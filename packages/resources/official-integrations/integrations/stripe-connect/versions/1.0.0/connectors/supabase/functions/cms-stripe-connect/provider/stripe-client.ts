@@ -31,17 +31,6 @@ export async function stripeV1<T extends JsonRecord>(
     throw stripeError(response.status, data);
 }
 
-export async function retrievePayout(payoutId: string, stripeAccountId: string): Promise<JsonRecord> {
-    const headers = new Headers();
-    if (stripeAccountId !== "platform") {
-        headers.set("stripe-account", stripeAccountId);
-    }
-    return await stripeV1<JsonRecord>(`/payouts/${encodeURIComponent(payoutId)}`, {
-        method: "GET",
-        headers,
-    });
-}
-
 export async function stripeV2<T extends JsonRecord>(
     path: string,
     init: RequestInit,

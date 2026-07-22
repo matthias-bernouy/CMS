@@ -3,10 +3,8 @@ import {
     defaultCurrency,
     protectedPlatformPayoutInterval,
     requiredEnv,
-    sellerActivityDescription,
     stripeLivemode,
     stripeV1ApiVersion,
-    stripeV2AccountIncludes,
     stripeV2ApiVersion,
     stripeWebhookMaximumBytes,
     stripeWebhookToleranceSeconds,
@@ -115,13 +113,52 @@ import {
 } from "./http/query.ts";
 import { json } from "./http/responses.ts";
 import { serveStripeConnect } from "./http/router.ts";
-import { retrievePayout, stripeV1, stripeV2 } from "./provider/stripe-client.ts";
+import {
+    retrieveConnectedBalance,
+    retrieveConnectedBalanceSettings,
+    retrievePlatformBalanceSettings,
+    updateBalanceSettings,
+} from "./provider/accounts/balances.ts";
+import {
+    createConnectedAccount,
+    createCustomConnectedAccount,
+    retrieveAccount,
+    updateCustomConnectedAccount,
+} from "./provider/accounts/lifecycle.ts";
+import { attachBankAccount, createAccountLink, createAccountSession } from "./provider/accounts/onboarding.ts";
+import {
+    closeStripeDispute,
+    listStripeDisputesByCharge,
+    retrieveStripeDispute,
+    updateStripeDisputeEvidence,
+    uploadStripeDisputeEvidenceFile,
+} from "./provider/disputes.ts";
+import {
+    cancelStripePaymentIntent,
+    createStripePaymentIntent,
+    hydrateSucceededPaymentIntentProviderTruth,
+    retrievePaymentIntent,
+    retrieveStripeBalanceTransaction,
+} from "./provider/payments.ts";
+import { retrieveStripePayout } from "./provider/payouts.ts";
+import {
+    createStripeRefund,
+    listStripeRefundsByCharge,
+    retrieveStripeRefund,
+    retrieveStripeRefundSnapshot,
+} from "./provider/refunds.ts";
+import {
+    createStripeTransfer,
+    createStripeTransferReversal,
+    listStripeTransferReversals,
+    listStripeTransfersByGroup,
+    retrieveStripeTransfer,
+    retrieveStripeTransferReversal,
+} from "./provider/transfers.ts";
 import type {
     ProviderTruthActorKind,
     StripeAccount,
     StripeAccountApiVersion,
-    StripeAccountSession,
-    StripeBalance,
     StripeBalanceSettings,
     StripeDispute,
     StripePaymentIntent,
@@ -1944,7 +1981,7 @@ async function uploadStripeDisputeFile(request: Request): Promise<Response> {
     form.set("purpose", "dispute_evidence");
     const fileBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
     form.set("file", new Blob([fileBuffer], { type: mimeType }), fileName);
-    const stripeFile = await stripeV1<JsonRecord>("/files", { method: "POST", body: form });
+    const stripeFile = await uploadStripeDisputeEvidenceFile(form);
     await insertPaymentEvent(dispute.payment_id, "stripe_dispute_file_uploaded", actorKind, userId, {
         disputeId,
         stripeFileId: stripeFile.id,
@@ -2214,13 +2251,9 @@ async function acceptStripeDispute(request: Request): Promise<Response> {
                 status: "processing",
                 attempt_count: operation.attempt_count + 1,
             });
-            const provider = await stripeV1<StripeDispute>(
-                `/disputes/${encodeURIComponent(dispute.stripe_dispute_id)}/close`,
-                {
-                    method: "POST",
-                    body: new URLSearchParams(),
-                },
-                { idempotencyKey: await stableStripeIdempotencyKey("dispute-accept", operation.business_key) },
+            const provider = await closeStripeDispute(
+                dispute.stripe_dispute_id,
+                await stableStripeIdempotencyKey("dispute-accept", operation.business_key),
             );
             await updateFinancialOperation(operation.id, {
                 status: "succeeded",
@@ -3684,312 +3717,6 @@ async function paymentClientSecret(payment: ConnectPaymentRow): Promise<string> 
     return intent.client_secret ?? "";
 }
 
-async function createConnectedAccount(options: {
-    userId: string;
-    country: string;
-    email: string;
-    displayName?: string | null;
-}): Promise<StripeAccount> {
-    return await stripeV2<StripeAccount>(
-        "/core/accounts",
-        {
-            method: "POST",
-            body: JSON.stringify({
-                contact_email: options.email,
-                display_name: options.displayName ?? options.email.split("@")[0],
-                dashboard: "none",
-                identity: {
-                    country: options.country.toLowerCase(),
-                    entity_type: "individual",
-                },
-                defaults: {
-                    currency: defaultCurrency(),
-                    profile: {
-                        product_description: sellerActivityDescription(),
-                    },
-                    responsibilities: {
-                        fees_collector: "application",
-                        losses_collector: "application",
-                    },
-                },
-                configuration: {
-                    recipient: {
-                        capabilities: {
-                            stripe_balance: {
-                                stripe_transfers: { requested: true },
-                            },
-                        },
-                    },
-                },
-                include: stripeV2AccountIncludes,
-            }),
-        },
-        { idempotencyKey: `cms_connect_account_v2_controlled_recipient_v2_${await digest(options.userId)}` },
-    );
-}
-
-async function createCustomConnectedAccount(userId: string, accountToken: string): Promise<StripeAccount> {
-    return await stripeV2<StripeAccount>(
-        "/core/accounts",
-        {
-            method: "POST",
-            body: JSON.stringify({
-                account_token: accountToken,
-                dashboard: "none",
-                identity: {
-                    country: defaultCountry().toLowerCase(),
-                },
-                defaults: {
-                    currency: defaultCurrency(),
-                    profile: { product_description: sellerActivityDescription() },
-                    responsibilities: {
-                        fees_collector: "application",
-                        losses_collector: "application",
-                    },
-                },
-                configuration: {
-                    recipient: {
-                        capabilities: {
-                            stripe_balance: {
-                                stripe_transfers: { requested: true },
-                            },
-                        },
-                    },
-                },
-                include: stripeV2AccountIncludes,
-                metadata: { cms_user_id: userId },
-            }),
-        },
-        { idempotencyKey: `cms_connect_custom_recipient_v2_${await digest(userId)}` },
-    );
-}
-
-async function updateCustomConnectedAccount(accountId: string, accountToken: string): Promise<StripeAccount> {
-    return await stripeV2<StripeAccount>(
-        `/core/accounts/${encodeURIComponent(accountId)}`,
-        {
-            method: "POST",
-            body: JSON.stringify({
-                account_token: accountToken,
-            }),
-        },
-        { idempotencyKey: `cms_connect_custom_identity_${await digest(`${accountId}:${accountToken}`)}` },
-    );
-}
-
-async function attachBankAccount(accountId: string, bankAccountToken: string): Promise<void> {
-    const params = new URLSearchParams();
-    params.set("external_account", bankAccountToken);
-    params.set("default_for_currency", "true");
-    await stripeV1<JsonRecord>(
-        `/accounts/${encodeURIComponent(accountId)}/external_accounts`,
-        {
-            method: "POST",
-            body: params,
-        },
-        { idempotencyKey: `cms_connect_bank_${await digest(`${accountId}:${bankAccountToken}`)}` },
-    );
-}
-
-async function retrieveAccount(accountId: string, apiVersion: StripeAccountApiVersion): Promise<StripeAccount> {
-    if (apiVersion === "v1") {
-        return await stripeV1<StripeAccount>(`/accounts/${encodeURIComponent(accountId)}`, { method: "GET" });
-    }
-    const include = new URLSearchParams();
-    for (const [index, value] of stripeV2AccountIncludes.entries()) {
-        include.set(`include[${index}]`, value);
-    }
-    return await stripeV2<StripeAccount>(`/core/accounts/${encodeURIComponent(accountId)}?${include.toString()}`, {
-        method: "GET",
-    });
-}
-
-async function createAccountLink(
-    accountId: string,
-    apiVersion: StripeAccountApiVersion,
-    returnUrl: string,
-    refreshUrl: string,
-): Promise<JsonRecord> {
-    if (apiVersion === "v2") {
-        return await stripeV2<JsonRecord>("/core/account_links", {
-            method: "POST",
-            body: JSON.stringify({
-                account: accountId,
-                use_case: {
-                    type: "account_onboarding",
-                    account_onboarding: {
-                        configurations: ["recipient"],
-                        collection_options: {
-                            fields: "currently_due",
-                            future_requirements: "omit",
-                        },
-                        return_url: returnUrl,
-                        refresh_url: refreshUrl,
-                    },
-                },
-            }),
-        });
-    }
-
-    const params = new URLSearchParams();
-    params.set("account", accountId);
-    params.set("return_url", returnUrl);
-    params.set("refresh_url", refreshUrl);
-    params.set("type", "account_onboarding");
-
-    return await stripeV1<JsonRecord>("/account_links", {
-        method: "POST",
-        body: params,
-    });
-}
-
-async function createAccountSession(accountId: string): Promise<StripeAccountSession> {
-    const params = new URLSearchParams();
-    params.set("account", accountId);
-    params.set("components[account_onboarding][enabled]", "true");
-
-    return await stripeV1<StripeAccountSession>("/account_sessions", {
-        method: "POST",
-        body: params,
-    });
-}
-
-async function createStripePaymentIntent(payment: ConnectPaymentRow): Promise<StripePaymentIntent> {
-    const params = new URLSearchParams();
-    params.set("amount", String(payment.amount_total));
-    params.set("currency", payment.currency);
-    params.append("payment_method_types[]", "card");
-    params.set("transfer_group", payment.transfer_group);
-    params.set("metadata[cms_payment_id]", String(payment.id));
-    params.set("metadata[client_reference_id]", payment.client_reference_id);
-    params.set("metadata[financial_terms_hash]", payment.financial_terms_hash);
-    params.set("metadata[seller_cms_user_id]", payment.seller_cms_user_id);
-    params.set("expand[]", "latest_charge.balance_transaction");
-    if (payment.description) {
-        params.set("description", payment.description);
-    }
-
-    return await stripeV1<StripePaymentIntent>(
-        "/payment_intents",
-        {
-            method: "POST",
-            body: params,
-        },
-        { idempotencyKey: `payment:${payment.id}:${payment.financial_terms_hash}` },
-    );
-}
-
-async function retrievePaymentIntent(paymentIntentId: string): Promise<StripePaymentIntent> {
-    const params = new URLSearchParams();
-    params.set("expand[]", "latest_charge.balance_transaction");
-    return await stripeV1<StripePaymentIntent>(
-        `/payment_intents/${encodeURIComponent(paymentIntentId)}?${params.toString()}`,
-        { method: "GET" },
-    );
-}
-
-async function hydrateSucceededPaymentIntentProviderTruth(intent: StripePaymentIntent): Promise<StripePaymentIntent> {
-    let charge: string | JsonRecord | null | undefined = intent.latest_charge;
-    if (typeof charge === "string") {
-        charge = await retrieveStripeCharge(charge);
-    }
-    if (!isRecord(charge)) {
-        return intent;
-    }
-
-    let balanceTransaction = charge.balance_transaction;
-    if (typeof balanceTransaction === "string") {
-        balanceTransaction = await retrieveStripeBalanceTransaction(balanceTransaction);
-    }
-    if (balanceTransaction === charge.balance_transaction && charge === intent.latest_charge) {
-        return intent;
-    }
-    return {
-        ...intent,
-        latest_charge: {
-            ...charge,
-            balance_transaction: balanceTransaction,
-        },
-    };
-}
-
-async function retrieveStripeCharge(chargeId: string): Promise<JsonRecord> {
-    const params = new URLSearchParams();
-    params.set("expand[]", "balance_transaction");
-    return await stripeV1<JsonRecord>(`/charges/${encodeURIComponent(chargeId)}?${params.toString()}`, {
-        method: "GET",
-    });
-}
-
-async function retrieveStripeBalanceTransaction(balanceTransactionId: string): Promise<JsonRecord> {
-    return await stripeV1<JsonRecord>(`/balance_transactions/${encodeURIComponent(balanceTransactionId)}`, {
-        method: "GET",
-    });
-}
-
-async function cancelStripePaymentIntent(paymentIntentId: string): Promise<StripePaymentIntent> {
-    const params = new URLSearchParams();
-    params.set("cancellation_reason", "requested_by_customer");
-    params.set("expand[]", "latest_charge.balance_transaction");
-    return await stripeV1<StripePaymentIntent>(
-        `/payment_intents/${encodeURIComponent(paymentIntentId)}/cancel`,
-        { method: "POST", body: params },
-        { idempotencyKey: await stableStripeIdempotencyKey("payment-cancel", paymentIntentId) },
-    );
-}
-
-async function retrieveConnectedBalance(stripeAccountId: string): Promise<StripeBalance> {
-    return await stripeV1<StripeBalance>("/balance", {
-        method: "GET",
-        headers: { "stripe-account": stripeAccountId },
-    });
-}
-
-async function retrieveConnectedBalanceSettings(stripeAccountId: string): Promise<StripeBalanceSettings> {
-    return await stripeV1<StripeBalanceSettings>("/balance_settings", {
-        method: "GET",
-        headers: { "stripe-account": stripeAccountId },
-    });
-}
-
-async function retrievePlatformBalanceSettings(): Promise<StripeBalanceSettings> {
-    return await stripeV1<StripeBalanceSettings>("/balance_settings", { method: "GET" });
-}
-
-async function updateBalanceSettings(
-    stripeAccountId: string | null,
-    request: JsonRecord,
-    idempotencyKey: string,
-): Promise<StripeBalanceSettings> {
-    const params = new URLSearchParams();
-    params.set("payments[payouts][schedule][interval]", String(request.interval));
-    for (const day of arrayAt(request, "weeklyPayoutDays")) {
-        params.append("payments[payouts][schedule][weekly_payout_days][]", String(day));
-    }
-    for (const day of arrayAt(request, "monthlyPayoutDays")) {
-        params.append("payments[payouts][schedule][monthly_payout_days][]", String(day));
-    }
-    if (Number.isSafeInteger(request.minimumBalanceEur)) {
-        params.set("payments[payouts][minimum_balance_by_currency][eur]", String(request.minimumBalanceEur));
-    }
-    if (Number.isSafeInteger(request.delayDaysOverride)) {
-        params.set("payments[settlement_timing][delay_days_override]", String(request.delayDaysOverride));
-    }
-    if (typeof request.debitNegativeBalances === "boolean") {
-        params.set("payments[debit_negative_balances]", String(request.debitNegativeBalances));
-    }
-    const headers = stripeAccountId ? { "stripe-account": stripeAccountId } : undefined;
-    return await stripeV1<StripeBalanceSettings>(
-        "/balance_settings",
-        {
-            method: "POST",
-            headers,
-            body: params,
-        },
-        { idempotencyKey },
-    );
-}
-
 async function assertPlatformPayoutProtection(): Promise<void> {
     const [settings, control] = await Promise.all([
         retrievePlatformBalanceSettings(),
@@ -4010,47 +3737,13 @@ async function assertPlatformPayoutProtection(): Promise<void> {
     }
 }
 
-async function createStripeTransfer(
-    payment: ConnectPaymentRow,
-    releaseAuthorizationId: string,
-    releaseKind: "initial" | "reserve" | "recovery",
-    amount: number,
-    idempotencyKey: string,
-): Promise<StripeTransfer> {
-    const params = new URLSearchParams();
-    params.set("amount", String(amount));
-    params.set("currency", payment.currency);
-    params.set("destination", payment.seller_stripe_account_id);
-    if (releaseKind !== "recovery") {
-        params.set("source_transaction", payment.stripe_charge_id!);
-    }
-    params.set("transfer_group", payment.transfer_group);
-    params.set("metadata[cms_payment_id]", String(payment.id));
-    params.set("metadata[cms_release_authorization_id]", releaseAuthorizationId);
-    params.set("metadata[cms_release_kind]", releaseKind);
-    params.set("metadata[financial_terms_hash]", payment.financial_terms_hash);
-    return await stripeV1<StripeTransfer>(
-        "/transfers",
-        {
-            method: "POST",
-            body: params,
-        },
-        { idempotencyKey },
-    );
-}
-
-async function retrieveStripeTransfer(transferId: string): Promise<StripeTransfer> {
-    return await stripeV1<StripeTransfer>(`/transfers/${encodeURIComponent(transferId)}`, { method: "GET" });
-}
-
 async function findStripeTransfer(
     payment: ConnectPaymentRow,
     releaseAuthorizationId: string,
     releaseKind: "initial" | "reserve" | "recovery",
     amount: number,
 ): Promise<StripeTransfer | null> {
-    const params = new URLSearchParams({ transfer_group: payment.transfer_group, limit: "100" });
-    const list = await stripeV1<JsonRecord>(`/transfers?${params.toString()}`, { method: "GET" });
+    const list = await listStripeTransfersByGroup(payment.transfer_group);
     const matches = recordArrayAt(list, "data").filter(
         (transfer) =>
             Number(transfer.amount) === amount &&
@@ -4069,40 +3762,12 @@ async function findStripeTransfer(
     return (matches[0] as StripeTransfer | undefined) ?? null;
 }
 
-async function createStripeTransferReversal(
-    transferId: string,
-    amount: number,
-    operationKey: string,
-    idempotencyKey: string,
-): Promise<JsonRecord> {
-    const params = new URLSearchParams();
-    params.set("amount", String(amount));
-    params.set("metadata[operation_key]", operationKey);
-    return await stripeV1<JsonRecord>(
-        `/transfers/${encodeURIComponent(transferId)}/reversals`,
-        {
-            method: "POST",
-            body: params,
-        },
-        { idempotencyKey },
-    );
-}
-
-async function retrieveStripeTransferReversal(transferId: string, reversalId: string): Promise<JsonRecord> {
-    return await stripeV1<JsonRecord>(
-        `/transfers/${encodeURIComponent(transferId)}/reversals/${encodeURIComponent(reversalId)}`,
-        { method: "GET" },
-    );
-}
-
 async function findStripeTransferReversal(
     transferId: string,
     operationKey: string,
     amount: number,
 ): Promise<JsonRecord | null> {
-    const list = await stripeV1<JsonRecord>(`/transfers/${encodeURIComponent(transferId)}/reversals?limit=100`, {
-        method: "GET",
-    });
+    const list = await listStripeTransferReversals(transferId);
     const matches = recordArrayAt(list, "data").filter(
         (reversal) =>
             Number(reversal.amount) === amount &&
@@ -4114,38 +3779,12 @@ async function findStripeTransferReversal(
     return matches[0] ?? null;
 }
 
-async function createStripeRefund(
-    chargeId: string,
-    amount: number,
-    refundRequestId: string,
-    reason: string | null,
-    idempotencyKey: string,
-): Promise<StripeRefund> {
-    const params = new URLSearchParams();
-    params.set("charge", chargeId);
-    params.set("amount", String(amount));
-    params.set("metadata[refund_request_id]", refundRequestId);
-    params.set("expand[]", "balance_transaction");
-    if (reason) {
-        params.set("metadata[commerce_reason]", reason);
-    }
-    return await stripeV1<StripeRefund>("/refunds", { method: "POST", body: params }, { idempotencyKey });
-}
-
-async function retrieveStripeRefund(refundId: string): Promise<StripeRefund> {
-    return await stripeV1<StripeRefund>(`/refunds/${encodeURIComponent(refundId)}?expand[]=balance_transaction`, {
-        method: "GET",
-    });
-}
-
 async function findStripeRefund(
     chargeId: string,
     refundRequestId: string,
     amount: number,
 ): Promise<StripeRefund | null> {
-    const params = new URLSearchParams({ charge: chargeId, limit: "100" });
-    params.set("expand[]", "data.balance_transaction");
-    const list = await stripeV1<JsonRecord>(`/refunds?${params.toString()}`, { method: "GET" });
+    const list = await listStripeRefundsByCharge(chargeId, true);
     const matches = recordArrayAt(list, "data").filter(
         (refund) =>
             Number(refund.amount) === amount &&
@@ -4156,26 +3795,6 @@ async function findStripeRefund(
         throw new HttpError(409, "Stripe Refund search is ambiguous");
     }
     return (matches[0] as StripeRefund | undefined) ?? null;
-}
-
-async function updateStripeDisputeEvidence(
-    disputeId: string,
-    evidence: JsonRecord,
-    idempotencyKey: string,
-): Promise<StripeDispute> {
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(evidence)) {
-        params.set(`evidence[${key}]`, String(value));
-    }
-    params.set("submit", "true");
-    return await stripeV1<StripeDispute>(
-        `/disputes/${encodeURIComponent(disputeId)}`,
-        {
-            method: "POST",
-            body: params,
-        },
-        { idempotencyKey },
-    );
 }
 
 async function requiredPayment(paymentId: number): Promise<ConnectPaymentRow> {
@@ -5052,9 +4671,7 @@ async function reconcilePayment(payment: ConnectPaymentRow): Promise<ConnectPaym
         if (!refund.stripe_refund_id || refund.status === "succeeded") {
             continue;
         }
-        const provider = await stripeV1<StripeRefund>(`/refunds/${encodeURIComponent(refund.stripe_refund_id)}`, {
-            method: "GET",
-        });
+        const provider = await retrieveStripeRefundSnapshot(refund.stripe_refund_id);
         await applyStripeRefund(refund, provider);
     }
     const ledger = await readPaymentReconciliationLedger(payment.id);
@@ -5096,8 +4713,7 @@ async function reconcileProviderDisputes(payment: ConnectPaymentRow): Promise<vo
     if (!payment.stripe_charge_id) {
         return;
     }
-    const params = new URLSearchParams({ charge: payment.stripe_charge_id, limit: "100" });
-    const listed = await stripeV1<JsonRecord>(`/disputes?${params.toString()}`, { method: "GET" });
+    const listed = await listStripeDisputesByCharge(payment.stripe_charge_id);
     if (listed.has_more === true) {
         throw new HttpError(409, "Stripe dispute search is incomplete");
     }
@@ -5117,8 +4733,7 @@ async function reconcileProviderRefunds(payment: ConnectPaymentRow): Promise<voi
     if (!payment.stripe_charge_id) {
         return;
     }
-    const params = new URLSearchParams({ charge: payment.stripe_charge_id, limit: "100" });
-    const listed = await stripeV1<JsonRecord>(`/refunds?${params.toString()}`, { method: "GET" });
+    const listed = await listStripeRefundsByCharge(payment.stripe_charge_id);
     if (listed.has_more === true) {
         throw new HttpError(409, "Stripe refund search is incomplete");
     }
@@ -5137,8 +4752,7 @@ async function reconcileProviderRefunds(payment: ConnectPaymentRow): Promise<voi
 }
 
 async function reconcileProviderTransfers(payment: ConnectPaymentRow): Promise<void> {
-    const params = new URLSearchParams({ transfer_group: payment.transfer_group, limit: "100" });
-    const listed = await stripeV1<JsonRecord>(`/transfers?${params.toString()}`, { method: "GET" });
+    const listed = await listStripeTransfersByGroup(payment.transfer_group);
     if (listed.has_more === true) {
         throw new HttpError(409, "Stripe Transfer search is incomplete");
     }
@@ -5294,9 +4908,7 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
             if (!refund) {
                 return false;
             }
-            const provider = await stripeV1<StripeRefund>(`/refunds/${encodeURIComponent(refundId)}`, {
-                method: "GET",
-            });
+            const provider = await retrieveStripeRefundSnapshot(refundId);
             await applyStripeRefund(refund, provider);
             await updatePayment(refund.payment_id, { last_stripe_event_id: eventId });
             return true;
@@ -5317,7 +4929,7 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
         if (!objectId) {
             throw new Error("Stripe dispute event has no object id");
         }
-        const provider = await stripeV1<StripeDispute>(`/disputes/${encodeURIComponent(objectId)}`, { method: "GET" });
+        const provider = await retrieveStripeDispute(objectId);
         await applyStripeDispute(provider, eventId, eventType, stringAt(row, "provider_created_at") || null);
         return true;
     }
@@ -5365,7 +4977,7 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
         let payoutTruthError: string | null = null;
         if (typeof providerSnapshot.automatic !== "boolean" && stringAt(providerSnapshot, "method") !== "instant") {
             try {
-                providerSnapshot = await retrievePayout(objectId, stripeAccountId);
+                providerSnapshot = await retrieveStripePayout(objectId, stripeAccountId);
             } catch (error) {
                 payoutTruthError = errorMessage(error);
             }
@@ -5545,7 +5157,7 @@ async function resolveRefundBalanceTransaction(provider: StripeRefund, refund: R
     const transaction = isRecord(raw)
         ? raw
         : typeof raw === "string" && raw.startsWith("txn_")
-          ? await stripeV1<JsonRecord>(`/balance_transactions/${encodeURIComponent(raw)}`, { method: "GET" })
+          ? await retrieveStripeBalanceTransaction(raw)
           : null;
     if (!transaction) {
         throw new HttpError(409, "succeeded Stripe Refund omitted its balance transaction");
@@ -5598,9 +5210,7 @@ async function disputeFundsTruth(
             continue;
         }
         if (typeof entry === "string" && entry) {
-            transactions.push(
-                await stripeV1<JsonRecord>(`/balance_transactions/${encodeURIComponent(entry)}`, { method: "GET" }),
-            );
+            transactions.push(await retrieveStripeBalanceTransaction(entry));
         }
     }
     const ordered = transactions
