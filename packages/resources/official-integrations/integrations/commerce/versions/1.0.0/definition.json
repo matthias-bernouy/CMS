@@ -3520,6 +3520,9 @@
                                                         "status": "$field.status",
                                                         "visibility": "$field.visibility"
                                                     }
+                                                },
+                                                "after": {
+                                                    "resource": "$result"
                                                 }
                                             }
                                         ],
@@ -4042,11 +4045,13 @@
                                         "actions": [
                                             {
                                                 "id": "verifySeller", "label": "Verify seller", "tone": "primary", "placement": "primary",
-                                                "endpoint": { "endpoint": "reviewSeller", "params": { "id": "$resource.id" }, "body": { "status": "verified", "reason": "$field.reviewReason", "expectedVersion": "$resource.version" } }
+                                                "endpoint": { "endpoint": "reviewSeller", "params": { "id": "$resource.id" }, "body": { "status": "verified", "reason": "$field.reviewReason", "expectedVersion": "$resource.version" } },
+                                                "after": { "resource": "$result" }
                                             },
                                             {
                                                 "id": "suspendSeller", "label": "Suspend seller", "tone": "danger", "placement": "more", "confirm": "Suspend this seller?",
-                                                "endpoint": { "endpoint": "reviewSeller", "params": { "id": "$resource.id" }, "body": { "status": "suspended", "reason": "$field.reviewReason", "expectedVersion": "$resource.version" } }
+                                                "endpoint": { "endpoint": "reviewSeller", "params": { "id": "$resource.id" }, "body": { "status": "suspended", "reason": "$field.reviewReason", "expectedVersion": "$resource.version" } },
+                                                "after": { "resource": "$result" }
                                             }
                                         ],
                                         "main": [
@@ -4097,6 +4102,9 @@
                                                         "requireFinalPriceApproval": "$field.requireFinalPriceApproval",
                                                         "sellerCanPublish": "$field.sellerCanPublish"
                                                     }
+                                                },
+                                                "after": {
+                                                    "resource": "$result"
                                                 }
                                             }
                                         ],
@@ -4696,6 +4704,9 @@
                                         "expectedVersion": "$resource.version", "slug": "$field.slug", "name": "$field.name",
                                         "description": "$field.description", "status": "$field.status"
                                     }
+                                },
+                                "after": {
+                                    "resource": "$result"
                                 }
                             },
                             {
