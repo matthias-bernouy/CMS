@@ -37,7 +37,6 @@ import {
     enqueueCommerceRefundProjection,
     reserveAccountFinancialOperation,
     reserveFinancialOperation,
-    reservePlatformFinancialOperation,
     updateFinancialOperation,
 } from "./db/repositories/financial-operations.ts";
 import {
@@ -51,11 +50,7 @@ import {
     reserveProtectedPayment,
     updatePayment,
 } from "./db/repositories/payments.ts";
-import {
-    markPaymentManualReview,
-    platformPayoutControlRpc,
-    sellerPayoutHoldRpc,
-} from "./db/repositories/payout-controls.ts";
+import { markPaymentManualReview, sellerPayoutHoldRpc } from "./db/repositories/payout-controls.ts";
 import { accountSelect, type ConnectAccountRow } from "./db/records/accounts.ts";
 import { disputeSelect, type StripeDisputeRow } from "./db/records/disputes.ts";
 import {
@@ -154,6 +149,7 @@ import { getProviderPayment, listProviderPayments } from "./routes/payments/dash
 import { createProtectedPaymentRoutes } from "./routes/payments/protected.ts";
 import { createRequestSettlementRelease } from "./routes/payments/settlement-release.ts";
 import { createRequestTransferReversal } from "./routes/payments/transfer-reversal.ts";
+import { createConfigurePlatformPayoutProtection } from "./routes/payouts/platform-protection.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { createRequestProtectedRefund } from "./routes/refunds/protected.ts";
 import { connectConfig, health } from "./routes/system.ts";
@@ -236,6 +232,7 @@ const disputeRouteDependencies = {
 };
 const submitStripeDisputeEvidence = createSubmitStripeDisputeEvidence(disputeRouteDependencies);
 const acceptStripeDispute = createAcceptStripeDispute(disputeRouteDependencies);
+const configurePlatformPayoutProtection = createConfigurePlatformPayoutProtection({ platformPayoutControl });
 
 serveStripeConnect({
     ingestPlatformWebhook: (request) => ingestStripeWebhook(request, "platform"),
@@ -281,168 +278,6 @@ serveStripeConnect({
     requeueCommerceProjection,
     listFinancialOperations,
 });
-
-async function configurePlatformPayoutProtection(request: Request): Promise<Response> {
-    requireCmsRequest(request, { requireUser: false });
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, [
-        "platformPayoutControlChangeId",
-        "minimumBalanceEur",
-        "delayDaysOverride",
-        "debitNegativeBalances",
-        "reason",
-        "liabilityRevision",
-        "decreaseAuthorizationId",
-    ]);
-    const changeId = requiredString(body, "platformPayoutControlChangeId", 200);
-    const minimumBalanceEur = optionalNonNegativeInteger(body, "minimumBalanceEur");
-    const liabilityRevision = requiredInteger(body, "liabilityRevision");
-    if (!Number.isSafeInteger(liabilityRevision) || liabilityRevision < 0) {
-        throw new HttpError(400, "liabilityRevision must be a non-negative safe integer");
-    }
-    const decreaseAuthorizationId = optionalText(body, "decreaseAuthorizationId", 64);
-    if (
-        decreaseAuthorizationId &&
-        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(decreaseAuthorizationId)
-    ) {
-        throw new HttpError(400, "decreaseAuthorizationId must be a UUID");
-    }
-    const delayDaysOverride = optionalNonNegativeInteger(body, "delayDaysOverride");
-    const debitNegativeBalances = optionalBoolean(body, "debitNegativeBalances");
-    const reason = optionalText(body, "reason", 500);
-    if (delayDaysOverride !== null && delayDaysOverride > 31) {
-        throw new HttpError(400, "delayDaysOverride must be between zero and 31");
-    }
-    const owner = crypto.randomUUID();
-    let claim = await platformPayoutControlRpc("claim_platform_payout_protection", {
-        p_owner: owner,
-        p_required_minimum_amount: minimumBalanceEur ?? 0,
-        p_liability_revision: liabilityRevision,
-        p_decrease_authorization_id: decreaseAuthorizationId,
-    });
-    if (claim.claimed !== true) {
-        throw new HttpError(
-            409,
-            "platform payout protection is already being synchronized; the higher requirement was recorded",
-        );
-    }
-    let operation: FinancialOperationRow | null = null;
-    let appliedMinimum = 0;
-    let appliedDecreaseAuthorizationId: string | null = null;
-    try {
-        for (let attempt = 0; attempt < 5; attempt++) {
-            const control = platformPayoutControl(claim);
-            appliedDecreaseAuthorizationId = control.decrease_authorization_id;
-            const current = await retrievePlatformBalanceSettings();
-            const currentMinimum =
-                numberAt(
-                    objectAt(objectAt(objectAt(current, "payments"), "payouts"), "minimum_balance_by_currency"),
-                    "eur",
-                ) ?? 0;
-            appliedMinimum = control.decrease_authorization_id
-                ? control.required_minimum_amount
-                : Math.max(control.required_minimum_amount, control.provider_minimum_amount, currentMinimum);
-            const operationRequest = stripUndefined({
-                scope: "platform",
-                interval: protectedPlatformPayoutInterval,
-                minimumBalanceEur: appliedMinimum,
-                delayDaysOverride: delayDaysOverride ?? undefined,
-                debitNegativeBalances: debitNegativeBalances ?? undefined,
-                reason: reason ?? undefined,
-                commerceLiabilityRevision: control.liability_revision,
-                commerceRequestedDecreaseAuthorizationId: decreaseAuthorizationId ?? undefined,
-                commerceAppliedDecreaseAuthorizationId: appliedDecreaseAuthorizationId ?? undefined,
-            });
-            const requestHash = await digest(JSON.stringify(operationRequest));
-            const businessKey = [
-                "platform-payout-protection",
-                control.liability_revision,
-                appliedMinimum,
-                requestHash,
-            ].join(":");
-            operation = await reservePlatformFinancialOperation({
-                businessKey,
-                operationType: "payout_schedule_update",
-                request: operationRequest,
-            });
-            let provider = current;
-            if (!balanceSettingsMatchRequest(current, operationRequest)) {
-                await updateFinancialOperation(operation.id, {
-                    status: "processing",
-                    claimed_at: new Date().toISOString(),
-                    attempt_count: operation.attempt_count + 1,
-                });
-                provider = await updateBalanceSettings(
-                    null,
-                    operationRequest,
-                    await stableStripeIdempotencyKey("platform-payout-protection", businessKey),
-                );
-            }
-            if (!balanceSettingsMatchRequest(provider, operationRequest)) {
-                throw new Error("Stripe did not confirm the required platform payout protection");
-            }
-            if (operation.status !== "succeeded" || provider !== current) {
-                await updateFinancialOperation(operation.id, {
-                    status: "succeeded",
-                    response: provider,
-                    last_error: null,
-                    completed_at: new Date().toISOString(),
-                });
-            }
-            const completed = await platformPayoutControlRpc("complete_platform_payout_protection", {
-                p_owner: owner,
-                p_expected_liability_revision: control.liability_revision,
-                p_applied_minimum_amount: appliedMinimum,
-                p_succeeded: true,
-                p_error: null,
-            });
-            if (completed.accepted !== true) {
-                throw new HttpError(409, "platform payout protection lease was superseded");
-            }
-            if (completed.needsReapply === true) {
-                claim = { claimed: true, control: objectAt(completed, "control") };
-                continue;
-            }
-            return json({
-                platformPayoutControlChangeId: changeId,
-                providerOperationId: operation.id,
-                liabilityRevision: platformPayoutControl(completed).liability_revision,
-                appliedMinimumBalanceEur: appliedMinimum,
-                decreaseAuthorizationId: appliedDecreaseAuthorizationId,
-                payoutControl: publicBalanceSettings(provider),
-                providerSnapshot: provider,
-            });
-        }
-        throw new Error("platform payout requirements changed repeatedly during provider synchronization");
-    } catch (error) {
-        const message = errorMessage(error);
-        if (operation) {
-            await updateFinancialOperation(operation.id, { status: "manual_review", last_error: message }).catch(
-                () => null,
-            );
-        }
-        const control = platformPayoutControl(claim);
-        await platformPayoutControlRpc("complete_platform_payout_protection", {
-            p_owner: owner,
-            p_expected_liability_revision: control.liability_revision,
-            p_applied_minimum_amount: appliedMinimum,
-            p_succeeded: false,
-            p_error: message,
-        }).catch(() => null);
-        await insertRow<JsonRecord>("provider_exceptions", "id", {
-            operation_id: operation?.id ?? null,
-            exception_type: "platform_payout_protection_ambiguous",
-            severity: "critical",
-            message,
-            details: {
-                platformPayoutControlChangeId: changeId,
-                requestedMinimumBalanceEur: minimumBalanceEur ?? 0,
-                liabilityRevision: control.liability_revision,
-            },
-        }).catch(() => null);
-        throw error;
-    }
-}
 
 async function configureSellerPayoutSchedule(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
