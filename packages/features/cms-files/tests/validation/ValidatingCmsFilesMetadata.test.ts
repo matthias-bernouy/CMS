@@ -54,6 +54,27 @@ describe("ValidatingCmsFilesMetadata", () => {
         await r.deleteItem(folder.id);
         expect((await r.listChildren(null)).total).toBe(0);
     });
+
+    test("delegates path, subtree, and content operations", async () => {
+        const r = repo();
+        const folder = await r.createFolder({ name: "images", parentId: null });
+        const file = await r.createFile({
+            name: "hero.png",
+            parentId: folder.id,
+            size: 3,
+            mimeType: "image/png",
+        });
+
+        expect((await r.getItemByPath("images/hero.png"))?.id).toBe(file.id);
+        expect((await r.listSubtree(folder.id)).map((item) => item.id)).toEqual([file.id]);
+        expect(
+            await r.updateFileContent(file.id, {
+                size: 8,
+                mimeType: "image/webp",
+                contentHash: "hero-v2",
+            }),
+        ).toMatchObject({ size: 8, mimeType: "image/webp", contentHash: "hero-v2" });
+    });
 });
 
 describe("validateUploadSize", () => {
