@@ -4342,6 +4342,9 @@
                                                         "code": "$field.code", "label": "$field.label", "description": "$field.description",
                                                         "position": "$field.position", "enabled": "$field.enabled"
                                                     }
+                                                },
+                                                "after": {
+                                                    "resource": "$result"
                                                 }
                                             }
                                         ],
@@ -4423,6 +4426,9 @@
                                                         "code": "$field.code", "label": "$field.label", "phase": "$field.phase",
                                                         "position": "$field.position", "enabled": "$field.enabled", "terminal": "$field.terminal"
                                                     }
+                                                },
+                                                "after": {
+                                                    "resource": "$result"
                                                 }
                                             }
                                         ],
@@ -4472,6 +4478,9 @@
                                                         "fromState": "$field.fromState", "action": "$field.action",
                                                         "actorKind": "$field.actorKind", "toState": "$field.toState"
                                                     }
+                                                },
+                                                "after": {
+                                                    "resource": "$result"
                                                 }
                                             }
                                         ],
@@ -4556,6 +4565,9 @@
                                                         "adminEditable": "$field.adminEditable", "publicReadable": "$field.publicReadable",
                                                         "showInDashboardTable": "$field.showInDashboardTable", "position": "$field.position", "enabled": "$field.enabled"
                                                     }
+                                                },
+                                                "after": {
+                                                    "resource": "$result"
                                                 }
                                             },
                                             {

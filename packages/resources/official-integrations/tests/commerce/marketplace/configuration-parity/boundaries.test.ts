@@ -88,6 +88,7 @@ describe("commerce configuration post-action boundaries", () => {
             expect(action?.endpoint).toMatchObject({
                 endpoint: endpoints[scenario.actionId as keyof typeof endpoints],
             });
+            expect(action?.after).toEqual({ resource: "$result" });
         }
     });
 });
