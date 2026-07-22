@@ -40,9 +40,11 @@ export type ProviderBoundaryHarness = {
         clearStripeRequests(): void;
         addProviderDispute(chargeId: string, patch?: JsonRecord): void;
         failNextFinancialOperationFailureUpdate(): void;
+        failNextDisputeFileUploadOnce(): void;
         failNextPaymentIntentCreationOnce(): void;
         failNextPaymentProjectionEnqueue(): void;
         failNextProtectedPaymentReservation(mode: "missing" | "raced"): void;
+        failNextPostgrestWrite(table: string, method: "POST" | "PATCH"): void;
         linkNextProtectedPaymentReservationToIntent(): void;
         loseNextRefundCreationResponse(): void;
         omitNextPaymentRead(): void;

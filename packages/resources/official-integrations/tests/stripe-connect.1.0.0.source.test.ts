@@ -31,7 +31,8 @@ import { registerPaymentCancellationRecoveryContracts } from "./stripe-connect/p
 import { registerPaymentCancellationReplayContracts } from "./stripe-connect/payment-cancellation/replay.contracts";
 import { registerPaymentCancellationReservationContracts } from "./stripe-connect/payment-cancellation/reservation.contracts";
 import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
-import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
+import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-writes/files.contracts";
+import { registerDisputeStagingContracts } from "./stripe-connect/provider-boundary/dispute-writes/staging.contracts";
 import { registerDisputeApplicationReadContextContracts } from "./stripe-connect/provider-boundary/dispute-application/read-context.contracts";
 import { registerDisputeApprovalContracts } from "./stripe-connect/provider-boundary/dispute-approval/approval.contracts";
 import { registerDisputeApprovalCompletionContracts } from "./stripe-connect/provider-boundary/dispute-approval/completion.contracts";
@@ -5788,7 +5789,9 @@ class StripeConnectMock {
     private failNextPaymentCancellationReservation = false;
     private failPaymentProjectionEnqueue = false;
     private failFinancialOperationFailureUpdate = false;
+    private failDisputeFileUpload = false;
     private failNextPaymentIntentCreation = false;
+    private nextPostgrestWriteFailure: { table: string; method: "POST" | "PATCH" } | null = null;
     private nextProtectedPaymentReservationFailure: "missing" | "raced" | null = null;
     private linkNextProtectedPaymentReservation = false;
     private nextPaymentIntentOperationSucceeded = false;
@@ -6395,12 +6398,20 @@ class StripeConnectMock {
         this.failFinancialOperationFailureUpdate = true;
     }
 
+    failNextDisputeFileUploadOnce(): void {
+        this.failDisputeFileUpload = true;
+    }
+
     failNextPaymentIntentCreationOnce(): void {
         this.failNextPaymentIntentCreation = true;
     }
 
     failNextProtectedPaymentReservation(mode: "missing" | "raced"): void {
         this.nextProtectedPaymentReservationFailure = mode;
+    }
+
+    failNextPostgrestWrite(table: string, method: "POST" | "PATCH"): void {
+        this.nextPostgrestWriteFailure = { table, method };
     }
 
     linkNextProtectedPaymentReservationToIntent(): void {
@@ -7237,6 +7248,10 @@ class StripeConnectMock {
                           .catch(() => null)) as JsonRecord | null)
                     : null,
         });
+        if (this.nextPostgrestWriteFailure?.table === table && this.nextPostgrestWriteFailure.method === method) {
+            this.nextPostgrestWriteFailure = null;
+            return jsonResponse({ message: `simulated ${table} ${method} failure` }, 500);
+        }
         if (table === "provider_exceptions" && method === "PATCH" && this.failProviderExceptionResolution) {
             this.failProviderExceptionResolution = false;
             return jsonResponse({ message: "simulated provider exception resolution failure" }, 500);
@@ -9225,6 +9240,10 @@ class StripeConnectMock {
             if (!upload) {
                 throw new Error("Stripe file upload form data was not captured");
             }
+            if (this.failDisputeFileUpload) {
+                this.failDisputeFileUpload = false;
+                return jsonResponse({ error: { message: "simulated Stripe dispute file upload failure" } }, 503);
+            }
             return jsonResponse({ id: "file_dispute_1", filename: upload.fileName, purpose: upload.purpose });
         }
         if (url.pathname === "/v1/payment_intents" && method === "POST") {
@@ -10115,7 +10134,9 @@ class StripeConnectMock {
                       actual_stripe_fee_details: [],
                       provider_snapshot: null,
                   }
-                : {};
+                : table === "stripe_dispute_evidence"
+                  ? { staged_at: now, submitted_operation_id: null, submitted_at: null }
+                  : {};
         const row = { id: this.nextRowId++, created_at: now, updated_at: now, ...defaults, ...value };
         this.tables[table].push(row);
         return { ...row };
@@ -10627,6 +10648,7 @@ registerDisputeApprovalCompletionContracts(createProviderBoundaryHarness);
 registerDisputeApprovalFailureContracts(createProviderBoundaryHarness);
 registerDisputeApprovalSubmissionContracts(createProviderBoundaryHarness);
 registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
+registerDisputeStagingContracts(createProviderBoundaryHarness);
 registerProtectedPaymentFailureContracts(createProviderBoundaryHarness);
 registerProtectedPaymentPayoutContracts(createProviderBoundaryHarness);
 registerProtectedPaymentProjectionRaceContracts(createProviderBoundaryHarness);
