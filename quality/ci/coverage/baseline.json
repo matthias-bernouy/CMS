@@ -1814,6 +1814,9 @@
                 "packages/foundation/components/src/ui/Form/Inputs/P9rInput/compute.ts",
                 "packages/foundation/components/src/ui/Form/Inputs/P9rInput/listener.ts",
                 "packages/foundation/components/src/ui/Form/Inputs/P9rInput/sync.ts",
+                "packages/foundation/components/src/ui/Form/Selection/Combobox/Combobox.ts",
+                "packages/foundation/components/src/ui/Form/Selection/Combobox/ComboboxView.ts",
+                "packages/foundation/components/src/ui/Form/Selection/Combobox/list.ts",
                 "packages/foundation/components/src/ui/Form/Structure/FormControlElement.ts",
                 "packages/foundation/components/src/ui/Form/Toggles/Checkbox/Checkbox.ts",
                 "packages/foundation/components/src/ui/Form/Toggles/Checkbox/compute.ts",
@@ -1890,9 +1893,6 @@
                 "packages/foundation/components/src/ui/Form/Inputs/TokenInput/TokenInputView.ts",
                 "packages/foundation/components/src/ui/Form/Inputs/TokenInput/tokenEvents.ts",
                 "packages/foundation/components/src/ui/Form/Inputs/TokenInput/tokens.ts",
-                "packages/foundation/components/src/ui/Form/Selection/Combobox/Combobox.ts",
-                "packages/foundation/components/src/ui/Form/Selection/Combobox/ComboboxView.ts",
-                "packages/foundation/components/src/ui/Form/Selection/Combobox/list.ts",
                 "packages/foundation/components/src/ui/Form/Selection/Combobox/types.ts",
                 "packages/foundation/components/src/ui/Form/Selection/P9rSelect/P9rSelect.ts",
                 "packages/foundation/components/src/ui/Form/Selection/P9rSelect/compute.ts",
@@ -1950,16 +1950,16 @@
                 "packages/foundation/components/src/ui/Navigation/Tabs/listener.ts"
             ],
             "files": {
-                "covered": 64,
+                "covered": 67,
                 "total": 188
             },
             "functions": {
-                "covered": 380,
-                "total": 425
+                "covered": 425,
+                "total": 472
             },
             "lines": {
-                "covered": 2898,
-                "total": 3153
+                "covered": 3135,
+                "total": 3403
             }
         },
         "@bernouy/envelope-crypto": {
