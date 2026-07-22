@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { executeFunction } from "@bernouy/cms-functions";
-import { fulfillmentQuote, installedFunctions, request, requiredFunction } from "../harness";
+import { fulfillmentQuote } from "../fixtures";
+import { installedFunctions, request, requiredFunction } from "../harness";
 
 export function registerShipmentCreationOperationTests(): void {
     test("recovers a lost shipment-create response through the durable operation worker", async () => {

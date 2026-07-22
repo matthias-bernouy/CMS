@@ -1,0 +1,95 @@
+import type { SourceEndpoint } from "@bernouy/cms-sources";
+import { array, boolean, endpoint, fulfillmentAddressShape, number, object, string } from "../builders";
+
+export const commerceContextEndpoints: SourceEndpoint[] = [
+    endpoint(
+        "getOrderFulfillmentBuyerContext",
+        "GET",
+        "/system/order/payment-context",
+        object({
+            id: number(),
+            publicId: string(),
+            buyerCmsUserId: string(),
+        }),
+        { orderId: string() },
+        undefined,
+        "system",
+    ),
+    endpoint(
+        "getOrderFulfillmentSellerContext",
+        "GET",
+        "/seller-context",
+        object({
+            id: number(),
+            publicId: string(),
+            orderNumber: string(),
+        }),
+        { orderId: string() },
+        undefined,
+        "system",
+    ),
+    endpoint(
+        "getOrderShipmentCreationSellerContext",
+        "GET",
+        "/shipment-creation-seller-context",
+        object({
+            id: number(),
+            publicId: string(),
+            allowed: boolean(),
+            sellerId: { type: "string", semantic: "user-id" },
+        }),
+        { orderId: string() },
+        undefined,
+        "system",
+    ),
+    endpoint(
+        "getOrderLabelSellerContext",
+        "GET",
+        "/label-seller-context",
+        object({
+            publicId: string(),
+            allowed: boolean(),
+            sellerCmsUserId: { type: "string", semantic: "user-id" },
+        }),
+        { orderId: string() },
+        undefined,
+        "system",
+    ),
+    endpoint(
+        "mySale",
+        "GET",
+        "/mySale",
+        object({
+            id: number(),
+            publicId: string(),
+            orderNumber: string(),
+            sellerId: { type: "string", semantic: "user-id" },
+            fulfillmentStatus: string(),
+        }),
+        { id: string() },
+        undefined,
+        "auth",
+    ),
+    endpoint(
+        "order",
+        "GET",
+        "/order",
+        object({
+            id: number(),
+            publicId: string(),
+            shippingAddress: object({
+                recipient: string(),
+                givenName: string(),
+                surname: string(),
+                phone: string(),
+                addressLine1: string(),
+                addressLine2: string(),
+                addressLine3: string(),
+                postalCode: string(),
+                city: string(),
+                countryCode: string(),
+            }),
+        }),
+        { id: string() },
+    ),
+];

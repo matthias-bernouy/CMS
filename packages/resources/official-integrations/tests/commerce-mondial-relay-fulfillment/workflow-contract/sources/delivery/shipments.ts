@@ -1,0 +1,65 @@
+import type { SourceEndpoint } from "@bernouy/cms-sources";
+import { array, boolean, endpoint, fulfillmentAddressShape, number, object, string } from "../builders";
+
+export const deliveryShipmentEndpoints: SourceEndpoint[] = [
+    endpoint(
+        "shipmentForExternalOrder",
+        "GET",
+        "/shipmentForExternalOrder",
+        object({
+            items: array({
+                id: string(),
+                expeditionNumber: string(),
+                status: string(),
+                trackingUrl: string(),
+                deliveryRelayLocation: string(),
+                latestEventLabel: string(),
+                latestEventAt: string(),
+                carrierAcceptedAt: string(),
+                sellerHandoffDeclaredAt: string(),
+                recipientHandoffAt: string(),
+                createdAt: string(),
+                events: array({
+                    normalizedStatus: string(),
+                    occurredAt: string(),
+                    eventLabel: string(),
+                    eventDate: string(),
+                    eventTime: string(),
+                    location: string(),
+                }),
+            }),
+        }),
+        { externalOrderId: string() },
+        undefined,
+        "system",
+    ),
+    endpoint(
+        "shipment",
+        "GET",
+        "/shipment",
+        object({
+            id: string(),
+            externalOrderId: string(),
+            expeditionNumber: string(),
+            status: string(),
+            trackingUrl: string(),
+            deliveryRelayLocation: string(),
+            latestEventLabel: string(),
+            latestEventAt: string(),
+            carrierAcceptedAt: string(),
+            sellerHandoffDeclaredAt: string(),
+            recipientHandoffAt: string(),
+            createdAt: string(),
+            events: array({
+                providerEventKey: string(),
+                normalizedStatus: string(),
+                occurredAt: string(),
+                eventLabel: string(),
+                eventDate: string(),
+                eventTime: string(),
+                location: string(),
+            }),
+        }),
+        { id: string(), expeditionNumber: string() },
+    ),
+];
