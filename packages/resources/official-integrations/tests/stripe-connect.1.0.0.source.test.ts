@@ -21,6 +21,9 @@ import { registerPaymentProjectionFailureContracts } from "./stripe-connect/paym
 import { registerPaymentProjectionReplayContracts } from "./stripe-connect/payment-projection/replay";
 import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
 import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
+import { registerAccountTermsRepositoryContracts } from "./stripe-connect/repository-boundary/accounts-terms.contracts";
+import { registerLedgerRepositoryContracts } from "./stripe-connect/repository-boundary/ledger.contracts";
+import { registerPaymentOperationRepositoryContracts } from "./stripe-connect/repository-boundary/payments-operations.contracts";
 import { registerProviderReconciliationBudgets } from "./stripe-connect/provider-reconciliation/budgets";
 import { registerProviderReconciliationContracts } from "./stripe-connect/provider-reconciliation/contracts";
 import { registerProviderExceptionResolutionContracts } from "./stripe-connect/provider-reconciliation/exception-resolution";
@@ -9802,10 +9805,22 @@ const createProviderBoundaryHarness = async () => {
     };
 };
 
+const createRepositoryBoundaryHarness = async () => {
+    const harness = await createHarness();
+    return {
+        rest: harness.rest,
+        submit: async (userId: string, role: string | undefined, endpoint: string, body: unknown) =>
+            await sourceJsonWithRole(harness, userId, role, endpoint, body),
+    };
+};
+
 registerRefundAndDisputeDashboardContracts(createDashboardReadHarness);
 registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
 registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
 registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
+registerAccountTermsRepositoryContracts(createRepositoryBoundaryHarness);
+registerLedgerRepositoryContracts(createRepositoryBoundaryHarness);
+registerPaymentOperationRepositoryContracts(createRepositoryBoundaryHarness);
 registerPaymentProjectionContracts(createPaymentProjectionHarness);
 registerPaymentProjectionFailureContracts(createPaymentProjectionHarness);
 registerPaymentProjectionReplayContracts(createPaymentProjectionHarness);
