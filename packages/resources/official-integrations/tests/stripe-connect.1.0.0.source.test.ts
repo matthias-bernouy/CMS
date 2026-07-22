@@ -38,6 +38,7 @@ import { registerProtectedPaymentReplayContracts } from "./stripe-connect/provid
 import { registerProtectedRefundFailureContracts } from "./stripe-connect/provider-boundary/protected-refund/failures.contracts";
 import { registerProtectedRefundRecoveryContracts } from "./stripe-connect/provider-boundary/protected-refund/recovery.contracts";
 import { registerProtectedRefundReplayContracts } from "./stripe-connect/provider-boundary/protected-refund/replay.contracts";
+import { registerProtectedRefundSellerRecoveryContracts } from "./stripe-connect/provider-boundary/protected-refund/seller-recovery.contracts";
 import { registerProtectedRefundSuccessContracts } from "./stripe-connect/provider-boundary/protected-refund/success.contracts";
 import { registerProtectedRefundValidationContracts } from "./stripe-connect/provider-boundary/protected-refund/validations.contracts";
 import { registerTransferReversalFailureContracts } from "./stripe-connect/provider-boundary/transfer-reversal/failures.contracts";
@@ -10343,6 +10344,7 @@ registerProtectedPaymentReplayContracts(createProviderBoundaryHarness);
 registerProtectedRefundFailureContracts(createProviderBoundaryHarness);
 registerProtectedRefundRecoveryContracts(createProviderBoundaryHarness);
 registerProtectedRefundReplayContracts(createProviderBoundaryHarness);
+registerProtectedRefundSellerRecoveryContracts(createProviderBoundaryHarness);
 registerProtectedRefundSuccessContracts(createProviderBoundaryHarness);
 registerProtectedRefundValidationContracts(createProviderBoundaryHarness);
 registerTransferReversalFailureContracts(createProviderBoundaryHarness);
