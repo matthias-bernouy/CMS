@@ -74,6 +74,7 @@ import { registerProviderExceptionResolutionContracts } from "./stripe-connect/p
 import { registerStripeConnectRoutingContracts } from "./stripe-connect/routing/contracts";
 import { registerProtectedPaymentReadContracts } from "./stripe-connect/routing/protected-payment-reads.contracts";
 import { registerProtectedPaymentValidationContracts } from "./stripe-connect/routing/protected-payment-validations.contracts";
+import { registerProviderReconciliationRunRoutingContracts } from "./stripe-connect/routing/reconciliation-run.contracts";
 import { registerStripeWebhookPersistenceContracts } from "./stripe-connect/routing/webhooks/persistence.contracts";
 import { registerStripeWebhookCoreProcessingContracts } from "./stripe-connect/routing/webhooks/processing-core.contracts";
 import { registerStripeWebhookMoneyProcessingContracts } from "./stripe-connect/routing/webhooks/processing-money.contracts";
@@ -10738,6 +10739,7 @@ registerSettlementReleaseReadOrderContracts(createProviderReconciliationHarness)
 registerSettlementReleaseLedgerFreshnessContracts(createProviderReconciliationHarness);
 registerStripeConnectRoutingContracts(createRoutingHarness);
 registerPaymentReconciliationRoutingContracts(createRoutingHarness);
+registerProviderReconciliationRunRoutingContracts(createRoutingHarness);
 registerProtectedPaymentValidationContracts(createRoutingHarness);
 registerProtectedPaymentReadContracts(createRoutingHarness);
 registerStripeWebhookPersistenceContracts(createRoutingHarness);
