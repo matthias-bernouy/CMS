@@ -731,12 +731,12 @@
                 "total": 386
             },
             "functions": {
-                "covered": 1071,
-                "total": 1860
+                "covered": 1074,
+                "total": 1861
             },
             "lines": {
-                "covered": 8528,
-                "total": 15835
+                "covered": 8543,
+                "total": 15833
             }
         },
         "@bernouy/cms-dashboards": {
