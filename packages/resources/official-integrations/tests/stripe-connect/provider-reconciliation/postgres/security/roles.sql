@@ -24,6 +24,17 @@ exception when insufficient_privilege then
     null;
 end;
 $anon_payment_local_context$;
+do $anon_dispute_application_context$
+begin
+    perform * from stripe_connect.read_stripe_dispute_application_context(
+        'ch_provider_reconciliation_missing',
+        'dp_provider_reconciliation_pg_missing'
+    );
+    raise exception 'provider reconciliation: anon executed dispute application RPC';
+exception when insufficient_privilege then
+    null;
+end;
+$anon_dispute_application_context$;
 do $anon_transfer_context$
 begin
     perform * from stripe_connect.read_provider_transfer_reconciliation_context(
@@ -79,6 +90,17 @@ exception when insufficient_privilege then
     null;
 end;
 $authenticated_payment_local_context$;
+do $authenticated_dispute_application_context$
+begin
+    perform * from stripe_connect.read_stripe_dispute_application_context(
+        'ch_provider_reconciliation_missing',
+        'dp_provider_reconciliation_pg_missing'
+    );
+    raise exception 'provider reconciliation: authenticated executed dispute application RPC';
+exception when insufficient_privilege then
+    null;
+end;
+$authenticated_dispute_application_context$;
 do $authenticated_transfer_context$
 begin
     perform * from stripe_connect.read_provider_transfer_reconciliation_context(
@@ -118,6 +140,11 @@ select pg_catalog.count(*)
 from stripe_connect.read_payment_reconciliation_ledger(-900000001);
 select pg_catalog.count(*)
 from stripe_connect.read_payment_reconciliation_local_context(-900000001);
+select pg_catalog.count(*)
+from stripe_connect.read_stripe_dispute_application_context(
+    'ch_provider_reconciliation_missing',
+    'dp_provider_reconciliation_pg_missing'
+);
 select pg_catalog.count(*)
 from stripe_connect.read_refund_projection_context(-900000001);
 select pg_catalog.count(*)

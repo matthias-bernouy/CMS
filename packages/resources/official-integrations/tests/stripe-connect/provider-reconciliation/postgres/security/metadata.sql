@@ -10,6 +10,7 @@ begin
             ('stripe_connect.read_reconciliation_operations(integer)', 's', false),
             ('stripe_connect.read_payment_reconciliation_ledger(bigint)', 's', false),
             ('stripe_connect.read_payment_reconciliation_local_context(bigint)', 's', false),
+            ('stripe_connect.read_stripe_dispute_application_context(text,text)', 'v', false),
             ('stripe_connect.read_refund_projection_context(bigint)', 'v', false),
             ('stripe_connect.read_refund_preflight_context(bigint,text)', 'v', false),
             ('stripe_connect.read_settlement_release_context(bigint,text,text)', 'v', false),

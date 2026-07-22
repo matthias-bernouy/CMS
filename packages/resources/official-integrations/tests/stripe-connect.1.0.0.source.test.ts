@@ -8125,6 +8125,14 @@ class StripeConnectMock {
             }
             return jsonResponse(dispute);
         }
+        if (table === "rpc/read_stripe_dispute_application_context" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const payment = this.tables.payments.find((row) => row.stripe_charge_id === body.p_stripe_charge_id);
+            const dispute = payment
+                ? this.tables.stripe_disputes.find((row) => row.stripe_dispute_id === body.p_stripe_dispute_id)
+                : undefined;
+            return jsonResponse({ payment: payment ?? null, dispute: dispute ?? null });
+        }
         if (table === "rpc/authorize_irreversible_dispute_action" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             if (body.p_actor_kind !== "admin") {

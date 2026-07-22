@@ -74,6 +74,7 @@ import {
     readPaymentReconciliationLedger,
     readProviderTransferReconciliationContext,
     readReconciliationOperations,
+    readStripeDisputeApplicationContext,
 } from "./db/reconciliation.ts";
 import {
     bankPayoutsStatus,
@@ -2790,19 +2791,15 @@ async function applyStripeDispute(
     if (!charge) {
         throw new Error("Stripe dispute has no charge id");
     }
-    const payment = await getRowByField<ConnectPaymentRow>("payments", "stripe_charge_id", charge, paymentSelect);
+    const context = await readStripeDisputeApplicationContext(charge, disputeId);
+    const payment = context.payment as unknown as ConnectPaymentRow | null;
     if (!payment) {
         throw new Error(`Stripe dispute ${disputeId} has no local payment`);
     }
     const status = stringAt(provider, "status") || "needs_response";
     const evidenceDetails = objectAt(provider, "evidence_details");
     const dueBy = numberAt(evidenceDetails, "due_by");
-    const existingDispute = await getRowByField<StripeDisputeRow>(
-        "stripe_disputes",
-        "stripe_dispute_id",
-        disputeId,
-        disputeSelect,
-    );
+    const existingDispute = context.dispute as unknown as StripeDisputeRow | null;
     const submissionCount = numberAt(evidenceDetails, "submission_count") ?? 0;
     const balanceTransactions = arrayAt(provider, "balance_transactions")
         .map((entry) => (typeof entry === "string" ? entry : isRecord(entry) ? stringAt(entry, "id") : ""))

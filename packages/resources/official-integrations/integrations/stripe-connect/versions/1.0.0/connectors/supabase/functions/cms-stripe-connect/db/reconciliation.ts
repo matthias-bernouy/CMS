@@ -36,6 +36,11 @@ export type ProviderTransferReconciliationContext = {
     local_reversed_amount: number;
 };
 
+export type StripeDisputeApplicationContext = {
+    payment: JsonRecord | null;
+    dispute: JsonRecord | null;
+};
+
 export type FinancialOperationRecoveryContext = {
     payment: JsonRecord | null;
     transfer: JsonRecord | null;
@@ -79,6 +84,16 @@ export async function readProviderTransferReconciliationContext(
 ): Promise<ProviderTransferReconciliationContext> {
     return await callRpcObject<ProviderTransferReconciliationContext>("read_provider_transfer_reconciliation_context", {
         p_stripe_transfer_id: stripeTransferId,
+    });
+}
+
+export async function readStripeDisputeApplicationContext(
+    stripeChargeId: string,
+    stripeDisputeId: string,
+): Promise<StripeDisputeApplicationContext> {
+    return await callRpcObject<StripeDisputeApplicationContext>("read_stripe_dispute_application_context", {
+        p_stripe_charge_id: stripeChargeId,
+        p_stripe_dispute_id: stripeDisputeId,
     });
 }
 

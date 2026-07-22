@@ -40,8 +40,7 @@ export function registerDisputeApplicationReadContextContracts(createHarness: Cr
                 }),
             ]);
             expect(disputeApplicationReads(harness)).toEqual([
-                { method: "GET", table: "payments" },
-                { method: "GET", table: "stripe_disputes" },
+                { method: "POST", table: "rpc/read_stripe_dispute_application_context" },
             ]);
             expect(harness.rest.stripeRequests.map(({ method, pathname }) => ({ method, pathname }))).toEqual([
                 { method: "GET", pathname: "/v1/payment_intents/pi_1" },
