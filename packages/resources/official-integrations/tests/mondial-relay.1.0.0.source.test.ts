@@ -1,13 +1,13 @@
 import { describe } from "bun:test";
 import { registerFoundationTests } from "./mondial-relay/source/tests/foundation.ts";
 import { registerInstallationTests } from "./mondial-relay/source/tests/installation.ts";
-import { registerShipmentReadTests } from "./mondial-relay/source/tests/shipment-read.ts";
-import { registerShipmentCreationTests } from "./mondial-relay/source/tests/shipment-creation.ts";
+import { registerShipmentReadTests } from "./mondial-relay/source/tests/shipment-read/index.ts";
+import { registerShipmentCreationTests } from "./mondial-relay/source/tests/shipment-creation/index.ts";
 import { registerLabelAccessTests } from "./mondial-relay/source/tests/label-access.ts";
-import { registerCancellationTests } from "./mondial-relay/source/tests/cancellation.ts";
+import { registerCancellationTests } from "./mondial-relay/source/tests/cancellation/index.ts";
 import { registerTrackingTests } from "./mondial-relay/source/tests/tracking.ts";
 import { registerProjectionTests } from "./mondial-relay/source/tests/projection.ts";
-import { registerRelaySelectionTests } from "./mondial-relay/source/workflows/relay-selection.ts";
+import { registerRelaySelectionTests } from "./mondial-relay/source/workflows/relay-selection/index.ts";
 import { registerSettingsTests } from "./mondial-relay/source/workflows/settings.ts";
 import { registerProviderErrorTests } from "./mondial-relay/source/workflows/provider-errors.ts";
 import { registerRecoveryTests } from "./mondial-relay/source/workflows/recovery.ts";
