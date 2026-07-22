@@ -17,7 +17,7 @@ import {
     setSourceStatusCondition as setSourceStatusConditionBinding,
     setSourceStatusConditions as setSourceStatusConditionsBinding,
     type SourceBinding,
-} from "./sourceBindings";
+} from "./Bindings/sourceBindings";
 
 export class ShellBindingMutations {
     private _pendingRepeatEditor: Editor | null = null;

@@ -12,7 +12,7 @@ import type { EditorDataSource } from "../../../../runtime";
 import type {
     DataSourcePickerSelectDetail,
     DataSourcePickerSourceBinding,
-} from "../../../Layout/DataSourcePicker/DataSourcePicker";
+} from "../../../Layout/Pickers/DataSourcePicker/DataSourcePicker";
 import type { SettingsViewAttributeChanges } from "../SettingsView";
 
 export function endpointOptions(setting: EndpointPickerSetting, dataSources: EditorDataSource[]): EditorDataSource[] {

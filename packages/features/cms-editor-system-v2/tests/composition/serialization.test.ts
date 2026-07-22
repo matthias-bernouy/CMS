@@ -6,7 +6,7 @@ import {
     COMPOSITION_RUNTIME_ATTRIBUTE,
 } from "@bernouy/components/base";
 import { serializableContentHtml } from "../../src/components/Layout/Shell/Domain/Structure/structureDocument";
-import { syncViewFrameContent } from "../../src/components/Layout/Shell/Domain/shellBindingPreview";
+import { syncViewFrameContent } from "../../src/components/Layout/Shell/Domain/Bindings/shellBindingPreview";
 
 function editorDocument() {
     return parseHTML(`

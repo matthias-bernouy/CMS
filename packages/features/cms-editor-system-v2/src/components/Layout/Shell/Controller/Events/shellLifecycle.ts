@@ -13,12 +13,12 @@ import {
     SETTINGS_VIEW_SETTING_CHANGE_EVENT,
     SETTINGS_VIEW_STATE_TOGGLE_EVENT,
 } from "../../../../Settings/SettingsView/SettingsView";
-import { REPEAT_PICKER_SELECT_EVENT } from "../../../RepeatPicker/RepeatPicker";
+import { REPEAT_PICKER_SELECT_EVENT } from "../../../Pickers/RepeatPicker/RepeatPicker";
 import type { Canvas } from "../../../Canvas/Canvas";
 import type { TopBar } from "../../../TopBar/TopBar";
 import type { SettingsView } from "../../../../Settings/SettingsView/SettingsView";
 import type { StructureTree } from "../../../StructureTree/StructureTree";
-import type { RepeatPicker } from "../../../RepeatPicker/RepeatPicker";
+import type { RepeatPicker } from "../../../Pickers/RepeatPicker/RepeatPicker";
 
 export type ShellLifecycleTargets = {
     structureTree: StructureTree;

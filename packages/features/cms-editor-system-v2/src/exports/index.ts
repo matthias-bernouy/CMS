@@ -5,5 +5,5 @@ export {
     type EditorV2PageConfig,
     type EditorV2SaveDocumentDetail,
 } from "../components/Layout/Shell/Shell";
-export type { BlockPickerItem } from "../components/Layout/BlockPickerModal/BlockPickerModal";
+export type { BlockPickerItem } from "../components/Layout/Pickers/BlockPickerModal/BlockPickerModal";
 export type { EditorDataSource } from "../runtime";

@@ -1,0 +1,104 @@
+
+.details {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    border-left: 1px solid var(--editor-v2-border);
+    padding-left: 12px;
+}
+
+.preview {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 10;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--editor-v2-accent) 8%, transparent), transparent 52%),
+        var(--editor-v2-surface);
+}
+
+.preview-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border: 1px solid color-mix(in srgb, var(--editor-v2-accent) 28%, var(--editor-v2-border));
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+    font-size: 15px;
+    font-weight: 780;
+}
+
+.details-eyebrow {
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 780;
+    text-transform: uppercase;
+}
+
+.details h3 {
+    margin: 0;
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 18px;
+    font-weight: 780;
+}
+
+.details p {
+    margin: 0;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+dl {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+dl > div {
+    display: grid;
+    gap: 2px;
+}
+
+dt {
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 780;
+    text-transform: uppercase;
+}
+
+dd {
+    margin: 0;
+    color: var(--editor-v2-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+
+.insert {
+    min-height: 32px;
+    border: 1px solid var(--editor-v2-accent);
+    border-radius: 7px;
+    background: var(--editor-v2-accent);
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 730;
+    cursor: pointer;
+}
+
+.details-empty,
+.empty {
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.empty {
+    padding: 24px 0;
+    text-align: center;
+}

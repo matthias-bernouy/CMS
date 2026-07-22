@@ -1,0 +1,138 @@
+:host {
+    display: block;
+}
+
+.settings-view {
+    display: grid;
+    gap: 10px;
+    padding: 0 10px 14px;
+}
+
+.empty,
+.section-empty {
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+}
+
+.empty {
+    padding: 12px 0;
+}
+
+.field {
+    display: grid;
+    gap: 4px;
+}
+
+.field-label {
+    overflow: hidden;
+    max-width: var(--settings-label-max, 104px);
+    color: var(--editor-v2-label);
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sr-only {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.field-help {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.setting-row {
+    display: grid;
+    gap: 5px;
+}
+
+.setting-row-labeled {
+    grid-template-columns: minmax(0, var(--settings-row-label-width, 62px)) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 8px;
+}
+
+.setting-row-label {
+    max-width: var(--settings-row-label-width, 62px);
+}
+
+.setting-row-controls {
+    display: grid;
+    grid-template-columns: repeat(var(--setting-row-count, 2), minmax(0, 1fr));
+    gap: 5px;
+    align-items: center;
+}
+
+.setting-row-control {
+    min-width: 0;
+    --field-row-label-width: 22px;
+}
+
+.setting-row-control .field-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+cms-editor-v2-segmented-control button {
+    display: inline-grid;
+    grid-auto-flow: column;
+    place-content: center;
+    align-items: center;
+    gap: 4px;
+}
+
+cms-editor-v2-segmented-control button svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+cms-editor-v2-segmented-control button svg:only-child {
+    margin: 0 auto;
+}
+
+.color-field {
+    gap: 4px;
+}
+
+.color-token-select {
+    width: 100%;
+    min-height: 27px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 5px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 11px;
+}
+
+.color-custom {
+    display: grid;
+    grid-template-columns: 27px minmax(0, 1fr) auto;
+    gap: 5px;
+}
+
+.color-custom-picker {
+    width: 27px;
+    height: 27px;
+    padding: 2px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
+    cursor: pointer;
+}
+

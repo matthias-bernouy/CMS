@@ -1,0 +1,23 @@
+.insert {
+    min-height: 32px;
+    border: 1px solid var(--editor-v2-accent);
+    border-radius: 7px;
+    background: var(--editor-v2-accent);
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 730;
+    cursor: pointer;
+}
+
+.details-empty,
+.empty {
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.empty {
+    padding: 24px 0;
+    text-align: center;
+}

@@ -1,7 +1,5 @@
 import {
     CMS_BINDING_ATTRIBUTES,
-    sourceStatusConditionDetailsFromElement,
-    sourceStatusConditionsFromElement,
     type ContentSlot,
     type Editor,
     type CmsSourceState,
@@ -24,15 +22,14 @@ import {
     pathToEditor,
     visibleStructureNodes,
 } from "../structureTreeTraversal";
-import {
-    sourceActionLabel,
-    structureIconClass,
-    structureIconText,
-    structureItemClass,
-    structureNodeLabel,
-    structureRowClass,
-} from "../../Renderers/structureTreePresentation";
 import type { StructureTreeState } from "../structureTreeState";
+import {
+    canSetSourceStatusCondition,
+    sourceAncestorNodes,
+    sourceStatusCondition,
+    sourceStatusConditionDetails,
+    sourceStatusConditions,
+} from "./Support/structureSourceConditions";
 
 export class StructureTreeNodes {
     constructor(private readonly state: StructureTreeState) {}
@@ -156,93 +153,25 @@ export class StructureTreeNodes {
     }
 
     sourceAncestorNodes(node: EditorStructureNode): EditorStructureNode[] {
-        const sources: EditorStructureNode[] = [];
-        for (let current = this.parentNode(node); current; current = this.parentNode(current)) {
-            if (current.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
-                sources.push(current);
-            }
-        }
-        return sources;
+        return sourceAncestorNodes(node, (candidate) => this.parentNode(candidate));
     }
 
     sourceStatusCondition(node: EditorStructureNode): CmsSourceState | null {
-        return sourceStatusConditionDetailsFromElement(node.target)?.state ?? null;
+        return sourceStatusCondition(node);
     }
 
     sourceStatusConditionDetails(node: EditorStructureNode): CmsSourceStatusCondition | null {
-        return sourceStatusConditionDetailsFromElement(node.target);
+        return sourceStatusConditionDetails(node);
     }
 
     sourceStatusConditions(node: EditorStructureNode): CmsSourceStatusCondition[] {
-        return sourceStatusConditionsFromElement(node.target);
+        return sourceStatusConditions(node);
     }
 
     canSetSourceStatusCondition(
         node: EditorStructureNode,
         source: EditorStructureNode | null = this.nearestSourceNode(node),
     ): boolean {
-        if (!source) {
-            return false;
-        }
-        if (!source.target.contains(node.target) || source.target === node.target) {
-            return false;
-        }
-        if (hasNonSourceStatusCondition(node.target)) {
-            return false;
-        }
-        return !hasSourceStatusConditionAncestor(node.target, source.target);
+        return canSetSourceStatusCondition(node, source);
     }
-
-    iconText(node: StructureNode): string {
-        return structureIconText(node);
-    }
-    nodeLabel(node: StructureNode): string {
-        return structureNodeLabel(node);
-    }
-    rowClass(node: StructureNode): string {
-        return structureRowClass(node);
-    }
-    itemClass(node: StructureNode): string {
-        return structureItemClass(node);
-    }
-    iconClass(node: StructureNode): string {
-        return structureIconClass(node);
-    }
-    sourceActionLabel(node: EditorStructureNode): string {
-        return sourceActionLabel(node);
-    }
-}
-
-function nearestSourceAncestor(target: HTMLElement): HTMLElement | null {
-    for (let current = target.parentElement; current; current = current.parentElement) {
-        if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
-            return current;
-        }
-    }
-    return null;
-}
-
-function hasSourceStatusConditionAncestor(target: HTMLElement, source: HTMLElement): boolean {
-    for (let current = target.parentElement; current && current !== source; current = current.parentElement) {
-        if (sourceStatusConditionTargetsSource(current, source)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function hasNonSourceStatusCondition(target: HTMLElement): boolean {
-    return (
-        target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target).length === 0
-    );
-}
-
-function sourceStatusConditionTargetsSource(target: HTMLElement, source: HTMLElement): boolean {
-    const conditions = sourceStatusConditionsFromElement(target);
-    return conditions.some((condition) => {
-        if (condition.sourceId) {
-            return condition.sourceId === source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
-        }
-        return nearestSourceAncestor(target) === source;
-    });
 }

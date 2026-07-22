@@ -1,4 +1,4 @@
-import type { BlockPickerItem } from "../../BlockPickerModal/BlockPickerModal";
+import type { BlockPickerItem } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 
 export type EmptyStructureTreeContext = {
     defaultTemplates: BlockPickerItem[];

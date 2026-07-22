@@ -1,7 +1,11 @@
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 
 import type { SettingsView } from "../../../Settings/SettingsView/SettingsView";
-import { injectBindingPreviewStyle, syncBindingPreviewCore, syncViewFrameContent } from "../Domain/shellBindingPreview";
+import {
+    injectBindingPreviewStyle,
+    syncBindingPreviewCore,
+    syncViewFrameContent,
+} from "../Domain/Bindings/shellBindingPreview";
 import { contentHtml } from "../Domain/Structure/structureDocument";
 import type { CmsSourceStateForce } from "@bernouy/cms-content/editor";
 import type { EditorDocument } from "@bernouy/cms-content/editor";

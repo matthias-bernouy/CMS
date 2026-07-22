@@ -7,7 +7,7 @@ import {
 } from "@bernouy/cms-content/editor";
 
 import type { MutationContext } from "./shellMutations";
-import type { ShellContentMutations } from "./shellContentMutations";
+import type { ShellContentMutations } from "./Content/shellContentMutations";
 import { applySlot } from "./insertion";
 import { canDelete, canDuplicate, canInsertSibling, canMoveEditor } from "./slots";
 

@@ -1,0 +1,128 @@
+.color-custom-input {
+    width: 100%;
+    min-height: 27px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 11px;
+    padding: 0 8px;
+}
+
+.color-custom-apply {
+    min-height: 27px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
+    color: var(--editor-v2-label);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 650;
+    padding: 0 9px;
+    cursor: pointer;
+}
+
+.endpoint-button {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 34px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    padding: 7px 9px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.endpoint-button:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
+}
+
+.endpoint-button:disabled {
+    cursor: not-allowed;
+    opacity: .58;
+}
+
+.endpoint-method {
+    border: 1px solid color-mix(in srgb, var(--editor-v2-accent) 24%, var(--editor-v2-border));
+    border-radius: 5px;
+    color: var(--editor-v2-accent);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 3px 5px;
+}
+
+.endpoint-value,
+.endpoint-placeholder {
+    overflow: hidden;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.endpoint-placeholder {
+    color: var(--editor-v2-muted);
+}
+
+.state-button {
+    display: grid;
+    gap: 3px;
+    width: 100%;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    padding: 9px 10px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.state-button:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 32%, var(--editor-v2-border));
+}
+
+.state-button[aria-pressed="true"] {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
+}
+
+.state-label {
+    font-size: 11px;
+    font-weight: 760;
+}
+
+.state-description {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+}
+
+.content-slot {
+    display: grid;
+    gap: 3px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    padding: 10px 11px;
+    background: var(--editor-v2-surface);
+}
+
+.content-slot strong {
+    font-size: 12px;
+}
+
+.content-slot span {
+    color: var(--editor-v2-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+}
+
+.content-slot {
+    background: color-mix(in srgb, var(--editor-v2-accent) 5%, var(--editor-v2-surface));
+}

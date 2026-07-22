@@ -1,5 +1,5 @@
 import type { ContentSlot, ContentSlotAccept, EditorCatalogEntry } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem, BlockPickerOption } from "../../BlockPickerModal/BlockPickerModal";
+import type { BlockPickerItem, BlockPickerOption } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorStructureNode } from "../../../../runtime";
 import type { StructurePickerGroupContext } from "./structurePickerGroups";
 

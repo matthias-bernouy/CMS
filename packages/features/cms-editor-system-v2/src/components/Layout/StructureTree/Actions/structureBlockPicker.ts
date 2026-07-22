@@ -1,4 +1,8 @@
-import type { BlockPickerItem, BlockPickerOption, BlockPickerSlotGroup } from "../../BlockPickerModal/BlockPickerModal";
+import type {
+    BlockPickerItem,
+    BlockPickerOption,
+    BlockPickerSlotGroup,
+} from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { PendingPickerAction, StructureTreeAction } from "../State/structureTreeTypes";
 
 export type StructureBlockPickerContext = {

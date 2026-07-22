@@ -1,5 +1,5 @@
 import type { Editor, EditorCatalog } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem, BlockPickerSlotGroup } from "../../../BlockPickerModal/BlockPickerModal";
+import type { BlockPickerItem, BlockPickerSlotGroup } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorDataSource, EditorStructureNode, StructureNode } from "../../../../../runtime";
 import type { DefaultTemplateSelection } from "../../Pickers/structurePickerGroups";
 import type { PendingPickerAction, StructureTreeRenderOptions } from "../structureTreeTypes";
@@ -8,7 +8,7 @@ import { StructureTreeEvents } from "./structureTreeEvents";
 import { StructureTreeMenus } from "./structureTreeMenus";
 import { StructureTreeNodes } from "./structureTreeNodes";
 import { StructureTreePickers } from "./structureTreePickers";
-import { StructureTreeRefs } from "./structureTreeRefs";
+import { StructureTreeRefs } from "./Support/structureTreeRefs";
 import { StructureTreeRenderer } from "./structureTreeRenderer";
 import { StructureTreeState } from "../structureTreeState";
 

@@ -1,0 +1,135 @@
+.name {
+    overflow: hidden;
+    color: var(--editor-v2-text);
+    font-size: 12px;
+    font-weight: 760;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scope {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+}
+
+.details {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    border-left: 1px solid var(--editor-v2-border);
+    padding-left: 12px;
+}
+
+.binding {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 12px;
+    border-left: 1px solid var(--editor-v2-border);
+    padding-left: 12px;
+}
+
+.binding-scroll {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 2px;
+}
+
+.binding-footer {
+    display: grid;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--editor-v2-border);
+}
+
+.details-eyebrow {
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--editor-v2-border);
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 780;
+    text-transform: uppercase;
+}
+
+.details h3 {
+    margin: 0;
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 18px;
+    font-weight: 780;
+    overflow-wrap: anywhere;
+}
+
+.binding-config,
+label {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+label {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.repeat-path {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.repeat-path span {
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 780;
+    text-transform: uppercase;
+}
+
+.repeat-path strong {
+    color: var(--editor-v2-text);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.fields {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 8px;
+    color: var(--editor-v2-text);
+    font-size: 11px;
+    line-height: 1.35;
+    min-width: 0;
+    padding: 3px 0 3px calc(var(--field-depth, 0) * 12px);
+}
+
+.field-path {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.field-children {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 2px;
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.field-type {
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+}
+

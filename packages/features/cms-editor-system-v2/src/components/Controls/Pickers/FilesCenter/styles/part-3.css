@@ -1,0 +1,14 @@
+.primary:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+    .toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .modal {
+        width: calc(100vw - 24px);
+    }
+}

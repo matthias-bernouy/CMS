@@ -1,5 +1,5 @@
 import type { Editor, EditorCatalog } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem } from "../../BlockPickerModal/BlockPickerModal";
+import type { BlockPickerItem } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorDataSource, StructureNode } from "../../../../runtime";
 import type { PendingPickerAction, StructureTreeKey } from "./structureTreeTypes";
 import type { DefaultTemplateSelection } from "../Pickers/structurePickerGroups";

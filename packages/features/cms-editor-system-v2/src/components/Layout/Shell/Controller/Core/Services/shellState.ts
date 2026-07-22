@@ -4,7 +4,7 @@ import type { EditorRuntime, EditorDataSource } from "../../../../../../runtime"
 import type { TopBarEditorMode, TopBarViewport } from "../../../../TopBar/TopBar";
 import type { SettingsViewMode } from "../../../../../Settings/SettingsView/SettingsView";
 import type { DefaultTemplateSelection } from "../../../../StructureTree/StructureTree";
-import type { BlockPickerItem } from "../../../../BlockPickerModal/BlockPickerModal";
+import type { BlockPickerItem } from "../../../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorV2PageConfig } from "../../shellTypes";
 
 export type ShellState = {

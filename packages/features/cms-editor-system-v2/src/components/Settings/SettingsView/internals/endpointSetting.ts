@@ -5,7 +5,7 @@ import {
     DATA_SOURCE_PICKER_REMOVE_EVENT,
     DATA_SOURCE_PICKER_SELECT_EVENT,
     type DataSourcePickerSelectDetail,
-} from "../../../Layout/DataSourcePicker/DataSourcePicker";
+} from "../../../Layout/Pickers/DataSourcePicker/DataSourcePicker";
 import {
     endpointAttributes,
     endpointOptions,

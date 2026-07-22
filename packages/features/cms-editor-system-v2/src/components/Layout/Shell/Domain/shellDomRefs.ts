@@ -1,7 +1,7 @@
 import { SettingsView } from "../../../Settings/SettingsView/SettingsView";
 import { Canvas } from "../../Canvas/Canvas";
-import type { RepeatPicker } from "../../RepeatPicker/RepeatPicker";
-import { RepeatPicker as RepeatPickerElement } from "../../RepeatPicker/RepeatPicker";
+import type { RepeatPicker } from "../../Pickers/RepeatPicker/RepeatPicker";
+import { RepeatPicker as RepeatPickerElement } from "../../Pickers/RepeatPicker/RepeatPicker";
 import { StructureTree } from "../../StructureTree/StructureTree";
 import { TopBar } from "../../TopBar/TopBar";
 

@@ -1,5 +1,6 @@
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
+import { cssViewportSize, installEditorFormGuard } from "./canvasFrame";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
@@ -151,8 +152,8 @@ export class Canvas extends HTMLElement {
     }
 
     private syncViewportSize(): void {
-        const width = this.cssSize(this.getAttribute("viewport-width") ?? this.getAttribute("max-width"));
-        const height = this.cssSize(this.getAttribute("viewport-height"));
+        const width = cssViewportSize(this.getAttribute("viewport-width") ?? this.getAttribute("max-width"));
+        const height = cssViewportSize(this.getAttribute("viewport-height"));
         if (width) {
             this.style.setProperty("--editor-v2-viewport-width", width);
         } else {
@@ -163,14 +164,6 @@ export class Canvas extends HTMLElement {
         } else {
             this.style.removeProperty("--editor-v2-viewport-height");
         }
-    }
-
-    private cssSize(value: string | null): string | null {
-        const size = value?.trim();
-        if (!size) {
-            return null;
-        }
-        return /^\d+$/.test(size) ? `${size}px` : size;
     }
 
     private get editorFrame(): HTMLIFrameElement {
@@ -184,23 +177,4 @@ export class Canvas extends HTMLElement {
 
 if (!customElements.get("cms-editor-v2-canvas")) {
     customElements.define("cms-editor-v2-canvas", Canvas);
-}
-
-const EDITOR_FORM_GUARD_KEY = "__cmsEditorFormGuardInstalled";
-
-function installEditorFormGuard(document: Document): void {
-    const state = document as Document & { [EDITOR_FORM_GUARD_KEY]?: boolean };
-    if (state[EDITOR_FORM_GUARD_KEY]) {
-        return;
-    }
-    state[EDITOR_FORM_GUARD_KEY] = true;
-    document.addEventListener(
-        "submit",
-        (event) => {
-            if (!event.defaultPrevented) {
-                event.preventDefault();
-            }
-        },
-        true,
-    );
 }
