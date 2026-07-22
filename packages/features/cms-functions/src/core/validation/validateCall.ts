@@ -1,6 +1,6 @@
 import { makeEndpointUrn, systemSourceUrnOf, type SourceEndpoint, type SourceRepository } from "@bernouy/cms-sources";
 import type { CmsFunction, FunctionCall, FunctionValue } from "../../interfaces/FunctionDefinition";
-import { SYSTEM_FUNCTIONS_SOURCE_ID } from "../projection";
+import { SYSTEM_FUNCTIONS_SOURCE_ID } from "../repositories/projection";
 import { isId } from "./ids";
 
 export async function validateCall(

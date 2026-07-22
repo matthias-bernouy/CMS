@@ -1,4 +1,4 @@
-import { DuplicateFunctionError } from "../core/errors";
+import { DuplicateFunctionError } from "../core/model/errors";
 import type { CmsFunction } from "../interfaces/FunctionDefinition";
 import type { FunctionRepository } from "../interfaces/FunctionRepository";
 

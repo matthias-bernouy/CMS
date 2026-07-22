@@ -1,5 +1,5 @@
 import type { FunctionAssert, FunctionCall, FunctionForEach, FunctionStep } from "../../interfaces/FunctionDefinition";
-import { MAX_FUNCTION_LOOP_ITEMS } from "../execution/limits";
+import { MAX_FUNCTION_LOOP_ITEMS } from "../execution/context/limits";
 import { isId } from "./ids";
 import { validateCall } from "./validateCall";
 import { validateReferences } from "./validateReferences";

@@ -1,7 +1,7 @@
 import type { IdentityService, IdentityValue } from "@bernouy/cms-identities";
 import type { SourceEndpoint } from "../../interfaces/Source";
-import type { SourceComputedContext } from "../buildUpstreamUrl";
-import { dataShapeAtPath, dataValueAtPath } from "../parseDataShape";
+import type { SourceComputedContext } from "cms-sources/core/upstream/buildUpstreamUrl";
+import { dataShapeAtPath, dataValueAtPath } from "cms-sources/core/validation/parseDataShape";
 
 const MAX_IDENTITY_BINDING_RESPONSE_BYTES = 64 * 1024;
 

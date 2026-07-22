@@ -5,4 +5,4 @@
 export {
     MongoCmsFilesMetadata,
     type MongoCmsFilesMetadataConfig,
-} from "cms-files/default-implementation/MongoCmsFilesMetadata";
+} from "cms-files/default-implementation/mongo/MongoCmsFilesMetadata";

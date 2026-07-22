@@ -1,6 +1,6 @@
 import type { CmsFilesMetadataRepository } from "cms-files/interfaces/CmsFilesMetadataRepository";
 import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
-import { variantKey } from "cms-files/core/imageVariants";
+import { variantKey } from "cms-files/core/media/imageVariants";
 
 export type VariantServeDeps = {
     metadata: CmsFilesMetadataRepository;

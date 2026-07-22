@@ -22,6 +22,6 @@ export {
     isForbiddenHeaderName,
     isValidHeaderValue,
     MAX_ENDPOINT_HEADERS,
-} from "../core/headerPolicy";
-export { isValidResponseStatus } from "../core/validateSource";
-export { extractPathParamNames } from "../core/buildUpstreamUrl";
+} from "../core/upstream/headerPolicy";
+export { isValidResponseStatus } from "../core/validation/validateSource";
+export { extractPathParamNames } from "../core/upstream/buildUpstreamUrl";

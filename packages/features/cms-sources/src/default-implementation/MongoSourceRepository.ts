@@ -1,7 +1,7 @@
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { SourceRepository } from "../interfaces/SourceRepository";
 import type { Source, SourceEndpoint } from "../interfaces/Source";
-import { DuplicateSourceError } from "../core/errors";
+import { DuplicateSourceError } from "../core/model/errors";
 
 /**
  * MongoDB implementation of `SourceRepository`. One `Source` = one document,

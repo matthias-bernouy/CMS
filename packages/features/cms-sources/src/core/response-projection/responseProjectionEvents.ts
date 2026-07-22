@@ -1,5 +1,5 @@
 import type { DataShape } from "../../interfaces/DataShape";
-import { safeUpstreamFailureResponse } from "../upstreamFailure";
+import { safeUpstreamFailureResponse } from "cms-sources/core/upstream/upstreamFailure";
 import type { JsonValueType } from "./projectDataShape";
 
 export const RESPONSE_PROJECTION_MODES = ["compatibility", "strict"] as const;
