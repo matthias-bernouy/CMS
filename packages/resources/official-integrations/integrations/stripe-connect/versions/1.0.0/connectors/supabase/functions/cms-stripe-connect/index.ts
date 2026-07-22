@@ -69,6 +69,12 @@ import { publicAccount, publicAccountStatus } from "./domain/accounts/presentati
 import { accountPatchFromStripe } from "./domain/accounts/provider-projection.ts";
 import { publicSellerProviderRisk, publicWalletBalances } from "./domain/accounts/risk-presentation.ts";
 import { assertApplicationControlledRecipient, isApplicationCollectedAccount } from "./domain/accounts/stripe-v2.ts";
+import { publicPayment, publicPaymentWithClientSecret } from "./domain/payments/presentation.ts";
+import {
+    chargeId,
+    isTransientBalanceTransactionExpansionReview,
+    paymentStatusFromStripe,
+} from "./domain/payments/provider-state.ts";
 import { requireCmsRequest, requireDashboardAdmin } from "./http/auth.ts";
 import {
     assertAllowedKeys,
@@ -3376,16 +3382,6 @@ async function applyPaymentIntent(
     return await projectPaymentIntent(payment, intent, options);
 }
 
-const transientBalanceTransactionExpansionReviewReason =
-    "Stripe payment provider truth mismatch: charge_balance_transaction_expansion";
-
-function isTransientBalanceTransactionExpansionReview(payment: ConnectPaymentRow): boolean {
-    return (
-        payment.settlement_status === "manual_review" &&
-        payment.manual_review_reason === transientBalanceTransactionExpansionReviewReason
-    );
-}
-
 async function projectPaymentIntent(
     payment: ConnectPaymentRow,
     intent: StripePaymentIntent,
@@ -4177,84 +4173,6 @@ async function updateStripeDisputeEvidence(
     );
 }
 
-function paymentStatusFromStripe(paymentIntent: StripePaymentIntent): string {
-    switch (paymentIntent.status) {
-        case "succeeded":
-            return "succeeded";
-        case "canceled":
-            return "cancelled";
-        case "requires_action":
-        case "requires_confirmation":
-        case "requires_capture":
-            return "requires_action";
-        case "requires_payment_method":
-            return "created";
-        case "processing":
-            return "processing";
-        default:
-            return "created";
-    }
-}
-
-function chargeId(paymentIntent: StripePaymentIntent): string | null {
-    const latestCharge = paymentIntent.latest_charge;
-    if (typeof latestCharge === "string") {
-        return latestCharge;
-    }
-    if (isRecord(latestCharge) && typeof latestCharge.id === "string") {
-        return latestCharge.id;
-    }
-    return null;
-}
-
-function publicPayment(row: ConnectPaymentRow): JsonRecord {
-    return {
-        paymentId: row.id,
-        providerPaymentId: row.id,
-        clientReferenceId: row.client_reference_id,
-        financialTermsHash: row.financial_terms_hash,
-        financialRevision: row.financial_revision,
-        dualApprovalThresholdAmount: row.dual_approval_threshold_amount,
-        buyerUserId: row.buyer_cms_user_id,
-        sellerUserId: row.seller_cms_user_id,
-        stripePaymentIntentId: row.stripe_payment_intent_id,
-        stripeChargeId: row.stripe_charge_id,
-        stripeChargeBalanceTransactionId: row.stripe_charge_balance_transaction_id,
-        providerEventId: row.last_stripe_event_id,
-        transferGroup: row.transfer_group,
-        currency: row.currency,
-        amountTotal: row.amount_total,
-        sellerTransferAmount: row.seller_transfer_amount,
-        platformRetainedAmount: row.platform_retained_amount,
-        refundedAmount: row.refunded_amount,
-        transferredAmount: row.transferred_amount,
-        reversedAmount: row.reversed_amount,
-        actualStripeChargeFeeAmount: row.actual_stripe_charge_fee_amount,
-        actualStripeRefundFeeAmount: row.actual_stripe_refund_fee_amount,
-        actualStripeProcessingFeeAmount: row.actual_stripe_processing_fee_amount,
-        actualStripeChargeNetAmount: row.actual_stripe_charge_net_amount,
-        actualStripeFeeCurrency: row.actual_stripe_fee_currency,
-        actualStripeChargeFeeDetails: row.actual_stripe_charge_fee_details,
-        actualPlatformMarginAfterStripeAmount: row.platform_retained_amount - row.actual_stripe_processing_fee_amount,
-        paymentStatus: row.payment_status,
-        commercePaymentStatus:
-            row.settlement_status === "manual_review" || row.manual_review_reason !== null
-                ? "manual_review"
-                : row.payment_status,
-        settlementStatus: row.settlement_status,
-        disputeStatus: row.dispute_status,
-        reconciliationPending: isTransientBalanceTransactionExpansionReview(row),
-        manualReviewReason: row.manual_review_reason,
-        description: row.description,
-        paidAt: row.paid_at,
-        cancelledAt: row.cancelled_at,
-        lastProviderSyncAt: row.last_provider_sync_at,
-        occurredAt: row.updated_at,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-    };
-}
-
 function publicTransfer(row: TransferRow): JsonRecord {
     return {
         transferId: row.id,
@@ -4485,13 +4403,6 @@ function redactFinancialOperationData(value: unknown): unknown {
         redacted[key] = redactFinancialOperationData(entry);
     }
     return redacted;
-}
-
-function publicPaymentWithClientSecret(row: ConnectPaymentRow, clientSecret: string): JsonRecord {
-    return {
-        ...publicPayment(row),
-        clientSecret,
-    };
 }
 
 async function requiredPayment(paymentId: number): Promise<ConnectPaymentRow> {
