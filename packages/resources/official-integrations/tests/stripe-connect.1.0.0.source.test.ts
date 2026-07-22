@@ -22,6 +22,9 @@ import { registerOperationAndExceptionDashboardContracts } from "./stripe-connec
 import { registerPaymentProjectionContracts } from "./stripe-connect/payment-projection/contracts";
 import { registerPaymentProjectionFailureContracts } from "./stripe-connect/payment-projection/failures";
 import { registerPaymentProjectionReplayContracts } from "./stripe-connect/payment-projection/replay";
+import { registerPaymentCancellationFailureContracts } from "./stripe-connect/payment-cancellation/failures.contracts";
+import { registerPaymentCancellationRecoveryContracts } from "./stripe-connect/payment-cancellation/recovery.contracts";
+import { registerPaymentCancellationReplayContracts } from "./stripe-connect/payment-cancellation/replay.contracts";
 import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
 import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
 import { registerAccountTermsRepositoryContracts } from "./stripe-connect/repository-boundary/accounts-terms.contracts";
@@ -5711,6 +5714,7 @@ class StripeConnectMock {
     private omitMinimumBalanceOnNextUpdate = false;
     private addSellerRiskDuringNextAutomaticRestore = false;
     private loseNextPaymentCancellationResponse = false;
+    private returnNextPaymentCancellationNonTerminal = false;
     private failPaymentProjectionEnqueue = false;
     private failProviderExceptionResolution = false;
     private failPaymentReconciliationLedgerRead = false;
@@ -6085,6 +6089,10 @@ class StripeConnectMock {
 
     losePaymentCancellationResponseOnce(): void {
         this.loseNextPaymentCancellationResponse = true;
+    }
+
+    keepNextPaymentCancellationNonTerminal(): void {
+        this.returnNextPaymentCancellationNonTerminal = true;
     }
 
     setStripeAccountState(userId: string, patch: JsonRecord): void {
@@ -8665,6 +8673,10 @@ class StripeConnectMock {
             if (!intent) {
                 return jsonResponse({ error: { message: "PaymentIntent not found" } }, 404);
             }
+            if (this.returnNextPaymentCancellationNonTerminal) {
+                this.returnNextPaymentCancellationNonTerminal = false;
+                return jsonResponse(intent);
+            }
             Object.assign(intent, { status: "canceled", canceled_at: Math.floor(Date.now() / 1000) });
             if (this.loseNextPaymentCancellationResponse) {
                 this.loseNextPaymentCancellationResponse = false;
@@ -9777,6 +9789,15 @@ const createPaymentProjectionHarness = async () => {
     };
 };
 
+const createPaymentCancellationHarness = async () => {
+    const harness = await createHarness();
+    return {
+        rest: harness.rest,
+        submit: async (userId: string, endpoint: string, body: unknown, params: Record<string, string> = {}) =>
+            await sourceJsonWithUser(harness, userId, endpoint, body, params),
+    };
+};
+
 const createProviderReconciliationHarness = async () => {
     const harness = await createHarness();
     return {
@@ -9836,6 +9857,9 @@ registerPaymentOperationRepositoryContracts(createRepositoryBoundaryHarness);
 registerPaymentProjectionContracts(createPaymentProjectionHarness);
 registerPaymentProjectionFailureContracts(createPaymentProjectionHarness);
 registerPaymentProjectionReplayContracts(createPaymentProjectionHarness);
+registerPaymentCancellationReplayContracts(createPaymentCancellationHarness);
+registerPaymentCancellationRecoveryContracts(createPaymentCancellationHarness);
+registerPaymentCancellationFailureContracts(createPaymentCancellationHarness);
 registerProviderReconciliationContracts(createProviderReconciliationHarness);
 registerProviderReconciliationBudgets(createProviderReconciliationHarness);
 registerProviderExceptionResolutionContracts(createProviderReconciliationHarness);
