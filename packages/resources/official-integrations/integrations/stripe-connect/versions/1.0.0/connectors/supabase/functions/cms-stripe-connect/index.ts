@@ -197,7 +197,6 @@ import {
 
 const executeSettlementRelease = createSettlementReleaseWorkflow({
     reconcilePayment,
-    authorizedSellerAmountAfterRefunds,
     moveOperationToManualReview,
 });
 const requestSettlementRelease = createRequestSettlementRelease({

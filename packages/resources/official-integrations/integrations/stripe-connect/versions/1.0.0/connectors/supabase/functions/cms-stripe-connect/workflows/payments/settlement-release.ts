@@ -1,11 +1,6 @@
 import { insertRow, updateRow } from "../../db/postgrest.ts";
-import { getAccountRow } from "../../db/repositories/accounts.ts";
 import { reserveFinancialOperation, updateFinancialOperation } from "../../db/repositories/financial-operations.ts";
-import {
-    getTransferByAuthorization,
-    sumSettledTransferAmounts,
-    sumSucceededAmounts,
-} from "../../db/repositories/ledger.ts";
+import { readSettlementReleaseContext, readSettlementReleaseLedger } from "../../db/repositories/settlement-release.ts";
 import { updatePayment } from "../../db/repositories/payments.ts";
 import type { FinancialOperationRow } from "../../db/records/operations.ts";
 import type { ConnectPaymentRow } from "../../db/records/payments.ts";
@@ -26,7 +21,6 @@ import {
 
 type SettlementReleaseDependencies = {
     reconcilePayment(payment: ConnectPaymentRow): Promise<ConnectPaymentRow>;
-    authorizedSellerAmountAfterRefunds(payment: ConnectPaymentRow): Promise<number>;
     moveOperationToManualReview(
         paymentId: number,
         operation: FinancialOperationRow,
@@ -45,7 +39,6 @@ export type ExecuteSettlementRelease = (
 
 export function createSettlementReleaseWorkflow({
     reconcilePayment,
-    authorizedSellerAmountAfterRefunds,
     moveOperationToManualReview,
 }: SettlementReleaseDependencies): ExecuteSettlementRelease {
     return async function executeSettlementRelease(payment, releaseAuthorizationId, releaseKind, amount, currency) {
@@ -56,14 +49,19 @@ export function createSettlementReleaseWorkflow({
         if (payment.payment_status !== "succeeded" || !payment.stripe_charge_id) {
             throw new HttpError(409, "payment is not confirmed by Stripe");
         }
-        const seller = await getAccountRow(payment.seller_cms_user_id);
+        const releaseContext = await readSettlementReleaseContext(
+            payment.id,
+            payment.seller_cms_user_id,
+            releaseAuthorizationId,
+        );
+        const seller = releaseContext.sellerAccount;
         if (!seller || !sellerCanReceivePayments(seller)) {
             throw new HttpError(409, "seller financial risk blocks settlement release");
         }
         if (currency !== payment.currency || currency !== "eur") {
             throw new HttpError(409, "release currency mismatch");
         }
-        const existingTransfer = await getTransferByAuthorization(releaseAuthorizationId);
+        const existingTransfer = releaseContext.existingTransfer;
         if (existingTransfer) {
             assertTransferReplay(existingTransfer, payment, releaseKind, amount, currency);
             if (existingTransfer.status === "succeeded") {
@@ -76,7 +74,7 @@ export function createSettlementReleaseWorkflow({
         if (!["held", "eligible", "release_pending"].includes(payment.settlement_status)) {
             throw new HttpError(409, "payment settlement is blocked or requires finance review");
         }
-        const authorizedSellerAmount = await authorizedSellerAmountAfterRefunds(payment);
+        const authorizedSellerAmount = payment.seller_transfer_amount - releaseContext.sellerRecoveryAmount;
         const netTransferredAmount = payment.transferred_amount - payment.reversed_amount;
         if (amount <= 0 || netTransferredAmount + amount > authorizedSellerAmount) {
             throw new HttpError(409, "release exceeds the authorized seller transfer amount");
@@ -156,13 +154,14 @@ export function createSettlementReleaseWorkflow({
                 response: stripeTransfer,
                 completed_at: new Date().toISOString(),
             });
-            const transferredAmount = await sumSettledTransferAmounts(payment.id);
-            const reversedAmount = await sumSucceededAmounts("transfer_reversals", payment.id);
-            const remainingAuthorizedSellerAmount = await authorizedSellerAmountAfterRefunds(payment);
+            const ledger = await readSettlementReleaseLedger(payment.id);
+            const remainingAuthorizedSellerAmount = payment.seller_transfer_amount - ledger.sellerRecoveryAmount;
             await updatePayment(payment.id, {
-                transferred_amount: transferredAmount,
+                transferred_amount: ledger.transferredAmount,
                 settlement_status:
-                    transferredAmount - reversedAmount >= remainingAuthorizedSellerAmount ? "released" : "held",
+                    ledger.transferredAmount - ledger.reversedAmount >= remainingAuthorizedSellerAmount
+                        ? "released"
+                        : "held",
             });
             return publicTransfer(transfer);
         } catch (error) {

@@ -25,7 +25,10 @@ export function registerSettlementReleaseReadOrderContracts(createHarness: Creat
             expect(await responseJson(response)).toEqual({
                 error: "seller financial risk blocks settlement release",
             });
-            expect(postgrestCalls(fixture)).toEqual([...reconciledPaymentReads, ["GET", "accounts"]]);
+            expect(postgrestCalls(fixture)).toEqual([
+                ...reconciledPaymentReads,
+                ["POST", "rpc/read_settlement_release_context"],
+            ]);
             expect(stripeCalls(fixture)).toEqual(providerReconciliationRequests);
             expectNoReleaseMutation(fixture);
         });
@@ -44,8 +47,7 @@ export function registerSettlementReleaseReadOrderContracts(createHarness: Creat
             expect(response).toEqual(expectedTransfer(fixture, transfer));
             expect(postgrestCalls(fixture)).toEqual([
                 ...reconciledPaymentReads,
-                ["GET", "accounts"],
-                ["GET", "transfers"],
+                ["POST", "rpc/read_settlement_release_context"],
             ]);
             expect(stripeCalls(fixture)).toEqual(providerReconciliationRequests);
             expect(fixture.rest.stripeRequests.filter(({ method }) => method === "POST")).toEqual([]);
@@ -68,9 +70,7 @@ export function registerSettlementReleaseReadOrderContracts(createHarness: Creat
             });
             expect(postgrestCalls(fixture)).toEqual([
                 ...reconciledPaymentReads,
-                ["GET", "accounts"],
-                ["GET", "transfers"],
-                ["GET", "refunds"],
+                ["POST", "rpc/read_settlement_release_context"],
             ]);
             expect(stripeCalls(fixture)).toEqual(providerReconciliationRequests);
             expectNoReleaseMutation(fixture);

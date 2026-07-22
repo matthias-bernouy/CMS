@@ -28,8 +28,7 @@ export function registerSettlementReleaseValidationContracts(createHarness: Crea
                 ["POST", "rpc/read_payment_reconciliation_local_context"],
                 ["POST", "rpc/read_payment_reconciliation_ledger"],
                 ["PATCH", "payments"],
-                ["GET", "accounts"],
-                ["GET", "transfers"],
+                ["POST", "rpc/read_settlement_release_context"],
             ]);
             expect(fixture.rest.rows("transfers")).toHaveLength(1);
             expect(
@@ -77,11 +76,7 @@ export function registerSettlementReleaseValidationContracts(createHarness: Crea
                 error: "release exceeds the authorized seller transfer amount",
             });
             expect(stripeCalls(fixture)).toEqual(providerReconciliationRequests);
-            expect(postgrestCalls(fixture)).toEqual([
-                ...commonValidationReads(),
-                ["GET", "transfers"],
-                ["GET", "refunds"],
-            ]);
+            expect(postgrestCalls(fixture)).toEqual(commonValidationReads());
             expectNoReleaseMutation(fixture);
         });
     });
@@ -94,7 +89,7 @@ function commonValidationReads(): Array<[string, string]> {
         ["POST", "rpc/read_payment_reconciliation_local_context"],
         ["POST", "rpc/read_payment_reconciliation_ledger"],
         ["PATCH", "payments"],
-        ["GET", "accounts"],
+        ["POST", "rpc/read_settlement_release_context"],
     ];
 }
 

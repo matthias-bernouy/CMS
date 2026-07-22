@@ -102,15 +102,11 @@ export function registerSettlementReleaseRecoveryContracts(createHarness: Create
                 ["POST", "rpc/read_payment_reconciliation_local_context"],
                 ["POST", "rpc/read_payment_reconciliation_ledger"],
                 ["PATCH", "payments"],
-                ["GET", "accounts"],
-                ["GET", "transfers"],
-                ["GET", "refunds"],
+                ["POST", "rpc/read_settlement_release_context"],
                 ["POST", "rpc/reserve_financial_operation"],
                 ["PATCH", "transfers"],
                 ["PATCH", "financial_operations"],
-                ["GET", "transfers"],
-                ["GET", "transfer_reversals"],
-                ["GET", "refunds"],
+                ["POST", "rpc/read_settlement_release_ledger"],
                 ["PATCH", "payments"],
             ]);
             expect(releaseOperation(fixture)).toMatchObject({

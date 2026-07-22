@@ -27,8 +27,7 @@ export function registerSettlementReleaseReplayContracts(createHarness: CreateSe
                 ["POST", "rpc/read_payment_reconciliation_local_context"],
                 ["POST", "rpc/read_payment_reconciliation_ledger"],
                 ["PATCH", "payments"],
-                ["GET", "accounts"],
-                ["GET", "transfers"],
+                ["POST", "rpc/read_settlement_release_context"],
             ]);
             expect(stripeCalls(fixture)).toEqual(providerReconciliationRequests);
             expect(fixture.rest.stripeRequests.filter(({ method }) => method === "POST")).toEqual([]);

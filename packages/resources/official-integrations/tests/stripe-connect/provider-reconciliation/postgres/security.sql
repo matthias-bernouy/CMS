@@ -10,6 +10,8 @@ begin
             ('stripe_connect.read_reconciliation_operations(integer)', 's', false),
             ('stripe_connect.read_payment_reconciliation_ledger(bigint)', 's', false),
             ('stripe_connect.read_payment_reconciliation_local_context(bigint)', 's', false),
+            ('stripe_connect.read_settlement_release_context(bigint,text,text)', 'v', false),
+            ('stripe_connect.read_settlement_release_ledger(bigint)', 'v', false),
             ('stripe_connect.read_provider_transfer_reconciliation_context(text)', 's', false),
             ('stripe_connect.read_financial_operation_recovery_context(bigint,bigint,text)', 's', false),
             ('stripe_connect.claim_commerce_projection_outbox(text,integer)', 'v', false),
@@ -152,6 +154,14 @@ select pg_catalog.count(*)
 from stripe_connect.read_payment_reconciliation_ledger(-900000001);
 select pg_catalog.count(*)
 from stripe_connect.read_payment_reconciliation_local_context(-900000001);
+select pg_catalog.count(*)
+from stripe_connect.read_settlement_release_context(
+    -900000001,
+    'provider-reconciliation-pg-missing-seller',
+    'provider-reconciliation-pg-missing-authorization'
+);
+select pg_catalog.count(*)
+from stripe_connect.read_settlement_release_ledger(-900000001);
 select pg_catalog.count(*)
 from stripe_connect.read_provider_transfer_reconciliation_context(
     'tr_provider_reconciliation_missing'

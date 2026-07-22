@@ -108,9 +108,7 @@ function releasePreparationCalls(): Array<[string, string]> {
         ["POST", "rpc/read_payment_reconciliation_local_context"],
         ["POST", "rpc/read_payment_reconciliation_ledger"],
         ["PATCH", "payments"],
-        ["GET", "accounts"],
-        ["GET", "transfers"],
-        ["GET", "refunds"],
+        ["POST", "rpc/read_settlement_release_context"],
         ["POST", "rpc/reserve_financial_operation"],
         ["POST", "transfers"],
     ];

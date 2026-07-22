@@ -6,7 +6,6 @@ import {
     enrollSeller,
     postgrestBody,
     postgrestBudget,
-    postgrestQuery,
     responseBody,
 } from "./harness";
 
@@ -43,36 +42,23 @@ export function registerLedgerRepositoryContracts(createHarness: CreateRepositor
                 { method: "POST", table: "rpc/read_payment_reconciliation_local_context" },
                 { method: "POST", table: "rpc/read_payment_reconciliation_ledger" },
                 { method: "PATCH", table: "payments" },
-                { method: "GET", table: "accounts" },
-                { method: "GET", table: "transfers" },
-                { method: "GET", table: "refunds" },
+                { method: "POST", table: "rpc/read_settlement_release_context" },
                 { method: "POST", table: "rpc/reserve_financial_operation" },
                 { method: "POST", table: "transfers" },
                 { method: "PATCH", table: "financial_operations" },
                 { method: "PATCH", table: "transfers" },
                 { method: "PATCH", table: "transfers" },
                 { method: "PATCH", table: "financial_operations" },
-                { method: "GET", table: "transfers" },
-                { method: "GET", table: "transfer_reversals" },
-                { method: "GET", table: "refunds" },
+                { method: "POST", table: "rpc/read_settlement_release_ledger" },
                 { method: "PATCH", table: "payments" },
             ]);
-            expect(postgrestQuery(harness, 14)).toMatchObject({
-                payment_id: `eq.${created.paymentId}`,
-                status: "in.(succeeded,partially_reversed,reversed)",
-                select: "amount,status",
+            expect(postgrestBody(harness, 5)).toEqual({
+                p_payment_id: created.paymentId,
+                p_seller_cms_user_id: "seller-1",
+                p_release_authorization_id: "repository-release-1",
             });
-            expect(postgrestQuery(harness, 15)).toMatchObject({
-                payment_id: `eq.${created.paymentId}`,
-                status: "eq.succeeded",
-                select: "amount",
-            });
-            expect(postgrestQuery(harness, 16)).toMatchObject({
-                payment_id: `eq.${created.paymentId}`,
-                status: "eq.succeeded",
-                select: "seller_entitlement_reduction_amount",
-            });
-            expect(postgrestBody(harness, 17)).toEqual({
+            expect(postgrestBody(harness, 12)).toEqual({ p_payment_id: created.paymentId });
+            expect(postgrestBody(harness, 13)).toEqual({
                 transferred_amount: 1080,
                 settlement_status: "released",
             });
