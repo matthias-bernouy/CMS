@@ -4,6 +4,7 @@ import {
     InMemoryAuthTokenStore,
     InMemoryEmailer,
     InMemoryLocalCredentialStore,
+    InMemoryPatRepository,
     InMemoryUsersRepository,
     LocalAuthentication,
     SignedCookieCodec,
@@ -14,12 +15,14 @@ import type { ControlCms } from "cms-control/ControlCms";
 import markVerified from "cms-control/api/_access/users/email-verified.post";
 import resendVerification from "cms-control/api/_access/users/email-verification.post";
 import sendReset from "cms-control/api/_access/users/password-reset.post";
+import deleteUser from "cms-control/api/_access/users/users.delete";
 import listUsers from "cms-control/api/_access/users/users.get";
 import type { CMS_ROLES } from "types/roles";
 
 function setup() {
     const users = new InMemoryUsersRepository<CMS_ROLES>();
     const credentials = new InMemoryLocalCredentialStore();
+    const pats = new InMemoryPatRepository();
     const tokens = new InMemoryAuthTokenStore();
     const emailer = new InMemoryEmailer();
     const local = new LocalAuthentication<CMS_ROLES>({
@@ -42,7 +45,7 @@ function setup() {
         passwordResetUrl: "http://control.test/auth/reset-password",
         authEmailCooldownSeconds: 0,
     };
-    const cms = { users, credentials, publicAuth } as unknown as ControlCms;
+    const cms = { users, credentials, pats, publicAuth } as unknown as ControlCms;
     return { cms, users, credentials, emailer };
 }
 
@@ -127,5 +130,26 @@ describe("admin user auth actions", () => {
         const { cms, users } = setup();
         await users.upsert({ sub: "oidc:1", provider: "oidc", email: "sso@example.com" }, "user");
         await expect(sendReset(req({ sub: "oidc:1" }), cms)).rejects.toThrow(/not a local user/);
+    });
+
+    test("deletes a user while protecting the last admin", async () => {
+        const { cms, credentials, users } = setup();
+        const admin = await createLocalUser(
+            { credentials, users },
+            { email: "admin@example.com", password: "password-1", role: "admin" },
+        );
+        const user = await createLocalUser(
+            { credentials, users },
+            { email: "member@example.com", password: "password-1", role: "user" },
+        );
+
+        const response = await deleteUser(new Request(`http://control/api/users?sub=${user.sub}`), cms);
+
+        expect(response.status).toBe(200);
+        expect(await users.getBySub(user.sub)).toBeNull();
+        expect(await credentials.getByEmail("member@example.com")).toBeNull();
+        await expect(deleteUser(new Request(`http://control/api/users?sub=${admin.sub}`), cms)).rejects.toThrow(
+            /last admin/,
+        );
     });
 });
