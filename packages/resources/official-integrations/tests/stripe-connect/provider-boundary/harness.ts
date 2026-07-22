@@ -31,13 +31,20 @@ export type ProviderBoundaryHarness = {
         clearExternalRequestOrder(): void;
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;
+        failNextFinancialOperationFailureUpdate(): void;
+        failNextPaymentIntentCreationOnce(): void;
+        failNextPaymentProjectionEnqueue(): void;
+        failNextProtectedPaymentReservation(mode: "missing" | "raced"): void;
+        linkNextProtectedPaymentReservationToIntent(): void;
         pauseNextPlatformBalanceSettingsRead(): { entered: Promise<void>; resume: () => void };
+        quarantineNextPaymentIntentProjection(): void;
         removePlatformPayoutControl(): void;
         rows(table: string): JsonRecord[];
         seedDispute(disputeId: string, status: string, evidenceStatus: string, submitted: boolean): void;
         setPlatformPayoutControl(patch: JsonRecord): void;
         setPlatformPayoutMinimum(minimumBalanceEur: number): void;
         setPaymentIntentSucceeded(paymentIntentId: string): void;
+        succeedNextPaymentIntentOperation(): void;
     };
     request(
         userId: string,

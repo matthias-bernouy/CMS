@@ -28,7 +28,9 @@ import { registerPaymentCancellationRecoveryContracts } from "./stripe-connect/p
 import { registerPaymentCancellationReplayContracts } from "./stripe-connect/payment-cancellation/replay.contracts";
 import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
 import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
+import { registerProtectedPaymentFailureContracts } from "./stripe-connect/provider-boundary/protected-payment-failures.contracts";
 import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment-payout.contracts";
+import { registerProtectedPaymentReservationContracts } from "./stripe-connect/provider-boundary/protected-payment-reservation.contracts";
 import { registerProtectedPaymentReplayContracts } from "./stripe-connect/provider-boundary/protected-payment-replay.contracts";
 import { registerAccountTermsRepositoryContracts } from "./stripe-connect/repository-boundary/accounts-terms.contracts";
 import { registerLedgerRepositoryContracts } from "./stripe-connect/repository-boundary/ledger.contracts";
@@ -5738,6 +5740,12 @@ class StripeConnectMock {
     private loseNextPaymentCancellationResponse = false;
     private returnNextPaymentCancellationNonTerminal = false;
     private failPaymentProjectionEnqueue = false;
+    private failFinancialOperationFailureUpdate = false;
+    private failNextPaymentIntentCreation = false;
+    private nextProtectedPaymentReservationFailure: "missing" | "raced" | null = null;
+    private linkNextProtectedPaymentReservation = false;
+    private nextPaymentIntentOperationSucceeded = false;
+    private nextPaymentIntentProjectionManualReview = false;
     private failProviderExceptionResolution = false;
     private failPaymentReconciliationLedgerRead = false;
     private failPaymentReconciliationLocalContextRead = false;
@@ -6281,6 +6289,30 @@ class StripeConnectMock {
 
     failNextPaymentProjectionEnqueue(): void {
         this.failPaymentProjectionEnqueue = true;
+    }
+
+    failNextFinancialOperationFailureUpdate(): void {
+        this.failFinancialOperationFailureUpdate = true;
+    }
+
+    failNextPaymentIntentCreationOnce(): void {
+        this.failNextPaymentIntentCreation = true;
+    }
+
+    failNextProtectedPaymentReservation(mode: "missing" | "raced"): void {
+        this.nextProtectedPaymentReservationFailure = mode;
+    }
+
+    linkNextProtectedPaymentReservationToIntent(): void {
+        this.linkNextProtectedPaymentReservation = true;
+    }
+
+    quarantineNextPaymentIntentProjection(): void {
+        this.nextPaymentIntentProjectionManualReview = true;
+    }
+
+    succeedNextPaymentIntentOperation(): void {
+        this.nextPaymentIntentOperationSucceeded = true;
     }
 
     failNextProviderExceptionResolution(): void {
@@ -7123,6 +7155,10 @@ class StripeConnectMock {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const payment = asRecord(body.p_payment);
             const reference = String(payment.client_reference_id);
+            if (this.nextProtectedPaymentReservationFailure === "missing") {
+                this.nextProtectedPaymentReservationFailure = null;
+                return jsonResponse({ message: "simulated protected payment reservation failure" }, 500);
+            }
             let guard = this.tables.payment_lifecycle_guards.find((row) => row.client_reference_id === reference);
             if (guard?.cancellation_request_id) {
                 return jsonResponse(
@@ -7132,10 +7168,11 @@ class StripeConnectMock {
             }
             const existing = this.tables.payments.find((row) => row.client_reference_id === reference);
             const reserved = existing ?? this.insertPayment(payment);
+            const stored = this.tables.payments.find((row) => row.client_reference_id === reference)!;
             if (!guard) {
                 guard = this.insertGeneric("payment_lifecycle_guards", {
                     client_reference_id: reference,
-                    payment_id: reserved.id,
+                    payment_id: stored.id,
                     cancellation_request_id: null,
                     cancellation_reason: null,
                     cancellation_requested_at: null,
@@ -7147,7 +7184,16 @@ class StripeConnectMock {
                     payment_linked_at: guard.payment_linked_at ?? reserved.created_at,
                 });
             }
-            return jsonResponse(reserved);
+            if (this.linkNextProtectedPaymentReservation) {
+                this.linkNextProtectedPaymentReservation = false;
+                const intent = this.seedPaymentIntent(stored);
+                this.update(stored, { stripe_payment_intent_id: intent.id });
+            }
+            if (this.nextProtectedPaymentReservationFailure === "raced") {
+                this.nextProtectedPaymentReservationFailure = null;
+                return jsonResponse({ message: "simulated protected payment reservation failure" }, 500);
+            }
+            return jsonResponse({ ...stored });
         }
         if (table === "rpc/apply_payment_provider_projection" && method === "POST") {
             return this.applyPaymentProviderProjection(JSON.parse(await request.text()) as JsonRecord);
@@ -7398,6 +7444,22 @@ class StripeConnectMock {
                 created_at: now,
                 updated_at: now,
             };
+            if (body.p_operation_type === "payment_intent_create" && this.nextPaymentIntentOperationSucceeded) {
+                this.nextPaymentIntentOperationSucceeded = false;
+                const payment = this.tables.payments.find((row) => same(row.id, body.p_payment_id));
+                if (!payment) {
+                    throw new Error(`unknown payment ${String(body.p_payment_id)}`);
+                }
+                const intent = this.seedPaymentIntent(payment);
+                Object.assign(operation, {
+                    status: "succeeded",
+                    stripe_object_id: intent.id,
+                    response: intent,
+                    attempt_count: 1,
+                    claimed_at: now,
+                    completed_at: now,
+                });
+            }
             this.tables.financial_operations.push(operation);
             return jsonResponse(operation);
         }
@@ -8358,6 +8420,14 @@ class StripeConnectMock {
         }
         if (method === "PATCH") {
             const patch = JSON.parse(await request.text()) as JsonRecord;
+            if (
+                table === "financial_operations" &&
+                patch.status === "failed" &&
+                this.failFinancialOperationFailureUpdate
+            ) {
+                this.failFinancialOperationFailureUpdate = false;
+                return jsonResponse({ message: "simulated financial operation failure update" }, 500);
+            }
             const rows = this.selectRefs(table, url).map((row) => this.update(row, patch));
             if (table === "financial_operations") {
                 for (const row of rows) {
@@ -8757,6 +8827,10 @@ class StripeConnectMock {
         }
         if (url.pathname === "/v1/payment_intents" && method === "POST") {
             const params = new URLSearchParams(await request.text());
+            if (this.failNextPaymentIntentCreation) {
+                this.failNextPaymentIntentCreation = false;
+                return jsonResponse({ error: { message: "simulated Stripe PaymentIntent creation failure" } }, 503);
+            }
             this.paymentIntentCreateCount += 1;
             this.lastPaymentIntentParameters = params;
             expect(params.getAll("payment_method_types[]")).toEqual(["card"]);
@@ -8767,7 +8841,7 @@ class StripeConnectMock {
             expect(params.get("metadata[financial_terms_hash]")).toBe(financialTermsHash);
             expect(params.getAll("expand[]")).toEqual(["latest_charge.balance_transaction"]);
             const id = `pi_${this.nextIntentId++}`;
-            const intent = {
+            const intent: JsonRecord = {
                 id,
                 client_secret: `${id}_secret`,
                 status: "requires_payment_method",
@@ -8783,6 +8857,11 @@ class StripeConnectMock {
                 },
                 latest_charge: null,
             };
+            if (this.nextPaymentIntentProjectionManualReview) {
+                this.nextPaymentIntentProjectionManualReview = false;
+                intent.status = "succeeded";
+                intent.amount_received = intent.amount;
+            }
             this.paymentIntents.set(id, intent);
             return jsonResponse(intent);
         }
@@ -9204,6 +9283,28 @@ class StripeConnectMock {
         };
         this.tables.payments.push(row);
         return { ...row };
+    }
+
+    private seedPaymentIntent(payment: JsonRecord): JsonRecord {
+        const id = `pi_${this.nextIntentId++}`;
+        const intent = {
+            id,
+            client_secret: `${id}_secret`,
+            status: "requires_payment_method",
+            amount: payment.amount_total,
+            amount_received: 0,
+            currency: payment.currency,
+            transfer_group: payment.transfer_group,
+            metadata: {
+                cms_payment_id: String(payment.id),
+                client_reference_id: payment.client_reference_id,
+                financial_terms_hash: payment.financial_terms_hash,
+                seller_cms_user_id: payment.seller_cms_user_id,
+            },
+            latest_charge: null,
+        };
+        this.paymentIntents.set(id, intent);
+        return intent;
     }
 
     private applyPaymentProviderProjection(body: JsonRecord): Response {
@@ -9996,7 +10097,9 @@ registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
 registerPaymentDashboardContracts(createDashboardReadHarness);
 registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
 registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
+registerProtectedPaymentFailureContracts(createProviderBoundaryHarness);
 registerProtectedPaymentPayoutContracts(createProviderBoundaryHarness);
+registerProtectedPaymentReservationContracts(createProviderBoundaryHarness);
 registerProtectedPaymentReplayContracts(createProviderBoundaryHarness);
 registerAccountTermsRepositoryContracts(createRepositoryBoundaryHarness);
 registerProtectedPaymentEligibilityContracts(createRepositoryBoundaryHarness);
