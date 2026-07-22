@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../helpers/integrationDefinition";
 
 type Endpoint = {
     endpointId?: string;
@@ -95,8 +95,8 @@ describe("commerce seller fulfillment Source contexts", () => {
 
 async function sourceEndpoints(): Promise<Endpoint[]> {
     const path = resolve(import.meta.dir, "../../../../integrations/domains/commerce/versions/1.0.0/definition.json");
-    const definition = JSON.parse(await readFile(path, "utf8")) as {
+    const definition = await loadIntegrationDefinition<{
         artifacts?: Array<{ type?: string; source?: { endpoints?: Endpoint[] } }>;
-    };
+    }>(path);
     return definition.artifacts?.find((artifact) => artifact.type === "source")?.source?.endpoints ?? [];
 }

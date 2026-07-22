@@ -1,0 +1,18 @@
+{
+    "type": "object",
+    "properties": {
+        "$include": "properties.json"
+    },
+    "required": [
+        "paymentId",
+        "clientReferenceId",
+        "financialTermsHash",
+        "currency",
+        "amountTotal",
+        "sellerTransferAmount",
+        "paymentStatus",
+        "commercePaymentStatus",
+        "settlementStatus",
+        "clientSecret"
+    ]
+}

@@ -1,0 +1,137 @@
+{
+    "widget": "w-detail",
+    "id": "productDetail",
+    "source": {
+        "endpoint": "manageProduct",
+        "params": {
+            "id": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "title",
+        "fallback": "New product"
+    },
+    "status": {
+        "path": "status"
+    },
+    "actions": [
+        {
+            "id": "saveProduct",
+            "label": "Save product",
+            "tone": "primary",
+            "placement": "primary",
+            "endpoint": {
+                "endpoint": "upsertProduct",
+                "params": {
+                    "id": "$resource.id"
+                },
+                "body": {
+                    "expectedVersion": "$resource.version",
+                    "slug": "$field.slug",
+                    "title": "$field.title",
+                    "description": "$field.description",
+                    "brandId": "$field.brandId",
+                    "primaryCategoryId": "$field.primaryCategoryId",
+                    "metadata": "$field.metadata",
+                    "variantAxes": "$field.variantAxes",
+                    "status": "$field.status",
+                    "visibility": "$field.visibility"
+                }
+            },
+            "after": {
+                "resource": "$result"
+            }
+        }
+    ],
+    "main": {
+        "$include": "product-detail/sections/root.json"
+    },
+    "aside": [
+        {
+            "id": "productState",
+            "title": "State",
+            "fields": [
+                {
+                    "id": "status",
+                    "label": "Status",
+                    "path": "status",
+                    "type": "select",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "draft",
+                            "label": "Draft"
+                        },
+                        {
+                            "value": "active",
+                            "label": "Active"
+                        },
+                        {
+                            "value": "archived",
+                            "label": "Archived"
+                        }
+                    ]
+                },
+                {
+                    "id": "visibility",
+                    "label": "Visibility",
+                    "path": "visibility",
+                    "type": "select",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "public",
+                            "label": "Public"
+                        },
+                        {
+                            "value": "hidden",
+                            "label": "Hidden"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "productClassification",
+            "title": "Classification",
+            "fields": [
+                {
+                    "id": "brandId",
+                    "label": "Brand",
+                    "path": "brandId",
+                    "type": "combobox",
+                    "lookup": {
+                        "endpoint": "manageBrands",
+                        "params": {
+                            "q": "$search",
+                            "limit": "20"
+                        },
+                        "itemsPath": "items",
+                        "valuePath": "id",
+                        "labelPath": "name",
+                        "subtitlePath": "slug",
+                        "selected": "$resource.brand"
+                    }
+                },
+                {
+                    "id": "primaryCategoryId",
+                    "label": "Primary category",
+                    "path": "primaryCategoryId",
+                    "type": "combobox",
+                    "lookup": {
+                        "endpoint": "manageCategories",
+                        "params": {
+                            "q": "$search",
+                            "limit": "20"
+                        },
+                        "itemsPath": "items",
+                        "valuePath": "id",
+                        "labelPath": "label",
+                        "subtitlePath": "fullSlug",
+                        "selected": "$resource.primaryCategory"
+                    }
+                }
+            ]
+        }
+    ]
+}

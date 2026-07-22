@@ -1,0 +1,75 @@
+[
+    {
+        "id": "shipmentGeneral",
+        "title": "Shipment",
+        "fields": [
+            {
+                "id": "externalOrderId",
+                "label": "External order id",
+                "path": "externalOrderId",
+                "type": "readonly"
+            },
+            {
+                "id": "expeditionNumber",
+                "label": "Expedition",
+                "path": "expeditionNumber",
+                "type": "readonly"
+            },
+            {
+                "id": "lastError",
+                "label": "Last error",
+                "path": "lastError",
+                "type": "readonly"
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "path": "status",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "recipientName",
+                "label": "Recipient",
+                "path": "recipientName",
+                "type": "readonly"
+            },
+            {
+                "id": "recipientEmail",
+                "label": "Email",
+                "path": "recipientEmail",
+                "type": "readonly"
+            },
+            {
+                "id": "recipientPhone",
+                "label": "Phone",
+                "path": "recipientPhone",
+                "type": "readonly"
+            },
+            {
+                "id": "recipientAddressLine1",
+                "label": "Address",
+                "path": "recipientAddressLine1",
+                "type": "readonly"
+            },
+            {
+                "id": "recipientPostalCode",
+                "label": "Postal code",
+                "path": "recipientPostalCode",
+                "type": "readonly"
+            },
+            {
+                "id": "recipientCity",
+                "label": "City",
+                "path": "recipientCity",
+                "type": "readonly"
+            },
+            {
+                "id": "deliveryRelayLocation",
+                "label": "Relay location",
+                "path": "deliveryRelayLocation",
+                "type": "readonly"
+            }
+        ]
+    }
+]

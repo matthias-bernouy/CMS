@@ -1,0 +1,23 @@
+{
+    "$files": [
+        "endpoints/health/health.json",
+        "endpoints/shipments/shipment-queries/root.json",
+        "endpoints/system/shipments/shipment-for-external-order.json",
+        "endpoints/system/shipments/shipment-tracking-context/root.json",
+        "endpoints/relay-points/relay-point-selection/root.json",
+        "endpoints/system/claim-return-relay-selections/save-claim-return-relay-selection.json",
+        "endpoints/relay-points/save-relay-selection/root.json",
+        "endpoints/system/quotes/resolve-delivery-quote/root.json",
+        "endpoints/system/quotes/delivery-quote.json",
+        "endpoints/shipments/create-shipment/root.json",
+        "endpoints/settings/settings-queries/root.json",
+        "endpoints/settings/set-settings/root.json",
+        "endpoints/system/label-access/issue-label-access.json",
+        "endpoints/system/shipments/shipment-handoff-and-cancellation.json",
+        "endpoints/admin/shipments/recover-unknown-shipment.json",
+        "endpoints/system/reconciliation/reconcile-shipments/root.json",
+        "endpoints/system/reconciliation/delivery-projection-reconciliation/root.json",
+        "endpoints/admin/reconciliation/shipment-projection-exceptions/root.json",
+        "endpoints/tracking/tracking-and-labels/root.json"
+    ]
+}

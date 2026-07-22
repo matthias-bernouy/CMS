@@ -285,17 +285,19 @@ only when its definition is marked `publicReadable`; administrator responses
 retain the complete metadata object.
 
 ## Files
-- `definition.json`: source, overlays, dashboards, generated secret, and
-  connector and bloc declarations.
+- `definition.json`: entry point for the source, overlays, dashboards,
+  generated secret, connector, and bloc declarations assembled from
+  `definitions/`.
 - `blocs/commerce-offer-list/`: transparent public offer source controller.
 - `blocs/commerce-offer-preview/`: editable public offer presentation.
 - `blocs/commerce-account-offers/`: authenticated seller offer listing.
-- `connectors/supabase/schema.sql`: private schema and transactional commands.
+- `connectors/supabase/sql/schema.manifest.json`: ordered private schema and
+  transactional command bundle.
 - `connectors/supabase/functions/cms-commerce/`: modular CMS-facing API.
 - `connectors/supabase/supabase.config.toml`: function deployment fragment.
 
-Source modules and tests are capped at 150 lines and eight files per local
-folder. `definition.json` is an explicit exception because it is the one exact,
-installable declarative contract. `schema.sql` is also an explicit exception:
-the connector deployer submits each declared SQL resource separately, so one
-file preserves atomic installation of tables, functions, grants, and policies.
+Source modules, resource fragments, and tests target 150 lines and eight files
+per local folder. The definition entry point and nested JSON directives declare
+the canonical assembly order explicitly. SQL manifests likewise declare the
+fragment order, while the connector deployer submits each root bundle as one
+atomic installation of tables, functions, grants, and policies.

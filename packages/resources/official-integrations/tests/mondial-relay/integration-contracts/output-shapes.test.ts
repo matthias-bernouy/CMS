@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { projectEndpointResponse, type SourceEndpoint } from "@bernouy/cms-sources";
-import { readFile } from "node:fs/promises";
+import { loadIntegrationDefinition } from "../../helpers/integrationDefinition";
 
 type DefinitionEndpoint = Pick<SourceEndpoint, "method" | "targetUrl" | "output"> & {
     endpointId: string;
@@ -156,9 +156,9 @@ async function projectedBody(endpointId: string, payload: unknown): Promise<unkn
 }
 
 async function definitionEndpoint(endpointId: string): Promise<SourceEndpoint> {
-    const definition = JSON.parse(await readFile(definitionUrl, "utf8")) as {
+    const definition = await loadIntegrationDefinition<{
         artifacts: Array<{ source?: { endpoints: DefinitionEndpoint[] } }>;
-    };
+    }>(definitionUrl);
     const endpoint = definition.artifacts
         .find((artifact) => artifact.source)
         ?.source?.endpoints.find((candidate) => candidate.endpointId === endpointId);

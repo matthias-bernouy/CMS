@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
 import { installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import { expectedC2cPolicyResponse, expectedC2cSourceResponse } from "./expected";
 import { useC2cPolicyResponder } from "./fixtures";
@@ -53,7 +53,7 @@ const definitionPath = resolve(
 );
 
 async function sourceShape(): Promise<DataShape> {
-    const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+    const definition = await loadIntegrationDefinition<any>(definitionPath);
     const endpoint = definition.artifacts
         .find((artifact: any) => artifact.source)
         ?.source?.endpoints.find((candidate: any) => candidate.endpointId === "c2cPolicies");

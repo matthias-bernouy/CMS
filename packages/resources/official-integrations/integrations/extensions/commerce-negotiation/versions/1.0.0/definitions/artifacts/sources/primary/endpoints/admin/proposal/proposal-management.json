@@ -1,0 +1,77 @@
+[
+    {
+        "endpointId": "manageProposal",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/admin/proposal",
+        "params": [
+            {
+                "name": "id",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "cancelProposal",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/admin/proposal/cancel",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "number"
+                },
+                "expectedVersion": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "expectedVersion"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    }
+]

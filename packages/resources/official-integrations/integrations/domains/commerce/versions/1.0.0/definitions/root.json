@@ -1,0 +1,51 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "commerce",
+    "label": "Commerce",
+    "version": "1.0.0",
+    "category": "Commerce",
+    "description": "Run a catalogue, marketplace offers, buyer carts, bounded price review workflows, sellers, and orders from one Supabase-backed commerce model.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
+    "inputs": {
+        "$include": "configuration/inputs.json"
+    },
+    "dependencies": {
+        "$include": "configuration/dependencies.json"
+    },
+    "ui": {
+        "$include": "configuration/ui.json"
+    },
+    "generatedSecrets": {
+        "$include": "configuration/generated-secrets.json"
+    },
+    "connectors": {
+        "$include": "configuration/connectors.json"
+    },
+    "artifacts": {
+        "$files": [
+            "artifacts/sources/primary/definition.json",
+            "artifacts/source-overlays/product-classification.json",
+            "artifacts/source-overlays/product-custom-fields.json",
+            "artifacts/source-overlays/offer-custom-fields.json",
+            "artifacts/source-overlays/seller-custom-fields.json",
+            "artifacts/source-overlays/order-custom-fields.json",
+            "artifacts/blocs/commerce-offer-list.json",
+            "artifacts/blocs/commerce-offer-filter.json",
+            "artifacts/blocs/commerce-offer-preview.json",
+            "artifacts/blocs/commerce-account-offers.json",
+            "artifacts/blocs/commerce-account-sales.json",
+            "artifacts/blocs/commerce-sale-detail.json",
+            "artifacts/blocs/commerce-offer-price-form.json",
+            "artifacts/dashboards/products/definition.json",
+            "artifacts/dashboards/offers/definition.json",
+            "artifacts/dashboards/orders/root.json",
+            "artifacts/dashboards/sellers/root.json",
+            "artifacts/dashboards/configuration/definition.json",
+            "artifacts/dashboards/workflow/definition.json",
+            "artifacts/dashboards/metadata/definition.json",
+            "artifacts/dashboards/taxonomy/definition.json"
+        ]
+    }
+}

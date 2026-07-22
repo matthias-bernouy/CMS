@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}-fields",
+    "meta": {
+        "name": "Fields",
+        "icon": {
+            "path": "assets/fields.svg"
+        }
+    },
+    "source": "{{answers.id}}",
+    "views": {
+        "$include": "views/root.json"
+    }
+}

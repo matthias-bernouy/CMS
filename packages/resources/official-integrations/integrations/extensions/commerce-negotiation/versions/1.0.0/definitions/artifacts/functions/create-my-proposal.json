@@ -1,0 +1,78 @@
+{
+    "type": "function",
+    "function": {
+        "id": "createMyProposal",
+        "method": "POST",
+        "access": {
+            "mode": "auth"
+        },
+        "meta": {
+            "name": "Create my proposal",
+            "description": "Resolve an authoritative Commerce offer and create a bounded buyer proposal."
+        },
+        "input": {
+            "body": {
+                "type": "object",
+                "properties": {
+                    "offerId": {
+                        "type": "number"
+                    },
+                    "amount": {
+                        "type": "number"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "offerId",
+                    "amount"
+                ]
+            }
+        },
+        "output": [
+            {
+                "status": "201",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ],
+        "steps": [
+            {
+                "id": "offer",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "getOfferNegotiationContext",
+                    "params": {
+                        "offerId": "$input.body.offerId"
+                    }
+                }
+            },
+            {
+                "id": "proposal",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "createMyProposal",
+                    "body": {
+                        "offerId": "$steps.offer.offerId",
+                        "amount": "$input.body.amount",
+                        "message": "$input.body.message",
+                        "offerSlug": "$steps.offer.offerSlug",
+                        "offerTitle": "$steps.offer.offerTitle",
+                        "sellerCmsUserId": "$steps.offer.sellerCmsUserId",
+                        "sellerDisplayName": "$steps.offer.sellerDisplayName",
+                        "referenceAmount": "$steps.offer.referenceAmount",
+                        "currency": "$steps.offer.currency",
+                        "publicationStatus": "$steps.offer.publicationStatus",
+                        "availability": "$steps.offer.availability"
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 201,
+            "body": "$steps.proposal"
+        }
+    }
+}

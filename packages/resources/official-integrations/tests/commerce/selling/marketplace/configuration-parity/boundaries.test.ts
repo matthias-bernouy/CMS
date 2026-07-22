@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
 import {
     capturedFetches,
     installCommerceTestEnvironment,
@@ -74,7 +74,7 @@ describe("commerce configuration post-action boundaries", () => {
     });
 
     test("resolves every configuration action to its matching mutation endpoint", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+        const definition = await loadIntegrationDefinition<any>(definitionPath);
         const endpoints = {
             saveCondition: "upsertOfferCondition",
             saveWorkflowState: "upsertWorkflowState",

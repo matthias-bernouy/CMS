@@ -1,0 +1,11 @@
+{
+    "id": "{{answers.id}}-settings",
+    "source": "{{answers.id}}",
+    "meta": {
+        "name": "Settings",
+        "icon": "settings"
+    },
+    "views": {
+        "$include": "views.json"
+    }
+}

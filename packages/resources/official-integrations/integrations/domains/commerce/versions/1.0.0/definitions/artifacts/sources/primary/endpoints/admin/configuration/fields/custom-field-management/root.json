@@ -1,0 +1,64 @@
+[
+    {
+        "$include": "custom-field.json"
+    },
+    {
+        "$include": "upsert-custom-field.json"
+    },
+    {
+        "endpointId": "deleteCustomField",
+        "method": "DELETE",
+        "effects": {
+            "invalidatesSchema": true
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/custom-field",
+        "params": [
+            {
+                "name": "entityType",
+                "in": "query",
+                "type": "string",
+                "required": true
+            },
+            {
+                "name": "key",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "entityType": {
+                            "type": "string"
+                        },
+                        "key": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "entityType",
+                        "key",
+                        "deleted"
+                    ]
+                }
+            }
+        ]
+    }
+]

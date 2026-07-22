@@ -1,0 +1,17 @@
+[
+    {
+        "$include": "success/root.json"
+    },
+    {
+        "status": "403",
+        "body": {
+            "type": "object"
+        }
+    },
+    {
+        "status": "404",
+        "body": {
+            "type": "object"
+        }
+    }
+]

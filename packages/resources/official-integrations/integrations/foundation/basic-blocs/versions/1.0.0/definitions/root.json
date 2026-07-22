@@ -1,0 +1,37 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "basic-blocs",
+    "label": "Basic Blocs",
+    "version": "1.0.0",
+    "category": "Blocks",
+    "description": "Install neutral official UI blocs used by other integrations.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
+    "inputs": [],
+    "ui": {
+        "$include": "configuration/ui.json"
+    },
+    "artifacts": {
+        "$files": [
+            "artifacts/blocs/basic/basic-button.json",
+            "artifacts/blocs/basic/basic-card.json",
+            "artifacts/blocs/feedback/basic-skeleton.json",
+            "artifacts/blocs/layout/basic-grid.json",
+            "artifacts/blocs/layout/basic-stack.json",
+            "artifacts/blocs/feedback/basic-toast.json",
+            "artifacts/blocs/media/basic-image.json",
+            "artifacts/blocs/navigation/basic-pagination.json",
+            "artifacts/blocs/basic/basic-redirect.json",
+            "artifacts/blocs/forms/basic-form.json",
+            "artifacts/blocs/forms/fields/basic-input.json",
+            "artifacts/blocs/forms/fields/basic-file-input.json",
+            "artifacts/blocs/forms/fields/basic-textarea.json",
+            "artifacts/blocs/forms/choices/basic-option.json",
+            "artifacts/blocs/forms/choices/basic-select.json",
+            "artifacts/blocs/forms/fields/basic-checkbox.json",
+            "artifacts/blocs/forms/choices/basic-chip.json",
+            "artifacts/blocs/forms/choices/basic-chip-group.json"
+        ]
+    }
+}

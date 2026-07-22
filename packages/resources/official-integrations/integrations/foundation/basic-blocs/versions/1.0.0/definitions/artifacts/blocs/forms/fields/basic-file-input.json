@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-file-input",
+        "name": "File input",
+        "group": "Form",
+        "description": "Form-associated file picker with an encapsulated label, hint, and validation message.",
+        "path": "blocs/forms/fields/basic-file-input"
+    }
+}

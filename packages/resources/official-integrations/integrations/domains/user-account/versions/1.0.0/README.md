@@ -19,9 +19,10 @@ the target user as an explicit request parameter.
 
 ## Files
 
-- `definition.json`: declarative CMS integration definition for this version.
-- `connectors/supabase/schema.sql`: private Supabase Postgres schema with
-  `user_account.accounts`.
+- `definition.json`: entry point for this version's declarative definition,
+  assembled from `definitions/`.
+- `connectors/supabase/sql/schema.manifest.json`: ordered private schema bundle
+  with `user_account.accounts`.
 - `connectors/supabase/functions/cms-user-account/index.ts`: standalone
   Supabase Edge Function.
 - `connectors/supabase/supabase.config.toml`: Supabase function config fragment.

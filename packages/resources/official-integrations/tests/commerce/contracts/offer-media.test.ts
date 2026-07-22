@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../helpers/integrationDefinition";
 
 type RecordValue = Record<string, any>;
 
@@ -11,7 +11,7 @@ const definitionPath = resolve(
 
 describe("commerce offer media contract", () => {
     test("exposes admin and seller-owned image operations", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8")) as RecordValue;
+        const definition = await loadIntegrationDefinition<RecordValue>(definitionPath);
         const endpoints = definition.artifacts.find((artifact: RecordValue) => artifact.source).source.endpoints;
         const byId = Object.fromEntries(endpoints.map((endpoint: RecordValue) => [endpoint.endpointId, endpoint]));
 
@@ -42,7 +42,7 @@ describe("commerce offer media contract", () => {
     });
 
     test("wires the offer image editor to the admin operations", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8")) as RecordValue;
+        const definition = await loadIntegrationDefinition<RecordValue>(definitionPath);
         const dashboard = definition.artifacts.find((artifact: RecordValue) =>
             artifact.dashboard?.id.endsWith("-offers"),
         ).dashboard;

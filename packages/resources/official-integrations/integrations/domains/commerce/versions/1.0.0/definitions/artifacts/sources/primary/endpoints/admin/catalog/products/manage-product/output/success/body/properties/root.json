@@ -1,0 +1,128 @@
+{
+    "id": {
+        "type": "number",
+        "nullable": true
+    },
+    "slug": {
+        "type": "string"
+    },
+    "title": {
+        "type": "string"
+    },
+    "description": {
+        "type": "string",
+        "nullable": true
+    },
+    "brandId": {
+        "type": "number",
+        "nullable": true
+    },
+    "brand": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "slug": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "status": {
+                "type": "string"
+            }
+        },
+        "nullable": true
+    },
+    "primaryCategoryId": {
+        "type": "number",
+        "nullable": true
+    },
+    "primaryCategory": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "parentId": {
+                "type": "number",
+                "nullable": true
+            },
+            "slug": {
+                "type": "string"
+            },
+            "fullSlug": {
+                "type": "string"
+            },
+            "label": {
+                "type": "string"
+            },
+            "status": {
+                "type": "string"
+            },
+            "position": {
+                "type": "number"
+            }
+        },
+        "nullable": true
+    },
+    "status": {
+        "type": "string"
+    },
+    "visibility": {
+        "type": "string"
+    },
+    "metadata": {
+        "type": "object"
+    },
+    "version": {
+        "type": "number"
+    },
+    "createdAt": {
+        "type": "string"
+    },
+    "updatedAt": {
+        "type": "string"
+    },
+    "media": {
+        "$include": "media.json"
+    },
+    "mainImageMediaId": {
+        "type": "string",
+        "nullable": true
+    },
+    "variantAxes": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "fieldKey": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "label": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "number"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "variants": {
+        "$include": "variants.json"
+    },
+    "variantMatrix": {
+        "$include": "variant-matrix.json"
+    }
+}

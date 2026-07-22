@@ -1,0 +1,93 @@
+{
+    "widget": "w-detail",
+    "id": "protectedPaymentDetail",
+    "source": {
+        "endpoint": "protectedPayment",
+        "params": {
+            "orderId": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "orderNumber",
+        "fallback": "Protected payment"
+    },
+    "status": {
+        "path": "settlementStatus"
+    },
+    "actions": [
+        {
+            "id": "authorizeRelease",
+            "label": "Authorize release",
+            "tone": "primary",
+            "placement": "primary",
+            "confirm": "Authorize the policy-eligible seller transfer?",
+            "visibleWhen": {
+                "any": [
+                    {
+                        "value": "$field.settlementStatus",
+                        "equals": "held"
+                    },
+                    {
+                        "value": "$field.settlementStatus",
+                        "equals": "eligible"
+                    }
+                ]
+            },
+            "endpoint": {
+                "endpoint": "authorizeOrderRelease",
+                "body": {
+                    "orderId": "$resource.orderId",
+                    "expectedSettlementVersion": "$resource.settlement.version",
+                    "reason": "$field.releaseReason"
+                }
+            }
+        },
+        {
+            "id": "requestRefund",
+            "label": "Request refund",
+            "tone": "danger",
+            "placement": "more",
+            "confirm": "Create this policy-bounded refund request?",
+            "endpoint": {
+                "endpoint": "requestOrderRefund",
+                "body": {
+                    "orderId": "$resource.orderId",
+                    "reason": "$field.refundReason",
+                    "amount": "$field.refundAmount"
+                }
+            }
+        }
+    ],
+    "main": {
+        "$include": "sections.json"
+    },
+    "aside": [
+        {
+            "id": "deadlines",
+            "title": "Protection",
+            "fields": [
+                {
+                    "id": "recipientHandoffAt",
+                    "label": "Recipient handoff",
+                    "path": "recipientHandoffAt",
+                    "type": "readonly",
+                    "format": "date"
+                },
+                {
+                    "id": "releaseEligibleAt",
+                    "label": "Release eligible",
+                    "path": "releaseEligibleAt",
+                    "type": "readonly",
+                    "format": "date"
+                },
+                {
+                    "id": "totalRefundRequestedAmount",
+                    "label": "Refund requested",
+                    "path": "totalRefundRequestedAmount",
+                    "type": "readonly",
+                    "format": "money"
+                }
+            ]
+        }
+    ]
+}

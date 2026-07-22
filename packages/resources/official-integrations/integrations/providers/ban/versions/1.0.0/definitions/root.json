@@ -1,0 +1,21 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "ban",
+    "label": "Base Adresse Nationale",
+    "version": "1.0.0",
+    "category": "Data",
+    "description": "Install French national address geocoding source contracts.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
+    "inputs": [],
+    "ui": {
+        "$include": "configuration/ui.json"
+    },
+    "artifacts": {
+        "$files": [
+            "artifacts/sources/ban/root.json",
+            "artifacts/dashboards/ban-addresses.json"
+        ]
+    }
+}

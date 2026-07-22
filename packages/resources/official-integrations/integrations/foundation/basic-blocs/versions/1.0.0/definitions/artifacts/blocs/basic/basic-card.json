@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-card",
+        "name": "Card",
+        "group": "Basic",
+        "description": "Generic card for grouping media, headings, content, and actions.",
+        "path": "blocs/basic/basic-card"
+    }
+}

@@ -1,0 +1,110 @@
+[
+    {
+        "$include": "refund-requests.json"
+    },
+    {
+        "endpointId": "refundRequest",
+        "method": "GET",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/refund-request",
+        "params": [
+            {
+                "name": "id",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "claimId": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "businessKey": {
+                            "type": "string"
+                        },
+                        "reason": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "requestedAmount": {
+                            "type": "number"
+                        },
+                        "protectionFeeRefundAmount": {
+                            "type": "number"
+                        },
+                        "sellerRecoveryAmount": {
+                            "type": "number"
+                        },
+                        "requiresFinanceApproval": {
+                            "type": "boolean"
+                        },
+                        "dualApprovalRequired": {
+                            "type": "boolean"
+                        },
+                        "firstApprovedBy": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "secondApprovedBy": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "requestedByKind": {
+                            "type": "string"
+                        },
+                        "decisionReason": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "version": {
+                            "type": "number"
+                        },
+                        "createdAt": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

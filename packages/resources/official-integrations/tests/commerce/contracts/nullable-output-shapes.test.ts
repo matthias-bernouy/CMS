@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../helpers/integrationDefinition";
 
 type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: DataShape; triggerBody?: DataShape }> };
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
@@ -204,8 +204,7 @@ describe("commerce nullable response contracts", () => {
 });
 let endpointsPromise: Promise<Endpoint[]> | undefined;
 function commerceEndpoints(): Promise<Endpoint[]> {
-    endpointsPromise ??= readFile(definitionPath, "utf8").then((content) => {
-        const definition = JSON.parse(content) as Definition;
+    endpointsPromise ??= loadIntegrationDefinition<Definition>(definitionPath).then((definition) => {
         return definition.artifacts.find((artifact) => artifact.source)?.source?.endpoints ?? [];
     });
     return endpointsPromise;

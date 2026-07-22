@@ -1,0 +1,54 @@
+[
+    {
+        "endpointId": "getUserPersonalInformationAvatar",
+        "method": "GET",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/record/avatar",
+        "responseKind": "file",
+        "mediaType": "image/*",
+        "meta": {
+            "name": "Get user avatar",
+            "description": "Read one target CMS user avatar file for the admin dashboard."
+        },
+        "params": [
+            {
+                "name": "userId",
+                "in": "query",
+                "required": true,
+                "type": "string",
+                "description": "Target CMS user id."
+            },
+            {
+                "name": "fileId",
+                "in": "query",
+                "required": true,
+                "type": "string",
+                "description": "Avatar file id stored on the personal information row."
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200"
+            },
+            {
+                "status": "206"
+            }
+        ]
+    }
+]

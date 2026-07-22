@@ -212,7 +212,7 @@ export async function importScenario(kind: string, answers: Record<string, strin
                 provider: "supabase",
                 outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" },
                 resources: [
-                    { type: "schema", id: "schema.sql", action: "applied" },
+                    { type: "schema", id: "sql/schema.manifest.json", action: "applied" },
                     ...(next.functions ?? []).map((fn) => ({
                         type: "function" as const,
                         id: fn.name,

@@ -1,0 +1,56 @@
+{
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "mediaId": {
+                "type": "number"
+            },
+            "sortOrder": {
+                "type": "number"
+            },
+            "isMain": {
+                "type": "boolean"
+            },
+            "media": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "storageBucket": {
+                        "type": "string"
+                    },
+                    "storagePath": {
+                        "type": "string"
+                    },
+                    "mimeType": {
+                        "type": "string"
+                    },
+                    "fileSize": {
+                        "type": "number"
+                    },
+                    "originalFilename": {
+                        "type": "string"
+                    },
+                    "alt": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

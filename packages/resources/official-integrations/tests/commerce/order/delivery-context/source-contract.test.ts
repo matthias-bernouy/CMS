@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { DataShape } from "@bernouy/cms-sources";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../helpers/integrationDefinition";
 
 type Endpoint = {
     endpointId: string;
@@ -87,8 +87,8 @@ describe("commerce delivery context Source contracts", () => {
 });
 
 async function commerceEndpoints(): Promise<Endpoint[]> {
-    const definition = JSON.parse(await readFile(definitionPath, "utf8")) as {
+    const definition = await loadIntegrationDefinition<{
         artifacts: Array<{ source?: { endpoints: Endpoint[] } }>;
-    };
+    }>(definitionPath);
     return definition.artifacts.find((artifact) => artifact.source)?.source?.endpoints ?? [];
 }

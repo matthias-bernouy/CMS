@@ -1,0 +1,111 @@
+[
+    {
+        "$include": "get-provider-exception.json"
+    },
+    {
+        "endpointId": "requeueCommerceProjection",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/commerce-projections/requeue",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "projectionId": {
+                    "type": "number"
+                },
+                "expectedInterventionRevision": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "projectionId",
+                "expectedInterventionRevision",
+                "reason"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "projectionId": {
+                            "type": "number"
+                        },
+                        "projectionStatus": {
+                            "type": "string"
+                        },
+                        "interventionRevision": {
+                            "type": "number"
+                        },
+                        "nextAttemptAt": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "projectionId",
+                        "projectionStatus",
+                        "interventionRevision"
+                    ]
+                }
+            },
+            {
+                "status": "400",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "403",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "404",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    },
+    {
+        "$include": "list-provider-exceptions.json"
+    }
+]

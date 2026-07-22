@@ -1,13 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import { resolve } from "node:path";
+import { loadSupabaseSchemaSql } from "../../helpers/supabaseSql";
 
-const schemaUrl = new URL(
-    "../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
-    import.meta.url,
-);
+const integrationRoot = resolve(import.meta.dir, "../../../integrations/providers/mondial-relay/versions/1.0.0");
 
 describe("Mondial Relay shipment creation database contracts", () => {
     test("validates, reserves or replays one shipment atomically without provider work", async () => {
-        const schema = await Bun.file(schemaUrl).text();
+        const schema = await loadSupabaseSchemaSql(integrationRoot);
         const definition = sqlFunction(schema, "delivery.reserve_shipment_creation");
 
         expect(definition).toContain("returns jsonb");
@@ -33,7 +32,7 @@ describe("Mondial Relay shipment creation database contracts", () => {
     });
 
     test("preserves omitted optional columns while retrying a failed reservation", async () => {
-        const schema = await Bun.file(schemaUrl).text();
+        const schema = await loadSupabaseSchemaSql(integrationRoot);
         const definition = sqlFunction(schema, "delivery.retry_shipment_creation");
 
         expect(definition).toContain("jsonb_populate_record(v_existing, p_reservation)");

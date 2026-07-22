@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-pagination",
+        "name": "Pagination",
+        "group": "Navigation",
+        "description": "Accessible previous and next pagination with page and offset events.",
+        "path": "blocs/navigation/basic-pagination"
+    }
+}

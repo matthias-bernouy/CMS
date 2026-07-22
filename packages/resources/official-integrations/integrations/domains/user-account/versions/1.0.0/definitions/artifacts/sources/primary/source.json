@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}",
+    "meta": {
+        "name": "User Personal Information",
+        "description": "Supabase-backed personal information endpoints and dashboard reads.",
+        "icon": {
+            "path": "assets/user-personal-information.svg"
+        }
+    },
+    "endpoints": {
+        "$include": "endpoints.json"
+    }
+}

@@ -42,7 +42,7 @@ export function connectorDeployer(
                 provider: "supabase",
                 outputs: { functionsBaseUrl: `${supabaseUrl}/functions/v1` },
                 resources: [
-                    { type: "schema", id: "schema.sql", action: "applied" },
+                    { type: "schema", id: "sql/schema.manifest.json", action: "applied" },
                     { type: "function", id: "cms-commerce", action: "deployed" },
                 ],
             };

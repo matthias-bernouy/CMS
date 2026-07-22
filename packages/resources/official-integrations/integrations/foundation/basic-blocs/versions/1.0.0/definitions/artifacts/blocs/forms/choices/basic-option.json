@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-option",
+        "name": "Select option",
+        "group": "Form",
+        "description": "Option used by a Basic select.",
+        "path": "blocs/forms/choices/basic-option"
+    }
+}

@@ -59,7 +59,7 @@ describe("commerce negotiation 1.0.0", () => {
                     provider: "supabase",
                     outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" },
                     resources: [
-                        { type: "schema", id: "schema.sql", action: "applied" },
+                        { type: "schema", id: "sql/schema.manifest.json", action: "applied" },
                         { type: "function", id: "cms-commerce-negotiation", action: "deployed" },
                     ],
                 };

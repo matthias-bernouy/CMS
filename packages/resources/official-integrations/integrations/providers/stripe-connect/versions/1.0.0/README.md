@@ -99,8 +99,9 @@ and appends the recovery audit event.
 
 This version is a breaking replacement, not a migration. There is no legacy
 destination-charge archive, backfill, or compatibility path. Reset any
-pre-protection development schema before applying `schema.sql`; only the
-protected separate-Charges-and-Transfers ledger is supported.
+pre-protection development schema before applying
+`connectors/supabase/sql/schema.manifest.json`; only the protected
+separate-Charges-and-Transfers ledger is supported.
 
 ## Direct Stripe webhooks
 

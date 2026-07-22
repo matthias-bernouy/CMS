@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-grid",
+        "name": "Grid",
+        "group": "Layout",
+        "description": "Intrinsic responsive grid driven by minimum and maximum item widths.",
+        "path": "blocs/layout/basic-grid"
+    }
+}

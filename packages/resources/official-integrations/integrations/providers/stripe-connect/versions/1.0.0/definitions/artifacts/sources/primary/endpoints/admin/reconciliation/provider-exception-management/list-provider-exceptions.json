@@ -1,0 +1,124 @@
+{
+    "endpointId": "listProviderExceptions",
+    "method": "GET",
+    "access": {
+        "mode": "admin"
+    },
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/exceptions",
+    "params": [
+        {
+            "name": "q",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "status",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "limit",
+            "in": "query",
+            "type": "number"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        },
+        {
+            "name": "x-cms-user-role",
+            "source": {
+                "from": "computed",
+                "ref": "userRole"
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "exceptions": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "number"
+                                },
+                                "deduplication_key": {
+                                    "type": "string"
+                                },
+                                "payment_id": {
+                                    "type": "number"
+                                },
+                                "operation_id": {
+                                    "type": "number"
+                                },
+                                "exception_type": {
+                                    "type": "string"
+                                },
+                                "severity": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "details": {
+                                    "type": "object"
+                                },
+                                "detected_at": {
+                                    "type": "string"
+                                },
+                                "resolved_at": {
+                                    "type": "string"
+                                },
+                                "resolved_by": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "exception_type",
+                                "severity",
+                                "status",
+                                "message",
+                                "detected_at"
+                            ]
+                        }
+                    },
+                    "total": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "exceptions",
+                    "total"
+                ]
+            }
+        },
+        {
+            "status": "403",
+            "body": {
+                "type": "object"
+            }
+        }
+    ]
+}

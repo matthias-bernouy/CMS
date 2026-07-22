@@ -1,0 +1,24 @@
+[
+    {
+        "provider": "supabase",
+        "root": "connectors/supabase",
+        "dataApiSchemas": [
+            "user_account"
+        ],
+        "schemas": [
+            {
+                "manifest": "sql/schema.manifest.json"
+            }
+        ],
+        "functions": [
+            {
+                "name": "cms-user-account",
+                "directory": "functions/cms-user-account",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_USER_ACCOUNT_API_KEY": "{{generated.cmsApiKey}}"
+                }
+            }
+        ]
+    }
+]

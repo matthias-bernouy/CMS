@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../helpers/integrationDefinition";
 
 const definitionPath = resolve(
     import.meta.dir,
@@ -9,7 +9,7 @@ const definitionPath = resolve(
 
 describe("commerce offer estimate contract", () => {
     test("exposes only aggregate market price fields publicly", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+        const definition = await loadIntegrationDefinition<any>(definitionPath);
         const source = definition.artifacts.find((artifact: any) => artifact.source).source;
         const endpoint = source.endpoints.find((candidate: any) => candidate.endpointId === "offerEstimate");
         const properties = endpoint.output[0].body.properties;

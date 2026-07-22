@@ -1,0 +1,7 @@
+{
+    "$files": [
+        "views/shipment-operations/root.json",
+        "views/shipment-detail/root.json",
+        "views/settings-detail/root.json"
+    ]
+}

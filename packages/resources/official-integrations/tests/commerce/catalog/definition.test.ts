@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../helpers/integrationDefinition";
 
 type Field = {
     id: string;
@@ -28,7 +28,7 @@ const definitionPath = resolve(
 
 describe("commerce product dashboard definition", () => {
     test("keeps variants, axes, and media inside Product without tabs", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8")) as { artifacts: Artifact[] };
+        const definition = await loadIntegrationDefinition<{ artifacts: Artifact[] }>(definitionPath);
         const source = definition.artifacts.find((artifact) => artifact.type === "source")?.source;
         const dashboards = definition.artifacts.flatMap((artifact) => (artifact.dashboard ? [artifact.dashboard] : []));
         const products = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-products");
@@ -87,7 +87,7 @@ describe("commerce product dashboard definition", () => {
 
 describe("commerce taxonomy dashboard definition", () => {
     test("allows creating and moving a root category without a parent", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+        const definition = await loadIntegrationDefinition<any>(definitionPath);
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const endpoint = source.endpoints.find((candidate: any) => candidate.endpointId === "upsertCategory");
         const dashboard = definition.artifacts.find(
@@ -101,7 +101,7 @@ describe("commerce taxonomy dashboard definition", () => {
     });
 
     test("allows optional Product classification references to be empty", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+        const definition = await loadIntegrationDefinition<any>(definitionPath);
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const endpoint = source.endpoints.find((candidate: any) => candidate.endpointId === "upsertProduct");
 
@@ -110,7 +110,7 @@ describe("commerce taxonomy dashboard definition", () => {
     });
 
     test("uses reorderable navigation lists and keeps state in detail asides", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+        const definition = await loadIntegrationDefinition<any>(definitionPath);
         const taxonomy = definition.artifacts.find(
             (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy",
         ).dashboard;
@@ -129,7 +129,7 @@ describe("commerce taxonomy dashboard definition", () => {
     });
 
     test("exposes confirmed deletion actions for metadata and taxonomy details", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+        const definition = await loadIntegrationDefinition<any>(definitionPath);
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const dashboards = definition.artifacts.flatMap((artifact: any) =>
             artifact.dashboard ? [artifact.dashboard] : [],
@@ -178,7 +178,7 @@ describe("commerce taxonomy dashboard definition", () => {
     });
 
     test("lets categories select Product metadata policies", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+        const definition = await loadIntegrationDefinition<any>(definitionPath);
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const taxonomy = definition.artifacts.find(
             (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy",

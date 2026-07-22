@@ -1,0 +1,97 @@
+[
+    {
+        "$include": "upsert-category.json"
+    },
+    {
+        "endpointId": "deleteCategory",
+        "method": "DELETE",
+        "effects": {
+            "invalidatesSchema": true
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/category",
+        "params": [
+            {
+                "name": "id",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "deleted"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "reorderCategories",
+        "method": "POST",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/categories/reorder",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                }
+            },
+            "required": [
+                "ids"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "ids": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

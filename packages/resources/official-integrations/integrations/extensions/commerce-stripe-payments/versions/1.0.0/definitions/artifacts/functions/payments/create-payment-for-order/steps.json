@@ -1,0 +1,6 @@
+{
+    "$files": [
+        "steps/seller-preflight/root.json",
+        "steps/commerce-recording.json"
+    ]
+}

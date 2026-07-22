@@ -1,0 +1,111 @@
+[
+    {
+        "endpointId": "uploadStripeDisputeFile",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/disputes/files",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "disputeId": {
+                    "type": "string"
+                },
+                "fileName": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "type": "string"
+                },
+                "base64": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "disputeId",
+                "fileName",
+                "mimeType",
+                "base64"
+            ]
+        },
+        "output": [
+            {
+                "status": "201",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "fileId": {
+                            "type": "string"
+                        },
+                        "fileName": {
+                            "type": "string"
+                        },
+                        "purpose": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "fileId",
+                        "fileName"
+                    ]
+                }
+            },
+            {
+                "status": "400",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "403",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "404",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "413",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    },
+    {
+        "$include": "stage-stripe-dispute-evidence.json"
+    },
+    {
+        "$include": "submit-stripe-dispute-evidence.json"
+    }
+]

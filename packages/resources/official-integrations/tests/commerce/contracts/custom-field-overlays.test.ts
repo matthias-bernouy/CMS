@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../helpers/integrationDefinition";
 
 type Target = { endpointId: string; path?: string; editable?: string };
 type Overlay = {
@@ -18,7 +18,7 @@ const definitionPath = resolve(
 
 describe("commerce custom-field overlays", () => {
     test("keeps Product admin metadata contextual while projecting public metadata", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8")) as Definition;
+        const definition = await loadIntegrationDefinition<Definition>(definitionPath);
         const overlays = definition.artifacts
             .filter((artifact) => artifact.type === "sourceOverlay")
             .map((artifact) => artifact.overlay!);

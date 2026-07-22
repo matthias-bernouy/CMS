@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-button",
+        "name": "Basic button",
+        "group": "Basic",
+        "description": "Neutral button bloc with inherited typography and CSS custom properties.",
+        "path": "blocs/basic/basic-button"
+    }
+}

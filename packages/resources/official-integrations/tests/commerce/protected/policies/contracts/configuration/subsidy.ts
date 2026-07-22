@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { functionSql, integrationRoot } from "../paths";
+import { functionSql, loadCommerceSchemaSql } from "../paths";
 
 export function registerPolicySubsidyTest(): void {
     test("refuses an economically uncovered policy unless an audited subsidy covers its deficit", async () => {
-        const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
+        const schema = await loadCommerceSchemaSql();
         const createRevision = functionSql(schema, "create_c2c_policy_revision", "refresh_seller_risk_state");
 
         expect(createRevision).toContain("v_guaranteed_fee_floor");

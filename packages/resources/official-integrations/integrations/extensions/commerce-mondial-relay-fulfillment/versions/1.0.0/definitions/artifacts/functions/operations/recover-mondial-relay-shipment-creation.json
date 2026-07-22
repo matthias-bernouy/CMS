@@ -1,0 +1,101 @@
+{
+    "type": "function",
+    "function": {
+        "id": "recoverMondialRelayShipmentCreation",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "meta": {
+            "name": "Recover Mondial Relay shipment creation",
+            "description": "Attach a verified provider shipment and complete the matching Commerce creation operation with an audited operator reason."
+        },
+        "input": {
+            "body": {
+                "type": "object",
+                "properties": {
+                    "shipmentId": {
+                        "type": "string"
+                    },
+                    "orderPublicId": {
+                        "type": "string"
+                    },
+                    "expeditionNumber": {
+                        "type": "string"
+                    },
+                    "labelUrl": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "shipmentId",
+                    "orderPublicId",
+                    "expeditionNumber",
+                    "reason"
+                ]
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ],
+        "steps": [
+            {
+                "assert": {
+                    "condition": {
+                        "equals": [
+                            "$ctx.user.role",
+                            "admin"
+                        ]
+                    },
+                    "failure": {
+                        "status": 403,
+                        "error": "Shipment recovery requires an admin"
+                    }
+                }
+            },
+            {
+                "id": "deliveryRecovery",
+                "call": {
+                    "source": "{{dependencies.delivery.sourceId}}",
+                    "endpoint": "recoverUnknownShipment",
+                    "body": {
+                        "shipmentId": "$input.body.shipmentId",
+                        "externalOrderId": "$input.body.orderPublicId",
+                        "expeditionNumber": "$input.body.expeditionNumber",
+                        "labelUrl": "$input.body.labelUrl",
+                        "reason": "$input.body.reason"
+                    }
+                }
+            },
+            {
+                "id": "commerceRecovery",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "recoverOrderShipmentCreation",
+                    "body": {
+                        "orderPublicId": "$input.body.orderPublicId",
+                        "providerReference": "$steps.deliveryRecovery.expeditionNumber",
+                        "providerShipmentId": "$steps.deliveryRecovery.id",
+                        "reason": "$input.body.reason",
+                        "providerSnapshot": "$steps.deliveryRecovery"
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": {
+                "shipment": "$steps.deliveryRecovery",
+                "fulfillment": "$steps.commerceRecovery"
+            }
+        }
+    }
+}

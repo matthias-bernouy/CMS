@@ -1,0 +1,83 @@
+[
+    {
+        "assert": {
+            "condition": {
+                "equals": [
+                    "$input.body.status",
+                    "authorized"
+                ]
+            },
+            "failure": {
+                "status": 409,
+                "error": "Settlement release is not authorized"
+            }
+        }
+    },
+    {
+        "id": "sellerPayoutControls",
+        "call": {
+            "source": "{{dependencies.stripe.sourceId}}",
+            "endpoint": "configureSellerPayoutSchedule",
+            "body": {
+                "userId": "$input.body.sellerId",
+                "payoutScheduleChangeId": {
+                    "$concat": [
+                        "settlement-release:",
+                        "$input.body.releaseAuthorizationId",
+                        ":",
+                        "$input.body.sellerRequiredMinimumBalanceAmount",
+                        ":",
+                        "$input.body.payoutDelayDays"
+                    ]
+                },
+                "interval": "weekly",
+                "weeklyPayoutDays": [
+                    "monday"
+                ],
+                "minimumBalanceEur": "$input.body.sellerRequiredMinimumBalanceAmount",
+                "delayDaysOverride": "$input.body.payoutDelayDays",
+                "reason": "Commerce authorized settlement release"
+            }
+        }
+    },
+    {
+        "id": "providerTransfer",
+        "call": {
+            "source": "{{dependencies.stripe.sourceId}}",
+            "endpoint": "requestSettlementRelease",
+            "body": {
+                "paymentId": "$input.body.paymentId",
+                "releaseAuthorizationId": "$input.body.releaseAuthorizationId",
+                "releaseKind": "$input.body.releaseKind",
+                "amount": "$input.body.amount",
+                "currency": "$input.body.currency"
+            }
+        }
+    },
+    {
+        "id": "commerceSettlement",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "recordOrderSettlement",
+            "body": {
+                "orderPublicId": "$input.body.orderPublicId",
+                "providerEventId": {
+                    "$concat": [
+                        "transfer:",
+                        "$steps.providerTransfer.providerOperationId",
+                        ":",
+                        "$steps.providerTransfer.updatedAt"
+                    ]
+                },
+                "operationType": "transfer",
+                "providerOperationId": "$steps.providerTransfer.providerOperationId",
+                "status": "$steps.providerTransfer.status",
+                "amount": "$steps.providerTransfer.amount",
+                "currency": "$steps.providerTransfer.currency",
+                "occurredAt": "$steps.providerTransfer.occurredAt",
+                "releaseAuthorizationId": "$input.body.releaseAuthorizationId",
+                "providerSnapshot": "$steps.providerTransfer"
+            }
+        }
+    }
+]

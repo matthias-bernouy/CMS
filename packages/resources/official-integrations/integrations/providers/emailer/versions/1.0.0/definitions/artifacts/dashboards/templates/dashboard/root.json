@@ -1,0 +1,11 @@
+{
+    "id": "{{answers.id}}-templates",
+    "source": "{{answers.id}}",
+    "meta": {
+        "name": "Templates",
+        "icon": "mail"
+    },
+    "views": {
+        "$include": "views/root.json"
+    }
+}

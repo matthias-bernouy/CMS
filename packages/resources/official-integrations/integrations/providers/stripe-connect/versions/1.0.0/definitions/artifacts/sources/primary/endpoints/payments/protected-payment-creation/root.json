@@ -1,0 +1,72 @@
+[
+    {
+        "endpointId": "checkSellerHeldPaymentEligibility",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/payments/seller-eligibility",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "sellerUserId": {
+                    "type": "string",
+                    "semantic": {
+                        "kind": "user-id",
+                        "authority": "cms"
+                    }
+                },
+                "marketplaceTermsVersion": {
+                    "type": "string"
+                },
+                "marketplaceTermsHash": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "sellerUserId",
+                "marketplaceTermsVersion",
+                "marketplaceTermsHash"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "eligible": {
+                            "type": "boolean"
+                        },
+                        "reasonCode": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "eligible",
+                        "reasonCode"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "$include": "create-protected-payment/root.json"
+    }
+]

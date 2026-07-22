@@ -1,0 +1,32 @@
+[
+    {
+        "provider": "supabase",
+        "root": "connectors/supabase",
+        "dataApiSchemas": [
+            "delivery"
+        ],
+        "schemas": [
+            {
+                "manifest": "sql/schema.manifest.json"
+            }
+        ],
+        "functions": [
+            {
+                "name": "cms-delivery",
+                "directory": "functions/cms-delivery",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_DELIVERY_API_KEY": "{{generated.cmsApiKey}}",
+                    "MONDIAL_RELAY_CONNECT_ENDPOINT": "{{answers.mondialRelayConnectEndpoint}}",
+                    "MONDIAL_RELAY_CONNECT_LOGIN": "{{answers.mondialRelayConnectLogin}}",
+                    "MONDIAL_RELAY_CONNECT_PASSWORD": "{{connectorSecrets.mondialRelayConnectPassword}}",
+                    "MONDIAL_RELAY_CONNECT_CUSTOMER_ID": "{{answers.mondialRelayConnectCustomerId}}",
+                    "MONDIAL_RELAY_WIDGET_BRAND": "{{answers.mondialRelayConnectCustomerId}}",
+                    "MONDIAL_RELAY_TRACKING_ENDPOINT": "{{answers.mondialRelayTrackingEndpoint}}",
+                    "MONDIAL_RELAY_TRACKING_BRAND": "{{answers.mondialRelayTrackingBrand}}",
+                    "MONDIAL_RELAY_TRACKING_PRIVATE_KEY": "{{connectorSecrets.mondialRelayTrackingPrivateKey}}"
+                }
+            }
+        ]
+    }
+]

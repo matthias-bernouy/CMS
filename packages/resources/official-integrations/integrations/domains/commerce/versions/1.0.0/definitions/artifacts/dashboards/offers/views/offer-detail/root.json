@@ -1,0 +1,97 @@
+{
+    "widget": "w-detail",
+    "id": "offerDetail",
+    "source": {
+        "endpoint": "manageOffer",
+        "params": {
+            "id": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "title",
+        "fallback": "New offer"
+    },
+    "status": {
+        "path": "workflowState"
+    },
+    "actions": {
+        "$include": "actions.json"
+    },
+    "main": {
+        "$include": "sections/root.json"
+    },
+    "aside": [
+        {
+            "id": "offerState",
+            "title": "State",
+            "fields": [
+                {
+                    "id": "publicationStatus",
+                    "label": "Publication",
+                    "path": "publicationStatus",
+                    "type": "select",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "draft",
+                            "label": "Draft"
+                        },
+                        {
+                            "value": "active",
+                            "label": "Active"
+                        },
+                        {
+                            "value": "paused",
+                            "label": "Paused"
+                        },
+                        {
+                            "value": "archived",
+                            "label": "Archived"
+                        }
+                    ]
+                },
+                {
+                    "id": "workflowState",
+                    "label": "Workflow state",
+                    "path": "workflowState",
+                    "type": "combobox",
+                    "required": true,
+                    "lookup": {
+                        "endpoint": "workflowStates",
+                        "itemsPath": "items",
+                        "valuePath": "code",
+                        "labelPath": "label",
+                        "subtitlePath": "phase"
+                    }
+                },
+                {
+                    "id": "availability",
+                    "label": "Availability",
+                    "path": "availability",
+                    "type": "select",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "available",
+                            "label": "Available"
+                        },
+                        {
+                            "value": "unavailable",
+                            "label": "Unavailable"
+                        },
+                        {
+                            "value": "preorder",
+                            "label": "Preorder"
+                        }
+                    ]
+                },
+                {
+                    "id": "quantityAvailable",
+                    "label": "Available quantity",
+                    "path": "quantityAvailable",
+                    "type": "text"
+                }
+            ]
+        }
+    ]
+}

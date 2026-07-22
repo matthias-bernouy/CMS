@@ -1,0 +1,24 @@
+[
+    {
+        "provider": "supabase",
+        "root": "connectors/supabase",
+        "dataApiSchemas": [
+            "commerce_negotiation"
+        ],
+        "schemas": [
+            {
+                "manifest": "sql/schema.manifest.json"
+            }
+        ],
+        "functions": [
+            {
+                "name": "cms-commerce-negotiation",
+                "directory": "functions/cms-commerce-negotiation",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_NEGOTIATION_API_KEY": "{{generated.cmsApiKey}}"
+                }
+            }
+        ]
+    }
+]

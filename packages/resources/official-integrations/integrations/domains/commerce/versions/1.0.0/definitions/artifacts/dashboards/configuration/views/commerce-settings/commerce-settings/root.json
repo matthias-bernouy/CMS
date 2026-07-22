@@ -1,0 +1,42 @@
+{
+    "widget": "w-detail",
+    "id": "commerceSettings",
+    "source": {
+        "endpoint": "settings"
+    },
+    "title": {
+        "path": "mode",
+        "fallback": "Commerce settings"
+    },
+    "status": {
+        "path": "mode"
+    },
+    "actions": [
+        {
+            "id": "saveSettings",
+            "label": "Save settings",
+            "tone": "primary",
+            "placement": "primary",
+            "endpoint": {
+                "endpoint": "updateSettings",
+                "body": {
+                    "expectedVersion": "$resource.version",
+                    "mode": "$field.mode",
+                    "defaultCurrency": "$field.defaultCurrency",
+                    "requireVerifiedSeller": "$field.requireVerifiedSeller",
+                    "offerModeration": "$field.offerModeration",
+                    "pricePolicy": "$field.pricePolicy",
+                    "autoApprovePriceInRange": "$field.autoApprovePriceInRange",
+                    "requireFinalPriceApproval": "$field.requireFinalPriceApproval",
+                    "sellerCanPublish": "$field.sellerCanPublish"
+                }
+            },
+            "after": {
+                "resource": "$result"
+            }
+        }
+    ],
+    "main": {
+        "$include": "main.json"
+    }
+}

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
 import { attachedEvidence } from "./raw";
 
 type Endpoint = {
@@ -165,7 +165,7 @@ describe("commerce claim evidence strict Source contracts", () => {
 });
 
 async function evidenceEndpoints(): Promise<Endpoint[]> {
-    const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+    const definition = await loadIntegrationDefinition<any>(definitionPath);
     return definition.artifacts
         .find((artifact: any) => artifact.source)
         ?.source?.endpoints.filter((endpoint: Endpoint) =>

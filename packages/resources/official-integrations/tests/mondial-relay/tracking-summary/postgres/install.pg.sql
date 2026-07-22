@@ -1,5 +1,11 @@
 \set ON_ERROR_STOP on
 
+\if :{?cms_integration_schema_bundle}
+\else
+    \echo 'cms_integration_schema_bundle must point to an assembled temporary SQL bundle.'
+    \quit 3
+\endif
+
 -- Explicit opt-in: this contract destroys and recreates delivery.
 \if :{?allow_tracking_summary_schema_reset}
 \else
@@ -13,7 +19,7 @@
 \endif
 
 drop schema if exists delivery cascade;
-\ir ../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
+\ir :cms_integration_schema_bundle
 
 create temporary table tracking_summary_install_fingerprint
 on commit preserve rows
@@ -39,7 +45,7 @@ begin
 end;
 $fresh_install$;
 
-\ir ../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
+\ir :cms_integration_schema_bundle
 
 do $reapply$
 begin

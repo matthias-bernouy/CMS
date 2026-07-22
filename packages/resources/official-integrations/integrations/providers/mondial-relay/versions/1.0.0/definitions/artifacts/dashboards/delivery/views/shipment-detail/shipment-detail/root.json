@@ -1,0 +1,109 @@
+{
+    "widget": "w-detail",
+    "id": "shipmentDetail",
+    "source": {
+        "endpoint": "shipment",
+        "params": {
+            "id": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "expeditionNumber",
+        "fallback": "Shipment"
+    },
+    "status": {
+        "path": "status"
+    },
+    "actions": [
+        {
+            "id": "recoverUnknownShipment",
+            "label": "Recover unknown shipment",
+            "tone": "danger",
+            "placement": "more",
+            "confirm": "Attach this verified Mondial Relay shipment to the ambiguous reservation?",
+            "visibleWhen": {
+                "value": "$field.status",
+                "equals": "unknown"
+            },
+            "endpoint": {
+                "endpoint": "recoverUnknownShipment",
+                "body": {
+                    "shipmentId": "$resource.id",
+                    "externalOrderId": "$resource.externalOrderId",
+                    "expeditionNumber": "$field.recoveryExpeditionNumber",
+                    "labelUrl": "$field.recoveryLabelUrl",
+                    "reason": "$field.recoveryReason"
+                }
+            }
+        }
+    ],
+    "main": {
+        "$include": "main.json"
+    },
+    "aside": [
+        {
+            "id": "shipmentLinks",
+            "title": "Links",
+            "fields": [
+                {
+                    "id": "trackingUrl",
+                    "label": "Tracking URL",
+                    "path": "trackingUrl",
+                    "type": "readonly",
+                    "format": "url"
+                },
+                {
+                    "id": "latestEventLabel",
+                    "label": "Latest event",
+                    "path": "latestEventLabel",
+                    "type": "readonly"
+                },
+                {
+                    "id": "latestEventAt",
+                    "label": "Latest event date",
+                    "path": "latestEventAt",
+                    "type": "readonly",
+                    "format": "date"
+                },
+                {
+                    "id": "createdAt",
+                    "label": "Created",
+                    "path": "createdAt",
+                    "type": "readonly",
+                    "format": "date"
+                },
+                {
+                    "id": "recoveryExpeditionNumber",
+                    "label": "Verified expedition number",
+                    "path": "recoveryExpeditionNumber",
+                    "type": "text",
+                    "visibleWhen": {
+                        "value": "$field.status",
+                        "equals": "unknown"
+                    }
+                },
+                {
+                    "id": "recoveryLabelUrl",
+                    "label": "Verified provider label URL",
+                    "path": "recoveryLabelUrl",
+                    "type": "text",
+                    "visibleWhen": {
+                        "value": "$field.status",
+                        "equals": "unknown"
+                    }
+                },
+                {
+                    "id": "recoveryReason",
+                    "label": "Recovery reason",
+                    "path": "recoveryReason",
+                    "type": "textarea",
+                    "rows": 3,
+                    "visibleWhen": {
+                        "value": "$field.status",
+                        "equals": "unknown"
+                    }
+                }
+            ]
+        }
+    ]
+}

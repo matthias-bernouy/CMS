@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { loadIntegrationDefinition } from "../helpers/integrationDefinition";
 import { registerDeliveryTests } from "./scenarios/delivery";
 import { registerInstallationTest } from "./scenarios/installation";
 import { registerSettingsTests } from "./scenarios/settings";
@@ -6,9 +7,11 @@ import { registerSettingsTests } from "./scenarios/settings";
 describe("emailer 1.0.0 source", () => {
     registerInstallationTest();
     test("does not deploy or retain Newsletter credentials in the broadcast connector", async () => {
-        const definition = await Bun.file(
-            new URL("../../integrations/providers/emailer/versions/1.0.0/definition.json", import.meta.url),
-        ).text();
+        const definition = JSON.stringify(
+            await loadIntegrationDefinition(
+                new URL("../../integrations/providers/emailer/versions/1.0.0/definition.json", import.meta.url),
+            ),
+        );
         const campaignSource = await Bun.file(
             new URL(
                 "../../integrations/providers/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/campaigns.ts",

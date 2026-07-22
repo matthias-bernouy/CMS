@@ -1,0 +1,53 @@
+{
+    "endpointId": "listMyOffers",
+    "method": "GET",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/offers",
+    "params": [
+        {
+            "name": "status",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "publicationStatus",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "workflowState",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "limit",
+            "in": "query",
+            "type": "number"
+        },
+        {
+            "name": "offset",
+            "in": "query",
+            "type": "number"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "output": {
+        "$include": "output.json"
+    }
+}

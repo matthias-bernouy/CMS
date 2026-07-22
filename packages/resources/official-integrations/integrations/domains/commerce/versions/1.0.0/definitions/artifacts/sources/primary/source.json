@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}",
+    "meta": {
+        "name": "Commerce",
+        "description": "Supabase-backed catalogue, marketplace, buyer cart, seller review, pricing workflow, and ordering endpoints.",
+        "icon": {
+            "path": "assets/icon.svg"
+        }
+    },
+    "endpoints": {
+        "$include": "endpoints.json"
+    }
+}

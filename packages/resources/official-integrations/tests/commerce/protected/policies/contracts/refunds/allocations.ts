@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { functionSql, integrationRoot } from "../paths";
+import { functionSql, loadCommerceSchemaSql } from "../paths";
 
 export function registerRefundAllocationsTest(): void {
     test("derives generic refund allocations and enforces distinct dual approvers", async () => {
-        const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
+        const schema = await loadCommerceSchemaSql();
         const createRefund = functionSql(schema, "create_refund_request", "refund_authorization_payload");
         const requestRefund = functionSql(schema, "request_order_refund", "review_refund_request");
         const reviewRefund = functionSql(schema, "review_refund_request", "authorize_order_release");

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
 
 type JsonRecord = Record<string, unknown>;
 type FunctionDefinition = JsonRecord & { id: string; steps: JsonRecord[] };
@@ -124,7 +124,7 @@ describe("claim return authorization consumer contracts", () => {
 });
 
 async function returnFunctions(): Promise<FunctionDefinition[]> {
-    const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+    const definition = await loadIntegrationDefinition<any>(definitionPath);
     const expected = new Set([
         "getClaimReturnForMe",
         "setRelayPointForMyClaimReturn",

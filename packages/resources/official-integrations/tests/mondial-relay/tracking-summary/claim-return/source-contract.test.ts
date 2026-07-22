@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, test } from "bun:test";
+import { loadIntegrationDefinition } from "../../../helpers/integrationDefinition";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -9,8 +9,8 @@ const definitionUrl = new URL(
 );
 
 describe("Mondial Relay shipment tracking context source contract", () => {
-    test("declares one bounded system endpoint with the two exact legacy DTOs", () => {
-        const endpoints = sourceEndpoints();
+    test("declares one bounded system endpoint with the two exact legacy DTOs", async () => {
+        const endpoints = await sourceEndpoints();
         const shipment = endpoint(endpoints, "shipment");
         const tracking = endpoint(endpoints, "tracking");
         const context = endpoint(endpoints, "shipmentTrackingContext");
@@ -33,8 +33,8 @@ describe("Mondial Relay shipment tracking context source contract", () => {
     });
 });
 
-function sourceEndpoints(): JsonRecord[] {
-    const definition = JSON.parse(readFileSync(definitionUrl, "utf8")) as JsonRecord;
+async function sourceEndpoints(): Promise<JsonRecord[]> {
+    const definition = await loadIntegrationDefinition<JsonRecord>(definitionUrl);
     const artifacts = definition.artifacts as JsonRecord[];
     const sourceArtifact = artifacts.find((artifact) => artifact.type === "source");
     const source = sourceArtifact?.source as JsonRecord;

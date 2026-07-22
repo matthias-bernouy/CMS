@@ -10,6 +10,10 @@ import {
     statusAfterObservation,
     test,
 } from "../support";
+import { resolve } from "node:path";
+import { loadSupabaseSchemaSql } from "../../../helpers/supabaseSql";
+
+const integrationRoot = resolve(import.meta.dir, "../../../../integrations/providers/mondial-relay/versions/1.0.0");
 
 export function registerFoundationTests(): void {
     test("redacts internal and unexpected database error details", async () => {
@@ -107,12 +111,7 @@ export function registerFoundationTests(): void {
     });
 
     test("claims due tracking rows with a stale lease and skip-locked concurrency", async () => {
-        const schema = await Bun.file(
-            new URL(
-                "../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
-                import.meta.url,
-            ),
-        ).text();
+        const schema = await loadSupabaseSchemaSql(integrationRoot);
 
         expect(schema).toContain("create or replace function delivery.claim_due_shipments");
         expect(schema).toContain("for update skip locked");
@@ -121,12 +120,7 @@ export function registerFoundationTests(): void {
     });
 
     test("declares durable projection leases, bounded retries, and manual review", async () => {
-        const schema = await Bun.file(
-            new URL(
-                "../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
-                import.meta.url,
-            ),
-        ).text();
+        const schema = await loadSupabaseSchemaSql(integrationRoot);
 
         expect(schema).toContain("create or replace function delivery.claim_pending_shipment_events");
         expect(schema).toContain("projection_claim_token");

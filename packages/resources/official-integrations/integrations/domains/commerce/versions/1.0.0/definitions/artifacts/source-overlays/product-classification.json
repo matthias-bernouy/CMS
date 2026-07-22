@@ -1,0 +1,73 @@
+{
+    "type": "sourceOverlay",
+    "overlay": {
+        "id": "{{answers.id}}-product-classification",
+        "sourceId": "{{answers.id}}",
+        "label": "Product classification",
+        "output": [
+            {
+                "endpointId": "product"
+            },
+            {
+                "endpointId": "manageProduct"
+            },
+            {
+                "endpointId": "upsertProduct"
+            },
+            {
+                "endpointId": "offer",
+                "path": "product"
+            },
+            {
+                "endpointId": "offers",
+                "path": "items[].product"
+            },
+            {
+                "endpointId": "manageOffer",
+                "path": "product"
+            },
+            {
+                "endpointId": "myOffer",
+                "path": "product"
+            }
+        ],
+        "fields": [
+            {
+                "id": "brandId",
+                "label": "Brand id",
+                "type": "number",
+                "path": "brandId"
+            },
+            {
+                "id": "brandName",
+                "label": "Brand",
+                "type": "string",
+                "path": "brand.name"
+            },
+            {
+                "id": "brandSlug",
+                "label": "Brand slug",
+                "type": "string",
+                "path": "brand.slug"
+            },
+            {
+                "id": "primaryCategoryId",
+                "label": "Primary category id",
+                "type": "number",
+                "path": "primaryCategoryId"
+            },
+            {
+                "id": "primaryCategoryLabel",
+                "label": "Primary category",
+                "type": "string",
+                "path": "primaryCategory.label"
+            },
+            {
+                "id": "primaryCategoryFullSlug",
+                "label": "Primary category path",
+                "type": "string",
+                "path": "primaryCategory.fullSlug"
+            }
+        ]
+    }
+}

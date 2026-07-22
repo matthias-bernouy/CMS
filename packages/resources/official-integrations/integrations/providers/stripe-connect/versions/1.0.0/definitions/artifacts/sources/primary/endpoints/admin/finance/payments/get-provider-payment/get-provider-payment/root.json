@@ -1,0 +1,43 @@
+{
+    "endpointId": "getProviderPayment",
+    "method": "GET",
+    "access": {
+        "mode": "admin"
+    },
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/payments/payment",
+    "params": [
+        {
+            "name": "paymentId",
+            "in": "query",
+            "type": "number",
+            "required": true
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        },
+        {
+            "name": "x-cms-user-role",
+            "source": {
+                "from": "computed",
+                "ref": "userRole"
+            }
+        }
+    ],
+    "output": {
+        "$include": "output/root.json"
+    }
+}

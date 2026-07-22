@@ -1,0 +1,26 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "file": "lifecycle/open-marketplace-claim.sql" },
+        { "file": "lifecycle/respond-marketplace-claim.sql" },
+        { "file": "evidence/attach-claim-evidence.sql" },
+        { "file": "evidence/get-claim-evidence-upload-context.sql" },
+        { "file": "evidence/get-claim-evidence-download-context.sql" },
+        { "file": "returns/get-claim-return-authorization-context.sql" },
+        { "file": "read-models/get-marketplace-claim-read-model.sql" },
+        { "file": "refunds/calculate-protection-fee-refund.sql" },
+        { "file": "refunds/create-refund-request.sql" },
+        { "file": "refunds/refund-authorization-payload.sql" },
+        { "file": "returns/record-claim-return-delivery.sql" },
+        { "file": "lifecycle/resolve-marketplace-claim.sql" },
+        { "file": "refunds/request-order-refund.sql" },
+        { "file": "refunds/create-cancellation-refund-request.sql" },
+        { "file": "refunds/review-refund-request.sql" },
+        { "file": "settlements/authorize-order-release.sql" },
+        { "file": "settlements/authorize-order-reserve-release.sql" },
+        { "file": "settlements/restore-order-inventory.sql" },
+        { "file": "settlements/record-order-settlement-projection.sql" },
+        { "file": "projections/record-order-stripe-dispute.sql" }
+    ]
+}

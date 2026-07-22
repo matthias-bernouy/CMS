@@ -1,0 +1,80 @@
+[
+    {
+        "endpointId": "getOfferNegotiationContext",
+        "method": "GET",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/offer/negotiation-context",
+        "params": [
+            {
+                "name": "offerId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "offerId": {
+                            "type": "number"
+                        },
+                        "offerSlug": {
+                            "type": "string"
+                        },
+                        "offerTitle": {
+                            "type": "string"
+                        },
+                        "sellerCmsUserId": {
+                            "type": "string",
+                            "nullable": true,
+                            "semantic": {
+                                "kind": "user-id",
+                                "authority": "cms"
+                            }
+                        },
+                        "sellerDisplayName": {
+                            "type": "string"
+                        },
+                        "referenceAmount": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "publicationStatus": {
+                            "type": "string"
+                        },
+                        "availability": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "offerId",
+                        "offerSlug",
+                        "offerTitle",
+                        "sellerCmsUserId",
+                        "sellerDisplayName",
+                        "referenceAmount",
+                        "currency",
+                        "publicationStatus",
+                        "availability"
+                    ]
+                }
+            }
+        ]
+    }
+]

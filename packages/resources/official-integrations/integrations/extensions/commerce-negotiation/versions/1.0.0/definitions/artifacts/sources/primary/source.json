@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}",
+    "meta": {
+        "name": "Commerce negotiation",
+        "description": "Bounded buyer price proposals for Commerce marketplace offers.",
+        "icon": {
+            "path": "assets/icon.svg"
+        }
+    },
+    "endpoints": {
+        "$include": "endpoints.json"
+    }
+}

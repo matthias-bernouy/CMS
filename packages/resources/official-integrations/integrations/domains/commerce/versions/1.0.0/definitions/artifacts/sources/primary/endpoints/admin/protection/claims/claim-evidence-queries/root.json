@@ -1,0 +1,69 @@
+[
+    {
+        "endpointId": "claimEvidenceFile",
+        "method": "GET",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/claim/evidence",
+        "params": [
+            {
+                "name": "evidenceId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "responseKind": "file",
+        "mediaType": "application/octet-stream",
+        "output": [
+            {
+                "status": "200"
+            },
+            {
+                "status": "404",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "$include": "claim-evidence-items.json"
+    },
+    {
+        "$include": "claim-evidence-item.json"
+    }
+]

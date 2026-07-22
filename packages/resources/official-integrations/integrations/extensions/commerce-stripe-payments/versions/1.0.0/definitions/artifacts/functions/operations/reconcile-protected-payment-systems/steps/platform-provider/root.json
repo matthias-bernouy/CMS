@@ -1,0 +1,97 @@
+[
+    {
+        "assert": {
+            "condition": {
+                "all": [
+                    {
+                        "gte": [
+                            "$input.body.limit",
+                            1
+                        ]
+                    },
+                    {
+                        "lte": [
+                            "$input.body.limit",
+                            5
+                        ]
+                    }
+                ]
+            },
+            "failure": {
+                "status": 400,
+                "error": "limit must be between 1 and 5"
+            }
+        }
+    },
+    {
+        "id": "platformLiabilities",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "pendingPlatformPayoutLiabilityAuthorizations",
+            "body": {
+                "runKey": "$input.body.runKey"
+            }
+        }
+    },
+    {
+        "id": "platformLiabilityApplications",
+        "forEach": {
+            "items": "$steps.platformLiabilities.authorizations",
+            "max": 1,
+            "steps": [
+                {
+                    "id": "providerControl",
+                    "call": {
+                        "source": "{{dependencies.stripe.sourceId}}",
+                        "endpoint": "configurePlatformPayoutControls",
+                        "body": {
+                            "platformPayoutControlChangeId": {
+                                "$concat": [
+                                    "commerce-reconciliation:",
+                                    "$input.body.runKey",
+                                    ":",
+                                    "$item.liabilityRevision"
+                                ]
+                            },
+                            "minimumBalanceEur": "$item.requiredMinimumAmount",
+                            "liabilityRevision": "$item.liabilityRevision",
+                            "decreaseAuthorizationId": "$item.decreaseAuthorizationId",
+                            "reason": "Commerce aggregate liability reconciliation"
+                        }
+                    }
+                },
+                {
+                    "id": "commerceReceipt",
+                    "call": {
+                        "source": "{{dependencies.commerce.sourceId}}",
+                        "endpoint": "recordPlatformPayoutLiabilityApplied",
+                        "body": {
+                            "liabilityRevision": "$steps.providerControl.liabilityRevision",
+                            "appliedMinimumAmount": "$steps.providerControl.appliedMinimumBalanceEur",
+                            "decreaseAuthorizationId": "$steps.providerControl.decreaseAuthorizationId"
+                        }
+                    }
+                }
+            ],
+            "yield": {
+                "authorization": "$item",
+                "provider": "$steps.providerControl",
+                "receipt": "$steps.commerceReceipt"
+            }
+        }
+    },
+    {
+        "id": "providerRun",
+        "call": {
+            "source": "{{dependencies.stripe.sourceId}}",
+            "endpoint": "runProviderReconciliation",
+            "body": {
+                "runKey": "$input.body.runKey",
+                "limit": "$input.body.limit"
+            }
+        }
+    },
+    {
+        "$include": "payment-projections.json"
+    }
+]

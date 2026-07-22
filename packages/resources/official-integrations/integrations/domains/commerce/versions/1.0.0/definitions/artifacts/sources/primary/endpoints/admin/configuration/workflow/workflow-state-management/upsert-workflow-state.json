@@ -1,0 +1,85 @@
+{
+    "endpointId": "upsertWorkflowState",
+    "method": "POST",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/workflow-state",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "code": {
+                "type": "string"
+            },
+            "label": {
+                "type": "string"
+            },
+            "phase": {
+                "type": "string"
+            },
+            "position": {
+                "type": "number"
+            },
+            "enabled": {
+                "type": "boolean"
+            },
+            "terminal": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "code",
+            "label",
+            "phase"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "phase": {
+                        "type": "string"
+                    },
+                    "position": {
+                        "type": "number"
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "terminal": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ]
+}

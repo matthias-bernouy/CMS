@@ -1,0 +1,126 @@
+{
+    "endpointId": "pendingOrderRefundAuthorizations",
+    "method": "POST",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/refunds/pending",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "runKey": {
+                "type": "string"
+            },
+            "limit": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "runKey"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "runKey": {
+                        "type": "string"
+                    },
+                    "authorizations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "status": {
+                                    "type": "string"
+                                },
+                                "orderId": {
+                                    "type": "number"
+                                },
+                                "orderPublicId": {
+                                    "type": "string"
+                                },
+                                "providerPaymentId": {
+                                    "type": "number",
+                                    "nullable": true
+                                },
+                                "refundRequestId": {
+                                    "type": "string"
+                                },
+                                "commerceRefundRequestId": {
+                                    "type": "number"
+                                },
+                                "businessKey": {
+                                    "type": "string"
+                                },
+                                "amount": {
+                                    "type": "number"
+                                },
+                                "authorizedSellerAmount": {
+                                    "type": "number"
+                                },
+                                "sellerEntitlementReductionAmount": {
+                                    "type": "number"
+                                },
+                                "sellerRecoveryAmount": {
+                                    "type": "number"
+                                },
+                                "sellerReserveOffsetAmount": {
+                                    "type": "number"
+                                },
+                                "protectionFeeRefundAmount": {
+                                    "type": "number"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                },
+                                "financialTermsHash": {
+                                    "type": "string"
+                                },
+                                "requiresFinanceApproval": {
+                                    "type": "boolean"
+                                },
+                                "requiresDualApproval": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "status",
+                                "orderId",
+                                "orderPublicId",
+                                "providerPaymentId",
+                                "refundRequestId",
+                                "commerceRefundRequestId",
+                                "businessKey",
+                                "amount",
+                                "authorizedSellerAmount",
+                                "sellerEntitlementReductionAmount",
+                                "sellerRecoveryAmount",
+                                "protectionFeeRefundAmount",
+                                "currency",
+                                "financialTermsHash",
+                                "requiresFinanceApproval",
+                                "requiresDualApproval"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "runKey",
+                    "authorizations"
+                ]
+            }
+        }
+    ]
+}

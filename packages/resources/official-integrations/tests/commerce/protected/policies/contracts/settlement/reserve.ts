@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { integrationRoot } from "../paths";
+import { loadCommerceSchemaSql } from "../paths";
 
 export function registerSellerReserveTest(): void {
     test("keeps a non-zero seller reserve as a later releasable liability", async () => {
-        const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
+        const schema = await loadCommerceSchemaSql();
 
         expect(schema).toContain("'eur', 1000,\n    14, 120");
         expect(schema).toContain("v_order.id, v_terms.seller_proceeds_amount");

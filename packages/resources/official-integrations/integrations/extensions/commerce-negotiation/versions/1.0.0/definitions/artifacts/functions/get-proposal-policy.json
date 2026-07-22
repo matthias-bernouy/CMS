@@ -1,0 +1,63 @@
+{
+    "type": "function",
+    "function": {
+        "id": "getProposalPolicy",
+        "method": "GET",
+        "access": {
+            "mode": "auth"
+        },
+        "meta": {
+            "name": "Get proposal policy",
+            "description": "Resolve an authoritative Commerce offer and return its negotiation policy."
+        },
+        "input": {
+            "params": {
+                "offerId": {
+                    "type": "number"
+                }
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ],
+        "steps": [
+            {
+                "id": "offer",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "getOfferNegotiationContext",
+                    "params": {
+                        "offerId": "$input.params.offerId"
+                    }
+                }
+            },
+            {
+                "id": "policy",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "getProposalPolicy",
+                    "params": {
+                        "offerId": "$steps.offer.offerId",
+                        "offerSlug": "$steps.offer.offerSlug",
+                        "offerTitle": "$steps.offer.offerTitle",
+                        "sellerCmsUserId": "$steps.offer.sellerCmsUserId",
+                        "sellerDisplayName": "$steps.offer.sellerDisplayName",
+                        "referenceAmount": "$steps.offer.referenceAmount",
+                        "currency": "$steps.offer.currency",
+                        "publicationStatus": "$steps.offer.publicationStatus",
+                        "availability": "$steps.offer.availability"
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": "$steps.policy"
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "items": {
+        "$include": "items/root.json"
+    },
+    "total": {
+        "type": "number"
+    },
+    "limit": {
+        "type": "number"
+    },
+    "offset": {
+        "type": "number"
+    }
+}

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../helpers/integrationDefinition";
 
 type Endpoint = { endpointId: string; output?: Array<{ body?: DataShape }> };
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
@@ -93,7 +93,7 @@ describe("commerce resource-backed lookup selections", () => {
 });
 
 async function commerceDefinition(): Promise<Definition> {
-    return JSON.parse(await readFile(definitionPath, "utf8")) as Definition;
+    return loadIntegrationDefinition<Definition>(definitionPath);
 }
 
 function endpoints(definition: Definition): Endpoint[] {

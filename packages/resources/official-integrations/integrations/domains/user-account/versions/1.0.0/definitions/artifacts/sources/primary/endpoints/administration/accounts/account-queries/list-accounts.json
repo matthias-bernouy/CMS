@@ -1,0 +1,143 @@
+{
+    "endpointId": "listAccounts",
+    "method": "GET",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/records",
+    "meta": {
+        "name": "List users",
+        "description": "Search user personal information rows for the admin dashboard."
+    },
+    "params": [
+        {
+            "name": "q",
+            "in": "query",
+            "type": "string",
+            "description": "Search by CMS user id, phone, given name, or surname."
+        },
+        {
+            "name": "limit",
+            "in": "query",
+            "type": "number",
+            "description": "Maximum number of rows to return."
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "accounts": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "exists": {
+                                    "type": "boolean"
+                                },
+                                "userId": {
+                                    "type": "string"
+                                },
+                                "phone": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "givenName": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "surname": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "birthDate": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "addressLine1": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "addressLine2": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "addressLine3": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "postalCode": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "city": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "region": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "countryCode": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "avatarUrl": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "avatarFileId": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "locale": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "timezone": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "createdAt": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "updatedAt": {
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            },
+                            "required": [
+                                "exists",
+                                "userId"
+                            ]
+                        }
+                    },
+                    "total": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "accounts",
+                    "total"
+                ]
+            }
+        }
+    ]
+}

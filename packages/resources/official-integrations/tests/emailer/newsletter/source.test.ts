@@ -172,7 +172,7 @@ async function importNewsletter() {
                 provider: "supabase",
                 outputs: { functionsBaseUrl },
                 resources: [
-                    { type: "schema", id: "schema.sql", action: "applied" },
+                    { type: "schema", id: "sql/schema.manifest.json", action: "applied" },
                     { type: "function", id: "cms-newsletter", action: "deployed" },
                 ],
             };

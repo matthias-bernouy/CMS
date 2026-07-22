@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
+import { loadIntegrationDefinition } from "../../helpers/integrationDefinition";
 
 const definitionUrl = new URL(
     "../../../integrations/providers/mondial-relay/versions/1.0.0/definition.json",
@@ -70,11 +70,11 @@ type Endpoint = {
 };
 
 async function handoffEndpoint(): Promise<Endpoint> {
-    const definition = JSON.parse(await readFile(definitionUrl, "utf8")) as {
+    const definition = await loadIntegrationDefinition<{
         artifacts: Array<{
             source?: { endpoints: Array<Endpoint & { endpointId?: string }> };
         }>;
-    };
+    }>(definitionUrl);
     const endpoint = definition.artifacts
         .find((artifact) => artifact.source)
         ?.source?.endpoints.find((candidate) => candidate.endpointId === "declareSellerHandoff");

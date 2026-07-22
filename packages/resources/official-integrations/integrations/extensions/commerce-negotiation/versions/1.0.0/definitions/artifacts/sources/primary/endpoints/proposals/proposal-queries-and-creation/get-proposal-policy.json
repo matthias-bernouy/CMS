@@ -1,0 +1,124 @@
+{
+    "endpointId": "getProposalPolicy",
+    "method": "GET",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/policy",
+    "params": [
+        {
+            "name": "offerId",
+            "in": "query",
+            "type": "number",
+            "required": true
+        },
+        {
+            "name": "offerSlug",
+            "in": "query",
+            "type": "string",
+            "required": true
+        },
+        {
+            "name": "offerTitle",
+            "in": "query",
+            "type": "string",
+            "required": true
+        },
+        {
+            "name": "sellerCmsUserId",
+            "in": "query",
+            "type": "string",
+            "required": true
+        },
+        {
+            "name": "sellerDisplayName",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "referenceAmount",
+            "in": "query",
+            "type": "number",
+            "required": true
+        },
+        {
+            "name": "currency",
+            "in": "query",
+            "type": "string",
+            "required": true
+        },
+        {
+            "name": "publicationStatus",
+            "in": "query",
+            "type": "string",
+            "required": true
+        },
+        {
+            "name": "availability",
+            "in": "query",
+            "type": "string",
+            "required": true
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "canPropose": {
+                        "type": "boolean"
+                    },
+                    "ineligibilityReason": {
+                        "type": "string"
+                    },
+                    "offerId": {
+                        "type": "number"
+                    },
+                    "referenceAmount": {
+                        "type": "number"
+                    },
+                    "minimumAmount": {
+                        "type": "number"
+                    },
+                    "maximumAmount": {
+                        "type": "number"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "expiresAfterHours": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "enabled",
+                    "canPropose",
+                    "offerId",
+                    "referenceAmount",
+                    "minimumAmount",
+                    "maximumAmount",
+                    "currency"
+                ]
+            }
+        }
+    ]
+}

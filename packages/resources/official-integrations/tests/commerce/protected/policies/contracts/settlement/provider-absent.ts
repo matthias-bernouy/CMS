@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { functionSql, integrationRoot } from "../paths";
+import { functionSql, loadCommerceSchemaSql } from "../paths";
 
 export function registerProviderAbsentCancellationTest(): void {
     test("finalizes provider-absent cancellation without creating a fake payment liability", async () => {
-        const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
+        const schema = await loadCommerceSchemaSql();
         const absent = functionSql(
             schema,
             "record_absent_order_payment_cancellation",

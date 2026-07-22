@@ -1,0 +1,133 @@
+[
+    {
+        "endpointId": "offerConditions",
+        "method": "GET",
+        "access": "public",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/offer-conditions",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "label": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "position": {
+                                        "type": "number"
+                                    },
+                                    "enabled": {
+                                        "type": "boolean"
+                                    },
+                                    "createdAt": {
+                                        "type": "string"
+                                    },
+                                    "updatedAt": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "offerEstimate",
+        "method": "GET",
+        "access": "public",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/offer-estimate",
+        "params": [
+            {
+                "name": "productId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            },
+            {
+                "name": "variantId",
+                "in": "query",
+                "type": "number"
+            },
+            {
+                "name": "conditionCode",
+                "in": "query",
+                "type": "string"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "available": {
+                            "type": "boolean"
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "scope": {
+                            "type": "string"
+                        },
+                        "sampleSize": {
+                            "type": "number"
+                        },
+                        "observedMinimumAmount": {
+                            "type": "number"
+                        },
+                        "observedMaximumAmount": {
+                            "type": "number"
+                        },
+                        "medianAmount": {
+                            "type": "number"
+                        },
+                        "estimatedMinimumAmount": {
+                            "type": "number"
+                        },
+                        "estimatedMaximumAmount": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

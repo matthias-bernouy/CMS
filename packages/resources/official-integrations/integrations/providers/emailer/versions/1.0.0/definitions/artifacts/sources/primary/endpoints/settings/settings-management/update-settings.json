@@ -1,0 +1,94 @@
+{
+    "endpointId": "updateSettings",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/settings",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "smtpHost": {
+                "type": "string"
+            },
+            "smtpPort": {
+                "type": "string"
+            },
+            "smtpSecure": {
+                "type": "string"
+            },
+            "smtpUser": {
+                "type": "string"
+            },
+            "smtpPassword": {
+                "type": "string"
+            },
+            "defaultFrom": {
+                "type": "string"
+            },
+            "defaultReplyTo": {
+                "type": "string"
+            }
+        }
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "provider": {
+                        "type": "string"
+                    },
+                    "functionName": {
+                        "type": "string"
+                    },
+                    "cmsApiKeyConfigured": {
+                        "type": "string"
+                    },
+                    "smtpHost": {
+                        "type": "string"
+                    },
+                    "smtpPort": {
+                        "type": "string"
+                    },
+                    "smtpSecure": {
+                        "type": "string"
+                    },
+                    "smtpPasswordConfigured": {
+                        "type": "string"
+                    },
+                    "defaultFrom": {
+                        "type": "string"
+                    },
+                    "defaultReplyTo": {
+                        "type": "string"
+                    },
+                    "smtpUser": {
+                        "type": "string"
+                    },
+                    "smtpPassword": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "provider",
+                    "functionName",
+                    "cmsApiKeyConfigured"
+                ]
+            }
+        }
+    ]
+}

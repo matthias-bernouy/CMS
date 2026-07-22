@@ -1,0 +1,100 @@
+{
+    "endpointId": "updateMySeller",
+    "method": "POST",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/seller/update",
+    "params": [],
+    "effects": {
+        "identityBindings": [
+            {
+                "kind": "user",
+                "responsePath": "id"
+            }
+        ]
+    },
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "expectedVersion": {
+                "type": "number"
+            },
+            "displayName": {
+                "type": "string"
+            },
+            "metadata": {
+                "type": "object"
+            }
+        },
+        "required": [
+            "expectedVersion"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "exists": {
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "type": "number",
+                        "semantic": "user-id"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "cmsUserId": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "verificationStatus": {
+                        "type": "string"
+                    },
+                    "verifiedAt": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "verifiedBy": {
+                        "type": "string"
+                    },
+                    "metadata": {
+                        "type": "object"
+                    },
+                    "version": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ]
+}

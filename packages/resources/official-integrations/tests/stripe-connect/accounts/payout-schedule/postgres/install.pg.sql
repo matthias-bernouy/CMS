@@ -1,5 +1,11 @@
 \set ON_ERROR_STOP on
 
+\if :{?cms_integration_schema_bundle}
+\else
+    \echo 'cms_integration_schema_bundle must point to an assembled temporary SQL bundle.'
+    \quit 3
+\endif
+
 -- Explicit opt-in: this contract destroys and recreates stripe_connect.
 \if :{?allow_payout_schedule_schema_reset}
 \else
@@ -13,7 +19,7 @@
 \endif
 
 drop schema if exists stripe_connect cascade;
-\ir ../../../../../integrations/providers/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql
+\ir :cms_integration_schema_bundle
 
 create temporary table payout_schedule_install_fingerprint
 on commit preserve rows
@@ -36,7 +42,7 @@ begin
 end;
 $fresh_install$;
 
-\ir ../../../../../integrations/providers/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql
+\ir :cms_integration_schema_bundle
 
 do $reapply$
 declare

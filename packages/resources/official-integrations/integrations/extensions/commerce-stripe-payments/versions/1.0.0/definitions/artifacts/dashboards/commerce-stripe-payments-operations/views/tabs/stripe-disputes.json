@@ -1,0 +1,7 @@
+{
+    "id": "stripeDisputes",
+    "label": "Stripe Disputes",
+    "children": {
+        "$include": "../stripe-disputes/views.json"
+    }
+}

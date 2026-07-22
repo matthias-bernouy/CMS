@@ -1,0 +1,125 @@
+[
+    {
+        "id": "seller",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "getCurrentSellerIdentity"
+        }
+    },
+    {
+        "id": "connect",
+        "call": {
+            "source": "{{dependencies.stripe.sourceId}}",
+            "endpoint": "getConnectStatus",
+            "params": {
+                "marketplaceTermsVersion": "{{answers.sellerTermsVersion}}",
+                "marketplaceTermsHash": "{{answers.sellerTermsHash}}"
+            }
+        }
+    },
+    {
+        "assert": {
+            "condition": {
+                "all": [
+                    {
+                        "equals": [
+                            "$steps.seller.exists",
+                            true
+                        ]
+                    },
+                    {
+                        "equals": [
+                            "$steps.seller.cmsUserId",
+                            "$ctx.user.id"
+                        ]
+                    },
+                    {
+                        "equals": [
+                            "$steps.connect.userId",
+                            "$ctx.user.id"
+                        ]
+                    }
+                ]
+            },
+            "failure": {
+                "status": 403,
+                "error": "Seller enrollment identity mismatch"
+            }
+        }
+    },
+    {
+        "assert": {
+            "condition": {
+                "any": [
+                    {
+                        "equals": [
+                            "$steps.connect.marketplaceTermsCurrentVersionAccepted",
+                            true
+                        ]
+                    },
+                    {
+                        "equals": [
+                            "$input.body.sellerTermsAccepted",
+                            true
+                        ]
+                    }
+                ]
+            },
+            "failure": {
+                "status": 409,
+                "error": "The current seller terms must be accepted before submitting a price"
+            }
+        }
+    },
+    {
+        "assert": {
+            "condition": {
+                "any": [
+                    {
+                        "equals": [
+                            "$steps.connect.accountStatus",
+                            "active"
+                        ]
+                    },
+                    {
+                        "exists": "$input.body.accountToken"
+                    }
+                ]
+            },
+            "failure": {
+                "status": 409,
+                "error": "Seller enrollment is required before submitting a price"
+            }
+        }
+    },
+    {
+        "id": "enrollment",
+        "call": {
+            "source": "{{dependencies.stripe.sourceId}}",
+            "endpoint": "enrollConnectSeller",
+            "body": {
+                "accountToken": "$input.body.accountToken",
+                "marketplaceTermsAccepted": "$input.body.sellerTermsAccepted",
+                "marketplaceTermsVersion": "{{answers.sellerTermsVersion}}",
+                "marketplaceTermsHash": "{{answers.sellerTermsHash}}"
+            }
+        }
+    },
+    {
+        "$include": "validate-seller-enrollment-not-ready-held-payments.json"
+    },
+    {
+        "id": "result",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "submitMyOfferPrice",
+            "params": {
+                "id": "$input.body.offerId"
+            },
+            "body": {
+                "amount": "$input.body.amount",
+                "expectedVersion": "$input.body.expectedVersion"
+            }
+        }
+    }
+]

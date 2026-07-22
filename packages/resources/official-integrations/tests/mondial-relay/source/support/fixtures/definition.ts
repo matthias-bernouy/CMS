@@ -1,9 +1,9 @@
-import { readFileSync } from "node:fs";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
 import { connectEndpoint, definitionUrl, trackingEndpoint, type JsonRecord } from "../runtime.ts";
 
-export function definition(): IntegrationDefinition {
-    return JSON.parse(readFileSync(definitionUrl, "utf8")) as IntegrationDefinition;
+export async function definition(): Promise<IntegrationDefinition> {
+    return loadIntegrationDefinition<IntegrationDefinition>(definitionUrl);
 }
 
 export function createShipmentField(createForm: JsonRecord | undefined, fieldId: string): JsonRecord | undefined {

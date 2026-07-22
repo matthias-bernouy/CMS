@@ -1,0 +1,38 @@
+[
+    {
+        "endpointId": "reconcileProviderPayment",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/reconciliation/payment",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "paymentId": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "paymentId"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    }
+]

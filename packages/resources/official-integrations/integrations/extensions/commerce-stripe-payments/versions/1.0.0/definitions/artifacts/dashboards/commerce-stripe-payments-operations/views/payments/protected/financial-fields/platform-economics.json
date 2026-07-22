@@ -1,0 +1,44 @@
+[
+    {
+        "id": "snapshotPlatformRetainedAmount",
+        "label": "Platform retained",
+        "path": "financialTerms.platformRetainedAmount",
+        "type": "readonly",
+        "format": "money"
+    },
+    {
+        "id": "estimatedStripeCostAmount",
+        "label": "Estimated Stripe cost (policy)",
+        "path": "financialTerms.estimatedStripeCostAmount",
+        "type": "readonly",
+        "format": "money"
+    },
+    {
+        "id": "estimatedCarrierCostAmount",
+        "label": "Estimated carrier cost (policy)",
+        "path": "financialTerms.estimatedCarrierCostAmount",
+        "type": "readonly",
+        "format": "money"
+    },
+    {
+        "id": "platformRiskReserveContributionAmount",
+        "label": "Platform risk reserve contribution",
+        "path": "financialTerms.platformRiskReserveContributionAmount",
+        "type": "readonly",
+        "format": "money"
+    },
+    {
+        "id": "configuredMinimumMarginAmount",
+        "label": "Configured minimum margin",
+        "path": "financialTerms.configuredMinimumMarginAmount",
+        "type": "readonly",
+        "format": "money"
+    },
+    {
+        "id": "expectedPlatformMarginAmount",
+        "label": "Expected platform margin",
+        "path": "financialTerms.expectedPlatformMarginAmount",
+        "type": "readonly",
+        "format": "money"
+    }
+]

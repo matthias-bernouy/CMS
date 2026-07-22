@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-textarea",
+        "name": "Textarea",
+        "group": "Form",
+        "description": "Form-associated multiline input with an encapsulated label.",
+        "path": "blocs/forms/fields/basic-textarea"
+    }
+}

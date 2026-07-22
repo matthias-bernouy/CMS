@@ -1,0 +1,24 @@
+[
+    {
+        "provider": "supabase",
+        "root": "connectors/supabase",
+        "dataApiSchemas": [
+            "commerce"
+        ],
+        "schemas": [
+            {
+                "manifest": "sql/schema.manifest.json"
+            }
+        ],
+        "functions": [
+            {
+                "name": "cms-commerce",
+                "directory": "functions/cms-commerce",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_COMMERCE_API_KEY": "{{generated.cmsApiKey}}"
+                }
+            }
+        ]
+    }
+]

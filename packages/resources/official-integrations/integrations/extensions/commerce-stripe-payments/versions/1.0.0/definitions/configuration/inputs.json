@@ -1,0 +1,14 @@
+[
+    {
+        "name": "sellerTermsVersion",
+        "label": "Current seller terms version",
+        "type": "text",
+        "required": true
+    },
+    {
+        "name": "sellerTermsHash",
+        "label": "Current seller terms SHA-256",
+        "type": "text",
+        "required": true
+    }
+]

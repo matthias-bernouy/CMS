@@ -53,7 +53,7 @@ export async function createHarness() {
                 provider: "supabase",
                 outputs: { functionsBaseUrl },
                 resources: [
-                    { type: "schema", id: "schema.sql", action: "applied" },
+                    { type: "schema", id: "sql/schema.manifest.json", action: "applied" },
                     { type: "function", id: "cms-user-account", action: "deployed" },
                 ],
             };

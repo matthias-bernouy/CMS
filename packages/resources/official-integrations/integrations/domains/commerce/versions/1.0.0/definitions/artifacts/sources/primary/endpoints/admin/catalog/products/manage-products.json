@@ -1,0 +1,102 @@
+[
+    {
+        "endpointId": "manageProducts",
+        "method": "GET",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/products",
+        "params": [
+            {
+                "name": "q",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "status",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "visibility",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "limit",
+                "in": "query",
+                "type": "number"
+            },
+            {
+                "name": "offset",
+                "in": "query",
+                "type": "number"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "number"
+                                    },
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "visibility": {
+                                        "type": "string"
+                                    },
+                                    "metadata": {
+                                        "type": "object"
+                                    },
+                                    "version": {
+                                        "type": "number"
+                                    },
+                                    "createdAt": {
+                                        "type": "string"
+                                    },
+                                    "updatedAt": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        },
+                        "limit": {
+                            "type": "number"
+                        },
+                        "offset": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "user-account-form",
+        "name": "User account form",
+        "group": "User account",
+        "description": "Public personal information form backed by the User Account source.",
+        "path": "blocs/user-account-form"
+    }
+}

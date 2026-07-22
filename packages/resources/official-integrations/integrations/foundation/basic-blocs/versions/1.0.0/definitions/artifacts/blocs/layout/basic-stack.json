@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-stack",
+        "name": "Stack",
+        "group": "Layout",
+        "description": "Vertical layout with token-based spacing.",
+        "path": "blocs/layout/basic-stack"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "commerce-account-sales",
+        "name": "Account sales",
+        "group": "Commerce",
+        "description": "Authenticated seller sales list with status filters, compact cards, and pagination.",
+        "path": "blocs/commerce-account-sales"
+    }
+}

@@ -5,9 +5,10 @@ connector. Version `1.0.0` ships one Supabase connector.
 
 ## Files
 
-- `definition.json`: declarative CMS integration definition.
-- `connectors/supabase/schema.sql`: private Supabase Postgres schema with one
-  `newsletter.subscriptions` table.
+- `definition.json`: entry point for the declarative definition assembled from
+  `definitions/`.
+- `connectors/supabase/sql/schema.manifest.json`: ordered private schema bundle
+  with one `newsletter.subscriptions` table.
 - `connectors/supabase/functions/cms-newsletter/index.ts`: Supabase Edge
   Function that exposes the CMS-facing newsletter API.
 - `connectors/supabase/supabase.config.toml`: Edge Function config fragment.

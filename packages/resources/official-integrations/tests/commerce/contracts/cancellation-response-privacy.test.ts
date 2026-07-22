@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { projectEndpointResponse, triggerResponseProjection, type SourceEndpoint } from "@bernouy/cms-sources";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../helpers/integrationDefinition";
 
 type EndpointDefinition = {
     endpointId: string;
@@ -107,6 +107,6 @@ function cancellationResult(): Record<string, unknown> {
 }
 
 async function commerceEndpoints(): Promise<EndpointDefinition[]> {
-    const definition = JSON.parse(await readFile(definitionPath, "utf8")) as Definition;
+    const definition = await loadIntegrationDefinition<Definition>(definitionPath);
     return definition.artifacts.find((artifact) => artifact.source)?.source?.endpoints ?? [];
 }

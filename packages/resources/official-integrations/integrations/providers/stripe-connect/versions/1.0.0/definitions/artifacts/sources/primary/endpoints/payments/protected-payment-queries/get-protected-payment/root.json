@@ -1,0 +1,34 @@
+{
+    "endpointId": "getProtectedPayment",
+    "method": "GET",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/payments/payment",
+    "params": [
+        {
+            "name": "paymentId",
+            "in": "query",
+            "type": "number",
+            "required": true
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "output": {
+        "$include": "output/root.json"
+    }
+}

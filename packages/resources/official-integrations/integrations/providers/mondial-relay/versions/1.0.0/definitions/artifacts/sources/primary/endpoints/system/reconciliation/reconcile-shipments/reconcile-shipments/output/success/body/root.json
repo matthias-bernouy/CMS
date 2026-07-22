@@ -1,0 +1,12 @@
+{
+    "type": "object",
+    "properties": {
+        "$include": "properties/root.json"
+    },
+    "required": [
+        "processed",
+        "shipments",
+        "events",
+        "claimReturnEvents"
+    ]
+}

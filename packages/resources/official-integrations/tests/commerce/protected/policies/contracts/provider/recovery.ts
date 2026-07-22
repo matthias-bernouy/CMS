@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { functionSql, integrationRoot } from "../paths";
+import { functionSql, loadCommerceSchemaSql } from "../paths";
 
 export function registerPaymentRecoveryTest(): void {
     test("recovers only the exact revalidated provider-payment ambiguity and otherwise stays fail-closed", async () => {
-        const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
+        const schema = await loadCommerceSchemaSql();
         const projection = functionSql(
             schema,
             "record_order_payment_projection",

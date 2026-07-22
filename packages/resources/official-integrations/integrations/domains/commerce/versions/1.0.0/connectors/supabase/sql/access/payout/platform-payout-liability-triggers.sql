@@ -1,0 +1,65 @@
+
+
+drop trigger if exists order_payment_attempts_platform_liability on commerce.order_payment_attempts;
+create trigger order_payment_attempts_platform_liability
+after insert or update of status, succeeded_at on commerce.order_payment_attempts
+for each row execute function commerce.collect_order_platform_payout_liability();
+drop trigger if exists order_payment_attempts_platform_liability_flush
+on commerce.order_payment_attempts;
+
+drop trigger if exists order_settlements_platform_liability on commerce.order_settlements;
+create trigger order_settlements_platform_liability
+after insert or update of authorized_seller_amount, total_transferred_amount, total_reversed_amount,
+    total_refunded_amount, seller_reserve_liability_remaining_amount, status
+on commerce.order_settlements
+for each row execute function commerce.collect_order_platform_payout_liability();
+drop trigger if exists order_settlements_platform_liability_flush
+on commerce.order_settlements;
+create trigger order_settlements_platform_liability_flush
+after insert or update on commerce.order_settlements
+for each statement execute function commerce.flush_platform_payout_liability_statement();
+
+drop trigger if exists stripe_disputes_platform_liability on commerce.stripe_dispute_projections;
+create trigger stripe_disputes_platform_liability
+after insert or update of status, funds_withdrawn on commerce.stripe_dispute_projections
+for each row execute function commerce.collect_order_platform_payout_liability();
+drop trigger if exists stripe_disputes_platform_liability_flush
+on commerce.stripe_dispute_projections;
+create trigger stripe_disputes_platform_liability_flush
+after insert or update on commerce.stripe_dispute_projections
+for each statement execute function commerce.flush_platform_payout_liability_statement();
+
+drop trigger if exists platform_payout_order_liabilities_dirty_insert_delete
+on commerce.platform_payout_order_liabilities;
+create trigger platform_payout_order_liabilities_dirty_insert_delete
+after insert or delete on commerce.platform_payout_order_liabilities
+for each row execute function commerce.queue_platform_payout_liability_order();
+drop trigger if exists platform_payout_order_liabilities_dirty_update
+on commerce.platform_payout_order_liabilities;
+create trigger platform_payout_order_liabilities_dirty_update
+after update of lifecycle_status, risk_release_at
+on commerce.platform_payout_order_liabilities
+for each row execute function commerce.queue_platform_payout_liability_order();
+
+drop trigger if exists order_financial_terms_platform_liability_insert_delete
+on commerce.order_financial_terms;
+create trigger order_financial_terms_platform_liability_insert_delete
+after insert or delete on commerce.order_financial_terms
+for each row execute function commerce.queue_platform_payout_liability_order();
+drop trigger if exists order_financial_terms_platform_liability_update
+on commerce.order_financial_terms;
+create trigger order_financial_terms_platform_liability_update
+after update of platform_risk_reserve_contribution_amount
+on commerce.order_financial_terms
+for each row execute function commerce.queue_platform_payout_liability_order();
+
+drop trigger if exists order_settlements_platform_liability_delete
+on commerce.order_settlements;
+create trigger order_settlements_platform_liability_delete
+after delete on commerce.order_settlements
+for each row execute function commerce.queue_platform_payout_liability_order();
+drop trigger if exists stripe_disputes_platform_liability_delete
+on commerce.stripe_dispute_projections;
+create trigger stripe_disputes_platform_liability_delete
+after delete on commerce.stripe_dispute_projections
+for each row execute function commerce.queue_platform_payout_liability_order();

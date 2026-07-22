@@ -1,0 +1,10 @@
+[
+    {
+        "name": "basicBlocs",
+        "kind": "basic-blocs"
+    },
+    {
+        "name": "commerce",
+        "kind": "commerce"
+    }
+]

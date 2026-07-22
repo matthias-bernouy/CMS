@@ -1,0 +1,90 @@
+[
+    {
+        "id": "templateBasics",
+        "title": "Template",
+        "fields": [
+            {
+                "id": "key",
+                "label": "Key",
+                "type": "text",
+                "path": "key",
+                "required": true
+            },
+            {
+                "id": "name",
+                "label": "Name",
+                "type": "text",
+                "path": "name",
+                "required": true
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "type": "select",
+                "path": "status",
+                "options": [
+                    {
+                        "value": "draft",
+                        "label": "Draft"
+                    },
+                    {
+                        "value": "active",
+                        "label": "Active"
+                    },
+                    {
+                        "value": "archived",
+                        "label": "Archived"
+                    }
+                ]
+            },
+            {
+                "id": "subject",
+                "label": "Subject",
+                "type": "text",
+                "path": "subject",
+                "required": true
+            },
+            {
+                "id": "htmlBody",
+                "label": "HTML body",
+                "type": "textarea",
+                "path": "htmlBody",
+                "rows": 12,
+                "required": true
+            }
+        ]
+    },
+    {
+        "id": "templateTokens",
+        "title": "Tokens",
+        "fields": [
+            {
+                "id": "requiredTokens",
+                "label": "Required tokens",
+                "type": "table",
+                "path": "requiredTokens",
+                "editable": true,
+                "columns": [
+                    {
+                        "id": "name",
+                        "label": "Name",
+                        "path": "name",
+                        "editable": true
+                    },
+                    {
+                        "id": "description",
+                        "label": "Description",
+                        "path": "description",
+                        "editable": true
+                    },
+                    {
+                        "id": "sample",
+                        "label": "Sample",
+                        "path": "sample",
+                        "editable": true
+                    }
+                ]
+            }
+        ]
+    }
+]

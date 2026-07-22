@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { functionSql, integrationRoot } from "../paths";
+import { functionSql, loadCommerceSchemaSql } from "../paths";
 
 export function registerSellerRiskTest(): void {
     test("applies seller velocity, value, claim, chargeback, and debt gates", async () => {
-        const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
+        const schema = await loadCommerceSchemaSql();
         const riskGate = functionSql(schema, "assert_order_seller_risk", "lock_order_financial_terms");
 
         expect(riskGate).toContain("outstanding_debt_amount");

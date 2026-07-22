@@ -1,0 +1,15 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "file": "policies/published-policy-immutability.sql" },
+        { "file": "payout/platform-payout-liability-functions.sql" },
+        { "file": "payout/platform-payout-liability-triggers.sql" },
+        { "file": "payout/drop-legacy-sync-order-platform-payout-liability.sql" },
+        { "file": "maintenance/model-maintenance-triggers.sql" },
+        { "file": "security/row-level-security.sql" },
+        { "file": "security/schema-deny-and-service-role.sql" },
+        { "file": "security/service-role-privileges.sql" },
+        { "file": "security/database-contract-comments.sql" }
+    ]
+}

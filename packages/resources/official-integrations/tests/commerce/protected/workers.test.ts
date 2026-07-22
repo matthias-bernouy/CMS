@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
+import { resolve } from "node:path";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
+import { loadSupabaseSchemaSql } from "../../helpers/supabaseSql";
+
+const integrationRoot = resolve(import.meta.dir, "../../../integrations/domains/commerce/versions/1.0.0");
 
 describe("commerce 1.0.0 protected workers", () => {
     test("publishes a system-only bounded deadline command", async () => {
@@ -25,12 +29,7 @@ describe("commerce 1.0.0 protected workers", () => {
     });
 
     test("uses database-clock row locks and fails closed on ambiguous deadlines", async () => {
-        const schema = await Bun.file(
-            new URL(
-                "../../../integrations/domains/commerce/versions/1.0.0/connectors/supabase/schema.sql",
-                import.meta.url,
-            ),
-        ).text();
+        const schema = await loadSupabaseSchemaSql(integrationRoot);
 
         expect(schema).toContain("create or replace function commerce.process_due_order_deadlines");
         expect(schema).toContain("for update of order_row, settlement skip locked");

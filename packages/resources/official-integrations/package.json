@@ -6,6 +6,9 @@
     "type": "module",
     "main": "./index.ts",
     "types": "./dist/index.d.ts",
+    "scripts": {
+        "test:postgres": "bun run tests/helpers/runPostgresContracts.ts"
+    },
     "files": [
         "index.ts",
         "dist/",

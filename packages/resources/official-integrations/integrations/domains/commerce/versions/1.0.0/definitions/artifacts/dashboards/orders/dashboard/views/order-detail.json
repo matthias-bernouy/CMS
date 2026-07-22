@@ -1,0 +1,107 @@
+{
+    "widget": "w-detail",
+    "id": "orderDetail",
+    "source": {
+        "endpoint": "order",
+        "params": {
+            "id": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "orderNumber",
+        "fallback": "Order"
+    },
+    "status": {
+        "path": "status"
+    },
+    "main": [
+        {
+            "id": "orderSummary",
+            "title": "Summary",
+            "fields": [
+                {
+                    "id": "publicId",
+                    "label": "Public id",
+                    "path": "publicId",
+                    "type": "readonly"
+                },
+                {
+                    "id": "buyerCmsUserId",
+                    "label": "Buyer",
+                    "path": "buyerCmsUserId",
+                    "type": "readonly"
+                },
+                {
+                    "id": "sellerId",
+                    "label": "Seller",
+                    "path": "sellerId",
+                    "type": "readonly"
+                },
+                {
+                    "id": "subtotalAmount",
+                    "label": "Subtotal",
+                    "path": "subtotalAmount",
+                    "type": "readonly",
+                    "format": "money"
+                },
+                {
+                    "id": "totalAmount",
+                    "label": "Total",
+                    "path": "totalAmount",
+                    "type": "readonly",
+                    "format": "money"
+                },
+                {
+                    "id": "currency",
+                    "label": "Currency",
+                    "path": "currency",
+                    "type": "readonly"
+                },
+                {
+                    "id": "statusMessage",
+                    "label": "Status note",
+                    "path": "statusMessage",
+                    "type": "textarea",
+                    "rows": 3
+                }
+            ]
+        },
+        {
+            "id": "orderLines",
+            "title": "Lines",
+            "fields": [
+                {
+                    "id": "lines",
+                    "label": "Order lines",
+                    "path": "lines",
+                    "type": "table",
+                    "columns": [
+                        {
+                            "id": "title",
+                            "label": "Item",
+                            "path": "title",
+                            "primary": true
+                        },
+                        {
+                            "id": "quantity",
+                            "label": "Quantity",
+                            "path": "quantity"
+                        },
+                        {
+                            "id": "unitAmount",
+                            "label": "Unit price",
+                            "path": "unitAmount",
+                            "format": "money"
+                        },
+                        {
+                            "id": "totalAmount",
+                            "label": "Total",
+                            "path": "totalAmount",
+                            "format": "money"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

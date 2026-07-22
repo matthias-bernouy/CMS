@@ -1,0 +1,86 @@
+{
+    "type": "function",
+    "function": {
+        "id": "declareShipmentHandoffForMySale",
+        "method": "POST",
+        "access": {
+            "mode": "auth"
+        },
+        "meta": {
+            "name": "Declare shipment handoff for my sale",
+            "description": "Record the seller assertion separately from the first trusted carrier scan."
+        },
+        "input": {
+            "body": {
+                "type": "object",
+                "properties": {
+                    "orderId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "orderId"
+                ]
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ],
+        "steps": [
+            {
+                "id": "sale",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "getOrderFulfillmentSellerContext",
+                    "params": {
+                        "orderId": "$input.body.orderId"
+                    }
+                }
+            },
+            {
+                "id": "handoff",
+                "call": {
+                    "source": "{{dependencies.delivery.sourceId}}",
+                    "endpoint": "declareSellerHandoff",
+                    "body": {
+                        "externalOrderId": "$steps.sale.publicId"
+                    }
+                }
+            },
+            {
+                "id": "commerceFulfillment",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "recordOrderFulfillment",
+                    "body": {
+                        "orderPublicId": "$steps.sale.publicId",
+                        "providerEventId": {
+                            "$concat": [
+                                "mondial-relay|",
+                                "$steps.handoff.expeditionNumber",
+                                "|seller_handoff|",
+                                "$steps.handoff.sellerHandoffDeclaredAt"
+                            ]
+                        },
+                        "normalizedStatus": "seller_handoff_declared",
+                        "occurredAt": "$steps.handoff.sellerHandoffDeclaredAt",
+                        "providerReference": "$steps.handoff.expeditionNumber",
+                        "sellerHandoffDeclaredAt": "$steps.handoff.sellerHandoffDeclaredAt"
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": {
+                "shipment": "$steps.handoff",
+                "fulfillment": "$steps.commerceFulfillment"
+            }
+        }
+    }
+}

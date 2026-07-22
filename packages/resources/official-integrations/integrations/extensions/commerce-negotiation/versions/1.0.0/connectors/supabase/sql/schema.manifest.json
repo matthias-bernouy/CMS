@@ -1,0 +1,20 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "file": "model/commerce-negotiation.sql" },
+        { "file": "model/version-and-updated-at-triggers.sql" },
+        { "file": "queries/expire-pending-proposals.sql" },
+        { "file": "queries/list-participant-proposals.sql" },
+        { "file": "queries/list-admin-proposals.sql" },
+        { "file": "queries/get-participant-proposal-detail.sql" },
+        { "file": "queries/get-admin-proposal-detail.sql" },
+        { "file": "commands/create-proposal.sql" },
+        { "file": "commands/decide-proposal.sql" },
+        { "file": "commands/withdraw-proposal.sql" },
+        { "file": "commands/moderate-proposal.sql" },
+        { "file": "access/row-level-security.sql" },
+        { "file": "access/schema-access.sql" },
+        { "file": "access/database-contract-comments.sql" }
+    ]
+}

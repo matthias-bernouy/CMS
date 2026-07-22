@@ -1,0 +1,63 @@
+{
+    "type": "sourceOverlay",
+    "overlay": {
+        "id": "{{answers.id}}-seller-custom-fields",
+        "sourceId": "{{answers.id}}",
+        "label": "Seller custom fields",
+        "sections": [
+            {
+                "id": "sellerCustomFields",
+                "label": "Custom fields",
+                "description": "Validated descriptive information configured for Commerce sellers."
+            }
+        ],
+        "input": [
+            {
+                "endpointId": "registerMySeller",
+                "editable": "self"
+            },
+            {
+                "endpointId": "updateMySeller",
+                "editable": "self"
+            }
+        ],
+        "output": [
+            {
+                "endpointId": "mySeller"
+            },
+            {
+                "endpointId": "registerMySeller"
+            },
+            {
+                "endpointId": "updateMySeller"
+            },
+            {
+                "endpointId": "seller"
+            },
+            {
+                "endpointId": "sellers",
+                "path": "items[]"
+            }
+        ],
+        "fieldSource": {
+            "endpointId": "entityCustomFields",
+            "params": {
+                "entityType": "seller"
+            },
+            "path": "fields",
+            "map": {
+                "id": "id",
+                "label": "label",
+                "type": "type",
+                "section": "section",
+                "required": "required",
+                "selfEditable": "selfEditable",
+                "adminEditable": "adminEditable",
+                "showInDashboardTable": "showInDashboardTable",
+                "exposeToEditorSources": "exposeToEditorSources",
+                "options": "options"
+            }
+        },
+        "fields": []
+    }
+}

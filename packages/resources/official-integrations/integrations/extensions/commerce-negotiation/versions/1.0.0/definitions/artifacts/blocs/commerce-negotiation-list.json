@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "commerce-negotiation-list",
+        "name": "Negotiation list",
+        "group": "Commerce",
+        "description": "Customizable received and sent proposal list composed from Basic Blocs.",
+        "path": "blocs/commerce-negotiation-list"
+    }
+}

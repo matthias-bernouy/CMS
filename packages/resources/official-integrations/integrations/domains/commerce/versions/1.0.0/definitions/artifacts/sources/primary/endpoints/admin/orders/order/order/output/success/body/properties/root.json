@@ -1,0 +1,116 @@
+{
+    "id": {
+        "type": "number"
+    },
+    "publicId": {
+        "type": "string"
+    },
+    "orderNumber": {
+        "type": "string"
+    },
+    "checkoutGroupId": {
+        "type": "string"
+    },
+    "sellerId": {
+        "type": "number"
+    },
+    "buyerCmsUserId": {
+        "type": "string"
+    },
+    "status": {
+        "type": "string"
+    },
+    "currency": {
+        "type": "string"
+    },
+    "subtotalAmount": {
+        "type": "number"
+    },
+    "totalAmount": {
+        "type": "number"
+    },
+    "shippingAddress": {
+        "type": "object",
+        "properties": {
+            "recipient": {
+                "type": "string"
+            },
+            "givenName": {
+                "type": "string"
+            },
+            "surname": {
+                "type": "string"
+            },
+            "email": {
+                "type": "string"
+            },
+            "phone": {
+                "type": "string"
+            },
+            "addressLine1": {
+                "type": "string"
+            },
+            "addressLine2": {
+                "type": "string",
+                "nullable": true
+            },
+            "addressLine3": {
+                "type": "string",
+                "nullable": true
+            },
+            "postalCode": {
+                "type": "string"
+            },
+            "city": {
+                "type": "string"
+            },
+            "countryCode": {
+                "type": "string"
+            }
+        }
+    },
+    "billingAddress": {
+        "type": "object"
+    },
+    "metadata": {
+        "type": "object"
+    },
+    "idempotencyKey": {
+        "type": "string"
+    },
+    "idempotentReplay": {
+        "type": "boolean"
+    },
+    "version": {
+        "type": "number"
+    },
+    "createdAt": {
+        "type": "string"
+    },
+    "updatedAt": {
+        "type": "string"
+    },
+    "lines": {
+        "$include": "lines.json"
+    },
+    "events": {
+        "$include": "events.json"
+    },
+    "seller": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "kind": {
+                "type": "string"
+            },
+            "slug": {
+                "type": "string"
+            },
+            "displayName": {
+                "type": "string"
+            }
+        }
+    }
+}

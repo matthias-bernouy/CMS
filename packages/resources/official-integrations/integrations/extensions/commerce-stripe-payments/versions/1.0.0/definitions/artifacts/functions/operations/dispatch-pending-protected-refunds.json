@@ -1,0 +1,112 @@
+{
+    "type": "function",
+    "function": {
+        "id": "dispatchPendingProtectedRefunds",
+        "method": "POST",
+        "access": {
+            "mode": "system"
+        },
+        "meta": {
+            "name": "Dispatch pending protected refunds",
+            "description": "Lease and replay Commerce-authorized refunds against Stripe; reconciliation projects every resulting operation."
+        },
+        "input": {
+            "body": {
+                "type": "object",
+                "properties": {
+                    "runKey": {
+                        "type": "string"
+                    },
+                    "limit": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "runKey",
+                    "limit"
+                ]
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ],
+        "steps": [
+            {
+                "assert": {
+                    "condition": {
+                        "all": [
+                            {
+                                "gte": [
+                                    "$input.body.limit",
+                                    1
+                                ]
+                            },
+                            {
+                                "lte": [
+                                    "$input.body.limit",
+                                    10
+                                ]
+                            }
+                        ]
+                    },
+                    "failure": {
+                        "status": 400,
+                        "error": "limit must be between 1 and 10"
+                    }
+                }
+            },
+            {
+                "id": "batch",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "pendingOrderRefundAuthorizations",
+                    "body": {
+                        "runKey": "$input.body.runKey",
+                        "limit": "$input.body.limit"
+                    }
+                }
+            },
+            {
+                "id": "dispatches",
+                "forEach": {
+                    "items": "$steps.batch.authorizations",
+                    "max": 10,
+                    "steps": [
+                        {
+                            "id": "providerRefund",
+                            "call": {
+                                "source": "{{dependencies.stripe.sourceId}}",
+                                "endpoint": "requestProtectedRefund",
+                                "body": {
+                                    "paymentId": "$item.providerPaymentId",
+                                    "refundRequestId": "$item.refundRequestId",
+                                    "commerceRefundRequestId": "$item.commerceRefundRequestId",
+                                    "amount": "$item.amount",
+                                    "authorizedSellerAmount": "$item.authorizedSellerAmount",
+                                    "sellerEntitlementReductionAmount": "$item.sellerEntitlementReductionAmount",
+                                    "reason": "Commerce authorized refund retry"
+                                }
+                            }
+                        }
+                    ],
+                    "yield": {
+                        "authorization": "$item",
+                        "providerRefund": "$steps.providerRefund"
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": {
+                "runKey": "$steps.batch.runKey",
+                "dispatches": "$steps.dispatches"
+            }
+        }
+    }
+}

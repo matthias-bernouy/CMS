@@ -1,0 +1,149 @@
+[
+    {
+        "status": "200",
+        "body": {
+            "type": "object",
+            "properties": {
+                "exists": {
+                    "type": "boolean"
+                },
+                "userId": {
+                    "type": "string",
+                    "semantic": {
+                        "kind": "user-id",
+                        "authority": "cms"
+                    }
+                },
+                "connected": {
+                    "type": "boolean"
+                },
+                "accountStatus": {
+                    "type": "string"
+                },
+                "termsStatus": {
+                    "type": "string"
+                },
+                "stripeTermsStatus": {
+                    "type": "string"
+                },
+                "marketplaceTermsStatus": {
+                    "type": "string"
+                },
+                "marketplaceTermsCurrentVersionAccepted": {
+                    "type": "boolean"
+                },
+                "marketplaceTermsAcceptedAt": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "enrollmentStatus": {
+                    "type": "string"
+                },
+                "onboardingStatus": {
+                    "type": "string"
+                },
+                "stripeAccountId": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "stripeAccountApiVersion": {
+                    "type": "string"
+                },
+                "payoutsEnabled": {
+                    "type": "boolean"
+                },
+                "riskStatus": {
+                    "type": "string"
+                },
+                "applicationControlledRecipient": {
+                    "type": "boolean"
+                },
+                "stripeTransfersStatus": {
+                    "type": "string"
+                },
+                "bankAccountStatus": {
+                    "type": "string"
+                },
+                "bankPayoutsStatus": {
+                    "type": "string"
+                },
+                "canAcceptHeldPayments": {
+                    "type": "boolean"
+                },
+                "payoutBankReady": {
+                    "type": "boolean"
+                },
+                "canReceiveProtectedPayments": {
+                    "type": "boolean"
+                },
+                "detailsSubmitted": {
+                    "type": "boolean"
+                },
+                "chargesEnabled": {
+                    "type": "boolean"
+                },
+                "currentlyDue": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "eventuallyDue": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "pastDue": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "pendingVerification": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "exists",
+                "connected",
+                "accountStatus",
+                "termsStatus",
+                "stripeTermsStatus",
+                "marketplaceTermsStatus",
+                "marketplaceTermsCurrentVersionAccepted",
+                "enrollmentStatus",
+                "onboardingStatus",
+                "payoutsEnabled",
+                "applicationControlledRecipient",
+                "stripeTransfersStatus",
+                "bankAccountStatus",
+                "bankPayoutsStatus",
+                "canAcceptHeldPayments",
+                "canReceiveProtectedPayments",
+                "payoutBankReady",
+                "detailsSubmitted",
+                "chargesEnabled",
+                "currentlyDue",
+                "eventuallyDue",
+                "pastDue",
+                "pendingVerification"
+            ]
+        }
+    },
+    {
+        "status": "400",
+        "body": {
+            "type": "object"
+        }
+    },
+    {
+        "status": "409",
+        "body": {
+            "type": "object"
+        }
+    }
+]

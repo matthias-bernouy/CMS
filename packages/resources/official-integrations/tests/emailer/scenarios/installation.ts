@@ -47,10 +47,9 @@ export function registerInstallationTest(): void {
         expect(dashboardJson).not.toContain("sampleDataJson");
         expect(settingsJson).toContain("emailerSettings");
         expect(harness.deployment?.dataApiSchemas).toEqual(["emailer", "broadcast"]);
-        expect(harness.deployment?.schemas.map((schema) => schema.path)).toEqual([
-            "schema.sql",
-            "broadcast-schema.sql",
-        ]);
+        expect(
+            harness.deployment?.schemas.map((schema) => ("manifest" in schema ? schema.manifest : schema.path)),
+        ).toEqual(["sql/schema.manifest.json", "sql/broadcast-schema.manifest.json"]);
         expect(harness.deployment?.functions.map((fn) => fn.name)).toEqual(["cms-emailer", "cms-broadcast"]);
         expect(String(harness.deployment?.functions[0]?.secrets?.CMS_EMAILER_API_KEY)).toStartWith("cms_em_");
         expect(harness.deployment?.functions[0]?.secrets).toMatchObject({

@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../../../helpers/integrationDefinition";
 import { integrationRoot } from "../paths";
 
 export function registerPolicyDashboardTest(): void {
     test("publishes protected C2C revisions from the admin settings dashboard with CAS and typed controls", async () => {
-        const definition = JSON.parse(await readFile(resolve(integrationRoot, "definition.json"), "utf8"));
+        const definition = await loadIntegrationDefinition<any>(resolve(integrationRoot, "definition.json"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const dashboard = definition.artifacts.find(
             (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-configuration",

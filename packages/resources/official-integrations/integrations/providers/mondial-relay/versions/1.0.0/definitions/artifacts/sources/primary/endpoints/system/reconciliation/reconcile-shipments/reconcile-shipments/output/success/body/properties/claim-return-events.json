@@ -1,0 +1,52 @@
+{
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "eventId": {
+                "type": "number"
+            },
+            "claimToken": {
+                "type": "string"
+            },
+            "projectionAttempts": {
+                "type": "number"
+            },
+            "claimId": {
+                "type": "number"
+            },
+            "externalOrderId": {
+                "type": "string"
+            },
+            "providerEventId": {
+                "type": "string",
+                "nullable": true
+            },
+            "normalizedStatus": {
+                "type": "string"
+            },
+            "occurredAt": {
+                "type": "string",
+                "nullable": true
+            },
+            "providerReference": {
+                "type": "string"
+            },
+            "providerEvidence": {
+                "type": "object"
+            }
+        },
+        "required": [
+            "eventId",
+            "claimToken",
+            "projectionAttempts",
+            "claimId",
+            "externalOrderId",
+            "providerEventId",
+            "normalizedStatus",
+            "occurredAt",
+            "providerReference",
+            "providerEvidence"
+        ]
+    }
+}

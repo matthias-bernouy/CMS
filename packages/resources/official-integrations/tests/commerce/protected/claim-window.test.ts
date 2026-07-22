@@ -1,13 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import { resolve } from "node:path";
+import { loadSupabaseSchemaSql } from "../../helpers/supabaseSql";
+
+const integrationRoot = resolve(import.meta.dir, "../../../integrations/domains/commerce/versions/1.0.0");
 
 describe("protected C2C claim window", () => {
     test("starts at first observation and serializes claim versus release", async () => {
-        const schema = await Bun.file(
-            new URL(
-                "../../../integrations/domains/commerce/versions/1.0.0/connectors/supabase/schema.sql",
-                import.meta.url,
-            ),
-        ).text();
+        const schema = await loadSupabaseSchemaSql(integrationRoot);
         const projection = functionSql(
             schema,
             "record_order_fulfillment_projection",

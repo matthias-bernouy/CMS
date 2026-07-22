@@ -1,0 +1,139 @@
+[
+    {
+        "$include": "delivery-projection-health.json"
+    },
+    {
+        "endpointId": "acknowledgeShipmentEvent",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/events/ack",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "eventId": {
+                    "type": "number"
+                },
+                "claimToken": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "eventId",
+                "claimToken"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "acknowledged": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "acknowledged"
+                    ]
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "failShipmentEventProjection",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/events/fail",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "eventId": {
+                    "type": "number"
+                },
+                "claimToken": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "eventId",
+                "claimToken",
+                "error"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "projectionStatus": {
+                            "type": "string"
+                        },
+                        "projectionAttempts": {
+                            "type": "number"
+                        },
+                        "projectionNextAttemptAt": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "projectionLastError": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "projectionManualReviewAt": {
+                            "type": "string",
+                            "nullable": true
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "projectionStatus",
+                        "projectionAttempts"
+                    ]
+                }
+            }
+        ]
+    }
+]

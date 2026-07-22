@@ -1,0 +1,80 @@
+[
+    {
+        "$include": "sellers.json"
+    },
+    {
+        "endpointId": "seller",
+        "method": "GET",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/seller",
+        "params": [
+            {
+                "name": "id",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "kind": {
+                            "type": "string"
+                        },
+                        "cmsUserId": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "slug": {
+                            "type": "string"
+                        },
+                        "displayName": {
+                            "type": "string"
+                        },
+                        "verificationStatus": {
+                            "type": "string"
+                        },
+                        "verifiedAt": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "verifiedBy": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "metadata": {
+                            "type": "object"
+                        },
+                        "version": {
+                            "type": "number"
+                        },
+                        "createdAt": {
+                            "type": "string"
+                        },
+                        "updatedAt": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "$include": "review-seller.json"
+    }
+]

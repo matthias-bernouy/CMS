@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
 
 const commerceDefinitionUrl = new URL(
     "../../../../../integrations/domains/commerce/versions/1.0.0/definition.json",
@@ -96,7 +96,7 @@ describe("Commerce current seller identity contract", () => {
     });
 
     test("keeps the identity lookup outside dynamic seller overlays", async () => {
-        const definition = JSON.parse(await readFile(commerceDefinitionUrl, "utf8"));
+        const definition = await loadIntegrationDefinition<any>(commerceDefinitionUrl);
         const sellerOverlay = definition.artifacts?.find(
             (artifact: { overlay?: { id?: string } }) => artifact.overlay?.id === "{{answers.id}}-seller-custom-fields",
         )?.overlay;
@@ -139,7 +139,7 @@ type FunctionDefinition = {
 };
 
 async function currentSellerIdentityEndpoint(): Promise<Endpoint> {
-    const definition = JSON.parse(await readFile(commerceDefinitionUrl, "utf8"));
+    const definition = await loadIntegrationDefinition<any>(commerceDefinitionUrl);
     const endpoint = definition.artifacts
         ?.find((artifact: { source?: unknown }) => artifact.source)
         ?.source?.endpoints?.find((candidate: Endpoint) => candidate.endpointId === "getCurrentSellerIdentity");
@@ -150,7 +150,7 @@ async function currentSellerIdentityEndpoint(): Promise<Endpoint> {
 }
 
 async function sellerPriceFunction(): Promise<FunctionDefinition> {
-    const definition = JSON.parse(await readFile(compositionDefinitionUrl, "utf8"));
+    const definition = await loadIntegrationDefinition<any>(compositionDefinitionUrl);
     const fn = definition.artifacts?.find(
         (artifact: { function?: FunctionDefinition }) => artifact.function?.id === "submitSellerOfferPrice",
     )?.function;

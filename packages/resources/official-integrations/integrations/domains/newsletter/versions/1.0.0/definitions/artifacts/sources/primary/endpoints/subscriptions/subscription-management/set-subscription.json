@@ -1,0 +1,86 @@
+{
+    "endpointId": "setSubscription",
+    "method": "POST",
+    "access": "public",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-newsletter/subscription",
+    "meta": {
+        "name": "Set subscription",
+        "description": "Create or update one newsletter subscription."
+    },
+    "params": [
+        {
+            "name": "email",
+            "in": "query",
+            "type": "string",
+            "description": "Normalized subscription email. Optional when the email is provided in the body."
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "email": {
+                "type": "string"
+            },
+            "subscribed": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "subscribed"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "exists": {
+                        "type": "boolean"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "subscribed": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "exists",
+                    "email",
+                    "subscribed"
+                ]
+            }
+        },
+        {
+            "status": "400",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,72 @@
+[
+    {
+        "widget": "w-table",
+        "id": "refundRequestsTable",
+        "title": "Refund requests",
+        "source": {
+            "endpoint": "refundRequests",
+            "params": {
+                "status": "$filter.status",
+                "limit": "100",
+                "offset": "0"
+            },
+            "itemsPath": "items",
+            "totalPath": "total"
+        },
+        "rowKey": "id",
+        "filters": [
+            {
+                "id": "status",
+                "label": "Status",
+                "param": "status",
+                "type": "text"
+            }
+        ],
+        "columns": [
+            {
+                "id": "id",
+                "label": "Refund",
+                "path": "id",
+                "primary": true
+            },
+            {
+                "id": "orderId",
+                "label": "Order",
+                "path": "orderId"
+            },
+            {
+                "id": "amount",
+                "label": "Amount",
+                "path": "requestedAmount",
+                "format": "money"
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "path": "status",
+                "format": "badge"
+            },
+            {
+                "id": "financeApproval",
+                "label": "Finance review",
+                "path": "requiresFinanceApproval",
+                "format": "badge"
+            },
+            {
+                "id": "dualApproval",
+                "label": "Dual approval",
+                "path": "dualApprovalRequired",
+                "format": "badge"
+            },
+            {
+                "id": "createdAt",
+                "label": "Requested",
+                "path": "createdAt",
+                "format": "date"
+            }
+        ],
+        "selection": {
+            "opens": "refundRequestDetail"
+        }
+    }
+]

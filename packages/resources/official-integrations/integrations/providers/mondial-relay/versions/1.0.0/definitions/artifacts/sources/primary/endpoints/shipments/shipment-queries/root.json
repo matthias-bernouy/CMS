@@ -1,0 +1,126 @@
+[
+    {
+        "endpointId": "shipments",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/shipments",
+        "params": [
+            {
+                "name": "status",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "externalOrderId",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "q",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "limit",
+                "in": "query",
+                "type": "number"
+            },
+            {
+                "name": "offset",
+                "in": "query",
+                "type": "number"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "externalOrderId": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "expeditionNumber": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "lastError": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "recipientName": {
+                                        "type": "string"
+                                    },
+                                    "recipientPostalCode": {
+                                        "type": "string"
+                                    },
+                                    "recipientCity": {
+                                        "type": "string"
+                                    },
+                                    "trackingUrl": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "latestEventLabel": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "createdAt": {
+                                        "type": "string"
+                                    },
+                                    "deliveryRelayLocation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "id",
+                                    "status",
+                                    "recipientName",
+                                    "recipientPostalCode",
+                                    "recipientCity",
+                                    "createdAt"
+                                ]
+                            }
+                        },
+                        "limit": {
+                            "type": "number"
+                        },
+                        "offset": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "items",
+                        "limit",
+                        "offset"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "$include": "shipment/root.json"
+    }
+]

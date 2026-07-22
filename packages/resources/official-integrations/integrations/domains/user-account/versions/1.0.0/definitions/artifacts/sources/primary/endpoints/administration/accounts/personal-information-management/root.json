@@ -1,0 +1,63 @@
+[
+    {
+        "$include": "create-user-personal-information/root.json"
+    },
+    {
+        "endpointId": "deleteUserPersonalInformation",
+        "method": "DELETE",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/record",
+        "meta": {
+            "name": "Delete user personal information",
+            "description": "Delete personal information for a target CMS user."
+        },
+        "params": [
+            {
+                "name": "userId",
+                "in": "query",
+                "required": true,
+                "type": "string",
+                "description": "Target CMS user id."
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "userId": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "deleted",
+                        "userId"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "$include": "upload-user-personal-information-avatar.json"
+    }
+]

@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}-metadata",
+    "source": "{{answers.id}}",
+    "meta": {
+        "name": "Metadata",
+        "icon": {
+            "path": "assets/metadata.svg"
+        }
+    },
+    "views": {
+        "$include": "views.json"
+    }
+}

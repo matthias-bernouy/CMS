@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "img",
+        "name": "Image",
+        "group": "Media",
+        "description": "Native responsive image with accessibility and loading settings.",
+        "path": "blocs/media/basic-image"
+    }
+}

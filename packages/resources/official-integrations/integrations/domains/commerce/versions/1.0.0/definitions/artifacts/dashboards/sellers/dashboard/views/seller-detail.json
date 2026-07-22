@@ -1,0 +1,100 @@
+{
+    "widget": "w-detail",
+    "id": "sellerDetail",
+    "source": {
+        "endpoint": "seller",
+        "params": {
+            "id": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "displayName",
+        "fallback": "Seller"
+    },
+    "status": {
+        "path": "verificationStatus"
+    },
+    "actions": [
+        {
+            "id": "verifySeller",
+            "label": "Verify seller",
+            "tone": "primary",
+            "placement": "primary",
+            "endpoint": {
+                "endpoint": "reviewSeller",
+                "params": {
+                    "id": "$resource.id"
+                },
+                "body": {
+                    "status": "verified",
+                    "reason": "$field.reviewReason",
+                    "expectedVersion": "$resource.version"
+                }
+            },
+            "after": {
+                "resource": "$result"
+            }
+        },
+        {
+            "id": "suspendSeller",
+            "label": "Suspend seller",
+            "tone": "danger",
+            "placement": "more",
+            "confirm": "Suspend this seller?",
+            "endpoint": {
+                "endpoint": "reviewSeller",
+                "params": {
+                    "id": "$resource.id"
+                },
+                "body": {
+                    "status": "suspended",
+                    "reason": "$field.reviewReason",
+                    "expectedVersion": "$resource.version"
+                }
+            },
+            "after": {
+                "resource": "$result"
+            }
+        }
+    ],
+    "main": [
+        {
+            "id": "sellerDetails",
+            "title": "Details",
+            "fields": [
+                {
+                    "id": "displayName",
+                    "label": "Display name",
+                    "path": "displayName",
+                    "type": "readonly"
+                },
+                {
+                    "id": "slug",
+                    "label": "Slug",
+                    "path": "slug",
+                    "type": "readonly"
+                },
+                {
+                    "id": "kind",
+                    "label": "Kind",
+                    "path": "kind",
+                    "type": "readonly",
+                    "format": "badge"
+                },
+                {
+                    "id": "cmsUserId",
+                    "label": "CMS user id",
+                    "path": "cmsUserId",
+                    "type": "readonly"
+                },
+                {
+                    "id": "reviewReason",
+                    "label": "Review reason",
+                    "path": "reviewReason",
+                    "type": "textarea",
+                    "rows": 3
+                }
+            ]
+        }
+    ]
+}

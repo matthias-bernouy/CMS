@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../helpers/integrationDefinition";
 import { installCommerceTestEnvironment, requestCommerce } from "../../harness";
 import { adminProduct, adminSourceProduct, publicProduct, publicSourceProduct, variants } from "./expected";
 import { useProductResponder } from "./fixtures";
@@ -96,7 +96,7 @@ describe("commerce product detail contracts", () => {
     });
 
     test("preserves the distinct strict Source projections consumed by integrations", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8"));
+        const definition = await loadIntegrationDefinition<any>(definitionPath);
         const endpoints = definition.artifacts.find((artifact: any) => artifact.source).source.endpoints;
 
         expect(

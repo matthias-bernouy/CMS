@@ -1,0 +1,89 @@
+[
+    {
+        "endpointId": "requestOrderRefund",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/refund",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "orderId": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "orderId",
+                "reason",
+                "amount"
+            ]
+        },
+        "output": [
+            {
+                "status": "201",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "businessKey": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "requestedAmount": {
+                            "type": "number"
+                        },
+                        "requiresFinanceApproval": {
+                            "type": "boolean"
+                        },
+                        "version": {
+                            "type": "number"
+                        },
+                        "refundAuthorization": {
+                            "type": "object",
+                            "nullable": true
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

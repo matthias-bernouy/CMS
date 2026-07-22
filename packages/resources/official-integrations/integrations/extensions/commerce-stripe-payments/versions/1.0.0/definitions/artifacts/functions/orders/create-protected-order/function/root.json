@@ -1,0 +1,125 @@
+{
+    "id": "createProtectedOrder",
+    "method": "POST",
+    "access": {
+        "mode": "auth"
+    },
+    "meta": {
+        "name": "Create protected order",
+        "description": "Resolve the authoritative Commerce seller and require current held-payment eligibility before reserving an offer."
+    },
+    "input": {
+        "body": {
+            "type": "object",
+            "properties": {
+                "idempotencyKey": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "offerId": {
+                                "type": "string"
+                            },
+                            "quantity": {
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "offerId",
+                            "quantity"
+                        ]
+                    }
+                },
+                "shippingAddress": {
+                    "type": "object"
+                },
+                "billingAddress": {
+                    "type": "object"
+                },
+                "metadata": {
+                    "type": "object"
+                }
+            },
+            "required": [
+                "idempotencyKey",
+                "items"
+            ]
+        }
+    },
+    "output": {
+        "$include": "output.json"
+    },
+    "steps": [
+        {
+            "id": "sellerContext",
+            "call": {
+                "source": "{{dependencies.commerce.sourceId}}",
+                "endpoint": "getProtectedCheckoutSellerContext",
+                "body": {
+                    "items": "$input.body.items"
+                }
+            }
+        },
+        {
+            "assert": {
+                "condition": {
+                    "equals": [
+                        "$steps.sellerContext.buyerCmsUserId",
+                        "$ctx.user.id"
+                    ]
+                },
+                "failure": {
+                    "status": 403,
+                    "error": "Protected checkout identity mismatch"
+                }
+            }
+        },
+        {
+            "id": "sellerEligibility",
+            "call": {
+                "source": "{{dependencies.stripe.sourceId}}",
+                "endpoint": "checkSellerHeldPaymentEligibility",
+                "body": {
+                    "sellerUserId": "$steps.sellerContext.sellerCmsUserId",
+                    "marketplaceTermsVersion": "{{answers.sellerTermsVersion}}",
+                    "marketplaceTermsHash": "{{answers.sellerTermsHash}}"
+                }
+            }
+        },
+        {
+            "assert": {
+                "condition": {
+                    "equals": [
+                        "$steps.sellerEligibility.eligible",
+                        true
+                    ]
+                },
+                "failure": {
+                    "status": 409,
+                    "error": "SELLER_PROTECTED_PAYMENT_NOT_READY"
+                }
+            }
+        },
+        {
+            "id": "order",
+            "call": {
+                "source": "{{dependencies.commerce.sourceId}}",
+                "endpoint": "createOrder",
+                "body": {
+                    "idempotencyKey": "$input.body.idempotencyKey",
+                    "items": "$input.body.items",
+                    "shippingAddress": "$input.body.shippingAddress",
+                    "billingAddress": "$input.body.billingAddress",
+                    "metadata": "$input.body.metadata"
+                }
+            }
+        }
+    ],
+    "return": {
+        "status": 200,
+        "body": "$steps.order"
+    }
+}

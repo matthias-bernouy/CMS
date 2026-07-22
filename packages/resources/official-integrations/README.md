@@ -14,6 +14,7 @@ integrations/<kind>/
     `-- <semver>/
         |-- README.md
         |-- definition.json
+        |-- definitions/
         |-- sources/
         `-- connectors/<provider>/
 ```
@@ -25,13 +26,15 @@ exact semver values without a leading `v`, for example `1.0.0`.
 integration kind, display metadata, `stable` and `latest` version pointers, and
 the available version directories.
 
-`definition.json` is the exact installable integration definition for one
-version. Its `kind` and `version` must match the root index and the version
-directory.
+`definition.json` is the version entry point. It may contain the definition
+directly or declare a recursive bundle rooted under `definitions/`; resolution
+always produces one canonical installable definition whose `kind` and `version`
+match the root index and version directory.
 
-Provider-specific deployment assets such as SQL files, Supabase config fragments,
-and Edge Function source live under the versioned `connectors/<provider>/`
-directory.
+Provider-specific deployment assets live under the versioned
+`connectors/<provider>/` directory. Supabase SQL units use explicit
+`sql/*.manifest.json` entry points, alongside Supabase config fragments and Edge
+Function source.
 
 Version directories are immutable once published. Add a new version directory
 for updates instead of editing an existing released version.

@@ -12,10 +12,12 @@ delivery, and audit rows.
 
 ## Files
 
-- `definition.json`: declarative CMS integration definition.
-- `connectors/supabase/schema.sql`: private Supabase Postgres schema with
-  `emailer.templates`, `emailer.messages`, and `emailer.settings`.
-- `connectors/supabase/broadcast-schema.sql`: private durable campaign state.
+- `definition.json`: entry point for the declarative definition assembled from
+  `definitions/`.
+- `connectors/supabase/sql/schema.manifest.json`: ordered private schema bundle
+  for `emailer.templates`, `emailer.messages`, and `emailer.settings`.
+- `connectors/supabase/sql/broadcast-schema.manifest.json`: ordered private
+  bundle for durable campaign state.
 - `connectors/supabase/functions/cms-emailer/index.ts`: Supabase Edge Function
   exposing the CMS-facing email API.
 - `connectors/supabase/functions/cms-broadcast/`: Supabase Edge Function for

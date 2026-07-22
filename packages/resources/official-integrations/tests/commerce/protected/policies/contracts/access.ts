@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
 import { integrationRoot } from "./paths";
 
 export function registerAdminHeadersTest(): void {
     test("declares computed actor and role headers on every financial admin endpoint", async () => {
-        const definition = JSON.parse(await readFile(resolve(integrationRoot, "definition.json"), "utf8"));
+        const definition = await loadIntegrationDefinition<any>(resolve(integrationRoot, "definition.json"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source");
         const financialIds = new Set([
             "c2cPolicies",

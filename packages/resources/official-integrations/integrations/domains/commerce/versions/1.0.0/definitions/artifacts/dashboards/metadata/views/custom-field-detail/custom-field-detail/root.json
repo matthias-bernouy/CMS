@@ -1,0 +1,71 @@
+{
+    "widget": "w-detail",
+    "id": "customFieldDetail",
+    "source": {
+        "endpoint": "customField",
+        "params": {
+            "id": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "label",
+        "fallback": "New metadata definition"
+    },
+    "status": {
+        "path": "fieldType"
+    },
+    "actions": [
+        {
+            "id": "saveCustomField",
+            "label": "Save metadata",
+            "tone": "primary",
+            "placement": "primary",
+            "endpoint": {
+                "endpoint": "upsertCustomField",
+                "body": {
+                    "entityType": "$field.entityType",
+                    "key": "$field.key",
+                    "label": "$field.label",
+                    "fieldType": "$field.fieldType",
+                    "options": "$field.options",
+                    "unit": "$field.unit",
+                    "required": "$field.required",
+                    "selfEditable": "$field.selfEditable",
+                    "adminEditable": "$field.adminEditable",
+                    "publicReadable": "$field.publicReadable",
+                    "showInDashboardTable": "$field.showInDashboardTable",
+                    "position": "$field.position",
+                    "enabled": "$field.enabled"
+                }
+            },
+            "after": {
+                "resource": "$result"
+            }
+        },
+        {
+            "id": "deleteCustomField",
+            "label": "Delete metadata",
+            "icon": "trash",
+            "tone": "danger",
+            "placement": "more",
+            "confirm": "Delete this metadata definition?",
+            "visibleWhen": {
+                "value": "$field.key",
+                "notEquals": ""
+            },
+            "endpoint": {
+                "endpoint": "deleteCustomField",
+                "params": {
+                    "entityType": "$resource.entityType",
+                    "key": "$resource.key"
+                }
+            }
+        }
+    ],
+    "main": {
+        "$include": "main.json"
+    },
+    "aside": {
+        "$include": "aside.json"
+    }
+}

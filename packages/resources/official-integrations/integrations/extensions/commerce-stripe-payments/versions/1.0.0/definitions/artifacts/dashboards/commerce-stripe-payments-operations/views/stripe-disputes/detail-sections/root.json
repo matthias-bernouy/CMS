@@ -1,0 +1,106 @@
+[
+    {
+        "$include": "dispute-state.json"
+    },
+    {
+        "id": "disputeProviderBalanceImpact",
+        "title": "Platform balance impact and correlation",
+        "description": "Stripe provider truth for whether dispute funds left the platform balance and the balance transactions that carry that impact. Seller Transfer recovery amounts are not part of this dispute DTO.",
+        "fields": [
+            {
+                "id": "disputeFundsWithdrawn",
+                "label": "Funds withdrawn from platform balance",
+                "path": "fundsWithdrawn",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "disputeBalanceTransactionIds",
+                "label": "Stripe balance transaction ids",
+                "path": "balanceTransactionIds",
+                "type": "readonly"
+            },
+            {
+                "id": "disputeCurrency",
+                "label": "Currency",
+                "path": "currency",
+                "type": "readonly"
+            },
+            {
+                "id": "disputeChargeRefundable",
+                "label": "Charge remains refundable",
+                "path": "isChargeRefundable",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "disputeStripeChargeId",
+                "label": "Stripe Charge",
+                "path": "stripeChargeId",
+                "type": "readonly"
+            },
+            {
+                "id": "disputeProviderPaymentId",
+                "label": "Provider payment",
+                "path": "providerPaymentId",
+                "type": "readonly"
+            },
+            {
+                "id": "disputeCommerceOrder",
+                "label": "Commerce order reference",
+                "path": "clientReferenceId",
+                "type": "readonly"
+            },
+            {
+                "id": "disputeCreatedAt",
+                "label": "Dispute created",
+                "path": "createdAt",
+                "type": "readonly",
+                "format": "date"
+            },
+            {
+                "id": "disputeUpdatedAt",
+                "label": "Provider updated",
+                "path": "updatedAt",
+                "type": "readonly",
+                "format": "date"
+            }
+        ]
+    },
+    {
+        "id": "disputeEvidence",
+        "title": "Evidence staging",
+        "fields": [
+            {
+                "id": "evidenceText",
+                "label": "Evidence statement",
+                "path": "evidenceText",
+                "type": "textarea"
+            },
+            {
+                "id": "shippingTrackingNumber",
+                "label": "Tracking number",
+                "path": "shippingTrackingNumber",
+                "type": "text"
+            },
+            {
+                "id": "shippingDate",
+                "label": "Shipping date",
+                "path": "shippingDate",
+                "type": "text"
+            },
+            {
+                "id": "shippingDocumentationFileId",
+                "label": "Shipping document file id",
+                "path": "shippingDocumentationFileId",
+                "type": "text"
+            },
+            {
+                "id": "customerCommunicationFileId",
+                "label": "Customer communication file id",
+                "path": "customerCommunicationFileId",
+                "type": "text"
+            }
+        ]
+    }
+]

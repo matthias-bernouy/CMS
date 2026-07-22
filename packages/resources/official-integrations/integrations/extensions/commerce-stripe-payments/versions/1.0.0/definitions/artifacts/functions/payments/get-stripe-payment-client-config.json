@@ -1,0 +1,46 @@
+{
+    "type": "function",
+    "function": {
+        "id": "getStripePaymentClientConfig",
+        "method": "GET",
+        "access": {
+            "mode": "auth"
+        },
+        "meta": {
+            "name": "Get Stripe payment client config",
+            "description": "Return the publishable Stripe key through the configured Stripe Connect dependency."
+        },
+        "input": {
+            "params": []
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "publishableKey": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "publishableKey"
+                    ]
+                }
+            }
+        ],
+        "steps": [
+            {
+                "id": "config",
+                "call": {
+                    "source": "{{dependencies.stripe.sourceId}}",
+                    "endpoint": "getConnectClientConfig"
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": "$steps.config"
+        }
+    }
+}

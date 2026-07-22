@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-redirect",
+        "name": "Redirect",
+        "group": "Basic",
+        "description": "Redirects a published page to another internal page.",
+        "path": "blocs/basic/basic-redirect"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-chip-group",
+        "name": "Choice chip group",
+        "group": "Form",
+        "description": "Form-associated single or multiple choice chip group.",
+        "path": "blocs/forms/choices/basic-chip-group"
+    }
+}

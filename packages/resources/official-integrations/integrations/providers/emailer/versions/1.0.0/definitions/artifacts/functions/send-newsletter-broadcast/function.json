@@ -1,0 +1,149 @@
+{
+    "id": "sendNewsletterBroadcast",
+    "method": "POST",
+    "access": {
+        "mode": "admin"
+    },
+    "meta": {
+        "name": "Send newsletter broadcast",
+        "description": "Send one Emailer template to the first 25 active newsletter subscribers."
+    },
+    "input": {
+        "body": {
+            "type": "object",
+            "properties": {
+                "campaignKey": {
+                    "type": "string"
+                },
+                "templateKey": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "object"
+                }
+            },
+            "required": [
+                "campaignKey",
+                "templateKey"
+            ]
+        }
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "subscribers": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "messages": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "ui": {
+        "execute": {
+            "fields": [
+                {
+                    "path": "body.campaignKey",
+                    "label": "Campaign key",
+                    "control": "text"
+                },
+                {
+                    "path": "body.templateKey",
+                    "label": "Template",
+                    "control": "source-select",
+                    "source": "{{answers.id}}",
+                    "endpoint": "listTemplates",
+                    "params": {
+                        "status": "active",
+                        "limit": 100
+                    },
+                    "itemsPath": "items",
+                    "labelPath": "name",
+                    "valuePath": "key"
+                },
+                {
+                    "path": "body.data",
+                    "label": "Data",
+                    "control": "json-object",
+                    "seed": {
+                        "type": "paths",
+                        "dependsOn": "body.templateKey",
+                        "source": "{{answers.id}}",
+                        "endpoint": "getTemplate",
+                        "params": {
+                            "key": "$body.templateKey"
+                        },
+                        "pathsPath": "requiredTokens",
+                        "pathNamePath": "name",
+                        "samplePath": "sample"
+                    }
+                }
+            ]
+        }
+    },
+    "steps": [
+        {
+            "id": "subscriptions",
+            "call": {
+                "source": "{{dependencies.newsletter.sourceId}}",
+                "endpoint": "listSubscriptions",
+                "params": {
+                    "subscribed": "true",
+                    "limit": 25
+                }
+            }
+        },
+        {
+            "id": "messages",
+            "forEach": {
+                "items": "$steps.subscriptions.subscriptions",
+                "max": 25,
+                "steps": [
+                    {
+                        "id": "message",
+                        "call": {
+                            "source": "{{answers.id}}",
+                            "endpoint": "sendTemplateEmail",
+                            "body": {
+                                "key": "$input.body.templateKey",
+                                "toEmails": [
+                                    "$item.email"
+                                ],
+                                "data": "$input.body.data",
+                                "idempotencyKey": {
+                                    "$concat": [
+                                        "$input.body.campaignKey",
+                                        ":",
+                                        "$item.email"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ],
+                "yield": {
+                    "email": "$item.email",
+                    "message": "$steps.message"
+                }
+            }
+        }
+    ],
+    "return": {
+        "status": 200,
+        "body": {
+            "subscribers": "$steps.subscriptions.subscriptions",
+            "messages": "$steps.messages"
+        }
+    }
+}

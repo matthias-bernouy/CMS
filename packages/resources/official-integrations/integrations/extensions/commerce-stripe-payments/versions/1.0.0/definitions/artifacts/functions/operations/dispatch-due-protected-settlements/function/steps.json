@@ -1,0 +1,118 @@
+[
+    {
+        "assert": {
+            "condition": {
+                "all": [
+                    {
+                        "gte": [
+                            "$input.body.limit",
+                            1
+                        ]
+                    },
+                    {
+                        "lte": [
+                            "$input.body.limit",
+                            10
+                        ]
+                    }
+                ]
+            },
+            "failure": {
+                "status": 400,
+                "error": "limit must be between 1 and 10"
+            }
+        }
+    },
+    {
+        "id": "batch",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "authorizeDueOrderReleases",
+            "body": {
+                "runKey": "$input.body.runKey",
+                "limit": "$input.body.limit"
+            }
+        }
+    },
+    {
+        "id": "dispatches",
+        "forEach": {
+            "items": "$steps.batch.authorizations",
+            "max": 10,
+            "steps": [
+                {
+                    "id": "sellerPayoutControls",
+                    "call": {
+                        "source": "{{dependencies.stripe.sourceId}}",
+                        "endpoint": "configureSellerPayoutSchedule",
+                        "body": {
+                            "userId": "$item.sellerId",
+                            "payoutScheduleChangeId": {
+                                "$concat": [
+                                    "settlement-release:",
+                                    "$item.releaseAuthorizationId",
+                                    ":",
+                                    "$item.sellerRequiredMinimumBalanceAmount",
+                                    ":",
+                                    "$item.payoutDelayDays"
+                                ]
+                            },
+                            "interval": "weekly",
+                            "weeklyPayoutDays": [
+                                "monday"
+                            ],
+                            "minimumBalanceEur": "$item.sellerRequiredMinimumBalanceAmount",
+                            "delayDaysOverride": "$item.payoutDelayDays",
+                            "reason": "Commerce authorized settlement release"
+                        }
+                    }
+                },
+                {
+                    "id": "providerTransfer",
+                    "call": {
+                        "source": "{{dependencies.stripe.sourceId}}",
+                        "endpoint": "requestSettlementRelease",
+                        "body": {
+                            "paymentId": "$item.paymentId",
+                            "releaseAuthorizationId": "$item.releaseAuthorizationId",
+                            "releaseKind": "$item.releaseKind",
+                            "amount": "$item.amount",
+                            "currency": "$item.currency"
+                        }
+                    }
+                },
+                {
+                    "id": "commerceSettlement",
+                    "call": {
+                        "source": "{{dependencies.commerce.sourceId}}",
+                        "endpoint": "recordOrderSettlement",
+                        "body": {
+                            "orderPublicId": "$item.orderPublicId",
+                            "providerEventId": {
+                                "$concat": [
+                                    "transfer:",
+                                    "$steps.providerTransfer.providerOperationId",
+                                    ":",
+                                    "$steps.providerTransfer.updatedAt"
+                                ]
+                            },
+                            "operationType": "transfer",
+                            "providerOperationId": "$steps.providerTransfer.providerOperationId",
+                            "status": "$steps.providerTransfer.status",
+                            "amount": "$steps.providerTransfer.amount",
+                            "currency": "$steps.providerTransfer.currency",
+                            "occurredAt": "$steps.providerTransfer.occurredAt",
+                            "releaseAuthorizationId": "$item.releaseAuthorizationId",
+                            "providerSnapshot": "$steps.providerTransfer"
+                        }
+                    }
+                }
+            ],
+            "yield": {
+                "authorization": "$item",
+                "providerTransfer": "$steps.providerTransfer",
+                "commerceSettlement": "$steps.commerceSettlement"
+            }
+        }
+    }
+]

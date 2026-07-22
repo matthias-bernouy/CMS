@@ -1,0 +1,91 @@
+[
+    {
+        "id": "sender",
+        "title": "Sender address",
+        "fields": [
+            {
+                "id": "senderName",
+                "label": "Sender",
+                "path": "senderName",
+                "required": true,
+                "type": "text"
+            },
+            {
+                "id": "senderFirstName",
+                "label": "Sender first name",
+                "path": "senderFirstName",
+                "type": "text"
+            },
+            {
+                "id": "senderLastName",
+                "label": "Sender last name",
+                "path": "senderLastName",
+                "type": "text"
+            },
+            {
+                "id": "senderAddressLine1",
+                "label": "Sender address",
+                "path": "senderAddressLine1",
+                "required": true,
+                "type": "text"
+            },
+            {
+                "id": "senderAddressLine2",
+                "label": "Sender address line 2",
+                "path": "senderAddressLine2",
+                "type": "text"
+            },
+            {
+                "id": "senderAddressLine3",
+                "label": "Sender address line 3",
+                "path": "senderAddressLine3",
+                "type": "text"
+            },
+            {
+                "id": "senderPostalCode",
+                "label": "Sender postal code",
+                "path": "senderPostalCode",
+                "required": true,
+                "type": "text"
+            },
+            {
+                "id": "senderCity",
+                "label": "Sender city",
+                "path": "senderCity",
+                "required": true,
+                "type": "text"
+            },
+            {
+                "id": "senderCountry",
+                "label": "Sender country",
+                "path": "senderCountry",
+                "required": true,
+                "type": "select",
+                "options": [
+                    {
+                        "value": "FR",
+                        "label": "France"
+                    }
+                ]
+            },
+            {
+                "id": "senderPhone",
+                "label": "Sender phone",
+                "path": "senderPhone",
+                "type": "text"
+            },
+            {
+                "id": "senderMobile",
+                "label": "Sender mobile",
+                "path": "senderMobile",
+                "type": "text"
+            },
+            {
+                "id": "senderEmail",
+                "label": "Sender email",
+                "path": "senderEmail",
+                "type": "text"
+            }
+        ]
+    }
+]

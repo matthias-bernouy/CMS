@@ -1,0 +1,47 @@
+{
+    "endpointId": "protectedPayment",
+    "method": "GET",
+    "access": {
+        "mode": "admin"
+    },
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/protected-payment",
+    "params": [
+        {
+            "name": "orderId",
+            "in": "query",
+            "type": "number"
+        },
+        {
+            "name": "publicId",
+            "in": "query",
+            "type": "string"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        },
+        {
+            "name": "x-cms-user-role",
+            "source": {
+                "from": "computed",
+                "ref": "userRole"
+            }
+        }
+    ],
+    "output": {
+        "$include": "output.json"
+    }
+}

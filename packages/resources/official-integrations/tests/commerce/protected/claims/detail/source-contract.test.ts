@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
 import { expectedClaimDetail } from "./expected";
 
 type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: DataShape }> };
@@ -14,7 +14,7 @@ const definitionPath = resolve(
 
 describe("commerce claim strict Source contract", () => {
     test("preserves the exact claim projection consumed by dashboards", async () => {
-        const definition = JSON.parse(await readFile(definitionPath, "utf8")) as Definition;
+        const definition = await loadIntegrationDefinition<Definition>(definitionPath);
         const endpoint = definition.artifacts
             .find((artifact) => artifact.source)
             ?.source?.endpoints.find((candidate) => candidate.endpointId === "claim");

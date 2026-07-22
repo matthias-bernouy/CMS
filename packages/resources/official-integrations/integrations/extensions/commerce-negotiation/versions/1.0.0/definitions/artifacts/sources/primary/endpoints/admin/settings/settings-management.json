@@ -1,0 +1,99 @@
+[
+    {
+        "endpointId": "settings",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/admin/settings",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "minimumPercent": {
+                            "type": "number"
+                        },
+                        "maximumPercent": {
+                            "type": "number"
+                        },
+                        "proposalTtlHours": {
+                            "type": "number"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "version": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "minimumPercent",
+                        "maximumPercent",
+                        "proposalTtlHours",
+                        "enabled",
+                        "version"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "updateSettings",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/admin/settings",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "expectedVersion": {
+                    "type": "number"
+                },
+                "minimumPercent": {
+                    "type": "number"
+                },
+                "maximumPercent": {
+                    "type": "number"
+                },
+                "proposalTtlHours": {
+                    "type": "number"
+                },
+                "enabled": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "expectedVersion"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    }
+]

@@ -1,5 +1,11 @@
-\ir ../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
-\ir ../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
+\if :{?cms_integration_schema_bundle}
+\else
+    \echo 'cms_integration_schema_bundle must point to an assembled temporary SQL bundle.'
+    \quit 3
+\endif
+
+\ir :cms_integration_schema_bundle
+\ir :cms_integration_schema_bundle
 
 do $install$
 begin

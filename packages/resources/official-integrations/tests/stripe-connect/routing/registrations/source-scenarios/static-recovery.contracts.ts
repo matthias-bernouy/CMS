@@ -1,12 +1,14 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
+import { loadSupabaseSchemaSql } from "../../../../helpers/supabaseSql";
 
 export function registerStaticRecoverySourceScenario(): void {
     test("persists seller recovery exposure and blocks payments, releases, and unsafe payouts", async () => {
         const root = resolve(import.meta.dir, "../../../../../integrations/providers/stripe-connect/versions/1.0.0");
         const [schema, edge, paymentProjection, definition] = await Promise.all([
-            readFile(resolve(root, "connectors/supabase/schema.sql"), "utf8"),
+            loadSupabaseSchemaSql(root),
             Promise.all([
                 readFile(resolve(root, "connectors/supabase/functions/cms-stripe-connect/index.ts"), "utf8"),
                 readFile(
@@ -35,7 +37,7 @@ export function registerStaticRecoverySourceScenario(): void {
                 ),
                 "utf8",
             ),
-            readFile(resolve(root, "definition.json"), "utf8"),
+            loadIntegrationDefinition(resolve(root, "definition.json")).then(JSON.stringify),
         ]);
 
         expect(schema).toContain("stripe_connect.seller_recovery_exposures");

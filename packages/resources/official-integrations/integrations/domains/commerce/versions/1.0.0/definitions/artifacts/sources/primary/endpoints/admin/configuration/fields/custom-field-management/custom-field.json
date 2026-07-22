@@ -1,0 +1,94 @@
+{
+    "endpointId": "customField",
+    "method": "GET",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/custom-field",
+    "params": [
+        {
+            "name": "id",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "entityType",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "key",
+            "in": "query",
+            "type": "string"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "entityType": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "fieldType": {
+                        "type": "string"
+                    },
+                    "options": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "unit": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "required": {
+                        "type": "boolean"
+                    },
+                    "selfEditable": {
+                        "type": "boolean"
+                    },
+                    "adminEditable": {
+                        "type": "boolean"
+                    },
+                    "publicReadable": {
+                        "type": "boolean"
+                    },
+                    "showInDashboardTable": {
+                        "type": "boolean"
+                    },
+                    "position": {
+                        "type": "number"
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ]
+}

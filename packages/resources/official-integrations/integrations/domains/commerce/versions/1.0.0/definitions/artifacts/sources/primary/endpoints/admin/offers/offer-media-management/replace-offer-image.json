@@ -1,0 +1,87 @@
+{
+    "endpointId": "replaceOfferImage",
+    "method": "POST",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer/image/replace",
+    "params": [
+        {
+            "name": "offerId",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "mediaId",
+            "in": "query",
+            "type": "string"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "ok": {
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "type": "number"
+                    },
+                    "offerMediaId": {
+                        "type": "number"
+                    },
+                    "mediaId": {
+                        "type": "number"
+                    },
+                    "sortOrder": {
+                        "type": "number"
+                    },
+                    "isMain": {
+                        "type": "boolean"
+                    },
+                    "storageBucket": {
+                        "type": "string"
+                    },
+                    "storagePath": {
+                        "type": "string"
+                    },
+                    "mimeType": {
+                        "type": "string"
+                    },
+                    "fileSize": {
+                        "type": "number"
+                    },
+                    "originalFilename": {
+                        "type": "string"
+                    },
+                    "alt": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ]
+}

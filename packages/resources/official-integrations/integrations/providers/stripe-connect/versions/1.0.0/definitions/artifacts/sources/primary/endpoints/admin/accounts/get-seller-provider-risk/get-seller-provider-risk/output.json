@@ -1,0 +1,147 @@
+[
+    {
+        "status": "200",
+        "body": {
+            "type": "object",
+            "properties": {
+                "account": {
+                    "type": "object",
+                    "properties": {
+                        "userId": {
+                            "type": "string",
+                            "semantic": {
+                                "kind": "user-id",
+                                "authority": "cms"
+                            }
+                        },
+                        "stripeAccountId": {
+                            "type": "string"
+                        },
+                        "payoutSchedule": {
+                            "type": "string"
+                        },
+                        "riskStatus": {
+                            "type": "string"
+                        },
+                        "financialHoldReason": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "payoutsEnabled": {
+                            "type": "boolean"
+                        },
+                        "outstandingDebtAmount": {
+                            "type": "number"
+                        },
+                        "financialExposureAmount": {
+                            "type": "number"
+                        },
+                        "payoutBlockedAt": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "manualPayoutHoldStartedAt": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "manualPayoutHoldAlertAt": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "manualPayoutHoldDeadlineAt": {
+                            "type": "string",
+                            "nullable": true
+                        }
+                    }
+                },
+                "balances": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "currency": {
+                                "type": "string"
+                            },
+                            "available": {
+                                "type": "number"
+                            },
+                            "pending": {
+                                "type": "number"
+                            },
+                            "total": {
+                                "type": "number"
+                            },
+                            "instantAvailable": {
+                                "type": "number"
+                            },
+                            "reserved": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                },
+                "payoutControl": {
+                    "type": "object",
+                    "properties": {
+                        "interval": {
+                            "type": "string"
+                        },
+                        "weeklyPayoutDays": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "monthlyPayoutDays": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        },
+                        "minimumBalanceByCurrency": {
+                            "type": "object"
+                        },
+                        "debitNegativeBalances": {
+                            "type": "boolean"
+                        },
+                        "delayDays": {
+                            "type": "number"
+                        },
+                        "delayDaysOverride": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "status": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "providerSnapshot": {
+                    "type": "object"
+                },
+                "refreshedAt": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "account",
+                "balances",
+                "payoutControl",
+                "providerSnapshot",
+                "refreshedAt"
+            ]
+        }
+    },
+    {
+        "status": "403",
+        "body": {
+            "type": "object"
+        }
+    },
+    {
+        "status": "404",
+        "body": {
+            "type": "object"
+        }
+    }
+]

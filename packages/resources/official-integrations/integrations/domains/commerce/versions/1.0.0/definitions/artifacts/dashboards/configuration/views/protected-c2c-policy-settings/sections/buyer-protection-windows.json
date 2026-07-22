@@ -1,0 +1,86 @@
+[
+    {
+        "id": "buyerProtectionWindows",
+        "title": "Protection and approval windows",
+        "fields": [
+            {
+                "id": "paymentWindowMinutes",
+                "label": "Payment window (minutes)",
+                "path": "activePolicy.protection.paymentWindowMinutes",
+                "type": "number",
+                "required": true,
+                "min": 1,
+                "max": 1440,
+                "step": 1
+            },
+            {
+                "id": "sellerHandoffHours",
+                "label": "Seller handoff window (hours)",
+                "path": "activePolicy.protection.sellerHandoffHours",
+                "type": "number",
+                "required": true,
+                "min": 1,
+                "max": 720,
+                "step": 1
+            },
+            {
+                "id": "scanGraceHours",
+                "label": "Carrier scan grace (hours)",
+                "path": "activePolicy.protection.scanGraceHours",
+                "type": "number",
+                "required": true,
+                "min": 1,
+                "max": 720,
+                "step": 1
+            },
+            {
+                "id": "claimWindowHours",
+                "label": "Claim window after collection (hours)",
+                "path": "activePolicy.protection.claimWindowHours",
+                "type": "number",
+                "required": true,
+                "min": 1,
+                "max": 720,
+                "step": 1
+            },
+            {
+                "id": "sellerResponseHours",
+                "label": "Seller response window (hours)",
+                "path": "activePolicy.protection.sellerResponseHours",
+                "type": "number",
+                "required": true,
+                "min": 1,
+                "max": 720,
+                "step": 1
+            },
+            {
+                "id": "returnShipHours",
+                "label": "Return handoff window (hours)",
+                "path": "activePolicy.protection.returnShipHours",
+                "type": "number",
+                "required": true,
+                "min": 1,
+                "max": 2160,
+                "step": 1
+            },
+            {
+                "id": "financeReviewThresholdAmount",
+                "label": "Finance review threshold",
+                "path": "activePolicy.protection.financeReviewThresholdAmount",
+                "type": "number",
+                "required": true,
+                "min": 0,
+                "step": 1
+            },
+            {
+                "id": "dualApprovalThresholdAmount",
+                "label": "Dual approval threshold",
+                "path": "activePolicy.protection.dualApprovalThresholdAmount",
+                "type": "number",
+                "required": true,
+                "min": 0,
+                "step": 1
+            }
+        ]
+    }
+]

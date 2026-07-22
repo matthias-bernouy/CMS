@@ -1,0 +1,5 @@
+[
+    {
+        "$include": "list-financial-operations/root.json"
+    }
+]

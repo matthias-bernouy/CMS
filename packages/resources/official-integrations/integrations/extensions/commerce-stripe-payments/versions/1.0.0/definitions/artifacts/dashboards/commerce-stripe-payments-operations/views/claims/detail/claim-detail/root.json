@@ -1,0 +1,69 @@
+{
+    "widget": "w-detail",
+    "id": "claimDetail",
+    "source": {
+        "endpoint": "claim",
+        "params": {
+            "id": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "publicId",
+        "fallback": "Marketplace claim"
+    },
+    "status": {
+        "path": "status"
+    },
+    "actions": [
+        {
+            "id": "resolveClaim",
+            "label": "Resolve claim",
+            "tone": "primary",
+            "placement": "primary",
+            "confirm": "Apply this audited marketplace claim decision?",
+            "visibleWhen": {
+                "any": [
+                    {
+                        "value": "$field.status",
+                        "equals": "open"
+                    },
+                    {
+                        "value": "$field.status",
+                        "equals": "awaiting_seller_response"
+                    },
+                    {
+                        "value": "$field.status",
+                        "equals": "under_review"
+                    },
+                    {
+                        "all": [
+                            {
+                                "value": "$field.status",
+                                "equals": "return_required"
+                            },
+                            {
+                                "value": "$field.returnRecipientHandoffAt",
+                                "notEquals": null
+                            }
+                        ]
+                    }
+                ]
+            },
+            "endpoint": {
+                "endpoint": "resolveOrderClaim",
+                "body": {
+                    "claimId": "$resource.id",
+                    "outcome": "$field.outcome",
+                    "buyerRefundAmount": "$field.buyerRefundAmount",
+                    "sellerTransferAmount": "$field.sellerTransferAmount",
+                    "protectionFeeRefundAmount": "$field.protectionFeeRefundAmount",
+                    "decisionReason": "$field.decisionReason",
+                    "expectedVersion": "$resource.version"
+                }
+            }
+        }
+    ],
+    "main": {
+        "$include": "main.json"
+    }
+}

@@ -1,0 +1,52 @@
+[
+    {
+        "id": "sellerContext",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "getProtectedPaymentSellerContext",
+            "body": {
+                "orderId": "$input.body.orderId"
+            }
+        }
+    },
+    {
+        "assert": {
+            "condition": {
+                "equals": [
+                    "$steps.sellerContext.buyerCmsUserId",
+                    "$ctx.user.id"
+                ]
+            },
+            "failure": {
+                "status": 403,
+                "error": "Protected payment identity mismatch"
+            }
+        }
+    },
+    {
+        "id": "sellerEligibility",
+        "call": {
+            "source": "{{dependencies.stripe.sourceId}}",
+            "endpoint": "checkSellerHeldPaymentEligibility",
+            "body": {
+                "sellerUserId": "$steps.sellerContext.sellerCmsUserId",
+                "marketplaceTermsVersion": "{{answers.sellerTermsVersion}}",
+                "marketplaceTermsHash": "{{answers.sellerTermsHash}}"
+            }
+        }
+    },
+    {
+        "assert": {
+            "condition": {
+                "equals": [
+                    "$steps.sellerEligibility.eligible",
+                    true
+                ]
+            },
+            "failure": {
+                "status": 409,
+                "error": "SELLER_PROTECTED_PAYMENT_NOT_READY"
+            }
+        }
+    }
+]

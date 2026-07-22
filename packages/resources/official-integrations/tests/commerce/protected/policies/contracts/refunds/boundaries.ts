@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { functionSql, integrationRoot } from "../paths";
+import { functionSql, loadCommerceSchemaSql } from "../paths";
 
 export function registerRefundBoundariesTest(): void {
     test("bounds platform-funded claim refunds and only terminalizes confirmed provider outcomes", async () => {
-        const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
+        const schema = await loadCommerceSchemaSql();
         const createRefund = functionSql(schema, "create_refund_request", "refund_authorization_payload");
         const resolver = functionSql(schema, "resolve_marketplace_claim", "request_order_refund");
         const projection = functionSql(

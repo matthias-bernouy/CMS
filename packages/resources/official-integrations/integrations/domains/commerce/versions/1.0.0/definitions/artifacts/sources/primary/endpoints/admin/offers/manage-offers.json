@@ -1,0 +1,147 @@
+[
+    {
+        "endpointId": "manageOffers",
+        "method": "GET",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offers",
+        "params": [
+            {
+                "name": "q",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "sellerId",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "productId",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "publicationStatus",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "workflowState",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "conditionCode",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "limit",
+                "in": "query",
+                "type": "number"
+            },
+            {
+                "name": "offset",
+                "in": "query",
+                "type": "number"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "number"
+                                    },
+                                    "sellerId": {
+                                        "type": "number"
+                                    },
+                                    "productId": {
+                                        "type": "number"
+                                    },
+                                    "variantId": {
+                                        "type": "number",
+                                        "nullable": true
+                                    },
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "conditionCode": {
+                                        "type": "string"
+                                    },
+                                    "publicationStatus": {
+                                        "type": "string"
+                                    },
+                                    "workflowState": {
+                                        "type": "string"
+                                    },
+                                    "acceptedPriceAmount": {
+                                        "type": "number",
+                                        "nullable": true
+                                    },
+                                    "currency": {
+                                        "type": "string"
+                                    },
+                                    "availability": {
+                                        "type": "string"
+                                    },
+                                    "quantityAvailable": {
+                                        "type": "number",
+                                        "nullable": true
+                                    },
+                                    "inventoryRevision": {
+                                        "type": "number"
+                                    },
+                                    "metadata": {
+                                        "type": "object"
+                                    },
+                                    "version": {
+                                        "type": "number"
+                                    },
+                                    "createdAt": {
+                                        "type": "string"
+                                    },
+                                    "updatedAt": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        },
+                        "limit": {
+                            "type": "number"
+                        },
+                        "offset": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

@@ -1,0 +1,9 @@
+{
+    "$files": [
+        "tabs/payments.json",
+        "tabs/claims.json",
+        "tabs/refunds.json",
+        "tabs/stripe-disputes.json",
+        "tabs/exceptions/root.json"
+    ]
+}

@@ -1,0 +1,145 @@
+[
+    {
+        "endpointId": "prepareProtectedPayment",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/payment/prepare",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "orderId": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "orderId"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "orderPublicId": {
+                            "type": "string"
+                        },
+                        "orderNumber": {
+                            "type": "string"
+                        },
+                        "buyerCmsUserId": {
+                            "type": "string",
+                            "semantic": {
+                                "kind": "user-id",
+                                "authority": "cms"
+                            }
+                        },
+                        "sellerId": {
+                            "type": "string",
+                            "semantic": {
+                                "kind": "user-id",
+                                "authority": "cms"
+                            }
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "buyerTotalAmount": {
+                            "type": "number"
+                        },
+                        "sellerProceedsAmount": {
+                            "type": "number"
+                        },
+                        "sellerTransferReleaseAmount": {
+                            "type": "number"
+                        },
+                        "sellerReserveLiabilityAmount": {
+                            "type": "number"
+                        },
+                        "platformRetainedAmount": {
+                            "type": "number"
+                        },
+                        "sellerRequiredMinimumBalanceAmount": {
+                            "type": "number"
+                        },
+                        "platformRequiredMinimumBalanceAmount": {
+                            "type": "number"
+                        },
+                        "payoutDelayDays": {
+                            "type": "number"
+                        },
+                        "platformLiabilityRevision": {
+                            "type": "number"
+                        },
+                        "platformPayoutDecreaseAuthorizationId": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "platformPayoutChangeDirection": {
+                            "type": "string"
+                        },
+                        "sellerReserveLiabilityDays": {
+                            "type": "number"
+                        },
+                        "dualApprovalThresholdAmount": {
+                            "type": "number"
+                        },
+                        "financialTermsHash": {
+                            "type": "string"
+                        },
+                        "financialRevision": {
+                            "type": "number"
+                        },
+                        "payByAt": {
+                            "type": "string"
+                        },
+                        "protectionRequired": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "orderId",
+                        "orderPublicId",
+                        "sellerId",
+                        "currency",
+                        "buyerTotalAmount",
+                        "sellerProceedsAmount",
+                        "sellerTransferReleaseAmount",
+                        "sellerReserveLiabilityAmount",
+                        "sellerRequiredMinimumBalanceAmount",
+                        "platformRequiredMinimumBalanceAmount",
+                        "platformLiabilityRevision",
+                        "platformPayoutChangeDirection",
+                        "payoutDelayDays",
+                        "sellerReserveLiabilityDays",
+                        "dualApprovalThresholdAmount",
+                        "financialTermsHash",
+                        "financialRevision",
+                        "protectionRequired"
+                    ]
+                }
+            }
+        ]
+    }
+]

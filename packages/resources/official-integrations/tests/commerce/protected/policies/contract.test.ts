@@ -19,6 +19,8 @@ import {
     registerShipmentReservationTest,
     registerSellerLabelTest,
 } from "./contracts";
+import { loadIntegrationDefinition } from "../../../helpers/integrationDefinition";
+import { loadSupabaseSchemaSql } from "../../../helpers/supabaseSql";
 
 describe("protected C2C financial policy contract", () => {
     registerRefundAllocationsTest();
@@ -38,15 +40,12 @@ describe("protected C2C financial policy contract", () => {
     registerPolicySubsidyTest();
     registerProviderAbsentCancellationTest();
     test("keeps claim evidence private and requires carrier proof before resolving a required return", async () => {
-        const schema = await Bun.file(
-            new URL(
-                "../../../../integrations/domains/commerce/versions/1.0.0/connectors/supabase/schema.sql",
-                import.meta.url,
-            ),
-        ).text();
-        const definition = (await Bun.file(
+        const schema = await loadSupabaseSchemaSql(
+            new URL("../../../../integrations/domains/commerce/versions/1.0.0/", import.meta.url),
+        );
+        const definition = await loadIntegrationDefinition<Record<string, unknown>>(
             new URL("../../../../integrations/domains/commerce/versions/1.0.0/definition.json", import.meta.url),
-        ).json()) as Record<string, unknown>;
+        );
         const serialized = JSON.stringify(definition);
 
         expect(schema).toContain("'commerce-claim-evidence', 'commerce-claim-evidence', false");

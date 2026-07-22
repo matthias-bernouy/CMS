@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { functionSql, integrationRoot } from "../paths";
+import { functionSql, integrationRoot, loadCommerceSchemaSql } from "../paths";
 
 export function registerPolicySerializationTest(): void {
     test("serializes protected C2C publication and rejects stale settings versions", async () => {
-        const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
+        const schema = await loadCommerceSchemaSql();
         const createRevision = functionSql(schema, "create_c2c_policy_revision", "refresh_seller_risk_state");
         const routeRoot = resolve(
             integrationRoot,

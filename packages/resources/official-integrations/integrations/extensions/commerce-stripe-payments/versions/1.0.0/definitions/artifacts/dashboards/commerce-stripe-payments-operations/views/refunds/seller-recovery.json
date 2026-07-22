@@ -1,0 +1,67 @@
+[
+    {
+        "id": "sellerTransferRecoveryFacts",
+        "title": "Seller Transfer recovery — Commerce facts",
+        "description": "Commerce first offsets unreleased seller reserve. Any remaining authorized seller recovery requires a Stripe Transfer Reversal and is confirmed in the payment settlement ledger/provider financial operations.",
+        "fields": [
+            {
+                "id": "sellerRecoveryAmount",
+                "label": "Total seller entitlement recovery",
+                "path": "sellerRecoveryAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "sellerReserveOffsetAmount",
+                "label": "Covered by unreleased seller reserve",
+                "path": "sellerReserveOffsetAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "refundBusinessKey",
+                "label": "Commerce refund business key",
+                "path": "businessKey",
+                "type": "readonly"
+            },
+            {
+                "id": "refundClaimId",
+                "label": "Originating claim",
+                "path": "claimId",
+                "type": "readonly"
+            }
+        ]
+    },
+    {
+        "id": "refundDecision",
+        "title": "Finance decision",
+        "fields": [
+            {
+                "id": "decision",
+                "label": "Decision",
+                "path": "decision",
+                "type": "select",
+                "options": [
+                    {
+                        "value": "approved",
+                        "label": "Approve"
+                    },
+                    {
+                        "value": "rejected",
+                        "label": "Reject"
+                    },
+                    {
+                        "value": "cancelled",
+                        "label": "Cancel before provider operation"
+                    }
+                ]
+            },
+            {
+                "id": "reviewReason",
+                "label": "Review reason",
+                "path": "reviewReason",
+                "type": "textarea"
+            }
+        ]
+    }
+]

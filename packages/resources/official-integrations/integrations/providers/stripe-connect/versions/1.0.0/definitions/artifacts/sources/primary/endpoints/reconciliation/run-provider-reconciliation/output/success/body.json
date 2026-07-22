@@ -1,0 +1,18 @@
+{
+    "type": "object",
+    "properties": {
+        "$include": "properties/root.json"
+    },
+    "required": [
+        "runId",
+        "runKey",
+        "status",
+        "scannedCount",
+        "repairedCount",
+        "exceptionCount",
+        "payments",
+        "operations",
+        "commerceOperations",
+        "disputes"
+    ]
+}

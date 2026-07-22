@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadIntegrationDefinition } from "../../../../../helpers/integrationDefinition";
+import { loadSupabaseSchemaSql } from "../../../../../helpers/supabaseSql";
 import { integrationRoot } from "../paths";
 
 export function registerPayoutControlsTest(): void {
     test("publishes aggregate payout controls as required payment and release inputs", async () => {
-        const definition = JSON.parse(await readFile(resolve(integrationRoot, "definition.json"), "utf8"));
+        const definition = await loadIntegrationDefinition<any>(resolve(integrationRoot, "definition.json"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source");
         const endpoint = source.source.endpoints.find(
             (candidate: any) => candidate.endpointId === "prepareProtectedPayment",
@@ -50,7 +51,7 @@ export function registerPayoutControlsTest(): void {
                 payoutDelayDays: { type: "number" },
             });
         }
-        const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
+        const schema = await loadSupabaseSchemaSql(integrationRoot);
         expect(schema).toContain("authorize_platform_payout_liability_decrease");
         expect(schema).toContain("conflict: stale platform payout liability revision");
         expect(schema).toContain("provider applied amount is below the Commerce aggregate");

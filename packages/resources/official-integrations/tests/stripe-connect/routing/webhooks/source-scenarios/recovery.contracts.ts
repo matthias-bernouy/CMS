@@ -1,7 +1,11 @@
 import { expect, test } from "bun:test";
+import { resolve } from "node:path";
 import type { StripeConnectHarness } from "../../../runtime/harness";
 import { okJson } from "../../../runtime/http";
 import { sourceJson } from "../../../runtime/source-requests";
+import { loadSupabaseSchemaSql } from "../../../../helpers/supabaseSql";
+
+const integrationRoot = resolve(import.meta.dir, "../../../../../integrations/providers/stripe-connect/versions/1.0.0");
 
 type CreateHarness = () => Promise<StripeConnectHarness>;
 
@@ -24,12 +28,7 @@ export function registerWebhookRecoverySourceScenario(createHarness: CreateHarne
             attempt_count: 2,
         });
 
-        const schema = await Bun.file(
-            new URL(
-                "../../../../../integrations/providers/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql",
-                import.meta.url,
-            ),
-        ).text();
+        const schema = await loadSupabaseSchemaSql(integrationRoot);
         expect(schema).toContain("event.processing_status = 'processing'");
         expect(schema).toContain("event.processing_started_at <= now() - interval '5 minutes'");
         expect(schema).toContain("processing_started_at = now()");

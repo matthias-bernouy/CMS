@@ -1,0 +1,46 @@
+{
+    "id": "dispatchDueProtectedSettlements",
+    "method": "POST",
+    "access": {
+        "mode": "system"
+    },
+    "meta": {
+        "name": "Dispatch due protected settlements",
+        "description": "Lease retryable Commerce release authorizations, execute idempotent Stripe transfers, and project provider truth."
+    },
+    "input": {
+        "body": {
+            "type": "object",
+            "properties": {
+                "runKey": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "runKey",
+                "limit"
+            ]
+        }
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object"
+            }
+        }
+    ],
+    "steps": {
+        "$include": "steps.json"
+    },
+    "return": {
+        "status": 200,
+        "body": {
+            "runKey": "$steps.batch.runKey",
+            "dispatches": "$steps.dispatches"
+        }
+    }
+}

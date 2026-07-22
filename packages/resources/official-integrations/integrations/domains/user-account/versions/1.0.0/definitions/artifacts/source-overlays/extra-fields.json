@@ -1,0 +1,50 @@
+{
+    "type": "sourceOverlay",
+    "overlay": {
+        "id": "{{answers.id}}-extra-fields",
+        "sourceId": "{{answers.id}}",
+        "label": "Extra fields",
+        "sections": [
+            {
+                "id": "additionalInformation",
+                "label": "Additional information"
+            }
+        ],
+        "input": [
+            {
+                "endpointId": "updateAccount",
+                "editable": "self"
+            },
+            {
+                "endpointId": "createUserPersonalInformation",
+                "editable": "admin"
+            }
+        ],
+        "output": [
+            {
+                "endpointId": "getAccount"
+            },
+            {
+                "endpointId": "updateAccount"
+            },
+            {
+                "endpointId": "updateAccountMetadata"
+            },
+            {
+                "endpointId": "createUserPersonalInformation"
+            },
+            {
+                "endpointId": "listAccounts",
+                "path": "accounts[]"
+            },
+            {
+                "endpointId": "getAccountByUserId"
+            }
+        ],
+        "fieldSource": {
+            "endpointId": "listExtraFields",
+            "path": "fields"
+        },
+        "fields": []
+    }
+}

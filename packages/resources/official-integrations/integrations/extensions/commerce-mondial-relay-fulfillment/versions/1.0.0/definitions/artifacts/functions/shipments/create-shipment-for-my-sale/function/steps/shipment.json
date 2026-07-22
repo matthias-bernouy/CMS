@@ -1,0 +1,49 @@
+{
+    "id": "shipment",
+    "call": {
+        "source": "{{dependencies.delivery.sourceId}}",
+        "endpoint": "createShipment",
+        "body": {
+            "externalOrderId": "$steps.sale.publicId",
+            "sellerCmsUserId": "$steps.authorization.sellerId",
+            "deliveryQuoteId": "$steps.quote.quoteId",
+            "quoteExternalOrderId": "$steps.quote.externalOrderId",
+            "quotePurpose": "fulfillment",
+            "selectedForCmsUserId": "$steps.authorization.buyerCmsUserId",
+            "senderName": "$steps.quote.sellerFulfillmentSnapshot.name",
+            "senderFirstName": "$steps.quote.sellerFulfillmentSnapshot.firstName",
+            "senderLastName": "$steps.quote.sellerFulfillmentSnapshot.lastName",
+            "senderEmail": "$steps.quote.sellerFulfillmentSnapshot.email",
+            "senderPhone": "$steps.quote.sellerFulfillmentSnapshot.phone",
+            "senderAddressLine1": "$steps.quote.sellerFulfillmentSnapshot.addressLine1",
+            "senderAddressLine2": "$steps.quote.sellerFulfillmentSnapshot.addressLine2",
+            "senderAddressLine3": "$steps.quote.sellerFulfillmentSnapshot.addressLine3",
+            "senderPostalCode": "$steps.quote.sellerFulfillmentSnapshot.postalCode",
+            "senderCity": "$steps.quote.sellerFulfillmentSnapshot.city",
+            "senderCountry": "$steps.quote.sellerFulfillmentSnapshot.country",
+            "recipientName": "$steps.quote.recipientSnapshot.name",
+            "recipientFirstName": "$steps.quote.recipientSnapshot.firstName",
+            "recipientLastName": "$steps.quote.recipientSnapshot.lastName",
+            "recipientEmail": "$steps.quote.recipientSnapshot.email",
+            "recipientPhone": "$steps.quote.recipientSnapshot.phone",
+            "recipientAddressLine1": "$steps.quote.recipientSnapshot.addressLine1",
+            "recipientAddressLine2": "$steps.quote.recipientSnapshot.addressLine2",
+            "recipientAddressLine3": "$steps.quote.recipientSnapshot.addressLine3",
+            "recipientPostalCode": "$steps.quote.recipientSnapshot.postalCode",
+            "recipientCity": "$steps.quote.recipientSnapshot.city",
+            "recipientCountry": "$steps.quote.recipientSnapshot.country",
+            "deliveryRelayLocation": "$steps.quote.relayLocation",
+            "weightGrams": "$steps.quote.weightGrams",
+            "packageCount": 1,
+            "declaredValueMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
+            "declaredCurrency": "EUR",
+            "metadata": {
+                "commerceOrderId": "$steps.sale.publicId",
+                "financialTermsHash": "$steps.authorization.financialTermsHash",
+                "deliveryQuoteId": "$steps.authorization.deliveryQuoteId",
+                "declaredValueMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
+                "declaredCurrency": "EUR"
+            }
+        }
+    }
+}

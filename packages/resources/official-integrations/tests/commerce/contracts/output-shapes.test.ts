@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
+import { loadIntegrationDefinition } from "../../helpers/integrationDefinition";
 
 type Shape = DataShape;
 type Endpoint = {
@@ -405,7 +405,7 @@ describe("commerce response contracts", () => {
 });
 
 async function commerceEndpoints(): Promise<Endpoint[]> {
-    const definition = JSON.parse(await readFile(definitionPath, "utf8")) as Definition;
+    const definition = await loadIntegrationDefinition<Definition>(definitionPath);
     return definition.artifacts.find((artifact) => artifact.source)?.source?.endpoints ?? [];
 }
 

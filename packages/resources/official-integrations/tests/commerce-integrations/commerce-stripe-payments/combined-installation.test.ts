@@ -107,20 +107,20 @@ describe("Commerce protected Stripe combined installation", () => {
             deployments.map((deployment) => ({
                 integrationKind: deployment.integrationKind,
                 dataApiSchemas: deployment.dataApiSchemas,
-                schemas: deployment.schemas.map((schema) => schema.path),
+                schemas: deployment.schemas.map((schema) => ("manifest" in schema ? schema.manifest : schema.path)),
                 functions: deployment.functions.map((fn) => fn.name),
             })),
         ).toEqual([
             {
                 integrationKind: "commerce",
                 dataApiSchemas: ["commerce"],
-                schemas: ["schema.sql"],
+                schemas: ["sql/schema.manifest.json"],
                 functions: ["cms-commerce"],
             },
             {
                 integrationKind: "stripe-connect",
                 dataApiSchemas: ["stripe_connect"],
-                schemas: ["schema.sql"],
+                schemas: ["sql/schema.manifest.json"],
                 functions: ["cms-stripe-connect"],
             },
         ]);
