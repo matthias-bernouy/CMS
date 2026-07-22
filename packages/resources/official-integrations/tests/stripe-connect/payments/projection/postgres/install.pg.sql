@@ -13,7 +13,7 @@
 \endif
 
 drop schema if exists stripe_connect cascade;
-\ir ../../../../integrations/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql
+\ir ../../../../../integrations/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql
 
 create temporary table payment_projection_install_fingerprint
 on commit preserve rows
@@ -37,7 +37,7 @@ begin
 end;
 $fresh_install$;
 
-\ir ../../../../integrations/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql
+\ir ../../../../../integrations/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql
 
 do $reapply$
 declare
