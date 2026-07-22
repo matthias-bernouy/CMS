@@ -17,11 +17,21 @@ export type RoutingHarness = {
         readonly stripeRequests: StripeRequestRecord[];
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;
+        addProviderRefund(chargeId: string, patch?: JsonRecord): void;
         failNextPostgrestWrite(table: string, method: "POST" | "PATCH"): void;
+        patchProviderTransfer(stripeTransferId: string, patch: JsonRecord): void;
         rows(table: string): JsonRecord[];
+        setPaymentIntentSucceeded(paymentIntentId: string): void;
+        setStripeAccountState(userId: string, patch: JsonRecord): void;
     };
     edgeRequest(request: Request): Promise<Response>;
     providerRequestCount(): number;
+    request(
+        userId: string,
+        role: string | undefined,
+        endpoint: string,
+        params?: Record<string, string>,
+    ): Promise<Response>;
     submit(userId: string, role: string | undefined, endpoint: string, body: unknown): Promise<Response>;
 };
 

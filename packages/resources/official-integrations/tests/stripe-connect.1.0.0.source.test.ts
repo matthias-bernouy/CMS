@@ -72,6 +72,8 @@ import { registerStripeConnectRoutingContracts } from "./stripe-connect/routing/
 import { registerProtectedPaymentReadContracts } from "./stripe-connect/routing/protected-payment-reads.contracts";
 import { registerProtectedPaymentValidationContracts } from "./stripe-connect/routing/protected-payment-validations.contracts";
 import { registerStripeWebhookPersistenceContracts } from "./stripe-connect/routing/webhooks/persistence.contracts";
+import { registerStripeWebhookCoreProcessingContracts } from "./stripe-connect/routing/webhooks/processing-core.contracts";
+import { registerStripeWebhookMoneyProcessingContracts } from "./stripe-connect/routing/webhooks/processing-money.contracts";
 import { registerStripeWebhookValidationContracts } from "./stripe-connect/routing/webhooks/validation.contracts";
 import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/contracts";
 import { registerPaymentReconciliationLedgerDivergenceContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/divergence";
@@ -10649,6 +10651,12 @@ const createRoutingHarness = async () => {
         rest: harness.rest,
         edgeRequest: async (request: Request) => await harness.edgeRequest(request),
         providerRequestCount: () => harness.rest.stripeRequests.length,
+        request: async (
+            userId: string,
+            role: string | undefined,
+            endpoint: string,
+            params: Record<string, string> = {},
+        ) => await sourceRequestWithRole(harness, userId, role, endpoint, params),
         submit: async (userId: string, role: string | undefined, endpoint: string, body: unknown) =>
             await sourceJsonWithRole(harness, userId, role, endpoint, body),
     };
@@ -10730,6 +10738,8 @@ registerPaymentReconciliationRoutingContracts(createRoutingHarness);
 registerProtectedPaymentValidationContracts(createRoutingHarness);
 registerProtectedPaymentReadContracts(createRoutingHarness);
 registerStripeWebhookPersistenceContracts(createRoutingHarness);
+registerStripeWebhookCoreProcessingContracts(createRoutingHarness);
+registerStripeWebhookMoneyProcessingContracts(createRoutingHarness);
 registerStripeWebhookValidationContracts(createRoutingHarness);
 registerAccountOnboardingContracts(createAccountHandlerHarness);
 registerAccountEnrollmentContracts(createAccountHandlerHarness);
