@@ -12,13 +12,13 @@ import {
 import {
     callRpcObject,
     callRpcRows,
-    firstRow,
     getRowByField,
     insertRow,
     listRows,
     rest,
     restError,
     updateRow,
+    upsertRow,
 } from "./db/postgrest.ts";
 import {
     readDisputeDashboardDetail,
@@ -27,7 +27,51 @@ import {
     readRefundDashboardPage,
     type DisputeDashboardRead,
 } from "./db/dashboard-reads.ts";
-import { accountSelect, type ConnectAccountRow, type MarketplaceTermsAcceptanceRow } from "./db/records/accounts.ts";
+import {
+    getAccountRow,
+    getAccountRowByStripeAccountId,
+    getMarketplaceTermsAcceptance,
+    recordMarketplaceTermsAcceptance,
+    updateAccountRow,
+    upsertAccountRow,
+} from "./db/repositories/accounts.ts";
+import {
+    insertPaymentEvent,
+    insertStripeEventDurably,
+    resolveProviderException,
+    upsertProviderException,
+} from "./db/repositories/events-exceptions.ts";
+import {
+    enqueueCommerceProviderProjection,
+    enqueueCommerceRefundProjection,
+    reserveAccountFinancialOperation,
+    reserveFinancialOperation,
+    reservePlatformFinancialOperation,
+    updateFinancialOperation,
+} from "./db/repositories/financial-operations.ts";
+import {
+    getTransferByAuthorization,
+    sumConfirmedRecoveryAmount,
+    sumSettledTransferAmounts,
+    sumSucceededAmounts,
+    sumSucceededField,
+    sumSucceededRefundSellerRecovery,
+    sumSucceededTransferReversalAmounts,
+} from "./db/repositories/ledger.ts";
+import {
+    getPaymentByClientReference,
+    getPaymentRow,
+    reservePaymentCancellationIntent,
+    reserveProtectedPayment,
+    updatePayment,
+} from "./db/repositories/payments.ts";
+import {
+    markPaymentManualReview,
+    platformPayoutControlRpc,
+    sellerPayoutHoldRpc,
+} from "./db/repositories/payout-controls.ts";
+import { reserveTransferRecovery } from "./db/repositories/transfer-recovery.ts";
+import { accountSelect, type ConnectAccountRow } from "./db/records/accounts.ts";
 import { disputeSelect, type StripeDisputeRow } from "./db/records/disputes.ts";
 import {
     operationSelect,
@@ -53,7 +97,6 @@ import {
     readPaymentReconciliationLedger,
     readProviderTransferReconciliationContext,
     readReconciliationOperations,
-    resolveProviderExceptionRow,
 } from "./db/reconciliation.ts";
 import {
     bankPayoutsStatus,
@@ -3220,183 +3263,6 @@ async function syncAccountForIdentity(identity: string): Promise<ConnectAccountR
     return byStripeAccount ? syncAccountForUser(byStripeAccount.cms_user_id) : syncAccountForUser(identity);
 }
 
-async function getAccountRowByStripeAccountId(stripeAccountId: string): Promise<ConnectAccountRow | null> {
-    const response = await rest(
-        `accounts?stripe_account_id=eq.${encodeURIComponent(stripeAccountId)}&select=${accountSelect}&limit=1`,
-        { method: "GET" },
-    );
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const rows = (await response.json()) as ConnectAccountRow[];
-    return rows[0] ?? null;
-}
-
-async function getAccountRow(userId: string): Promise<ConnectAccountRow | null> {
-    const response = await rest(
-        `accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=${accountSelect}&limit=1`,
-        { method: "GET" },
-    );
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const rows = (await response.json()) as ConnectAccountRow[];
-    return rows[0] ?? null;
-}
-
-async function getMarketplaceTermsAcceptance(
-    userId: string,
-    version: string,
-    hash: string,
-): Promise<MarketplaceTermsAcceptanceRow | null> {
-    const query = new URLSearchParams({
-        cms_user_id: `eq.${userId}`,
-        terms_version: `eq.${version}`,
-        terms_hash: `eq.${hash}`,
-        select: "cms_user_id,terms_version,terms_hash,accepted_at",
-        limit: "1",
-    });
-    const response = await rest(`marketplace_terms_acceptances?${query.toString()}`, { method: "GET" });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const rows = (await response.json()) as MarketplaceTermsAcceptanceRow[];
-    return rows[0] ?? null;
-}
-
-async function recordMarketplaceTermsAcceptance(
-    userId: string,
-    version: string,
-    hash: string,
-): Promise<MarketplaceTermsAcceptanceRow> {
-    const response = await rest("rpc/record_marketplace_terms_acceptance", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-            p_cms_user_id: userId,
-            p_terms_version: version,
-            p_terms_hash: hash,
-        }),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const value = await response.json();
-    if (!isRecord(value)) {
-        throw new HttpError(502, "Supabase returned an invalid marketplace terms acceptance");
-    }
-    return value as MarketplaceTermsAcceptanceRow;
-}
-
-async function upsertAccountRow(values: JsonRecord): Promise<ConnectAccountRow> {
-    const query = new URLSearchParams();
-    query.set("on_conflict", "cms_user_id");
-    query.set("select", accountSelect);
-
-    const response = await rest(`accounts?${query.toString()}`, {
-        method: "POST",
-        headers: {
-            "content-type": "application/json",
-            prefer: "resolution=merge-duplicates,return=representation",
-        },
-        body: JSON.stringify(stripUndefined(values)),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    return firstRow<ConnectAccountRow>(await response.json());
-}
-
-async function updateAccountRow(userId: string, values: JsonRecord): Promise<ConnectAccountRow | null> {
-    const response = await rest(`accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=${accountSelect}`, {
-        method: "PATCH",
-        headers: {
-            "content-type": "application/json",
-            prefer: "return=representation",
-        },
-        body: JSON.stringify(stripUndefined(values)),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const rows = (await response.json()) as ConnectAccountRow[];
-    return rows[0] ?? null;
-}
-
-async function reserveProtectedPayment(values: JsonRecord): Promise<ConnectPaymentRow> {
-    const response = await rest("rpc/reserve_protected_payment", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ p_payment: stripUndefined(values) }),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const value = await response.json();
-    if (isRecord(value)) {
-        return value as ConnectPaymentRow;
-    }
-    return firstRow<ConnectPaymentRow>(value);
-}
-
-async function reservePaymentCancellationIntent(
-    clientReferenceId: string,
-    cancellationRequestId: string,
-    reason: string | undefined,
-): Promise<JsonRecord> {
-    const response = await rest("rpc/reserve_payment_cancellation_intent", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-            p_client_reference_id: clientReferenceId,
-            p_cancellation_request_id: cancellationRequestId,
-            p_reason: reason ?? null,
-        }),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const value = await response.json();
-    return isRecord(value) ? value : firstRow<JsonRecord>(value);
-}
-
-async function updatePayment(paymentId: number, values: JsonRecord): Promise<ConnectPaymentRow | null> {
-    const response = await rest(`payments?id=eq.${paymentId}&select=${paymentSelect}`, {
-        method: "PATCH",
-        headers: {
-            "content-type": "application/json",
-            prefer: "return=representation",
-        },
-        body: JSON.stringify(stripUndefined(values)),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const rows = (await response.json()) as ConnectPaymentRow[];
-    return rows[0] ?? null;
-}
-
-async function getPaymentRow(paymentId: number): Promise<ConnectPaymentRow | null> {
-    const response = await rest(`payments?id=eq.${paymentId}&select=${paymentSelect}&limit=1`, { method: "GET" });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const rows = (await response.json()) as ConnectPaymentRow[];
-    return rows[0] ?? null;
-}
-
-async function getPaymentByClientReference(clientReferenceId: string): Promise<ConnectPaymentRow | null> {
-    const response = await rest(
-        `payments?client_reference_id=eq.${encodeURIComponent(clientReferenceId)}&select=${paymentSelect}&limit=1`,
-        { method: "GET" },
-    );
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const rows = (await response.json()) as ConnectPaymentRow[];
-    return rows[0] ?? null;
-}
-
 async function syncPayment(payment: ConnectPaymentRow): Promise<ConnectPaymentRow> {
     if (!payment.stripe_payment_intent_id) {
         return payment;
@@ -3834,153 +3700,6 @@ function assertPaymentReplay(
     }
 }
 
-async function reserveFinancialOperation(
-    paymentId: number,
-    options: { businessKey: string; operationType: string; request: JsonRecord },
-): Promise<FinancialOperationRow> {
-    const response = await rest("rpc/reserve_financial_operation", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-            p_payment_id: paymentId,
-            p_business_key: options.businessKey,
-            p_operation_type: options.operationType,
-            p_request: options.request,
-        }),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const value = await response.json();
-    if (isRecord(value)) {
-        return value as FinancialOperationRow;
-    }
-    return firstRow<FinancialOperationRow>(value);
-}
-
-async function reserveTransferRecovery(
-    paymentId: number,
-    recoveryRequestId: string,
-    amount: number,
-    exposureType: TransferRecoveryRow["exposure_type"],
-    reason: string | null,
-): Promise<ReservedTransferRecovery> {
-    const response = await rest("rpc/reserve_transfer_recovery", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-            p_payment_id: paymentId,
-            p_recovery_request_id: recoveryRequestId,
-            p_amount: amount,
-            p_exposure_type: exposureType,
-            p_reason: reason,
-        }),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const value = await response.json();
-    const result = isRecord(value) ? value : firstRow<JsonRecord>(value);
-    const recovery = result.recovery;
-    const allocations = result.allocations;
-    if (!isRecord(recovery) || !Array.isArray(allocations)) {
-        throw new HttpError(502, "Supabase returned an invalid Transfer recovery reservation");
-    }
-    return {
-        recovery: recovery as TransferRecoveryRow,
-        allocations: allocations.map((allocation) => {
-            if (
-                !isRecord(allocation) ||
-                !isRecord(allocation.reversal) ||
-                !isRecord(allocation.operation) ||
-                !isRecord(allocation.transfer)
-            ) {
-                throw new HttpError(502, "Supabase returned an invalid Transfer recovery allocation");
-            }
-            return {
-                reversal: allocation.reversal as TransferReversalRow,
-                operation: allocation.operation as FinancialOperationRow,
-                transfer: allocation.transfer as TransferRow,
-            };
-        }),
-    };
-}
-
-async function reserveAccountFinancialOperation(
-    userId: string,
-    options: { businessKey: string; operationType: string; request: JsonRecord },
-): Promise<FinancialOperationRow> {
-    const response = await rest("rpc/reserve_account_financial_operation", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-            p_cms_user_id: userId,
-            p_business_key: options.businessKey,
-            p_operation_type: options.operationType,
-            p_request: options.request,
-        }),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const value = await response.json();
-    if (isRecord(value)) {
-        return value as FinancialOperationRow;
-    }
-    return firstRow<FinancialOperationRow>(value);
-}
-
-async function reservePlatformFinancialOperation(options: {
-    businessKey: string;
-    operationType: string;
-    request: JsonRecord;
-}): Promise<FinancialOperationRow> {
-    const response = await rest("rpc/reserve_platform_financial_operation", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-            p_business_key: options.businessKey,
-            p_operation_type: options.operationType,
-            p_request: options.request,
-        }),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const value = await response.json();
-    if (isRecord(value)) {
-        return value as FinancialOperationRow;
-    }
-    return firstRow<FinancialOperationRow>(value);
-}
-
-async function updateFinancialOperation(
-    operationId: number,
-    values: JsonRecord,
-): Promise<FinancialOperationRow | null> {
-    return await updateRow<FinancialOperationRow>("financial_operations", operationId, values, operationSelect);
-}
-
-async function enqueueCommerceProviderProjection(
-    paymentId: number,
-    projectionKey: string,
-    projectionKind: "payment" | "dispute",
-    providerObjectId: string,
-): Promise<void> {
-    await callRpcObject<JsonRecord>("enqueue_commerce_provider_projection", {
-        p_payment_id: paymentId,
-        p_projection_key: projectionKey,
-        p_projection_kind: projectionKind,
-        p_provider_object_id: providerObjectId,
-    });
-}
-
-async function enqueueCommerceRefundProjection(refundId: number): Promise<void> {
-    await callRpcObject<JsonRecord>("enqueue_commerce_refund_projection", {
-        p_refund_id: refundId,
-    });
-}
-
 function requiredOperationString(operation: FinancialOperationRow, name: string): string {
     const value = operation.request[name];
     if (typeof value !== "string" || !value) {
@@ -4051,15 +3770,6 @@ async function listTable(
     return { [itemsKey]: rows, total: rows.length };
 }
 
-async function getTransferByAuthorization(releaseAuthorizationId: string): Promise<TransferRow | null> {
-    return await getRowByField<TransferRow>(
-        "transfers",
-        "release_authorization_id",
-        releaseAuthorizationId,
-        transferSelect,
-    );
-}
-
 function assertTransferReplay(
     transfer: TransferRow,
     payment: ConnectPaymentRow,
@@ -4079,64 +3789,12 @@ function assertTransferReplay(
     }
 }
 
-async function sumSucceededAmounts(table: string, paymentId: number): Promise<number> {
-    const rows = await listRows<JsonRecord>(`${table}?payment_id=eq.${paymentId}&status=eq.succeeded&select=amount`);
-    return rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-}
-
-async function sumSucceededField(table: string, paymentId: number, field: string): Promise<number> {
-    const rows = await listRows<JsonRecord>(
-        `${table}?payment_id=eq.${paymentId}&status=eq.succeeded&select=${encodeURIComponent(field)}`,
-    );
-    return rows.reduce((sum, row) => sum + Number(row[field] ?? 0), 0);
-}
-
-async function sumSucceededTransferReversalAmounts(transferId: number): Promise<number> {
-    const rows = await listRows<JsonRecord>(
-        `transfer_reversals?transfer_id=eq.${transferId}&status=eq.succeeded&select=amount`,
-    );
-    return rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-}
-
-async function sumConfirmedRecoveryAmount(recoveryId: number): Promise<number> {
-    const rows = await listRows<JsonRecord>(
-        `transfer_reversals?recovery_id=eq.${recoveryId}&status=eq.succeeded&select=amount`,
-    );
-    return rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-}
-
-async function sumSettledTransferAmounts(paymentId: number): Promise<number> {
-    const rows = await listRows<JsonRecord>(
-        `transfers?payment_id=eq.${paymentId}` +
-            "&status=in.(succeeded,partially_reversed,reversed)&select=amount,status",
-    );
-    return rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-}
-
-async function sumSucceededRefundSellerRecovery(paymentId: number): Promise<number> {
-    const rows = await listRows<JsonRecord>(
-        `refunds?payment_id=eq.${paymentId}&status=eq.succeeded&select=seller_entitlement_reduction_amount`,
-    );
-    return rows.reduce((sum, row) => sum + Number(row.seller_entitlement_reduction_amount ?? 0), 0);
-}
-
 async function authorizedSellerAmountAfterRefunds(payment: ConnectPaymentRow): Promise<number> {
     return payment.seller_transfer_amount - (await sumSucceededRefundSellerRecovery(payment.id));
 }
 
 function releasableDisputeStatus(status: string): boolean {
     return ["none", "won", "prevented", "warning_closed"].includes(status);
-}
-
-async function markPaymentManualReview(paymentId: number, reason: string, details: JsonRecord): Promise<void> {
-    const response = await rest("rpc/mark_payment_manual_review", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ p_payment_id: paymentId, p_reason: reason, p_details: details }),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
 }
 
 async function recordSellerRecoveryExposure(
@@ -4185,30 +3843,6 @@ async function recordSellerRecoveryExposure(
     // Provider payout controls are a second line of defence. Their outage must
     // never prevent the idempotent Transfer Reversal that can recover the funds.
     await enforceSellerRecoveryPayoutHold(payment.seller_cms_user_id).catch(() => null);
-}
-
-async function sellerPayoutHoldRpc(name: string, body: JsonRecord): Promise<JsonRecord> {
-    const response = await rest(`rpc/${name}`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    return (await response.json()) as JsonRecord;
-}
-
-async function platformPayoutControlRpc(name: string, body: JsonRecord): Promise<JsonRecord> {
-    const response = await rest(`rpc/${name}`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    return (await response.json()) as JsonRecord;
 }
 
 function platformPayoutControl(result: JsonRecord): PlatformPayoutControlRow {
@@ -4560,19 +4194,6 @@ async function moveOperationToManualReview(
     }).catch(() => null);
 }
 
-async function upsertProviderException(deduplicationKey: string, values: JsonRecord): Promise<void> {
-    await upsertRow<JsonRecord>("provider_exceptions", "deduplication_key", "*", {
-        deduplication_key: deduplicationKey,
-        ...values,
-        resolved_at: null,
-        resolved_by: null,
-    });
-}
-
-async function resolveProviderException(deduplicationKey: string): Promise<void> {
-    await resolveProviderExceptionRow(deduplicationKey, new Date().toISOString());
-}
-
 async function requiredDispute(disputeId: string): Promise<StripeDisputeRow> {
     const row = await getRowByField<StripeDisputeRow>("stripe_disputes", "stripe_dispute_id", disputeId, disputeSelect);
     if (!row) {
@@ -4633,22 +4254,6 @@ async function authorizeIrreversibleDisputeAction(options: {
         firstApprovedBy: result.firstApprovedBy,
         secondApprovedBy: typeof result.secondApprovedBy === "string" ? result.secondApprovedBy : undefined,
     };
-}
-
-async function insertPaymentEvent(
-    paymentId: number,
-    eventType: string,
-    actorKind: string,
-    actorId: string,
-    data: JsonRecord,
-): Promise<void> {
-    await insertRow<JsonRecord>("payment_events", "id", {
-        payment_id: paymentId,
-        event_type: eventType,
-        actor_kind: actorKind,
-        actor_id: actorId,
-        data,
-    });
 }
 
 async function reconcilePayment(payment: ConnectPaymentRow): Promise<ConnectPaymentRow> {
@@ -5435,40 +5040,6 @@ async function applyStripeDispute(
             }
         }
     }
-}
-
-async function insertStripeEventDurably(values: JsonRecord): Promise<boolean> {
-    const response = await rest("stripe_events?on_conflict=stripe_account_id,event_id&select=id", {
-        method: "POST",
-        headers: {
-            "content-type": "application/json",
-            prefer: "resolution=ignore-duplicates,return=representation",
-        },
-        body: JSON.stringify(values),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const rows = (await response.json()) as JsonRecord[];
-    return rows.length > 0;
-}
-
-async function upsertRow<T>(table: string, conflictField: string, select: string, values: JsonRecord): Promise<T> {
-    const response = await rest(
-        `${table}?on_conflict=${encodeURIComponent(conflictField)}&select=${encodeURIComponent(select)}`,
-        {
-            method: "POST",
-            headers: {
-                "content-type": "application/json",
-                prefer: "resolution=merge-duplicates,return=representation",
-            },
-            body: JSON.stringify(stripUndefined(values)),
-        },
-    );
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    return firstRow<T>(await response.json());
 }
 
 async function verifyStripeWebhookSignature(

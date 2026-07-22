@@ -49,6 +49,29 @@ export async function insertRow<T>(table: string, select: string, values: JsonRe
     return firstRow<T>(await response.json());
 }
 
+export async function upsertRow<T>(
+    table: string,
+    conflictField: string,
+    select: string,
+    values: JsonRecord,
+): Promise<T> {
+    const response = await rest(
+        `${table}?on_conflict=${encodeURIComponent(conflictField)}&select=${encodeURIComponent(select)}`,
+        {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                prefer: "resolution=merge-duplicates,return=representation",
+            },
+            body: JSON.stringify(stripUndefined(values)),
+        },
+    );
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    return firstRow<T>(await response.json());
+}
+
 export async function updateRow<T = JsonRecord>(
     table: string,
     id: number,
