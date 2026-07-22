@@ -1,9 +1,4 @@
-import {
-    defaultCurrency,
-    protectedPlatformPayoutInterval,
-    stripeV1ApiVersion,
-    stripeV2ApiVersion,
-} from "./shared/runtime.ts";
+import { defaultCurrency, protectedPlatformPayoutInterval, stripeV1ApiVersion } from "./shared/runtime.ts";
 import {
     callRpcObject,
     callRpcRows,
@@ -16,12 +11,7 @@ import {
     upsertRow,
 } from "./db/postgrest.ts";
 import type { DisputeDashboardRead } from "./db/dashboard-reads.ts";
-import {
-    getAccountRow,
-    getAccountRowByStripeAccountId,
-    getMarketplaceTermsAcceptance,
-    updateAccountRow,
-} from "./db/repositories/accounts.ts";
+import { getAccountRow, getMarketplaceTermsAcceptance, updateAccountRow } from "./db/repositories/accounts.ts";
 import {
     insertPaymentEvent,
     insertStripeEventDurably,
@@ -57,7 +47,7 @@ import {
 } from "./db/records/operations.ts";
 import { paymentSelect, type ConnectPaymentRow } from "./db/records/payments.ts";
 import { refundSelect, type RefundRow } from "./db/records/refunds.ts";
-import { transferSelect, type TransferRecoveryRow, type TransferRow } from "./db/records/transfers.ts";
+import type { TransferRecoveryRow, TransferRow } from "./db/records/transfers.ts";
 import {
     claimReconciliationProjectionBatch,
     readFinancialOperationRecoveryContext,
@@ -70,9 +60,7 @@ import {
     stripeTransfersStatus,
 } from "./domain/accounts/eligibility.ts";
 import { balanceSettingsMatchRequest, publicBalanceSettings } from "./domain/accounts/payout-settings.ts";
-import { accountPatchFromStripe } from "./domain/accounts/provider-projection.ts";
 import { publicPayment, publicPaymentWithClientSecret } from "./domain/payments/presentation.ts";
-import { chargeId } from "./domain/payments/provider-state.ts";
 import { publicFinancialOperation } from "./domain/admin/financial-operation.ts";
 import { projectPublicDisputeWithContext } from "./domain/disputes/presentation.ts";
 import { requireCmsRequest } from "./http/auth.ts";
@@ -96,14 +84,11 @@ import {
     retrievePlatformBalanceSettings,
     updateBalanceSettings,
 } from "./provider/accounts/balances.ts";
-import { retrieveAccount } from "./provider/accounts/lifecycle.ts";
-import { retrieveStripeDispute } from "./provider/disputes.ts";
 import {
     createStripePaymentIntent,
     retrievePaymentIntent,
     retrieveStripeBalanceTransaction,
 } from "./provider/payments.ts";
-import { retrieveStripePayout } from "./provider/payouts.ts";
 import { retrieveStripeRefundSnapshot } from "./provider/refunds.ts";
 import {
     createStripeTransferReversal,
@@ -169,14 +154,11 @@ import { executePaymentIntentCancellation } from "./workflows/payments/cancellat
 import { createProtectedPaymentWorkflow } from "./workflows/payments/creation/workflow.ts";
 import { createSettlementReleaseWorkflow } from "./workflows/payments/settlement-release.ts";
 import { createTransferReversalWorkflow } from "./workflows/payments/transfer-reversal/workflow.ts";
-import {
-    applyPaymentIntent,
-    paymentClientSecret,
-    quarantineProviderPaymentTruth,
-} from "./workflows/payments/projection.ts";
+import { applyPaymentIntent, paymentClientSecret } from "./workflows/payments/projection.ts";
 import { createPaymentReconciliationWorkflow } from "./workflows/reconciliation/payment.ts";
 import { createProviderObjectReconciliation } from "./workflows/reconciliation/provider-objects.ts";
 import { createStripeWebhookIngress } from "./workflows/webhooks/ingress.ts";
+import { createStripeEventProcessor } from "./workflows/webhooks/processing.ts";
 
 const createProtectedPaymentForBuyer = createProtectedPaymentWorkflow({ syncAccountForIdentity });
 const {
@@ -237,6 +219,7 @@ const configureSellerPayoutSchedule = createConfigureSellerPayoutSchedule({
     applyClaimedSellerRecoveryPayoutHold,
 });
 const stripeWebhookIngress = createStripeWebhookIngress({ insertStripeEventDurably });
+const processStripeEvent = createStripeEventProcessor({ applyStripeDispute, applyStripeRefund, reconcilePayment });
 
 serveStripeConnect({
     ...stripeWebhookIngress,
@@ -1534,279 +1517,6 @@ async function authorizeIrreversibleDisputeAction(options: {
         firstApprovedBy: result.firstApprovedBy,
         secondApprovedBy: typeof result.secondApprovedBy === "string" ? result.secondApprovedBy : undefined,
     };
-}
-
-async function processStripeEvent(row: JsonRecord): Promise<boolean> {
-    const event = row.payload;
-    if (!isRecord(event)) {
-        throw new Error("stored Stripe event payload is invalid");
-    }
-    const eventType = stringAt(event, "type");
-    const apiVersion = stringAt(event, "api_version");
-    const expectedApiVersion = eventType.startsWith("v2.") ? stripeV2ApiVersion : stripeV1ApiVersion;
-    if (apiVersion && apiVersion !== expectedApiVersion) {
-        throw new Error(`Stripe webhook API version mismatch: ${apiVersion}`);
-    }
-    const eventId = stringAt(event, "id");
-    const object = objectAt(objectAt(event, "data"), "object");
-    const objectId = stringAt(object, "id") || stringAt(row, "object_id");
-
-    if (eventType.startsWith("v2.core.account")) {
-        if (!objectId) {
-            throw new Error("Stripe Accounts v2 event has no related account id");
-        }
-        const account = await getAccountRowByStripeAccountId(objectId);
-        if (!account) {
-            return false;
-        }
-        if (account.stripe_account_api_version !== "v2") {
-            throw new Error("Stripe Accounts v2 event targets a non-v2 local account");
-        }
-        const provider = await retrieveAccount(objectId, "v2");
-        await updateAccountRow(account.cms_user_id, {
-            ...accountPatchFromStripe(provider, "v2"),
-            last_provider_sync_at: new Date().toISOString(),
-        });
-        return true;
-    }
-
-    if (eventType.startsWith("payment_intent.")) {
-        if (!objectId) {
-            throw new Error("Stripe PaymentIntent event has no object id");
-        }
-        const payment = await getRowByField<ConnectPaymentRow>(
-            "payments",
-            "stripe_payment_intent_id",
-            objectId,
-            paymentSelect,
-        );
-        if (!payment) {
-            return false;
-        }
-        const intent = await retrievePaymentIntent(objectId);
-        const applied = await applyPaymentIntent(payment, intent, {
-            actorKind: "webhook",
-            actorId: eventId,
-        });
-        await updatePayment(applied.id, {
-            last_stripe_event_id: eventId,
-        });
-        await insertPaymentEvent(payment.id, `stripe_${eventType}`, "webhook", eventId, { objectId });
-        return true;
-    }
-
-    if (eventType === "charge.succeeded" || eventType === "charge.failed") {
-        const paymentIntentId = typeof object.payment_intent === "string" ? object.payment_intent : "";
-        const payment = paymentIntentId
-            ? await getRowByField<ConnectPaymentRow>(
-                  "payments",
-                  "stripe_payment_intent_id",
-                  paymentIntentId,
-                  paymentSelect,
-              )
-            : objectId
-              ? await getRowByField<ConnectPaymentRow>("payments", "stripe_charge_id", objectId, paymentSelect)
-              : null;
-        if (!payment) {
-            return false;
-        }
-        const providerPaymentIntentId = paymentIntentId || payment.stripe_payment_intent_id;
-        const providerIntent = providerPaymentIntentId ? await retrievePaymentIntent(providerPaymentIntentId) : null;
-        const applied = !providerIntent
-            ? await quarantineProviderPaymentTruth(
-                  payment,
-                  { id: "missing", status: "succeeded", latest_charge: object },
-                  ["charge_payment_intent"],
-                  { actorKind: "webhook", actorId: eventId },
-              )
-            : eventType === "charge.succeeded" && objectId !== chargeId(providerIntent)
-              ? await quarantineProviderPaymentTruth(payment, providerIntent, ["charge_event_id"], {
-                    actorKind: "webhook",
-                    actorId: eventId,
-                })
-              : await applyPaymentIntent(payment, providerIntent, {
-                    actorKind: "webhook",
-                    actorId: eventId,
-                });
-        await updatePayment(applied.id, {
-            last_stripe_event_id: eventId,
-            last_provider_sync_at: new Date().toISOString(),
-        });
-        return true;
-    }
-
-    if (eventType.startsWith("refund.") || eventType === "charge.refunded") {
-        const refundId = eventType.startsWith("refund.") ? objectId : "";
-        if (refundId) {
-            const refund = await getRowByField<RefundRow>("refunds", "stripe_refund_id", refundId, refundSelect);
-            if (!refund) {
-                return false;
-            }
-            const provider = await retrieveStripeRefundSnapshot(refundId);
-            await applyStripeRefund(refund, provider);
-            await updatePayment(refund.payment_id, { last_stripe_event_id: eventId });
-            return true;
-        }
-        const chargeId = objectId;
-        const payment = chargeId
-            ? await getRowByField<ConnectPaymentRow>("payments", "stripe_charge_id", chargeId, paymentSelect)
-            : null;
-        if (!payment) {
-            return false;
-        }
-        await reconcilePayment(payment);
-        await updatePayment(payment.id, { last_stripe_event_id: eventId });
-        return true;
-    }
-
-    if (eventType.startsWith("charge.dispute.")) {
-        if (!objectId) {
-            throw new Error("Stripe dispute event has no object id");
-        }
-        const provider = await retrieveStripeDispute(objectId);
-        await applyStripeDispute(provider, eventId, eventType, stringAt(row, "provider_created_at") || null);
-        return true;
-    }
-
-    if (eventType.startsWith("transfer.")) {
-        if (!objectId) {
-            return false;
-        }
-        const transfer = await getRowByField<TransferRow>("transfers", "stripe_transfer_id", objectId, transferSelect);
-        if (!transfer) {
-            return false;
-        }
-        const amountReversed = Number(object.amount_reversed ?? 0);
-        await updateRow("transfers", transfer.id, {
-            status: object.reversed === true ? "reversed" : amountReversed > 0 ? "partially_reversed" : "succeeded",
-            provider_snapshot: object,
-        });
-        await updatePayment(transfer.payment_id, { last_stripe_event_id: eventId });
-        return true;
-    }
-
-    if (eventType === "account.updated") {
-        if (!objectId) {
-            return false;
-        }
-        const account = await getAccountRowByStripeAccountId(objectId);
-        if (!account) {
-            return false;
-        }
-        const provider = await retrieveAccount(objectId, account.stripe_account_api_version);
-        await updateAccountRow(account.cms_user_id, {
-            ...accountPatchFromStripe(provider, account.stripe_account_api_version),
-            last_provider_sync_at: new Date().toISOString(),
-        });
-        return true;
-    }
-
-    if (eventType.startsWith("payout.")) {
-        const stripeAccountId = stringAt(event, "account") || "platform";
-        if (!objectId) {
-            return false;
-        }
-        const account = stripeAccountId === "platform" ? null : await getAccountRowByStripeAccountId(stripeAccountId);
-        let providerSnapshot = object;
-        let payoutTruthError: string | null = null;
-        if (typeof providerSnapshot.automatic !== "boolean" && stringAt(providerSnapshot, "method") !== "instant") {
-            try {
-                providerSnapshot = await retrieveStripePayout(objectId, stripeAccountId);
-            } catch (error) {
-                payoutTruthError = errorMessage(error);
-            }
-        }
-        const manualPayout = providerSnapshot.automatic === false;
-        const instantPayout = stringAt(providerSnapshot, "method") === "instant";
-        const ambiguousPayout = !manualPayout && !instantPayout && providerSnapshot.automatic !== true;
-        const failedPayout = eventType === "payout.failed" || stringAt(providerSnapshot, "status") === "failed";
-        const connectedEmergencyHold = Boolean(
-            account &&
-                (account.manual_payout_hold_started_at ||
-                    account.outstanding_debt_amount > 0 ||
-                    account.financial_exposure_amount > 0),
-        );
-        let platformControlDrift = false;
-        if (!account && !manualPayout && !instantPayout && !ambiguousPayout) {
-            try {
-                const [settings, control] = await Promise.all([
-                    retrievePlatformBalanceSettings(),
-                    getRowByField<PlatformPayoutControlRow>("platform_payout_controls", "control_key", "default", "*"),
-                ]);
-                const payouts = objectAt(objectAt(settings, "payments"), "payouts");
-                const interval = stringAt(objectAt(payouts, "schedule"), "interval");
-                const minimum = numberAt(objectAt(payouts, "minimum_balance_by_currency"), "eur") ?? 0;
-                platformControlDrift =
-                    !control ||
-                    interval !== protectedPlatformPayoutInterval ||
-                    minimum < Math.max(control.required_minimum_amount, control.provider_minimum_amount);
-            } catch {
-                platformControlDrift = true;
-            }
-        }
-        await upsertRow<JsonRecord>("payout_events", "stripe_payout_id", "*", {
-            cms_user_id: account?.cms_user_id ?? null,
-            stripe_account_id: stripeAccountId,
-            stripe_payout_id: objectId,
-            amount: Number.isSafeInteger(providerSnapshot.amount) ? providerSnapshot.amount : null,
-            currency: stringAt(providerSnapshot, "currency") || null,
-            status: stringAt(providerSnapshot, "status") || eventType.slice("payout.".length),
-            failure_code: stringAt(providerSnapshot, "failure_code") || null,
-            failure_message: stringAt(providerSnapshot, "failure_message") || null,
-            provider_snapshot: providerSnapshot,
-        });
-        const unexpectedPayout =
-            manualPayout || instantPayout || ambiguousPayout || connectedEmergencyHold || platformControlDrift;
-        if (account && (failedPayout || unexpectedPayout)) {
-            await updateAccountRow(account.cms_user_id, {
-                risk_status: "manual_review",
-                financial_hold_reason: unexpectedPayout
-                    ? ambiguousPayout
-                        ? "Stripe payout control mode is ambiguous"
-                        : connectedEmergencyHold
-                          ? "Automatic payout conflicts with an emergency seller hold"
-                          : platformControlDrift
-                            ? "Automatic payout occurred while platform controls were inconsistent"
-                            : "Unexpected manual or instant Stripe payout"
-                    : "Stripe payout failed",
-            });
-        }
-        if (unexpectedPayout) {
-            await upsertProviderException(`unexpected-payout:${stripeAccountId}:${objectId}`, {
-                exception_type: "unexpected_provider_payout",
-                severity: "critical",
-                message: ambiguousPayout
-                    ? "Stripe payout control mode could not be verified"
-                    : connectedEmergencyHold
-                      ? "Stripe reported an automatic payout during an emergency seller hold"
-                      : platformControlDrift
-                        ? "Stripe reported an automatic platform payout while payout protection had drifted"
-                        : "Stripe reported a platform-controlled manual or instant payout",
-                details: {
-                    stripeAccountId,
-                    stripePayoutId: objectId,
-                    eventType,
-                    providerSnapshot,
-                    payoutTruthError,
-                    connectedEmergencyHold,
-                    platformControlDrift,
-                },
-            });
-        } else {
-            await resolveProviderException(`unexpected-payout:${stripeAccountId}:${objectId}`);
-        }
-        if (failedPayout) {
-            await upsertProviderException(`failed-payout:${stripeAccountId}:${objectId}`, {
-                exception_type: "provider_payout_failed",
-                severity: "critical",
-                message: "Stripe reported a failed payout",
-                details: { stripeAccountId, stripePayoutId: objectId, eventType, providerSnapshot },
-            });
-        }
-        return true;
-    }
-
-    return false;
 }
 
 type DisputeFundsTruth = { fundsWithdrawn: boolean; eventAt: string; eventId: string };
