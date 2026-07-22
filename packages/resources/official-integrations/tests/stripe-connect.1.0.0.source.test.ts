@@ -32,6 +32,9 @@ import { registerProtectedPaymentFailureContracts } from "./stripe-connect/provi
 import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment-payout.contracts";
 import { registerProtectedPaymentReservationContracts } from "./stripe-connect/provider-boundary/protected-payment-reservation.contracts";
 import { registerProtectedPaymentReplayContracts } from "./stripe-connect/provider-boundary/protected-payment-replay.contracts";
+import { registerTransferReversalFailureContracts } from "./stripe-connect/provider-boundary/transfer-reversal/failures.contracts";
+import { registerTransferReversalRecoveryContracts } from "./stripe-connect/provider-boundary/transfer-reversal/recovery.contracts";
+import { registerTransferReversalSuccessContracts } from "./stripe-connect/provider-boundary/transfer-reversal/success.contracts";
 import { registerAccountTermsRepositoryContracts } from "./stripe-connect/repository-boundary/accounts-terms.contracts";
 import { registerLedgerRepositoryContracts } from "./stripe-connect/repository-boundary/ledger.contracts";
 import { registerPaymentOperationRepositoryContracts } from "./stripe-connect/repository-boundary/payments-operations.contracts";
@@ -5728,6 +5731,14 @@ class StripeConnectMock {
     private loseNextTransferCreationResponse = false;
     private omitProviderTransfersFromNextList = false;
     private loseTransferReversalResponseAt: number | null = null;
+    private nextTransferReversalScenario:
+        | "operation-succeeded"
+        | "metadata-match"
+        | "manual-review-no-match"
+        | "ambiguous"
+        | "has-more"
+        | null = null;
+    private nextTransferReversalListHasMore = false;
     private inFlightTransferBeforeRefund: { paymentId: number; amount: number } | null = null;
     private failBalanceSettingsUpdates = false;
     private nextSellerBalanceSettingsPause: { entered: () => void; wait: Promise<void> } | null = null;
@@ -5769,6 +5780,11 @@ class StripeConnectMock {
     private readonly customAccountIds = new Set<string>();
     lastPaymentIntentParameters: URLSearchParams | null = null;
     lastTransferParameters: Record<string, string> | null = null;
+    readonly transferReversalRequests: Array<{
+        transferId: string;
+        parameters: Array<[string, string]>;
+        idempotencyKey: string | null;
+    }> = [];
     readonly moneyCallOrder: string[] = [];
     readonly accountCreationRequests: Array<{ body: JsonRecord; idempotencyKey: string | null }> = [];
     readonly accountLinkRequests: JsonRecord[] = [];
@@ -6273,6 +6289,12 @@ class StripeConnectMock {
 
     loseTransferReversalResponseAfter(successfulUpcomingReversals: number): void {
         this.loseTransferReversalResponseAt = this.nextReversalId + successfulUpcomingReversals;
+    }
+
+    setNextTransferReversalScenario(
+        scenario: "operation-succeeded" | "metadata-match" | "manual-review-no-match" | "ambiguous" | "has-more",
+    ): void {
+        this.nextTransferReversalScenario = scenario;
     }
 
     patchPaymentLedger(paymentId: number, patch: JsonRecord): void {
@@ -7586,6 +7608,7 @@ class StripeConnectMock {
                     operation: this.tables.financial_operations.find((row) => same(row.id, reversal.operation_id)),
                     transfer: this.tables.transfers.find((row) => same(row.id, reversal.transfer_id)),
                 }));
+            this.applyNextTransferReversalScenario(allocations);
             return jsonResponse({ recovery, allocations });
         }
         if (table === "rpc/upsert_seller_recovery_exposure_and_refresh" && method === "POST") {
@@ -8991,7 +9014,9 @@ class StripeConnectMock {
         }
         if (/^\/v1\/transfers\/tr_[^/]+\/reversals$/.test(url.pathname) && method === "GET") {
             const transferId = decodeURIComponent(url.pathname.slice("/v1/transfers/".length, -"/reversals".length));
-            return jsonResponse({ data: this.providerTransferReversals.get(transferId) ?? [], has_more: false });
+            const hasMore = this.nextTransferReversalListHasMore;
+            this.nextTransferReversalListHasMore = false;
+            return jsonResponse({ data: this.providerTransferReversals.get(transferId) ?? [], has_more: hasMore });
         }
         if (/^\/v1\/transfers\/tr_[^/]+\/reversals\/trr_[^/]+$/.test(url.pathname) && method === "GET") {
             const path = url.pathname.slice("/v1/transfers/".length).split("/reversals/");
@@ -9005,6 +9030,12 @@ class StripeConnectMock {
         if (/^\/v1\/transfers\/tr_[^/]+\/reversals$/.test(url.pathname) && method === "POST") {
             const params = new URLSearchParams(await request.text());
             this.moneyCallOrder.push("reversal");
+            const transferId = decodeURIComponent(url.pathname.slice("/v1/transfers/".length, -"/reversals".length));
+            this.transferReversalRequests.push({
+                transferId,
+                parameters: Array.from(params.entries()),
+                idempotencyKey: request.headers.get("idempotency-key"),
+            });
             if (this.failTransferReversals) {
                 return new Response(
                     JSON.stringify({ error: { message: "connected account balance is unavailable" } }),
@@ -9014,7 +9045,6 @@ class StripeConnectMock {
                     },
                 );
             }
-            const transferId = decodeURIComponent(url.pathname.slice("/v1/transfers/".length, -"/reversals".length));
             const transfer = this.providerTransfers.find((candidate) => candidate.id === transferId);
             const reversalAmount = Number(params.get("amount"));
             if (transfer) {
@@ -9305,6 +9335,55 @@ class StripeConnectMock {
         };
         this.paymentIntents.set(id, intent);
         return intent;
+    }
+
+    private applyNextTransferReversalScenario(
+        allocations: Array<{
+            operation: JsonRecord | undefined;
+            reversal: JsonRecord;
+            transfer: JsonRecord | undefined;
+        }>,
+    ): void {
+        const scenario = this.nextTransferReversalScenario;
+        if (!scenario) {
+            return;
+        }
+        this.nextTransferReversalScenario = null;
+        const allocation = allocations[0];
+        if (!allocation?.operation || !allocation.transfer) {
+            throw new Error("transfer reversal scenario has no allocation");
+        }
+        const operation = allocation.operation;
+        const transferId = String(allocation.transfer.stripe_transfer_id);
+        const providerReversal = {
+            id: scenario === "operation-succeeded" ? "trr_operation_succeeded" : "trr_metadata_recovered",
+            amount: allocation.reversal.amount,
+            currency: allocation.reversal.currency,
+            metadata: { operation_key: operation.business_key },
+        };
+        if (scenario === "operation-succeeded") {
+            this.update(operation, {
+                status: "succeeded",
+                stripe_object_id: providerReversal.id,
+                attempt_count: 1,
+            });
+            this.providerTransferReversals.set(transferId, [providerReversal]);
+            return;
+        }
+        this.update(operation, {
+            status: scenario === "manual-review-no-match" ? "manual_review" : "processing",
+            attempt_count: 1,
+        });
+        if (scenario === "metadata-match") {
+            this.providerTransferReversals.set(transferId, [providerReversal]);
+        }
+        if (scenario === "ambiguous") {
+            this.providerTransferReversals.set(transferId, [
+                providerReversal,
+                { ...providerReversal, id: "trr_metadata_ambiguous" },
+            ]);
+        }
+        this.nextTransferReversalListHasMore = scenario === "has-more";
     }
 
     private applyPaymentProviderProjection(body: JsonRecord): Response {
@@ -10101,6 +10180,9 @@ registerProtectedPaymentFailureContracts(createProviderBoundaryHarness);
 registerProtectedPaymentPayoutContracts(createProviderBoundaryHarness);
 registerProtectedPaymentReservationContracts(createProviderBoundaryHarness);
 registerProtectedPaymentReplayContracts(createProviderBoundaryHarness);
+registerTransferReversalFailureContracts(createProviderBoundaryHarness);
+registerTransferReversalRecoveryContracts(createProviderBoundaryHarness);
+registerTransferReversalSuccessContracts(createProviderBoundaryHarness);
 registerAccountTermsRepositoryContracts(createRepositoryBoundaryHarness);
 registerProtectedPaymentEligibilityContracts(createRepositoryBoundaryHarness);
 registerLedgerRepositoryContracts(createRepositoryBoundaryHarness);
