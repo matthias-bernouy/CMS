@@ -1266,6 +1266,10 @@ alter table commerce.order_fulfillments
 create index if not exists order_fulfillments_status_deadline_idx
     on commerce.order_fulfillments(status, release_eligible_at)
     where status not in ('cancelled', 'returned_to_sender');
+create index if not exists order_fulfillments_scan_grace_due_idx
+    on commerce.order_fulfillments(scan_grace_deadline, order_id)
+    where carrier_accepted_at is null
+      and status in ('awaiting_shipment', 'label_created', 'seller_handoff_declared');
 
 create table if not exists commerce.order_settlements (
     order_id bigint primary key references commerce.orders(id) on delete restrict,
@@ -1386,10 +1390,18 @@ create table if not exists commerce.marketplace_claims (
 create unique index if not exists marketplace_claims_one_active_idx
     on commerce.marketplace_claims(order_id)
     where status not in ('resolved_buyer', 'resolved_seller', 'resolved_split');
+create index if not exists marketplace_claims_order_created_idx
+    on commerce.marketplace_claims(order_id, created_at desc);
 create index if not exists marketplace_claims_seller_idx
     on commerce.marketplace_claims(seller_id, status, created_at desc);
 create index if not exists marketplace_claims_buyer_idx
     on commerce.marketplace_claims(buyer_cms_user_id, status, created_at desc);
+create index if not exists marketplace_claims_seller_response_due_idx
+    on commerce.marketplace_claims(seller_response_by_at, id)
+    where status = 'awaiting_seller_response';
+create index if not exists marketplace_claims_return_ship_due_idx
+    on commerce.marketplace_claims(return_ship_by_at, id)
+    where status = 'return_required';
 
 alter table commerce.marketplace_claims
     drop constraint if exists marketplace_claims_return_delivery;
@@ -2430,6 +2442,9 @@ create index if not exists orders_seller_status_idx
     on commerce.orders(seller_id, status, created_at desc, id desc);
 create index if not exists orders_buyer_status_idx
     on commerce.orders(buyer_cms_user_id, status, created_at desc, id desc);
+create index if not exists orders_awaiting_payment_idx
+    on commerce.orders(id)
+    where status = 'awaiting_payment';
 create index if not exists orders_checkout_group_idx
     on commerce.orders(checkout_group_id, seller_id, id);
 create index if not exists order_lines_order_idx
