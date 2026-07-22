@@ -29,6 +29,7 @@ import { readShipmentTrackingContext } from "./shipment/tracking-context.ts";
 import { mondialRelayConnectEndpoint } from "./provider/provider-endpoints.ts";
 import { reconcileDueShipments, reconcileShipment, trackingRefreshDue } from "./shipment/reconciliation.ts";
 import { relayPointsFromUrl } from "./provider/relay.ts";
+import { setSettings, settings, settingsFromRow } from "./routes/settings/routes.ts";
 import {
     cancelShipmentReservation,
     declareSellerHandoff,
@@ -41,7 +42,6 @@ import {
     deliveryQuoteRow,
     reserveShipmentCreation,
     settingsRow,
-    upsertSettingsRow,
     shipmentEvents,
     shipmentRowByExpedition,
     shipmentWithEventsRowByExpedition,
@@ -57,7 +57,7 @@ import {
     projectionHealth,
     reviewShipmentEventProjection,
 } from "./shipment/supabase.ts";
-import type { DeliverySettings, JsonRecord } from "./shipment/types.ts";
+import type { JsonRecord } from "./shipment/types.ts";
 
 Deno.serve(async (request) => {
     try {
@@ -397,29 +397,6 @@ async function existingCreatingShipmentResponse(row: JsonRecord): Promise<Respon
         throw new HttpError(409, "shipment creation outcome is unknown and requires administrator recovery");
     }
     throw new HttpError(409, "shipment creation is already in progress");
-}
-
-async function settings(request: Request): Promise<Response> {
-    requireCmsRequest(request);
-    const url = new URL(request.url);
-    const id = queryText(url, "id");
-    const row = await settingsRow(id || "default");
-    const settings = settingsJson(row);
-    if (id) {
-        return json(settings);
-    }
-    return json({ items: [settings] });
-}
-
-async function setSettings(request: Request): Promise<Response> {
-    requireCmsWriteRequest(request);
-    const body = await readJsonObject(request);
-    const patch = settingsRowFromBody(body);
-    if (!Object.keys(patch).length) {
-        throw new HttpError(400, "settings payload is empty");
-    }
-    const row = await upsertSettingsRow(patch);
-    return json(settingsJson(row));
 }
 
 async function relayPoints(request: Request): Promise<Response> {
@@ -1133,124 +1110,6 @@ function toShipmentJson(row: JsonRecord): JsonRecord {
     return out;
 }
 
-function settingsJson(row: JsonRecord | null): JsonRecord {
-    const settings = settingsFromRow(row);
-    return {
-        id: settings.id,
-        modeCollection: settings.modeCollection,
-        modeDelivery: settings.modeDelivery,
-        senderName: settings.sender.name,
-        senderFirstName: settings.sender.firstName,
-        senderLastName: settings.sender.lastName,
-        senderAddressLine1: settings.sender.addressLine1,
-        senderAddressLine2: settings.sender.addressLine2,
-        senderAddressLine3: settings.sender.addressLine3,
-        senderPostalCode: settings.sender.postalCode,
-        senderCity: settings.sender.city,
-        senderCountry: settings.sender.country,
-        senderPhone: settings.sender.phone,
-        senderMobile: settings.sender.mobile,
-        senderEmail: settings.sender.email,
-        defaultWeightGrams: settings.defaultWeightGrams,
-        defaultPackageCount: settings.defaultPackageCount,
-        defaultLengthCm: settings.defaultLengthCm,
-        defaultWidthCm: settings.defaultWidthCm,
-        defaultHeightCm: settings.defaultHeightCm,
-        defaultContent: settings.defaultContent,
-        defaultShippingAmount: settings.defaultShippingAmount,
-        declaredCurrency: settings.declaredCurrency,
-        connectCulture: settings.connectCulture,
-        connectVersionApi: settings.connectVersionApi,
-        connectOutputFormat: settings.connectOutputFormat,
-        connectOutputType: settings.connectOutputType,
-        createdAt: stringValue(row?.created_at),
-        updatedAt: stringValue(row?.updated_at),
-    };
-}
-
-function settingsFromRow(row: JsonRecord | null): DeliverySettings {
-    return {
-        id: rowText(row, "id", "default"),
-        modeCollection: rowText(row, "mode_collection", "CCC").toUpperCase(),
-        modeDelivery: rowText(row, "mode_delivery", "24R").toUpperCase(),
-        sender: {
-            name: rowText(row, "sender_name", ""),
-            firstName: rowText(row, "sender_firstname", ""),
-            lastName: rowText(row, "sender_lastname", ""),
-            addressLine1: rowText(row, "sender_address_line1", ""),
-            addressLine2: rowText(row, "sender_address_line2", ""),
-            addressLine3: rowText(row, "sender_address_line3", ""),
-            city: rowText(row, "sender_city", ""),
-            postalCode: rowText(row, "sender_postal_code", ""),
-            country: rowText(row, "sender_country", "FR").toUpperCase(),
-            phone: rowText(row, "sender_phone", ""),
-            mobile: rowText(row, "sender_mobile", ""),
-            email: rowText(row, "sender_email", ""),
-        },
-        defaultWeightGrams: rowInteger(row, "default_weight_grams", 500),
-        defaultPackageCount: rowInteger(row, "default_package_count", 1),
-        defaultLengthCm: rowInteger(row, "default_length_cm", 30),
-        defaultWidthCm: rowInteger(row, "default_width_cm", 20),
-        defaultHeightCm: rowInteger(row, "default_height_cm", 10),
-        defaultContent: rowText(row, "default_content", "Products"),
-        defaultShippingAmount: rowNonNegativeInteger(row, "default_shipping_amount", 450),
-        declaredCurrency: rowText(row, "declared_currency", "EUR").toUpperCase(),
-        connectCulture: rowText(row, "connect_culture", "fr-FR"),
-        connectVersionApi: rowText(row, "connect_version_api", "1.0"),
-        connectOutputFormat: rowText(row, "connect_output_format", "10x15"),
-        connectOutputType: rowText(row, "connect_output_type", "PdfUrl"),
-        createdAt: stringValue(row?.created_at),
-        updatedAt: stringValue(row?.updated_at),
-    };
-}
-
-function settingsRowFromBody(body: JsonRecord): JsonRecord {
-    const row: JsonRecord = {};
-    setText(row, body, "modeCollection", "mode_collection", (value) =>
-        requireOneOf(value.toUpperCase(), ["CCC"], "modeCollection"),
-    );
-    setText(row, body, "modeDelivery", "mode_delivery", (value) =>
-        requireOneOf(value.toUpperCase(), ["24R"], "modeDelivery"),
-    );
-    setText(row, body, "senderName", "sender_name");
-    setText(row, body, "senderFirstName", "sender_firstname");
-    setText(row, body, "senderLastName", "sender_lastname");
-    setText(row, body, "senderAddressLine1", "sender_address_line1");
-    setText(row, body, "senderAddressLine2", "sender_address_line2");
-    setText(row, body, "senderAddressLine3", "sender_address_line3");
-    setText(row, body, "senderPostalCode", "sender_postal_code");
-    setText(row, body, "senderCity", "sender_city");
-    setText(row, body, "senderCountry", "sender_country", (value) =>
-        requireOneOf(value.toUpperCase(), ["FR"], "senderCountry"),
-    );
-    const country =
-        typeof row.sender_country === "string"
-            ? row.sender_country
-            : stringValue(body.senderCountry || "FR").toUpperCase();
-    setText(row, body, "senderPhone", "sender_phone", (value) => normalizeSettingsPhone(value, country, "senderPhone"));
-    setText(row, body, "senderMobile", "sender_mobile", (value) =>
-        normalizeSettingsPhone(value, country, "senderMobile"),
-    );
-    setText(row, body, "senderEmail", "sender_email");
-    setPositiveInteger(row, body, "defaultWeightGrams", "default_weight_grams");
-    setText(row, body, "defaultPackageCount", "default_package_count", (value) =>
-        requireOneOf(value, ["1"], "defaultPackageCount"),
-    );
-    setPositiveInteger(row, body, "defaultLengthCm", "default_length_cm");
-    setPositiveInteger(row, body, "defaultWidthCm", "default_width_cm");
-    setPositiveInteger(row, body, "defaultHeightCm", "default_height_cm");
-    setText(row, body, "defaultContent", "default_content");
-    setNonNegativeInteger(row, body, "defaultShippingAmount", "default_shipping_amount");
-    setText(row, body, "declaredCurrency", "declared_currency", (value) =>
-        requireOneOf(value.toUpperCase(), ["EUR"], "declaredCurrency"),
-    );
-    setText(row, body, "connectCulture", "connect_culture");
-    setText(row, body, "connectVersionApi", "connect_version_api");
-    setText(row, body, "connectOutputFormat", "connect_output_format");
-    setText(row, body, "connectOutputType", "connect_output_type");
-    return row;
-}
-
 async function shipmentWithEventsByRequest(url: URL): Promise<JsonRecord | null> {
     const id = queryText(url, "id");
     if (id) {
@@ -1276,84 +1135,6 @@ function trackingUrl(expeditionNumber: string, postalCode: string): string {
         url.searchParams.set("codePostal", postalCode);
     }
     return url.toString();
-}
-
-function rowText(row: JsonRecord | null, key: string, fallback: string): string {
-    return stringValue(row?.[key]) || fallback;
-}
-
-function rowInteger(row: JsonRecord | null, key: string, fallback: number): number {
-    const value = Number(row?.[key]);
-    return Number.isInteger(value) && value > 0 ? value : fallback;
-}
-
-function rowNonNegativeInteger(row: JsonRecord | null, key: string, fallback: number): number {
-    const value = Number(row?.[key]);
-    return Number.isSafeInteger(value) && value >= 0 ? value : fallback;
-}
-
-function hasOwn(record: JsonRecord, key: string): boolean {
-    return Object.prototype.hasOwnProperty.call(record, key);
-}
-
-function setText(
-    row: JsonRecord,
-    body: JsonRecord,
-    source: string,
-    target: string,
-    transform: (value: string) => string = (value) => value,
-): void {
-    if (!hasOwn(body, source)) {
-        return;
-    }
-    row[target] = transform(stringValue(body[source]));
-}
-
-function setPositiveInteger(row: JsonRecord, body: JsonRecord, source: string, target: string): void {
-    if (!hasOwn(body, source)) {
-        return;
-    }
-    const value = Number(stringValue(body[source]));
-    if (!Number.isInteger(value) || value < 1) {
-        throw new HttpError(400, `${source} must be a positive integer`);
-    }
-    row[target] = value;
-}
-
-function setNonNegativeInteger(row: JsonRecord, body: JsonRecord, source: string, target: string): void {
-    if (!hasOwn(body, source)) {
-        return;
-    }
-    const value = Number(stringValue(body[source]));
-    if (!Number.isSafeInteger(value) || value < 0) {
-        throw new HttpError(400, `${source} must be a non-negative safe integer`);
-    }
-    row[target] = value;
-}
-
-function requireOneOf(value: string, options: string[], name: string): string {
-    if (!options.includes(value)) {
-        throw new HttpError(400, `${name} must be ${options.join(" or ")}`);
-    }
-    return value;
-}
-
-function requirePattern(value: string, pattern: RegExp, message: string): string {
-    if (!pattern.test(value)) {
-        throw new HttpError(400, message);
-    }
-    return value;
-}
-
-function normalizeSettingsPhone(value: string, country: string, name: string): string {
-    const normalized = normalizePhone(value, country);
-    if (value && !normalized) {
-        throw new HttpError(400, `${name} must use E.164 international format`);
-    }
-    if (normalized && !/^\+[1-9]\d{7,14}$/.test(normalized)) {
-        throw new HttpError(400, `${name} must use E.164 international format`);
-    }
-    return normalized;
 }
 
 function parseMondialRelayTrackingLink(value: string): JsonRecord {
