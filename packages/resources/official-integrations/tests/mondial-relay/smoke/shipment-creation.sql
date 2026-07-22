@@ -1,3 +1,4 @@
+-- Mondial Relay shipment creation database smoke contract.
 \set ON_ERROR_STOP on
 
 begin;

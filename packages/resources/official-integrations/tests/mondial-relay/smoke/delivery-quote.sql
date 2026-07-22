@@ -1,3 +1,4 @@
+-- Mondial Relay delivery quote database smoke contract.
 \set ON_ERROR_STOP on
 
 begin;
