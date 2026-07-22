@@ -165,6 +165,10 @@ describe("stripe-connect 1.0.0 source", () => {
             Promise.all([
                 readFile(resolve(root, "connectors/supabase/functions/cms-stripe-connect/index.ts"), "utf8"),
                 readFile(
+                    resolve(root, "connectors/supabase/functions/cms-stripe-connect/routes/payouts/seller-schedule.ts"),
+                    "utf8",
+                ),
+                readFile(
                     resolve(
                         root,
                         "connectors/supabase/functions/cms-stripe-connect/workflows/payments/settlement-release.ts",
