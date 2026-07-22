@@ -9,7 +9,10 @@ import {
     successfulJson,
 } from "./harness";
 
-const lifecycleAndSnapshot = ["postgrest:POST:rpc/reserve_payment_cancellation_intent", "postgrest:GET:payments"];
+const lifecycleAndReservation = [
+    "postgrest:POST:rpc/reserve_payment_cancellation_intent",
+    "postgrest:POST:rpc/reserve_payment_cancellation_operation",
+];
 
 export function registerPaymentCancellationReservationContracts(createHarness: CreatePaymentCancellationHarness): void {
     describe("stripe-connect payment cancellation reservation contracts", () => {
@@ -26,8 +29,7 @@ export function registerPaymentCancellationReservationContracts(createHarness: C
 
             expect(body).toEqual(cancellationResponse(fixture, operationId, fixture.paymentIntentId));
             expect(fixture.rest.externalRequestOrder).toEqual([
-                ...lifecycleAndSnapshot,
-                "postgrest:POST:rpc/reserve_financial_operation",
+                ...lifecycleAndReservation,
                 "postgrest:PATCH:financial_operations",
                 `stripe:GET:/v1/payment_intents/${fixture.paymentIntentId}`,
                 "postgrest:POST:rpc/apply_payment_provider_projection",
@@ -38,22 +40,17 @@ export function registerPaymentCancellationReservationContracts(createHarness: C
             ]);
             expect(postgrestBudget(fixture)).toEqual([
                 ["POST", "rpc/reserve_payment_cancellation_intent"],
-                ["GET", "payments"],
-                ["POST", "rpc/reserve_financial_operation"],
+                ["POST", "rpc/reserve_payment_cancellation_operation"],
                 ["PATCH", "financial_operations"],
                 ["POST", "rpc/apply_payment_provider_projection"],
                 ["POST", "rpc/apply_payment_provider_projection"],
                 ["PATCH", "financial_operations"],
                 ["POST", "payment_events"],
             ]);
-            expect(Object.fromEntries(fixture.rest.postgrestRequests[1]?.searchParams ?? [])).toMatchObject({
-                id: `eq.${fixture.paymentId}`,
-                limit: "1",
-            });
-            expect(fixture.rest.postgrestRequests[2]?.body).toEqual({
+            expect(fixture.rest.postgrestRequests[1]?.body).toEqual({
                 p_payment_id: fixture.paymentId,
+                p_client_reference_id: fixture.clientReferenceId,
                 p_business_key: `payment-cancellation:${fixture.paymentId}:${fixture.cancellationRequestId}`,
-                p_operation_type: "payment_intent_cancel",
                 p_request: {
                     clientReferenceId: fixture.clientReferenceId,
                     cancellationRequestId: fixture.cancellationRequestId,
@@ -74,7 +71,7 @@ export function registerPaymentCancellationReservationContracts(createHarness: C
             const pending = fixture.cancel();
 
             await paymentRead.entered;
-            expect(fixture.rest.externalRequestOrder).toEqual(lifecycleAndSnapshot);
+            expect(fixture.rest.externalRequestOrder).toEqual(lifecycleAndReservation);
             expect(fixture.rest.rows("payment_lifecycle_guards")).toContainEqual(
                 expect.objectContaining({
                     payment_id: fixture.paymentId,
@@ -89,10 +86,10 @@ export function registerPaymentCancellationReservationContracts(createHarness: C
             expect(await responseJson(response)).toEqual({
                 error: "payment cancellation lifecycle guard does not match provider payment truth",
             });
-            expect(fixture.rest.externalRequestOrder).toEqual(lifecycleAndSnapshot);
+            expect(fixture.rest.externalRequestOrder).toEqual(lifecycleAndReservation);
             expect(postgrestBudget(fixture)).toEqual([
                 ["POST", "rpc/reserve_payment_cancellation_intent"],
-                ["GET", "payments"],
+                ["POST", "rpc/reserve_payment_cancellation_operation"],
             ]);
             expect(fixture.rest.stripeRequests).toEqual([]);
         });
@@ -108,14 +105,10 @@ export function registerPaymentCancellationReservationContracts(createHarness: C
             expect(await responseJson(response)).toEqual({
                 error: "simulated payment cancellation reservation failure",
             });
-            expect(fixture.rest.externalRequestOrder).toEqual([
-                ...lifecycleAndSnapshot,
-                "postgrest:POST:rpc/reserve_financial_operation",
-            ]);
+            expect(fixture.rest.externalRequestOrder).toEqual(lifecycleAndReservation);
             expect(postgrestBudget(fixture)).toEqual([
                 ["POST", "rpc/reserve_payment_cancellation_intent"],
-                ["GET", "payments"],
-                ["POST", "rpc/reserve_financial_operation"],
+                ["POST", "rpc/reserve_payment_cancellation_operation"],
             ]);
             expect(fixture.rest.stripeRequests).toEqual([]);
             expect(

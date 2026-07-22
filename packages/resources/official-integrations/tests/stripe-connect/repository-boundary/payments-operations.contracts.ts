@@ -105,33 +105,31 @@ export function registerPaymentOperationRepositoryContracts(createHarness: Creat
             });
             expect(postgrestBudget(harness)).toEqual([
                 { method: "POST", table: "rpc/reserve_payment_cancellation_intent" },
-                { method: "GET", table: "payments" },
-                { method: "POST", table: "rpc/reserve_financial_operation" },
+                { method: "POST", table: "rpc/reserve_payment_cancellation_operation" },
                 { method: "PATCH", table: "financial_operations" },
                 { method: "POST", table: "rpc/apply_payment_provider_projection" },
                 { method: "POST", table: "rpc/apply_payment_provider_projection" },
                 { method: "PATCH", table: "financial_operations" },
                 { method: "POST", table: "payment_events" },
             ]);
-            expect(postgrestQuery(harness, 1)).toMatchObject({ id: `eq.${created.paymentId}`, limit: "1" });
-            expect(postgrestBody(harness, 2)).toEqual({
+            expect(postgrestBody(harness, 1)).toEqual({
                 p_payment_id: created.paymentId,
+                p_client_reference_id: "repository-order-1",
                 p_business_key: `payment-cancellation:${created.paymentId}:${cancellationRequestId}`,
-                p_operation_type: "payment_intent_cancel",
                 p_request: {
                     clientReferenceId: "repository-order-1",
                     cancellationRequestId,
                     reason: "buyer cancelled",
                 },
             });
-            expect(postgrestBody(harness, 3)).toMatchObject({ status: "processing", attempt_count: 1 });
-            expect(postgrestBody(harness, 6)).toMatchObject({
+            expect(postgrestBody(harness, 2)).toMatchObject({ status: "processing", attempt_count: 1 });
+            expect(postgrestBody(harness, 5)).toMatchObject({
                 status: "succeeded",
                 stripe_object_id: created.stripePaymentIntentId,
                 last_error: null,
                 next_attempt_at: null,
             });
-            expect(postgrestBody(harness, 7)).toEqual({
+            expect(postgrestBody(harness, 6)).toEqual({
                 payment_id: created.paymentId,
                 event_type: "payment_intent_cancellation_confirmed",
                 actor_kind: "system",

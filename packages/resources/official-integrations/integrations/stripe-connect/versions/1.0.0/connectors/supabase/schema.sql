@@ -2149,11 +2149,8 @@ begin
         v_reference, v_payment.id, case when v_payment.id is not null then now() end
     ) on conflict (client_reference_id) do update set
         payment_id = coalesce(stripe_connect.payment_lifecycle_guards.payment_id, excluded.payment_id),
-        payment_linked_at = coalesce(stripe_connect.payment_lifecycle_guards.payment_linked_at, excluded.payment_linked_at);
-    select * into v_guard
-    from stripe_connect.payment_lifecycle_guards
-    where client_reference_id = v_reference
-    for update;
+        payment_linked_at = coalesce(stripe_connect.payment_lifecycle_guards.payment_linked_at, excluded.payment_linked_at)
+    returning * into v_guard;
     if v_guard.cancellation_request_id is not null
         and (v_guard.cancellation_request_id <> v_cancellation_id
             or v_guard.cancellation_reason <> v_reason) then
@@ -2319,6 +2316,55 @@ begin
     return to_jsonb(v_operation);
 end;
 $$;
+
+create or replace function stripe_connect.reserve_payment_cancellation_operation(
+    p_payment_id bigint,
+    p_client_reference_id text,
+    p_business_key text,
+    p_request jsonb
+)
+returns table (
+    payment jsonb,
+    operation jsonb
+)
+language plpgsql
+volatile
+security invoker
+set search_path = ''
+as $$
+declare
+    v_payment jsonb;
+    v_operation jsonb;
+begin
+    -- Keep this read separate from the reservation statement. Under READ
+    -- COMMITTED, the nested reservation must retain its later observation point.
+    select pg_catalog.to_jsonb(payment_row)
+    into v_payment
+    from stripe_connect.payments payment_row
+    where payment_row.id = p_payment_id;
+
+    if v_payment is null
+       or v_payment->>'client_reference_id' is distinct from p_client_reference_id then
+        raise exception 'conflict: payment cancellation lifecycle guard does not match provider payment truth';
+    end if;
+
+    select stripe_connect.reserve_financial_operation(
+        p_payment_id,
+        p_business_key,
+        'payment_intent_cancel',
+        p_request
+    ) into v_operation;
+
+    return query select v_payment, v_operation;
+end;
+$$;
+
+revoke execute on function stripe_connect.reserve_payment_cancellation_operation(
+    bigint, text, text, jsonb
+) from public, anon, authenticated;
+grant execute on function stripe_connect.reserve_payment_cancellation_operation(
+    bigint, text, text, jsonb
+) to service_role;
 
 create or replace function stripe_connect.reserve_transfer_recovery(
     p_payment_id bigint,

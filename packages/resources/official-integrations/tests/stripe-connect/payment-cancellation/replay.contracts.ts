@@ -27,7 +27,7 @@ export function registerPaymentCancellationReplayContracts(createHarness: Create
                 retrieveRequest(fixture.paymentIntentId),
                 cancelRequest(fixture.paymentIntentId, idempotencyKey),
             ]);
-            expect(fixture.rest.postgrestRequests[6]?.body).toEqual({
+            expect(fixture.rest.postgrestRequests[5]?.body).toEqual({
                 status: "succeeded",
                 stripe_object_id: fixture.paymentIntentId,
                 response: cancelledIntent(fixture, fixture.paymentIntentId),
@@ -43,8 +43,7 @@ export function registerPaymentCancellationReplayContracts(createHarness: Create
             expect(replay).toEqual(cancellationResponse(fixture, operationId, fixture.paymentIntentId));
             expect(fixture.rest.externalRequestOrder).toEqual([
                 "postgrest:POST:rpc/reserve_payment_cancellation_intent",
-                "postgrest:GET:payments",
-                "postgrest:POST:rpc/reserve_financial_operation",
+                "postgrest:POST:rpc/reserve_payment_cancellation_operation",
                 "postgrest:PATCH:financial_operations",
                 `stripe:GET:/v1/payment_intents/${fixture.paymentIntentId}`,
                 "postgrest:POST:rpc/apply_payment_provider_projection",
@@ -53,8 +52,7 @@ export function registerPaymentCancellationReplayContracts(createHarness: Create
             ]);
             expect(postgrestBudget(fixture)).toEqual([
                 ["POST", "rpc/reserve_payment_cancellation_intent"],
-                ["GET", "payments"],
-                ["POST", "rpc/reserve_financial_operation"],
+                ["POST", "rpc/reserve_payment_cancellation_operation"],
                 ["PATCH", "financial_operations"],
                 ["POST", "rpc/apply_payment_provider_projection"],
                 ["PATCH", "financial_operations"],
@@ -81,7 +79,7 @@ export function registerPaymentCancellationReplayContracts(createHarness: Create
             });
             expect(fixture.rest.externalRequestOrder).toEqual([
                 "postgrest:POST:rpc/reserve_payment_cancellation_intent",
-                "postgrest:GET:payments",
+                "postgrest:POST:rpc/reserve_payment_cancellation_operation",
             ]);
             expect(fixture.rest.stripeRequests).toEqual([]);
             expect(

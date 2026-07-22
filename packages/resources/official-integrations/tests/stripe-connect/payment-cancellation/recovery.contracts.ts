@@ -21,8 +21,7 @@ export function registerPaymentCancellationRecoveryContracts(createHarness: Crea
             expect(body).toEqual(cancellationResponse(fixture, cancellationOperationId, fixture.paymentIntentId));
             expect(fixture.rest.externalRequestOrder).toEqual([
                 "postgrest:POST:rpc/reserve_payment_cancellation_intent",
-                "postgrest:GET:payments",
-                "postgrest:POST:rpc/reserve_financial_operation",
+                "postgrest:POST:rpc/reserve_payment_cancellation_operation",
                 "postgrest:PATCH:financial_operations",
                 "postgrest:GET:financial_operations",
                 `stripe:GET:/v1/payment_intents/${fixture.paymentIntentId}`,
@@ -36,9 +35,10 @@ export function registerPaymentCancellationRecoveryContracts(createHarness: Crea
                 retrieveRequest(fixture.paymentIntentId),
                 cancelRequest(fixture.paymentIntentId, idempotencyKey),
             ]);
-            expect(fixture.rest.postgrestRequests[4]?.body).toBeNull();
-            expect(Object.fromEntries(fixture.rest.postgrestRequests[4]?.searchParams ?? [])).toMatchObject({
+            expect(fixture.rest.postgrestRequests[3]?.body).toBeNull();
+            expect(Object.fromEntries(fixture.rest.postgrestRequests[3]?.searchParams ?? [])).toMatchObject({
                 business_key: `eq.payment:${fixture.paymentId}:${"a".repeat(64)}`,
+                select: "id,stripe_object_id,created_at",
                 limit: "1",
             });
         });
@@ -63,8 +63,7 @@ export function registerPaymentCancellationRecoveryContracts(createHarness: Crea
             expect(fixture.rest.paymentIntentCreateCount).toBe(2);
             expect(fixture.rest.externalRequestOrder).toEqual([
                 "postgrest:POST:rpc/reserve_payment_cancellation_intent",
-                "postgrest:GET:payments",
-                "postgrest:POST:rpc/reserve_financial_operation",
+                "postgrest:POST:rpc/reserve_payment_cancellation_operation",
                 "postgrest:PATCH:financial_operations",
                 "postgrest:GET:financial_operations",
                 "stripe:POST:/v1/payment_intents",

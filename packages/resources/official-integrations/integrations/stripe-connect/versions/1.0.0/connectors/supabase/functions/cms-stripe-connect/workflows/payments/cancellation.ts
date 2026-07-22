@@ -1,7 +1,7 @@
 import { getRowByField } from "../../db/postgrest.ts";
 import { insertPaymentEvent } from "../../db/repositories/events-exceptions.ts";
 import { updateFinancialOperation } from "../../db/repositories/financial-operations.ts";
-import { operationSelect, type FinancialOperationRow } from "../../db/records/operations.ts";
+import type { FinancialOperationRow } from "../../db/records/operations.ts";
 import type { ConnectPaymentRow } from "../../db/records/payments.ts";
 import { publicPayment } from "../../domain/payments/presentation.ts";
 import {
@@ -13,6 +13,10 @@ import type { ProviderTruthActorKind, StripePaymentIntent } from "../../provider
 import type { JsonRecord } from "../../shared/types.ts";
 import { requiredOperationString } from "../operations/request-values.ts";
 import { applyPaymentIntent } from "./projection.ts";
+
+type PaymentIntentCreationOperation = Pick<FinancialOperationRow, "id" | "stripe_object_id" | "created_at">;
+
+const paymentIntentCreationOperationSelect = "id,stripe_object_id,created_at";
 
 export async function executePaymentIntentCancellation(
     payment: ConnectPaymentRow,
@@ -69,11 +73,11 @@ async function paymentIntentForCancellation(
     if (payment.stripe_payment_intent_id) {
         return await retrievePaymentIntent(payment.stripe_payment_intent_id);
     }
-    const createOperation = await getRowByField<FinancialOperationRow>(
+    const createOperation = await getRowByField<PaymentIntentCreationOperation>(
         "financial_operations",
         "business_key",
         `payment:${payment.id}:${payment.financial_terms_hash}`,
-        operationSelect,
+        paymentIntentCreationOperationSelect,
     );
     if (!createOperation) {
         throw new Error("PaymentIntent creation has not been durably reserved yet");

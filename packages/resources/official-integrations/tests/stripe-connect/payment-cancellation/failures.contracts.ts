@@ -30,8 +30,7 @@ export function registerPaymentCancellationFailureContracts(createHarness: Creat
             expect(await responseJson(response)).toEqual({ error: "internal error" });
             expect(harness.rest.externalRequestOrder).toEqual([
                 "postgrest:POST:rpc/reserve_payment_cancellation_intent",
-                "postgrest:GET:payments",
-                "postgrest:POST:rpc/reserve_financial_operation",
+                "postgrest:POST:rpc/reserve_payment_cancellation_operation",
                 "postgrest:PATCH:financial_operations",
                 "postgrest:GET:financial_operations",
                 "postgrest:PATCH:financial_operations",
@@ -56,8 +55,7 @@ export function registerPaymentCancellationFailureContracts(createHarness: Creat
             expect(await responseJson(response)).toEqual({ error: "internal error" });
             expect(fixture.rest.externalRequestOrder).toEqual([
                 "postgrest:POST:rpc/reserve_payment_cancellation_intent",
-                "postgrest:GET:payments",
-                "postgrest:POST:rpc/reserve_financial_operation",
+                "postgrest:POST:rpc/reserve_payment_cancellation_operation",
                 "postgrest:PATCH:financial_operations",
                 "postgrest:GET:financial_operations",
                 "postgrest:PATCH:financial_operations",
@@ -79,8 +77,7 @@ export function registerPaymentCancellationFailureContracts(createHarness: Creat
             expect(await responseJson(response)).toEqual({ error: "internal error" });
             expect(fixture.rest.externalRequestOrder).toEqual([
                 "postgrest:POST:rpc/reserve_payment_cancellation_intent",
-                "postgrest:GET:payments",
-                "postgrest:POST:rpc/reserve_financial_operation",
+                "postgrest:POST:rpc/reserve_payment_cancellation_operation",
                 "postgrest:PATCH:financial_operations",
                 `stripe:GET:/v1/payment_intents/${fixture.paymentIntentId}`,
                 "postgrest:POST:rpc/apply_payment_provider_projection",

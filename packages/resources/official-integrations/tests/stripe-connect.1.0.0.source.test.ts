@@ -7481,8 +7481,27 @@ class StripeConnectMock {
                 requestedAt: guard.cancellation_requested_at,
             });
         }
-        if (table === "rpc/reserve_financial_operation" && method === "POST") {
-            const body = JSON.parse(await request.text()) as JsonRecord;
+        if (
+            (table === "rpc/reserve_financial_operation" || table === "rpc/reserve_payment_cancellation_operation") &&
+            method === "POST"
+        ) {
+            let body = JSON.parse(await request.text()) as JsonRecord;
+            let cancellationPayment: JsonRecord | undefined;
+            if (table === "rpc/reserve_payment_cancellation_operation") {
+                await this.waitForPostgrestRead("payments");
+                const payment = this.tables.payments.find((row) => same(row.id, body.p_payment_id));
+                if (!payment || payment.client_reference_id !== body.p_client_reference_id) {
+                    return jsonResponse(
+                        {
+                            message:
+                                "conflict: payment cancellation lifecycle guard does not match provider payment truth",
+                        },
+                        400,
+                    );
+                }
+                cancellationPayment = structuredClone(payment);
+                body = { ...body, p_operation_type: "payment_intent_cancel" };
+            }
             if (body.p_operation_type === "payment_intent_cancel" && this.failNextPaymentCancellationReservation) {
                 this.failNextPaymentCancellationReservation = false;
                 return jsonResponse({ message: "conflict: simulated payment cancellation reservation failure" }, 400);
@@ -7490,7 +7509,9 @@ class StripeConnectMock {
             const businessKey = String(body.p_business_key);
             const existing = this.tables.financial_operations.find((row) => row.business_key === businessKey);
             if (existing) {
-                return jsonResponse(existing);
+                return jsonResponse(
+                    cancellationPayment ? { payment: cancellationPayment, operation: existing } : existing,
+                );
             }
             const operationRequest = asRecord(body.p_request);
             if (
@@ -7629,7 +7650,7 @@ class StripeConnectMock {
                 });
             }
             this.tables.financial_operations.push(operation);
-            return jsonResponse(operation);
+            return jsonResponse(cancellationPayment ? { payment: cancellationPayment, operation } : operation);
         }
         if (table === "rpc/reserve_transfer_recovery" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;

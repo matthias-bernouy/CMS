@@ -1,7 +1,34 @@
 import { isRecord } from "../../shared/data.ts";
 import type { JsonRecord } from "../../shared/types.ts";
+import { HttpError } from "../../http/errors.ts";
 import { callRpcObject, firstRow, rest, restError, updateRow } from "../postgrest.ts";
 import { operationSelect, type FinancialOperationRow } from "../records/operations.ts";
+import type { ConnectPaymentRow } from "../records/payments.ts";
+
+export type PaymentCancellationOperationContext = {
+    payment: ConnectPaymentRow;
+    operation: FinancialOperationRow;
+};
+
+export async function reservePaymentCancellationOperation(
+    paymentId: number,
+    clientReferenceId: string,
+    options: { businessKey: string; request: JsonRecord },
+): Promise<PaymentCancellationOperationContext> {
+    const value = await callRpcObject<unknown>("reserve_payment_cancellation_operation", {
+        p_payment_id: paymentId,
+        p_client_reference_id: clientReferenceId,
+        p_business_key: options.businessKey,
+        p_request: options.request,
+    });
+    if (!isRecord(value) || !isRecord(value.payment) || !isRecord(value.operation)) {
+        throw new HttpError(502, "payment cancellation reservation returned an invalid response");
+    }
+    return {
+        payment: value.payment as unknown as ConnectPaymentRow,
+        operation: value.operation as unknown as FinancialOperationRow,
+    };
+}
 
 export async function reserveFinancialOperation(
     paymentId: number,

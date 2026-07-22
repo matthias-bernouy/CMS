@@ -1,5 +1,8 @@
-import { reserveFinancialOperation, updateFinancialOperation } from "../../db/repositories/financial-operations.ts";
-import { getPaymentRow, reservePaymentCancellationIntent } from "../../db/repositories/payments.ts";
+import {
+    reservePaymentCancellationOperation,
+    updateFinancialOperation,
+} from "../../db/repositories/financial-operations.ts";
+import { reservePaymentCancellationIntent } from "../../db/repositories/payments.ts";
 import { requireCmsRequest } from "../../http/auth.ts";
 import { assertAllowedKeys, optionalText, readJsonObject, requiredInteger, requiredString } from "../../http/body.ts";
 import { HttpError } from "../../http/errors.ts";
@@ -26,15 +29,14 @@ export async function requestPaymentIntentCancellation(request: Request): Promis
         });
     }
     const paymentId = requiredInteger(lifecycle, "paymentId");
-    const payment = await getPaymentRow(paymentId);
-    if (!payment || payment.client_reference_id !== clientReferenceId) {
-        throw new HttpError(409, "payment cancellation lifecycle guard does not match provider payment truth");
-    }
-    const operation = await reserveFinancialOperation(payment.id, {
-        businessKey: `payment-cancellation:${payment.id}:${cancellationRequestId}`,
-        operationType: "payment_intent_cancel",
+    const context = await reservePaymentCancellationOperation(paymentId, clientReferenceId, {
+        businessKey: `payment-cancellation:${paymentId}:${cancellationRequestId}`,
         request: { clientReferenceId, cancellationRequestId, reason },
     });
+    if (context.payment.client_reference_id !== clientReferenceId) {
+        throw new HttpError(409, "payment cancellation lifecycle guard does not match provider payment truth");
+    }
+    const { operation, payment } = context;
     try {
         const result = await executePaymentIntentCancellation(payment, operation, "system", cancellationRequestId);
         const projectedPayment = result.payment;
