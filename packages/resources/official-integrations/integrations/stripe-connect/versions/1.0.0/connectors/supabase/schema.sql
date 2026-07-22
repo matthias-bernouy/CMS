@@ -553,6 +553,9 @@ create index if not exists commerce_projection_outbox_claim_idx
 create index if not exists commerce_projection_outbox_recovery_idx
     on stripe_connect.commerce_projection_outbox(recovery_key, causal_sequence, projection_status)
     where recovery_key is not null;
+create index if not exists commerce_projection_outbox_refund_predecessor_idx
+    on stripe_connect.commerce_projection_outbox(operation_id, causal_sequence)
+    where projection_kind = 'refund' and projection_status <> 'succeeded';
 
 create table if not exists stripe_connect.commerce_projection_interventions (
     id bigint generated always as identity primary key,
