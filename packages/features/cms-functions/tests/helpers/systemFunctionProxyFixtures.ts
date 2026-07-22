@@ -1,6 +1,7 @@
 import {
     executeFunctionSystemSourceEndpoint,
     InMemoryFunctionRepository,
+    RequestScopedFunctionRepository,
     withFunctionsSource,
     type CmsFunction,
 } from "@bernouy/cms-functions";
@@ -32,7 +33,6 @@ export async function systemFunctionProxyHarness(upstreamStatus = 200) {
     const overlaySources = new SourceOverlaySourceRepository(sources, overlays);
     const probe = new FunctionExecutionProbe(overlaySources);
     const functions = probe.functions(storedFunctions);
-    const proxiedSources = withFunctionsSource(probe.sources, functions);
     const authorizedEndpoints: SourceEndpoint[] = [];
     const executedEndpoints: SourceEndpoint[] = [];
     const upstreamRequests: Array<{ method: string; url: string }> = [];
@@ -43,9 +43,10 @@ export async function systemFunctionProxyHarness(upstreamStatus = 200) {
         authorizedEndpoints,
         executedEndpoints,
         upstreamRequests,
-        request: (authorization: SourceAuthorizationResult = true) =>
-            handleSourceRequest(
-                proxiedSources,
+        request: (authorization: SourceAuthorizationResult = true) => {
+            const requestFunctions = new RequestScopedFunctionRepository(functions);
+            return handleSourceRequest(
+                withFunctionsSource(probe.sources, requestFunctions),
                 new Request(`${origin()}${PREFIX}system-functions/readOrder?orderId=order-1`),
                 {
                     prefix: PREFIX,
@@ -57,7 +58,7 @@ export async function systemFunctionProxyHarness(upstreamStatus = 200) {
                         executeSystemEndpoint: (endpoint, request) => {
                             executedEndpoints.push(structuredClone(endpoint));
                             return executeFunctionSystemSourceEndpoint(endpoint, request, {
-                                functions,
+                                functions: requestFunctions,
                                 sources: probe.sources,
                                 deps: probe.deps({
                                     fetchImpl: async (input, init) => {
@@ -81,7 +82,8 @@ export async function systemFunctionProxyHarness(upstreamStatus = 200) {
                         },
                     },
                 },
-            ),
+            );
+        },
     };
 }
 

@@ -4,7 +4,7 @@ import { expectCorrelatedFunctionFailure } from "../helpers/functionFixtures";
 import { readOrderFunction, systemFunctionProxyHarness } from "../helpers/systemFunctionProxyFixtures";
 
 describe("system function source proxy contract", () => {
-    test("preserves authorization, enriched output and three function reads per request", async () => {
+    test("preserves authorization and enriched output with one function read per request", async () => {
         const harness = await systemFunctionProxyHarness();
         const firstMark = harness.probe.mark();
 
@@ -16,7 +16,7 @@ describe("system function source proxy contract", () => {
         expect(harness.executedEndpoints).toEqual([expectedFunctionEndpoint("v1")]);
         expect(harness.upstreamRequests).toEqual([{ method: "GET", url: "https://orders.test/orders/order-1" }]);
         expect(harness.probe.budgetSince(firstMark)).toMatchObject({
-            functionLookups: 3,
+            functionLookups: 1,
             endpointLookups: 1,
             upstreamCalls: 1,
         });
@@ -30,7 +30,7 @@ describe("system function source proxy contract", () => {
         expect(harness.authorizedEndpoints).toEqual([expectedFunctionEndpoint("v1"), expectedFunctionEndpoint("v2")]);
         expect(harness.executedEndpoints).toEqual([expectedFunctionEndpoint("v1"), expectedFunctionEndpoint("v2")]);
         expect(harness.probe.budgetSince(secondMark)).toMatchObject({
-            functionLookups: 3,
+            functionLookups: 1,
             endpointLookups: 1,
             upstreamCalls: 1,
         });
@@ -58,7 +58,7 @@ describe("system function source proxy contract", () => {
         });
     });
 
-    test("keeps upstream failures generic after the three function reads", async () => {
+    test("keeps upstream failures generic after one function read", async () => {
         const harness = await systemFunctionProxyHarness(503);
         const mark = harness.probe.mark();
 
@@ -68,7 +68,7 @@ describe("system function source proxy contract", () => {
         expect(harness.authorizedEndpoints).toEqual([expectedFunctionEndpoint("v1")]);
         expect(harness.executedEndpoints).toEqual([expectedFunctionEndpoint("v1")]);
         expect(harness.probe.budgetSince(mark)).toMatchObject({
-            functionLookups: 3,
+            functionLookups: 1,
             endpointLookups: 1,
             upstreamCalls: 1,
         });

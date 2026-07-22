@@ -22,6 +22,7 @@ export type {
 } from "../interfaces/FunctionDefinition";
 export type { FunctionRepository } from "../interfaces/FunctionRepository";
 export { InMemoryFunctionRepository } from "../default-implementation/InMemoryFunctionRepository";
+export { RequestScopedFunctionRepository } from "../default-implementation/RequestScopedFunctionRepository";
 export { DuplicateFunctionError, FunctionExecutionError } from "../core/errors";
 export {
     SYSTEM_FUNCTIONS_SOURCE_ID,

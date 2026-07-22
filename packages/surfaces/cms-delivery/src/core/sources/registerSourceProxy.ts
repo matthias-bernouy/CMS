@@ -9,8 +9,10 @@ import {
 import { executeAuthSystemSourceEndpoint } from "@bernouy/cms-auth";
 import {
     executeFunctionSystemSourceEndpoint,
+    RequestScopedFunctionRepository,
     SYSTEM_FUNCTIONS_SOURCE_URN,
     withFunctionsSource,
+    type FunctionRepository,
 } from "@bernouy/cms-functions";
 import { createTriggerInterceptor } from "@bernouy/cms-triggers";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
@@ -29,10 +31,6 @@ export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
             ...(delivery.identities ? { identities: delivery.identities } : {}),
             resolveContext: (request: Request) => resolveDeliverySourceContext(delivery, request),
         };
-        const proxiedSources =
-            delivery.sources && delivery.functions
-                ? withFunctionsSource(delivery.sources, delivery.functions)
-                : delivery.sources;
         const interceptEndpoint =
             delivery.triggers && delivery.functions && delivery.sources
                 ? createTriggerInterceptor({
@@ -46,18 +44,25 @@ export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
                       },
                   })
                 : undefined;
-        const deps = {
-            ...sourceDeps,
-            executeSystemEndpoint: (endpoint: SourceEndpoint, request: Request) =>
-                executeSystemEndpoint(delivery, endpoint, request, sourceDeps),
-            authorizeEndpoint: (endpoint: SourceEndpoint, request: Request) =>
-                authorizeDeliverySourceEndpoint(delivery, endpoint, request),
-            ...(interceptEndpoint ? { interceptEndpoint } : {}),
-        };
         for (const method of SOURCE_PROXY_METHODS) {
-            proxyRunner.setDefaultEndpoint(method, (request) =>
-                handleSourceRequest(proxiedSources, request, { prefix, deps }),
-            );
+            proxyRunner.setDefaultEndpoint(method, (request) => {
+                const requestFunctions = delivery.functions
+                    ? new RequestScopedFunctionRepository(delivery.functions)
+                    : undefined;
+                const proxiedSources =
+                    delivery.sources && requestFunctions
+                        ? withFunctionsSource(delivery.sources, requestFunctions)
+                        : delivery.sources;
+                const deps = {
+                    ...sourceDeps,
+                    executeSystemEndpoint: (endpoint: SourceEndpoint, systemRequest: Request) =>
+                        executeSystemEndpoint(delivery, endpoint, systemRequest, sourceDeps, requestFunctions),
+                    authorizeEndpoint: (endpoint: SourceEndpoint, sourceRequest: Request) =>
+                        authorizeDeliverySourceEndpoint(delivery, endpoint, sourceRequest),
+                    ...(interceptEndpoint ? { interceptEndpoint } : {}),
+                };
+                return handleSourceRequest(proxiedSources, request, { prefix, deps });
+            });
         }
     });
 }
@@ -67,14 +72,15 @@ async function executeSystemEndpoint(
     endpoint: SourceEndpoint,
     request: Request,
     sourceDeps: ExecutorDeps,
+    functions: FunctionRepository | undefined,
 ): Promise<Response> {
     if (endpoint.urn.startsWith(`${SYSTEM_FUNCTIONS_SOURCE_URN}:`)) {
-        if (!delivery.functions || !delivery.sources) {
+        if (!functions || !delivery.sources) {
             return new Response("function executor not configured", { status: 501 });
         }
         const subject = await resolveDeliverySubject(delivery, request);
         return executeFunctionSystemSourceEndpoint(endpoint, request, {
-            functions: delivery.functions,
+            functions,
             sources: delivery.sources,
             deps: sourceDeps,
             resolveUser: async () => (subject ? { id: subject.identifier, role: subject.role } : {}),
