@@ -8,6 +8,7 @@ import {
     validateDashboard,
     validateSource,
 } from "../support";
+import { declaredBlocViewSources } from "../../../helpers/blocArtifactSource";
 
 export function registerInstallationTests(): void {
     test("installs the Connect source and dashboard with widget-backed relay lookup", async () => {
@@ -83,10 +84,11 @@ export function registerInstallationTests(): void {
         });
         expect(functionSecrets).not.toHaveProperty("MONDIAL_RELAY_SENDER_NAME");
         expect(functionSecrets).not.toHaveProperty("MONDIAL_RELAY_DEFAULT_MODE_COL");
-        expect(harness.importedBlocs[0]?.viewJS).toContain("Choisissez un point relais");
-        expect(harness.importedBlocs[0]?.viewJS).toContain("setRelayPointForOrder");
-        expect(harness.importedBlocs[0]?.viewJS).toContain("mondial-relay-picker:change");
-        expect(harness.importedBlocs[0]?.viewJS).toContain("source-id");
+        const pickerSource = declaredBlocViewSources(harness.importedBlocs[0] ?? {});
+        expect(pickerSource).toContain("Choisissez un point relais");
+        expect(pickerSource).toContain("setRelayPointForOrder");
+        expect(pickerSource).toContain("mondial-relay-picker:change");
+        expect(pickerSource).toContain("source-id");
         expect(harness.importedBlocs[0]?.editorJS).toContain('type: "color"');
     });
 }

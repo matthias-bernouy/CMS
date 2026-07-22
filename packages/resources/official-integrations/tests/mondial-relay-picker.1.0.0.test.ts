@@ -1,11 +1,9 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, test } from "bun:test";
+import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 const tag = "test-mondial-relay-picker-validation";
-const blocUrl = new URL(
-    "../integrations/mondial-relay/versions/1.0.0/blocs/mondial-relay-picker/Bloc.ts",
-    import.meta.url,
-);
 
 type TestPicker = HTMLElement & {
     search(): Promise<void>;
@@ -15,8 +13,7 @@ type TestPicker = HTMLElement & {
 describe("mondial-relay-picker 1.0.0", () => {
     test("owns postal-code validation across prefill, input, and search", async () => {
         if (!customElements.get(tag)) {
-            const source = readFileSync(blocUrl, "utf8").replaceAll("BE5_TAG_TO_BE_REPLACED", tag);
-            new Function(source)();
+            await definePicker();
         }
 
         const picker = document.createElement(tag) as TestPicker;
@@ -69,3 +66,23 @@ describe("mondial-relay-picker 1.0.0", () => {
         }
     });
 });
+
+async function definePicker(): Promise<void> {
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mondial-relay");
+    const artifact = definition?.artifacts?.find(
+        (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "mondial-relay-picker",
+    );
+    if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS) {
+        throw new Error("mondial-relay-picker source not found");
+    }
+    const compiled = await prepare_bloc(
+        new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+        null,
+        artifact.bloc.name,
+        artifact.bloc.group ?? "Mondial Relay",
+        artifact.bloc.description ?? "",
+        tag,
+        artifact.bloc.source,
+    );
+    new Function(compiled.viewJS)();
+}
