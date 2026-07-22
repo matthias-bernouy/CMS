@@ -171,6 +171,7 @@ import { syncAccountForIdentity } from "./routes/accounts/sync.ts";
 import { getStripeDispute, listStripeDisputes } from "./routes/disputes/dashboard.ts";
 import { requestPaymentIntentCancellation } from "./routes/payments/cancellation.ts";
 import { getProviderPayment, listProviderPayments } from "./routes/payments/dashboard.ts";
+import { createProtectedPaymentRoutes } from "./routes/payments/protected.ts";
 import { createRequestSettlementRelease } from "./routes/payments/settlement-release.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { connectConfig, health } from "./routes/system.ts";
@@ -198,6 +199,7 @@ import {
     requiredOperationString,
 } from "./workflows/operations/request-values.ts";
 import { executePaymentIntentCancellation } from "./workflows/payments/cancellation.ts";
+import { createProtectedPaymentWorkflow } from "./workflows/payments/creation/workflow.ts";
 import { createSettlementReleaseWorkflow } from "./workflows/payments/settlement-release.ts";
 import {
     applyPaymentIntent,
@@ -215,6 +217,13 @@ const requestSettlementRelease = createRequestSettlementRelease({
     executeSettlementRelease,
     requiredPayment,
 });
+const createProtectedPaymentForBuyer = createProtectedPaymentWorkflow({ syncAccountForIdentity });
+const {
+    checkSellerHeldPaymentEligibility,
+    createProtectedPayment,
+    getProtectedPayment,
+    getProtectedPaymentByReference,
+} = createProtectedPaymentRoutes({ createProtectedPaymentForBuyer, syncAccountForIdentity });
 
 serveStripeConnect({
     ingestPlatformWebhook: (request) => ingestStripeWebhook(request, "platform"),
@@ -260,215 +269,6 @@ serveStripeConnect({
     requeueCommerceProjection,
     listFinancialOperations,
 });
-
-async function createProtectedPayment(request: Request): Promise<Response> {
-    const { userId: buyerUserId } = requireCmsRequest(request);
-    const body = await readJsonObject(request);
-    return json(await createProtectedPaymentForBuyer(buyerUserId, body));
-}
-
-async function checkSellerHeldPaymentEligibility(request: Request): Promise<Response> {
-    const { userId: buyerUserId } = requireCmsRequest(request);
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, ["sellerUserId", "marketplaceTermsVersion", "marketplaceTermsHash"]);
-    const sellerIdentity = requiredString(body, "sellerUserId", 200);
-    const expectedTerms = marketplaceTermsExpectationFromBody(body);
-    if (!expectedTerms) {
-        throw new HttpError(400, "marketplaceTermsVersion and marketplaceTermsHash are required");
-    }
-    const seller = await syncAccountForIdentity(sellerIdentity);
-    if (!seller?.stripe_account_id) {
-        return json({ eligible: false, reasonCode: "seller_account_missing" });
-    }
-    if (seller.cms_user_id === buyerUserId) {
-        return json({ eligible: false, reasonCode: "buyer_is_seller" });
-    }
-    const currentTermsAccepted = Boolean(
-        await getMarketplaceTermsAcceptance(seller.cms_user_id, expectedTerms.version, expectedTerms.hash),
-    );
-    if (!currentTermsAccepted) {
-        return json({ eligible: false, reasonCode: "seller_terms_not_current" });
-    }
-    if (!sellerCanAcceptHeldPayments(seller)) {
-        return json({ eligible: false, reasonCode: "seller_account_not_ready" });
-    }
-    return json({ eligible: true, reasonCode: "eligible" });
-}
-
-async function createProtectedPaymentForBuyer(buyerUserId: string, body: JsonRecord): Promise<JsonRecord> {
-    assertAllowedKeys(body, [
-        "sellerUserId",
-        "amountTotal",
-        "sellerTransferAmount",
-        "currency",
-        "clientReferenceId",
-        "financialTermsHash",
-        "financialRevision",
-        "dualApprovalThresholdAmount",
-        "description",
-    ]);
-    const sellerIdentity = requiredString(body, "sellerUserId", 200);
-    const amountTotal = requiredInteger(body, "amountTotal");
-    const sellerTransferAmount = requiredInteger(body, "sellerTransferAmount");
-    const currency = optionalCurrency(body, "currency") ?? defaultCurrency();
-    const clientReferenceId = requiredString(body, "clientReferenceId", 200);
-    const financialTermsHash = requiredHash(body, "financialTermsHash");
-    const financialRevision = optionalPositiveInteger(body, "financialRevision") ?? 1;
-    const dualApprovalThresholdAmount = requiredInteger(body, "dualApprovalThresholdAmount");
-    const description = optionalText(body, "description", 500);
-
-    if (amountTotal <= 0) {
-        throw new HttpError(400, "amountTotal must be positive");
-    }
-    if (sellerTransferAmount < 0 || sellerTransferAmount > amountTotal) {
-        throw new HttpError(400, "sellerTransferAmount must be between zero and amountTotal");
-    }
-    if (currency !== "eur") {
-        throw new HttpError(400, "protected C2C payments support EUR only");
-    }
-    if (dualApprovalThresholdAmount < 0) {
-        throw new HttpError(400, "dualApprovalThresholdAmount must be non-negative");
-    }
-
-    const seller = await syncAccountForIdentity(sellerIdentity);
-    if (!seller?.stripe_account_id || !sellerCanAcceptHeldPayments(seller)) {
-        throw new HttpError(409, "seller enrollment does not allow a held platform payment");
-    }
-    const sellerUserId = seller.cms_user_id;
-    if (sellerUserId === buyerUserId) {
-        throw new HttpError(400, "buyer and seller must be different users");
-    }
-
-    const expectedTerms = {
-        buyerUserId,
-        sellerUserId,
-        sellerStripeAccountId: seller.stripe_account_id,
-        amountTotal,
-        sellerTransferAmount,
-        currency,
-        financialTermsHash,
-        financialRevision,
-        dualApprovalThresholdAmount,
-    };
-    const existing = await getPaymentByClientReference(clientReferenceId);
-    if (existing) {
-        assertPaymentReplay(existing, expectedTerms);
-        if (existing.payment_status !== "succeeded") {
-            await assertPlatformPayoutProtection();
-        }
-        const synced = await syncPayment(existing);
-        return publicPaymentWithClientSecret(synced, await paymentClientSecret(synced));
-    }
-
-    await assertPlatformPayoutProtection();
-
-    const transferGroup = `cms_order_${await digest(clientReferenceId)}`;
-    let payment: ConnectPaymentRow;
-    try {
-        payment = await reserveProtectedPayment({
-            client_reference_id: clientReferenceId,
-            financial_terms_hash: financialTermsHash,
-            financial_revision: financialRevision,
-            dual_approval_threshold_amount: dualApprovalThresholdAmount,
-            buyer_cms_user_id: buyerUserId,
-            seller_cms_user_id: sellerUserId,
-            seller_stripe_account_id: seller.stripe_account_id,
-            transfer_group: transferGroup,
-            currency,
-            amount_total: amountTotal,
-            seller_transfer_amount: sellerTransferAmount,
-            platform_retained_amount: amountTotal - sellerTransferAmount,
-            payment_status: "created",
-            settlement_status: "held",
-            description,
-        });
-        assertPaymentReplay(payment, expectedTerms);
-    } catch (error) {
-        const raced = await getPaymentByClientReference(clientReferenceId);
-        if (!raced) {
-            throw error;
-        }
-        assertPaymentReplay(raced, expectedTerms);
-        payment = raced;
-    }
-
-    if (payment.stripe_payment_intent_id) {
-        const synced = await syncPayment(payment);
-        return publicPaymentWithClientSecret(synced, await paymentClientSecret(synced));
-    }
-
-    const operation = await reserveFinancialOperation(payment.id, {
-        businessKey: `payment:${payment.id}:${financialTermsHash}`,
-        operationType: "payment_intent_create",
-        request: {
-            amount: amountTotal,
-            currency,
-            clientReferenceId,
-            financialTermsHash,
-            transferGroup,
-        },
-    });
-
-    try {
-        if (operation.status === "succeeded" && operation.stripe_object_id) {
-            const intent = await retrievePaymentIntent(operation.stripe_object_id);
-            payment = await applyPaymentIntent(payment, intent, {
-                actorKind: "system",
-                actorId: "payment-operation-replay",
-            });
-            return publicPaymentWithClientSecret(payment, intent.client_secret ?? "");
-        }
-        await updateFinancialOperation(operation.id, {
-            status: "processing",
-            claimed_at: new Date().toISOString(),
-            attempt_count: operation.attempt_count + 1,
-        });
-        const paymentIntent = await createStripePaymentIntent(payment);
-        payment = await applyPaymentIntent(payment, paymentIntent, {
-            expectedPaymentIntentId: paymentIntent.id,
-            actorKind: "system",
-            actorId: "payment-intent-create",
-        });
-        await updateFinancialOperation(operation.id, {
-            status: payment.settlement_status === "manual_review" ? "manual_review" : "succeeded",
-            stripe_object_id: paymentIntent.id,
-            response: paymentIntent,
-            last_error: payment.settlement_status === "manual_review" ? payment.manual_review_reason : null,
-            completed_at: new Date().toISOString(),
-        });
-        return publicPaymentWithClientSecret(payment, paymentIntent.client_secret ?? "");
-    } catch (error) {
-        await updateFinancialOperation(operation.id, {
-            status: "failed",
-            last_error: errorMessage(error),
-            next_attempt_at: new Date(Date.now() + 60_000).toISOString(),
-        }).catch(() => null);
-        throw error;
-    }
-}
-
-async function getProtectedPayment(request: Request): Promise<Response> {
-    const { userId } = requireCmsRequest(request);
-    const paymentId = requiredQueryInteger(request, "paymentId");
-    const payment = await getPaymentRow(paymentId);
-    if (!payment) {
-        throw new HttpError(404, "payment not found");
-    }
-    if (payment.buyer_cms_user_id !== userId && payment.seller_cms_user_id !== userId) {
-        throw new HttpError(403, "payment is not visible to this user");
-    }
-    return json(publicPayment(await syncPayment(payment)));
-}
-
-async function getProtectedPaymentByReference(request: Request): Promise<Response> {
-    const { userId } = requireCmsRequest(request);
-    const clientReferenceId = requiredQueryText(request, "clientReferenceId", 200);
-    const payment = await getPaymentByClientReference(clientReferenceId);
-    if (!payment || payment.buyer_cms_user_id !== userId) {
-        return json({ exists: false });
-    }
-    return json({ exists: true, payment: publicPayment(await syncPayment(payment)) });
-}
 
 async function configurePlatformPayoutProtection(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
@@ -2517,26 +2317,6 @@ async function ingestStripeWebhook(
     return json({ received: true, duplicate: !inserted }, inserted ? 202 : 200);
 }
 
-async function assertPlatformPayoutProtection(): Promise<void> {
-    const [settings, control] = await Promise.all([
-        retrievePlatformBalanceSettings(),
-        getRowByField<PlatformPayoutControlRow>("platform_payout_controls", "control_key", "default", "*"),
-    ]);
-    if (!control) {
-        throw new HttpError(503, "platform payout protection state is unavailable");
-    }
-    const interval = stringAt(objectAt(objectAt(objectAt(settings, "payments"), "payouts"), "schedule"), "interval");
-    if (interval !== protectedPlatformPayoutInterval) {
-        throw new HttpError(503, "protected payments require the configured automatic Stripe platform payout schedule");
-    }
-    const providerMinimum =
-        numberAt(objectAt(objectAt(objectAt(settings, "payments"), "payouts"), "minimum_balance_by_currency"), "eur") ??
-        0;
-    if (providerMinimum < control.required_minimum_amount || providerMinimum < control.provider_minimum_amount) {
-        throw new HttpError(503, "protected payments require the current Stripe platform minimum balance");
-    }
-}
-
 async function findStripeTransferReversal(
     transferId: string,
     operationKey: string,
@@ -2578,35 +2358,6 @@ async function requiredPayment(paymentId: number): Promise<ConnectPaymentRow> {
         throw new HttpError(404, "payment not found");
     }
     return payment;
-}
-
-function assertPaymentReplay(
-    payment: ConnectPaymentRow,
-    expected: {
-        buyerUserId: string;
-        sellerUserId: string;
-        sellerStripeAccountId: string;
-        amountTotal: number;
-        sellerTransferAmount: number;
-        currency: string;
-        financialTermsHash: string;
-        financialRevision: number;
-        dualApprovalThresholdAmount: number;
-    },
-): void {
-    const matches =
-        payment.buyer_cms_user_id === expected.buyerUserId &&
-        payment.seller_cms_user_id === expected.sellerUserId &&
-        payment.seller_stripe_account_id === expected.sellerStripeAccountId &&
-        payment.amount_total === expected.amountTotal &&
-        payment.seller_transfer_amount === expected.sellerTransferAmount &&
-        payment.currency === expected.currency &&
-        payment.financial_terms_hash === expected.financialTermsHash &&
-        payment.financial_revision === expected.financialRevision &&
-        payment.dual_approval_threshold_amount === expected.dualApprovalThresholdAmount;
-    if (!matches) {
-        throw new HttpError(409, "protected payment replay does not match immutable financial terms");
-    }
 }
 
 async function authorizedSellerAmountAfterRefunds(payment: ConnectPaymentRow): Promise<number> {
