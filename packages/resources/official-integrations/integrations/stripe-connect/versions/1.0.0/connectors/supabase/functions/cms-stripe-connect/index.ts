@@ -41,9 +41,7 @@ import {
     updateFinancialOperation,
 } from "./db/repositories/financial-operations.ts";
 import {
-    getTransferByAuthorization,
     sumConfirmedRecoveryAmount,
-    sumSettledTransferAmounts,
     sumSucceededAmounts,
     sumSucceededField,
     sumSucceededRefundSellerRecovery,
@@ -91,7 +89,6 @@ import {
 import {
     bankPayoutsStatus,
     sellerCanAcceptHeldPayments,
-    sellerCanReceivePayments,
     stripeTransfersStatus,
 } from "./domain/accounts/eligibility.ts";
 import { balanceSettingsMatchRequest, publicBalanceSettings } from "./domain/accounts/payout-settings.ts";
@@ -102,7 +99,7 @@ import { chargeId } from "./domain/payments/provider-state.ts";
 import { publicFinancialOperation } from "./domain/admin/financial-operation.ts";
 import { projectPublicDisputeWithContext } from "./domain/disputes/presentation.ts";
 import { normalizeProtectedRefundOperation, publicRefund } from "./domain/refunds/presentation.ts";
-import { publicReversal, publicTransfer, publicTransferRecovery } from "./domain/transfers/presentation.ts";
+import { publicReversal, publicTransferRecovery } from "./domain/transfers/presentation.ts";
 import { loadPublicTransferRecovery } from "./domain/transfers/recovery-read.ts";
 import { requireCmsRequest, requireDashboardAdmin } from "./http/auth.ts";
 import {
@@ -150,20 +147,12 @@ import {
     retrieveStripeRefundSnapshot,
 } from "./provider/refunds.ts";
 import {
-    createStripeTransfer,
     createStripeTransferReversal,
     listStripeTransferReversals,
     listStripeTransfersByGroup,
-    retrieveStripeTransfer,
     retrieveStripeTransferReversal,
 } from "./provider/transfers.ts";
-import type {
-    StripeBalanceSettings,
-    StripeDispute,
-    StripePaymentIntent,
-    StripeRefund,
-    StripeTransfer,
-} from "./provider/types.ts";
+import type { StripeBalanceSettings, StripeDispute, StripePaymentIntent, StripeRefund } from "./provider/types.ts";
 import {
     getProviderException,
     listFinancialOperations,
@@ -182,6 +171,7 @@ import { syncAccountForIdentity } from "./routes/accounts/sync.ts";
 import { getStripeDispute, listStripeDisputes } from "./routes/disputes/dashboard.ts";
 import { requestPaymentIntentCancellation } from "./routes/payments/cancellation.ts";
 import { getProviderPayment, listProviderPayments } from "./routes/payments/dashboard.ts";
+import { createRequestSettlementRelease } from "./routes/payments/settlement-release.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { connectConfig, health } from "./routes/system.ts";
 import { bytesToHex, digest, safeEqual, stableStripeIdempotencyKey } from "./shared/crypto.ts";
@@ -208,12 +198,23 @@ import {
     requiredOperationString,
 } from "./workflows/operations/request-values.ts";
 import { executePaymentIntentCancellation } from "./workflows/payments/cancellation.ts";
+import { createSettlementReleaseWorkflow } from "./workflows/payments/settlement-release.ts";
 import {
     applyPaymentIntent,
     paymentClientSecret,
     quarantineProviderPaymentTruth,
     syncPayment,
 } from "./workflows/payments/projection.ts";
+
+const executeSettlementRelease = createSettlementReleaseWorkflow({
+    reconcilePayment,
+    authorizedSellerAmountAfterRefunds,
+    moveOperationToManualReview,
+});
+const requestSettlementRelease = createRequestSettlementRelease({
+    executeSettlementRelease,
+    requiredPayment,
+});
 
 serveStripeConnect({
     ingestPlatformWebhook: (request) => ingestStripeWebhook(request, "platform"),
@@ -823,147 +824,6 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
                 await applyClaimedSellerRecoveryPayoutHold(userId, owner, cancelled).catch(() => false);
             }
         }
-        throw error;
-    }
-}
-
-async function requestSettlementRelease(request: Request): Promise<Response> {
-    requireCmsRequest(request, { requireUser: false });
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, ["paymentId", "releaseAuthorizationId", "releaseKind", "amount", "currency"]);
-    const payment = await requiredPayment(requiredInteger(body, "paymentId"));
-    const releaseAuthorizationId = requiredString(body, "releaseAuthorizationId", 200);
-    const releaseKind = requiredReleaseKind(body.releaseKind);
-    const amount = requiredInteger(body, "amount");
-    const currency = optionalCurrency(body, "currency") ?? payment.currency;
-    return json(await executeSettlementRelease(payment, releaseAuthorizationId, releaseKind, amount, currency));
-}
-
-async function executeSettlementRelease(
-    payment: ConnectPaymentRow,
-    releaseAuthorizationId: string,
-    releaseKind: "initial" | "reserve" | "recovery",
-    amount: number,
-    currency: string,
-): Promise<JsonRecord> {
-    // A release must verify current provider truth synchronously. Periodic
-    // reconciliation and webhooks reduce latency, but neither is a safe gate
-    // against a just-opened dispute or an out-of-band provider refund.
-    payment = await reconcilePayment(payment);
-    if (payment.payment_status !== "succeeded" || !payment.stripe_charge_id) {
-        throw new HttpError(409, "payment is not confirmed by Stripe");
-    }
-    const seller = await getAccountRow(payment.seller_cms_user_id);
-    if (!seller || !sellerCanReceivePayments(seller)) {
-        throw new HttpError(409, "seller financial risk blocks settlement release");
-    }
-    if (currency !== payment.currency || currency !== "eur") {
-        throw new HttpError(409, "release currency mismatch");
-    }
-    const existingTransfer = await getTransferByAuthorization(releaseAuthorizationId);
-    if (existingTransfer) {
-        assertTransferReplay(existingTransfer, payment, releaseKind, amount, currency);
-        if (existingTransfer.status === "succeeded") {
-            return publicTransfer(existingTransfer);
-        }
-    }
-    if (!releasableDisputeStatus(payment.dispute_status)) {
-        throw new HttpError(409, "payment is blocked by an open, lost, or unresolved Stripe dispute");
-    }
-    if (!["held", "eligible", "release_pending"].includes(payment.settlement_status)) {
-        throw new HttpError(409, "payment settlement is blocked or requires finance review");
-    }
-    const authorizedSellerAmount = await authorizedSellerAmountAfterRefunds(payment);
-    const netTransferredAmount = payment.transferred_amount - payment.reversed_amount;
-    if (amount <= 0 || netTransferredAmount + amount > authorizedSellerAmount) {
-        throw new HttpError(409, "release exceeds the authorized seller transfer amount");
-    }
-
-    const businessKey = `settlement:${payment.id}:${releaseAuthorizationId}`;
-    const operation = await reserveFinancialOperation(payment.id, {
-        businessKey,
-        operationType: "transfer_create",
-        request: {
-            releaseAuthorizationId,
-            releaseKind,
-            amount,
-            currency,
-            sourceChargeId: releaseKind === "recovery" ? null : payment.stripe_charge_id,
-            destinationAccountId: payment.seller_stripe_account_id,
-            transferGroup: payment.transfer_group,
-        },
-    });
-    let transfer = existingTransfer;
-    if (!transfer) {
-        transfer = await insertRow<TransferRow>("transfers", transferSelect, {
-            payment_id: payment.id,
-            operation_id: operation.id,
-            release_authorization_id: releaseAuthorizationId,
-            release_kind: releaseKind,
-            source_charge_id: releaseKind === "recovery" ? null : payment.stripe_charge_id,
-            destination_account_id: payment.seller_stripe_account_id,
-            transfer_group: payment.transfer_group,
-            amount,
-            currency,
-            status: "reserved",
-        });
-    } else {
-        assertTransferReplay(transfer, payment, releaseKind, amount, currency);
-    }
-
-    try {
-        let stripeTransfer: StripeTransfer | null = null;
-        if (operation.status === "succeeded" && operation.stripe_object_id) {
-            stripeTransfer = await retrieveStripeTransfer(operation.stripe_object_id);
-        } else if (operation.attempt_count > 0) {
-            stripeTransfer = await findStripeTransfer(payment, releaseAuthorizationId, releaseKind, amount);
-            if (!stripeTransfer && operation.status === "manual_review") {
-                throw new HttpError(409, "Transfer outcome is unresolved and requires finance review");
-            }
-        }
-        if (!stripeTransfer) {
-            await updateFinancialOperation(operation.id, {
-                status: "processing",
-                claimed_at: new Date().toISOString(),
-                attempt_count: operation.attempt_count + 1,
-            });
-            await updateRow("transfers", transfer.id, { status: "processing" });
-            stripeTransfer = await createStripeTransfer(
-                payment,
-                releaseAuthorizationId,
-                releaseKind,
-                amount,
-                await stableStripeIdempotencyKey("transfer", businessKey),
-            );
-        }
-        transfer =
-            (await updateRow<TransferRow>(
-                "transfers",
-                transfer.id,
-                {
-                    stripe_transfer_id: stripeTransfer.id,
-                    status: "succeeded",
-                    provider_snapshot: stripeTransfer,
-                },
-                transferSelect,
-            )) ?? transfer;
-        await updateFinancialOperation(operation.id, {
-            status: "succeeded",
-            stripe_object_id: stripeTransfer.id,
-            response: stripeTransfer,
-            completed_at: new Date().toISOString(),
-        });
-        const transferredAmount = await sumSettledTransferAmounts(payment.id);
-        const reversedAmount = await sumSucceededAmounts("transfer_reversals", payment.id);
-        const remainingAuthorizedSellerAmount = await authorizedSellerAmountAfterRefunds(payment);
-        await updatePayment(payment.id, {
-            transferred_amount: transferredAmount,
-            settlement_status:
-                transferredAmount - reversedAmount >= remainingAuthorizedSellerAmount ? "released" : "held",
-        });
-        return publicTransfer(transfer);
-    } catch (error) {
-        await moveOperationToManualReview(payment.id, operation, error, "transfer_create_ambiguous");
         throw error;
     }
 }
@@ -2677,31 +2537,6 @@ async function assertPlatformPayoutProtection(): Promise<void> {
     }
 }
 
-async function findStripeTransfer(
-    payment: ConnectPaymentRow,
-    releaseAuthorizationId: string,
-    releaseKind: "initial" | "reserve" | "recovery",
-    amount: number,
-): Promise<StripeTransfer | null> {
-    const list = await listStripeTransfersByGroup(payment.transfer_group);
-    const matches = recordArrayAt(list, "data").filter(
-        (transfer) =>
-            Number(transfer.amount) === amount &&
-            stringAt(transfer, "currency") === payment.currency &&
-            stripeObjectId(transfer.destination) === payment.seller_stripe_account_id &&
-            stringAt(objectAt(transfer, "metadata"), "cms_payment_id") === String(payment.id) &&
-            stringAt(objectAt(transfer, "metadata"), "cms_release_authorization_id") === releaseAuthorizationId &&
-            stringAt(objectAt(transfer, "metadata"), "cms_release_kind") === releaseKind &&
-            (releaseKind === "recovery"
-                ? !stripeObjectId(transfer.source_transaction)
-                : stripeObjectId(transfer.source_transaction) === payment.stripe_charge_id),
-    );
-    if (matches.length > 1 || (matches.length === 0 && list.has_more === true)) {
-        throw new HttpError(409, "Stripe Transfer search is ambiguous");
-    }
-    return (matches[0] as StripeTransfer | undefined) ?? null;
-}
-
 async function findStripeTransferReversal(
     transferId: string,
     operationKey: string,
@@ -2774,31 +2609,8 @@ function assertPaymentReplay(
     }
 }
 
-function assertTransferReplay(
-    transfer: TransferRow,
-    payment: ConnectPaymentRow,
-    releaseKind: "initial" | "reserve" | "recovery",
-    amount: number,
-    currency: string,
-): void {
-    if (
-        transfer.payment_id !== payment.id ||
-        transfer.amount !== amount ||
-        transfer.currency !== currency ||
-        transfer.release_kind !== releaseKind ||
-        transfer.source_charge_id !== (releaseKind === "recovery" ? null : payment.stripe_charge_id) ||
-        transfer.destination_account_id !== payment.seller_stripe_account_id
-    ) {
-        throw new HttpError(409, "settlement release replay mismatch");
-    }
-}
-
 async function authorizedSellerAmountAfterRefunds(payment: ConnectPaymentRow): Promise<number> {
     return payment.seller_transfer_amount - (await sumSucceededRefundSellerRecovery(payment.id));
-}
-
-function releasableDisputeStatus(status: string): boolean {
-    return ["none", "won", "prevented", "warning_closed"].includes(status);
 }
 
 async function recordSellerRecoveryExposure(

@@ -113,7 +113,16 @@ describe("stripe-connect 1.0.0 source", () => {
         const root = resolve(import.meta.dir, "../integrations/stripe-connect/versions/1.0.0");
         const [schema, edge, paymentProjection, definition] = await Promise.all([
             readFile(resolve(root, "connectors/supabase/schema.sql"), "utf8"),
-            readFile(resolve(root, "connectors/supabase/functions/cms-stripe-connect/index.ts"), "utf8"),
+            Promise.all([
+                readFile(resolve(root, "connectors/supabase/functions/cms-stripe-connect/index.ts"), "utf8"),
+                readFile(
+                    resolve(
+                        root,
+                        "connectors/supabase/functions/cms-stripe-connect/workflows/payments/settlement-release.ts",
+                    ),
+                    "utf8",
+                ),
+            ]).then((sources) => sources.join("\n")),
             readFile(
                 resolve(
                     root,
