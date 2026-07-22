@@ -48,140 +48,72 @@ export type StripeConnectRouteHandlers = {
     listFinancialOperations: RouteHandler;
 };
 
+type RouteDefinition = readonly [method: "GET" | "POST", handler: keyof StripeConnectRouteHandlers];
+
+const webhookRoutes: Readonly<Record<string, RouteDefinition>> = {
+    "/webhooks/stripe": ["POST", "ingestPlatformWebhook"],
+    "/webhooks/stripe-connect": ["POST", "ingestConnectWebhook"],
+    "/webhooks/stripe-connect-v2": ["POST", "ingestConnectV2Webhook"],
+};
+
+const routes: Readonly<Record<string, RouteDefinition>> = {
+    "/health": ["GET", "health"],
+    "/connect/config": ["GET", "connectConfig"],
+    "/connect/status": ["GET", "connectStatus"],
+    "/connect/wallet": ["GET", "connectWallet"],
+    "/connect/enrollment": ["POST", "connectEnrollment"],
+    "/connect/verification": ["POST", "connectVerification"],
+    "/connect/onboarding": ["POST", "connectOnboarding"],
+    "/connect/onboarding/session": ["POST", "connectOnboardingSession"],
+    "/payments/seller-eligibility": ["POST", "checkSellerHeldPaymentEligibility"],
+    "/payments/protected": ["POST", "createProtectedPayment"],
+    "/payments/payment": ["GET", "getProtectedPayment"],
+    "/payments/reference": ["GET", "getProtectedPaymentByReference"],
+    "/operations/payment-cancellation": ["POST", "requestPaymentIntentCancellation"],
+    "/operations/release": ["POST", "requestSettlementRelease"],
+    "/operations/reversal": ["POST", "requestTransferReversal"],
+    "/operations/protected-refund": ["POST", "requestProtectedRefund"],
+    "/reconciliation/payment": ["POST", "reconcileProviderPayment"],
+    "/reconciliation/run": ["POST", "runProviderReconciliation"],
+    "/reconciliation/projections/ack": ["POST", "acknowledgeCommerceProjection"],
+    "/reconciliation/projections/fail": ["POST", "failCommerceProjection"],
+    "/admin/platform/payout-protection": ["POST", "configurePlatformPayoutProtection"],
+    "/admin/accounts/account/risk": ["GET", "getSellerProviderRisk"],
+    "/admin/accounts/account/payout-schedule": ["POST", "configureSellerPayoutSchedule"],
+    "/admin/accounts/account/onboarding": ["POST", "adminCreateOnboarding"],
+    "/admin/accounts/account/onboarding/session": ["POST", "adminCreateOnboardingSession"],
+    "/admin/payments": ["GET", "listProviderPayments"],
+    "/admin/payments/payment": ["GET", "getProviderPayment"],
+    "/admin/refunds": ["GET", "listProviderRefunds"],
+    "/admin/refunds/refund": ["GET", "getProviderRefund"],
+    "/admin/disputes": ["GET", "listStripeDisputes"],
+    "/admin/disputes/dispute": ["GET", "getStripeDispute"],
+    "/admin/disputes/files": ["POST", "uploadStripeDisputeFile"],
+    "/admin/disputes/evidence/stage": ["POST", "stageStripeDisputeEvidence"],
+    "/admin/disputes/evidence/submit": ["POST", "submitStripeDisputeEvidence"],
+    "/admin/disputes/accept": ["POST", "acceptStripeDispute"],
+    "/admin/exceptions": ["GET", "listProviderExceptions"],
+    "/admin/exceptions/exception": ["GET", "getProviderException"],
+    "/admin/commerce-projections/requeue": ["POST", "requeueCommerceProjection"],
+    "/admin/operations": ["GET", "listFinancialOperations"],
+};
+
 export function serveStripeConnect(handlers: StripeConnectRouteHandlers): void {
     Deno.serve(async (request) => {
         try {
             assertStripeKeyModeCoherence();
             const route = routePath(request);
-            if (route === "/webhooks/stripe") {
-                return await withMethod(request, "POST", () => handlers.ingestPlatformWebhook(request));
-            }
-            if (route === "/webhooks/stripe-connect") {
-                return await withMethod(request, "POST", () => handlers.ingestConnectWebhook(request));
-            }
-            if (route === "/webhooks/stripe-connect-v2") {
-                return await withMethod(request, "POST", () => handlers.ingestConnectV2Webhook(request));
+            const webhook = webhookRoutes[route];
+            if (webhook) {
+                return await dispatchRoute(handlers, request, webhook);
             }
             if (request.method === "OPTIONS") {
                 return optionsResponse();
             }
 
-            if (route === "/health") {
-                return await withMethod(request, "GET", () => handlers.health(request));
-            }
-            if (route === "/connect/config") {
-                return await withMethod(request, "GET", () => handlers.connectConfig(request));
-            }
-            if (route === "/connect/status") {
-                return await withMethod(request, "GET", () => handlers.connectStatus(request));
-            }
-            if (route === "/connect/wallet") {
-                return await withMethod(request, "GET", () => handlers.connectWallet(request));
-            }
-            if (route === "/connect/enrollment") {
-                return await withMethod(request, "POST", () => handlers.connectEnrollment(request));
-            }
-            if (route === "/connect/verification") {
-                return await withMethod(request, "POST", () => handlers.connectVerification(request));
-            }
-            if (route === "/connect/onboarding") {
-                return await withMethod(request, "POST", () => handlers.connectOnboarding(request));
-            }
-            if (route === "/connect/onboarding/session") {
-                return await withMethod(request, "POST", () => handlers.connectOnboardingSession(request));
-            }
-            if (route === "/payments/seller-eligibility") {
-                return await withMethod(request, "POST", () => handlers.checkSellerHeldPaymentEligibility(request));
-            }
-            if (route === "/payments/protected") {
-                return await withMethod(request, "POST", () => handlers.createProtectedPayment(request));
-            }
-            if (route === "/payments/payment") {
-                return await withMethod(request, "GET", () => handlers.getProtectedPayment(request));
-            }
-            if (route === "/payments/reference") {
-                return await withMethod(request, "GET", () => handlers.getProtectedPaymentByReference(request));
-            }
-            if (route === "/operations/payment-cancellation") {
-                return await withMethod(request, "POST", () => handlers.requestPaymentIntentCancellation(request));
-            }
-            if (route === "/operations/release") {
-                return await withMethod(request, "POST", () => handlers.requestSettlementRelease(request));
-            }
-            if (route === "/operations/reversal") {
-                return await withMethod(request, "POST", () => handlers.requestTransferReversal(request));
-            }
-            if (route === "/operations/protected-refund") {
-                return await withMethod(request, "POST", () => handlers.requestProtectedRefund(request));
-            }
-            if (route === "/reconciliation/payment") {
-                return await withMethod(request, "POST", () => handlers.reconcileProviderPayment(request));
-            }
-            if (route === "/reconciliation/run") {
-                return await withMethod(request, "POST", () => handlers.runProviderReconciliation(request));
-            }
-            if (route === "/reconciliation/projections/ack") {
-                return await withMethod(request, "POST", () => handlers.acknowledgeCommerceProjection(request));
-            }
-            if (route === "/reconciliation/projections/fail") {
-                return await withMethod(request, "POST", () => handlers.failCommerceProjection(request));
-            }
-            if (route === "/admin/platform/payout-protection") {
-                return await withMethod(request, "POST", () => handlers.configurePlatformPayoutProtection(request));
-            }
-            if (route === "/admin/accounts/account/risk") {
-                return await withMethod(request, "GET", () => handlers.getSellerProviderRisk(request));
-            }
-            if (route === "/admin/accounts/account/payout-schedule") {
-                return await withMethod(request, "POST", () => handlers.configureSellerPayoutSchedule(request));
-            }
-            if (route === "/admin/accounts/account/onboarding") {
-                return await withMethod(request, "POST", () => handlers.adminCreateOnboarding(request));
-            }
-            if (route === "/admin/accounts/account/onboarding/session") {
-                return await withMethod(request, "POST", () => handlers.adminCreateOnboardingSession(request));
-            }
-            if (route === "/admin/payments") {
-                return await withMethod(request, "GET", () => handlers.listProviderPayments(request));
-            }
-            if (route === "/admin/payments/payment") {
-                return await withMethod(request, "GET", () => handlers.getProviderPayment(request));
-            }
-            if (route === "/admin/refunds") {
-                return await withMethod(request, "GET", () => handlers.listProviderRefunds(request));
-            }
-            if (route === "/admin/refunds/refund") {
-                return await withMethod(request, "GET", () => handlers.getProviderRefund(request));
-            }
-            if (route === "/admin/disputes") {
-                return await withMethod(request, "GET", () => handlers.listStripeDisputes(request));
-            }
-            if (route === "/admin/disputes/dispute") {
-                return await withMethod(request, "GET", () => handlers.getStripeDispute(request));
-            }
-            if (route === "/admin/disputes/files") {
-                return await withMethod(request, "POST", () => handlers.uploadStripeDisputeFile(request));
-            }
-            if (route === "/admin/disputes/evidence/stage") {
-                return await withMethod(request, "POST", () => handlers.stageStripeDisputeEvidence(request));
-            }
-            if (route === "/admin/disputes/evidence/submit") {
-                return await withMethod(request, "POST", () => handlers.submitStripeDisputeEvidence(request));
-            }
-            if (route === "/admin/disputes/accept") {
-                return await withMethod(request, "POST", () => handlers.acceptStripeDispute(request));
-            }
-            if (route === "/admin/exceptions") {
-                return await withMethod(request, "GET", () => handlers.listProviderExceptions(request));
-            }
-            if (route === "/admin/exceptions/exception") {
-                return await withMethod(request, "GET", () => handlers.getProviderException(request));
-            }
-            if (route === "/admin/commerce-projections/requeue") {
-                return await withMethod(request, "POST", () => handlers.requeueCommerceProjection(request));
-            }
-            if (route === "/admin/operations") {
-                return await withMethod(request, "GET", () => handlers.listFinancialOperations(request));
+            const definition = routes[route];
+            if (definition) {
+                return await dispatchRoute(handlers, request, definition);
             }
 
             return json({ error: "not found" }, 404);
@@ -189,6 +121,14 @@ export function serveStripeConnect(handlers: StripeConnectRouteHandlers): void {
             return handleError(error);
         }
     });
+}
+
+async function dispatchRoute(
+    handlers: StripeConnectRouteHandlers,
+    request: Request,
+    [method, handler]: RouteDefinition,
+): Promise<Response> {
+    return await withMethod(request, method, () => handlers[handler](request));
 }
 
 function routePath(request: Request): string {
