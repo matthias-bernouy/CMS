@@ -5,7 +5,6 @@ import { refundSelect, type RefundRow } from "../../db/records/refunds.ts";
 import { transferRecoverySelect, type TransferRecoveryRow } from "../../db/records/transfers.ts";
 import { publicPayment } from "../../domain/payments/presentation.ts";
 import { normalizeProtectedRefundOperation } from "../../domain/refunds/presentation.ts";
-import { loadPublicTransferRecovery } from "../../domain/transfers/recovery-read.ts";
 import { HttpError } from "../../http/errors.ts";
 import { errorMessage, isRecord } from "../../shared/data.ts";
 import type { JsonRecord } from "../../shared/types.ts";
@@ -92,7 +91,7 @@ export function createProtectedRefundWorkflow({
             recoveryRequestId,
             transferRecoverySelect,
         );
-        let reversal: JsonRecord | null = existingRecovery ? await loadPublicTransferRecovery(existingRecovery) : null;
+        let reversal: JsonRecord | null = null;
         const requestedRecoveryAmount = existingRecovery?.requested_amount ?? requiredRecoveryNow;
         if (requestedRecoveryAmount > 0) {
             try {

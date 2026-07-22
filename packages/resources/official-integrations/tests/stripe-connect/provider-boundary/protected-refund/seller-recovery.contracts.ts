@@ -22,7 +22,6 @@ export const sellerRecoveryReplayBudget = [
     { method: "PATCH", table: "payments" },
     { method: "GET", table: "refunds" },
     { method: "GET", table: "transfer_recovery_requests" },
-    { method: "GET", table: "transfer_reversals" },
     { method: "GET", table: "transfer_recovery_requests" },
     { method: "POST", table: "rpc/upsert_seller_recovery_exposure_and_refresh" },
     { method: "POST", table: "rpc/claim_seller_payout_hold" },
