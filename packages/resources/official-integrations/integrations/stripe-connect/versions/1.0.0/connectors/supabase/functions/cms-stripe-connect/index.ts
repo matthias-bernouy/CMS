@@ -61,9 +61,6 @@ import { transferSelect, type TransferRecoveryRow, type TransferRow } from "./db
 import {
     claimReconciliationProjectionBatch,
     readFinancialOperationRecoveryContext,
-    readPaymentReconciliationLocalContext,
-    readPaymentReconciliationLedger,
-    readProviderTransferReconciliationContext,
     readReconciliationOperations,
     readStripeDisputeApplicationContext,
 } from "./db/reconciliation.ts";
@@ -105,21 +102,20 @@ import {
     updateBalanceSettings,
 } from "./provider/accounts/balances.ts";
 import { retrieveAccount } from "./provider/accounts/lifecycle.ts";
-import { listStripeDisputesByCharge, retrieveStripeDispute } from "./provider/disputes.ts";
+import { retrieveStripeDispute } from "./provider/disputes.ts";
 import {
     createStripePaymentIntent,
     retrievePaymentIntent,
     retrieveStripeBalanceTransaction,
 } from "./provider/payments.ts";
 import { retrieveStripePayout } from "./provider/payouts.ts";
-import { listStripeRefundsByCharge, retrieveStripeRefundSnapshot } from "./provider/refunds.ts";
+import { retrieveStripeRefundSnapshot } from "./provider/refunds.ts";
 import {
     createStripeTransferReversal,
     listStripeTransferReversals,
-    listStripeTransfersByGroup,
     retrieveStripeTransferReversal,
 } from "./provider/transfers.ts";
-import type { StripeBalanceSettings, StripeDispute, StripePaymentIntent, StripeRefund } from "./provider/types.ts";
+import type { StripeBalanceSettings, StripeDispute, StripePaymentIntent } from "./provider/types.ts";
 import {
     getProviderException,
     listFinancialOperations,
@@ -146,6 +142,7 @@ import { createProtectedPaymentRoutes } from "./routes/payments/protected.ts";
 import { createRequestSettlementRelease } from "./routes/payments/settlement-release.ts";
 import { createRequestTransferReversal } from "./routes/payments/transfer-reversal.ts";
 import { createConfigurePlatformPayoutProtection } from "./routes/payouts/platform-protection.ts";
+import { createReconcileProviderPayment } from "./routes/reconciliation/payment.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { createRequestProtectedRefund } from "./routes/refunds/protected.ts";
 import { connectConfig, health } from "./routes/system.ts";
@@ -156,7 +153,6 @@ import {
     isRecord,
     numberAt,
     objectAt,
-    recordArrayAt,
     stringArrayAt,
     stringAt,
     stripeObjectId,
@@ -181,18 +177,11 @@ import {
     applyPaymentIntent,
     paymentClientSecret,
     quarantineProviderPaymentTruth,
-    syncPayment,
 } from "./workflows/payments/projection.ts";
+import { createPaymentReconciliationWorkflow } from "./workflows/reconciliation/payment.ts";
+import { createProviderObjectReconciliation } from "./workflows/reconciliation/provider-objects.ts";
 import { createStripeWebhookIngress } from "./workflows/webhooks/ingress.ts";
 
-const executeSettlementRelease = createSettlementReleaseWorkflow({
-    reconcilePayment,
-    moveOperationToManualReview,
-});
-const requestSettlementRelease = createRequestSettlementRelease({
-    executeSettlementRelease,
-    requiredPayment,
-});
 const createProtectedPaymentForBuyer = createProtectedPaymentWorkflow({ syncAccountForIdentity });
 const {
     checkSellerHeldPaymentEligibility,
@@ -206,6 +195,24 @@ const executeTransferReversal = createTransferReversalWorkflow({
 });
 const requestTransferReversal = createRequestTransferReversal({ executeTransferReversal, requiredPayment });
 const applyStripeRefund = createRefundProjectionWorkflow();
+const { reconcileProviderDisputes, reconcileProviderRefunds, reconcileProviderTransfers } =
+    createProviderObjectReconciliation({ applyStripeDispute, applyStripeRefund });
+const reconcilePayment = createPaymentReconciliationWorkflow({
+    applyStripeRefund,
+    reconcileProviderDisputes,
+    reconcileProviderRefunds,
+    reconcileProviderTransfers,
+    requiredPayment,
+});
+const reconcileProviderPayment = createReconcileProviderPayment({ reconcilePayment, requiredPayment });
+const executeSettlementRelease = createSettlementReleaseWorkflow({
+    reconcilePayment,
+    moveOperationToManualReview,
+});
+const requestSettlementRelease = createRequestSettlementRelease({
+    executeSettlementRelease,
+    requiredPayment,
+});
 const executeRefund = createRefundExecutionWorkflow({ applyStripeRefund, moveOperationToManualReview });
 const executeProtectedRefund = createProtectedRefundWorkflow({
     executeRefund,
@@ -468,14 +475,6 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
         }
         throw error;
     }
-}
-
-async function reconcileProviderPayment(request: Request): Promise<Response> {
-    requireCmsRequest(request, { requireUser: false });
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, ["paymentId"]);
-    const payment = await requiredPayment(requiredInteger(body, "paymentId"));
-    return json(publicPayment(await reconcilePayment(payment)));
 }
 
 async function runProviderReconciliation(request: Request): Promise<Response> {
@@ -1731,157 +1730,6 @@ async function authorizeIrreversibleDisputeAction(options: {
         firstApprovedBy: result.firstApprovedBy,
         secondApprovedBy: typeof result.secondApprovedBy === "string" ? result.secondApprovedBy : undefined,
     };
-}
-
-async function reconcilePayment(payment: ConnectPaymentRow): Promise<ConnectPaymentRow> {
-    let current = await syncPayment(payment);
-    if (current.stripe_charge_id) {
-        await reconcileProviderDisputes(current);
-        await reconcileProviderRefunds(current);
-        await reconcileProviderTransfers(current);
-    }
-    const localContext = await readPaymentReconciliationLocalContext(payment.id);
-    if (current.stripe_charge_id) {
-        const refreshedPayment = localContext.payment as unknown as ConnectPaymentRow | null;
-        if (!refreshedPayment) {
-            throw new HttpError(404, "payment not found");
-        }
-        current = refreshedPayment;
-    }
-    const refunds = localContext.refunds as unknown as RefundRow[];
-    for (const refund of refunds) {
-        if (!refund.stripe_refund_id || refund.status === "succeeded") {
-            continue;
-        }
-        const provider = await retrieveStripeRefundSnapshot(refund.stripe_refund_id);
-        await applyStripeRefund(refund, provider);
-    }
-    const ledger = await readPaymentReconciliationLedger(payment.id);
-    const refundedAmount = Number(ledger.refunded_amount);
-    const transferredAmount = Number(ledger.transferred_amount);
-    const reversedAmount = Number(ledger.reversed_amount);
-    const sellerRecoveryAmount = Number(ledger.seller_recovery_amount);
-    const authorizedSellerAmount = current.seller_transfer_amount - sellerRecoveryAmount;
-    const netTransferredAmount = transferredAmount - reversedAmount;
-    if (
-        refundedAmount > current.amount_total ||
-        reversedAmount > transferredAmount ||
-        sellerRecoveryAmount > current.seller_transfer_amount ||
-        netTransferredAmount > authorizedSellerAmount
-    ) {
-        await markPaymentManualReview(current.id, "provider ledger arithmetic divergence", {
-            refundedAmount,
-            transferredAmount,
-            reversedAmount,
-            sellerRecoveryAmount,
-            authorizedSellerAmount,
-            netTransferredAmount,
-        });
-        current = await requiredPayment(current.id);
-        throw new HttpError(409, "provider ledger arithmetic divergence requires finance review");
-    } else {
-        current =
-            (await updatePayment(current.id, {
-                refunded_amount: refundedAmount,
-                transferred_amount: transferredAmount,
-                reversed_amount: reversedAmount,
-                last_provider_sync_at: new Date().toISOString(),
-            })) ?? current;
-    }
-    return current;
-}
-
-async function reconcileProviderDisputes(payment: ConnectPaymentRow): Promise<void> {
-    if (!payment.stripe_charge_id) {
-        return;
-    }
-    const listed = await listStripeDisputesByCharge(payment.stripe_charge_id);
-    if (listed.has_more === true) {
-        throw new HttpError(409, "Stripe dispute search is incomplete");
-    }
-    for (const value of recordArrayAt(listed, "data")) {
-        const disputeId = stringAt(value, "id");
-        if (!disputeId) {
-            throw new Error("Stripe dispute search returned an object without id");
-        }
-        await applyStripeDispute(
-            value as StripeDispute,
-            `provider-reconciliation:dispute:${disputeId}:${stringAt(value, "status") || "unknown"}`,
-        );
-    }
-}
-
-async function reconcileProviderRefunds(payment: ConnectPaymentRow): Promise<void> {
-    if (!payment.stripe_charge_id) {
-        return;
-    }
-    const listed = await listStripeRefundsByCharge(payment.stripe_charge_id);
-    if (listed.has_more === true) {
-        throw new HttpError(409, "Stripe refund search is incomplete");
-    }
-    for (const value of recordArrayAt(listed, "data")) {
-        const refundId = stringAt(value, "id");
-        if (!refundId) {
-            throw new Error("Stripe refund search returned an object without id");
-        }
-        const local = await getRowByField<RefundRow>("refunds", "stripe_refund_id", refundId, refundSelect);
-        if (local) {
-            await applyStripeRefund(local, value as StripeRefund);
-            continue;
-        }
-        await quarantineUntrackedProviderObject(payment, "refund", refundId, value);
-    }
-}
-
-async function reconcileProviderTransfers(payment: ConnectPaymentRow): Promise<void> {
-    const listed = await listStripeTransfersByGroup(payment.transfer_group);
-    if (listed.has_more === true) {
-        throw new HttpError(409, "Stripe Transfer search is incomplete");
-    }
-    for (const value of recordArrayAt(listed, "data")) {
-        const transferId = stringAt(value, "id");
-        if (!transferId) {
-            throw new Error("Stripe Transfer search returned an object without id");
-        }
-        const context = await readProviderTransferReconciliationContext(transferId);
-        const local = context.transfer as unknown as TransferRow | null;
-        if (!local) {
-            await quarantineUntrackedProviderObject(payment, "transfer", transferId, value);
-            continue;
-        }
-        const providerReversedAmount = numberAt(value, "amount_reversed") ?? 0;
-        const localReversedAmount = Number(context.local_reversed_amount);
-        if (providerReversedAmount !== localReversedAmount) {
-            await quarantineUntrackedProviderObject(payment, "transfer_reversal", transferId, {
-                ...value,
-                providerReversedAmount,
-                localReversedAmount,
-            });
-        }
-        await updateRow("transfers", local.id, {
-            status:
-                value.reversed === true ? "reversed" : providerReversedAmount > 0 ? "partially_reversed" : "succeeded",
-            provider_snapshot: value,
-        });
-    }
-}
-
-async function quarantineUntrackedProviderObject(
-    payment: ConnectPaymentRow,
-    objectType: string,
-    objectId: string,
-    providerSnapshot: JsonRecord,
-): Promise<void> {
-    const reason = `untracked Stripe ${objectType} ${objectId}`;
-    await markPaymentManualReview(payment.id, reason, { objectType, objectId, providerSnapshot });
-    await upsertProviderException(`untracked:${objectType}:${objectId}`, {
-        payment_id: payment.id,
-        exception_type: `untracked_provider_${objectType}`,
-        severity: "critical",
-        status: "open",
-        message: reason,
-        details: { providerSnapshot },
-    });
 }
 
 async function processStripeEvent(row: JsonRecord): Promise<boolean> {
