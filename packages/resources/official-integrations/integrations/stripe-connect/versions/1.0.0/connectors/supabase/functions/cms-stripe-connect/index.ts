@@ -1,15 +1,12 @@
 import { callRpcObject, getRowByField, insertRow, rest, restError, updateRow, upsertRow } from "./db/postgrest.ts";
 import type { DisputeDashboardRead } from "./db/dashboard-reads.ts";
-import { getAccountRow, getMarketplaceTermsAcceptance, updateAccountRow } from "./db/repositories/accounts.ts";
 import {
     insertPaymentEvent,
     insertStripeEventDurably,
-    resolveProviderException,
     upsertProviderException,
 } from "./db/repositories/events-exceptions.ts";
 import {
     enqueueCommerceProviderProjection,
-    reserveAccountFinancialOperation,
     reserveFinancialOperation,
     updateFinancialOperation,
 } from "./db/repositories/financial-operations.ts";
@@ -18,48 +15,19 @@ import {
     sumSucceededRefundSellerRecovery,
     sumSucceededTransferReversalAmounts,
 } from "./db/repositories/ledger.ts";
-import {
-    getPaymentByClientReference,
-    getPaymentRow,
-    reserveProtectedPayment,
-    updatePayment,
-} from "./db/repositories/payments.ts";
-import { markPaymentManualReview, sellerPayoutHoldRpc } from "./db/repositories/payout-controls.ts";
+import { getPaymentRow, updatePayment } from "./db/repositories/payments.ts";
+import { markPaymentManualReview } from "./db/repositories/payout-controls.ts";
 import type { ConnectAccountRow } from "./db/records/accounts.ts";
 import { disputeSelect, type StripeDisputeRow } from "./db/records/disputes.ts";
 import type { FinancialOperationRow, PlatformPayoutControlRow } from "./db/records/operations.ts";
 import type { ConnectPaymentRow } from "./db/records/payments.ts";
 import { readStripeDisputeApplicationContext } from "./db/reconciliation.ts";
-import {
-    bankPayoutsStatus,
-    sellerCanAcceptHeldPayments,
-    stripeTransfersStatus,
-} from "./domain/accounts/eligibility.ts";
-import { balanceSettingsMatchRequest, publicBalanceSettings } from "./domain/accounts/payout-settings.ts";
-import { publicPaymentWithClientSecret } from "./domain/payments/presentation.ts";
 import { requireCmsRequest } from "./http/auth.ts";
-import {
-    assertAllowedKeys,
-    marketplaceTermsExpectationFromBody,
-    optionalCurrency,
-    readJsonObject,
-    requiredHash,
-    requiredInteger,
-    requiredString,
-    validBusinessType,
-} from "./http/body.ts";
+import { assertAllowedKeys, readJsonObject, requiredInteger, requiredString } from "./http/body.ts";
 import { HttpError } from "./http/errors.ts";
-import { requiredQueryInteger, requiredQueryText } from "./http/query.ts";
 import { json } from "./http/responses.ts";
 import { serveStripeConnect } from "./http/router.ts";
-import { retrieveConnectedBalanceSettings, updateBalanceSettings } from "./provider/accounts/balances.ts";
 import { retrieveStripeBalanceTransaction } from "./provider/payments.ts";
-import { retrieveStripeRefundSnapshot } from "./provider/refunds.ts";
-import {
-    createStripeTransferReversal,
-    listStripeTransferReversals,
-    retrieveStripeTransferReversal,
-} from "./provider/transfers.ts";
 import type { StripeDispute } from "./provider/types.ts";
 import {
     getProviderException,
@@ -93,19 +61,8 @@ import { createRunProviderReconciliation } from "./routes/reconciliation/run.ts"
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { createRequestProtectedRefund } from "./routes/refunds/protected.ts";
 import { connectConfig, health } from "./routes/system.ts";
-import { digest, stableStripeIdempotencyKey } from "./shared/crypto.ts";
-import {
-    arrayAt,
-    errorMessage,
-    isRecord,
-    numberAt,
-    objectAt,
-    stringArrayAt,
-    stringAt,
-    stripeObjectId,
-    stripUndefined,
-    unique,
-} from "./shared/data.ts";
+import { digest } from "./shared/crypto.ts";
+import { arrayAt, errorMessage, isRecord, numberAt, objectAt, stringAt } from "./shared/data.ts";
 import type { JsonRecord } from "./shared/types.ts";
 import { createRefundExecutionWorkflow } from "./workflows/refunds/execution.ts";
 import { createRefundProjectionWorkflow } from "./workflows/refunds/projection.ts";
@@ -113,6 +70,8 @@ import { createProtectedRefundWorkflow } from "./workflows/refunds/protected.ts"
 import { createProtectedPaymentWorkflow } from "./workflows/payments/creation/workflow.ts";
 import { createSettlementReleaseWorkflow } from "./workflows/payments/settlement-release.ts";
 import { createTransferReversalWorkflow } from "./workflows/payments/transfer-reversal/workflow.ts";
+import { createSellerRecoveryPayoutHold } from "./workflows/payouts/seller-hold.ts";
+import { createSellerPayoutRestoration } from "./workflows/payouts/seller-restoration.ts";
 import { createPaymentReconciliationWorkflow } from "./workflows/reconciliation/payment.ts";
 import { createPaymentOperationRecovery } from "./workflows/reconciliation/operations/payment.ts";
 import { createPayoutScheduleOperationRecovery } from "./workflows/reconciliation/operations/payout-schedule.ts";
@@ -146,6 +105,13 @@ const reconcilePayment = createPaymentReconciliationWorkflow({
 });
 const reconcileProviderPayment = createReconcileProviderPayment({ reconcilePayment, requiredPayment });
 const processStripeEvent = createStripeEventProcessor({ applyStripeDispute, applyStripeRefund, reconcilePayment });
+const { applyClaimedSellerRecoveryPayoutHold, enforceSellerRecoveryPayoutHold } = createSellerRecoveryPayoutHold({
+    sellerRiskAccount,
+});
+const restoreSellerAutomaticPayoutSchedule = createSellerPayoutRestoration({
+    sellerRiskAccount,
+    applyClaimedSellerRecoveryPayoutHold,
+});
 const reconcileAccountPayoutHolds = createAccountPayoutHoldReconciliation({
     enforceSellerRecoveryPayoutHold,
     restoreSellerAutomaticPayoutSchedule,
@@ -363,315 +329,6 @@ function sellerRiskAccount(result: JsonRecord): ConnectAccountRow {
         throw new Error("Seller payout hold RPC returned no account");
     }
     return account;
-}
-
-async function enforceSellerRecoveryPayoutHold(userId: string): Promise<boolean> {
-    const owner = crypto.randomUUID();
-    const claim = await sellerPayoutHoldRpc("claim_seller_payout_hold", {
-        p_seller_cms_user_id: userId,
-        p_owner: owner,
-        p_require_risk: true,
-    });
-    if (claim.claimed !== true) {
-        return false;
-    }
-    return await applyClaimedSellerRecoveryPayoutHold(userId, owner, claim);
-}
-
-async function applyClaimedSellerRecoveryPayoutHold(
-    userId: string,
-    owner: string,
-    initialClaim: JsonRecord,
-): Promise<boolean> {
-    let claim = initialClaim;
-    for (let attempt = 0; attempt < 5; attempt++) {
-        const account = sellerRiskAccount(claim);
-        const requiredHold = account.outstanding_debt_amount + account.financial_exposure_amount;
-        let operation: FinancialOperationRow | null = null;
-        let appliedMinimum = account.provider_hold_minimum_amount;
-        const holdKey = `seller-risk-hold:${userId}:${account.risk_revision}:${account.payout_hold_claimed_at ?? owner}`;
-        try {
-            if (!account.stripe_account_id) {
-                throw new Error("Seller Stripe account is unavailable");
-            }
-            const current = await retrieveConnectedBalanceSettings(account.stripe_account_id);
-            const currentPayments = objectAt(current, "payments");
-            const currentSchedule = objectAt(objectAt(currentPayments, "payouts"), "schedule");
-            const currentMinimum =
-                numberAt(objectAt(objectAt(currentPayments, "payouts"), "minimum_balance_by_currency"), "eur") ?? 0;
-            const currentInterval = stringAt(currentSchedule, "interval");
-            if (!["manual", "daily", "weekly", "monthly"].includes(currentInterval)) {
-                throw new Error("Seller payout baseline has an unsupported interval");
-            }
-            const weeklyPayoutDays = stringArrayAt(currentSchedule, "weekly_payout_days");
-            const monthlyPayoutDays = arrayAt(currentSchedule, "monthly_payout_days").filter((value) =>
-                Number.isSafeInteger(value),
-            );
-            if (
-                (currentInterval === "weekly" && weeklyPayoutDays.length === 0) ||
-                (currentInterval === "monthly" && monthlyPayoutDays.length === 0)
-            ) {
-                throw new Error("Seller payout baseline is missing its scheduled payout days");
-            }
-            const restoreSettings = account.manual_payout_hold_restore_settings ?? {
-                interval: currentInterval,
-                ...(currentInterval === "weekly" ? { weeklyPayoutDays } : {}),
-                ...(currentInterval === "monthly" ? { monthlyPayoutDays } : {}),
-                minimumBalanceEur: currentMinimum,
-                debitNegativeBalances: currentPayments.debit_negative_balances === true,
-                ...(Number.isSafeInteger(objectAt(currentPayments, "settlement_timing").delay_days_override)
-                    ? { delayDaysOverride: objectAt(currentPayments, "settlement_timing").delay_days_override }
-                    : {}),
-            };
-            appliedMinimum = Math.max(requiredHold, account.provider_hold_minimum_amount, currentMinimum);
-            const holdRequest = {
-                interval: "manual",
-                minimumBalanceEur: appliedMinimum,
-                debitNegativeBalances: true,
-                reason: "Seller recovery exposure hold",
-            };
-            operation = await reserveAccountFinancialOperation(userId, {
-                businessKey: holdKey,
-                operationType: "payout_schedule_update",
-                request: {
-                    cmsUserId: userId,
-                    stripeAccountId: account.stripe_account_id,
-                    restoreSettings,
-                    ...holdRequest,
-                },
-            });
-            let provider = current;
-            if (!balanceSettingsMatchRequest(current, holdRequest)) {
-                await updateFinancialOperation(operation.id, {
-                    status: "processing",
-                    claimed_at: new Date().toISOString(),
-                    attempt_count: operation.attempt_count + 1,
-                });
-                provider = await updateBalanceSettings(
-                    account.stripe_account_id,
-                    holdRequest,
-                    await stableStripeIdempotencyKey("payout-schedule", holdKey),
-                );
-            }
-            if (!balanceSettingsMatchRequest(provider, holdRequest)) {
-                throw new Error("Stripe did not confirm the required seller payout hold");
-            }
-            if (operation.status !== "succeeded" || provider !== current) {
-                await updateFinancialOperation(operation.id, {
-                    status: "succeeded",
-                    response: provider,
-                    last_error: null,
-                    completed_at: new Date().toISOString(),
-                });
-            }
-            const completed = await sellerPayoutHoldRpc("complete_seller_payout_hold", {
-                p_seller_cms_user_id: userId,
-                p_owner: owner,
-                p_expected_risk_revision: account.risk_revision,
-                p_applied_minimum_amount: appliedMinimum,
-                p_succeeded: true,
-                p_error: null,
-                p_restore_settings: restoreSettings,
-            });
-            if (completed.accepted !== true) {
-                return false;
-            }
-            if (completed.needsReapply !== true) {
-                return true;
-            }
-            claim = { claimed: true, account: objectAt(completed, "account") };
-        } catch (error) {
-            const message = `Could not enforce Stripe seller payout hold: ${errorMessage(error)}`;
-            if (operation) {
-                await updateFinancialOperation(operation.id, {
-                    status: "manual_review",
-                    last_error: message,
-                }).catch(() => null);
-            }
-            await sellerPayoutHoldRpc("complete_seller_payout_hold", {
-                p_seller_cms_user_id: userId,
-                p_owner: owner,
-                p_expected_risk_revision: account.risk_revision,
-                p_applied_minimum_amount: appliedMinimum,
-                p_succeeded: false,
-                p_error: message,
-            }).catch(() => null);
-            await upsertProviderException(`seller-payout-hold:${holdKey}`, {
-                operation_id: operation?.id ?? null,
-                exception_type: "seller_payout_hold_failed",
-                severity: "critical",
-                message,
-                details: { userId, requiredHold, riskRevision: account.risk_revision },
-            }).catch(() => null);
-            return false;
-        }
-    }
-
-    await sellerPayoutHoldRpc("complete_seller_payout_hold", {
-        p_seller_cms_user_id: userId,
-        p_owner: owner,
-        p_expected_risk_revision: sellerRiskAccount(claim).risk_revision,
-        p_applied_minimum_amount: sellerRiskAccount(claim).provider_hold_minimum_amount,
-        p_succeeded: false,
-        p_error: "Seller payout hold changed repeatedly during provider synchronization",
-    }).catch(() => null);
-    return false;
-}
-
-async function restoreSellerAutomaticPayoutSchedule(userId: string): Promise<boolean> {
-    const owner = crypto.randomUUID();
-    const claim = await sellerPayoutHoldRpc("claim_seller_payout_hold", {
-        p_seller_cms_user_id: userId,
-        p_owner: owner,
-        p_require_risk: false,
-    });
-    if (claim.claimed !== true) {
-        return false;
-    }
-    const account = sellerRiskAccount(claim);
-    if (account.outstanding_debt_amount + account.financial_exposure_amount > 0) {
-        return await applyClaimedSellerRecoveryPayoutHold(userId, owner, claim);
-    }
-
-    let operation: FinancialOperationRow | null = null;
-    try {
-        if (!account.stripe_account_id) {
-            throw new Error("Seller Stripe account is unavailable");
-        }
-        if (!account.manual_payout_hold_started_at || !account.manual_payout_hold_restore_settings) {
-            throw new Error("Seller payout hold restoration snapshot is unavailable");
-        }
-        const snapshot = account.manual_payout_hold_restore_settings;
-        const restoreSettingKeys = new Set([
-            "interval",
-            "weeklyPayoutDays",
-            "monthlyPayoutDays",
-            "minimumBalanceEur",
-            "delayDaysOverride",
-            "debitNegativeBalances",
-        ]);
-        if (Object.keys(snapshot).some((key) => !restoreSettingKeys.has(key))) {
-            throw new Error("Seller payout hold restoration snapshot contains unsupported settings");
-        }
-        const interval = stringAt(snapshot, "interval");
-        const minimumBalanceEur = numberAt(snapshot, "minimumBalanceEur");
-        const weeklyPayoutDays = stringArrayAt(snapshot, "weeklyPayoutDays");
-        const monthlyPayoutDays = arrayAt(snapshot, "monthlyPayoutDays").filter((value) => Number.isSafeInteger(value));
-        if (
-            !["manual", "daily", "weekly", "monthly"].includes(interval) ||
-            !Number.isSafeInteger(minimumBalanceEur) ||
-            minimumBalanceEur! < 0 ||
-            (interval === "weekly" && weeklyPayoutDays.length === 0) ||
-            (interval === "monthly" && monthlyPayoutDays.length === 0) ||
-            (interval !== "weekly" && weeklyPayoutDays.length > 0) ||
-            (interval !== "monthly" && monthlyPayoutDays.length > 0)
-        ) {
-            throw new Error("Seller payout hold restoration snapshot is invalid");
-        }
-        const restoreRequest: JsonRecord = {
-            interval,
-            minimumBalanceEur,
-            ...(interval === "weekly" ? { weeklyPayoutDays } : {}),
-            ...(interval === "monthly" ? { monthlyPayoutDays } : {}),
-            ...(typeof snapshot.debitNegativeBalances === "boolean"
-                ? { debitNegativeBalances: snapshot.debitNegativeBalances }
-                : {}),
-            ...(Number.isSafeInteger(snapshot.delayDaysOverride)
-                ? { delayDaysOverride: snapshot.delayDaysOverride }
-                : {}),
-            reason: "Seller recovery exposure cleared",
-        };
-        const restoreKey = `seller-risk-restore:${userId}:${account.risk_revision}:${account.manual_payout_hold_started_at}`;
-        operation = await reserveAccountFinancialOperation(userId, {
-            businessKey: restoreKey,
-            operationType: "payout_schedule_update",
-            request: {
-                cmsUserId: userId,
-                stripeAccountId: account.stripe_account_id,
-                riskRevision: account.risk_revision,
-                manualPayoutHoldStartedAt: account.manual_payout_hold_started_at,
-                ...restoreRequest,
-            },
-        });
-        let provider = await retrieveConnectedBalanceSettings(account.stripe_account_id);
-        if (!balanceSettingsMatchRequest(provider, restoreRequest)) {
-            await updateFinancialOperation(operation.id, {
-                status: "processing",
-                claimed_at: new Date().toISOString(),
-                attempt_count: operation.attempt_count + 1,
-            });
-            try {
-                provider = await updateBalanceSettings(
-                    account.stripe_account_id,
-                    restoreRequest,
-                    await stableStripeIdempotencyKey("payout-schedule", restoreKey),
-                );
-            } catch (updateError) {
-                const recovered = await retrieveConnectedBalanceSettings(account.stripe_account_id).catch(() => null);
-                if (!recovered || !balanceSettingsMatchRequest(recovered, restoreRequest)) {
-                    throw updateError;
-                }
-                provider = recovered;
-            }
-        }
-        if (!balanceSettingsMatchRequest(provider, restoreRequest)) {
-            throw new Error("Stripe did not confirm the automatic seller payout schedule restoration");
-        }
-        await updateFinancialOperation(operation.id, {
-            status: "succeeded",
-            response: provider,
-            last_error: null,
-            completed_at: new Date().toISOString(),
-        });
-        const finalized = await sellerPayoutHoldRpc("finalize_seller_payout_configuration", {
-            p_seller_cms_user_id: userId,
-            p_owner: owner,
-            p_expected_risk_revision: account.risk_revision,
-            p_interval: interval,
-        });
-        if (finalized.accepted !== true) {
-            return false;
-        }
-        if (finalized.superseded === true) {
-            return await applyClaimedSellerRecoveryPayoutHold(userId, owner, {
-                claimed: true,
-                account: objectAt(finalized, "account"),
-            });
-        }
-        await resolveProviderException(`seller-payout-restore:${userId}`);
-        return true;
-    } catch (error) {
-        const message = `Could not restore the automatic seller payout schedule: ${errorMessage(error)}`;
-        if (operation) {
-            await updateFinancialOperation(operation.id, {
-                status: "manual_review",
-                last_error: message,
-            }).catch(() => null);
-        }
-        const cancelled = await sellerPayoutHoldRpc("cancel_seller_payout_configuration", {
-            p_seller_cms_user_id: userId,
-            p_owner: owner,
-            p_expected_risk_revision: account.risk_revision,
-        }).catch(() => null);
-        if (cancelled?.accepted === true && cancelled.superseded === true) {
-            await applyClaimedSellerRecoveryPayoutHold(userId, owner, {
-                claimed: true,
-                account: objectAt(cancelled, "account"),
-            }).catch(() => false);
-        }
-        await upsertProviderException(`seller-payout-restore:${userId}`, {
-            operation_id: operation?.id ?? null,
-            exception_type: "seller_payout_schedule_restore_failed",
-            severity: "critical",
-            message,
-            details: {
-                userId,
-                stripeAccountId: account.stripe_account_id,
-                manualPayoutHoldDeadlineAt: account.manual_payout_hold_deadline_at,
-            },
-        }).catch(() => null);
-        return false;
-    }
 }
 
 async function moveOperationToManualReview(
