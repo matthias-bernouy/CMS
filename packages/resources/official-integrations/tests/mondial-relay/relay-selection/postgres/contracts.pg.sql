@@ -127,6 +127,8 @@ end;
 $conditional$;
 reset role;
 
+\ir setup-contracts.pg.sql
+
 rollback;
 
 \ir freshness.sql

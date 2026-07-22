@@ -27,6 +27,9 @@ export function createFetchMock(options: SaveSetupOptions) {
             if (options.shipmentExists) {
                 return jsonResponse({ outcome: "shipment_exists", settings: null });
             }
+            if (observed.body?.p_read_settings !== true) {
+                return jsonResponse({ outcome: "ready", settings: null });
+            }
             logicalSteps.push("settings");
             if (options.failure === "settings") {
                 return databaseFailure();

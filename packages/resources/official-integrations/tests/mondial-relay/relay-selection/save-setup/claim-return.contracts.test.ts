@@ -69,11 +69,14 @@ describe("Mondial Relay claim-return selection setup", () => {
         expect(await result.response.json()).toEqual(expectedClaim);
         expect(result.logicalSteps).toEqual(["shipment", "settings", "provider", "write"]);
         expect(result.databaseRequests.map(({ method, pathname }) => [method, pathname])).toEqual([
-            ["GET", "/rest/v1/shipments"],
-            ["GET", "/rest/v1/settings"],
+            ["POST", "/rest/v1/rpc/read_relay_selection_setup_context"],
             ["POST", "/rest/v1/relay_selections"],
         ]);
-        expect(result.databaseRequests[2]?.body).toMatchObject({
+        expect(result.databaseRequests[0]?.body).toEqual({
+            p_external_order_id: "claim-return:42",
+            p_read_settings: true,
+        });
+        expect(result.databaseRequests[1]?.body).toMatchObject({
             weight_grams: 750,
             shipping_amount: 625,
             currency: "eur",
@@ -88,5 +91,7 @@ describe("Mondial Relay claim-return selection setup", () => {
         expect(new URLSearchParams(result.providerRequests[0]?.search).get("Weight")).toBe("500");
     });
 
-    test.todo("future budget: setup RPC plus selection upsert uses exactly two database requests");
+    test("uses exactly two database requests", async () => {
+        expect((await callSaveRoute({ route: "claim-return" })).databaseRequests).toHaveLength(2);
+    });
 });

@@ -1494,16 +1494,18 @@ describe("mondial-relay 1.0.0 source", () => {
             expiresAt: "2099-07-13T10:15:00.000Z",
         });
         expect(harness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
-            ["GET", "/rest/v1/shipments"],
-            ["GET", "/rest/v1/settings"],
+            ["POST", "/rest/v1/rpc/read_relay_selection_setup_context"],
             ["POST", "/rest/v1/rpc/reserve_delivery_quote"],
         ]);
         expect(harness.providerRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["GET", "/parcelshop-picker/v4_0/services/parcelshop-picker.svc/SearchPR"],
         ]);
         expect(harness.fetchTimeline()).toEqual([
-            { kind: "postgrest", method: "GET", pathname: "/rest/v1/shipments" },
-            { kind: "postgrest", method: "GET", pathname: "/rest/v1/settings" },
+            {
+                kind: "postgrest",
+                method: "POST",
+                pathname: "/rest/v1/rpc/read_relay_selection_setup_context",
+            },
             {
                 kind: "provider",
                 method: "GET",
@@ -1514,7 +1516,7 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(
             harness.postgrestRequests().filter((request) => request.pathname === "/rest/v1/delivery_quotes"),
         ).toEqual([]);
-        expect(harness.postgrestRequests()[2]?.body).toMatchObject({
+        expect(harness.postgrestRequests()[1]?.body).toMatchObject({
             p_quote_id: "mrq_12a24601fa17ea51f8af4b4a33a43c932d1c638945fda05f283ac297fa161054",
             p_request_key: "quote-request:order-public-42:1:FR-034439",
             p_external_order_id: "order-public-42",
@@ -2412,6 +2414,26 @@ async function createHarness(
                     url,
                     relaySelections.filter((row) => !externalOrderId || row.external_order_id === externalOrderId),
                 ),
+                200,
+            );
+        }
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/read_relay_selection_setup_context" &&
+            method === "POST"
+        ) {
+            const body = JSON.parse(requestBody) as JsonRecord;
+            const shipment = insertedShipments.find(
+                (row) => row.external_order_id === String(body.p_external_order_id ?? ""),
+            );
+            if (shipment) {
+                return jsonResponse({ outcome: "shipment_exists", settings: null }, 200);
+            }
+            return jsonResponse(
+                {
+                    outcome: "ready",
+                    settings: body.p_read_settings === true ? settingRow : null,
+                },
                 200,
             );
         }

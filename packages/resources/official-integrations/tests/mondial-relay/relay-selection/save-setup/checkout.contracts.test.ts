@@ -71,13 +71,16 @@ describe("Mondial Relay checkout selection setup", () => {
         expect(await result.response.json()).toEqual(expectedCheckout);
         expect(result.logicalSteps).toEqual(["shipment", "settings", "provider", "write"]);
         expect(result.databaseRequests.map(({ method, pathname }) => [method, pathname])).toEqual([
-            ["GET", "/rest/v1/shipments"],
-            ["GET", "/rest/v1/settings"],
+            ["POST", "/rest/v1/rpc/read_relay_selection_setup_context"],
             ["POST", "/rest/v1/rpc/reserve_delivery_quote"],
         ]);
+        expect(result.databaseRequests[0]?.body).toEqual({
+            p_external_order_id: "checkout-order-42",
+            p_read_settings: true,
+        });
         const lookup = new URLSearchParams(result.providerRequests[0]?.search);
         expect(lookup.get("Weight")).toBe("750");
-        expect(result.databaseRequests[2]?.body).toMatchObject({
+        expect(result.databaseRequests[1]?.body).toMatchObject({
             p_weight_grams: 750,
             p_shipping_amount: 625,
             p_currency: "eur",
@@ -92,5 +95,7 @@ describe("Mondial Relay checkout selection setup", () => {
         expect(new URLSearchParams(result.providerRequests[0]?.search).get("Weight")).toBe("500");
     });
 
-    test.todo("future budget: setup RPC plus quote write uses exactly two database requests");
+    test("uses exactly two database requests", async () => {
+        expect((await callSaveRoute()).databaseRequests).toHaveLength(2);
+    });
 });

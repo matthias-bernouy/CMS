@@ -6,6 +6,10 @@ export type RelaySelectionContext =
     | { outcome: "selection" | "quote"; row: JsonRecord }
     | { outcome: "missing"; row: null };
 
+export type RelaySelectionSetupContext =
+    | { outcome: "shipment_exists"; settings: null }
+    | { outcome: "ready"; settings: JsonRecord | null };
+
 export type TrackingSummaryContext = {
     shipment: JsonRecord | null;
     events: JsonRecord[];
@@ -54,6 +58,38 @@ export async function readRelaySelectionContext(
     throw invalidRelaySelectionContext();
 }
 
+export async function readRelaySelectionSetupContext(
+    externalOrderId: string,
+    readSettings: boolean,
+): Promise<RelaySelectionSetupContext> {
+    let context: unknown;
+    try {
+        context = await restJson<unknown>("rpc/read_relay_selection_setup_context", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+                p_external_order_id: externalOrderId,
+                p_read_settings: readSettings,
+            }),
+        });
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            throw invalidRelaySelectionSetupContext();
+        }
+        throw error;
+    }
+    if (!isRecord(context)) {
+        throw invalidRelaySelectionSetupContext();
+    }
+    if (context.outcome === "shipment_exists" && context.settings === null) {
+        return { outcome: "shipment_exists", settings: null };
+    }
+    if (context.outcome === "ready" && (context.settings === null || isRecord(context.settings))) {
+        return { outcome: "ready", settings: context.settings };
+    }
+    throw invalidRelaySelectionSetupContext();
+}
+
 export async function trackingSummaryContextByExpedition(expeditionNumber: string): Promise<TrackingSummaryContext> {
     const value = await restJson<unknown>("rpc/read_tracking_summary", {
         method: "POST",
@@ -78,6 +114,10 @@ export async function trackingSummaryContextByExpedition(expeditionNumber: strin
 
 function invalidRelaySelectionContext(): HttpError {
     return new HttpError(502, "relay selection context returned an invalid response");
+}
+
+function invalidRelaySelectionSetupContext(): HttpError {
+    return new HttpError(502, "relay selection setup context returned an invalid response");
 }
 
 function isTrackingSummaryShipment(value: unknown): value is JsonRecord {

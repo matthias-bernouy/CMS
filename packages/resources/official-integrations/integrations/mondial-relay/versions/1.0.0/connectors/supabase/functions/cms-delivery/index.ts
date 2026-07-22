@@ -20,7 +20,11 @@ import {
 import { issueLabelCapability, shipmentForLabelCapability } from "./shipment/label-access.ts";
 import { validatedMondialRelayLabelUrl } from "./provider/label-url.ts";
 import { normalizePhone, shipmentPayload, stringValue } from "./shipment/payload.ts";
-import { readRelaySelectionContext, trackingSummaryContextByExpedition } from "./shipment/read-contexts.ts";
+import {
+    readRelaySelectionContext,
+    readRelaySelectionSetupContext,
+    trackingSummaryContextByExpedition,
+} from "./shipment/read-contexts.ts";
 import { mondialRelayConnectEndpoint } from "./provider/provider-endpoints.ts";
 import { reconcileDueShipments, reconcileShipment, trackingRefreshDue } from "./shipment/reconciliation.ts";
 import { relayPointsFromUrl } from "./provider/relay.ts";
@@ -38,7 +42,6 @@ import {
     settingsRow,
     upsertSettingsRow,
     shipmentEvents,
-    shipmentRowByExternalOrderId,
     shipmentRowByExpedition,
     shipmentWithEventsRowByExpedition,
     shipmentWithEventsRowByExternalOrderId,
@@ -441,29 +444,54 @@ async function saveRelaySelection(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
     const requestKey = requiredBodyText(body, "requestKey", 500);
     const externalOrderId = requiredBodyText(body, "externalOrderId", 200);
-    if (await shipmentRowByExternalOrderId(externalOrderId)) {
+    const validation = captureValidation(() => {
+        const relayLocation = requiredBodyText(body, "relayLocation", 23).toUpperCase();
+        const selectedForCmsUserId = requiredBodyText(body, "selectedForCmsUserId", 512);
+        if (selectedForCmsUserId !== selectedBy) {
+            throw new HttpError(403, "delivery quote belongs to another buyer");
+        }
+        const orderVersion = requiredBodyInteger(body, "orderVersion");
+        const merchandiseSubtotalMinorAmount = requiredMinorAmount(
+            body.merchandiseSubtotalMinorAmount,
+            "merchandiseSubtotalMinorAmount",
+        );
+        const orderCurrency = requiredBodyText(body, "currency", 3).toLowerCase();
+        if (orderCurrency !== "eur") {
+            throw new HttpError(400, "protected Mondial Relay quotes support EUR only");
+        }
+        return {
+            relayLocation,
+            selectedForCmsUserId,
+            orderVersion,
+            merchandiseSubtotalMinorAmount,
+            orderCurrency,
+            recipientSnapshot: fulfillmentAddressSnapshot(body.recipientSnapshot, "recipient", false),
+            sellerFulfillmentSnapshot: fulfillmentAddressSnapshot(body.sellerFulfillmentSnapshot, "seller", true),
+            country: (stringValue(body.country) || "FR").toUpperCase(),
+            postalCode: requiredBodyText(body, "postalCode", 20),
+            city: stringValue(body.city).slice(0, 120),
+        };
+    });
+    const setup = await readRelaySelectionSetupContext(externalOrderId, validation.ok);
+    if (setup.outcome === "shipment_exists") {
         throw new HttpError(409, "relay selection cannot change after shipment creation has started");
     }
-    const relayLocation = requiredBodyText(body, "relayLocation", 23).toUpperCase();
-    const selectedForCmsUserId = requiredBodyText(body, "selectedForCmsUserId", 512);
-    if (selectedForCmsUserId !== selectedBy) {
-        throw new HttpError(403, "delivery quote belongs to another buyer");
+    if (!validation.ok) {
+        throw validation.error;
     }
-    const orderVersion = requiredBodyInteger(body, "orderVersion");
-    const merchandiseSubtotalMinorAmount = requiredMinorAmount(
-        body.merchandiseSubtotalMinorAmount,
-        "merchandiseSubtotalMinorAmount",
-    );
-    const orderCurrency = requiredBodyText(body, "currency", 3).toLowerCase();
-    if (orderCurrency !== "eur") {
-        throw new HttpError(400, "protected Mondial Relay quotes support EUR only");
-    }
-    const recipientSnapshot = fulfillmentAddressSnapshot(body.recipientSnapshot, "recipient", false);
-    const sellerFulfillmentSnapshot = fulfillmentAddressSnapshot(body.sellerFulfillmentSnapshot, "seller", true);
-    const country = (stringValue(body.country) || "FR").toUpperCase();
-    const postalCode = requiredBodyText(body, "postalCode", 20);
-    const city = stringValue(body.city).slice(0, 120);
-    const deliverySettings = settingsFromRow(await settingsRow());
+    const {
+        relayLocation,
+        selectedForCmsUserId,
+        orderVersion,
+        merchandiseSubtotalMinorAmount,
+        orderCurrency,
+        recipientSnapshot,
+        sellerFulfillmentSnapshot,
+        country,
+        postalCode,
+        city,
+    } = validation.value;
+    const deliverySettings = settingsFromRow(setup.settings);
     const weightGrams = deliverySettings.defaultWeightGrams;
     if (!/^[A-Z]{2}-[A-Z0-9]{1,20}$/.test(relayLocation)) {
         throw new HttpError(400, "pickup point identifier is invalid");
@@ -543,14 +571,21 @@ async function saveClaimReturnRelaySelection(request: Request): Promise<Response
     if (!/^claim-return:[1-9][0-9]*$/.test(externalOrderId)) {
         throw new HttpError(400, "legacy relay selection is restricted to claim returns");
     }
-    if (await shipmentRowByExternalOrderId(externalOrderId)) {
+    const validation = captureValidation(() => ({
+        relayLocation: requiredBodyText(body, "relayLocation", 23).toUpperCase(),
+        country: (stringValue(body.country) || "FR").toUpperCase(),
+        postalCode: requiredBodyText(body, "postalCode", 20),
+        city: stringValue(body.city).slice(0, 120),
+    }));
+    const setup = await readRelaySelectionSetupContext(externalOrderId, validation.ok);
+    if (setup.outcome === "shipment_exists") {
         throw new HttpError(409, "relay selection cannot change after shipment creation has started");
     }
-    const relayLocation = requiredBodyText(body, "relayLocation", 23).toUpperCase();
-    const country = (stringValue(body.country) || "FR").toUpperCase();
-    const postalCode = requiredBodyText(body, "postalCode", 20);
-    const city = stringValue(body.city).slice(0, 120);
-    const deliverySettings = settingsFromRow(await settingsRow());
+    if (!validation.ok) {
+        throw validation.error;
+    }
+    const { relayLocation, country, postalCode, city } = validation.value;
+    const deliverySettings = settingsFromRow(setup.settings);
     if (!/^[A-Z]{2}-[A-Z0-9]{1,20}$/.test(relayLocation) || country !== "FR") {
         throw new HttpError(400, "claim return pickup point is invalid");
     }
@@ -717,6 +752,14 @@ function requiredBodyText(body: JsonRecord, name: string, maxLength: number): st
         throw new HttpError(400, `${name} is too long`);
     }
     return value;
+}
+
+function captureValidation<T>(validate: () => T): { ok: true; value: T } | { ok: false; error: unknown } {
+    try {
+        return { ok: true, value: validate() };
+    } catch (error) {
+        return { ok: false, error };
+    }
 }
 
 function requiredMinorAmount(value: unknown, name: string): number {

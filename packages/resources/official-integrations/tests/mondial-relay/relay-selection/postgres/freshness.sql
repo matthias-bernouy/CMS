@@ -4,6 +4,86 @@ set statement_timeout = '15s';
 delete from delivery.delivery_quotes
 where external_order_id = 'relay-selection-freshness';
 
+update delivery.settings
+set default_weight_grams = 500
+where id = 'default';
+
+select public.dblink_connect('relay_selection_setup_reader', 'dbname=' || current_database());
+select public.dblink_connect('relay_selection_setup_writer', 'dbname=' || current_database());
+select public.dblink_exec('relay_selection_setup_reader', 'set role service_role');
+
+create temporary table relay_selection_setup_reader_backend(pid integer not null);
+insert into relay_selection_setup_reader_backend
+select pid
+from public.dblink(
+    'relay_selection_setup_reader',
+    'select pg_backend_pid()'
+) response(pid integer);
+
+select public.dblink_exec('relay_selection_setup_writer', 'begin');
+select public.dblink_exec(
+    'relay_selection_setup_writer',
+    'lock table delivery.settings in access exclusive mode'
+);
+select public.dblink_exec(
+    'relay_selection_setup_writer',
+    $update$
+    update delivery.settings
+    set default_weight_grams = 875
+    where id = 'default'
+    $update$
+);
+
+select public.dblink_send_query(
+    'relay_selection_setup_reader',
+    $read$
+    select delivery.read_relay_selection_setup_context(
+        'relay-selection-setup-freshness', true
+    )
+    $read$
+);
+
+do $wait_for_setup_settings_read$
+declare
+    blocked boolean := false;
+begin
+    for attempt in 1..200 loop
+        select activity.wait_event_type = 'Lock' into blocked
+        from relay_selection_setup_reader_backend reader
+        join pg_catalog.pg_stat_activity activity on activity.pid = reader.pid;
+        exit when coalesce(blocked, false);
+        perform pg_catalog.pg_sleep(0.01);
+    end loop;
+    if not coalesce(blocked, false) then
+        raise exception 'relay selection: setup reader did not reach the settings read';
+    end if;
+end;
+$wait_for_setup_settings_read$;
+
+select public.dblink_exec('relay_selection_setup_writer', 'commit');
+
+do $setup_freshness$
+declare
+    context jsonb;
+begin
+    select result into strict context
+    from public.dblink_get_result(
+        'relay_selection_setup_reader'
+    ) response(result jsonb);
+    if context #>> '{outcome}' <> 'ready'
+       or context #>> '{settings,default_weight_grams}' <> '875' then
+        raise exception 'relay selection: setup missed fresh settings: %', context;
+    end if;
+end;
+$setup_freshness$;
+
+select public.dblink_disconnect('relay_selection_setup_reader');
+select public.dblink_disconnect('relay_selection_setup_writer');
+drop table relay_selection_setup_reader_backend;
+update delivery.settings
+set default_weight_grams = 500
+where id = 'default';
+
 select public.dblink_connect('relay_selection_reader', 'dbname=' || current_database());
 select public.dblink_connect('relay_selection_writer', 'dbname=' || current_database());
 select public.dblink_exec('relay_selection_reader', 'set role service_role');

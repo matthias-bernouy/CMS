@@ -25,14 +25,15 @@ select
     procedure.prosecdef as security_definer,
     procedure.provolatile as volatility
 from pg_catalog.pg_proc procedure
-where procedure.oid = pg_catalog.to_regprocedure(
-    'delivery.read_relay_selection_context(text,text)'
+where procedure.oid in (
+    pg_catalog.to_regprocedure('delivery.read_relay_selection_context(text,text)'),
+    pg_catalog.to_regprocedure('delivery.read_relay_selection_setup_context(text,boolean)')
 );
 
 do $fresh_install$
 begin
-    if (select pg_catalog.count(*) from relay_selection_install_fingerprint) <> 1 then
-        raise exception 'relay selection: fresh install omitted the read context RPC';
+    if (select pg_catalog.count(*) from relay_selection_install_fingerprint) <> 2 then
+        raise exception 'relay selection: fresh install omitted a private context RPC';
     end if;
 end;
 $fresh_install$;
@@ -53,7 +54,7 @@ begin
            or fingerprint.security_definer is distinct from procedure.prosecdef
            or fingerprint.volatility is distinct from procedure.provolatile
     ) then
-        raise exception 'relay selection: schema reapply changed the read context RPC';
+        raise exception 'relay selection: schema reapply changed a private context RPC';
     end if;
 end;
 $reapply$;
