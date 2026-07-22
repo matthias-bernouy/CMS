@@ -20,7 +20,7 @@ import {
     updateRow,
     upsertRow,
 } from "./db/postgrest.ts";
-import { readFinancialOperationDashboardPage, type DisputeDashboardRead } from "./db/dashboard-reads.ts";
+import type { DisputeDashboardRead } from "./db/dashboard-reads.ts";
 import {
     getAccountRow,
     getAccountRowByStripeAccountId,
@@ -202,6 +202,7 @@ import type {
     StripeRefund,
     StripeTransfer,
 } from "./provider/types.ts";
+import { listFinancialOperations } from "./routes/admin/dashboard.ts";
 import { getStripeDispute, listStripeDisputes } from "./routes/disputes/dashboard.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { connectConfig, health } from "./routes/system.ts";
@@ -2321,23 +2322,6 @@ async function requeueCommerceProjection(request: Request): Promise<Response> {
         interventionRevision: result.intervention_revision,
         nextAttemptAt: result.next_attempt_at,
     });
-}
-
-async function listFinancialOperations(request: Request): Promise<Response> {
-    const actor = requireDashboardAdmin(request);
-    const rows = await readFinancialOperationDashboardPage(request, actor);
-    const operations = rows.map((row) =>
-        publicFinancialOperation(
-            row.operation as unknown as FinancialOperationRow,
-            row.client_reference_id === null
-                ? null
-                : {
-                      client_reference_id: row.client_reference_id,
-                      currency: row.payment_currency ?? "",
-                  },
-        ),
-    );
-    return json({ operations, total: operations.length });
 }
 
 async function reconcileProviderPayment(request: Request): Promise<Response> {
