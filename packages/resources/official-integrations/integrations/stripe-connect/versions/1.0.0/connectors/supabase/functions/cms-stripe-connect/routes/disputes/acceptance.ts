@@ -3,7 +3,7 @@ import { insertPaymentEvent } from "../../db/repositories/events-exceptions.ts";
 import { reserveFinancialOperation, updateFinancialOperation } from "../../db/repositories/financial-operations.ts";
 import { operationSelect, type FinancialOperationRow } from "../../db/records/operations.ts";
 import { requireDashboardAdmin } from "../../http/auth.ts";
-import { assertAllowedKeys, readJsonObject, requiredString } from "../../http/body.ts";
+import { assertAllowedKeys, readJsonObject, requiredString } from "../../http/body/index.ts";
 import { HttpError } from "../../http/errors.ts";
 import { json } from "../../http/responses.ts";
 import { closeStripeDispute } from "../../provider/disputes.ts";

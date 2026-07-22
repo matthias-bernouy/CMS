@@ -9,7 +9,7 @@ import {
     marketplaceTermsExpectationFromBody,
     readJsonObject,
     requiredString,
-} from "../../http/body.ts";
+} from "../../http/body/index.ts";
 import { HttpError } from "../../http/errors.ts";
 import { requiredQueryInteger, requiredQueryText } from "../../http/query.ts";
 import { json } from "../../http/responses.ts";

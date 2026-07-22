@@ -6,7 +6,7 @@ import {
     readJsonObject,
     requiredInteger,
     requiredString,
-} from "../../http/body.ts";
+} from "../../http/body/index.ts";
 import { requiredReleaseKind } from "../../http/query.ts";
 import { json } from "../../http/responses.ts";
 import type { ExecuteSettlementRelease } from "../../workflows/payments/settlement-release.ts";

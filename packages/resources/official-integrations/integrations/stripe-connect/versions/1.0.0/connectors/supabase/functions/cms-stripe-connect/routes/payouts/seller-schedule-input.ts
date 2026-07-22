@@ -5,7 +5,7 @@ import {
     optionalText,
     readJsonObject,
     requiredString,
-} from "../../http/body.ts";
+} from "../../http/body/index.ts";
 import { HttpError } from "../../http/errors.ts";
 import { optionalMonthlyPayoutDays, optionalWeeklyPayoutDays, requiredPayoutInterval } from "../../http/payouts.ts";
 

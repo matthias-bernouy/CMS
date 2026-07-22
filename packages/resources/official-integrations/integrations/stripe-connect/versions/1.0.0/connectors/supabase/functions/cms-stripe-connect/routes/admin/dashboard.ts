@@ -3,7 +3,7 @@ import { callRpcObject, getRowByField, listRows } from "../../db/postgrest.ts";
 import type { FinancialOperationRow } from "../../db/records/operations.ts";
 import { publicFinancialOperation } from "../../domain/admin/financial-operation.ts";
 import { requireDashboardAdmin } from "../../http/auth.ts";
-import { assertAllowedKeys, readJsonObject, requiredInteger, requiredString } from "../../http/body.ts";
+import { assertAllowedKeys, readJsonObject, requiredInteger, requiredString } from "../../http/body/index.ts";
 import { HttpError } from "../../http/errors.ts";
 import { queryLimit, requiredQueryInteger, searchPattern } from "../../http/query.ts";
 import { json } from "../../http/responses.ts";

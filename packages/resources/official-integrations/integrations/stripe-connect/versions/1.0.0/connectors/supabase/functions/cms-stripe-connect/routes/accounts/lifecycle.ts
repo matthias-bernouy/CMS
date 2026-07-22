@@ -7,7 +7,13 @@ import {
     assertApplicationControlledRecipient,
     isApplicationCollectedAccount,
 } from "../../domain/accounts/stripe-v2.ts";
-import { assertOnlyKeys, optionalCountry, optionalEmail, optionalStripeToken, optionalText } from "../../http/body.ts";
+import {
+    assertOnlyKeys,
+    optionalCountry,
+    optionalEmail,
+    optionalStripeToken,
+    optionalText,
+} from "../../http/body/index.ts";
 import { HttpError } from "../../http/errors.ts";
 import {
     createConnectedAccount,

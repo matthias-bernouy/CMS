@@ -1,7 +1,7 @@
 import { updateAccountRow } from "../../db/repositories/accounts.ts";
 import { publicAccountStatus } from "../../domain/accounts/presentation.ts";
 import { requireCmsRequest } from "../../http/auth.ts";
-import { readJsonObject, requiredString } from "../../http/body.ts";
+import { readJsonObject, requiredString } from "../../http/body/index.ts";
 import { requiredQueryText, validHttpsUrl } from "../../http/query.ts";
 import { json } from "../../http/responses.ts";
 import { createAccountLink, createAccountSession } from "../../provider/accounts/onboarding.ts";

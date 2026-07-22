@@ -1,5 +1,5 @@
 import type { JsonRecord } from "../shared/types.ts";
-import { requiredString } from "./body.ts";
+import { requiredString } from "./body/index.ts";
 import { HttpError } from "./errors.ts";
 
 export function requiredPayoutInterval(body: JsonRecord, name: string): "manual" | "daily" | "weekly" | "monthly" {

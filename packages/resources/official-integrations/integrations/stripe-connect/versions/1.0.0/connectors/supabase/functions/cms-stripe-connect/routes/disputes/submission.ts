@@ -4,7 +4,7 @@ import { reserveFinancialOperation, updateFinancialOperation } from "../../db/re
 import type { StripeDisputeRow } from "../../db/records/disputes.ts";
 import { operationSelect, type FinancialOperationRow } from "../../db/records/operations.ts";
 import { requireDashboardAdmin } from "../../http/auth.ts";
-import { assertAllowedKeys, readJsonObject, requiredString } from "../../http/body.ts";
+import { assertAllowedKeys, readJsonObject, requiredString } from "../../http/body/index.ts";
 import { HttpError } from "../../http/errors.ts";
 import { json } from "../../http/responses.ts";
 import { updateStripeDisputeEvidence } from "../../provider/disputes.ts";

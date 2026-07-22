@@ -1,5 +1,5 @@
 import { defaultCountry } from "../../shared/runtime.ts";
-import { validBusinessType } from "../../http/body.ts";
+import { validBusinessType } from "../../http/body/index.ts";
 import { HttpError } from "../../http/errors.ts";
 import type { StripeAccount } from "../../provider/types.ts";
 import { numberAt, objectAt, recordArrayAt, stringAt, unique } from "../../shared/data.ts";

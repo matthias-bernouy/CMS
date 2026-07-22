@@ -1,7 +1,7 @@
 import type { ConnectPaymentRow } from "../../db/records/payments.ts";
 import { publicPayment } from "../../domain/payments/presentation.ts";
 import { requireCmsRequest } from "../../http/auth.ts";
-import { assertAllowedKeys, readJsonObject, requiredInteger } from "../../http/body.ts";
+import { assertAllowedKeys, readJsonObject, requiredInteger } from "../../http/body/index.ts";
 import { json } from "../../http/responses.ts";
 import type { ReconcilePayment } from "../../workflows/reconciliation/payment.ts";
 

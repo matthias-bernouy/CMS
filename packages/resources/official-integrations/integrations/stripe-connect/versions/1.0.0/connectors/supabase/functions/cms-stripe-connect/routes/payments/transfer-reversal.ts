@@ -1,6 +1,12 @@
 import type { ConnectPaymentRow } from "../../db/records/payments.ts";
 import { requireCmsRequest } from "../../http/auth.ts";
-import { assertAllowedKeys, optionalText, readJsonObject, requiredInteger, requiredString } from "../../http/body.ts";
+import {
+    assertAllowedKeys,
+    optionalText,
+    readJsonObject,
+    requiredInteger,
+    requiredString,
+} from "../../http/body/index.ts";
 import { json } from "../../http/responses.ts";
 import type { ExecuteTransferReversal } from "../../workflows/payments/transfer-reversal/workflow.ts";
 

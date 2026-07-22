@@ -2,7 +2,7 @@ import { getAccountRow, getMarketplaceTermsAcceptance } from "../../db/repositor
 import { publicAccountStatus } from "../../domain/accounts/presentation.ts";
 import { publicSellerProviderRisk, publicWalletBalances } from "../../domain/accounts/risk-presentation.ts";
 import { requireCmsRequest, requireDashboardAdmin } from "../../http/auth.ts";
-import { marketplaceTermsExpectationFromRequest } from "../../http/body.ts";
+import { marketplaceTermsExpectationFromRequest } from "../../http/body/index.ts";
 import { requiredQueryText } from "../../http/query.ts";
 import { json } from "../../http/responses.ts";
 import { retrieveConnectedBalance, retrieveConnectedBalanceSettings } from "../../provider/accounts/balances.ts";

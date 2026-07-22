@@ -1,6 +1,6 @@
 import { callRpcObject } from "../../db/postgrest.ts";
 import { requireCmsRequest } from "../../http/auth.ts";
-import { assertAllowedKeys, readJsonObject, requiredInteger, requiredString } from "../../http/body.ts";
+import { assertAllowedKeys, readJsonObject, requiredInteger, requiredString } from "../../http/body/index.ts";
 import { json } from "../../http/responses.ts";
 import type { JsonRecord } from "../../shared/types.ts";
 

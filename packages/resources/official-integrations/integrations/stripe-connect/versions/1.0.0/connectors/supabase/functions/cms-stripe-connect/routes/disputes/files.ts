@@ -1,7 +1,7 @@
 import { insertPaymentEvent } from "../../db/repositories/events-exceptions.ts";
 import type { StripeDisputeRow } from "../../db/records/disputes.ts";
 import { requireDashboardAdmin } from "../../http/auth.ts";
-import { assertAllowedKeys, readJsonObject, requiredString } from "../../http/body.ts";
+import { assertAllowedKeys, readJsonObject, requiredString } from "../../http/body/index.ts";
 import { HttpError } from "../../http/errors.ts";
 import { json } from "../../http/responses.ts";
 import { uploadStripeDisputeEvidenceFile } from "../../provider/disputes.ts";

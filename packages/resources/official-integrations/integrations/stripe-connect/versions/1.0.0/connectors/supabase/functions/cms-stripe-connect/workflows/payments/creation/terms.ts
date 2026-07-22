@@ -7,7 +7,7 @@ import {
     requiredHash,
     requiredInteger,
     requiredString,
-} from "../../../http/body.ts";
+} from "../../../http/body/index.ts";
 import { HttpError } from "../../../http/errors.ts";
 import { defaultCurrency } from "../../../shared/runtime.ts";
 import type { JsonRecord } from "../../../shared/types.ts";

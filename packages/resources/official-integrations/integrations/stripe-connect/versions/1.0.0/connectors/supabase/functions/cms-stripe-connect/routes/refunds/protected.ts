@@ -7,7 +7,7 @@ import {
     readJsonObject,
     requiredInteger,
     requiredString,
-} from "../../http/body.ts";
+} from "../../http/body/index.ts";
 import { json } from "../../http/responses.ts";
 import type { ExecuteProtectedRefund, ProtectedRefundInput } from "../../workflows/refunds/protected.ts";
 

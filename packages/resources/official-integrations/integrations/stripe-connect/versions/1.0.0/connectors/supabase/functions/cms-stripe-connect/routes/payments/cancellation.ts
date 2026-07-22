@@ -4,7 +4,13 @@ import {
 } from "../../db/repositories/financial-operations.ts";
 import { reservePaymentCancellationIntent } from "../../db/repositories/payments.ts";
 import { requireCmsRequest } from "../../http/auth.ts";
-import { assertAllowedKeys, optionalText, readJsonObject, requiredInteger, requiredString } from "../../http/body.ts";
+import {
+    assertAllowedKeys,
+    optionalText,
+    readJsonObject,
+    requiredInteger,
+    requiredString,
+} from "../../http/body/index.ts";
 import { HttpError } from "../../http/errors.ts";
 import { json } from "../../http/responses.ts";
 import { errorMessage, isRecord } from "../../shared/data.ts";
