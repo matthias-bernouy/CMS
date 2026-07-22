@@ -55,6 +55,26 @@ export async function readRefundProjectionContext(paymentId: number): Promise<Re
     };
 }
 
+export type TransferReversalCompletionContext = {
+    reversedAmount: number;
+    payment: ConnectPaymentRow | null;
+};
+
+export async function readTransferReversalCompletionContext(
+    paymentId: number,
+): Promise<TransferReversalCompletionContext> {
+    const value = await callRpcObject<unknown>("read_transfer_reversal_completion_context", {
+        p_payment_id: paymentId,
+    });
+    if (!isRecord(value) || (value.payment !== null && !isRecord(value.payment))) {
+        throw invalidTransferReversalCompletionContext();
+    }
+    return {
+        reversedAmount: amountAt(value, "reversed_amount", false, invalidTransferReversalCompletionContext),
+        payment: value.payment as unknown as ConnectPaymentRow | null,
+    };
+}
+
 export async function sumSucceededAmounts(table: string, paymentId: number): Promise<number> {
     const rows = await listRows<JsonRecord>(`${table}?payment_id=eq.${paymentId}&status=eq.succeeded&select=amount`);
     return rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
@@ -100,4 +120,8 @@ function invalidRefundProjectionContext(): HttpError {
 
 function invalidRefundPreflightContext(): HttpError {
     return new HttpError(502, "refund preflight context returned an invalid response");
+}
+
+function invalidTransferReversalCompletionContext(): HttpError {
+    return new HttpError(502, "transfer reversal completion context returned an invalid response");
 }

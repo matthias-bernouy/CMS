@@ -213,7 +213,6 @@ const {
 const executeTransferReversal = createTransferReversalWorkflow({
     moveOperationToManualReview,
     recordSellerRecoveryExposure,
-    requiredPayment,
 });
 const requestTransferReversal = createRequestTransferReversal({ executeTransferReversal, requiredPayment });
 const applyStripeRefund = createRefundProjectionWorkflow();

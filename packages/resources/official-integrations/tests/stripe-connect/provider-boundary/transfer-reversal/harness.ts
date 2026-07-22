@@ -59,29 +59,18 @@ export const successfulReversalWriteBudget = [
     { method: "PATCH", table: "transfer_recovery_requests" },
     { method: "GET", table: "transfer_reversals" },
     { method: "PATCH", table: "transfer_recovery_requests" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "GET", table: "payments" },
+    { method: "POST", table: "rpc/read_transfer_reversal_completion_context" },
     { method: "PATCH", table: "payments" },
     { method: "POST", table: "rpc/upsert_seller_recovery_exposure_and_refresh" },
     { method: "POST", table: "rpc/claim_seller_payout_hold" },
 ];
 
 export function expectTransferReversalCompletionReads(harness: ProviderBoundaryHarness, paymentId: number): void {
-    const tail = harness.rest.postgrestRequests.slice(-5);
-    expect(tail.map(({ method, table }) => ({ method, table }))).toEqual(successfulReversalWriteBudget.slice(-5));
-    expect(Object.fromEntries(tail[0]?.searchParams ?? [])).toEqual({
-        payment_id: `eq.${paymentId}`,
-        status: "eq.succeeded",
-        select: "amount",
-    });
-    expect(Object.fromEntries(tail[1]?.searchParams ?? [])).toEqual({
-        id: `eq.${paymentId}`,
-        select: expect.stringContaining("settlement_status"),
-        limit: "1",
-    });
-    expect(harness.rest.externalRequestOrder.slice(-5)).toEqual([
-        "postgrest:GET:transfer_reversals",
-        "postgrest:GET:payments",
+    const tail = harness.rest.postgrestRequests.slice(-4);
+    expect(tail.map(({ method, table }) => ({ method, table }))).toEqual(successfulReversalWriteBudget.slice(-4));
+    expect(tail[0]?.body).toEqual({ p_payment_id: paymentId });
+    expect(harness.rest.externalRequestOrder.slice(-4)).toEqual([
+        "postgrest:POST:rpc/read_transfer_reversal_completion_context",
         "postgrest:PATCH:payments",
         "postgrest:POST:rpc/upsert_seller_recovery_exposure_and_refresh",
         "postgrest:POST:rpc/claim_seller_payout_hold",

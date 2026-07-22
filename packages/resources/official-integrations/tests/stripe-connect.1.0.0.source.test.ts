@@ -8466,6 +8466,26 @@ class StripeConnectMock {
                 },
             ]);
         }
+        if (table === "rpc/read_transfer_reversal_completion_context" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const paymentId = Number(body.p_payment_id);
+            await this.waitForPostgrestRead("transfer_reversals");
+            const reversedAmount = this.tables.transfer_reversals
+                .filter((row) => same(row.payment_id, paymentId) && row.status === "succeeded")
+                .reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+            await this.waitForPostgrestRead("payments");
+            let payment = this.tables.payments.find((row) => same(row.id, paymentId));
+            if (this.omitNextPaymentReadResult) {
+                this.omitNextPaymentReadResult = false;
+                payment = undefined;
+            }
+            return jsonResponse([
+                {
+                    reversed_amount: reversedAmount,
+                    payment: payment ? { ...payment } : null,
+                },
+            ]);
+        }
         if (table === "rpc/read_settlement_release_context" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const paymentId = Number(body.p_payment_id);

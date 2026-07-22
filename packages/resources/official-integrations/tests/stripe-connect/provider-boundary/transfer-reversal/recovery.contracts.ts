@@ -1,22 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import { type CreateProviderBoundaryHarness, postgrestBudget, responseBody } from "../harness";
 import { expectedRecovery, initialPayoutHoldRequests } from "./expectations";
-import { initialReversalBudget, releasedTransferFixture, requestReversal } from "./harness";
+import {
+    initialReversalBudget,
+    releasedTransferFixture,
+    requestReversal,
+    successfulReversalWriteBudget,
+} from "./harness";
 
 const recoveredWriteBudget = [
-    { method: "PATCH", table: "transfer_reversals" },
-    { method: "PATCH", table: "financial_operations" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "PATCH", table: "transfers" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "PATCH", table: "transfer_recovery_requests" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "PATCH", table: "transfer_recovery_requests" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "GET", table: "payments" },
-    { method: "PATCH", table: "payments" },
-    { method: "POST", table: "rpc/upsert_seller_recovery_exposure_and_refresh" },
-    { method: "POST", table: "rpc/claim_seller_payout_hold" },
+    successfulReversalWriteBudget[2]!,
+    successfulReversalWriteBudget[3]!,
+    ...successfulReversalWriteBudget.slice(4),
 ];
 
 export function registerTransferReversalRecoveryContracts(createHarness: CreateProviderBoundaryHarness): void {

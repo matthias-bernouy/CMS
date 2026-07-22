@@ -1,5 +1,5 @@
 import { updateRow } from "../../../db/postgrest.ts";
-import { sumConfirmedRecoveryAmount, sumSucceededAmounts } from "../../../db/repositories/ledger.ts";
+import { readTransferReversalCompletionContext, sumConfirmedRecoveryAmount } from "../../../db/repositories/ledger.ts";
 import { updatePayment } from "../../../db/repositories/payments.ts";
 import { markPaymentManualReview } from "../../../db/repositories/payout-controls.ts";
 import type { ConnectPaymentRow } from "../../../db/records/payments.ts";
@@ -7,11 +7,10 @@ import { transferRecoverySelect, type TransferRecoveryRow } from "../../../db/re
 import { publicTransferRecovery } from "../../../domain/transfers/presentation.ts";
 import { HttpError } from "../../../http/errors.ts";
 import type { JsonRecord } from "../../../shared/types.ts";
-import type { RecordSellerRecoveryExposure, RequiredPayment, TransferRecoveryExposureType } from "./types.ts";
+import type { RecordSellerRecoveryExposure, TransferRecoveryExposureType } from "./types.ts";
 
 type TransferRecoveryCompletionDependencies = {
     recordSellerRecoveryExposure: RecordSellerRecoveryExposure;
-    requiredPayment: RequiredPayment;
 };
 
 export async function updateTransferRecoveryProgress(recovery: TransferRecoveryRow): Promise<TransferRecoveryRow> {
@@ -37,7 +36,6 @@ export async function updateTransferRecoveryProgress(recovery: TransferRecoveryR
 
 export function createCompleteTransferRecovery({
     recordSellerRecoveryExposure,
-    requiredPayment,
 }: TransferRecoveryCompletionDependencies) {
     return async function completeTransferRecovery(
         payment: ConnectPaymentRow,
@@ -94,8 +92,12 @@ export function createCompleteTransferRecovery({
                 },
                 transferRecoverySelect,
             )) ?? recovery;
-        const reversedAmount = await sumSucceededAmounts("transfer_reversals", payment.id);
-        const currentPayment = await requiredPayment(payment.id);
+        const context = await readTransferReversalCompletionContext(payment.id);
+        const reversedAmount = context.reversedAmount;
+        const currentPayment = context.payment;
+        if (!currentPayment) {
+            throw new HttpError(404, "payment not found");
+        }
         const preservesBlockingSettlement = ["blocked", "manual_review", "refund_pending"].includes(
             currentPayment.settlement_status,
         );

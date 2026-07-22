@@ -15,14 +15,12 @@ import { createCompleteTransferRecovery, updateTransferRecoveryProgress } from "
 import type {
     MoveOperationToManualReview,
     RecordSellerRecoveryExposure,
-    RequiredPayment,
     TransferRecoveryExposureType,
 } from "./types.ts";
 
 type TransferReversalWorkflowDependencies = {
     moveOperationToManualReview: MoveOperationToManualReview;
     recordSellerRecoveryExposure: RecordSellerRecoveryExposure;
-    requiredPayment: RequiredPayment;
 };
 
 export type ExecuteTransferReversal = (
@@ -35,12 +33,8 @@ export type ExecuteTransferReversal = (
 export function createTransferReversalWorkflow({
     moveOperationToManualReview,
     recordSellerRecoveryExposure,
-    requiredPayment,
 }: TransferReversalWorkflowDependencies): ExecuteTransferReversal {
-    const completeTransferRecovery = createCompleteTransferRecovery({
-        recordSellerRecoveryExposure,
-        requiredPayment,
-    });
+    const completeTransferRecovery = createCompleteTransferRecovery({ recordSellerRecoveryExposure });
 
     return async function executeTransferReversal(payment, recoveryRequestId, amount, reason) {
         const existingRecovery = await getRowByField<TransferRecoveryRow>(

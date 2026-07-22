@@ -75,10 +75,10 @@ export function registerTransferReversalCompletionSnapshotContracts(
             expect(await responseBody(response)).toEqual({ error: "payment not found" });
             expect(postgrestBudget(fixture.harness)).toEqual([
                 ...initialReversalBudget,
-                ...successfulReversalWriteBudget.slice(0, 12),
+                ...successfulReversalWriteBudget.slice(0, 11),
                 ...missingPaymentRecoveryBudget,
             ]);
-            expectMissingPaymentReadOrder(fixture.harness.rest.postgrestRequests, fixture.paymentId);
+            expectMissingPaymentContextOrder(fixture.harness.rest.postgrestRequests, fixture.paymentId);
             expect(fixture.harness.rest.rows("payments")[0]).toMatchObject({
                 reversed_amount: 0,
                 settlement_status: "released",
@@ -114,22 +114,16 @@ function seedReversal(
     });
 }
 
-function expectMissingPaymentReadOrder(
+function expectMissingPaymentContextOrder(
     requests: ProviderBoundaryHarness["rest"]["postgrestRequests"],
     paymentId: number,
 ): void {
-    const paymentRead = requests.findLastIndex(({ method, table }) => method === "GET" && table === "payments");
-    expect(requests.slice(paymentRead - 1, paymentRead + 1).map(({ method, table }) => [method, table])).toEqual([
-        ["GET", "transfer_reversals"],
-        ["GET", "payments"],
-    ]);
-    expect(Object.fromEntries(requests[paymentRead - 1]?.searchParams ?? [])).toEqual({
-        payment_id: `eq.${paymentId}`,
-        status: "eq.succeeded",
-        select: "amount",
-    });
+    const contextRead = requests.findLastIndex(
+        ({ table }) => table === "rpc/read_transfer_reversal_completion_context",
+    );
+    expect(requests[contextRead]?.body).toEqual({ p_payment_id: paymentId });
     expect(
-        requests.slice(paymentRead + 1).some(({ method, table }) => method === "PATCH" && table === "payments"),
+        requests.slice(contextRead + 1).some(({ method, table }) => method === "PATCH" && table === "payments"),
     ).toBe(false);
 }
 

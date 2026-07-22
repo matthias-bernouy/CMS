@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { clearRequests, type CreateProviderBoundaryHarness, postgrestBudget, responseBody } from "../harness";
+import { successfulReversalWriteBudget } from "../transfer-reversal/harness";
 import { expectedRefundPreflightRequests } from "./expectations";
 import { refundablePaymentFixture, requestProtectedRefund } from "./harness";
 
@@ -23,15 +24,7 @@ export const sellerRecoveryReplayBudget = [
     { method: "POST", table: "rpc/upsert_seller_recovery_exposure_and_refresh" },
     { method: "POST", table: "rpc/claim_seller_payout_hold" },
     { method: "POST", table: "rpc/reserve_transfer_recovery" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "PATCH", table: "transfer_recovery_requests" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "PATCH", table: "transfer_recovery_requests" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "GET", table: "payments" },
-    { method: "PATCH", table: "payments" },
-    { method: "POST", table: "rpc/upsert_seller_recovery_exposure_and_refresh" },
-    { method: "POST", table: "rpc/claim_seller_payout_hold" },
+    ...successfulReversalWriteBudget.slice(6),
     { method: "GET", table: "payments" },
     { method: "GET", table: "refunds" },
     { method: "GET", table: "payments" },
