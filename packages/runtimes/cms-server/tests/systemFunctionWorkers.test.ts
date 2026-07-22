@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { PRODUCTION_SYSTEM_FUNCTION_JOBS } from "../src/systemFunctionWorkers";
+import { PRODUCTION_SYSTEM_FUNCTION_JOBS, startProductionSystemFunctionWorkers } from "../src/systemFunctionWorkers";
 
 describe("production system function workers", () => {
     test("schedules every protected-commerce recovery path with bounded batches", () => {
@@ -96,5 +96,16 @@ describe("production system function workers", () => {
         const drainMs = Math.ceil(backlog / limit) * reconciliation.intervalMs;
         expect(limit).toBe(5);
         expect(drainMs).toBeLessThanOrEqual(60_000);
+    });
+
+    test("starts and stops every delayed production worker as one runner", async () => {
+        const runner = startProductionSystemFunctionWorkers({
+            functions: {} as never,
+            sources: {} as never,
+            deps: {} as never,
+        });
+
+        expect(typeof runner.runNow).toBe("function");
+        await runner.stop();
     });
 });
