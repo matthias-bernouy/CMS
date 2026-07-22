@@ -1,5 +1,5 @@
 import { json, readJsonObject, requireCmsWriteRequest } from "../../http.ts";
-import { stringValue } from "../../shipment/payload.ts";
+import { stringValue } from "../../shipment/payload/index.ts";
 import {
     cancelShipmentReservation,
     declareSellerHandoff,

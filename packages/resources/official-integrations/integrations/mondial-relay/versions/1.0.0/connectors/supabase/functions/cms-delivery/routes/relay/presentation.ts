@@ -1,4 +1,4 @@
-import { stringValue } from "../../shipment/payload.ts";
+import { stringValue } from "../../shipment/payload/index.ts";
 import type { JsonRecord } from "../../shipment/types.ts";
 
 export function deliveryQuoteJson(row: JsonRecord): JsonRecord {

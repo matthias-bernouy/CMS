@@ -6,7 +6,7 @@ import {
     requireCmsWriteRequest,
     requiredQuery,
 } from "../../http.ts";
-import { stringValue } from "../../shipment/payload.ts";
+import { stringValue } from "../../shipment/payload/index.ts";
 import { deliveryQuoteRow } from "../../shipment/supabase/index.ts";
 import { requiredBodyText } from "../body.ts";
 import { deliveryQuoteJson } from "./presentation.ts";

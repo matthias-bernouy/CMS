@@ -1,5 +1,5 @@
 import { HttpError } from "../http.ts";
-import { stringValue } from "../shipment/payload.ts";
+import { stringValue } from "../shipment/payload/index.ts";
 import type { JsonRecord } from "../shipment/types.ts";
 
 export function requiredBodyText(body: JsonRecord, name: string, maxLength: number): string {

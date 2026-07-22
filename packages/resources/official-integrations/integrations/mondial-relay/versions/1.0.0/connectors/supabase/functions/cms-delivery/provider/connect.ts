@@ -1,7 +1,7 @@
 import { requiredEnv } from "../env.ts";
 import { ProviderStatusError } from "../http.ts";
 import { validatedMondialRelayLabelUrl } from "./label-url.ts";
-import { splitStreet } from "../shipment/payload.ts";
+import { splitStreet } from "../shipment/payload/index.ts";
 import { mondialRelayConnectEndpoint } from "./provider-endpoints.ts";
 import type { ConnectShipmentResult, ConnectStatus, JsonRecord, ShipmentPayload } from "../shipment/types.ts";
 import { decodeXml, xmlAttr, xmlAttributes, xmlEscape, xmlTag } from "./xml.ts";

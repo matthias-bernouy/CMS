@@ -1,5 +1,5 @@
 import { HttpError } from "../../http.ts";
-import { normalizePhone, stringValue } from "../../shipment/payload.ts";
+import { normalizePhone, stringValue } from "../../shipment/payload/index.ts";
 import type { JsonRecord } from "../../shipment/types.ts";
 
 export function settingsRowFromBody(body: JsonRecord): JsonRecord {

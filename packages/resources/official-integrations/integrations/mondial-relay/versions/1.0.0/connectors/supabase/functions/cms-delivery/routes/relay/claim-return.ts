@@ -1,6 +1,6 @@
 import { HttpError, json, readJsonObject, requireCmsWriteRequest } from "../../http.ts";
 import { relayPointsFromUrl } from "../../provider/relay.ts";
-import { stringValue } from "../../shipment/payload.ts";
+import { stringValue } from "../../shipment/payload/index.ts";
 import { readRelaySelectionSetupContext } from "../../shipment/read-contexts.ts";
 import { upsertRelaySelectionRow } from "../../shipment/supabase/index.ts";
 import { requiredBodyText } from "../body.ts";

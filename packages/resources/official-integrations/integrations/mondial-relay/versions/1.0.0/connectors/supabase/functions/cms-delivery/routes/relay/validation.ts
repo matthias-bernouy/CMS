@@ -1,5 +1,5 @@
 import { HttpError, isRecord } from "../../http.ts";
-import { normalizePhone, stringValue } from "../../shipment/payload.ts";
+import { normalizePhone, stringValue } from "../../shipment/payload/index.ts";
 import type { JsonRecord } from "../../shipment/types.ts";
 
 export function captureValidation<T>(validate: () => T): { ok: true; value: T } | { ok: false; error: unknown } {

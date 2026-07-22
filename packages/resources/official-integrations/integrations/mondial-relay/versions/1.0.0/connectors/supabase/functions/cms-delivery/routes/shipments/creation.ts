@@ -1,6 +1,6 @@
 import { HttpError, isRecord, json, ProviderStatusError, readJsonObject, requireCmsWriteRequest } from "../../http.ts";
 import { createConnectShipment } from "../../provider/connect.ts";
-import { shipmentPayload, stringValue } from "../../shipment/payload.ts";
+import { shipmentPayload, stringValue } from "../../shipment/payload/index.ts";
 import { reserveShipmentCreation, settingsRow, updateShipment } from "../../shipment/supabase/index.ts";
 import { settingsFromRow } from "../settings/presentation.ts";
 import { existingCreatingShipmentResponse, shipmentReplayResponse, trackingUrl } from "./creation-responses.ts";
