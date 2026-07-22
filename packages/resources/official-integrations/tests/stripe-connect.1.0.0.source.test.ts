@@ -28,6 +28,8 @@ import { registerPaymentCancellationRecoveryContracts } from "./stripe-connect/p
 import { registerPaymentCancellationReplayContracts } from "./stripe-connect/payment-cancellation/replay.contracts";
 import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
 import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
+import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment-payout.contracts";
+import { registerProtectedPaymentReplayContracts } from "./stripe-connect/provider-boundary/protected-payment-replay.contracts";
 import { registerAccountTermsRepositoryContracts } from "./stripe-connect/repository-boundary/accounts-terms.contracts";
 import { registerLedgerRepositoryContracts } from "./stripe-connect/repository-boundary/ledger.contracts";
 import { registerPaymentOperationRepositoryContracts } from "./stripe-connect/repository-boundary/payments-operations.contracts";
@@ -5727,6 +5729,7 @@ class StripeConnectMock {
     private inFlightTransferBeforeRefund: { paymentId: number; amount: number } | null = null;
     private failBalanceSettingsUpdates = false;
     private nextSellerBalanceSettingsPause: { entered: () => void; wait: Promise<void> } | null = null;
+    private nextPlatformBalanceSettingsReadPause: { entered: () => void; wait: Promise<void> } | null = null;
     private nextPlatformBalanceSettingsPause: { entered: () => void; wait: Promise<void> } | null = null;
     private loseNextPlatformBalanceSettingsResponse = false;
     private loseNextSellerBalanceSettingsResponse = false;
@@ -6224,6 +6227,18 @@ class StripeConnectMock {
         payouts.minimum_balance_by_currency = { eur: minimumBalanceEur };
     }
 
+    setPlatformPayoutControl(patch: JsonRecord): void {
+        const control = this.tables.platform_payout_controls[0];
+        if (!control) {
+            throw new Error("platform payout control is missing");
+        }
+        this.update(control, patch);
+    }
+
+    removePlatformPayoutControl(): void {
+        this.tables.platform_payout_controls.length = 0;
+    }
+
     rejectTransferReversals(): void {
         this.failTransferReversals = true;
     }
@@ -6697,6 +6712,19 @@ class StripeConnectMock {
             resume = resolve;
         });
         this.nextPlatformBalanceSettingsPause = { entered: markEntered, wait };
+        return { entered, resume };
+    }
+
+    pauseNextPlatformBalanceSettingsRead(): { entered: Promise<void>; resume: () => void } {
+        let markEntered!: () => void;
+        let resume!: () => void;
+        const entered = new Promise<void>((resolve) => {
+            markEntered = resolve;
+        });
+        const wait = new Promise<void>((resolve) => {
+            resume = resolve;
+        });
+        this.nextPlatformBalanceSettingsReadPause = { entered: markEntered, wait };
         return { entered, resume };
     }
 
@@ -8568,6 +8596,12 @@ class StripeConnectMock {
             });
         }
         if (url.pathname === "/v1/balance_settings" && method === "GET") {
+            if (!request.headers.get("stripe-account") && this.nextPlatformBalanceSettingsReadPause) {
+                const pause = this.nextPlatformBalanceSettingsReadPause;
+                this.nextPlatformBalanceSettingsReadPause = null;
+                pause.entered();
+                await pause.wait;
+            }
             return jsonResponse(
                 request.headers.get("stripe-account") ? this.balanceSettings : this.platformBalanceSettings,
             );
@@ -9914,6 +9948,12 @@ const createProviderBoundaryHarness = async () => {
     const harness = await createHarness();
     return {
         rest: harness.rest,
+        request: async (
+            userId: string,
+            role: string | undefined,
+            endpoint: string,
+            params: Record<string, string> = {},
+        ) => await sourceRequestWithRole(harness, userId, role, endpoint, params),
         submit: async (userId: string, role: string | undefined, endpoint: string, body: unknown) =>
             await sourceJsonWithRole(harness, userId, role, endpoint, body),
     };
@@ -9956,6 +9996,8 @@ registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
 registerPaymentDashboardContracts(createDashboardReadHarness);
 registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
 registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
+registerProtectedPaymentPayoutContracts(createProviderBoundaryHarness);
+registerProtectedPaymentReplayContracts(createProviderBoundaryHarness);
 registerAccountTermsRepositoryContracts(createRepositoryBoundaryHarness);
 registerProtectedPaymentEligibilityContracts(createRepositoryBoundaryHarness);
 registerLedgerRepositoryContracts(createRepositoryBoundaryHarness);
