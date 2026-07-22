@@ -32,9 +32,8 @@ import {
     camelizeRecord,
     acknowledgeShipmentEvent,
     failShipmentEventProjection,
-    relaySelectionRow,
     deliveryQuoteRow,
-    latestDeliveryQuoteRow,
+    readRelaySelectionContext,
     reserveShipmentCreation,
     settingsRow,
     upsertSettingsRow,
@@ -422,16 +421,15 @@ async function relayPoints(request: Request): Promise<Response> {
 async function relaySelection(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const externalOrderId = requiredQuery(new URL(request.url), "externalOrderId");
-    const row = await relaySelectionRow(externalOrderId);
-    if (row) {
-        return json(relaySelectionJson(row));
-    }
     const selectedForCmsUserId = request.headers.get("x-cms-user-id")?.trim() || "";
-    const quote = selectedForCmsUserId ? await latestDeliveryQuoteRow(externalOrderId, selectedForCmsUserId) : null;
-    if (!quote) {
-        throw new HttpError(404, "no pickup point is saved for this order");
+    const context = await readRelaySelectionContext(externalOrderId, selectedForCmsUserId);
+    if (context.outcome === "selection") {
+        return json(relaySelectionJson(context.row));
     }
-    return json(deliveryQuoteJson(quote));
+    if (context.outcome === "quote") {
+        return json(deliveryQuoteJson(context.row));
+    }
+    throw new HttpError(404, "no pickup point is saved for this order");
 }
 
 async function saveRelaySelection(request: Request): Promise<Response> {

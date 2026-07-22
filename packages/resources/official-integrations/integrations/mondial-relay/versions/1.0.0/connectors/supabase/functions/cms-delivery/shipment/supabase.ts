@@ -4,6 +4,10 @@ import type { JsonRecord } from "./types.ts";
 
 const deliverySchema = "delivery";
 
+export type RelaySelectionContext =
+    | { outcome: "selection" | "quote"; row: JsonRecord }
+    | { outcome: "missing"; row: null };
+
 export async function shipmentsRows(filters: string): Promise<JsonRecord[]> {
     return await restJson<JsonRecord[]>(`shipments?${filters}`, { method: "GET" });
 }
@@ -164,25 +168,44 @@ export async function labelAccessTokenRow(tokenHash: string, sellerCmsUserId: st
     );
 }
 
-export async function relaySelectionRow(externalOrderId: string): Promise<JsonRecord | null> {
-    return await getOne("relay_selections", { external_order_id: externalOrderId }, relaySelectionSelect());
-}
-
 export async function deliveryQuoteRow(quoteId: string): Promise<JsonRecord | null> {
     return await getOne("delivery_quotes", { quote_id: quoteId }, deliveryQuoteSelect(true));
 }
 
-export async function latestDeliveryQuoteRow(
+export async function readRelaySelectionContext(
     externalOrderId: string,
     selectedForCmsUserId: string,
-): Promise<JsonRecord | null> {
-    const rows = await restJson<JsonRecord[]>(
-        `delivery_quotes?external_order_id=eq.${encodeURIComponent(externalOrderId)}` +
-            `&selected_for_cms_user_id=eq.${encodeURIComponent(selectedForCmsUserId)}` +
-            `&select=${encodeURIComponent(deliveryQuoteSelect(false))}&order=revision.desc&limit=1`,
-        { method: "GET" },
-    );
-    return rows[0] ?? null;
+): Promise<RelaySelectionContext> {
+    let context: unknown;
+    try {
+        context = await restJson<unknown>("rpc/read_relay_selection_context", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+                p_external_order_id: externalOrderId,
+                p_selected_for_cms_user_id: selectedForCmsUserId || null,
+            }),
+        });
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            throw invalidRelaySelectionContext();
+        }
+        throw error;
+    }
+    if (!isRecord(context)) {
+        throw invalidRelaySelectionContext();
+    }
+    if (context.outcome === "missing" && context.row === null) {
+        return { outcome: "missing", row: null };
+    }
+    if ((context.outcome === "selection" || context.outcome === "quote") && isRecord(context.row)) {
+        return { outcome: context.outcome, row: context.row };
+    }
+    throw invalidRelaySelectionContext();
+}
+
+function invalidRelaySelectionContext(): HttpError {
+    return new HttpError(502, "relay selection context returned an invalid response");
 }
 
 export async function reserveDeliveryQuote(row: JsonRecord): Promise<JsonRecord> {

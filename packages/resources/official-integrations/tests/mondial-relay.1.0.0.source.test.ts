@@ -1542,8 +1542,7 @@ describe("mondial-relay 1.0.0 source", () => {
             currency: "eur",
         });
         expect(harness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
-            ["GET", "/rest/v1/relay_selections"],
-            ["GET", "/rest/v1/delivery_quotes"],
+            ["POST", "/rest/v1/rpc/read_relay_selection_context"],
         ]);
         expect(harness.relaySelections).toHaveLength(0);
         expect(harness.deliveryQuotes).toContainEqual(
@@ -2415,6 +2414,32 @@ async function createHarness(
                 ),
                 200,
             );
+        }
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/read_relay_selection_context" &&
+            method === "POST"
+        ) {
+            const body = JSON.parse(requestBody) as JsonRecord;
+            const externalOrderId = String(body.p_external_order_id ?? "");
+            const selection = relaySelections.find((row) => row.external_order_id === externalOrderId);
+            if (selection) {
+                return jsonResponse({ outcome: "selection", row: selection }, 200);
+            }
+            const selectedFor = String(body.p_selected_for_cms_user_id ?? "");
+            const quote = deliveryQuotes
+                .filter(
+                    (row) => row.external_order_id === externalOrderId && row.selected_for_cms_user_id === selectedFor,
+                )
+                .sort((left, right) => Number(right.revision) - Number(left.revision))[0];
+            if (!quote) {
+                return jsonResponse({ outcome: "missing", row: null }, 200);
+            }
+            const publicQuote = { ...quote };
+            delete publicQuote.recipient_snapshot;
+            delete publicQuote.seller_fulfillment_snapshot;
+            delete publicQuote.request_snapshot;
+            return jsonResponse({ outcome: "quote", row: publicQuote }, 200);
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/delivery_quotes" && method === "GET") {
             const quoteId = url.searchParams.get("quote_id")?.replace(/^eq\./, "");
