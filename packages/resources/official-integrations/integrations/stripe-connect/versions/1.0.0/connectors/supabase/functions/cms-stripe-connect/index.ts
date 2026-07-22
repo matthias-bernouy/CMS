@@ -1,5 +1,4 @@
 import {
-    defaultCountry,
     defaultCurrency,
     protectedPlatformPayoutInterval,
     requiredEnv,
@@ -25,9 +24,7 @@ import {
     getAccountRow,
     getAccountRowByStripeAccountId,
     getMarketplaceTermsAcceptance,
-    recordMarketplaceTermsAcceptance,
     updateAccountRow,
-    upsertAccountRow,
 } from "./db/repositories/accounts.ts";
 import {
     insertPaymentEvent,
@@ -96,14 +93,11 @@ import {
     bankPayoutsStatus,
     sellerCanAcceptHeldPayments,
     sellerCanReceivePayments,
-    sellerStripeEnrollmentReady,
     stripeTransfersStatus,
 } from "./domain/accounts/eligibility.ts";
 import { balanceSettingsMatchRequest, publicBalanceSettings } from "./domain/accounts/payout-settings.ts";
-import { publicAccount, publicAccountStatus } from "./domain/accounts/presentation.ts";
 import { accountPatchFromStripe } from "./domain/accounts/provider-projection.ts";
-import { publicSellerProviderRisk, publicWalletBalances } from "./domain/accounts/risk-presentation.ts";
-import { assertApplicationControlledRecipient, isApplicationCollectedAccount } from "./domain/accounts/stripe-v2.ts";
+import { publicSellerProviderRisk } from "./domain/accounts/risk-presentation.ts";
 import { publicPayment, publicPaymentWithClientSecret } from "./domain/payments/presentation.ts";
 import {
     chargeId,
@@ -118,22 +112,16 @@ import { loadPublicTransferRecovery } from "./domain/transfers/recovery-read.ts"
 import { requireCmsRequest, requireDashboardAdmin } from "./http/auth.ts";
 import {
     assertAllowedKeys,
-    assertOnlyKeys,
     marketplaceTermsExpectationFromBody,
-    marketplaceTermsExpectationFromRequest,
     optionalBoolean,
-    optionalCountry,
     optionalCurrency,
-    optionalEmail,
     optionalNonNegativeInteger,
     optionalPositiveInteger,
-    optionalStripeToken,
     optionalText,
     readJsonObject,
     requiredHash,
     requiredInteger,
     requiredString,
-    requiredStripeToken,
     validBusinessType,
 } from "./http/body.ts";
 import { HttpError } from "./http/errors.ts";
@@ -146,23 +134,15 @@ import {
     requiredQueryText,
     requiredReleaseKind,
     searchPattern,
-    validHttpsUrl,
 } from "./http/query.ts";
 import { json } from "./http/responses.ts";
 import { serveStripeConnect } from "./http/router.ts";
 import {
-    retrieveConnectedBalance,
     retrieveConnectedBalanceSettings,
     retrievePlatformBalanceSettings,
     updateBalanceSettings,
 } from "./provider/accounts/balances.ts";
-import {
-    createConnectedAccount,
-    createCustomConnectedAccount,
-    retrieveAccount,
-    updateCustomConnectedAccount,
-} from "./provider/accounts/lifecycle.ts";
-import { attachBankAccount, createAccountLink, createAccountSession } from "./provider/accounts/onboarding.ts";
+import { retrieveAccount } from "./provider/accounts/lifecycle.ts";
 import {
     closeStripeDispute,
     listStripeDisputesByCharge,
@@ -194,8 +174,6 @@ import {
 } from "./provider/transfers.ts";
 import type {
     ProviderTruthActorKind,
-    StripeAccount,
-    StripeAccountApiVersion,
     StripeBalanceSettings,
     StripeDispute,
     StripePaymentIntent,
@@ -208,6 +186,15 @@ import {
     listProviderExceptions,
     requeueCommerceProjection,
 } from "./routes/admin/dashboard.ts";
+import { connectEnrollment, connectVerification } from "./routes/accounts/enrollment.ts";
+import {
+    adminCreateOnboarding,
+    adminCreateOnboardingSession,
+    connectOnboarding,
+    connectOnboardingSession,
+} from "./routes/accounts/onboarding.ts";
+import { connectStatus, connectWallet, getSellerProviderRisk } from "./routes/accounts/status.ts";
+import { syncAccountForIdentity } from "./routes/accounts/sync.ts";
 import { getStripeDispute, listStripeDisputes } from "./routes/disputes/dashboard.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { connectConfig, health } from "./routes/system.ts";
@@ -225,7 +212,6 @@ import {
     stringAt,
     stripeObjectId,
     stripUndefined,
-    unixTimestampAt,
     unique,
 } from "./shared/data.ts";
 import type { JsonRecord } from "./shared/types.ts";
@@ -274,287 +260,6 @@ serveStripeConnect({
     requeueCommerceProjection,
     listFinancialOperations,
 });
-
-async function connectStatus(request: Request): Promise<Response> {
-    const { userId } = requireCmsRequest(request);
-    const expectedTerms = marketplaceTermsExpectationFromRequest(request);
-    const account = await syncAccountForUser(userId);
-    const currentTermsAccepted = Boolean(
-        account &&
-            expectedTerms &&
-            (await getMarketplaceTermsAcceptance(userId, expectedTerms.version, expectedTerms.hash)),
-    );
-    return json(publicAccountStatus(account, userId, { currentTermsAccepted }));
-}
-
-async function connectWallet(request: Request): Promise<Response> {
-    const { userId } = requireCmsRequest(request);
-    const account = await getAccountRow(userId);
-    const refreshedAt = new Date().toISOString();
-    if (!account?.stripe_account_id) {
-        return json({ connected: false, balances: [], refreshedAt });
-    }
-
-    const stripeBalance = await retrieveConnectedBalance(account.stripe_account_id);
-    return json({
-        connected: true,
-        stripeAccountId: account.stripe_account_id,
-        livemode: stripeBalance.livemode === true,
-        balances: publicWalletBalances(stripeBalance),
-        refreshedAt,
-    });
-}
-
-async function connectEnrollment(request: Request): Promise<Response> {
-    const { userId } = requireCmsRequest(request);
-    const body = await readJsonObject(request);
-    return json(await enrollSellerForUser(userId, body));
-}
-
-async function connectVerification(request: Request): Promise<Response> {
-    const { userId } = requireCmsRequest(request);
-    const body = await readJsonObject(request);
-    return json(await submitCustomVerificationForUser(userId, body));
-}
-
-async function enrollSellerForUser(userId: string, body: JsonRecord): Promise<JsonRecord> {
-    assertAllowedKeys(body, [
-        "accountToken",
-        "contactEmail",
-        "marketplaceTermsAccepted",
-        "marketplaceTermsVersion",
-        "marketplaceTermsHash",
-    ]);
-    const expectedTerms = marketplaceTermsExpectationFromBody(body);
-    let current = await syncAccountForUser(userId);
-    let recordedTerms =
-        current && expectedTerms
-            ? await getMarketplaceTermsAcceptance(userId, expectedTerms.version, expectedTerms.hash)
-            : null;
-
-    const explicitlyAccepted = body.marketplaceTermsAccepted === true;
-    if (body.marketplaceTermsAccepted !== undefined && !explicitlyAccepted) {
-        throw new HttpError(400, "marketplaceTermsAccepted must be true when provided");
-    }
-    if (explicitlyAccepted && !expectedTerms) {
-        throw new HttpError(
-            400,
-            "marketplaceTermsVersion and marketplaceTermsHash are required with marketplaceTermsAccepted",
-        );
-    }
-    if (!recordedTerms && !explicitlyAccepted && !(current?.marketplace_terms_accepted_at && !expectedTerms)) {
-        throw new HttpError(409, "current marketplace terms acceptance is required");
-    }
-
-    if (!current || !sellerStripeEnrollmentReady(current)) {
-        const accountToken = requiredStripeToken(body, "accountToken", "accttok_");
-        const contactEmail = optionalEmail(body, "contactEmail");
-        await submitCustomVerificationForUser(userId, {
-            accountToken,
-            ...(contactEmail ? { contactEmail } : {}),
-        });
-        current = await syncAccountForUser(userId);
-        if (!current || !sellerStripeEnrollmentReady(current)) {
-            throw new HttpError(409, "Stripe identity and terms acceptance were not confirmed");
-        }
-    }
-
-    if (expectedTerms && explicitlyAccepted && !recordedTerms) {
-        recordedTerms = await recordMarketplaceTermsAcceptance(userId, expectedTerms.version, expectedTerms.hash);
-        current = await getAccountRow(userId);
-        if (!current) {
-            throw new HttpError(502, "could not reload the enrolled seller account");
-        }
-    }
-
-    return publicAccount(current, { currentTermsAccepted: Boolean(expectedTerms && recordedTerms) });
-}
-
-async function connectOnboarding(request: Request): Promise<Response> {
-    const { userId } = requireCmsRequest(request);
-    const body = await readJsonObject(request);
-    return json(await createOnboardingForUser(userId, body));
-}
-
-async function connectOnboardingSession(request: Request): Promise<Response> {
-    const { userId } = requireCmsRequest(request);
-    const body = await readJsonObject(request);
-    return json(await createOnboardingSessionForUser(userId, body));
-}
-
-async function adminCreateOnboarding(request: Request): Promise<Response> {
-    requireCmsRequest(request, { requireUser: false });
-    const userId = requiredQueryText(request, "userId", 200);
-    const body = await readJsonObject(request);
-    return json(await createOnboardingForUser(userId, body));
-}
-
-async function adminCreateOnboardingSession(request: Request): Promise<Response> {
-    requireCmsRequest(request, { requireUser: false });
-    const userId = requiredQueryText(request, "userId", 200);
-    const body = await readJsonObject(request);
-    return json(await createOnboardingSessionForUser(userId, body));
-}
-
-async function ensureConnectedAccountForUser(
-    userId: string,
-    body: JsonRecord,
-): Promise<{
-    account: ConnectAccountRow;
-    stripeAccountId: string;
-    stripeAccountApiVersion: StripeAccountApiVersion;
-}> {
-    const email = optionalEmail(body, "email");
-    const displayName = optionalText(body, "displayName", 200);
-    const country = defaultCountry();
-    const requestedCountry = optionalCountry(body, "country");
-    if (requestedCountry && requestedCountry !== country) {
-        throw new HttpError(400, `country must be ${country} for this integration version`);
-    }
-
-    let account = await getAccountRow(userId);
-    let stripeAccountId = account?.stripe_account_id ?? null;
-    let stripeAccountApiVersion: StripeAccountApiVersion = account?.stripe_account_api_version ?? "v1";
-    if (!stripeAccountId) {
-        if (!email) {
-            throw new HttpError(400, "email is required to create a Stripe recipient account");
-        }
-        const stripeAccount = await createConnectedAccount({
-            userId,
-            country,
-            email,
-            displayName,
-        });
-        assertApplicationControlledRecipient(stripeAccount);
-        stripeAccountId = stripeAccount.id;
-        stripeAccountApiVersion = "v2";
-        account = await upsertAccountRow({
-            cms_user_id: userId,
-            stripe_account_api_version: stripeAccountApiVersion,
-            ...accountPatchFromStripe(stripeAccount, stripeAccountApiVersion),
-        });
-    } else {
-        let stripeAccount = await retrieveAccount(stripeAccountId, stripeAccountApiVersion);
-        if (stripeAccountApiVersion !== "v2" || !isApplicationCollectedAccount(stripeAccount)) {
-            if (!email) {
-                throw new HttpError(409, "email is required to replace a recipient account with unsafe payout access");
-            }
-            stripeAccount = await createConnectedAccount({
-                userId,
-                country,
-                email,
-                displayName,
-            });
-            assertApplicationControlledRecipient(stripeAccount);
-            stripeAccountId = stripeAccount.id;
-            stripeAccountApiVersion = "v2";
-            account = await upsertAccountRow({
-                cms_user_id: userId,
-                stripe_account_api_version: stripeAccountApiVersion,
-                ...accountPatchFromStripe(stripeAccount, stripeAccountApiVersion),
-            });
-        } else {
-            account = await updateAccountRow(userId, accountPatchFromStripe(stripeAccount, stripeAccountApiVersion));
-        }
-    }
-
-    if (!stripeAccountId) {
-        throw new HttpError(502, "could not create connected account");
-    }
-    if (!account) {
-        throw new HttpError(502, "could not store connected account");
-    }
-    return { account, stripeAccountId, stripeAccountApiVersion };
-}
-
-async function submitCustomVerificationForUser(userId: string, body: JsonRecord): Promise<JsonRecord> {
-    assertOnlyKeys(body, ["accountToken", "bankAccountToken", "contactEmail"]);
-    const accountToken = optionalStripeToken(body, "accountToken", "accttok_");
-    const bankAccountToken = optionalStripeToken(body, "bankAccountToken", "btok_");
-    optionalEmail(body, "contactEmail");
-    let row = await getAccountRow(userId);
-    let stripeAccount: StripeAccount | null = null;
-
-    if (row?.stripe_account_id) {
-        stripeAccount = await retrieveAccount(row.stripe_account_id, row.stripe_account_api_version);
-    }
-
-    const replaceAccount =
-        !row?.stripe_account_id ||
-        row.stripe_account_api_version !== "v2" ||
-        !isApplicationCollectedAccount(stripeAccount);
-
-    if (replaceAccount) {
-        if (!accountToken) {
-            throw new HttpError(400, "accountToken is required for initial Stripe identity enrollment");
-        }
-        const currentPatch =
-            stripeAccount && row ? accountPatchFromStripe(stripeAccount, row.stripe_account_api_version) : null;
-        if (currentPatch?.payouts_enabled === true && currentPatch.details_submitted === true) {
-            throw new HttpError(
-                409,
-                "A fully active legacy Stripe account cannot be replaced through seller verification",
-            );
-        }
-        stripeAccount = await createCustomConnectedAccount(userId, accountToken);
-        row = await upsertAccountRow({
-            cms_user_id: userId,
-            stripe_account_api_version: "v2",
-            ...accountPatchFromStripe(stripeAccount, "v2"),
-        });
-    } else if (accountToken) {
-        stripeAccount = await updateCustomConnectedAccount(row!.stripe_account_id!, accountToken);
-    }
-
-    if (!stripeAccount?.id) {
-        throw new HttpError(502, "Stripe did not return a connected account");
-    }
-    if (bankAccountToken) {
-        await attachBankAccount(stripeAccount.id, bankAccountToken);
-    }
-    stripeAccount = await retrieveAccount(stripeAccount.id, "v2");
-    row = await upsertAccountRow({
-        cms_user_id: userId,
-        stripe_account_api_version: "v2",
-        ...(bankAccountToken ? { external_bank_account_attached: true } : {}),
-        ...accountPatchFromStripe(stripeAccount, "v2"),
-    });
-    return publicAccount(row);
-}
-
-async function createOnboardingForUser(userId: string, body: JsonRecord): Promise<JsonRecord> {
-    const returnUrl = validHttpsUrl(requiredString(body, "returnUrl", 2048), "returnUrl");
-    const refreshUrl = validHttpsUrl(requiredString(body, "refreshUrl", 2048), "refreshUrl");
-    const { account, stripeAccountId, stripeAccountApiVersion } = await ensureConnectedAccountForUser(userId, body);
-    const link = await createAccountLink(stripeAccountId, stripeAccountApiVersion, returnUrl, refreshUrl);
-    const updated =
-        (await updateAccountRow(userId, {
-            onboarding_status: "link_created",
-            last_onboarding_started_at: new Date().toISOString(),
-        })) ?? account;
-
-    return {
-        ...publicAccountStatus(updated, userId),
-        url: stringAt(link, "url"),
-        expiresAt: unixTimestampAt(link, "expires_at"),
-    };
-}
-
-async function createOnboardingSessionForUser(userId: string, body: JsonRecord): Promise<JsonRecord> {
-    const { account, stripeAccountId } = await ensureConnectedAccountForUser(userId, body);
-    const session = await createAccountSession(stripeAccountId);
-    const updated =
-        (await updateAccountRow(userId, {
-            onboarding_status: "onboarding_started",
-            last_onboarding_started_at: new Date().toISOString(),
-        })) ?? account;
-
-    return {
-        ...publicAccountStatus(updated, userId),
-        clientSecret: session.client_secret,
-        expiresAt: session.expires_at,
-    };
-}
 
 async function createProtectedPayment(request: Request): Promise<Response> {
     const { userId: buyerUserId } = requireCmsRequest(request);
@@ -763,20 +468,6 @@ async function getProtectedPaymentByReference(request: Request): Promise<Respons
         return json({ exists: false });
     }
     return json({ exists: true, payment: publicPayment(await syncPayment(payment)) });
-}
-
-async function getSellerProviderRisk(request: Request): Promise<Response> {
-    requireDashboardAdmin(request);
-    const userId = requiredQueryText(request, "userId", 200);
-    const account = await syncAccountForUser(userId);
-    if (!account?.stripe_account_id) {
-        throw new HttpError(404, "connected account not found");
-    }
-    const [balance, balanceSettings] = await Promise.all([
-        retrieveConnectedBalance(account.stripe_account_id),
-        retrieveConnectedBalanceSettings(account.stripe_account_id),
-    ]);
-    return json(publicSellerProviderRisk(account, balance, balanceSettings));
 }
 
 async function configurePlatformPayoutProtection(request: Request): Promise<Response> {
@@ -3160,20 +2851,6 @@ async function ingestStripeWebhook(
         processing_status: "pending",
     });
     return json({ received: true, duplicate: !inserted }, inserted ? 202 : 200);
-}
-
-async function syncAccountForUser(userId: string): Promise<ConnectAccountRow | null> {
-    const account = await getAccountRow(userId);
-    if (!account?.stripe_account_id) {
-        return account;
-    }
-    const stripeAccount = await retrieveAccount(account.stripe_account_id, account.stripe_account_api_version);
-    return await updateAccountRow(userId, accountPatchFromStripe(stripeAccount, account.stripe_account_api_version));
-}
-
-async function syncAccountForIdentity(identity: string): Promise<ConnectAccountRow | null> {
-    const byStripeAccount = await getAccountRowByStripeAccountId(identity);
-    return byStripeAccount ? syncAccountForUser(byStripeAccount.cms_user_id) : syncAccountForUser(identity);
 }
 
 async function syncPayment(payment: ConnectPaymentRow): Promise<ConnectPaymentRow> {
