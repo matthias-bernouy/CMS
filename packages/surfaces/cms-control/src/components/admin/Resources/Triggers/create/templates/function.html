@@ -1,0 +1,48 @@
+
+<details slot="main" class="editor-panel" open data-panel="function">
+    <summary>
+        <span class="step-number">4</span>
+        <span class="summary-copy">
+            <strong>Choose what happens</strong>
+            <small>Select a function and map event data to its inputs.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <label>
+            Function
+            <select data-field="function"></select>
+        </label>
+
+        <div class="function-contract" data-role="function-contract"></div>
+
+        <div class="mapping-group">
+            <strong>Parameter mapping</strong>
+            <span>Choose which event value fills each function parameter.</span>
+            <div data-role="function-params"></div>
+        </div>
+
+        <div class="mapping-group">
+            <strong>Body mapping</strong>
+            <span>Choose which event value fills each function body field.</span>
+            <div data-role="function-body"></div>
+        </div>
+
+        <details class="advanced-panel">
+            <summary>Advanced JSON override</summary>
+            <div class="advanced-body">
+                <label>
+                    Parameter mapping
+                    <span>Leave empty to use the selectors above.</span>
+                    <textarea data-field="params"></textarea>
+                </label>
+                <label>
+                    Body mapping
+                    <span>Leave empty to use the selectors above.</span>
+                    <textarea data-field="body"></textarea>
+                </label>
+            </div>
+        </details>
+    </div>
+</details>

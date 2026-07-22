@@ -2,10 +2,10 @@ import { type Editor, type EditorDocument, type CmsSourceState } from "@bernouy/
 
 import type { EditorRuntime, EditorDataSource } from "../../../../../runtime";
 import type { StructureTreeActionDetail } from "../../../StructureTree/StructureTree";
-import type { RepeatPicker } from "../../../RepeatPicker/RepeatPicker";
-import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
-import type { SourceBinding } from "./sourceBindings";
-import { ShellContentMutations } from "./shellContentMutations";
+import type { RepeatPicker } from "../../../Pickers/RepeatPicker/RepeatPicker";
+import type { BlockPickerItem } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
+import type { SourceBinding } from "./Bindings/sourceBindings";
+import { ShellContentMutations } from "./Content/shellContentMutations";
 import { ShellEditorMutations } from "./shellEditorMutations";
 import { ShellBindingMutations } from "./shellBindingMutations";
 

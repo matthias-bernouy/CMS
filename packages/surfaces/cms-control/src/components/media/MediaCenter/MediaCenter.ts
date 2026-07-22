@@ -1,16 +1,14 @@
 import html from "./template.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import chromeCss from "./styles/chrome.css" with { type: "text" };
+import contentCss from "./styles/content.css" with { type: "text" };
+import folderCss from "./styles/folder.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
 
 import "cms-control/components/media/CardMedia/CardMedia";
 import type { MediaItem, BreadcrumbEntry } from "cms-control/components/media/GridMedia/types";
-import {
-    uploadFiles,
-    createFolder,
-    fetchItems,
-    type LocalTypeFilter,
-} from "cms-control/components/media/GridMedia/api";
+import { createFolder, fetchItems, type LocalTypeFilter } from "cms-control/components/media/GridMedia/api";
 import { renderBreadcrumb, renderGrid } from "../GridMedia/view/render";
+import { wireMediaCenterEvents } from "./events";
 
 export class MediaCenter extends Component {
     private _dialog: HTMLDialogElement | null = null;
@@ -22,11 +20,9 @@ export class MediaCenter extends Component {
     private _items: MediaItem[] = [];
     private _selectedItem: MediaItem | null = null;
     private _types: string[] = [];
-    private _dragCounter = 0;
-
     constructor() {
         super({
-            css: css as unknown as string,
+            css: [chromeCss, contentCss, folderCss].join("\n"),
             template: html as unknown as string,
         });
     }
@@ -37,107 +33,23 @@ export class MediaCenter extends Component {
         this._grid = s.getElementById("grid");
         this._btnSelect = s.getElementById("btnSelect") as HTMLButtonElement;
 
-        s.getElementById("btnClose")!.addEventListener("click", () => this._dialog?.close());
-        s.getElementById("btnCancel")!.addEventListener("click", () => this._dialog?.close());
-        this._dialog!.addEventListener("click", (e) => {
-            if (e.target === this._dialog) {
-                this._dialog?.close();
-            }
-        });
-
-        // New folder
-        s.getElementById("btnCreateFolder")!.addEventListener("click", () => this._openNewFolder());
-
-        const nfBackdrop = s.getElementById("nf-backdrop")!;
-        const nfInput = s.getElementById("nf-input") as HTMLInputElement;
-        s.getElementById("nf-cancel")!.addEventListener("click", () => nfBackdrop.classList.remove("open"));
-        s.getElementById("nf-confirm")!.addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
-        nfInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                this._createFolder(nfInput, nfBackdrop);
-            }
-            if (e.key === "Escape") {
-                nfBackdrop.classList.remove("open");
-            }
-        });
-
-        const fileInput = s.getElementById("file-input") as HTMLInputElement;
-        s.getElementById("btnUpload")!.addEventListener("click", () => fileInput.click());
-        fileInput.addEventListener("change", async () => {
-            if (!fileInput.files?.length) {
-                return;
-            }
-            await uploadFiles(fileInput.files, this._folder);
-            fileInput.value = "";
-            this._refresh();
-        });
-
         this._btnSelect!.addEventListener("click", () => this._confirmSelection());
-
-        this._grid!.addEventListener("click", (e) => {
-            const card = (e.target as HTMLElement).closest("p9r-card-media") as HTMLElement;
-            if (!card) {
-                return;
-            }
-
-            const id = card.dataset.id!;
-            const type = card.dataset.type;
-
-            if (type === "folder") {
-                const folder = this._items.find((i) => i.id === id);
-                this._navigateTo(id, folder?.label);
-            } else {
-                this._select(card, id);
-            }
-        });
-
-        // Double-click to confirm
-        this._grid!.addEventListener("dblclick", (e) => {
-            const card = (e.target as HTMLElement).closest("p9r-card-media") as HTMLElement;
-            if (!card || card.dataset.type === "folder") {
-                return;
-            }
-            this._confirmSelection();
-        });
-
-        s.getElementById("breadcrumb")!.addEventListener("click", (e) => {
-            const target = e.target as HTMLElement;
-            if (!target.classList.contains("bc-item")) {
-                return;
-            }
-            const folder = target.dataset.folder || null;
-            const index = parseInt(target.dataset.index || "-1");
-            this._breadcrumb = this._breadcrumb.slice(0, index + 1);
-            this._navigateTo(folder);
-        });
-
-        // Drag & drop
-        const container = s.querySelector(".modal-container") as HTMLElement;
-        const overlay = s.getElementById("drop-overlay")!;
-
-        container.addEventListener("dragenter", (e) => {
-            if (e.dataTransfer?.types.includes("Files")) {
-                e.preventDefault();
-                this._dragCounter++;
-                overlay.classList.add("active");
-            }
-        });
-        container.addEventListener("dragleave", () => {
-            this._dragCounter--;
-            if (this._dragCounter <= 0) {
-                this._dragCounter = 0;
-                overlay.classList.remove("active");
-            }
-        });
-        container.addEventListener("dragover", (e) => e.preventDefault());
-        container.addEventListener("drop", async (e) => {
-            e.preventDefault();
-            this._dragCounter = 0;
-            overlay.classList.remove("active");
-            if (e.dataTransfer?.files.length) {
-                await uploadFiles(e.dataTransfer.files, this._folder);
-                this._refresh();
-            }
+        wireMediaCenterEvents({
+            root: s,
+            dialog: this._dialog!,
+            grid: this._grid!,
+            getFolder: () => this._folder,
+            findItem: (id) => this._items.find((item) => item.id === id),
+            navigate: (folderId, label) => this._navigateTo(folderId, label),
+            navigateBreadcrumb: (folderId, index) => {
+                this._breadcrumb = this._breadcrumb.slice(0, index + 1);
+                this._navigateTo(folderId);
+            },
+            select: (card, id) => this._select(card, id),
+            confirmSelection: () => this._confirmSelection(),
+            openNewFolder: () => this._openNewFolder(),
+            createFolder: (input, backdrop) => this._createFolder(input, backdrop),
+            refresh: () => this._refresh(),
         });
     }
 

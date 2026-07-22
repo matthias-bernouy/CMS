@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import postIntegrationImport from "cms-control/api/integrations/import.post";
-import { makeCms, manualSourceDefinition, postImport, sourceWithFunctionDefinition } from "./helpers";
+import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
+import { makeCms, manualSourceDefinition, postImport, sourceWithFunctionDefinition } from "./support/helpers";
 
 describe("POST /api/integrations/import", () => {
     test("creates a tracked Test secret source installation without exposing the secret value", async () => {

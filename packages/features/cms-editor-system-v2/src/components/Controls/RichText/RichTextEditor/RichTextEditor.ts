@@ -5,7 +5,7 @@ import type { RichTextAction } from "./richTextActions";
 import { RichTextRangeCommands } from "./richTextRangeCommands";
 import { renderRichTextToolbar } from "./richTextToolbar";
 import templateHtml from "./template.html" with { type: "text" };
-import componentCss from "./style.css" with { type: "text" };
+import componentCss from "./styles/index";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;

@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { serializeFrontmatter } from "../shared/frontmatterWrite";
+import { serializeFrontmatter } from "../shared/frontmatter/frontmatterWrite";
 import { safeJoin } from "../shared/safeJoin";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });

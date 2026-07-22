@@ -10,7 +10,7 @@ import type {
 } from "@bernouy/cms-sources";
 import { SOURCE_OVERLAY_EDITABLE_SCOPES, SOURCE_OVERLAY_FIELD_TYPES } from "@bernouy/cms-sources";
 import { IntegrationInputError } from "../../../errors";
-import { isRecord, text } from "../../values";
+import { isRecord, text } from "../../definition/values";
 import { parseStringMap, requiredText } from "../common";
 import { parseOverlayDashboardFields, parseOverlayDashboardOptions } from "./dashboardFields";
 

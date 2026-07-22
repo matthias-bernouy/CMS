@@ -1,4 +1,5 @@
 import { describe, test, expect } from "bun:test";
+import { resolve } from "node:path";
 
 // `serveApi` uses the second-to-last `.`-delimited segment of each filename
 // as the HTTP method. Without a whitelist, a typo like `foo.typo.ts` would
@@ -7,7 +8,9 @@ import { describe, test, expect } from "bun:test";
 // this — either via a literal allow-list or by skipping unknown methods.
 describe("API routing guards HTTP methods", () => {
     test("serveApiFolder whitelists HTTP methods", async () => {
-        const src = await Bun.file("packages/surfaces/cms-control/src/core/registerEndpoints/serveApiFolder.ts").text();
+        const src = await Bun.file(
+            resolve(import.meta.dir, "../../../src/core/admin/registerEndpoints/serveApiFolder.ts"),
+        ).text();
 
         // Either a whitelist literal appears, or the code throws on unknown.
         const hasWhitelist =

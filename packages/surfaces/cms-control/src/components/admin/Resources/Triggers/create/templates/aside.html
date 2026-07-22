@@ -1,0 +1,51 @@
+
+<details slot="aside" class="side-panel" open>
+    <summary>
+        <strong>Execution</strong>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="side-body">
+        <label>
+            Mode
+            <select data-field="mode">
+                <option value="async">Async — recommended</option>
+                <option value="sync">Synchronous</option>
+            </select>
+        </label>
+
+        <label>
+            On failure
+            <select data-field="failure">
+                <option value="ignore">Record and continue</option>
+                <option value="block">Block the source response</option>
+            </select>
+        </label>
+
+        <label class="check">
+            <input type="checkbox" data-field="enabled" />
+            Enable immediately
+        </label>
+    </div>
+</details>
+
+<details slot="aside" class="side-panel">
+    <summary>
+        <strong>Available references</strong>
+        <span class="chevron">⌄</span>
+    </summary>
+    <div class="side-body reference-list">
+        <code>$request.method</code>
+        <code>$request.params.name</code>
+        <code>$request.body.field</code>
+        <code>$response.status</code>
+        <code>$response.body.field</code>
+        <code>$ctx.user.id</code>
+        <code>$endpoint.urn</code>
+    </div>
+</details>
+
+<div slot="aside" class="status-panel">
+    <strong>Status</strong>
+    <div class="message" data-role="message">New triggers are disabled unless explicitly enabled.</div>
+</div>

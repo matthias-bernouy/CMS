@@ -1,4 +1,4 @@
-import { CmsDetailSection } from "cms-control/components/admin/ShellDetail/DetailSection";
+import { CmsDetailSection } from "cms-control/components/admin/Layout/ShellDetail/DetailSection";
 
 export class DashboardWSection extends CmsDetailSection {}
 

@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { PatRepository, Pat, PatPrincipal, NewPat } from "cms-auth/interfaces/PatRepository";
-import { mintPatToken, hashPatToken } from "cms-auth/core/patToken";
+import { mintPatToken, hashPatToken } from "cms-auth/core/tokens/patToken";
 
 /**
  * MongoDB `PatRepository`. One collection (`<prefix>pats`), the record id as

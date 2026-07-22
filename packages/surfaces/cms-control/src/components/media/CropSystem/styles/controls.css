@@ -1,0 +1,71 @@
+.ratio-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.ratio-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--modal-border);
+    border-radius: 6px;
+    background: none;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--value-color);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.ratio-btn:hover {
+    border-color: var(--primary);
+}
+
+.ratio-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--modal-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-cancel {
+    padding: 8px 16px;
+    background: none;
+    border: 1px solid var(--modal-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--close-color);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-cancel:hover {
+    color: var(--header-color);
+    border-color: var(--header-color);
+}
+
+.btn-apply {
+    padding: 8px 16px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+
+.btn-apply:hover {
+    background: var(--primary-hover);
+}

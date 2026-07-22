@@ -1,0 +1,36 @@
+
+<details slot="main" class="editor-panel" data-panel="workflow">
+    <summary>
+        <span class="step-number">3</span>
+        <span>
+            <strong>Build the workflow</strong>
+            <small>Call endpoints and add business rules in execution order.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <div class="workflow-help">
+            <div>
+                <strong>Call endpoint</strong>
+                <span>Reads or changes data through an installed source.</span>
+            </div>
+            <div>
+                <strong>Add rule</strong>
+                <span>Stops the function when a condition fails.</span>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button type="button" class="button secondary" data-role="add-call">+ Call endpoint</button>
+            <button type="button" class="button secondary" data-role="add-assert">+ Add rule</button>
+        </div>
+
+        <div class="steps" data-role="steps"></div>
+
+        <div class="empty" data-role="steps-empty">
+            <strong>No workflow steps yet.</strong>
+            <span>Add an endpoint call or a business rule above.</span>
+        </div>
+    </div>
+</details>

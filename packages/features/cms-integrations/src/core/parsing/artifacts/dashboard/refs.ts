@@ -9,7 +9,7 @@ import type {
 } from "@bernouy/cms-dashboards";
 import { DASHBOARD_MAX_NESTED_FIELDS, DASHBOARD_MAX_OPTIONS } from "@bernouy/cms-dashboards";
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
-import { isRecord, text } from "../../values";
+import { isRecord, text } from "../../definition/values";
 import { optionalText, parseStringList, parseStringMap, requiredText } from "../common";
 import { parseFields } from "./fields";
 

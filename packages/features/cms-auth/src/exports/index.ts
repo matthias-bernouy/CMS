@@ -16,8 +16,14 @@
 // ── Authentication ─────────────────────────────────────────────────────
 export type { Authentication, Subject, DefaultRole } from "cms-auth/interfaces/Authentication";
 export { SignedCookieCodec } from "cms-auth/core/SignedCookieCodec";
-export { LocalAuthentication, type LocalAuthConfig } from "cms-auth/default-implementation/LocalAuthentication";
-export { OidcAuthentication, type OidcAuthConfig } from "cms-auth/default-implementation/OidcAuthentication";
+export {
+    LocalAuthentication,
+    type LocalAuthConfig,
+} from "cms-auth/default-implementation/authentication/LocalAuthentication";
+export {
+    OidcAuthentication,
+    type OidcAuthConfig,
+} from "cms-auth/default-implementation/authentication/OidcAuthentication";
 export { SubjectResolver } from "cms-auth/core/SubjectResolver";
 export {
     validateProviderKind,
@@ -25,9 +31,13 @@ export {
     isBuiltinProvider,
     AuthValidationError,
 } from "cms-auth/core/validation";
-export { deleteUserCompletely, type UserDeletionStores } from "cms-auth/core/deleteUserCompletely";
-export { createLocalUser, type CreateLocalUserInput, type CreateLocalUserStores } from "cms-auth/core/createLocalUser";
-export { changeOwnPassword, type ChangeOwnPasswordStores } from "cms-auth/core/changeOwnPassword";
+export { deleteUserCompletely, type UserDeletionStores } from "cms-auth/core/accounts/deleteUserCompletely";
+export {
+    createLocalUser,
+    type CreateLocalUserInput,
+    type CreateLocalUserStores,
+} from "cms-auth/core/accounts/createLocalUser";
+export { changeOwnPassword, type ChangeOwnPasswordStores } from "cms-auth/core/accounts/changeOwnPassword";
 export {
     signupLocalUser,
     requestEmailVerification,
@@ -38,13 +48,13 @@ export {
     type PublicAuthSendResult,
     type SignupLocalUserInput,
     type SignupLocalUserResult,
-} from "cms-auth/core/publicAuth";
+} from "cms-auth/core/public-auth/flows";
 export {
     deleteIdentityProvider,
     updateIdentityProvider,
     type IdentityProviderStores,
-} from "cms-auth/core/identityProviderRules";
-export { isLastAdmin } from "cms-auth/core/isLastAdmin";
+} from "cms-auth/core/accounts/identityProviderRules";
+export { isLastAdmin } from "cms-auth/core/accounts/isLastAdmin";
 
 // ── Interfaces ─────────────────────────────────────────────────────────
 export type {

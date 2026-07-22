@@ -1,6 +1,6 @@
 import { isSafeDashboardExpression, type DashboardAction } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
-import { isRecord, text } from "../../values";
+import { isRecord, text } from "../../definition/values";
 import { requiredText } from "../common";
 import { parseEndpointRef } from "./refs";
 import { parseVisibilityRule } from "./visibility";

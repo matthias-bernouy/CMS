@@ -1,6 +1,6 @@
 import type { Editor, EditorCatalogEntry } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem } from "../../BlockPickerModal/BlockPickerModal";
-import type { DataSourcePickerSourceBinding } from "../../DataSourcePicker/DataSourcePicker";
+import type { BlockPickerItem } from "../../Pickers/BlockPickerModal/BlockPickerModal";
+import type { DataSourcePickerSourceBinding } from "../../Pickers/DataSourcePicker/DataSourcePicker";
 import type { EditorDataSource, SourceStateName } from "../../../../runtime";
 
 export type StructureTreeKey = HTMLElement | object;

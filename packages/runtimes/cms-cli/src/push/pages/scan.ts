@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
-import { parseFrontmatter } from "../shared/frontmatter";
+import { parseFrontmatter } from "../shared/frontmatter/frontmatter";
 
 export type PageFrontmatter = {
     title: string;

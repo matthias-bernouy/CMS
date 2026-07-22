@@ -1,13 +1,13 @@
 import type { Runner } from "@bernouy/http-runner";
-import type { LocalAuthentication } from "cms-auth/default-implementation/LocalAuthentication";
-import type { PublicAuthFlowConfig } from "cms-auth/core/publicAuth";
+import type { LocalAuthentication } from "cms-auth/default-implementation/authentication/LocalAuthentication";
+import type { PublicAuthFlowConfig } from "cms-auth/core/public-auth/flows";
 import {
     confirmEmailVerification,
     confirmPasswordReset,
     requestEmailVerification,
     requestPasswordReset,
     signupLocalUser,
-} from "cms-auth/core/publicAuth";
+} from "cms-auth/core/public-auth/flows";
 import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse } from "cms-auth/http/authResponse";
 

@@ -4,7 +4,7 @@ import {
     type EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
 
-import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
+import type { BlockPickerItem } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
 
 export type ContentInsertion = {
     fragment: DocumentFragment;

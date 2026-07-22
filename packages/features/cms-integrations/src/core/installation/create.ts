@@ -1,4 +1,4 @@
-import { findIntegration } from "../catalog";
+import { findIntegration } from "../definitions/catalog";
 import { DuplicateIntegrationInstallationError, IntegrationInputError } from "../errors";
 import {
     declarativeSecretBindingNames,
@@ -6,13 +6,13 @@ import {
     resolveDeclarativeSecretRefs,
 } from "../import/declarative";
 import { integrationInstallationId } from "./ids";
-import { successRun } from "./runs";
+import { successRun } from "./execution/runs";
 import { assertSecretKeysAvailable } from "./secretRefs";
 import { installationLabel, sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "./snapshots";
 import type {
     RunIntegrationInstallationCreateRequest,
     RunIntegrationInstallationResult,
-} from "./runIntegrationInstallation";
+} from "./execution/runIntegrationInstallation";
 import type { IntegrationInstallationCreate } from "../../interfaces/IntegrationInstallationRepository";
 
 export async function runCreate(

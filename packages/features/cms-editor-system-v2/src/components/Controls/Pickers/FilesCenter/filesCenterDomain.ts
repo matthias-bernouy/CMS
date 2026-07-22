@@ -28,6 +28,32 @@ export type FilesCenterSelectDetail = {
     mimeType?: string;
 };
 
+export type FilesCenterShowOptions = {
+    accept?: ("folder" | "file")[];
+    fileAccept?: FilesCenterFileAccept[];
+    multiple?: boolean;
+    maxSelection?: number;
+};
+
+export async function loadFilesPage(
+    basePath: string,
+    folder: string | null,
+    accept: ("folder" | "file")[],
+): Promise<FileItem[]> {
+    const params = new URLSearchParams();
+    if (folder) {
+        params.set("parentId", folder);
+    }
+    params.set("accept", accept.join(","));
+    params.set("sortBy", "name");
+    params.set("limit", "10000");
+    const response = await fetch(`${basePath}/api/files?${params.toString()}`);
+    if (!response.ok) {
+        return [];
+    }
+    return ((await response.json()) as FilesPage).items;
+}
+
 export function fileUrl(basePath: string, id: string): string {
     return `${basePath}/.cms/files/by-id/${encodeURIComponent(id)}`;
 }

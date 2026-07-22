@@ -1,5 +1,5 @@
 import { CMS_BINDING_ATTRIBUTES } from "@bernouy/cms-content/editor";
-import type { BlockPickerSlotGroup } from "../../BlockPickerModal/BlockPickerModal";
+import type { BlockPickerSlotGroup } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorStructureNode, StructureNode } from "../../../../runtime";
 import { contextMenuButton, contextSeparator, positionContextMenu } from "./structureContextMenuItems";
 

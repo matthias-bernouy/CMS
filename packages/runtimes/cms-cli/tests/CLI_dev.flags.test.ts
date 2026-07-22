@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { LOCAL_RUNTIME_PROFILES, parseDevFlags } from "../src/CLI_dev";
+import { LOCAL_RUNTIME_PROFILES, parseDevFlags } from "../src/commands/CLI_dev";
 
 describe("parseDevFlags", () => {
     test("defaults to the editor port and derived public port", () => {

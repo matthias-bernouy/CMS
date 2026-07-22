@@ -4,6 +4,13 @@ import { renderStructureBadge } from "../../Renderers/structureTreePresentation"
 import { renderStructureTreeRow } from "../../Renderers/structureTreeRow";
 import type { StructureTreeKey, StructureTreeRenderRequest } from "../structureTreeTypes";
 import type { StructureTreeController } from "./structureTreeController";
+import {
+    structureIconClass,
+    structureIconText,
+    structureItemClass,
+    structureNodeLabel,
+    structureRowClass,
+} from "../../Renderers/structureTreePresentation";
 
 export class StructureTreeRenderer {
     constructor(private readonly tree: StructureTreeController) {}
@@ -45,17 +52,17 @@ export class StructureTreeRenderer {
             selectedEditor: this.tree.state.selectedEditor,
             clearDragState: () => this.tree.events.clearDragState(),
             clearDropRow: () => this.tree.events.clearDropRow(),
-            iconClass: (value) => this.tree.nodes.iconClass(value),
-            iconText: (value) => this.tree.nodes.iconText(value),
+            iconClass: structureIconClass,
+            iconText: structureIconText,
             isCollapsed: (value) => this.tree.nodes.isCollapsed(value),
-            itemClass: (value) => this.tree.nodes.itemClass(value),
-            nodeLabel: (value) => this.tree.nodes.nodeLabel(value),
+            itemClass: structureItemClass,
+            nodeLabel: structureNodeLabel,
             onDragOver: (value, row, event) => this.tree.events.onDragOver(value, row, event),
             onDragStart: (value, event) => this.tree.events.onDragStart(value, event),
             onDrop: (value, event) => this.tree.events.onDrop(value, event),
             openContextMenu: (value, clientX, clientY) => this.tree.menus.openContextMenu(value, clientX, clientY),
             renderBadge: (value) => renderStructureBadge(value),
-            rowClass: (value) => this.tree.nodes.rowClass(value),
+            rowClass: structureRowClass,
             selectEditor: (editor) => this.tree.emitter.selectEditor(editor),
             toggleBadges: (value) => this.toggleBadges(value),
             toggleNode: (value) => this.toggleNode(value),

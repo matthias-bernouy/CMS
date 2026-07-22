@@ -1,4 +1,4 @@
-import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import { parseDataShape, type DataShape } from "@bernouy/cms-sources";
 
 /** Parse a JSON-blob form field into a `DataShape`, or `undefined` when blank.

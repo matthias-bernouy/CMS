@@ -10,7 +10,7 @@ import {
     SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
     type IntegrationConnectorProviderRepository,
 } from "../interfaces/IntegrationConnectorProvider";
-import { SupabaseConnectorDeployer, type SupabaseConnectorFunctionSecrets } from "./SupabaseConnectorDeployer";
+import { SupabaseConnectorDeployer, type SupabaseConnectorFunctionSecrets } from "./supabase/SupabaseConnectorDeployer";
 
 export type ConfiguredSupabaseConnectorDeployerConfig = {
     integrationsRoot: string;

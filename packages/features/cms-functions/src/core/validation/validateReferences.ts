@@ -1,4 +1,4 @@
-import { collectReferences } from "../expressions";
+import { collectReferences } from "../model/expressions";
 import { shapeHasPath } from "./shapes";
 import type { ValidationState } from "./state";
 

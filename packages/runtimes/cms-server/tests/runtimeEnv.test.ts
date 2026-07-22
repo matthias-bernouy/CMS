@@ -55,4 +55,14 @@ describe("runtime env validation", () => {
             /CMS_AUTH_PASSWORD_RESET_URL must be a valid URL/,
         );
     });
+
+    test("rejects missing required values and invalid email cooldowns", () => {
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_FILES_DIR: " " })).toThrow(/env CMS_FILES_DIR missing/);
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "-1" })).toThrow(
+            /must be a non-negative integer/,
+        );
+        expect(
+            readRuntimeEnv({ ...validEnv(), CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "0" }).CMS_AUTH_EMAIL_COOLDOWN_SECONDS,
+        ).toBe(0);
+    });
 });

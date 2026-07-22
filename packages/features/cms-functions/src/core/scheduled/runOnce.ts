@@ -1,4 +1,4 @@
-import { executeFunction } from "../executeFunction";
+import { executeFunction } from "../execution/executeFunction";
 import type {
     ScheduledFunctionLogger,
     ScheduledFunctionRunContext,

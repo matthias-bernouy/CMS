@@ -1,0 +1,51 @@
+import type { AnalyticsStore } from "@bernouy/cms-analytics";
+import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
+import type { ContentReader } from "@bernouy/cms-content";
+import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
+import type { FunctionRepository } from "@bernouy/cms-functions";
+import type { IdentityService } from "@bernouy/cms-identities";
+import type { IntegrationInstallationRepository } from "@bernouy/cms-integrations";
+import type { RolesRepository } from "@bernouy/cms-permissions";
+import type { SourceRepository, SourceSecretResolver } from "@bernouy/cms-sources";
+import type { TriggerRepository } from "@bernouy/cms-triggers";
+import type { Cache, Runner } from "@bernouy/http-runner";
+import type { HeadInjector } from "./HeadInjector";
+
+export type DeliveryCmsConfig = {
+    runner?: Runner;
+    repository: ContentReader;
+    cache?: Cache;
+    /**
+     * Extensions called in registration order for each rendered document,
+     * immediately after the basic HTML head is built.
+     */
+    headInjectors?: readonly HeadInjector[];
+    /** Data sources exposed by the optional same-origin source gateway. */
+    sources?: SourceRepository;
+    /** Trusted functions projected as the system-functions source. */
+    functions?: FunctionRepository;
+    /** Endpoint triggers. Sources and functions must also be configured. */
+    triggers?: TriggerRepository;
+    /** Federated opaque identity aliases used by functions and bindings. */
+    identities?: IdentityService;
+    /**
+     * Resolver for source header secrets. Only composition roots that enforce
+     * the appropriate source access policy should provide one.
+     */
+    sourceResolveSecret?: SourceSecretResolver;
+    /** Optional first-party public authentication routes and system source. */
+    auth?: PublicAuthRoutesConfig<string>;
+    /** Role definitions used to authorize public source endpoint calls. */
+    roles?: RolesRepository;
+    /** Successful integration snapshots used to extend the page CSP. */
+    integrationInstallations?: IntegrationInstallationRepository;
+    /** Optional page-view writer. */
+    analytics?: AnalyticsStore;
+    /** Secret used to salt the cookieless, daily visitor identifier. */
+    analyticsSalt?: string;
+    /** File metadata and bytes backing the public file route. */
+    filesMetadata?: CmsFilesMetadataRepository;
+    filesBlob?: CmsFilesBlobStore;
+    /** Shared storage for derived responsive image variants. */
+    variantStore?: CmsFilesBlobStore;
+};

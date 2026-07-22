@@ -1,10 +1,10 @@
 import type { Editor } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
-import type { ConditionPickerCondition } from "../../../ConditionPicker/ConditionPicker";
-import type { DataSourcePickerSourceBinding } from "../../../DataSourcePicker/DataSourcePicker";
+import type { BlockPickerItem } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
+import type { ConditionPickerCondition } from "../../../Pickers/ConditionPicker/ConditionPicker";
+import type { DataSourcePickerSourceBinding } from "../../../Pickers/DataSourcePicker/DataSourcePicker";
 import type { EditorDataSource, SourceStateName } from "../../../../../runtime";
 import type { StructureTreeAction, StructureTreeActionDetail } from "../structureTreeTypes";
-import type { StructureTreeRefs } from "./structureTreeRefs";
+import type { StructureTreeRefs } from "./Support/structureTreeRefs";
 
 export class StructureTreeEmitter {
     constructor(

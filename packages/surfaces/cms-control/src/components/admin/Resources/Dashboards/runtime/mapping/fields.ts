@@ -1,8 +1,20 @@
-import type { DashboardField, DashboardOption } from "@bernouy/cms-dashboards";
-import type { WDetailField, WDetailReorderableListField, WDetailTableColumn } from "../../widgets/w-detail/types";
+import type { DashboardField } from "@bernouy/cms-dashboards";
+import type { WDetailField } from "../../widgets/w-detail/types";
 import { valueAt } from "../expressions";
 import { mediaValue } from "../media";
-import { nestedLookupKey } from "../lookups/targets";
+import {
+    isCreatable,
+    numberValue,
+    optionData,
+    optionList,
+    readonlyValue,
+    recordValue,
+    schemaDefinitions,
+    tableValue,
+    textValue,
+    tokenValue,
+} from "./fieldSupport";
+import { reorderableField, tableColumn } from "./nestedFields";
 import type { DetailOptions, DetailSchemas } from "./types";
 
 export function detailField(
@@ -106,127 +118,4 @@ export function detailField(
         return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
     }
     return { ...base, input: "text", value: textValue(value) };
-}
-
-function tableColumn(
-    fieldId: string,
-    column: Extract<DashboardField, { type: "table" }>["columns"][number],
-    options: DetailOptions,
-): WDetailTableColumn {
-    const base = {
-        key: column.id,
-        label: column.label,
-        path: column.path,
-        ...(column.width ? { width: column.width } : {}),
-    };
-    if (column.editable !== true) {
-        return base;
-    }
-    const type = column.type ?? "text";
-    if (type === "select") {
-        return { ...base, editable: true, type, options: (column.options ?? []).map(optionData) };
-    }
-    if (type === "combobox") {
-        return {
-            ...base,
-            editable: true,
-            type,
-            options: optionList(column.options, options[nestedLookupKey(fieldId, column.id)] ?? []),
-        };
-    }
-    return { ...base, editable: true, type };
-}
-
-function reorderableField(
-    fieldId: string,
-    field: Extract<DashboardField, { type: "reorderable-list" }>["fields"][number],
-    options: DetailOptions,
-): WDetailReorderableListField {
-    const base = {
-        id: field.id,
-        label: field.label,
-        path: field.path,
-        ...(field.required ? { required: true } : {}),
-        ...(field.placeholder ? { placeholder: field.placeholder } : {}),
-    };
-    const type = field.type ?? "text";
-    if (type === "select") {
-        return { ...base, type, options: (field.options ?? []).map(optionData) };
-    }
-    if (type === "combobox") {
-        return { ...base, type, options: optionList(field.options, options[nestedLookupKey(fieldId, field.id)] ?? []) };
-    }
-    return { ...base, type };
-}
-
-function optionData(option: DashboardOption): { label: string; value: string } {
-    return { label: option.label, value: option.value };
-}
-
-function optionList(staticOptions: DashboardOption[] | undefined, dynamicOptions: DashboardOption[]) {
-    const seen = new Set<string>();
-    return [...(staticOptions ?? []), ...dynamicOptions]
-        .filter((option) => {
-            if (seen.has(option.value)) {
-                return false;
-            }
-            seen.add(option.value);
-            return true;
-        })
-        .map(optionData);
-}
-
-function textValue(value: unknown): string {
-    return value === null || value === undefined ? "" : String(value);
-}
-function numberValue(value: unknown): number | "" {
-    if (value === null || value === undefined || value === "") {
-        return "";
-    }
-    const parsed = typeof value === "number" ? value : Number(value);
-    return Number.isFinite(parsed) ? parsed : "";
-}
-function readonlyValue(value: unknown): string | string[] {
-    return Array.isArray(value)
-        ? value
-              .map(textValue)
-              .map((item) => item.trim())
-              .filter(Boolean)
-        : textValue(value);
-}
-function tokenValue(value: unknown): string[] {
-    return Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
-}
-function tableValue(value: unknown): Record<string, unknown>[] {
-    return Array.isArray(value)
-        ? value.filter(
-              (item): item is Record<string, unknown> =>
-                  item !== null && typeof item === "object" && !Array.isArray(item),
-          )
-        : [];
-}
-function recordValue(value: unknown): Record<string, unknown> {
-    return value !== null && typeof value === "object" && !Array.isArray(value)
-        ? { ...(value as Record<string, unknown>) }
-        : {};
-}
-function schemaDefinitions(
-    field: Extract<DashboardField, { type: "schema" }>,
-    fields: Record<string, unknown>,
-    definitions: DetailSchemas[string]["definitions"],
-): DetailSchemas[string]["definitions"] {
-    if (!field.exclude) {
-        return definitions;
-    }
-    const source = valueAt(fields, field.exclude.from.slice("$field.".length));
-    const excluded = new Set(
-        (Array.isArray(source) ? source : [source]).flatMap((item) => {
-            const value = valueAt(item, field.exclude!.valuePath);
-            return typeof value === "string" || typeof value === "number" ? [String(value)] : [];
-        }),
-    );
-    return definitions.filter((definition) => !excluded.has(definition.id));
-}
-function isCreatable(field: Extract<DashboardField, { type: "combobox" | "tokens" }>): boolean {
-    return Boolean(field.allowCustom || field.lookup?.create?.mode === "inline");
 }

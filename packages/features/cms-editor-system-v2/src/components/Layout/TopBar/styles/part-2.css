@@ -1,0 +1,117 @@
+.view-reload {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+    border-color: var(--editor-v2-border);
+    background: var(--editor-v2-surface-muted);
+    opacity: .45;
+    transition: opacity .12s ease;
+}
+
+.view-reload span {
+    font-size: 16px;
+    line-height: 1;
+    transform: translateY(-1px);
+}
+
+.view-reload:disabled {
+    cursor: default;
+}
+
+:host([mode="view"]) .state-switch {
+    opacity: .45;
+    pointer-events: none;
+}
+
+:host([mode="view"]) .view-reload {
+    opacity: 1;
+}
+
+.device-icon {
+    display: block;
+    margin: 0 auto;
+    border: 1.5px solid currentColor;
+    border-radius: 3px;
+    position: relative;
+}
+
+.desktop-icon {
+    width: 17px;
+    height: 11px;
+}
+
+.desktop-icon::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    bottom: -4px;
+    height: 3px;
+    border-bottom: 1.5px solid currentColor;
+}
+
+.tablet-icon {
+    width: 13px;
+    height: 17px;
+    border-radius: 4px;
+}
+
+.mobile-icon {
+    width: 10px;
+    height: 17px;
+    border-radius: 4px;
+}
+
+button:hover {
+    border-color: var(--editor-v2-border);
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+}
+
+.segmented button.active {
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
+}
+
+.save-state {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 5px;
+    border-radius: 999px;
+    background: var(--editor-v2-success);
+    vertical-align: 1px;
+}
+
+.primary {
+    border-color: var(--editor-v2-accent);
+    background: var(--editor-v2-accent);
+    color: #fff;
+    padding: 0 11px;
+}
+
+.primary:hover {
+    border-color: var(--editor-v2-accent);
+    background: var(--editor-v2-accent);
+    color: #fff;
+}
+
+.danger {
+    color: var(--editor-v2-danger, #b42318);
+}
+
+.danger:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-danger, #b42318) 35%, transparent);
+    background: color-mix(in srgb, var(--editor-v2-danger, #b42318) 10%, transparent);
+    color: var(--editor-v2-danger, #b42318);
+}

@@ -1,6 +1,6 @@
 import type { SourceRepository } from "../interfaces/SourceRepository";
 import type { Source, SourceEndpoint } from "../interfaces/Source";
-import { DuplicateSourceError } from "../core/errors";
+import { DuplicateSourceError } from "../core/model/errors";
 
 /**
  * In-memory implementation of `SourceRepository` — the dep-free default, for

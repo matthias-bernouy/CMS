@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { DEV_SYSTEM_FUNCTION_JOBS } from "../../src/dev-server/systemFunctionWorkers";
+import { DEV_SYSTEM_FUNCTION_JOBS } from "../../src/dev-server/runtime/systemFunctionWorkers";
 
 describe("p9r dev system function workers", () => {
     test("matches the production protected-commerce worker set", () => {

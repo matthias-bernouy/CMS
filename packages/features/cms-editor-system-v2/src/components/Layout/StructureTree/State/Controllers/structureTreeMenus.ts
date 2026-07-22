@@ -5,6 +5,7 @@ import {
     type StructureContextMenuContext,
 } from "../../Actions/structureContextMenus";
 import type { StructureTreeController } from "./structureTreeController";
+import { sourceActionLabel } from "../../Renderers/structureTreePresentation";
 
 export class StructureTreeMenus {
     constructor(private readonly tree: StructureTreeController) {}
@@ -40,6 +41,6 @@ export class StructureTreeMenus {
     }
 
     sourceActionLabel(node: EditorStructureNode): string {
-        return this.tree.nodes.sourceActionLabel(node);
+        return sourceActionLabel(node);
     }
 }

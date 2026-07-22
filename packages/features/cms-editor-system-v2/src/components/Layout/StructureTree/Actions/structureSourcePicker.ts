@@ -6,7 +6,7 @@ import {
     DATA_SOURCE_PICKER_SELECT_EVENT,
     type DataSourcePicker,
     type DataSourcePickerSourceBinding,
-} from "../../DataSourcePicker/DataSourcePicker";
+} from "../../Pickers/DataSourcePicker/DataSourcePicker";
 
 export type StructureSourcePickerContext = {
     dataSources: EditorDataSource[];

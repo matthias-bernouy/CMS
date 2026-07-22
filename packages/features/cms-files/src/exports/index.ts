@@ -24,20 +24,25 @@ export type {
 export type { CmsFilesBlobStore, BlobInput } from "cms-files/interfaces/CmsFilesBlobStore";
 
 // ── Default implementations (memory + local FS; mongo/s3 under subpaths) ─
-export { InMemoryCmsFilesMetadata } from "cms-files/default-implementation/InMemoryCmsFilesMetadata";
-export { InMemoryCmsFilesBlob } from "cms-files/default-implementation/InMemoryCmsFilesBlob";
-export { LocalFsCmsFilesBlob } from "cms-files/default-implementation/LocalFsCmsFilesBlob";
+export { InMemoryCmsFilesMetadata } from "cms-files/default-implementation/memory/InMemoryCmsFilesMetadata";
+export { InMemoryCmsFilesBlob } from "cms-files/default-implementation/memory/InMemoryCmsFilesBlob";
+export { LocalFsCmsFilesBlob } from "cms-files/default-implementation/local-fs/LocalFsCmsFilesBlob";
 export {
     CMS_FILES_REGISTRY_NAME,
     LocalFsCmsFiles,
     type ReconcileOptions,
     type ReconcileResult,
-} from "cms-files/default-implementation/LocalFsCmsFiles";
-export { ValidatingCmsFilesMetadata } from "cms-files/core/ValidatingCmsFilesMetadata";
+} from "cms-files/default-implementation/local-fs/LocalFsCmsFiles";
+export { ValidatingCmsFilesMetadata } from "cms-files/core/validation/ValidatingCmsFilesMetadata";
 
 // ── Core ───────────────────────────────────────────────────────────────
-export { sha256Hex } from "cms-files/core/hashBytes";
-export { MAX_UPLOAD_BYTES, validateUploadSize, validateItemName, FileValidationError } from "cms-files/core/validation";
+export { sha256Hex } from "cms-files/core/media/hashBytes";
+export {
+    MAX_UPLOAD_BYTES,
+    validateUploadSize,
+    validateItemName,
+    FileValidationError,
+} from "cms-files/core/validation/validation";
 export {
     CMS_FILES_ROUTE,
     CMS_FILES_BY_ID_SEGMENT,
@@ -56,12 +61,12 @@ export {
     parseCmsFilesByIdUrl,
     withFileVersion,
     type CmsFilesByIdUrl,
-} from "cms-files/core/fileUrls";
+} from "cms-files/core/media/fileUrls";
 
 // ── File lifecycle (domain rules — create w/ rollback, in-place update, tree delete) ─
-export { uploadFile } from "cms-files/core/uploadFile";
-export { updateFileContent } from "cms-files/core/updateFileContent";
-export { deleteFileTree } from "cms-files/core/deleteFileTree";
+export { uploadFile } from "cms-files/core/lifecycle/uploadFile";
+export { updateFileContent } from "cms-files/core/lifecycle/updateFileContent";
+export { deleteFileTree } from "cms-files/core/lifecycle/deleteFileTree";
 
 // ── Image variants (sharp — lazily imported at generation time) ────────
 export {
@@ -73,10 +78,14 @@ export {
     type VariantFormat,
     type VariantSpec,
     type VariantManifest,
-} from "cms-files/core/imageVariants";
-export { OptimizeQueue } from "cms-files/core/optimizeQueue";
-export { optimizePageImages, DEFAULT_LADDER, type OptimizeDeps } from "cms-files/core/optimizePageJob";
-export { injectMediaVersions } from "cms-files/core/injectMediaVersions";
+} from "cms-files/core/media/imageVariants";
+export { OptimizeQueue } from "cms-files/core/optimization/optimizeQueue";
+export {
+    optimizePageImages,
+    DEFAULT_LADDER,
+    type OptimizeDeps,
+} from "cms-files/core/optimization/optimizePageJob";
+export { injectMediaVersions } from "cms-files/core/media/injectMediaVersions";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export { serveVariantRequest, type VariantServeDeps } from "cms-files/http/serveVariant";

@@ -1,32 +1,23 @@
 import type { CmsSourceStateForce } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
-import componentCss from "./style.css" with { type: "text" };
+import componentCss from "./styles/index";
+import {
+    handleTopBarClick,
+    syncTopBarButtonGroup,
+    TOPBAR_EDITOR_MODE_CHANGE_EVENT,
+    TOPBAR_SOURCE_STATE_CHANGE_EVENT,
+    TOPBAR_VIEWPORT_CHANGE_EVENT,
+    type TopBarEditorMode,
+    type TopBarEditorModeChangeDetail,
+    type TopBarSourceStateChangeDetail,
+    type TopBarViewport,
+    type TopBarViewportChangeDetail,
+} from "./topBarEvents";
+
+export * from "./topBarEvents";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
-
-export type TopBarViewport = "desktop" | "tablet" | "mobile" | "full" | "bleed";
-export type TopBarEditorMode = "edit" | "view";
-
-export type TopBarViewportChangeDetail = {
-    viewport: TopBarViewport;
-};
-
-export type TopBarEditorModeChangeDetail = {
-    mode: TopBarEditorMode;
-};
-
-export type TopBarSourceStateChangeDetail = {
-    sourceState: CmsSourceStateForce;
-};
-
-export const TOPBAR_VIEWPORT_CHANGE_EVENT = "editor-v2:viewport-change";
-export const TOPBAR_EDITOR_MODE_CHANGE_EVENT = "editor-v2:editor-mode-change";
-export const TOPBAR_SOURCE_STATE_CHANGE_EVENT = "editor-v2:source-state-change";
-export const TOPBAR_VIEW_RELOAD_EVENT = "editor-v2:view-reload";
-export const TOPBAR_SAVE_EVENT = "editor-v2:save";
-export const TOPBAR_DELETE_EVENT = "editor-v2:topbar-delete-document";
-export const TOPBAR_PAGE_SETTINGS_EVENT = "editor-v2:page-settings";
 
 export class TopBar extends HTMLElement {
     private _viewport: TopBarViewport = "bleed";
@@ -93,58 +84,11 @@ export class TopBar extends HTMLElement {
     }
 
     private readonly _onClick = (event: Event): void => {
-        const button = (event.target as Element | null)?.closest<HTMLButtonElement>("button");
-        if (!button) {
-            return;
-        }
-
-        const viewport = button.dataset.viewport as TopBarViewport | undefined;
-        if (viewport) {
-            this._setViewport(viewport, true);
-            return;
-        }
-
-        const mode = button.dataset.editorMode as TopBarEditorMode | undefined;
-        if (mode) {
-            this._setMode(mode, true);
-            return;
-        }
-
-        const sourceState = button.dataset.sourceState as CmsSourceStateForce | undefined;
-        if (sourceState) {
-            this._setSourceState(sourceState, true);
-            return;
-        }
-
-        if (button.dataset.action === "save") {
-            this.dispatchEvent(
-                new CustomEvent(TOPBAR_SAVE_EVENT, {
-                    bubbles: true,
-                    composed: true,
-                }),
-            );
-        } else if (button.dataset.action === "delete") {
-            this.dispatchEvent(
-                new CustomEvent(TOPBAR_DELETE_EVENT, {
-                    bubbles: true,
-                    composed: true,
-                }),
-            );
-        } else if (button.dataset.action === "page-settings") {
-            this.dispatchEvent(
-                new CustomEvent(TOPBAR_PAGE_SETTINGS_EVENT, {
-                    bubbles: true,
-                    composed: true,
-                }),
-            );
-        } else if (button.dataset.action === "view-reload") {
-            this.dispatchEvent(
-                new CustomEvent(TOPBAR_VIEW_RELOAD_EVENT, {
-                    bubbles: true,
-                    composed: true,
-                }),
-            );
-        }
+        handleTopBarClick(this, event, {
+            setViewport: (viewport) => this._setViewport(viewport, true),
+            setMode: (mode) => this._setMode(mode, true),
+            setSourceState: (sourceState) => this._setSourceState(sourceState, true),
+        });
     };
 
     private _setViewport(viewport: TopBarViewport, emit: boolean): void {
@@ -203,9 +147,9 @@ export class TopBar extends HTMLElement {
     }
 
     private _syncButtons(): void {
-        this._syncButtonGroup("[data-viewport]", "viewport", this._viewport);
-        this._syncButtonGroup("[data-editor-mode]", "editorMode", this._mode);
-        this._syncButtonGroup("[data-source-state]", "sourceState", this._sourceState);
+        syncTopBarButtonGroup(this.shadowRoot!, "[data-viewport]", "viewport", this._viewport);
+        syncTopBarButtonGroup(this.shadowRoot!, "[data-editor-mode]", "editorMode", this._mode);
+        syncTopBarButtonGroup(this.shadowRoot!, "[data-source-state]", "sourceState", this._sourceState);
     }
 
     private _syncModeAttribute(): void {
@@ -213,18 +157,6 @@ export class TopBar extends HTMLElement {
         const reload = this.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="view-reload"]');
         if (reload) {
             reload.disabled = this._mode !== "view";
-        }
-    }
-
-    private _syncButtonGroup(
-        selector: string,
-        dataKey: "viewport" | "editorMode" | "sourceState",
-        value: string,
-    ): void {
-        for (const button of Array.from(this.shadowRoot!.querySelectorAll<HTMLButtonElement>(selector))) {
-            const isActive = button.dataset[dataKey] === value;
-            button.classList.toggle("active", isActive);
-            button.setAttribute("aria-pressed", String(isActive));
         }
     }
 

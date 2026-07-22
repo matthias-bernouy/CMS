@@ -8,34 +8,19 @@ import type {
 } from "@bernouy/cms-auth";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type { DashboardRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
-import type { FunctionRepository } from "@bernouy/cms-functions";
-import {
-    collectIntegrationInstallationCspExtras,
-    type IntegrationConnectorDeployer,
-    type IntegrationDefinitionRepository,
-    type IntegrationInstallationRepository,
-} from "@bernouy/cms-integrations";
-import type { RelationRepository } from "@bernouy/cms-relations";
-import type { Cache, CspExtras, Runner } from "@bernouy/http-runner";
+import type { Cache, Runner } from "@bernouy/http-runner";
 import type { RolesRepository } from "@bernouy/cms-permissions";
-import { createSecretResolver, type SecretStore } from "@bernouy/cms-secrets";
-import {
-    SourceOverlaySourceRepository,
-    type ExecutorDeps,
-    type SourceOverlayRepository,
-    type SourceRepository,
-} from "@bernouy/cms-sources";
-import { withFunctionsSource } from "@bernouy/cms-functions";
+import type { SecretStore } from "@bernouy/cms-secrets";
+import type { SourceRepository } from "@bernouy/cms-sources";
 import { join } from "node:path";
 import type { CMS_ROLES } from "types/roles";
-import { mergeUnique } from "cms-control/core/control/defaults";
-import { mountControlCmsRoutes } from "cms-control/core/control/mountRoutes";
-import { createControlCmsState } from "cms-control/core/control/state";
-import type { ControlAuthBackends, ControlCmsOptions, ControlCmsState } from "cms-control/core/control/types";
+import { controlCmsAccessors } from "cms-control/core/admin/control/accessors";
+import { mountControlCmsRoutes } from "cms-control/core/admin/control/mountRoutes";
+import { createControlCmsState } from "cms-control/core/admin/control/state";
+import type { ControlAuthBackends, ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
 
-export type { ControlAuthBackends, ControlCmsOptions } from "cms-control/core/control/types";
+export type { ControlAuthBackends, ControlCmsOptions } from "cms-control/core/admin/control/types";
 
 export class ControlCms {
     readonly ready: Promise<void>;
@@ -59,7 +44,7 @@ export class ControlCms {
         roles?: RolesRepository,
         authBackends: ControlAuthBackends = {},
     ) {
-        this.state = createControlCmsState({
+        const state = createControlCmsState({
             configuration,
             runner,
             repository,
@@ -77,183 +62,102 @@ export class ControlCms {
             roles,
             authBackends,
         });
-        this.ready = Promise.resolve();
-        mountControlCmsRoutes(this, this.state, authBackends, join(__dirname, "./api"));
+        this.state = state;
+        this.ready = mountControlCmsRoutes(this, state, authBackends, join(__dirname, "./api"));
     }
 
     get config() {
-        return this.state.configuration;
+        return controlCmsAccessors.config(this.state);
     }
-
     get repository() {
-        return this.state.repository;
+        return controlCmsAccessors.repository(this.state);
     }
-
     get auth() {
-        return this.state.auth;
+        return controlCmsAccessors.auth(this.state);
     }
-
     get runner() {
-        return this.state.runner;
+        return controlCmsAccessors.runner(this.state);
     }
-
     get cache() {
-        return this.state.cache;
+        return controlCmsAccessors.cache(this.state);
     }
-
     get secrets() {
-        return this.state.secrets;
+        return controlCmsAccessors.secrets(this.state);
     }
-
-    get roles(): RolesRepository {
-        return this.state.roles;
+    get roles() {
+        return controlCmsAccessors.roles(this.state);
     }
-
-    get integrationCatalog(): IntegrationDefinitionRepository {
-        return this.state.integrationCatalog;
+    get integrationCatalog() {
+        return controlCmsAccessors.integrationCatalog(this.state);
     }
-
-    get dashboards(): DashboardRepository {
-        return this.state.dashboards;
+    get dashboards() {
+        return controlCmsAccessors.dashboards(this.state);
     }
-
-    get relations(): RelationRepository {
-        return this.state.relations;
+    get relations() {
+        return controlCmsAccessors.relations(this.state);
     }
-
-    get functions(): FunctionRepository | null {
-        return this.state.functions;
+    get functions() {
+        return controlCmsAccessors.functions(this.state);
     }
-
     get triggers() {
-        return this.state.triggers;
+        return controlCmsAccessors.triggers(this.state);
     }
-
     get identities() {
-        return this.state.identities;
+        return controlCmsAccessors.identities(this.state);
     }
-
     get sourceOverlays() {
-        return this.state.sourceOverlays;
+        return controlCmsAccessors.sourceOverlays(this.state);
     }
-
-    get configuredIntegrationInstallations(): IntegrationInstallationRepository | null {
-        return this.state.integrationInstallations;
+    get configuredIntegrationInstallations() {
+        return controlCmsAccessors.configuredIntegrationInstallations(this.state);
     }
-
-    get integrationConnectorDeployers():
-        | IntegrationConnectorDeployer[]
-        | Record<string, IntegrationConnectorDeployer>
-        | undefined {
-        return this.state.configuration.integrationConnectorDeployers;
+    get integrationConnectorDeployers() {
+        return controlCmsAccessors.integrationConnectorDeployers(this.state);
     }
-
     get integrationConnectorProviders() {
-        return this.state.integrationConnectorProviders;
+        return controlCmsAccessors.integrationConnectorProviders(this.state);
     }
-
-    get integrationBlocRepository(): CmsRepository | null {
-        return this.state.integrationBlocRepository;
+    get integrationBlocRepository() {
+        return controlCmsAccessors.integrationBlocRepository(this.state);
     }
-
-    get sourceExecutorDeps(): ExecutorDeps {
-        return {
-            resolveSecret: createSecretResolver(this.state.secrets),
-            identities: this.state.identities,
-        };
+    get sourceExecutorDeps() {
+        return controlCmsAccessors.sourceExecutorDeps(this.state);
     }
-
-    get filesMetadata(): CmsFilesMetadataRepository {
-        if (!this.state.filesMetadata) {
-            throw new Error("files metadata backend not configured");
-        }
-        return this.state.filesMetadata;
+    get filesMetadata() {
+        return controlCmsAccessors.filesMetadata(this.state);
     }
-
-    get filesBlob(): CmsFilesBlobStore {
-        if (!this.state.filesBlob) {
-            throw new Error("files blob backend not configured");
-        }
-        return this.state.filesBlob;
+    get filesBlob() {
+        return controlCmsAccessors.filesBlob(this.state);
     }
-
-    get users(): UsersRepository<CMS_ROLES> {
-        if (!this.state.users) {
-            throw new Error("users repository not configured");
-        }
-        return this.state.users;
+    get users() {
+        return controlCmsAccessors.users(this.state);
     }
-
-    get identityProviders(): IdentityProviderRepository {
-        if (!this.state.identityProviders) {
-            throw new Error("identity providers repository not configured");
-        }
-        return this.state.identityProviders;
+    get identityProviders() {
+        return controlCmsAccessors.identityProviders(this.state);
     }
-
-    get pats(): PatRepository {
-        if (!this.state.pats) {
-            throw new Error("PAT repository not configured");
-        }
-        return this.state.pats;
+    get pats() {
+        return controlCmsAccessors.pats(this.state);
     }
-
-    get credentials(): LocalCredentialStore {
-        if (!this.state.credentials) {
-            throw new Error("local credential store not configured");
-        }
-        return this.state.credentials;
+    get credentials() {
+        return controlCmsAccessors.credentials(this.state);
     }
-
-    get publicAuth(): PublicAuthRoutesConfig<CMS_ROLES> {
-        if (!this.state.configuration.publicAuth) {
-            throw new Error("public auth not configured");
-        }
-        return this.state.configuration.publicAuth;
+    get publicAuth() {
+        return controlCmsAccessors.publicAuth(this.state);
     }
-
-    get integrationInstallations(): IntegrationInstallationRepository {
-        if (!this.state.integrationInstallations) {
-            throw new Error("integration installations repository not configured");
-        }
-        return this.state.integrationInstallations;
+    get integrationInstallations() {
+        return controlCmsAccessors.integrationInstallations(this.state);
     }
-
-    get sources(): SourceRepository {
-        if (!this.state.sources) {
-            throw new Error("sources repository not configured");
-        }
-        const overlaySources = this.state.sourceOverlays
-            ? new SourceOverlaySourceRepository(this.state.sources, this.state.sourceOverlays, {
-                  deps: this.sourceExecutorDeps,
-              })
-            : this.state.sources;
-        return this.state.functions ? withFunctionsSource(overlaySources, this.state.functions) : overlaySources;
+    get sources() {
+        return controlCmsAccessors.sources(this.state);
     }
-
-    get analytics(): AnalyticsStore {
-        if (!this.state.analytics) {
-            throw new Error("analytics store not configured");
-        }
-        return this.state.analytics;
+    get analytics() {
+        return controlCmsAccessors.analytics(this.state);
     }
-
     get basePath() {
-        const base = this.state.runner.basePath;
-        return base === "/" ? "" : base;
+        return controlCmsAccessors.basePath(this.state);
     }
 
-    async getCspExtras(): Promise<CspExtras> {
-        const settings = await this.state.repository.getSystem();
-        const integrationCsp = this.state.integrationInstallations
-            ? collectIntegrationInstallationCspExtras(await this.state.integrationInstallations.list())
-            : null;
-        return {
-            connectExtras: mergeUnique(settings.security.connectExtras, integrationCsp?.connectExtras),
-            mediaExtras: mergeUnique(settings.security.mediaExtras, integrationCsp?.mediaExtras),
-            styleExtras: mergeUnique([], integrationCsp?.styleExtras),
-            scriptExtras: mergeUnique([], integrationCsp?.scriptExtras),
-            frameExtras: mergeUnique([], integrationCsp?.frameExtras),
-        };
+    async getCspExtras() {
+        return controlCmsAccessors.getCspExtras(this.state);
     }
 }

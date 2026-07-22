@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import { sourceDtoToSource } from "@bernouy/cms-sources";
 import type { SourceDto } from "../validation/gateway/parseSourceDto";
 

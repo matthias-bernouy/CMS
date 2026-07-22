@@ -1,9 +1,9 @@
 import type { BlocListItemResponse } from "@bernouy/cms-content";
-import type { BuiltBloc } from "../build";
+import type { BuiltBloc } from "../bloc-build/index";
 import { bundleBlocSource } from "cms-cli/push/blocs/bundle";
 import type { TBloc } from "@bernouy/cms-content";
 import { ContentValidationError, DuplicateBlocTagError } from "@bernouy/cms-content";
-import { buildDevBloc } from "cms-cli/dev-server/build";
+import { buildDevBloc } from "cms-cli/dev-server/bloc-build/index";
 import { scanDevBlocs } from "cms-cli/dev-server/scan";
 import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
 import { safeJoin } from "cms-cli/push/shared/safeJoin";

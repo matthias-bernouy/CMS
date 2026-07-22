@@ -1,7 +1,7 @@
 import { evaluateNode } from "./condition/evaluate";
 import { parseConditionExpression } from "./condition/parser";
 import type { CompiledCondition, ConditionNode } from "./condition/types";
-import type { Scope } from "../scope";
+import type { Scope } from "../core/scope";
 
 export type { CompiledCondition } from "./condition/types";
 export { collectConditionReferences } from "./condition/references";

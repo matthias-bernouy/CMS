@@ -1,0 +1,59 @@
+.condition-fields {
+    display: grid;
+    gap: 1rem;
+    padding-top: .25rem;
+}
+
+.mapping-group,
+.mapping-editor,
+.value-picker {
+    display: grid;
+    gap: .55rem;
+}
+
+.mapping-group > span,
+.mapping-target span,
+.mapping-empty {
+    color: var(--p9r-color-muted, #64748b);
+    font-size: .78rem;
+}
+
+.mapping-row {
+    display: grid;
+    grid-template-columns: minmax(150px, .65fr) minmax(240px, 1fr);
+    align-items: start;
+    gap: .75rem;
+    padding: .65rem;
+    border: 1px solid var(--p9r-color-border, #e2e8f0);
+    border-radius: 7px;
+    background: #fff;
+}
+
+.mapping-target {
+    display: grid;
+    gap: .3rem;
+}
+
+.mapping-empty {
+    padding: .7rem;
+    border: 1px dashed #cbd5e1;
+    border-radius: 7px;
+}
+
+.advanced-panel {
+    border-top: 1px solid var(--p9r-color-border, #e2e8f0);
+    padding-top: .75rem;
+}
+
+.advanced-panel > summary {
+    cursor: pointer;
+    color: #64748b;
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.advanced-body {
+    display: grid;
+    gap: 1rem;
+    padding-top: .8rem;
+}

@@ -11,6 +11,6 @@
  */
 
 export { default as DeliveryCms } from "cms-delivery/DeliveryCms";
-export type { DeliveryCmsConfig } from "cms-delivery/DeliveryCms";
+export type { DeliveryCmsConfig } from "cms-delivery/interfaces/DeliveryCmsConfig";
 export type { ContentReader } from "@bernouy/cms-content";
 export type { HeadInjector, HeadInjectorContext } from "cms-delivery/interfaces/HeadInjector";

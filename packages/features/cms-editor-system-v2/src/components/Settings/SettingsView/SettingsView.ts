@@ -10,11 +10,12 @@ import { type SettingControl } from "@bernouy/cms-content/editor";
 import type { DataScope, EditableState, SettingSection, TextCapability } from "@bernouy/cms-content/editor";
 import type { EditorDataSource } from "../../../runtime";
 import { EndpointSettingController } from "./internals/endpointSetting";
-import { renderFieldLabel, SettingControlRenderer } from "./internals/settingControls";
-import { attributesForSettingValue, visibleSettings } from "./internals/settingState";
-import { renderTextCapability } from "./internals/textCapability";
+import { renderFieldLabel, SettingControlRenderer } from "./internals/rendering/settingControls";
+import { renderSettingSection, renderSettingsStates } from "./internals/rendering/settingsSections";
+import { renderTextCapability } from "./internals/rendering/textCapability";
+import { attributesForSettingValue } from "./internals/settingState";
 import templateHtml from "./template.html" with { type: "text" };
-import componentCss from "./style.css" with { type: "text" };
+import componentCss from "./styles/index";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
@@ -116,67 +117,22 @@ export class SettingsView extends HTMLElement {
         }
 
         if (shouldRenderStates) {
-            view.append(this._renderStates(states));
+            view.append(renderSettingsStates(states, (state) => this._emitStateToggle(state)));
         }
 
         for (const section of visibleSections) {
-            view.append(this._renderSettingSection(section));
+            view.append(renderSettingSection(section, this._settingControls));
         }
     }
 
-    private _renderStates(states: EditableState[]): HTMLElement {
-        const section = document.createElement("cms-editor-v2-section");
-        section.setAttribute("label", "States");
-
-        for (const state of states) {
-            const button = document.createElement("button");
-            button.className = "state-button";
-            button.type = "button";
-            button.ariaPressed = String(state.isActive());
-
-            const label = document.createElement("span");
-            label.className = "state-label";
-            label.textContent = state.label;
-
-            const description = document.createElement("span");
-            description.className = "state-description";
-            description.textContent = state.description ?? (state.isActive() ? "Active" : "Inactive");
-
-            button.append(label, description);
-            button.addEventListener("click", () => {
-                this.dispatchEvent(
-                    new CustomEvent<SettingsViewStateToggleDetail>(SETTINGS_VIEW_STATE_TOGGLE_EVENT, {
-                        bubbles: true,
-                        composed: true,
-                        detail: { state },
-                    }),
-                );
-            });
-            section.append(button);
-        }
-
-        return section;
-    }
-
-    private _renderSettingSection(section: SettingSection): HTMLElement {
-        const element = document.createElement("cms-editor-v2-section");
-        element.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
-
-        const settings = visibleSettings(section.settings);
-
-        if (settings.length === 0) {
-            const empty = document.createElement("div");
-            empty.className = "section-empty";
-            empty.textContent = "No settings";
-            element.append(empty);
-            return element;
-        }
-
-        for (const setting of settings) {
-            element.append(this._settingControls.render(setting));
-        }
-
-        return element;
+    private _emitStateToggle(state: EditableState): void {
+        this.dispatchEvent(
+            new CustomEvent<SettingsViewStateToggleDetail>(SETTINGS_VIEW_STATE_TOGGLE_EVENT, {
+                bubbles: true,
+                composed: true,
+                detail: { state },
+            }),
+        );
     }
 
     private _emitSettingChange(

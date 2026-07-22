@@ -1,10 +1,10 @@
 import type { SourceRepository } from "../interfaces/SourceRepository";
 import type { SourceEndpoint } from "../interfaces/Source";
-import { resolveEndpoint } from "../core/resolveEndpoint";
-import { executeEndpoint, type ExecutorDeps } from "../core/executeEndpoint";
-import { systemSourceUrnOf } from "../core/systemSources";
-import { sourceEndpointAccessMode } from "../core/access";
-import { parseUrn } from "../core/urn";
+import { resolveEndpoint } from "../core/execution/resolveEndpoint";
+import { executeEndpoint, type ExecutorDeps } from "../core/execution/executeEndpoint";
+import { systemSourceUrnOf } from "../core/system/systemSources";
+import { sourceEndpointAccessMode } from "../core/execution/access";
+import { parseUrn } from "../core/system/urn";
 
 export const CMS_SOURCES_ROUTE = "/.cms/sources";
 export const SOURCE_PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;

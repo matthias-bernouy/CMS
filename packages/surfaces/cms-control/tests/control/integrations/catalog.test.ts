@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import getIntegrationCatalogue from "cms-control/api/integrations/catalogue.get";
-import getIntegrations from "cms-control/api/integrations/list.get";
-import postIntegrationImport from "cms-control/api/integrations/import.post";
+import getIntegrationCatalogue from "cms-control/api/_platform/integrations/catalogue.get";
+import getIntegrations from "cms-control/api/_platform/integrations/list.get";
+import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
 import type { IntegrationDefinition, IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
-import { makeCms, postImport, TEST_SECRET_SOURCE_DEFINITION } from "./helpers";
+import { makeCms, postImport, TEST_SECRET_SOURCE_DEFINITION } from "./support/helpers";
 
 describe("GET /api/integrations/list", () => {
     test("lists configured declarative integrations", async () => {

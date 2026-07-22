@@ -1,4 +1,4 @@
-import { memoizePromise } from "../core/execution/promiseMemoization";
+import { memoizePromise } from "../core/execution/support/promiseMemoization";
 import type { CmsFunction } from "../interfaces/FunctionDefinition";
 import type { FunctionRepository } from "../interfaces/FunctionRepository";
 

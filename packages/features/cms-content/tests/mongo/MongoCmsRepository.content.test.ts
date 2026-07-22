@@ -1,0 +1,90 @@
+import { describe, expect, test } from "bun:test";
+import type { TBloc } from "@bernouy/cms-content";
+import { DuplicateBlocTagError } from "@bernouy/cms-content";
+import { createMongoContentRepository } from "./contentMongoFixture";
+
+const card: TBloc = {
+    id: "site-card",
+    name: "Card",
+    group: "Marketing",
+    description: "A reusable card",
+    editorJS: "editor-code",
+    viewJS: "view-code",
+    source: { "index.ts": "c291cmNl" },
+};
+
+describe("MongoCmsRepository content persistence", () => {
+    test("uses prefixed collections and initializes required unique indexes", async () => {
+        const { db, repository } = createMongoContentRepository("tenant_");
+
+        await repository.init();
+
+        expect(db.get("tenant_pages").indexes).toEqual([{ keys: { path: 1 }, options: { unique: true } }]);
+        expect(db.get("tenant_templates").indexes).toEqual([{ keys: { identifier: 1 }, options: { unique: true } }]);
+        expect(db.get("tenant_templates").updateManyCalls).toBe(1);
+        expect(db.requestedCollections.every((name) => name.startsWith("tenant_"))).toBe(true);
+    });
+
+    test("stores, replaces, and projects blocs while translating duplicate tags", async () => {
+        const { repository } = createMongoContentRepository();
+
+        await expect(repository.createBloc(card)).resolves.toEqual(card);
+        expect(await repository.getBlocViewJS(card.id)).toBe("view-code");
+        expect(await repository.getBlocSource(card.id)).toEqual(card.source!);
+        expect(await repository.getBlocsJS()).toEqual([{ id: card.id, editorJS: "editor-code", viewJS: "view-code" }]);
+        expect(await repository.getBlocsList()).toEqual([
+            { id: card.id, name: "Card", group: "Marketing", description: "A reusable card" },
+        ]);
+
+        await repository.replaceBloc({ ...card, name: "Updated card", source: undefined });
+        expect(await repository.getBlocsList()).toEqual([
+            { id: card.id, name: "Updated card", group: "Marketing", description: "A reusable card" },
+        ]);
+        expect(await repository.getBlocSource(card.id)).toBeNull();
+        await expect(repository.createBloc(card)).rejects.toBeInstanceOf(DuplicateBlocTagError);
+    });
+
+    test("round-trips page documents and enforces published visibility", async () => {
+        const { repository } = createMongoContentRepository();
+        expect(await repository.getPage("/missing")).toBeNull();
+        await repository.insertPage("/draft", "Draft");
+        const draft = await repository.getPage("/draft");
+
+        expect(draft).toMatchObject({ path: "/draft", title: "Draft", visible: false });
+        expect(await repository.getPublishedPage("/draft")).toBeNull();
+        await repository.updatePage({ id: draft!.id, visible: true, tags: ["news"] });
+
+        expect(await repository.getPageById(draft!.id)).toMatchObject({ visible: true, tags: ["news"] });
+        expect((await repository.getPublishedPages()).map((page) => page.id)).toEqual([draft!.id]);
+        expect(await repository.getLinks()).toEqual([{ path: "/draft", title: "Draft" }]);
+        await repository.deletePage(draft!.id);
+        expect(await repository.getAllPages()).toEqual([]);
+        await expect(repository.updatePage({ title: "Missing id" })).rejects.toThrow(/requires `id`/);
+    });
+
+    test("round-trips template documents without exposing Mongo ids", async () => {
+        const { repository } = createMongoContentRepository();
+        const template = await repository.createTemplate({
+            identifier: "landing-page",
+            name: "Landing page",
+            description: "Marketing layout",
+            content: "<site-card></site-card>",
+            category: "Marketing",
+            createdAt: new Date("2026-01-02T00:00:00.000Z"),
+        });
+
+        expect(await repository.getTemplateById(template.id)).toEqual(template);
+        expect(await repository.getTemplateById("missing")).toBeNull();
+    });
+
+    test("seeds and updates the singleton system document", async () => {
+        const { repository } = createMongoContentRepository();
+
+        const fresh = await repository.getSystem();
+        expect(fresh).toMatchObject({ initializationStep: 0, site: { visible: true } });
+
+        const updated = await repository.updateSystem({ initializationStep: 3 });
+        expect(updated).toMatchObject({ initializationStep: 3, site: fresh.site });
+        expect(await repository.getSystem()).toEqual(updated);
+    });
+});

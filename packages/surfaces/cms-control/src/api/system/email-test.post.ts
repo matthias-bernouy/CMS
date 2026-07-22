@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { readJsonBody } from "cms-control/core/http/readJsonBody";
-import { sendTestEmail } from "cms-control/core/settings/sendTestEmail";
+import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
+import { sendTestEmail } from "cms-control/core/management/settings/sendTestEmail";
 import { parseEmailTestDto } from "cms-control/core/validation/settings/parseEmailTestDto";
 
 export default async function postEmailTest(req: Request, cms: ControlCms) {

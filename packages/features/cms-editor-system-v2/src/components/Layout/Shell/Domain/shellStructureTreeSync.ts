@@ -1,5 +1,5 @@
 import type { EditorCatalog } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem } from "../../BlockPickerModal/BlockPickerModal";
+import type { BlockPickerItem } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { DefaultTemplateSelection, StructureTree } from "../../StructureTree/StructureTree";
 
 export function isStructureTree(value: Element | null | undefined): value is StructureTree {

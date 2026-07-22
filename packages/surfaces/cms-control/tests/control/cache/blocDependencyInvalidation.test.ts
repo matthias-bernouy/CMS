@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { P9R_CACHE } from "@bernouy/cms-content";
-import { invalidatePagesReferencingBloc } from "cms-control/core/server/cache/invalidation";
+import { invalidatePagesReferencingBloc } from "cms-control/core/admin/server/cache/invalidation";
 
 function system() {
     const deleted: string[] = [];

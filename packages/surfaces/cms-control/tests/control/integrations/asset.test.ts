@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import getIntegrationAsset from "cms-control/api/integrations/asset.get";
+import getIntegrationAsset from "cms-control/api/_platform/integrations/asset.get";
 import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 
 describe("GET /api/integrations/asset", () => {

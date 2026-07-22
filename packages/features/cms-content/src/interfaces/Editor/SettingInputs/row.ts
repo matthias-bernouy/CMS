@@ -1,12 +1,12 @@
 import type { SettingLabelDisplay, SettingVisibilityRule } from "./base";
-import type { ColorSetting } from "./color";
-import type { EndpointPickerSetting } from "./endpointPicker";
-import type { PageLinkSetting } from "./pageLink";
-import type { SegmentedSetting } from "./segmented";
-import type { SelectSetting } from "./select";
-import type { TextareaSetting } from "./textarea";
-import type { TextSetting } from "./text";
-import type { ToggleSetting } from "./toggle";
+import type { ColorSetting } from "./choices/color";
+import type { EndpointPickerSetting } from "./references/endpointPicker";
+import type { PageLinkSetting } from "./references/pageLink";
+import type { SegmentedSetting } from "./choices/segmented";
+import type { SelectSetting } from "./choices/select";
+import type { TextareaSetting } from "./textual/textarea";
+import type { TextSetting } from "./textual/text";
+import type { ToggleSetting } from "./choices/toggle";
 
 type RowSettingControl =
     | TextSetting

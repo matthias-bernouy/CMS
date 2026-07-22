@@ -2,7 +2,7 @@ import { type EditorCatalog, type EditorDocument } from "@bernouy/cms-content/ed
 
 import { EditorRuntime, type EditorDataSource } from "../../../../../runtime";
 import type { DefaultTemplateSelection } from "../../../StructureTree/StructureTree";
-import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
+import type { BlockPickerItem } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorV2PageConfig } from "../shellTypes";
 import type { ShellDomRefs } from "../../Domain/shellDomRefs";
 import type { ShellCommands } from "./shellCommands";

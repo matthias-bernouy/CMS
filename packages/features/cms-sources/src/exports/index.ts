@@ -5,75 +5,7 @@
  * CMS- and persistence-agnostic; consumed by cms-delivery (proxy) and the
  * cms-control editor.
  */
-export type {
-    Source,
-    SourceEndpoint,
-    HTTPMethod,
-    ParamIn,
-    EndpointHeader,
-    HeaderSource,
-    EndpointParam,
-    SourceMeta,
-    EndpointResponse,
-    ComputedParamRef,
-    ParamValueSource,
-    ResponseKind,
-    SourceEndpointAccess,
-    SourceEndpointAccessMode,
-    SourceEndpointEffects,
-} from "../interfaces/Source";
-export {
-    COMPUTED_PARAM_REFS,
-    DEFAULT_SOURCE_ENDPOINT_TIMEOUT_MS,
-    HTTP_METHODS,
-    MAX_SOURCE_ENDPOINT_TIMEOUT_MS,
-    PARAM_INS,
-    RESPONSE_KINDS,
-    SOURCE_ENDPOINT_ACCESS_MODES,
-} from "../interfaces/Source";
-export type { DataShape } from "../interfaces/DataShape";
-export {
-    FORBIDDEN_REQUEST_HEADERS,
-    HEADER_NAME_RE,
-    isForbiddenHeaderName,
-    isValidHeaderName,
-    isValidHeaderValue,
-    MAX_ENDPOINT_HEADERS,
-    MAX_HEADER_VALUE_LENGTH,
-} from "../core/headerPolicy";
-
-export type {
-    SourceRepository,
-    SourceSchemaInvalidationScope,
-} from "../interfaces/SourceRepository";
-export type {
-    SourceOverlay,
-    SourceOverlayDashboardDataRef,
-    SourceOverlayDashboardEndpointRef,
-    SourceOverlayDashboardField,
-    SourceOverlayDashboardFieldPatch,
-    SourceOverlayDashboardFieldType,
-    SourceOverlayDashboardLookupRef,
-    SourceOverlayDashboardOption,
-    SourceOverlayEditableScope,
-    SourceOverlayEndpointTarget,
-    SourceOverlayField,
-    SourceOverlayFieldSource,
-    SourceOverlayFieldSourceMap,
-    SourceOverlayFieldType,
-    SourceOverlayRepository,
-    SourceOverlaySection,
-} from "../interfaces/SourceOverlay";
-export {
-    SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES,
-    SOURCE_OVERLAY_EDITABLE_SCOPES,
-    SOURCE_OVERLAY_FIELD_TYPES,
-    sourceOverlayFieldShape,
-} from "../interfaces/SourceOverlay";
-export { InMemorySourceRepository } from "../default-implementation/InMemorySourceRepository";
-export { InMemorySourceOverlayRepository } from "../default-implementation/InMemorySourceOverlayRepository";
-export { ValidatingSourceRepository } from "../core/ValidatingSourceRepository";
-export { CompositeSourceRepository } from "../core/CompositeSourceRepository";
+export * from "../publicApi";
 
 // ── Core (pure logic) ──
 export {
@@ -84,7 +16,7 @@ export {
     isSourceUrn,
     isEndpointUrn,
     type ParsedUrn,
-} from "../core/urn";
+} from "../core/system/urn";
 export {
     validateSource,
     endpointBelongsToSource,
@@ -93,7 +25,7 @@ export {
     isAllowedSourceTargetUrl,
     isValidResponseStatus,
     type SourceTargetUrlValidationOptions,
-} from "../core/validateSource";
+} from "../core/validation/validateSource";
 export {
     SYSTEM_SOURCE_ID_PREFIX,
     SYSTEM_AUTH_SOURCE_ID,
@@ -103,30 +35,30 @@ export {
     isSystemSourceId,
     isSystemSourceUrn,
     systemSourceUrnOf,
-} from "../core/systemSources";
-export { SourceValidationError, DuplicateSourceError } from "../core/errors";
+} from "../core/system/systemSources";
+export { SourceValidationError, DuplicateSourceError } from "../core/model/errors";
 export {
     DEFAULT_SOURCE_ENDPOINT_ACCESS_MODE,
     isSourceEndpointAccessMode,
     sourceEndpointAccessAllows,
     sourceEndpointAccessMode,
-} from "../core/access";
+} from "../core/execution/access";
 export {
     dataShapeAtPath,
     dataValueAtPath,
     parseDataShape,
     type DataShapePathOptions,
-} from "../core/parseDataShape";
+} from "../core/validation/parseDataShape";
 export {
     DataShapeProjectionError,
     projectStrictDataShape,
     type StrictDataShapeProjectionOptions,
-} from "../core/projectStrictDataShape";
+} from "../core/model/projectStrictDataShape";
 export {
     safeUpstreamFailureResponse,
     type SafeUpstreamFailureResponseOptions,
     type UndeclaredUpstreamStatus,
-} from "../core/upstreamFailure";
+} from "../core/upstream/upstreamFailure";
 export {
     SourceOverlaySourceRepository,
     applySourceOverlays,
@@ -134,13 +66,13 @@ export {
     sourceOverlaySchemaCacheFor,
     sourceOverlayFieldPath,
     type SourceOverlaySourceRepositoryOptions,
-} from "../core/sourceOverlay";
+} from "../core/overlays/sourceOverlay";
 export {
     DEFAULT_SOURCE_OVERLAY_SCHEMA_CACHE_TTL_MS,
     SourceOverlaySchemaCache,
     type SourceOverlaySchemaCacheOptions,
     type SourceOverlaySchemaCacheSelector,
-} from "../core/SourceOverlaySchemaCache";
+} from "../core/repositories/SourceOverlaySchemaCache";
 export {
     sourceDtoToSource,
     sourceToDto,
@@ -152,16 +84,16 @@ export {
     type SourceFlatDto,
     type CanonicalSourceEndpointDto,
     type CanonicalSourceDto,
-} from "../core/sourceDto";
-export { resolveEndpoint, type ResolveResult } from "../core/resolveEndpoint";
-export { seedSources, type SeedResult } from "../core/seedSources";
+} from "../core/overlays/sourceDto";
+export { resolveEndpoint, type ResolveResult } from "../core/execution/resolveEndpoint";
+export { seedSources, type SeedResult } from "../core/system/seedSources";
 export {
     buildUpstreamUrl,
     extractPathParamNames,
     type BuildUpstream,
     type SourceComputedContext,
-} from "../core/buildUpstreamUrl";
-export { executeEndpoint, type ExecutorDeps, type SourceSecretResolver } from "../core/executeEndpoint";
+} from "../core/upstream/buildUpstreamUrl";
+export { executeEndpoint, type ExecutorDeps, type SourceSecretResolver } from "../core/execution/executeEndpoint";
 export {
     MAX_PROJECTED_JSON_BYTES,
     RESPONSE_PROJECTION_MODES,

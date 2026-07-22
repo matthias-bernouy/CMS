@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from "bun:test";
-import { runFetch } from "../../../src/binding/fetcher";
+import { runFetch } from "../../../src/binding/source/fetcher";
 
 const realFetch = globalThis.fetch;
 afterEach(() => {

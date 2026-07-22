@@ -16,4 +16,4 @@ export {
     parseCmsFilesByIdUrl,
     withFileVersion,
     type CmsFilesByIdUrl,
-} from "cms-files/core/fileUrls";
+} from "cms-files/core/media/fileUrls";

@@ -5,7 +5,7 @@ import {
     requestEmailVerification,
     requestPasswordReset,
     signupLocalUser,
-} from "cms-auth/core/publicAuth";
+} from "cms-auth/core/public-auth/flows";
 import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
 

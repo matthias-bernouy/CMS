@@ -1,0 +1,131 @@
+:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.create-shell {
+    --w-detail-main-width: 760px;
+    --w-detail-aside-width: 290px;
+}
+
+.state {
+    color: var(--p9r-color-muted, #64748b);
+    padding: 1rem 0;
+}
+
+.back {
+    color: inherit;
+    font-size: 1.25rem;
+    text-decoration: none;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.journey-intro {
+    display: grid;
+    gap: .25rem;
+    padding: .25rem .1rem .75rem;
+}
+
+.journey-intro strong {
+    color: var(--p9r-color-text, #0f172a);
+    font-size: 1rem;
+}
+
+.journey-intro span {
+    color: var(--p9r-color-muted, #64748b);
+    font-size: .875rem;
+}
+
+.editor-panel,
+.side-panel,
+.status-panel {
+    overflow: hidden;
+    border: 1px solid var(--p9r-color-border, #d8e1ea);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.editor-panel + .editor-panel,
+.side-panel + .side-panel,
+.status-panel {
+    margin-top: .75rem;
+}
+
+.editor-panel > summary,
+.side-panel > summary {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    cursor: pointer;
+    list-style: none;
+}
+
+.editor-panel > summary::-webkit-details-marker,
+.side-panel > summary::-webkit-details-marker {
+    display: none;
+}
+
+.editor-panel > summary {
+    min-height: 4.5rem;
+    padding: .8rem 1rem;
+}
+
+.side-panel > summary {
+    padding: .8rem .9rem;
+}
+
+.summary-copy {
+    display: grid;
+    flex: 1;
+    gap: .2rem;
+}
+
+.summary-copy small {
+    color: var(--p9r-color-muted, #64748b);
+    font-size: .78rem;
+    font-weight: 500;
+}
+
+.step-number {
+    display: grid;
+    place-items: center;
+    flex: 0 0 2rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: #ecfdf5;
+    color: #047857;
+    font-weight: 800;
+}
+
+.step-number.optional {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.chevron {
+    margin-left: auto;
+    color: #64748b;
+    transition: transform .16s ease;
+}
+
+details[open] > summary > .chevron {
+    transform: rotate(180deg);
+}
+
+.panel-body,
+.side-body {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+    border-top: 1px solid var(--p9r-color-border, #e2e8f0);
+    background: #fbfdff;
+}

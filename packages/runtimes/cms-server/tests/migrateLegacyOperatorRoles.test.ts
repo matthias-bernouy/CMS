@@ -55,4 +55,23 @@ describe("migrateLegacyOperatorRoles", () => {
         expect((await users.list({ role: "support" })).total).toBe(0);
         expect((await users.list({ role: "admin" })).total).toBe(101);
     });
+
+    test("fails when a legacy-role page reports users but returns none", async () => {
+        const users = new InMemoryUsersRepository<string>();
+        const roles = new InMemoryRolesRepository();
+        users.list = async () => ({ users: [], total: 1, page: 1, limit: 100 });
+
+        await expect(migrateLegacyOperatorRoles(users, roles)).rejects.toThrow("Unable to migrate legacy role support");
+    });
+
+    test("fails when a legacy operator cannot be promoted", async () => {
+        const users = new InMemoryUsersRepository<string>();
+        const roles = new InMemoryRolesRepository();
+        await users.upsert({ sub: "stuck-operator" }, "support");
+        users.setRole = async () => null;
+
+        await expect(migrateLegacyOperatorRoles(users, roles)).rejects.toThrow(
+            "Unable to promote a user from legacy role support",
+        );
+    });
 });

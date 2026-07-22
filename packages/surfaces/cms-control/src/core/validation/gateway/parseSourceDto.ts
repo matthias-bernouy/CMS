@@ -1,23 +1,20 @@
-import MissingParam from "cms-control/errors/Http/MissingParam";
-import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
+import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import {
     HTTP_METHODS,
-    MAX_SOURCE_ENDPOINT_TIMEOUT_MS,
     RESPONSE_KINDS,
     isAllowedSourceTargetUrl,
-    isSourceEndpointAccessMode,
     isSystemSourceId,
     SYSTEM_SOURCE_ID_PREFIX,
     type HTTPMethod,
     type ResponseKind,
     type SourceDto,
-    type SourceEndpointAccess,
-    type SourceEndpointEffects,
 } from "@bernouy/cms-sources";
-import { slugify } from "cms-control/core/validation/slugify";
+import { slugify } from "cms-control/core/validation/identifiers/slugify";
 import { parseShapeField } from "./parseShapeField";
 import { pathParamsFromUrl, parseParamsBlob, parseMetaField, buildMeta } from "./gatewayValidators";
 import { parseResponsesBlob, parseHeadersBlob } from "./blobParsers";
+import { parseAccessBlob, parseEffectsBlob, parseTimeoutMs, required } from "./endpointFields";
 export type { SourceDto };
 
 /** Matches the flat indexed endpoint scalar keys, e.g. `endpoints.0.targetUrl`. */
@@ -140,77 +137,4 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
     // Zero endpoints is allowed: the create form makes a provider shell, and
     // endpoints are added afterwards on the provider's edit page.
     return { id, meta: buildMeta(body, id), endpoints };
-}
-
-function parseTimeoutMs(raw: string | undefined, name: string): number | undefined {
-    if (raw === undefined || raw === "") {
-        return undefined;
-    }
-    if (!/^\d+$/.test(raw)) {
-        throw new InvalidParam(name, `must be an integer between 1 and ${MAX_SOURCE_ENDPOINT_TIMEOUT_MS}`);
-    }
-    const timeoutMs = Number(raw);
-    if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > MAX_SOURCE_ENDPOINT_TIMEOUT_MS) {
-        throw new InvalidParam(name, `must be an integer between 1 and ${MAX_SOURCE_ENDPOINT_TIMEOUT_MS}`);
-    }
-    return timeoutMs;
-}
-
-function required(value: string | undefined, name: string): string {
-    if (!value) {
-        throw new MissingParam(name);
-    }
-    return value;
-}
-
-function parseAccessBlob(raw: unknown, name: string): SourceEndpointAccess | undefined {
-    if (raw === undefined || raw === "") {
-        return undefined;
-    }
-    if (typeof raw !== "string") {
-        throw new InvalidParam(name, "expected a JSON string.");
-    }
-    let parsed: unknown;
-    try {
-        parsed = JSON.parse(raw);
-    } catch {
-        throw new InvalidParam(name, "must be valid JSON.");
-    }
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-        throw new InvalidParam(name, "must be an object.");
-    }
-    const value = parsed as Record<string, unknown>;
-    if (!isSourceEndpointAccessMode(value.mode)) {
-        throw new InvalidParam(`${name}.mode`, "must be public|auth|admin|system.");
-    }
-    if (value.roles !== undefined) {
-        throw new InvalidParam(`${name}.roles`, "is no longer supported; use admin access.");
-    }
-    return { mode: value.mode };
-}
-
-function parseEffectsBlob(raw: unknown, name: string): SourceEndpointEffects | undefined {
-    if (raw === undefined || raw === "") {
-        return undefined;
-    }
-    if (typeof raw !== "string") {
-        throw new InvalidParam(name, "expected a JSON string.");
-    }
-    let parsed: unknown;
-    try {
-        parsed = JSON.parse(raw);
-    } catch {
-        throw new InvalidParam(name, "must be valid JSON.");
-    }
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-        throw new InvalidParam(name, "must be an object.");
-    }
-    const invalidatesSchema = (parsed as Record<string, unknown>).invalidatesSchema;
-    if (invalidatesSchema === undefined) {
-        return undefined;
-    }
-    if (invalidatesSchema !== true) {
-        throw new InvalidParam(`${name}.invalidatesSchema`, "must be true.");
-    }
-    return { invalidatesSchema: true };
 }

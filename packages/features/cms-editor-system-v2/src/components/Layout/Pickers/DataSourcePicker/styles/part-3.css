@@ -1,0 +1,142 @@
+.details p {
+    margin: 0;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.binding-config {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+}
+
+.binding-config label {
+    display: grid;
+    gap: 5px;
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.source-alias,
+.source-trigger,
+.param-value,
+.param-mode {
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 6px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+    padding: 0 9px;
+}
+
+.source-alias:focus,
+.source-trigger:focus,
+.param-value:focus,
+.param-mode:focus {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
+}
+
+.config-heading {
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 780;
+    text-transform: uppercase;
+}
+
+.param-row {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface);
+    padding: 10px;
+}
+
+.param-header {
+    display: grid;
+    gap: 5px;
+}
+
+.param-controls {
+    display: grid;
+    gap: 7px;
+}
+
+.param-header {
+    color: var(--editor-v2-text);
+    font-size: 12px;
+    font-weight: 760;
+}
+
+.param-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.param-meta {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.param-meta span {
+    border: 1px solid color-mix(in srgb, var(--editor-v2-accent) 18%, var(--editor-v2-border));
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--editor-v2-accent) 5%, var(--editor-v2-bg));
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 720;
+    line-height: 1;
+    padding: 3px 5px;
+}
+
+.param-meta span:first-child {
+    text-transform: uppercase;
+}
+
+.param-meta span:last-child {
+    color: var(--editor-v2-muted);
+}
+
+.param-row p {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.param-mode,
+.param-value {
+    background: var(--editor-v2-bg);
+}
+
+.fields {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: 8px;
+    color: var(--editor-v2-text);
+    font-size: 11px;
+    line-height: 1.35;
+    padding: 3px 0 3px calc(var(--field-depth, 0) * 12px);
+}
+
+.field-path {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}

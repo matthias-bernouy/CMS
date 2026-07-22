@@ -1,6 +1,6 @@
 import type { TSystem } from "cms-content/interfaces/settings";
-import { ContentValidationError } from "cms-content/core/errors";
-import { defaultSystem } from "cms-content/core/system";
+import { ContentValidationError } from "cms-content/core/validation/errors";
+import { defaultSystem } from "cms-content/core/lifecycle/system";
 import { validateThemeSettings } from "cms-content/core/theme";
 
 const SECRET_REF_PATTERN = /^\$\{[A-Z][A-Z0-9_]*\}$/;

@@ -6,7 +6,7 @@ export {
     SupabaseConnectorDeployer,
     type SupabaseConnectorDeployerConfig,
     type SupabaseConnectorFunctionSecrets,
-} from "../default-implementation/SupabaseConnectorDeployer";
+} from "../default-implementation/supabase/SupabaseConnectorDeployer";
 export {
     ConfiguredSupabaseConnectorDeployer,
     type ConfiguredSupabaseConnectorDeployerConfig,

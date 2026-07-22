@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { parseFrontmatter } from "cms-cli/push/shared/frontmatter";
+import { parseFrontmatter } from "cms-cli/push/shared/frontmatter/frontmatter";
 import { folderToCategory } from "cms-cli/push/shared/categoryFolder";
 import { isValidCategoryFolder } from "@bernouy/cms-content";
 

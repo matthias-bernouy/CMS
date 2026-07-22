@@ -1,6 +1,6 @@
 import type { FunctionDto } from "@bernouy/cms-functions";
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
-import { isRecord, text } from "../../values";
+import { isRecord, text } from "../../definition/values";
 import { parseAccessTemplate } from "../common";
 
 export function parseFunctionTemplate(value: Record<string, unknown>, name: string): FunctionDto {

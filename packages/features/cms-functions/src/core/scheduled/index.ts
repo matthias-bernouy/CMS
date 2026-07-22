@@ -1,4 +1,4 @@
-import { MIN_SCHEDULED_FUNCTION_INTERVAL_MS } from "../execution/limits";
+import { MIN_SCHEDULED_FUNCTION_INTERVAL_MS } from "../execution/context/limits";
 import { DEFAULT_SCHEDULED_FUNCTION_LOGGER, runScheduledSystemFunctionOnce } from "./runOnce";
 import type {
     ScheduledFunctionLogger,

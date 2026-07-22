@@ -1,6 +1,6 @@
-import { SOURCE_ATTR, SOURCE_TRIGGER_ATTR, isSourceTrigger, type SourceTrigger } from "../attrs";
-import { listenReactiveUrlChanges } from "./reactiveUrl";
-import { sourceUrl } from "./sourceSpec";
+import { SOURCE_ATTR, SOURCE_TRIGGER_ATTR, isSourceTrigger, type SourceTrigger } from "../core/attrs";
+import { listenReactiveUrlChanges } from "./runtime/reactiveUrl";
+import { sourceUrl } from "./runtime/sourceSpec";
 
 /** Space-separated event names in this attribute re-run the source. */
 export const RELOAD_ATTR = "cms-reload-on";

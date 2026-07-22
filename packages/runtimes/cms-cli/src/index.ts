@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import CLI_push from "./CLI_push";
-import CLI_pull from "./CLI_pull";
-import CLI_secrets from "./CLI_secrets";
-import CLI_filesReindex from "./CLI_filesReindex";
+import CLI_push from "./commands/CLI_push";
+import CLI_pull from "./commands/CLI_pull";
+import CLI_secrets from "./commands/CLI_secrets";
+import CLI_filesReindex from "./commands/CLI_filesReindex";
 
 const [command, ...rest] = process.argv.slice(2);
 
@@ -57,11 +57,11 @@ try {
     switch (command) {
         case "dev":
             process.env.MODE = "DEV";
-            await (await import("./CLI_dev")).default(rest);
+            await (await import("./commands/CLI_dev")).default(rest);
             break;
         case "preview":
             process.env.MODE = "PROD";
-            await (await import("./CLI_preview")).default(rest);
+            await (await import("./commands/CLI_preview")).default(rest);
             break;
         case "push":
             await CLI_push(rest);

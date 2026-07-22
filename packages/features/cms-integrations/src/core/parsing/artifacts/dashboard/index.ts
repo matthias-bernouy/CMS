@@ -1,7 +1,7 @@
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
-import { parseArtifactIcon } from "../../icon";
-import { isRecord, text } from "../../values";
+import { parseArtifactIcon } from "../../definition/icon";
+import { isRecord, text } from "../../definition/values";
 import { parseWidget } from "./widgets";
 
 export function parseDashboardTemplate(value: Record<string, unknown>, name: string): DashboardDto {

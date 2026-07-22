@@ -1,6 +1,6 @@
 import type { DashboardColumn, DashboardFilter } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
-import { isRecord, text } from "../../values";
+import { isRecord, text } from "../../definition/values";
 import { requiredText } from "../common";
 import { parseOptions } from "./refs";
 

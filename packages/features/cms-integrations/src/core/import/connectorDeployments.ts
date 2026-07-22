@@ -1,5 +1,5 @@
 import { IntegrationRuntimeError } from "../errors";
-import { resolveTemplates, type TemplateContext } from "../templates";
+import { resolveTemplates, type TemplateContext } from "../definitions/templates";
 import type { DeclarativeConnectorTemplate } from "../../interfaces/Integration";
 import type {
     IntegrationConnectorDeployer,

@@ -5,7 +5,7 @@ import {
     type DashboardVisibilityRule,
 } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
-import { isRecord } from "../../values";
+import { isRecord } from "../../definition/values";
 
 export function parseVisibilityRule(value: unknown, name: string): DashboardVisibilityRule {
     return parseRule(value, name, 0, { nodes: 0 });

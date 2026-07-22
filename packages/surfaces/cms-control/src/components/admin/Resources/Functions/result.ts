@@ -1,5 +1,5 @@
 import type { FunctionExecutionResult } from "./api";
-import { valueAt } from "./draft";
+import { valueAt } from "./create/draft";
 
 export function readableResult(result: FunctionExecutionResult): string {
     if (!result.ok) {

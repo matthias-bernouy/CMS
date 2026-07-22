@@ -1,24 +1,21 @@
-import { BLOCK_PICKER_SELECT_EVENT, type BlockPickerSelectDetail } from "../../../BlockPickerModal/BlockPickerModal";
-import {
-    DATA_SOURCE_PICKER_REMOVE_EVENT,
-    DATA_SOURCE_PICKER_SELECT_EVENT,
-    type DataSourcePickerSelectDetail,
-} from "../../../DataSourcePicker/DataSourcePicker";
-import {
-    CONDITION_PICKER_APPLY_EVENT,
-    CONDITION_PICKER_REMOVE_EVENT,
-    type ConditionPickerApplyDetail,
-} from "../../../ConditionPicker/ConditionPicker";
+import { type BlockPickerSelectDetail } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
+import { type DataSourcePickerSelectDetail } from "../../../Pickers/DataSourcePicker/DataSourcePicker";
+import { type ConditionPickerApplyDetail } from "../../../Pickers/ConditionPicker/ConditionPicker";
 import type { EditorStructureNode } from "../../../../../runtime";
-import {
-    clearStructureDragState,
-    clearStructureDropRow,
-    onStructureDragOver,
-    onStructureDragStart,
-    onStructureDrop,
-} from "../../Actions/structureDragDrop";
 import { onStructureDocumentKeydown } from "../../Actions/structureKeyboard";
 import type { StructureTreeController } from "./structureTreeController";
+import {
+    connectStructureTreeEvents,
+    disconnectStructureTreeEvents,
+    type StructureTreeEventHandlers,
+} from "./Support/structureTreeEventBindings";
+import {
+    clearStructureTreeDrag,
+    clearStructureTreeDropRow,
+    dropStructureTreeDrag,
+    overStructureTreeDrag,
+    startStructureTreeDrag,
+} from "./Support/structureTreeDragEvents";
 
 export class StructureTreeEvents {
     readonly onBlockPickerSelect = (event: CustomEvent<BlockPickerSelectDetail>): void => {
@@ -106,81 +103,47 @@ export class StructureTreeEvents {
         });
     };
 
-    private readonly onDocumentClick = (): void => {
+    readonly onDocumentClick = (): void => {
         this.tree.emitter.closeContextMenu();
     };
 
     constructor(private readonly tree: StructureTreeController) {}
 
     connect(): void {
-        this.tree.host.ownerDocument.addEventListener("click", this.onDocumentClick);
-        this.tree.host.ownerDocument.addEventListener("keydown", this.onDocumentKeydown);
-        this.tree.refs.blockPicker.addEventListener(
-            BLOCK_PICKER_SELECT_EVENT,
-            this.onBlockPickerSelect as EventListener,
-        );
-        this.tree.refs.dataSourcePicker.addEventListener(
-            DATA_SOURCE_PICKER_SELECT_EVENT,
-            this.onDataSourceSelect as EventListener,
-        );
-        this.tree.refs.dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this.onDataSourceRemove);
-        this.tree.refs.conditionPicker.addEventListener(
-            CONDITION_PICKER_APPLY_EVENT,
-            this.onConditionApply as EventListener,
-        );
-        this.tree.refs.conditionPicker.addEventListener(CONDITION_PICKER_REMOVE_EVENT, this.onConditionRemove);
-        this.tree.refs.tree.addEventListener("click", this.onTreeClick);
-        this.tree.refs.tree.addEventListener("contextmenu", this.onTreeContextMenu);
+        connectStructureTreeEvents(this.tree, this.eventHandlers());
     }
 
     disconnect(): void {
-        this.tree.host.ownerDocument.removeEventListener("click", this.onDocumentClick);
-        this.tree.host.ownerDocument.removeEventListener("keydown", this.onDocumentKeydown);
-        this.tree.refs.blockPicker.removeEventListener(
-            BLOCK_PICKER_SELECT_EVENT,
-            this.onBlockPickerSelect as EventListener,
-        );
-        this.tree.refs.dataSourcePicker.removeEventListener(
-            DATA_SOURCE_PICKER_SELECT_EVENT,
-            this.onDataSourceSelect as EventListener,
-        );
-        this.tree.refs.dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this.onDataSourceRemove);
-        this.tree.refs.conditionPicker.removeEventListener(
-            CONDITION_PICKER_APPLY_EVENT,
-            this.onConditionApply as EventListener,
-        );
-        this.tree.refs.conditionPicker.removeEventListener(CONDITION_PICKER_REMOVE_EVENT, this.onConditionRemove);
-        this.tree.refs.tree.removeEventListener("click", this.onTreeClick);
-        this.tree.refs.tree.removeEventListener("contextmenu", this.onTreeContextMenu);
+        disconnectStructureTreeEvents(this.tree, this.eventHandlers());
     }
 
     onDragStart(node: EditorStructureNode, event: DragEvent): void {
-        onStructureDragStart(this.tree.state.dragDrop, node, event);
+        startStructureTreeDrag(this.tree, node, event);
     }
 
     onDragOver(node: EditorStructureNode, row: HTMLElement, event: DragEvent): void {
-        onStructureDragOver(this.tree.state.dragDrop, node, row, event, this.dragDropContext());
+        overStructureTreeDrag(this.tree, node, row, event);
     }
 
     onDrop(node: EditorStructureNode, event: DragEvent): void {
-        onStructureDrop(this.tree.state.dragDrop, node, event, this.dragDropContext());
+        dropStructureTreeDrag(this.tree, node, event);
     }
 
     clearDragState(): void {
-        clearStructureDragState(this.tree.state.dragDrop);
+        clearStructureTreeDrag(this.tree);
     }
 
     clearDropRow(): void {
-        clearStructureDropRow(this.tree.state.dragDrop);
+        clearStructureTreeDropRow(this.tree);
     }
 
-    private readonly onTreeClick = (event: Event): void => {
+    readonly onTreeClick = (event: Event): void => {
         if (event.target === this.tree.refs.tree) {
             this.tree.pickers.openRootPicker();
         }
     };
 
-    private readonly onTreeContextMenu = (event: Event): void => {
+    readonly onTreeContextMenu = (event: Event): void => {
         if (event.target !== this.tree.refs.tree) {
             return;
         }
@@ -189,18 +152,17 @@ export class StructureTreeEvents {
         this.tree.menus.openRootContextMenu(mouseEvent.clientX, mouseEvent.clientY);
     };
 
-    private dragDropContext() {
+    private eventHandlers(): StructureTreeEventHandlers {
         return {
-            clearDropRow: () => this.clearDropRow(),
-            emitMove: (
-                action: "move-before" | "move-after",
-                target: EditorStructureNode,
-                dragged: EditorStructureNode,
-            ) => {
-                this.tree.emitter.emitAction(action, target.editor, undefined, undefined, undefined, dragged.editor);
-            },
-            isDescendantNode: (candidate: EditorStructureNode, parent: EditorStructureNode) =>
-                this.tree.nodes.isDescendantNode(candidate, parent),
+            blockPickerSelect: this.onBlockPickerSelect as EventListener,
+            conditionApply: this.onConditionApply as EventListener,
+            conditionRemove: this.onConditionRemove,
+            dataSourceRemove: this.onDataSourceRemove,
+            dataSourceSelect: this.onDataSourceSelect as EventListener,
+            documentClick: this.onDocumentClick,
+            documentKeydown: this.onDocumentKeydown as EventListener,
+            treeClick: this.onTreeClick,
+            treeContextMenu: this.onTreeContextMenu,
         };
     }
 }

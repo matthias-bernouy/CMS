@@ -1,6 +1,6 @@
 import { join, relative } from "node:path";
 import { scanDevBlocs, type DevBloc } from "cms-cli/dev-server/scan";
-import { buildAllDevBlocs } from "cms-cli/dev-server/build";
+import { buildAllDevBlocs } from "cms-cli/dev-server/bloc-build/index";
 import { loadPushConfig } from "cms-cli/push/shared/config";
 import { confirm } from "cms-cli/push/shared/recap";
 import { applyPushBlocs, fetchRemoteBlocList } from "cms-cli/push/blocs/apply";

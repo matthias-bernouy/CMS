@@ -1,6 +1,5 @@
 import type { SourceEndpoint } from "../../interfaces/Source";
-import { responseHeaders } from "../endpointHeaders";
-import { DataShapeProjectionError } from "../projectStrictDataShape";
+import { DataShapeProjectionError } from "../model/projectStrictDataShape";
 import { projectDataShape } from "./projectDataShape";
 import { readBoundedJson } from "./readBoundedJson";
 import {
@@ -10,6 +9,13 @@ import {
     type ResponseProjectionOptions,
 } from "./responseProjectionEvents";
 import { attachProjectedTriggerResponseBody } from "./triggerResponseBody";
+import {
+    cancelResponseBody,
+    discardResponseBody,
+    isJsonMediaType,
+    passthroughResponse,
+    projectedJsonResponse,
+} from "./projectedResponse";
 
 export {
     RESPONSE_PROJECTION_MODES,
@@ -35,12 +41,12 @@ export async function projectEndpointResponse(
         if ((options.responseProjectionMode ?? "compatibility") === "compatibility") {
             reportLegacyContract(endpoint, upstream, output === undefined ? "missing_output" : "empty_output", options);
             if (request.method === "HEAD") {
-                return discardBody(upstream);
+                return discardResponseBody(upstream);
             }
-            return passthrough(upstream);
+            return passthroughResponse(upstream);
         }
 
-        await cancelBody(upstream.body);
+        await cancelResponseBody(upstream.body);
         return projectionFailure(
             endpoint.urn,
             upstream.status,
@@ -57,29 +63,29 @@ export async function projectEndpointResponse(
         if ((options.responseProjectionMode ?? "compatibility") === "compatibility") {
             reportLegacyContract(endpoint, upstream, "unmatched_status", options);
             if (request.method === "HEAD") {
-                return discardBody(upstream);
+                return discardResponseBody(upstream);
             }
-            return passthrough(upstream);
+            return passthroughResponse(upstream);
         }
-        await cancelBody(upstream.body);
+        await cancelResponseBody(upstream.body);
         return projectionFailure(endpoint.urn, upstream.status, request.method === "HEAD", "unmatched_status", options);
     }
 
     if (request.method === "HEAD") {
-        return discardBody(upstream);
+        return discardResponseBody(upstream);
     }
 
     // File contracts stay streaming and media-type permissive during C14.
     if (endpoint.responseKind === "file") {
-        return passthrough(upstream);
+        return passthroughResponse(upstream);
     }
 
     if (!declared.body) {
-        return discardBody(upstream);
+        return discardResponseBody(upstream);
     }
 
     if (!isJsonMediaType(upstream.headers.get("content-type"))) {
-        await cancelBody(upstream.body);
+        await cancelResponseBody(upstream.body);
         return projectionFailure(endpoint.urn, upstream.status, false, "unsupported_media_type", options, {
             path: "$",
             expectedType: declared.body.type,
@@ -120,42 +126,6 @@ export async function projectEndpointResponse(
     return response;
 }
 
-function passthrough(upstream: Response): Response {
-    return new Response(upstream.body, {
-        status: upstream.status,
-        statusText: upstream.statusText,
-        headers: responseHeaders(upstream),
-    });
-}
-
-async function discardBody(upstream: Response): Promise<Response> {
-    await cancelBody(upstream.body);
-    const headers = responseHeaders(upstream);
-    headers.delete("content-type");
-    headers.delete("etag");
-    headers.delete("last-modified");
-    return new Response(null, {
-        status: upstream.status,
-        statusText: upstream.statusText,
-        headers,
-    });
-}
-
-function projectedJsonResponse(upstream: Response, value: unknown): Response {
-    const headers = responseHeaders(upstream);
-    headers.delete("etag");
-    headers.delete("last-modified");
-    headers.delete("content-length");
-    headers.delete("content-encoding");
-    headers.set("content-type", "application/json; charset=utf-8");
-    headers.set("x-content-type-options", "nosniff");
-    return new Response(JSON.stringify(value), {
-        status: upstream.status,
-        statusText: upstream.statusText,
-        headers,
-    });
-}
-
 function reportLegacyContract(
     endpoint: SourceEndpoint,
     upstream: Response,
@@ -169,19 +139,4 @@ function reportLegacyContract(
         reason,
         correlationId: crypto.randomUUID(),
     });
-}
-
-function isJsonMediaType(contentType: string | null): boolean {
-    if (!contentType) {
-        return false;
-    }
-    const mediaType = contentType.split(";", 1)[0]!.trim().toLowerCase();
-    return mediaType === "application/json" || /^[^\s/;]+\/[^\s/;]+\+json$/.test(mediaType);
-}
-
-async function cancelBody(body: ReadableStream<Uint8Array> | null): Promise<void> {
-    if (!body) {
-        return;
-    }
-    await body.cancel().catch(() => undefined);
 }

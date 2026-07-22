@@ -1,9 +1,8 @@
 import { Component } from "@bernouy/components/base";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import { emitWidgetEvent, setText, WIDGET_ACTION_EVENT } from "../shared";
-import "./WCell";
 import { type DashboardWRow } from "./WRow";
-import "./WRow";
+import { createTableRow, renderTableColumns, tableActionButtons } from "./render";
 import type { WTableColumn, WTableData, WTableRow } from "./types";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
@@ -18,7 +17,7 @@ export class DashboardWTable extends Component {
 
     set data(value: WTableData) {
         this.value = value;
-        this.replaceChildren(...value.rows.map((row) => this.createRow(row)));
+        this.replaceChildren(...value.rows.map((row) => createTableRow(row, value.columns)));
         if (this.isConnected) {
             this.render();
             this.syncRows();
@@ -67,37 +66,11 @@ export class DashboardWTable extends Component {
 
     private renderActions(): void {
         const root = this.query<HTMLElement>("[data-actions]");
-        root.replaceChildren(
-            ...(this.value.actions ?? []).map((action) => {
-                const button = document.createElement("p9r-button");
-                button.dataset.action = action.action;
-                if (action.widget) {
-                    button.dataset.widget = action.widget;
-                }
-                if (action.target) {
-                    button.dataset.target = action.target;
-                }
-                if (action.confirm) {
-                    button.dataset.confirm = action.confirm;
-                }
-                button.setAttribute("tone", action.tone ?? "primary");
-                button.textContent = action.label;
-                return button;
-            }),
-        );
+        root.replaceChildren(...tableActionButtons(this.value.actions ?? []));
     }
 
     private renderColumns(): void {
-        const head = this.query<HTMLElement>("[data-head-row]");
-        head.querySelectorAll("[data-column-header]").forEach((th) => th.remove());
-        this.style.setProperty("--dashboard-table-columns", tableColumns(this.value.columns));
-        for (const column of this.value.columns) {
-            const th = document.createElement("span");
-            th.dataset.columnHeader = column.key;
-            th.setAttribute("role", "columnheader");
-            th.textContent = column.label;
-            head.append(th);
-        }
+        renderTableColumns(this, this.query<HTMLElement>("[data-head-row]"), this.value.columns);
     }
 
     private syncConfig(): void {
@@ -138,34 +111,6 @@ export class DashboardWTable extends Component {
         return Array.from(this.querySelectorAll<DashboardWRow>("cms-dashboard-w-row"));
     }
 
-    private createRow(row: WTableRow): DashboardWRow {
-        const element = document.createElement("cms-dashboard-w-row") as DashboardWRow;
-        element.setAttribute("row-key", row.id);
-        if (row.collection) {
-            element.setAttribute("collection", row.collection);
-        }
-        for (const column of this.value.columns) {
-            const cell = document.createElement("cms-dashboard-w-cell");
-            const value = row.cells[column.key];
-            if (column.primary) {
-                cell.toggleAttribute("primary", true);
-            }
-            if (typeof value === "object") {
-                if (value.tone) {
-                    cell.setAttribute("tone", value.tone);
-                }
-                if (value.meta) {
-                    cell.setAttribute("meta", value.meta);
-                }
-                cell.textContent = value.title;
-            } else {
-                cell.textContent = value ?? "";
-            }
-            element.append(cell);
-        }
-        return element;
-    }
-
     private onSlotChange = (): void => this.syncRows();
 
     private onActionClick = (event: Event): void => {
@@ -201,10 +146,6 @@ if (!customElements.get("cms-dashboard-w-table")) {
 export type { WTableColumn, WTableData, WTableRow };
 
 type TableWidget = Extract<DashboardWidget, { widget: "w-table" }>;
-
-function tableColumns(columns: WTableColumn[]): string {
-    return ["46px", ...columns.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" ");
-}
 
 function parseJson<T>(value: string): T | null {
     if (!value) {

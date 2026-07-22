@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 import type { PatRepository, Pat, PatPrincipal, NewPat } from "cms-auth/interfaces/PatRepository";
-import { mintPatToken, hashPatToken } from "cms-auth/core/patToken";
+import { mintPatToken, hashPatToken } from "cms-auth/core/tokens/patToken";
 
 /**
  * In-memory `PatRepository` for dev and tests. Stores only the SHA-256 of each

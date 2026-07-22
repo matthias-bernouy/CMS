@@ -1,0 +1,46 @@
+.callout,
+.function-contract,
+.message,
+.reference-list {
+    color: var(--p9r-color-muted, #64748b);
+    font-size: .8125rem;
+}
+
+.callout {
+    padding: .7rem .8rem;
+    border-left: 3px solid #0f766e;
+    background: #f0fdfa;
+    color: #115e59;
+}
+
+.function-contract {
+    padding: .65rem .75rem;
+    border-radius: 6px;
+    background: #f1f5f9;
+}
+
+.reference-list {
+    display: grid;
+    gap: .55rem;
+}
+
+.reference-list code {
+    overflow-wrap: anywhere;
+}
+
+.status-panel {
+    display: grid;
+    gap: .45rem;
+    padding: .85rem .9rem;
+}
+
+.message.error {
+    color: #b91c1c;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 760px) {
+    .mapping-row {
+        grid-template-columns: 1fr;
+    }
+}

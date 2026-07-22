@@ -4,7 +4,7 @@ import type { EncryptedBlob } from "@bernouy/envelope-crypto";
 import type { Identity } from "cms-auth/interfaces/UsersRepository";
 import type { LocalCredentialStore, LocalCredential, NewCredential } from "cms-auth/interfaces/LocalCredentialStore";
 import type { FieldCrypto } from "@bernouy/envelope-crypto";
-import { dummyPasswordVerify } from "cms-auth/core/passwordTiming";
+import { dummyPasswordVerify } from "cms-auth/core/accounts/passwordTiming";
 
 /**
  * MongoDB `LocalCredentialStore`. One collection (`<prefix>credentials`), `sub`

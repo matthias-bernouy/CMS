@@ -1,5 +1,5 @@
 import type { DataShape } from "../../interfaces/DataShape";
-import { DataShapeProjectionError, projectStrictDataShape } from "../projectStrictDataShape";
+import { DataShapeProjectionError, projectStrictDataShape } from "../model/projectStrictDataShape";
 import { isStructuredTriggerBody } from "./validateTriggerResponse";
 
 export type TriggerResponseProjection = {

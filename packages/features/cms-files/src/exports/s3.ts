@@ -3,4 +3,4 @@
  * roots only.
  */
 
-export { S3CmsFilesBlob, type S3CmsFilesBlobConfig } from "cms-files/default-implementation/S3CmsFilesBlob";
+export { S3CmsFilesBlob, type S3CmsFilesBlobConfig } from "cms-files/default-implementation/s3/S3CmsFilesBlob";

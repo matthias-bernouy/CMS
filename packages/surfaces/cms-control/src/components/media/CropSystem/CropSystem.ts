@@ -1,11 +1,12 @@
 import template from "./template.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import controlsCss from "./styles/controls.css" with { type: "text" };
+import layoutCss from "./styles/layout.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
 
 export class CropSystem extends Component {
     constructor() {
         super({
-            css: css as unknown as string,
+            css: [layoutCss, controlsCss].join("\n"),
             template: template as unknown as string,
         });
     }

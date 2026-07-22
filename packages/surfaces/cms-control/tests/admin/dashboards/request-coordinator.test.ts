@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { DetailResourceState } from "../../../src/components/admin/Resources/Dashboards/domain";
+import { DetailResourceState } from "cms-control/components/admin/Resources/Dashboards/domain";
 import { DetailRequestCoordinator } from "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/requests";
 
 const realFetch = globalThis.fetch;

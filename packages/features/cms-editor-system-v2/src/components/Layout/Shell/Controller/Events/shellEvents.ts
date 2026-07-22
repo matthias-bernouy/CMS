@@ -11,7 +11,7 @@ import type {
     SettingsViewSettingChangeDetail,
     SettingsViewStateToggleDetail,
 } from "../../../../Settings/SettingsView/SettingsView";
-import type { RepeatPickerSelectDetail } from "../../../RepeatPicker/RepeatPicker";
+import type { RepeatPickerSelectDetail } from "../../../Pickers/RepeatPicker/RepeatPicker";
 import type { StructureTreeActionDetail } from "../../../StructureTree/StructureTree";
 import { setTextValue } from "../../Domain/Settings/settingsValues";
 import type { ShellEventsContext } from "./shellEventTypes";
