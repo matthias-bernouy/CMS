@@ -71,6 +71,8 @@ import { registerProviderExceptionResolutionContracts } from "./stripe-connect/p
 import { registerStripeConnectRoutingContracts } from "./stripe-connect/routing/contracts";
 import { registerProtectedPaymentReadContracts } from "./stripe-connect/routing/protected-payment-reads.contracts";
 import { registerProtectedPaymentValidationContracts } from "./stripe-connect/routing/protected-payment-validations.contracts";
+import { registerStripeWebhookPersistenceContracts } from "./stripe-connect/routing/webhooks/persistence.contracts";
+import { registerStripeWebhookValidationContracts } from "./stripe-connect/routing/webhooks/validation.contracts";
 import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/contracts";
 import { registerPaymentReconciliationLedgerDivergenceContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/divergence";
 import { registerStalePaymentLocalContextContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/stale-local-context";
@@ -10705,6 +10707,8 @@ registerSettlementReleaseLedgerFreshnessContracts(createProviderReconciliationHa
 registerStripeConnectRoutingContracts(createRoutingHarness);
 registerProtectedPaymentValidationContracts(createRoutingHarness);
 registerProtectedPaymentReadContracts(createRoutingHarness);
+registerStripeWebhookPersistenceContracts(createRoutingHarness);
+registerStripeWebhookValidationContracts(createRoutingHarness);
 registerAccountOnboardingContracts(createAccountHandlerHarness);
 registerAccountEnrollmentContracts(createAccountHandlerHarness);
 registerAccountLifecycleContracts(createAccountHandlerHarness);
