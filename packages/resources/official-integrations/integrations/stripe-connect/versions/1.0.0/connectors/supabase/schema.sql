@@ -1746,6 +1746,8 @@ create index if not exists operations_pending_idx on stripe_connect.financial_op
 create index if not exists stripe_events_pending_idx on stripe_connect.stripe_events(received_at)
     where processing_status in ('pending', 'failed');
 create index if not exists disputes_payment_status_idx on stripe_connect.stripe_disputes(payment_id, status);
+create index if not exists stripe_disputes_created_at_idx
+    on stripe_connect.stripe_disputes(created_at desc);
 create index if not exists exceptions_open_idx on stripe_connect.provider_exceptions(severity, detected_at)
     where status <> 'resolved';
 create index if not exists commerce_projection_outbox_payment_idx
@@ -1754,6 +1756,9 @@ create index if not exists financial_operations_payment_idx
     on stripe_connect.financial_operations(payment_id);
 create index if not exists dispute_action_approvals_dispute_idx
     on stripe_connect.irreversible_dispute_action_approvals(dispute_id);
+create index if not exists dispute_action_approvals_pending_idx
+    on stripe_connect.irreversible_dispute_action_approvals(dispute_id, created_at desc)
+    where status = 'pending_second_approval';
 create index if not exists payment_events_payment_idx
     on stripe_connect.payment_events(payment_id);
 create index if not exists payout_events_account_idx
@@ -1832,6 +1837,7 @@ returns table(
 language plpgsql
 security invoker
 set search_path = ''
+set plan_cache_mode = force_custom_plan
 as $$
 begin
     if p_actor_kind is distinct from 'admin' or nullif(btrim(p_actor_id), '') is null then
