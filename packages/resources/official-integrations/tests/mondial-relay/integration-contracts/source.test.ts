@@ -1,0 +1,30 @@
+import { describe } from "bun:test";
+import { registerFoundationTests } from "../source/tests/foundation.ts";
+import { registerInstallationTests } from "../source/tests/installation.ts";
+import { registerShipmentReadTests } from "../source/tests/shipment-read/index.ts";
+import { registerShipmentCreationTests } from "../source/tests/shipment-creation/index.ts";
+import { registerLabelAccessTests } from "../source/tests/label-access.ts";
+import { registerCancellationTests } from "../source/tests/cancellation/index.ts";
+import { registerTrackingTests } from "../source/tests/tracking.ts";
+import { registerProjectionTests } from "../source/tests/projection.ts";
+import { registerRelaySelectionTests } from "../source/workflows/relay-selection/index.ts";
+import { registerSettingsTests } from "../source/workflows/settings.ts";
+import { registerProviderErrorTests } from "../source/workflows/provider-errors.ts";
+import { registerRecoveryTests } from "../source/workflows/recovery.ts";
+import { registerLabelValidationTests } from "../source/workflows/label-validation.ts";
+
+describe("mondial-relay 1.0.0 source", () => {
+    registerFoundationTests();
+    registerInstallationTests();
+    registerShipmentReadTests();
+    registerShipmentCreationTests();
+    registerLabelAccessTests();
+    registerCancellationTests();
+    registerTrackingTests();
+    registerProjectionTests();
+    registerRelaySelectionTests();
+    registerSettingsTests();
+    registerProviderErrorTests();
+    registerRecoveryTests();
+    registerLabelValidationTests();
+});
