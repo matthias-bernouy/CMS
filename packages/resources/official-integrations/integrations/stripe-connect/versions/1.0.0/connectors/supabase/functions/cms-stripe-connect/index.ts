@@ -1,12 +1,8 @@
 import {
     defaultCurrency,
     protectedPlatformPayoutInterval,
-    requiredEnv,
-    stripeLivemode,
     stripeV1ApiVersion,
     stripeV2ApiVersion,
-    stripeWebhookMaximumBytes,
-    stripeWebhookToleranceSeconds,
 } from "./shared/runtime.ts";
 import {
     callRpcObject,
@@ -153,7 +149,7 @@ import { createConfigurePlatformPayoutProtection } from "./routes/payouts/platfo
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { createRequestProtectedRefund } from "./routes/refunds/protected.ts";
 import { connectConfig, health } from "./routes/system.ts";
-import { bytesToHex, digest, safeEqual, stableStripeIdempotencyKey } from "./shared/crypto.ts";
+import { digest, stableStripeIdempotencyKey } from "./shared/crypto.ts";
 import {
     arrayAt,
     errorMessage,
@@ -161,7 +157,6 @@ import {
     numberAt,
     objectAt,
     recordArrayAt,
-    requiredRecordString,
     stringArrayAt,
     stringAt,
     stripeObjectId,
@@ -188,6 +183,7 @@ import {
     quarantineProviderPaymentTruth,
     syncPayment,
 } from "./workflows/payments/projection.ts";
+import { createStripeWebhookIngress } from "./workflows/webhooks/ingress.ts";
 
 const executeSettlementRelease = createSettlementReleaseWorkflow({
     reconcilePayment,
@@ -233,11 +229,10 @@ const disputeRouteDependencies = {
 const submitStripeDisputeEvidence = createSubmitStripeDisputeEvidence(disputeRouteDependencies);
 const acceptStripeDispute = createAcceptStripeDispute(disputeRouteDependencies);
 const configurePlatformPayoutProtection = createConfigurePlatformPayoutProtection({ platformPayoutControl });
+const stripeWebhookIngress = createStripeWebhookIngress({ insertStripeEventDurably });
 
 serveStripeConnect({
-    ingestPlatformWebhook: (request) => ingestStripeWebhook(request, "platform"),
-    ingestConnectWebhook: (request) => ingestStripeWebhook(request, "connect"),
-    ingestConnectV2Webhook: (request) => ingestStripeWebhook(request, "connect_v2"),
+    ...stripeWebhookIngress,
     health,
     connectConfig,
     connectStatus,
@@ -1267,80 +1262,6 @@ function publicCommerceOperation(operation: JsonRecord): JsonRecord | null {
         createdAt: operation.createdAt,
         updatedAt: operation.updatedAt,
     });
-}
-
-async function ingestStripeWebhook(
-    request: Request,
-    endpointKind: "platform" | "connect" | "connect_v2",
-): Promise<Response> {
-    const contentLength = Number(request.headers.get("content-length") ?? 0);
-    if (contentLength > stripeWebhookMaximumBytes) {
-        throw new HttpError(413, "Stripe webhook payload is too large");
-    }
-    const bytes = new Uint8Array(await request.arrayBuffer());
-    if (bytes.length > stripeWebhookMaximumBytes) {
-        throw new HttpError(413, "Stripe webhook payload is too large");
-    }
-    const rawBody = new TextDecoder().decode(bytes);
-    await verifyStripeWebhookSignature(
-        rawBody,
-        request.headers.get("stripe-signature") ?? "",
-        endpointKind === "platform"
-            ? "STRIPE_WEBHOOK_SECRET"
-            : endpointKind === "connect_v2"
-              ? "STRIPE_CONNECT_V2_WEBHOOK_SECRET"
-              : "STRIPE_CONNECT_WEBHOOK_SECRET",
-    );
-    let event: JsonRecord;
-    try {
-        const parsed = JSON.parse(rawBody);
-        if (!isRecord(parsed)) {
-            throw new Error("not an object");
-        }
-        event = parsed;
-    } catch {
-        throw new HttpError(400, "invalid Stripe event JSON");
-    }
-    const expectedLivemode = stripeLivemode();
-    if (typeof event.livemode !== "boolean" || event.livemode !== expectedLivemode) {
-        throw new HttpError(400, "Stripe webhook livemode does not match configured API keys");
-    }
-    const eventId = requiredRecordString(event, "id", 255);
-    const eventType = requiredRecordString(event, "type", 255);
-    const providerCreatedAt = stripeEventCreatedAt(event);
-    const dataObject = objectAt(objectAt(event, "data"), "object");
-    const relatedObject = objectAt(event, "related_object");
-    const connectedAccountId =
-        endpointKind === "connect_v2" ? stringAt(relatedObject, "id") : stringAt(event, "account");
-    if (endpointKind === "platform" && connectedAccountId) {
-        throw new HttpError(400, "connected-account event sent to platform Stripe webhook");
-    }
-    if (endpointKind === "connect" && !connectedAccountId) {
-        throw new HttpError(400, "platform event sent to Stripe Connect webhook");
-    }
-    if (
-        endpointKind === "connect_v2" &&
-        (!eventType.startsWith("v2.core.account") ||
-            stringAt(relatedObject, "type") !== "v2.core.account" ||
-            !connectedAccountId)
-    ) {
-        throw new HttpError(400, "non-account event sent to Stripe Connect v2 webhook");
-    }
-    const stripeAccountId = connectedAccountId || "platform";
-    const payloadSha256 = await digest(rawBody);
-    const inserted = await insertStripeEventDurably({
-        stripe_account_id: stripeAccountId,
-        event_id: eventId,
-        event_type: eventType,
-        object_id: stringAt(dataObject, "id") || stringAt(relatedObject, "id") || null,
-        api_version: stringAt(event, "api_version") || null,
-        livemode: event.livemode === true,
-        provider_created_at: providerCreatedAt,
-        payload_sha256: payloadSha256,
-        payload: event,
-        processing_status: "pending",
-    });
-    return json({ received: true, duplicate: !inserted }, inserted ? 202 : 200);
 }
 
 async function requiredPayment(paymentId: number): Promise<ConnectPaymentRow> {
@@ -2483,49 +2404,6 @@ async function applyStripeDispute(
             }
         }
     }
-}
-
-async function verifyStripeWebhookSignature(
-    rawBody: string,
-    signatureHeader: string,
-    secretName: "STRIPE_WEBHOOK_SECRET" | "STRIPE_CONNECT_WEBHOOK_SECRET" | "STRIPE_CONNECT_V2_WEBHOOK_SECRET",
-): Promise<void> {
-    const fields = signatureHeader.split(",").map((part) => part.trim().split("=", 2));
-    const timestampText = fields.find(([key]) => key === "t")?.[1] ?? "";
-    const signatures = fields.filter(([key]) => key === "v1").map(([, value]) => value ?? "");
-    const timestamp = Number(timestampText);
-    if (!Number.isSafeInteger(timestamp) || !signatures.length) {
-        throw new HttpError(400, "invalid Stripe signature header");
-    }
-    if (Math.abs(Math.floor(Date.now() / 1000) - timestamp) > stripeWebhookToleranceSeconds) {
-        throw new HttpError(400, "stale Stripe webhook signature");
-    }
-    const secret = requiredEnv(secretName);
-    const key = await crypto.subtle.importKey(
-        "raw",
-        new TextEncoder().encode(secret),
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"],
-    );
-    const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestampText}.${rawBody}`));
-    const expected = bytesToHex(new Uint8Array(mac));
-    if (!signatures.some((signature) => safeEqual(signature, expected))) {
-        throw new HttpError(400, "invalid Stripe webhook signature");
-    }
-}
-
-function stripeEventCreatedAt(event: JsonRecord): string {
-    if (Number.isSafeInteger(event.created)) {
-        return new Date(Number(event.created) * 1000).toISOString();
-    }
-    if (typeof event.created === "string") {
-        const timestamp = Date.parse(event.created);
-        if (Number.isFinite(timestamp)) {
-            return new Date(timestamp).toISOString();
-        }
-    }
-    throw new HttpError(400, "Stripe event created timestamp is invalid");
 }
 
 function terminalDisputeStatus(status: string): boolean {
