@@ -2,89 +2,12 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { USER_ROLE } from "@bernouy/cms-permissions";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { registerAccountEnrollmentContracts } from "./stripe-connect/accounts/enrollment.contracts";
-import { registerAccountLifecycleContracts } from "./stripe-connect/accounts/lifecycle.contracts";
-import { registerAccountOnboardingContracts } from "./stripe-connect/accounts/onboarding.contracts";
-import { registerSellerPayoutSourceScenarios } from "./stripe-connect/accounts/source-scenarios/payout-schedule/register";
 import { registerAccountSourceScenarios } from "./stripe-connect/accounts/source-scenarios/register";
-import { registerPayoutScheduleConcurrencyContracts } from "./stripe-connect/accounts/payout-schedule/concurrency";
-import { registerPayoutScheduleContracts } from "./stripe-connect/accounts/payout-schedule/contracts";
-import { registerPayoutScheduleFailureContracts } from "./stripe-connect/accounts/payout-schedule/failures";
-import { registerPayoutScheduleCleanupContracts } from "./stripe-connect/accounts/payout-schedule/cleanup";
-import { registerPayoutScheduleRiskContracts } from "./stripe-connect/accounts/payout-schedule/risk";
-import { registerPayoutScheduleValidationContracts } from "./stripe-connect/accounts/payout-schedule/validation";
-import { registerOperationAndExceptionDashboardContracts } from "./stripe-connect/dashboard/operations-exceptions.contracts";
-import { registerPaymentDashboardContracts } from "./stripe-connect/dashboard/payments.contracts";
-import { registerPaymentProjectionContracts } from "./stripe-connect/payments/projection/contracts";
-import { registerPaymentProjectionFailureContracts } from "./stripe-connect/payments/projection/failures";
-import { registerPaymentProjectionReplayContracts } from "./stripe-connect/payments/projection/replay";
-import { registerPaymentCancellationFailureContracts } from "./stripe-connect/payments/cancellation/failures.contracts";
-import { registerPaymentCancellationRecoveryContracts } from "./stripe-connect/payments/cancellation/recovery.contracts";
-import { registerPaymentCancellationReplayContracts } from "./stripe-connect/payments/cancellation/replay.contracts";
-import { registerPaymentCancellationReservationContracts } from "./stripe-connect/payments/cancellation/reservation.contracts";
-import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
-import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-writes/files.contracts";
-import { registerDisputeStagingContracts } from "./stripe-connect/provider-boundary/dispute-writes/staging.contracts";
-import { registerDisputeApplicationReadContextContracts } from "./stripe-connect/provider-boundary/dispute-application/read-context.contracts";
-import { registerDisputeApprovalContracts } from "./stripe-connect/provider-boundary/dispute-approval/approval.contracts";
-import { registerDisputeApprovalCompletionContracts } from "./stripe-connect/provider-boundary/dispute-approval/completion.contracts";
-import { registerDisputeApprovalFailureContracts } from "./stripe-connect/provider-boundary/dispute-approval/failures.contracts";
-import { registerDisputeApprovalSubmissionContracts } from "./stripe-connect/provider-boundary/dispute-approval/submission.contracts";
-import { registerProtectedPaymentFailureContracts } from "./stripe-connect/provider-boundary/protected-payment/failures.contracts";
-import { registerPlatformPayoutProtectionFailureContracts } from "./stripe-connect/provider-boundary/protected-payment/platform-protection/failures.contracts";
-import { registerPlatformPayoutProtectionValidationContracts } from "./stripe-connect/provider-boundary/protected-payment/platform-protection/validation.contracts";
-import { registerPlatformPayoutProtectionWorkflowContracts } from "./stripe-connect/provider-boundary/protected-payment/platform-protection/workflow.contracts";
-import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment/payout.contracts";
-import { registerProtectedPaymentProjectionRaceContracts } from "./stripe-connect/provider-boundary/protected-payment/projection-races.contracts";
-import { registerProtectedPaymentReservationContracts } from "./stripe-connect/provider-boundary/protected-payment/reservation.contracts";
-import { registerProtectedPaymentReplayContracts } from "./stripe-connect/provider-boundary/protected-payment/replay.contracts";
-import { registerProtectedRefundFailureContracts } from "./stripe-connect/provider-boundary/protected-refund/failures.contracts";
-import { registerProtectedRefundRecoveryContracts } from "./stripe-connect/provider-boundary/protected-refund/recovery.contracts";
-import { registerProtectedRefundReplayContracts } from "./stripe-connect/provider-boundary/protected-refund/replay.contracts";
-import { registerProtectedRefundSellerRecoveryContracts } from "./stripe-connect/provider-boundary/protected-refund/seller-recovery.contracts";
-import { registerProtectedRefundSuccessContracts } from "./stripe-connect/provider-boundary/protected-refund/success/contracts";
-import { registerProtectedRefundProjectionInterleavingContracts } from "./stripe-connect/provider-boundary/protected-refund/success/projection-interleavings.contracts";
-import { registerProtectedRefundProjectionStatusContracts } from "./stripe-connect/provider-boundary/protected-refund/success/projection-statuses.contracts";
-import { registerProtectedRefundPreflightInterleavingContracts } from "./stripe-connect/provider-boundary/protected-refund/success/preflight-interleavings.contracts";
-import { registerProtectedRefundValidationContracts } from "./stripe-connect/provider-boundary/protected-refund/validations.contracts";
-import { registerTransferReversalCompletionSnapshotContracts } from "./stripe-connect/provider-boundary/transfer-reversal/completion-snapshots.contracts";
-import { registerTransferReversalFailureContracts } from "./stripe-connect/provider-boundary/transfer-reversal/failures.contracts";
-import { registerTransferReversalRecoveryContracts } from "./stripe-connect/provider-boundary/transfer-reversal/recovery.contracts";
-import { registerTransferReversalSuccessContracts } from "./stripe-connect/provider-boundary/transfer-reversal/success.contracts";
-import { registerAccountTermsRepositoryContracts } from "./stripe-connect/repository-boundary/accounts-terms.contracts";
-import { registerLedgerRepositoryContracts } from "./stripe-connect/repository-boundary/ledger.contracts";
-import { registerPaymentOperationRepositoryContracts } from "./stripe-connect/repository-boundary/payments-operations.contracts";
-import { registerProtectedPaymentEligibilityContracts } from "./stripe-connect/repository-boundary/protected-payment-eligibility.contracts";
-import { registerProviderReconciliationBudgets } from "./stripe-connect/provider-reconciliation/budgets";
-import { registerProviderReconciliationContracts } from "./stripe-connect/provider-reconciliation/contracts";
-import { registerProviderExceptionResolutionContracts } from "./stripe-connect/provider-reconciliation/exception-resolution";
-import { registerStripeConnectRoutingContracts } from "./stripe-connect/routing/contracts";
-import { registerProtectedPaymentReadContracts } from "./stripe-connect/routing/protected-payment-reads.contracts";
-import { registerProtectedPaymentValidationContracts } from "./stripe-connect/routing/protected-payment-validations.contracts";
-import { registerProviderReconciliationRunRoutingContracts } from "./stripe-connect/routing/reconciliation-run.contracts";
-import { registerStripeWebhookPersistenceContracts } from "./stripe-connect/routing/webhooks/persistence.contracts";
-import { registerPayoutSourceScenarios } from "./stripe-connect/routing/webhooks/payout-scenarios/register";
-import { registerStripeWebhookCoreProcessingContracts } from "./stripe-connect/routing/webhooks/processing-core.contracts";
-import { registerStripeWebhookMoneyProcessingContracts } from "./stripe-connect/routing/webhooks/processing-money.contracts";
-import { registerStripeWebhookValidationContracts } from "./stripe-connect/routing/webhooks/validation.contracts";
-import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/contracts";
-import { registerPaymentReconciliationLedgerDivergenceContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/divergence";
-import { registerPaymentReconciliationProviderFailureContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/provider-failures.contracts";
+import { registerSellerPayoutSourceScenarios } from "./stripe-connect/accounts/source-scenarios/payout-schedule/register";
 import { registerDisputeRecoverySourceScenarios } from "./stripe-connect/provider-reconciliation/payment-ledger/source-scenarios/disputes/register";
 import { registerPaymentRecoverySourceScenarios } from "./stripe-connect/provider-reconciliation/payment-ledger/source-scenarios/register";
-import { registerStalePaymentLocalContextContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/stale-local-context";
-import { registerStalePaymentLocalContextFailureContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/stale-local-context-failures";
-import { registerProviderTransferContextContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/contracts";
-import { registerProviderTransferContextFailureContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/failures";
-import { registerTerminalOperationRecoveryContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/terminal-contracts";
-import { registerSettlementReleaseFailureContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/failures.contracts";
-import { registerSettlementReleaseRecoveryContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/recovery.contracts";
-import { registerSettlementReleaseReadOrderContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/read-order.contracts";
-import { registerSettlementReleaseLedgerFreshnessContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/ledger-freshness.contracts";
-import { registerSettlementReleaseReplayContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/replay.contracts";
-import { registerSettlementReleaseValidationContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/validations.contracts";
-import { registerPaymentReconciliationRoutingContracts } from "./stripe-connect/routing/payment-reconciliation.contracts";
-import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/dashboard/refunds-disputes.contracts";
+import { registerPayoutSourceScenarios } from "./stripe-connect/routing/webhooks/payout-scenarios/register";
+import { registerStripeConnectBoundaryContracts } from "./stripe-connect/routing/registrations/register";
 import {
     financialTermsHash,
     functionsBaseUrl,
@@ -96,11 +19,11 @@ import {
     installStripeConnectRuntime,
     restoreStripeConnectRuntime,
 } from "./stripe-connect/runtime/environment";
-import { jsonBody, okJson, stripeSignature } from "./stripe-connect/runtime/http";
 import {
     createStripeConnectHarness as createHarness,
     type StripeConnectHarness as Harness,
 } from "./stripe-connect/runtime/harness";
+import { jsonBody, okJson, stripeSignature } from "./stripe-connect/runtime/http";
 import { same } from "./stripe-connect/runtime/records";
 import {
     sourceJson,
@@ -3061,180 +2984,4 @@ function filterValues(widget: JsonRecord | undefined, filterId: string): string[
     return options.map((option) => String(option.value));
 }
 
-const createDashboardReadHarness = async () => {
-    const harness = await createHarness();
-    return {
-        rest: harness.rest,
-        request: async (
-            userId: string,
-            role: string | undefined,
-            endpoint: string,
-            params: Record<string, string> = {},
-        ) => await sourceRequestWithRole(harness, userId, role, endpoint, params),
-    };
-};
-
-const createPaymentProjectionHarness = async () => {
-    const harness = await createHarness();
-    return {
-        rest: harness.rest,
-        request: async (userId: string, endpoint: string, params: Record<string, string> = {}) =>
-            await sourceRequestWithUser(harness, userId, endpoint, params),
-        submit: async (userId: string, endpoint: string, body: unknown, params: Record<string, string> = {}) =>
-            await sourceJsonWithUser(harness, userId, endpoint, body, params),
-    };
-};
-
-const createPaymentCancellationHarness = async () => {
-    const harness = await createHarness();
-    return {
-        rest: harness.rest,
-        submit: async (userId: string, endpoint: string, body: unknown, params: Record<string, string> = {}) =>
-            await sourceJsonWithUser(harness, userId, endpoint, body, params),
-    };
-};
-
-const createProviderReconciliationHarness = async () => {
-    const harness = await createHarness();
-    return {
-        rest: harness.rest,
-        run: async (runKey: string, limit = 50) =>
-            await sourceJson(harness, "runProviderReconciliation", { runKey, limit }),
-        submit: async (userId: string, endpoint: string, body: unknown, params: Record<string, string> = {}) =>
-            await sourceJsonWithUser(harness, userId, endpoint, body, params),
-    };
-};
-
-const createProviderBoundaryHarness = async () => {
-    const harness = await createHarness();
-    return {
-        apiKey: activeEnv.CMS_STRIPE_CONNECT_API_KEY ?? "",
-        rest: harness.rest,
-        edgeRequest: async (request: Request) => await harness.edgeRequest(request),
-        request: async (
-            userId: string,
-            role: string | undefined,
-            endpoint: string,
-            params: Record<string, string> = {},
-        ) => await sourceRequestWithRole(harness, userId, role, endpoint, params),
-        submit: async (userId: string, role: string | undefined, endpoint: string, body: unknown) =>
-            await sourceJsonWithRole(harness, userId, role, endpoint, body),
-    };
-};
-
-const createRepositoryBoundaryHarness = async () => {
-    const harness = await createHarness();
-    return {
-        rest: harness.rest,
-        submit: async (userId: string, role: string | undefined, endpoint: string, body: unknown) =>
-            await sourceJsonWithRole(harness, userId, role, endpoint, body),
-    };
-};
-
-const createRoutingHarness = async () => {
-    const harness = await createHarness();
-    return {
-        apiKey: activeEnv.CMS_STRIPE_CONNECT_API_KEY ?? "",
-        rest: harness.rest,
-        edgeRequest: async (request: Request) => await harness.edgeRequest(request),
-        providerRequestCount: () => harness.rest.stripeRequests.length,
-        request: async (
-            userId: string,
-            role: string | undefined,
-            endpoint: string,
-            params: Record<string, string> = {},
-        ) => await sourceRequestWithRole(harness, userId, role, endpoint, params),
-        submit: async (userId: string, role: string | undefined, endpoint: string, body: unknown) =>
-            await sourceJsonWithRole(harness, userId, role, endpoint, body),
-    };
-};
-
-const createAccountHandlerHarness = async () => {
-    const harness = await createHarness();
-    return {
-        apiKey: activeEnv.CMS_STRIPE_CONNECT_API_KEY ?? "",
-        rest: harness.rest,
-        edgeRequest: async (request: Request) => await harness.edgeRequest(request),
-        submit: async (userId: string, role: string | undefined, endpoint: string, body: unknown) =>
-            await sourceJsonWithRole(harness, userId, role, endpoint, body),
-    };
-};
-
-registerRefundAndDisputeDashboardContracts(createDashboardReadHarness);
-registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
-registerPaymentDashboardContracts(createDashboardReadHarness);
-registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
-registerDisputeApplicationReadContextContracts(createProviderBoundaryHarness);
-registerDisputeApprovalContracts(createProviderBoundaryHarness);
-registerDisputeApprovalCompletionContracts(createProviderBoundaryHarness);
-registerDisputeApprovalFailureContracts(createProviderBoundaryHarness);
-registerDisputeApprovalSubmissionContracts(createProviderBoundaryHarness);
-registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
-registerDisputeStagingContracts(createProviderBoundaryHarness);
-registerProtectedPaymentFailureContracts(createProviderBoundaryHarness);
-registerPlatformPayoutProtectionFailureContracts(createProviderBoundaryHarness);
-registerPlatformPayoutProtectionValidationContracts(createProviderBoundaryHarness);
-registerPlatformPayoutProtectionWorkflowContracts(createProviderBoundaryHarness);
-registerProtectedPaymentPayoutContracts(createProviderBoundaryHarness);
-registerProtectedPaymentProjectionRaceContracts(createProviderBoundaryHarness);
-registerProtectedPaymentReservationContracts(createProviderBoundaryHarness);
-registerProtectedPaymentReplayContracts(createProviderBoundaryHarness);
-registerProtectedRefundFailureContracts(createProviderBoundaryHarness);
-registerProtectedRefundRecoveryContracts(createProviderBoundaryHarness);
-registerProtectedRefundReplayContracts(createProviderBoundaryHarness);
-registerProtectedRefundSellerRecoveryContracts(createProviderBoundaryHarness);
-registerProtectedRefundSuccessContracts(createProviderBoundaryHarness);
-registerProtectedRefundProjectionInterleavingContracts(createProviderBoundaryHarness);
-registerProtectedRefundProjectionStatusContracts(createProviderBoundaryHarness);
-registerProtectedRefundPreflightInterleavingContracts(createProviderBoundaryHarness);
-registerProtectedRefundValidationContracts(createProviderBoundaryHarness);
-registerTransferReversalCompletionSnapshotContracts(createProviderBoundaryHarness);
-registerTransferReversalFailureContracts(createProviderBoundaryHarness);
-registerTransferReversalRecoveryContracts(createProviderBoundaryHarness);
-registerTransferReversalSuccessContracts(createProviderBoundaryHarness);
-registerAccountTermsRepositoryContracts(createRepositoryBoundaryHarness);
-registerProtectedPaymentEligibilityContracts(createRepositoryBoundaryHarness);
-registerLedgerRepositoryContracts(createRepositoryBoundaryHarness);
-registerPaymentOperationRepositoryContracts(createRepositoryBoundaryHarness);
-registerPaymentProjectionContracts(createPaymentProjectionHarness);
-registerPaymentProjectionFailureContracts(createPaymentProjectionHarness);
-registerPaymentProjectionReplayContracts(createPaymentProjectionHarness);
-registerPaymentCancellationReplayContracts(createPaymentCancellationHarness);
-registerPaymentCancellationRecoveryContracts(createPaymentCancellationHarness);
-registerPaymentCancellationFailureContracts(createPaymentCancellationHarness);
-registerPaymentCancellationReservationContracts(createPaymentCancellationHarness);
-registerProviderReconciliationContracts(createProviderReconciliationHarness);
-registerProviderReconciliationBudgets(createProviderReconciliationHarness);
-registerProviderExceptionResolutionContracts(createProviderReconciliationHarness);
-registerPaymentReconciliationLedgerContracts(createProviderReconciliationHarness);
-registerPaymentReconciliationLedgerDivergenceContracts(createProviderReconciliationHarness);
-registerPaymentReconciliationProviderFailureContracts(createProviderReconciliationHarness);
-registerStalePaymentLocalContextContracts(createProviderReconciliationHarness);
-registerStalePaymentLocalContextFailureContracts(createProviderReconciliationHarness);
-registerProviderTransferContextContracts(createProviderReconciliationHarness);
-registerProviderTransferContextFailureContracts(createProviderReconciliationHarness);
-registerTerminalOperationRecoveryContracts(createProviderReconciliationHarness);
-registerSettlementReleaseValidationContracts(createProviderReconciliationHarness);
-registerSettlementReleaseRecoveryContracts(createProviderReconciliationHarness);
-registerSettlementReleaseFailureContracts(createProviderReconciliationHarness);
-registerSettlementReleaseReplayContracts(createProviderReconciliationHarness);
-registerSettlementReleaseReadOrderContracts(createProviderReconciliationHarness);
-registerSettlementReleaseLedgerFreshnessContracts(createProviderReconciliationHarness);
-registerStripeConnectRoutingContracts(createRoutingHarness);
-registerPaymentReconciliationRoutingContracts(createRoutingHarness);
-registerProviderReconciliationRunRoutingContracts(createRoutingHarness);
-registerProtectedPaymentValidationContracts(createRoutingHarness);
-registerProtectedPaymentReadContracts(createRoutingHarness);
-registerStripeWebhookPersistenceContracts(createRoutingHarness);
-registerStripeWebhookCoreProcessingContracts(createRoutingHarness);
-registerStripeWebhookMoneyProcessingContracts(createRoutingHarness);
-registerStripeWebhookValidationContracts(createRoutingHarness);
-registerAccountOnboardingContracts(createAccountHandlerHarness);
-registerAccountEnrollmentContracts(createAccountHandlerHarness);
-registerAccountLifecycleContracts(createAccountHandlerHarness);
-registerPayoutScheduleContracts(createAccountHandlerHarness);
-registerPayoutScheduleFailureContracts(createAccountHandlerHarness);
-registerPayoutScheduleConcurrencyContracts(createAccountHandlerHarness);
-registerPayoutScheduleCleanupContracts(createAccountHandlerHarness);
-registerPayoutScheduleRiskContracts(createAccountHandlerHarness);
-registerPayoutScheduleValidationContracts(createAccountHandlerHarness);
+registerStripeConnectBoundaryContracts(createHarness);

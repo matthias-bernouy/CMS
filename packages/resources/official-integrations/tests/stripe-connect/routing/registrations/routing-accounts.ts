@@ -1,0 +1,40 @@
+import { registerAccountEnrollmentContracts } from "../../accounts/enrollment.contracts";
+import { registerAccountLifecycleContracts } from "../../accounts/lifecycle.contracts";
+import { registerAccountOnboardingContracts } from "../../accounts/onboarding.contracts";
+import { registerPayoutScheduleConcurrencyContracts } from "../../accounts/payout-schedule/concurrency";
+import { registerPayoutScheduleContracts } from "../../accounts/payout-schedule/contracts";
+import { registerPayoutScheduleFailureContracts } from "../../accounts/payout-schedule/failures";
+import { registerPayoutScheduleCleanupContracts } from "../../accounts/payout-schedule/cleanup";
+import { registerPayoutScheduleRiskContracts } from "../../accounts/payout-schedule/risk";
+import { registerPayoutScheduleValidationContracts } from "../../accounts/payout-schedule/validation";
+import { registerPaymentReconciliationRoutingContracts } from "../payment-reconciliation.contracts";
+import { registerProtectedPaymentReadContracts } from "../protected-payment-reads.contracts";
+import { registerProtectedPaymentValidationContracts } from "../protected-payment-validations.contracts";
+import { registerProviderReconciliationRunRoutingContracts } from "../reconciliation-run.contracts";
+import { registerStripeConnectRoutingContracts } from "../contracts";
+import { registerStripeWebhookCoreProcessingContracts } from "../webhooks/processing-core.contracts";
+import { registerStripeWebhookMoneyProcessingContracts } from "../webhooks/processing-money.contracts";
+import { registerStripeWebhookPersistenceContracts } from "../webhooks/persistence.contracts";
+import { registerStripeWebhookValidationContracts } from "../webhooks/validation.contracts";
+import type { BoundaryHarnesses } from "./harnesses";
+
+export function registerRoutingAndAccountContracts(harnesses: BoundaryHarnesses): void {
+    registerStripeConnectRoutingContracts(harnesses.routing);
+    registerPaymentReconciliationRoutingContracts(harnesses.routing);
+    registerProviderReconciliationRunRoutingContracts(harnesses.routing);
+    registerProtectedPaymentValidationContracts(harnesses.routing);
+    registerProtectedPaymentReadContracts(harnesses.routing);
+    registerStripeWebhookPersistenceContracts(harnesses.routing);
+    registerStripeWebhookCoreProcessingContracts(harnesses.routing);
+    registerStripeWebhookMoneyProcessingContracts(harnesses.routing);
+    registerStripeWebhookValidationContracts(harnesses.routing);
+    registerAccountOnboardingContracts(harnesses.account);
+    registerAccountEnrollmentContracts(harnesses.account);
+    registerAccountLifecycleContracts(harnesses.account);
+    registerPayoutScheduleContracts(harnesses.account);
+    registerPayoutScheduleFailureContracts(harnesses.account);
+    registerPayoutScheduleConcurrencyContracts(harnesses.account);
+    registerPayoutScheduleCleanupContracts(harnesses.account);
+    registerPayoutScheduleRiskContracts(harnesses.account);
+    registerPayoutScheduleValidationContracts(harnesses.account);
+}
