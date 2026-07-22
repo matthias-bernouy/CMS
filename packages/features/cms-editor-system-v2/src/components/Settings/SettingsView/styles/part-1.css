@@ -135,4 +135,3 @@ cms-editor-v2-segmented-control button svg:only-child {
     background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
     cursor: pointer;
 }
-
