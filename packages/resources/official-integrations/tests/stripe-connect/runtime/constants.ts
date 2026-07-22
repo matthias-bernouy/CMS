@@ -1,0 +1,9 @@
+export const sourcePrefix = "/.cms/sources/";
+export const functionsBaseUrl = "https://project.supabase.co/functions/v1";
+export const supabaseUrl = "https://project.supabase.co";
+export const stripeUrl = "https://api.stripe.com";
+export const edgeFunctionUrl =
+    "../integrations/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/index.ts";
+export const financialTermsHash = "a".repeat(64);
+export const marketplaceTermsHash = "c".repeat(64);
+export const isoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;

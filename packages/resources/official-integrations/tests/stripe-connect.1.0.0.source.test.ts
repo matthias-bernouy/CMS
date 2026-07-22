@@ -8,7 +8,7 @@ import {
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
-import { handleSourceRequest, InMemorySourceRepository, type SourceRepository } from "@bernouy/cms-sources";
+import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
 import { InMemoryRolesRepository, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemoryIdentityService } from "@bernouy/cms-identities";
@@ -100,61 +100,39 @@ import type {
 } from "./stripe-connect/provider-reconciliation/harness";
 import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/dashboard/refunds-disputes.contracts";
 import type { DashboardTable, PostgrestRequestRecord } from "./stripe-connect/dashboard/dashboard-contract-harness";
+import {
+    edgeFunctionUrl,
+    financialTermsHash,
+    functionsBaseUrl,
+    isoTimestampPattern,
+    marketplaceTermsHash,
+    stripeUrl,
+    supabaseUrl,
+} from "./stripe-connect/runtime/constants";
+import {
+    activeEnv,
+    installStripeConnectRuntime,
+    loadEdgeHandler,
+    restoreStripeConnectRuntime,
+    setActiveEnvironment,
+    setActiveFetch,
+} from "./stripe-connect/runtime/environment";
+import { jsonBody, jsonResponse, okJson, requestFromFetchInput, stripeSignature } from "./stripe-connect/runtime/http";
+import { asRecord, filterValue, isRecord, same } from "./stripe-connect/runtime/records";
+import {
+    sourceJson,
+    sourceJsonWithRole,
+    sourceJsonWithUser,
+    sourceRequest,
+    sourceRequestWithRole,
+    sourceRequestWithUser,
+} from "./stripe-connect/runtime/source-requests";
+import type { JsonRecord, StripeRequestRecord } from "./stripe-connect/runtime/types";
 
-type EdgeHandler = (request: Request) => Response | Promise<Response>;
-type JsonRecord = Record<string, unknown>;
-type StripeRequestRecord = {
-    method: string;
-    pathname: string;
-    searchParams: Array<[string, string]>;
-    idempotencyKey: string | null;
-    stripeAccount: string | null;
-};
-
-function isRecord(value: unknown): value is JsonRecord {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function asRecord(value: unknown): JsonRecord {
-    return isRecord(value) ? value : {};
-}
-
-const sourcePrefix = "/.cms/sources/";
-const functionsBaseUrl = "https://project.supabase.co/functions/v1";
-const supabaseUrl = "https://project.supabase.co";
-const stripeUrl = "https://api.stripe.com";
-const edgeFunctionUrl =
-    "../integrations/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/index.ts";
-const financialTermsHash = "a".repeat(64);
-const marketplaceTermsHash = "c".repeat(64);
-const isoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-
-const realFetch = globalThis.fetch;
-const realDeno = (globalThis as { Deno?: unknown }).Deno;
-let activeEnv: Record<string, string> = {};
-let activeFetch: typeof fetch = realFetch;
-let edgeHandler: EdgeHandler | undefined;
-
-(
-    globalThis as {
-        Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown };
-    }
-).Deno = {
-    env: { get: (key) => activeEnv[key] },
-    serve(handler) {
-        edgeHandler = handler;
-        return {
-            shutdown() {
-                /* test stub */
-            },
-        };
-    },
-};
-globalThis.fetch = ((input, init) => activeFetch(input, init)) as typeof fetch;
+installStripeConnectRuntime();
 
 afterAll(() => {
-    globalThis.fetch = realFetch;
-    (globalThis as { Deno?: unknown }).Deno = realDeno;
+    restoreStripeConnectRuntime();
 });
 
 describe("stripe-connect 1.0.0 source", () => {
@@ -5682,15 +5660,15 @@ async function createHarness() {
         [definition],
     );
     const functionSecrets = deployment?.functions[0]?.secrets ?? {};
-    activeEnv = {
+    setActiveEnvironment({
         ...Object.fromEntries(Object.entries(functionSecrets).map(([key, value]) => [key, String(value)])),
         SUPABASE_URL: supabaseUrl,
         SUPABASE_SECRET_KEYS: JSON.stringify({ default: "supabase-secret-key" }),
-    };
+    });
 
-    const handler = await loadEdgeHandler();
+    const handler = await loadEdgeHandler(() => import(edgeFunctionUrl));
     const rest = new StripeConnectMock();
-    activeFetch = async (input, init) => rest.fetch(input, init);
+    setActiveFetch(async (input, init) => rest.fetch(input, init));
 
     return {
         result,
@@ -10328,107 +10306,6 @@ function defaultAccountRow(userId: string, now: string): JsonRecord {
     };
 }
 
-async function loadEdgeHandler(): Promise<EdgeHandler> {
-    if (!edgeHandler) {
-        await import(edgeFunctionUrl);
-    }
-    if (!edgeHandler) {
-        throw new Error("cms-stripe-connect edge handler was not registered");
-    }
-    return edgeHandler;
-}
-
-async function sourceRequest(
-    harness: Harness,
-    endpoint: string,
-    params: Record<string, string> = {},
-): Promise<Response> {
-    return await sourceRequestWithUser(harness, "user-123", endpoint, params);
-}
-
-async function sourceRequestWithUser(
-    harness: Harness,
-    userId: string,
-    endpoint: string,
-    params: Record<string, string> = {},
-): Promise<Response> {
-    return await sourceRequestWithRole(harness, userId, "admin", endpoint, params);
-}
-
-async function sourceRequestWithRole(
-    harness: Harness,
-    userId: string,
-    role: string | undefined,
-    endpoint: string,
-    params: Record<string, string> = {},
-): Promise<Response> {
-    const url = new URL(`http://cms.local${sourcePrefix}stripe-connect/${endpoint}`);
-    for (const [key, value] of Object.entries(params)) {
-        url.searchParams.set(key, value);
-    }
-    return await proxySource(harness, userId, role, new Request(url));
-}
-
-async function sourceJson(
-    harness: Harness,
-    endpoint: string,
-    body: unknown,
-    params: Record<string, string> = {},
-): Promise<Response> {
-    return await sourceJsonWithUser(harness, "user-123", endpoint, body, params);
-}
-
-async function sourceJsonWithUser(
-    harness: Harness,
-    userId: string,
-    endpoint: string,
-    body: unknown,
-    params: Record<string, string> = {},
-): Promise<Response> {
-    return await sourceJsonWithRole(harness, userId, "admin", endpoint, body, params);
-}
-
-async function sourceJsonWithRole(
-    harness: Harness,
-    userId: string,
-    role: string | undefined,
-    endpoint: string,
-    body: unknown,
-    params: Record<string, string> = {},
-): Promise<Response> {
-    const url = new URL(`http://cms.local${sourcePrefix}stripe-connect/${endpoint}`);
-    for (const [key, value] of Object.entries(params)) {
-        url.searchParams.set(key, value);
-    }
-    return await proxySource(
-        harness,
-        userId,
-        role,
-        new Request(url, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(body),
-        }),
-    );
-}
-
-async function proxySource(
-    harness: Harness,
-    userId: string,
-    role: string | undefined,
-    request: Request,
-): Promise<Response> {
-    return await handleSourceRequest(harness.sources, request, {
-        prefix: sourcePrefix,
-        deps: {
-            fetchImpl: harness.sourceFetch,
-            resolveSecret: harness.resolveSecret,
-            resolveContext: async () => ({ userID: userId, ...(role ? { userRole: role } : {}) }),
-            identities: harness.identities,
-        },
-    });
-}
-
 type Harness = Awaited<ReturnType<typeof createHarness>>;
 
 async function createPaidPaymentWithReleases(
@@ -10477,29 +10354,6 @@ async function createPaidPaymentWithReleases(
     return { harness, created };
 }
 
-function requestFromFetchInput(input: RequestInfo | URL, init?: RequestInit): Request {
-    return input instanceof Request ? input : new Request(input, init);
-}
-
-function jsonResponse(data: unknown, status = 200): Response {
-    return new Response(JSON.stringify(data), {
-        status,
-        headers: { "content-type": "application/json" },
-    });
-}
-
-function filterValue(value: string | null): { operator: string; value: string } | null {
-    if (!value) {
-        return null;
-    }
-    const [operator, ...rest] = value.split(".");
-    return { operator: operator ?? "", value: rest.join(".") };
-}
-
-function same(a: unknown, b: unknown): boolean {
-    return String(a) === String(b);
-}
-
 function widgetById(widgets: JsonRecord[] | undefined, id: string): JsonRecord | undefined {
     const stack = [...(widgets ?? [])];
     while (stack.length) {
@@ -10526,10 +10380,6 @@ function filterValues(widget: JsonRecord | undefined, filterId: string): string[
     const filter = filters.find((candidate) => candidate.id === filterId);
     const options = Array.isArray(filter?.options) ? (filter.options as JsonRecord[]) : [];
     return options.map((option) => String(option.value));
-}
-
-async function jsonBody(response: Response): Promise<JsonRecord> {
-    return (await response.json()) as JsonRecord;
 }
 
 function payoutEventPayload(options: {
@@ -10559,27 +10409,6 @@ function payoutEventPayload(options: {
             },
         },
     });
-}
-
-async function stripeSignature(payload: string, secret: string): Promise<string> {
-    const timestamp = Math.floor(Date.now() / 1000);
-    const key = await crypto.subtle.importKey(
-        "raw",
-        new TextEncoder().encode(secret),
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"],
-    );
-    const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${payload}`));
-    const hex = [...new Uint8Array(signature)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-    return `t=${timestamp},v1=${hex}`;
-}
-
-async function okJson(response: Response): Promise<JsonRecord> {
-    const body = await jsonBody(response);
-    expect(response.status).toBeGreaterThanOrEqual(200);
-    expect(response.status).toBeLessThan(300);
-    return body;
 }
 
 const createDashboardReadHarness = async () => {
