@@ -52,6 +52,7 @@ import {
     markStaleShipmentCreationsUnknown,
     projectionHealth,
     reviewShipmentEventProjection,
+    trackingSummaryContextByExpedition,
 } from "./shipment/supabase.ts";
 import type { DeliverySettings, JsonRecord } from "./shipment/types.ts";
 
@@ -1011,7 +1012,8 @@ async function parseTrackingLink(request: Request): Promise<Response> {
 }
 
 async function trackingSummary(expeditionNumber: string): Promise<JsonRecord> {
-    const row = await shipmentRowByExpedition(expeditionNumber);
+    const context = await trackingSummaryContextByExpedition(expeditionNumber);
+    const row = context.shipment;
     if (!row) {
         return { expeditionNumber, status: "unknown", events: [] };
     }
@@ -1020,7 +1022,7 @@ async function trackingSummary(expeditionNumber: string): Promise<JsonRecord> {
         status: row.status ?? "created",
         latestEventLabel: row.latest_event_label ?? "",
         latestEventAt: row.latest_event_at ?? "",
-        events: (await shipmentEvents(String(row.id))).map(publicTrackingEvent),
+        events: context.events.map(publicTrackingEvent),
     };
 }
 

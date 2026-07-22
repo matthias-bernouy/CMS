@@ -22,7 +22,7 @@ describe("Mondial Relay tracking summary failures", () => {
         expect(response.status).toBe(502);
         expect(await response.json()).toEqual({ error: "Supabase Data API request failed (503)" });
         expect(database.reads).toEqual(["shipment", "events"]);
-        expect(database.calls.map((call) => call.pathname)).toEqual(["/rest/v1/shipments", "/rest/v1/shipment_events"]);
+        expect(database.calls.map((call) => call.pathname)).toEqual(["/rest/v1/rpc/read_tracking_summary"]);
     });
 
     test("fails closed when the future tracking RPC returns malformed events", async () => {

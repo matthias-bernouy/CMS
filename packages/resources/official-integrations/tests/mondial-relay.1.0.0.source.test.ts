@@ -2554,6 +2554,41 @@ async function createHarness(
             }
             return jsonResponse(projected, 200);
         }
+        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/read_tracking_summary" && method === "POST") {
+            const body = JSON.parse(requestBody) as JsonRecord;
+            const row = insertedShipments.find((shipment) => shipment.expedition_number === body.p_expedition_number);
+            if (!row) {
+                return jsonResponse([{ shipment: null, events: [] }], 200);
+            }
+            const events = shipmentEvents
+                .filter((event) => event.shipment_id === row.id)
+                .sort((left, right) => {
+                    const occurred = nullableTimestampDescending(left.occurred_at, right.occurred_at);
+                    return occurred || timestamp(right.created_at) - timestamp(left.created_at);
+                })
+                .map((event) => ({
+                    normalized_status: event.normalized_status ?? null,
+                    occurred_at: event.occurred_at ?? null,
+                    event_label: event.event_label,
+                    event_date: event.event_date ?? null,
+                    event_time: event.event_time ?? null,
+                    location: event.location ?? null,
+                }));
+            return jsonResponse(
+                [
+                    {
+                        shipment: {
+                            id: row.id,
+                            status: row.status,
+                            latest_event_label: row.latest_event_label ?? null,
+                            latest_event_at: row.latest_event_at ?? null,
+                        },
+                        events,
+                    },
+                ],
+                200,
+            );
+        }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/claim_due_shipments" && method === "POST") {
             const body = JSON.parse(requestBody) as JsonRecord;
             const workerId = String(body.p_worker_id ?? "");

@@ -25,8 +25,7 @@ describe("Mondial Relay tracking summary freshness", () => {
         });
         expect(database.reads).toEqual(["shipment", "events"]);
         expect(database.calls.map((call) => [call.method, call.pathname])).toEqual([
-            ["GET", "/rest/v1/shipments"],
-            ["GET", "/rest/v1/shipment_events"],
+            ["POST", "/rest/v1/rpc/read_tracking_summary"],
         ]);
     });
 });

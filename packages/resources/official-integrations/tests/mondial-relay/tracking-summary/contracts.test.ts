@@ -42,16 +42,10 @@ describe("Mondial Relay tracking summary contracts", () => {
         expect(JSON.stringify(body)).not.toContain("private@example.test");
         expect(database.reads).toEqual(["shipment", "events"]);
         expect(database.calls.map((call) => [call.method, call.pathname])).toEqual([
-            ["GET", "/rest/v1/shipments"],
-            ["GET", "/rest/v1/shipment_events"],
+            ["POST", "/rest/v1/rpc/read_tracking_summary"],
         ]);
-        expect(database.calls[0]?.searchParams).toMatchObject({
-            expedition_number: "eq.00435394",
-            limit: "1",
-        });
-        expect(database.calls[1]?.searchParams).toMatchObject({
-            shipment_id: "eq.shipment-tracking-summary",
-            order: "occurred_at.desc.nullslast,created_at.desc",
+        expect(database.calls[0]?.body).toEqual({
+            p_expedition_number: "00435394",
         });
     });
 
@@ -75,6 +69,9 @@ describe("Mondial Relay tracking summary contracts", () => {
         });
         expect(database.reads).toEqual(["shipment"]);
         expect(database.eventReadCount()).toBe(0);
-        expect(database.calls.map((call) => [call.method, call.pathname])).toEqual([["GET", "/rest/v1/shipments"]]);
+        expect(database.calls.map((call) => [call.method, call.pathname])).toEqual([
+            ["POST", "/rest/v1/rpc/read_tracking_summary"],
+        ]);
+        expect(database.calls[0]?.body).toEqual({ p_expedition_number: "87654321" });
     });
 });
