@@ -20,13 +20,7 @@ import {
     updateRow,
     upsertRow,
 } from "./db/postgrest.ts";
-import {
-    readDisputeDashboardDetail,
-    readDisputeDashboardPage,
-    readFinancialOperationDashboardPage,
-    readRefundDashboardPage,
-    type DisputeDashboardRead,
-} from "./db/dashboard-reads.ts";
+import { readFinancialOperationDashboardPage, type DisputeDashboardRead } from "./db/dashboard-reads.ts";
 import {
     getAccountRow,
     getAccountRowByStripeAccountId,
@@ -117,7 +111,7 @@ import {
     paymentStatusFromStripe,
 } from "./domain/payments/provider-state.ts";
 import { publicFinancialOperation } from "./domain/admin/financial-operation.ts";
-import { projectPublicDisputeWithContext, publicDisputeFromDashboardRead } from "./domain/disputes/presentation.ts";
+import { projectPublicDisputeWithContext } from "./domain/disputes/presentation.ts";
 import { normalizeProtectedRefundOperation, publicRefund } from "./domain/refunds/presentation.ts";
 import { publicReversal, publicTransfer, publicTransferRecovery } from "./domain/transfers/presentation.ts";
 import { loadPublicTransferRecovery } from "./domain/transfers/recovery-read.ts";
@@ -208,6 +202,8 @@ import type {
     StripeRefund,
     StripeTransfer,
 } from "./provider/types.ts";
+import { getStripeDispute, listStripeDisputes } from "./routes/disputes/dashboard.ts";
+import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { connectConfig, health } from "./routes/system.ts";
 import { bytesToHex, digest, safeEqual, stableStripeIdempotencyKey } from "./shared/crypto.ts";
 import {
@@ -1966,43 +1962,6 @@ async function executeRefund(
         await moveOperationToManualReview(payment.id, operation, error, "refund_create_ambiguous");
         throw error;
     }
-}
-
-async function listProviderRefunds(request: Request): Promise<Response> {
-    const actor = requireDashboardAdmin(request);
-    const rows = await readRefundDashboardPage(request, actor);
-    const refunds = rows.map((row) => ({
-        ...publicRefund(row.refund as unknown as RefundRow),
-        clientReferenceId: row.client_reference_id,
-    }));
-    return json({ refunds, total: refunds.length });
-}
-
-async function getProviderRefund(request: Request): Promise<Response> {
-    requireDashboardAdmin(request);
-    const refundId = requiredQueryInteger(request, "refundId");
-    const row = await getRowByField<RefundRow>("refunds", "id", String(refundId), refundSelect);
-    if (!row) {
-        throw new HttpError(404, "refund not found");
-    }
-    return json(publicRefund(row));
-}
-
-async function listStripeDisputes(request: Request): Promise<Response> {
-    const actor = requireDashboardAdmin(request);
-    const rows = await readDisputeDashboardPage(request, actor);
-    const disputes = rows.map(publicDisputeFromDashboardRead);
-    return json({ disputes, total: disputes.length });
-}
-
-async function getStripeDispute(request: Request): Promise<Response> {
-    const actor = requireDashboardAdmin(request);
-    const disputeId = requiredQueryText(request, "disputeId", 200);
-    const row = await readDisputeDashboardDetail(disputeId, actor);
-    if (!row) {
-        throw new HttpError(404, "Stripe dispute not found");
-    }
-    return json(publicDisputeFromDashboardRead(row));
 }
 
 async function uploadStripeDisputeFile(request: Request): Promise<Response> {
