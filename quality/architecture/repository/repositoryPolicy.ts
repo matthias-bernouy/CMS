@@ -14,7 +14,7 @@ export const ENVIRONMENT_READ_BASELINE = {
     "packages/features/cms-files/src/http/serveVariant.ts": {
         "process.env.MODE": 1,
     },
-    "packages/foundation/http-runner/src/core/compression.ts": {
+    "packages/foundation/http-runner/src/core/compression/headers.ts": {
         "process.env.MODE": 3,
     },
     "packages/foundation/http-runner/src/default-implementation/InMemoryCache.ts": {
@@ -29,7 +29,7 @@ export const ENVIRONMENT_READ_BASELINE = {
     "packages/surfaces/cms-delivery/src/core/head/buildMetaCsp.ts": {
         "process.env.MODE": 1,
     },
-    "packages/surfaces/cms-delivery/src/DeliveryCms.ts": {
+    "packages/surfaces/cms-delivery/src/runtime/DeliveryCmsContext.ts": {
         "process.env.MODE": 1,
     },
 } as const;
