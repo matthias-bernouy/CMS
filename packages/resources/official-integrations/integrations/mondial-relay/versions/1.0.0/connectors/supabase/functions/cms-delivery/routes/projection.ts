@@ -8,7 +8,7 @@ import {
     requireCmsRequest,
     requireCmsWriteRequest,
 } from "../http.ts";
-import { reconcileDueShipments } from "../shipment/reconciliation.ts";
+import { reconcileDueShipments } from "../shipment/reconciliation/index.ts";
 import {
     acknowledgeShipmentEvent,
     camelizeRecord,
