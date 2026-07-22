@@ -22,6 +22,16 @@ set pg_stat_statements.track = 'all';
 
 select pg_stat_statements_reset();
 set local role service_role;
+select commerce.assert_custom_field_patch('variant', '{}'::jsonb, 'admin');
+reset role;
+insert into custom_field_validation_budget
+select 0, coalesce(sum(calls), 0), coalesce(sum(total_exec_time), 0)
+from pg_stat_statements
+where dbid = (select oid from pg_database where datname = current_database())
+  and query ~* '(from|join) commerce\.custom_field_definitions';
+
+select pg_stat_statements_reset();
+set local role service_role;
 select commerce.assert_custom_field_patch(
     'variant', jsonb_build_object('budgetField001', 'value'), 'admin'
 );
@@ -64,9 +74,9 @@ do $$
 begin
     if exists (
         select 1 from custom_field_validation_budget
-        where definition_statements <> field_count
+        where definition_statements <> case when field_count = 0 then 0 else 1 end
     ) then
-        raise exception 'custom-field budget: expected one definition statement per field, got %',
+        raise exception 'custom-field budget: expected one batched definition statement, got %',
             (select jsonb_agg(to_jsonb(result) order by field_count)
              from custom_field_validation_budget result);
     end if;
