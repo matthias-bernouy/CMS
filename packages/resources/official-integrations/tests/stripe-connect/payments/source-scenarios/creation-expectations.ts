@@ -1,0 +1,38 @@
+import { expect } from "bun:test";
+
+type ImportedBloc = {
+    editorJS?: string;
+    viewJS?: string;
+};
+
+export function expectWalletBlocContract(bloc: ImportedBloc | undefined): void {
+    expect(bloc?.viewJS).toContain("Activer mes versements");
+    expect(bloc?.viewJS).toContain("submitConnectVerification");
+    expect(bloc?.viewJS).toContain('requestAccountSource("getAccount")');
+    expect(bloc?.viewJS).toContain('requestAuthSource("me")');
+    expect(bloc?.viewJS).toContain("currentAccount?.subject?.email");
+    expect(bloc?.viewJS).toContain('|| "system-auth"');
+    expect(bloc?.viewJS).toContain('requestStripeSource("getConnectWallet")');
+    expect(bloc?.viewJS).not.toContain("seller-eligibility-function-id");
+    expect(bloc?.viewJS).not.toContain("seller-sync-function-id");
+    expect(bloc?.viewJS).not.toContain("synchronizeSellerEligibility");
+    expect(bloc?.viewJS).not.toContain("system-functions");
+    expect(bloc?.viewJS).not.toContain("createConnectPayout");
+    expect(bloc?.editorJS).not.toContain("Payout button");
+    expect(bloc?.viewJS).toContain("Complète les informations suivantes");
+    expect(bloc?.viewJS).toContain("Nous ne conservons pas ton IBAN");
+    expect(bloc?.viewJS).toContain('Intl.NumberFormat("fr-FR"');
+    expect(bloc?.viewJS).toContain("--wallet-accent");
+    expect(bloc?.viewJS).not.toContain("CmsCore receives it");
+    expect(bloc?.viewJS).not.toContain("Stripe must verify");
+    expect(bloc?.viewJS).not.toContain('"given-name"');
+    expect(bloc?.viewJS).not.toContain('"address-line1"');
+    expect(bloc?.viewJS).not.toContain("Date of birth");
+    expect(bloc?.viewJS).not.toContain("source-prefix");
+    expect(bloc?.viewJS).not.toContain("account-onboarding");
+    expect(bloc?.editorJS).toContain("User Account source");
+    expect(bloc?.editorJS).toContain("Authentication source");
+    expect(bloc?.editorJS).toContain('type: "color"');
+    expect(bloc?.editorJS).toContain("IBAN privacy notice");
+    expect(bloc?.editorJS).not.toContain("address-line1");
+}
