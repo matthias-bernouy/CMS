@@ -19,6 +19,8 @@ import { registerOperationAndExceptionDashboardContracts } from "./stripe-connec
 import { registerPaymentProjectionContracts } from "./stripe-connect/payment-projection/contracts";
 import { registerPaymentProjectionFailureContracts } from "./stripe-connect/payment-projection/failures";
 import { registerPaymentProjectionReplayContracts } from "./stripe-connect/payment-projection/replay";
+import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
+import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
 import { registerProviderReconciliationBudgets } from "./stripe-connect/provider-reconciliation/budgets";
 import { registerProviderReconciliationContracts } from "./stripe-connect/provider-reconciliation/contracts";
 import { registerProviderExceptionResolutionContracts } from "./stripe-connect/provider-reconciliation/exception-resolution";
@@ -5761,6 +5763,17 @@ class StripeConnectMock {
     lastTransferParameters: Record<string, string> | null = null;
     readonly moneyCallOrder: string[] = [];
     readonly accountCreationRequests: Array<{ body: JsonRecord; idempotencyKey: string | null }> = [];
+    readonly accountUpdateRequests: Array<{
+        accountId: string;
+        body: JsonRecord;
+        idempotencyKey: string | null;
+    }> = [];
+    readonly fileUploadRequests: Array<{
+        purpose: string;
+        fileName: string;
+        mimeType: string;
+        content: number[];
+    }> = [];
     readonly postgrestRequests: PostgrestRequestRecord[] = [];
     readonly stripeRequests: StripeRequestRecord[] = [];
     paymentIntentCreateCount = 0;
@@ -6877,6 +6890,19 @@ class StripeConnectMock {
     }
 
     async fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+        if (init?.body instanceof FormData) {
+            const purpose = init.body.get("purpose");
+            const file = init.body.get("file");
+            if (typeof purpose !== "string" || !file || typeof file === "string") {
+                throw new Error("invalid Stripe file upload form data");
+            }
+            this.fileUploadRequests.push({
+                purpose,
+                fileName: file.name,
+                mimeType: file.type,
+                content: Array.from(new Uint8Array(await file.arrayBuffer())),
+            });
+        }
         const request = requestFromFetchInput(input, init);
         const url = new URL(request.url);
         const method = request.method.toUpperCase();
@@ -8361,8 +8387,14 @@ class StripeConnectMock {
             const accountId = decodeURIComponent(url.pathname.slice("/v2/core/accounts/".length));
             const body = JSON.parse(await request.text()) as JsonRecord;
             if ("account_token" in body) {
-                expect(body).toEqual({ account_token: "accttok_test_identity_123" });
+                expect(String(body.account_token)).toStartWith("accttok_");
                 expect(request.headers.get("idempotency-key")).toStartWith("cms_connect_custom_identity_");
+                this.accountUpdateRequests.push({
+                    accountId,
+                    body,
+                    idempotencyKey: request.headers.get("idempotency-key"),
+                });
+                this.customAccountIds.add(accountId);
                 return jsonResponse(stripeAccountV2(accountId, "seller@example.com", true));
             }
             expect(body).toMatchObject({
@@ -8588,6 +8620,14 @@ class StripeConnectMock {
                 url: "https://connect.stripe.test/onboard",
                 expires_at: 1800000000,
             });
+        }
+        if (url.pathname === "/v1/files" && method === "POST") {
+            expect(request.headers.get("content-type")).toStartWith("multipart/form-data; boundary=");
+            const upload = this.fileUploadRequests.at(-1);
+            if (!upload) {
+                throw new Error("Stripe file upload form data was not captured");
+            }
+            return jsonResponse({ id: "file_dispute_1", filename: upload.fileName, purpose: upload.purpose });
         }
         if (url.pathname === "/v1/payment_intents" && method === "POST") {
             const params = new URLSearchParams(await request.text());
@@ -9753,8 +9793,19 @@ const createProviderReconciliationHarness = async () => {
     };
 };
 
+const createProviderBoundaryHarness = async () => {
+    const harness = await createHarness();
+    return {
+        rest: harness.rest,
+        submit: async (userId: string, role: string | undefined, endpoint: string, body: unknown) =>
+            await sourceJsonWithRole(harness, userId, role, endpoint, body),
+    };
+};
+
 registerRefundAndDisputeDashboardContracts(createDashboardReadHarness);
 registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
+registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
+registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
 registerPaymentProjectionContracts(createPaymentProjectionHarness);
 registerPaymentProjectionFailureContracts(createPaymentProjectionHarness);
 registerPaymentProjectionReplayContracts(createPaymentProjectionHarness);
