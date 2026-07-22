@@ -2638,6 +2638,10 @@ input:disabled {
       if (this.chevron)
         this.chevron.toggleAttribute("hidden", e !== "");
     }
+    syncClearButtonForInput() {
+      if (this.clearButton)
+        this.clearButton.hidden = this.input?.value === "";
+    }
     renderList(t, e, r, i) {
       if (!this.listbox)
         return;
@@ -2700,7 +2704,7 @@ input:disabled {
       this.view.input?.focus();
     }
     handlers = { focus: () => this.renderList(this.query), input: () => {
-      this.activeIndex = -1, this.renderList(this.query);
+      this.view.syncClearButtonForInput(), this.activeIndex = -1, this.renderList(this.query);
     }, keydown: (t) => this.onKeydown(t), blur: () => window.setTimeout(() => {
       this.hideList(), this.syncDisplay();
     }, 120), clear: (t) => {

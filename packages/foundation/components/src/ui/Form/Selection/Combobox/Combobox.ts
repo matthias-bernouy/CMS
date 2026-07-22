@@ -67,6 +67,7 @@ export class Combobox extends Component {
     private readonly handlers: ComboboxHandlers = {
         focus: () => this.renderList(this.query),
         input: () => {
+            this.view.syncClearButtonForInput();
             this.activeIndex = -1;
             this.renderList(this.query);
         },

@@ -73,6 +73,12 @@ export class ComboboxView {
         }
     }
 
+    syncClearButtonForInput(): void {
+        if (this.clearButton) {
+            this.clearButton.hidden = this.input?.value === "";
+        }
+    }
+
     renderList(
         items: ComboItem[],
         activeIndex: number,
