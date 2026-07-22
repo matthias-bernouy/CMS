@@ -42,6 +42,9 @@ import { registerStalePaymentLocalContextFailureContracts } from "./stripe-conne
 import { registerProviderTransferContextContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/contracts";
 import { registerProviderTransferContextFailureContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/failures";
 import { registerTerminalOperationRecoveryContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/terminal-contracts";
+import { registerSettlementReleaseFailureContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/failures.contracts";
+import { registerSettlementReleaseRecoveryContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/recovery.contracts";
+import { registerSettlementReleaseValidationContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/validations.contracts";
 import type {
     OperationRecoveryKind,
     TerminalOperationRecoverySeed,
@@ -5705,6 +5708,9 @@ class StripeConnectMock {
     private nextRefundStatus: "succeeded" | "pending" | "failed" = "succeeded";
     private nextRefundFee = 0;
     private failTransferReversals = false;
+    private failNextTransferCreation = false;
+    private loseNextTransferCreationResponse = false;
+    private omitProviderTransfersFromNextList = false;
     private loseTransferReversalResponseAt: number | null = null;
     private inFlightTransferBeforeRefund: { paymentId: number; amount: number } | null = null;
     private failBalanceSettingsUpdates = false;
@@ -6210,6 +6216,26 @@ class StripeConnectMock {
         this.failTransferReversals = true;
     }
 
+    failNextTransferCreationOnce(): void {
+        this.failNextTransferCreation = true;
+    }
+
+    loseNextTransferResponseOnce(): void {
+        this.loseNextTransferCreationResponse = true;
+    }
+
+    omitProviderTransfersOnNextList(): void {
+        this.omitProviderTransfersFromNextList = true;
+    }
+
+    removeAccount(userId: string): void {
+        const index = this.tables.accounts.findIndex((row) => row.cms_user_id === userId);
+        if (index < 0) {
+            throw new Error(`unknown account ${userId}`);
+        }
+        this.tables.accounts.splice(index, 1);
+    }
+
     loseTransferReversalResponseAfter(successfulUpcomingReversals: number): void {
         this.loseTransferReversalResponseAt = this.nextReversalId + successfulUpcomingReversals;
     }
@@ -6387,6 +6413,56 @@ class StripeConnectMock {
             artifactId: Number(artifact.id),
             providerObjectId,
         };
+    }
+
+    seedNonterminalSettlementRelease(
+        paymentId: number,
+        releaseAuthorizationId: string,
+    ): {
+        operationId: number;
+        transferId: number;
+    } {
+        const payment = this.tables.payments.find((row) => same(row.id, paymentId));
+        if (!payment) {
+            throw new Error(`unknown payment ${paymentId}`);
+        }
+        const operation = this.insertGeneric("financial_operations", {
+            payment_id: paymentId,
+            business_key: `settlement:${paymentId}:${releaseAuthorizationId}`,
+            operation_type: "transfer_create",
+            status: "failed",
+            stripe_object_id: null,
+            request: {
+                releaseAuthorizationId,
+                releaseKind: "initial",
+                amount: 1080,
+                currency: "eur",
+                sourceChargeId: payment.stripe_charge_id,
+                destinationAccountId: payment.seller_stripe_account_id,
+                transferGroup: payment.transfer_group,
+            },
+            response: null,
+            last_error: "simulated nonterminal Transfer operation",
+            attempt_count: 1,
+            next_attempt_at: null,
+            claimed_at: null,
+            completed_at: null,
+        });
+        const transfer = this.insertGeneric("transfers", {
+            payment_id: paymentId,
+            operation_id: operation.id,
+            release_authorization_id: releaseAuthorizationId,
+            release_kind: "initial",
+            stripe_transfer_id: null,
+            source_charge_id: payment.stripe_charge_id,
+            destination_account_id: payment.seller_stripe_account_id,
+            transfer_group: payment.transfer_group,
+            amount: 1080,
+            currency: "eur",
+            status: "processing",
+            provider_snapshot: null,
+        });
+        return { operationId: Number(operation.id), transferId: Number(transfer.id) };
     }
 
     seedTerminalReconciliationPage(runKey: string) {
@@ -8746,6 +8822,10 @@ class StripeConnectMock {
                 return jsonResponse({ error: { message: "simulated Stripe Transfer list outage" } }, 503);
             }
             const transferGroup = url.searchParams.get("transfer_group");
+            if (this.omitProviderTransfersFromNextList) {
+                this.omitProviderTransfersFromNextList = false;
+                return jsonResponse({ data: [], has_more: false });
+            }
             return jsonResponse({
                 data: this.providerTransfers.filter(
                     (transfer) => !transferGroup || transfer.transfer_group === transferGroup,
@@ -8757,6 +8837,10 @@ class StripeConnectMock {
             const params = new URLSearchParams(await request.text());
             this.moneyCallOrder.push("transfer");
             this.lastTransferParameters = Object.fromEntries(params.entries());
+            if (this.failNextTransferCreation) {
+                this.failNextTransferCreation = false;
+                return jsonResponse({ error: { message: "simulated Stripe Transfer creation failure" } }, 402);
+            }
             const id = `tr_${this.nextTransferId++}`;
             const transfer = {
                 id,
@@ -8774,6 +8858,10 @@ class StripeConnectMock {
                 reversed: false,
             };
             this.providerTransfers.push(transfer);
+            if (this.loseNextTransferCreationResponse) {
+                this.loseNextTransferCreationResponse = false;
+                throw new Error("simulated network loss after Stripe created the Transfer");
+            }
             return jsonResponse(transfer);
         }
         if (/^\/v1\/transfers\/tr_[^/]+\/reversals$/.test(url.pathname) && method === "GET") {
@@ -9872,6 +9960,9 @@ registerStalePaymentLocalContextFailureContracts(createProviderReconciliationHar
 registerProviderTransferContextContracts(createProviderReconciliationHarness);
 registerProviderTransferContextFailureContracts(createProviderReconciliationHarness);
 registerTerminalOperationRecoveryContracts(createProviderReconciliationHarness);
+registerSettlementReleaseValidationContracts(createProviderReconciliationHarness);
+registerSettlementReleaseRecoveryContracts(createProviderReconciliationHarness);
+registerSettlementReleaseFailureContracts(createProviderReconciliationHarness);
 registerStripeConnectRoutingContracts(createRoutingHarness);
 registerAccountOnboardingContracts(createAccountHandlerHarness);
 registerAccountEnrollmentContracts(createAccountHandlerHarness);
