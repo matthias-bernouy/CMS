@@ -9,7 +9,8 @@ set statement_timeout = '15s';
 \endif
 
 \ir fixture.sql
-\ir security.sql
+\ir security/metadata.sql
+\ir security/roles.sql
 \ir behavior/payment-cancellation/lifecycle.sql
 \ir behavior/payment-cancellation/security.sql
 \ir behavior/payment-cancellation/operation.sql
@@ -19,11 +20,13 @@ set statement_timeout = '15s';
 \ir behavior/read-contexts/payment-local.sql
 \ir behavior/read-contexts/refunds/preflight.sql
 \ir behavior/read-contexts/refunds/projection.sql
-\ir behavior/read-contexts/settlement-context.sql
-\ir behavior/read-contexts/settlement-ledger.sql
-\ir behavior/read-contexts/settlement-freshness.sql
+\ir behavior/read-contexts/settlement/context.sql
+\ir behavior/read-contexts/settlement/ledger.sql
+\ir behavior/read-contexts/settlement/freshness.sql
 \ir behavior/read-contexts/provider-transfer.sql
 \ir behavior/read-contexts/operation-recovery.sql
+\ir behavior/read-contexts/settlement/reversal-completion-context.sql
+\ir behavior/read-contexts/settlement/reversal-completion-freshness.sql
 \ir behavior/order-and-limit.sql
 \ir behavior/batch-hydration.sql
 \ir behavior/missing-references.sql

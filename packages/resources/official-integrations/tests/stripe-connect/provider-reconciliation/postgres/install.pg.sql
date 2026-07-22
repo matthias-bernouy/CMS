@@ -48,6 +48,9 @@ where procedure.oid in (
         'stripe_connect.read_settlement_release_ledger(bigint)'
     ),
     pg_catalog.to_regprocedure(
+        'stripe_connect.read_transfer_reversal_completion_context(bigint)'
+    ),
+    pg_catalog.to_regprocedure(
         'stripe_connect.read_provider_transfer_reconciliation_context(text)'
     ),
     pg_catalog.to_regprocedure(
@@ -75,7 +78,7 @@ begin
         raise exception 'provider reconciliation: fresh install omitted cancellation operation RPC';
     end if;
     if (select pg_catalog.count(*)
-        from provider_reconciliation_install_fingerprint) <> 13 then
+        from provider_reconciliation_install_fingerprint) <> 14 then
         raise exception 'provider reconciliation: fresh install omitted RPCs';
     end if;
 end;
