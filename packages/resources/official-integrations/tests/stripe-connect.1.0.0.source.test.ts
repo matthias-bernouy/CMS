@@ -104,9 +104,16 @@ afterAll(() => {
 describe("stripe-connect 1.0.0 source", () => {
     test("persists seller recovery exposure and blocks payments, releases, and unsafe payouts", async () => {
         const root = resolve(import.meta.dir, "../integrations/stripe-connect/versions/1.0.0");
-        const [schema, edge, definition] = await Promise.all([
+        const [schema, edge, paymentProjection, definition] = await Promise.all([
             readFile(resolve(root, "connectors/supabase/schema.sql"), "utf8"),
             readFile(resolve(root, "connectors/supabase/functions/cms-stripe-connect/index.ts"), "utf8"),
+            readFile(
+                resolve(
+                    root,
+                    "connectors/supabase/functions/cms-stripe-connect/workflows/payments/projection-builders.ts",
+                ),
+                "utf8",
+            ),
             readFile(resolve(root, "definition.json"), "utf8"),
         ]);
 
@@ -134,8 +141,8 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(edge).toContain("payout schedule change was superseded by seller financial risk");
         expect(edge).toContain("seller financial risk blocks settlement release");
         expect(edge).toContain("seller financial exposure requires a manual payout hold");
-        expect(edge).toContain("settlementStatus: payment.settlement_status");
-        expect(edge).toContain("manualReviewReason: payment.manual_review_reason");
+        expect(paymentProjection).toContain("settlementStatus: payment.settlement_status");
+        expect(paymentProjection).toContain("manualReviewReason: payment.manual_review_reason");
         expect(edge).not.toContain('route === "/operations/refund"');
         expect(definition).not.toContain('"endpointId": "requestRefund"');
     });
