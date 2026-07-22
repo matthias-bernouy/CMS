@@ -8150,7 +8150,13 @@ class StripeConnectMock {
             if (body.p_actor_kind !== "admin") {
                 return jsonResponse({ message: "forbidden: admin approval actor is required" }, 400);
             }
-            if (Number(body.p_amount) < Number(body.p_threshold_amount)) {
+            const dispute = this.tables.stripe_disputes.find((row) => same(row.id, body.p_dispute_id));
+            const payment = dispute ? this.tables.payments.find((row) => same(row.id, dispute.payment_id)) : undefined;
+            if (!payment) {
+                return jsonResponse({ message: "not_found: payment not found" }, 400);
+            }
+            const thresholdAmount = Number(payment.dual_approval_threshold_amount);
+            if (Number(body.p_amount) < thresholdAmount) {
                 return jsonResponse({
                     approved: true,
                     dualApprovalRequired: false,
@@ -8168,7 +8174,7 @@ class StripeConnectMock {
                     action_type: body.p_action_type,
                     dispute_id: body.p_dispute_id,
                     amount: body.p_amount,
-                    threshold_amount: body.p_threshold_amount,
+                    threshold_amount: thresholdAmount,
                     payload_sha256: body.p_payload_sha256,
                     status: "pending_second_approval",
                     first_actor_kind: body.p_actor_kind,
@@ -8180,7 +8186,7 @@ class StripeConnectMock {
                 approval.action_type !== body.p_action_type ||
                 !same(approval.dispute_id, body.p_dispute_id) ||
                 !same(approval.amount, body.p_amount) ||
-                !same(approval.threshold_amount, body.p_threshold_amount) ||
+                !same(approval.threshold_amount, thresholdAmount) ||
                 approval.payload_sha256 !== body.p_payload_sha256
             ) {
                 return jsonResponse({ message: "conflict: irreversible dispute approval replay mismatch" }, 400);

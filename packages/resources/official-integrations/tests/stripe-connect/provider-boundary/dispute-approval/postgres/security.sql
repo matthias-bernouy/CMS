@@ -3,7 +3,7 @@ begin;
 do $security$
 declare
     target oid := pg_catalog.to_regprocedure(
-        'stripe_connect.authorize_irreversible_dispute_action(text,text,bigint,bigint,bigint,text,text,text)'
+        'stripe_connect.authorize_irreversible_dispute_action(text,text,bigint,bigint,text,text,text)'
     );
 begin
     if target is null then

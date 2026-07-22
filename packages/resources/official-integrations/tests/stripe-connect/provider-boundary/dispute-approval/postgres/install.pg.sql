@@ -25,7 +25,7 @@ select
     procedure.prosecdef as security_definer
 from pg_catalog.pg_proc procedure
 where procedure.oid = pg_catalog.to_regprocedure(
-    'stripe_connect.authorize_irreversible_dispute_action(text,text,bigint,bigint,bigint,text,text,text)'
+    'stripe_connect.authorize_irreversible_dispute_action(text,text,bigint,bigint,text,text,text)'
 );
 
 do $fresh_install$
@@ -41,10 +41,12 @@ $fresh_install$;
 do $reapply$
 declare
     target oid := pg_catalog.to_regprocedure(
-        'stripe_connect.authorize_irreversible_dispute_action(text,text,bigint,bigint,bigint,text,text,text)'
+        'stripe_connect.authorize_irreversible_dispute_action(text,text,bigint,bigint,text,text,text)'
     );
 begin
-    if target is null or not exists (
+    if target is null or pg_catalog.to_regprocedure(
+        'stripe_connect.authorize_irreversible_dispute_action(text,text,bigint,bigint,bigint,text,text,text)'
+    ) is not null or not exists (
         select 1
         from dispute_approval_install_fingerprint fingerprint
         join pg_catalog.pg_proc procedure on procedure.oid = target

@@ -89,14 +89,10 @@ as $$
         'dispute_accept',
         p_dispute_id,
         1200,
-        payment.dual_approval_threshold_amount,
         'admin',
         p_actor_id,
         p_payload_sha256
     )
-    from stripe_connect.stripe_disputes dispute
-    join stripe_connect.payments payment on payment.id = dispute.payment_id
-    where dispute.id = p_dispute_id
 $$;
 
 revoke all on schema dispute_approval_test from public;

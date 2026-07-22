@@ -66,13 +66,27 @@ begin
     begin
         perform stripe_connect.authorize_irreversible_dispute_action(
             'dispute-approval-pg-forbidden', 'dispute_accept',
-            v_dispute_id, 1200, 1000, 'finance', 'finance-1',
+            v_dispute_id, 1200, 'finance', 'finance-1',
             pg_catalog.repeat('d', 64)
         );
         raise exception 'dispute approval: non-admin actor was accepted';
     exception when others then
         if sqlerrm = 'dispute approval: non-admin actor was accepted'
            or sqlerrm <> 'forbidden: admin approval actor is required' then
+            raise;
+        end if;
+    end;
+
+    begin
+        perform stripe_connect.authorize_irreversible_dispute_action(
+            'dispute-approval-pg-missing-payment', 'dispute_accept',
+            9223372036854775807, 1200, 'admin', 'admin-first',
+            pg_catalog.repeat('e', 64)
+        );
+        raise exception 'dispute approval: missing payment was accepted';
+    exception when others then
+        if sqlerrm = 'dispute approval: missing payment was accepted'
+           or sqlerrm <> 'not_found: payment not found' then
             raise;
         end if;
     end;

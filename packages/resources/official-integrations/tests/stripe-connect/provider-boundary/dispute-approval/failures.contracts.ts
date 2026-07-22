@@ -71,7 +71,7 @@ export function registerDisputeApprovalFailureContracts(createHarness: CreatePro
             expect(postgrestBudget(harness)).toEqual([
                 { method: "GET", table: "stripe_disputes" },
                 { method: "GET", table: "financial_operations" },
-                { method: "GET", table: "payments" },
+                { method: "POST", table: "rpc/authorize_irreversible_dispute_action" },
             ]);
             expect(harness.rest.rows("irreversible_dispute_action_approvals")).toEqual([]);
             expect(harness.rest.stripeRequests).toEqual([]);

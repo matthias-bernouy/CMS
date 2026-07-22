@@ -2259,7 +2259,6 @@ async function authorizeIrreversibleDisputeAction(options: {
     if (options.actorKind !== "admin") {
         throw new HttpError(403, "admin approval actor is required");
     }
-    const payment = await requiredPayment(options.dispute.payment_id);
     const response = await rest("rpc/authorize_irreversible_dispute_action", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -2268,7 +2267,6 @@ async function authorizeIrreversibleDisputeAction(options: {
             p_action_type: options.actionType,
             p_dispute_id: options.dispute.id,
             p_amount: options.dispute.amount,
-            p_threshold_amount: payment.dual_approval_threshold_amount,
             p_actor_kind: options.actorKind,
             p_actor_id: options.actorId,
             p_payload_sha256: await digest(JSON.stringify(options.payload)),

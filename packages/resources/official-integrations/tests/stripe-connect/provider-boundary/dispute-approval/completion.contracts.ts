@@ -80,7 +80,6 @@ function completionBudget(): Array<{ method: string; table: string }> {
     return [
         { method: "GET", table: "stripe_disputes" },
         { method: "GET", table: "financial_operations" },
-        { method: "GET", table: "payments" },
         { method: "POST", table: "rpc/authorize_irreversible_dispute_action" },
         { method: "POST", table: "rpc/reserve_financial_operation" },
         { method: "PATCH", table: "financial_operations" },

@@ -28,7 +28,6 @@ export function registerDisputeApprovalSubmissionContracts(createHarness: Create
                 { method: "GET", table: "stripe_disputes" },
                 { method: "GET", table: "stripe_dispute_evidence" },
                 { method: "GET", table: "financial_operations" },
-                { method: "GET", table: "payments" },
                 { method: "POST", table: "rpc/authorize_irreversible_dispute_action" },
                 { method: "POST", table: "payment_events" },
             ]);
@@ -76,7 +75,6 @@ export function registerDisputeApprovalSubmissionContracts(createHarness: Create
                 { method: "GET", table: "stripe_disputes" },
                 { method: "GET", table: "stripe_dispute_evidence" },
                 { method: "GET", table: "financial_operations" },
-                { method: "GET", table: "payments" },
                 { method: "POST", table: "rpc/authorize_irreversible_dispute_action" },
             ]);
             expect(harness.rest.stripeRequests).toEqual([]);
