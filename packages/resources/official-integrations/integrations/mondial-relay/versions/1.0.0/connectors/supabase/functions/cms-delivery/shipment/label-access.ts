@@ -1,5 +1,6 @@
 import { HttpError, isRecord } from "../http.ts";
-import { issueLabelAccessToken, labelAccessContext } from "./supabase.ts";
+import { labelAccessContext } from "./read-contexts.ts";
+import { issueLabelAccessToken } from "./supabase.ts";
 import type { JsonRecord } from "./types.ts";
 
 const tokenLifetimeMs = 10 * 60 * 1000;

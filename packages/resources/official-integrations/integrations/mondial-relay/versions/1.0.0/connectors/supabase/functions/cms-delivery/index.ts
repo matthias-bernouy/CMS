@@ -20,6 +20,7 @@ import {
 import { issueLabelCapability, shipmentForLabelCapability } from "./shipment/label-access.ts";
 import { validatedMondialRelayLabelUrl } from "./provider/label-url.ts";
 import { normalizePhone, shipmentPayload, stringValue } from "./shipment/payload.ts";
+import { readRelaySelectionContext, trackingSummaryContextByExpedition } from "./shipment/read-contexts.ts";
 import { mondialRelayConnectEndpoint } from "./provider/provider-endpoints.ts";
 import { reconcileDueShipments, reconcileShipment, trackingRefreshDue } from "./shipment/reconciliation.ts";
 import { relayPointsFromUrl } from "./provider/relay.ts";
@@ -33,7 +34,6 @@ import {
     acknowledgeShipmentEvent,
     failShipmentEventProjection,
     deliveryQuoteRow,
-    readRelaySelectionContext,
     reserveShipmentCreation,
     settingsRow,
     upsertSettingsRow,
@@ -52,7 +52,6 @@ import {
     markStaleShipmentCreationsUnknown,
     projectionHealth,
     reviewShipmentEventProjection,
-    trackingSummaryContextByExpedition,
 } from "./shipment/supabase.ts";
 import type { DeliverySettings, JsonRecord } from "./shipment/types.ts";
 
