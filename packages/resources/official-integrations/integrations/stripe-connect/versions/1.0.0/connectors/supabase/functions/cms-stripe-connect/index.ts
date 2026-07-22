@@ -42,8 +42,6 @@ import {
 } from "./db/repositories/financial-operations.ts";
 import {
     sumConfirmedRecoveryAmount,
-    sumSucceededAmounts,
-    sumSucceededField,
     sumSucceededRefundSellerRecovery,
     sumSucceededTransferReversalAmounts,
 } from "./db/repositories/ledger.ts";
@@ -58,7 +56,6 @@ import {
     platformPayoutControlRpc,
     sellerPayoutHoldRpc,
 } from "./db/repositories/payout-controls.ts";
-import { reserveTransferRecovery } from "./db/repositories/transfer-recovery.ts";
 import { accountSelect, type ConnectAccountRow } from "./db/records/accounts.ts";
 import { disputeSelect, type StripeDisputeRow } from "./db/records/disputes.ts";
 import {
@@ -69,15 +66,7 @@ import {
 } from "./db/records/operations.ts";
 import { paymentSelect, type ConnectPaymentRow } from "./db/records/payments.ts";
 import { refundSelect, type RefundRow } from "./db/records/refunds.ts";
-import {
-    transferRecoverySelect,
-    transferReversalSelect,
-    transferSelect,
-    type ReservedTransferRecovery,
-    type TransferRecoveryRow,
-    type TransferReversalRow,
-    type TransferRow,
-} from "./db/records/transfers.ts";
+import { transferSelect, type TransferRecoveryRow, type TransferRow } from "./db/records/transfers.ts";
 import {
     claimReconciliationProjectionBatch,
     readFinancialOperationRecoveryContext,
@@ -98,9 +87,6 @@ import { publicPayment, publicPaymentWithClientSecret } from "./domain/payments/
 import { chargeId } from "./domain/payments/provider-state.ts";
 import { publicFinancialOperation } from "./domain/admin/financial-operation.ts";
 import { projectPublicDisputeWithContext } from "./domain/disputes/presentation.ts";
-import { normalizeProtectedRefundOperation, publicRefund } from "./domain/refunds/presentation.ts";
-import { publicReversal, publicTransferRecovery } from "./domain/transfers/presentation.ts";
-import { loadPublicTransferRecovery } from "./domain/transfers/recovery-read.ts";
 import { requireCmsRequest, requireDashboardAdmin } from "./http/auth.ts";
 import {
     assertAllowedKeys,
@@ -140,12 +126,7 @@ import {
     retrieveStripeBalanceTransaction,
 } from "./provider/payments.ts";
 import { retrieveStripePayout } from "./provider/payouts.ts";
-import {
-    createStripeRefund,
-    listStripeRefundsByCharge,
-    retrieveStripeRefund,
-    retrieveStripeRefundSnapshot,
-} from "./provider/refunds.ts";
+import { listStripeRefundsByCharge, retrieveStripeRefundSnapshot } from "./provider/refunds.ts";
 import {
     createStripeTransferReversal,
     listStripeTransferReversals,
@@ -175,6 +156,7 @@ import { createProtectedPaymentRoutes } from "./routes/payments/protected.ts";
 import { createRequestSettlementRelease } from "./routes/payments/settlement-release.ts";
 import { createRequestTransferReversal } from "./routes/payments/transfer-reversal.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
+import { createRequestProtectedRefund } from "./routes/refunds/protected.ts";
 import { connectConfig, health } from "./routes/system.ts";
 import { bytesToHex, digest, safeEqual, stableStripeIdempotencyKey } from "./shared/crypto.ts";
 import {
@@ -199,6 +181,9 @@ import {
     requiredOperationInteger,
     requiredOperationString,
 } from "./workflows/operations/request-values.ts";
+import { createRefundExecutionWorkflow } from "./workflows/refunds/execution.ts";
+import { createRefundProjectionWorkflow } from "./workflows/refunds/projection.ts";
+import { createProtectedRefundWorkflow } from "./workflows/refunds/protected.ts";
 import { executePaymentIntentCancellation } from "./workflows/payments/cancellation.ts";
 import { createProtectedPaymentWorkflow } from "./workflows/payments/creation/workflow.ts";
 import { createSettlementReleaseWorkflow } from "./workflows/payments/settlement-release.ts";
@@ -232,6 +217,22 @@ const executeTransferReversal = createTransferReversalWorkflow({
     requiredPayment,
 });
 const requestTransferReversal = createRequestTransferReversal({ executeTransferReversal, requiredPayment });
+const applyStripeRefund = createRefundProjectionWorkflow({
+    authorizedSellerAmountAfterRefunds,
+    requiredPayment,
+});
+const executeRefund = createRefundExecutionWorkflow({ applyStripeRefund, moveOperationToManualReview });
+const executeProtectedRefund = createProtectedRefundWorkflow({
+    executeRefund,
+    executeTransferReversal,
+    recordSellerRecoveryExposure,
+    requiredPayment,
+});
+const requestProtectedRefund = createRequestProtectedRefund({
+    executeProtectedRefund,
+    reconcilePayment,
+    requiredPayment,
+});
 
 serveStripeConnect({
     ingestPlatformWebhook: (request) => ingestStripeWebhook(request, "platform"),
@@ -632,251 +633,6 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
                 await applyClaimedSellerRecoveryPayoutHold(userId, owner, cancelled).catch(() => false);
             }
         }
-        throw error;
-    }
-}
-
-async function requestProtectedRefund(request: Request): Promise<Response> {
-    requireCmsRequest(request, { requireUser: false });
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, [
-        "paymentId",
-        "refundRequestId",
-        "commerceRefundRequestId",
-        "amount",
-        "authorizedSellerAmount",
-        "sellerEntitlementReductionAmount",
-        "reason",
-    ]);
-    let payment = await requiredPayment(requiredInteger(body, "paymentId"));
-    payment = await reconcilePayment(payment);
-    const refundRequestId = requiredString(body, "refundRequestId", 200);
-    const commerceRefundRequestId = optionalPositiveInteger(body, "commerceRefundRequestId");
-    const amount = requiredInteger(body, "amount");
-    const authorizedSellerAmount = requiredInteger(body, "authorizedSellerAmount");
-    const sellerEntitlementReductionAmount = requiredInteger(body, "sellerEntitlementReductionAmount");
-    const reason = optionalText(body, "reason", 500);
-    if (sellerEntitlementReductionAmount < 0 || sellerEntitlementReductionAmount > amount) {
-        throw new HttpError(400, "sellerEntitlementReductionAmount must be between zero and the refund amount");
-    }
-    if (authorizedSellerAmount < 0 || authorizedSellerAmount > payment.seller_transfer_amount) {
-        throw new HttpError(400, "authorizedSellerAmount is invalid");
-    }
-    const existingRefund = await getRowByField<RefundRow>(
-        "refunds",
-        "refund_request_id",
-        refundRequestId,
-        refundSelect,
-    );
-    if (existingRefund) {
-        if (
-            existingRefund.authorized_seller_amount_after_refund !== authorizedSellerAmount ||
-            existingRefund.seller_entitlement_reduction_amount !== sellerEntitlementReductionAmount
-        ) {
-            throw new HttpError(409, "refund seller entitlement replay mismatch");
-        }
-    } else {
-        const refunds = await listRows<RefundRow>(
-            `refunds?payment_id=eq.${payment.id}&select=${encodeURIComponent(refundSelect)}`,
-        );
-        if (refunds.some((refund) => ["reserved", "processing", "pending", "manual_review"].includes(refund.status))) {
-            throw new HttpError(409, "another refund is awaiting terminal provider confirmation");
-        }
-        const committedReductionAmount = refunds
-            .filter((refund) => refund.status === "succeeded")
-            .reduce((sum, refund) => sum + refund.seller_entitlement_reduction_amount, 0);
-        const expectedAuthorizedSellerAmount =
-            payment.seller_transfer_amount - committedReductionAmount - sellerEntitlementReductionAmount;
-        if (expectedAuthorizedSellerAmount !== authorizedSellerAmount) {
-            throw new HttpError(409, "refund seller entitlement target is stale or invalid");
-        }
-    }
-    const netTransferredAmount = payment.transferred_amount - payment.reversed_amount;
-    const requiredRecoveryNow = Math.max(0, netTransferredAmount - authorizedSellerAmount);
-    const recoveryRequestId = `${refundRequestId}:seller-recovery`;
-    const existingRecovery = await getRowByField<TransferRecoveryRow>(
-        "transfer_recovery_requests",
-        "recovery_request_id",
-        recoveryRequestId,
-        transferRecoverySelect,
-    );
-    let reversal: JsonRecord | null = existingRecovery ? await loadPublicTransferRecovery(existingRecovery) : null;
-    const requestedRecoveryAmount = existingRecovery?.requested_amount ?? requiredRecoveryNow;
-    if (requestedRecoveryAmount > 0) {
-        try {
-            reversal = await executeTransferReversal(payment, recoveryRequestId, requestedRecoveryAmount, reason);
-        } catch (error) {
-            await recordSellerRecoveryExposure(
-                payment,
-                recoveryRequestId,
-                "refund_recovery",
-                "debt",
-                requestedRecoveryAmount,
-                "Protected Refund seller recovery is not available",
-                { refundRequestId, error: errorMessage(error) },
-            ).catch(() => null);
-            await markPaymentManualReview(payment.id, "Protected Refund seller recovery failed", {
-                refundRequestId,
-                recoveryRequestId,
-                error: errorMessage(error),
-            }).catch(() => null);
-            throw new HttpError(409, "seller recovery failed; refund requires finance review");
-        }
-        payment = await requiredPayment(payment.id);
-        if (payment.transferred_amount - payment.reversed_amount > authorizedSellerAmount) {
-            throw new HttpError(409, "seller recovery is not confirmed; refund remains blocked");
-        }
-    }
-    const refund = await executeRefund(
-        payment,
-        refundRequestId,
-        commerceRefundRequestId,
-        amount,
-        requestedRecoveryAmount,
-        sellerEntitlementReductionAmount,
-        authorizedSellerAmount,
-        reason,
-    );
-    const currentPayment = await requiredPayment(payment.id);
-    const reversalOperations =
-        isRecord(reversal) && Array.isArray(reversal.reversals)
-            ? reversal.reversals
-                  .filter(isRecord)
-                  .map((child) =>
-                      normalizeProtectedRefundOperation("reversal", child, currentPayment.last_stripe_event_id),
-                  )
-            : [];
-    const operations = [
-        ...reversalOperations,
-        normalizeProtectedRefundOperation("refund", refund, currentPayment.last_stripe_event_id),
-    ];
-    return json({ payment: publicPayment(currentPayment), reversal, refund, operations });
-}
-
-async function executeRefund(
-    payment: ConnectPaymentRow,
-    refundRequestId: string,
-    commerceRefundRequestId: number | null,
-    amount: number,
-    requiredReversalAmount: number,
-    sellerEntitlementReductionAmount: number,
-    authorizedSellerAmount: number,
-    reason: string | null,
-): Promise<JsonRecord> {
-    if (payment.payment_status !== "succeeded" || !payment.stripe_charge_id) {
-        throw new HttpError(409, "payment is not refundable");
-    }
-    const existingRefund = await getRowByField<RefundRow>(
-        "refunds",
-        "refund_request_id",
-        refundRequestId,
-        refundSelect,
-    );
-    if (existingRefund) {
-        if (
-            existingRefund.payment_id !== payment.id ||
-            existingRefund.amount !== amount ||
-            existingRefund.required_reversal_amount !== requiredReversalAmount ||
-            existingRefund.seller_entitlement_reduction_amount !== sellerEntitlementReductionAmount ||
-            existingRefund.authorized_seller_amount_after_refund !== authorizedSellerAmount ||
-            (existingRefund.commerce_refund_request_id ?? null) !== commerceRefundRequestId
-        ) {
-            throw new HttpError(409, "refund request replay mismatch");
-        }
-        if (["succeeded", "pending"].includes(existingRefund.status)) {
-            return publicRefund(existingRefund);
-        }
-    }
-    if (amount <= 0 || payment.refunded_amount + amount > payment.amount_total) {
-        throw new HttpError(409, "refund exceeds the remaining captured amount");
-    }
-    if (requiredReversalAmount < 0 || requiredReversalAmount > amount) {
-        throw new HttpError(400, "requiredReversalAmount is invalid");
-    }
-    if (payment.transferred_amount - payment.reversed_amount > authorizedSellerAmount) {
-        throw new HttpError(409, "required seller Transfer Reversal is not confirmed");
-    }
-    const businessKey = `refund:${payment.id}:${refundRequestId}`;
-    const operation = await reserveFinancialOperation(payment.id, {
-        businessKey,
-        operationType: "refund_create",
-        request: {
-            refundRequestId,
-            commerceRefundRequestId,
-            chargeId: payment.stripe_charge_id,
-            amount,
-            requiredReversalAmount,
-            sellerEntitlementReductionAmount,
-            authorizedSellerAmount,
-            currency: payment.currency,
-            reason,
-        },
-    });
-    let refund = existingRefund;
-    if (!refund) {
-        refund = await insertRow<RefundRow>("refunds", refundSelect, {
-            payment_id: payment.id,
-            operation_id: operation.id,
-            refund_request_id: refundRequestId,
-            commerce_refund_request_id: commerceRefundRequestId,
-            stripe_charge_id: payment.stripe_charge_id,
-            amount,
-            required_reversal_amount: requiredReversalAmount,
-            seller_entitlement_reduction_amount: sellerEntitlementReductionAmount,
-            authorized_seller_amount_after_refund: authorizedSellerAmount,
-            currency: payment.currency,
-            reason,
-            status: "reserved",
-        });
-    } else if (
-        refund.payment_id !== payment.id ||
-        refund.amount !== amount ||
-        refund.required_reversal_amount !== requiredReversalAmount ||
-        refund.seller_entitlement_reduction_amount !== sellerEntitlementReductionAmount ||
-        refund.authorized_seller_amount_after_refund !== authorizedSellerAmount ||
-        (refund.commerce_refund_request_id ?? null) !== commerceRefundRequestId
-    ) {
-        throw new HttpError(409, "refund request replay mismatch");
-    }
-    try {
-        let stripeRefund: StripeRefund | null = null;
-        if (operation.status === "succeeded" && operation.stripe_object_id) {
-            stripeRefund = await retrieveStripeRefund(operation.stripe_object_id);
-        } else if (operation.attempt_count > 0) {
-            stripeRefund = await findStripeRefund(payment.stripe_charge_id, refundRequestId, amount);
-            if (!stripeRefund && operation.status === "manual_review") {
-                throw new HttpError(409, "Refund outcome is unresolved and requires finance review");
-            }
-        }
-        if (!stripeRefund) {
-            await updateFinancialOperation(operation.id, {
-                status: "processing",
-                claimed_at: new Date().toISOString(),
-                attempt_count: operation.attempt_count + 1,
-            });
-            await updateRow("refunds", refund.id, { status: "processing" });
-            stripeRefund = await createStripeRefund(
-                payment.stripe_charge_id,
-                amount,
-                refundRequestId,
-                reason,
-                await stableStripeIdempotencyKey("refund", businessKey),
-            );
-        }
-        refund =
-            (await updateRow<RefundRow>(
-                "refunds",
-                refund.id,
-                {
-                    stripe_refund_id: stripeRefund.id,
-                },
-                refundSelect,
-            )) ?? refund;
-        await applyStripeRefund(refund, stripeRefund);
-        refund = (await getRowByField<RefundRow>("refunds", "id", String(refund.id), refundSelect)) ?? refund;
-        return publicRefund(refund);
-    } catch (error) {
-        await moveOperationToManualReview(payment.id, operation, error, "refund_create_ambiguous");
         throw error;
     }
 }
@@ -2073,24 +1829,6 @@ async function ingestStripeWebhook(
     return json({ received: true, duplicate: !inserted }, inserted ? 202 : 200);
 }
 
-async function findStripeRefund(
-    chargeId: string,
-    refundRequestId: string,
-    amount: number,
-): Promise<StripeRefund | null> {
-    const list = await listStripeRefundsByCharge(chargeId, true);
-    const matches = recordArrayAt(list, "data").filter(
-        (refund) =>
-            Number(refund.amount) === amount &&
-            stripeObjectId(refund.charge) === chargeId &&
-            stringAt(objectAt(refund, "metadata"), "refund_request_id") === refundRequestId,
-    );
-    if (matches.length > 1 || (matches.length === 0 && list.has_more === true)) {
-        throw new HttpError(409, "Stripe Refund search is ambiguous");
-    }
-    return (matches[0] as StripeRefund | undefined) ?? null;
-}
-
 async function requiredPayment(paymentId: number): Promise<ConnectPaymentRow> {
     const payment = await getPaymentRow(paymentId);
     if (!payment) {
@@ -2986,115 +2724,6 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
     return false;
 }
 
-async function applyStripeRefund(refund: RefundRow, provider: StripeRefund): Promise<void> {
-    const status = refundStatusFromStripe(provider);
-    if (["succeeded", "failed", "cancelled"].includes(refund.status) && refund.status !== status) {
-        await upsertProviderException(`refund-terminal-conflict:${refund.id}`, {
-            payment_id: refund.payment_id,
-            operation_id: refund.operation_id,
-            exception_type: "refund_terminal_state_conflict",
-            severity: "critical",
-            message: "Stripe reported a refund state after a different terminal state was recorded",
-            details: { refundId: refund.id, recordedStatus: refund.status, providerSnapshot: provider },
-        });
-        return;
-    }
-    const balanceTransaction = status === "succeeded" ? await resolveRefundBalanceTransaction(provider, refund) : null;
-    const updatedRefund =
-        (await updateRow<RefundRow>(
-            "refunds",
-            refund.id,
-            {
-                status,
-                failure_reason: stringAt(provider, "failure_reason") || null,
-                stripe_balance_transaction_id: balanceTransaction
-                    ? stringAt(balanceTransaction, "id")
-                    : refund.stripe_balance_transaction_id,
-                actual_stripe_fee_amount: balanceTransaction
-                    ? numberAt(balanceTransaction, "fee")
-                    : refund.actual_stripe_fee_amount,
-                actual_stripe_net_amount: balanceTransaction
-                    ? numberAt(balanceTransaction, "net")
-                    : refund.actual_stripe_net_amount,
-                actual_stripe_fee_currency: balanceTransaction
-                    ? stringAt(balanceTransaction, "currency").toLowerCase()
-                    : refund.actual_stripe_fee_currency,
-                actual_stripe_fee_details: balanceTransaction
-                    ? recordArrayAt(balanceTransaction, "fee_details")
-                    : refund.actual_stripe_fee_details,
-                provider_snapshot: provider,
-            },
-            refundSelect,
-        )) ?? refund;
-    await updateFinancialOperation(refund.operation_id, {
-        status:
-            status === "succeeded" ? "succeeded" : ["failed", "cancelled"].includes(status) ? "failed" : "processing",
-        stripe_object_id: provider.id,
-        response: provider,
-        last_error: ["failed", "cancelled"].includes(status)
-            ? stringAt(provider, "failure_reason") || `Stripe Refund ${status}`
-            : null,
-        completed_at: status === "succeeded" ? new Date().toISOString() : null,
-    });
-    if (["pending", "succeeded", "failed", "cancelled"].includes(status)) {
-        await enqueueCommerceRefundProjection(updatedRefund.id);
-    }
-    const refundedAmount = await sumSucceededAmounts("refunds", refund.payment_id);
-    const refundFeeAmount = await sumSucceededField("refunds", refund.payment_id, "actual_stripe_fee_amount");
-    const payment = await requiredPayment(refund.payment_id);
-    const authorizedSellerAmount = await authorizedSellerAmountAfterRefunds(payment);
-    await updatePayment(refund.payment_id, {
-        refunded_amount: refundedAmount,
-        actual_stripe_refund_fee_amount: refundFeeAmount,
-        actual_stripe_processing_fee_amount: payment.actual_stripe_charge_fee_amount + refundFeeAmount,
-        settlement_status:
-            status === "failed"
-                ? "manual_review"
-                : status === "pending"
-                  ? "refund_pending"
-                  : payment.settlement_status === "manual_review"
-                    ? "manual_review"
-                    : refundedAmount >= payment.amount_total
-                      ? "refunded"
-                      : payment.transferred_amount - payment.reversed_amount >= authorizedSellerAmount
-                        ? "released"
-                        : "held",
-        last_provider_sync_at: new Date().toISOString(),
-    });
-}
-
-async function resolveRefundBalanceTransaction(provider: StripeRefund, refund: RefundRow): Promise<JsonRecord> {
-    const raw = provider.balance_transaction;
-    const transaction = isRecord(raw)
-        ? raw
-        : typeof raw === "string" && raw.startsWith("txn_")
-          ? await retrieveStripeBalanceTransaction(raw)
-          : null;
-    if (!transaction) {
-        throw new HttpError(409, "succeeded Stripe Refund omitted its balance transaction");
-    }
-    const id = stringAt(transaction, "id");
-    const amount = numberAt(transaction, "amount");
-    const fee = numberAt(transaction, "fee");
-    const net = numberAt(transaction, "net");
-    const currency = stringAt(transaction, "currency").toLowerCase();
-    if (
-        !id.startsWith("txn_") ||
-        amount !== -refund.amount ||
-        !Number.isSafeInteger(fee) ||
-        !Number.isSafeInteger(net) ||
-        net !== amount! - fee! ||
-        currency !== refund.currency ||
-        !Array.isArray(transaction.fee_details)
-    ) {
-        throw new HttpError(409, "Stripe Refund balance transaction does not match immutable refund truth");
-    }
-    if (refund.stripe_balance_transaction_id && refund.stripe_balance_transaction_id !== id) {
-        throw new HttpError(409, "Stripe Refund balance transaction replay changed identity");
-    }
-    return transaction;
-}
-
 type DisputeFundsTruth = { fundsWithdrawn: boolean; eventAt: string; eventId: string };
 
 async function disputeFundsTruth(
@@ -3389,21 +3018,6 @@ function stripeEventCreatedAt(event: JsonRecord): string {
         }
     }
     throw new HttpError(400, "Stripe event created timestamp is invalid");
-}
-
-function refundStatusFromStripe(refund: StripeRefund): string {
-    switch (refund.status) {
-        case "succeeded":
-            return "succeeded";
-        case "failed":
-        case "canceled":
-            return refund.status === "canceled" ? "cancelled" : "failed";
-        case "pending":
-        case "requires_action":
-            return "pending";
-        default:
-            return "processing";
-    }
 }
 
 function terminalDisputeStatus(status: string): boolean {
