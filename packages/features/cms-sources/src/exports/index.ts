@@ -5,7 +5,7 @@
  * CMS- and persistence-agnostic; consumed by cms-delivery (proxy) and the
  * cms-control editor.
  */
-export * from "./contracts";
+export * from "../publicApi";
 
 // ── Core (pure logic) ──
 export {
