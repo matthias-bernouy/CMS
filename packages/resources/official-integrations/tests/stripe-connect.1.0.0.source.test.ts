@@ -15,7 +15,7 @@ import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { registerOperationAndExceptionDashboardContracts } from "./stripe-connect/operations-exceptions.contracts";
+import { registerOperationAndExceptionDashboardContracts } from "./stripe-connect/dashboard/operations-exceptions.contracts";
 import { registerPaymentProjectionContracts } from "./stripe-connect/payment-projection/contracts";
 import { registerPaymentProjectionFailureContracts } from "./stripe-connect/payment-projection/failures";
 import { registerPaymentProjectionReplayContracts } from "./stripe-connect/payment-projection/replay";
@@ -38,8 +38,8 @@ import type {
     OperationRecoveryKind,
     TerminalOperationRecoverySeed,
 } from "./stripe-connect/provider-reconciliation/harness";
-import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/refunds-disputes.contracts";
-import type { DashboardTable, PostgrestRequestRecord } from "./stripe-connect/dashboard-contract-harness";
+import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/dashboard/refunds-disputes.contracts";
+import type { DashboardTable, PostgrestRequestRecord } from "./stripe-connect/dashboard/dashboard-contract-harness";
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type JsonRecord = Record<string, unknown>;

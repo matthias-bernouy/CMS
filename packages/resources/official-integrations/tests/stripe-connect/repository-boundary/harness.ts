@@ -1,4 +1,4 @@
-import type { PostgrestRequestRecord } from "../dashboard-contract-harness";
+import type { PostgrestRequestRecord } from "../dashboard/dashboard-contract-harness";
 
 export type JsonRecord = Record<string, unknown>;
 
