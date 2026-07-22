@@ -1,14 +1,5 @@
 import { describe, expect, test } from "bun:test";
-
-const functionsBaseUrl = "https://project.supabase.co/functions/v1";
-
-type RoutingHarness = {
-    apiKey: string;
-    edgeRequest(request: Request): Promise<Response>;
-    providerRequestCount(): number;
-};
-
-export type CreateRoutingHarness = () => Promise<RoutingHarness>;
+import { type CreateRoutingHarness, functionsBaseUrl, responseBody } from "./harness";
 
 export function registerStripeConnectRoutingContracts(createHarness: CreateRoutingHarness): void {
     describe("stripe-connect routing contracts", () => {
@@ -48,11 +39,11 @@ export function registerStripeConnectRoutingContracts(createHarness: CreateRouti
             expect(wrongMethod.headers.get("allow")).toBe("POST, OPTIONS");
             expect(await wrongMethod.text()).toBe("Method Not Allowed");
             expect(unknown.status).toBe(404);
-            expect(await jsonBody(unknown)).toEqual({ error: "not found" });
+            expect(await responseBody(unknown)).toEqual({ error: "not found" });
             expect(unauthenticated.status).toBe(401);
-            expect(await jsonBody(unauthenticated)).toEqual({ error: "invalid CMS API key" });
+            expect(await responseBody(unauthenticated)).toEqual({ error: "invalid CMS API key" });
             expect(forbidden.status).toBe(403);
-            expect(await jsonBody(forbidden)).toEqual({ error: "the CMS admin role is required" });
+            expect(await responseBody(forbidden)).toEqual({ error: "the CMS admin role is required" });
             expect(harness.providerRequestCount()).toBe(0);
         });
 
@@ -66,9 +57,9 @@ export function registerStripeConnectRoutingContracts(createHarness: CreateRouti
             const direct = await harness.edgeRequest(new Request("https://project.supabase.co/health", { headers }));
 
             expect(marked.status).toBe(200);
-            expect(await jsonBody(marked)).toEqual({ ok: true, stripeMode: "test" });
+            expect(await responseBody(marked)).toEqual({ ok: true, stripeMode: "test" });
             expect(direct.status).toBe(200);
-            expect(await jsonBody(direct)).toEqual({ ok: true, stripeMode: "test" });
+            expect(await responseBody(direct)).toEqual({ ok: true, stripeMode: "test" });
             expect(harness.providerRequestCount()).toBe(0);
         });
 
@@ -86,7 +77,7 @@ export function registerStripeConnectRoutingContracts(createHarness: CreateRouti
             const wrongMethod = await harness.edgeRequest(new Request(url, { method: "GET", headers }));
 
             expect(dispatched.status).toBe(400);
-            expect(await jsonBody(dispatched)).toEqual({ error: "returnUrl is required" });
+            expect(await responseBody(dispatched)).toEqual({ error: "returnUrl is required" });
             expect(wrongMethod.status).toBe(405);
             expect(wrongMethod.headers.get("allow")).toBe("POST, OPTIONS");
             expect(await wrongMethod.text()).toBe("Method Not Allowed");
@@ -114,8 +105,4 @@ export function registerStripeConnectRoutingContracts(createHarness: CreateRouti
             expect(harness.providerRequestCount()).toBe(0);
         });
     });
-}
-
-async function jsonBody(response: Response): Promise<Record<string, unknown>> {
-    return (await response.json()) as Record<string, unknown>;
 }

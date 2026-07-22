@@ -9,6 +9,7 @@ export type RepositoryBoundaryHarness = {
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;
         rows(table: string): JsonRecord[];
+        setAccountState(userId: string, patch: JsonRecord): void;
         setPaymentIntentSucceeded(paymentIntentId: string): void;
     };
     submit(userId: string, role: string | undefined, endpoint: string, body: unknown): Promise<Response>;

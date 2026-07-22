@@ -31,10 +31,13 @@ import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/p
 import { registerAccountTermsRepositoryContracts } from "./stripe-connect/repository-boundary/accounts-terms.contracts";
 import { registerLedgerRepositoryContracts } from "./stripe-connect/repository-boundary/ledger.contracts";
 import { registerPaymentOperationRepositoryContracts } from "./stripe-connect/repository-boundary/payments-operations.contracts";
+import { registerProtectedPaymentEligibilityContracts } from "./stripe-connect/repository-boundary/protected-payment-eligibility.contracts";
 import { registerProviderReconciliationBudgets } from "./stripe-connect/provider-reconciliation/budgets";
 import { registerProviderReconciliationContracts } from "./stripe-connect/provider-reconciliation/contracts";
 import { registerProviderExceptionResolutionContracts } from "./stripe-connect/provider-reconciliation/exception-resolution";
 import { registerStripeConnectRoutingContracts } from "./stripe-connect/routing/contracts";
+import { registerProtectedPaymentReadContracts } from "./stripe-connect/routing/protected-payment-reads.contracts";
+import { registerProtectedPaymentValidationContracts } from "./stripe-connect/routing/protected-payment-validations.contracts";
 import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/contracts";
 import { registerPaymentReconciliationLedgerDivergenceContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/divergence";
 import { registerStalePaymentLocalContextContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/stale-local-context";
@@ -9929,8 +9932,11 @@ const createRoutingHarness = async () => {
     const harness = await createHarness();
     return {
         apiKey: activeEnv.CMS_STRIPE_CONNECT_API_KEY ?? "",
+        rest: harness.rest,
         edgeRequest: async (request: Request) => await harness.edgeRequest(request),
         providerRequestCount: () => harness.rest.stripeRequests.length,
+        submit: async (userId: string, role: string | undefined, endpoint: string, body: unknown) =>
+            await sourceJsonWithRole(harness, userId, role, endpoint, body),
     };
 };
 
@@ -9951,6 +9957,7 @@ registerPaymentDashboardContracts(createDashboardReadHarness);
 registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
 registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
 registerAccountTermsRepositoryContracts(createRepositoryBoundaryHarness);
+registerProtectedPaymentEligibilityContracts(createRepositoryBoundaryHarness);
 registerLedgerRepositoryContracts(createRepositoryBoundaryHarness);
 registerPaymentOperationRepositoryContracts(createRepositoryBoundaryHarness);
 registerPaymentProjectionContracts(createPaymentProjectionHarness);
@@ -9973,6 +9980,8 @@ registerSettlementReleaseValidationContracts(createProviderReconciliationHarness
 registerSettlementReleaseRecoveryContracts(createProviderReconciliationHarness);
 registerSettlementReleaseFailureContracts(createProviderReconciliationHarness);
 registerStripeConnectRoutingContracts(createRoutingHarness);
+registerProtectedPaymentValidationContracts(createRoutingHarness);
+registerProtectedPaymentReadContracts(createRoutingHarness);
 registerAccountOnboardingContracts(createAccountHandlerHarness);
 registerAccountEnrollmentContracts(createAccountHandlerHarness);
 registerAccountLifecycleContracts(createAccountHandlerHarness);
