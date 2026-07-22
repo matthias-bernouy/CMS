@@ -39,6 +39,9 @@ where procedure.oid in (
         'stripe_connect.read_refund_projection_context(bigint)'
     ),
     pg_catalog.to_regprocedure(
+        'stripe_connect.read_refund_preflight_context(bigint,text)'
+    ),
+    pg_catalog.to_regprocedure(
         'stripe_connect.read_settlement_release_context(bigint,text,text)'
     ),
     pg_catalog.to_regprocedure(
@@ -61,7 +64,7 @@ where procedure.oid in (
 do $fresh_install$
 begin
     if (select pg_catalog.count(*)
-        from provider_reconciliation_install_fingerprint) <> 10 then
+        from provider_reconciliation_install_fingerprint) <> 11 then
         raise exception 'provider reconciliation: fresh install omitted RPCs';
     end if;
 end;

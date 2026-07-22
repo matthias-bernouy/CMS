@@ -8369,6 +8369,35 @@ class StripeConnectMock {
                 },
             ]);
         }
+        if (table === "rpc/read_refund_preflight_context" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const paymentId = Number(body.p_payment_id);
+            const refundRequestId = String(body.p_refund_request_id);
+            await this.waitForPostgrestRead("refunds");
+            const existing = this.tables.refunds.find((row) => row.refund_request_id === refundRequestId);
+            if (existing) {
+                return jsonResponse([
+                    {
+                        existing_refund: { ...existing },
+                        has_nonterminal: false,
+                        committed_reduction_amount: 0,
+                    },
+                ]);
+            }
+            await this.waitForPostgrestRead("refunds");
+            const refunds = this.tables.refunds.filter((row) => same(row.payment_id, paymentId));
+            return jsonResponse([
+                {
+                    existing_refund: null,
+                    has_nonterminal: refunds.some((row) =>
+                        ["reserved", "processing", "pending", "manual_review"].includes(String(row.status)),
+                    ),
+                    committed_reduction_amount: refunds
+                        .filter((row) => row.status === "succeeded")
+                        .reduce((sum, row) => sum + Number(row.seller_entitlement_reduction_amount ?? 0), 0),
+                },
+            ]);
+        }
         if (table === "rpc/read_refund_projection_context" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const paymentId = Number(body.p_payment_id);

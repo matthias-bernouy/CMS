@@ -3,6 +3,35 @@ import { isRecord } from "../../shared/data.ts";
 import type { JsonRecord } from "../../shared/types.ts";
 import { callRpcObject, listRows } from "../postgrest.ts";
 import type { ConnectPaymentRow } from "../records/payments.ts";
+import type { RefundRow } from "../records/refunds.ts";
+
+export type RefundPreflightContext = {
+    existingRefund: RefundRow | null;
+    hasNonterminal: boolean;
+    committedReductionAmount: number;
+};
+
+export async function readRefundPreflightContext(
+    paymentId: number,
+    refundRequestId: string,
+): Promise<RefundPreflightContext> {
+    const value = await callRpcObject<unknown>("read_refund_preflight_context", {
+        p_payment_id: paymentId,
+        p_refund_request_id: refundRequestId,
+    });
+    if (
+        !isRecord(value) ||
+        (value.existing_refund !== null && !isRecord(value.existing_refund)) ||
+        typeof value.has_nonterminal !== "boolean"
+    ) {
+        throw invalidRefundPreflightContext();
+    }
+    return {
+        existingRefund: value.existing_refund as unknown as RefundRow | null,
+        hasNonterminal: value.has_nonterminal,
+        committedReductionAmount: amountAt(value, "committed_reduction_amount", false, invalidRefundPreflightContext),
+    };
+}
 
 export type RefundProjectionContext = {
     refundedAmount: number;
@@ -52,14 +81,23 @@ export async function sumSucceededRefundSellerRecovery(paymentId: number): Promi
     return rows.reduce((sum, row) => sum + Number(row.seller_entitlement_reduction_amount ?? 0), 0);
 }
 
-function amountAt(value: JsonRecord, key: string, signed: boolean): number {
+function amountAt(
+    value: JsonRecord,
+    key: string,
+    signed: boolean,
+    invalid: () => HttpError = invalidRefundProjectionContext,
+): number {
     const amount = value[key];
     if (typeof amount !== "number" || !Number.isSafeInteger(amount) || (!signed && amount < 0)) {
-        throw invalidRefundProjectionContext();
+        throw invalid();
     }
     return amount;
 }
 
 function invalidRefundProjectionContext(): HttpError {
     return new HttpError(502, "refund projection context returned an invalid response");
+}
+
+function invalidRefundPreflightContext(): HttpError {
+    return new HttpError(502, "refund preflight context returned an invalid response");
 }

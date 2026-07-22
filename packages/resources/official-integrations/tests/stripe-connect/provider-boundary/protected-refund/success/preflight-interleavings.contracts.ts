@@ -9,8 +9,7 @@ const preflightBudget = [
     { method: "POST", table: "rpc/read_payment_reconciliation_local_context" },
     { method: "POST", table: "rpc/read_payment_reconciliation_ledger" },
     { method: "PATCH", table: "payments" },
-    { method: "GET", table: "refunds" },
-    { method: "GET", table: "refunds" },
+    { method: "POST", table: "rpc/read_refund_preflight_context" },
 ];
 
 const interleavings = [

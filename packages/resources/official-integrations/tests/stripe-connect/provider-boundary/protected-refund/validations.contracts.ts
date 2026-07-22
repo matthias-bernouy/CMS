@@ -28,8 +28,7 @@ const pendingConflictBudget = [
     { method: "PATCH", table: "payments" },
     { method: "POST", table: "rpc/read_payment_reconciliation_ledger" },
     { method: "PATCH", table: "payments" },
-    { method: "GET", table: "refunds" },
-    { method: "GET", table: "refunds" },
+    { method: "POST", table: "rpc/read_refund_preflight_context" },
 ];
 
 const validationCases = [
@@ -55,7 +54,7 @@ const validationCases = [
         patch: { authorizedSellerAmount: 779 },
         status: 409,
         error: "refund seller entitlement target is stale or invalid",
-        budget: [...validationBudget, { method: "GET", table: "refunds" }, { method: "GET", table: "refunds" }],
+        budget: [...validationBudget, { method: "POST", table: "rpc/read_refund_preflight_context" }],
     },
     {
         patch: { amount: 1300, authorizedSellerAmount: 0, sellerEntitlementReductionAmount: 1080 },
@@ -63,8 +62,7 @@ const validationCases = [
         error: "refund exceeds the remaining captured amount",
         budget: [
             ...validationBudget,
-            { method: "GET", table: "refunds" },
-            { method: "GET", table: "refunds" },
+            { method: "POST", table: "rpc/read_refund_preflight_context" },
             { method: "GET", table: "transfer_recovery_requests" },
             { method: "GET", table: "refunds" },
         ],

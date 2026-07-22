@@ -1,4 +1,4 @@
--- Refund projection reads retain their former sequential observation points.
+-- Refund projection reads retain their exact sequential observation points.
 select provider_reconciliation_test.cleanup();
 
 do $refund_projection_context$

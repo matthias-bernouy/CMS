@@ -11,6 +11,7 @@ begin
             ('stripe_connect.read_payment_reconciliation_ledger(bigint)', 's', false),
             ('stripe_connect.read_payment_reconciliation_local_context(bigint)', 's', false),
             ('stripe_connect.read_refund_projection_context(bigint)', 'v', false),
+            ('stripe_connect.read_refund_preflight_context(bigint,text)', 'v', false),
             ('stripe_connect.read_settlement_release_context(bigint,text,text)', 'v', false),
             ('stripe_connect.read_settlement_release_ledger(bigint)', 'v', false),
             ('stripe_connect.read_provider_transfer_reconciliation_context(text)', 's', false),
@@ -157,6 +158,11 @@ select pg_catalog.count(*)
 from stripe_connect.read_payment_reconciliation_local_context(-900000001);
 select pg_catalog.count(*)
 from stripe_connect.read_refund_projection_context(-900000001);
+select pg_catalog.count(*)
+from stripe_connect.read_refund_preflight_context(
+    -900000001,
+    'provider-reconciliation-pg-missing-refund'
+);
 select pg_catalog.count(*)
 from stripe_connect.read_settlement_release_context(
     -900000001,

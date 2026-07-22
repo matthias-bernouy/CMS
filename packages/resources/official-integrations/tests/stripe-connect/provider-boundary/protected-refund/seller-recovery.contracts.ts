@@ -17,7 +17,7 @@ export const sellerRecoveryReplayBudget = [
     { method: "POST", table: "rpc/read_payment_reconciliation_local_context" },
     { method: "POST", table: "rpc/read_payment_reconciliation_ledger" },
     { method: "PATCH", table: "payments" },
-    { method: "GET", table: "refunds" },
+    { method: "POST", table: "rpc/read_refund_preflight_context" },
     { method: "GET", table: "transfer_recovery_requests" },
     { method: "GET", table: "transfer_recovery_requests" },
     { method: "POST", table: "rpc/upsert_seller_recovery_exposure_and_refresh" },

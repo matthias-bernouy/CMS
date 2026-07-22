@@ -1,7 +1,7 @@
-import { getRowByField, listRows } from "../../db/postgrest.ts";
+import { getRowByField } from "../../db/postgrest.ts";
+import { readRefundPreflightContext } from "../../db/repositories/ledger.ts";
 import { markPaymentManualReview } from "../../db/repositories/payout-controls.ts";
 import type { ConnectPaymentRow } from "../../db/records/payments.ts";
-import { refundSelect, type RefundRow } from "../../db/records/refunds.ts";
 import { transferRecoverySelect, type TransferRecoveryRow } from "../../db/records/transfers.ts";
 import { publicPayment } from "../../domain/payments/presentation.ts";
 import { normalizeProtectedRefundOperation } from "../../domain/refunds/presentation.ts";
@@ -51,12 +51,8 @@ export function createProtectedRefundWorkflow({
         if (authorizedSellerAmount < 0 || authorizedSellerAmount > payment.seller_transfer_amount) {
             throw new HttpError(400, "authorizedSellerAmount is invalid");
         }
-        const existingRefund = await getRowByField<RefundRow>(
-            "refunds",
-            "refund_request_id",
-            refundRequestId,
-            refundSelect,
-        );
+        const preflight = await readRefundPreflightContext(payment.id, refundRequestId);
+        const existingRefund = preflight.existingRefund;
         if (existingRefund) {
             if (
                 existingRefund.authorized_seller_amount_after_refund !== authorizedSellerAmount ||
@@ -65,19 +61,11 @@ export function createProtectedRefundWorkflow({
                 throw new HttpError(409, "refund seller entitlement replay mismatch");
             }
         } else {
-            const refunds = await listRows<RefundRow>(
-                `refunds?payment_id=eq.${payment.id}&select=${encodeURIComponent(refundSelect)}`,
-            );
-            if (
-                refunds.some((refund) => ["reserved", "processing", "pending", "manual_review"].includes(refund.status))
-            ) {
+            if (preflight.hasNonterminal) {
                 throw new HttpError(409, "another refund is awaiting terminal provider confirmation");
             }
-            const committedReductionAmount = refunds
-                .filter((refund) => refund.status === "succeeded")
-                .reduce((sum, refund) => sum + refund.seller_entitlement_reduction_amount, 0);
             const expectedAuthorizedSellerAmount =
-                payment.seller_transfer_amount - committedReductionAmount - sellerEntitlementReductionAmount;
+                payment.seller_transfer_amount - preflight.committedReductionAmount - sellerEntitlementReductionAmount;
             if (expectedAuthorizedSellerAmount !== authorizedSellerAmount) {
                 throw new HttpError(409, "refund seller entitlement target is stale or invalid");
             }
