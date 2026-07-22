@@ -27,6 +27,7 @@ import { registerPaymentOperationRepositoryContracts } from "./stripe-connect/re
 import { registerProviderReconciliationBudgets } from "./stripe-connect/provider-reconciliation/budgets";
 import { registerProviderReconciliationContracts } from "./stripe-connect/provider-reconciliation/contracts";
 import { registerProviderExceptionResolutionContracts } from "./stripe-connect/provider-reconciliation/exception-resolution";
+import { registerStripeConnectRoutingContracts } from "./stripe-connect/routing/contracts";
 import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/contracts";
 import { registerPaymentReconciliationLedgerDivergenceContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/divergence";
 import { registerStalePaymentLocalContextContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/stale-local-context";
@@ -292,48 +293,6 @@ describe("stripe-connect 1.0.0 source", () => {
             activeEnv.STRIPE_SECRET_KEY = originalSecret;
             activeEnv.STRIPE_PUBLISHABLE_KEY = originalPublishable;
         }
-    });
-
-    test("preserves routing, method, authentication, and authorization responses", async () => {
-        const harness = await createHarness();
-        const cmsHeaders = {
-            authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
-            "x-cms-user-id": "user-123",
-        };
-
-        const options = await harness.edgeRequest(
-            new Request(`${functionsBaseUrl}/cms-stripe-connect/payments/protected`, { method: "OPTIONS" }),
-        );
-        const wrongMethod = await harness.edgeRequest(
-            new Request(`${functionsBaseUrl}/cms-stripe-connect/payments/protected`, {
-                method: "GET",
-                headers: cmsHeaders,
-            }),
-        );
-        const unknown = await harness.edgeRequest(
-            new Request(`${functionsBaseUrl}/cms-stripe-connect/unknown`, { headers: cmsHeaders }),
-        );
-        const unauthenticated = await harness.edgeRequest(
-            new Request(`${functionsBaseUrl}/cms-stripe-connect/admin/payments`),
-        );
-        const forbidden = await harness.edgeRequest(
-            new Request(`${functionsBaseUrl}/cms-stripe-connect/admin/payments`, {
-                headers: { ...cmsHeaders, "x-cms-user-role": "member" },
-            }),
-        );
-
-        expect(options.status).toBe(200);
-        expect(await options.text()).toBe("ok");
-        expect(wrongMethod.status).toBe(405);
-        expect(wrongMethod.headers.get("allow")).toBe("POST, OPTIONS");
-        expect(await wrongMethod.text()).toBe("Method Not Allowed");
-        expect(unknown.status).toBe(404);
-        expect(await jsonBody(unknown)).toEqual({ error: "not found" });
-        expect(unauthenticated.status).toBe(401);
-        expect(await jsonBody(unauthenticated)).toEqual({ error: "invalid CMS API key" });
-        expect(forbidden.status).toBe(403);
-        expect(await jsonBody(forbidden)).toEqual({ error: "the CMS admin role is required" });
-        expect(harness.rest.stripeRequests).toHaveLength(0);
     });
 
     test("rejects livemode mismatch on every signed Stripe webhook boundary", async () => {
@@ -9814,6 +9773,15 @@ const createRepositoryBoundaryHarness = async () => {
     };
 };
 
+const createRoutingHarness = async () => {
+    const harness = await createHarness();
+    return {
+        apiKey: activeEnv.CMS_STRIPE_CONNECT_API_KEY ?? "",
+        edgeRequest: async (request: Request) => await harness.edgeRequest(request),
+        providerRequestCount: () => harness.rest.stripeRequests.length,
+    };
+};
+
 registerRefundAndDisputeDashboardContracts(createDashboardReadHarness);
 registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
 registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
@@ -9834,3 +9802,4 @@ registerStalePaymentLocalContextFailureContracts(createProviderReconciliationHar
 registerProviderTransferContextContracts(createProviderReconciliationHarness);
 registerProviderTransferContextFailureContracts(createProviderReconciliationHarness);
 registerTerminalOperationRecoveryContracts(createProviderReconciliationHarness);
+registerStripeConnectRoutingContracts(createRoutingHarness);
