@@ -11,7 +11,7 @@ import {
     protectedPaymentBody,
     responseBody,
     type ProviderBoundaryHarness,
-} from "./harness";
+} from "../harness";
 
 const accountSyncBudget = [
     { method: "GET", table: "accounts" },

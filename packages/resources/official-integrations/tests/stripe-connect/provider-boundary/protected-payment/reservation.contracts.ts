@@ -13,7 +13,7 @@ import {
     protectedPaymentBody,
     responseBody,
     type ProviderBoundaryHarness,
-} from "./harness";
+} from "../harness";
 
 const reservationBudget = [
     { method: "GET", table: "accounts" },

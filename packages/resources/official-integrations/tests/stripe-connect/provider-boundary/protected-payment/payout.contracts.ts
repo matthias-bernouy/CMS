@@ -10,7 +10,7 @@ import {
     postgrestBudget,
     protectedPaymentBody,
     responseBody,
-} from "./harness";
+} from "../harness";
 
 const protectionBudget = [
     { method: "GET", table: "accounts" },

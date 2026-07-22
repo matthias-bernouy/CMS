@@ -28,10 +28,10 @@ import { registerPaymentCancellationRecoveryContracts } from "./stripe-connect/p
 import { registerPaymentCancellationReplayContracts } from "./stripe-connect/payment-cancellation/replay.contracts";
 import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
 import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
-import { registerProtectedPaymentFailureContracts } from "./stripe-connect/provider-boundary/protected-payment-failures.contracts";
-import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment-payout.contracts";
-import { registerProtectedPaymentReservationContracts } from "./stripe-connect/provider-boundary/protected-payment-reservation.contracts";
-import { registerProtectedPaymentReplayContracts } from "./stripe-connect/provider-boundary/protected-payment-replay.contracts";
+import { registerProtectedPaymentFailureContracts } from "./stripe-connect/provider-boundary/protected-payment/failures.contracts";
+import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment/payout.contracts";
+import { registerProtectedPaymentReservationContracts } from "./stripe-connect/provider-boundary/protected-payment/reservation.contracts";
+import { registerProtectedPaymentReplayContracts } from "./stripe-connect/provider-boundary/protected-payment/replay.contracts";
 import { registerTransferReversalFailureContracts } from "./stripe-connect/provider-boundary/transfer-reversal/failures.contracts";
 import { registerTransferReversalRecoveryContracts } from "./stripe-connect/provider-boundary/transfer-reversal/recovery.contracts";
 import { registerTransferReversalSuccessContracts } from "./stripe-connect/provider-boundary/transfer-reversal/success.contracts";
