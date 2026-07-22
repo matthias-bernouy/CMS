@@ -47,6 +47,8 @@ export type ProviderReconciliationHarness = {
         addProviderTransfer(transferGroup: string, patch?: JsonRecord): string;
         seedLocalTransferReversal(stripeTransferId: string, amount: number, status: string): void;
         failProviderTransferContextReadAfter(successfulReads: number): void;
+        failNextProviderDisputeList(): void;
+        failNextProviderRefundList(): void;
         failNextProviderTransferList(): void;
         seedPaymentReconciliationLedger(paymentId: number): void;
         setPaymentReconciliationSellerRecoveryAmount(paymentId: number, amount: number): void;

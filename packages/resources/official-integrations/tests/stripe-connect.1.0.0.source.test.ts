@@ -75,6 +75,7 @@ import { registerStripeWebhookPersistenceContracts } from "./stripe-connect/rout
 import { registerStripeWebhookValidationContracts } from "./stripe-connect/routing/webhooks/validation.contracts";
 import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/contracts";
 import { registerPaymentReconciliationLedgerDivergenceContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/divergence";
+import { registerPaymentReconciliationProviderFailureContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/provider-failures.contracts";
 import { registerStalePaymentLocalContextContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/stale-local-context";
 import { registerStalePaymentLocalContextFailureContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/stale-local-context-failures";
 import { registerProviderTransferContextContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/contracts";
@@ -86,6 +87,7 @@ import { registerSettlementReleaseReadOrderContracts } from "./stripe-connect/pr
 import { registerSettlementReleaseLedgerFreshnessContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/ledger-freshness.contracts";
 import { registerSettlementReleaseReplayContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/replay.contracts";
 import { registerSettlementReleaseValidationContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/validations.contracts";
+import { registerPaymentReconciliationRoutingContracts } from "./stripe-connect/routing/payment-reconciliation.contracts";
 import type {
     OperationRecoveryKind,
     TerminalOperationRecoverySeed,
@@ -5809,6 +5811,8 @@ class StripeConnectMock {
     private omitNextAccountRead = false;
     private omitNextPaymentReadResult = false;
     private providerTransferContextReadsBeforeFailure: number | null = null;
+    private failProviderDisputeList = false;
+    private failProviderRefundList = false;
     private failProviderTransferList = false;
     private losePaymentProjectionEnqueueResponse = false;
     private failPaymentIntentRetrieve = false;
@@ -6457,6 +6461,14 @@ class StripeConnectMock {
 
     failProviderTransferContextReadAfter(successfulReads: number): void {
         this.providerTransferContextReadsBeforeFailure = successfulReads;
+    }
+
+    failNextProviderDisputeList(): void {
+        this.failProviderDisputeList = true;
+    }
+
+    failNextProviderRefundList(): void {
+        this.failProviderRefundList = true;
     }
 
     failNextProviderTransferList(): void {
@@ -9348,6 +9360,10 @@ class StripeConnectMock {
                 : jsonResponse({ error: { message: "BalanceTransaction not found" } }, 404);
         }
         if (url.pathname === "/v1/disputes" && method === "GET") {
+            if (this.failProviderDisputeList) {
+                this.failProviderDisputeList = false;
+                return jsonResponse({ error: { message: "simulated Stripe dispute list outage" } }, 503);
+            }
             const charge = url.searchParams.get("charge");
             return jsonResponse({
                 data: this.providerDisputes.filter((dispute) => !charge || dispute.charge === charge),
@@ -9475,6 +9491,10 @@ class StripeConnectMock {
             return refund ? jsonResponse(refund) : jsonResponse({ error: { message: "refund not found" } }, 404);
         }
         if (url.pathname === "/v1/refunds" && method === "GET") {
+            if (this.failProviderRefundList) {
+                this.failProviderRefundList = false;
+                return jsonResponse({ error: { message: "simulated Stripe refund list outage" } }, 503);
+            }
             const charge = url.searchParams.get("charge");
             const isRecoverySearch = url.searchParams.getAll("expand[]").includes("data.balance_transaction");
             const scenario = isRecoverySearch ? this.nextRefundSearchScenario : null;
@@ -10693,6 +10713,7 @@ registerProviderReconciliationBudgets(createProviderReconciliationHarness);
 registerProviderExceptionResolutionContracts(createProviderReconciliationHarness);
 registerPaymentReconciliationLedgerContracts(createProviderReconciliationHarness);
 registerPaymentReconciliationLedgerDivergenceContracts(createProviderReconciliationHarness);
+registerPaymentReconciliationProviderFailureContracts(createProviderReconciliationHarness);
 registerStalePaymentLocalContextContracts(createProviderReconciliationHarness);
 registerStalePaymentLocalContextFailureContracts(createProviderReconciliationHarness);
 registerProviderTransferContextContracts(createProviderReconciliationHarness);
@@ -10705,6 +10726,7 @@ registerSettlementReleaseReplayContracts(createProviderReconciliationHarness);
 registerSettlementReleaseReadOrderContracts(createProviderReconciliationHarness);
 registerSettlementReleaseLedgerFreshnessContracts(createProviderReconciliationHarness);
 registerStripeConnectRoutingContracts(createRoutingHarness);
+registerPaymentReconciliationRoutingContracts(createRoutingHarness);
 registerProtectedPaymentValidationContracts(createRoutingHarness);
 registerProtectedPaymentReadContracts(createRoutingHarness);
 registerStripeWebhookPersistenceContracts(createRoutingHarness);
