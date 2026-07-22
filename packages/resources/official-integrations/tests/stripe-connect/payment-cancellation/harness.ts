@@ -16,10 +16,12 @@ export type PaymentCancellationHarness = {
         readonly postgrestRequests: PostgrestRequestRecord[];
         readonly stripeRequests: StripeRequestRecord[];
         readonly paymentIntentCreateCount: number;
+        failNextPaymentCancellationOperationReservation(): void;
         seedDashboardPayment(clientReferenceId: string, patch?: JsonRecord): number;
         patchPaymentLedger(paymentId: number, patch: JsonRecord): void;
         patchDashboardRow(table: "financial_operations", id: number, patch: JsonRecord): void;
         keepNextPaymentCancellationNonTerminal(): void;
+        pauseNextPostgrestRead(table: "payments", readsToSkip?: number): { entered: Promise<void>; resume: () => void };
         rows(table: string): JsonRecord[];
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;

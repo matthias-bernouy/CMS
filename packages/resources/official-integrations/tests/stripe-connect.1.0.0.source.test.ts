@@ -26,6 +26,7 @@ import { registerPaymentProjectionReplayContracts } from "./stripe-connect/payme
 import { registerPaymentCancellationFailureContracts } from "./stripe-connect/payment-cancellation/failures.contracts";
 import { registerPaymentCancellationRecoveryContracts } from "./stripe-connect/payment-cancellation/recovery.contracts";
 import { registerPaymentCancellationReplayContracts } from "./stripe-connect/payment-cancellation/replay.contracts";
+import { registerPaymentCancellationReservationContracts } from "./stripe-connect/payment-cancellation/reservation.contracts";
 import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
 import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
 import type { ProtectedRefundSearchScenario } from "./stripe-connect/provider-boundary/harness";
@@ -5775,6 +5776,7 @@ class StripeConnectMock {
     private addSellerRiskDuringNextAutomaticRestore = false;
     private loseNextPaymentCancellationResponse = false;
     private returnNextPaymentCancellationNonTerminal = false;
+    private failNextPaymentCancellationReservation = false;
     private failPaymentProjectionEnqueue = false;
     private failFinancialOperationFailureUpdate = false;
     private failNextPaymentIntentCreation = false;
@@ -6181,6 +6183,10 @@ class StripeConnectMock {
 
     keepNextPaymentCancellationNonTerminal(): void {
         this.returnNextPaymentCancellationNonTerminal = true;
+    }
+
+    failNextPaymentCancellationOperationReservation(): void {
+        this.failNextPaymentCancellationReservation = true;
     }
 
     setStripeAccountState(userId: string, patch: JsonRecord): void {
@@ -7471,6 +7477,10 @@ class StripeConnectMock {
         }
         if (table === "rpc/reserve_financial_operation" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
+            if (body.p_operation_type === "payment_intent_cancel" && this.failNextPaymentCancellationReservation) {
+                this.failNextPaymentCancellationReservation = false;
+                return jsonResponse({ message: "conflict: simulated payment cancellation reservation failure" }, 400);
+            }
             const businessKey = String(body.p_business_key);
             const existing = this.tables.financial_operations.find((row) => row.business_key === businessKey);
             if (existing) {
@@ -10515,6 +10525,7 @@ registerPaymentProjectionReplayContracts(createPaymentProjectionHarness);
 registerPaymentCancellationReplayContracts(createPaymentCancellationHarness);
 registerPaymentCancellationRecoveryContracts(createPaymentCancellationHarness);
 registerPaymentCancellationFailureContracts(createPaymentCancellationHarness);
+registerPaymentCancellationReservationContracts(createPaymentCancellationHarness);
 registerProviderReconciliationContracts(createProviderReconciliationHarness);
 registerProviderReconciliationBudgets(createProviderReconciliationHarness);
 registerProviderExceptionResolutionContracts(createProviderReconciliationHarness);
