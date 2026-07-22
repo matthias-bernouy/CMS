@@ -26,7 +26,7 @@ export function registerWebhookRecoverySourceScenario(createHarness: CreateHarne
 
         const schema = await Bun.file(
             new URL(
-                "../../../../../integrations/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql",
+                "../../../../../integrations/providers/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql",
                 import.meta.url,
             ),
         ).text();

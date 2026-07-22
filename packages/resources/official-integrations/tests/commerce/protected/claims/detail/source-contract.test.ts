@@ -7,7 +7,10 @@ import { expectedClaimDetail } from "./expected";
 type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: DataShape }> };
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
 
-const definitionPath = resolve(import.meta.dir, "../../../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 describe("commerce claim strict Source contract", () => {
     test("preserves the exact claim projection consumed by dashboards", async () => {

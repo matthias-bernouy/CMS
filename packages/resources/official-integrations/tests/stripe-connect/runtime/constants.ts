@@ -3,7 +3,7 @@ export const functionsBaseUrl = "https://project.supabase.co/functions/v1";
 export const supabaseUrl = "https://project.supabase.co";
 export const stripeUrl = "https://api.stripe.com";
 export const edgeFunctionUrl = new URL(
-    "../../../integrations/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/index.ts",
+    "../../../integrations/providers/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/index.ts",
     import.meta.url,
 ).href;
 export const financialTermsHash = "a".repeat(64);

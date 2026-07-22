@@ -18,7 +18,10 @@ type Endpoint = {
 };
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
 
-const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 installCommerceTestEnvironment();
 

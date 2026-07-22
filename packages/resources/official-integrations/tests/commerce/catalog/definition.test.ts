@@ -21,7 +21,10 @@ type Artifact = {
     dashboard?: { id: string; views: View[] };
 };
 
-const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 describe("commerce product dashboard definition", () => {
     test("keeps variants, axes, and media inside Product without tabs", async () => {

@@ -19,7 +19,7 @@ const sourcePrefix = "/.cms/sources/";
 const functionsBaseUrl = "https://project.supabase.co/functions/v1";
 const supabaseUrl = "https://project.supabase.co";
 const edgeFunctionUrl =
-    "../../../integrations/newsletter/versions/1.0.0/connectors/supabase/functions/cms-newsletter/index.ts";
+    "../../../integrations/domains/newsletter/versions/1.0.0/connectors/supabase/functions/cms-newsletter/index.ts";
 
 const realFetch = globalThis.fetch;
 const realDeno = (globalThis as { Deno?: unknown }).Deno;

@@ -93,7 +93,7 @@ beforeAll(async () => {
     };
     globalThis.fetch = captureDatabaseRequest;
     await import(
-        "../../../integrations/commerce-negotiation/versions/1.0.0/connectors/supabase/functions/cms-commerce-negotiation/index.ts?read-contracts"
+        "../../../integrations/extensions/commerce-negotiation/versions/1.0.0/connectors/supabase/functions/cms-commerce-negotiation/index.ts?read-contracts"
     );
 });
 

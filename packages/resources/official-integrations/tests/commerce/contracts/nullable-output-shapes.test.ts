@@ -6,7 +6,10 @@ import { resolve } from "node:path";
 type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: DataShape; triggerBody?: DataShape }> };
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
 
-const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 describe("commerce nullable response contracts", () => {
     test("preserves catalogue nulls across public and management projections", async () => {
         const endpoints = await commerceEndpoints();

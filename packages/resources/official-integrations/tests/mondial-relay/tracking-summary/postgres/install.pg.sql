@@ -13,7 +13,7 @@
 \endif
 
 drop schema if exists delivery cascade;
-\ir ../../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
+\ir ../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
 
 create temporary table tracking_summary_install_fingerprint
 on commit preserve rows
@@ -39,7 +39,7 @@ begin
 end;
 $fresh_install$;
 
-\ir ../../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
+\ir ../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
 
 do $reapply$
 begin

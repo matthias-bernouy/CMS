@@ -2,7 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 describe("commerce offer estimate contract", () => {
     test("exposes only aggregate market price fields publicly", async () => {

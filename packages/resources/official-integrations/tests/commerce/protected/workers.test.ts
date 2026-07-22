@@ -26,7 +26,10 @@ describe("commerce 1.0.0 protected workers", () => {
 
     test("uses database-clock row locks and fails closed on ambiguous deadlines", async () => {
         const schema = await Bun.file(
-            new URL("../../../integrations/commerce/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url),
+            new URL(
+                "../../../integrations/domains/commerce/versions/1.0.0/connectors/supabase/schema.sql",
+                import.meta.url,
+            ),
         ).text();
 
         expect(schema).toContain("create or replace function commerce.process_due_order_deadlines");

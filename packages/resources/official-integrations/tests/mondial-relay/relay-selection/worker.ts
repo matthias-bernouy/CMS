@@ -5,7 +5,7 @@ type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type WorkerInput = { options: HarnessOptions; externalOrderId: string };
 
 const edgeUrl = new URL(
-    "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/index.ts",
+    "../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/index.ts",
     import.meta.url,
 ).href;
 let handler: EdgeHandler | undefined;

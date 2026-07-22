@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 
-const definitionUrl = new URL("../../../integrations/mondial-relay/versions/1.0.0/definition.json", import.meta.url);
+const definitionUrl = new URL(
+    "../../../integrations/providers/mondial-relay/versions/1.0.0/definition.json",
+    import.meta.url,
+);
 
 describe("Mondial Relay seller handoff Source contract", () => {
     test("forwards the authenticated seller through a computed header", async () => {

@@ -6,7 +6,7 @@ export const functionsBaseUrl = "https://project.supabase.co/functions/v1";
 export const supabaseUrl = "https://project.supabase.co";
 
 const edgeFunctionUrl =
-    "../../../integrations/emailer/versions/1.0.0/connectors/supabase/functions/cms-emailer/index.ts";
+    "../../../integrations/providers/emailer/versions/1.0.0/connectors/supabase/functions/cms-emailer/index.ts";
 const realFetch = globalThis.fetch;
 const realDeno = (globalThis as { Deno?: unknown }).Deno;
 const realTransport = (globalThis as { __CMS_EMAILER_TRANSPORT__?: EmailTransport }).__CMS_EMAILER_TRANSPORT__;

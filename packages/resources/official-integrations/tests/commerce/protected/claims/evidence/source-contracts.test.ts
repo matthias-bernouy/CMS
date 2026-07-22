@@ -15,7 +15,10 @@ type Endpoint = {
     output?: Array<{ status?: string; body?: DataShape }>;
 };
 
-const definitionPath = resolve(import.meta.dir, "../../../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 describe("commerce claim evidence strict Source contracts", () => {
     test("keeps endpoint access and file response declarations", async () => {

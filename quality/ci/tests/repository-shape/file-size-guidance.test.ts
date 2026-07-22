@@ -41,8 +41,11 @@ test("file-size guidance ignores known generated and atomic files", () => {
     expect(fileSizeException(generated)).toContain("generated");
     expect(isGovernedFile("quality/ci/coverage/baseline.json")).toBeFalse();
     const schema =
-        "packages/resources/official-integrations/integrations/demo/versions/1.0.0/connectors/supabase/schema.sql";
+        "packages/resources/official-integrations/integrations/providers/demo/versions/1.0.0/connectors/supabase/schema.sql";
     expect(fileSizeException(schema)).toContain("atomic");
+    const definition =
+        "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/definition.json";
+    expect(fileSizeException(definition)).toContain("atomic");
 });
 
 test("file-size guidance classifies every current file without a Git baseline", () => {

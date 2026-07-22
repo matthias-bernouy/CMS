@@ -2,11 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 
 const commerceDefinitionUrl = new URL(
-    "../../../../../integrations/commerce/versions/1.0.0/definition.json",
+    "../../../../../integrations/domains/commerce/versions/1.0.0/definition.json",
     import.meta.url,
 );
 const compositionDefinitionUrl = new URL(
-    "../../../../../integrations/commerce-stripe-payments/versions/1.0.0/definition.json",
+    "../../../../../integrations/extensions/commerce-stripe-payments/versions/1.0.0/definition.json",
     import.meta.url,
 );
 

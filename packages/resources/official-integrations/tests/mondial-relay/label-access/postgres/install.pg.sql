@@ -1,5 +1,5 @@
-\ir ../../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
-\ir ../../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
+\ir ../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
+\ir ../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql
 
 do $install$
 begin

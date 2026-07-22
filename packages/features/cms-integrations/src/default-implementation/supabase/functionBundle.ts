@@ -2,7 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { relative, sep } from "node:path";
 import { IntegrationRuntimeError } from "../../core/errors";
 import type { IntegrationConnectorFunctionDeployment } from "../../interfaces/IntegrationConnectorDeployer";
-import { safeJoin } from "./paths";
+import { resolveExistingSupabasePath, safeJoin } from "./paths";
 
 type SupabaseFunctionConfig = {
     entrypoint_path?: string;
@@ -21,14 +21,17 @@ export async function buildFunctionBody(
     connectorRoot: string,
     fn: IntegrationConnectorFunctionDeployment,
 ): Promise<FormData> {
-    const functionRoot = safeJoin(connectorRoot, fn.directory);
+    const functionRoot = await resolveExistingSupabasePath(connectorRoot, fn.directory);
     const files = await listFiles(functionRoot);
     if (!files.length) {
         throw new IntegrationRuntimeError(`Supabase function "${fn.name}" has no files`);
     }
 
     const config = fn.configPath
-        ? parseFunctionConfig(await readFile(safeJoin(connectorRoot, fn.configPath), "utf-8"), fn.name)
+        ? parseFunctionConfig(
+              await readFile(await resolveExistingSupabasePath(connectorRoot, fn.configPath), "utf-8"),
+              fn.name,
+          )
         : {};
     const metadata = {
         entrypoint_path: config.entrypoint_path ?? "index.ts",

@@ -17,7 +17,10 @@ type Endpoint = {
     output?: Array<{ body?: DataShape }>;
 };
 
-const definitionPath = resolve(import.meta.dir, "../../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 describe("commerce delivery context Source contracts", () => {
     test("declares exact actor-scoped system endpoints", async () => {

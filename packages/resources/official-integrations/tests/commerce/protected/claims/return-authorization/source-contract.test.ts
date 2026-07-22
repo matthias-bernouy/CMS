@@ -18,7 +18,10 @@ type Endpoint = {
 
 installCommerceTestEnvironment();
 
-const definitionPath = resolve(import.meta.dir, "../../../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 const route = `/system/claim/return-authorization?claimId=${claimId}`;
 
 describe("commerce claim return authorization Source contract", () => {

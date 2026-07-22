@@ -11,7 +11,10 @@ type EndpointDefinition = {
 };
 type Definition = { artifacts: Array<{ source?: { endpoints: EndpointDefinition[] } }> };
 
-const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 describe("commerce cancellation response privacy", () => {
     test("keeps financial authorizations available only to in-process triggers", async () => {

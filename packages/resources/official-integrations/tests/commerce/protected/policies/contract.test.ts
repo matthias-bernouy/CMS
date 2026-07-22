@@ -39,10 +39,13 @@ describe("protected C2C financial policy contract", () => {
     registerProviderAbsentCancellationTest();
     test("keeps claim evidence private and requires carrier proof before resolving a required return", async () => {
         const schema = await Bun.file(
-            new URL("../../../../integrations/commerce/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url),
+            new URL(
+                "../../../../integrations/domains/commerce/versions/1.0.0/connectors/supabase/schema.sql",
+                import.meta.url,
+            ),
         ).text();
         const definition = (await Bun.file(
-            new URL("../../../../integrations/commerce/versions/1.0.0/definition.json", import.meta.url),
+            new URL("../../../../integrations/domains/commerce/versions/1.0.0/definition.json", import.meta.url),
         ).json()) as Record<string, unknown>;
         const serialized = JSON.stringify(definition);
 

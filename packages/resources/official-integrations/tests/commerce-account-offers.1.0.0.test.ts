@@ -4,7 +4,7 @@ import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { syncRenderedOffers } from "../integrations/commerce/versions/1.0.0/blocs/commerce-account-offers/presentation";
+import { syncRenderedOffers } from "../integrations/domains/commerce/versions/1.0.0/blocs/commerce-account-offers/presentation";
 import { declaredBlocViewSources } from "./helpers/blocArtifactSource";
 
 describe("commerce account offers 1.0.0", () => {

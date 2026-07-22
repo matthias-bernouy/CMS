@@ -44,7 +44,10 @@ describe("commerce offer filter schema contracts", () => {
     });
 });
 
-const definitionPath = resolve(import.meta.dir, "../../../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 async function sourceEndpoints(): Promise<any[]> {
     const definition = JSON.parse(await readFile(definitionPath, "utf8"));

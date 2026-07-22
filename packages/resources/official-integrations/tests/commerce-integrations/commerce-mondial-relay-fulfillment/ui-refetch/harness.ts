@@ -5,7 +5,7 @@ import { Component } from "@bernouy/components/base";
 
 const blocDirectory = resolve(
     import.meta.dir,
-    "../../../../integrations/commerce-mondial-relay-fulfillment/versions/1.0.0/blocs/commerce-mondial-relay-sale-fulfillment",
+    "../../../../integrations/extensions/commerce-mondial-relay-fulfillment/versions/1.0.0/blocs/commerce-mondial-relay-sale-fulfillment",
 );
 const tag = "test-commerce-mondial-relay-sale-fulfillment-refetch";
 

@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 export function registerStaticRecoverySourceScenario(): void {
     test("persists seller recovery exposure and blocks payments, releases, and unsafe payouts", async () => {
-        const root = resolve(import.meta.dir, "../../../../../integrations/stripe-connect/versions/1.0.0");
+        const root = resolve(import.meta.dir, "../../../../../integrations/providers/stripe-connect/versions/1.0.0");
         const [schema, edge, paymentProjection, definition] = await Promise.all([
             readFile(resolve(root, "connectors/supabase/schema.sql"), "utf8"),
             Promise.all([

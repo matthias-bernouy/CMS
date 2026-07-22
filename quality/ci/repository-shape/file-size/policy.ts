@@ -66,14 +66,14 @@ function categorizedException(path: string): string | undefined {
         return "generated dependency lockfile";
     }
     if (
-        /^packages\/resources\/official-integrations\/integrations\/[^/]+\/versions\/[^/]+\/definition\.json$/.test(
+        /^packages\/resources\/official-integrations\/integrations\/(?:[^/]+\/)+versions\/[^/]+\/definition\.json$/.test(
             path,
         )
     ) {
         return "atomic official-integration definition";
     }
     if (
-        /^packages\/resources\/official-integrations\/integrations\/[^/]+\/versions\/[^/]+\/connectors\/[^/]+\/schema\.sql$/.test(
+        /^packages\/resources\/official-integrations\/integrations\/(?:[^/]+\/)+versions\/[^/]+\/connectors\/[^/]+\/schema\.sql$/.test(
             path,
         )
     ) {

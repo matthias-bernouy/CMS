@@ -11,7 +11,10 @@ type Overlay = {
 };
 type Definition = { artifacts: Array<{ type: string; overlay?: Overlay }> };
 
-const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 describe("commerce custom-field overlays", () => {
     test("keeps Product admin metadata contextual while projecting public metadata", async () => {

@@ -2,7 +2,7 @@
 
 begin;
 set local role service_role;
-\ir ../../../../commerce/offer/detail/postgres/managed-offer.fixture.sql
+\ir ../../../../commerce/selling/offer/detail/postgres/managed-offer.fixture.sql
 
 do $$
 declare

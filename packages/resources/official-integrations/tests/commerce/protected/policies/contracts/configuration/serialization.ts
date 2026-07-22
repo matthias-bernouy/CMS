@@ -7,13 +7,15 @@ export function registerPolicySerializationTest(): void {
     test("serializes protected C2C publication and rejects stale settings versions", async () => {
         const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
         const createRevision = functionSql(schema, "create_c2c_policy_revision", "refresh_seller_risk_state");
-        const route = await readFile(
-            resolve(
-                integrationRoot,
-                "connectors/supabase/functions/cms-commerce/routes/configuration/protected-policies.ts",
-            ),
-            "utf8",
+        const routeRoot = resolve(
+            integrationRoot,
+            "connectors/supabase/functions/cms-commerce/routes/configuration/protected-policy",
         );
+        const route = (
+            await Promise.all(
+                ["index.ts", "fields.ts", "validation.ts"].map((file) => readFile(resolve(routeRoot, file), "utf8")),
+            )
+        ).join("\n");
 
         expect(createRevision).toContain("pg_advisory_xact_lock(hashtextextended('commerce-c2c-policy', 0))");
         expect(createRevision).toContain("from commerce.settings where id = 'default' for update");

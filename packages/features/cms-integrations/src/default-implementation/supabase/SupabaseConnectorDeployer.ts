@@ -8,8 +8,10 @@ import type {
     IntegrationConnectorFunctionDeployment,
     IntegrationConnectorResourceResult,
 } from "../../interfaces/IntegrationConnectorDeployer";
+import { IntegrationPackageLocator } from "../fs-definition/packageLocator";
+import { resolveExistingPathWithin } from "../fs-definition/repositorySupport";
 import { buildFunctionBody } from "./functionBundle";
-import { requiredText, safeJoin } from "./paths";
+import { requiredText, resolveExistingSupabasePath } from "./paths";
 import { SupabaseManagementClient } from "./SupabaseManagementClient";
 import type { SupabaseConnectorDeployerConfig, SupabaseConnectorFunctionSecrets } from "./types";
 
@@ -18,13 +20,13 @@ export type { SupabaseConnectorDeployerConfig, SupabaseConnectorFunctionSecrets 
 export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
     readonly provider = "supabase";
 
-    private readonly integrationsRoot: string;
+    private readonly locator: IntegrationPackageLocator;
     private readonly projectRef: string;
     private readonly functionSecrets?: SupabaseConnectorFunctionSecrets;
     private readonly client: SupabaseManagementClient;
 
     constructor(config: SupabaseConnectorDeployerConfig) {
-        this.integrationsRoot = config.integrationsRoot;
+        this.locator = new IntegrationPackageLocator(config.integrationsRoot);
         this.projectRef = requiredText(config.projectRef, "projectRef");
         const accessToken = requiredText(config.accessToken, "accessToken");
         this.functionSecrets = config.functionSecrets;
@@ -41,12 +43,13 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
         context: IntegrationConnectorDeployContext,
     ): Promise<IntegrationConnectorDeployResult> {
         this.validateDeployment(deployment);
-        const connectorRoot = this.connectorRoot(deployment);
+        const connectorRoot = await this.connectorRoot(deployment);
         const resources: IntegrationConnectorResourceResult[] = [];
         let reloadSchemaCache = false;
 
         for (const schema of deployment.schemas) {
-            const sql = await readFile(safeJoin(connectorRoot, schema.path), "utf-8");
+            const schemaPath = await resolveExistingSupabasePath(connectorRoot, schema.path);
+            const sql = await readFile(schemaPath, "utf-8");
             await this.client.applySchema(sql);
             resources.push({ type: "schema", id: schema.path, action: "applied" });
             reloadSchemaCache = true;
@@ -85,14 +88,14 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
         }
     }
 
-    private connectorRoot(deployment: IntegrationConnectorDeployment): string {
-        return safeJoin(
-            this.integrationsRoot,
-            deployment.integrationKind,
-            "versions",
-            deployment.version ?? "",
-            deployment.root ?? "",
-        );
+    private async connectorRoot(deployment: IntegrationConnectorDeployment): Promise<string> {
+        const locatedVersion = await this.locator.getVersion(deployment.integrationKind, deployment.version ?? "");
+        if (!locatedVersion) {
+            throw new IntegrationRuntimeError(
+                `Integration "${deployment.integrationKind}" version "${deployment.version}" was not found`,
+            );
+        }
+        return await resolveExistingPathWithin(locatedVersion.root, "Supabase connector", deployment.root ?? "");
     }
 
     private async deployFunction(

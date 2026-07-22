@@ -6,7 +6,10 @@ type DefinitionEndpoint = Pick<SourceEndpoint, "method" | "targetUrl" | "output"
     endpointId: string;
 };
 
-const definitionUrl = new URL("../../../integrations/mondial-relay/versions/1.0.0/definition.json", import.meta.url);
+const definitionUrl = new URL(
+    "../../../integrations/providers/mondial-relay/versions/1.0.0/definition.json",
+    import.meta.url,
+);
 
 describe("mondial-relay response contracts", () => {
     test("preserves nullable shipment list and detail fields", async () => {

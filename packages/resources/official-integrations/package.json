@@ -17,6 +17,17 @@
             "bun": "./index.ts",
             "default": "./index.ts"
         },
-        "./integrations/*": "./integrations/*"
+        "./integrations/ban/*": "./integrations/providers/ban/*",
+        "./integrations/basic-blocs/*": "./integrations/foundation/basic-blocs/*",
+        "./integrations/commerce/*": "./integrations/domains/commerce/*",
+        "./integrations/commerce-mondial-relay-delivery/*": "./integrations/extensions/commerce-mondial-relay-delivery/*",
+        "./integrations/commerce-mondial-relay-fulfillment/*": "./integrations/extensions/commerce-mondial-relay-fulfillment/*",
+        "./integrations/commerce-negotiation/*": "./integrations/extensions/commerce-negotiation/*",
+        "./integrations/commerce-stripe-payments/*": "./integrations/extensions/commerce-stripe-payments/*",
+        "./integrations/emailer/*": "./integrations/providers/emailer/*",
+        "./integrations/mondial-relay/*": "./integrations/providers/mondial-relay/*",
+        "./integrations/newsletter/*": "./integrations/domains/newsletter/*",
+        "./integrations/stripe-connect/*": "./integrations/providers/stripe-connect/*",
+        "./integrations/user-account/*": "./integrations/domains/user-account/*"
     }
 }

@@ -6,7 +6,7 @@ export const functionsBaseUrl = "https://project.supabase.co/functions/v1";
 export const supabaseUrl = "https://project.supabase.co";
 
 const edgeFunctionUrl =
-    "../../../../integrations/user-account/versions/1.0.0/connectors/supabase/functions/cms-user-account/index.ts";
+    "../../../../integrations/domains/user-account/versions/1.0.0/connectors/supabase/functions/cms-user-account/index.ts";
 const realFetch = globalThis.fetch;
 const realDeno = (globalThis as { Deno?: unknown }).Deno;
 

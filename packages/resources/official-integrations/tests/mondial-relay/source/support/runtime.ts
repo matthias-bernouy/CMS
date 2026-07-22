@@ -21,11 +21,11 @@ export const supabaseUrl = "https://project.supabase.co";
 export const connectEndpoint = "https://connect-api-sandbox.mondialrelay.com/api/shipment";
 export const trackingEndpoint = "https://api.mondialrelay.com/WebService.asmx";
 export const definitionUrl = new URL(
-    "../../../../integrations/mondial-relay/versions/1.0.0/definition.json",
+    "../../../../integrations/providers/mondial-relay/versions/1.0.0/definition.json",
     import.meta.url,
 );
 const edgeFunctionUrl =
-    "../../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/index.ts";
+    "../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/index.ts";
 
 const realFetch = globalThis.fetch;
 const realDeno = (globalThis as { Deno?: unknown }).Deno;

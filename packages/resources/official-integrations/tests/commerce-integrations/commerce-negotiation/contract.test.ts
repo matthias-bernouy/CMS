@@ -357,7 +357,7 @@ describe("commerce negotiation 1.0.0", () => {
         };
         try {
             await import(
-                "../../../integrations/commerce-negotiation/versions/1.0.0/connectors/supabase/functions/cms-commerce-negotiation/index.ts"
+                "../../../integrations/extensions/commerce-negotiation/versions/1.0.0/connectors/supabase/functions/cms-commerce-negotiation/index.ts"
             );
             expect(handler).toBeTruthy();
             const policyUrl = new URL("https://project.supabase.co/functions/v1/cms-commerce-negotiation/policy");

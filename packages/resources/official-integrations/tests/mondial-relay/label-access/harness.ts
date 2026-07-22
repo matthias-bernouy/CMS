@@ -30,7 +30,7 @@ const apiKey = "cms-delivery-contract-key";
 const supabaseUrl = "https://delivery-contract.supabase.co";
 const functionUrl = "https://delivery-contract.supabase.co/functions/v1/cms-delivery/label";
 const edgeModule =
-    "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/index.ts";
+    "../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/index.ts";
 const realDeno = (globalThis as { Deno?: unknown }).Deno;
 const realFetch = globalThis.fetch;
 let edgeHandler: EdgeHandler | undefined;

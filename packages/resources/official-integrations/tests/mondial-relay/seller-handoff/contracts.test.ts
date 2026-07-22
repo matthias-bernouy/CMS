@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { declareSellerHandoff } from "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/shipment/shipment-operations";
+import { declareSellerHandoff } from "../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/shipment/shipment-operations";
 import { shipmentRow, useDatabase } from "./harness";
 
 describe("Mondial Relay seller handoff contracts", () => {

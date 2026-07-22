@@ -109,7 +109,7 @@ export function registerFoundationTests(): void {
     test("claims due tracking rows with a stale lease and skip-locked concurrency", async () => {
         const schema = await Bun.file(
             new URL(
-                "../../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
+                "../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
                 import.meta.url,
             ),
         ).text();
@@ -123,7 +123,7 @@ export function registerFoundationTests(): void {
     test("declares durable projection leases, bounded retries, and manual review", async () => {
         const schema = await Bun.file(
             new URL(
-                "../../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
+                "../../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
                 import.meta.url,
             ),
         ).text();

@@ -3,7 +3,10 @@ import { describe, expect, test } from "bun:test";
 
 type JsonRecord = Record<string, unknown>;
 
-const definitionUrl = new URL("../../../../integrations/mondial-relay/versions/1.0.0/definition.json", import.meta.url);
+const definitionUrl = new URL(
+    "../../../../integrations/providers/mondial-relay/versions/1.0.0/definition.json",
+    import.meta.url,
+);
 
 describe("Mondial Relay shipment tracking context source contract", () => {
     test("declares one bounded system endpoint with the two exact legacy DTOs", () => {

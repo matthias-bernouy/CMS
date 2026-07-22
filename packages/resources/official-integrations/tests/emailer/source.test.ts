@@ -7,17 +7,17 @@ describe("emailer 1.0.0 source", () => {
     registerInstallationTest();
     test("does not deploy or retain Newsletter credentials in the broadcast connector", async () => {
         const definition = await Bun.file(
-            new URL("../../integrations/emailer/versions/1.0.0/definition.json", import.meta.url),
+            new URL("../../integrations/providers/emailer/versions/1.0.0/definition.json", import.meta.url),
         ).text();
         const campaignSource = await Bun.file(
             new URL(
-                "../../integrations/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/campaigns.ts",
+                "../../integrations/providers/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/campaigns.ts",
                 import.meta.url,
             ),
         ).text();
         const entrypoint = await Bun.file(
             new URL(
-                "../../integrations/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/index.ts",
+                "../../integrations/providers/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/index.ts",
                 import.meta.url,
             ),
         ).text();

@@ -4,7 +4,10 @@ import { resolve } from "node:path";
 
 type RecordValue = Record<string, any>;
 
-const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 describe("commerce offer media contract", () => {
     test("exposes admin and seller-owned image operations", async () => {

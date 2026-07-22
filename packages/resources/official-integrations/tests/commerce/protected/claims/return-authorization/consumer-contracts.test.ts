@@ -9,7 +9,7 @@ const commerceSource = "{{dependencies.commerce.sourceId}}";
 const deliverySource = "{{dependencies.delivery.sourceId}}";
 const definitionPath = resolve(
     import.meta.dir,
-    "../../../../../integrations/commerce-mondial-relay-fulfillment/versions/1.0.0/definition.json",
+    "../../../../../integrations/extensions/commerce-mondial-relay-fulfillment/versions/1.0.0/definition.json",
 );
 
 describe("claim return authorization consumer contracts", () => {

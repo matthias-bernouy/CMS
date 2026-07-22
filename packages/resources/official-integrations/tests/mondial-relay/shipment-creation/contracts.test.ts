@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 const schemaUrl = new URL(
-    "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
+    "../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
     import.meta.url,
 );
 

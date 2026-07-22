@@ -117,7 +117,10 @@ describe("commerce product detail contracts", () => {
     });
 });
 
-const definitionPath = resolve(import.meta.dir, "../../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 function responseBody(endpoints: any[], endpointId: string): DataShape {
     const body = endpoints.find((endpoint) => endpoint.endpointId === endpointId)?.output?.[0]?.body;

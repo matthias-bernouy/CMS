@@ -16,7 +16,7 @@ describe("filesystem integration repository confinement", () => {
         symlinkSync(outside, join(root, "demo"), "dir");
         const repository = new FsIntegrationDefinitionRepository(root);
 
-        await expect(repository.getIndex("demo")).rejects.toThrow(/escapes integration repository root/);
+        await expect(repository.getIndex("demo")).rejects.toThrow(/symlink/);
     });
 
     test("rejects version paths that cross into another integration", async () => {

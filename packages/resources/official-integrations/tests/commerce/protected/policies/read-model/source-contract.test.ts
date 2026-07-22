@@ -47,7 +47,10 @@ describe("commerce protected C2C policy strict Source contract", () => {
     });
 });
 
-const definitionPath = resolve(import.meta.dir, "../../../../../integrations/commerce/versions/1.0.0/definition.json");
+const definitionPath = resolve(
+    import.meta.dir,
+    "../../../../../integrations/domains/commerce/versions/1.0.0/definition.json",
+);
 
 async function sourceShape(): Promise<DataShape> {
     const definition = JSON.parse(await readFile(definitionPath, "utf8"));

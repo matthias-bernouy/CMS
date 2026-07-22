@@ -8,7 +8,7 @@ type EdgeHandler = (request: Request) => Response | Promise<Response>;
 const functionUrl = "https://project.supabase.co/functions/v1/cms-delivery";
 const supabaseUrl = "https://project.supabase.co";
 const edgeFunctionUrl = new URL(
-    "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/index.ts",
+    "../../../integrations/providers/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/index.ts",
     import.meta.url,
 );
 const realFetch = globalThis.fetch;

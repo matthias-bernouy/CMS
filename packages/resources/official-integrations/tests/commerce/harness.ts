@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, expect } from "bun:test";
-import { handleCommerceRequest } from "../../integrations/commerce/versions/1.0.0/connectors/supabase/functions/cms-commerce/handler.ts";
+import { handleCommerceRequest } from "../../integrations/domains/commerce/versions/1.0.0/connectors/supabase/functions/cms-commerce/handler.ts";
 
 export type JsonRecord = Record<string, unknown>;
 export type CapturedFetch = {

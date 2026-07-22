@@ -3,7 +3,10 @@ import { describe, expect, test } from "bun:test";
 describe("protected C2C claim window", () => {
     test("starts at first observation and serializes claim versus release", async () => {
         const schema = await Bun.file(
-            new URL("../../../integrations/commerce/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url),
+            new URL(
+                "../../../integrations/domains/commerce/versions/1.0.0/connectors/supabase/schema.sql",
+                import.meta.url,
+            ),
         ).text();
         const projection = functionSql(
             schema,
