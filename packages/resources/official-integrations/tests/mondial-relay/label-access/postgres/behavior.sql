@@ -1,0 +1,96 @@
+begin;
+set local role service_role;
+select label_access_test.cleanup();
+
+select label_access_test.seed(
+    'ok', 'a', 'label_ready',
+    'https://connect-api-sandbox.mondialrelay.com/labels/ok.pdf',
+    '2026-07-22 10:10:00+00', null
+);
+select label_access_test.seed(
+    'revoked', 'b', 'label_ready',
+    'https://connect-api-sandbox.mondialrelay.com/labels/revoked.pdf',
+    '2026-07-22 10:10:00+00', '2026-07-22 09:55:00+00'
+);
+select label_access_test.seed(
+    'expired', 'c', 'label_ready',
+    'https://connect-api-sandbox.mondialrelay.com/labels/expired.pdf',
+    '2026-07-22 09:59:59+00', null
+);
+select label_access_test.seed(
+    'missing-label', 'd', 'label_ready', null,
+    '2026-07-22 10:10:00+00', null
+);
+select label_access_test.seed(
+    'cancelled-unscanned', 'e', 'cancelled_unscanned',
+    'https://connect-api-sandbox.mondialrelay.com/labels/cancelled-unscanned.pdf',
+    '2026-07-22 10:10:00+00', null
+);
+select label_access_test.seed(
+    'cancelled', 'f', 'cancelled',
+    'https://connect-api-sandbox.mondialrelay.com/labels/cancelled.pdf',
+    '2026-07-22 10:10:00+00', null
+);
+select label_access_test.seed(
+    'manual-review', '1', 'manual_review',
+    'https://connect-api-sandbox.mondialrelay.com/labels/manual-review.pdf',
+    '2026-07-22 10:10:00+00', null
+);
+select label_access_test.seed(
+    'carrier-accepted', '2', 'carrier_accepted',
+    'https://connect-api-sandbox.mondialrelay.com/labels/carrier-accepted.pdf',
+    '2026-07-22 10:10:00+00', null
+);
+
+do $contract$
+declare
+    v_observed_at constant timestamptz := '2026-07-22 10:00:00+00';
+    v_result jsonb;
+begin
+    v_result := delivery.get_label_access_context(
+        pg_catalog.repeat('a', 64), 'label-access-pg-seller', v_observed_at
+    );
+    if v_result is distinct from pg_catalog.jsonb_build_object(
+        'state', 'ok',
+        'shipment', pg_catalog.jsonb_build_object(
+            'expedition_number', 'label-access-pg-expedition-ok',
+            'label_url', 'https://connect-api-sandbox.mondialrelay.com/labels/ok.pdf'
+        )
+    ) then
+        raise exception 'label access: success projection changed: %', v_result;
+    end if;
+    if delivery.get_label_access_context(
+        pg_catalog.repeat('9', 64), 'label-access-pg-seller', v_observed_at
+    ) is distinct from '{"state":"not_found"}'::jsonb
+       or delivery.get_label_access_context(
+        pg_catalog.repeat('a', 64), 'wrong-seller', v_observed_at
+    ) is distinct from '{"state":"not_found"}'::jsonb
+       or delivery.get_label_access_context(
+        pg_catalog.repeat('b', 64), 'label-access-pg-seller', v_observed_at
+    ) is distinct from '{"state":"not_found"}'::jsonb then
+        raise exception 'label access: token anti-enumeration precedence changed';
+    end if;
+    if delivery.get_label_access_context(
+        pg_catalog.repeat('c', 64), 'label-access-pg-seller', v_observed_at
+    ) is distinct from '{"state":"expired"}'::jsonb then
+        raise exception 'label access: expiry state changed';
+    end if;
+    foreach v_result in array array[
+        delivery.get_label_access_context(repeat('d', 64), 'label-access-pg-seller', v_observed_at),
+        delivery.get_label_access_context(repeat('e', 64), 'label-access-pg-seller', v_observed_at),
+        delivery.get_label_access_context(repeat('f', 64), 'label-access-pg-seller', v_observed_at),
+        delivery.get_label_access_context(repeat('1', 64), 'label-access-pg-seller', v_observed_at)
+    ] loop
+        if v_result is distinct from '{"state":"label_missing"}'::jsonb then
+            raise exception 'label access: shipment refusal changed: %', v_result;
+        end if;
+    end loop;
+    if delivery.get_label_access_context(
+        repeat('2', 64), 'label-access-pg-seller', v_observed_at
+    )->>'state' <> 'ok' then
+        raise exception 'label access: historical allowed statuses narrowed';
+    end if;
+end;
+$contract$;
+
+rollback;
