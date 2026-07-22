@@ -7,6 +7,7 @@ import {
     enrollSeller,
     expectedProtectedPayment,
     paymentIntentRequest,
+    postgrestBody,
     postgrestBudget,
     protectedPaymentBody,
     responseBody,
@@ -37,6 +38,10 @@ export function registerProtectedPaymentReplayContracts(createHarness: CreatePro
                 { method: "GET", table: "platform_payout_controls" },
                 { method: "POST", table: "rpc/apply_payment_provider_projection" },
             ]);
+            expect(postgrestBody(harness, 5).p_projection).toMatchObject({
+                kind: "apply",
+                stripePaymentIntentId: "pi_1",
+            });
             expect(harness.rest.stripeRequests).toEqual([
                 accountSyncRequest(),
                 balanceSettingsRequest(),
@@ -45,6 +50,7 @@ export function registerProtectedPaymentReplayContracts(createHarness: CreatePro
             ]);
             expect(harness.rest.paymentIntentCreateCount).toBe(1);
             expect(harness.rest.rows("payments")).toHaveLength(1);
+            expect(harness.rest.rows("payments")[0]).toMatchObject({ stripe_payment_intent_id: "pi_1" });
             expect(harness.rest.rows("financial_operations")).toEqual(operations);
         });
 

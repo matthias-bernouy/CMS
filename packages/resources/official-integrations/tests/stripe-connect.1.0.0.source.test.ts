@@ -30,6 +30,8 @@ import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provi
 import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
 import { registerProtectedPaymentFailureContracts } from "./stripe-connect/provider-boundary/protected-payment/failures.contracts";
 import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment/payout.contracts";
+import type { ProtectedPaymentProjectionScenario } from "./stripe-connect/provider-boundary/protected-payment/projection-race-harness";
+import { registerProtectedPaymentProjectionRaceContracts } from "./stripe-connect/provider-boundary/protected-payment/projection-races.contracts";
 import { registerProtectedPaymentReservationContracts } from "./stripe-connect/provider-boundary/protected-payment/reservation.contracts";
 import { registerProtectedPaymentReplayContracts } from "./stripe-connect/provider-boundary/protected-payment/replay.contracts";
 import { registerTransferReversalFailureContracts } from "./stripe-connect/provider-boundary/transfer-reversal/failures.contracts";
@@ -5757,6 +5759,7 @@ class StripeConnectMock {
     private linkNextProtectedPaymentReservation = false;
     private nextPaymentIntentOperationSucceeded = false;
     private nextPaymentIntentProjectionManualReview = false;
+    private nextProtectedPaymentProjectionScenario: ProtectedPaymentProjectionScenario | null = null;
     private failProviderExceptionResolution = false;
     private failPaymentReconciliationLedgerRead = false;
     private failPaymentReconciliationLocalContextRead = false;
@@ -6331,6 +6334,10 @@ class StripeConnectMock {
 
     quarantineNextPaymentIntentProjection(): void {
         this.nextPaymentIntentProjectionManualReview = true;
+    }
+
+    setNextProtectedPaymentProjectionScenario(scenario: ProtectedPaymentProjectionScenario): void {
+        this.nextProtectedPaymentProjectionScenario = scenario;
     }
 
     succeedNextPaymentIntentOperation(): void {
@@ -9391,6 +9398,7 @@ class StripeConnectMock {
         if (!payment) {
             return jsonResponse({ message: "not_found: payment" }, 400);
         }
+        this.applyNextProtectedPaymentProjectionScenario(payment);
         const projection = asRecord(body.p_projection);
         const expectedPayment = asRecord(body.p_expected_payment);
         const equivalentApply =
@@ -9473,6 +9481,44 @@ class StripeConnectMock {
             throw new Error("simulated lost payment projection response");
         }
         return jsonResponse({ applied: true, payment: { ...payment } });
+    }
+
+    private applyNextProtectedPaymentProjectionScenario(payment: JsonRecord): void {
+        const scenario = this.nextProtectedPaymentProjectionScenario;
+        if (!scenario) {
+            return;
+        }
+        this.nextProtectedPaymentProjectionScenario = null;
+        if (!same(payment.id, scenario.paymentId)) {
+            throw new Error(`payment projection scenario expected payment ${scenario.paymentId}`);
+        }
+        const paymentIntentId = String(payment.stripe_payment_intent_id);
+        const intent = this.paymentIntents.get(paymentIntentId);
+        if (!intent) {
+            throw new Error(`payment projection scenario has no PaymentIntent ${paymentIntentId}`);
+        }
+        if (scenario.kind === "replace-intent") {
+            this.paymentIntents.set(scenario.replacementIntentId, {
+                ...intent,
+                id: scenario.replacementIntentId,
+                client_secret: `${scenario.replacementIntentId}_secret`,
+            });
+            this.update(payment, { stripe_payment_intent_id: scenario.replacementIntentId });
+            return;
+        }
+        if (scenario.kind === "cancel-payment") {
+            Object.assign(intent, {
+                status: "canceled",
+                canceled_at: Math.floor(Date.now() / 1000),
+                client_secret: scenario.clientSecret,
+            });
+            this.update(payment, {
+                payment_status: "cancelled",
+                cancelled_at: "2026-07-06T12:09:00.000Z",
+            });
+            return;
+        }
+        intent.client_secret = scenario.clientSecret;
     }
 
     private latestProviderSyncAt(payment: JsonRecord, projection: JsonRecord): unknown {
@@ -10178,6 +10224,7 @@ registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
 registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
 registerProtectedPaymentFailureContracts(createProviderBoundaryHarness);
 registerProtectedPaymentPayoutContracts(createProviderBoundaryHarness);
+registerProtectedPaymentProjectionRaceContracts(createProviderBoundaryHarness);
 registerProtectedPaymentReservationContracts(createProviderBoundaryHarness);
 registerProtectedPaymentReplayContracts(createProviderBoundaryHarness);
 registerTransferReversalFailureContracts(createProviderBoundaryHarness);
