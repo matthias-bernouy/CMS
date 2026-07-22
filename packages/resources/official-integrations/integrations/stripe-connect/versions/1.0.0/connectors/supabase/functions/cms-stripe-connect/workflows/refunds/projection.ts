@@ -4,25 +4,17 @@ import {
     enqueueCommerceRefundProjection,
     updateFinancialOperation,
 } from "../../db/repositories/financial-operations.ts";
-import { sumSucceededAmounts, sumSucceededField } from "../../db/repositories/ledger.ts";
+import { readRefundProjectionContext } from "../../db/repositories/ledger.ts";
 import { updatePayment } from "../../db/repositories/payments.ts";
-import type { ConnectPaymentRow } from "../../db/records/payments.ts";
 import { refundSelect, type RefundRow } from "../../db/records/refunds.ts";
+import { HttpError } from "../../http/errors.ts";
 import type { StripeRefund } from "../../provider/types.ts";
 import { numberAt, recordArrayAt, stringAt } from "../../shared/data.ts";
 import { refundStatusFromStripe, resolveRefundBalanceTransaction } from "./provider-truth.ts";
 
-type RefundProjectionDependencies = {
-    authorizedSellerAmountAfterRefunds(payment: ConnectPaymentRow): Promise<number>;
-    requiredPayment(paymentId: number): Promise<ConnectPaymentRow>;
-};
-
 export type ApplyStripeRefund = (refund: RefundRow, provider: StripeRefund) => Promise<void>;
 
-export function createRefundProjectionWorkflow({
-    authorizedSellerAmountAfterRefunds,
-    requiredPayment,
-}: RefundProjectionDependencies): ApplyStripeRefund {
+export function createRefundProjectionWorkflow(): ApplyStripeRefund {
     return async function applyStripeRefund(refund, provider) {
         const status = refundStatusFromStripe(provider);
         if (["succeeded", "failed", "cancelled"].includes(refund.status) && refund.status !== status) {
@@ -81,14 +73,16 @@ export function createRefundProjectionWorkflow({
         if (["pending", "succeeded", "failed", "cancelled"].includes(status)) {
             await enqueueCommerceRefundProjection(updatedRefund.id);
         }
-        const refundedAmount = await sumSucceededAmounts("refunds", refund.payment_id);
-        const refundFeeAmount = await sumSucceededField("refunds", refund.payment_id, "actual_stripe_fee_amount");
-        const payment = await requiredPayment(refund.payment_id);
-        const authorizedSellerAmount = await authorizedSellerAmountAfterRefunds(payment);
+        const context = await readRefundProjectionContext(refund.payment_id);
+        const payment = context.payment;
+        if (!payment) {
+            throw new HttpError(404, "payment not found");
+        }
+        const authorizedSellerAmount = payment.seller_transfer_amount - context.sellerRecoveryAmount;
         await updatePayment(refund.payment_id, {
-            refunded_amount: refundedAmount,
-            actual_stripe_refund_fee_amount: refundFeeAmount,
-            actual_stripe_processing_fee_amount: payment.actual_stripe_charge_fee_amount + refundFeeAmount,
+            refunded_amount: context.refundedAmount,
+            actual_stripe_refund_fee_amount: context.refundFeeAmount,
+            actual_stripe_processing_fee_amount: payment.actual_stripe_charge_fee_amount + context.refundFeeAmount,
             settlement_status:
                 status === "failed"
                     ? "manual_review"
@@ -96,7 +90,7 @@ export function createRefundProjectionWorkflow({
                       ? "refund_pending"
                       : payment.settlement_status === "manual_review"
                         ? "manual_review"
-                        : refundedAmount >= payment.amount_total
+                        : context.refundedAmount >= payment.amount_total
                           ? "refunded"
                           : payment.transferred_amount - payment.reversed_amount >= authorizedSellerAmount
                             ? "released"

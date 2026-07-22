@@ -13,6 +13,7 @@ set statement_timeout = '15s';
 \ir behavior/read-operations.sql
 \ir behavior/read-contexts/payment-ledger.sql
 \ir behavior/read-contexts/payment-local.sql
+\ir behavior/read-contexts/refund-projection.sql
 \ir behavior/read-contexts/settlement-context.sql
 \ir behavior/read-contexts/settlement-ledger.sql
 \ir behavior/read-contexts/settlement-freshness.sql

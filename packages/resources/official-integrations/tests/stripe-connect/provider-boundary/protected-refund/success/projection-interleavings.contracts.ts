@@ -70,7 +70,7 @@ export function registerProtectedRefundProjectionInterleavingContracts(
                 settlement_status: "released",
             });
             expect(postgrestBudget(fixture.harness)).toEqual(createRefundBudget);
-            expectProjectionReadOrder(fixture.harness.rest.postgrestRequests, fixture.paymentId);
+            expectProjectionContextCall(fixture.harness.rest.postgrestRequests, fixture.paymentId);
         });
     });
 }
@@ -94,41 +94,15 @@ function seedRefund(
     });
 }
 
-function expectProjectionReadOrder(
-    requests: Array<{ method: string; table: string; searchParams: string[][] }>,
+function expectProjectionContextCall(
+    requests: Array<{ method: string; table: string; searchParams: string[][]; body: JsonRecord | null }>,
     paymentId: number,
 ): void {
     const enqueue = requests.findIndex(({ table }) => table === "rpc/enqueue_commerce_refund_projection");
-    const reads = requests.slice(enqueue + 1, enqueue + 5).map(({ method, table, searchParams }) => ({
-        method,
-        table,
-        query: Object.fromEntries(searchParams),
-    }));
-    const paymentFilter = `eq.${paymentId}`;
-    expect(reads).toEqual([
-        {
-            method: "GET",
-            table: "refunds",
-            query: { payment_id: paymentFilter, status: "eq.succeeded", select: "amount" },
-        },
-        {
-            method: "GET",
-            table: "refunds",
-            query: { payment_id: paymentFilter, status: "eq.succeeded", select: "actual_stripe_fee_amount" },
-        },
-        {
-            method: "GET",
-            table: "payments",
-            query: { id: paymentFilter, select: expect.stringContaining("settlement_status"), limit: "1" },
-        },
-        {
-            method: "GET",
-            table: "refunds",
-            query: {
-                payment_id: paymentFilter,
-                status: "eq.succeeded",
-                select: "seller_entitlement_reduction_amount",
-            },
-        },
-    ]);
+    expect(requests[enqueue + 1]).toEqual({
+        method: "POST",
+        table: "rpc/read_refund_projection_context",
+        searchParams: [],
+        body: { p_payment_id: paymentId },
+    });
 }

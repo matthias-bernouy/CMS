@@ -84,7 +84,7 @@ export function registerProtectedRefundProjectionStatusContracts(createHarness: 
                 ]);
                 expect(fixture.harness.rest.refundCreateRequests).toEqual([refundCreateCall]);
                 expect(postgrestBudget(fixture.harness)).toEqual(createRefundBudget);
-                expectSucceededFilters(fixture.harness.rest.postgrestRequests);
+                expectProjectionContextCall(fixture.harness.rest.postgrestRequests, fixture.paymentId);
                 expect(refundOperation(fixture)).toMatchObject({
                     status: statusCase.status === "pending" ? "processing" : "failed",
                     stripe_object_id: "re_1",
@@ -114,11 +114,15 @@ function seedLedgerRows(fixture: Awaited<ReturnType<typeof refundablePaymentFixt
     }
 }
 
-function expectSucceededFilters(requests: Array<{ table: string; searchParams: string[][] }>): void {
+function expectProjectionContextCall(
+    requests: Array<{ method: string; table: string; searchParams: string[][]; body: JsonRecord | null }>,
+    paymentId: number,
+): void {
     const enqueue = requests.findIndex(({ table }) => table === "rpc/enqueue_commerce_refund_projection");
-    const refundReads = requests.slice(enqueue + 1, enqueue + 5).filter(({ table }) => table === "refunds");
-    expect(refundReads).toHaveLength(3);
-    for (const request of refundReads) {
-        expect(request.searchParams).toContainEqual(["status", "eq.succeeded"]);
-    }
+    expect(requests[enqueue + 1]).toEqual({
+        method: "POST",
+        table: "rpc/read_refund_projection_context",
+        searchParams: [],
+        body: { p_payment_id: paymentId },
+    });
 }

@@ -8368,6 +8368,37 @@ class StripeConnectMock {
                 },
             ]);
         }
+        if (table === "rpc/read_refund_projection_context" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const paymentId = Number(body.p_payment_id);
+            await this.waitForPostgrestRead("refunds");
+            const succeededAtAmount = this.tables.refunds.filter(
+                (row) => same(row.payment_id, paymentId) && row.status === "succeeded",
+            );
+            const refundedAmount = succeededAtAmount.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+            await this.waitForPostgrestRead("refunds");
+            const refundFeeAmount = this.tables.refunds
+                .filter((row) => same(row.payment_id, paymentId) && row.status === "succeeded")
+                .reduce((sum, row) => sum + Number(row.actual_stripe_fee_amount ?? 0), 0);
+            await this.waitForPostgrestRead("payments");
+            const paymentRow = this.tables.payments.find((row) => same(row.id, paymentId));
+            const payment = paymentRow ? { ...paymentRow } : null;
+            let sellerRecoveryAmount = 0;
+            if (payment) {
+                await this.waitForPostgrestRead("refunds");
+                sellerRecoveryAmount = this.tables.refunds
+                    .filter((row) => same(row.payment_id, paymentId) && row.status === "succeeded")
+                    .reduce((sum, row) => sum + Number(row.seller_entitlement_reduction_amount ?? 0), 0);
+            }
+            return jsonResponse([
+                {
+                    refunded_amount: refundedAmount,
+                    actual_stripe_refund_fee_amount: refundFeeAmount,
+                    payment,
+                    seller_recovery_amount: sellerRecoveryAmount,
+                },
+            ]);
+        }
         if (table === "rpc/read_settlement_release_context" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const paymentId = Number(body.p_payment_id);

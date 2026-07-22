@@ -216,10 +216,7 @@ const executeTransferReversal = createTransferReversalWorkflow({
     requiredPayment,
 });
 const requestTransferReversal = createRequestTransferReversal({ executeTransferReversal, requiredPayment });
-const applyStripeRefund = createRefundProjectionWorkflow({
-    authorizedSellerAmountAfterRefunds,
-    requiredPayment,
-});
+const applyStripeRefund = createRefundProjectionWorkflow();
 const executeRefund = createRefundExecutionWorkflow({ applyStripeRefund, moveOperationToManualReview });
 const executeProtectedRefund = createProtectedRefundWorkflow({
     executeRefund,
