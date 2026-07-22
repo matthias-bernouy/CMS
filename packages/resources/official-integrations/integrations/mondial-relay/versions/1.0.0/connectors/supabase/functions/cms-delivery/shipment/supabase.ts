@@ -180,18 +180,13 @@ export async function insertShipmentRecoveryEvent(row: JsonRecord): Promise<void
     });
 }
 
-export async function labelAccessContext(
-    tokenHash: string,
-    sellerCmsUserId: string,
-    observedAt: string,
-): Promise<unknown> {
+export async function labelAccessContext(tokenHash: string, sellerCmsUserId: string): Promise<unknown> {
     return await restJson<unknown>("rpc/get_label_access_context", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
             p_token_hash: tokenHash,
             p_seller_cms_user_id: sellerCmsUserId,
-            p_observed_at: observedAt,
         }),
     });
 }

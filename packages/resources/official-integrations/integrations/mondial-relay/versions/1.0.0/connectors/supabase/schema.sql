@@ -1338,10 +1338,11 @@ create index if not exists label_access_tokens_expiry_idx
 create index if not exists label_access_tokens_shipment_idx
     on delivery.label_access_tokens(shipment_id);
 
+drop function if exists delivery.get_label_access_context(text, text, timestamptz);
+
 create or replace function delivery.get_label_access_context(
     p_token_hash text,
-    p_seller_cms_user_id text,
-    p_observed_at timestamptz
+    p_seller_cms_user_id text
 )
 returns jsonb
 language plpgsql
@@ -1360,7 +1361,7 @@ begin
     if not found or v_token.revoked_at is not null then
         return pg_catalog.jsonb_build_object('state', 'not_found');
     end if;
-    if p_observed_at is null or v_token.expires_at <= p_observed_at then
+    if v_token.expires_at <= pg_catalog.clock_timestamp() then
         return pg_catalog.jsonb_build_object('state', 'expired');
     end if;
 
@@ -1390,10 +1391,10 @@ end;
 $$;
 
 revoke execute on function delivery.get_label_access_context(
-    text, text, timestamptz
+    text, text
 ) from public, anon, authenticated;
 grant execute on function delivery.get_label_access_context(
-    text, text, timestamptz
+    text, text
 ) to service_role;
 
 create or replace function delivery.declare_seller_handoff(

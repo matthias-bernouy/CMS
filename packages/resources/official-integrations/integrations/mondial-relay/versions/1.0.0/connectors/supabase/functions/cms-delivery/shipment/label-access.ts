@@ -18,15 +18,11 @@ export async function issueLabelCapability(
     return { token, expiresAt };
 }
 
-export async function shipmentForLabelCapability(
-    token: string,
-    sellerCmsUserId: string,
-    observedAt: string,
-): Promise<JsonRecord> {
+export async function shipmentForLabelCapability(token: string, sellerCmsUserId: string): Promise<JsonRecord> {
     if (!token || !sellerCmsUserId) {
         throw new HttpError(401, "a seller-bound label token is required");
     }
-    const context = await labelAccessContext(await sha256(token), sellerCmsUserId, observedAt);
+    const context = await labelAccessContext(await sha256(token), sellerCmsUserId);
     if (!validState(context)) {
         throw invalidContext();
     }
