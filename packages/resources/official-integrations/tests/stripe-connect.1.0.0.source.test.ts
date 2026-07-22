@@ -15,6 +15,9 @@ import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
+import { registerAccountEnrollmentContracts } from "./stripe-connect/accounts/enrollment.contracts";
+import { registerAccountLifecycleContracts } from "./stripe-connect/accounts/lifecycle.contracts";
+import { registerAccountOnboardingContracts } from "./stripe-connect/accounts/onboarding.contracts";
 import { registerOperationAndExceptionDashboardContracts } from "./stripe-connect/dashboard/operations-exceptions.contracts";
 import { registerPaymentProjectionContracts } from "./stripe-connect/payment-projection/contracts";
 import { registerPaymentProjectionFailureContracts } from "./stripe-connect/payment-projection/failures";
@@ -5705,6 +5708,8 @@ class StripeConnectMock {
     private failProviderExceptionResolution = false;
     private failPaymentReconciliationLedgerRead = false;
     private failPaymentReconciliationLocalContextRead = false;
+    private failAccountReloadAfterTermsAcceptance = false;
+    private omitNextAccountRead = false;
     private providerTransferContextReadsBeforeFailure: number | null = null;
     private failProviderTransferList = false;
     private losePaymentProjectionEnqueueResponse = false;
@@ -5725,11 +5730,13 @@ class StripeConnectMock {
     lastTransferParameters: Record<string, string> | null = null;
     readonly moneyCallOrder: string[] = [];
     readonly accountCreationRequests: Array<{ body: JsonRecord; idempotencyKey: string | null }> = [];
+    readonly accountLinkRequests: JsonRecord[] = [];
     readonly accountUpdateRequests: Array<{
         accountId: string;
         body: JsonRecord;
         idempotencyKey: string | null;
     }> = [];
+    readonly externalRequestOrder: string[] = [];
     readonly fileUploadRequests: Array<{
         purpose: string;
         fileName: string;
@@ -6870,6 +6877,7 @@ class StripeConnectMock {
         const method = request.method.toUpperCase();
 
         if (url.origin === stripeUrl) {
+            this.externalRequestOrder.push(`stripe:${method}:${url.pathname}`);
             return await this.stripeFetch(request, url, method);
         }
         if (url.origin !== supabaseUrl || !url.pathname.startsWith("/rest/v1/")) {
@@ -6883,6 +6891,7 @@ class StripeConnectMock {
             expect(request.headers.get("content-profile")).toBe("stripe_connect");
         }
         const table = decodeURIComponent(url.pathname.slice("/rest/v1/".length));
+        this.externalRequestOrder.push(`postgrest:${method}:${table}`);
         this.postgrestRequests.push({
             method,
             table,
@@ -7115,6 +7124,10 @@ class StripeConnectMock {
                     marketplace_terms_hash: acceptance.terms_hash,
                     marketplace_terms_accepted_at: acceptance.accepted_at,
                 });
+            }
+            if (this.failAccountReloadAfterTermsAcceptance) {
+                this.failAccountReloadAfterTermsAcceptance = false;
+                this.omitNextAccountRead = true;
             }
             return jsonResponse(acceptance);
         }
@@ -8183,6 +8196,10 @@ class StripeConnectMock {
             throw new Error(`unexpected table: ${table}`);
         }
         if (method === "GET") {
+            if (table === "accounts" && this.omitNextAccountRead) {
+                this.omitNextAccountRead = false;
+                return jsonResponse([]);
+            }
             return jsonResponse(this.select(table, url));
         }
         if (method === "POST") {
@@ -8265,6 +8282,14 @@ class StripeConnectMock {
 
     clearStripeRequests(): void {
         this.stripeRequests.length = 0;
+    }
+
+    clearExternalRequestOrder(): void {
+        this.externalRequestOrder.length = 0;
+    }
+
+    failNextAccountReloadAfterTermsAcceptance(): void {
+        this.failAccountReloadAfterTermsAcceptance = true;
     }
 
     private async stripeFetch(request: Request, url: URL, method: string): Promise<Response> {
@@ -8396,6 +8421,7 @@ class StripeConnectMock {
         }
         if (url.pathname === "/v2/core/account_links" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
+            this.accountLinkRequests.push(body);
             expect(body).toMatchObject({
                 account: expect.stringContaining("acct_"),
                 use_case: {
@@ -9782,6 +9808,17 @@ const createRoutingHarness = async () => {
     };
 };
 
+const createAccountHandlerHarness = async () => {
+    const harness = await createHarness();
+    return {
+        apiKey: activeEnv.CMS_STRIPE_CONNECT_API_KEY ?? "",
+        rest: harness.rest,
+        edgeRequest: async (request: Request) => await harness.edgeRequest(request),
+        submit: async (userId: string, role: string | undefined, endpoint: string, body: unknown) =>
+            await sourceJsonWithRole(harness, userId, role, endpoint, body),
+    };
+};
+
 registerRefundAndDisputeDashboardContracts(createDashboardReadHarness);
 registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
 registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
@@ -9803,3 +9840,6 @@ registerProviderTransferContextContracts(createProviderReconciliationHarness);
 registerProviderTransferContextFailureContracts(createProviderReconciliationHarness);
 registerTerminalOperationRecoveryContracts(createProviderReconciliationHarness);
 registerStripeConnectRoutingContracts(createRoutingHarness);
+registerAccountOnboardingContracts(createAccountHandlerHarness);
+registerAccountEnrollmentContracts(createAccountHandlerHarness);
+registerAccountLifecycleContracts(createAccountHandlerHarness);
