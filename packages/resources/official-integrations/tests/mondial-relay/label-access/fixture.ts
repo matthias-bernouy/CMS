@@ -26,12 +26,13 @@ export function databaseResponse(
     shipment: JsonRecord | null,
 ): Response {
     if (url.pathname === "/rest/v1/rpc/get_label_access_context" && request.method === "POST") {
-        const value = scenario.rpcResponse === undefined ? context(tokenState, shipment, text) : scenario.rpcResponse;
+        const value =
+            scenario.rpcResponse === undefined ? context(scenario, tokenState, shipment, text) : scenario.rpcResponse;
         return Response.json(value);
     }
     if (url.pathname === "/rest/v1/label_access_tokens" && request.method === "GET") {
         const seller = url.searchParams.get("seller_cms_user_id")?.replace(/^eq\./, "");
-        return Response.json(tokenRows(tokenState, seller));
+        return Response.json(tokenRows(scenario, tokenState, seller));
     }
     if (url.pathname === "/rest/v1/shipments" && request.method === "GET") {
         return Response.json(shipment ? [shipment] : []);
@@ -51,7 +52,7 @@ export function providerResponse(mode: LabelScenario["provider"]): Response {
     });
 }
 
-function tokenRows(state: NonNullable<LabelScenario["token"]>, seller?: string): JsonRecord[] {
+function tokenRows(scenario: LabelScenario, state: NonNullable<LabelScenario["token"]>, seller?: string): JsonRecord[] {
     if (state === "missing" || seller !== "seller-42") {
         return [];
     }
@@ -60,19 +61,27 @@ function tokenRows(state: NonNullable<LabelScenario["token"]>, seller?: string):
             token_hash: tokenHash,
             shipment_id: "shipment-label-contract",
             seller_cms_user_id: "seller-42",
-            expires_at: state === "expired" ? "2026-07-22T09:59:59.999Z" : "2026-07-22T10:10:00.000Z",
+            expires_at: tokenExpiry(scenario, state),
             revoked_at: state === "revoked" ? "2026-07-22T09:55:00.000Z" : null,
             created_at: "2026-07-22T09:50:00.000Z",
         },
     ];
 }
 
-function context(state: NonNullable<LabelScenario["token"]>, shipment: JsonRecord | null, body: string): JsonRecord {
-    const seller = String((JSON.parse(body) as JsonRecord).p_seller_cms_user_id ?? "");
+function context(
+    scenario: LabelScenario,
+    state: NonNullable<LabelScenario["token"]>,
+    shipment: JsonRecord | null,
+    body: string,
+): JsonRecord {
+    const params = JSON.parse(body) as JsonRecord;
+    const seller = String(params.p_seller_cms_user_id ?? "");
     if (state === "missing" || state === "revoked" || seller !== "seller-42") {
         return { state: "not_found" };
     }
-    if (state === "expired") {
+    const databaseObservedAt =
+        typeof params.p_observed_at === "string" ? params.p_observed_at : new Date().toISOString();
+    if (Date.parse(tokenExpiry(scenario, state)) <= Date.parse(databaseObservedAt)) {
         return { state: "expired" };
     }
     const refused = ["cancelled_unscanned", "cancelled", "manual_review"];
@@ -83,4 +92,8 @@ function context(state: NonNullable<LabelScenario["token"]>, shipment: JsonRecor
         state: "ok",
         shipment: { expedition_number: shipment.expedition_number, label_url: shipment.label_url },
     };
+}
+
+function tokenExpiry(scenario: LabelScenario, state: NonNullable<LabelScenario["token"]>): string {
+    return scenario.tokenExpiresAt ?? (state === "expired" ? "2026-07-22T09:59:59.999Z" : "2026-07-22T10:10:00.000Z");
 }

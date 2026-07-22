@@ -2958,7 +2958,7 @@ async function createHarness(
             if (!token || token.revoked_at) {
                 return jsonResponse({ state: "not_found" }, 200);
             }
-            if (Date.parse(String(token.expires_at)) <= Date.parse(String(body.p_observed_at))) {
+            if (Date.parse(String(token.expires_at)) <= Date.now()) {
                 return jsonResponse({ state: "expired" }, 200);
             }
             const shipment = insertedShipments.find((row) => row.id === token.shipment_id);

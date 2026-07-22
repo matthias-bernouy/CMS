@@ -4,45 +4,18 @@ create extension if not exists dblink;
 select label_access_test.seed(
     'guard-revoked', 'b', 'label_ready',
     'https://connect-api-sandbox.mondialrelay.com/labels/guard-revoked.pdf',
-    '2026-07-22 10:10:00+00', '2026-07-22 09:55:00+00'
+    pg_catalog.clock_timestamp() + interval '10 minutes', pg_catalog.clock_timestamp()
 );
 select label_access_test.seed(
     'guard-expired', 'c', 'label_ready',
     'https://connect-api-sandbox.mondialrelay.com/labels/guard-expired.pdf',
-    '2026-07-22 09:59:59+00', null
+    pg_catalog.clock_timestamp() - interval '1 second', null
 );
 select label_access_test.seed(
     'interleaving', '3', 'label_ready',
     'https://connect-api-sandbox.mondialrelay.com/labels/old.pdf',
-    '2026-07-22 10:10:00+00', null
+    pg_catalog.clock_timestamp() + interval '10 minutes', null
 );
-
-create function label_access_test.wait_for_reader(p_application_name text)
-returns void
-language plpgsql
-security invoker
-set search_path = ''
-as $$
-declare
-    v_deadline timestamptz := pg_catalog.clock_timestamp() + interval '5 seconds';
-begin
-    loop
-        exit when exists (
-            select 1
-            from pg_catalog.pg_locks lock_row
-            join pg_catalog.pg_stat_activity activity
-              on activity.pid = lock_row.pid
-            where activity.application_name = p_application_name
-              and not lock_row.granted
-        );
-        if pg_catalog.clock_timestamp() >= v_deadline then
-            raise exception 'label access: reader did not reach shipment read';
-        end if;
-        perform pg_catalog.pg_sleep(0.01);
-    end loop;
-end;
-$$;
-
 select dblink_connect(
     'label_guard_reader',
     'dbname=' || current_database()
@@ -68,20 +41,16 @@ from dblink(
     'label_guard_reader',
     $$select pg_catalog.jsonb_build_array(
         delivery.get_label_access_context(
-            pg_catalog.repeat('9', 64), 'label-access-pg-seller',
-            '2026-07-22 10:00:00+00'
+            pg_catalog.repeat('9', 64), 'label-access-pg-seller'
         ),
         delivery.get_label_access_context(
-            pg_catalog.repeat('3', 64), 'wrong-seller',
-            '2026-07-22 10:00:00+00'
+            pg_catalog.repeat('3', 64), 'wrong-seller'
         ),
         delivery.get_label_access_context(
-            pg_catalog.repeat('b', 64), 'label-access-pg-seller',
-            '2026-07-22 10:00:00+00'
+            pg_catalog.repeat('b', 64), 'label-access-pg-seller'
         ),
         delivery.get_label_access_context(
-            pg_catalog.repeat('c', 64), 'label-access-pg-seller',
-            '2026-07-22 10:00:00+00'
+            pg_catalog.repeat('c', 64), 'label-access-pg-seller'
         )
     )$$
 ) as result(contexts jsonb);
@@ -117,8 +86,7 @@ select dblink_exec(
 select dblink_send_query(
     'label_interleaving_reader',
     $$select delivery.get_label_access_context(
-        pg_catalog.repeat('3', 64), 'label-access-pg-seller',
-        '2026-07-22 10:00:00+00'
+        pg_catalog.repeat('3', 64), 'label-access-pg-seller'
     )$$
 );
 select label_access_test.wait_for_reader('label_interleaving_reader');

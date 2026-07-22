@@ -7,6 +7,8 @@ export type JsonRecord = Record<string, unknown>;
 
 export type LabelScenario = {
     token?: "valid" | "missing" | "revoked" | "expired";
+    tokenExpiresAt?: string;
+    databaseClockAt?: string;
     shipment?: JsonRecord | null;
     rpcResponse?: unknown;
     provider?: "pdf" | "redirect" | "missing" | "html";
@@ -54,6 +56,9 @@ export async function useLabelScenario(scenario: LabelScenario = {}) {
         const text = request.method === "GET" ? "" : await request.clone().text();
         calls.push(observe(request, url, text, url.origin === supabaseUrl ? "database" : "provider"));
         if (url.origin === supabaseUrl) {
+            if (scenario.databaseClockAt) {
+                setSystemTime(new Date(scenario.databaseClockAt));
+            }
             return databaseResponse(request, url, text, scenario, tokenState, shipment);
         }
         if (request.url === providerUrl) {

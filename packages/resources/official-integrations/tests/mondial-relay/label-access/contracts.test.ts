@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { observedAt, providerUrl, rawToken, tokenHash, useLabelScenario, type JsonRecord } from "./harness";
+import { providerUrl, rawToken, tokenHash, useLabelScenario, type JsonRecord } from "./harness";
 
 describe("Mondial Relay protected label contract", () => {
     test("preserves the exact PDF body, headers, and single provider fetch", async () => {
@@ -34,18 +34,29 @@ describe("Mondial Relay protected label contract", () => {
             ["database", "POST", "/rest/v1/rpc/get_label_access_context"],
             ["provider", "GET", "/labels/exact.pdf"],
         ]);
-        expect(harness.calls[0]).toMatchObject({
-            body: {
-                p_token_hash: tokenHash,
-                p_seller_cms_user_id: "seller-42",
-                p_observed_at: observedAt,
-            },
+        expect(harness.calls[0]?.body).toEqual({
+            p_token_hash: tokenHash,
+            p_seller_cms_user_id: "seller-42",
         });
+    });
+
+    test("evaluates expiry when the database reads the token after hashing and RPC latency", async () => {
+        const harness = await useLabelScenario({
+            tokenExpiresAt: "2026-07-22T10:00:00.050Z",
+            databaseClockAt: "2026-07-22T10:00:00.100Z",
+        });
+        const response = await harness.request({ token: rawToken, seller: "seller-42" });
+
+        expect(response.status).toBe(410);
+        expect(await response.json()).toEqual({ error: "label token expired" });
+        expect(harness.calls.map(({ kind, pathname }) => [kind, pathname])).toEqual([
+            ["database", "/rest/v1/rpc/get_label_access_context"],
+        ]);
     });
 
     test("preserves nullable and empty expedition numbers in successful label contexts", async () => {
         for (const [expeditionNumber, filename] of [
-            [null, "mondial-relay-label.pdf"],
+            [null, "mondial-relay-null.pdf"],
             ["", "mondial-relay-.pdf"],
         ] as const) {
             const harness = await useLabelScenario({

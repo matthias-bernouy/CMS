@@ -3,7 +3,7 @@ begin;
 do $security$
 declare
     target oid := pg_catalog.to_regprocedure(
-        'delivery.get_label_access_context(text,text,timestamp with time zone)'
+        'delivery.get_label_access_context(text,text)'
     );
 begin
     if target is null then

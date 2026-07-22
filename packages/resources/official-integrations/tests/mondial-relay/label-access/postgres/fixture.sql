@@ -49,9 +49,35 @@ begin
     ) values (
         v_token_hash, 'label-access-pg-' || p_suffix,
         'label-access-pg-seller', p_expires_at,
-        '2026-07-22 09:00:00+00', p_revoked_at
+        p_expires_at - interval '1 hour', p_revoked_at
     );
     return v_token_hash;
+end;
+$$;
+
+create function label_access_test.wait_for_reader(p_application_name text)
+returns void
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+    v_deadline timestamptz := pg_catalog.clock_timestamp() + interval '5 seconds';
+begin
+    loop
+        exit when exists (
+            select 1
+            from pg_catalog.pg_locks lock_row
+            join pg_catalog.pg_stat_activity activity
+              on activity.pid = lock_row.pid
+            where activity.application_name = p_application_name
+              and not lock_row.granted
+        );
+        if pg_catalog.clock_timestamp() >= v_deadline then
+            raise exception 'label access: reader did not reach blocked database read';
+        end if;
+        perform pg_catalog.pg_sleep(0.01);
+    end loop;
 end;
 $$;
 

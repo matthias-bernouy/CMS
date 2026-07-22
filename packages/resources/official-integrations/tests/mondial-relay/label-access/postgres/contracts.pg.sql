@@ -10,3 +10,4 @@
 \ir security.sql
 \ir behavior.sql
 \ir freshness.sql
+\ir expiry.sql
