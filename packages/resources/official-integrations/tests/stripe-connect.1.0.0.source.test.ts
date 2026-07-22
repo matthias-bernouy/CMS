@@ -19,6 +19,7 @@ import { registerAccountEnrollmentContracts } from "./stripe-connect/accounts/en
 import { registerAccountLifecycleContracts } from "./stripe-connect/accounts/lifecycle.contracts";
 import { registerAccountOnboardingContracts } from "./stripe-connect/accounts/onboarding.contracts";
 import { registerOperationAndExceptionDashboardContracts } from "./stripe-connect/dashboard/operations-exceptions.contracts";
+import { registerPaymentDashboardContracts } from "./stripe-connect/dashboard/payments.contracts";
 import { registerPaymentProjectionContracts } from "./stripe-connect/payment-projection/contracts";
 import { registerPaymentProjectionFailureContracts } from "./stripe-connect/payment-projection/failures";
 import { registerPaymentProjectionReplayContracts } from "./stripe-connect/payment-projection/replay";
@@ -9849,6 +9850,7 @@ const createAccountHandlerHarness = async () => {
 
 registerRefundAndDisputeDashboardContracts(createDashboardReadHarness);
 registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
+registerPaymentDashboardContracts(createDashboardReadHarness);
 registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
 registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
 registerAccountTermsRepositoryContracts(createRepositoryBoundaryHarness);
