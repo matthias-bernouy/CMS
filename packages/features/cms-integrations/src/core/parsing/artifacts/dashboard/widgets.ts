@@ -1,6 +1,6 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
-import { isRecord, text } from "../../values";
+import { isRecord, text } from "../../definition/values";
 import { requiredText } from "../common";
 import { parseActions, parseSelection } from "./actions";
 import { parseColumns, parseFilters } from "./columns";

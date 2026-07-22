@@ -1,14 +1,14 @@
 import { IntegrationRuntimeError } from "../../errors";
-import { writeDashboardsWithRollback, type IntegrationDashboardWrite } from "../dashboardWrites";
-import { writeFunctionsWithRollback, type IntegrationFunctionWrite } from "../functionWrites";
+import { writeDashboardsWithRollback, type IntegrationDashboardWrite } from "../writes/dashboardWrites";
+import { writeFunctionsWithRollback, type IntegrationFunctionWrite } from "../writes/functionWrites";
 import {
     writeDashboardRelationProjectionsWithRollback,
     writeRelationsWithRollback,
     type IntegrationDashboardRelationProjectionWrite,
     type IntegrationRelationWrite,
-} from "../relationWrites";
-import { writeSourceOverlaysWithRollback, type IntegrationSourceOverlayWrite } from "../sourceOverlayWrites";
-import { writeTriggersWithRollback, type IntegrationTriggerWrite } from "../triggerWrites";
+} from "../writes/relationWrites";
+import { writeSourceOverlaysWithRollback, type IntegrationSourceOverlayWrite } from "../writes/sourceOverlayWrites";
+import { writeTriggersWithRollback, type IntegrationTriggerWrite } from "../writes/triggerWrites";
 import type { IntegrationArtifactResult, IntegrationImportDeps } from "../../../interfaces/IntegrationImport";
 
 export type DeclarativeArtifactWriteResults = {

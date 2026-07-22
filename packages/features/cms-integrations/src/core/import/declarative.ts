@@ -1,5 +1,5 @@
 import { IntegrationInputError } from "../errors";
-import type { TemplateContext } from "../templates";
+import type { TemplateContext } from "../definitions/templates";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import type {
     IntegrationImportDeps,

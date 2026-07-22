@@ -1,8 +1,8 @@
-import { findIntegration } from "../catalog";
+import { findIntegration } from "../definitions/catalog";
 import { IntegrationInputError, MissingIntegrationParam } from "../errors";
 import type { IntegrationAnswerValue, IntegrationDefinition } from "../../interfaces/Integration";
 import type { IntegrationImportDto, IntegrationImportRequest } from "../../interfaces/IntegrationImport";
-import { assertDefinitionUsable, parseOptionalDefinition } from "./definition";
+import { assertDefinitionUsable, parseOptionalDefinition } from "./definition/definition";
 import {
     booleanAnswer,
     isJsonValue,
@@ -12,7 +12,7 @@ import {
     parseOptions,
     text,
     validateUrl,
-} from "./values";
+} from "./definition/values";
 
 export function parseIntegrationImportRequest(
     body: Record<string, unknown>,

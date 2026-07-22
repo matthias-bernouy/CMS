@@ -5,4 +5,4 @@
 export {
     HttpIntegrationDefinitionRepository,
     type HttpIntegrationDefinitionRepositoryConfig,
-} from "../default-implementation/HttpIntegrationDefinitionRepository";
+} from "../default-implementation/http-definition/HttpIntegrationDefinitionRepository";

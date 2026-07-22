@@ -1,5 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
-import { parseIntegrationDefinition } from "../../core/parsing/definition";
+import { parseIntegrationDefinition } from "../../core/parsing/definition/definition";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import type {
     IntegrationAsset,

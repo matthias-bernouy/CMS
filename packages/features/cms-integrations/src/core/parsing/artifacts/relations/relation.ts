@@ -11,7 +11,7 @@ import type {
 } from "@bernouy/cms-relations";
 import { RELATION_CARDINALITIES } from "@bernouy/cms-relations";
 import { IntegrationInputError } from "../../../errors";
-import { isRecord, text } from "../../values";
+import { isRecord, text } from "../../definition/values";
 import { parseStringRecord, requiredText } from "../common";
 import { parseRelationDashboardActions } from "./relationDashboardActions";
 

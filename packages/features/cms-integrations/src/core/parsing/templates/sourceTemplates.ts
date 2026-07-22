@@ -1,0 +1,1 @@
+export { parseArtifactTemplates } from "../artifacts";

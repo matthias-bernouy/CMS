@@ -1,6 +1,6 @@
 import { IntegrationInputError } from "../../errors";
 import type { DeclarativeArtifactTemplate } from "../../../interfaces/Integration";
-import { isRecord, text } from "../values";
+import { isRecord, text } from "../definition/values";
 import { parseBlocTemplate } from "./bloc";
 import { parseDashboardTemplate } from "./dashboard";
 import { parseFunctionTemplate } from "./workflows/function";

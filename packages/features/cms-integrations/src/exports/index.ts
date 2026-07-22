@@ -84,29 +84,29 @@ export {
 export {
     findIntegration,
     integrationRegistry,
-} from "../core/catalog";
+} from "../core/definitions/catalog";
 export {
     parseIntegrationImportRequest,
     parseIntegrationImportDto,
 } from "../core/parsing/parseIntegrationImportDto";
-export { parseIntegrationDefinition } from "../core/parsing/definition";
+export { parseIntegrationDefinition } from "../core/parsing/definition/definition";
 export { importIntegration } from "../core/importIntegration";
 export {
     integrationInstallationId,
     runIntegrationInstallation,
     type RunIntegrationInstallationCreateRequest,
     type RunIntegrationInstallationRerunRequest,
-} from "../core/installation/runIntegrationInstallation";
+} from "../core/installation/execution/runIntegrationInstallation";
 export {
     resolveTemplate,
     resolveTemplates,
     type TemplateContext,
-} from "../core/templates";
+} from "../core/definitions/templates";
 export {
     collectIntegrationDefinitionCspExtras,
     collectIntegrationInstallationCspExtras,
     emptyIntegrationCspExtras,
     type IntegrationCspExtras,
 } from "../core/security/csp";
-export { InMemoryIntegrationInstallationRepository } from "../default-implementation/InMemoryIntegrationInstallationRepository";
-export { InMemoryIntegrationConnectorProviderRepository } from "../default-implementation/InMemoryIntegrationConnectorProviderRepository";
+export { InMemoryIntegrationInstallationRepository } from "../default-implementation/installations/InMemoryIntegrationInstallationRepository";
+export { InMemoryIntegrationConnectorProviderRepository } from "../default-implementation/connector-providers/InMemoryIntegrationConnectorProviderRepository";

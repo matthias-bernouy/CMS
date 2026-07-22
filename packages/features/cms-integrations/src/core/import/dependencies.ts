@@ -4,7 +4,7 @@ import { integrationInstallationId } from "../installation/ids";
 import { sensitiveInputNames } from "../shared/inputSensitivity";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import type { IntegrationInstallationRepository } from "../../interfaces/IntegrationInstallationRepository";
-import type { DependencyTemplateContext } from "../templates";
+import type { DependencyTemplateContext } from "../definitions/templates";
 
 export async function resolveDependencyContext(
     definition: IntegrationDefinition,

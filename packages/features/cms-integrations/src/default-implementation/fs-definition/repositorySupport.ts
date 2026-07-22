@@ -1,6 +1,6 @@
 import { realpath } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import { parseIntegrationIcon } from "../../core/parsing/icon";
+import { parseIntegrationIcon } from "../../core/parsing/definition/icon";
 import type {
     IntegrationDefinitionIndex,
     IntegrationDefinitionVersion,

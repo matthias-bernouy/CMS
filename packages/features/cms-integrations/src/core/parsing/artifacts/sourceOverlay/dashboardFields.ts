@@ -7,7 +7,7 @@ import type {
 } from "@bernouy/cms-sources";
 import { SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES } from "@bernouy/cms-sources";
 import { IntegrationInputError } from "../../../errors";
-import { isRecord, text } from "../../values";
+import { isRecord, text } from "../../definition/values";
 import { parseStringList, parseStringMap, requiredText } from "../common";
 
 export function parseOverlayDashboardFields(value: unknown, name: string): SourceOverlayDashboardField[] {

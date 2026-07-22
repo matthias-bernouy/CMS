@@ -1,4 +1,4 @@
-import { findIntegration } from "./catalog";
+import { findIntegration } from "./definitions/catalog";
 import { IntegrationInputError } from "./errors";
 import { importDeclarativeIntegration } from "./import/declarative";
 import type { IntegrationDefinition } from "../interfaces/Integration";

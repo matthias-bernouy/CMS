@@ -1,6 +1,6 @@
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import type { DeclarativeArtifactTemplate } from "../../../interfaces/Integration";
-import { isRecord, text } from "../values";
+import { isRecord, text } from "../definition/values";
 
 export function parseBlocTemplate(
     value: Record<string, unknown>,

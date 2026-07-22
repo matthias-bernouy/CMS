@@ -1,9 +1,9 @@
 import { secretKeyToRef } from "@bernouy/cms-secrets";
-import { type TemplateContext } from "../../templates";
+import { type TemplateContext } from "../../definitions/templates";
 import { buildConnectorDeployments, deployConnectorDeployments } from "../connectorDeployments";
 import { resolveDependencyContext } from "../dependencies";
-import { writeSecretsWithRollback } from "../secretWrites";
-import { writeSourcesWithRollback } from "../sourceWrites";
+import { writeSecretsWithRollback } from "../writes/secretWrites";
+import { writeSourcesWithRollback } from "../writes/sourceWrites";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
 import type {
     IntegrationImportDeps,
@@ -21,18 +21,21 @@ import {
     buildSourceArtifacts,
     buildSourceOverlayArtifacts,
     buildTriggerArtifacts,
-} from "./artifactBuilders";
-import { buildDashboardRelationProjectionWrites } from "./dashboardRelationWriteBuilders";
-import { buildRelationWrites } from "./relationWriteBuilders";
+} from "./builders/artifactBuilders";
+import { buildDashboardRelationProjectionWrites } from "./builders/dashboardRelationWriteBuilders";
+import { buildRelationWrites } from "./builders/relationWriteBuilders";
 import {
     assertUniqueSecretWrites,
     buildGeneratedSecretWrites,
     buildInputSecretWrites,
     sensitiveInputs,
 } from "./secrets";
-import { buildDashboardWrites, buildFunctionWrites, buildSourceWrites, importBlocArtifacts } from "./writeBuilders";
-import { buildSourceOverlayWrites } from "./sourceOverlayWriteBuilders";
-import { buildTriggerWrites } from "./triggerWriteBuilders";
+import { importBlocArtifacts } from "./builders/artifactWrites/blocImports";
+import { buildDashboardWrites } from "./builders/artifactWrites/dashboardWrites";
+import { buildFunctionWrites } from "./builders/artifactWrites/functionWrites";
+import { buildSourceWrites } from "./builders/artifactWrites/sourceWrites";
+import { buildSourceOverlayWrites } from "./builders/sourceOverlayWriteBuilders";
+import { buildTriggerWrites } from "./builders/triggerWriteBuilders";
 
 export async function executeDeclarativeIntegration<T>(
     deps: IntegrationImportDeps,

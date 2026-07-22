@@ -1,7 +1,7 @@
 import type { SourceEndpointAccess, SourceEndpointAccessMode } from "@bernouy/cms-sources";
 import { isSourceEndpointAccessMode } from "@bernouy/cms-sources";
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
-import { isRecord, text } from "../values";
+import { isRecord, text } from "../definition/values";
 
 export function requiredText(value: unknown, name: string): string {
     const result = text(value);
