@@ -35,10 +35,6 @@ export async function shipmentWithEventsRowByExternalOrderId(externalOrderId: st
     );
 }
 
-export async function privateShipmentRowById(id: string): Promise<JsonRecord | null> {
-    return await getOne("shipments", { id }, privateShipmentSelect());
-}
-
 export async function shipmentRowByExternalOrderId(externalOrderId: string): Promise<JsonRecord | null> {
     return await getOne("shipments", { external_order_id: externalOrderId }, shipmentSelect());
 }
@@ -157,15 +153,20 @@ export async function insertShipmentRecoveryEvent(row: JsonRecord): Promise<void
     });
 }
 
-export async function labelAccessTokenRow(tokenHash: string, sellerCmsUserId: string): Promise<JsonRecord | null> {
-    return await getOne(
-        "label_access_tokens",
-        {
-            token_hash: tokenHash,
-            seller_cms_user_id: sellerCmsUserId,
-        },
-        "token_hash,shipment_id,seller_cms_user_id,expires_at,revoked_at,created_at",
-    );
+export async function labelAccessContext(
+    tokenHash: string,
+    sellerCmsUserId: string,
+    observedAt: string,
+): Promise<unknown> {
+    return await restJson<unknown>("rpc/get_label_access_context", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+            p_token_hash: tokenHash,
+            p_seller_cms_user_id: sellerCmsUserId,
+            p_observed_at: observedAt,
+        }),
+    });
 }
 
 export async function deliveryQuoteRow(quoteId: string): Promise<JsonRecord | null> {
@@ -439,10 +440,6 @@ export function shipmentSelect(): string {
         "created_at",
         "updated_at",
     ].join(",");
-}
-
-export function privateShipmentSelect(): string {
-    return `${shipmentSelect()},label_url`;
 }
 
 function eventSelect(): string {

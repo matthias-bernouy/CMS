@@ -2911,6 +2911,40 @@ async function createHarness(
             labelAccessTokens.push(token);
             return jsonResponse(token, 200);
         }
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/get_label_access_context" &&
+            method === "POST"
+        ) {
+            const body = JSON.parse(requestBody) as JsonRecord;
+            const token = labelAccessTokens.find(
+                (row) => row.token_hash === body.p_token_hash && row.seller_cms_user_id === body.p_seller_cms_user_id,
+            );
+            if (!token || token.revoked_at) {
+                return jsonResponse({ state: "not_found" }, 200);
+            }
+            if (Date.parse(String(token.expires_at)) <= Date.parse(String(body.p_observed_at))) {
+                return jsonResponse({ state: "expired" }, 200);
+            }
+            const shipment = insertedShipments.find((row) => row.id === token.shipment_id);
+            if (
+                !shipment ||
+                !shipment.label_url ||
+                ["cancelled_unscanned", "cancelled", "manual_review"].includes(String(shipment.status))
+            ) {
+                return jsonResponse({ state: "label_missing" }, 200);
+            }
+            return jsonResponse(
+                {
+                    state: "ok",
+                    shipment: {
+                        expedition_number: shipment.expedition_number,
+                        label_url: shipment.label_url,
+                    },
+                },
+                200,
+            );
+        }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/label_access_tokens" && method === "GET") {
             const tokenHash = url.searchParams.get("token_hash")?.replace(/^eq\./, "");
             const seller = url.searchParams.get("seller_cms_user_id")?.replace(/^eq\./, "");

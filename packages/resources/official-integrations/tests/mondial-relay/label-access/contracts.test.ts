@@ -43,6 +43,25 @@ describe("Mondial Relay protected label contract", () => {
         });
     });
 
+    test("preserves nullable and empty expedition numbers in successful label contexts", async () => {
+        for (const [expeditionNumber, filename] of [
+            [null, "mondial-relay-label.pdf"],
+            ["", "mondial-relay-.pdf"],
+        ] as const) {
+            const harness = await useLabelScenario({
+                shipment: {
+                    expedition_number: expeditionNumber,
+                    label_url: providerUrl,
+                },
+            });
+            const response = await harness.request({ token: rawToken, seller: "seller-42" });
+
+            expect(response.status).toBe(200);
+            expect(response.headers.get("content-disposition")).toBe(`attachment; filename="${filename}"`);
+            expect(harness.calls.map(({ kind }) => kind)).toEqual(["database", "provider"]);
+        }
+    });
+
     test("keeps authentication and local validation ahead of database and provider work", async () => {
         const harness = await useLabelScenario();
         const cases = [

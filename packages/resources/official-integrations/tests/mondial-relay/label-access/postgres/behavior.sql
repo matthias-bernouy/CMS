@@ -1,4 +1,5 @@
 begin;
+alter table delivery.shipments drop constraint shipments_label_url_http;
 set local role service_role;
 select label_access_test.cleanup();
 
@@ -41,6 +42,18 @@ select label_access_test.seed(
     'https://connect-api-sandbox.mondialrelay.com/labels/carrier-accepted.pdf',
     '2026-07-22 10:10:00+00', null
 );
+select label_access_test.seed(
+    'whitespace-label', '4', 'label_ready', '   ',
+    '2026-07-22 10:10:00+00', null
+);
+select label_access_test.seed(
+    'nullable-expedition', '5', 'label_ready',
+    'https://connect-api-sandbox.mondialrelay.com/labels/nullable-expedition.pdf',
+    '2026-07-22 10:10:00+00', null
+);
+update delivery.shipments
+set expedition_number = null
+where id = 'label-access-pg-nullable-expedition';
 
 do $contract$
 declare
@@ -89,6 +102,22 @@ begin
         repeat('2', 64), 'label-access-pg-seller', v_observed_at
     )->>'state' <> 'ok' then
         raise exception 'label access: historical allowed statuses narrowed';
+    end if;
+    if delivery.get_label_access_context(
+        repeat('4', 64), 'label-access-pg-seller', v_observed_at
+    )->>'state' <> 'ok' then
+        raise exception 'label access: whitespace-only label URL was reinterpreted as missing';
+    end if;
+    if delivery.get_label_access_context(
+        repeat('5', 64), 'label-access-pg-seller', v_observed_at
+    ) is distinct from pg_catalog.jsonb_build_object(
+        'state', 'ok',
+        'shipment', pg_catalog.jsonb_build_object(
+            'expedition_number', null,
+            'label_url', 'https://connect-api-sandbox.mondialrelay.com/labels/nullable-expedition.pdf'
+        )
+    ) then
+        raise exception 'label access: nullable expedition number was rejected';
     end if;
 end;
 $contract$;

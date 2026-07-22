@@ -792,7 +792,7 @@ async function label(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const token = requiredQuery(url, "token");
     const sellerCmsUserId = request.headers.get("x-cms-user-id")?.trim() || "";
-    const row = await shipmentForLabelCapability(token, sellerCmsUserId);
+    const row = await shipmentForLabelCapability(token, sellerCmsUserId, new Date().toISOString());
     const labelUrl = typeof row?.label_url === "string" ? row.label_url : "";
     if (!labelUrl) {
         throw new HttpError(404, "label not found");
@@ -815,7 +815,7 @@ async function label(request: Request): Promise<Response> {
             "content-type": "application/pdf",
             "cache-control": "private, no-store",
             "x-content-type-options": "nosniff",
-            "content-disposition": `attachment; filename="mondial-relay-${String(row.expedition_number)}.pdf"`,
+            "content-disposition": `attachment; filename="mondial-relay-${String(row.expedition_number ?? "label")}.pdf"`,
         },
     });
 }

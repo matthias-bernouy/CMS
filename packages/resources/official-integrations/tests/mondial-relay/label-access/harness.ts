@@ -95,7 +95,7 @@ function observe(request: Request, url: URL, text: string, kind: ObservedCall["k
 
 async function loadEdgeHandler(): Promise<EdgeHandler> {
     if (!edgeHandler) {
-        await import(edgeModule);
+        await import(`${edgeModule}?label-access-contract`);
     }
     if (!edgeHandler) {
         throw new Error("cms-delivery edge handler was not registered");

@@ -59,6 +59,17 @@ describe("Mondial Relay protected label refusal precedence", () => {
         }
     });
 
+    test("does not reinterpret a whitespace-only historical label URL as missing", async () => {
+        const harness = await useLabelScenario({ shipment: shipmentRow({ label_url: "   " }) });
+        const response = await harness.request(request);
+
+        expect([response.status, await response.json()]).toEqual([
+            400,
+            { error: "Mondial Relay label URL is invalid" },
+        ]);
+        expect(harness.calls.map(({ kind }) => kind)).toEqual(["database"]);
+    });
+
     test("does not silently narrow the historical allowed status set", async () => {
         for (const status of ["carrier_accepted", "in_transit", "collected_by_recipient", "failed", "unknown"]) {
             const harness = await useLabelScenario({ shipment: shipmentRow({ status }) });
