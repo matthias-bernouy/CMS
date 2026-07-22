@@ -5,12 +5,14 @@ export type Scenario = {
     refreshDue?: boolean;
     providerFailure?: boolean;
     missing?: boolean;
+    afterFirstShipmentRead?: JsonRecord;
 };
 
 export class ClaimReturnDatabase {
     readonly calls: Array<{ method: string; origin: string; pathname: string; body?: unknown }> = [];
     readonly events: JsonRecord[] = [structuredClone(oldEvent)];
     private row: JsonRecord;
+    private shipmentReads = 0;
 
     constructor(private readonly scenario: Scenario) {
         this.row = {
@@ -46,7 +48,12 @@ export class ClaimReturnDatabase {
                 return Response.json([]);
             }
             const embedded = (url.searchParams.get("select") ?? "").includes("events:");
-            return Response.json([{ ...this.row, ...(embedded ? { events: sorted(this.events) } : {}) }]);
+            const snapshot = { ...this.row, ...(embedded ? { events: sorted(this.events) } : {}) };
+            this.shipmentReads += 1;
+            if (this.shipmentReads === 1 && this.scenario.afterFirstShipmentRead) {
+                this.row = { ...this.row, ...this.scenario.afterFirstShipmentRead };
+            }
+            return Response.json([snapshot]);
         }
         if (url.pathname === "/rest/v1/shipment_events" && method === "GET") {
             return Response.json(sorted(this.events));
