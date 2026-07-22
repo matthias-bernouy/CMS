@@ -32,6 +32,7 @@ export type ProviderBoundaryHarness = {
         }>;
         readonly externalRequestOrder: string[];
         readonly moneyCallOrder: string[];
+        readonly balanceSettingsUpdateCount: number;
         readonly paymentIntentCreateCount: number;
         readonly postgrestRequests: PostgrestRequestRecord[];
         readonly stripeRequests: StripeRequestRecord[];
@@ -46,6 +47,7 @@ export type ProviderBoundaryHarness = {
         failNextProtectedPaymentReservation(mode: "missing" | "raced"): void;
         failNextPostgrestWrite(table: string, method: "POST" | "PATCH"): void;
         linkNextProtectedPaymentReservationToIntent(): void;
+        loseNextPlatformPayoutProtectionResponse(): void;
         loseNextRefundCreationResponse(): void;
         omitNextPaymentRead(): void;
         patchPaymentLedger(paymentId: number, patch: JsonRecord): void;
@@ -70,6 +72,8 @@ export type ProviderBoundaryHarness = {
         succeedNextPaymentIntentOperation(): void;
         succeedNextRefundOperation(): void;
     };
+    apiKey: string;
+    edgeRequest(request: Request): Promise<Response>;
     request(
         userId: string,
         role: string | undefined,

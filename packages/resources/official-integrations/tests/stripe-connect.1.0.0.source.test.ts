@@ -40,6 +40,9 @@ import { registerDisputeApprovalFailureContracts } from "./stripe-connect/provid
 import { registerDisputeApprovalSubmissionContracts } from "./stripe-connect/provider-boundary/dispute-approval/submission.contracts";
 import type { ProtectedRefundSearchScenario } from "./stripe-connect/provider-boundary/harness";
 import { registerProtectedPaymentFailureContracts } from "./stripe-connect/provider-boundary/protected-payment/failures.contracts";
+import { registerPlatformPayoutProtectionFailureContracts } from "./stripe-connect/provider-boundary/protected-payment/platform-protection/failures.contracts";
+import { registerPlatformPayoutProtectionValidationContracts } from "./stripe-connect/provider-boundary/protected-payment/platform-protection/validation.contracts";
+import { registerPlatformPayoutProtectionWorkflowContracts } from "./stripe-connect/provider-boundary/protected-payment/platform-protection/workflow.contracts";
 import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment/payout.contracts";
 import type { ProtectedPaymentProjectionScenario } from "./stripe-connect/provider-boundary/protected-payment/projection-race-harness";
 import { registerProtectedPaymentProjectionRaceContracts } from "./stripe-connect/provider-boundary/protected-payment/projection-races.contracts";
@@ -10594,7 +10597,9 @@ const createProviderReconciliationHarness = async () => {
 const createProviderBoundaryHarness = async () => {
     const harness = await createHarness();
     return {
+        apiKey: activeEnv.CMS_STRIPE_CONNECT_API_KEY ?? "",
         rest: harness.rest,
+        edgeRequest: async (request: Request) => await harness.edgeRequest(request),
         request: async (
             userId: string,
             role: string | undefined,
@@ -10650,6 +10655,9 @@ registerDisputeApprovalSubmissionContracts(createProviderBoundaryHarness);
 registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
 registerDisputeStagingContracts(createProviderBoundaryHarness);
 registerProtectedPaymentFailureContracts(createProviderBoundaryHarness);
+registerPlatformPayoutProtectionFailureContracts(createProviderBoundaryHarness);
+registerPlatformPayoutProtectionValidationContracts(createProviderBoundaryHarness);
+registerPlatformPayoutProtectionWorkflowContracts(createProviderBoundaryHarness);
 registerProtectedPaymentPayoutContracts(createProviderBoundaryHarness);
 registerProtectedPaymentProjectionRaceContracts(createProviderBoundaryHarness);
 registerProtectedPaymentReservationContracts(createProviderBoundaryHarness);
