@@ -1,15 +1,4 @@
-import { defaultCurrency, protectedPlatformPayoutInterval, stripeV1ApiVersion } from "./shared/runtime.ts";
-import {
-    callRpcObject,
-    callRpcRows,
-    getRowByField,
-    insertRow,
-    listRows,
-    rest,
-    restError,
-    updateRow,
-    upsertRow,
-} from "./db/postgrest.ts";
+import { callRpcObject, getRowByField, insertRow, rest, restError, updateRow, upsertRow } from "./db/postgrest.ts";
 import type { DisputeDashboardRead } from "./db/dashboard-reads.ts";
 import { getAccountRow, getMarketplaceTermsAcceptance, updateAccountRow } from "./db/repositories/accounts.ts";
 import {
@@ -37,38 +26,25 @@ import {
     updatePayment,
 } from "./db/repositories/payments.ts";
 import { markPaymentManualReview, sellerPayoutHoldRpc } from "./db/repositories/payout-controls.ts";
-import { accountSelect, type ConnectAccountRow } from "./db/records/accounts.ts";
+import type { ConnectAccountRow } from "./db/records/accounts.ts";
 import { disputeSelect, type StripeDisputeRow } from "./db/records/disputes.ts";
-import {
-    operationSelect,
-    type CommerceProjectionOutboxRow,
-    type FinancialOperationRow,
-    type PlatformPayoutControlRow,
-} from "./db/records/operations.ts";
+import { operationSelect, type FinancialOperationRow, type PlatformPayoutControlRow } from "./db/records/operations.ts";
 import { paymentSelect, type ConnectPaymentRow } from "./db/records/payments.ts";
 import { refundSelect, type RefundRow } from "./db/records/refunds.ts";
 import type { TransferRecoveryRow, TransferRow } from "./db/records/transfers.ts";
-import {
-    claimReconciliationProjectionBatch,
-    readFinancialOperationRecoveryContext,
-    readReconciliationOperations,
-    readStripeDisputeApplicationContext,
-} from "./db/reconciliation.ts";
+import { readFinancialOperationRecoveryContext, readStripeDisputeApplicationContext } from "./db/reconciliation.ts";
 import {
     bankPayoutsStatus,
     sellerCanAcceptHeldPayments,
     stripeTransfersStatus,
 } from "./domain/accounts/eligibility.ts";
 import { balanceSettingsMatchRequest, publicBalanceSettings } from "./domain/accounts/payout-settings.ts";
-import { publicPayment, publicPaymentWithClientSecret } from "./domain/payments/presentation.ts";
-import { publicFinancialOperation } from "./domain/admin/financial-operation.ts";
-import { projectPublicDisputeWithContext } from "./domain/disputes/presentation.ts";
+import { publicPaymentWithClientSecret } from "./domain/payments/presentation.ts";
 import { requireCmsRequest } from "./http/auth.ts";
 import {
     assertAllowedKeys,
     marketplaceTermsExpectationFromBody,
     optionalCurrency,
-    optionalPositiveInteger,
     readJsonObject,
     requiredHash,
     requiredInteger,
@@ -124,6 +100,7 @@ import { createRequestTransferReversal } from "./routes/payments/transfer-revers
 import { createConfigurePlatformPayoutProtection } from "./routes/payouts/platform-protection.ts";
 import { createConfigureSellerPayoutSchedule } from "./routes/payouts/seller-schedule.ts";
 import { createReconcileProviderPayment } from "./routes/reconciliation/payment.ts";
+import { createRunProviderReconciliation } from "./routes/reconciliation/run.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { createRequestProtectedRefund } from "./routes/refunds/protected.ts";
 import { connectConfig, health } from "./routes/system.ts";
@@ -157,6 +134,8 @@ import { createTransferReversalWorkflow } from "./workflows/payments/transfer-re
 import { applyPaymentIntent, paymentClientSecret } from "./workflows/payments/projection.ts";
 import { createPaymentReconciliationWorkflow } from "./workflows/reconciliation/payment.ts";
 import { createProviderObjectReconciliation } from "./workflows/reconciliation/provider-objects.ts";
+import { createAccountPayoutHoldReconciliation } from "./workflows/reconciliation/account-holds.ts";
+import { createProviderReconciliationRun } from "./workflows/reconciliation/run.ts";
 import { createStripeWebhookIngress } from "./workflows/webhooks/ingress.ts";
 import { createStripeEventProcessor } from "./workflows/webhooks/processing.ts";
 
@@ -183,6 +162,19 @@ const reconcilePayment = createPaymentReconciliationWorkflow({
     requiredPayment,
 });
 const reconcileProviderPayment = createReconcileProviderPayment({ reconcilePayment, requiredPayment });
+const processStripeEvent = createStripeEventProcessor({ applyStripeDispute, applyStripeRefund, reconcilePayment });
+const reconcileAccountPayoutHolds = createAccountPayoutHoldReconciliation({
+    enforceSellerRecoveryPayoutHold,
+    restoreSellerAutomaticPayoutSchedule,
+});
+const executeProviderReconciliationRun = createProviderReconciliationRun({
+    moveOperationToManualReview,
+    processClaimedFinancialOperation,
+    processStripeEvent,
+    reconcileAccountPayoutHolds,
+    reconcilePayment,
+});
+const runProviderReconciliation = createRunProviderReconciliation({ executeProviderReconciliationRun });
 const executeSettlementRelease = createSettlementReleaseWorkflow({
     reconcilePayment,
     moveOperationToManualReview,
@@ -219,7 +211,6 @@ const configureSellerPayoutSchedule = createConfigureSellerPayoutSchedule({
     applyClaimedSellerRecoveryPayoutHold,
 });
 const stripeWebhookIngress = createStripeWebhookIngress({ insertStripeEventDurably });
-const processStripeEvent = createStripeEventProcessor({ applyStripeDispute, applyStripeRefund, reconcilePayment });
 
 serveStripeConnect({
     ...stripeWebhookIngress,
@@ -263,342 +254,6 @@ serveStripeConnect({
     requeueCommerceProjection,
     listFinancialOperations,
 });
-
-async function runProviderReconciliation(request: Request): Promise<Response> {
-    requireCmsRequest(request, { requireUser: false });
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, ["runKey", "limit"]);
-    const runKey = requiredString(body, "runKey", 200);
-    const limit = Math.min(optionalPositiveInteger(body, "limit") ?? 50, 200);
-    let run = await getRowByField<JsonRecord>("reconciliation_runs", "run_key", runKey, "*");
-    if (run && ["succeeded", "manual_review"].includes(String(run.status))) {
-        return json(await publicReconciliationRun(run, limit, `commerce:${runKey}`));
-    }
-    if (!run) {
-        run = await insertRow<JsonRecord>("reconciliation_runs", "*", { run_key: runKey, status: "running" });
-    }
-
-    let scanned = 0;
-    let repaired = 0;
-    let exceptions = 0;
-    let platformPayoutInterval = "unknown";
-    let platformPayoutMinimum = 0;
-    let platformRequiredMinimum = 0;
-    let remainingWorkBudget = limit;
-    try {
-        const [platformSettings, platformControl] = await Promise.all([
-            retrievePlatformBalanceSettings(),
-            getRowByField<PlatformPayoutControlRow>("platform_payout_controls", "control_key", "default", "*"),
-        ]);
-        if (!platformControl) {
-            throw new Error("platform payout control state is unavailable");
-        }
-        platformPayoutInterval =
-            stringAt(objectAt(objectAt(objectAt(platformSettings, "payments"), "payouts"), "schedule"), "interval") ||
-            "unknown";
-        platformPayoutMinimum =
-            numberAt(
-                objectAt(objectAt(objectAt(platformSettings, "payments"), "payouts"), "minimum_balance_by_currency"),
-                "eur",
-            ) ?? 0;
-        platformRequiredMinimum = Math.max(
-            platformControl.required_minimum_amount,
-            platformControl.provider_minimum_amount,
-        );
-        await resolveProviderException("platform-payout-settings-unavailable");
-        if (platformPayoutInterval !== protectedPlatformPayoutInterval) {
-            exceptions++;
-            await upsertProviderException("platform-payout-schedule-drift", {
-                exception_type: "platform_payout_schedule_drift",
-                severity: "critical",
-                status: "open",
-                message:
-                    "Stripe platform payout schedule is not the protected automatic schedule; new protected payments are blocked",
-                details: { platformPayoutInterval, providerSnapshot: platformSettings },
-            });
-        } else {
-            await resolveProviderException("platform-payout-schedule-drift");
-        }
-        if (platformPayoutMinimum < platformRequiredMinimum) {
-            exceptions++;
-            await upsertProviderException("platform-payout-minimum-drift", {
-                exception_type: "platform_payout_minimum_drift",
-                severity: "critical",
-                status: "open",
-                message: "Stripe platform minimum balance is below the monotonic protected liability requirement",
-                details: {
-                    platformPayoutMinimum,
-                    platformRequiredMinimum,
-                    liabilityRevision: platformControl.liability_revision,
-                },
-            });
-        } else {
-            await resolveProviderException("platform-payout-minimum-drift");
-        }
-    } catch (error) {
-        exceptions++;
-        await upsertProviderException("platform-payout-settings-unavailable", {
-            exception_type: "platform_payout_settings_unavailable",
-            severity: "critical",
-            status: "open",
-            message: errorMessage(error),
-            details: {},
-        }).catch(() => null);
-    }
-    // Keep one unit available for every later recovery queue. A permanent
-    // webhook backlog must never starve money-operation recovery, provider
-    // payment reconciliation, or payout-hold enforcement.
-    const eventBudget = Math.max(1, remainingWorkBudget - 4);
-    const events =
-        remainingWorkBudget > 0 ? await callRpcRows<JsonRecord>("claim_stripe_events", { p_limit: eventBudget }) : [];
-    remainingWorkBudget -= events.length;
-    for (const event of events) {
-        scanned++;
-        try {
-            const changed = await processStripeEvent(event);
-            if (changed) {
-                repaired++;
-            }
-            await updateRow("stripe_events", Number(event.id), {
-                processing_status: changed ? "processed" : "ignored",
-                processing_started_at: null,
-                processed_at: new Date().toISOString(),
-                last_error: null,
-            });
-        } catch (error) {
-            exceptions++;
-            await updateRow("stripe_events", Number(event.id), {
-                processing_status: Number(event.attempt_count ?? 0) >= 5 ? "manual_review" : "failed",
-                processing_started_at: null,
-                last_error: errorMessage(error),
-            });
-        }
-    }
-
-    const operationBudget = Math.max(1, remainingWorkBudget - 3);
-    const claimedOperations =
-        remainingWorkBudget > 0
-            ? await callRpcRows<FinancialOperationRow>("claim_financial_operations", { p_limit: operationBudget })
-            : [];
-    remainingWorkBudget -= claimedOperations.length;
-    for (const operation of claimedOperations) {
-        scanned++;
-        try {
-            if (await processClaimedFinancialOperation(operation)) {
-                repaired++;
-            }
-        } catch (error) {
-            exceptions++;
-            if (operation.payment_id) {
-                await moveOperationToManualReview(
-                    operation.payment_id,
-                    operation,
-                    error,
-                    "financial_operation_recovery_ambiguous",
-                );
-            } else {
-                await updateFinancialOperation(operation.id, {
-                    status: "manual_review",
-                    last_error: errorMessage(error),
-                }).catch(() => null);
-                await insertRow<JsonRecord>("provider_exceptions", "id", {
-                    operation_id: operation.id,
-                    exception_type: "account_or_platform_operation_recovery_ambiguous",
-                    severity: "critical",
-                    message: errorMessage(error),
-                    details: { businessKey: operation.business_key, operationType: operation.operation_type },
-                }).catch(() => null);
-            }
-        }
-    }
-    const stalePaymentBudget = Math.max(1, remainingWorkBudget - 2);
-    const stalePayments =
-        remainingWorkBudget > 0
-            ? await listRows<ConnectPaymentRow>(
-                  "payments?payment_status=in.(created,requires_action,processing,succeeded)" +
-                      `&select=${encodeURIComponent(paymentSelect)}` +
-                      `&order=last_provider_sync_at.asc.nullsfirst,updated_at.asc&limit=${stalePaymentBudget}`,
-              )
-            : [];
-    remainingWorkBudget -= stalePayments.length;
-    for (const payment of stalePayments) {
-        scanned++;
-        try {
-            const before = `${payment.payment_status}:${payment.stripe_charge_id ?? ""}:${payment.refunded_amount}`;
-            const reconciled = await reconcilePayment(payment);
-            const after = `${reconciled.payment_status}:${reconciled.stripe_charge_id ?? ""}:${reconciled.refunded_amount}`;
-            if (before !== after) {
-                repaired++;
-            }
-        } catch (error) {
-            exceptions++;
-            await markPaymentManualReview(payment.id, "stale provider payment reconciliation failed", {
-                error: errorMessage(error),
-            }).catch(() => null);
-        }
-    }
-    const sellerRiskBudget = Math.max(1, remainingWorkBudget - 1);
-    const sellerRiskAccounts =
-        remainingWorkBudget > 0
-            ? await listRows<ConnectAccountRow>(
-                  "accounts?or=(outstanding_debt_amount.gt.0,financial_exposure_amount.gt.0)" +
-                      `&select=${encodeURIComponent(accountSelect)}` +
-                      `&order=payout_hold_claimed_at.asc.nullsfirst,updated_at.asc&limit=${sellerRiskBudget}`,
-              )
-            : [];
-    remainingWorkBudget -= sellerRiskAccounts.length;
-    for (const account of sellerRiskAccounts) {
-        scanned++;
-        try {
-            await enforceSellerRecoveryPayoutHold(account.cms_user_id);
-        } catch (error) {
-            exceptions++;
-            await upsertProviderException(`seller-payout-hold-reconciliation:${account.cms_user_id}`, {
-                exception_type: "seller_payout_hold_reconciliation_failed",
-                severity: "critical",
-                message: errorMessage(error),
-                details: { userId: account.cms_user_id },
-            }).catch(() => null);
-        }
-    }
-    const manualPayoutHoldAccounts =
-        remainingWorkBudget > 0
-            ? await listRows<ConnectAccountRow>(
-                  "accounts?manual_payout_hold_deadline_at=not.is.null" +
-                      `&select=${encodeURIComponent(accountSelect)}` +
-                      `&order=manual_payout_hold_deadline_at.asc&limit=${remainingWorkBudget}`,
-              )
-            : [];
-    remainingWorkBudget -= manualPayoutHoldAccounts.length;
-    for (const account of manualPayoutHoldAccounts) {
-        scanned++;
-        const restorationRequired = account.outstanding_debt_amount + account.financial_exposure_amount === 0;
-        if (restorationRequired && (await restoreSellerAutomaticPayoutSchedule(account.cms_user_id))) {
-            repaired++;
-            await resolveProviderException(`seller-manual-payout-hold-drift:${account.cms_user_id}`);
-            await resolveProviderException(`seller-manual-payout-hold-alert:${account.cms_user_id}`);
-            await resolveProviderException(`seller-manual-payout-hold-deadline:${account.cms_user_id}`);
-            continue;
-        }
-        let accountHasException = restorationRequired;
-        if (restorationRequired) {
-            await updateAccountRow(account.cms_user_id, {
-                risk_status: "manual_review",
-                financial_hold_reason: "Automatic seller payout schedule restoration requires Finance review",
-            }).catch(() => null);
-        }
-        const exceptionDetails = {
-            userId: account.cms_user_id,
-            stripeAccountId: account.stripe_account_id,
-            manualPayoutHoldStartedAt: account.manual_payout_hold_started_at,
-            manualPayoutHoldAlertAt: account.manual_payout_hold_alert_at,
-            manualPayoutHoldDeadlineAt: account.manual_payout_hold_deadline_at,
-        };
-        const alertAt = Date.parse(account.manual_payout_hold_alert_at ?? "");
-        const deadlineAt = Date.parse(account.manual_payout_hold_deadline_at ?? "");
-        const now = Date.now();
-        let providerHoldConfirmed = false;
-        try {
-            if (!account.stripe_account_id || account.payout_schedule !== "manual") {
-                throw new Error("Emergency seller payout hold is not locally configured as manual");
-            }
-            const current = await retrieveConnectedBalanceSettings(account.stripe_account_id);
-            const payouts = objectAt(objectAt(current, "payments"), "payouts");
-            const providerInterval = stringAt(objectAt(payouts, "schedule"), "interval");
-            const providerMinimum = numberAt(objectAt(payouts, "minimum_balance_by_currency"), "eur") ?? 0;
-            const requiredMinimum = Math.max(
-                account.provider_hold_minimum_amount,
-                account.outstanding_debt_amount + account.financial_exposure_amount,
-            );
-            if (providerInterval !== "manual" || providerMinimum < requiredMinimum) {
-                throw new Error("Emergency seller payout hold drifted from the required provider controls");
-            }
-            providerHoldConfirmed = true;
-            await resolveProviderException(`seller-manual-payout-hold-drift:${account.cms_user_id}`);
-        } catch (error) {
-            accountHasException = true;
-            await updateAccountRow(account.cms_user_id, {
-                risk_status: "manual_review",
-                financial_hold_reason: "Emergency seller payout hold requires immediate finance review",
-            }).catch(() => null);
-            await upsertProviderException(`seller-manual-payout-hold-drift:${account.cms_user_id}`, {
-                exception_type: "seller_manual_payout_hold_drift",
-                severity: "critical",
-                message: errorMessage(error),
-                details: exceptionDetails,
-            }).catch(() => null);
-        }
-        if (!Number.isFinite(alertAt) || !Number.isFinite(deadlineAt) || alertAt >= deadlineAt) {
-            accountHasException = true;
-            await updateAccountRow(account.cms_user_id, {
-                risk_status: "manual_review",
-                financial_hold_reason: "Emergency seller payout hold deadline is invalid",
-            }).catch(() => null);
-            await upsertProviderException(`seller-manual-payout-hold-deadline:${account.cms_user_id}`, {
-                exception_type: "seller_manual_payout_hold_deadline_invalid",
-                severity: "critical",
-                message: "Emergency seller payout hold has no valid country deadline",
-                details: exceptionDetails,
-            }).catch(() => null);
-        } else if (now >= deadlineAt) {
-            accountHasException = true;
-            await updateAccountRow(account.cms_user_id, {
-                risk_status: "manual_review",
-                financial_hold_reason: "Emergency seller payout hold exceeded the French 90-day deadline",
-            }).catch(() => null);
-            await resolveProviderException(`seller-manual-payout-hold-alert:${account.cms_user_id}`);
-            await upsertProviderException(`seller-manual-payout-hold-deadline:${account.cms_user_id}`, {
-                exception_type: "seller_manual_payout_hold_deadline_exceeded",
-                severity: "critical",
-                message: "Emergency seller payout hold exceeded the French 90-day deadline",
-                details: { ...exceptionDetails, providerHoldConfirmed },
-            }).catch(() => null);
-        } else {
-            await resolveProviderException(`seller-manual-payout-hold-deadline:${account.cms_user_id}`);
-            if (now >= alertAt) {
-                accountHasException = true;
-                await upsertProviderException(`seller-manual-payout-hold-alert:${account.cms_user_id}`, {
-                    exception_type: "seller_manual_payout_hold_deadline_approaching",
-                    severity: "high",
-                    message: "Emergency seller payout hold is approaching the French 90-day deadline",
-                    details: { ...exceptionDetails, providerHoldConfirmed },
-                }).catch(() => null);
-            } else {
-                await resolveProviderException(`seller-manual-payout-hold-alert:${account.cms_user_id}`);
-            }
-        }
-        if (accountHasException) {
-            exceptions++;
-        }
-    }
-    run =
-        (await updateRow<JsonRecord>(
-            "reconciliation_runs",
-            Number(run.id),
-            {
-                status: exceptions ? "manual_review" : "succeeded",
-                scanned_count: scanned,
-                repaired_count: repaired,
-                exception_count: exceptions,
-                details: {
-                    stripeApiVersion: stripeV1ApiVersion,
-                    processedStripeEvents: events.length,
-                    recoveredFinancialOperations: claimedOperations.length,
-                    reconciledStalePayments: stalePayments.length,
-                    reconciledSellerRiskAccounts: sellerRiskAccounts.length,
-                    reconciledManualPayoutHolds: manualPayoutHoldAccounts.length,
-                    platformPayoutInterval,
-                    platformPayoutMinimum,
-                    platformRequiredMinimum,
-                    workBudgetLimit: limit,
-                    workBudgetConsumed: limit - remainingWorkBudget,
-                },
-                finished_at: new Date().toISOString(),
-            },
-            "*",
-        )) ?? run;
-    return json(await publicReconciliationRun(run, limit, `commerce:${runKey}`));
-}
 
 async function acknowledgeCommerceProjection(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
@@ -893,161 +548,6 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
         return true;
     }
     return false;
-}
-
-async function publicReconciliationRun(run: JsonRecord, limit: number, projectionOwner: string): Promise<JsonRecord> {
-    const operationReads = await readReconciliationOperations(limit);
-    const operations = operationReads.map((read) =>
-        publicFinancialOperation(
-            read.operation as unknown as FinancialOperationRow,
-            read.client_reference_id === null
-                ? null
-                : {
-                      client_reference_id: read.client_reference_id,
-                      currency: read.payment_currency ?? "",
-                  },
-        ),
-    );
-    const claimedReads = await claimReconciliationProjectionBatch(projectionOwner, limit);
-    const claimedPublic = claimedReads.map((read) => {
-        const projection = read.projection as unknown as CommerceProjectionOutboxRow;
-        const lease = {
-            projectionId: projection.id,
-            projectionClaimToken: projection.claim_token,
-            projectionAttemptCount: projection.attempt_count,
-            recoveryKey: projection.recovery_key,
-            causalSequence: projection.causal_sequence,
-        };
-        if (projection.projection_kind === "payment") {
-            if (!read.payment) {
-                throw new HttpError(404, "payment not found");
-            }
-            const payment = read.payment as unknown as ConnectPaymentRow;
-            return {
-                kind: "payment",
-                value: {
-                    ...publicPayment(payment),
-                    providerEventId: projection.projection_key,
-                    ...lease,
-                },
-            };
-        }
-        if (projection.projection_kind === "dispute") {
-            if (!read.dispute) {
-                throw new Error(`projection ${projection.id} has no Stripe dispute`);
-            }
-            if (read.dispute_client_reference_id === null) {
-                throw new HttpError(404, "payment not found");
-            }
-            const dispute = read.dispute as unknown as StripeDisputeRow;
-            return {
-                kind: "dispute",
-                value: {
-                    ...projectPublicDisputeWithContext(dispute, {
-                        clientReferenceId: read.dispute_client_reference_id,
-                        staged: read.staged_evidence,
-                        evidenceSubmissionCount: Number(read.evidence_submission_count),
-                        pendingApproval: read.pending_approval,
-                    }),
-                    providerEventId: projection.projection_key,
-                    ...lease,
-                },
-            };
-        }
-        if (!projection.operation_id) {
-            throw new Error(`projection ${projection.id} has no financial operation id`);
-        }
-        if (!read.financial_operation) {
-            throw new Error(`projection ${projection.id} has no financial operation`);
-        }
-        const operation = read.financial_operation as unknown as FinancialOperationRow;
-        const payment = read.operation_payment as unknown as ConnectPaymentRow | null;
-        const publicOperation = publicCommerceOperation(publicFinancialOperation(operation, payment));
-        if (!publicOperation) {
-            return null;
-        }
-        if (projection.projection_kind === "refund") {
-            const payload = projection.projection_payload ?? {};
-            return {
-                kind: "operation",
-                value: {
-                    ...publicOperation,
-                    providerEventId: projection.projection_key,
-                    status: stringAt(payload, "status") || publicOperation.status,
-                    refundRequestId: payload.refundRequestId ?? publicOperation.refundRequestId,
-                    commerceRefundRequestId: payload.commerceRefundRequestId ?? publicOperation.commerceRefundRequestId,
-                    providerSnapshot: objectAt(payload, "providerSnapshot"),
-                    occurredAt: payload.occurredAt ?? publicOperation.occurredAt,
-                    ...lease,
-                },
-            };
-        }
-        return {
-            kind: "operation",
-            value: {
-                ...publicOperation,
-                providerEventId: projection.projection_key,
-                ...lease,
-            },
-        };
-    });
-    const paymentProjections = claimedPublic
-        .filter((entry): entry is { kind: string; value: JsonRecord } => entry?.kind === "payment")
-        .map((entry) => entry.value);
-    const commerceOperations = claimedPublic
-        .filter((entry): entry is { kind: string; value: JsonRecord } => entry?.kind === "operation")
-        .map((entry) => entry.value);
-    const disputeProjections = claimedPublic
-        .filter((entry): entry is { kind: string; value: JsonRecord } => entry?.kind === "dispute")
-        .map((entry) => entry.value);
-    return {
-        runId: run.id,
-        runKey: run.run_key,
-        status: run.status,
-        scannedCount: run.scanned_count,
-        repairedCount: run.repaired_count,
-        exceptionCount: run.exception_count,
-        details: run.details,
-        startedAt: run.started_at,
-        finishedAt: run.finished_at,
-        payments: paymentProjections,
-        operations,
-        commerceOperations,
-        disputes: disputeProjections,
-    };
-}
-
-function publicCommerceOperation(operation: JsonRecord): JsonRecord | null {
-    const rawType = stringAt(operation, "operationType");
-    const operationType =
-        rawType === "transfer_create"
-            ? "transfer"
-            : rawType === "transfer_reversal_create"
-              ? "reversal"
-              : rawType === "refund_create"
-                ? "refund"
-                : null;
-    if (!operationType) {
-        return null;
-    }
-    return stripUndefined({
-        orderPublicId: operation.clientReferenceId ?? null,
-        paymentId: operation.paymentId ?? null,
-        providerPaymentId: operation.providerPaymentId ?? null,
-        providerOperationId: operation.providerOperationId,
-        providerEventId: operation.providerEventId,
-        operationType,
-        status: operation.status,
-        amount: operation.amount,
-        currency: operation.currency,
-        releaseAuthorizationId: operation.releaseAuthorizationId ?? undefined,
-        refundRequestId: operation.refundRequestId ?? undefined,
-        commerceRefundRequestId: operation.commerceRefundRequestId ?? undefined,
-        providerSnapshot: operation.response ?? {},
-        occurredAt: operation.occurredAt,
-        createdAt: operation.createdAt,
-        updatedAt: operation.updatedAt,
-    });
 }
 
 async function requiredPayment(paymentId: number): Promise<ConnectPaymentRow> {

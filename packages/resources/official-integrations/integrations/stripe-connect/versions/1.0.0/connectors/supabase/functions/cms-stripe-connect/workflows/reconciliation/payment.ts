@@ -1,10 +1,12 @@
+import { listRows } from "../../db/postgrest.ts";
 import { readPaymentReconciliationLocalContext, readPaymentReconciliationLedger } from "../../db/reconciliation.ts";
 import { updatePayment } from "../../db/repositories/payments.ts";
 import { markPaymentManualReview } from "../../db/repositories/payout-controls.ts";
-import type { ConnectPaymentRow } from "../../db/records/payments.ts";
+import { paymentSelect, type ConnectPaymentRow } from "../../db/records/payments.ts";
 import type { RefundRow } from "../../db/records/refunds.ts";
 import { HttpError } from "../../http/errors.ts";
 import { retrieveStripeRefundSnapshot } from "../../provider/refunds.ts";
+import { errorMessage } from "../../shared/data.ts";
 import { syncPayment } from "../payments/projection.ts";
 import type { ApplyStripeRefund } from "../refunds/projection.ts";
 import type { ReconcileProviderObject } from "./provider-objects.ts";
@@ -18,6 +20,54 @@ type PaymentReconciliationDependencies = {
 };
 
 export type ReconcilePayment = (payment: ConnectPaymentRow) => Promise<ConnectPaymentRow>;
+
+export type StalePaymentReconciliation = {
+    remainingWorkBudget: number;
+    scanned: number;
+    repaired: number;
+    exceptions: number;
+    reconciledStalePayments: number;
+};
+
+export async function reconcileStalePayments(
+    remainingWorkBudget: number,
+    reconcilePayment: ReconcilePayment,
+): Promise<StalePaymentReconciliation> {
+    let repaired = 0;
+    let exceptions = 0;
+    const stalePaymentBudget = Math.max(1, remainingWorkBudget - 2);
+    const stalePayments =
+        remainingWorkBudget > 0
+            ? await listRows<ConnectPaymentRow>(
+                  "payments?payment_status=in.(created,requires_action,processing,succeeded)" +
+                      `&select=${encodeURIComponent(paymentSelect)}` +
+                      `&order=last_provider_sync_at.asc.nullsfirst,updated_at.asc&limit=${stalePaymentBudget}`,
+              )
+            : [];
+    remainingWorkBudget -= stalePayments.length;
+    for (const payment of stalePayments) {
+        try {
+            const before = `${payment.payment_status}:${payment.stripe_charge_id ?? ""}:${payment.refunded_amount}`;
+            const reconciled = await reconcilePayment(payment);
+            const after = `${reconciled.payment_status}:${reconciled.stripe_charge_id ?? ""}:${reconciled.refunded_amount}`;
+            if (before !== after) {
+                repaired++;
+            }
+        } catch (error) {
+            exceptions++;
+            await markPaymentManualReview(payment.id, "stale provider payment reconciliation failed", {
+                error: errorMessage(error),
+            }).catch(() => null);
+        }
+    }
+    return {
+        remainingWorkBudget,
+        scanned: stalePayments.length,
+        repaired,
+        exceptions,
+        reconciledStalePayments: stalePayments.length,
+    };
+}
 
 export function createPaymentReconciliationWorkflow({
     applyStripeRefund,
