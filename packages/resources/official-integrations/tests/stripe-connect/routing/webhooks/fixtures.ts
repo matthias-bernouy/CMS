@@ -46,3 +46,32 @@ export function baseEvent(eventId: string, created: number | string): Record<str
         data: { object: { id: "object_contract" } },
     };
 }
+
+export function payoutEventPayload(options: {
+    eventId: string;
+    payoutId: string;
+    accountId?: string;
+    eventType?: string;
+    status?: string;
+    automatic?: boolean;
+    method: "standard" | "instant";
+}): string {
+    return JSON.stringify({
+        id: options.eventId,
+        type: options.eventType ?? "payout.created",
+        ...(options.accountId ? { account: options.accountId } : {}),
+        api_version: "2026-02-25.clover",
+        created: Math.floor(Date.now() / 1000),
+        livemode: false,
+        data: {
+            object: {
+                id: options.payoutId,
+                amount: 1000,
+                currency: "eur",
+                status: options.status ?? "pending",
+                ...(options.automatic === undefined ? {} : { automatic: options.automatic }),
+                method: options.method,
+            },
+        },
+    });
+}
