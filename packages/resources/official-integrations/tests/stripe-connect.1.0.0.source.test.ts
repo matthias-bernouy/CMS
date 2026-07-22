@@ -42,6 +42,7 @@ import { registerProtectedRefundSellerRecoveryContracts } from "./stripe-connect
 import { registerProtectedRefundSuccessContracts } from "./stripe-connect/provider-boundary/protected-refund/success/contracts";
 import { registerProtectedRefundProjectionInterleavingContracts } from "./stripe-connect/provider-boundary/protected-refund/success/projection-interleavings.contracts";
 import { registerProtectedRefundProjectionStatusContracts } from "./stripe-connect/provider-boundary/protected-refund/success/projection-statuses.contracts";
+import { registerProtectedRefundPreflightInterleavingContracts } from "./stripe-connect/provider-boundary/protected-refund/success/preflight-interleavings.contracts";
 import { registerProtectedRefundValidationContracts } from "./stripe-connect/provider-boundary/protected-refund/validations.contracts";
 import { registerTransferReversalFailureContracts } from "./stripe-connect/provider-boundary/transfer-reversal/failures.contracts";
 import { registerTransferReversalRecoveryContracts } from "./stripe-connect/provider-boundary/transfer-reversal/recovery.contracts";
@@ -10470,6 +10471,7 @@ registerProtectedRefundSellerRecoveryContracts(createProviderBoundaryHarness);
 registerProtectedRefundSuccessContracts(createProviderBoundaryHarness);
 registerProtectedRefundProjectionInterleavingContracts(createProviderBoundaryHarness);
 registerProtectedRefundProjectionStatusContracts(createProviderBoundaryHarness);
+registerProtectedRefundPreflightInterleavingContracts(createProviderBoundaryHarness);
 registerProtectedRefundValidationContracts(createProviderBoundaryHarness);
 registerTransferReversalFailureContracts(createProviderBoundaryHarness);
 registerTransferReversalRecoveryContracts(createProviderBoundaryHarness);
