@@ -2,7 +2,7 @@ import type { IdentityService } from "@bernouy/cms-identities";
 import { handleSourceRequest, type SourceRepository } from "@bernouy/cms-sources";
 import { sourcePrefix } from "./constants";
 
-type SourceRequestHarness = {
+export type SourceRequestHarness = {
     sources: SourceRepository;
     sourceFetch: typeof fetch;
     resolveSecret(ref: string): Promise<string | undefined>;
