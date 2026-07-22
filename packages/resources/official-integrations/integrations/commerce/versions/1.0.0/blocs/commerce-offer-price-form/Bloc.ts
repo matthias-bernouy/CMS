@@ -51,9 +51,7 @@ export class CommerceOfferPriceForm extends Composition {
         "privacy-notice",
         "privacy-url",
         "profile-error-message",
-        "profile-link-label",
         "profile-summary",
-        "profile-url",
         "range-error-message",
         "range-label",
         "range-message",
@@ -553,8 +551,6 @@ export class CommerceOfferPriceForm extends Composition {
             "profile-summary",
             "Seules les informations manquantes sont demandées ici. Les autres sont reprises depuis ton profil.",
         );
-        this.profileLink.textContent = this.text("profile-link-label", "Modifier mes informations");
-        this.profileLink.setAttribute("href", this.getAttribute("profile-url") || "/mon-espace/profil");
         this.setProfileLabel("givenName", "first-name-label", "Prénom");
         this.setProfileLabel("surname", "last-name-label", "Nom");
         this.setProfileLabel("birthDate", "birth-date-label", "Date de naissance");
@@ -613,7 +609,7 @@ export class CommerceOfferPriceForm extends Composition {
         for (const element of [this.amount, ...this.profileControls]) {
             copyColors(this, element, "field");
         }
-        for (const element of [this.submit, this.profileLink, this.back, this.successLink, this.technicalRetry]) {
+        for (const element of [this.submit, this.back, this.successLink, this.technicalRetry]) {
             copyColors(this, element, "button");
         }
     }
@@ -813,9 +809,6 @@ export class CommerceOfferPriceForm extends Composition {
     }
     get profileSummary() {
         return this.querySelector("[data-profile-summary]");
-    }
-    get profileLink() {
-        return this.querySelector("[data-profile-link]");
     }
     get profileValidation() {
         return this.querySelector("[data-profile-validation]");

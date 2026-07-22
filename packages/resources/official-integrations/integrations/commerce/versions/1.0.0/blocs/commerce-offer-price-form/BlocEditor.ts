@@ -77,12 +77,6 @@ export class CommerceOfferPriceFormEditor extends Editor {
                         defaultValue:
                             "Seules les informations manquantes sont demandées ici. Les autres sont reprises depuis ton profil.",
                     },
-                    {
-                        type: "text",
-                        label: "Profile link label",
-                        attribute: "profile-link-label",
-                        defaultValue: "Modifier mes informations",
-                    },
                     { type: "text", label: "First name label", attribute: "first-name-label", defaultValue: "Prénom" },
                     { type: "text", label: "Last name label", attribute: "last-name-label", defaultValue: "Nom" },
                     {
@@ -298,7 +292,6 @@ export class CommerceOfferPriceFormEditor extends Editor {
                         label: "Privacy notice page (replace placeholder before production)",
                         attribute: "privacy-url",
                     },
-                    { type: "page-link", label: "Profile page", attribute: "profile-url" },
                     { type: "page-link", label: "Success page", attribute: "success-url" },
                     { type: "text", label: "Locale", attribute: "locale", defaultValue: "fr-FR" },
                 ],

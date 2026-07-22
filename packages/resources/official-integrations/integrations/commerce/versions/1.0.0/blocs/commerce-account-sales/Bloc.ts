@@ -1,7 +1,7 @@
 import { Component } from "@bernouy/components/base";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
-import { errorMessage, positiveInteger, saleStatusDefaults, saleStatuses } from "./helpers";
+import { errorMessage, positiveInteger, saleFilterDefaults, saleStatusDefaults, saleStatuses } from "./helpers";
 import { copyColors, renderSale } from "./render";
 
 export class CommerceAccountSales extends Component {
@@ -37,6 +37,7 @@ export class CommerceAccountSales extends Component {
             ["text", "background", "border", "accent"].map((name) => `${prefix}-${name}-color`),
         ),
         ...saleStatuses.map((status) => `label-${status}`),
+        ...saleStatuses.map((status) => `filter-label-${status}`),
     ];
 
     constructor() {
@@ -150,7 +151,7 @@ export class CommerceAccountSales extends Component {
         copyColors(this, this.empty, "card");
         copyColors(this, this.error, "card");
         for (const option of this.filter.querySelectorAll("basic-option")) {
-            option.textContent = this.statusLabel(option.getAttribute("value"));
+            option.textContent = this.filterLabel(option.getAttribute("value"));
         }
         this.empty.querySelector("[data-empty-title]").textContent =
             this.getAttribute("empty-title") || "Aucune vente pour le moment";
@@ -159,7 +160,10 @@ export class CommerceAccountSales extends Component {
     }
 
     statusLabel(status) {
-        return this.getAttribute(`label-${status}`) || saleStatusDefaults[status] || "Statut indisponible";
+        return this.getAttribute(`label-${status}`) || saleStatusDefaults[status] || "À vérifier";
+    }
+    filterLabel(status) {
+        return this.getAttribute(`filter-label-${status}`) || saleFilterDefaults[status] || this.statusLabel(status);
     }
     readUrl() {
         if (this.getAttribute("sync-url") === "false") {

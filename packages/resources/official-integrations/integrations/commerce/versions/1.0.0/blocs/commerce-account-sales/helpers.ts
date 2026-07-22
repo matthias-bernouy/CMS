@@ -1,12 +1,46 @@
-export const saleStatuses = ["all", "placed", "completed", "cancelled", "archived"];
+export const saleStatuses = [
+    "all",
+    "awaiting_quote",
+    "awaiting_payment",
+    "active",
+    "completed",
+    "cancellation_pending",
+    "cancelled",
+    "expired",
+];
 
 export const saleStatusDefaults = {
-    all: "Toutes",
-    placed: "À traiter",
-    completed: "Terminées",
-    cancelled: "Annulées",
-    archived: "Archivées",
+    awaiting_quote: "Livraison à finaliser",
+    awaiting_payment: "Paiement en attente",
+    active: "À expédier",
+    completed: "Terminée",
+    cancellation_pending: "Annulation en cours",
+    cancelled: "Annulée",
+    expired: "Expirée",
 };
+
+export const saleFilterDefaults = {
+    all: "Toutes",
+    awaiting_quote: "Livraison à finaliser",
+    awaiting_payment: "Paiement en attente",
+    active: "À expédier",
+    completed: "Terminées",
+    cancellation_pending: "Annulation en cours",
+    cancelled: "Annulées",
+    expired: "Expirées",
+};
+
+export function lineSummaryLabel(value) {
+    const summary = value?.lineSummary;
+    const title = typeof summary?.firstTitle === "string" ? summary.firstTitle.trim() : "";
+    if (!title) {
+        return "";
+    }
+    const lineCount = Number(summary?.lineCount);
+    return Number.isSafeInteger(lineCount) && lineCount > 1
+        ? `${title} + ${lineCount - 1} autre${lineCount > 2 ? "s" : ""}`
+        : title;
+}
 
 export function positiveInteger(value, fallback) {
     const parsed = Number(value);

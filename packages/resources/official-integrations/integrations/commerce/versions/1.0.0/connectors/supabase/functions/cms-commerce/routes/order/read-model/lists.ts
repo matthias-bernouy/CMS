@@ -8,7 +8,7 @@ import {
     parsePublicOrderMetadataDefinitions,
     type PublicOrderMetadataDefinition,
 } from "../../../core/order-metadata.ts";
-import { projectOrderListItem, projectSale } from "./projections.ts";
+import { projectOrderListItem, projectSaleListItem } from "./projections.ts";
 
 type ListScope = "buyer" | "seller" | "admin";
 type ListEnvelope = {
@@ -47,7 +47,7 @@ async function listOrderReadModel(request: Request, scope: ListScope): Promise<R
     const operationByOrder = new Map(envelope.operations.map((operation) => [String(operation.order_id), operation]));
     const items =
         scope === "seller"
-            ? envelope.orders.map((row) => projectSale(row, envelope.definitions))
+            ? envelope.orders.map((row) => projectSaleListItem(row, envelope.definitions))
             : envelope.orders.map((row) =>
                   projectOrderListItem(
                       row,

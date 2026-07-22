@@ -15221,6 +15221,14 @@ begin
             from filtered
             order by filtered.created_at desc, filtered.id desc
             limit v_limit offset v_offset
+        ), line_summaries as materialized (
+            select order_line.order_id,
+                (array_agg(order_line.title order by order_line.id))[1] as first_title,
+                count(*) as line_count,
+                coalesce(sum(order_line.quantity), 0) as total_quantity
+            from commerce.order_lines order_line
+            join page on page.id = order_line.order_id
+            group by order_line.order_id
         )
         select jsonb_build_object(
             'state', 'ok',
@@ -15229,6 +15237,11 @@ begin
                     'id', order_row.id,
                     'public_id', order_row.public_id,
                     'order_number', order_row.order_number,
+                    'line_summary', jsonb_build_object(
+                        'first_title', line_summary.first_title,
+                        'line_count', coalesce(line_summary.line_count, 0),
+                        'total_quantity', coalesce(line_summary.total_quantity, 0)
+                    ),
                     'checkout_group_id', order_row.checkout_group_id,
                     'seller_id', order_row.seller_id,
                     'buyer_cms_user_id', order_row.buyer_cms_user_id,
@@ -15247,7 +15260,9 @@ begin
                     'created_at', order_row.created_at,
                     'updated_at', order_row.updated_at
                 ) order by page.created_at desc, page.id desc)
-                from page join commerce.orders order_row on order_row.id = page.id
+                from page
+                join commerce.orders order_row on order_row.id = page.id
+                left join line_summaries line_summary on line_summary.order_id = page.id
             ), '[]'::jsonb),
             'operations', coalesce((
                 select jsonb_agg(jsonb_build_object(
@@ -15288,6 +15303,14 @@ begin
             from filtered
             order by filtered.created_at desc, filtered.id desc
             limit v_limit offset v_offset
+        ), line_summaries as materialized (
+            select order_line.order_id,
+                (array_agg(order_line.title order by order_line.id))[1] as first_title,
+                count(*) as line_count,
+                coalesce(sum(order_line.quantity), 0) as total_quantity
+            from commerce.order_lines order_line
+            join page on page.id = order_line.order_id
+            group by order_line.order_id
         )
         select jsonb_build_object(
             'state', 'ok',
@@ -15296,6 +15319,11 @@ begin
                     'id', order_row.id,
                     'public_id', order_row.public_id,
                     'order_number', order_row.order_number,
+                    'line_summary', jsonb_build_object(
+                        'first_title', line_summary.first_title,
+                        'line_count', coalesce(line_summary.line_count, 0),
+                        'total_quantity', coalesce(line_summary.total_quantity, 0)
+                    ),
                     'checkout_group_id', order_row.checkout_group_id,
                     'status', order_row.status,
                     'currency', order_row.currency,
@@ -15308,7 +15336,9 @@ begin
                     'created_at', order_row.created_at,
                     'updated_at', order_row.updated_at
                 ) order by page.created_at desc, page.id desc)
-                from page join commerce.orders order_row on order_row.id = page.id
+                from page
+                join commerce.orders order_row on order_row.id = page.id
+                left join line_summaries line_summary on line_summary.order_id = page.id
             ), '[]'::jsonb),
             'operations', '[]'::jsonb,
             'definitions', coalesce((
@@ -15336,6 +15366,14 @@ begin
             from filtered
             order by filtered.created_at desc, filtered.id desc
             limit v_limit offset v_offset
+        ), line_summaries as materialized (
+            select order_line.order_id,
+                (array_agg(order_line.title order by order_line.id))[1] as first_title,
+                count(*) as line_count,
+                coalesce(sum(order_line.quantity), 0) as total_quantity
+            from commerce.order_lines order_line
+            join page on page.id = order_line.order_id
+            group by order_line.order_id
         )
         select jsonb_build_object(
             'state', 'ok',
@@ -15344,6 +15382,11 @@ begin
                     'id', order_row.id,
                     'public_id', order_row.public_id,
                     'order_number', order_row.order_number,
+                    'line_summary', jsonb_build_object(
+                        'first_title', line_summary.first_title,
+                        'line_count', coalesce(line_summary.line_count, 0),
+                        'total_quantity', coalesce(line_summary.total_quantity, 0)
+                    ),
                     'checkout_group_id', order_row.checkout_group_id,
                     'seller_id', order_row.seller_id,
                     'buyer_cms_user_id', order_row.buyer_cms_user_id,
@@ -15362,7 +15405,9 @@ begin
                     'created_at', order_row.created_at,
                     'updated_at', order_row.updated_at
                 ) order by page.created_at desc, page.id desc)
-                from page join commerce.orders order_row on order_row.id = page.id
+                from page
+                join commerce.orders order_row on order_row.id = page.id
+                left join line_summaries line_summary on line_summary.order_id = page.id
             ), '[]'::jsonb),
             'operations', coalesce((
                 select jsonb_agg(jsonb_build_object(

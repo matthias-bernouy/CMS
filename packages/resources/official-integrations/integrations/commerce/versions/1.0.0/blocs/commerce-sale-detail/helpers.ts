@@ -1,5 +1,6 @@
 export const saleStatusDefaults = {
     placed: "À traiter",
+    awaiting_quote: "Livraison à finaliser",
     awaiting_payment: "Paiement en attente",
     active: "À expédier",
     seller_handoff_declared: "Dépôt déclaré",

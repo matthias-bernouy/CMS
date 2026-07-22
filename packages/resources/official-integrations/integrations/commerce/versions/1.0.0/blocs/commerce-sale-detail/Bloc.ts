@@ -147,7 +147,7 @@ export class CommerceSaleDetail extends Component {
         this.load();
     };
     statusLabel(status) {
-        return this.getAttribute(`label-${status}`) || saleStatusDefaults[status] || "Statut indisponible";
+        return this.getAttribute(`label-${status}`) || saleStatusDefaults[status] || "À vérifier";
     }
     text(attribute, fallback) {
         return this.getAttribute(attribute)?.trim() || fallback;

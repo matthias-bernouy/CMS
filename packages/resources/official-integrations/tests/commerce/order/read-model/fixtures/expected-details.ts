@@ -17,9 +17,11 @@ import {
 } from "./expected-parts";
 
 const seller = { id: 17, kind: "user", slug: "seller-17", displayName: "Seller 17" };
+const { lineSummary: _buyerListSummary, ...expectedFirstAdminDetailOrder } = expectedFirstAdminOrder;
+const { lineSummary: _sellerListSummary, ...expectedFirstSellerDetailOrder } = expectedSellerList.items[0];
 
 export const expectedBuyerDetail = {
-    ...expectedFirstAdminOrder,
+    ...expectedFirstAdminDetailOrder,
     metadata: expectedFirstPublicMetadata,
     metadataEntries: expectedFirstEntries,
     lines: expectedAdminLines,
@@ -33,7 +35,7 @@ export const expectedBuyerDetail = {
 };
 
 export const expectedAdminDetail = {
-    ...expectedFirstAdminOrder,
+    ...expectedFirstAdminDetailOrder,
     metadata: { publicNote: "Ring twice", weight: 305, insured: true, internalRisk: "high" },
     lines: expectedAdminLines,
     events: expectedAdminEvents,
@@ -46,7 +48,7 @@ export const expectedAdminDetail = {
 };
 
 export const expectedSellerDetail = {
-    ...expectedSellerList.items[0],
+    ...expectedFirstSellerDetailOrder,
     operation: {
         orderId: 42,
         orderPublicId: "00000000-0000-4000-8000-000000000042",

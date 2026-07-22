@@ -40,6 +40,46 @@ export const saleFields = [
     "createdAt",
     "updatedAt",
 ] as const;
+const orderListFields = [
+    "id",
+    "publicId",
+    "orderNumber",
+    "lineSummary",
+    "checkoutGroupId",
+    "sellerId",
+    "buyerCmsUserId",
+    "status",
+    "currency",
+    "subtotalAmount",
+    "shippingAmount",
+    "deliveryQuotedAt",
+    "totalAmount",
+    "shippingAddress",
+    "billingAddress",
+    "metadata",
+    "idempotencyKey",
+    "archivedAt",
+    "version",
+    "createdAt",
+    "updatedAt",
+] as const;
+const saleListFields = [
+    "id",
+    "publicId",
+    "orderNumber",
+    "lineSummary",
+    "checkoutGroupId",
+    "status",
+    "currency",
+    "subtotalAmount",
+    "shippingAmount",
+    "deliveryQuotedAt",
+    "totalAmount",
+    "metadata",
+    "version",
+    "createdAt",
+    "updatedAt",
+] as const;
 const operationListFields = [
     "orderId",
     "paymentStatus",
@@ -57,7 +97,7 @@ export function projectOrderListItem(
     publicMetadata: boolean,
 ): JsonRecord {
     const item = {
-        ...safeRecord(row, orderFields),
+        ...safeRecord(row, orderListFields),
         operation: safeOptional(operation, operationListFields),
     };
     return publicMetadata ? withPublicOrderMetadata(item, definitions) : item;
@@ -65,6 +105,13 @@ export function projectOrderListItem(
 
 export function projectSale(row: JsonRecord, definitions: readonly PublicOrderMetadataDefinition[]): JsonRecord {
     return withPublicOrderMetadata(safeRecord(row, saleFields), definitions);
+}
+
+export function projectSaleListItem(
+    row: JsonRecord,
+    definitions: readonly PublicOrderMetadataDefinition[],
+): JsonRecord {
+    return withPublicOrderMetadata(safeRecord(row, saleListFields), definitions);
 }
 
 export function safeRecord(row: JsonRecord, fields: readonly string[]): JsonRecord {

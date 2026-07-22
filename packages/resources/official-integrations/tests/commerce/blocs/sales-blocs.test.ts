@@ -5,7 +5,11 @@ import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { declaredBlocViewSources } from "../../helpers/blocArtifactSource";
 import {
     formatMoney as formatListMoney,
+    lineSummaryLabel,
+    saleFilterDefaults,
     saleDetailUrl,
+    saleStatusDefaults as listSaleStatusDefaults,
+    saleStatuses,
 } from "../../../integrations/commerce/versions/1.0.0/blocs/commerce-account-sales/helpers";
 import {
     conditionLabel,
@@ -28,6 +32,29 @@ describe("Commerce seller blocs", () => {
         expect(formatListMoney(11450, "eur", "fr-FR")).toBe("114,50 €");
         expect(saleDetailUrl("/account/sale", { id: 42 }, "orderId")).toBe("/account/sale?orderId=42");
         expect(saleDetailUrl("/sales/{publicId}", { publicId: "order / 42" })).toBe("/sales/order%20%2F%2042");
+        expect(
+            lineSummaryLabel({
+                lineSummary: { firstTitle: "Wilson Blade 98", lineCount: 1, totalQuantity: 1 },
+            }),
+        ).toBe("Wilson Blade 98");
+        expect(
+            lineSummaryLabel({
+                lineSummary: { firstTitle: "Wilson Blade 98", lineCount: 3, totalQuantity: 4 },
+            }),
+        ).toBe("Wilson Blade 98 + 2 autres");
+        expect(lineSummaryLabel({ lineSummary: { firstTitle: null, lineCount: 0 } })).toBe("");
+        expect(saleStatuses).toEqual([
+            "all",
+            "awaiting_quote",
+            "awaiting_payment",
+            "active",
+            "completed",
+            "cancellation_pending",
+            "cancelled",
+            "expired",
+        ]);
+        expect(listSaleStatusDefaults.active).toBe("À expédier");
+        expect(saleFilterDefaults.completed).toBe("Terminées");
         expect(shippingAmount({ shippingAmount: 450 })).toBe(450);
         expect(shippingAmount({ shippingAmount: 999, financialTerms: { shippingAmount: 450 } })).toBe(450);
         expect(Number.isNaN(shippingAmount({ subtotalAmount: 11000, totalAmount: 12070 }))).toBe(true);

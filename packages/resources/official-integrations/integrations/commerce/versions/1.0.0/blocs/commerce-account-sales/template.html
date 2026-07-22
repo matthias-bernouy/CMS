@@ -2,10 +2,13 @@
     <basic-stack gap="lg">
         <basic-select data-status-filter accessible-label="Filtrer les ventes par statut" value="all">
             <basic-option value="all">Toutes</basic-option>
-            <basic-option value="placed">À traiter</basic-option>
+            <basic-option value="awaiting_quote">Livraison à finaliser</basic-option>
+            <basic-option value="awaiting_payment">Paiement en attente</basic-option>
+            <basic-option value="active">À expédier</basic-option>
             <basic-option value="completed">Terminées</basic-option>
+            <basic-option value="cancellation_pending">Annulation en cours</basic-option>
             <basic-option value="cancelled">Annulées</basic-option>
-            <basic-option value="archived">Archivées</basic-option>
+            <basic-option value="expired">Expirées</basic-option>
         </basic-select>
 
         <basic-stack data-loading gap="sm">

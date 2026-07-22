@@ -7,7 +7,8 @@ h2 { margin: 0; font: inherit; font-size: clamp(1.35rem, 3vw, 1.8rem); font-weig
 .muted, .line-meta { color: var(--commerce-sale-muted, var(--text-muted)); }
 .status { padding: .4rem .7rem; border-radius: 999px; color: var(--commerce-sale-status-text, var(--secondary-contrasted)); background: var(--commerce-sale-status-background, var(--secondary-base)); font-size: .85rem; font-weight: 700; white-space: nowrap; }
 .status[data-status="completed"] { background: var(--commerce-sale-success, var(--success-base, #287a4d)); }
-.status[data-status="cancelled"] { background: var(--commerce-sale-danger, var(--danger-base, #b42318)); }
+.status[data-status="cancelled"],
+.status[data-status="expired"] { background: var(--commerce-sale-danger, var(--danger-base, #b42318)); }
 .status[data-status="archived"] { background: var(--commerce-sale-muted-status, var(--text-muted)); }
 .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(16rem, .65fr); gap: 1.25rem; align-items: start; }
 aside { position: sticky; top: 1rem; }

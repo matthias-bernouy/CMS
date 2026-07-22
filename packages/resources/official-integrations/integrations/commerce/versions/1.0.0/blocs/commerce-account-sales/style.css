@@ -24,8 +24,8 @@
     white-space: nowrap;
 }
 .sale-status[data-status="completed"] { background: var(--commerce-sales-success, var(--success-base, #287a4d)); }
-.sale-status[data-status="cancelled"] { background: var(--commerce-sales-danger, var(--danger-base, #b42318)); }
-.sale-status[data-status="archived"] { background: var(--commerce-sales-muted-status, var(--text-muted)); }
+.sale-status[data-status="cancelled"],
+.sale-status[data-status="expired"] { background: var(--commerce-sales-danger, var(--danger-base, #b42318)); }
 
 [hidden] { display: none !important; }
 

@@ -5,6 +5,7 @@ const buyerListFields = [
     "id",
     "publicId",
     "orderNumber",
+    "lineSummary",
     "checkoutGroupId",
     "sellerId",
     "buyerCmsUserId",
@@ -23,6 +24,26 @@ const buyerListFields = [
     "operation",
 ] as const;
 const adminListFields = [
+    "id",
+    "publicId",
+    "orderNumber",
+    "lineSummary",
+    "checkoutGroupId",
+    "sellerId",
+    "buyerCmsUserId",
+    "status",
+    "currency",
+    "subtotalAmount",
+    "totalAmount",
+    "shippingAddress",
+    "billingAddress",
+    "metadata",
+    "idempotencyKey",
+    "version",
+    "createdAt",
+    "updatedAt",
+] as const;
+const adminDetailFields = [
     "id",
     "publicId",
     "orderNumber",
@@ -112,7 +133,7 @@ export const expectedSellerSourceDetail = {
     financialTerms: expectedSellerDetail.financialTerms,
 };
 export const expectedAdminSourceDetail = pick(expectedAdminDetail, [
-    ...adminListFields,
+    ...adminDetailFields,
     "lines",
     "events",
     "seller",

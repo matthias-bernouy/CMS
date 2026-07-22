@@ -1,9 +1,7 @@
 \set ON_ERROR_STOP on
-
 begin;
 set local role service_role;
 \ir baseline.fixture.sql
-
 insert into commerce.custom_field_definitions (
     entity_type, key, label, field_type, unit, public_readable, position, enabled
 ) values
@@ -11,6 +9,8 @@ insert into commerce.custom_field_definitions (
     ('order', 'publicA', 'Public A', 'number', 'g', true, 5, true),
     ('order', 'privateField', 'Private', 'string', null, false, 1, true),
     ('order', 'disabledField', 'Disabled', 'string', null, true, 1, false);
+
+\ir line-summary.fixture.sql
 
 do $$
 declare
@@ -37,6 +37,16 @@ begin
             <> array['ORDER-READ-42', 'ORDER-READ-41'] then
         raise exception 'order list smoke: seller ownership/order changed: %', v_seller;
     end if;
+    if v_buyer->'orders'->0->'line_summary' <> jsonb_build_object(
+            'first_title', 'Baseline line A', 'line_count', 2, 'total_quantity', 3
+        )
+        or v_seller->'orders'->0->'line_summary' <> v_buyer->'orders'->0->'line_summary'
+        or v_admin->'orders'->1->'line_summary' <> v_buyer->'orders'->0->'line_summary'
+        or v_buyer->'orders'->1->'line_summary' <> jsonb_build_object(
+            'first_title', null, 'line_count', 0, 'total_quantity', 0
+        ) then
+        raise exception 'order list smoke: line summary changed: %', v_buyer->'orders';
+    end if;
     if v_admin->>'state' <> 'ok' or (v_admin->>'total')::integer <> 3
         or (select array_agg(item->>'order_number') from jsonb_array_elements(v_admin->'orders') item)
             <> array['ORDER-READ-43', 'ORDER-READ-42', 'ORDER-READ-41'] then
@@ -48,7 +58,7 @@ begin
     if v_keys <> array[
         'archived_at', 'billing_address', 'buyer_cms_user_id', 'checkout_group_id',
         'created_at', 'currency', 'delivery_quoted_at', 'id', 'idempotency_key',
-        'metadata', 'order_number', 'public_id', 'seller_id', 'shipping_address',
+        'line_summary', 'metadata', 'order_number', 'public_id', 'seller_id', 'shipping_address',
         'shipping_amount', 'status', 'subtotal_amount', 'total_amount', 'updated_at', 'version'
     ] or v_buyer->'orders'->0 ? 'request_hash' then
         raise exception 'order list smoke: buyer order projection changed: %', v_keys;
@@ -57,7 +67,7 @@ begin
     from jsonb_object_keys(v_seller->'orders'->0) key;
     if v_keys <> array[
         'checkout_group_id', 'created_at', 'currency', 'delivery_quoted_at', 'id',
-        'metadata', 'order_number', 'public_id', 'shipping_amount', 'status',
+        'line_summary', 'metadata', 'order_number', 'public_id', 'shipping_amount', 'status',
         'subtotal_amount', 'total_amount', 'updated_at', 'version'
     ] or v_seller::text like '%order-read-buyer-%'
         or v_seller::text like '%order-42%'

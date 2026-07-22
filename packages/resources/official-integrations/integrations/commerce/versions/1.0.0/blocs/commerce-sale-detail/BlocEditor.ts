@@ -71,7 +71,19 @@ export class CommerceSaleDetailEditor extends Editor {
                 kind: "self",
                 label: "Status labels",
                 settings: [
-                    { type: "text", label: "Placed", attribute: "label-placed", defaultValue: "À traiter" },
+                    {
+                        type: "text",
+                        label: "Awaiting quote",
+                        attribute: "label-awaiting_quote",
+                        defaultValue: "Livraison à finaliser",
+                    },
+                    {
+                        type: "text",
+                        label: "Awaiting payment",
+                        attribute: "label-awaiting_payment",
+                        defaultValue: "Paiement en attente",
+                    },
+                    { type: "text", label: "Active", attribute: "label-active", defaultValue: "À expédier" },
                     {
                         type: "text",
                         label: "Seller handoff declared",
@@ -98,8 +110,14 @@ export class CommerceSaleDetailEditor extends Editor {
                         defaultValue: "Livrée",
                     },
                     { type: "text", label: "Completed", attribute: "label-completed", defaultValue: "Terminée" },
+                    {
+                        type: "text",
+                        label: "Cancellation pending",
+                        attribute: "label-cancellation_pending",
+                        defaultValue: "Annulation en cours",
+                    },
                     { type: "text", label: "Cancelled", attribute: "label-cancelled", defaultValue: "Annulée" },
-                    { type: "text", label: "Archived", attribute: "label-archived", defaultValue: "Archivée" },
+                    { type: "text", label: "Expired", attribute: "label-expired", defaultValue: "Expirée" },
                 ],
             },
             {

@@ -1,4 +1,4 @@
-import { formatDate, formatMoney, saleDetailUrl } from "./helpers";
+import { formatDate, formatMoney, lineSummaryLabel, saleDetailUrl } from "./helpers";
 
 export function renderSale(host, sale) {
     const card = document.createElement("basic-card");
@@ -12,10 +12,13 @@ export function renderSale(host, sale) {
     identity.className = "sale-identity";
     const number = document.createElement("strong");
     number.className = "sale-number";
-    number.textContent = sale.orderNumber || sale.publicId || `Vente ${sale.id}`;
+    const reference = sale.orderNumber || sale.publicId || `Vente ${sale.id}`;
+    const summary = lineSummaryLabel(sale);
+    number.textContent = summary || reference;
     const date = document.createElement("small");
     date.className = "sale-date";
-    date.textContent = `${host.getAttribute("date-prefix") || "Vendue le"} ${formatDate(sale.createdAt, host.locale)}`;
+    const datedAt = `${host.getAttribute("date-prefix") || "Vendue le"} ${formatDate(sale.createdAt, host.locale)}`;
+    date.textContent = summary ? `${reference} · ${datedAt}` : datedAt;
     identity.append(number, date);
 
     const status = document.createElement("span");

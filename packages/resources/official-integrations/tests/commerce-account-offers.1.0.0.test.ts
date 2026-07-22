@@ -342,7 +342,8 @@ describe("commerce account offers 1.0.0", () => {
         expect(compiled.viewJS).toContain('name="email" type="email" autocomplete="email" readonly required');
         expect(viewSource).toContain("profile.email = textValue(this.profile?.email)");
         expect(viewSource).toContain("control.hidden = profileFieldReady");
-        expect(compiled.viewJS).toContain('href="/mon-espace/profil"');
+        expect(compiled.viewJS).not.toContain("data-profile-link");
+        expect(viewSource).not.toContain("profileLink");
         expect(compiled.viewJS).toContain('name="sellerTermsAccepted" type="checkbox"');
         expect(viewSource).toContain("this.stripeConsentFragment.hidden = !this.enrollmentRequired");
         expect(viewSource).toContain("if (!this.templateReady)");
@@ -377,6 +378,8 @@ describe("commerce account offers 1.0.0", () => {
         expect(editorSource).toContain('attribute: "privacy-url"');
         expect(editorSource).toContain('attribute: "privacy-notice"');
         expect(editorSource).toContain('attribute: "privacy-link-label"');
+        expect(editorSource).not.toContain('attribute: "profile-link-label"');
+        expect(editorSource).not.toContain('attribute: "profile-url"');
         expect(editorSource).toContain('attribute: "first-enrollment-consent-required-message"');
         expect(editorSource).toContain('attribute: "seller-terms-consent-required-message"');
         expect(editorSource).not.toContain('attribute: "privacy-label"');
@@ -386,6 +389,7 @@ describe("commerce account offers 1.0.0", () => {
         expect(defaultContent).toContain('seller-terms-url="/cgu-cgv"');
         expect(defaultContent).toContain('stripe-terms-url="https://stripe.com/connect-account/legal"');
         expect(defaultContent).toContain('privacy-url="/mentions-legales"');
+        expect(defaultContent).not.toContain("profile-url=");
         expect(defaultContent).toContain("Replace the privacy notice placeholder URL before production publication.");
         expect(manifest.meta.description).toContain("privacy information separately");
         expect(manifest.meta.description).toContain("placeholder");
