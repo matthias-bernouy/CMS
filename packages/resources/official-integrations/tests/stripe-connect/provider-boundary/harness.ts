@@ -10,6 +10,8 @@ export type StripeRequestRecord = {
     stripeAccount: string | null;
 };
 
+export type ProtectedRefundSearchScenario = "no-match" | "ambiguous" | "has-more";
+
 export type ProviderBoundaryHarness = {
     rest: {
         readonly accountCreationRequests: Array<{ body: JsonRecord; idempotencyKey: string | null }>;
@@ -24,7 +26,12 @@ export type ProviderBoundaryHarness = {
             mimeType: string;
             content: number[];
         }>;
+        readonly refundCreateRequests: Array<{
+            parameters: Array<[string, string]>;
+            idempotencyKey: string | null;
+        }>;
         readonly externalRequestOrder: string[];
+        readonly moneyCallOrder: string[];
         readonly paymentIntentCreateCount: number;
         readonly postgrestRequests: PostgrestRequestRecord[];
         readonly stripeRequests: StripeRequestRecord[];
@@ -36,6 +43,7 @@ export type ProviderBoundaryHarness = {
         failNextPaymentProjectionEnqueue(): void;
         failNextProtectedPaymentReservation(mode: "missing" | "raced"): void;
         linkNextProtectedPaymentReservationToIntent(): void;
+        loseNextRefundCreationResponse(): void;
         pauseNextPlatformBalanceSettingsRead(): { entered: Promise<void>; resume: () => void };
         quarantineNextPaymentIntentProjection(): void;
         removePlatformPayoutControl(): void;
@@ -44,7 +52,10 @@ export type ProviderBoundaryHarness = {
         setPlatformPayoutControl(patch: JsonRecord): void;
         setPlatformPayoutMinimum(minimumBalanceEur: number): void;
         setPaymentIntentSucceeded(paymentIntentId: string): void;
+        setNextRefundSearchScenario(scenario: ProtectedRefundSearchScenario): void;
+        setNextRefundStatus(status: "succeeded" | "pending" | "failed"): void;
         succeedNextPaymentIntentOperation(): void;
+        succeedNextRefundOperation(): void;
     };
     request(
         userId: string,

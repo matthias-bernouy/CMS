@@ -28,12 +28,18 @@ import { registerPaymentCancellationRecoveryContracts } from "./stripe-connect/p
 import { registerPaymentCancellationReplayContracts } from "./stripe-connect/payment-cancellation/replay.contracts";
 import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
 import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
+import type { ProtectedRefundSearchScenario } from "./stripe-connect/provider-boundary/harness";
 import { registerProtectedPaymentFailureContracts } from "./stripe-connect/provider-boundary/protected-payment/failures.contracts";
 import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment/payout.contracts";
 import type { ProtectedPaymentProjectionScenario } from "./stripe-connect/provider-boundary/protected-payment/projection-race-harness";
 import { registerProtectedPaymentProjectionRaceContracts } from "./stripe-connect/provider-boundary/protected-payment/projection-races.contracts";
 import { registerProtectedPaymentReservationContracts } from "./stripe-connect/provider-boundary/protected-payment/reservation.contracts";
 import { registerProtectedPaymentReplayContracts } from "./stripe-connect/provider-boundary/protected-payment/replay.contracts";
+import { registerProtectedRefundFailureContracts } from "./stripe-connect/provider-boundary/protected-refund/failures.contracts";
+import { registerProtectedRefundRecoveryContracts } from "./stripe-connect/provider-boundary/protected-refund/recovery.contracts";
+import { registerProtectedRefundReplayContracts } from "./stripe-connect/provider-boundary/protected-refund/replay.contracts";
+import { registerProtectedRefundSuccessContracts } from "./stripe-connect/provider-boundary/protected-refund/success.contracts";
+import { registerProtectedRefundValidationContracts } from "./stripe-connect/provider-boundary/protected-refund/validations.contracts";
 import { registerTransferReversalFailureContracts } from "./stripe-connect/provider-boundary/transfer-reversal/failures.contracts";
 import { registerTransferReversalRecoveryContracts } from "./stripe-connect/provider-boundary/transfer-reversal/recovery.contracts";
 import { registerTransferReversalSuccessContracts } from "./stripe-connect/provider-boundary/transfer-reversal/success.contracts";
@@ -5728,6 +5734,9 @@ class StripeConnectMock {
     private nextRefundId = 1;
     private nextRefundStatus: "succeeded" | "pending" | "failed" = "succeeded";
     private nextRefundFee = 0;
+    private loseNextRefundResponse = false;
+    private nextRefundSearchScenario: ProtectedRefundSearchScenario | null = null;
+    private nextRefundOperationSucceeded = false;
     private failTransferReversals = false;
     private failNextTransferCreation = false;
     private loseNextTransferCreationResponse = false;
@@ -5802,6 +5811,10 @@ class StripeConnectMock {
         fileName: string;
         mimeType: string;
         content: number[];
+    }> = [];
+    readonly refundCreateRequests: Array<{
+        parameters: Array<[string, string]>;
+        idempotencyKey: string | null;
     }> = [];
     readonly postgrestRequests: PostgrestRequestRecord[] = [];
     readonly stripeRequests: StripeRequestRecord[] = [];
@@ -6008,6 +6021,18 @@ class StripeConnectMock {
 
     setNextRefundFee(amount: number): void {
         this.nextRefundFee = amount;
+    }
+
+    loseNextRefundCreationResponse(): void {
+        this.loseNextRefundResponse = true;
+    }
+
+    setNextRefundSearchScenario(scenario: ProtectedRefundSearchScenario): void {
+        this.nextRefundSearchScenario = scenario;
+    }
+
+    succeedNextRefundOperation(): void {
+        this.nextRefundOperationSucceeded = true;
     }
 
     updateProviderRefund(refundId: string, patch: JsonRecord): void {
@@ -7484,6 +7509,38 @@ class StripeConnectMock {
                     status: "succeeded",
                     stripe_object_id: intent.id,
                     response: intent,
+                    attempt_count: 1,
+                    claimed_at: now,
+                    completed_at: now,
+                });
+            }
+            if (body.p_operation_type === "refund_create" && this.nextRefundOperationSucceeded) {
+                this.nextRefundOperationSucceeded = false;
+                const amount = Number(operationRequest.amount);
+                const refund = {
+                    id: "re_operation_succeeded",
+                    charge: operationRequest.chargeId,
+                    amount,
+                    currency: operationRequest.currency,
+                    status: "succeeded",
+                    metadata: {
+                        refund_request_id: operationRequest.refundRequestId,
+                        commerce_reason: operationRequest.reason,
+                    },
+                    balance_transaction: {
+                        id: "txn_refund_operation_succeeded",
+                        amount: -amount,
+                        fee: 0,
+                        net: -amount,
+                        currency: operationRequest.currency,
+                        fee_details: [],
+                    },
+                };
+                this.providerRefunds.push(refund);
+                Object.assign(operation, {
+                    status: "succeeded",
+                    stripe_object_id: refund.id,
+                    response: refund,
                     attempt_count: 1,
                     claimed_at: now,
                     completed_at: now,
@@ -9080,22 +9137,43 @@ class StripeConnectMock {
         }
         if (url.pathname === "/v1/refunds" && method === "GET") {
             const charge = url.searchParams.get("charge");
+            const isRecoverySearch = url.searchParams.getAll("expand[]").includes("data.balance_transaction");
+            const scenario = isRecoverySearch ? this.nextRefundSearchScenario : null;
+            if (isRecoverySearch) {
+                this.nextRefundSearchScenario = null;
+            }
+            const matching = this.providerRefunds.filter((refund) => !charge || refund.charge === charge);
+            const data =
+                scenario === "no-match" || scenario === "has-more"
+                    ? []
+                    : scenario === "ambiguous" && matching[0]
+                      ? [...matching, { ...matching[0], id: "re_metadata_ambiguous" }]
+                      : matching;
             return jsonResponse({
-                data: this.providerRefunds.filter((refund) => !charge || refund.charge === charge),
-                has_more: false,
+                data,
+                has_more: scenario === "has-more",
             });
         }
         if (url.pathname === "/v1/refunds" && method === "POST") {
             const params = new URLSearchParams(await request.text());
+            this.refundCreateRequests.push({
+                parameters: Array.from(params.entries()),
+                idempotencyKey: request.headers.get("idempotency-key"),
+            });
             this.moneyCallOrder.push("refund");
             const refundId = `re_${this.nextRefundId++}`;
             const refundFee = this.nextRefundFee;
+            const commerceReason = params.get("metadata[commerce_reason]");
             const refund = {
                 id: refundId,
                 charge: params.get("charge"),
                 amount: Number(params.get("amount")),
                 currency: "eur",
                 status: this.nextRefundStatus,
+                metadata: {
+                    refund_request_id: params.get("metadata[refund_request_id]"),
+                    ...(commerceReason ? { commerce_reason: commerceReason } : {}),
+                },
                 ...(this.nextRefundStatus === "succeeded"
                     ? {
                           balance_transaction: {
@@ -9114,6 +9192,10 @@ class StripeConnectMock {
             this.nextRefundStatus = "succeeded";
             this.nextRefundFee = 0;
             this.providerRefunds.push(refund);
+            if (this.loseNextRefundResponse) {
+                this.loseNextRefundResponse = false;
+                throw new Error("simulated network loss after Stripe created the Refund");
+            }
             return jsonResponse(refund);
         }
         throw new Error(`unexpected Stripe fetch: ${method} ${url}`);
@@ -9709,11 +9791,14 @@ class StripeConnectMock {
         const defaults =
             table === "refunds"
                 ? {
+                      stripe_refund_id: null,
                       stripe_balance_transaction_id: null,
+                      failure_reason: null,
                       actual_stripe_fee_amount: 0,
                       actual_stripe_net_amount: null,
                       actual_stripe_fee_currency: null,
                       actual_stripe_fee_details: [],
+                      provider_snapshot: null,
                   }
                 : {};
         const row = { id: this.nextRowId++, created_at: now, updated_at: now, ...defaults, ...value };
@@ -10227,6 +10312,11 @@ registerProtectedPaymentPayoutContracts(createProviderBoundaryHarness);
 registerProtectedPaymentProjectionRaceContracts(createProviderBoundaryHarness);
 registerProtectedPaymentReservationContracts(createProviderBoundaryHarness);
 registerProtectedPaymentReplayContracts(createProviderBoundaryHarness);
+registerProtectedRefundFailureContracts(createProviderBoundaryHarness);
+registerProtectedRefundRecoveryContracts(createProviderBoundaryHarness);
+registerProtectedRefundReplayContracts(createProviderBoundaryHarness);
+registerProtectedRefundSuccessContracts(createProviderBoundaryHarness);
+registerProtectedRefundValidationContracts(createProviderBoundaryHarness);
 registerTransferReversalFailureContracts(createProviderBoundaryHarness);
 registerTransferReversalRecoveryContracts(createProviderBoundaryHarness);
 registerTransferReversalSuccessContracts(createProviderBoundaryHarness);
