@@ -13,7 +13,7 @@
  *                                   remains reachable (no shadowing ambiguity).
  */
 
-export { REPEAT_ATTR } from "../attrs";
+export { REPEAT_ATTR } from "../core/attrs";
 
 export type RepeatSpec = { path: string; name?: string };
 

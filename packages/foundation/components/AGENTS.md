@@ -28,10 +28,10 @@ runtime uses a `cms-` activation tag.
 
 ## Adding A Component
 
-1. Add `src/ui/MyThing/MyThing.ts` plus optional `template.html` and
+1. Add `src/ui/<Family>/MyThing/MyThing.ts` plus optional `template.html` and
    `style.css`.
 2. Export the class from `src/index.ts`.
-3. Add a lazy bundle entry to `build.ts` if consumers should import
+3. Add a lazy bundle entry to `tooling/build.ts` if consumers should import
    `@bernouy/components/blocs/my-thing`.
 4. Keep HTML/CSS imports using `with { type: "text" }`.
 

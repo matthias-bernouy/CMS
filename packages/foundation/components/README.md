@@ -155,24 +155,11 @@ inspect generated composition markup yet.
 | `Badge` | `<p9r-badge>` | Small status badge with `color` / `variant` / `size` / `dot`. |
 | `Tag` | `<p9r-tag>` | Display tag / chip. |
 
-## Development
-
-```bash
-bun install
-bun --hot ./index.ts
-```
-
-To rebuild distribution artifacts after changes:
-
-```bash
-bun run build
-```
-
 ## Adding a component
 
-A new component lives under `src/ui/<Group>/<Name>/` with three files:
+A new component lives under a semantic family in `src/ui/`, usually with three files:
 
-- `<Name>.ts` — extends `Component`, registers `customElements.define(...)`
+- `<Name>.ts` — exports the component class without registering a custom element
 - `style.css` — styles scoped to the Shadow Root
 - `template.html` — HTML template
 

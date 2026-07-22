@@ -1,4 +1,4 @@
-import { type Scope } from "../scope";
+import { type Scope } from "../core/scope";
 
 export interface LiveBindingSite {
     update(scope: Scope): void;

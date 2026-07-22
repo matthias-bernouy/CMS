@@ -1,4 +1,4 @@
-import { BIND_STOP_ATTR, READY_ATTR, SOURCE_ATTR } from "../attrs";
+import { BIND_STOP_ATTR, READY_ATTR, SOURCE_ATTR } from "../core/attrs";
 
 export function revealSources(root: Node): void {
     if (root.nodeType !== Node.ELEMENT_NODE) {

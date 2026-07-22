@@ -1,5 +1,5 @@
 import { currentState, setState, STATE_CHANGE_EVENT } from "../params";
-import { PAGE_STATE_ATTR } from "../attrs";
+import { PAGE_STATE_ATTR } from "../core/attrs";
 
 const DEBOUNCE_MS = 300;
 

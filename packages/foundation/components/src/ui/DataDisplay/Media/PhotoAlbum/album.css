@@ -1,0 +1,129 @@
+:host {
+    --min: 260px;
+    --gap: var(--p9r-space-lg, 24px);
+    --radius: 8px;
+    --fit: cover;
+    --aspect-ratio: 4 / 3;
+    --max-width: 100%;
+    --image-bg: var(--bg-surface, #ffffff);
+    --image-border: color-mix(in srgb, var(--border-default, #e5e7eb) 80%, transparent);
+    --image-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline: 0 auto;
+}
+
+.album,
+.legend-album {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--min), 100%), 1fr));
+    gap: var(--gap);
+    align-items: start;
+}
+
+.album[hidden],
+.legend-album[hidden] {
+    display: none !important;
+}
+
+.images {
+    display: contents;
+}
+
+::slotted(img),
+.figure img {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--aspect-ratio);
+    object-fit: var(--fit);
+    border-radius: var(--radius);
+    background: var(--image-bg);
+    border: 1px solid var(--image-border);
+    box-shadow: var(--image-shadow);
+}
+
+::slotted(img) {
+    cursor: zoom-in;
+}
+
+.figure {
+    display: grid;
+    gap: var(--p9r-space-xs, 4px);
+    margin: 0;
+    break-inside: avoid;
+}
+
+.figure-trigger {
+    display: block;
+    width: 100%;
+    padding: 0;
+    cursor: zoom-in;
+    appearance: none;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    font: inherit;
+}
+
+.figure-trigger:focus-visible,
+.preview-close:focus-visible,
+.preview-nav:focus-visible,
+.preview-thumb:focus-visible {
+    outline: 2px solid var(--primary-base, #2563eb);
+    outline-offset: 3px;
+}
+
+.figure figcaption {
+    color: var(--text-muted, #6b7280);
+    font: inherit;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    text-align: center;
+}
+
+:host([layout="masonry"]) .album,
+:host([layout="masonry"]) .legend-album {
+    display: block;
+    columns: var(--min);
+    column-gap: var(--gap);
+}
+
+:host([layout="masonry"]) .images {
+    display: contents;
+}
+
+:host([layout="masonry"]) ::slotted(img),
+:host([layout="masonry"]) .figure {
+    break-inside: avoid;
+    margin-block-end: var(--gap);
+}
+
+:host([layout="masonry"]) ::slotted(img),
+:host([layout="masonry"]) .figure img {
+    aspect-ratio: auto;
+}
+
+:host([layout="strip"]) .album,
+:host([layout="strip"]) .legend-album {
+    display: flex;
+    gap: var(--gap);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+}
+
+:host([layout="strip"]) .images {
+    display: contents;
+}
+
+:host([layout="strip"]) ::slotted(img),
+:host([layout="strip"]) .figure {
+    flex: 0 0 min(var(--min), 82vw);
+    scroll-snap-align: start;
+}

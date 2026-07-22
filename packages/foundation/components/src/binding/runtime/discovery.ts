@@ -1,4 +1,4 @@
-import { BINDING_CORE_TAG, BIND_STOP_ATTR } from "../attrs";
+import { BINDING_CORE_TAG, BIND_STOP_ATTR } from "../core/attrs";
 
 /**
  * Invoke `cb` for `node` and every descendant carrying `attr`, without crossing

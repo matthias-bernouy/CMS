@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { collectConditionReferences, compileCondition, evaluateCondition } from "../../../src/binding/render/condition";
-import type { Scope } from "../../../src/binding/scope";
+import type { Scope } from "../../../src/binding/core/scope";
 
 const scope: Scope = {
     value: {

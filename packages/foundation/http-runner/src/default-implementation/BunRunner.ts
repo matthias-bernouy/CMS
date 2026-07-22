@@ -1,20 +1,7 @@
 import type { Runner, RouteHandler, Middleware } from "http-runner/interfaces/Runner";
 import { setRequestIP, getRequestIP as readRequestIP } from "http-runner/core/requestIP";
-
-function urlJoin(...parts: string[]): string {
-    return ("/" + parts.join("/")).replace(/\/+/g, "/") || "/";
-}
-
-function normalizePath(p: string): string {
-    return p.length > 1 && p.endsWith("/") ? p.slice(0, -1) : p;
-}
-
-function pathUnderPrefix(pathname: string, prefix: string): boolean {
-    if (prefix === "/") {
-        return true;
-    }
-    return pathname === prefix || pathname.startsWith(prefix + "/");
-}
+import { dispatchRequest } from "http-runner/core/requestDispatch";
+import { matchPath, normalizePath, pathUnderPrefix, urlJoin } from "./runnerPaths";
 
 export class BunRunner implements Runner {
     basePath: string = "/";
@@ -162,7 +149,7 @@ export class BunRunner implements Runner {
                 const method = request.method;
                 const pathname = normalizePath(url.pathname);
 
-                const route = self.routes.find((r) => r.method === method && self.matchPath(r.path, pathname));
+                const route = self.routes.find((r) => r.method === method && matchPath(r.path, pathname));
 
                 const fallback = route
                     ? null
@@ -176,35 +163,7 @@ export class BunRunner implements Runner {
                     return new Response("Not Found", { status: 404 });
                 }
 
-                const allMiddlewares = [...self.globalMiddlewares, ...effective.middlewares];
-
-                let index = 0;
-                const next = async (req: Request): Promise<Response> => {
-                    if (index < allMiddlewares.length) {
-                        const middleware = allMiddlewares[index++]!;
-                        return middleware(req, () => next(req));
-                    }
-                    return effective.handler(req);
-                };
-
-                try {
-                    return await next(request);
-                } catch (e) {
-                    console.error(e);
-                    // An error carrying a numeric `status` is a deliberate HTTP
-                    // error (validation, conflict…): surface its message as a
-                    // JSON `{ error }` body with that status, so clients can show
-                    // something explicit instead of an opaque 500.
-                    const status = (e as { status?: unknown })?.status;
-                    if (typeof status === "number") {
-                        const message = e instanceof Error ? e.message : "Error";
-                        return new Response(JSON.stringify({ error: message }), {
-                            status,
-                            headers: { "Content-Type": "application/json" },
-                        });
-                    }
-                    return new Response("Internal Server Error", { status: 500 });
-                }
+                return dispatchRequest(request, effective, self.globalMiddlewares);
             },
         });
 
@@ -215,21 +174,5 @@ export class BunRunner implements Runner {
     stop(): void {
         this.server?.stop(true);
         this.server = undefined;
-    }
-
-    private matchPath(routePath: string, requestPath: string): boolean {
-        const route = normalizePath(routePath);
-        if (route === requestPath) {
-            return true;
-        }
-
-        const routeParts = route.split("/");
-        const requestParts = requestPath.split("/");
-
-        if (routeParts.length !== requestParts.length) {
-            return false;
-        }
-
-        return routeParts.every((part, i) => part.startsWith(":") || part === requestParts[i]);
     }
 }

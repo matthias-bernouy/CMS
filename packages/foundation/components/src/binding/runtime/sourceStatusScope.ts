@@ -1,5 +1,5 @@
-import { SOURCE_ATTR, SOURCE_ID_ATTR } from "../attrs";
-import { type SourceStatusValue } from "../source/sourceStatus";
+import { SOURCE_ATTR, SOURCE_ID_ATTR } from "../core/attrs";
+import { type SourceStatusValue } from "../source/presentation/sourceStatus";
 
 export function sourceStatusScope(
     root: Element,

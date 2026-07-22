@@ -1,4 +1,4 @@
-import { lookup, type Scope } from "../../scope";
+import { lookup, type Scope } from "../../core/scope";
 import type { CompareOperator, ConditionNode } from "./types";
 
 export function evaluateNode(node: ConditionNode, scope: Scope): unknown {
