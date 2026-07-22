@@ -122,6 +122,7 @@ describe("commerce self offer image ownership", () => {
             { offerMedia: null },
             { offer: null },
             { seller: null },
+            { seller: { ...verifiedOwnerRow, cms_user_id: null } },
             { seller: { ...verifiedOwnerRow, cms_user_id: "another-user" } },
         ];
 
