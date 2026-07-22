@@ -6,8 +6,8 @@
         "baseUrl":  ".",
         "paths": {
             "@bernouy/cms-control":           ["index.ts"],
-            "@bernouy/cms-control/component": ["component.ts"],
-            "@bernouy/cms-control/editor":    ["editor.ts"],
+            "@bernouy/cms-control/component": ["src/exports/component.ts"],
+            "@bernouy/cms-control/editor":    ["src/exports/editor.ts"],
             "cms-control/*":                  ["src/*"]
         }
     },
@@ -15,9 +15,6 @@
         "src/**/*.ts",
         "src/**/*.json",
         "index.ts",
-        "component.ts",
-        "editor.ts",
-        "build.ts",
         "types/**/*.ts",
         "tests/**/*.ts"
     ],

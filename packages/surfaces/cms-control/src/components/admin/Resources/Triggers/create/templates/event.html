@@ -1,0 +1,72 @@
+<a slot="back" class="back" aria-label="Back to triggers">&lt;</a>
+
+<span slot="title">Create trigger</span>
+
+<div slot="actions" class="header-actions">
+    <button type="button" class="button quiet" data-role="collapse">Collapse all</button>
+    <button type="button" class="button primary" data-role="save">Create trigger</button>
+</div>
+
+<div slot="main" class="journey-intro">
+    <strong>Connect an event to a function</strong>
+    <span>Choose what happens, when the trigger fires, then what it should call.</span>
+</div>
+
+<details slot="main" class="editor-panel" open data-panel="general">
+    <summary>
+        <span class="step-number">1</span>
+        <span class="summary-copy">
+            <strong>Name the trigger</strong>
+            <small>Use a clear name that describes the event and its outcome.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <label>
+            Trigger name
+            <input data-field="label" placeholder="Notify on new order" />
+        </label>
+
+        <label>
+            Identifier
+            <span>Generated from the name. You can adjust it before creation.</span>
+            <input data-field="id" placeholder="notify-on-order" />
+        </label>
+    </div>
+</details>
+
+<details slot="main" class="editor-panel" open data-panel="event">
+    <summary>
+        <span class="step-number">2</span>
+        <span class="summary-copy">
+            <strong>Choose the event</strong>
+            <small>Select the endpoint and whether to fire before or after it runs.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <label>
+            Source
+            <select data-field="source"></select>
+        </label>
+
+        <label>
+            Endpoint
+            <select data-field="endpoint"></select>
+        </label>
+
+        <label class="narrow-field">
+            When should it fire?
+            <select data-field="phase">
+                <option value="response">After a successful response</option>
+                <option value="request">Before the request</option>
+            </select>
+        </label>
+
+        <div class="callout" data-role="phase-help">
+            Response triggers can inspect both the request and response.
+        </div>
+    </div>
+</details>

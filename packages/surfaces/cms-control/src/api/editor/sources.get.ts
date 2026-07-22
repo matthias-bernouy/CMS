@@ -1,13 +1,13 @@
 import { parseUrn, sourceEndpointAccessMode, type SourceEndpoint } from "@bernouy/cms-sources";
 import type { ControlCms } from "cms-control/ControlCms";
-import { editorSourceFromEndpoint } from "cms-control/core/editorSources/sourceDto";
+import { editorSourceFromEndpoint } from "cms-control/core/content/editorSources/sourceDto";
 
 export type {
     EditorSourceBodyDto,
     EditorSourceBodyFieldDto,
     EditorSourceDto,
     EditorSourceParamDto,
-} from "cms-control/core/editorSources/types";
+} from "cms-control/core/content/editorSources/types";
 
 export default async function getEditorSources(_req: Request, cms: ControlCms): Promise<Response> {
     try {

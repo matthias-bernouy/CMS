@@ -1,6 +1,6 @@
-import MissingParam from "cms-control/errors/Http/MissingParam";
+import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import { coerceVisible } from "./visible";
-import { coerceTags } from "../contentDefaults";
+import { coerceTags } from "./tags";
 
 export type PageUpdateDto = {
     id: string;

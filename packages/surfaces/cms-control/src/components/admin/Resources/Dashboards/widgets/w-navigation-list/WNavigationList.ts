@@ -1,12 +1,11 @@
 import { Component } from "@bernouy/components/base";
-import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import { emitWidgetEvent, setText, WIDGET_ACTION_EVENT } from "../shared";
 import "./WNavigationItem";
 import type { DashboardWNavigationItem } from "./WNavigationItem";
+import { navigationDragItem } from "./drag";
+import { parseNavigationListWidget, type NavigationListWidget } from "./config";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
-
-type NavigationListWidget = Extract<DashboardWidget, { widget: "w-navigation-list" }>;
 
 export class DashboardWNavigationList extends Component {
     private value: NavigationListWidget | null = null;
@@ -47,8 +46,8 @@ export class DashboardWNavigationList extends Component {
     }
 
     private syncConfig(): void {
-        const widget = parseJson<NavigationListWidget>(this.dataset.configJson ?? "");
-        if (widget?.widget === "w-navigation-list") {
+        const widget = parseNavigationListWidget(this.dataset.configJson ?? "");
+        if (widget) {
             this.value = widget;
         }
     }
@@ -105,7 +104,7 @@ export class DashboardWNavigationList extends Component {
     };
 
     private onDragStart = (event: DragEvent): void => {
-        const item = dragItem(event);
+        const item = navigationDragItem(event);
         if (!item || !this.value?.reorderable) {
             return;
         }
@@ -118,7 +117,7 @@ export class DashboardWNavigationList extends Component {
     };
 
     private onDragOver = (event: DragEvent): void => {
-        const item = dragItem(event);
+        const item = navigationDragItem(event);
         if (!item || !this.dragging || item === this.dragging) {
             return;
         }
@@ -130,7 +129,7 @@ export class DashboardWNavigationList extends Component {
     };
 
     private onDrop = (event: DragEvent): void => {
-        const target = dragItem(event);
+        const target = navigationDragItem(event);
         const dragging = this.dragging;
         if (!target || !dragging || target === dragging || !this.value?.reorderable) {
             return;
@@ -171,28 +170,4 @@ export class DashboardWNavigationList extends Component {
 
 if (!customElements.get("cms-dashboard-w-navigation-list")) {
     customElements.define("cms-dashboard-w-navigation-list", DashboardWNavigationList);
-}
-
-function dragItem(event: Event): DashboardWNavigationItem | null {
-    const fromPath = event
-        .composedPath()
-        .find(
-            (target): target is DashboardWNavigationItem =>
-                target instanceof HTMLElement && target.matches("cms-dashboard-w-navigation-item"),
-        );
-    if (fromPath) {
-        return fromPath;
-    }
-    const target = event.target;
-    return target instanceof Element
-        ? target.closest<DashboardWNavigationItem>("cms-dashboard-w-navigation-item")
-        : null;
-}
-
-function parseJson<T>(value: string): T | null {
-    try {
-        return value ? (JSON.parse(value) as T) : null;
-    } catch {
-        return null;
-    }
 }

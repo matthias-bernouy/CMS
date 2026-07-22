@@ -52,7 +52,7 @@
     mountEditor() {}
     unmountEditor() {}
   }
-  // ../../features/cms-content/src/interfaces/Editor/BindingSyntax.ts
+  // ../../features/cms-content/src/interfaces/Editor/BindingSyntax/types.ts
   var CMS_BINDING_CORE_TAG = "cms-binding-core";
   var CMS_BINDING_ATTRIBUTES = {
     bindingDisabled: "cms-binding-disabled",
@@ -75,9 +75,9 @@
   var CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"];
   var CMS_SOURCE_STATUS_SCOPE = "$source";
   var CMS_SOURCES_STATUS_SCOPE = "$sources";
+  // ../../features/cms-content/src/interfaces/Editor/BindingSyntax/source.ts
   var SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   var REPEAT_ALIAS_PATTERN = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  var SOURCE_STATUS_ID_PATTERN = /^[A-Za-z_$][\w$-]*$/;
   function asInterpolation(expression) {
     return `{{ ${expression.trim()} }}`;
   }
@@ -138,6 +138,63 @@
     const path = value.trim();
     return path ? { path } : null;
   }
+  function sourceUrlWithParams(rawUrl, params) {
+    const url = rawUrl.trim();
+    if (!params) {
+      return url;
+    }
+    const entries = Object.entries(normalizeSourceParamMap(params));
+    if (entries.length === 0) {
+      return url;
+    }
+    const hashIndex = url.indexOf("#");
+    const beforeHash = hashIndex === -1 ? url : url.slice(0, hashIndex);
+    const hash = hashIndex === -1 ? "" : url.slice(hashIndex);
+    const separator = beforeHash.endsWith("?") || beforeHash.endsWith("&") ? "" : beforeHash.includes("?") ? "&" : "?";
+    const query = entries.map(([name, source]) => `${encodeURIComponent(name)}=${encodeSourceParamValue(source)}`).join("&");
+    return `${beforeHash}${separator}${query}${hash}`;
+  }
+  function encodeSourceParamValue(value) {
+    if (value.from === "queryParam") {
+      return `#{${value.name.trim()}}`;
+    }
+    if (value.from === "state") {
+      return `@{${value.name.trim()}}`;
+    }
+    return encodeURIComponent(String(value.value).trim());
+  }
+  function normalizeSourceParamMap(params) {
+    const normalized = {};
+    for (const [name, value] of Object.entries(params)) {
+      const param = normalizeSourceParamValue(value);
+      if (name.trim() && param) {
+        normalized[name] = param;
+      }
+    }
+    return normalized;
+  }
+  function normalizeSourceParamValue(value) {
+    if (!isRecord(value) || typeof value.from !== "string") {
+      return null;
+    }
+    if (value.from === "queryParam" || value.from === "state") {
+      return typeof value.name === "string" && value.name.trim() ? { from: value.from, name: value.name.trim() } : null;
+    }
+    if (value.from !== "raw") {
+      return null;
+    }
+    if (typeof value.value === "string") {
+      return value.value.trim() ? { from: "raw", value: value.value } : null;
+    }
+    if (typeof value.value === "number" && Number.isFinite(value.value)) {
+      return { from: "raw", value: value.value };
+    }
+    return typeof value.value === "boolean" ? { from: "raw", value: value.value } : null;
+  }
+  function isRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+  // ../../features/cms-content/src/interfaces/Editor/BindingSyntax/conditions.ts
   function asFieldCondition(path, operator = "truthy", value = true) {
     const normalizedPath = normalizeConditionPath(path);
     if (operator === "truthy") {
@@ -152,8 +209,7 @@
     if (operator === "notEmpty") {
       return `${normalizedPath}.length > 0`;
     }
-    const comparison = comparisonOperator(operator);
-    return `${normalizedPath} ${comparison} ${asConditionLiteral(value)}`;
+    return `${normalizedPath} ${comparisonOperator(operator)} ${asConditionLiteral(value)}`;
   }
   function asConditionLiteral(value) {
     if (typeof value === "string") {
@@ -170,6 +226,36 @@
     }
     return "null";
   }
+  function normalizeConditionPath(path) {
+    const normalized = path.trim();
+    if (!normalized) {
+      throw new Error("Condition path is required");
+    }
+    if (normalized === ".") {
+      return normalized;
+    }
+    if (!/^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(normalized)) {
+      throw new Error(`Invalid condition path: "${path}"`);
+    }
+    return normalized;
+  }
+  function comparisonOperator(operator) {
+    const operators = {
+      equals: "==",
+      notEquals: "!=",
+      greaterThan: ">",
+      greaterThanOrEqual: ">=",
+      lessThan: "<",
+      lessThanOrEqual: "<="
+    };
+    const comparison = operators[operator];
+    if (!comparison) {
+      throw new Error(`Unsupported comparison operator: ${operator}`);
+    }
+    return comparison;
+  }
+  // ../../features/cms-content/src/interfaces/Editor/BindingSyntax/sourceStatus.ts
+  var SOURCE_STATUS_ID_PATTERN = /^[A-Za-z_$][\w$-]*$/;
   function asSourceStatusCondition(state, sourceId) {
     const id = sourceId?.trim();
     if (id && !SOURCE_STATUS_ID_PATTERN.test(id)) {
@@ -218,27 +304,6 @@
   function isCmsSourceTrigger(value) {
     return CMS_SOURCE_TRIGGERS.includes(value ?? "");
   }
-  function clearBindingRuntimeState(root) {
-    const attr = CMS_BINDING_RUNTIME_ATTRIBUTES.ready;
-    root.removeAttribute(attr);
-    root.querySelectorAll(`[${attr}]`).forEach((element) => element.removeAttribute(attr));
-  }
-  function sourceUrlWithParams(rawUrl, params) {
-    const url = rawUrl.trim();
-    if (!params) {
-      return url;
-    }
-    const entries = Object.entries(normalizeSourceParamMap(params));
-    if (entries.length === 0) {
-      return url;
-    }
-    const hashIndex = url.indexOf("#");
-    const beforeHash = hashIndex === -1 ? url : url.slice(0, hashIndex);
-    const hash = hashIndex === -1 ? "" : url.slice(hashIndex);
-    const separator = beforeHash.endsWith("?") || beforeHash.endsWith("&") ? "" : beforeHash.includes("?") ? "&" : "?";
-    const query = entries.map(([name, value]) => `${encodeURIComponent(name)}=${encodeSourceParamValue(value)}`).join("&");
-    return `${beforeHash}${separator}${query}${hash}`;
-  }
   function parseSingleSourceStatusCondition(value) {
     const expression = value.trim();
     for (const state of CMS_SOURCE_STATES) {
@@ -247,87 +312,13 @@
       }
     }
     const match = /^\$sources\.([A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)$/.exec(expression);
-    if (!match) {
-      return null;
-    }
-    return { sourceId: match[1], state: match[2] };
+    return match ? { sourceId: match[1], state: match[2] } : null;
   }
-  function normalizeConditionPath(path) {
-    const normalized = path.trim();
-    if (!normalized) {
-      throw new Error("Condition path is required");
-    }
-    if (normalized === ".") {
-      return normalized;
-    }
-    if (!/^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(normalized)) {
-      throw new Error(`Invalid condition path: "${path}"`);
-    }
-    return normalized;
-  }
-  function comparisonOperator(operator) {
-    if (operator === "equals") {
-      return "==";
-    }
-    if (operator === "notEquals") {
-      return "!=";
-    }
-    if (operator === "greaterThan") {
-      return ">";
-    }
-    if (operator === "greaterThanOrEqual") {
-      return ">=";
-    }
-    if (operator === "lessThan") {
-      return "<";
-    }
-    if (operator === "lessThanOrEqual") {
-      return "<=";
-    }
-    throw new Error(`Unsupported comparison operator: ${operator}`);
-  }
-  function encodeSourceParamValue(value) {
-    if (value.from === "queryParam") {
-      return `#{${value.name.trim()}}`;
-    }
-    if (value.from === "state") {
-      return `@{${value.name.trim()}}`;
-    }
-    return encodeURIComponent(String(value.value).trim());
-  }
-  function normalizeSourceParamMap(params) {
-    const normalized = {};
-    for (const [name, value] of Object.entries(params)) {
-      const param = normalizeSourceParamValue(value);
-      if (name.trim() && param) {
-        normalized[name] = param;
-      }
-    }
-    return normalized;
-  }
-  function normalizeSourceParamValue(value) {
-    if (!isRecord(value) || typeof value.from !== "string") {
-      return null;
-    }
-    if (value.from === "queryParam" || value.from === "state") {
-      return typeof value.name === "string" && value.name.trim() ? { from: value.from, name: value.name.trim() } : null;
-    }
-    if (value.from !== "raw") {
-      return null;
-    }
-    if (typeof value.value === "string") {
-      return value.value.trim() ? { from: "raw", value: value.value } : null;
-    }
-    if (typeof value.value === "number" && Number.isFinite(value.value)) {
-      return { from: "raw", value: value.value };
-    }
-    if (typeof value.value === "boolean") {
-      return { from: "raw", value: value.value };
-    }
-    return null;
-  }
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
+  // ../../features/cms-content/src/interfaces/Editor/BindingSyntax/runtime.ts
+  function clearBindingRuntimeState(root) {
+    const attribute = CMS_BINDING_RUNTIME_ATTRIBUTES.ready;
+    root.removeAttribute(attribute);
+    root.querySelectorAll(`[${attribute}]`).forEach((element) => element.removeAttribute(attribute));
   }
   // ../../features/cms-content/src/core/editor/EditorCatalog.ts
   function fallbackElementConstructor() {
@@ -393,11 +384,11 @@
       delete t[e], t[e] = r;
     }
   }
-  var Ke = `<div class="accordion" part="accordion">
+  var dr = `<div class="accordion" part="accordion">
     <slot></slot>
 </div>
 `;
-  var Ue = `:host {
+  var cr = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -426,9 +417,9 @@
 }
 `;
 
-  class Xe extends s {
+  class ur extends s {
     constructor() {
-      super({ css: Ue, template: Ke });
+      super({ css: cr, template: dr });
     }
     connectedCallback() {
       this.addEventListener("accordion-item-toggle", this._handleItemToggle);
@@ -450,7 +441,7 @@
           r.removeAttribute("open");
     };
   }
-  var Ze = `<div class="item" part="item">
+  var pr = `<div class="item" part="item">
     <div class="header" part="header">
         <button class="toggle title-toggle" part="title" type="button" aria-expanded="false">
             <span class="title"><slot name="header"></slot></span>
@@ -471,7 +462,7 @@
     </div>
 </div>
 `;
-  var Ye = `:host {
+  var hr = `:host {
   display: block;
 
   --_text: var(--text-main, #1f2937);
@@ -582,14 +573,14 @@
 }
 `;
 
-  class Qe extends s {
+  class mr extends s {
     _toggles;
     _titleToggle;
     static get observedAttributes() {
       return ["open", "disabled"];
     }
     constructor() {
-      super({ css: Ye, template: Ze });
+      super({ css: hr, template: pr });
       this._toggles = Array.from(this.shadowRoot?.querySelectorAll(".toggle") ?? []), this._titleToggle = this.shadowRoot?.querySelector(".title-toggle") ?? null;
     }
     connectedCallback() {
@@ -642,7 +633,7 @@
         this.removeAttribute("disabled");
     }
   }
-  var Je = `<div class="alert" part="alert" role="alert">
+  var br = `<div class="alert" part="alert" role="alert">
     <span class="icon" part="icon" aria-hidden="true">
         <slot name="icon"></slot>
     </span>
@@ -653,7 +644,7 @@
     <button class="close" part="close" aria-label="Dismiss" hidden>&times;</button>
 </div>
 `;
-  var Ge = `:host {
+  var fr = `:host {
   display: block;
 
   --_bg: var(--info-muted, #eff6ff);
@@ -730,7 +721,7 @@
 
 .close:hover { opacity: 1; }
 `;
-  var We = `:host([type="success"]) {
+  var vr = `:host([type="success"]) {
   --_bg: var(--success-muted);
   --_color: var(--success-contrasted);
   --_accent: var(--success-base);
@@ -804,9 +795,9 @@
   to   { opacity: 0; transform: translateY(-6px); }
 }
 `;
-  var wl = Ge + We;
+  var Ol = fr + vr;
 
-  class tr extends s {
+  class gr extends s {
     _close;
     _message;
     _messageSlot;
@@ -814,7 +805,7 @@
       return ["dismissible"];
     }
     constructor() {
-      super({ css: wl, template: Je });
+      super({ css: Ol, template: br });
       this._close = this.shadowRoot?.querySelector(".close") ?? null, this._message = this.shadowRoot?.querySelector(".message") ?? null, this._messageSlot = this.shadowRoot?.querySelector(".message slot") ?? null;
     }
     connectedCallback() {
@@ -847,13 +838,13 @@
       this._handleClose();
     }
   }
-  var er = `<div class="avatar" part="avatar">
+  var xr = `<div class="avatar" part="avatar">
     <img class="image" part="image" alt="" hidden />
     <span class="initials" part="initials" aria-hidden="true"></span>
     <span class="fallback" part="fallback"><slot></slot></span>
 </div>
 `;
-  var rr = `:host {
+  var yr = `:host {
   display: inline-block;
 
   --_size: 2.5rem;
@@ -935,14 +926,14 @@
 }
 `;
 
-  class ir extends s {
+  class _r extends s {
     _img;
     _initials;
     static get observedAttributes() {
       return ["src", "alt", "name", "initials"];
     }
     constructor() {
-      super({ css: rr, template: er });
+      super({ css: yr, template: xr });
       this._img = this.shadowRoot?.querySelector(".image") ?? null, this._initials = this.shadowRoot?.querySelector(".initials") ?? null;
     }
     connectedCallback() {
@@ -989,12 +980,12 @@
         this._img.hidden = true;
     };
   }
-  var or = `<span class="badge" part="badge">
+  var wr = `<span class="badge" part="badge">
     <span class="dot" part="dot" aria-hidden="true"></span>
     <span class="content" part="content"><slot></slot></span>
 </span>
 `;
-  var nr = `:host {
+  var kr = `:host {
   display: inline-flex;
 
   --_bg: var(--secondary-muted, #f1f5f9);
@@ -1067,12 +1058,12 @@
 }
 `;
 
-  class ar extends s {
+  class Er extends s {
     constructor() {
-      super({ css: nr, template: or });
+      super({ css: kr, template: wr });
     }
   }
-  var hr = `<article class="card" part="card">
+  var Hr = `<article class="card" part="card">
     <header class="header" part="header">
         <slot name="header"></slot>
     </header>
@@ -1084,7 +1075,7 @@
     </footer>
 </article>
 `;
-  var mr = `:host {
+  var Ir = `:host {
   display: block;
 
   --_bg: var(--bg-surface, #ffffff);
@@ -1166,9 +1157,9 @@
 }
 `;
 
-  class vr extends s {
+  class Rr extends s {
     constructor() {
-      super({ css: mr, template: hr });
+      super({ css: Ir, template: Hr });
     }
     connectedCallback() {
       this._headerSlot.addEventListener("slotchange", this._syncSlots), this._footerSlot.addEventListener("slotchange", this._syncSlots), this._syncSlots();
@@ -1177,7 +1168,7 @@
       this._headerSlot.removeEventListener("slotchange", this._syncSlots), this._footerSlot.removeEventListener("slotchange", this._syncSlots);
     }
     _syncSlots = () => {
-      this.toggleAttribute("has-header", br(this._headerSlot)), this.toggleAttribute("has-footer", br(this._footerSlot));
+      this.toggleAttribute("has-header", zr(this._headerSlot)), this.toggleAttribute("has-footer", zr(this._footerSlot));
     };
     get _headerSlot() {
       return this.shadowRoot.querySelector('slot[name="header"]');
@@ -1186,14 +1177,14 @@
       return this.shadowRoot.querySelector('slot[name="footer"]');
     }
   }
-  function br(t) {
+  function zr(t) {
     return t.assignedNodes({ flatten: true }).some((e) => {
       if (e.nodeType !== Node.TEXT_NODE)
         return true;
       return e.textContent?.trim() !== "";
     });
   }
-  var fr = `:host {
+  var Br = `:host {
     --_modal-width: 500px;
     --_modal-radius: 12px;
     --_modal-bg: var(--bg-surface);
@@ -1275,7 +1266,7 @@ footer.actions slot[name="footer"]::slotted(*) {
     --ctx-border: var(--border-default);
 }
 `;
-  var xr = `.close-icon {
+  var Fr = `.close-icon {
     background: transparent;
     border: none;
     font-size: 1.5rem;
@@ -1330,8 +1321,8 @@ footer.actions slot[name="footer"]::slotted(*) {
     }
 }
 `;
-  var Pl = fr + xr;
-  var Lr = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
+  var td = Br + Fr;
+  var jr = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
     <header part="header">
         <div id="title" part="title">
             <slot name="title">Dialog</slot>
@@ -1348,7 +1339,7 @@ footer.actions slot[name="footer"]::slotted(*) {
     </footer>
 </dialog>
 `;
-  var Ar = `:host {
+  var $r = `:host {
     --drawer-width: 400px;
     --drawer-bg: var(--bg-surface);
     --transition-speed: 0.4s;
@@ -1405,7 +1396,7 @@ dialog > * {
     pointer-events: auto;
 }
 `;
-  var Cr = `header {
+  var Ur = `header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1487,7 +1478,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     filter: brightness(0.9);
 }
 `;
-  var Tr = `@media (prefers-reduced-motion: no-preference) {
+  var Kr = `@media (prefers-reduced-motion: no-preference) {
     dialog {
         transition:
             transform var(--transition-speed) var(--transition-curve),
@@ -1533,38 +1524,38 @@ footer slot[name="footer"]::slotted(button:hover) {
     }
 }
 `;
-  var Sr = (t) => {
+  var Xr = (t) => {
     t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
   };
-  var Mr = (t) => {
+  var Gr = (t) => {
     t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
   };
-  var Hr = (t, e) => {
+  var Yr = (t, e) => {
     let r = t.shadowRoot?.querySelector("dialog");
     if (e.target === r)
       t.close();
   };
-  var Ir = (t, e) => {
+  var Zr = (t, e) => {
     e.preventDefault(), t.close();
   };
-  var zr = (t, e) => {
+  var Qr = (t, e) => {
     e.preventDefault(), t.close();
   };
-  var Fr = (t) => {
+  var Wr = (t) => {
     if (t.hasAttribute("open"))
       t.removeAttribute("open");
-    Mr(t);
+    Gr(t);
   };
-  var Nl = Ar + Cr + Tr;
+  var nd = $r + Ur + Kr;
 
-  class Rr extends s {
+  class Jr extends s {
     _dialog;
     _closeBtn;
     static get observedAttributes() {
       return ["open"];
     }
     constructor() {
-      super({ css: Nl, template: Lr });
+      super({ css: nd, template: jr });
       this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._closeBtn = this.shadowRoot?.querySelector("#close-btn") ?? null;
     }
     connectedCallback() {
@@ -1584,10 +1575,10 @@ footer slot[name="footer"]::slotted(button:hover) {
           this._dialog.close();
       }
     }
-    _onBackdrop = (t) => Hr(this, t);
-    _onCloseClick = (t) => Ir(this, t);
-    _onCancel = (t) => zr(this, t);
-    _onClose = () => Fr(this);
+    _onBackdrop = (t) => Yr(this, t);
+    _onCloseClick = (t) => Zr(this, t);
+    _onCancel = (t) => Qr(this, t);
+    _onClose = () => Wr(this);
     get open() {
       return this.hasAttribute("open");
     }
@@ -1604,7 +1595,7 @@ footer slot[name="footer"]::slotted(button:hover) {
         this._dialog.showModal();
       if (!this.hasAttribute("open"))
         this.setAttribute("open", "");
-      Sr(this);
+      Xr(this);
     }
     showModal() {
       this.show();
@@ -1616,19 +1607,19 @@ footer slot[name="footer"]::slotted(button:hover) {
         this._dialog.close();
     }
   }
-  var Pr = (t, e) => {
+  var ti = (t, e) => {
     if (e.target === e.currentTarget)
       t.hide();
   };
-  var Dr = (t, e) => {
+  var ei = (t, e) => {
     e.preventDefault(), t.hide();
   };
-  var qr = (t) => {
+  var ri = (t) => {
     if (t.hasAttribute("open"))
       t.removeAttribute("open");
     t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
   };
-  var Br = `<dialog part="dialog">
+  var ii = `<dialog part="dialog">
     <form method="dialog" id="m-close"></form>
     <div class="panel" part="panel">
         <header class="header" part="header">
@@ -1640,7 +1631,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     </div>
 </dialog>
 `;
-  var Vr = `:host {
+  var oi = `:host {
     --modal-width: var(--p9r-modal-width, 520px);
     --modal-radius: var(--p9r-modal-radius, 12px);
     --modal-bg: var(--p9r-modal-bg, var(--bg-surface, #ffffff));
@@ -1725,16 +1716,16 @@ dialog[open]::backdrop { opacity: 1; }
 .body { padding: var(--modal-pad); overflow: auto; }
 `;
 
-  class Nr extends s {
+  class ni extends s {
     _dialog = null;
-    _onBackdrop = (t) => Pr(this, t);
-    _onCancel = (t) => Dr(this, t);
-    _onClose = () => qr(this);
+    _onBackdrop = (t) => ti(this, t);
+    _onCancel = (t) => ei(this, t);
+    _onClose = () => ri(this);
     static get observedAttributes() {
       return ["open", "aria-label"];
     }
     constructor() {
-      super({ css: Vr, template: Br });
+      super({ css: oi, template: ii });
     }
     connectedCallback() {
       this._dialog ??= this.shadowRoot?.querySelector("dialog") ?? null, c(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this.addEventListener("form:success", this.hide), this._syncLabel(), this._syncOpen();
@@ -1790,17 +1781,17 @@ dialog[open]::backdrop { opacity: 1; }
         this.show();
     }
   }
-  var Or = `<slot></slot>
+  var ai = `<slot></slot>
 `;
-  var jr = `:host {
+  var si = `:host {
     display: contents;
     cursor: pointer;
 }
 `;
 
-  class $r extends s {
+  class li extends s {
     constructor() {
-      super({ css: jr, template: Or });
+      super({ css: si, template: ai });
     }
     connectedCallback() {
       if (!this.hasAttribute("role"))
@@ -1839,7 +1830,7 @@ dialog[open]::backdrop { opacity: 1; }
         this.removeAttribute("modal-target");
     }
   }
-  var Zr = `<button id="btn" class="button" part="button">
+  var pi = `<button id="btn" class="button" part="button">
     <slot name="icon-left"></slot>
     <span class="label">
         <slot>Button</slot>
@@ -1847,7 +1838,7 @@ dialog[open]::backdrop { opacity: 1; }
     <slot name="icon-right"></slot>
 </button>
 `;
-  var Yr = `:host {
+  var hi = `:host {
   display: inline-block;
 
   --_btn-padding-y: 0.6rem;
@@ -1910,7 +1901,7 @@ dialog[open]::backdrop { opacity: 1; }
   width: 1.2rem;
 }
 `;
-  var Qr = `:host([color="primary"]) {
+  var mi = `:host([color="primary"]) {
   --_accent-base: var(--primary-base);
   --_accent-muted: var(--primary-muted);
   --_accent-contrast: var(--primary-foreground, var(--primary-contrasted));
@@ -1995,14 +1986,14 @@ dialog[open]::backdrop { opacity: 1; }
   }
 }
 `;
-  var Jl = Yr + Qr;
+  var bd = hi + mi;
 
-  class Jr extends s {
+  class bi extends s {
     static formAssociated = true;
     _internals;
     _btn;
     constructor() {
-      super({ css: Jl, template: Zr });
+      super({ css: bd, template: pi });
       this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
     }
     static get observedAttributes() {
@@ -2053,7 +2044,7 @@ dialog[open]::backdrop { opacity: 1; }
     }
   }
 
-  class J extends s {
+  class Q extends s {
     static formAssociated = true;
     _internals;
     _defaultChecked = false;
@@ -2098,7 +2089,7 @@ dialog[open]::backdrop { opacity: 1; }
       return this._internals.form;
     }
   }
-  var Gr = `<label class="checkbox-container" part="container">
+  var fi = `<label class="checkbox-container" part="container">
     <span class="input-wrapper">
         <input type="checkbox" id="native-input" part="input" />
         <span class="custom-box" part="box" aria-hidden="true">
@@ -2113,7 +2104,7 @@ dialog[open]::backdrop { opacity: 1; }
     </span>
 </label>
 `;
-  var Wr = `:host {
+  var vi = `:host {
   display: inline-block;
   --cb-size: 20px;
   --cb-border: var(--border-default, #d1d5db);
@@ -2195,7 +2186,7 @@ input {
   display: none;
 }
 `;
-  var ti = `input:checked ~ .custom-box {
+  var gi = `input:checked ~ .custom-box {
   background-color: var(--cb-active-bg);
   border-color: var(--cb-active-border);
 }
@@ -2248,11 +2239,11 @@ input:focus-visible ~ .custom-box {
   }
 }
 `;
-  var D = (t, e, r) => {
+  var F = (t, e, r) => {
     let i = e?.checked ?? t.hasAttribute("checked");
     r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
   };
-  var ei = (t, e) => {
+  var xi = (t, e) => {
     if (!e)
       return;
     if (e.checked = t.hasAttribute("checked"), e.disabled = t.hasAttribute("disabled"), e.indeterminate = t.hasAttribute("indeterminate"), t.hasAttribute("name"))
@@ -2260,11 +2251,11 @@ input:focus-visible ~ .custom-box {
     if (t.hasAttribute("value"))
       e.value = t.getAttribute("value") ?? "";
   };
-  var ri = (t, e, r, i, o) => {
+  var yi = (t, e, r, i, o) => {
     if (!e)
       return;
     if (i === "checked")
-      e.checked = o !== null, D(t, e, r);
+      e.checked = o !== null, F(t, e, r);
     else if (i === "disabled")
       e.disabled = o !== null;
     else if (i === "indeterminate")
@@ -2272,24 +2263,24 @@ input:focus-visible ~ .custom-box {
     else if (i === "name")
       e.name = o ?? "";
     else if (i === "value")
-      e.value = o ?? "", D(t, e, r);
+      e.value = o ?? "", F(t, e, r);
   };
-  var ii = (t, e, r) => {
+  var _i = (t, e, r) => {
     if (e?.checked ?? false)
       t.setAttribute("checked", "");
     else
       t.removeAttribute("checked");
     if (e && e.indeterminate === false && t.hasAttribute("indeterminate"))
       t.removeAttribute("indeterminate");
-    D(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
+    F(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
   };
-  var oi = (t, e) => {
+  var wi = (t, e) => {
     if (t.hasAttribute("disabled"))
       e.preventDefault(), e.stopImmediatePropagation();
   };
-  var ed = Wr + ti;
+  var xd = vi + gi;
 
-  class ni extends J {
+  class ki extends Q {
     _input;
     _labelText;
     _labelSlot;
@@ -2298,11 +2289,11 @@ input:focus-visible ~ .custom-box {
       return ["checked", "disabled", "name", "value", "indeterminate"];
     }
     constructor() {
-      super({ css: ed, template: Gr });
+      super({ css: xd, template: fi });
       this._input = this.shadowRoot?.querySelector("input") ?? null, this._labelText = this.shadowRoot?.querySelector(".label-text") ?? null, this._labelSlot = this.shadowRoot?.querySelector(".label-text slot:not([name])") ?? null;
     }
     connectedCallback() {
-      this._captureDefaults(), ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => c(this, t)), ei(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), D(this, this._input, this._internals);
+      this._captureDefaults(), ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => c(this, t)), xi(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), F(this, this._input, this._internals);
     }
     disconnectedCallback() {
       this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick), this._labelSlot?.removeEventListener("slotchange", this._syncLabel);
@@ -2322,10 +2313,10 @@ input:focus-visible ~ .custom-box {
       this.indeterminate = this._defaultIndeterminate, super.formResetCallback();
     }
     attributeChangedCallback(t, e, r) {
-      ri(this, this._input, this._internals, t, r);
+      yi(this, this._input, this._internals, t, r);
     }
-    _onChange = () => ii(this, this._input, this._internals);
-    _onClick = (t) => oi(this, t);
+    _onChange = () => _i(this, this._input, this._internals);
+    _onClick = (t) => wi(this, t);
     get indeterminate() {
       return this._input?.indeterminate ?? this.hasAttribute("indeterminate");
     }
@@ -2337,7 +2328,7 @@ input:focus-visible ~ .custom-box {
       this._input?.click();
     }
   }
-  var ai = `<div class="field">
+  var Ei = `<div class="field">
     <label class="label" for="input"></label>
     <div class="control">
         <svg class="search" viewBox="0 0 24 24" aria-hidden="true">
@@ -2368,7 +2359,7 @@ input:focus-visible ~ .custom-box {
 </div>
 <div hidden><slot></slot></div>
 `;
-  var bt = `:host {
+  var gt = `:host {
     display: block;
 }
 
@@ -2480,7 +2471,7 @@ input:disabled {
     color: var(--text-main, #1e293b);
 }
 `;
-  var vt = `.listbox {
+  var xt = `.listbox {
     position: absolute;
     inset-block-start: calc(100% + 3px);
     inset-inline: 0;
@@ -2580,68 +2571,112 @@ input:disabled {
     transform: rotate(90deg);
 }
 `;
-  function gt(t) {
+  function yt(t) {
     return Array.from(t.querySelectorAll("option")).map((e) => ({ value: e.value, label: e.textContent ?? e.value, disabled: e.disabled }));
   }
-  function ft(t, e) {
+  function _t(t, e) {
     let r = e.toLowerCase();
     return (r ? t.filter((o) => o.label.toLowerCase().includes(r)) : t).slice(0, 8).map((o) => ({ ...o, kind: "option" }));
   }
-  function xt(t, e, r, i, o) {
+  function wt(t, e, r, i, o) {
     let n = document.createElement("div");
     return n.className = `option ${t.kind}`, n.id = `option-${e}`, n.dataset.active = String(e === r), n.dataset.selected = String(t.kind === "option" && t.value === i), n.setAttribute("role", "option"), n.setAttribute("aria-selected", n.dataset.active), n.addEventListener("mousedown", (a) => {
       if (a.preventDefault(), !t.disabled)
         o(t);
-    }), n.append(li(), di(t.label)), n;
+    }), n.append(Si(), Li(t.label)), n;
   }
-  function _t() {
+  function kt() {
     let t = document.createElement("div");
     return t.className = "empty", t.textContent = "No results", t;
   }
-  function si(t, e) {
+  function Ai(t, e) {
     let r = document.createElement("div");
     return r.className = "option create", r.setAttribute("role", "option"), r.addEventListener("mousedown", (i) => {
       i.preventDefault(), e();
-    }), r.append(li(), di(t)), r;
+    }), r.append(Si(), Li(t)), r;
   }
-  function li() {
+  function Si() {
     let t = document.createElement("span");
     return t.className = "indicator", t;
   }
-  function di(t) {
+  function Li(t) {
     let e = document.createElement("span");
     return e.className = "option-label", e.textContent = t, e;
   }
-  var nd = bt + vt;
 
-  class ci extends s {
+  class Ut {
+    internals;
+    input;
+    optionSlot;
+    label;
+    listbox;
+    clearButton;
+    chevron;
+    constructor(t, e) {
+      this.internals = e;
+      this.input = t?.querySelector("input") ?? null, this.label = t?.querySelector(".label") ?? null, this.listbox = t?.querySelector("[role='listbox']") ?? null, this.clearButton = t?.querySelector("[data-clear]") ?? null, this.chevron = t?.querySelector(".chevron") ?? null, this.optionSlot = t?.querySelector("slot") ?? null;
+    }
+    connect(t) {
+      this.input?.addEventListener("focus", t.focus), this.input?.addEventListener("input", t.input), this.input?.addEventListener("keydown", t.keydown), this.input?.addEventListener("blur", t.blur), this.clearButton?.addEventListener("mousedown", t.clear), this.optionSlot?.addEventListener("slotchange", t.options);
+    }
+    disconnect(t) {
+      this.input?.removeEventListener("focus", t.focus), this.input?.removeEventListener("input", t.input), this.input?.removeEventListener("keydown", t.keydown), this.input?.removeEventListener("blur", t.blur), this.clearButton?.removeEventListener("mousedown", t.clear), this.optionSlot?.removeEventListener("slotchange", t.options);
+    }
+    syncAttributes(t, e) {
+      if (this.label) {
+        let r = t.getAttribute("label") ?? "";
+        this.label.textContent = r, this.label.hidden = r === "";
+      }
+      if (this.input)
+        this.input.placeholder = t.getAttribute("placeholder") ?? "", this.input.disabled = e;
+    }
+    syncDisplay(t, e) {
+      if (this.input && document.activeElement !== this.input)
+        this.input.value = e;
+      if (this.internals.setFormValue(t), this.clearButton)
+        this.clearButton.hidden = e === "";
+      if (this.chevron)
+        this.chevron.toggleAttribute("hidden", e !== "");
+    }
+    renderList(t, e, r, i) {
+      if (!this.listbox)
+        return;
+      if (this.listbox.replaceChildren(...t.map((o, n) => wt(o, n, e, r, i))), t.length === 0)
+        this.listbox.append(kt());
+      this.listbox.hidden = false, this.input?.setAttribute("aria-expanded", "true");
+    }
+    hideList() {
+      if (this.listbox)
+        this.listbox.hidden = true;
+      this.input?.setAttribute("aria-expanded", "false"), this.input?.removeAttribute("aria-activedescendant");
+    }
+    get listHidden() {
+      return this.listbox?.hidden ?? true;
+    }
+  }
+
+  class Ci extends s {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "disabled", "creatable"];
     }
-    internalsRef;
-    input;
-    labelEl;
-    listbox;
-    clearButton;
-    chevron;
-    optionSlot;
+    view;
     options = [];
     items = [];
     activeIndex = -1;
     selectedValue = "";
     selectedLabel = "";
     constructor() {
-      super({ css: nd, template: ai });
-      this.internalsRef = this.attachInternals(), this.input = this.shadowRoot?.querySelector("input") ?? null, this.labelEl = this.shadowRoot?.querySelector(".label") ?? null, this.listbox = this.shadowRoot?.querySelector("[role='listbox']") ?? null, this.clearButton = this.shadowRoot?.querySelector("[data-clear]") ?? null, this.chevron = this.shadowRoot?.querySelector(".chevron") ?? null, this.optionSlot = this.shadowRoot?.querySelector("slot") ?? null;
+      super({ css: gt + xt, template: Ei });
+      this.view = new Ut(this.shadowRoot, this.attachInternals());
     }
     connectedCallback() {
       for (let t of ["value", "disabled"])
         c(this, t);
-      this.input?.addEventListener("focus", this.onFocus), this.input?.addEventListener("input", this.onInput), this.input?.addEventListener("keydown", this.onKeydown), this.input?.addEventListener("blur", this.onBlur), this.clearButton?.addEventListener("mousedown", this.onClear), this.optionSlot?.addEventListener("slotchange", this.syncOptions), this.syncOptions(), this.syncAttributes();
+      this.view.connect(this.handlers), this.syncOptions(), this.syncAttributes();
     }
     disconnectedCallback() {
-      this.input?.removeEventListener("focus", this.onFocus), this.input?.removeEventListener("input", this.onInput), this.input?.removeEventListener("keydown", this.onKeydown), this.input?.removeEventListener("blur", this.onBlur), this.clearButton?.removeEventListener("mousedown", this.onClear), this.optionSlot?.removeEventListener("slotchange", this.syncOptions);
+      this.view.disconnect(this.handlers);
     }
     attributeChangedCallback(t, e, r) {
       if (t === "value")
@@ -2653,9 +2688,7 @@ input:disabled {
       return this.selectedValue;
     }
     set value(t) {
-      this.selectedValue = t ?? "";
-      let e = this.options.find((r) => r.value === this.selectedValue);
-      this.selectedLabel = e?.label ?? this.selectedValue, this.syncDisplay();
+      this.selectedValue = t ?? "", this.selectedLabel = this.options.find((e) => e.value === this.selectedValue)?.label ?? this.selectedValue, this.syncDisplay();
     }
     get disabled() {
       return this.hasAttribute("disabled");
@@ -2664,90 +2697,64 @@ input:disabled {
       t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
     }
     focus() {
-      this.input?.focus();
+      this.view.input?.focus();
     }
+    handlers = { focus: () => this.renderList(this.query), input: () => {
+      this.activeIndex = -1, this.renderList(this.query);
+    }, keydown: (t) => this.onKeydown(t), blur: () => window.setTimeout(() => {
+      this.hideList(), this.syncDisplay();
+    }, 120), clear: (t) => {
+      t.preventDefault(), this.selectItem({ kind: "option", value: "", label: "", disabled: false }), this.view.input?.focus();
+    }, options: () => this.syncOptions() };
     syncAttributes() {
-      if (this.labelEl) {
-        let t = this.getAttribute("label") ?? "";
-        this.labelEl.textContent = t, this.labelEl.hidden = t === "";
-      }
-      if (this.input)
-        this.input.placeholder = this.getAttribute("placeholder") ?? "", this.input.disabled = this.disabled;
-      this.syncDisplay();
+      this.view.syncAttributes(this, this.disabled), this.syncDisplay();
     }
-    syncOptions = () => {
-      this.options = gt(this), this.value = this.getAttribute("value") ?? this.selectedValue;
-    };
+    syncOptions() {
+      this.options = yt(this), this.value = this.getAttribute("value") ?? this.selectedValue;
+    }
     syncDisplay() {
-      if (this.input && document.activeElement !== this.input)
-        this.input.value = this.selectedLabel;
-      if (this.internalsRef.setFormValue(this.selectedValue), this.clearButton)
-        this.clearButton.hidden = this.selectedLabel === "";
-      if (this.chevron)
-        this.chevron.toggleAttribute("hidden", this.selectedLabel !== "");
+      this.view.syncDisplay(this.selectedValue, this.selectedLabel);
     }
     renderList(t) {
-      if (!this.listbox)
-        return;
-      if (this.items = ft(this.options, t), this.items.length === 0 && t && this.hasAttribute("creatable"))
+      if (this.items = _t(this.options, t), this.items.length === 0 && t && this.hasAttribute("creatable"))
         this.items = [{ kind: "create", value: t, label: `Add "${t}"`, disabled: false }];
-      if (this.listbox.replaceChildren(...this.items.map((e, r) => xt(e, r, this.activeIndex, this.selectedValue, this.selectItem))), this.items.length === 0)
-        this.listbox.append(_t());
-      this.listbox.hidden = false, this.input?.setAttribute("aria-expanded", "true");
+      this.view.renderList(this.items, this.activeIndex, this.selectedValue, this.selectItem);
     }
     selectItem = (t) => {
-      let e = t.kind === "create" ? t.value : t.label;
-      if (this.selectedValue = t.value, this.selectedLabel = e, this.input)
-        this.input.value = e;
-      this.internalsRef.setFormValue(t.value), this.hideList(), this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: t.value, label: e, created: t.kind === "create" } }));
+      if (this.selectedValue = t.value, this.selectedLabel = t.kind === "create" ? t.value : t.label, this.view.input)
+        this.view.input.value = this.selectedLabel;
+      this.syncDisplay(), this.hideList(), this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: t.value, label: this.selectedLabel, created: t.kind === "create" } }));
     };
-    hideList() {
-      if (this.listbox)
-        this.listbox.hidden = true;
-      this.input?.setAttribute("aria-expanded", "false"), this.input?.removeAttribute("aria-activedescendant"), this.activeIndex = -1;
-    }
-    onFocus = () => this.renderList(this.input?.value.trim() ?? "");
-    onInput = () => {
-      if (this.clearButton)
-        this.clearButton.hidden = this.input?.value === "";
-      this.activeIndex = -1, this.renderList(this.input?.value.trim() ?? "");
-    };
-    onBlur = () => {
-      window.setTimeout(() => {
-        this.hideList(), this.syncDisplay();
-      }, 120);
-    };
-    onClear = (t) => {
-      t.preventDefault(), this.selectItem({ kind: "option", value: "", label: "", disabled: false }), this.input?.focus();
-    };
-    onKeydown = (t) => {
+    onKeydown(t) {
       if (t.key === "ArrowDown" || t.key === "ArrowUp")
         this.moveActive(t);
-      else if (t.key === "Enter")
-        this.confirmActive(t);
-      else if (t.key === "Escape")
+      else if (t.key === "Enter") {
+        let e = this.items[this.activeIndex];
+        if (e)
+          t.preventDefault(), this.selectItem(e);
+      } else if (t.key === "Escape")
         t.preventDefault(), this.hideList(), this.syncDisplay();
-    };
+    }
     moveActive(t) {
-      if (t.preventDefault(), this.listbox?.hidden)
-        this.renderList(this.input?.value.trim() ?? "");
+      if (t.preventDefault(), this.view.listHidden)
+        this.renderList(this.query);
       if (this.items.length === 0)
         return;
       let e = t.key === "ArrowDown" ? 1 : -1;
-      this.activeIndex = Math.max(0, Math.min(this.items.length - 1, this.activeIndex + e)), this.renderList(this.input?.value.trim() ?? ""), this.input?.setAttribute("aria-activedescendant", `option-${this.activeIndex}`);
+      this.activeIndex = Math.max(0, Math.min(this.items.length - 1, this.activeIndex + e)), this.renderList(this.query), this.view.input?.setAttribute("aria-activedescendant", `option-${this.activeIndex}`);
     }
-    confirmActive(t) {
-      let e = this.items[this.activeIndex];
-      if (!e)
-        return;
-      t.preventDefault(), this.selectItem(e);
+    hideList() {
+      this.view.hideList(), this.activeIndex = -1;
+    }
+    get query() {
+      return this.view.input?.value.trim() ?? "";
     }
   }
-  var vi = `<button id="btn" class="icon-button" part="button">
+  var Ri = `<button id="btn" class="icon-button" part="button">
     <slot></slot>
 </button>
 `;
-  var gi = `:host {
+  var Pi = `:host {
   display: inline-block;
 
   --_size: 2.25rem;
@@ -2843,7 +2850,7 @@ input:disabled {
 }
 `;
 
-  class fi extends s {
+  class Bi extends s {
     static formAssociated = true;
     _internals;
     _btn;
@@ -2851,7 +2858,7 @@ input:disabled {
       return ["type", "disabled", "aria-label"];
     }
     constructor() {
-      super({ css: gi, template: vi });
+      super({ css: Pi, template: Ri });
       this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
     }
     connectedCallback() {
@@ -2909,7 +2916,7 @@ input:disabled {
         this.removeAttribute("disabled");
     }
   }
-  var Ai = `<div class="field" part="field">
+  var $i = `<div class="field" part="field">
     <label class="label" part="label"></label>
     <input class="input" part="input" type="text" />
     <div class="meta" part="meta" hidden>
@@ -2918,7 +2925,7 @@ input:disabled {
     </div>
 </div>
 `;
-  var Ci = `:host {
+  var Ui = `:host {
     display: block;
 }
 
@@ -2990,7 +2997,7 @@ input:disabled {
     display: none;
 }
 `;
-  var Ti = `.input:hover:not(:disabled) {
+  var Ki = `.input:hover:not(:disabled) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -3026,41 +3033,41 @@ input:disabled {
     font-weight: 600;
 }
 `;
-  var Si = `@media (prefers-reduced-motion: no-preference) {
+  var Xi = `@media (prefers-reduced-motion: no-preference) {
     .input { transition: border-color 0.15s, box-shadow 0.15s; }
 }
 `;
-  var Ut = (t) => {
+  var Qt = (t) => {
     let e = t.getAttribute("max-count");
     if (e === null)
       return null;
     let r = parseInt(e, 10);
     return Number.isFinite(r) && r > 0 ? r : null;
   };
-  var q = (t, e, r, i) => {
+  var N = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let o = Ut(t);
+    let o = Qt(t);
     if (o === null)
       return;
     let n = e.value.length;
     i.textContent = String(n), r.dataset.over = String(n > o);
   };
-  var Xt = (t, e, r) => {
+  var Wt = (t, e, r) => {
     if (!t || !e || !r)
       return;
     let i = (t.textContent ?? "").length > 0, o = !e.hidden;
     r.hidden = !i && !o;
   };
-  var vd = 0;
-  var Mi = () => `p9r-input-label-${++vd}`;
-  var Zt = (t, e) => {
+  var zd = 0;
+  var Gi = () => `p9r-input-label-${++zd}`;
+  var Jt = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("label") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var gd = (t, e) => {
+  var Rd = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("placeholder");
@@ -3069,12 +3076,12 @@ input:disabled {
     else
       e.setAttribute("placeholder", r);
   };
-  var fd = (t, e) => {
+  var Pd = (t, e) => {
     if (!e)
       return;
     e.setAttribute("type", t.getAttribute("type") ?? "text");
   };
-  var xd = (t, e) => {
+  var Bd = (t, e) => {
     if (!e)
       return;
     for (let r of ["min", "max", "step"]) {
@@ -3085,11 +3092,11 @@ input:disabled {
         e.setAttribute(r, i);
     }
   };
-  var _d = (t, e) => {
+  var Fd = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var yd = (t, e) => {
+  var Nd = (t, e) => {
     if (!e)
       return;
     let r = t.hasAttribute("required");
@@ -3098,17 +3105,17 @@ input:disabled {
     else
       e.removeAttribute("aria-required");
   };
-  var wd = (t, e, r, i) => {
+  var Dd = (t, e, r, i) => {
     if (!e)
       return;
-    e.textContent = t.getAttribute("hint") ?? "", Xt(e, r, i);
+    e.textContent = t.getAttribute("hint") ?? "", Wt(e, r, i);
   };
-  var kd = (t, e) => {
+  var Od = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var Ed = (t, e) => {
+  var qd = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -3116,32 +3123,32 @@ input:disabled {
     else
       e.removeAttribute("aria-invalid");
   };
-  var Yt = (t, e, r, i, o) => {
+  var te = (t, e, r, i, o) => {
     if (!e || !r)
       return;
-    let n = Ut(t);
+    let n = Qt(t);
     if (n === null)
       e.hidden = true;
     else
       e.hidden = false, r.textContent = String(n);
-    Xt(i, e, o);
+    Wt(i, e, o);
   };
-  var Qt = (t, e, r, i, o, n, a) => {
-    Zt(t, r), gd(t, e), fd(t, e), xd(t, e), _d(t, e), yd(t, e), wd(t, i, n, o), kd(t, i), Ed(t, e), Yt(t, n, a, i, o);
+  var ee = (t, e, r, i, o, n, a) => {
+    Jt(t, r), Rd(t, e), Pd(t, e), Bd(t, e), Fd(t, e), Nd(t, e), Dd(t, i, n, o), Od(t, i), qd(t, e), te(t, n, a, i, o);
   };
-  var Hi = (t, e, r, i, o) => {
+  var Yi = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), q(t, e, i, o), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+    r.setFormValue(e.value), N(t, e, i, o), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   };
-  var Ii = (t, e, r) => {
+  var Zi = (t, e, r) => {
     if (!e)
       return;
     r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
-  var Ld = Ci + Ti + Si;
+  var Vd = Ui + Ki + Xi;
 
-  class zi extends s {
+  class Qi extends s {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "type", "min", "max", "step", "hint", "hint-level", "max-count", "invalid", "disabled", "required"];
@@ -3157,23 +3164,23 @@ input:disabled {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: Ld, template: Ai });
+      super({ css: Vd, template: $i });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._labelEl = t.querySelector(".label"), this._input = t.querySelector(".input"), this._hintEl = t.querySelector(".hint"), this._metaEl = t.querySelector(".meta"), this._counterEl = t.querySelector(".counter"), this._countEl = t.querySelector(".count"), this._maxEl = t.querySelector(".max");
-      let e = Mi();
+      let e = Gi();
       if (this._labelEl && this._input)
         this._labelEl.id = e, this._input.setAttribute("aria-labelledby", e);
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["value", "disabled", "required"].forEach((e) => c(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), Qt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+      ["value", "disabled", "required"].forEach((e) => c(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), ee(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
       let t = this.getAttribute("value");
       if (t !== null)
         this.value = t;
       else
-        q(this, this._input, this._counterEl, this._countEl);
+        N(this, this._input, this._counterEl, this._countEl);
     }
     disconnectedCallback() {
       this._input?.removeEventListener("input", this._onInput), this._input?.removeEventListener("change", this._onChange);
@@ -3187,11 +3194,11 @@ input:disabled {
       if (t === "value" && r !== null)
         this.value = r;
       else if (t === "label")
-        Zt(this, this._labelEl);
+        Jt(this, this._labelEl);
       else if (t === "max-count")
-        Yt(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), q(this, this._input, this._counterEl, this._countEl);
+        te(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), N(this, this._input, this._counterEl, this._countEl);
       else
-        Qt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+        ee(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
     }
     get value() {
       return this._input?.value ?? "";
@@ -3199,7 +3206,7 @@ input:disabled {
     set value(t) {
       if (!this._input)
         return;
-      this._input.value = t, this._internals.setFormValue(t), q(this, this._input, this._counterEl, this._countEl);
+      this._input.value = t, this._internals.setFormValue(t), N(this, this._input, this._counterEl, this._countEl);
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -3219,10 +3226,10 @@ input:disabled {
     focus() {
       this._input?.focus();
     }
-    _onInput = () => Hi(this, this._input, this._internals, this._counterEl, this._countEl);
-    _onChange = () => Ii(this, this._input, this._internals);
+    _onInput = () => Yi(this, this._input, this._internals, this._counterEl, this._countEl);
+    _onChange = () => Zi(this, this._input, this._internals);
   }
-  var Ri = `:host {
+  var Ji = `:host {
     display: block;
 }
 
@@ -3298,7 +3305,7 @@ input:disabled {
     margin-top: -2px;
 }
 `;
-  var Pi = `:host([disabled]) {
+  var to = `:host([disabled]) {
     opacity: 0.55;
     pointer-events: none;
 }
@@ -3384,14 +3391,14 @@ input:disabled {
     border: none;
 }
 `;
-  var Di = `@media (prefers-reduced-motion: no-preference) {
+  var eo = `@media (prefers-reduced-motion: no-preference) {
     .input-wrap { transition: border-color 0.15s; }
     .fill { transition: width 0.05s ease; }
     .slider::-webkit-slider-thumb { transition: transform 0.1s; }
 }
 `;
-  var Md = Ri + Pi + Di;
-  var $i = `<div class="field">
+  var Xd = Ji + to + eo;
+  var lo = `<div class="field">
     <span class="label"></span>
     <button class="trigger" type="button" tabindex="0"
             popovertarget="panel" popovertargetaction="toggle">
@@ -3407,7 +3414,7 @@ input:disabled {
 </div>
 <div hidden><slot></slot></div>
 `;
-  var Ki = `:host {
+  var co = `:host {
     display: block;
 }
 
@@ -3479,7 +3486,7 @@ input:disabled {
     transition: background 0.1s;
 }
 `;
-  var Ui = `.trigger:hover {
+  var uo = `.trigger:hover {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -3524,16 +3531,16 @@ input:disabled {
     font-weight: 600;
 }
 `;
-  var Xi = (t, e) => {
+  var po = (t, e) => {
     t.forEach((r) => r.classList.toggle("selected", r.dataset.value === e));
   };
-  var Zi = (t, e) => {
+  var ho = (t, e) => {
     if (!t)
       return;
     let r = e.getAttribute("label") ?? e.getAttribute("name") ?? "";
     t.textContent = r, t.hidden = r === "";
   };
-  var Yi = (t, e, r) => {
+  var mo = (t, e, r) => {
     let i = Array.from(t.querySelectorAll("option"));
     if (e)
       e.innerHTML = "";
@@ -3546,14 +3553,14 @@ input:disabled {
       n = i[0].value, a = i[0].textContent ?? "";
     return { options: o, initialValue: n, initialLabel: a };
   };
-  var Qi = (t, e, r, i) => {
+  var bo = (t, e, r, i) => {
     if (e)
       e.textContent = i;
-    Xi(t, r);
+    po(t, r);
   };
-  var Fd = Ki + Ui;
+  var Qd = co + uo;
 
-  class Ji extends s {
+  class fo extends s {
     static formAssociated = true;
     _internals;
     _trigger;
@@ -3564,11 +3571,11 @@ input:disabled {
     _value = "";
     _isOpen = false;
     constructor() {
-      super({ css: Fd, template: $i });
+      super({ css: Qd, template: lo });
       this._internals = this.attachInternals(), this._trigger = this.shadowRoot.querySelector(".trigger"), this._display = this.shadowRoot.querySelector(".value"), this._list = this.shadowRoot.querySelector(".list"), this._panel = this.shadowRoot.querySelector(".panel");
     }
     connectedCallback() {
-      Zi(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
+      ho(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
     }
     disconnectedCallback() {
       if (this.shadowRoot.querySelector("slot")?.removeEventListener("slotchange", this._onSlot), this._panel?.removeEventListener("beforetoggle", this._onBeforeToggle), this._panel?.removeEventListener("toggle", this._onToggle), this._isOpen)
@@ -3576,7 +3583,7 @@ input:disabled {
       this._unbindReposition();
     }
     _syncFromSlot = () => {
-      let { options: t, initialValue: e, initialLabel: r } = Yi(this, this._list, (o, n) => this._select(o, n));
+      let { options: t, initialValue: e, initialLabel: r } = mo(this, this._list, (o, n) => this._select(o, n));
       this._options = t;
       let i = this.getAttribute("value");
       if (i !== null) {
@@ -3593,7 +3600,7 @@ input:disabled {
       this._setValue(t, e), this._panel?.hidePopover?.(), this.dispatchEvent(new Event("change", { bubbles: true }));
     }
     _setValue(t, e) {
-      this._value = t, this._internals.setFormValue(t), Qi(this._options, this._display, t, e);
+      this._value = t, this._internals.setFormValue(t), bo(this._options, this._display, t, e);
     }
     _onBeforeToggle = (t) => {
       if (t.newState === "open")
@@ -3627,7 +3634,7 @@ input:disabled {
     }
     _onSlot = () => this._syncFromSlot();
   }
-  var co = `<div class="switch-container" part="container">
+  var Co = `<div class="switch-container" part="container">
     <span class="label" id="group-label" part="label"></span>
 
     <div class="switch-wrapper" part="wrapper" role="radiogroup" aria-labelledby="group-label">
@@ -3643,7 +3650,7 @@ input:disabled {
     </span>
 </div>
 `;
-  var uo = `:host {
+  var To = `:host {
   --active-index: 0;
   --total-options: 1;
   display: block;
@@ -3737,11 +3744,11 @@ input:disabled {
       return [];
     return t.assignedElements().filter((e) => e.tagName === "OPTION");
   };
-  var oe = (t, e) => {
+  var de = (t, e) => {
     if (t)
       t.textContent = e;
   };
-  var kt = (t, e, r) => {
+  var St = (t, e, r) => {
     let i = e.findIndex((o) => o.getAttribute("value") === r);
     if (i === -1)
       return;
@@ -3750,7 +3757,7 @@ input:disabled {
       o.setAttribute("aria-checked", a.toString()), o.setAttribute("tabindex", a ? "0" : "-1");
     });
   };
-  var Et = (t, e) => {
+  var Lt = (t, e) => {
     t.forEach((r) => {
       if (r.getAttribute("value") === e)
         r.setAttribute("selected", "");
@@ -3758,7 +3765,7 @@ input:disabled {
         r.removeAttribute("selected");
     });
   };
-  var ne = (t, e) => {
+  var ce = (t, e) => {
     let r = tt(e);
     t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, o) => {
       if (i.setAttribute("role", "radio"), i.setAttribute("part", "segment"), !i.hasAttribute("tabindex"))
@@ -3768,9 +3775,9 @@ input:disabled {
           return;
         t.value = i.getAttribute("value") ?? "", i.focus();
       };
-    }), kt(t, r, t.value), Et(r, t.value);
+    }), St(t, r, t.value), Lt(r, t.value);
   };
-  var po = (t, e, r) => {
+  var Mo = (t, e, r) => {
     if (t.disabled)
       return;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
@@ -3802,7 +3809,7 @@ input:disabled {
     t.value = u.getAttribute("value") ?? "", u.focus();
   };
 
-  class ho extends s {
+  class Ho extends s {
     static formAssociated = true;
     _internals;
     _labelEl;
@@ -3814,7 +3821,7 @@ input:disabled {
       return ["value", "disabled", "name", "label"];
     }
     constructor() {
-      super({ css: uo, template: co });
+      super({ css: To, template: Co });
       this._internals = this.attachInternals(), this._labelEl = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot:not([name])") ?? null;
     }
     connectedCallback() {
@@ -3823,8 +3830,8 @@ input:disabled {
       for (let t of ["value", "disabled", "name", "label"])
         c(this, t);
       if (this._slot)
-        this._slot.addEventListener("slotchange", this._onSlotChange), ne(this, this._slot);
-      this.addEventListener("keydown", this._onKey), oe(this._labelEl, this.getAttribute("label") ?? "");
+        this._slot.addEventListener("slotchange", this._onSlotChange), ce(this, this._slot);
+      this.addEventListener("keydown", this._onKey), de(this._labelEl, this.getAttribute("label") ?? "");
     }
     disconnectedCallback() {
       this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("keydown", this._onKey);
@@ -3843,7 +3850,7 @@ input:disabled {
       if (t === "value")
         this.value = r ?? "";
       else if (t === "label")
-        oe(this._labelEl, r ?? "");
+        de(this._labelEl, r ?? "");
     }
     get value() {
       return this.getAttribute("value") ?? "";
@@ -3853,7 +3860,7 @@ input:disabled {
         this.setAttribute("value", t);
       this._internals.setFormValue(t);
       let e = tt(this._slot);
-      if (kt(this, e, t), Et(e, t), !this._silentValueChange)
+      if (St(this, e, t), Lt(e, t), !this._silentValueChange)
         this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: t } }));
     }
     get name() {
@@ -3874,10 +3881,10 @@ input:disabled {
     set label(t) {
       t ? this.setAttribute("label", t) : this.removeAttribute("label");
     }
-    _onSlotChange = () => ne(this, this._slot);
-    _onKey = (t) => po(this, this._slot, t);
+    _onSlotChange = () => ce(this, this._slot);
+    _onKey = (t) => Mo(this, this._slot, t);
   }
-  var xo = `<div class="container" part="container">
+  var Fo = `<div class="container" part="container">
     <label for="main-input" part="label">
         <slot name="label">Tags</slot>
     </label>
@@ -3916,7 +3923,7 @@ input:disabled {
     ></div>
 </div>
 `;
-  var _o = `:host {
+  var No = `:host {
     display: block;
     font-family: system-ui, -apple-system, sans-serif;
 }
@@ -3984,7 +3991,7 @@ input::placeholder {
     }
 }
 `;
-  var yo = `input:hover:not(:disabled) {
+  var Do = `input:hover:not(:disabled) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -4062,7 +4069,7 @@ p9r-tag:hover {
     filter: brightness(0.92);
 }
 `;
-  var Lt = (t, e) => {
+  var Ct = (t, e) => {
     if (!t)
       return;
     t.textContent = "", window.setTimeout(() => {
@@ -4070,7 +4077,7 @@ p9r-tag:hover {
         t.textContent = e;
     }, 10);
   };
-  var ae = async (t) => {
+  var ue = async (t) => {
     let e = t.getAttribute("resource");
     if (!e)
       return null;
@@ -4085,7 +4092,7 @@ p9r-tag:hover {
       return null;
     }
   };
-  var wo = (t, e, r, i) => {
+  var Oo = (t, e, r, i) => {
     if (!t)
       return;
     if (t.innerHTML = "", e !== "multiple")
@@ -4095,11 +4102,11 @@ p9r-tag:hover {
       a.setAttribute("color", "primary"), a.setAttribute("part", "chip"), a.setAttribute("role", "listitem"), a.textContent = o, a.title = `Remove ${o}`, a.setAttribute("aria-label", `Remove ${o}`), a.addEventListener("click", () => i(n)), t.appendChild(a);
     });
   };
-  var ko = (t, e, r, i, o, n) => {
+  var qo = (t, e, r, i, o, n) => {
     if (!t || !e)
       return;
     if (r.length === 0) {
-      se(t, e);
+      pe(t, e);
       return;
     }
     if (t.innerHTML = "", r.forEach((a, l) => {
@@ -4118,24 +4125,24 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-activedescendant");
   };
-  var se = (t, e) => {
+  var pe = (t, e) => {
     if (t)
       t.hidden = true;
     if (e)
       e.setAttribute("aria-expanded", "false"), e.removeAttribute("aria-activedescendant");
   };
-  var Eo = (t, e, r) => {
+  var Vo = (t, e, r) => {
     let i = t.filter((o) => !e.includes(o.value));
     if (r === "")
       return i.slice(0, 8);
     return i.filter((o) => o.value.toLowerCase().includes(r)).slice(0, 8);
   };
-  var Lo = (t, e) => {
+  var jo = (t, e) => {
     if (t === "multiple")
       return e.join(",");
     return e[0] ?? "";
   };
-  var Ao = (t, e) => {
+  var $o = (t, e) => {
     if (t === "multiple")
       return e ? e.split(",").map((r) => r.trim()).filter((r) => r !== "") : [];
     return e ? [e.trim()] : [];
@@ -4147,78 +4154,78 @@ p9r-tag:hover {
       return;
     if (i === "multiple") {
       if (!r._tags.includes(o))
-        r._tags.push(o), Lt(r._liveRegion, `${o} added`);
+        r._tags.push(o), Ct(r._liveRegion, `${o} added`);
       r._input.value = "";
     } else
-      r._tags = [o], r._input.value = o, Lt(r._liveRegion, `${o} selected`);
-    r._activeIndex = -1, At(t), Tt(t);
+      r._tags = [o], r._input.value = o, Ct(r._liveRegion, `${o} selected`);
+    r._activeIndex = -1, Tt(t), Ht(t);
   };
-  var Co = (t, e) => {
+  var Uo = (t, e) => {
     let r = _(t), i = e.trim();
     if (r._tags = i ? [i] : [], r._internals.setFormValue(r.value), r._silent)
       return;
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: r.value, tags: [...r._tags] } }));
   };
-  var To = (t, e) => {
+  var Ko = (t, e) => {
     let r = _(t), i = r._tags[e];
     if (i === undefined)
       return;
-    r._tags.splice(e, 1), Lt(r._liveRegion, `${i} removed`), At(t), r._input?.focus();
+    r._tags.splice(e, 1), Ct(r._liveRegion, `${i} removed`), Tt(t), r._input?.focus();
   };
-  var So = (t) => {
+  var Xo = (t) => {
     let e = _(t);
     if (e._tags.length === 0)
       return;
-    To(t, e._tags.length - 1);
-  };
-  var At = (t) => {
-    let e = _(t);
-    if (le(t), e._internals.setFormValue(e.value), e._silent)
-      return;
-    t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: e.value, tags: [...e._tags] } }));
-  };
-  var le = (t) => {
-    let e = _(t);
-    wo(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => To(t, r));
-  };
-  var de = (t, e) => {
-    let r = _(t), o = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
-    r._suggestions = Eo(r._allSuggestions, o, e), r._activeIndex = -1, Ct(t);
-  };
-  var Ct = (t) => {
-    let e = _(t);
-    ko(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => et(t, r));
+    Ko(t, e._tags.length - 1);
   };
   var Tt = (t) => {
     let e = _(t);
-    se(e._suggestionsEl, e._input), e._activeIndex = -1;
+    if (he(t), e._internals.setFormValue(e.value), e._silent)
+      return;
+    t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: e.value, tags: [...e._tags] } }));
   };
-  var Mo = (t, e) => {
+  var he = (t) => {
+    let e = _(t);
+    Oo(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => Ko(t, r));
+  };
+  var me = (t, e) => {
+    let r = _(t), o = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
+    r._suggestions = Vo(r._allSuggestions, o, e), r._activeIndex = -1, Mt(t);
+  };
+  var Mt = (t) => {
+    let e = _(t);
+    qo(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => et(t, r));
+  };
+  var Ht = (t) => {
+    let e = _(t);
+    pe(e._suggestionsEl, e._input), e._activeIndex = -1;
+  };
+  var Go = (t, e) => {
     if (!e)
       return;
-    de(t, e.value.trim().toLowerCase());
+    me(t, e.value.trim().toLowerCase());
   };
-  var Ho = (t) => {
-    setTimeout(() => Tt(t), 150);
+  var Yo = (t) => {
+    setTimeout(() => Ht(t), 150);
   };
-  var Io = (t, e) => {
+  var Zo = (t, e) => {
     if (!e)
       return;
-    if (de(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
-      Co(t, e.value);
+    if (me(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
+      Uo(t, e.value);
   };
-  var zo = (t, e, r) => {
+  var Qo = (t, e, r) => {
     if (!e)
       return;
     let i = t.getAttribute("mode") || "multiple", o = t;
     if (r.key === "ArrowDown") {
       if (r.preventDefault(), o._suggestions.length === 0)
         return;
-      o._activeIndex = Math.min(o._activeIndex + 1, o._suggestions.length - 1), Ct(t);
+      o._activeIndex = Math.min(o._activeIndex + 1, o._suggestions.length - 1), Mt(t);
     } else if (r.key === "ArrowUp") {
       if (r.preventDefault(), o._suggestions.length === 0)
         return;
-      o._activeIndex = Math.max(o._activeIndex - 1, -1), Ct(t);
+      o._activeIndex = Math.max(o._activeIndex - 1, -1), Mt(t);
     } else if (r.key === "Enter") {
       r.preventDefault();
       let n = o._activeIndex >= 0 ? o._suggestions[o._activeIndex] : undefined;
@@ -4230,9 +4237,9 @@ p9r-tag:hover {
           et(t, a);
       }
     } else if (r.key === "Escape")
-      r.preventDefault(), Tt(t);
+      r.preventDefault(), Ht(t);
     else if (r.key === "Backspace" && e.value === "" && i === "multiple")
-      So(t);
+      Xo(t);
     else if (r.key === "," && i === "multiple") {
       r.preventDefault();
       let n = e.value.trim();
@@ -4240,9 +4247,9 @@ p9r-tag:hover {
         et(t, n);
     }
   };
-  var Xd = _o + yo;
+  var cc = No + Do;
 
-  class Fo extends s {
+  class Wo extends s {
     static formAssociated = true;
     static get observedAttributes() {
       return ["placeholder", "mode", "resource", "api", "disabled", "value"];
@@ -4261,7 +4268,7 @@ p9r-tag:hover {
     _defaultsCaptured = false;
     _silent = false;
     constructor() {
-      super({ css: Xd, template: xo });
+      super({ css: cc, template: Fo });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       if (this._input = t.querySelector("#main-input"), this._display = t.querySelector("#tags-display"), this._suggestionsEl = t.querySelector("#suggestions"), this._liveRegion = t.querySelector("#live-region"), this._uid = `ts-${Math.random().toString(36).slice(2, 9)}`, this._suggestionsEl)
@@ -4272,7 +4279,7 @@ p9r-tag:hover {
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => c(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), ae(this).then((t) => {
+      ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => c(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), ue(this).then((t) => {
         if (t)
           this._allSuggestions = t;
       });
@@ -4296,27 +4303,27 @@ p9r-tag:hover {
       else if (t === "disabled")
         this._input.disabled = this.hasAttribute("disabled");
       else if (t === "resource" || t === "api")
-        this._allSuggestions = [], ae(this).then((i) => {
+        this._allSuggestions = [], ue(this).then((i) => {
           if (i)
             this._allSuggestions = i;
         });
       else if (t === "mode")
-        le(this);
+        he(this);
       else if (t === "value")
         this.value = r ?? "";
     }
-    _onFocus = () => Mo(this, this._input);
-    _onBlur = () => Ho(this);
-    _onInput = () => Io(this, this._input);
-    _onKeyDown = (t) => zo(this, this._input, t);
+    _onFocus = () => Go(this, this._input);
+    _onBlur = () => Yo(this);
+    _onInput = () => Zo(this, this._input);
+    _onKeyDown = (t) => Qo(this, this._input, t);
     get value() {
-      return Lo(this.getAttribute("mode") || "multiple", this._tags);
+      return jo(this.getAttribute("mode") || "multiple", this._tags);
     }
     set value(t) {
       let e = this.getAttribute("mode") || "multiple";
-      if (this._tags = Ao(e, t), this._input)
+      if (this._tags = $o(e, t), this._input)
         this._input.value = e === "multiple" ? "" : this._tags[0] ?? "";
-      At(this);
+      Tt(this);
     }
     get name() {
       return this.getAttribute("name") || "";
@@ -4355,7 +4362,7 @@ p9r-tag:hover {
       return [...this._tags];
     }
   }
-  var Ro = `<div class="field" part="field">
+  var Jo = `<div class="field" part="field">
     <label class="label" part="label" for="ta"></label>
     <textarea id="ta" class="textarea" part="textarea"></textarea>
     <div class="meta" part="meta" hidden>
@@ -4364,7 +4371,7 @@ p9r-tag:hover {
     </div>
 </div>
 `;
-  var Po = `:host {
+  var tn = `:host {
   display: block;
 }
 
@@ -4419,7 +4426,7 @@ p9r-tag:hover {
 
 .meta[hidden] { display: none; }
 `;
-  var Do = `:host([resize="none"]) .textarea       { resize: none; }
+  var en = `:host([resize="none"]) .textarea       { resize: none; }
 :host([resize="horizontal"]) .textarea { resize: horizontal; }
 :host([resize="vertical"]) .textarea   { resize: vertical; }
 :host([resize="both"]) .textarea       { resize: both; }
@@ -4473,23 +4480,23 @@ p9r-tag:hover {
   font-weight: 600;
 }
 `;
-  var ce = (t) => {
+  var be = (t) => {
     let e = t.getAttribute("max-count");
     if (e === null)
       return null;
     let r = parseInt(e, 10);
     return Number.isFinite(r) && r > 0 ? r : null;
   };
-  var O = (t, e, r, i) => {
+  var V = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let o = ce(t);
+    let o = be(t);
     if (o === null)
       return;
     let n = e.value.length;
     i.textContent = String(n), r.dataset.over = String(n > o);
   };
-  var ue = (t, e, r) => {
+  var fe = (t, e, r) => {
     if (!t || !e || !r)
       return;
     let i = (t.textContent ?? "").length > 0, o = !e.hidden;
@@ -4500,13 +4507,13 @@ p9r-tag:hover {
       return;
     e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
   };
-  var Jd = (t, e) => {
+  var mc = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("label") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var Gd = (t, e) => {
+  var bc = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("placeholder");
@@ -4515,14 +4522,14 @@ p9r-tag:hover {
     else
       e.setAttribute("placeholder", r);
   };
-  var Wd = (t, e) => {
+  var fc = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("rows");
     if (r)
       e.rows = Number(r) || 3;
   };
-  var tc = (t, e) => {
+  var vc = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("maxlength");
@@ -4531,11 +4538,11 @@ p9r-tag:hover {
     else
       e.setAttribute("maxlength", r);
   };
-  var ec = (t, e) => {
+  var gc = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var rc = (t, e) => {
+  var xc = (t, e) => {
     if (!e)
       return;
     let r = t.hasAttribute("required");
@@ -4544,17 +4551,17 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-required");
   };
-  var ic = (t, e, r, i) => {
+  var yc = (t, e, r, i) => {
     if (!e)
       return;
-    e.textContent = t.getAttribute("hint") ?? "", ue(e, r, i);
+    e.textContent = t.getAttribute("hint") ?? "", fe(e, r, i);
   };
-  var oc = (t, e) => {
+  var _c = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var nc = (t, e) => {
+  var wc = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -4562,32 +4569,32 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-invalid");
   };
-  var pe = (t, e, r, i, o) => {
+  var ve = (t, e, r, i, o) => {
     if (!e || !r)
       return;
-    let n = ce(t);
+    let n = be(t);
     if (n === null)
       e.hidden = true;
     else
       e.hidden = false, r.textContent = String(n);
-    ue(i, e, o);
+    fe(i, e, o);
   };
-  var he = (t, e, r, i, o, n, a) => {
-    Jd(t, r), Gd(t, e), Wd(t, e), tc(t, e), ec(t, e), rc(t, e), ic(t, i, n, o), oc(t, i), nc(t, e), pe(t, n, a, i, o);
+  var ge = (t, e, r, i, o, n, a) => {
+    mc(t, r), bc(t, e), fc(t, e), vc(t, e), gc(t, e), xc(t, e), yc(t, i, n, o), _c(t, i), wc(t, e), ve(t, n, a, i, o);
   };
-  var qo = (t, e, r, i, o) => {
+  var rn = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), O(t, e, i, o), rt(t, e);
+    r.setFormValue(e.value), V(t, e, i, o), rt(t, e);
   };
-  var Bo = (t, e) => {
+  var on = (t, e) => {
     if (!t)
       return;
     e.setFormValue(t.value);
   };
-  var ac = Po + Do;
+  var kc = tn + en;
 
-  class Vo extends s {
+  class nn extends s {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "rows", "maxlength", "max-count", "hint", "hint-level", "invalid", "disabled", "required", "autosize"];
@@ -4603,7 +4610,7 @@ p9r-tag:hover {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: ac, template: Ro });
+      super({ css: kc, template: Jo });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._textarea = t.querySelector("textarea"), this._label = t.querySelector(".label"), this._hint = t.querySelector(".hint"), this._meta = t.querySelector(".meta"), this._counter = t.querySelector(".counter"), this._count = t.querySelector(".count"), this._max = t.querySelector(".max");
@@ -4611,12 +4618,12 @@ p9r-tag:hover {
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["value", "disabled", "required"].forEach((e) => c(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), he(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+      ["value", "disabled", "required"].forEach((e) => c(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), ge(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
       let t = this.getAttribute("value");
       if (t !== null)
         this.value = t;
       else
-        O(this, this._textarea, this._counter, this._count);
+        V(this, this._textarea, this._counter, this._count);
     }
     disconnectedCallback() {
       this._textarea?.removeEventListener("input", this._onInput), this._textarea?.removeEventListener("change", this._onChange);
@@ -4630,11 +4637,11 @@ p9r-tag:hover {
       if (t === "value" && r !== null)
         this.value = r;
       else if (t === "max-count")
-        pe(this, this._counter, this._max, this._hint, this._meta), O(this, this._textarea, this._counter, this._count);
+        ve(this, this._counter, this._max, this._hint, this._meta), V(this, this._textarea, this._counter, this._count);
       else if (t === "autosize")
         rt(this, this._textarea);
       else
-        he(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+        ge(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
     }
     get value() {
       return this._textarea?.value ?? "";
@@ -4642,7 +4649,7 @@ p9r-tag:hover {
     set value(t) {
       if (!this._textarea)
         return;
-      this._textarea.value = t, this._internals.setFormValue(t), O(this, this._textarea, this._counter, this._count), rt(this, this._textarea);
+      this._textarea.value = t, this._internals.setFormValue(t), V(this, this._textarea, this._counter, this._count), rt(this, this._textarea);
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -4662,10 +4669,10 @@ p9r-tag:hover {
     focus() {
       this._textarea?.focus();
     }
-    _onInput = () => qo(this, this._textarea, this._internals, this._counter, this._count);
-    _onChange = () => Bo(this._textarea, this._internals);
+    _onInput = () => rn(this, this._textarea, this._internals, this._counter, this._count);
+    _onChange = () => on(this._textarea, this._internals);
   }
-  var No = `<div class="field">
+  var an = `<div class="field">
     <div class="label-row">
         <label class="label" for="input"></label>
         <button class="create-button" type="button" data-create aria-label="Add value" hidden>
@@ -4689,7 +4696,7 @@ p9r-tag:hover {
 </div>
 <div hidden><slot></slot></div>
 `;
-  var Oo = `.label-row {
+  var sn = `.label-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -4805,22 +4812,25 @@ input:hover:not(:disabled) {
     color: var(--text-main, #1e293b);
 }
 `;
-  function jo(t) {
+  function xe(t, e, r, i) {
+    t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: e, values: r, created: i } }));
+  }
+  function ln(t) {
     return t.split(",").map((e) => e.trim()).filter(Boolean);
   }
-  function $o(t) {
+  function dn(t) {
     return t.join(",");
   }
-  function Ko(t, e) {
+  function cn(t, e) {
     return t.map((r) => e.find((i) => i.value === r) ?? { value: r, label: r, disabled: false });
   }
-  function Uo(t, e, r, i) {
-    let o = t.filter((a) => !e.includes(a.value)), n = ft(o, r);
+  function un(t, e, r, i) {
+    let o = t.filter((a) => !e.includes(a.value)), n = _t(o, r);
     if (n.length > 0 || !r || !i || e.includes(r))
       return n;
     return [{ kind: "create", value: r, label: `Add "${r}"`, disabled: false }];
   }
-  function Xo(t, e) {
+  function pn(t, e) {
     let r = document.createElement("span");
     r.className = "token";
     let i = document.createElement("span");
@@ -4829,33 +4839,75 @@ input:hover:not(:disabled) {
     return o.type = "button", o.setAttribute("aria-label", `Remove ${t.label}`), o.textContent = "x", o.addEventListener("click", () => e(t.value)), r.append(i, o), r;
   }
 
-  class Zo extends s {
+  class ye {
+    internals;
+    input;
+    optionSlot;
+    label;
+    tokens;
+    listbox;
+    createButton;
+    constructor(t, e) {
+      this.internals = e;
+      this.input = t?.querySelector("input") ?? null, this.label = t?.querySelector(".label") ?? null, this.tokens = t?.querySelector("[data-tokens]") ?? null, this.listbox = t?.querySelector("[role='listbox']") ?? null, this.createButton = t?.querySelector("[data-create]") ?? null, this.optionSlot = t?.querySelector("slot") ?? null;
+    }
+    connect(t) {
+      this.input?.addEventListener("focus", t.focus), this.input?.addEventListener("input", t.input), this.input?.addEventListener("keydown", t.keydown), this.input?.addEventListener("blur", t.blur), this.createButton?.addEventListener("mousedown", t.create), this.optionSlot?.addEventListener("slotchange", t.options);
+    }
+    disconnect(t) {
+      this.input?.removeEventListener("focus", t.focus), this.input?.removeEventListener("input", t.input), this.input?.removeEventListener("keydown", t.keydown), this.input?.removeEventListener("blur", t.blur), this.createButton?.removeEventListener("mousedown", t.create), this.optionSlot?.removeEventListener("slotchange", t.options);
+    }
+    syncAttributes(t, e, r) {
+      if (this.label) {
+        let i = t.getAttribute("label") ?? "";
+        this.label.textContent = i, this.label.hidden = i === "";
+      }
+      if (this.input)
+        this.input.placeholder = r ? "" : t.getAttribute("placeholder") ?? "", this.input.disabled = e;
+      if (this.createButton)
+        this.createButton.hidden = !t.hasAttribute("creatable");
+    }
+    syncDisplay(t, e, r, i) {
+      this.tokens?.replaceChildren(...cn(e, r).map((o) => pn(o, i))), this.internals.setFormValue(t);
+    }
+    renderList(t, e, r, i) {
+      if (!this.listbox)
+        return;
+      if (this.listbox.replaceChildren(...t.map((o, n) => wt(o, n, e, "", r))), t.length === 0)
+        this.listbox.append(i);
+      this.listbox.hidden = false, this.input?.setAttribute("aria-expanded", "true");
+    }
+    hideList() {
+      if (this.listbox)
+        this.listbox.hidden = true;
+      this.input?.setAttribute("aria-expanded", "false"), this.input?.removeAttribute("aria-activedescendant");
+    }
+    get listHidden() {
+      return this.listbox?.hidden ?? true;
+    }
+  }
+
+  class hn extends s {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "disabled", "creatable"];
     }
-    internalsRef;
-    input;
-    labelEl;
-    tokensEl;
-    listbox;
-    createButton;
-    optionSlot;
+    view;
     options = [];
     items = [];
     selected = [];
     activeIndex = -1;
     constructor() {
-      super({ css: bt + vt + Oo, template: No });
-      this.internalsRef = this.attachInternals(), this.input = this.shadowRoot?.querySelector("input") ?? null, this.labelEl = this.shadowRoot?.querySelector(".label") ?? null, this.tokensEl = this.shadowRoot?.querySelector("[data-tokens]") ?? null, this.listbox = this.shadowRoot?.querySelector("[role='listbox']") ?? null, this.createButton = this.shadowRoot?.querySelector("[data-create]") ?? null, this.optionSlot = this.shadowRoot?.querySelector("slot") ?? null;
+      super({ css: gt + xt + sn, template: an });
+      this.view = new ye(this.shadowRoot, this.attachInternals());
     }
     connectedCallback() {
       for (let t of ["value", "disabled"])
         c(this, t);
-      this.input?.addEventListener("focus", this.onFocus), this.input?.addEventListener("input", this.onInput), this.input?.addEventListener("keydown", this.onKeydown), this.input?.addEventListener("blur", this.onBlur), this.createButton?.addEventListener("mousedown", this.onCreate), this.optionSlot?.addEventListener("slotchange", this.syncOptions), this.syncOptions(), this.syncAttributes();
+      this.view.connect(this.handlers), this.syncOptions(), this.syncAttributes();
     }
     disconnectedCallback() {
-      this.input?.removeEventListener("focus", this.onFocus), this.input?.removeEventListener("input", this.onInput), this.input?.removeEventListener("keydown", this.onKeydown), this.input?.removeEventListener("blur", this.onBlur), this.createButton?.removeEventListener("mousedown", this.onCreate), this.optionSlot?.removeEventListener("slotchange", this.syncOptions);
+      this.view.disconnect(this.handlers);
     }
     attributeChangedCallback(t, e, r) {
       if (t === "value")
@@ -4864,10 +4916,10 @@ input:hover:not(:disabled) {
         this.syncAttributes();
     }
     get value() {
-      return $o(this.selected);
+      return dn(this.selected);
     }
     set value(t) {
-      this.selected = jo(t), this.syncDisplay();
+      this.selected = ln(t), this.syncDisplay();
     }
     get values() {
       return [...this.selected];
@@ -4879,104 +4931,74 @@ input:hover:not(:disabled) {
       t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
     }
     focus() {
-      this.input?.focus();
+      this.view.input?.focus();
     }
+    handlers = { focus: () => this.renderList(this.query), input: () => {
+      this.activeIndex = -1, this.renderList(this.query);
+    }, keydown: (t) => this.onKeydown(t), blur: () => window.setTimeout(() => this.hideList(), 120), create: (t) => this.onCreate(t), options: () => this.syncOptions() };
     syncAttributes() {
-      if (this.labelEl) {
-        let t = this.getAttribute("label") ?? "";
-        this.labelEl.textContent = t, this.labelEl.hidden = t === "";
-      }
-      if (this.input)
-        this.input.placeholder = this.selected.length ? "" : this.getAttribute("placeholder") ?? "", this.input.disabled = this.disabled;
-      if (this.createButton)
-        this.createButton.hidden = !this.hasAttribute("creatable");
-      this.syncDisplay();
+      this.view.syncAttributes(this, this.disabled, this.selected.length), this.syncDisplay();
     }
-    syncOptions = () => {
-      this.options = gt(this), this.value = this.getAttribute("value") ?? this.value;
-    };
+    syncOptions() {
+      this.options = yt(this), this.value = this.getAttribute("value") ?? this.value;
+    }
     syncDisplay() {
-      if (this.renderTokens(), this.internalsRef.setFormValue(this.value), this.input)
-        this.input.placeholder = this.selected.length ? "" : this.getAttribute("placeholder") ?? "";
-    }
-    renderTokens() {
-      this.tokensEl?.replaceChildren(...Ko(this.selected, this.options).map((t) => Xo(t, this.removeValue)));
+      this.view.syncDisplay(this.value, this.selected, this.options, this.removeValue), this.view.syncAttributes(this, this.disabled, this.selected.length);
     }
     renderList(t) {
-      if (!this.listbox)
-        return;
-      if (this.items = Uo(this.options, this.selected, t, this.hasAttribute("creatable")), this.listbox.replaceChildren(...this.items.map((e, r) => xt(e, r, this.activeIndex, "", this.selectItem))), this.items.length === 0)
-        this.listbox.append(this.emptyState());
-      this.listbox.hidden = false, this.input?.setAttribute("aria-expanded", "true");
-    }
-    emptyState() {
-      if (!this.hasAttribute("creatable"))
-        return _t();
-      return si("Type to create", () => this.input?.focus());
+      this.items = un(this.options, this.selected, t, this.hasAttribute("creatable"));
+      let e = this.hasAttribute("creatable") ? Ai("Type to create", () => this.view.input?.focus()) : kt();
+      this.view.renderList(this.items, this.activeIndex, this.selectItem, e);
     }
     selectItem = (t) => {
       if (!this.selected.includes(t.value))
         this.selected.push(t.value);
-      if (this.input)
-        this.input.value = "";
-      this.activeIndex = -1, this.syncDisplay(), this.hideList(), this.emitChange(t.kind === "create");
+      if (this.view.input)
+        this.view.input.value = "";
+      this.activeIndex = -1, this.syncDisplay(), this.hideList(), xe(this, this.value, this.values, t.kind === "create");
     };
     removeValue = (t) => {
       if (!t)
         return;
-      this.selected = this.selected.filter((e) => e !== t), this.syncDisplay(), this.emitChange(false), this.input?.focus();
+      this.selected = this.selected.filter((e) => e !== t), this.syncDisplay(), xe(this, this.value, this.values, false), this.view.input?.focus();
     };
-    emitChange(t) {
-      this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: this.value, values: this.values, created: t } }));
-    }
-    hideList() {
-      if (this.listbox)
-        this.listbox.hidden = true;
-      this.input?.setAttribute("aria-expanded", "false"), this.input?.removeAttribute("aria-activedescendant"), this.activeIndex = -1;
-    }
-    onFocus = () => this.renderList(this.input?.value.trim() ?? "");
-    onInput = () => {
-      this.activeIndex = -1, this.renderList(this.input?.value.trim() ?? "");
-    };
-    onBlur = () => {
-      window.setTimeout(() => this.hideList(), 120);
-    };
-    onCreate = (t) => {
-      t.preventDefault();
-      let e = this.input?.value.trim() ?? "";
-      if (e)
-        this.selectItem({ kind: "create", value: e, label: e, disabled: false });
+    onCreate(t) {
+      if (t.preventDefault(), this.query)
+        this.selectItem({ kind: "create", value: this.query, label: this.query, disabled: false });
       else
-        this.input?.focus(), this.renderList("");
-    };
-    onKeydown = (t) => {
+        this.view.input?.focus(), this.renderList("");
+    }
+    onKeydown(t) {
       if (t.key === "ArrowDown" || t.key === "ArrowUp")
         this.moveActive(t);
-      else if (t.key === "Enter" || t.key === ",")
-        this.confirmActive(t);
-      else if (t.key === "Escape")
+      else if (t.key === "Enter" || t.key === ",") {
+        t.preventDefault();
+        let e = this.items[this.activeIndex] ?? this.items[0];
+        if (e)
+          this.selectItem(e);
+      } else if (t.key === "Escape")
         t.preventDefault(), this.hideList();
-      else if (t.key === "Backspace" && !this.input?.value)
+      else if (t.key === "Backspace" && !this.view.input?.value)
         this.removeValue(this.selected.at(-1) ?? "");
-    };
+    }
     moveActive(t) {
-      if (t.preventDefault(), this.listbox?.hidden)
-        this.renderList(this.input?.value.trim() ?? "");
+      if (t.preventDefault(), this.view.listHidden)
+        this.renderList(this.query);
       if (this.items.length === 0)
         return;
       let e = t.key === "ArrowDown" ? 1 : -1;
-      this.activeIndex = Math.max(0, Math.min(this.items.length - 1, this.activeIndex + e)), this.renderList(this.input?.value.trim() ?? "");
+      this.activeIndex = Math.max(0, Math.min(this.items.length - 1, this.activeIndex + e)), this.renderList(this.query);
     }
-    confirmActive(t) {
-      t.preventDefault();
-      let e = this.items[this.activeIndex] ?? this.items[0];
-      if (e)
-        this.selectItem(e);
+    hideList() {
+      this.view.hideList(), this.activeIndex = -1;
+    }
+    get query() {
+      return this.view.input?.value.trim() ?? "";
     }
   }
-  var Go = `<slot></slot>
+  var vn = `<slot></slot>
 `;
-  var Wo = `:host {
+  var gn = `:host {
     --max-width: var(--p9r-container-md, 768px);
     display: block;
     width: 100%;
@@ -4997,14 +5019,14 @@ input:hover:not(:disabled) {
 :host([align="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }
 `;
 
-  class tn extends s {
+  class xn extends s {
     constructor() {
-      super({ css: Wo, template: Go });
+      super({ css: gn, template: vn });
     }
   }
-  var en = `<slot></slot>
+  var yn = `<slot></slot>
 `;
-  var rn = `:host {
+  var _n = `:host {
     --min: 240px;
     --item-max: none;
     --item-justify: stretch;
@@ -5081,12 +5103,12 @@ input:hover:not(:disabled) {
 :host([gap="xl"])   { --gap: var(--p9r-space-xl, 32px); }
 `;
 
-  class on extends s {
+  class wn extends s {
     constructor() {
-      super({ css: rn, template: en });
+      super({ css: _n, template: yn });
     }
   }
-  var nn = `<div class="app-container" part="container">
+  var kn = `<div class="app-container" part="container">
     <a class="skip-link" part="skip-link" href="#main-content">
         <slot name="skip-link">Skip to main content</slot>
     </a>
@@ -5108,7 +5130,7 @@ input:hover:not(:disabled) {
     </main>
 </div>
 `;
-  var an = `:host {
+  var En = `:host {
     display: block;
     height: 100vh;
     width: 100vw;
@@ -5243,13 +5265,13 @@ input:hover:not(:disabled) {
 }
 `;
 
-  class sn extends s {
+  class An extends s {
     _sidebar;
     _secondarySidebar;
     _secondarySlot;
     _content;
     constructor() {
-      super({ css: an, template: nn });
+      super({ css: En, template: kn });
       this._sidebar = this.shadowRoot?.querySelector(".app-sidebar") ?? null, this._secondarySidebar = this.shadowRoot?.querySelector(".secondary-sidebar") ?? null, this._secondarySlot = this.shadowRoot?.querySelector('slot[name="secondary-sidebar"]') ?? null, this._content = this.shadowRoot?.querySelector(".app-content") ?? null;
     }
     static get observedAttributes() {
@@ -5300,9 +5322,9 @@ input:hover:not(:disabled) {
       this._content?.focus();
     }
   }
-  var ln = `<slot></slot>
+  var Sn = `<slot></slot>
 `;
-  var dn = `:host {
+  var Ln = `:host {
     --gap: var(--p9r-space-md, 16px);
     --max-width: 100%;
     --divider-color: var(--p9r-stack-divider, var(--border-default, rgba(0,0,0,0.1)));
@@ -5374,12 +5396,12 @@ input:hover:not(:disabled) {
 }
 `;
 
-  class cn extends s {
+  class Cn extends s {
     constructor() {
-      super({ css: dn, template: ln });
+      super({ css: Ln, template: Sn });
     }
   }
-  var un = `<section class="album" part="album">
+  var Tn = `<section class="album" part="album">
     <slot class="images" name="images"></slot>
 </section>
 <section class="legend-album" part="legend-album" hidden></section>
@@ -5396,7 +5418,7 @@ input:hover:not(:disabled) {
     </div>
 </section>
 `;
-  var pn = `:host {
+  var Mn = `:host {
     --min: 260px;
     --gap: var(--p9r-space-lg, 24px);
     --radius: 8px;
@@ -5525,8 +5547,8 @@ input:hover:not(:disabled) {
     flex: 0 0 min(var(--min), 82vw);
     scroll-snap-align: start;
 }
-
-.preview[hidden] {
+`;
+  var Hn = `.preview[hidden] {
     display: none !important;
 }
 
@@ -5678,8 +5700,8 @@ input:hover:not(:disabled) {
     height: 100%;
     object-fit: cover;
 }
-
-:host([min="sm"]) { --min: 160px; }
+`;
+  var In = `:host([min="sm"]) { --min: 160px; }
 :host([min="md"]) { --min: 260px; }
 :host([min="lg"]) { --min: 340px; }
 :host([min="xl"]) { --min: 440px; }
@@ -5728,164 +5750,151 @@ input:hover:not(:disabled) {
 :host([align-self="end"]) { margin-inline: auto 0; }
 `;
 
-  class hn extends s {
-    _observer = null;
-    _activeIndex = 0;
+  class _e {
+    slot;
+    album;
+    legendAlbum;
+    preview;
+    previewImage;
+    caption;
+    strip;
+    closeButton;
+    previousButton;
+    nextButton;
+    constructor(t) {
+      this.slot = t.querySelector('slot[name="images"]'), this.album = t.querySelector(".album"), this.legendAlbum = t.querySelector(".legend-album"), this.preview = t.querySelector(".preview"), this.previewImage = t.querySelector(".preview-image"), this.caption = t.querySelector(".preview-caption"), this.strip = t.querySelector(".preview-strip"), this.closeButton = t.querySelector(".preview-close"), this.previousButton = t.querySelector(".preview-prev"), this.nextButton = t.querySelector(".preview-next");
+    }
+    images() {
+      return this.slot.assignedElements({ flatten: true }).filter((t) => t instanceof HTMLImageElement);
+    }
+    syncAlbum(t, e) {
+      this.album.hidden = e, this.legendAlbum.hidden = !e, this.legendAlbum.replaceChildren(...e ? t.map(Oc) : []);
+    }
+    showActive(t, e, r) {
+      let i = t[e];
+      this.previewImage.src = i.currentSrc || i.src, this.previewImage.alt = i.alt, this.caption.textContent = i.alt, this.caption.hidden = !r || i.alt.trim() === "", this.previousButton.hidden = t.length < 2, this.nextButton.hidden = t.length < 2, this.syncStrip(t, e);
+    }
+    syncStrip(t, e) {
+      let r = t.map((i, o) => {
+        let n = document.createElement("button");
+        n.className = "preview-thumb", n.type = "button", n.dataset.previewIndex = String(o), n.ariaSelected = o === e ? "true" : "false", n.setAttribute("role", "option"), n.ariaLabel = i.alt.trim() || `Image ${o + 1}`;
+        let a = document.createElement("img");
+        return a.src = i.currentSrc || i.src, a.alt = "", a.loading = i.loading || "lazy", n.append(a), n;
+      });
+      this.strip.replaceChildren(...r), this.strip.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest", inline: "center" });
+    }
+  }
+  function Oc(t, e) {
+    let r = document.createElement("figure");
+    r.className = "figure", r.setAttribute("part", "figure");
+    let i = document.createElement("button");
+    i.className = "figure-trigger", i.type = "button", i.dataset.previewIndex = String(e), i.ariaLabel = t.alt.trim() || "Open image";
+    let o = document.createElement("img");
+    if (o.src = t.currentSrc || t.src, o.alt = t.alt, o.loading = t.loading || "lazy", t.width > 0)
+      o.width = t.width;
+    if (t.height > 0)
+      o.height = t.height;
+    let n = document.createElement("figcaption");
+    return n.setAttribute("part", "legend"), n.textContent = t.alt, n.hidden = t.alt.trim() === "", i.append(o), r.append(i, n), r;
+  }
+  var qc = [Mn, Hn, In].join(`
+`);
+
+  class Pn extends s {
+    observer = null;
+    activeIndex = 0;
+    view;
     static get observedAttributes() {
       return ["view-legend"];
     }
     constructor() {
-      super({ css: pn, template: un });
+      super({ css: qc, template: Tn });
+      this.view = new _e(this.shadowRoot);
     }
     connectedCallback() {
-      this._slot.addEventListener("slotchange", this._syncImages), this.addEventListener("click", this._onHostClick), this._preview.addEventListener("click", this._onPreviewClick), this._strip.addEventListener("click", this._onStripClick), this._closeButton.addEventListener("click", this._closePreview), this._prevButton.addEventListener("click", this._showPrevious), this._nextButton.addEventListener("click", this._showNext), this._observer = new MutationObserver(this._syncImages), this._observer.observe(this, { attributes: true, childList: true, subtree: true, attributeFilter: ["src", "alt", "width", "height", "slot"] }), this._syncImages();
+      this.view.slot.addEventListener("slotchange", this.syncImages), this.addEventListener("click", this.onHostClick), this.view.preview.addEventListener("click", this.onPreviewClick), this.view.strip.addEventListener("click", this.onStripClick), this.view.closeButton.addEventListener("click", this.closePreview), this.view.previousButton.addEventListener("click", this.showPrevious), this.view.nextButton.addEventListener("click", this.showNext), this.observer = new MutationObserver(this.syncImages), this.observer.observe(this, { attributes: true, childList: true, subtree: true, attributeFilter: ["src", "alt", "width", "height", "slot"] }), this.syncImages();
     }
     disconnectedCallback() {
-      this._slot.removeEventListener("slotchange", this._syncImages), this.removeEventListener("click", this._onHostClick), this._preview.removeEventListener("click", this._onPreviewClick), this._strip.removeEventListener("click", this._onStripClick), this._closeButton.removeEventListener("click", this._closePreview), this._prevButton.removeEventListener("click", this._showPrevious), this._nextButton.removeEventListener("click", this._showNext), document.removeEventListener("keydown", this._onKeyDown), this._observer?.disconnect(), this._observer = null;
+      this.view.slot.removeEventListener("slotchange", this.syncImages), this.removeEventListener("click", this.onHostClick), this.view.preview.removeEventListener("click", this.onPreviewClick), this.view.strip.removeEventListener("click", this.onStripClick), this.view.closeButton.removeEventListener("click", this.closePreview), this.view.previousButton.removeEventListener("click", this.showPrevious), this.view.nextButton.removeEventListener("click", this.showNext), document.removeEventListener("keydown", this.onKeyDown), this.observer?.disconnect(), this.observer = null;
     }
     attributeChangedCallback() {
-      this._syncImages();
+      this.syncImages();
     }
-    _syncImages = () => {
+    syncImages = () => {
       let t = this.hasAttribute("view-legend");
-      if (this._album.hidden = t, this._legendAlbum.hidden = !t, !t) {
-        this._legendAlbum.replaceChildren(), this._syncPreview();
-        return;
-      }
-      let e = this._images.map((r, i) => this._figureFor(r, i));
-      this._legendAlbum.replaceChildren(...e), this._syncPreview();
+      this.view.syncAlbum(this.view.images(), t), this.syncPreview();
     };
-    _figureFor(t, e) {
-      let r = document.createElement("figure");
-      r.className = "figure", r.setAttribute("part", "figure");
-      let i = document.createElement("button");
-      i.className = "figure-trigger", i.type = "button", i.dataset.previewIndex = String(e), i.ariaLabel = t.alt.trim() || "Open image";
-      let o = document.createElement("img");
-      if (o.src = t.currentSrc || t.src, o.alt = t.alt, o.loading = t.loading || "lazy", t.width > 0)
-        o.width = t.width;
-      if (t.height > 0)
-        o.height = t.height;
-      let n = document.createElement("figcaption");
-      return n.setAttribute("part", "legend"), n.textContent = t.alt, n.hidden = t.alt.trim() === "", i.append(o), r.append(i, n), r;
-    }
-    _onHostClick = (t) => {
-      let e = this._images, r = t.composedPath().find((o) => {
+    onHostClick = (t) => {
+      let e = this.view.images(), r = t.composedPath().find((o) => {
         return o instanceof HTMLImageElement && e.includes(o);
       });
       if (r) {
-        this._openPreview(e.indexOf(r));
+        this.openPreview(e.indexOf(r));
         return;
       }
-      let i = t.composedPath().find((o) => {
-        return o instanceof HTMLButtonElement && o.dataset.previewIndex !== undefined;
-      });
-      if (!i)
-        return;
-      this._openPreview(Number(i.dataset.previewIndex));
+      let i = zn(t);
+      if (i)
+        this.openPreview(Number(i.dataset.previewIndex));
     };
-    _onPreviewClick = (t) => {
-      if (t.target === this._preview)
-        this._closePreview();
+    onPreviewClick = (t) => {
+      if (t.target === this.view.preview)
+        this.closePreview();
     };
-    _onStripClick = (t) => {
-      let e = t.composedPath().find((r) => {
-        return r instanceof HTMLButtonElement && r.dataset.previewIndex !== undefined;
-      });
-      if (!e)
-        return;
-      this._setActiveIndex(Number(e.dataset.previewIndex));
+    onStripClick = (t) => {
+      let e = zn(t);
+      if (e)
+        this.setActiveIndex(Number(e.dataset.previewIndex));
     };
-    _onKeyDown = (t) => {
-      if (this._preview.hidden)
+    onKeyDown = (t) => {
+      if (this.view.preview.hidden)
         return;
       if (t.key === "Escape")
-        t.preventDefault(), this._closePreview();
+        t.preventDefault(), this.closePreview();
       else if (t.key === "ArrowLeft")
-        t.preventDefault(), this._showPrevious();
+        t.preventDefault(), this.showPrevious();
       else if (t.key === "ArrowRight")
-        t.preventDefault(), this._showNext();
+        t.preventDefault(), this.showNext();
     };
-    _openPreview(t) {
-      if (!Number.isInteger(t) || t < 0 || t >= this._images.length)
+    openPreview(t) {
+      if (!Rn(t, this.view.images()))
         return;
-      this._preview.hidden = false, document.addEventListener("keydown", this._onKeyDown), this._setActiveIndex(t), this._closeButton.focus();
+      this.view.preview.hidden = false, document.addEventListener("keydown", this.onKeyDown), this.setActiveIndex(t), this.view.closeButton.focus();
     }
-    _closePreview = () => {
-      this._preview.hidden = true, document.removeEventListener("keydown", this._onKeyDown);
+    closePreview = () => {
+      this.view.preview.hidden = true, document.removeEventListener("keydown", this.onKeyDown);
     };
-    _showPrevious = () => {
-      let t = this._images.length;
-      if (t === 0)
+    showPrevious = () => this.move(-1);
+    showNext = () => this.move(1);
+    move(t) {
+      let e = this.view.images().length;
+      if (e > 0)
+        this.setActiveIndex((this.activeIndex + t + e) % e);
+    }
+    setActiveIndex(t) {
+      let e = this.view.images();
+      if (!Rn(t, e))
         return;
-      this._setActiveIndex((this._activeIndex - 1 + t) % t);
-    };
-    _showNext = () => {
-      let t = this._images.length;
-      if (t === 0)
+      this.activeIndex = t, this.view.showActive(e, t, this.hasAttribute("view-legend"));
+    }
+    syncPreview() {
+      if (this.view.preview.hidden)
         return;
-      this._setActiveIndex((this._activeIndex + 1) % t);
-    };
-    _setActiveIndex(t) {
-      let e = this._images;
-      if (!Number.isInteger(t) || t < 0 || t >= e.length)
-        return;
-      this._activeIndex = t;
-      let r = e[t];
-      this._previewImage.src = r.currentSrc || r.src, this._previewImage.alt = r.alt, this._caption.textContent = r.alt, this._caption.hidden = !this.hasAttribute("view-legend") || r.alt.trim() === "", this._prevButton.hidden = e.length < 2, this._nextButton.hidden = e.length < 2, this._syncStrip();
-    }
-    _syncPreview() {
-      if (this._preview.hidden)
-        return;
-      if (this._images.length === 0) {
-        this._closePreview();
-        return;
-      }
-      this._setActiveIndex(Math.min(this._activeIndex, this._images.length - 1));
-    }
-    _syncStrip() {
-      let t = this._images.map((e, r) => {
-        let i = document.createElement("button");
-        i.className = "preview-thumb", i.type = "button", i.dataset.previewIndex = String(r), i.ariaSelected = r === this._activeIndex ? "true" : "false", i.setAttribute("role", "option"), i.ariaLabel = e.alt.trim() || `Image ${r + 1}`;
-        let o = document.createElement("img");
-        return o.src = e.currentSrc || e.src, o.alt = "", o.loading = e.loading || "lazy", i.append(o), i;
-      });
-      this._strip.replaceChildren(...t), this._strip.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest", inline: "center" });
-    }
-    get _images() {
-      return this._slot.assignedElements({ flatten: true }).filter((t) => t instanceof HTMLImageElement);
-    }
-    get _slot() {
-      return this.shadowRoot.querySelector('slot[name="images"]');
-    }
-    get _album() {
-      return this.shadowRoot.querySelector(".album");
-    }
-    get _legendAlbum() {
-      return this.shadowRoot.querySelector(".legend-album");
-    }
-    get _preview() {
-      return this.shadowRoot.querySelector(".preview");
-    }
-    get _previewImage() {
-      return this.shadowRoot.querySelector(".preview-image");
-    }
-    get _caption() {
-      return this.shadowRoot.querySelector(".preview-caption");
-    }
-    get _strip() {
-      return this.shadowRoot.querySelector(".preview-strip");
-    }
-    get _closeButton() {
-      return this.shadowRoot.querySelector(".preview-close");
-    }
-    get _prevButton() {
-      return this.shadowRoot.querySelector(".preview-prev");
-    }
-    get _nextButton() {
-      return this.shadowRoot.querySelector(".preview-next");
+      let t = this.view.images();
+      if (t.length === 0)
+        this.closePreview();
+      else
+        this.setActiveIndex(Math.min(this.activeIndex, t.length - 1));
     }
   }
-  var mn = `<div class="action-menu">
+  function zn(t) {
+    return t.composedPath().find((e) => {
+      return e instanceof HTMLButtonElement && e.dataset.previewIndex !== undefined;
+    });
+  }
+  function Rn(t, e) {
+    return Number.isInteger(t) && t >= 0 && t < e.length;
+  }
+  var Bn = `<div class="action-menu">
     <button class="trigger" type="button" aria-haspopup="menu" aria-expanded="false" data-trigger>
         <span data-label></span>
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -5897,7 +5906,7 @@ input:hover:not(:disabled) {
     </div>
 </div>
 `;
-  var bn = `:host {
+  var Fn = `:host {
     display: inline-block;
     position: relative;
 }
@@ -5959,11 +5968,11 @@ input:hover:not(:disabled) {
 }
 `;
 
-  class vn extends s {
+  class Nn extends s {
     _trigger;
     _panel;
     constructor() {
-      super({ css: bn, template: mn });
+      super({ css: Fn, template: Bn });
       this._trigger = this.shadowRoot?.querySelector("[data-trigger]") ?? null, this._panel = this.shadowRoot?.querySelector("[data-panel]") ?? null;
     }
     static get observedAttributes() {
@@ -6005,7 +6014,7 @@ input:hover:not(:disabled) {
         this.open = !this.open;
     };
     _onMenuClick = (t) => {
-      let e = t.composedPath().find(kc);
+      let e = t.composedPath().find($c);
       if (e && !e.hasAttribute("disabled"))
         this.open = false;
     };
@@ -6020,10 +6029,10 @@ input:hover:not(:disabled) {
       this.open = false, this._trigger?.focus();
     };
   }
-  function kc(t) {
+  function $c(t) {
     return t instanceof HTMLElement && t.tagName.toLowerCase() === "p9r-action-menu-item";
   }
-  var gn = `<button class="item" type="button" role="menuitem" part="item">
+  var Dn = `<button class="item" type="button" role="menuitem" part="item">
     <span class="icon" aria-hidden="true">
         <slot name="icon"></slot>
     </span>
@@ -6032,7 +6041,7 @@ input:hover:not(:disabled) {
     </span>
 </button>
 `;
-  var fn = `:host {
+  var On = `:host {
     display: block;
     padding: 0 6px;
 }
@@ -6111,11 +6120,11 @@ input:hover:not(:disabled) {
 }
 `;
 
-  class xn extends s {
+  class qn extends s {
     _button;
     _iconSlot;
     constructor() {
-      super({ css: fn, template: gn });
+      super({ css: On, template: Dn });
       this._button = this.shadowRoot?.querySelector("button") ?? null, this._iconSlot = this.shadowRoot?.querySelector('slot[name="icon"]') ?? null;
     }
     static get observedAttributes() {
@@ -6147,14 +6156,14 @@ input:hover:not(:disabled) {
       this.toggleAttribute("has-icon", Boolean(this._iconSlot?.assignedElements().length));
     };
   }
-  var _n = `<section class="section">
+  var Vn = `<section class="section">
     <p data-label></p>
     <div class="items">
         <slot></slot>
     </div>
 </section>
 `;
-  var yn = `:host {
+  var jn = `:host {
     display: block;
 }
 
@@ -6181,10 +6190,10 @@ p {
 }
 `;
 
-  class wn extends s {
+  class $n extends s {
     _label;
     constructor() {
-      super({ css: yn, template: _n });
+      super({ css: jn, template: Vn });
       this._label = this.shadowRoot?.querySelector("[data-label]") ?? null;
     }
     static get observedAttributes() {
@@ -6208,7 +6217,7 @@ p {
       this._label.textContent = this.label, this._label.hidden = !this.label;
     }
   }
-  var kn = `<aside class="sidebar" part="sidebar">
+  var Un = `<aside class="sidebar" part="sidebar">
     <div class="sidebar-header" part="header">
         <slot name="header">
             <h3>Menu</h3>
@@ -6224,7 +6233,7 @@ p {
     </div>
 </aside>
 `;
-  var En = `:host {
+  var Kn = `:host {
     display: flex;
     flex-direction: column;
     width: 252px;
@@ -6349,13 +6358,13 @@ p {
     background: var(--border-default);
 }
 `;
-  var Ln = (t) => {
+  var Xn = (t) => {
     if (!t)
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e instanceof HTMLElement && e.tagName.toLowerCase() === "w13c-lateral-menu-item" && !e.hasAttribute("disabled"));
   };
-  var An = (t, e) => {
-    let r = t.shadowRoot?.querySelector("slot:not([name])"), i = Ln(r);
+  var Gn = (t, e) => {
+    let r = t.shadowRoot?.querySelector("slot:not([name])"), i = Xn(r);
     if (i.length === 0)
       return;
     let o = document.activeElement, n = i.findIndex((u) => u === o || u.contains(o)), a = -1;
@@ -6381,10 +6390,10 @@ p {
       l.focus();
   };
 
-  class Cn extends s {
+  class Yn extends s {
     _sidebar;
     constructor() {
-      super({ css: En, template: kn });
+      super({ css: Kn, template: Un });
       this._sidebar = this.shadowRoot?.querySelector(".sidebar") ?? null;
     }
     static get observedAttributes() {
@@ -6416,9 +6425,9 @@ p {
       else
         this.removeAttribute("collapsed");
     }
-    _onKey = (t) => An(this, t);
+    _onKey = (t) => Gn(this, t);
   }
-  var Tn = `<a class="menu-item" part="item" tabindex="-1">
+  var Zn = `<a class="menu-item" part="item" tabindex="-1">
     <span class="icon-wrapper" part="icon">
         <slot name="icon"></slot>
     </span>
@@ -6428,7 +6437,7 @@ p {
     <span class="badge" part="badge" id="badge-element"></span>
 </a>
 `;
-  var Sn = `:host {
+  var Qn = `:host {
     display: block;
     width: 100%;
     margin: 0;
@@ -6520,7 +6529,7 @@ p {
     flex-shrink: 0;
 }
 `;
-  var Mn = `.menu-item:hover {
+  var Wn = `.menu-item:hover {
     background-color: var(--item-bg-hover);
     color: var(--item-color-hover);
 }
@@ -6572,7 +6581,7 @@ p {
     box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
 }
 `;
-  var me = (t, e) => {
+  var we = (t, e) => {
     if (!t)
       return;
     if (e)
@@ -6580,7 +6589,7 @@ p {
     else
       t.removeAttribute("href");
   };
-  var be = (t, e) => {
+  var ke = (t, e) => {
     if (!t)
       return;
     if (e)
@@ -6588,7 +6597,7 @@ p {
     else
       t.textContent = "", t.style.display = "none";
   };
-  var St = (t, e, r) => {
+  var It = (t, e, r) => {
     if (r) {
       if (!t.hasAttribute("active"))
         t.setAttribute("active", "");
@@ -6599,9 +6608,9 @@ p {
       t.removeAttribute("aria-current"), e?.classList.remove("active");
     }
   };
-  var Mt = (t, e) => {
+  var zt = (t, e) => {
     if (t.hasAttribute("active")) {
-      St(t, e, true);
+      It(t, e, true);
       return;
     }
     if (!e || !t.hasAttribute("href"))
@@ -6611,12 +6620,12 @@ p {
       return;
     try {
       let i = new URL(r, window.location.href), n = new URL(window.location.href).pathname, a = i.pathname, l = a === "/" ? n === "/" : n === a || n.startsWith(a + "/");
-      St(t, e, l);
+      It(t, e, l);
     } catch {
       console.warn("Invalid href in LateralMenuItem:", r);
     }
   };
-  var Hn = (t, e, r) => {
+  var Jn = (t, e, r) => {
     if (t.hasAttribute("disabled"))
       return;
     if (r.key !== "Enter" && r.key !== " ")
@@ -6625,13 +6634,13 @@ p {
       return;
     r.preventDefault(), e?.click();
   };
-  var zc = Sn + Mn;
+  var tu = Qn + Wn;
 
-  class In extends s {
+  class ta extends s {
     _anchor;
     _badgeEl;
     constructor() {
-      super({ css: zc, template: Tn });
+      super({ css: tu, template: Zn });
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
     }
     static get observedAttributes() {
@@ -6644,7 +6653,7 @@ p {
         this.setAttribute("role", "listitem");
       if (!this.hasAttribute("tabindex"))
         this.setAttribute("tabindex", "0");
-      me(this._anchor, this.getAttribute("href")), be(this._badgeEl, this.getAttribute("badge")), Mt(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
+      we(this._anchor, this.getAttribute("href")), ke(this._badgeEl, this.getAttribute("badge")), zt(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
     }
     disconnectedCallback() {
       window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey);
@@ -6653,14 +6662,14 @@ p {
       if (!this._anchor)
         return;
       if (t === "href")
-        me(this._anchor, r);
+        we(this._anchor, r);
       if (t === "badge")
-        be(this._badgeEl, r);
+        ke(this._badgeEl, r);
       if (t === "active")
         if (r !== null)
-          St(this, this._anchor, true);
+          It(this, this._anchor, true);
         else
-          Mt(this, this._anchor);
+          zt(this, this._anchor);
       if (t === "disabled") {
         let i = this.hasAttribute("disabled");
         this.setAttribute("aria-disabled", i ? "true" : "false"), this.setAttribute("tabindex", i ? "-1" : "0");
@@ -6690,10 +6699,10 @@ p {
     set active(t) {
       t ? this.setAttribute("active", "") : this.removeAttribute("active");
     }
-    _onPopstate = () => Mt(this, this._anchor);
-    _onKey = (t) => Hn(this, this._anchor, t);
+    _onPopstate = () => zt(this, this._anchor);
+    _onKey = (t) => Jn(this, this._anchor, t);
   }
-  var ta = `:host {
+  var wa = `:host {
   display: flex;
   flex: 1;
 
@@ -6782,7 +6791,7 @@ p {
 
 .description.is-empty { display: none; }
 `;
-  var ea = `:host([data-state="active"], [state="active"]) {
+  var ka = `:host([data-state="active"], [state="active"]) {
   --_color: var(--_active);
   --_label-color: var(--_text);
 }
@@ -6843,14 +6852,14 @@ p {
   margin-top: 0.4rem;
 }
 `;
-  var Xc = ta + ea;
-  var ia = `<div class="table-container">
+  var mu = wa + ka;
+  var Aa = `<div class="table-container">
   <div class="p9r-table">
     <slot name="header"></slot>
     <slot></slot>
   </div>
 </div>`;
-  var oa = `:host {
+  var Sa = `:host {
   display: block;
   width: 100%;
 
@@ -6889,14 +6898,14 @@ p {
 }
 `;
 
-  class na extends s {
+  class La extends s {
     constructor() {
-      super({ css: oa, template: ia });
+      super({ css: Sa, template: Aa });
     }
   }
-  var aa = `<slot></slot>
+  var Ca = `<slot></slot>
 `;
-  var sa = `:host {
+  var Ta = `:host {
   display: table-cell;
   padding: 12px 20px;
   vertical-align: middle;
@@ -6921,16 +6930,16 @@ p {
 }
 `;
 
-  class la extends s {
+  class Ma extends s {
     constructor() {
-      super({ css: sa, template: aa });
+      super({ css: Ta, template: Ca });
     }
     connectedCallback() {
       if (!this.hasAttribute("role"))
         this.setAttribute("role", "cell");
     }
   }
-  var da = `<div class="header-wrapper" part="wrapper">
+  var Ha = `<div class="header-wrapper" part="wrapper">
   <button
     type="button"
     class="label-section"
@@ -6960,7 +6969,7 @@ p {
   </div>
 </div>
 `;
-  var ca = `:host {
+  var Ia = `:host {
   display: table-cell;
   padding: 12px 20px;
   border-bottom: 2px solid var(--border-light);
@@ -7031,7 +7040,7 @@ p {
   box-sizing: border-box;
 }
 `;
-  var ua = `:host([sort]) .label-section {
+  var za = `:host([sort]) .label-section {
   cursor: pointer;
 }
 
@@ -7078,13 +7087,13 @@ p {
   background: var(--bg-base, #eee);
 }
 `;
-  var eu = (t) => {
+  var wu = (t) => {
     let e = t.getAttribute("filter-name");
     if (!e)
       return "";
     return new URL(window.location.href).searchParams.get(`f_${e}`) ?? "";
   };
-  var ve = (t, e, r) => {
+  var Ee = (t, e, r) => {
     let i = t.getAttribute("filter-name");
     if (!e)
       return;
@@ -7093,7 +7102,7 @@ p {
       return;
     }
     e.removeAttribute("hidden");
-    let o = eu(t);
+    let o = wu(t);
     if (r)
       r.value = o;
     if (o)
@@ -7101,14 +7110,14 @@ p {
     else
       t.removeAttribute("data-has-filter");
   };
-  var pa = (t) => {
+  var Ra = (t) => {
     let e = t.getAttribute("sort");
     if (!e)
       return;
     let r = new URL(window.location.href), i = r.searchParams.get("sort"), o = r.searchParams.get("direction"), n = i === e && o === "asc" ? "desc" : "asc";
     r.searchParams.set("sort", e), r.searchParams.set("direction", n), window.location.href = r.toString();
   };
-  var ha = (t, e) => {
+  var Pa = (t, e) => {
     let r = t.getAttribute("filter-name");
     if (!r)
       return;
@@ -7119,12 +7128,12 @@ p {
       i.searchParams.delete(`f_${r}`);
     window.location.href = i.toString();
   };
-  var ma = (t, e) => {
+  var Ba = (t, e) => {
     if (e.composedPath().some((r) => r instanceof HTMLInputElement))
       return;
-    pa(t);
+    Ra(t);
   };
-  var ba = (t, e, r, i) => {
+  var Fa = (t, e, r, i) => {
     if (t.stopPropagation(), !r || !e)
       return;
     if (r.hasAttribute("hidden"))
@@ -7132,17 +7141,17 @@ p {
     else
       r.setAttribute("hidden", ""), e.setAttribute("aria-expanded", "false");
   };
-  var va = (t, e, r) => {
+  var Na = (t, e, r) => {
     if (r.key !== "Enter" || !e)
       return;
-    ha(t, e.value);
+    Pa(t, e.value);
   };
-  var ga = (t, e) => {
+  var Da = (t, e) => {
     e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
   };
-  var ru = ca + ua;
+  var ku = Ia + za;
 
-  class fa extends s {
+  class Oa extends s {
     _sortTrigger;
     _filterBtn;
     _filterPopover;
@@ -7151,27 +7160,27 @@ p {
       return ["sort", "filter-name"];
     }
     constructor() {
-      super({ css: ru, template: da });
+      super({ css: ku, template: Ha });
       this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
     }
     connectedCallback() {
-      ve(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
+      Ee(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
     }
     disconnectedCallback() {
       this._sortTrigger?.removeEventListener("click", this._onSort), this._filterBtn?.removeEventListener("click", this._onFilterToggle), this._filterPopover?.removeEventListener("click", this._stopPropagation), this._filterInput?.removeEventListener("keydown", this._onFilterKey), window.removeEventListener("click", this._onWindowClick);
     }
     attributeChangedCallback() {
-      ve(this, this._filterBtn, this._filterInput);
+      Ee(this, this._filterBtn, this._filterInput);
     }
-    _onSort = (t) => ma(this, t);
-    _onFilterToggle = (t) => ba(t, this._filterBtn, this._filterPopover, this._filterInput);
-    _onFilterKey = (t) => va(this, this._filterInput, t);
-    _onWindowClick = () => ga(this._filterBtn, this._filterPopover);
+    _onSort = (t) => Ba(this, t);
+    _onFilterToggle = (t) => Fa(t, this._filterBtn, this._filterPopover, this._filterInput);
+    _onFilterKey = (t) => Na(this, this._filterInput, t);
+    _onWindowClick = () => Da(this._filterBtn, this._filterPopover);
     _stopPropagation = (t) => t.stopPropagation();
   }
-  var xa = `<slot></slot>
+  var qa = `<slot></slot>
 `;
-  var _a = `:host {
+  var Va = `:host {
   display: table-row;
 }
 
@@ -7190,7 +7199,7 @@ p {
   }
 }
 `;
-  var ge = (t) => {
+  var Ae = (t) => {
     let e = t.getAttribute("href");
     if (!e)
       return;
@@ -7202,18 +7211,18 @@ p {
     else
       window.location.href = e;
   };
-  var ya = (t) => {
+  var ja = (t) => {
     if (!t.hasAttribute("href"))
       return;
-    ge(t);
+    Ae(t);
   };
-  var wa = (t, e) => {
+  var $a = (t, e) => {
     if (!t.hasAttribute("href"))
       return;
     if (e.key === "Enter" || e.key === " ")
-      e.preventDefault(), ge(t);
+      e.preventDefault(), Ae(t);
   };
-  var fe = (t) => {
+  var Se = (t) => {
     if (t.hasAttribute("href")) {
       if (!t.hasAttribute("tabindex"))
         t.setAttribute("tabindex", "0");
@@ -7229,27 +7238,27 @@ p {
     }
   };
 
-  class ka extends s {
+  class Ua extends s {
     static get observedAttributes() {
       return ["href"];
     }
     constructor() {
-      super({ css: _a, template: xa });
+      super({ css: Va, template: qa });
     }
     connectedCallback() {
       for (let t of ["href", "target"])
         c(this, t);
-      this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), fe(this);
+      this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), Se(this);
     }
     disconnectedCallback() {
       this.removeEventListener("click", this._onClick), this.removeEventListener("keydown", this._onKey);
     }
     attributeChangedCallback(t) {
       if (t === "href")
-        fe(this);
+        Se(this);
     }
-    _onClick = () => ya(this);
-    _onKey = (t) => wa(this, t);
+    _onClick = () => ja(this);
+    _onKey = (t) => $a(this, t);
     get href() {
       return this.getAttribute("href");
     }
@@ -7269,14 +7278,14 @@ p {
         this.setAttribute("target", t);
     }
   }
-  var Ea = `<div class="tabs" part="tabs">
+  var Ka = `<div class="tabs" part="tabs">
     <div class="tablist" part="tablist" role="tablist"></div>
     <div class="panels" part="panels">
         <slot></slot>
     </div>
 </div>
 `;
-  var La = `:host {
+  var Xa = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -7353,7 +7362,7 @@ p {
   .tab { transition: color 0.15s; }
 }
 `;
-  var Aa = `:host([variant="pills"]) .tablist {
+  var Ga = `:host([variant="pills"]) .tablist {
   border-bottom: 0;
   gap: 0.4rem;
   padding: 0.25rem;
@@ -7392,25 +7401,25 @@ p {
   padding-left: 1rem;
 }
 `;
-  var xe = (t) => {
+  var Le = (t) => {
     if (!t)
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
   };
-  var lu = 0;
-  var Ca = () => `tabpanel-${lu++}`;
-  var Ta = (t, e) => {
+  var Tu = 0;
+  var Ya = () => `tabpanel-${Tu++}`;
+  var Za = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
   };
-  var _e = (t, e, r) => {
+  var Ce = (t, e, r) => {
     if (!e)
       return;
     e.innerHTML = "";
-    let i = xe(r), o = t.getAttribute("active");
+    let i = Le(r), o = t.getAttribute("active");
     if (!o && i.length > 0)
       o = i[0]?.getAttribute("id") ?? null;
     if (i.forEach((n, a) => {
-      let l = n.getAttribute("id") ?? Ca();
+      let l = n.getAttribute("id") ?? Ya();
       if (!n.id)
         n.id = l;
       let u = n.getAttribute("label") ?? `Tab ${a + 1}`, d = document.createElement("button");
@@ -7421,7 +7430,7 @@ p {
       j(t, e, r, o);
   };
   var j = (t, e, r, i) => {
-    let o = xe(r), n = Array.from(e?.querySelectorAll(".tab") ?? []), a = false;
+    let o = Le(r), n = Array.from(e?.querySelectorAll(".tab") ?? []), a = false;
     if (o.forEach((l) => {
       let u = l.id === i;
       if (u)
@@ -7431,9 +7440,9 @@ p {
       let u = l.dataset.target === i;
       l.setAttribute("aria-selected", String(u)), l.setAttribute("tabindex", u ? "0" : "-1");
     }), a && t.getAttribute("active") !== i)
-      t.setAttribute("active", i), Ta(t, i);
+      t.setAttribute("active", i), Za(t, i);
   };
-  var Sa = (t, e, r, i) => {
+  var Qa = (t, e, r, i) => {
     let o = i.target.closest(".tab");
     if (!o || o.hasAttribute("disabled"))
       return;
@@ -7441,7 +7450,7 @@ p {
     if (n)
       j(t, e, r, n);
   };
-  var Ma = (t, e, r, i) => {
+  var Wa = (t, e, r, i) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(i.key))
       return;
     let o = Array.from(e?.querySelectorAll(".tab:not([disabled])") ?? []);
@@ -7465,20 +7474,20 @@ p {
       j(t, e, r, d);
     u.focus();
   };
-  var du = La + Aa;
+  var Mu = Xa + Ga;
 
-  class Ha extends s {
+  class Ja extends s {
     _tablist;
     _slot;
     static get observedAttributes() {
       return ["active"];
     }
     constructor() {
-      super({ css: du, template: Ea });
+      super({ css: Mu, template: Ka });
       this._tablist = this.shadowRoot?.querySelector(".tablist") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
-      this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), _e(this, this._tablist, this._slot);
+      this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), Ce(this, this._tablist, this._slot);
     }
     disconnectedCallback() {
       this._slot?.removeEventListener("slotchange", this._onRebuild), this._tablist?.removeEventListener("click", this._onClick), this._tablist?.removeEventListener("keydown", this._onKey);
@@ -7493,15 +7502,15 @@ p {
     set active(t) {
       this.setAttribute("active", t);
     }
-    _onRebuild = () => _e(this, this._tablist, this._slot);
-    _onClick = (t) => Sa(this, this._tablist, this._slot, t);
-    _onKey = (t) => Ma(this, this._tablist, this._slot, t);
+    _onRebuild = () => Ce(this, this._tablist, this._slot);
+    _onClick = (t) => Qa(this, this._tablist, this._slot, t);
+    _onKey = (t) => Wa(this, this._tablist, this._slot, t);
   }
-  var Ia = `<div class="panel" part="panel">
+  var ts = `<div class="panel" part="panel">
     <slot></slot>
 </div>
 `;
-  var za = `:host {
+  var es = `:host {
   display: block;
 }
 
@@ -7512,15 +7521,15 @@ p {
 }
 `;
 
-  class Fa extends s {
+  class rs extends s {
     constructor() {
-      super({ css: za, template: Ia });
+      super({ css: es, template: ts });
     }
   }
-  var Ra = `<span class="label" part="label"><slot></slot></span>
+  var is = `<span class="label" part="label"><slot></slot></span>
 <button type="button" class="remove" part="remove" aria-label="Remove" hidden>&times;</button>
 `;
-  var Pa = `:host {
+  var os = `:host {
     --_tag-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 
     --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
@@ -7594,7 +7603,7 @@ p {
     }
 }
 `;
-  var Da = `:host([color="info"]) {
+  var ns = `:host([color="info"]) {
     --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
     --_tag-color: var(--info-base, oklch(65% 0.12 230));
     --_tag-border: var(--info-contrasted, oklch(25% 0.08 230));
@@ -7630,15 +7639,15 @@ p {
     --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
 }
 `;
-  var bu = Pa + Da;
+  var Bu = os + ns;
 
-  class qa extends s {
+  class as extends s {
     _removeBtn;
     static get observedAttributes() {
       return ["removable"];
     }
     constructor() {
-      super({ css: bu, template: Ra });
+      super({ css: Bu, template: is });
       this._removeBtn = this.shadowRoot?.querySelector(".remove") ?? null;
     }
     connectedCallback() {
@@ -7675,13 +7684,13 @@ p {
         this.removeAttribute("removable");
     }
   }
-  var Ba = `<div class="icon" part="icon"></div>
+  var ss = `<div class="icon" part="icon"></div>
 <div class="content">
     <span class="message"><slot></slot></span>
 </div>
 <button class="close" aria-label="Dismiss">&times;</button>
 `;
-  var Va = `:host {
+  var ls = `:host {
     --_bg: var(--bg-surface, #ffffff);
     --_color: var(--text-main, #1f2937);
     --_border: var(--border-default, #e5e7eb);
@@ -7761,7 +7770,7 @@ p {
     opacity: 1;
 }
 `;
-  var Na = `:host([leaving]) {
+  var ds = `:host([leaving]) {
     animation: toast-out 160ms ease-in forwards;
 }
 
@@ -7804,12 +7813,12 @@ p {
     to   { opacity: 0; transform: translateX(-20px); }
 }
 `;
-  var xu = Va + Na;
+  var Ou = ls + ds;
 
-  class Oa extends s {
+  class cs extends s {
     _timer = null;
     constructor() {
-      super({ css: xu, template: Ba });
+      super({ css: Ou, template: ss });
     }
     connectedCallback() {
       this.shadowRoot?.querySelector(".close")?.addEventListener("click", () => this.dismiss());
@@ -7831,9 +7840,9 @@ p {
       }, { once: true });
     }
   }
-  var ja = `<slot></slot>
+  var us = `<slot></slot>
 `;
-  var $a = `:host {
+  var ps = `:host {
     position: fixed;
     top: 24px;
     left: 24px;
@@ -7883,9 +7892,9 @@ p {
 }
 `;
 
-  class Ka extends s {
+  class hs extends s {
     constructor() {
-      super({ css: $a, template: ja });
+      super({ css: ps, template: us });
     }
     connectedCallback() {
       if (!this.hasAttribute("popover"))
@@ -7901,18 +7910,18 @@ p {
       return r.textContent = t, this.appendChild(r), r;
     }
   }
-  var y = null;
-  function wu() {
-    if (y && y.isConnected)
-      return y;
-    if (y = document.querySelector("p9r-toast-stack"), y)
-      return y;
-    return y = document.createElement("p9r-toast-stack"), document.body.appendChild(y), y;
+  var w = null;
+  function ju() {
+    if (w && w.isConnected)
+      return w;
+    if (w = document.querySelector("p9r-toast-stack"), w)
+      return w;
+    return w = document.createElement("p9r-toast-stack"), document.body.appendChild(w), w;
   }
-  function ku(t, e = {}) {
-    return wu().push(t, e);
+  function $u(t, e = {}) {
+    return ju().push(t, e);
   }
-  var Xa = `:host {
+  var bs = `:host {
   display: inline-block;
   position: relative;
 
@@ -7982,7 +7991,7 @@ p {
   border-top-color: var(--_bg);
 }
 `;
-  var Za = `:host([position="bottom"]) .tooltip {
+  var fs = `:host([position="bottom"]) .tooltip {
   top: calc(100% + var(--_offset));
   bottom: auto;
   left: 50%;
@@ -8030,8 +8039,8 @@ p {
   border-right-color: var(--_bg);
 }
 `;
-  var Cu = Xa + Za;
-  function Qa(t) {
+  var Gu = bs + fs;
+  function gs(t) {
     let e = new URL(t, window.location.href);
     for (let [r, i] of new URLSearchParams(window.location.search))
       e.searchParams.append(r, i);
@@ -8039,52 +8048,52 @@ p {
   }
   async function $(t) {
     try {
-      let e = await fetch(Qa(t), { headers: { Accept: "application/json" } });
+      let e = await fetch(gs(t), { headers: { Accept: "application/json" } });
       return e.ok ? await e.json() : null;
     } catch {
       return null;
     }
   }
-  var Tu = new Intl.NumberFormat("fr-FR");
-  var Su = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
-  var w = (t) => t.replace(/[&<>"]/g, (e) => e === "&" ? "&amp;" : e === "<" ? "&lt;" : e === ">" ? "&gt;" : "&quot;");
-  var Mu = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
-  function ye(t, e) {
+  var Yu = new Intl.NumberFormat("fr-FR");
+  var Zu = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
+  var k = (t) => t.replace(/[&<>"]/g, (e) => e === "&" ? "&amp;" : e === "<" ? "&lt;" : e === ">" ? "&gt;" : "&quot;");
+  var Qu = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
+  function Te(t, e) {
     if (e === "ms")
       return `${Math.round(t)} ms`;
     if (e === "pct")
       return `${(t * 100).toFixed(1).replace(".", ",")} %`;
-    return Tu.format(Math.round(t));
+    return Yu.format(Math.round(t));
   }
-  var Ja = (t) => {
+  var xs = (t) => {
     let e = new Date(t);
-    return Number.isNaN(e.getTime()) ? t : Su.format(e);
+    return Number.isNaN(e.getTime()) ? t : Zu.format(e);
   };
-  function It(t, e) {
-    return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${w(t)}</p>${e ? `<p class="empty-hint">${w(e)}</p>` : ""}</div>`;
+  function Pt(t, e) {
+    return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${k(t)}</p>${e ? `<p class="empty-hint">${k(e)}</p>` : ""}</div>`;
   }
-  function Ga(t) {
+  function ys(t) {
     if (t.length === 0)
       return "";
-    let e = 320, r = 140, i = 32, o = 8, n = 10, a = 22, l = e - i - o, u = r - n - a, d = n + u, p = Math.max(...t.map((H) => H.value), 1), m = t.length, b = t.map((H, Y) => [i + (m === 1 ? l / 2 : Y / (m - 1) * l), n + (1 - H.value / p) * u]), A = b.map(([H, Y]) => `${H.toFixed(1)},${Y.toFixed(1)}`).join(" "), ul = `${b[0][0].toFixed(1)},${d} ${A} ${b[m - 1][0].toFixed(1)},${d}`, pl = b.map(([H, Y]) => `<circle class="dot" cx="${H.toFixed(1)}" cy="${Y.toFixed(1)}" r="2.5"/>`).join("");
-    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${n}" x2="${i}" y2="${d}"/><line class="axis" x1="${i}" y1="${d}" x2="${e - o}" y2="${d}"/><text class="tick" x="${i - 4}" y="${n + 3}" text-anchor="end">${Mu(p)}</text><text class="tick" x="${i - 4}" y="${d}" text-anchor="end">0</text><polygon class="area" points="${ul}" fill="url(#lc-grad)"/><polyline class="stroke" points="${A}"/>${pl}<text class="tick" x="${i}" y="${r - 6}">${w(t[0].label)}</text><text class="tick" x="${e - o}" y="${r - 6}" text-anchor="end">${w(t[m - 1].label)}</text></svg>`;
+    let e = 320, r = 140, i = 32, o = 8, n = 10, a = 22, l = e - i - o, u = r - n - a, d = n + u, p = Math.max(...t.map((I) => I.value), 1), m = t.length, b = t.map((I, Y) => [i + (m === 1 ? l / 2 : Y / (m - 1) * l), n + (1 - I.value / p) * u]), A = b.map(([I, Y]) => `${I.toFixed(1)},${Y.toFixed(1)}`).join(" "), Tl = `${b[0][0].toFixed(1)},${d} ${A} ${b[m - 1][0].toFixed(1)},${d}`, Ml = b.map(([I, Y]) => `<circle class="dot" cx="${I.toFixed(1)}" cy="${Y.toFixed(1)}" r="2.5"/>`).join("");
+    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${n}" x2="${i}" y2="${d}"/><line class="axis" x1="${i}" y1="${d}" x2="${e - o}" y2="${d}"/><text class="tick" x="${i - 4}" y="${n + 3}" text-anchor="end">${Qu(p)}</text><text class="tick" x="${i - 4}" y="${d}" text-anchor="end">0</text><polygon class="area" points="${Tl}" fill="url(#lc-grad)"/><polyline class="stroke" points="${A}"/>${Ml}<text class="tick" x="${i}" y="${r - 6}">${k(t[0].label)}</text><text class="tick" x="${e - o}" y="${r - 6}" text-anchor="end">${k(t[m - 1].label)}</text></svg>`;
   }
-  function Wa(t, e) {
+  function _s(t, e) {
     if (t.length === 0)
       return "";
     let r = t.reduce((i, o) => i + o.value, 0) || 1;
     return t.map((i) => {
       let o = i.value / r * 100, n = `${o.toFixed(1).replace(".", ",")} %`;
-      return `<div class="bar"><span class="bar-key" title="${w(i.label)}">${w(i.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${o.toFixed(1)}"/></svg><span class="bar-val">${e ? `${ye(i.value, "int")} · ${n}` : n}</span></div>`;
+      return `<div class="bar"><span class="bar-key" title="${k(i.label)}">${k(i.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${o.toFixed(1)}"/></svg><span class="bar-val">${e ? `${Te(i.value, "int")} · ${n}` : n}</span></div>`;
     }).join("");
   }
-  var ts = `<div class="stat">
+  var ws = `<div class="stat">
     <span class="label"></span>
     <strong class="value">—</strong>
     <span class="note"></span>
 </div>
 `;
-  var es = `:host {
+  var ks = `:host {
     display: block;
     flex: 1 1 0;
     min-width: 0;
@@ -8129,9 +8138,9 @@ p {
 }
 `;
 
-  class rs extends s {
+  class Es extends s {
     constructor() {
-      super({ css: es, template: ts });
+      super({ css: ks, template: ws });
     }
     connectedCallback() {
       let t = this.shadowRoot;
@@ -8143,12 +8152,12 @@ p {
         e.textContent = "—", e.classList.add("is-empty"), r.textContent = this.getAttribute("empty") ?? "Aucune donnée";
         return;
       }
-      e.classList.remove("is-empty"), e.textContent = ye(Number(n), this.getAttribute("format") ?? "int"), r.textContent = "";
+      e.classList.remove("is-empty"), e.textContent = Te(Number(n), this.getAttribute("format") ?? "int"), r.textContent = "";
     }
   }
-  var is = `<div class="chart"></div>
+  var As = `<div class="chart"></div>
 `;
-  var os = `:host {
+  var Ss = `:host {
     display: block;
 }
 
@@ -8225,9 +8234,9 @@ p {
 }
 `;
 
-  class ns extends s {
+  class Ls extends s {
     constructor() {
-      super({ css: os, template: is });
+      super({ css: Ss, template: As });
     }
     connectedCallback() {
       this._load();
@@ -8235,16 +8244,16 @@ p {
     async _load() {
       let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), r = e ? await $(e) : null, i = Array.isArray(r) ? r : [];
       if (i.length === 0) {
-        t.innerHTML = It(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
+        t.innerHTML = Pt(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
         return;
       }
-      let o = this.getAttribute("value") ?? "value", n = this.getAttribute("x") ?? "", a = i.map((l) => ({ label: n ? Ja(String(l[n] ?? "")) : "", value: Number(l[o] ?? 0) }));
-      t.innerHTML = Ga(a);
+      let o = this.getAttribute("value") ?? "value", n = this.getAttribute("x") ?? "", a = i.map((l) => ({ label: n ? xs(String(l[n] ?? "")) : "", value: Number(l[o] ?? 0) }));
+      t.innerHTML = ys(a);
     }
   }
-  var as = `<div class="list"></div>
+  var Cs = `<div class="list"></div>
 `;
-  var ss = `:host {
+  var Ts = `:host {
     display: block;
 }
 
@@ -8317,9 +8326,9 @@ p {
 }
 `;
 
-  class ls extends s {
+  class Ms extends s {
     constructor() {
-      super({ css: ss, template: as });
+      super({ css: Ts, template: Cs });
     }
     connectedCallback() {
       this._load();
@@ -8327,16 +8336,16 @@ p {
     async _load() {
       let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), r = e ? await $(e) : null, i = Array.isArray(r) ? r : [];
       if (i.length === 0) {
-        t.innerHTML = It(this.getAttribute("empty") ?? "Aucune donnée");
+        t.innerHTML = Pt(this.getAttribute("empty") ?? "Aucune donnée");
         return;
       }
       let o = this.getAttribute("label-field") ?? "key", n = this.getAttribute("value-field") ?? "value", a = i.map((l) => ({ label: String(l[o] ?? ""), value: Number(l[n] ?? 0) }));
-      t.innerHTML = Wa(a, this.hasAttribute("show-count"));
+      t.innerHTML = _s(a, this.hasAttribute("show-count"));
     }
   }
-  var ds = `<div class="tabs" role="group" aria-label="Période"></div>
+  var Hs = `<div class="tabs" role="group" aria-label="Période"></div>
 `;
-  var cs = `:host {
+  var Is = `:host {
     display: inline-block;
 }
 
@@ -8374,13 +8383,13 @@ p {
 }
 `;
 
-  class us extends s {
+  class zs extends s {
     constructor() {
-      super({ css: cs, template: ds });
+      super({ css: Is, template: Hs });
     }
     connectedCallback() {
       let t = this.getAttribute("param") ?? "range", e = new URLSearchParams(window.location.search).get(t) ?? this.getAttribute("default") ?? "", r = (this.getAttribute("tabs") ?? "").split(",").map((o) => o.split(":")).filter((o) => o[0]), i = this.shadowRoot.querySelector(".tabs");
-      i.innerHTML = r.map(([o, n]) => `<button type="button" data-v="${w(o)}"${o === e ? ' class="active"' : ""}>${w(n ?? o)}</button>`).join(""), i.addEventListener("click", (o) => {
+      i.innerHTML = r.map(([o, n]) => `<button type="button" data-v="${k(o)}"${o === e ? ' class="active"' : ""}>${k(n ?? o)}</button>`).join(""), i.addEventListener("click", (o) => {
         let n = o.target.closest("button")?.dataset.v;
         if (!n)
           return;
@@ -8389,7 +8398,293 @@ p {
       });
     }
   }
-  async function ms(t, e, r = {}) {
+  var g = "cms-binding-core";
+  var it = "cms-binding-disabled";
+  var Bt = "cms-source-state-force";
+  var h = "cms-source";
+  var Me = "cms-source-body";
+  var ot = "cms-source-id";
+  var nt = "cms-source-trigger";
+  var Rs = "cms-source-method";
+  var Ps = "cms-source-publish";
+  var Bs = "cms-source-success-reset";
+  var Fs = "cms-source-success-redirect";
+  var at = "cms-repeat";
+  var L = "cms-condition";
+  var v = "cms-page-state";
+  var ap = ["loaded", "loading", "empty", "error"];
+  var sp = ["auto", "submit", "change"];
+  var x = "cms-bind-stop";
+  var f = "cms-ready";
+  function Ns(t) {
+    return ap.includes(t ?? "");
+  }
+  function Ds(t) {
+    return sp.includes(t ?? "");
+  }
+  var z = "cms-params:change";
+  var C = "cms-state:change";
+  var lp = /#\{\s*(\w+)\s*\}/g;
+  var dp = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
+  var Os = new WeakMap;
+  function qs(t) {
+    return /#\{\s*\w+\s*\}/.test(t);
+  }
+  function Vs(t) {
+    return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
+  }
+  function U() {
+    return new URLSearchParams(typeof location > "u" ? "" : location.search);
+  }
+  function js(t, e = U()) {
+    return t.replace(lp, (r, i) => encodeURIComponent(e.get(i) ?? ""));
+  }
+  function $s(t, e = document) {
+    let r = Ie(e);
+    return t.replace(dp, (i, o) => encodeURIComponent(r.get(o) ?? ""));
+  }
+  function He(t, e) {
+    let r = U();
+    if (e === "")
+      r.delete(t);
+    else
+      r.set(t, e);
+    let i = r.toString();
+    history.replaceState(history.state, "", location.pathname + (i ? `?${i}` : "") + location.hash), document.dispatchEvent(new Event("cms-params:change"));
+  }
+  function K(t, e = document) {
+    return Ie(e).get(t.trim()) ?? "";
+  }
+  function Ft(t, e, r = document) {
+    let i = t.trim();
+    if (!i)
+      return;
+    let o = Ie(r), n = e, a = o.get(i) ?? "";
+    if (n === "")
+      o.delete(i);
+    else
+      o.set(i, n);
+    if (n !== a)
+      r.dispatchEvent(new Event("cms-state:change"));
+  }
+  function Ie(t) {
+    let e = Os.get(t);
+    if (!e)
+      e = new Map, Os.set(t, e);
+    return e;
+  }
+  var cp = 300;
+
+  class ze {
+    el;
+    key;
+    timer = null;
+    reflectTimer = null;
+    last = null;
+    reflecting = false;
+    childObserver = null;
+    onInput = () => this.schedule();
+    onChange = () => this.write();
+    onState = () => this.reflect();
+    onChildren = () => {
+      if (this.reflectTimer)
+        clearTimeout(this.reflectTimer);
+      this.reflectTimer = setTimeout(() => this.reflect(), 0);
+    };
+    constructor(t) {
+      this.el = t;
+      this.key = (t.getAttribute(v) || "").trim() || t.name || "";
+    }
+    start() {
+      if (!this.key) {
+        console.warn(`${v}: no key - set ${v}="<key>" or a name attribute`, this.el);
+        return;
+      }
+      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), this.el.ownerDocument.addEventListener(C, this.onState);
+      let t = this.el.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
+      this.childObserver = new t(this.onChildren), this.childObserver.observe(this.el, { childList: true });
+    }
+    dispose() {
+      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), this.el.ownerDocument.removeEventListener(C, this.onState), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
+        clearTimeout(this.timer);
+      if (this.reflectTimer)
+        clearTimeout(this.reflectTimer);
+      this.timer = this.reflectTimer = null;
+    }
+    reflect() {
+      if (this.timer)
+        return;
+      let t = K(this.key, this.el.ownerDocument), e = this.el;
+      if (e.type === "checkbox") {
+        let r = t !== "" && t === (e.value || "true");
+        if (e.checked !== r)
+          this.set(() => {
+            e.checked = r;
+          });
+      } else if (e.value !== t)
+        this.set(() => {
+          e.value = t;
+        });
+      this.last = this.currentValue();
+    }
+    set(t) {
+      this.reflecting = true;
+      try {
+        t();
+      } finally {
+        this.reflecting = false;
+      }
+    }
+    currentValue() {
+      let t = this.el;
+      return t.type === "checkbox" ? t.checked ? t.value || "true" : "" : t.value ?? "";
+    }
+    schedule() {
+      if (this.reflecting)
+        return;
+      if (this.timer)
+        clearTimeout(this.timer);
+      this.timer = setTimeout(() => this.write(), cp);
+    }
+    write() {
+      if (this.reflecting)
+        return;
+      if (this.timer)
+        clearTimeout(this.timer), this.timer = null;
+      let t = this.currentValue();
+      if (t === this.last)
+        return;
+      this.last = t, Ft(this.key, t, this.el.ownerDocument);
+    }
+  }
+  var y = "cms-param-sync";
+  var up = 300;
+
+  class Re {
+    el;
+    key;
+    timer = null;
+    reflectTimer = null;
+    last = null;
+    reflecting = false;
+    childObserver = null;
+    onInput = () => this.schedule();
+    onChange = () => this.write();
+    onParams = () => this.reflect();
+    onChildren = () => {
+      if (this.reflectTimer)
+        clearTimeout(this.reflectTimer);
+      this.reflectTimer = setTimeout(() => this.reflect(), 0);
+    };
+    constructor(t) {
+      this.el = t;
+      this.key = (t.getAttribute(y) || "").trim() || t.name || "";
+    }
+    start() {
+      if (!this.key) {
+        console.warn(`${y}: no key — set ${y}="<param>" or a name attribute`, this.el);
+        return;
+      }
+      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(z, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
+    }
+    dispose() {
+      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), document.removeEventListener(z, this.onParams), window.removeEventListener("popstate", this.onParams), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
+        clearTimeout(this.timer);
+      if (this.reflectTimer)
+        clearTimeout(this.reflectTimer);
+      this.timer = this.reflectTimer = null;
+    }
+    reflect() {
+      if (this.timer)
+        return;
+      let t = U().get(this.key) ?? "", e = this.el;
+      if (e.type === "checkbox") {
+        let r = t !== "" && t === (e.value || "true");
+        if (e.checked !== r)
+          this.set(() => {
+            e.checked = r;
+          });
+      } else if (e.value !== t)
+        this.set(() => {
+          e.value = t;
+        });
+      this.last = this.currentValue();
+    }
+    set(t) {
+      this.reflecting = true;
+      try {
+        t();
+      } finally {
+        this.reflecting = false;
+      }
+    }
+    currentValue() {
+      let t = this.el;
+      return t.type === "checkbox" ? t.checked ? t.value || "true" : "" : t.value ?? "";
+    }
+    schedule() {
+      if (this.reflecting)
+        return;
+      if (this.timer)
+        clearTimeout(this.timer);
+      this.timer = setTimeout(() => this.write(), up);
+    }
+    write() {
+      if (this.reflecting)
+        return;
+      if (this.timer)
+        clearTimeout(this.timer), this.timer = null;
+      let t = this.currentValue();
+      if (t === this.last)
+        return;
+      this.last = t, He(this.key, t);
+    }
+  }
+  function R(t, e, r, i) {
+    if (t.nodeType !== Node.ELEMENT_NODE)
+      return;
+    let o = t;
+    if (o !== r && Us(o, r))
+      return;
+    if (o.hasAttribute(e))
+      i(o);
+    o.querySelectorAll(`[${e}]`).forEach((n) => {
+      if (!Us(n, r))
+        i(n);
+    });
+  }
+  function Us(t, e) {
+    for (let r = t.parentElement;r && r !== e; r = r.parentElement)
+      if (r.localName === g || r.hasAttribute(x))
+        return true;
+    return false;
+  }
+  function Nt(t, e, r) {
+    R(t, h, e, (i) => r.registerSource(i)), R(t, y, e, (i) => r.registerParamSync(i)), R(t, v, e, (i) => r.registerPageStateSync(i));
+  }
+  function Ks(t, e, r) {
+    R(t, h, e, (i) => r.unregisterSource(i)), R(t, y, e, (i) => r.unregisterParamSync(i)), R(t, v, e, (i) => r.unregisterPageStateSync(i));
+  }
+  function Xs(t, e, r) {
+    if (t.nodeType !== Node.ELEMENT_NODE || !e)
+      return;
+    let i = t;
+    if (!r.isInScope(i))
+      return;
+    if (e === h)
+      r.reconcileSource(i);
+    else if (e === y)
+      if (i.hasAttribute(y))
+        r.registerParamSync(i);
+      else
+        r.unregisterParamSync(i);
+    else if (e === v)
+      if (i.hasAttribute(v))
+        r.registerPageStateSync(i);
+      else
+        r.unregisterPageStateSync(i);
+  }
+  async function Zs(t, e, r = {}) {
     let i;
     try {
       let n = new Headers(r.headers);
@@ -8397,7 +8692,7 @@ p {
         n.set("Accept", "application/json");
       i = await fetch(t, { ...r, headers: n, signal: e });
     } catch (n) {
-      return ps(n) ? { kind: "aborted" } : { kind: "error", status: null, message: hs(n) };
+      return Gs(n) ? { kind: "aborted" } : { kind: "error", status: null, message: Ys(n) };
     }
     if (!i.ok)
       return { kind: "error", status: i.status, message: `HTTP ${i.status}` };
@@ -8405,7 +8700,7 @@ p {
     try {
       o = await i.text();
     } catch (n) {
-      return ps(n) ? { kind: "aborted" } : { kind: "error", status: i.status, message: hs(n) };
+      return Gs(n) ? { kind: "aborted" } : { kind: "error", status: i.status, message: Ys(n) };
     }
     if (o.trim() === "")
       return { kind: "success", data: null };
@@ -8415,35 +8710,173 @@ p {
       return { kind: "error", status: i.status, message: "Invalid JSON response" };
     }
   }
-  function ps(t) {
+  function Gs(t) {
     return t?.name === "AbortError";
   }
-  function hs(t) {
+  function Ys(t) {
     return t instanceof Error ? t.message : String(t);
   }
-  var Bu = { found: false, value: undefined };
-  function I(t, e) {
+  function Qs(t) {
+    let e = t.ownerDocument ?? document, r = e.createDocumentFragment(), i = e.createDocumentFragment();
+    for (let o of Array.from(t.childNodes))
+      if (i.appendChild(o.cloneNode(true)), o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
+        r.appendChild(o.content), o.remove();
+      else
+        r.appendChild(o);
+    return { template: i, body: r };
+  }
+  function Ws(t) {
+    let e = t.ownerDocument ?? document, r = e.createDocumentFragment(), i = e.createDocumentFragment();
+    for (let o of Array.from(t.childNodes))
+      if (i.appendChild(o.cloneNode(true)), o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
+        r.appendChild(o.content.cloneNode(true));
+      else
+        r.appendChild(o.cloneNode(true));
+    return { template: i, body: r };
+  }
+  function Js(t) {
+    if (t == null)
+      return true;
+    if (Array.isArray(t))
+      return t.length === 0;
+    if (typeof t === "object")
+      return Object.keys(t).length === 0;
+    return false;
+  }
+  function tl(t, e) {
+    return $s(js(t), e);
+  }
+  function el(t, e, r) {
+    let i = qs(t), o = Vs(t);
+    if (i)
+      e.addEventListener(z, r), e.defaultView?.addEventListener?.("popstate", r);
+    if (o)
+      e.addEventListener(C, r);
+    return () => {
+      if (i)
+        e.removeEventListener(z, r), e.defaultView?.removeEventListener?.("popstate", r);
+      if (o)
+        e.removeEventListener(C, r);
+    };
+  }
+  var pp = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  function Dt(t) {
+    return T(t).url;
+  }
+  function T(t) {
+    let e = pp.exec(t);
+    if (!e)
+      return { url: t.trim() };
+    return { url: e[1].trim(), alias: e[2] };
+  }
+  var rl = "cms-reload-on";
+  var il = "cms-source:reload";
+  function Ot(t) {
+    let e = t.getAttribute(nt);
+    return Ds(e) ? e : "auto";
+  }
+  function ol(t, e) {
+    let r = t.ownerDocument, i = [il, ...mp(t)];
+    for (let a of i)
+      r.addEventListener(a, e.onReload);
+    let o = Ot(t);
+    if (o === "submit" || o === "change") {
+      let a = hp(t) ?? t.closest("form"), l = o === "submit" ? "submit" : "change", u = o === "submit" ? e.onSubmit : e.onChange;
+      return a?.addEventListener(l, u), () => {
+        for (let d of i)
+          r.removeEventListener(d, e.onReload);
+        a?.removeEventListener(l, u);
+      };
+    }
+    let n = el(Dt(t.getAttribute(h) ?? ""), r, e.onReactiveUrlChange);
+    return () => {
+      for (let a of i)
+        r.removeEventListener(a, e.onReload);
+      n();
+    };
+  }
+  function hp(t) {
+    let e = t.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
+    return typeof e === "function" && t instanceof e ? t : null;
+  }
+  function mp(t) {
+    return (t.getAttribute(rl) ?? "").split(/\s+/).filter(Boolean);
+  }
+
+  class Pe {
+    start;
+    end;
+    sites;
+    constructor(t, e, r) {
+      this.start = t;
+      this.end = e;
+      this.sites = r;
+    }
+    update(t) {
+      for (let e of this.sites)
+        e.update(t);
+    }
+    unmount() {
+      for (let t of this.sites)
+        t.unmount?.();
+      bp(this.start, this.end);
+    }
+  }
+
+  class Be {
+    sites;
+    constructor(t) {
+      this.sites = t;
+    }
+    update(t) {
+      for (let e of this.sites)
+        e.update(t);
+    }
+    unmount() {
+      for (let t of this.sites)
+        t.unmount?.();
+    }
+  }
+  function st(t, e) {
+    let r = t.nextSibling;
+    while (r && r !== e) {
+      let i = r.nextSibling;
+      r.parentNode?.removeChild(r), r = i;
+    }
+  }
+  function bp(t, e) {
+    let r = t.parentNode;
+    if (!r)
+      return;
+    let i = t;
+    while (i) {
+      let o = i === e ? null : i.nextSibling;
+      r.removeChild(i), i = o;
+    }
+  }
+  var fp = { found: false, value: undefined };
+  function P(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
-      return { found: true, value: Vu(t) };
+      return { found: true, value: vp(t) };
     let r = e.indexOf("."), i = r === -1 ? e : e.slice(0, r), o = r === -1 ? "" : e.slice(r + 1);
     for (let n = t;n; n = n.parent) {
       if (n.vars && i in n.vars)
-        return { found: true, value: bs(n.vars[i], o) };
+        return { found: true, value: nl(n.vars[i], o) };
       let a = n.value;
-      if (vs(a) && i in a)
-        return { found: true, value: bs(a[i], o) };
+      if (al(a) && i in a)
+        return { found: true, value: nl(a[i], o) };
     }
-    return Bu;
+    return fp;
   }
-  function Vu(t) {
+  function vp(t) {
     let e = t.value;
-    if (vs(e) && "value" in e)
+    if (al(e) && "value" in e)
       return e.value;
     return e;
   }
-  function bs(t, e) {
+  function nl(t, e) {
     if (e === "")
       return t;
     let r = t;
@@ -8454,263 +8887,32 @@ p {
     }
     return r;
   }
-  function vs(t) {
+  function al(t) {
     return t !== null && typeof t === "object";
-  }
-  var Nu = { urlencode: (t) => encodeURIComponent(t == null ? "" : String(t)) };
-  var Ou = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
-  function it(t, e, r = {}) {
-    return t.replace(Ou, (i, o, n) => {
-      let a = I(e, o);
-      if (!a.found)
-        return "";
-      let l = n ? r[n] ?? Nu[n] : undefined, u = l ? l(a.value) : a.value;
-      return u == null ? "" : String(u);
-    });
-  }
-  var g = "cms-binding-core";
-  var ot = "cms-binding-disabled";
-  var zt = "cms-source-state-force";
-  var h = "cms-source";
-  var we = "cms-source-body";
-  var nt = "cms-source-id";
-  var at = "cms-source-trigger";
-  var gs = "cms-source-method";
-  var fs = "cms-source-publish";
-  var xs = "cms-source-success-reset";
-  var _s = "cms-source-success-redirect";
-  var K = "cms-repeat";
-  var k = "cms-condition";
-  var f = "cms-page-state";
-  var ju = ["loaded", "loading", "empty", "error"];
-  var $u = ["auto", "submit", "change"];
-  var x = "cms-bind-stop";
-  var v = "cms-ready";
-  function ys(t) {
-    return ju.includes(t ?? "");
-  }
-  function ws(t) {
-    return $u.includes(t ?? "");
-  }
-  function ks(t) {
-    let e = t.ownerDocument ?? document, r = e.createDocumentFragment(), i = e.createDocumentFragment();
-    for (let o of Array.from(t.childNodes))
-      if (i.appendChild(o.cloneNode(true)), o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
-        r.appendChild(o.content), o.remove();
-      else
-        r.appendChild(o);
-    return { template: i, body: r };
-  }
-  function Es(t) {
-    let e = t.ownerDocument ?? document, r = e.createDocumentFragment(), i = e.createDocumentFragment();
-    for (let o of Array.from(t.childNodes))
-      if (i.appendChild(o.cloneNode(true)), o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
-        r.appendChild(o.content.cloneNode(true));
-      else
-        r.appendChild(o.cloneNode(true));
-    return { template: i, body: r };
-  }
-  function Ls(t) {
-    if (t == null)
-      return true;
-    if (Array.isArray(t))
-      return t.length === 0;
-    if (typeof t === "object")
-      return Object.keys(t).length === 0;
-    return false;
-  }
-  var z = "cms-params:change";
-  var T = "cms-state:change";
-  var Ku = /#\{\s*(\w+)\s*\}/g;
-  var Uu = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
-  var As = new WeakMap;
-  function Cs(t) {
-    return /#\{\s*\w+\s*\}/.test(t);
-  }
-  function Ts(t) {
-    return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
-  }
-  function U() {
-    return new URLSearchParams(typeof location > "u" ? "" : location.search);
-  }
-  function Ss(t, e = U()) {
-    return t.replace(Ku, (r, i) => encodeURIComponent(e.get(i) ?? ""));
-  }
-  function Ms(t, e = document) {
-    let r = Ee(e);
-    return t.replace(Uu, (i, o) => encodeURIComponent(r.get(o) ?? ""));
-  }
-  function ke(t, e) {
-    let r = U();
-    if (e === "")
-      r.delete(t);
-    else
-      r.set(t, e);
-    let i = r.toString();
-    history.replaceState(history.state, "", location.pathname + (i ? `?${i}` : "") + location.hash), document.dispatchEvent(new Event("cms-params:change"));
-  }
-  function X(t, e = document) {
-    return Ee(e).get(t.trim()) ?? "";
-  }
-  function Ft(t, e, r = document) {
-    let i = t.trim();
-    if (!i)
-      return;
-    let o = Ee(r), n = e, a = o.get(i) ?? "";
-    if (n === "")
-      o.delete(i);
-    else
-      o.set(i, n);
-    if (n !== a)
-      r.dispatchEvent(new Event("cms-state:change"));
-  }
-  function Ee(t) {
-    let e = As.get(t);
-    if (!e)
-      e = new Map, As.set(t, e);
-    return e;
-  }
-  function Hs(t, e) {
-    return Ms(Ss(t), e);
-  }
-  function Is(t, e, r) {
-    let i = Cs(t), o = Ts(t);
-    if (i)
-      e.addEventListener(z, r), e.defaultView?.addEventListener?.("popstate", r);
-    if (o)
-      e.addEventListener(T, r);
-    return () => {
-      if (i)
-        e.removeEventListener(z, r), e.defaultView?.removeEventListener?.("popstate", r);
-      if (o)
-        e.removeEventListener(T, r);
-    };
-  }
-  var Xu = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function Rt(t) {
-    return S(t).url;
-  }
-  function S(t) {
-    let e = Xu.exec(t);
-    if (!e)
-      return { url: t.trim() };
-    return { url: e[1].trim(), alias: e[2] };
-  }
-  var zs = "cms-reload-on";
-  var Fs = "cms-source:reload";
-  function Pt(t) {
-    let e = t.getAttribute(at);
-    return ws(e) ? e : "auto";
-  }
-  function Rs(t, e) {
-    let r = t.ownerDocument, i = [Fs, ...Yu(t)];
-    for (let a of i)
-      r.addEventListener(a, e.onReload);
-    let o = Pt(t);
-    if (o === "submit" || o === "change") {
-      let a = Zu(t) ?? t.closest("form"), l = o === "submit" ? "submit" : "change", u = o === "submit" ? e.onSubmit : e.onChange;
-      return a?.addEventListener(l, u), () => {
-        for (let d of i)
-          r.removeEventListener(d, e.onReload);
-        a?.removeEventListener(l, u);
-      };
-    }
-    let n = Is(Rt(t.getAttribute(h) ?? ""), r, e.onReactiveUrlChange);
-    return () => {
-      for (let a of i)
-        r.removeEventListener(a, e.onReload);
-      n();
-    };
-  }
-  function Zu(t) {
-    let e = t.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
-    return typeof e === "function" && t instanceof e ? t : null;
-  }
-  function Yu(t) {
-    return (t.getAttribute(zs) ?? "").split(/\s+/).filter(Boolean);
-  }
-  function Ps(t, e) {
-    let r = Qu(t);
-    if (!r)
-      return;
-    let i = {}, o = U();
-    for (let [n, a] of Object.entries(r))
-      if (a.from === "queryParam")
-        i[n] = o.get(a.name) ?? "";
-      else if (a.from === "state")
-        i[n] = X(a.name, e);
-      else
-        i[n] = a.value;
-    return Object.keys(i).length ? i : undefined;
-  }
-  function Qu(t) {
-    let e = t?.trim() ?? "";
-    if (!e)
-      return null;
-    let r;
-    try {
-      r = JSON.parse(e);
-    } catch {
-      return null;
-    }
-    if (!Ds(r))
-      return null;
-    let i = {};
-    for (let [o, n] of Object.entries(r)) {
-      let a = Ju(n);
-      if (o.trim() && a)
-        i[o] = a;
-    }
-    return Object.keys(i).length ? i : null;
-  }
-  function Ju(t) {
-    if (!Ds(t) || typeof t.from !== "string")
-      return null;
-    if (t.from === "queryParam" || t.from === "state")
-      return typeof t.name === "string" && t.name.trim() ? { from: t.from, name: t.name.trim() } : null;
-    if (t.from !== "raw")
-      return null;
-    if (typeof t.value === "string")
-      return t.value.trim() ? { from: "raw", value: t.value } : null;
-    if (typeof t.value === "number" && Number.isFinite(t.value))
-      return { from: "raw", value: t.value };
-    if (typeof t.value === "boolean")
-      return { from: "raw", value: t.value };
-    return null;
-  }
-  function Ds(t) {
-    return typeof t === "object" && t !== null && !Array.isArray(t);
-  }
-  var Gu = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function qs(t) {
-    let e = t.match(Gu);
-    if (e)
-      return { path: e[1], name: e[2] };
-    return { path: t.trim() };
   }
   function E(t, e) {
     if (t.kind === "literal")
       return t.value;
     if (t.kind === "path")
-      return Wu(t.path, e);
+      return gp(t.path, e);
     if (t.kind === "not")
-      return !st(E(t.node, e));
+      return !lt(E(t.node, e));
     if (t.kind === "and")
-      return st(E(t.left, e)) && st(E(t.right, e));
+      return lt(E(t.left, e)) && lt(E(t.right, e));
     if (t.kind === "or")
-      return st(E(t.left, e)) || st(E(t.right, e));
+      return lt(E(t.left, e)) || lt(E(t.right, e));
     if (t.kind === "compare")
-      return tp(E(t.left, e), E(t.right, e), t.operator);
+      return xp(E(t.left, e), E(t.right, e), t.operator);
     return false;
   }
-  function Wu(t, e) {
-    let r = I(e, t.trim());
+  function gp(t, e) {
+    let r = P(e, t.trim());
     return r.found ? r.value : undefined;
   }
-  function st(t) {
+  function lt(t) {
     return Boolean(t);
   }
-  function tp(t, e, r) {
+  function xp(t, e, r) {
     if (r === "==")
       return Object.is(t, e);
     if (r === "!=")
@@ -8735,7 +8937,7 @@ p {
     }
     return false;
   }
-  function Dt(t) {
+  function qt(t) {
     let e = [], r = 0;
     while (r < t.length) {
       let i = t[r];
@@ -8755,16 +8957,16 @@ p {
       if (i === "(" || i === ")")
         throw Error("parentheses are not supported yet");
       if (i === "'" || i === '"') {
-        let a = ep(t, r, i);
+        let a = yp(t, r, i);
         e.push({ kind: "literal", value: a.value }), r = a.next;
         continue;
       }
       if (i === "-" && /\d/.test(t[r + 1] ?? "") || /\d/.test(i)) {
-        let a = ip(t, r);
+        let a = wp(t, r);
         e.push({ kind: "literal", value: a.value }), r = a.next;
         continue;
       }
-      let n = op(t, r);
+      let n = kp(t, r);
       if (n.value === "true")
         e.push({ kind: "literal", value: true });
       else if (n.value === "false")
@@ -8777,7 +8979,7 @@ p {
     }
     return e.push({ kind: "end" }), e;
   }
-  function ep(t, e, r) {
+  function yp(t, e, r) {
     let i = "";
     for (let o = e + 1;o < t.length; o += 1) {
       let n = t[o];
@@ -8787,14 +8989,14 @@ p {
         let a = t[o + 1];
         if (a == null)
           throw Error("unterminated string literal");
-        i += rp(a), o += 1;
+        i += _p(a), o += 1;
         continue;
       }
       i += n;
     }
     throw Error("unterminated string literal");
   }
-  function rp(t) {
+  function _p(t) {
     if (t === "n")
       return `
 `;
@@ -8804,7 +9006,7 @@ p {
       return "\t";
     return t;
   }
-  function ip(t, e) {
+  function wp(t, e) {
     let r = e;
     if (t[r] === "-")
       r += 1;
@@ -8820,27 +9022,27 @@ p {
       throw Error(`invalid number literal "${i}"`);
     return { value: o, next: r };
   }
-  function op(t, e) {
+  function kp(t, e) {
     let r = e;
     while (r < t.length && !/\s/.test(t[r]) && !`!&|=<>"'()`.includes(t[r]))
       r += 1;
     let i = t.slice(e, r);
     if (!i)
       throw Error(`unexpected token "${t[e] ?? ""}"`);
-    if (!np(i))
+    if (!Ep(i))
       throw Error(`invalid path "${i}"`);
     return { value: i, next: r };
   }
-  function np(t) {
+  function Ep(t) {
     if (t === ".")
       return true;
     return /^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(t);
   }
-  function Bs(t) {
-    return new Vs(Dt(t)).parse();
+  function sl(t) {
+    return new ll(qt(t)).parse();
   }
 
-  class Vs {
+  class ll {
     tokens;
     index = 0;
     constructor(t) {
@@ -8907,10 +9109,10 @@ p {
       return this.index += 1, t;
     }
   }
-  function Le(t) {
+  function Fe(t) {
     let e = [];
     try {
-      for (let r of Dt(t))
+      for (let r of qt(t))
         if (r.kind === "path")
           e.push(r.value);
     } catch {
@@ -8920,113 +9122,148 @@ p {
     }
     return e;
   }
-  function Ae(t) {
+  function Ne(t) {
     let e = t.trim();
     if (!e)
-      return Ns(t, { kind: "literal", value: true });
+      return dl(t, { kind: "literal", value: true });
     try {
-      return Ns(t, Bs(e));
+      return dl(t, sl(e));
     } catch (r) {
       let i = false;
       return { expression: t, valid: false, evaluate: () => {
         if (!i)
-          i = true, console.warn(`Invalid cms-condition "${t}": ${ap(r)}`);
+          i = true, console.warn(`Invalid cms-condition "${t}": ${Ap(r)}`);
         return false;
       } };
     }
   }
-  function Ns(t, e) {
+  function dl(t, e) {
     return { expression: t, valid: true, evaluate: (r) => Boolean(E(e, r)) };
   }
-  function ap(t) {
+  function Ap(t) {
     return t instanceof Error ? t.message : String(t);
   }
-
-  class Ce {
-    start;
-    end;
-    sites;
-    constructor(t, e, r) {
-      this.start = t;
-      this.end = e;
-      this.sites = r;
-    }
-    update(t) {
-      for (let e of this.sites)
-        e.update(t);
-    }
-    unmount() {
-      for (let t of this.sites)
-        t.unmount?.();
-      sp(this.start, this.end);
-    }
+  var cl = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+  function ul(t) {
+    return { alias: T(t.getAttribute(h) ?? "").alias };
   }
-
-  class Te {
-    sites;
-    constructor(t) {
-      this.sites = t;
-    }
-    update(t) {
-      for (let e of this.sites)
-        e.update(t);
-    }
-    unmount() {
-      for (let t of this.sites)
-        t.unmount?.();
-    }
+  function Vt(t, e) {
+    if (!e)
+      return false;
+    cl.lastIndex = 0;
+    for (let r of t.matchAll(cl))
+      if (X(r[1] ?? "", e))
+        return true;
+    return false;
   }
-  function lt(t, e) {
-    let r = t.nextSibling;
-    while (r && r !== e) {
-      let i = r.nextSibling;
-      r.parentNode?.removeChild(r), r = i;
-    }
+  function De(t, e) {
+    if (!e)
+      return false;
+    return Fe(t).some((r) => X(r, e));
   }
-  function sp(t, e) {
-    let r = t.parentNode;
-    if (!r)
+  function X(t, e) {
+    if (!e)
+      return false;
+    let r = t.trim().split(".")[0] ?? "";
+    return r === "$source" || !!e.alias && r === e.alias;
+  }
+  function jt(t, e, r, i) {
+    for (let o of Array.from(t.attributes))
+      if (o.value.includes("{{") && !Vt(o.value, i))
+        r.attributes.push({ path: e, name: o.name, template: o.value });
+  }
+  var Sp = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
+  function pl(t) {
+    let e = t.childNodes.length === 1 ? t.firstChild : null;
+    if (!e || e.nodeType !== Node.TEXT_NODE)
+      return null;
+    return (e.nodeValue ?? "").trim().match(Sp)?.[1] ?? null;
+  }
+  var Lp = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  function hl(t) {
+    let e = t.match(Lp);
+    if (e)
+      return { path: e[1], name: e[2] };
+    return { path: t.trim() };
+  }
+  function ml(t, e, r, i, o, n) {
+    let a = t.getAttribute(at) ?? "";
+    if (r.skipRepeat || !t.hasAttribute(at) || X(a, r.submitBoundary))
+      return false;
+    let l = t.getAttribute(L), u = l ? De(l, r.submitBoundary) : false;
+    return i.repeats.push({ path: e, spec: hl(a), template: fl(t, o, n, { removeRepeat: true, removeCondition: !!r.submitBoundary && !!l && !u, submitBoundary: r.submitBoundary }), rootCondition: u || !l ? null : Ne(l) }), true;
+  }
+  function bl(t, e, r, i, o, n) {
+    let a = t.getAttribute(L) ?? "";
+    if (r.skipCondition || !t.hasAttribute(L) || De(a, r.submitBoundary))
+      return false;
+    return i.conditions.push({ path: e, condition: Ne(a), template: fl(t, o, n, { removeCondition: !!r.submitBoundary, submitBoundary: r.submitBoundary }) }), true;
+  }
+  function fl(t, e, r, i) {
+    let o = (t.ownerDocument ?? document).createDocumentFragment(), n = t.cloneNode(true);
+    if (i.removeRepeat)
+      n.removeAttribute(at);
+    if (i.removeCondition)
+      n.removeAttribute(L);
+    return o.appendChild(n), r(o, e, { skipRootCondition: true, skipRootRepeat: i.removeRepeat === true, submitBoundary: i.submitBoundary ?? null });
+  }
+  function Oe(t, e, r, i) {
+    let o = { text: [], attributes: [], conditions: [], repeats: [], rawHtml: [] };
+    return Array.from(t.childNodes).forEach((n, a) => {
+      gl(n, [a], { skipCondition: r.skipRootCondition === true, skipRepeat: r.skipRootRepeat === true, submitBoundary: r.submitBoundary ?? null }, o, e, i);
+    }), o;
+  }
+  function gl(t, e, r, i, o, n) {
+    if (t.nodeType === Node.TEXT_NODE) {
+      let u = t.nodeValue ?? "";
+      if (u.includes("{{") && !Vt(u, r.submitBoundary))
+        i.text.push({ path: e, template: u });
       return;
-    let i = t;
-    while (i) {
-      let o = i === e ? null : i.nextSibling;
-      r.removeChild(i), i = o;
     }
+    if (t.nodeType !== Node.ELEMENT_NODE)
+      return;
+    let a = t;
+    if (ml(a, e, r, i, o, n))
+      return;
+    if (bl(a, e, r, i, o, n))
+      return;
+    if (a.hasAttribute(h)) {
+      jt(a, e, i, r.submitBoundary);
+      let u = a.getAttribute(nt)?.trim().toLowerCase();
+      if (u === "submit" || u === "change")
+        vl(a, e, i, o, n, ul(a));
+      return;
+    }
+    if (a.localName === g) {
+      jt(a, e, i, r.submitBoundary);
+      return;
+    }
+    let l = pl(a);
+    if (l) {
+      if (!X(l, r.submitBoundary))
+        i.rawHtml.push({ path: e, expression: l });
+      return;
+    }
+    jt(a, e, i, r.submitBoundary), vl(a, e, i, o, n, r.submitBoundary);
+  }
+  function vl(t, e, r, i, o, n) {
+    Array.from(t.childNodes).forEach((a, l) => {
+      gl(a, [...e, l], { skipCondition: false, skipRepeat: false, submitBoundary: n }, r, i, o);
+    });
+  }
+  var Cp = { urlencode: (t) => encodeURIComponent(t == null ? "" : String(t)) };
+  var Tp = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+  function dt(t, e, r = {}) {
+    return t.replace(Tp, (i, o, n) => {
+      let a = P(e, o);
+      if (!a.found)
+        return "";
+      let l = n ? r[n] ?? Cp[n] : undefined, u = l ? l(a.value) : a.value;
+      return u == null ? "" : String(u);
+    });
   }
 
-  class F {
-    template;
-    plan;
-    filters;
-    constructor(t, e, r) {
-      this.template = t;
-      this.plan = e;
-      this.filters = r;
-    }
-    static fromFragment(t, e = {}) {
-      let r = t.cloneNode(true);
-      return new F(r, Se(r, e), e);
-    }
-    mount(t, e, r = null) {
-      let i = t.ownerDocument ?? document, o = i.createComment("cms-region start"), n = i.createComment("cms-region end"), a = this.template.cloneNode(true), l = Os(a, this.plan, this.filters), u = new Ce(o, n, l);
-      return u.update(e), t.insertBefore(o, r), t.insertBefore(a, r), t.insertBefore(n, r), u;
-    }
-    cloneRaw() {
-      return this.template.cloneNode(true);
-    }
-    static fromTemplate(t, e, r = {}) {
-      return new F(t, Se(t, e, r), e);
-    }
-    static bindChildrenInPlace(t, e, r = {}) {
-      let o = (t.ownerDocument ?? document).createDocumentFragment();
-      for (let u of Array.from(t.childNodes))
-        o.appendChild(u.cloneNode(true));
-      let n = Se(o, r), a = Os(t, n, r), l = new Te(a);
-      return l.update(e), l;
-    }
-  }
-
-  class Us {
+  class qe {
     node;
     template;
     filters;
@@ -9036,27 +9273,27 @@ p {
       this.filters = r;
     }
     update(t) {
-      this.node.nodeValue = it(this.template, t, this.filters);
+      this.node.nodeValue = dt(this.template, t, this.filters);
     }
   }
 
-  class Xs {
-    el;
+  class Ve {
+    element;
     name;
     template;
     filters;
     constructor(t, e, r, i) {
-      this.el = t;
+      this.element = t;
       this.name = e;
       this.template = r;
       this.filters = i;
     }
     update(t) {
-      this.el.setAttribute(this.name, it(this.template, t, this.filters));
+      this.element.setAttribute(this.name, dt(this.template, t, this.filters));
     }
   }
 
-  class Zs {
+  class je {
     start;
     end;
     condition;
@@ -9078,16 +9315,15 @@ p {
         return;
       }
       let e = this.end.parentNode;
-      if (!e)
-        return;
-      this.child = this.template.mount(e, t, this.end);
+      if (e)
+        this.child = this.template.mount(e, t, this.end);
     }
     unmount() {
-      this.child?.unmount(), this.child = null, lt(this.start, this.end);
+      this.child?.unmount(), this.child = null, st(this.start, this.end);
     }
   }
 
-  class Ys {
+  class $e {
     start;
     end;
     spec;
@@ -9103,7 +9339,7 @@ p {
     }
     update(t) {
       this.unmount();
-      let e = I(t, this.spec.path);
+      let e = P(t, this.spec.path);
       if (!Array.isArray(e.value)) {
         if (e.found && e.value != null)
           console.warn(`cms-repeat="${this.spec.path}" expected an array, got`, e.value);
@@ -9114,19 +9350,18 @@ p {
         return;
       for (let i of e.value) {
         let o = this.spec.name ? { vars: { [this.spec.name]: i }, parent: t } : { value: i, parent: t };
-        if (this.rootCondition && !this.rootCondition.evaluate(o))
-          continue;
-        this.regions.push(this.template.mount(r, o, this.end));
+        if (!this.rootCondition || this.rootCondition.evaluate(o))
+          this.regions.push(this.template.mount(r, o, this.end));
       }
     }
     unmount() {
       for (let t of this.regions)
         t.unmount();
-      this.regions = [], lt(this.start, this.end);
+      this.regions = [], st(this.start, this.end);
     }
   }
 
-  class Qs {
+  class Ue {
     start;
     end;
     expression;
@@ -9136,94 +9371,44 @@ p {
       this.expression = r;
     }
     update(t) {
-      lt(this.start, this.end);
+      st(this.start, this.end);
       let e = this.end.parentNode;
       if (!e)
         return;
-      let r = I(t, this.expression), i = (this.end.ownerDocument ?? document).createElement("template");
+      let r = P(t, this.expression), i = (this.end.ownerDocument ?? document).createElement("template");
       i.innerHTML = r.found && r.value != null ? String(r.value) : "", e.insertBefore(i.content, this.end);
     }
     unmount() {
-      lt(this.start, this.end);
+      st(this.start, this.end);
     }
   }
-  function Se(t, e, r = {}) {
-    let i = { text: [], attributes: [], conditions: [], repeats: [], rawHtml: [] };
-    return Array.from(t.childNodes).forEach((o, n) => {
-      Ie(o, [n], { skipCondition: r.skipRootCondition === true, skipRepeat: r.skipRootRepeat === true, submitBoundary: r.submitBoundary ?? null }, i, e);
-    }), i;
-  }
-  function Ie(t, e, r, i, o) {
-    if (t.nodeType === Node.TEXT_NODE) {
-      let l = t.nodeValue ?? "";
-      if (Js(l) && !Gs(l, r.submitBoundary))
-        i.text.push({ path: e, template: l });
-      return;
-    }
-    if (t.nodeType !== Node.ELEMENT_NODE)
-      return;
-    let n = t;
-    if (!r.skipRepeat && n.hasAttribute(K) && !qt(n.getAttribute(K) ?? "", r.submitBoundary)) {
-      let l = n.getAttribute(k), u = l ? Ks(l, r.submitBoundary) : false;
-      i.repeats.push({ path: e, spec: qs(n.getAttribute(K) ?? ""), template: js(n, o, { removeRepeat: true, removeCondition: !!r.submitBoundary && !!l && !u, submitBoundary: r.submitBoundary }), rootCondition: u || !l ? null : Ae(l) });
-      return;
-    }
-    if (!r.skipCondition && n.hasAttribute(k) && !Ks(n.getAttribute(k) ?? "", r.submitBoundary)) {
-      i.conditions.push({ path: e, condition: Ae(n.getAttribute(k) ?? ""), template: js(n, o, { removeCondition: !!r.submitBoundary, submitBoundary: r.submitBoundary }) });
-      return;
-    }
-    if (n.hasAttribute(h)) {
-      Me(n, e, i, r.submitBoundary);
-      let l = n.getAttribute(at)?.trim().toLowerCase();
-      if (l !== "submit" && l !== "change")
-        return;
-      let u = cp(n);
-      Array.from(n.childNodes).forEach((d, p) => {
-        Ie(d, [...e, p], { skipCondition: false, skipRepeat: false, submitBoundary: u }, i, o);
-      });
-      return;
-    }
-    if (n.localName === g) {
-      Me(n, e, i, r.submitBoundary);
-      return;
-    }
-    let a = dp(n);
-    if (a) {
-      if (!qt(a, r.submitBoundary))
-        i.rawHtml.push({ path: e, expression: a });
-      return;
-    }
-    Me(n, e, i, r.submitBoundary), Array.from(n.childNodes).forEach((l, u) => {
-      Ie(l, [...e, u], { skipCondition: false, skipRepeat: false, submitBoundary: r.submitBoundary }, i, o);
-    });
-  }
-  function Os(t, e, r) {
-    let i = [], o = e.text.map((d) => ({ plan: d, node: dt(t, d.path) })), n = e.attributes.map((d) => ({ plan: d, node: dt(t, d.path) })), a = e.conditions.map((d) => ({ plan: d, node: dt(t, d.path) })), l = e.repeats.map((d) => ({ plan: d, node: dt(t, d.path) })), u = e.rawHtml.map((d) => ({ plan: d, node: dt(t, d.path) }));
-    for (let { plan: d, node: p } of o) {
+  function Xe(t, e, r) {
+    let i = [], o = e.text.map((d) => ({ item: d, node: ct(t, d.path) })), n = e.attributes.map((d) => ({ item: d, node: ct(t, d.path) })), a = e.conditions.map((d) => ({ item: d, node: ct(t, d.path) })), l = e.repeats.map((d) => ({ item: d, node: ct(t, d.path) })), u = e.rawHtml.map((d) => ({ item: d, node: ct(t, d.path) }));
+    for (let { item: d, node: p } of o) {
       if (p.nodeType !== Node.TEXT_NODE)
         throw Error("Compiled text binding no longer points to a text node.");
-      i.push(new Us(p, d.template, r));
+      i.push(new qe(p, d.template, r));
     }
-    for (let { plan: d, node: p } of n) {
+    for (let { item: d, node: p } of n) {
       if (p.nodeType !== Node.ELEMENT_NODE)
         throw Error("Compiled attribute binding no longer points to an element.");
-      i.push(new Xs(p, d.name, d.template, r));
+      i.push(new Ve(p, d.name, d.template, r));
     }
-    for (let { plan: d, node: p } of a) {
-      let m = He(p, "cms-condition");
-      i.push(new Zs(m.start, m.end, d.condition, d.template));
+    for (let { item: d, node: p } of a) {
+      let m = Ke(p, "cms-condition");
+      i.push(new je(m.start, m.end, d.condition, d.template));
     }
-    for (let { plan: d, node: p } of l) {
-      let m = He(p, `cms-repeat ${d.spec.path}`);
-      i.push(new Ys(m.start, m.end, d.spec, d.template, d.rootCondition));
+    for (let { item: d, node: p } of l) {
+      let m = Ke(p, `cms-repeat ${d.spec.path}`);
+      i.push(new $e(m.start, m.end, d.spec, d.template, d.rootCondition));
     }
-    for (let { plan: d, node: p } of u) {
-      let m = He(p, `cms-html ${d.expression}`);
-      i.push(new Qs(m.start, m.end, d.expression));
+    for (let { item: d, node: p } of u) {
+      let m = Ke(p, `cms-html ${d.expression}`);
+      i.push(new Ue(m.start, m.end, d.expression));
     }
     return i;
   }
-  function dt(t, e) {
+  function ct(t, e) {
     let r = t;
     for (let i of e) {
       let o = r.childNodes.item(i);
@@ -9233,67 +9418,48 @@ p {
     }
     return r;
   }
-  function Js(t) {
-    return t.includes("{{");
-  }
-  function Me(t, e, r, i = null) {
-    for (let o of Array.from(t.attributes))
-      if (Js(o.value) && !Gs(o.value, i))
-        r.attributes.push({ path: e, name: o.name, template: o.value });
-  }
-  function js(t, e, r = {}) {
-    let i = (t.ownerDocument ?? document).createDocumentFragment(), o = t.cloneNode(true);
-    if (r.removeRepeat)
-      o.removeAttribute(K);
-    if (r.removeCondition)
-      o.removeAttribute(k);
-    return i.appendChild(o), F.fromTemplate(i, e, { skipRootCondition: true, skipRootRepeat: r.removeRepeat === true, submitBoundary: r.submitBoundary ?? null });
-  }
-  function He(t, e) {
+  function Ke(t, e) {
     let r = t.parentNode;
     if (!r)
       throw Error(`Cannot mount ${e}: target node has no parent.`);
     let i = t.ownerDocument ?? document, o = i.createComment(`${e} start`), n = i.createComment(`${e} end`);
     return r.replaceChild(n, t), r.insertBefore(o, n), { start: o, end: n };
   }
-  var lp = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
-  var $s = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
-  function dp(t) {
-    if (t.childNodes.length !== 1)
-      return null;
-    let e = t.firstChild;
-    if (!e || e.nodeType !== Node.TEXT_NODE)
-      return null;
-    return (e.nodeValue ?? "").trim().match(lp)?.[1] ?? null;
-  }
-  function cp(t) {
-    return { alias: S(t.getAttribute(h) ?? "").alias };
-  }
-  function Gs(t, e) {
-    if (!e)
-      return false;
-    $s.lastIndex = 0;
-    for (let r of t.matchAll($s))
-      if (qt(r[1] ?? "", e))
-        return true;
-    return false;
-  }
-  function Ks(t, e) {
-    if (!e)
-      return false;
-    for (let r of Le(t))
-      if (qt(r, e))
-        return true;
-    return false;
-  }
-  function qt(t, e) {
-    if (!e)
-      return false;
-    let r = t.trim().split(".")[0] ?? "";
-    return r === "$source" || !!e.alias && r === e.alias;
+
+  class M {
+    template;
+    plan;
+    filters;
+    constructor(t, e, r) {
+      this.template = t;
+      this.plan = e;
+      this.filters = r;
+    }
+    static fromFragment(t, e = {}) {
+      let r = t.cloneNode(true);
+      return M.fromTemplate(r, e);
+    }
+    static fromTemplate(t, e, r = {}) {
+      let i = Oe(t, e, r, M.fromTemplate);
+      return new M(t, i, e);
+    }
+    static bindChildrenInPlace(t, e, r = {}) {
+      let o = (t.ownerDocument ?? document).createDocumentFragment();
+      for (let l of Array.from(t.childNodes))
+        o.appendChild(l.cloneNode(true));
+      let n = Oe(o, r, {}, M.fromTemplate), a = new Be(Xe(t, n, r));
+      return a.update(e), a;
+    }
+    mount(t, e, r = null) {
+      let i = t.ownerDocument ?? document, o = i.createComment("cms-region start"), n = i.createComment("cms-region end"), a = this.template.cloneNode(true), l = new Pe(o, n, Xe(a, this.plan, this.filters));
+      return l.update(e), t.insertBefore(o, r), t.insertBefore(a, r), t.insertBefore(n, r), l;
+    }
+    cloneRaw() {
+      return this.template.cloneNode(true);
+    }
   }
 
-  class ze {
+  class Ge {
     el;
     captured;
     filters;
@@ -9307,12 +9473,12 @@ p {
       this.captured = e;
       this.filters = r;
       this.options = i;
-      this.bodyTemplate = i.inPlace ? null : F.fromFragment(e.body, r);
+      this.bodyTemplate = i.inPlace ? null : M.fromFragment(e.body, r);
     }
     body(t) {
       if (this.options.inPlace) {
         if (!this.inPlaceRegion) {
-          this.inPlaceRegion = F.bindChildrenInPlace(this.el, t, this.filters), this.rendered = "body";
+          this.inPlaceRegion = M.bindChildrenInPlace(this.el, t, this.filters), this.rendered = "body";
           return;
         }
         this.inPlaceRegion.update(t);
@@ -9333,40 +9499,40 @@ p {
       this.bodyRegion?.unmount(), this.bodyRegion = null, this.el.replaceChildren(), this.rendered = "none";
     }
   }
-  function tl(t) {
-    let e = new Set, r = Array.from(t.children), i = Array.from(t.querySelectorAll(`[${k}]`));
+  function yl(t) {
+    let e = new Set, r = Array.from(t.children), i = Array.from(t.querySelectorAll(`[${L}]`));
     for (let o of [...r, ...i])
-      for (let n of up(o.getAttribute(k)))
+      for (let n of Mp(o.getAttribute(L)))
         e.add(n);
     return e;
   }
-  function Z(t, e) {
-    return { loading: t === "loading", loaded: t === "loaded", empty: t === "empty", error: t === "error", status: Ws(e) ? e.status : undefined, message: Ws(e) ? e.message : undefined };
+  function G(t, e) {
+    return { loading: t === "loading", loaded: t === "loaded", empty: t === "empty", error: t === "error", status: xl(e) ? e.status : undefined, message: xl(e) ? e.message : undefined };
   }
-  function R(t, e, r) {
+  function B(t, e, r) {
     r.setSourceStatus?.(t, e);
   }
-  function el(t, e, r, i, o) {
-    let n = o.sourceStatusesFor?.(t, r) ?? pp(t, r), a = { $source: r, $sources: n };
+  function _l(t, e, r, i, o) {
+    let n = o.sourceStatusesFor?.(t, r) ?? Hp(t, r), a = { $source: r, $sources: n };
     if (e)
       a[e] = i;
     return { value: i, vars: a };
   }
-  function up(t) {
+  function Mp(t) {
     let e = [];
     for (let r of (t ?? "").matchAll(/(?:\$source|\$sources\.[A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)/g))
       e.push(r[1]);
     return e;
   }
-  function Ws(t) {
+  function xl(t) {
     return typeof t === "object" && t !== null && (("status" in t) || ("message" in t));
   }
-  function pp(t, e) {
-    let r = t.getAttribute(nt)?.trim();
+  function Hp(t, e) {
+    let r = t.getAttribute(ot)?.trim();
     return r ? { [r]: e } : {};
   }
 
-  class Fe {
+  class Ye {
     el;
     renderer;
     options;
@@ -9376,125 +9542,108 @@ p {
       this.el = t;
       this.renderer = r;
       this.options = i;
-      this.conditions = tl(e.body);
+      this.conditions = yl(e.body);
     }
     initial(t) {
       let e = { loading: false, loaded: false, empty: false, error: false };
-      R(this.el, e, this.options), this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
+      B(this.el, e, this.options), this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
     }
     loading(t) {
-      let e = Z("loading", undefined);
-      if (R(this.el, e, this.options), this.renderedBody && !this.hasConditions("loading"))
+      let e = G("loading", undefined);
+      if (B(this.el, e, this.options), this.renderedBody && !this.hasConditions("loading"))
         return;
       this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
     }
     error(t, e, r, i) {
-      let o = { status: r, message: i }, n = Z("error", o);
-      if (R(this.el, n, this.options), this.renderer.body(this.scope(t, n, o)), this.renderedBody = true, !this.hasConditions("error"))
+      let o = { status: r, message: i }, n = G("error", o);
+      if (B(this.el, n, this.options), this.renderer.body(this.scope(t, n, o)), this.renderedBody = true, !this.hasConditions("error"))
         console.warn(`cms-source "${e}": ${i}`);
     }
     data(t, e) {
-      let r = Ls(e) ? "empty" : "loaded", i = Z(r, e);
-      R(this.el, i, this.options);
+      let r = Js(e) ? "empty" : "loaded", i = G(r, e);
+      B(this.el, i, this.options);
       let o = this.scope(t, i, e);
       this.renderer.body(o), this.renderedBody = true;
     }
     result(t, e) {
-      let r = e.ok ? "loaded" : "error", i = Z(r, e);
-      R(this.el, i, this.options), this.renderer.body(this.scope(t, i, e)), this.renderedBody = true;
+      let r = e.ok ? "loaded" : "error", i = G(r, e);
+      B(this.el, i, this.options), this.renderer.body(this.scope(t, i, e)), this.renderedBody = true;
     }
     forced(t) {
-      let e = t === "error" ? { status: 0, message: "Forced error state" } : undefined, r = Z(t, e), i = S(this.el.getAttribute(h) ?? "");
-      R(this.el, r, this.options), this.renderer.body(this.scope(i.alias, r, e)), this.renderedBody = true;
+      let e = t === "error" ? { status: 0, message: "Forced error state" } : undefined, r = G(t, e), i = T(this.el.getAttribute(h) ?? "");
+      B(this.el, r, this.options), this.renderer.body(this.scope(i.alias, r, e)), this.renderedBody = true;
     }
     scope(t, e, r) {
-      return el(this.el, t, e, r, this.options);
+      return _l(this.el, t, e, r, this.options);
     }
     hasConditions(t) {
       return this.conditions.has(t);
     }
   }
-  var hp = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-  function il(t, e) {
-    let r = (t ?? "").trim().toUpperCase();
-    if (r === "GET" || r === "POST" || r === "PUT" || r === "PATCH" || r === "DELETE" || r === "HEAD")
-      return r;
-    return e;
+  function wl(t, e) {
+    let r = Ip(t);
+    if (!r)
+      return;
+    let i = {}, o = U();
+    for (let [n, a] of Object.entries(r))
+      if (a.from === "queryParam")
+        i[n] = o.get(a.name) ?? "";
+      else if (a.from === "state")
+        i[n] = K(a.name, e);
+      else
+        i[n] = a.value;
+    return Object.keys(i).length ? i : undefined;
   }
-  function Re(t) {
+  function Ip(t) {
+    let e = t?.trim() ?? "";
+    if (!e)
+      return null;
+    let r;
+    try {
+      r = JSON.parse(e);
+    } catch {
+      return null;
+    }
+    if (!kl(r))
+      return null;
+    let i = {};
+    for (let [o, n] of Object.entries(r)) {
+      let a = zp(n);
+      if (o.trim() && a)
+        i[o] = a;
+    }
+    return Object.keys(i).length ? i : null;
+  }
+  function zp(t) {
+    if (!kl(t) || typeof t.from !== "string")
+      return null;
+    if (t.from === "queryParam" || t.from === "state")
+      return typeof t.name === "string" && t.name.trim() ? { from: t.from, name: t.name.trim() } : null;
+    if (t.from !== "raw")
+      return null;
+    if (typeof t.value === "string")
+      return t.value.trim() ? { from: "raw", value: t.value } : null;
+    if (typeof t.value === "number" && Number.isFinite(t.value))
+      return { from: "raw", value: t.value };
+    if (typeof t.value === "boolean")
+      return { from: "raw", value: t.value };
+    return null;
+  }
+  function kl(t) {
+    return typeof t === "object" && t !== null && !Array.isArray(t);
+  }
+  function ut(t) {
     let e = new FormData(t);
     if (Array.from(e.keys()).length > 0)
       return e;
-    for (let r of gp(t))
-      fp(e, r);
+    for (let r of Rp(t))
+      Pp(e, r);
     return e;
   }
-  function mp(t, e) {
-    let r = e.formData ?? Re(t), i = e.method;
-    if (i === "GET" || i === "HEAD")
-      return { kind: "query", url: bp(e.url, r), formData: r, data: rl(r) };
-    let o = vp(rl(r), r, e.bodyFields);
-    if (hp.has(i) && xp(r))
-      return { kind: "formData", url: e.url, formData: r, data: o, body: r };
-    return { kind: "json", url: e.url, formData: r, data: o, body: JSON.stringify(o) };
-  }
-  async function ol(t, e) {
-    let r = mp(t, e), i = new Headers({ Accept: "application/json" }), o = { method: e.method, headers: i, signal: e.signal };
-    if (r.kind === "json")
-      i.set("Content-Type", "application/json"), o.body = r.body;
-    else if (r.kind === "formData")
-      o.body = r.body;
-    try {
-      let n = await fetch(r.url, o), a = await _p(n);
-      return { ok: n.ok, status: n.status, statusText: n.statusText, body: a, message: n.ok ? "" : yp(n, a), form: t };
-    } catch (n) {
-      if (n?.name === "AbortError")
-        return { ok: false, status: 0, statusText: "Aborted", body: null, message: "Aborted", form: t };
-      return { ok: false, status: 0, statusText: "Network Error", body: null, message: n instanceof Error ? n.message : String(n), form: t };
-    }
-  }
-  function rl(t) {
-    let e = {};
-    for (let [r, i] of t.entries()) {
-      if (Pe(i))
-        continue;
-      let o = e[r];
-      if (o === undefined)
-        e[r] = i;
-      else if (Array.isArray(o))
-        o.push(i);
-      else
-        e[r] = [o, i];
-    }
-    return e;
-  }
-  function bp(t, e) {
-    let r = new URL(t, location.href);
-    for (let [i, o] of e.entries()) {
-      if (Pe(o))
-        continue;
-      r.searchParams.append(i, De(o) ? o.name : o);
-    }
-    return r.toString();
-  }
-  function vp(t, e, r) {
-    if (!r)
-      return t;
-    let i = t;
-    for (let [o, n] of Object.entries(r)) {
-      let a = o.trim();
-      if (!a || e.has(a) || Object.prototype.hasOwnProperty.call(t, a))
-        continue;
-      if (i === t)
-        i = { ...t };
-      i[a] = n, e.append(a, String(n));
-    }
-    return i;
-  }
-  function gp(t) {
+  function Rp(t) {
     return Array.from(t.querySelectorAll("input, select, textarea, [name]"));
   }
-  function fp(t, e) {
+  function Pp(t, e) {
     let r = e.name?.trim();
     if (!r || e.disabled)
       return;
@@ -9532,49 +9681,182 @@ p {
     }
     t.append(r, String(o));
   }
-  function xp(t) {
-    for (let e of t.values())
-      if (!Pe(e) && De(e))
-        return true;
-    return false;
+  var Bp = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+  function Qe(t, e) {
+    let r = (t ?? "").trim().toUpperCase();
+    if (r === "GET" || r === "POST" || r === "PUT" || r === "PATCH" || r === "DELETE" || r === "HEAD")
+      return r;
+    return e;
   }
-  function Pe(t) {
-    return De(t) && t.name === "" && t.size === 0;
+  function We(t, e) {
+    let r = e.formData ?? ut(t);
+    if (e.method === "GET" || e.method === "HEAD")
+      return { kind: "query", url: Fp(e.url, r), formData: r, data: Ze(r) };
+    let i = Np(Ze(r), r, e.bodyFields);
+    if (Bp.has(e.method) && Dp(r))
+      return { kind: "formData", url: e.url, formData: r, data: i, body: r };
+    return { kind: "json", url: e.url, formData: r, data: i, body: JSON.stringify(i) };
   }
-  function De(t) {
+  function Ze(t) {
+    let e = {};
+    for (let [r, i] of t.entries()) {
+      if (Je(i))
+        continue;
+      let o = e[r];
+      if (o === undefined)
+        e[r] = i;
+      else if (Array.isArray(o))
+        o.push(i);
+      else
+        e[r] = [o, i];
+    }
+    return e;
+  }
+  function Fp(t, e) {
+    let r = new URL(t, location.href);
+    for (let [i, o] of e.entries())
+      if (!Je(o))
+        r.searchParams.append(i, tr(o) ? o.name : o);
+    return r.toString();
+  }
+  function Np(t, e, r) {
+    if (!r)
+      return t;
+    let i = t;
+    for (let [o, n] of Object.entries(r)) {
+      let a = o.trim();
+      if (!a || e.has(a) || Object.prototype.hasOwnProperty.call(t, a))
+        continue;
+      if (i === t)
+        i = { ...t };
+      i[a] = n, e.append(a, String(n));
+    }
+    return i;
+  }
+  function Dp(t) {
+    return Array.from(t.values()).some((e) => !Je(e) && tr(e));
+  }
+  function Je(t) {
+    return tr(t) && t.name === "" && t.size === 0;
+  }
+  function tr(t) {
     return typeof t === "object" && t !== null && typeof t.name === "string" && typeof t.size === "number";
   }
-  async function _p(t) {
+  async function er(t, e) {
+    let r = We(t, e), i = new Headers({ Accept: "application/json" }), o = { method: e.method, headers: i, signal: e.signal };
+    if (r.kind === "json")
+      i.set("Content-Type", "application/json"), o.body = r.body;
+    else if (r.kind === "formData")
+      o.body = r.body;
+    try {
+      let n = await fetch(r.url, o), a = await Op(n);
+      return { ok: n.ok, status: n.status, statusText: n.statusText, body: a, message: n.ok ? "" : qp(n, a), form: t };
+    } catch (n) {
+      if (n?.name === "AbortError")
+        return { ok: false, status: 0, statusText: "Aborted", body: null, message: "Aborted", form: t };
+      return { ok: false, status: 0, statusText: "Network Error", body: null, message: n instanceof Error ? n.message : String(n), form: t };
+    }
+  }
+  async function Op(t) {
     if (t.status === 204)
       return null;
     let e = await t.clone().text().catch(() => "");
     if (e.trim() === "")
       return null;
-    if ((t.headers.get("content-type") ?? "").includes("application/json"))
-      try {
-        return JSON.parse(e);
-      } catch {
-        return null;
-      }
     try {
       return JSON.parse(e);
     } catch {
-      return e;
+      return t.headers.get("content-type")?.includes("application/json") ? null : e;
     }
   }
-  function yp(t, e) {
+  function qp(t, e) {
     if (e && typeof e === "object" && "error" in e && typeof e.error === "string")
       return e.error;
     if (e && typeof e === "object" && "message" in e && typeof e.message === "string")
       return e.message;
     return t.statusText || `Request failed (${t.status})`;
   }
-  var wp = "cms-source:success";
-  var kp = "cms-source:failed";
-  var Ep = "form:success";
-  var Lp = "form:failed";
+  var Vp = "cms-source:success";
+  var jp = "cms-source:failed";
+  var $p = "form:success";
+  var Up = "form:failed";
 
-  class Be {
+  class rr {
+    element;
+    filters;
+    constructor(t, e) {
+      this.element = t;
+      this.filters = e;
+    }
+    capture() {
+      let t = pt(this.element, this.element.ownerDocument);
+      if (!t)
+        return null;
+      let e = this.sourceMethod();
+      return { form: t, method: e, formData: ut(t), bodyFields: e === "GET" || e === "HEAD" ? undefined : wl(this.element.getAttribute(Me), this.element.ownerDocument) };
+    }
+    async send(t, e, r) {
+      return er(t.form, { url: this.submitUrl(e), method: t.method, signal: r, bodyFields: t.bodyFields, formData: t.formData });
+    }
+    complete(t, e) {
+      if (this.dispatchResult(t), !t.ok)
+        return;
+      if (this.publish(t), this.shouldReset())
+        t.form.reset();
+      let r = this.successRedirect(t, e);
+      if (r)
+        this.redirect(r);
+    }
+    sourceMethod() {
+      return Qe(this.element.getAttribute(Rs), "POST");
+    }
+    submitUrl(t) {
+      let e = new URL(t, location.href);
+      for (let [r, i] of new URLSearchParams(location.search))
+        e.searchParams.append(r, i);
+      return e.toString();
+    }
+    dispatchResult(t) {
+      let e = t.ok ? Vp : jp, r = t.ok ? $p : Up, i = { bubbles: true, composed: true, detail: t };
+      this.element.dispatchEvent(new CustomEvent(e, i)), this.element.dispatchEvent(new CustomEvent(r, i));
+    }
+    publish(t) {
+      let e = (this.element.getAttribute(Ps) ?? "").split(/\s+/).filter(Boolean);
+      for (let r of e)
+        this.element.ownerDocument.dispatchEvent(new CustomEvent(r, { bubbles: true, composed: true, detail: t }));
+    }
+    shouldReset() {
+      let t = this.element.getAttribute(Bs)?.trim().toLowerCase();
+      if (t === "false" || t === "0" || t === "no")
+        return false;
+      if (t === "true" || t === "1" || t === "yes" || t === "")
+        return true;
+      let e = this.sourceMethod();
+      return e !== "GET" && e !== "HEAD";
+    }
+    successRedirect(t, e) {
+      let r = this.element.getAttribute(Fs)?.trim();
+      if (!r)
+        return "";
+      let i = { value: t, vars: { ...e ? { [e]: t } : {}, result: t, $source: { loading: false, loaded: t.ok, empty: false, error: !t.ok, status: t.status, message: t.message } } };
+      return dt(r, i, this.filters).trim();
+    }
+    redirect(t) {
+      let e;
+      try {
+        e = new URL(t, location.href);
+      } catch {
+        return;
+      }
+      if (e.origin === location.origin && (e.protocol === "http:" || e.protocol === "https:"))
+        location.href = `${e.pathname}${e.search}${e.hash}`;
+    }
+  }
+  function pt(t, e) {
+    let r = e.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
+    return typeof r === "function" && t instanceof r ? t : null;
+  }
+  class or {
     el;
     filters;
     options;
@@ -9584,6 +9866,7 @@ p {
     stopListeners = null;
     lastUrl = null;
     formOwned;
+    submission;
     onReload = () => {
       if (this.el.isConnected)
         this.run();
@@ -9593,7 +9876,7 @@ p {
         this.run({ onlyIfUrlChanged: true });
     };
     onSubmit = (t) => {
-      let e = Bt(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
+      let e = pt(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
       if (!(typeof e?.reportValidity === "function" ? e.reportValidity() : true)) {
         t.preventDefault();
         return;
@@ -9602,7 +9885,7 @@ p {
         this.run();
     };
     onChange = () => {
-      let t = Bt(this.el, this.el.ownerDocument) ?? this.el.closest("form");
+      let t = pt(this.el, this.el.ownerDocument) ?? this.el.closest("form");
       if ((typeof t?.reportValidity === "function" ? t.reportValidity() : true) && this.el.isConnected)
         this.run();
     };
@@ -9610,19 +9893,19 @@ p {
       this.el = t;
       this.filters = e;
       this.options = r;
-      this.formOwned = Bt(t, t.ownerDocument) !== null && Pt(t) !== "auto";
-      let i = this.formOwned ? Es(t) : ks(t);
-      this.renderer = new ze(t, i, this.filters, { inPlace: this.formOwned }), this.presenter = new Fe(t, i, this.renderer, this.options);
+      this.formOwned = pt(t, t.ownerDocument) !== null && Ot(t) !== "auto", this.submission = this.formOwned ? new rr(t, e) : null;
+      let i = this.formOwned ? Ws(t) : Qs(t);
+      this.renderer = new Ge(t, i, this.filters, { inPlace: this.formOwned }), this.presenter = new Ye(t, i, this.renderer, this.options);
     }
     start() {
-      if (this.stopListeners = Rs(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), Pt(this.el) === "auto" || this.options.sourceStateForce)
+      if (this.stopListeners = ol(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), Ot(this.el) === "auto" || this.options.sourceStateForce)
         this.run();
       else {
-        let t = S(this.el.getAttribute(h) ?? "");
+        let t = T(this.el.getAttribute(h) ?? "");
         if (t.url)
           this.presenter.initial(t.alias), this.afterRender();
       }
-      this.el.setAttribute(v, "");
+      this.el.setAttribute(f, "");
     }
     dispose() {
       this.abort?.abort(), this.abort = null, this.stopListeners?.(), this.stopListeners = null;
@@ -9635,14 +9918,14 @@ p {
         this.abort?.abort(), this.abort = null, this.presenter.forced(this.options.sourceStateForce);
         return;
       }
-      let e = S(this.el.getAttribute(h) ?? "");
+      let e = T(this.el.getAttribute(h) ?? "");
       if (!e.url)
         return;
-      let r = Hs(e.url, this.el.ownerDocument);
+      let r = tl(e.url, this.el.ownerDocument);
       if (t?.onlyIfUrlChanged && r === this.lastUrl)
         return;
       this.lastUrl = r;
-      let i = this.formOwned ? this.captureSubmission() : null;
+      let i = this.submission?.capture() ?? null;
       if (this.formOwned && !i)
         return;
       this.presenter.loading(e.alias), this.afterRender(), this.abort?.abort();
@@ -9650,13 +9933,13 @@ p {
       if (this.abort = o, this.formOwned) {
         if (!i)
           return;
-        let a = await ol(i.form, { url: this.submitUrl(r), method: i.method, signal: o.signal, bodyFields: i.bodyFields, formData: i.formData });
+        let a = await this.submission.send(i, r, o.signal);
         if (o.signal.aborted)
           return;
-        this.presenter.result(e.alias, a), this.afterRender(), this.dispatchSubmitEvent(a), this.afterSubmit(a, e.alias);
+        this.presenter.result(e.alias, a), this.afterRender(), this.submission.complete(a, e.alias);
         return;
       }
-      let n = await ms(r, o.signal);
+      let n = await Zs(r, o.signal);
       if (o.signal.aborted || n.kind === "aborted")
         return;
       if (n.kind === "error") {
@@ -9665,286 +9948,16 @@ p {
       }
       this.presenter.data(e.alias, n.data), this.afterRender();
     }
-    sourceMethod() {
-      let t = this.formOwned ? "POST" : "GET";
-      return il(this.el.getAttribute(gs), t);
-    }
-    captureSubmission() {
-      let t = Bt(this.el, this.el.ownerDocument);
-      if (!t)
-        return null;
-      let e = this.sourceMethod();
-      return { form: t, method: e, formData: Re(t), bodyFields: e === "GET" || e === "HEAD" ? undefined : Ps(this.el.getAttribute(we), this.el.ownerDocument) };
-    }
-    submitUrl(t) {
-      let e = new URL(t, location.href);
-      for (let [r, i] of new URLSearchParams(location.search))
-        e.searchParams.append(r, i);
-      return e.toString();
-    }
-    afterSubmit(t, e) {
-      if (!t.ok)
-        return;
-      if (this.publish(t), this.shouldReset())
-        t.form.reset();
-      let r = this.successRedirect(t, e);
-      if (r)
-        this.redirect(r);
-    }
-    dispatchSubmitEvent(t) {
-      let e = t.ok ? wp : kp, r = t.ok ? Ep : Lp, i = { bubbles: true, composed: true, detail: t };
-      this.el.dispatchEvent(new CustomEvent(e, i)), this.el.dispatchEvent(new CustomEvent(r, i));
-    }
-    publish(t) {
-      let e = (this.el.getAttribute(fs) ?? "").split(/\s+/).filter(Boolean);
-      for (let r of e)
-        this.el.ownerDocument.dispatchEvent(new CustomEvent(r, { bubbles: true, composed: true, detail: t }));
-    }
-    shouldReset() {
-      let t = this.el.getAttribute(xs)?.trim().toLowerCase();
-      if (t === "false" || t === "0" || t === "no")
-        return false;
-      if (t === "true" || t === "1" || t === "yes" || t === "")
-        return true;
-      let e = this.sourceMethod();
-      return e !== "GET" && e !== "HEAD";
-    }
-    successRedirect(t, e) {
-      let r = this.el.getAttribute(_s)?.trim();
-      if (!r)
-        return "";
-      let i = { value: t, vars: { ...e ? { [e]: t } : {}, result: t, $source: { loading: false, loaded: t.ok, empty: false, error: !t.ok, status: t.status, message: t.message } } };
-      return it(r, i, this.filters).trim();
-    }
-    redirect(t) {
-      let e;
-      try {
-        e = new URL(t, location.href);
-      } catch {
-        return;
-      }
-      if (e.origin !== location.origin || e.protocol !== "http:" && e.protocol !== "https:")
-        return;
-      location.href = `${e.pathname}${e.search}${e.hash}`;
-    }
     afterRender() {
       this.options.afterSourceRender?.(this.el);
     }
   }
-  function Bt(t, e) {
-    let r = e.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
-    return typeof r === "function" && t instanceof r ? t : null;
-  }
-  var L = "cms-param-sync";
-  var Ap = 300;
-
-  class Ve {
-    el;
-    key;
-    timer = null;
-    reflectTimer = null;
-    last = null;
-    reflecting = false;
-    childObserver = null;
-    onInput = () => this.schedule();
-    onChange = () => this.write();
-    onParams = () => this.reflect();
-    onChildren = () => {
-      if (this.reflectTimer)
-        clearTimeout(this.reflectTimer);
-      this.reflectTimer = setTimeout(() => this.reflect(), 0);
-    };
-    constructor(t) {
-      this.el = t;
-      this.key = (t.getAttribute(L) || "").trim() || t.name || "";
-    }
-    start() {
-      if (!this.key) {
-        console.warn(`${L}: no key — set ${L}="<param>" or a name attribute`, this.el);
-        return;
-      }
-      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(z, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
-    }
-    dispose() {
-      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), document.removeEventListener(z, this.onParams), window.removeEventListener("popstate", this.onParams), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
-        clearTimeout(this.timer);
-      if (this.reflectTimer)
-        clearTimeout(this.reflectTimer);
-      this.timer = this.reflectTimer = null;
-    }
-    reflect() {
-      if (this.timer)
-        return;
-      let t = U().get(this.key) ?? "", e = this.el;
-      if (e.type === "checkbox") {
-        let r = t !== "" && t === (e.value || "true");
-        if (e.checked !== r)
-          this.set(() => {
-            e.checked = r;
-          });
-      } else if (e.value !== t)
-        this.set(() => {
-          e.value = t;
-        });
-      this.last = this.currentValue();
-    }
-    set(t) {
-      this.reflecting = true;
-      try {
-        t();
-      } finally {
-        this.reflecting = false;
-      }
-    }
-    currentValue() {
-      let t = this.el;
-      return t.type === "checkbox" ? t.checked ? t.value || "true" : "" : t.value ?? "";
-    }
-    schedule() {
-      if (this.reflecting)
-        return;
-      if (this.timer)
-        clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), Ap);
-    }
-    write() {
-      if (this.reflecting)
-        return;
-      if (this.timer)
-        clearTimeout(this.timer), this.timer = null;
-      let t = this.currentValue();
-      if (t === this.last)
-        return;
-      this.last = t, ke(this.key, t);
-    }
-  }
-  var Cp = 300;
-
-  class Ne {
-    el;
-    key;
-    timer = null;
-    reflectTimer = null;
-    last = null;
-    reflecting = false;
-    childObserver = null;
-    onInput = () => this.schedule();
-    onChange = () => this.write();
-    onState = () => this.reflect();
-    onChildren = () => {
-      if (this.reflectTimer)
-        clearTimeout(this.reflectTimer);
-      this.reflectTimer = setTimeout(() => this.reflect(), 0);
-    };
-    constructor(t) {
-      this.el = t;
-      this.key = (t.getAttribute(f) || "").trim() || t.name || "";
-    }
-    start() {
-      if (!this.key) {
-        console.warn(`${f}: no key - set ${f}="<key>" or a name attribute`, this.el);
-        return;
-      }
-      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), this.el.ownerDocument.addEventListener(T, this.onState);
-      let t = this.el.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
-      this.childObserver = new t(this.onChildren), this.childObserver.observe(this.el, { childList: true });
-    }
-    dispose() {
-      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), this.el.ownerDocument.removeEventListener(T, this.onState), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
-        clearTimeout(this.timer);
-      if (this.reflectTimer)
-        clearTimeout(this.reflectTimer);
-      this.timer = this.reflectTimer = null;
-    }
-    reflect() {
-      if (this.timer)
-        return;
-      let t = X(this.key, this.el.ownerDocument), e = this.el;
-      if (e.type === "checkbox") {
-        let r = t !== "" && t === (e.value || "true");
-        if (e.checked !== r)
-          this.set(() => {
-            e.checked = r;
-          });
-      } else if (e.value !== t)
-        this.set(() => {
-          e.value = t;
-        });
-      this.last = this.currentValue();
-    }
-    set(t) {
-      this.reflecting = true;
-      try {
-        t();
-      } finally {
-        this.reflecting = false;
-      }
-    }
-    currentValue() {
-      let t = this.el;
-      return t.type === "checkbox" ? t.checked ? t.value || "true" : "" : t.value ?? "";
-    }
-    schedule() {
-      if (this.reflecting)
-        return;
-      if (this.timer)
-        clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), Cp);
-    }
-    write() {
-      if (this.reflecting)
-        return;
-      if (this.timer)
-        clearTimeout(this.timer), this.timer = null;
-      let t = this.currentValue();
-      if (t === this.last)
-        return;
-      this.last = t, Ft(this.key, t, this.el.ownerDocument);
-    }
-  }
-  function P(t, e, r, i) {
-    if (t.nodeType !== Node.ELEMENT_NODE)
-      return;
-    let o = t;
-    if (o !== r && nl(o, r))
-      return;
-    if (o.hasAttribute(e))
-      i(o);
-    o.querySelectorAll(`[${e}]`).forEach((n) => {
-      if (!nl(n, r))
-        i(n);
-    });
-  }
-  function nl(t, e) {
-    for (let r = t.parentElement;r && r !== e; r = r.parentElement)
-      if (r.localName === g || r.hasAttribute(x))
-        return true;
-    return false;
-  }
-  function M(t) {
-    if (t.nodeType !== Node.ELEMENT_NODE)
-      return;
-    let e = t;
-    if (e.hasAttribute(h))
-      e.setAttribute(v, "");
-    e.querySelectorAll(`[${h}]`).forEach((r) => r.setAttribute(v, ""));
-  }
-  function Oe(t) {
-    if (t.nodeType !== Node.ELEMENT_NODE)
-      return;
-    let e = t;
-    if (e.hasAttribute(x)) {
-      M(e);
-      return;
-    }
-    e.querySelectorAll(`[${x}]`).forEach(M);
-  }
-  function al(t, e, r, i) {
+  function El(t, e, r, i) {
     let o = {};
-    for (let n of Tp(t, r)) {
+    for (let n of Kp(t, r)) {
       if (!n.hasAttribute(h))
         continue;
-      let a = n.getAttribute(nt)?.trim();
+      let a = n.getAttribute(ot)?.trim();
       if (!a)
         continue;
       let l = n === r ? i : e.get(n);
@@ -9953,7 +9966,7 @@ p {
     }
     return o;
   }
-  function Tp(t, e) {
+  function Kp(t, e) {
     let r = [];
     for (let i = e;i && i !== t.parentElement; i = i.parentElement)
       if (r.push(i), i === t)
@@ -9961,126 +9974,48 @@ p {
     return r.reverse();
   }
 
-  class je {
+  class nr {
     root;
     filters;
     options;
+    afterSourceRender;
     sources = new Map;
     sourceStatuses = new Map;
     paramSyncs = new Map;
     pageStateSyncs = new Map;
-    observer = null;
-    stopped = false;
-    constructor(t, e = {}, r = {}) {
+    constructor(t, e, r, i) {
       this.root = t;
       this.filters = e;
       this.options = r;
+      this.afterSourceRender = i;
     }
-    start() {
-      if (typeof document < "u" && document.readyState === "loading")
-        document.addEventListener("DOMContentLoaded", () => this.activate(), { once: true });
-      else
-        this.activate();
-    }
-    activate() {
-      if (this.stopped)
-        return;
-      Oe(this.root), this.registerWithin(this.root);
-      let t = this.root.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
-      this.observer = new t((e) => {
-        for (let r of e) {
-          if (r.type === "attributes") {
-            this.reconcileAttribute(r.target, r.attributeName);
-            continue;
-          }
-          r.removedNodes.forEach((i) => this.unregisterWithin(i)), r.addedNodes.forEach((i) => {
-            Oe(i), this.registerWithin(i);
-          });
-        }
-      }), this.observer.observe(this.root, { attributes: true, attributeFilter: [h, L, f], childList: true, subtree: true });
-    }
-    stop() {
-      this.teardown();
-    }
-    deactivate() {
-      this.teardown({ beforeSourceDispose: (t) => t.renderTemplate(), afterDispose: () => M(this.root) });
+    get sourceCount() {
+      return this.sources.size;
     }
     teardown(t) {
-      if (this.stopped)
-        return;
-      this.stopped = true, this.observer?.disconnect(), this.observer = null;
       for (let e of this.sources.values())
         t?.beforeSourceDispose?.(e), e.dispose();
       for (let e of this.paramSyncs.values())
         e.dispose();
       for (let e of this.pageStateSyncs.values())
         e.dispose();
-      this.sources.clear(), this.sourceStatuses.clear(), this.paramSyncs.clear(), this.pageStateSyncs.clear(), t?.afterDispose?.();
+      this.sources.clear(), this.sourceStatuses.clear(), this.paramSyncs.clear(), this.pageStateSyncs.clear();
     }
-    get isStopped() {
-      return this.stopped;
-    }
-    get size() {
-      return this.sources.size;
-    }
-    registerWithin(t) {
-      P(t, h, this.root, (e) => {
-        this.registerSource(e);
-      }), P(t, L, this.root, (e) => {
-        this.registerParamSync(e);
-      }), P(t, f, this.root, (e) => {
-        this.registerPageStateSync(e);
-      });
-    }
-    unregisterWithin(t) {
-      P(t, h, this.root, (e) => {
-        this.unregisterSource(e);
-      }), P(t, L, this.root, (e) => {
-        this.unregisterParamSync(e);
-      }), P(t, f, this.root, (e) => {
-        this.unregisterPageStateSync(e);
-      });
-    }
-    reconcileAttribute(t, e) {
-      if (t.nodeType !== Node.ELEMENT_NODE || !e)
-        return;
-      let r = t;
-      if (!this.isInScope(r))
-        return;
-      if (e === h) {
-        if (!r.hasAttribute(h) || !this.hasSourceUrl(r)) {
-          this.unregisterSource(r);
-          return;
-        }
-        let i = this.sources.get(r);
-        if (i)
-          i.run({ onlyIfUrlChanged: true });
-        else
-          this.registerSource(r);
+    reconcileSource(t) {
+      if (!t.hasAttribute(h) || !this.hasSourceUrl(t)) {
+        this.unregisterSource(t);
         return;
       }
-      if (e === L) {
-        if (r.hasAttribute(L))
-          this.registerParamSync(r);
-        else
-          this.unregisterParamSync(r);
-        return;
-      }
-      if (e === f)
-        if (r.hasAttribute(f))
-          this.registerPageStateSync(r);
-        else
-          this.unregisterPageStateSync(r);
+      let e = this.sources.get(t);
+      if (e)
+        e.run({ onlyIfUrlChanged: true });
+      else
+        this.registerSource(t);
     }
     registerSource(t) {
       if (!t.isConnected || this.sources.has(t) || !this.hasSourceUrl(t))
         return;
-      let e = new Be(t, this.filters, { ...this.options, setSourceStatus: (r, i) => this.sourceStatuses.set(r, i), sourceStatusesFor: (r, i) => al(this.root, this.sourceStatuses, r, i), afterSourceRender: (r) => {
-        if (this.stopped)
-          return;
-        if (this.pruneDetachedBindings(), r.isConnected)
-          this.registerWithin(r);
-      } });
+      let e = new or(t, this.filters, { ...this.options, setSourceStatus: (r, i) => this.sourceStatuses.set(r, i), sourceStatusesFor: (r, i) => El(this.root, this.sourceStatuses, r, i), afterSourceRender: this.afterSourceRender });
       this.sources.set(t, e), e.start();
     }
     unregisterSource(t) {
@@ -10089,21 +10024,10 @@ p {
         return;
       e.dispose(), this.sources.delete(t), this.sourceStatuses.delete(t);
     }
-    pruneDetachedBindings() {
-      for (let t of this.sources.keys())
-        if (!t.isConnected)
-          this.unregisterSource(t);
-      for (let t of this.paramSyncs.keys())
-        if (!t.isConnected)
-          this.unregisterParamSync(t);
-      for (let t of this.pageStateSyncs.keys())
-        if (!t.isConnected)
-          this.unregisterPageStateSync(t);
-    }
     registerParamSync(t) {
       if (!t.isConnected || this.paramSyncs.has(t))
         return;
-      let e = new Ve(t);
+      let e = new Re(t);
       this.paramSyncs.set(t, e), e.start();
     }
     unregisterParamSync(t) {
@@ -10115,7 +10039,7 @@ p {
     registerPageStateSync(t) {
       if (!t.isConnected || this.pageStateSyncs.has(t))
         return;
-      let e = new Ne(t);
+      let e = new ze(t);
       this.pageStateSyncs.set(t, e), e.start();
     }
     unregisterPageStateSync(t) {
@@ -10124,8 +10048,16 @@ p {
         return;
       e.dispose(), this.pageStateSyncs.delete(t);
     }
-    hasSourceUrl(t) {
-      return Rt(t.getAttribute(h) ?? "").trim() !== "";
+    pruneDetached() {
+      for (let t of this.sources.keys())
+        if (!t.isConnected)
+          this.unregisterSource(t);
+      for (let t of this.paramSyncs.keys())
+        if (!t.isConnected)
+          this.unregisterParamSync(t);
+      for (let t of this.pageStateSyncs.keys())
+        if (!t.isConnected)
+          this.unregisterPageStateSync(t);
     }
     isInScope(t) {
       if (t !== this.root && !this.root.contains(t))
@@ -10135,27 +10067,105 @@ p {
           return false;
       return true;
     }
+    hasSourceUrl(t) {
+      return Dt(t.getAttribute(h) ?? "").trim() !== "";
+    }
   }
-  var sl = "cms-binding-cloak";
-  var Sp = `${g}{display:contents}[${h}]:not([${v}]){visibility:hidden}`;
-  function ll(t) {
-    if (t.getElementById(sl))
+  function H(t) {
+    if (t.nodeType !== Node.ELEMENT_NODE)
       return;
-    let e = t.createElement("style");
-    e.id = sl, e.textContent = Sp, (t.head ?? t.documentElement).appendChild(e);
+    let e = t;
+    if (e.hasAttribute(h))
+      e.setAttribute(f, "");
+    e.querySelectorAll(`[${h}]`).forEach((r) => r.setAttribute(f, ""));
   }
-  var dl = {};
-  function Mp(t) {
-    dl = t;
+  function ar(t) {
+    if (t.nodeType !== Node.ELEMENT_NODE)
+      return;
+    let e = t;
+    if (e.hasAttribute(x)) {
+      H(e);
+      return;
+    }
+    e.querySelectorAll(`[${x}]`).forEach(H);
   }
 
-  class cl extends HTMLElement {
+  class sr {
+    root;
+    registry;
+    observer = null;
+    stopped = false;
+    constructor(t, e = {}, r = {}) {
+      this.root = t;
+      this.registry = new nr(t, e, r, (i) => this.afterSourceRender(i));
+    }
+    start() {
+      if (typeof document < "u" && document.readyState === "loading")
+        document.addEventListener("DOMContentLoaded", () => this.activate(), { once: true });
+      else
+        this.activate();
+    }
+    stop() {
+      this.teardown();
+    }
+    deactivate() {
+      this.teardown({ beforeSourceDispose: (t) => t.renderTemplate(), afterDispose: () => H(this.root) });
+    }
+    get isStopped() {
+      return this.stopped;
+    }
+    get size() {
+      return this.registry.sourceCount;
+    }
+    activate() {
+      if (this.stopped)
+        return;
+      ar(this.root), Nt(this.root, this.root, this.registry);
+      let t = this.root.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
+      this.observer = new t((e) => {
+        for (let r of e) {
+          if (r.type === "attributes") {
+            Xs(r.target, r.attributeName, this.registry);
+            continue;
+          }
+          r.removedNodes.forEach((i) => Ks(i, this.root, this.registry)), r.addedNodes.forEach((i) => {
+            ar(i), Nt(i, this.root, this.registry);
+          });
+        }
+      }), this.observer.observe(this.root, { attributes: true, attributeFilter: [h, y, v], childList: true, subtree: true });
+    }
+    teardown(t) {
+      if (this.stopped)
+        return;
+      this.stopped = true, this.observer?.disconnect(), this.observer = null, this.registry.teardown(t), t?.afterDispose?.();
+    }
+    afterSourceRender(t) {
+      if (this.stopped)
+        return;
+      if (this.registry.pruneDetached(), t.isConnected)
+        Nt(t, this.root, this.registry);
+    }
+  }
+  var Al = "cms-binding-cloak";
+  var Xp = `${g}{display:contents}[${h}]:not([${f}]){visibility:hidden}`;
+  function Sl(t) {
+    if (t.getElementById(Al))
+      return;
+    let e = t.createElement("style");
+    e.id = Al, e.textContent = Xp, (t.head ?? t.documentElement).appendChild(e);
+  }
+  var Ll = {};
+  function Gp(t) {
+    Ll = t;
+  }
+
+  class Cl extends HTMLElement {
     _runtime = null;
     static get observedAttributes() {
-      return [ot, zt];
+      return [it, Bt];
     }
     connectedCallback() {
-      ll(this.ownerDocument ?? document), this._syncRuntime();
+      Sl(this.ownerDocument ?? document), this._syncRuntime();
     }
     disconnectedCallback() {
       this._runtime?.stop(), this._runtime = null;
@@ -10170,7 +10180,7 @@ p {
       }
       if (this._runtime && !this._runtime.isStopped)
         return;
-      this._runtime = new je(this, dl, { sourceStateForce: this._sourceStateForce() }), this._runtime.start();
+      this._runtime = new sr(this, Ll, { sourceStateForce: this._sourceStateForce() }), this._runtime.start();
     }
     attributeChangedCallback() {
       if (!this.isConnected)
@@ -10187,21 +10197,21 @@ p {
       this.startRuntime();
     }
     _isRuntimeDisabled() {
-      if (this.hasAttribute(ot) || this.closest(`[${x}]`) !== null)
+      if (this.hasAttribute(it) || this.closest(`[${x}]`) !== null)
         return true;
       for (let t = this.parentElement;t; t = t.parentElement)
-        if (t.localName === g && t.hasAttribute(ot))
+        if (t.localName === g && t.hasAttribute(it))
           return true;
       return false;
     }
     _sourceStateForce() {
-      let t = this.getAttribute(zt);
-      return ys(t) ? t : undefined;
+      let t = this.getAttribute(Bt);
+      return Ns(t) ? t : undefined;
     }
     _revealInertSources() {
-      M(this), queueMicrotask(() => {
+      H(this), queueMicrotask(() => {
         if (this.isConnected && this._isRuntimeDisabled())
-          M(this);
+          H(this);
       });
     }
   }
@@ -10229,8 +10239,8 @@ p {
     }
     connectedCallback() {}
   }
-  var O2 = "data-p9r-composition";
-  var N = "data-p9r-composition-input";
+  var O = "data-p9r-composition";
+  var N2 = "data-p9r-composition-input";
   var _2 = "data-p9r-composition-output";
   function c2(T2) {
     while (true) {
@@ -10238,7 +10248,7 @@ p {
       if (o.length === 0)
         return;
       for (let n of o.reverse()) {
-        let e = I2(n);
+        let e = I(n);
         if (n.removeAttribute("data-p9r-composition"), e)
           n.replaceChildren(e.content.cloneNode(true));
         else
@@ -10246,11 +10256,11 @@ p {
       }
     }
   }
-  function I2(T2) {
+  function I(T2) {
     return Array.from(T2.children).find((n) => n.localName === "template" && n.hasAttribute("data-p9r-composition-input")) ?? null;
   }
   function t(T2) {
-    return T2.hasAttribute("data-p9r-composition") && I2(T2) !== null;
+    return T2.hasAttribute("data-p9r-composition") && I(T2) !== null;
   }
   function M2(T2) {
     let o = R2(T2);
@@ -10275,7 +10285,7 @@ p {
     return o.nodeType === Node.DOCUMENT_NODE ? o : o;
   }
 
-  class C extends HTMLElement {
+  class C2 extends HTMLElement {
     templateSource;
     input = null;
     rendered = false;
@@ -10285,15 +10295,15 @@ p {
     }
     connectedCallback() {
       if (M2(this), !this.rendered) {
-        let T2 = this.hasAttribute(O2) ? I2(this) : null;
-        if (this.input = T2 ?? this.captureInput(), this.setAttribute(O2, ""), !T2)
+        let T2 = this.hasAttribute(O) ? I(this) : null;
+        if (this.input = T2 ?? this.captureInput(), this.setAttribute(O, ""), !T2)
           this.renderTemplate();
         this.rendered = true;
       }
     }
     captureInput() {
       let T2 = this.ownerDocument.createElement("template");
-      return T2.setAttribute(N, ""), T2.content.append(...Array.from(this.childNodes)), c2(T2.content), this.append(T2), T2;
+      return T2.setAttribute(N2, ""), T2.content.append(...Array.from(this.childNodes)), c2(T2.content), this.append(T2), T2;
     }
     renderTemplate() {
       let T2 = this.ownerDocument.createElement("template");
@@ -10306,10 +10316,10 @@ p {
   // src/components/globals.ts
   window.p9r = {
     Component: U2,
-    Composition: C
+    Composition: C2
   };
 
-  // src/components/admin/AdminLayout/template.html
+  // src/components/admin/Layout/AdminLayout/template.html
   var template_default = `<w13c-left-menu-layout>
 
     <w13c-lateral-menu slot="sidebar" aria-label="Admin navigation" style="--menu-brand-mark: 'C'; --menu-brand-mark-display: grid; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;">
@@ -10487,7 +10497,7 @@ p {
 </w13c-left-menu-layout>
 `;
 
-  // src/components/admin/AdminLayout/AdminLayout.ts
+  // src/components/admin/Layout/AdminLayout/AdminLayout.ts
   var DEFAULT_BRAND_NAME = "CmsCore";
 
   class FixedAdminLayout extends U2 {
@@ -10618,7 +10628,7 @@ p {
     }
   }
 
-  // src/components/admin/ConfirmForm/ConfirmForm.ts
+  // src/components/admin/Common/ConfirmForm/ConfirmForm.ts
   class CmsConfirmForm extends HTMLElement {
     _busy = false;
     _onClick = async (e) => {
@@ -10652,7 +10662,7 @@ p {
       const target = this.getAttribute("target");
       const method = this.getAttribute("method") || "POST";
       if (!target) {
-        ku("cms-confirm-form: missing target", { type: "error" });
+        $u("cms-confirm-form: missing target", { type: "error" });
         return;
       }
       const url = force ? withForce(target) : target;
@@ -10660,7 +10670,7 @@ p {
       try {
         res = await fetch(url, { method });
       } catch (e) {
-        ku(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
+        $u(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
         return;
       }
       if (res.ok) {
@@ -10688,7 +10698,7 @@ ${followMessage}`)) {
           message = body.error;
         }
       } catch {}
-      ku(message || `HTTP ${res.status}`, { type: "error" });
+      $u(message || `HTTP ${res.status}`, { type: "error" });
     }
     _onSuccess() {
       const emit = this.getAttribute("emit");
@@ -10728,7 +10738,7 @@ ${followMessage}`)) {
   }
   customElements.define("cms-confirm-form", CmsConfirmForm);
 
-  // src/components/admin/CredentialSelect/CredentialSelect.css
+  // src/components/admin/Common/CredentialSelect/CredentialSelect.css
   var CredentialSelect_default = `:host { display: block; }
 
 .field { display: flex; flex-direction: column; gap: 6px; position: relative; }
@@ -10842,7 +10852,7 @@ ${followMessage}`)) {
 .option.selected { background: var(--primary-muted, rgb(67 97 238 / 0.1)); color: var(--primary-base, #4361ee); }
 `;
 
-  // src/components/admin/CredentialSelect/icons.ts
+  // src/components/admin/Common/CredentialSelect/icons.ts
   var ICON_KEY = `
 <svg class="key-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
     stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
@@ -10851,7 +10861,7 @@ ${followMessage}`)) {
 </svg>
 `;
 
-  // src/components/admin/CredentialSelect/template.ts
+  // src/components/admin/Common/CredentialSelect/template.ts
   function buildShadow(host, label) {
     const shadow = host.attachShadow({ mode: "open" });
     shadow.innerHTML = `
@@ -10937,12 +10947,12 @@ ${followMessage}`)) {
   function secretRefToKey(ref) {
     return ref.match(EXACT_SECRET_REF_PATTERN)?.[1] ?? null;
   }
-  // src/components/admin/CredentialSelect/flows.ts
+  // src/components/admin/Common/CredentialSelect/flows.ts
   var SAVED_EVENT = "secret:saved";
   async function fetchKeys(api) {
     const res = await fetch(`${api}/keys`, { headers: { Accept: "application/json" } });
     if (!res.ok) {
-      ku("Failed to load credentials", { type: "error" });
+      $u("Failed to load credentials", { type: "error" });
       return [];
     }
     return res.json();
@@ -10967,7 +10977,7 @@ ${followMessage}`)) {
     return { ok: false, error };
   }
 
-  // src/components/admin/CredentialSelect/controller.ts
+  // src/components/admin/Common/CredentialSelect/controller.ts
   function refToDisplay(ref) {
     return secretRefToKey(ref) ?? "";
   }
@@ -11028,7 +11038,7 @@ ${followMessage}`)) {
     return li2;
   }
 
-  // src/components/admin/CredentialSelect/dialog.ts
+  // src/components/admin/Common/CredentialSelect/dialog.ts
   function buildModal(host) {
     const m = document.createElement("p9r-modal");
     m.setAttribute("aria-label", "Create credential");
@@ -11083,19 +11093,19 @@ ${followMessage}`)) {
       keyInput.setAttribute("invalid", "");
       keyInput.setAttribute("hint", keyError);
       keyInput.setAttribute("hint-level", "error");
-      ku(`Invalid key: ${keyError}`, { type: "error" });
+      $u(`Invalid key: ${keyError}`, { type: "error" });
       return;
     }
     if (host._keys.includes(key)) {
-      ku(`Credential ${key} already exists`, { type: "warning" });
+      $u(`Credential ${key} already exists`, { type: "warning" });
       return;
     }
     const r = await createCredential(host._api, key, value);
     if (!r.ok) {
-      ku(`Create failed: ${r.error}`, { type: "error" });
+      $u(`Create failed: ${r.error}`, { type: "error" });
       return;
     }
-    ku(`Credential ${key} created`, { type: "success" });
+    $u(`Credential ${key} created`, { type: "success" });
     m.removeAttribute("open");
     await refreshList(host);
     setValue(host, keyToRef(key));
@@ -11103,7 +11113,7 @@ ${followMessage}`)) {
     closePanel(host);
   }
 
-  // src/components/admin/CredentialSelect/CredentialSelect.ts
+  // src/components/admin/Common/CredentialSelect/CredentialSelect.ts
   class CredentialSelect extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = ["value"];
@@ -11176,8 +11186,8 @@ ${followMessage}`)) {
         }
       });
       r.search.addEventListener("input", () => {
-        const q2 = r.search.value.trim().toUpperCase();
-        const filtered = q2 ? this._keys.filter((k2) => k2.includes(q2)) : this._keys;
+        const q = r.search.value.trim().toUpperCase();
+        const filtered = q ? this._keys.filter((k2) => k2.includes(q)) : this._keys;
         renderList(this, filtered);
       });
       r.list.addEventListener("click", (e) => {
@@ -11196,7 +11206,7 @@ ${followMessage}`)) {
     customElements.define("cms-credential-select", CredentialSelect);
   }
 
-  // src/components/admin/EmptyState/template.html
+  // src/components/admin/Common/EmptyState/template.html
   var template_default2 = `<div class="cell">
     <slot name="icon"></slot>
     <slot name="title"></slot>
@@ -11204,7 +11214,7 @@ ${followMessage}`)) {
 </div>
 `;
 
-  // src/components/admin/EmptyState/style.css
+  // src/components/admin/Common/EmptyState/style.css
   var style_default = `:host {
     display: table-row;
     position: relative;
@@ -11257,7 +11267,7 @@ ${followMessage}`)) {
 }
 `;
 
-  // src/components/admin/EmptyState/EmptyState.ts
+  // src/components/admin/Common/EmptyState/EmptyState.ts
   class EmptyState extends U2 {
     constructor() {
       super({
@@ -11293,8 +11303,33 @@ ${followMessage}`)) {
     customElements.define("cms-empty-state", EmptyState);
   }
 
-  // src/components/admin/EndpointsInput/EndpointsInput.css
-  var EndpointsInput_default = `/* \`<cms-endpoints-input>\` is light-DOM (its named controls must stay in the
+  // src/components/admin/EndpointsInput/styles/actions.css
+  var actions_default = `/* Full-width dashed "Add endpoint" button (hover handled here, not in JS) */
+cms-endpoints-input .ep-add {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem;
+    border: 1.5px dashed var(--border-default, #d1d5db);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted, #6b7280);
+    font: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+}
+cms-endpoints-input .ep-add:hover {
+    border-color: var(--primary-base, #4361ee);
+    color: var(--primary-base, #4361ee);
+}
+`;
+
+  // src/components/admin/EndpointsInput/styles/base.css
+  var base_default = `/* \`<cms-endpoints-input>\` is light-DOM (its named controls must stay in the
    parent form's tree for FormData). This sheet is injected once into the
    document head; every rule is scoped to the tag so nothing leaks. */
 
@@ -11399,8 +11434,10 @@ cms-endpoints-input .ep-add-param {
     cursor: pointer;
     padding: 0.25rem 0;
 }
+`;
 
-/* ── Body shape tree ──────────────────────────────────────────────── */
+  // src/components/admin/EndpointsInput/styles/shape.css
+  var shape_default = `/* ── Body shape tree ──────────────────────────────────────────────── */
 /* "Root type [select]" header */
 cms-endpoints-input .ep-root-head {
     display: flex;
@@ -11483,35 +11520,12 @@ cms-endpoints-input .ep-remove-body {
     padding: 0.25rem 0;
 }
 cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); }
-
-/* Full-width dashed "Add endpoint" button (hover handled here, not in JS) */
-cms-endpoints-input .ep-add {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.8rem;
-    border: 1.5px dashed var(--border-default, #d1d5db);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text-muted, #6b7280);
-    font: inherit;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: border-color .15s ease, color .15s ease;
-}
-cms-endpoints-input .ep-add:hover {
-    border-color: var(--primary-base, #4361ee);
-    color: var(--primary-base, #4361ee);
-}
 `;
 
   // ../../features/cms-sources/src/interfaces/Source.ts
   var HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"];
   var COMPUTED_PARAM_REFS = ["userID", "userRole"];
-  // ../../features/cms-sources/src/core/headerPolicy.ts
+  // ../../features/cms-sources/src/core/upstream/headerPolicy.ts
   var FORBIDDEN_REQUEST_HEADERS = new Set([
     "host",
     "connection",
@@ -11528,7 +11542,7 @@ cms-endpoints-input .ep-add:hover {
   var HEADER_NAME_RE = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
   var isForbiddenHeaderName = (n) => FORBIDDEN_REQUEST_HEADERS.has(n.toLowerCase());
   var isValidHeaderName = (n) => HEADER_NAME_RE.test(n);
-  // ../../features/cms-sources/src/core/urn.ts
+  // ../../features/cms-sources/src/core/system/urn.ts
   function parseUrn(urn) {
     const parts = urn.split(":");
     if (parts[0] !== "urn") {
@@ -11549,7 +11563,7 @@ cms-endpoints-input .ep-add:hover {
     return `urn:${sourceId}:${endpointId}`;
   }
 
-  // ../../features/cms-sources/src/core/systemSources.ts
+  // ../../features/cms-sources/src/core/system/systemSources.ts
   var SYSTEM_SOURCE_ID_PREFIX = "system-";
   var SYSTEM_AUTH_SOURCE_ID = "system-auth";
   var SYSTEM_AUTH_SOURCE_URN = makeSourceUrn(SYSTEM_AUTH_SOURCE_ID);
@@ -11664,7 +11678,7 @@ cms-endpoints-input .ep-add:hover {
     return makeSourceUrn(parsed.source);
   }
 
-  // ../../features/cms-sources/src/core/errors.ts
+  // ../../features/cms-sources/src/core/model/errors.ts
   class SourceValidationError extends Error {
     status = 400;
     constructor(field, message) {
@@ -11681,12 +11695,12 @@ cms-endpoints-input .ep-add:hover {
     }
   }
 
-  // ../../features/cms-sources/src/core/sourceEndpointValidation.ts
+  // ../../features/cms-sources/src/core/validation/sourceEndpointValidation.ts
   var RESPONSE_STATUS = /^[1-5][0-9][0-9]$/;
   function isValidResponseStatus(status) {
     return status === "default" || RESPONSE_STATUS.test(status);
   }
-  // ../../features/cms-sources/src/core/buildUpstreamUrl.ts
+  // ../../features/cms-sources/src/core/upstream/buildUpstreamUrl.ts
   var PATH_PLACEHOLDER = /\{(\w+)\}/g;
   function extractPathParamNames(targetUrl) {
     const out = [];
@@ -11701,7 +11715,7 @@ cms-endpoints-input .ep-add:hover {
     }
     return out;
   }
-  // src/components/admin/EndpointsInput/controls.ts
+  // src/components/admin/EndpointsInput/fields/controls.ts
   var ICON_SVG = (paths, size = 16) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
   var ICON_PLUS = ICON_SVG('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', 18);
@@ -11775,7 +11789,7 @@ cms-endpoints-input .ep-add:hover {
     return btn;
   }
 
-  // src/components/admin/EndpointsInput/pathParams.ts
+  // src/components/admin/EndpointsInput/fields/pathParams.ts
   var extractPathNames = extractPathParamNames;
   function makePathParamRow(name) {
     const row = document.createElement("p9r-stack");
@@ -11841,7 +11855,7 @@ cms-endpoints-input .ep-add:hover {
   };
   var methodColor = (m) => METHOD_COLOR[m] ?? "primary";
 
-  // src/components/admin/EndpointsInput/queryRow.ts
+  // src/components/admin/EndpointsInput/rows/queryRow.ts
   function makeQueryParamRow(seed, onChange) {
     const row = document.createElement("p9r-stack");
     row.setAttribute("direction", "row");
@@ -11893,8 +11907,8 @@ cms-endpoints-input .ep-add:hover {
     const type = rawType === "computed" ? "string" : rawType;
     const required = row.querySelector('[data-role="required"]').hasAttribute("checked");
     const description = row.dataset.description;
-    const source = rawType === "computed" ? readComputedSource(row) : {};
-    return { name, in: "query", type, required, ...description ? { description } : {}, ...source };
+    const source2 = rawType === "computed" ? readComputedSource(row) : {};
+    return { name, in: "query", type, required, ...description ? { description } : {}, ...source2 };
   }
   function readComputedSource(row) {
     const ref = readControl(row.querySelector('[data-role="param-computed"]'));
@@ -11906,7 +11920,7 @@ cms-endpoints-input .ep-add:hover {
     };
   }
 
-  // src/components/admin/EndpointsInput/bodyNode.ts
+  // src/components/admin/EndpointsInput/editors/bodyNode.ts
   function makeNode(seed, onChange, depth = 0) {
     const nullable = seed.nullable === true;
     const preserveNullable = (shape) => nullable ? { ...shape, nullable: true } : shape;
@@ -12020,7 +12034,7 @@ cms-endpoints-input .ep-add:hover {
     return { typeEl, childrenEl, read };
   }
 
-  // src/components/admin/EndpointsInput/dataShapeTree.ts
+  // src/components/admin/EndpointsInput/editors/dataShapeTree.ts
   function makeDataShapeTree(seed, onChange, labels) {
     const defineLabel = labels?.define ?? "+ Define request body";
     const removeLabel = labels?.remove ?? "Remove body";
@@ -12067,7 +12081,7 @@ cms-endpoints-input .ep-add:hover {
     return { element, read: () => root?.read() };
   }
 
-  // src/components/admin/EndpointsInput/bodyEditor.ts
+  // src/components/admin/EndpointsInput/editors/bodyEditor.ts
   function makeBodySection(ei2, seedBody) {
     const container = document.createElement("div");
     container.dataset.role = "body";
@@ -12079,7 +12093,7 @@ cms-endpoints-input .ep-add:hover {
     return container;
   }
 
-  // src/components/admin/EndpointsInput/inPanel.ts
+  // src/components/admin/EndpointsInput/panels/inPanel.ts
   function makeInPanel(endpointIdx, seed, urlInput) {
     const seedParams = seed.params ?? [];
     const panel = document.createElement("p9r-tab-panel");
@@ -12133,7 +12147,7 @@ cms-endpoints-input .ep-add:hover {
     return h2;
   }
 
-  // src/components/admin/EndpointsInput/statusField.ts
+  // src/components/admin/EndpointsInput/fields/statusField.ts
   var COMMON = [
     "200",
     "201",
@@ -12226,7 +12240,7 @@ cms-endpoints-input .ep-add:hover {
     return { element, read };
   }
 
-  // src/components/admin/EndpointsInput/responseRow.ts
+  // src/components/admin/EndpointsInput/rows/responseRow.ts
   function makeResponseRow(seed, onChange, onRemove) {
     const row = document.createElement("p9r-stack");
     row.setAttribute("gap", "sm");
@@ -12263,7 +12277,7 @@ cms-endpoints-input .ep-add:hover {
     return { element: row, read };
   }
 
-  // src/components/admin/EndpointsInput/outPanel.ts
+  // src/components/admin/EndpointsInput/panels/outPanel.ts
   function makeOutPanel(endpointIdx, seed) {
     const panel = document.createElement("p9r-tab-panel");
     panel.id = `out-${endpointIdx}`;
@@ -12311,7 +12325,7 @@ cms-endpoints-input .ep-add:hover {
     return h2;
   }
 
-  // src/components/admin/EndpointsInput/headerRow.ts
+  // src/components/admin/EndpointsInput/rows/headerRow.ts
   function makeHeaderRow(seed, onChange, onRemove, opts) {
     const row = document.createElement("p9r-stack");
     row.setAttribute("direction", "row");
@@ -12402,7 +12416,7 @@ cms-endpoints-input .ep-add:hover {
     return { element: row, read };
   }
 
-  // src/components/admin/EndpointsInput/headersPanel.ts
+  // src/components/admin/EndpointsInput/panels/headersPanel.ts
   function makeHeadersPanel(endpointIdx, seed, opts) {
     const panel = document.createElement("p9r-tab-panel");
     panel.id = `headers-${endpointIdx}`;
@@ -12450,7 +12464,7 @@ cms-endpoints-input .ep-add:hover {
     return h2;
   }
 
-  // src/components/admin/EndpointsInput/rows.ts
+  // src/components/admin/EndpointsInput/rows/rows.ts
   function makeEndpointRow(idx, seed = {}, api) {
     const method = seed.method && HTTP_METHODS.includes(seed.method) ? seed.method : HTTP_METHODS[0];
     const item = document.createElement("p9r-accordion-item");
@@ -12581,19 +12595,20 @@ cms-endpoints-input .ep-add:hover {
     stylesInjected = true;
     const style = document.createElement("style");
     style.id = "cms-endpoints-input-styles";
-    style.textContent = EndpointsInput_default;
+    style.textContent = [base_default, shape_default, actions_default].join(`
+`);
     document.head.appendChild(style);
   }
   customElements.define("cms-endpoints-input", CmsEndpointsInput);
 
-  // src/components/admin/EventToast/EventToast.ts
+  // src/components/admin/Common/EventToast/EventToast.ts
   class CmsEventToast extends HTMLElement {
     _attached = null;
     _onEvent = () => {
       const message = this.getAttribute("message") ?? "";
       const type = this.getAttribute("type") ?? "success";
       if (message) {
-        ku(message, { type });
+        $u(message, { type });
       }
     };
     connectedCallback() {
@@ -12649,7 +12664,7 @@ cms-endpoints-input .ep-add:hover {
   }
   var esc = (s2) => s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   customElements.define("cms-login-methods", CmsLoginMethods);
-  // src/components/admin/ProviderActions/ProviderActions.ts
+  // src/components/admin/Actions/ProviderActions/ProviderActions.ts
   class CmsProviderActions extends HTMLElement {
     static get observedAttributes() {
       return ["provider-id", "kind", "enabled"];
@@ -12714,7 +12729,7 @@ cms-endpoints-input .ep-add:hover {
       const next = !this._enabled;
       if (await this._send("PATCH", { id: this._id, enabled: next })) {
         this.setAttribute("enabled", String(next));
-        ku(next ? "Provider enabled" : "Provider disabled", { type: "success" });
+        $u(next ? "Provider enabled" : "Provider disabled", { type: "success" });
         this._fire();
       }
     }
@@ -12723,7 +12738,7 @@ cms-endpoints-input .ep-add:hover {
         return;
       }
       if (await this._send("DELETE", { id: this._id })) {
-        ku("Provider removed", { type: "success" });
+        $u("Provider removed", { type: "success" });
         this._fire();
       }
     }
@@ -12735,12 +12750,12 @@ cms-endpoints-input .ep-add:hover {
           body: JSON.stringify(body)
         });
         if (!res.ok) {
-          ku("Action failed", { type: "error" });
+          $u("Action failed", { type: "error" });
           return false;
         }
         return true;
       } catch {
-        ku("Network error", { type: "error" });
+        $u("Network error", { type: "error" });
         return false;
       }
     }
@@ -12757,7 +12772,7 @@ cms-endpoints-input .ep-add:hover {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
   var escapeAttr = escapeHtml;
-  // src/components/admin/RoleSelect/RoleSelect.ts
+  // src/components/admin/Common/RoleSelect/RoleSelect.ts
   class CmsRoleSelect extends HTMLElement {
     static formAssociated = true;
     static get observedAttributes() {
@@ -12828,15 +12843,15 @@ cms-endpoints-input .ep-add:hover {
           body: JSON.stringify({ sub: this._sub, role })
         });
         if (res.ok) {
-          ku("Role updated", { type: "success" });
+          $u("Role updated", { type: "success" });
           if (this._emit) {
             document.dispatchEvent(new Event(this._emit, { bubbles: true }));
           }
         } else {
-          ku("Failed to update role", { type: "error" });
+          $u("Failed to update role", { type: "error" });
         }
       } catch {
-        ku("Network error", { type: "error" });
+        $u("Network error", { type: "error" });
       }
     }
     get name() {
@@ -12951,19 +12966,19 @@ cms-endpoints-input .ep-add:hover {
           body: JSON.stringify({ id: this.data.role.id, label: this.data.role.label, grants })
         });
         if (res.ok) {
-          ku("Role permissions saved", { type: "success" });
+          $u("Role permissions saved", { type: "success" });
           location.href = this._back;
         } else {
-          ku("Failed to save permissions", { type: "error" });
+          $u("Failed to save permissions", { type: "error" });
         }
       } catch {
-        ku("Network error", { type: "error" });
+        $u("Network error", { type: "error" });
       }
     }
   }
   customElements.define("cms-role-editor", CmsRoleEditor);
 
-  // src/components/admin/UserActions/style.css
+  // src/components/admin/Actions/UserActions/style.css
   var style_default2 = `:host {
     display: inline-flex;
 }
@@ -12973,7 +12988,7 @@ p9r-action-menu {
 }
 `;
 
-  // src/components/admin/UserActions/template.html
+  // src/components/admin/Actions/UserActions/template.html
   var template_default3 = `<p9r-action-menu label="Actions">
     <p9r-action-menu-section label="Account">
         <p9r-action-menu-item data-action="password-reset">Send password reset</p9r-action-menu-item>
@@ -12986,7 +13001,7 @@ p9r-action-menu {
 </p9r-action-menu>
 `;
 
-  // src/components/admin/UserActions/UserActions.ts
+  // src/components/admin/Actions/UserActions/UserActions.ts
   var ACTIONS = {
     "password-reset": { endpoint: "/api/users/password-reset", label: "Password reset sent" },
     "email-verification": { endpoint: "/api/users/email-verification", label: "Verification email sent" },
@@ -13030,10 +13045,10 @@ p9r-action-menu {
       }
       const res = await fetch(this.url(action), this.request(action, sub)).catch(() => null);
       if (!res?.ok) {
-        ku(await errorMessage(res), { type: "error" });
+        $u(await errorMessage(res), { type: "error" });
         return;
       }
-      ku(ACTIONS[action].label, { type: "success" });
+      $u(ACTIONS[action].label, { type: "success" });
       if (action === "delete") {
         window.location.href = `${this.basePath}/admin/users`;
       } else {
@@ -13087,7 +13102,7 @@ p9r-action-menu {
     customElements.define("cms-user-actions", CmsUserActions);
   }
 
-  // src/components/admin/Tokens/TokenCreate.ts
+  // src/components/admin/Common/Tokens/TokenCreate.ts
   class CmsTokenCreate extends HTMLElement {
     _token = "";
     connectedCallback() {
@@ -13124,7 +13139,7 @@ p9r-action-menu {
           body: JSON.stringify({ name })
         });
         if (!res.ok) {
-          ku("Could not create token", { type: "error" });
+          $u("Could not create token", { type: "error" });
           return;
         }
         const { token } = await res.json();
@@ -13134,14 +13149,14 @@ p9r-action-menu {
         this._q('[data-role="reveal"]').hidden = false;
         document.dispatchEvent(new Event(this._emit, { bubbles: true }));
       } catch {
-        ku("Network error", { type: "error" });
+        $u("Network error", { type: "error" });
       } finally {
         btn.removeAttribute("disabled");
       }
     }
     _copy() {
       navigator.clipboard?.writeText(this._token);
-      ku("Token copied", { type: "success" });
+      $u("Token copied", { type: "success" });
     }
     _reset() {
       this._token = "";
@@ -13350,9 +13365,9 @@ p9r-action-menu {
   async function opSaveRow(api, key, value) {
     const r = await postSecret(api, key, value);
     if (r.ok) {
-      ku(`Secret ${key} updated`, { type: "success" });
+      $u(`Secret ${key} updated`, { type: "success" });
     } else {
-      ku(`Update failed: ${r.error}`, { type: "error" });
+      $u(`Update failed: ${r.error}`, { type: "error" });
     }
   }
   async function opDeleteSecret(api, key) {
@@ -13361,9 +13376,9 @@ p9r-action-menu {
     }
     const r = await deleteSecret(api, key);
     if (r.ok) {
-      ku(`Secret ${key} deleted`, { type: "success" });
+      $u(`Secret ${key} deleted`, { type: "success" });
     } else {
-      ku(`Delete failed: ${r.error}`, { type: "error" });
+      $u(`Delete failed: ${r.error}`, { type: "error" });
     }
   }
 
@@ -13377,10 +13392,10 @@ p9r-action-menu {
       super({ css: style_default3, template: template_default4 });
     }
     connectedCallback() {
-      const sr = this.shadowRoot;
-      this._list = sr.querySelector('[data-role="list"]');
-      this._empty = sr.querySelector('[data-role="empty"]');
-      this._rowTemplate = sr.querySelector('[data-role="row-template"]');
+      const sr2 = this.shadowRoot;
+      this._list = sr2.querySelector('[data-role="list"]');
+      this._empty = sr2.querySelector('[data-role="empty"]');
+      this._rowTemplate = sr2.querySelector('[data-role="row-template"]');
       document.addEventListener(SECRETS_RELOAD_EVENT, this._onReload);
       this._reload();
     }
@@ -13433,7 +13448,7 @@ p9r-action-menu {
     customElements.define("cms-secrets", CmsSecrets);
   }
 
-  // src/components/admin/SettingsSections/style.css
+  // src/components/admin/Layout/SettingsSections/style.css
   var style_default4 = `:host {
     display: block;
     height: 100%;
@@ -13453,7 +13468,7 @@ w13c-lateral-menu-item {
 }
 `;
 
-  // src/components/admin/SettingsSections/template.html
+  // src/components/admin/Layout/SettingsSections/template.html
   var template_default5 = `<w13c-lateral-menu
     aria-label="Settings navigation"
     style="width: 100%; height: 100%; --menu-brand-mark-display: none; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;"
@@ -13519,7 +13534,7 @@ w13c-lateral-menu-item {
 </w13c-lateral-menu>
 `;
 
-  // src/components/admin/SettingsSections/SettingsSections.ts
+  // src/components/admin/Layout/SettingsSections/SettingsSections.ts
   var SETTINGS_SECTIONS = ["general", "email", "secrets", "identity", "connectors"];
   var DEFAULT_SECTION = "general";
 
@@ -13579,7 +13594,7 @@ w13c-lateral-menu-item {
     return SETTINGS_SECTIONS.includes(value);
   }
 
-  // src/components/admin/ShellDetail/style.css
+  // src/components/admin/Layout/ShellDetail/style.css
   var style_default5 = `:host {
     display: block;
 }
@@ -13722,7 +13737,7 @@ slot[name="aside"]::slotted(*) {
 }
 `;
 
-  // src/components/admin/ShellDetail/template.html
+  // src/components/admin/Layout/ShellDetail/template.html
   var template_default6 = `<article class="shell-detail">
     <header class="shell-detail-header">
         <div class="shell-detail-identity">
@@ -13747,7 +13762,7 @@ slot[name="aside"]::slotted(*) {
 </article>
 `;
 
-  // src/components/admin/ShellDetail/section.css
+  // src/components/admin/Layout/ShellDetail/section.css
   var section_default = `:host {
     display: block;
     --detail-section-padding: 16px;
@@ -13816,7 +13831,7 @@ p {
 }
 `;
 
-  // src/components/admin/ShellDetail/section.html
+  // src/components/admin/Layout/ShellDetail/section.html
   var section_default2 = `<section class="section">
     <header class="header">
         <div class="heading">
@@ -13833,7 +13848,7 @@ p {
 </section>
 `;
 
-  // src/components/admin/ShellDetail/DetailSection.ts
+  // src/components/admin/Layout/ShellDetail/DetailSection.ts
   class CmsDetailSection extends U2 {
     heading;
     description;
@@ -13883,7 +13898,7 @@ p {
     }));
   }
 
-  // src/components/admin/ShellDetail/ShellDetail.ts
+  // src/components/admin/Layout/ShellDetail/ShellDetail.ts
   class CmsShellDetail extends U2 {
     constructor() {
       super({ css: style_default5, template: template_default6 });
@@ -13891,16 +13906,6 @@ p {
   }
   if (!customElements.get("cms-shell-detail")) {
     customElements.define("cms-shell-detail", CmsShellDetail);
-  }
-
-  // src/core/dom/meta/getMetaBasePath.ts
-  function getMetaBasePath() {
-    const meta = document.querySelector('meta[name="basePath"]');
-    const content = meta?.getAttribute("content") ?? "";
-    if (!content || content === "/") {
-      return "";
-    }
-    return content.replace(/\/+$/, "");
   }
 
   // src/components/admin/Theme/events.ts
@@ -13921,8 +13926,318 @@ p {
     window.dispatchEvent(new CustomEvent(THEME_SETTINGS_CHANGED_EVENT));
   }
 
-  // src/components/admin/Theme/ThemeEditor.css
-  var ThemeEditor_default = `:host {
+  // src/core/dom/meta/getMetaBasePath.ts
+  function getMetaBasePath() {
+    const meta = document.querySelector('meta[name="basePath"]');
+    const content = meta?.getAttribute("content") ?? "";
+    if (!content || content === "/") {
+      return "";
+    }
+    return content.replace(/\/+$/, "");
+  }
+
+  // src/components/admin/Theme/editor/model.ts
+  function currentSource(settings, selection) {
+    return settings?.sources.find((item) => item.id === selection.sourceId) ?? settings?.sources[0];
+  }
+  function currentCategory(settings, selection) {
+    const source2 = currentSource(settings, selection);
+    return source2?.categories.find((item) => item.id === selection.categoryId) ?? source2?.categories[0];
+  }
+  function currentTheme(settings, selectedThemeId) {
+    return settings?.themes.find((item) => item.id === selectedThemeId) ?? settings?.themes[0];
+  }
+  function selectionFromUrl(settings) {
+    const sources = settings?.sources ?? [];
+    const url = new URL(window.location.href);
+    const sourceId = url.searchParams.get("type") ?? "";
+    const categoryId = url.searchParams.get("category") ?? "";
+    const source2 = sources.find((item) => item.id === sourceId) ?? sources.find((item) => item.categories.some((category2) => category2.id === categoryId)) ?? sources[0];
+    const category = source2?.categories.find((item) => item.id === categoryId) ?? source2?.categories[0];
+    return { sourceId: source2?.id ?? "", categoryId: category?.id ?? "" };
+  }
+  function addTheme(settings) {
+    const number = settings.themes.length + 1;
+    const id = uniqueId(`theme-${number}`, new Set(settings.themes.map((item) => item.id)));
+    settings.themes.push({ id, name: `New theme ${number}`, values: { light: {}, dark: {} } });
+    return id;
+  }
+  function addCategory(settings, selection) {
+    const source2 = currentSource(settings, selection);
+    if (!source2) {
+      return;
+    }
+    const number = source2.categories.length + 1;
+    const id = uniqueId(`${source2.id}-category-${number}`, new Set(source2.categories.map((item) => item.id)));
+    const category = {
+      id,
+      label: `New category ${number}`,
+      description: `Custom ${source2.label} tokens.`,
+      tokens: []
+    };
+    source2.categories.push(category);
+    return { sourceId: source2.id, category };
+  }
+  function addToken(settings, selection) {
+    const source2 = currentSource(settings, selection);
+    const category = currentCategory(settings, selection);
+    if (!source2 || !category) {
+      return;
+    }
+    const allIds = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.map((token) => token.id))));
+    const number = allIds.size + 1;
+    const id = uniqueId(`custom-${number}`, allIds);
+    category.tokens.push({
+      id,
+      variable: id,
+      label: `New token ${number}`,
+      description: "Custom design token",
+      type: source2.supportsModes ? "color" : "value"
+    });
+  }
+  function themeSettingsFromCss(css) {
+    const values = {};
+    const tokens = [];
+    const seen = new Set;
+    for (const match of css.matchAll(/--([a-z][a-z0-9-]*)\s*:\s*([^;{}]+)\s*;/gi)) {
+      const variable = match[1].toLowerCase();
+      if (seen.has(variable)) {
+        continue;
+      }
+      seen.add(variable);
+      const value = match[2].trim();
+      tokens.push({
+        id: variable,
+        variable,
+        label: variable.split("-").map(capitalize).join(" "),
+        description: `Existing --${variable} variable`,
+        type: looksLikeColor(value) ? "color" : "value"
+      });
+      values[variable] = value;
+    }
+    return {
+      activeThemeId: "imported",
+      sources: [
+        {
+          id: "other",
+          label: "Other",
+          supportsModes: false,
+          categories: [
+            {
+              id: "general",
+              label: "General",
+              description: "Variables inferred from the current free-form stylesheet.",
+              tokens
+            }
+          ]
+        }
+      ],
+      themes: [{ id: "imported", name: "Imported theme", values: { light: values, dark: {} } }]
+    };
+  }
+  function uniqueId(base, existing) {
+    let value = base;
+    let suffix = 2;
+    while (existing.has(value)) {
+      value = `${base}-${suffix++}`;
+    }
+    return value;
+  }
+  function capitalize(value) {
+    return value ? value[0].toUpperCase() + value.slice(1) : value;
+  }
+  function looksLikeColor(value) {
+    return /^(#|rgb\(|rgba\(|hsl\(|hsla\(|oklch\(|oklab\(|lab\(|lch\(|color\(|transparent$|currentcolor$)/i.test(value);
+  }
+
+  // src/components/admin/Theme/editor/api.ts
+  async function loadThemeSettings() {
+    const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) {
+      throw new Error(`Request failed (${response.status})`);
+    }
+    const data = await response.json();
+    return {
+      canPersist: Boolean(data.theme),
+      settings: structuredClone(data.theme ?? themeSettingsFromCss(data.site?.theme ?? "")),
+      siteName: data.site?.name ?? ""
+    };
+  }
+  async function saveThemeSettings(settings) {
+    const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ theme: settings })
+    });
+    if (!response.ok) {
+      throw new Error(await response.text() || `Request failed (${response.status})`);
+    }
+  }
+
+  // src/components/admin/Theme/editor/inputEvents.ts
+  function handleThemeInput(event, context) {
+    const input = event.target;
+    const theme = currentTheme(context.settings, context.selectedThemeId);
+    if (!input || !theme) {
+      return;
+    }
+    if (input.matches("[data-theme-name-input]")) {
+      theme.name = input.value;
+      return;
+    }
+    const category = currentCategory(context.settings, context.selection);
+    const source2 = currentSource(context.settings, context.selection);
+    if (input.matches("[data-category-label-input]") && category && source2) {
+      category.label = input.value;
+      query(context.root, "[data-category-title]").textContent = category.label;
+      query(context.root, "[data-category-section]").setAttribute("heading", category.label);
+      dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
+      return;
+    }
+    if (input.matches("[data-category-description-input]") && category && source2) {
+      category.description = input.value;
+      query(context.root, "[data-category-section]").setAttribute("description", category.description);
+      query(context.root, "[data-category-description]").textContent = `${source2.label} · ${category.description}`;
+      dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
+      return;
+    }
+    if (input.matches("[data-token-label]")) {
+      const tokenId2 = input.closest("[data-token-id]")?.dataset.tokenId;
+      const token = category?.tokens.find((item) => item.id === tokenId2);
+      if (token) {
+        token.label = input.value;
+      }
+      return;
+    }
+    if (!input.matches("[data-value-control]")) {
+      return;
+    }
+    const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
+    if (!tokenId) {
+      return;
+    }
+    theme.values[context.mode] ??= {};
+    theme.values[context.mode][tokenId] = input.value;
+    if (input.type === "color") {
+      const text = input.closest("[data-token-id]")?.querySelector('input[type="text"]');
+      if (text) {
+        text.value = input.value;
+      }
+    }
+  }
+  function clickAction(event) {
+    const target = event.target;
+    if (target?.closest("[data-add-theme]")) {
+      return "theme";
+    }
+    if (target?.closest("[data-add-theme-category]")) {
+      return "category";
+    }
+    if (target?.closest("[data-add-element]")) {
+      return "token";
+    }
+    if (target?.closest("[data-save-theme]")) {
+      return "save";
+    }
+    if (target?.closest("[data-activate-theme]")) {
+      return "activate";
+    }
+    return;
+  }
+  function query(root, selector) {
+    return root.querySelector(selector);
+  }
+
+  // src/components/admin/Theme/editor/styles/editor.css
+  var editor_default = `.theme-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.theme-name {
+    min-width: 0;
+    width: 100%;
+    min-height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--bg-base);
+    color: var(--text-main);
+    font: inherit;
+    font-weight: 700;
+}
+
+.theme-message {
+    min-height: 18px;
+    margin: 10px 0 0;
+    color: var(--success-base, #21865f);
+    font-size: 12px;
+}
+
+.theme-message[data-error] {
+    color: var(--danger-base, #c4473d);
+}
+
+.theme-note {
+    margin: 10px 0 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.category-fields {
+    display: grid;
+    gap: 10px;
+}
+
+.category-fields label {
+    display: grid;
+    gap: 5px;
+}
+
+.category-fields label > span {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.category-fields input,
+.category-fields textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--bg-base);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 12px;
+    resize: vertical;
+}
+
+.empty-category {
+    padding: 18px;
+    border: 1px dashed var(--border-default);
+    border-radius: 7px;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+@media (max-width: 880px) {
+    .element-row {
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+}
+`;
+
+  // src/components/admin/Theme/editor/styles/tokens.css
+  var tokens_default = `:host {
     display: block;
 }
 
@@ -14063,94 +14378,14 @@ cms-shell-detail {
     font: inherit;
     font-size: 12px;
 }
-
-.theme-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.theme-name {
-    min-width: 0;
-    width: 100%;
-    min-height: 32px;
-    padding: 0 8px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    background: var(--bg-base);
-    color: var(--text-main);
-    font: inherit;
-    font-weight: 700;
-}
-
-.theme-message {
-    min-height: 18px;
-    margin: 10px 0 0;
-    color: var(--success-base, #21865f);
-    font-size: 12px;
-}
-
-.theme-message[data-error] {
-    color: var(--danger-base, #c4473d);
-}
-
-.theme-note {
-    margin: 10px 0 0;
-    color: var(--text-muted);
-    font-size: 12px;
-    line-height: 1.45;
-}
-
-.category-fields {
-    display: grid;
-    gap: 10px;
-}
-
-.category-fields label {
-    display: grid;
-    gap: 5px;
-}
-
-.category-fields label > span {
-    color: var(--text-muted);
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.category-fields input,
-.category-fields textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 7px 8px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    background: var(--bg-base);
-    color: var(--text-main);
-    font: inherit;
-    font-size: 12px;
-    resize: vertical;
-}
-
-.empty-category {
-    padding: 18px;
-    border: 1px dashed var(--border-default);
-    border-radius: 7px;
-    color: var(--text-muted);
-    font-size: 12px;
-    text-align: center;
-}
-
-@media (max-width: 880px) {
-    .element-row {
-        grid-template-columns: 1fr;
-        gap: 7px;
-    }
-}
 `;
 
-  // src/components/admin/Theme/ThemeEditor.html
-  var ThemeEditor_default2 = `<cms-shell-detail>
+  // src/components/admin/Theme/editor/styles/index.ts
+  var styles_default = [tokens_default, editor_default].join(`
+`);
+
+  // src/components/admin/Theme/editor/ThemeEditor.html
+  var ThemeEditor_default = `<cms-shell-detail>
     <span slot="title" data-category-title>Colors</span>
     <p9r-select slot="actions" data-theme-switch aria-label="Select theme"></p9r-select>
     <p9r-button slot="actions" type="button" variant="outlined" data-add-theme>+ Theme</p9r-button>
@@ -14192,6 +14427,106 @@ cms-shell-detail {
 </cms-shell-detail>
 `;
 
+  // src/components/admin/Theme/editor/view.ts
+  function renderThemeEditor(root, state) {
+    const source2 = currentSource(state.settings, state.selection);
+    const category = currentCategory(state.settings, state.selection);
+    const theme = currentTheme(state.settings, state.selectedThemeId);
+    if (!source2 || !category || !theme) {
+      return state.mode;
+    }
+    query2(root, "[data-category-title]").textContent = category.label;
+    query2(root, "[data-category-description]").textContent = `${source2.label} · ${category.description}`;
+    query2(root, "[data-theme-name-input]").value = theme.name;
+    query2(root, "[data-category-label-input]").value = category.label;
+    query2(root, "[data-category-description-input]").value = category.description;
+    query2(root, "[data-site-name]").textContent = state.siteName ? `Editing the appearance of ${state.siteName}.` : "Editing the appearance of this site.";
+    const select = query2(root, "[data-theme-switch]");
+    select.replaceChildren(...state.settings.themes.map(themeOption));
+    select.value = theme.id;
+    const active = theme.id === state.settings.activeThemeId;
+    const status = query2(root, "[data-theme-status]");
+    status.textContent = active ? "Active" : "Draft";
+    status.setAttribute("color", active ? "success" : "warning");
+    query2(root, "[data-save-theme]").toggleAttribute("disabled", !state.canPersist);
+    query2(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
+    const mode = source2.supportsModes ? state.mode : "light";
+    const modeSwitch = query2(root, "[data-mode-switch]");
+    modeSwitch.hidden = !source2.supportsModes;
+    for (const button of Array.from(modeSwitch.querySelectorAll("[data-mode]"))) {
+      button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
+    }
+    const section = query2(root, "[data-category-section]");
+    section.setAttribute("heading", category.label);
+    section.setAttribute("description", category.description);
+    const list = document.createElement("div");
+    list.className = "element-list";
+    category.tokens.forEach((token) => list.append(renderToken(token, theme, mode)));
+    query2(root, "[data-groups]").replaceChildren(category.tokens.length ? list : emptyCategory());
+    return mode;
+  }
+  function setThemeMessage(root, message, error = false) {
+    const element = root?.querySelector("[data-message]");
+    if (element) {
+      element.textContent = message;
+      element.toggleAttribute("data-error", error);
+    }
+  }
+  function renderToken(token, theme, mode) {
+    const row = document.createElement("div");
+    row.className = "element-row";
+    row.dataset.tokenId = token.id;
+    const label = document.createElement("div");
+    label.className = "element-label";
+    const name = document.createElement("input");
+    name.className = "token-label-input";
+    name.type = "text";
+    name.value = token.label;
+    name.ariaLabel = `Label for --${token.variable}`;
+    name.dataset.tokenLabel = "true";
+    const detail = document.createElement("span");
+    detail.textContent = `${token.description} · var(--${token.variable})`;
+    label.append(name, detail);
+    row.append(label, renderControl(token, theme.values[mode]?.[token.id] ?? ""));
+    return row;
+  }
+  function renderControl(token, value) {
+    if (token.type !== "color") {
+      return valueInput(value);
+    }
+    const control = document.createElement("div");
+    control.className = "color-control";
+    const picker = document.createElement("input");
+    picker.type = "color";
+    picker.value = /^#[0-9a-f]{6}$/i.test(value) ? value : "#000000";
+    picker.dataset.valueControl = "true";
+    control.append(picker, valueInput(value));
+    return control;
+  }
+  function valueInput(value) {
+    const input = document.createElement("input");
+    input.className = "value-control";
+    input.type = "text";
+    input.value = value;
+    input.dataset.valueControl = "true";
+    return input;
+  }
+  function emptyCategory() {
+    const empty = document.createElement("div");
+    empty.className = "empty-category";
+    empty.textContent = "This category is ready for its first token.";
+    return empty;
+  }
+  function themeOption(theme) {
+    const option = document.createElement("option");
+    option.value = theme.id;
+    option.textContent = theme.name;
+    return option;
+  }
+  function query2(root, selector) {
+    return root.querySelector(selector);
+  }
+
   // src/components/admin/Theme/ThemeEditor.ts
   class CmsThemeEditor extends U2 {
     selection = { sourceId: "", categoryId: "" };
@@ -14201,7 +14536,7 @@ cms-shell-detail {
     siteName = "";
     canPersist = true;
     constructor() {
-      super({ css: ThemeEditor_default, template: ThemeEditor_default2 });
+      super({ css: styles_default, template: ThemeEditor_default });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -14218,177 +14553,56 @@ cms-shell-detail {
       window.removeEventListener(THEME_CATEGORY_SELECTED_EVENT, this.onCategorySelected);
     }
     async load() {
-      this.setMessage("Loading theme…");
+      setThemeMessage(this.shadowRoot, "Loading theme…");
       try {
-        const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
-          headers: { Accept: "application/json" }
-        });
-        if (!response.ok) {
-          throw new Error(`Request failed (${response.status})`);
-        }
-        const data = await response.json();
-        this.canPersist = Boolean(data.theme);
-        this.settings = structuredClone(data.theme ?? themeSettingsFromCss(data.site?.theme ?? ""));
-        this.siteName = data.site?.name ?? "";
+        const loaded = await loadThemeSettings();
+        this.canPersist = loaded.canPersist;
+        this.settings = loaded.settings;
+        this.siteName = loaded.siteName;
         this.selectedThemeId = this.settings.activeThemeId || this.settings.themes[0]?.id || "";
-        this.selection = this.selectionFromUrl();
+        this.selection = selectionFromUrl(this.settings);
         this.render();
-        this.setMessage(this.canPersist ? "" : "Restart the Control server to enable theme persistence.", !this.canPersist);
+        setThemeMessage(this.shadowRoot, this.canPersist ? "" : "Restart the Control server to enable theme persistence.", !this.canPersist);
         dispatchThemeSettingsChanged();
       } catch (error) {
-        this.setMessage(error instanceof Error ? error.message : "Unable to load theme", true);
+        setThemeMessage(this.shadowRoot, error instanceof Error ? error.message : "Unable to load theme", true);
       }
     }
     render() {
-      const settings = this.settings;
-      const source = this.currentSource();
-      const category = this.currentCategory();
-      const theme = this.currentTheme();
-      if (!settings || !source || !category || !theme) {
+      if (!this.settings || !this.shadowRoot) {
         return;
       }
-      this.query("[data-category-title]").textContent = category.label;
-      this.query("[data-category-description]").textContent = `${source.label} · ${category.description}`;
-      this.query("[data-theme-name-input]").value = theme.name;
-      this.query("[data-category-label-input]").value = category.label;
-      this.query("[data-category-description-input]").value = category.description;
-      this.query("[data-site-name]").textContent = this.siteName ? `Editing the appearance of ${this.siteName}.` : "Editing the appearance of this site.";
-      const select = this.query("[data-theme-switch]");
-      select.replaceChildren(...settings.themes.map((item) => {
-        const option = document.createElement("option");
-        option.value = item.id;
-        option.textContent = item.name;
-        return option;
-      }));
-      select.value = theme.id;
-      const active = theme.id === settings.activeThemeId;
-      const status = this.query("[data-theme-status]");
-      status.textContent = active ? "Active" : "Draft";
-      status.setAttribute("color", active ? "success" : "warning");
-      this.query("[data-save-theme]").toggleAttribute("disabled", !this.canPersist);
-      this.query("[data-activate-theme]").toggleAttribute("disabled", active || !this.canPersist);
-      const modeSwitch = this.query("[data-mode-switch]");
-      modeSwitch.hidden = !source.supportsModes;
-      if (!source.supportsModes) {
-        this.mode = "light";
-      }
-      for (const button of Array.from(modeSwitch.querySelectorAll("[data-mode]"))) {
-        button.setAttribute("aria-pressed", String(button.dataset.mode === this.mode));
-      }
-      const section = this.query("[data-category-section]");
-      section.setAttribute("heading", category.label);
-      section.setAttribute("description", category.description);
-      const list = document.createElement("div");
-      list.className = "element-list";
-      category.tokens.forEach((token) => list.append(this.renderToken(token, theme)));
-      const groups = this.query("[data-groups]");
-      groups.replaceChildren(category.tokens.length ? list : this.emptyCategory());
-    }
-    renderToken(token, theme) {
-      const row = document.createElement("div");
-      row.className = "element-row";
-      row.dataset.tokenId = token.id;
-      const label = document.createElement("div");
-      label.className = "element-label";
-      const name = document.createElement("input");
-      name.className = "token-label-input";
-      name.type = "text";
-      name.value = token.label;
-      name.ariaLabel = `Label for --${token.variable}`;
-      name.dataset.tokenLabel = "true";
-      const detail = document.createElement("span");
-      detail.textContent = `${token.description} · var(--${token.variable})`;
-      label.append(name, detail);
-      row.append(label, this.renderControl(token, theme.values[this.mode]?.[token.id] ?? ""));
-      return row;
-    }
-    renderControl(token, value) {
-      if (token.type === "color") {
-        const control = document.createElement("div");
-        control.className = "color-control";
-        const picker = document.createElement("input");
-        picker.type = "color";
-        picker.value = validHex(value) ? value : "#000000";
-        picker.dataset.valueControl = "true";
-        const input = this.valueInput(value);
-        control.append(picker, input);
-        return control;
-      }
-      return this.valueInput(value);
-    }
-    valueInput(value) {
-      const input = document.createElement("input");
-      input.className = "value-control";
-      input.type = "text";
-      input.value = value;
-      input.dataset.valueControl = "true";
-      return input;
-    }
-    currentSource() {
-      return this.settings?.sources.find((item) => item.id === this.selection.sourceId) ?? this.settings?.sources[0];
-    }
-    currentCategory() {
-      const source = this.currentSource();
-      return source?.categories.find((item) => item.id === this.selection.categoryId) ?? source?.categories[0];
-    }
-    currentTheme() {
-      return this.settings?.themes.find((item) => item.id === this.selectedThemeId) ?? this.settings?.themes[0];
-    }
-    selectionFromUrl() {
-      const sources = this.settings?.sources ?? [];
-      const url = new URL(window.location.href);
-      const sourceId = url.searchParams.get("type") ?? "";
-      const categoryId = url.searchParams.get("category") ?? "";
-      const source = sources.find((item) => item.id === sourceId) ?? sources.find((item) => item.categories.some((category2) => category2.id === categoryId)) ?? sources[0];
-      const category = source?.categories.find((item) => item.id === categoryId) ?? source?.categories[0];
-      return { sourceId: source?.id ?? "", categoryId: category?.id ?? "" };
+      this.mode = renderThemeEditor(this.shadowRoot, {
+        settings: this.settings,
+        selection: this.selection,
+        selectedThemeId: this.selectedThemeId,
+        mode: this.mode,
+        siteName: this.siteName,
+        canPersist: this.canPersist
+      });
     }
     addTheme() {
+      if (this.settings) {
+        this.selectedThemeId = addTheme(this.settings);
+        this.render();
+      }
+    }
+    addCategory() {
       if (!this.settings) {
         return;
       }
-      const number = this.settings.themes.length + 1;
-      const id = uniqueId(`theme-${number}`, new Set(this.settings.themes.map((item) => item.id)));
-      this.settings.themes.push({ id, name: `New theme ${number}`, values: { light: {}, dark: {} } });
-      this.selectedThemeId = id;
-      this.render();
-    }
-    addCategory() {
-      const source = this.currentSource();
-      if (!source) {
-        return;
+      const added = addCategory(this.settings, this.selection);
+      if (added) {
+        this.selection = { sourceId: added.sourceId, categoryId: added.category.id };
+        this.render();
+        dispatchThemeCategoryAdded(added);
       }
-      const number = source.categories.length + 1;
-      const id = uniqueId(`${source.id}-category-${number}`, new Set(source.categories.map((item) => item.id)));
-      const category = {
-        id,
-        label: `New category ${number}`,
-        description: `Custom ${source.label} tokens.`,
-        tokens: []
-      };
-      source.categories.push(category);
-      this.selection = { sourceId: source.id, categoryId: category.id };
-      this.render();
-      dispatchThemeCategoryAdded({ sourceId: source.id, category });
     }
     addToken() {
-      const settings = this.settings;
-      const source = this.currentSource();
-      const category = this.currentCategory();
-      if (!settings || !source || !category) {
-        return;
+      if (this.settings) {
+        addToken(this.settings, this.selection);
+        this.render();
       }
-      const allIds = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.map((token) => token.id))));
-      const number = allIds.size + 1;
-      const id = uniqueId(`custom-${number}`, allIds);
-      category.tokens.push({
-        id,
-        variable: id,
-        label: `New token ${number}`,
-        description: "Custom design token",
-        type: source.supportsModes ? "color" : "value"
-      });
-      this.render();
     }
     async save(activate) {
       if (!this.settings || !this.canPersist) {
@@ -14397,198 +14611,64 @@ cms-shell-detail {
       if (activate) {
         this.settings.activeThemeId = this.selectedThemeId;
       }
-      this.setMessage("Saving…");
+      setThemeMessage(this.shadowRoot, "Saving…");
       try {
-        const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ theme: this.settings })
-        });
-        if (!response.ok) {
-          throw new Error(await response.text() || `Request failed (${response.status})`);
-        }
-        this.setMessage(activate ? "Theme activated." : "Theme saved.");
+        await saveThemeSettings(this.settings);
+        setThemeMessage(this.shadowRoot, activate ? "Theme activated." : "Theme saved.");
         this.render();
         dispatchThemeSettingsChanged();
       } catch (error) {
-        this.setMessage(error instanceof Error ? error.message : "Unable to save theme", true);
+        setThemeMessage(this.shadowRoot, error instanceof Error ? error.message : "Unable to save theme", true);
       }
-    }
-    setMessage(message, error = false) {
-      const element = this.shadowRoot?.querySelector("[data-message]");
-      if (!element) {
-        return;
-      }
-      element.textContent = message;
-      element.toggleAttribute("data-error", error);
-    }
-    emptyCategory() {
-      const empty = document.createElement("div");
-      empty.className = "empty-category";
-      empty.textContent = "This category is ready for its first token.";
-      return empty;
     }
     onClick = (event) => {
-      const target = event.target;
-      if (target?.closest("[data-add-theme]")) {
+      const action = clickAction(event);
+      if (action === "theme") {
         this.addTheme();
-      }
-      if (target?.closest("[data-add-theme-category]")) {
+      } else if (action === "category") {
         this.addCategory();
-      }
-      if (target?.closest("[data-add-element]")) {
+      } else if (action === "token") {
         this.addToken();
+      } else if (action === "save" || action === "activate") {
+        this.save(action === "activate");
       }
-      if (target?.closest("[data-save-theme]")) {
-        this.save(false);
-      }
-      if (target?.closest("[data-activate-theme]")) {
-        this.save(true);
-      }
-      const mode = target?.closest("[data-mode]")?.dataset.mode;
+      const mode = event.target?.closest("[data-mode]")?.dataset.mode;
       if (mode === "light" || mode === "dark") {
         this.mode = mode;
         this.render();
       }
     };
     onInput = (event) => {
-      const input = event.target;
-      const theme = this.currentTheme();
-      if (!input || !theme) {
-        return;
-      }
-      if (input.matches("[data-theme-name-input]")) {
-        theme.name = input.value;
-        return;
-      }
-      const category = this.currentCategory();
-      const source = this.currentSource();
-      if (input.matches("[data-category-label-input]") && category && source) {
-        category.label = input.value;
-        this.query("[data-category-title]").textContent = category.label;
-        this.query("[data-category-section]").setAttribute("heading", category.label);
-        dispatchThemeCategoryUpdated({ sourceId: source.id, category });
-        return;
-      }
-      if (input.matches("[data-category-description-input]") && category && source) {
-        category.description = input.value;
-        this.query("[data-category-section]").setAttribute("description", category.description);
-        this.query("[data-category-description]").textContent = `${source.label} · ${category.description}`;
-        dispatchThemeCategoryUpdated({ sourceId: source.id, category });
-        return;
-      }
-      if (input.matches("[data-token-label]")) {
-        const tokenId2 = input.closest("[data-token-id]")?.dataset.tokenId;
-        const token = category?.tokens.find((item) => item.id === tokenId2);
-        if (token) {
-          token.label = input.value;
-        }
-        return;
-      }
-      if (!input.matches("[data-value-control]")) {
-        return;
-      }
-      const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
-      if (!tokenId) {
-        return;
-      }
-      theme.values[this.mode] ??= {};
-      theme.values[this.mode][tokenId] = input.value;
-      if (input.type === "color") {
-        const text = input.closest("[data-token-id]")?.querySelector('input[type="text"]');
-        if (text) {
-          text.value = input.value;
-        }
+      if (this.settings && this.shadowRoot) {
+        handleThemeInput(event, {
+          root: this.shadowRoot,
+          settings: this.settings,
+          selection: this.selection,
+          selectedThemeId: this.selectedThemeId,
+          mode: this.mode
+        });
       }
     };
     onChange = (event) => {
       const target = event.target;
-      if (!target.matches?.("[data-theme-switch]") || !target.value) {
-        return;
+      if (target.matches?.("[data-theme-switch]") && target.value) {
+        this.selectedThemeId = target.value;
+        this.render();
       }
-      this.selectedThemeId = target.value;
-      this.render();
     };
     onCategorySelected = (event) => {
-      const source = this.settings?.sources.find((item) => item.id === event.detail?.sourceId);
-      if (!source?.categories.some((category) => category.id === event.detail.categoryId)) {
-        return;
+      const source2 = this.settings?.sources.find((item) => item.id === event.detail?.sourceId);
+      if (source2?.categories.some((category) => category.id === event.detail.categoryId)) {
+        this.selection = event.detail;
+        this.render();
       }
-      this.selection = event.detail;
-      this.render();
     };
-    query(selector) {
-      return this.shadowRoot.querySelector(selector);
-    }
   }
   if (!customElements.get("cms-theme-editor")) {
     customElements.define("cms-theme-editor", CmsThemeEditor);
   }
-  function validHex(value) {
-    return /^#[0-9a-f]{6}$/i.test(value);
-  }
-  function uniqueId(base, existing) {
-    let value = base;
-    let suffix = 2;
-    while (existing.has(value)) {
-      value = `${base}-${suffix++}`;
-    }
-    return value;
-  }
-  function themeSettingsFromCss(css) {
-    const values = {};
-    const tokens = [];
-    const seen = new Set;
-    for (const match of css.matchAll(/--([a-z][a-z0-9-]*)\s*:\s*([^;{}]+)\s*;/gi)) {
-      const variable = match[1].toLowerCase();
-      if (seen.has(variable)) {
-        continue;
-      }
-      seen.add(variable);
-      const value = match[2].trim();
-      tokens.push({
-        id: variable,
-        variable,
-        label: variable.split("-").map(capitalize).join(" "),
-        description: `Existing --${variable} variable`,
-        type: looksLikeColor(value) ? "color" : "value"
-      });
-      values[variable] = value;
-    }
-    return {
-      activeThemeId: "imported",
-      sources: [
-        {
-          id: "other",
-          label: "Other",
-          supportsModes: false,
-          categories: [
-            {
-              id: "general",
-              label: "General",
-              description: "Variables inferred from the current free-form stylesheet.",
-              tokens
-            }
-          ]
-        }
-      ],
-      themes: [
-        {
-          id: "imported",
-          name: "Imported theme",
-          values: { light: values, dark: {} }
-        }
-      ]
-    };
-  }
-  function capitalize(value) {
-    return value ? value[0].toUpperCase() + value.slice(1) : value;
-  }
-  function looksLikeColor(value) {
-    return /^(#|rgb\(|rgba\(|hsl\(|hsla\(|oklch\(|oklab\(|lab\(|lch\(|color\(|transparent$|currentcolor$)/i.test(value);
-  }
 
-  // src/components/admin/Theme/ThemeNav.css
+  // src/components/admin/Theme/nav/ThemeNav.css
   var ThemeNav_default = `:host {
     display: block;
     height: 100%;
@@ -14613,11 +14693,82 @@ w13c-lateral-menu-item.category-item {
 }
 `;
 
-  // src/components/admin/Theme/ThemeNav.html
+  // src/components/admin/Theme/nav/ThemeNav.html
   var ThemeNav_default2 = `<w13c-lateral-menu aria-label="Theme categories">
     <span slot="header">Theme</span>
 </w13c-lateral-menu>
 `;
+
+  // src/components/admin/Theme/nav/icons.ts
+  function createSourceIcon(sourceId) {
+    return createIcon(sourceIconPaths(sourceId));
+  }
+  function createCategoryIcon() {
+    return createIcon('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8"/><path d="M8 13h5"/>');
+  }
+  function createIcon(paths) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("slot", "icon");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.innerHTML = paths;
+    return svg;
+  }
+  function sourceIconPaths(sourceId) {
+    if (sourceId === "colors") {
+      return '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7" r=".5" fill="currentColor"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.7-.13 2.45-.35 1.1-.33 1.5-1.65.9-2.65-.58-.98-1.35-1.45-1.35-2.4 0-1.1.9-2 2-2h4c1.1 0 2-.9 2-2A10 10 0 0 0 12 2Z"/>';
+    }
+    if (sourceId === "typography") {
+      return '<path d="M4 5V3h16v2"/><path d="M12 3v18"/><path d="M8 21h8"/>';
+    }
+    if (sourceId === "spacing") {
+      return '<path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h16"/><path d="M17 9v6"/>';
+    }
+    return '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 16 16 8"/>';
+  }
+
+  // src/components/admin/Theme/nav/view.ts
+  function renderThemeNav(root, sources, selection) {
+    const menu = root?.querySelector("w13c-lateral-menu");
+    if (!menu) {
+      return;
+    }
+    menu.querySelectorAll("[data-generated]").forEach((item) => item.remove());
+    for (const source2 of sources) {
+      const sourceItem = document.createElement("w13c-lateral-menu-item");
+      sourceItem.dataset.generated = "true";
+      sourceItem.dataset.source = source2.id;
+      sourceItem.toggleAttribute("active", source2.id === selection.sourceId);
+      sourceItem.append(createSourceIcon(source2.id), document.createTextNode(source2.label));
+      menu.append(sourceItem);
+      if (source2.id !== selection.sourceId) {
+        continue;
+      }
+      for (const category of source2.categories) {
+        const categoryItem = document.createElement("w13c-lateral-menu-item");
+        categoryItem.classList.add("category-item");
+        categoryItem.dataset.generated = "true";
+        categoryItem.dataset.source = source2.id;
+        categoryItem.dataset.category = category.id;
+        categoryItem.toggleAttribute("active", category.id === selection.categoryId);
+        categoryItem.append(createCategoryIcon(), document.createTextNode(category.label));
+        menu.append(categoryItem);
+      }
+    }
+  }
+  function selectionFromUrl2(sources) {
+    const url = new URL(window.location.href);
+    const sourceId = url.searchParams.get("type") ?? "";
+    const categoryId = url.searchParams.get("category") ?? "";
+    const explicitSource = sources.find((source3) => source3.id === sourceId);
+    const source2 = explicitSource ?? sources.find((item) => item.categories.some((category2) => category2.id === categoryId)) ?? sources[0];
+    const category = source2?.categories.find((item) => item.id === categoryId) ?? source2?.categories[0];
+    return { sourceId: source2?.id ?? "", categoryId: category?.id ?? "" };
+  }
 
   // src/components/admin/Theme/ThemeNav.ts
   class CmsThemeNav extends U2 {
@@ -14652,63 +14803,26 @@ w13c-lateral-menu-item.category-item {
         }
         const data = await response.json();
         this.sources = structuredClone(data.theme?.sources ?? []);
-        this.selection = this.selectionFromUrl();
+        this.selection = selectionFromUrl2(this.sources);
         this.render();
       } catch {}
     }
     render() {
-      const menu = this.shadowRoot?.querySelector("w13c-lateral-menu");
-      if (!menu) {
-        return;
-      }
-      menu.querySelectorAll("[data-generated]").forEach((item) => item.remove());
-      for (const source of this.sources) {
-        const sourceItem = document.createElement("w13c-lateral-menu-item");
-        sourceItem.dataset.generated = "true";
-        sourceItem.dataset.source = source.id;
-        sourceItem.toggleAttribute("active", source.id === this.selection.sourceId);
-        sourceItem.append(createSourceIcon(source.id), document.createTextNode(source.label));
-        menu.append(sourceItem);
-        if (source.id !== this.selection.sourceId) {
-          continue;
-        }
-        for (const category of source.categories) {
-          const categoryItem = document.createElement("w13c-lateral-menu-item");
-          categoryItem.classList.add("category-item");
-          categoryItem.dataset.generated = "true";
-          categoryItem.dataset.source = source.id;
-          categoryItem.dataset.category = category.id;
-          categoryItem.toggleAttribute("active", category.id === this.selection.categoryId);
-          categoryItem.append(createCategoryIcon(), document.createTextNode(category.label));
-          menu.append(categoryItem);
-        }
-      }
+      renderThemeNav(this.shadowRoot, this.sources, this.selection);
     }
     select(sourceId, categoryId) {
-      const source = this.sources.find((item) => item.id === sourceId);
-      if (!source) {
+      const source2 = this.sources.find((item) => item.id === sourceId);
+      const category = source2?.categories.find((item) => item.id === categoryId) ?? source2?.categories[0];
+      if (!source2 || !category) {
         return;
       }
-      const category = source.categories.find((item) => item.id === categoryId) ?? source.categories[0];
-      if (!category) {
-        return;
-      }
-      this.selection = { sourceId: source.id, categoryId: category.id };
+      this.selection = { sourceId: source2.id, categoryId: category.id };
       const url = new URL(window.location.href);
-      url.searchParams.set("type", source.id);
+      url.searchParams.set("type", source2.id);
       url.searchParams.set("category", category.id);
       window.history.replaceState(null, "", url);
       this.render();
       dispatchThemeCategorySelected(this.selection);
-    }
-    selectionFromUrl() {
-      const url = new URL(window.location.href);
-      const sourceId = url.searchParams.get("type") ?? "";
-      const categoryId = url.searchParams.get("category") ?? "";
-      const explicitSource = this.sources.find((source2) => source2.id === sourceId);
-      const source = explicitSource ?? this.sources.find((item) => item.categories.some((category2) => category2.id === categoryId)) ?? this.sources[0];
-      const category = source?.categories.find((item) => item.id === categoryId) ?? source?.categories[0];
-      return { sourceId: source?.id ?? "", categoryId: category?.id ?? "" };
     }
     onClick = (event) => {
       const target = event.target;
@@ -14717,34 +14831,33 @@ w13c-lateral-menu-item.category-item {
         this.select(category.dataset.source, category.dataset.category);
         return;
       }
-      const source = target?.closest("[data-source]");
-      if (source?.dataset.source) {
-        this.select(source.dataset.source);
+      const source2 = target?.closest("[data-source]");
+      if (source2?.dataset.source) {
+        this.select(source2.dataset.source);
       }
     };
     onPopState = () => {
-      this.selection = this.selectionFromUrl();
+      this.selection = selectionFromUrl2(this.sources);
       this.render();
       dispatchThemeCategorySelected(this.selection);
     };
     onCategoryAdded = (event) => {
       const { sourceId, category } = event.detail ?? {};
-      const source = this.sources.find((item) => item.id === sourceId);
-      if (!source || !category || source.categories.some((item) => item.id === category.id)) {
+      const source2 = this.sources.find((item) => item.id === sourceId);
+      if (!source2 || !category || source2.categories.some((item) => item.id === category.id)) {
         return;
       }
-      source.categories.push(category);
-      this.select(source.id, category.id);
+      source2.categories.push(category);
+      this.select(source2.id, category.id);
     };
     onCategoryUpdated = (event) => {
       const { sourceId, category } = event.detail ?? {};
       const current = this.sources.find((item) => item.id === sourceId)?.categories.find((item) => item.id === category?.id);
-      if (!current || !category) {
-        return;
+      if (current && category) {
+        current.label = category.label;
+        current.description = category.description;
+        this.render();
       }
-      current.label = category.label;
-      current.description = category.description;
-      this.render();
     };
     onSettingsChanged = () => {
       this.load();
@@ -14752,36 +14865,6 @@ w13c-lateral-menu-item.category-item {
   }
   if (!customElements.get("cms-theme-nav")) {
     customElements.define("cms-theme-nav", CmsThemeNav);
-  }
-  function createSourceIcon(sourceId) {
-    return createIcon(sourceIconPaths(sourceId));
-  }
-  function createCategoryIcon() {
-    return createIcon('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8"/><path d="M8 13h5"/>');
-  }
-  function createIcon(paths) {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("slot", "icon");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "2");
-    svg.setAttribute("stroke-linecap", "round");
-    svg.setAttribute("stroke-linejoin", "round");
-    svg.innerHTML = paths;
-    return svg;
-  }
-  function sourceIconPaths(sourceId) {
-    if (sourceId === "colors") {
-      return '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7" r=".5" fill="currentColor"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.7-.13 2.45-.35 1.1-.33 1.5-1.65.9-2.65-.58-.98-1.35-1.45-1.35-2.4 0-1.1.9-2 2-2h4c1.1 0 2-.9 2-2A10 10 0 0 0 12 2Z"/>';
-    }
-    if (sourceId === "typography") {
-      return '<path d="M4 5V3h16v2"/><path d="M12 3v18"/><path d="M8 21h8"/>';
-    }
-    if (sourceId === "spacing") {
-      return '<path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h16"/><path d="M17 9v6"/>';
-    }
-    return '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 16 16 8"/>';
   }
 
   // src/components/admin/Resources/Dashboards/api.ts
@@ -14793,7 +14876,7 @@ w13c-lateral-menu-item.category-item {
   function route(path) {
     return `${basePath()}${path}`;
   }
-  function currentSource() {
+  function currentSource2() {
     return new URL(window.location.href).searchParams.get("source") ?? "";
   }
   function currentDashboard() {
@@ -14809,7 +14892,7 @@ w13c-lateral-menu-item.category-item {
     const collection = currentCollection();
     const row = currentRow();
     return {
-      source: currentSource(),
+      source: currentSource2(),
       dashboard: currentDashboard(),
       ...collection && row ? { collection, row } : {}
     };
@@ -14852,7 +14935,19 @@ w13c-lateral-menu-item.category-item {
     return response.json();
   }
 
-  // src/components/admin/Resources/Dashboards/icons/catalog.ts
+  // src/components/admin/Resources/Dashboards/runtime/mounting/bindingFilters.ts
+  var configured = false;
+  function configureDashboardBindingFilters() {
+    if (configured) {
+      return;
+    }
+    configured = true;
+    Gp({
+      json: (value) => value === undefined ? undefined : JSON.stringify(value)
+    });
+  }
+
+  // src/components/admin/Resources/Dashboards/navigation/icons/catalog.ts
   var DASHBOARD_ICONS = {
     database: svg(`
         <ellipse cx="12" cy="5" rx="7" ry="3" />
@@ -14924,7 +15019,7 @@ w13c-lateral-menu-item.category-item {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${content}</svg>`;
   }
 
-  // src/components/admin/Resources/Dashboards/icons.ts
+  // src/components/admin/Resources/Dashboards/navigation/icons.ts
   var SVG_MAX_LENGTH = 8000;
   var ALLOWED_TAGS = new Set(["svg", "g", "path", "circle", "rect", "line", "polyline", "polygon", "ellipse"]);
   var ALLOWED_ATTRS = new Set([
@@ -14973,9 +15068,9 @@ w13c-lateral-menu-item.category-item {
   }
   function createIcon2(svg2, icon, fallback) {
     const iconName = toIconName(icon);
-    const source = sanitizeSvg(svg2) ?? (iconName ? DASHBOARD_ICONS[iconName] : undefined) ?? DASHBOARD_ICONS[fallback];
+    const source2 = sanitizeSvg(svg2) ?? (iconName ? DASHBOARD_ICONS[iconName] : undefined) ?? DASHBOARD_ICONS[fallback];
     const template = document.createElement("template");
-    template.innerHTML = source.trim();
+    template.innerHTML = source2.trim();
     const element = template.content.firstElementChild;
     if (!element || element.tagName.toLowerCase() !== "svg") {
       return null;
@@ -15015,19 +15110,62 @@ w13c-lateral-menu-item.category-item {
     return value && value in DASHBOARD_ICONS ? value : undefined;
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/bindingFilters.ts
-  var configured = false;
-  function configureDashboardBindingFilters() {
-    if (configured) {
+  // src/components/admin/Resources/Dashboards/navigation/DashboardNavRendering.ts
+  function renderDashboardNavigation(menu, groups, selectedSource, selectedDashboard) {
+    clearGeneratedItems(menu);
+    if (!groups.length) {
+      const empty = document.createElement("span");
+      empty.className = "empty";
+      empty.dataset.generated = "true";
+      empty.textContent = "No sources";
+      menu.append(empty);
       return;
     }
-    configured = true;
-    Mp({
-      json: (value) => value === undefined ? undefined : JSON.stringify(value)
-    });
+    for (const group of groups) {
+      const sourceItem = createItem(group.source.name, group.source.svg, group.source.icon, "database");
+      sourceItem.dataset.generated = "true";
+      sourceItem.dataset.source = group.source.id;
+      sourceItem.toggleAttribute("active", group.source.id === selectedSource);
+      menu.append(sourceItem);
+      if (group.source.id === selectedSource && group.dashboards.length > 1) {
+        appendDashboardItems(menu, group, selectedDashboard);
+      }
+    }
+  }
+  function renderDashboardNavigationExample(menu) {
+    clearGeneratedItems(menu);
+    const sourceItem = createItem("Example source", undefined, "database", "database");
+    sourceItem.dataset.generated = "true";
+    sourceItem.toggleAttribute("active", true);
+    menu.append(sourceItem);
+    const dashboardItem = createItem("Product dashboard", undefined, "layout", "layout");
+    dashboardItem.classList.add("dashboard-item");
+    dashboardItem.dataset.generated = "true";
+    dashboardItem.toggleAttribute("active", true);
+    menu.append(dashboardItem);
+  }
+  function appendDashboardItems(menu, group, selectedDashboard) {
+    for (const dashboard of group.dashboards) {
+      const item = createItem(dashboard.meta?.name ?? dashboard.id, dashboard.meta?.svg, dashboard.meta?.icon, "layout");
+      item.classList.add("dashboard-item");
+      item.dataset.generated = "true";
+      item.dataset.source = group.source.id;
+      item.dataset.dashboard = dashboard.id;
+      item.toggleAttribute("active", dashboard.id === selectedDashboard);
+      menu.append(item);
+    }
+  }
+  function createItem(label, svg2, icon, fallback) {
+    const item = document.createElement("w13c-lateral-menu-item");
+    appendIconSlot(item, svg2, icon, fallback);
+    item.append(document.createTextNode(label));
+    return item;
+  }
+  function clearGeneratedItems(menu) {
+    menu.querySelectorAll("[data-generated]").forEach((element) => element.remove());
   }
 
-  // src/components/admin/Resources/Dashboards/nav.css
+  // src/components/admin/Resources/Dashboards/navigation/nav.css
   var nav_default = `:host {
     display: block;
     height: 100%;
@@ -15066,7 +15204,7 @@ w13c-lateral-menu-item {
 }
 `;
 
-  // src/components/admin/Resources/Dashboards/nav.html
+  // src/components/admin/Resources/Dashboards/navigation/nav.html
   var nav_default2 = `<cms-binding-core class="binding-source">
     <span data-nav-list-source hidden>
         <span data-nav-groups-json="{{ dashboards | json }}"></span>
@@ -15081,7 +15219,7 @@ w13c-lateral-menu-item {
 </w13c-lateral-menu>
 `;
 
-  // src/components/admin/Resources/Dashboards/DashboardNav.ts
+  // src/components/admin/Resources/Dashboards/navigation/DashboardNav.ts
   class DashboardNav extends U2 {
     groups = [];
     selectedSource = "";
@@ -15108,13 +15246,13 @@ w13c-lateral-menu-item {
     }
     startBoundSource() {
       if (this.isExampleMode()) {
-        this.renderExample();
+        renderDashboardNavigationExample(this.query("w13c-lateral-menu"));
         return;
       }
-      const source = this.query("[data-nav-list-source]");
-      source.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
+      const source2 = this.query("[data-nav-list-source]");
+      source2.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
       this.observer = new MutationObserver(() => this.readBoundGroups());
-      this.observer.observe(source, { attributes: true, childList: true, subtree: true });
+      this.observer.observe(source2, { attributes: true, childList: true, subtree: true });
       this.readBoundGroups();
     }
     readBoundGroups() {
@@ -15149,52 +15287,7 @@ w13c-lateral-menu-item {
     }
     render() {
       const menu = this.query("w13c-lateral-menu");
-      menu.querySelectorAll("[data-generated]").forEach((element) => element.remove());
-      if (!this.groups.length) {
-        const empty = document.createElement("span");
-        empty.className = "empty";
-        empty.dataset.generated = "true";
-        empty.textContent = "No sources";
-        menu.append(empty);
-        return;
-      }
-      for (const group of this.groups) {
-        const sourceItem = this.createItem(group.source.name, group.source.svg, group.source.icon, "database");
-        sourceItem.dataset.generated = "true";
-        sourceItem.dataset.source = group.source.id;
-        sourceItem.toggleAttribute("active", group.source.id === this.selectedSource);
-        menu.append(sourceItem);
-        if (group.source.id === this.selectedSource && group.dashboards.length > 1) {
-          for (const dashboard of group.dashboards) {
-            const dashboardItem = this.createItem(dashboard.meta?.name ?? dashboard.id, dashboard.meta?.svg, dashboard.meta?.icon, "layout");
-            dashboardItem.classList.add("dashboard-item");
-            dashboardItem.dataset.generated = "true";
-            dashboardItem.dataset.source = group.source.id;
-            dashboardItem.dataset.dashboard = dashboard.id;
-            dashboardItem.toggleAttribute("active", dashboard.id === this.selectedDashboard);
-            menu.append(dashboardItem);
-          }
-        }
-      }
-    }
-    renderExample() {
-      const menu = this.query("w13c-lateral-menu");
-      menu.querySelectorAll("[data-generated]").forEach((element) => element.remove());
-      const sourceItem = this.createItem("Example source", undefined, "database", "database");
-      sourceItem.dataset.generated = "true";
-      sourceItem.toggleAttribute("active", true);
-      menu.append(sourceItem);
-      const dashboardItem = this.createItem("Product dashboard", undefined, "layout", "layout");
-      dashboardItem.classList.add("dashboard-item");
-      dashboardItem.dataset.generated = "true";
-      dashboardItem.toggleAttribute("active", true);
-      menu.append(dashboardItem);
-    }
-    createItem(label, svg2, icon, fallback) {
-      const item = document.createElement("w13c-lateral-menu-item");
-      appendIconSlot(item, svg2, icon, fallback);
-      item.append(document.createTextNode(label));
-      return item;
+      renderDashboardNavigation(menu, this.groups, this.selectedSource, this.selectedDashboard);
     }
     activeGroup() {
       return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
@@ -15252,229 +15345,6 @@ w13c-lateral-menu-item {
       return null;
     }
   }
-
-  // src/components/admin/Resources/Dashboards/style.css
-  var style_default6 = `:host {
-    display: block;
-}
-
-[hidden] {
-    display: none !important;
-}
-
-.binding-source {
-    display: none;
-}
-
-h3,
-p {
-    margin: 0;
-}
-
-.content,
-.widgets,
-.widget-stack,
-.tab-body,
-.dashboard-widget-binding {
-    display: grid;
-    align-content: start;
-    min-width: 0;
-}
-
-.content {
-    gap: 24px;
-}
-
-.widgets,
-.widget-stack,
-.tab-body,
-.dashboard-widget-binding {
-    gap: 16px;
-}
-
-.dashboard-source-state {
-    align-items: center;
-    border: 1px solid var(--border-default, #dfe5e2);
-    border-radius: 8px;
-    display: flex;
-    gap: 16px;
-    justify-content: space-between;
-    padding: 16px;
-}
-
-.dashboard-source-state > div {
-    display: grid;
-    gap: 4px;
-}
-
-.dashboard-source-state span,
-.dashboard-source-state small {
-    color: var(--text-muted, #66736f);
-}
-
-.dashboard-source-loading {
-    color: var(--text-muted, #66736f);
-}
-
-.dashboard-source-error {
-    background: var(--danger-muted, #fff3f1);
-    border-color: var(--danger-border, #e8b7af);
-}
-
-.dashboard-source-error button {
-    background: var(--bg-surface, #fff);
-    border: 1px solid var(--border-default, #dfe5e2);
-    border-radius: 6px;
-    color: var(--text-default, #0f1f1a);
-    cursor: pointer;
-    flex: none;
-    font: inherit;
-    font-weight: 700;
-    min-height: 36px;
-    padding: 6px 12px;
-}
-
-.dashboard-source-error button:hover {
-    background: var(--bg-hover, #f3f6f5);
-}
-
-.dashboard-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 34px;
-    border-bottom: 1px solid var(--border-default, #dfe5e2);
-    padding: 0 2px 18px;
-}
-
-.dashboard-head h3 {
-    color: var(--text-default, #0f1f1a);
-    font-size: 18px;
-    font-weight: 750;
-    line-height: 1.2;
-}
-
-.title-icon {
-    display: inline-grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    flex: none;
-    border-radius: 8px;
-    background: var(--primary-muted, #e3f2ed);
-    color: var(--primary-base, #165f4b);
-}
-
-.title-icon.compact {
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
-}
-
-.title-icon svg {
-    width: 18px;
-    height: 18px;
-    stroke: currentColor;
-    fill: none;
-}
-
-.title-icon.compact svg {
-    width: 15px;
-    height: 15px;
-}
-
-.panel,
-.tabs-panel {
-    border: 1px solid var(--border-default, #dfe5e2);
-    border-radius: 8px;
-    background: var(--bg-surface, #fff);
-}
-
-.panel {
-    padding: 16px;
-}
-
-.empty {
-    display: grid;
-    gap: 4px;
-}
-
-.empty span,
-.migration-placeholder {
-    color: var(--text-muted, #66736f);
-}
-
-.tabs-panel {
-    display: grid;
-    gap: 14px;
-    overflow: visible;
-    padding: 0;
-}
-
-.tabs {
-    display: flex;
-    gap: 4px;
-    border-bottom: 1px solid var(--border-default, #dfe5e2);
-    padding: 0 14px;
-}
-
-.tab {
-    min-height: 42px;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    background: transparent;
-    color: var(--text-default, #0f1f1a);
-    cursor: pointer;
-    font: inherit;
-    font-weight: 700;
-    padding: 0 10px;
-}
-
-.tab.active {
-    border-bottom-color: var(--primary-base, #165f4b);
-    color: var(--primary-base, #165f4b);
-}
-
-.tab:hover {
-    background: var(--bg-hover, #f3f6f5);
-}
-
-.tab-body {
-    padding: 0 14px 14px;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/template.html
-  var template_default7 = `<main class="content">
-    <cms-binding-core class="binding-source">
-        <span data-dashboard-list-source hidden>
-            <span data-dashboard-groups-json="{{ dashboards | json }}"></span>
-        </span>
-    </cms-binding-core>
-
-    <section class="panel empty" data-empty>
-        <strong>No dashboards</strong>
-        <span>Install an integration that provides dashboard artifacts.</span>
-    </section>
-
-    <section class="panel empty" data-source-empty hidden>
-        <strong>No dashboards for this source</strong>
-        <span>This source exposes endpoints, but no dashboard artifact has been installed for it yet.</span>
-    </section>
-
-    <section class="dashboard-head" data-dashboard-head hidden>
-        <span class="title-icon compact" data-dashboard-icon></span>
-        <h3 data-dashboard-name></h3>
-    </section>
-
-    <section class="detail-toolbar" data-detail-toolbar hidden>
-        <button type="button" data-dashboard-back>Back</button>
-        <span data-detail-row></span>
-    </section>
-
-    <div class="widgets" data-widgets hidden></div>
-</main>
-`;
 
   // src/components/admin/Resources/Dashboards/domain.ts
   function widgetsForSelection(dashboard, detail, projections = []) {
@@ -15627,19 +15497,19 @@ p {
   // ../../features/cms-sources/src/default-implementation/InMemorySourceRepository.ts
   class InMemorySourceRepository {
     _sources = new Map;
-    async createSource(source) {
-      if (this._sources.has(source.urn)) {
-        throw new DuplicateSourceError(source.urn);
+    async createSource(source2) {
+      if (this._sources.has(source2.urn)) {
+        throw new DuplicateSourceError(source2.urn);
       }
-      this._sources.set(source.urn, structuredClone(source));
-      return structuredClone(source);
+      this._sources.set(source2.urn, structuredClone(source2));
+      return structuredClone(source2);
     }
-    async updateSource(source) {
-      if (!this._sources.has(source.urn)) {
+    async updateSource(source2) {
+      if (!this._sources.has(source2.urn)) {
         return null;
       }
-      this._sources.set(source.urn, structuredClone(source));
-      return structuredClone(source);
+      this._sources.set(source2.urn, structuredClone(source2));
+      return structuredClone(source2);
     }
     async deleteSource(urn) {
       return this._sources.delete(urn);
@@ -15652,8 +15522,8 @@ p {
       return Array.from(this._sources.values(), (p) => structuredClone(p));
     }
     async getEndpoint(urn) {
-      for (const source of this._sources.values()) {
-        const endpoint = source.endpoints.find((e) => e.urn === urn);
+      for (const source2 of this._sources.values()) {
+        const endpoint = source2.endpoints.find((e) => e.urn === urn);
         if (endpoint) {
           return structuredClone(endpoint);
         }
@@ -15683,7 +15553,7 @@ p {
       return this.overlays.delete(id);
     }
   }
-  // ../../features/cms-sources/src/core/CompositeSourceRepository.ts
+  // ../../features/cms-sources/src/core/repositories/CompositeSourceRepository.ts
   class CompositeSourceRepository {
     inner;
     systemSources = new Map;
@@ -15691,8 +15561,8 @@ p {
     invalidateSchema;
     constructor(inner, systemSources = []) {
       this.inner = inner;
-      for (const source of systemSources) {
-        this.systemSources.set(source.urn, structuredClone(source));
+      for (const source2 of systemSources) {
+        this.systemSources.set(source2.urn, structuredClone(source2));
       }
       if (inner.getEndpointForAuthorization) {
         this.getEndpointForAuthorization = async (urn) => {
@@ -15709,13 +15579,13 @@ p {
         this.invalidateSchema = (scope) => inner.invalidateSchema(scope);
       }
     }
-    async createSource(source) {
-      this.assertUserSource(source.urn, "system source namespace is reserved");
-      return this.inner.createSource(source);
+    async createSource(source2) {
+      this.assertUserSource(source2.urn, "system source namespace is reserved");
+      return this.inner.createSource(source2);
     }
-    async updateSource(source) {
-      this.assertUserSource(source.urn, "system sources are readonly");
-      return this.inner.updateSource(source);
+    async updateSource(source2) {
+      this.assertUserSource(source2.urn, "system sources are readonly");
+      return this.inner.updateSource(source2);
     }
     async deleteSource(urn) {
       this.assertUserSource(urn, "system sources are readonly");
@@ -15730,8 +15600,8 @@ p {
     }
     async getAllSources() {
       const systemUrns = new Set(this.systemSources.keys());
-      const system = Array.from(this.systemSources.values(), (source) => structuredClone(source));
-      const user = (await this.inner.getAllSources()).filter((source) => !systemUrns.has(source.urn) && !systemSourceUrnOf(source.urn));
+      const system = Array.from(this.systemSources.values(), (source2) => structuredClone(source2));
+      const user = (await this.inner.getAllSources()).filter((source2) => !systemUrns.has(source2.urn) && !systemSourceUrnOf(source2.urn));
       return [...system, ...user];
     }
     async getEndpoint(urn) {
@@ -15749,7 +15619,7 @@ p {
       }
     }
   }
-  // ../../features/cms-sources/src/core/endpointHeaders.ts
+  // ../../features/cms-sources/src/core/upstream/endpointHeaders.ts
   function hasComputedParams(endpoint) {
     return (endpoint.input?.params ?? []).some((param) => param.source?.from === "computed");
   }
@@ -15757,7 +15627,7 @@ p {
     return (endpoint.headers ?? []).some((header) => header.source.from === "computed");
   }
 
-  // ../../features/cms-sources/src/core/SourceOverlaySchemaCache.ts
+  // ../../features/cms-sources/src/core/repositories/SourceOverlaySchemaCache.ts
   var DEFAULT_SOURCE_OVERLAY_SCHEMA_CACHE_TTL_MS = 60000;
 
   class SourceOverlaySchemaCache {
@@ -15774,8 +15644,8 @@ p {
       this.ttlMs = ttlMs;
       this.now = options.now ?? Date.now;
     }
-    async getOrLoad(source, overlay, load) {
-      const fingerprint = await schemaFingerprint(source, overlay);
+    async getOrLoad(source2, overlay, load) {
+      const fingerprint = await schemaFingerprint(source2, overlay);
       if (!fingerprint) {
         return await load();
       }
@@ -15824,17 +15694,17 @@ p {
       }
     }
   }
-  async function schemaFingerprint(source, overlay) {
+  async function schemaFingerprint(source2, overlay) {
     const endpointId = overlay.fieldSource?.endpointId;
     if (!endpointId) {
       return null;
     }
-    const endpoint = source.endpoints.find((candidate) => parseUrn(candidate.urn)?.endpoint === endpointId);
+    const endpoint = source2.endpoints.find((candidate) => parseUrn(candidate.urn)?.endpoint === endpointId);
     if (!endpoint || endpoint.method !== "GET" || endpoint.effects !== undefined || hasComputedParams(endpoint) || hasComputedHeaders(endpoint)) {
       return null;
     }
     const revision = canonicalJson({
-      source: { urn: source.urn, fieldSourceEndpoint: endpoint },
+      source: { urn: source2.urn, fieldSourceEndpoint: endpoint },
       overlay
     });
     const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(revision));
@@ -15871,7 +15741,7 @@ p {
   // ../../features/cms-sources/src/core/response-projection/bindResponseIdentities.ts
   var MAX_IDENTITY_BINDING_RESPONSE_BYTES = 64 * 1024;
 
-  // ../../features/cms-sources/src/core/sourceOverlay.ts
+  // ../../features/cms-sources/src/core/overlays/sourceOverlay.ts
   var sharedSchemaCaches = new WeakMap;
   // ../../features/cms-dashboards/src/core/dashboardPaths.ts
   var PATH_SEGMENT = /^[A-Za-z_$][\w$]*$/;
@@ -15895,7 +15765,6 @@ p {
     const path = match[2];
     return path === undefined ? !pathRequired : isSafeDashboardPath(path);
   }
-
   // ../../features/cms-dashboards/src/core/dashboardVisibility.ts
   var DASHBOARD_VISIBILITY_MAX_DEPTH = 10;
   var DASHBOARD_VISIBILITY_MAX_NODES = 500;
@@ -16086,87 +15955,11 @@ p {
     }
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/source.ts
-  async function fetchSourceJson(sourceId, ref, vars, options = {}) {
-    const response = await fetch(sourceUrl(sourceId, ref, vars), {
-      headers: { Accept: "application/json" },
-      signal: options.signal
-    });
-    return responseJson(response);
-  }
-  function sourceRequestKey(sourceId, ref, vars) {
-    const url = sourceUrl(sourceId, ref, vars);
-    url.searchParams.sort();
-    return url.href;
-  }
-  async function sendSourceJson(sourceId, ref, method, vars) {
-    const response = await sendSourceResponse(sourceId, ref, method, vars, "application/json");
-    return responseJson(response);
-  }
-  async function sendSourceForm(sourceId, ref, method, vars, body) {
-    const response = await fetch(sourceUrl(sourceId, ref, vars), {
-      method,
-      headers: { Accept: "application/json" },
-      body
-    });
-    return responseJson(response);
-  }
-  async function sendSourceDownload(sourceId, ref, method, vars) {
-    const response = await sendSourceResponse(sourceId, ref, method, vars, "*/*");
-    if (!response.ok) {
-      throw new Error(await response.text() || `Source request failed (${response.status})`);
-    }
-    const filename = filenameFromDisposition(response.headers.get("content-disposition"));
-    return {
-      blob: await response.blob(),
-      ...filename ? { filename } : {}
-    };
-  }
-  async function sendSourceResponse(sourceId, ref, method, vars, accept) {
-    const body = resolveBody(ref.body, vars);
-    return fetch(sourceUrl(sourceId, ref, vars), {
-      method,
-      headers: body === undefined ? { Accept: accept } : { Accept: accept, "Content-Type": "application/json" },
-      ...body === undefined ? {} : { body: JSON.stringify(body) }
-    });
-  }
-  function sourceUrl(sourceId, ref, vars) {
-    const targetSourceId = ref.sourceId ?? sourceId;
-    const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) {
-      url.searchParams.set(key, value);
-    }
-    return url;
-  }
-  async function responseJson(response) {
-    if (!response.ok) {
-      throw new Error(await response.text() || `Source request failed (${response.status})`);
-    }
-    const contentType = response.headers.get("content-type") ?? "";
-    if (!contentType.includes("json")) {
-      return response.text();
-    }
-    return response.json();
-  }
-  function filenameFromDisposition(value) {
-    const match = value?.match(/filename="?([^";]+)"?/i);
-    return match?.[1]?.trim() || undefined;
-  }
-  function itemsFrom(data, ref) {
-    if (!ref.itemsPath) {
-      return Array.isArray(data) ? data : [];
-    }
-    return arrayAt(data, ref.itemsPath);
-  }
-  function itemFrom(data, ref) {
-    return ref.itemPath ? valueAt(data, ref.itemPath) : data;
-  }
-
   // src/components/admin/Resources/Dashboards/runtime/media.ts
   function mediaValue(value, field, sourceId) {
     return (Array.isArray(value) ? value : arrayAt({ value }, "value")).map((item) => {
-      const source = sourceMediaItem(item, field, sourceId);
-      return source.id && source.url ? source : normalizedMediaItem(item) ?? source;
+      const source2 = sourceMediaItem(item, field, sourceId);
+      return source2.id && source2.url ? source2 : normalizedMediaItem(item) ?? source2;
     }).filter((item) => item.id && item.url);
   }
   function normalizedMediaItem(item) {
@@ -16219,6 +16012,57 @@ p {
     return /^(https?:|blob:|data:|\/)/.test(value);
   }
 
+  // src/components/admin/Resources/Dashboards/runtime/mapping/fieldSupport.ts
+  function optionData(option) {
+    return { label: option.label, value: option.value };
+  }
+  function optionList(staticOptions, dynamicOptions) {
+    const seen = new Set;
+    return [...staticOptions ?? [], ...dynamicOptions].filter((option) => {
+      if (seen.has(option.value)) {
+        return false;
+      }
+      seen.add(option.value);
+      return true;
+    }).map(optionData);
+  }
+  function textValue(value) {
+    return value === null || value === undefined ? "" : String(value);
+  }
+  function numberValue(value) {
+    if (value === null || value === undefined || value === "") {
+      return "";
+    }
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) ? parsed : "";
+  }
+  function readonlyValue(value) {
+    return Array.isArray(value) ? value.map(textValue).map((item) => item.trim()).filter(Boolean) : textValue(value);
+  }
+  function tokenValue(value) {
+    return Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
+  }
+  function tableValue(value) {
+    return Array.isArray(value) ? value.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item)) : [];
+  }
+  function recordValue(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value) ? { ...value } : {};
+  }
+  function schemaDefinitions(field, fields, definitions) {
+    if (!field.exclude) {
+      return definitions;
+    }
+    const source2 = valueAt(fields, field.exclude.from.slice("$field.".length));
+    const excluded = new Set((Array.isArray(source2) ? source2 : [source2]).flatMap((item) => {
+      const value = valueAt(item, field.exclude.valuePath);
+      return typeof value === "string" || typeof value === "number" ? [String(value)] : [];
+    }));
+    return definitions.filter((definition) => !excluded.has(definition.id));
+  }
+  function isCreatable(field) {
+    return Boolean(field.allowCustom || field.lookup?.create?.mode === "inline");
+  }
+
   // src/components/admin/Resources/Dashboards/runtime/lookups/targets.ts
   function nestedLookupKey(fieldId, nestedId) {
     return `${fieldId}::${nestedId}`;
@@ -16251,6 +16095,49 @@ p {
   }
   function detailFields(widget) {
     return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/mapping/nestedFields.ts
+  function tableColumn(fieldId, column, options) {
+    const base = {
+      key: column.id,
+      label: column.label,
+      path: column.path,
+      ...column.width ? { width: column.width } : {}
+    };
+    if (column.editable !== true) {
+      return base;
+    }
+    const type = column.type ?? "text";
+    if (type === "select") {
+      return { ...base, editable: true, type, options: (column.options ?? []).map(optionData) };
+    }
+    if (type === "combobox") {
+      return {
+        ...base,
+        editable: true,
+        type,
+        options: optionList(column.options, options[nestedLookupKey(fieldId, column.id)] ?? [])
+      };
+    }
+    return { ...base, editable: true, type };
+  }
+  function reorderableField(fieldId, field, options) {
+    const base = {
+      id: field.id,
+      label: field.label,
+      path: field.path,
+      ...field.required ? { required: true } : {},
+      ...field.placeholder ? { placeholder: field.placeholder } : {}
+    };
+    const type = field.type ?? "text";
+    if (type === "select") {
+      return { ...base, type, options: (field.options ?? []).map(optionData) };
+    }
+    if (type === "combobox") {
+      return { ...base, type, options: optionList(field.options, options[nestedLookupKey(fieldId, field.id)] ?? []) };
+    }
+    return { ...base, type };
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/fields.ts
@@ -16349,96 +16236,6 @@ p {
     }
     return { ...base, input: "text", value: textValue(value) };
   }
-  function tableColumn(fieldId, column, options) {
-    const base = {
-      key: column.id,
-      label: column.label,
-      path: column.path,
-      ...column.width ? { width: column.width } : {}
-    };
-    if (column.editable !== true) {
-      return base;
-    }
-    const type = column.type ?? "text";
-    if (type === "select") {
-      return { ...base, editable: true, type, options: (column.options ?? []).map(optionData) };
-    }
-    if (type === "combobox") {
-      return {
-        ...base,
-        editable: true,
-        type,
-        options: optionList(column.options, options[nestedLookupKey(fieldId, column.id)] ?? [])
-      };
-    }
-    return { ...base, editable: true, type };
-  }
-  function reorderableField(fieldId, field, options) {
-    const base = {
-      id: field.id,
-      label: field.label,
-      path: field.path,
-      ...field.required ? { required: true } : {},
-      ...field.placeholder ? { placeholder: field.placeholder } : {}
-    };
-    const type = field.type ?? "text";
-    if (type === "select") {
-      return { ...base, type, options: (field.options ?? []).map(optionData) };
-    }
-    if (type === "combobox") {
-      return { ...base, type, options: optionList(field.options, options[nestedLookupKey(fieldId, field.id)] ?? []) };
-    }
-    return { ...base, type };
-  }
-  function optionData(option) {
-    return { label: option.label, value: option.value };
-  }
-  function optionList(staticOptions, dynamicOptions) {
-    const seen = new Set;
-    return [...staticOptions ?? [], ...dynamicOptions].filter((option) => {
-      if (seen.has(option.value)) {
-        return false;
-      }
-      seen.add(option.value);
-      return true;
-    }).map(optionData);
-  }
-  function textValue(value) {
-    return value === null || value === undefined ? "" : String(value);
-  }
-  function numberValue(value) {
-    if (value === null || value === undefined || value === "") {
-      return "";
-    }
-    const parsed = typeof value === "number" ? value : Number(value);
-    return Number.isFinite(parsed) ? parsed : "";
-  }
-  function readonlyValue(value) {
-    return Array.isArray(value) ? value.map(textValue).map((item) => item.trim()).filter(Boolean) : textValue(value);
-  }
-  function tokenValue(value) {
-    return Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
-  }
-  function tableValue(value) {
-    return Array.isArray(value) ? value.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item)) : [];
-  }
-  function recordValue(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value) ? { ...value } : {};
-  }
-  function schemaDefinitions(field, fields, definitions) {
-    if (!field.exclude) {
-      return definitions;
-    }
-    const source = valueAt(fields, field.exclude.from.slice("$field.".length));
-    const excluded = new Set((Array.isArray(source) ? source : [source]).flatMap((item) => {
-      const value = valueAt(item, field.exclude.valuePath);
-      return typeof value === "string" || typeof value === "number" ? [String(value)] : [];
-    }));
-    return definitions.filter((definition) => !excluded.has(definition.id));
-  }
-  function isCreatable(field) {
-    return Boolean(field.allowCustom || field.lookup?.create?.mode === "inline");
-  }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/detail.ts
   function detailData(widget, resource, rowKey, draft = {}, options = {}, sourceId = "", schemas = {}) {
@@ -16482,418 +16279,11 @@ p {
   function record(value) {
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
   }
-  // src/components/admin/Resources/Dashboards/runtime/actions.ts
-  async function executeDashboardAction(group, dashboard, detail, actionId, draft, currentResource, groups = [group]) {
-    const widget = findDetailWidget(dashboard.views, detail.collection);
-    if (!widget) {
-      throw new Error(`Dashboard action target "${detail.collection}" was not found`);
-    }
-    const action = widget.actions?.find((item) => item.id === actionId);
-    if (!action) {
-      throw new Error(`Dashboard action "${actionId}" was not found`);
-    }
-    if (!action.endpoint) {
-      throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
-    }
-    const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
-    const fields = { ...fieldValues(widget, resource), ...draft };
-    if (!matchesDashboardVisibility(action.visibleWhen, { resource, fields })) {
-      throw new Error(`Dashboard action "${actionId}" is not available in the current state`);
-    }
-    return executeEndpointAction(group, groups, action, {
-      selection: { id: detail.row },
-      resource,
-      fields
-    });
+  // src/components/admin/Resources/Dashboards/widgets/w-section/WSection.ts
+  class DashboardWSection extends CmsDetailSection {
   }
-  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value, groups = [group]) {
-    const action = findCollectionAction(dashboard.views, actionId, widgetId);
-    if (!action) {
-      throw new Error(`Dashboard table action "${actionId}" was not found`);
-    }
-    if (!action.endpoint) {
-      throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
-    }
-    return executeEndpointAction(group, groups, action, { filters: {}, value });
-  }
-  async function executeEndpointAction(group, groups, action, vars) {
-    if (!action.endpoint) {
-      throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
-    }
-    const method = endpointMethod(group, groups, action.endpoint);
-    if (action.download) {
-      const download = await sendSourceDownload(group.source.id, action.endpoint, method, vars);
-      return {
-        kind: "download",
-        blob: download.blob,
-        filename: action.download.filename ?? download.filename ?? `${action.id}.download`,
-        ...actionMeta(group, groups, action)
-      };
-    }
-    return {
-      kind: "value",
-      value: await sendSourceJson(group.source.id, action.endpoint, method, vars),
-      ...actionMeta(group, groups, action)
-    };
-  }
-  function actionMeta(group, groups, action) {
-    return {
-      ...action.after ? { after: action.after } : {},
-      ...action.endpoint && endpointInvalidatesSchema(group, groups, action.endpoint) ? { invalidatesSchema: true } : {}
-    };
-  }
-  async function fetchActionResource(sourceId, widget, row) {
-    const data = await fetchSourceJson(sourceId, widget.source, { selection: { id: row } });
-    return itemFrom(data, widget.source);
-  }
-  async function executeDashboardMediaAction(group, dashboard, detail, media, draft, groups = [group]) {
-    const widget = findDetailWidget(dashboard.views, detail.collection);
-    if (!widget) {
-      throw new Error(`Dashboard media target "${detail.collection}" was not found`);
-    }
-    const field = findMediaField(widget, media.field);
-    const ref = field?.actions?.[media.action];
-    if (!field || !ref) {
-      return [];
-    }
-    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
-    const resource = itemFrom(data, widget.source);
-    const fields = { ...fieldValues(widget, resource), ...draft };
-    const mediaVars = mediaActionVars(media);
-    const files = media.files ?? (media.file ? [media.file] : []);
-    if (!files.length) {
-      return [
-        await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), {
-          resource,
-          fields,
-          media: mediaVars
-        })
-      ];
-    }
-    return Promise.all(files.map((file) => {
-      const body = new FormData;
-      body.set("file", file);
-      return sendSourceForm(group.source.id, ref, endpointMethod(group, groups, ref), { resource, fields, media: mediaVars }, body);
-    }));
-  }
-  function findDetailWidget(widgets, id) {
-    for (const widget of widgets) {
-      if (widget.widget === "w-detail" && widget.id === id) {
-        return widget;
-      }
-      if (widget.widget === "w-section") {
-        const found = findDetailWidget(widget.children, id);
-        if (found) {
-          return found;
-        }
-      }
-      if (widget.widget === "w-tabs") {
-        for (const tab of widget.tabs) {
-          const found = findDetailWidget(tab.children, id);
-          if (found) {
-            return found;
-          }
-        }
-      }
-    }
-    return null;
-  }
-  function findCollectionAction(widgets, actionId, widgetId) {
-    for (const widget of widgets) {
-      if ((widget.widget === "w-table" || widget.widget === "w-navigation-list") && (!widgetId || widget.id === widgetId)) {
-        const action = widget.actions?.find((item) => item.id === actionId);
-        if (action) {
-          return action;
-        }
-      }
-      if (widget.widget === "w-section") {
-        const found = findCollectionAction(widget.children, actionId, widgetId);
-        if (found) {
-          return found;
-        }
-      }
-      if (widget.widget === "w-tabs") {
-        for (const tab of widget.tabs) {
-          const found = findCollectionAction(tab.children, actionId, widgetId);
-          if (found) {
-            return found;
-          }
-        }
-      }
-    }
-    return null;
-  }
-  function endpointMethod(group, groups, ref) {
-    const sourceId = ref.sourceId ?? group.source.id;
-    const sourceGroup = groups.find((candidate) => candidate.source.id === sourceId);
-    const endpoint = sourceGroup?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
-    if (!endpoint) {
-      throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
-    }
-    return endpoint.method;
-  }
-  function endpointInvalidatesSchema(group, groups, ref) {
-    const sourceId = ref.sourceId ?? group.source.id;
-    return groups.find((candidate) => candidate.source.id === sourceId)?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.effects?.invalidatesSchema === true;
-  }
-  function findMediaField(widget, fieldId) {
-    const fields = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
-    return fields.find((field) => field.id === fieldId && field.type === "media") ?? null;
-  }
-  function mediaActionVars(media) {
-    return {
-      action: media.action,
-      index: media.index,
-      from: media.from,
-      to: media.to,
-      item: media.item,
-      previousItem: media.previousItem,
-      value: media.value,
-      valueIds: media.value.map(mediaId).filter(Boolean)
-    };
-  }
-  function mediaId(item) {
-    return item.id;
-  }
-
-  // src/components/admin/Resources/Dashboards/DashboardViewActions.ts
-  async function runDashboardWidgetAction(context, action) {
-    const { group, dashboard, detail } = context;
-    if (!group || !dashboard) {
-      return;
-    }
-    const actionDetail = detail ?? (action.detail && action.widget ? { collection: action.widget, row: action.row ?? "" } : null);
-    const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
-    try {
-      const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, {
-        ...context.drafts.get(key) ?? {},
-        ...action.fields ?? {}
-      }, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group]);
-      if (actionDetail) {
-        context.drafts.delete(key);
-      }
-      if (result.invalidatesSchema && context.reloadDefinitions) {
-        try {
-          await context.reloadDefinitions();
-        } catch {
-          ku(`${action.action} completed, but CMS definitions could not be reloaded`, { type: "warning" });
-        }
-      }
-      if (result.kind === "download") {
-        downloadBlob(result.blob, result.filename);
-        ku(`${action.action} downloaded`, { type: "success" });
-        return;
-      }
-      ku(`${action.action} completed`, { type: "success" });
-      const after = result.kind === "value" ? afterTarget(result.after, result.value, actionDetail) : null;
-      if (after) {
-        context.openDetail(after.collection, after.row);
-      } else if (!detail) {
-        context.render();
-      } else if (action.action.startsWith("delete")) {
-        context.clearDetail();
-      } else if (detail.row === "__new__" && createdId(result.value)) {
-        context.openDetail(detail.collection, createdId(result.value));
-      } else {
-        context.reload(detail.collection, detail.row);
-      }
-    } catch (error) {
-      ku(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
-    }
-  }
-  function downloadBlob(blob, filename) {
-    if (typeof URL.createObjectURL !== "function") {
-      throw new Error("Downloads are not supported in this browser");
-    }
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.hidden = true;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    if (typeof URL.revokeObjectURL === "function") {
-      window.setTimeout(() => URL.revokeObjectURL(url), 0);
-    }
-  }
-  function createdId(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-      return null;
-    }
-    const id = value.id;
-    if (typeof id === "string" && id.trim()) {
-      return id;
-    }
-    if (typeof id === "number" && Number.isFinite(id)) {
-      return String(id);
-    }
-    return null;
-  }
-  function afterTarget(after, result, detail) {
-    if (!after?.opens) {
-      return null;
-    }
-    const rowValue = after.row === undefined ? createdId(result) : resolveExpression(after.row, {
-      result,
-      ...detail ? { selection: { id: detail.row } } : {}
-    });
-    const row = stringValue(rowValue);
-    return row ? { collection: after.opens, row } : null;
-  }
-  function stringValue(value) {
-    if (value === null || value === undefined) {
-      return "";
-    }
-    if (typeof value === "string") {
-      return value;
-    }
-    if (typeof value === "number" || typeof value === "boolean") {
-      return String(value);
-    }
-    return "";
-  }
-  async function runDashboardMediaAction(context, media) {
-    const { group, dashboard, detail } = context;
-    if (!group || !dashboard || !detail) {
-      return;
-    }
-    const key = detailKey(detail.collection, detail.row);
-    try {
-      await executeDashboardMediaAction(group, dashboard, detail, media, context.drafts.get(key) ?? {}, context.groups ?? [group]);
-      removeDraftField(context.drafts, key, media.field);
-      ku(`Media ${media.action} completed`, { type: "success" });
-      context.reload(detail.collection, detail.row);
-    } catch (error) {
-      ku(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
-    }
-  }
-  function removeDraftField(drafts, key, field) {
-    const draft = { ...drafts.get(key) ?? {} };
-    delete draft[field];
-    Object.keys(draft).length ? drafts.set(key, draft) : drafts.delete(key);
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/lookups/create.ts
-  async function executeLookupCreate(group, dashboard, detail, fieldId, previousDraft, nextDraft, groups = [group]) {
-    const widget = findDetailWidget2(dashboard.views, detail.collection);
-    const field = widget ? lookupField(widget, fieldId) : null;
-    const create = field?.lookup?.create;
-    if (!widget || !field || !create || create.mode !== "inline") {
-      return;
-    }
-    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
-    const resource = itemFrom(data, widget.source);
-    const baseFields = fieldValues(widget, resource);
-    const previousValue = previousDraft[fieldId] ?? baseFields[fieldId];
-    const nextValue = nextDraft[fieldId];
-    const createdValue = createdInput(previousValue, nextValue);
-    if (!createdValue) {
-      return;
-    }
-    const created = await sendSourceJson(group.source.id, create, endpointMethod2(group, groups, create), {
-      resource,
-      fields: { ...baseFields, ...previousDraft, [fieldId]: createdValue },
-      value: createdValue
-    });
-    const createdId2 = valueAt(created, create.valuePath);
-    if (createdId2 === undefined || createdId2 === null || createdId2 === "") {
-      return;
-    }
-    const id = String(createdId2);
-    return {
-      value: replaceCreatedValue(nextValue, createdValue, id),
-      option: { value: id, label: textValue2(valueAt(created, create.labelPath)) || createdValue }
-    };
-  }
-  function textValue2(value) {
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return String(value);
-    }
-    return typeof value === "string" ? value.trim() : "";
-  }
-  function createdInput(previous, next) {
-    if (Array.isArray(next)) {
-      const previousValues = new Set(arrayValue(previous));
-      return arrayValue(next).find((value) => !previousValues.has(value)) ?? "";
-    }
-    return typeof next === "string" ? next.trim() : "";
-  }
-  function replaceCreatedValue(next, created, id) {
-    if (Array.isArray(next)) {
-      return arrayValue(next).map((value) => value === created ? id : value);
-    }
-    return id;
-  }
-  function arrayValue(value) {
-    if (Array.isArray(value)) {
-      return value.map((item) => String(item)).filter(Boolean);
-    }
-    return typeof value === "string" ? value.split(",").map((item) => item.trim()).filter(Boolean) : [];
-  }
-  function lookupField(widget, fieldId) {
-    const fields = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
-    return fields.find((field) => (field.type === "combobox" || field.type === "tokens") && field.id === fieldId) ?? null;
-  }
-  function endpointMethod2(group, groups, ref) {
-    const sourceId = ref.sourceId ?? group.source.id;
-    const endpoint = groups.find((candidate) => candidate.source.id === sourceId)?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
-    if (!endpoint) {
-      throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
-    }
-    return endpoint.method;
-  }
-  function findDetailWidget2(widgets, id) {
-    for (const widget of widgets) {
-      if (widget.widget === "w-detail" && widget.id === id) {
-        return widget;
-      }
-      if (widget.widget === "w-section") {
-        const found = findDetailWidget2(widget.children, id);
-        if (found) {
-          return found;
-        }
-      }
-      if (widget.widget === "w-tabs") {
-        for (const tab of widget.tabs) {
-          const found = findDetailWidget2(tab.children, id);
-          if (found) {
-            return found;
-          }
-        }
-      }
-    }
-    return null;
-  }
-
-  // src/components/admin/Resources/Dashboards/DashboardViewLookups.ts
-  async function runDashboardLookupCreate(context, change, previousDraft, target) {
-    const { group, dashboard, detail } = context;
-    if (!change.created || !group || !dashboard || !detail) {
-      return;
-    }
-    const key = detailKey(detail.collection, change.rowKey);
-    const nextDraft = context.drafts.get(key) ?? {};
-    try {
-      const result = await executeLookupCreate(group, dashboard, detail, change.field, previousDraft, nextDraft, context.groups ?? [group]);
-      if (result === undefined) {
-        return;
-      }
-      context.drafts.set(key, { ...nextDraft, [change.field]: result.value });
-      applyLookupCreate(target, change.field, result.value, result.option);
-      ku("Item created", { type: "success" });
-    } catch (error) {
-      ku(error instanceof Error ? error.message : "Lookup creation failed", { type: "error" });
-    }
-  }
-  function applyLookupCreate(target, field, value, option) {
-    const detail = target;
-    detail?.applyLookupCreate?.(field, value, option);
-  }
-
-  // src/components/admin/Resources/Dashboards/mode.ts
-  function isDashboardExampleMode(host) {
-    return host.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
+  if (!customElements.get("cms-dashboard-w-section")) {
+    customElements.define("cms-dashboard-w-section", DashboardWSection);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/shared.ts
@@ -16910,521 +16300,6 @@ p {
     if (element) {
       element.textContent = value;
     }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/WCell.ts
-  var template = document.createElement("template");
-  template.innerHTML = `
-    <style>
-        :host {
-            display: block;
-            min-width: 0;
-            color: #0f1f1a;
-        }
-
-        .cell {
-            display: grid;
-            gap: 2px;
-            min-width: 0;
-        }
-
-        .title {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        :host([primary]) .title {
-            font-weight: 700;
-        }
-
-        small {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: #66736f;
-        }
-
-        small:empty {
-            display: none;
-        }
-
-        :host([tone="badge"]) .title {
-            justify-self: start;
-            border-radius: 999px;
-            background: #edf7f0;
-            color: #105d3e;
-            font-size: 12px;
-            font-weight: 750;
-            padding: 3px 8px;
-        }
-
-        :host([tone="muted"]) {
-            color: #66736f;
-        }
-    </style>
-    <span class="cell">
-        <span class="title"><slot></slot></span>
-        <small data-meta></small>
-    </span>
-`;
-
-  class DashboardWCell extends HTMLElement {
-    static get observedAttributes() {
-      return ["meta"];
-    }
-    constructor() {
-      super();
-      this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
-    }
-    connectedCallback() {
-      this.render();
-    }
-    attributeChangedCallback() {
-      this.render();
-    }
-    render() {
-      const meta = this.shadowRoot?.querySelector("[data-meta]");
-      if (meta) {
-        meta.textContent = this.getAttribute("meta") ?? "";
-      }
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-cell")) {
-    customElements.define("cms-dashboard-w-cell", DashboardWCell);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/WRow.ts
-  var template2 = document.createElement("template");
-  template2.innerHTML = `
-    <style>
-        :host {
-            display: block;
-        }
-
-        .row {
-            display: grid;
-            grid-template-columns: var(--dashboard-table-columns, 46px 1fr);
-            align-items: center;
-            min-height: 54px;
-            border-top: 1px solid #e8ecea;
-            cursor: default;
-            min-width: 0;
-        }
-
-        :host([collection]) .row {
-            cursor: pointer;
-        }
-
-        :host([collection]) .row:hover,
-        :host([selected]) .row {
-            background: #f3f7f5;
-        }
-
-        .check {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 0;
-        }
-
-        input {
-            margin: 0;
-        }
-
-        slot {
-            display: contents;
-        }
-
-        ::slotted(cms-dashboard-w-cell) {
-            min-width: 0;
-            padding: 12px 16px;
-        }
-    </style>
-    <div class="row" role="row" tabindex="0">
-        <span class="check" role="cell">
-            <input type="checkbox" data-check aria-label="Select row">
-        </span>
-        <slot></slot>
-    </div>
-`;
-
-  class DashboardWRow extends HTMLElement {
-    onClick = (event) => {
-      if (event.target?.closest("input")) {
-        return;
-      }
-      this.select();
-    };
-    onKeydown = (event) => {
-      const key = event instanceof KeyboardEvent ? event.key : "";
-      if (key !== "Enter" && key !== " ") {
-        return;
-      }
-      event.preventDefault();
-      this.select();
-    };
-    constructor() {
-      super();
-      this.attachShadow({ mode: "open" }).append(template2.content.cloneNode(true));
-    }
-    connectedCallback() {
-      this.shadowRoot?.querySelector("[data-check]")?.setAttribute("aria-label", `Select row ${this.rowKey}`);
-      this.shadowRoot?.querySelector(".row")?.addEventListener("click", this.onClick);
-      this.shadowRoot?.querySelector(".row")?.addEventListener("keydown", this.onKeydown);
-    }
-    disconnectedCallback() {
-      this.shadowRoot?.querySelector(".row")?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.querySelector(".row")?.removeEventListener("keydown", this.onKeydown);
-    }
-    get rowKey() {
-      return this.getAttribute("row-key") ?? "";
-    }
-    get collection() {
-      return this.getAttribute("collection") ?? "";
-    }
-    set checked(value) {
-      const input = this.shadowRoot?.querySelector("[data-check]");
-      if (input) {
-        input.checked = value;
-      }
-    }
-    select() {
-      if (!this.collection || !this.rowKey) {
-        return;
-      }
-      emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: this.collection, rowKey: this.rowKey });
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-row")) {
-    customElements.define("cms-dashboard-w-row", DashboardWRow);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
-  var style_default7 = `:host {
-    display: block;
-    --dashboard-table-columns: 46px 1fr;
-}
-
-.w-table-shell {
-    min-width: 0;
-    overflow: clip;
-    border: 1px solid #e3e8e5;
-    border-radius: 7px;
-    background: #fff;
-}
-
-:host([embedded]) .w-table-shell {
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-}
-
-.w-table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 14px 16px;
-    border-bottom: 1px solid #e8ecea;
-}
-
-.w-table-header[hidden] {
-    display: none;
-}
-
-.w-table-header h3,
-.w-table-header p {
-    margin: 0;
-}
-
-.w-table-header p,
-small,
-.muted {
-    color: #66736f;
-}
-
-.w-table-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.w-table-actions p9r-button {
-    --_btn-padding-y: 0.48rem;
-    --_btn-padding-x: 0.82rem;
-    --_btn-font-size: 12px;
-    --_btn-radius: 6px;
-}
-
-.w-table-frame {
-    min-width: 0;
-    overflow: auto;
-}
-
-.w-table-grid {
-    min-width: 0;
-}
-
-.w-table-head {
-    display: grid;
-    grid-template-columns: var(--dashboard-table-columns);
-    align-items: center;
-    background: #f7f8f7;
-}
-
-:host([embedded]) .w-table-head {
-    border-radius: 6px 6px 0 0;
-}
-
-.w-table-head span {
-    color: #3d4a46;
-    font-size: 12px;
-    font-weight: 750;
-    padding: 12px 16px;
-    text-align: left;
-}
-
-.check-cell {
-    display: flex;
-    justify-content: center;
-    padding-inline: 0;
-}
-
-.w-table-body {
-    min-width: 0;
-}
-
-slot {
-    display: contents;
-}
-
-.w-table-empty {
-    margin: 0;
-    padding: 22px 16px;
-    color: #66736f;
-}
-
-:host([embedded]) .w-table-empty {
-    padding-inline: 0;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
-  var template_default8 = `<section class="w-table-shell">
-    <header class="w-table-header" data-header>
-        <div>
-            <h3 data-title></h3>
-            <p data-subtitle></p>
-        </div>
-        <div class="w-table-actions" data-actions></div>
-    </header>
-
-    <div class="w-table-frame">
-        <div class="w-table-grid" role="table">
-            <div class="w-table-head" role="row" data-head-row>
-                <span class="check-cell" role="columnheader">
-                    <input type="checkbox" aria-label="Select all rows" data-select-all>
-                </span>
-            </div>
-            <div class="w-table-body" data-body>
-                <slot></slot>
-            </div>
-        </div>
-        <p class="w-table-empty" data-empty hidden>No rows.</p>
-    </div>
-</section>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/WTable.ts
-  class DashboardWTable extends U2 {
-    value = { title: "", actions: [], columns: [], rows: [] };
-    selectedRow = "";
-    constructor() {
-      super({ css: style_default7, template: template_default8 });
-    }
-    set data(value) {
-      this.value = value;
-      this.replaceChildren(...value.rows.map((row) => this.createRow(row)));
-      if (this.isConnected) {
-        this.render();
-        this.syncRows();
-      }
-    }
-    set selected(value) {
-      this.selectedRow = value;
-      this.setAttribute("data-selected", value);
-    }
-    static get observedAttributes() {
-      return ["data-config-json", "data-selected"];
-    }
-    attributeChangedCallback() {
-      this.syncConfig();
-      if (this.isConnected) {
-        this.render();
-      }
-    }
-    connectedCallback() {
-      this.shadowRoot.querySelector("slot")?.addEventListener("slotchange", this.onSlotChange);
-      this.shadowRoot.querySelector("[data-select-all]")?.addEventListener("change", this.onSelectAll);
-      this.shadowRoot.querySelector("[data-actions]")?.addEventListener("click", this.onActionClick);
-      this.syncConfig();
-      this.render();
-    }
-    disconnectedCallback() {
-      this.shadowRoot?.querySelector("slot")?.removeEventListener("slotchange", this.onSlotChange);
-      this.shadowRoot?.querySelector("[data-select-all]")?.removeEventListener("change", this.onSelectAll);
-      this.shadowRoot?.querySelector("[data-actions]")?.removeEventListener("click", this.onActionClick);
-    }
-    render() {
-      setText(this.shadowRoot, "[data-title]", this.value.title);
-      setText(this.shadowRoot, "[data-subtitle]", this.value.subtitle ?? "");
-      this.query("[data-header]").hidden = !this.value.title && !this.value.subtitle && !this.value.actions?.length;
-      this.renderActions();
-      this.renderColumns();
-      this.syncRows();
-    }
-    renderActions() {
-      const root = this.query("[data-actions]");
-      root.replaceChildren(...(this.value.actions ?? []).map((action) => {
-        const button = document.createElement("p9r-button");
-        button.dataset.action = action.action;
-        if (action.widget) {
-          button.dataset.widget = action.widget;
-        }
-        if (action.target) {
-          button.dataset.target = action.target;
-        }
-        if (action.confirm) {
-          button.dataset.confirm = action.confirm;
-        }
-        button.setAttribute("tone", action.tone ?? "primary");
-        button.textContent = action.label;
-        return button;
-      }));
-    }
-    renderColumns() {
-      const head = this.query("[data-head-row]");
-      head.querySelectorAll("[data-column-header]").forEach((th) => th.remove());
-      this.style.setProperty("--dashboard-table-columns", tableColumns(this.value.columns));
-      for (const column of this.value.columns) {
-        const th = document.createElement("span");
-        th.dataset.columnHeader = column.key;
-        th.setAttribute("role", "columnheader");
-        th.textContent = column.label;
-        head.append(th);
-      }
-    }
-    syncConfig() {
-      this.selectedRow = this.dataset.selected ?? "";
-      const widget = parseJson(this.dataset.configJson ?? "");
-      if (!widget || widget.widget !== "w-table") {
-        return;
-      }
-      this.value = {
-        title: widget.title ?? widget.source.endpoint,
-        actions: (widget.actions ?? []).map((action) => ({
-          label: action.label,
-          action: action.id,
-          widget: widget.id,
-          ...action.selection?.opens ? { target: action.selection.opens } : {},
-          tone: action.tone,
-          ...action.confirm ? { confirm: action.confirm } : {}
-        })),
-        columns: widget.columns.map((column) => ({
-          key: column.id,
-          label: column.label,
-          ...column.width ? { width: column.width } : {},
-          ...column.primary ? { primary: true } : {}
-        })),
-        rows: []
-      };
-    }
-    syncRows() {
-      const rows = this.rows();
-      for (const row of rows) {
-        row.toggleAttribute("selected", Boolean(this.selectedRow && row.rowKey === this.selectedRow));
-      }
-      this.query("[data-empty]").hidden = rows.length > 0;
-    }
-    rows() {
-      return Array.from(this.querySelectorAll("cms-dashboard-w-row"));
-    }
-    createRow(row) {
-      const element = document.createElement("cms-dashboard-w-row");
-      element.setAttribute("row-key", row.id);
-      if (row.collection) {
-        element.setAttribute("collection", row.collection);
-      }
-      for (const column of this.value.columns) {
-        const cell = document.createElement("cms-dashboard-w-cell");
-        const value = row.cells[column.key];
-        if (column.primary) {
-          cell.toggleAttribute("primary", true);
-        }
-        if (typeof value === "object") {
-          if (value.tone) {
-            cell.setAttribute("tone", value.tone);
-          }
-          if (value.meta) {
-            cell.setAttribute("meta", value.meta);
-          }
-          cell.textContent = value.title;
-        } else {
-          cell.textContent = value ?? "";
-        }
-        element.append(cell);
-      }
-      return element;
-    }
-    onSlotChange = () => this.syncRows();
-    onActionClick = (event) => {
-      const action = event.target?.closest("[data-action]");
-      if (action?.dataset.confirm && !window.confirm(action.dataset.confirm)) {
-        return;
-      }
-      if (action?.dataset.action) {
-        emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
-          action: action.dataset.action,
-          widget: action.dataset.widget,
-          target: action.dataset.target
-        });
-      }
-    };
-    onSelectAll = (event) => {
-      const checked = Boolean(event.target?.checked);
-      for (const row of this.rows()) {
-        row.checked = checked;
-      }
-    };
-    query(selector) {
-      return this.shadowRoot.querySelector(selector);
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-table")) {
-    customElements.define("cms-dashboard-w-table", DashboardWTable);
-  }
-  function tableColumns(columns) {
-    return ["46px", ...columns.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" ");
-  }
-  function parseJson(value) {
-    if (!value) {
-      return null;
-    }
-    try {
-      return JSON.parse(value);
-    } catch {
-      return null;
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-section/WSection.ts
-  class DashboardWSection extends CmsDetailSection {
-  }
-  if (!customElements.get("cms-dashboard-w-section")) {
-    customElements.define("cms-dashboard-w-section", DashboardWSection);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/icons.ts
@@ -17522,7 +16397,7 @@ slot {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/style.css
-  var style_default8 = `:host {
+  var style_default6 = `:host {
     --media-grid-item-max: 120px;
     --media-grid-item-max-mobile: 112px;
     --media-grid-featured-item-max: calc((var(--media-grid-item-max) * 2) + 8px);
@@ -17668,7 +16543,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/template.html
-  var template_default9 = `<section class="media-field">
+  var template_default7 = `<section class="media-field">
     <div class="label-row">
         <span data-label></span>
     </div>
@@ -17734,9 +16609,9 @@ button {
         return;
       }
       event.preventDefault();
-      const to = numberData(tileFromEvent(event)?.dataset.index);
-      if (to !== null) {
-        this.move(this.dragFrom, to);
+      const to2 = numberData(tileFromEvent(event)?.dataset.index);
+      if (to2 !== null) {
+        this.move(this.dragFrom, to2);
       }
       this.clear();
     };
@@ -17755,6 +16630,34 @@ button {
       });
       window.setTimeout(() => this.setSuppressClick(false), 0);
     }
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/types.ts
+  var W_MEDIA_FIELD_ACTION_EVENT = "cms-dashboard-w-media-field:action";
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/mediaState.ts
+  class LocalMediaFiles {
+    urls = new Set;
+    create(file) {
+      const url = URL.createObjectURL(file);
+      this.urls.add(url);
+      return { id: `local-${localId()}`, url, thumbnailUrl: url, alt: file.name, name: file.name, pending: true };
+    }
+    revoke(url) {
+      if (!url || !this.urls.has(url)) {
+        return;
+      }
+      URL.revokeObjectURL(url);
+      this.urls.delete(url);
+    }
+  }
+  function dispatchMediaChange(host, action, items, detail) {
+    host.dispatchEvent(new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, {
+      bubbles: true,
+      composed: true,
+      detail: { ...detail, action, value: items }
+    }));
+    host.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/render.ts
@@ -17798,20 +16701,17 @@ button {
     return button;
   }
 
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/types.ts
-  var W_MEDIA_FIELD_ACTION_EVENT = "cms-dashboard-w-media-field:action";
-
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/WMediaField.ts
   class DashboardWMediaField extends U2 {
     currentItems = [];
-    drag = new MediaDragController(() => this.shadowRoot, (from, to) => this.move(from, to), (value) => {
+    drag = new MediaDragController(() => this.shadowRoot, (from, to2) => this.move(from, to2), (value) => {
       this.suppressClick = value;
     });
-    localUrls = new Set;
+    localFiles = new LocalMediaFiles;
     pendingPick = { action: "upload" };
     suppressClick = false;
     constructor() {
-      super({ css: style_default8, template: template_default9 });
+      super({ css: style_default6, template: template_default7 });
     }
     static get observedAttributes() {
       return ["label", "accept"];
@@ -17894,7 +16794,7 @@ button {
       this.pendingPick.action === "replace" ? this.replace(this.pendingPick.index, file) : this.upload(files);
     };
     upload(files) {
-      const inserted = files.map((file) => this.itemFromFile(file));
+      const inserted = files.map((file) => this.localFiles.create(file));
       this.currentItems = [...this.currentItems, ...inserted];
       this.changed("upload", { files });
     }
@@ -17903,8 +16803,8 @@ button {
       if (!previousItem) {
         return;
       }
-      const item = { ...previousItem, ...this.itemFromFile(file), id: previousItem.id };
-      this.revokeLocalUrl(previousItem.url);
+      const item = { ...previousItem, ...this.localFiles.create(file), id: previousItem.id };
+      this.localFiles.revoke(previousItem.url);
       this.currentItems = this.currentItems.map((entry, entryIndex) => entryIndex === index ? item : entry);
       this.changed("replace", { index, item, previousItem, file });
     }
@@ -17913,12 +16813,12 @@ button {
       if (!item) {
         return;
       }
-      this.revokeLocalUrl(item.url);
+      this.localFiles.revoke(item.url);
       this.currentItems = this.currentItems.filter((_3, entryIndex) => entryIndex !== index);
       this.changed("remove", { index, item });
     }
-    move(from, to) {
-      if (from === to || to < 0 || to >= this.currentItems.length) {
+    move(from, to2) {
+      if (from === to2 || to2 < 0 || to2 >= this.currentItems.length) {
         return;
       }
       const next = [...this.currentItems];
@@ -17926,30 +16826,13 @@ button {
       if (!item) {
         return;
       }
-      next.splice(to, 0, item);
+      next.splice(to2, 0, item);
       this.currentItems = next;
-      this.changed("reorder", { from, to, item });
-    }
-    itemFromFile(file) {
-      const url = URL.createObjectURL(file);
-      this.localUrls.add(url);
-      return { id: `local-${localId()}`, url, thumbnailUrl: url, alt: file.name, name: file.name, pending: true };
+      this.changed("reorder", { from, to: to2, item });
     }
     changed(action, detail) {
       this.renderGrid();
-      this.dispatchEvent(new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, {
-        bubbles: true,
-        composed: true,
-        detail: { ...detail, action, value: this.items }
-      }));
-      this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    }
-    revokeLocalUrl(url) {
-      if (!url || !this.localUrls.has(url)) {
-        return;
-      }
-      URL.revokeObjectURL(url);
-      this.localUrls.delete(url);
+      dispatchMediaChange(this, action, this.items, detail);
     }
     query(selector) {
       return this.shadowRoot.querySelector(selector);
@@ -18045,6 +16928,100 @@ button {
     return isValueControl(control) && "values" in control && Array.isArray(control.values);
   }
 
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/inputFields.ts
+  function textInput(field) {
+    const input = document.createElement("p9r-input");
+    input.setAttribute("label", field.label);
+    input.setAttribute("type", "text");
+    input.setAttribute("value", String(field.value));
+    applyInputMetadata(input, field);
+    input.value = String(field.value);
+    bindFieldControl(input, field);
+    return input;
+  }
+  function numberInput(field) {
+    const input = document.createElement("p9r-input");
+    input.setAttribute("label", field.label);
+    input.setAttribute("type", "number");
+    input.setAttribute("value", String(field.value));
+    for (const attribute of ["min", "max", "step"]) {
+      const value = field[attribute];
+      if (value !== undefined) {
+        input.setAttribute(attribute, String(value));
+      }
+    }
+    applyInputMetadata(input, field);
+    input.value = String(field.value);
+    bindFieldControl(input, field);
+    return input;
+  }
+  function textarea(field) {
+    const input = document.createElement("p9r-textarea");
+    input.setAttribute("label", field.label);
+    input.setAttribute("rows", String(field.rows ?? 4));
+    input.setAttribute("value", String(field.value));
+    applyInputMetadata(input, field);
+    input.value = String(field.value);
+    bindFieldControl(input, field);
+    return input;
+  }
+  function select(field) {
+    const input = document.createElement("p9r-select");
+    input.setAttribute("label", field.label);
+    input.setAttribute("value", String(field.value));
+    if (field.required) {
+      input.setAttribute("required", "");
+    }
+    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
+    bindFieldControl(input, field);
+    return input;
+  }
+  function combobox(field) {
+    const input = document.createElement("p9r-combobox");
+    input.setAttribute("label", field.label);
+    input.setAttribute("value", String(field.value));
+    input.setAttribute("placeholder", field.placeholder ?? "");
+    if (field.required) {
+      input.setAttribute("required", "");
+    }
+    if (field.creatable) {
+      input.setAttribute("creatable", "");
+    }
+    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
+    input.value = String(field.value);
+    bindFieldControl(input, field);
+    return input;
+  }
+  function tokenInput(field) {
+    const input = document.createElement("p9r-token-input");
+    input.setAttribute("label", field.label);
+    input.setAttribute("value", fieldArrayValue(field).join(","));
+    input.setAttribute("placeholder", field.placeholder ?? "");
+    if (field.required) {
+      input.setAttribute("required", "");
+    }
+    if (field.creatable) {
+      input.setAttribute("creatable", "");
+    }
+    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, "")));
+    bindFieldControl(input, field);
+    return input;
+  }
+  function fieldArrayValue(field) {
+    if (!Array.isArray(field.value)) {
+      return String(field.value).split(",").map((item) => item.trim()).filter(Boolean);
+    }
+    return field.value.filter((item) => typeof item === "string");
+  }
+  function applyInputMetadata(input, field) {
+    if (field.placeholder) {
+      input.setAttribute("placeholder", field.placeholder);
+    }
+    if (field.required) {
+      input.setAttribute("required", "");
+    }
+  }
+
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/basic.ts
   function createBasicControl(field) {
     if (field.input === "number") {
@@ -18104,32 +17081,6 @@ button {
     }
     return Array.isArray(field.value) ? field.value : String(field.value);
   }
-  function textInput(field) {
-    const input = document.createElement("p9r-input");
-    input.setAttribute("label", field.label);
-    input.setAttribute("type", "text");
-    input.setAttribute("value", String(field.value));
-    applyInputMetadata(input, field);
-    input.value = String(field.value);
-    bindFieldControl(input, field);
-    return input;
-  }
-  function numberInput(field) {
-    const input = document.createElement("p9r-input");
-    input.setAttribute("label", field.label);
-    input.setAttribute("type", "number");
-    input.setAttribute("value", String(field.value));
-    for (const attribute of ["min", "max", "step"]) {
-      const value = field[attribute];
-      if (value !== undefined) {
-        input.setAttribute(attribute, String(value));
-      }
-    }
-    applyInputMetadata(input, field);
-    input.value = String(field.value);
-    bindFieldControl(input, field);
-    return input;
-  }
   function checkbox(field) {
     const input = document.createElement("input");
     input.type = "checkbox";
@@ -18140,60 +17091,8 @@ button {
     bindFieldControl(input, field);
     return input;
   }
-  function textarea(field) {
-    const input = document.createElement("p9r-textarea");
-    input.setAttribute("label", field.label);
-    input.setAttribute("rows", String(field.rows ?? 4));
-    input.setAttribute("value", String(field.value));
-    applyInputMetadata(input, field);
-    input.value = String(field.value);
-    bindFieldControl(input, field);
-    return input;
-  }
-  function select(field) {
-    const input = document.createElement("p9r-select");
-    input.setAttribute("label", field.label);
-    input.setAttribute("value", String(field.value));
-    if (field.required) {
-      input.setAttribute("required", "");
-    }
-    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
-    bindFieldControl(input, field);
-    return input;
-  }
-  function combobox(field) {
-    const input = document.createElement("p9r-combobox");
-    input.setAttribute("label", field.label);
-    input.setAttribute("value", String(field.value));
-    input.setAttribute("placeholder", field.placeholder ?? "");
-    if (field.required) {
-      input.setAttribute("required", "");
-    }
-    if (field.creatable) {
-      input.setAttribute("creatable", "");
-    }
-    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
-    input.value = String(field.value);
-    bindFieldControl(input, field);
-    return input;
-  }
-  function tokenInput(field) {
-    const input = document.createElement("p9r-token-input");
-    input.setAttribute("label", field.label);
-    input.setAttribute("value", arrayValue2(field).join(","));
-    input.setAttribute("placeholder", field.placeholder ?? "");
-    if (field.required) {
-      input.setAttribute("required", "");
-    }
-    if (field.creatable) {
-      input.setAttribute("creatable", "");
-    }
-    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, "")));
-    bindFieldControl(input, field);
-    return input;
-  }
   function chips(field) {
-    const selected = new Set(arrayValue2(field));
+    const selected = new Set(arrayValue(field));
     const group = document.createElement("div");
     group.className = "chip-group";
     bindFieldControl(group, field);
@@ -18208,19 +17107,11 @@ button {
     }
     return group;
   }
-  function arrayValue2(field) {
+  function arrayValue(field) {
     if (!Array.isArray(field.value)) {
       return String(field.value).split(",").map((item) => item.trim()).filter(Boolean);
     }
     return field.value.filter((item) => typeof item === "string");
-  }
-  function applyInputMetadata(input, field) {
-    if (field.placeholder) {
-      input.setAttribute("placeholder", field.placeholder);
-    }
-    if (field.required) {
-      input.setAttribute("required", "");
-    }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema.ts
@@ -18285,7 +17176,7 @@ button {
     }
     if (definition.options?.length) {
       const input2 = document.createElement("p9r-select");
-      const selected = textValue3(value);
+      const selected = textValue2(value);
       input2.setAttribute("label", definition.label);
       input2.setAttribute("value", selected);
       if (definition.required) {
@@ -18298,11 +17189,11 @@ button {
     const input = document.createElement("p9r-input");
     input.setAttribute("label", definition.label);
     input.setAttribute("type", definition.type === "number" ? "number" : "text");
-    input.setAttribute("value", textValue3(value));
+    input.setAttribute("value", textValue2(value));
     if (definition.required) {
       input.setAttribute("required", "");
     }
-    input.value = textValue3(value);
+    input.value = textValue2(value);
     return input;
   }
   function readSchemaValue(definition, control) {
@@ -18333,7 +17224,7 @@ button {
   function recordValue2(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value) ? { ...value } : {};
   }
-  function textValue3(value) {
+  function textValue2(value) {
     return value === null || value === undefined ? "" : String(value);
   }
 
@@ -18424,15 +17315,15 @@ button {
     value.items.splice(index, 1);
     return true;
   }
-  function moveItem(value, from, to) {
-    if (!Number.isInteger(from) || !Number.isInteger(to) || from === to || to < 0 || to >= value.items.length) {
+  function moveItem(value, from, to2) {
+    if (!Number.isInteger(from) || !Number.isInteger(to2) || from === to2 || to2 < 0 || to2 >= value.items.length) {
       return false;
     }
     const [item] = value.items.splice(from, 1);
     if (!item) {
       return false;
     }
-    value.items.splice(to, 0, item);
+    value.items.splice(to2, 0, item);
     return true;
   }
   function updateItem(value, index, path, fieldValue) {
@@ -18453,9 +17344,9 @@ button {
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/view.ts
   function renderList2(root, value) {
-    query(root, "[data-rows]").replaceChildren(...value.items.map((item, index) => renderRow(value, item, index)));
+    query3(root, "[data-rows]").replaceChildren(...value.items.map((item, index) => renderRow(value, item, index)));
     renderHeader(root, value);
-    const add = query(root, "[data-add]");
+    const add = query3(root, "[data-add]");
     add.textContent = value.addLabel ?? "Add item";
     add.disabled = value.maxItems !== undefined && value.items.length >= value.maxItems;
   }
@@ -18463,7 +17354,7 @@ button {
     return Array.from(root.querySelectorAll(".row"));
   }
   function renderHeader(root, value) {
-    const header = query(root, "[data-header]");
+    const header = query3(root, "[data-header]");
     header.style.setProperty("--reorderable-columns", columns(value));
     const cells = [document.createElement("span")];
     for (const field of value.fields) {
@@ -18507,12 +17398,12 @@ button {
   function columns(value) {
     return ["24px", ...value.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" ");
   }
-  function query(root, selector) {
+  function query3(root, selector) {
     return root.querySelector(selector);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/style.css
-  var style_default9 = `:host { display: block; }
+  var style_default7 = `:host { display: block; }
 
 .reorderable-list { display: grid; gap: 8px; }
 
@@ -18581,7 +17472,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/template.html
-  var template_default10 = `<section class="reorderable-list">
+  var template_default8 = `<section class="reorderable-list">
     <div class="header" data-header></div>
     <div class="rows" data-rows></div>
     <button class="add" data-add type="button"></button>
@@ -18593,7 +17484,7 @@ button {
     value = emptyData();
     draggingIndex = null;
     constructor() {
-      super({ css: style_default9, template: template_default10 });
+      super({ css: style_default7, template: template_default8 });
     }
     connectedCallback() {
       this.shadowRoot.addEventListener("click", this.onClick);
@@ -18737,21 +17628,21 @@ button {
   }
   function textEditor(value) {
     const input = document.createElement("p9r-input");
-    const text = textValue4(value);
+    const text = textValue3(value);
     input.setAttribute("value", text);
     input.value = text;
     return input;
   }
   function selectEditor(column, value) {
     const input = document.createElement("p9r-select");
-    const text = textValue4(value);
+    const text = textValue3(value);
     input.setAttribute("value", text);
     input.replaceChildren(...column.options.map((option) => optionElement(option, text)));
     return input;
   }
   function comboboxEditor(column, value) {
     const input = document.createElement("p9r-combobox");
-    const text = textValue4(value);
+    const text = textValue3(value);
     input.setAttribute("value", text);
     input.replaceChildren(...column.options.map((option) => optionElement(option, text)));
     input.value = text;
@@ -18759,11 +17650,11 @@ button {
   }
   function tokensEditor(value) {
     const input = document.createElement("p9r-token-input");
-    const values = Array.isArray(value) ? value.map(textValue4).filter(Boolean) : [];
+    const values = Array.isArray(value) ? value.map(textValue3).filter(Boolean) : [];
     input.setAttribute("value", values.join(","));
     return input;
   }
-  function textValue4(value) {
+  function textValue3(value) {
     return value === null || value === undefined ? "" : String(value);
   }
 
@@ -18775,7 +17666,7 @@ button {
     bindFieldControl(root, field);
     root.dataset.tableEditable = String(field.editable === true);
     const columns2 = field.columns ?? [];
-    root.style.setProperty("--detail-table-columns", tableColumns2(columns2, field.editable === true));
+    root.style.setProperty("--detail-table-columns", tableColumns(columns2, field.editable === true));
     const header = document.createElement("div");
     header.className = "detail-table-row detail-table-head";
     for (const column of columns2) {
@@ -18883,7 +17774,7 @@ button {
     }
     return value === null || value === undefined ? "" : String(value);
   }
-  function tableColumns2(columns2, editable) {
+  function tableColumns(columns2, editable) {
     return [
       ...(columns2 ?? []).map((column) => column.width ?? "minmax(8rem, 1fr)"),
       ...editable ? ["72px"] : []
@@ -19081,9 +17972,9 @@ button {
     }
   }
   function readDetailBinding(dataset) {
-    const widget = parseJson2(dataset.configJson ?? "");
+    const widget = parseJson(dataset.configJson ?? "");
     const sourceJson = dataset.sourceJson ?? "";
-    const sourceData = parseJson2(sourceJson);
+    const sourceData = parseJson(sourceJson);
     if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null) {
       return null;
     }
@@ -19098,7 +17989,7 @@ button {
       sourceId: dataset.sourceId ?? ""
     };
   }
-  function parseJson2(value) {
+  function parseJson(value) {
     if (!value) {
       return null;
     }
@@ -19108,6 +17999,307 @@ button {
       return null;
     }
   }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/style.css
+  var style_default8 = `.detail-schema {
+    display: grid;
+    gap: 12px;
+}
+
+.detail-schema-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+}
+
+.detail-schema-unit,
+.detail-schema-status {
+    color: #66736f;
+    font-size: 12px;
+}
+
+.detail-schema-unit {
+    padding-bottom: 9px;
+}
+
+.detail-schema-status-error {
+    color: #8a1f12;
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/base.css
+  var base_default2 = `:host {
+    display: block;
+}
+
+cms-shell-detail {
+    --w-detail-main-width: 720px;
+    --w-detail-aside-width: 300px;
+    --w-detail-gap: 16px;
+}
+
+.w-detail-main,
+.w-detail-aside {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+}
+
+.w-detail-actions p9r-button {
+    --_btn-padding-y: 0.48rem;
+    --_btn-padding-x: 0.82rem;
+    --_btn-font-size: 12px;
+    --_btn-radius: 6px;
+}
+
+.w-detail-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.w-detail-actions p9r-action-menu {
+    --action-menu-panel-min-width: 220px;
+}
+
+h4,
+p {
+    margin: 0;
+}
+
+p,
+dt,
+.readonly {
+    color: #66736f;
+}
+
+button[slot="back"] svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+dl {
+    display: grid;
+    gap: 16px;
+    margin: 0;
+}
+
+.w-detail-field {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+}
+
+.w-detail-field[data-internal-label] {
+    gap: 0;
+}
+
+.w-detail-field[data-internal-label] dt {
+    display: none;
+}
+
+dt {
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+dd {
+    margin: 0;
+    min-width: 0;
+}
+
+.readonly,
+.detail-table-row > span {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.detail-image {
+    aspect-ratio: 1;
+    background: #f4f1ec;
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    display: block;
+    object-fit: cover;
+    width: 100%;
+}
+
+.readonly-list {
+    display: grid;
+    gap: 4px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.readonly-list li {
+    min-width: 0;
+}
+
+.readonly-empty {
+    color: #8a9692;
+    font-style: italic;
+}
+
+p9r-input,
+p9r-select,
+p9r-textarea,
+p9r-combobox,
+p9r-token-input {
+    width: 100%;
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/controls.css
+  var controls_default = `.detail-schema {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 12px;
+}
+
+.detail-schema-field {
+    min-width: 0;
+}
+
+.detail-schema-field[data-has-unit="true"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+}
+
+.detail-schema-unit {
+    align-items: center;
+    background: #f3f7f5;
+    border: 1px solid #cfd8d4;
+    border-radius: 7px;
+    color: #52615c;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 750;
+    justify-content: center;
+    min-height: 36px;
+    min-width: 44px;
+    padding: 0 10px;
+}
+
+@media (max-width: 720px) {
+    .detail-schema {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.detail-table {
+    display: grid;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.detail-table-row {
+    display: grid;
+    grid-template-columns: var(--detail-table-columns);
+    gap: 8px;
+    align-items: center;
+    width: max-content;
+    min-width: 100%;
+    min-height: 34px;
+}
+
+.detail-table-head {
+    color: #66736f;
+    font-size: 11px;
+    font-weight: 750;
+    text-transform: uppercase;
+}
+
+.detail-table-row > span {
+    min-width: 0;
+}
+
+.detail-table-row > p9r-input {
+    min-width: 0;
+}
+
+.detail-table[data-table-editable="false"] .detail-table-row:not(.detail-table-head) {
+    color: #16231f;
+    font-size: 13px;
+}
+
+.detail-table p9r-input {
+    --_field-min-height: 34px;
+    --_field-padding-y: 5px;
+    --_field-padding-x: 9px;
+    --_field-font-size: 13px;
+}
+
+.detail-table-add,
+.detail-table-remove {
+    min-height: 30px;
+    border: 1px solid #cfd8d4;
+    border-radius: 6px;
+    background: #fff;
+    color: #0f1f1a;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.detail-table-add:hover,
+.detail-table-remove:hover {
+    background: #f3f7f5;
+}
+
+.detail-table-add {
+    width: fit-content;
+}
+
+.detail-table-remove {
+    color: #8a1f12;
+}
+
+.badge,
+.chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 999px;
+    background: #edf7f0;
+    color: #105d3e;
+    font-size: 12px;
+    font-weight: 750;
+    padding: 3px 8px;
+}
+
+.chip-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.chip {
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+}
+
+.chip[aria-pressed="false"] {
+    background: #f3f4f3;
+    color: #3d4a46;
+}
+`;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/tableValues.ts
   function toggleChip(chip, emitFieldChange) {
@@ -19169,7 +18361,7 @@ button {
       return [];
     }
     const axes = Array.isArray(sourceValue) ? sourceValue.filter((row) => row !== null && typeof row === "object" && !Array.isArray(row)).map((row, index) => ({
-      label: textValue5(valueAt(row, field.derive.labelPath)),
+      label: textValue4(valueAt(row, field.derive.labelPath)),
       values: listValue(valueAt(row, field.derive.valuesPath)),
       position: index
     })).filter((axis) => axis.label && axis.values.length) : [];
@@ -19193,7 +18385,7 @@ button {
     }
     return [];
   }
-  function textValue5(value) {
+  function textValue4(value) {
     return value === null || value === undefined ? "" : String(value).trim();
   }
   function slug(value) {
@@ -19244,7 +18436,7 @@ button {
         emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
       }
       const action = findActionTarget(event);
-      const widget = this.isBound() ? parseJson2(this.host.dataset.configJson ?? "") : null;
+      const widget = this.isBound() ? parseJson(this.host.dataset.configJson ?? "") : null;
       const data = this.readData();
       if (action?.dataset.confirm && !window.confirm(action.dataset.confirm)) {
         return;
@@ -19333,6 +18525,82 @@ button {
   }
   function findActionTarget(event) {
     return event.composedPath().find((target) => target instanceof HTMLElement && Boolean(target.dataset.action));
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/source.ts
+  async function fetchSourceJson(sourceId, ref, vars, options = {}) {
+    const response = await fetch(sourceUrl(sourceId, ref, vars), {
+      headers: { Accept: "application/json" },
+      signal: options.signal
+    });
+    return responseJson(response);
+  }
+  function sourceRequestKey(sourceId, ref, vars) {
+    const url = sourceUrl(sourceId, ref, vars);
+    url.searchParams.sort();
+    return url.href;
+  }
+  async function sendSourceJson(sourceId, ref, method, vars) {
+    const response = await sendSourceResponse(sourceId, ref, method, vars, "application/json");
+    return responseJson(response);
+  }
+  async function sendSourceForm(sourceId, ref, method, vars, body) {
+    const response = await fetch(sourceUrl(sourceId, ref, vars), {
+      method,
+      headers: { Accept: "application/json" },
+      body
+    });
+    return responseJson(response);
+  }
+  async function sendSourceDownload(sourceId, ref, method, vars) {
+    const response = await sendSourceResponse(sourceId, ref, method, vars, "*/*");
+    if (!response.ok) {
+      throw new Error(await response.text() || `Source request failed (${response.status})`);
+    }
+    const filename = filenameFromDisposition(response.headers.get("content-disposition"));
+    return {
+      blob: await response.blob(),
+      ...filename ? { filename } : {}
+    };
+  }
+  async function sendSourceResponse(sourceId, ref, method, vars, accept) {
+    const body = resolveBody(ref.body, vars);
+    return fetch(sourceUrl(sourceId, ref, vars), {
+      method,
+      headers: body === undefined ? { Accept: accept } : { Accept: accept, "Content-Type": "application/json" },
+      ...body === undefined ? {} : { body: JSON.stringify(body) }
+    });
+  }
+  function sourceUrl(sourceId, ref, vars) {
+    const targetSourceId = ref.sourceId ?? sourceId;
+    const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) {
+      url.searchParams.set(key, value);
+    }
+    return url;
+  }
+  async function responseJson(response) {
+    if (!response.ok) {
+      throw new Error(await response.text() || `Source request failed (${response.status})`);
+    }
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.includes("json")) {
+      return response.text();
+    }
+    return response.json();
+  }
+  function filenameFromDisposition(value) {
+    const match = value?.match(/filename="?([^";]+)"?/i);
+    return match?.[1]?.trim() || undefined;
+  }
+  function itemsFrom(data, ref) {
+    if (!ref.itemsPath) {
+      return Array.isArray(data) ? data : [];
+    }
+    return arrayAt(data, ref.itemsPath);
+  }
+  function itemFrom(data, ref) {
+    return ref.itemPath ? valueAt(data, ref.itemPath) : data;
   }
 
   // src/components/admin/Resources/Dashboards/runtime/lookups/options.ts
@@ -19885,307 +19153,61 @@ button {
     }
   }
 
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/style.css
-  var style_default10 = `.detail-schema {
-    display: grid;
-    gap: 12px;
-}
-
-.detail-schema-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
-    align-items: end;
-}
-
-.detail-schema-unit,
-.detail-schema-status {
-    color: #66736f;
-    font-size: 12px;
-}
-
-.detail-schema-unit {
-    padding-bottom: 9px;
-}
-
-.detail-schema-status-error {
-    color: #8a1f12;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/style.css
-  var style_default11 = `:host {
-    display: block;
-}
-
-cms-shell-detail {
-    --w-detail-main-width: 720px;
-    --w-detail-aside-width: 300px;
-    --w-detail-gap: 16px;
-}
-
-.w-detail-main,
-.w-detail-aside {
-    display: grid;
-    gap: 16px;
-    min-width: 0;
-}
-
-.w-detail-actions p9r-button {
-    --_btn-padding-y: 0.48rem;
-    --_btn-padding-x: 0.82rem;
-    --_btn-font-size: 12px;
-    --_btn-radius: 6px;
-}
-
-.w-detail-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.w-detail-actions p9r-action-menu {
-    --action-menu-panel-min-width: 220px;
-}
-
-h4,
-p {
-    margin: 0;
-}
-
-p,
-dt,
-.readonly {
-    color: #66736f;
-}
-
-button[slot="back"] svg {
-    width: 17px;
-    height: 17px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2;
-}
-
-dl {
-    display: grid;
-    gap: 16px;
-    margin: 0;
-}
-
-.w-detail-field {
-    display: grid;
-    gap: 7px;
-    min-width: 0;
-}
-
-.w-detail-field[data-internal-label] {
-    gap: 0;
-}
-
-.w-detail-field[data-internal-label] dt {
-    display: none;
-}
-
-dt {
-    font-size: 11px;
-    font-weight: 750;
-    letter-spacing: 0;
-    text-transform: uppercase;
-}
-
-dd {
-    margin: 0;
-    min-width: 0;
-}
-
-.readonly,
-.detail-table-row > span {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-.detail-image {
-    aspect-ratio: 1;
-    background: #f4f1ec;
-    border: 1px solid var(--border-default);
-    border-radius: 10px;
-    display: block;
-    object-fit: cover;
-    width: 100%;
-}
-
-.readonly-list {
-    display: grid;
-    gap: 4px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-
-.readonly-list li {
-    min-width: 0;
-}
-
-.readonly-empty {
-    color: #8a9692;
-    font-style: italic;
-}
-
-p9r-input,
-p9r-select,
-p9r-textarea,
-p9r-combobox,
-p9r-token-input {
-    width: 100%;
-}
-
-.detail-schema {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 12px;
-}
-
-.detail-schema-field {
-    min-width: 0;
-}
-
-.detail-schema-field[data-has-unit="true"] {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
-    align-items: end;
-}
-
-.detail-schema-unit {
-    align-items: center;
-    background: #f3f7f5;
-    border: 1px solid #cfd8d4;
-    border-radius: 7px;
-    color: #52615c;
-    display: inline-flex;
-    font-size: 12px;
-    font-weight: 750;
-    justify-content: center;
-    min-height: 36px;
-    min-width: 44px;
-    padding: 0 10px;
-}
-
-@media (max-width: 720px) {
-    .detail-schema {
-        grid-template-columns: minmax(0, 1fr);
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/runtime.ts
+  class DetailSyncScheduler {
+    lifecycleRevision = 0;
+    scheduled = false;
+    advanceLifecycle() {
+      this.lifecycleRevision += 1;
+      this.scheduled = false;
     }
-}
+    schedule(isConnected, isBound, invalidate, sync) {
+      if (!isConnected()) {
+        return;
+      }
+      invalidate();
+      if (this.scheduled) {
+        return;
+      }
+      this.scheduled = true;
+      const lifecycleRevision = this.lifecycleRevision;
+      queueMicrotask(() => {
+        if (this.lifecycleRevision !== lifecycleRevision || !isBound()) {
+          return;
+        }
+        this.scheduled = false;
+        if (isConnected()) {
+          sync();
+        }
+      });
+    }
+  }
+  function createDetailRuntime(host, root, callbacks) {
+    const fields = new DetailFieldState(root, host.dataset, callbacks.data);
+    const view = new DetailView(root);
+    const requests = new DetailRequestCoordinator;
+    let schemas;
+    const lookups = new DetailLookups(host.dataset, fields, requests, {
+      setData: callbacks.setData,
+      render: callbacks.render,
+      isConnected: callbacks.isConnected,
+      schemas: () => schemas.values
+    });
+    schemas = new DetailSchemasState(host.dataset, fields, requests, {
+      setData: callbacks.setData,
+      render: callbacks.render,
+      isConnected: callbacks.isConnected,
+      options: () => lookups.options
+    });
+    const events = new DetailEvents(host, root, fields, lookups, schemas, callbacks.isBound, callbacks.data, callbacks.refreshConditionalFields);
+    return { events, fields, lookups, requests, schemas, view };
+  }
+  function mapDetailData(runtime2, widget, resource, rowKey, fields, sourceId) {
+    return detailData(widget, resource, rowKey, fields, runtime2.lookups.options, sourceId, runtime2.schemas.values);
+  }
 
-.detail-table {
-    display: grid;
-    gap: 6px;
-    max-width: 100%;
-    min-width: 0;
-    overflow-x: auto;
-    padding-bottom: 2px;
-}
-
-.detail-table-row {
-    display: grid;
-    grid-template-columns: var(--detail-table-columns);
-    gap: 8px;
-    align-items: center;
-    width: max-content;
-    min-width: 100%;
-    min-height: 34px;
-}
-
-.detail-table-head {
-    color: #66736f;
-    font-size: 11px;
-    font-weight: 750;
-    text-transform: uppercase;
-}
-
-.detail-table-row > span {
-    min-width: 0;
-}
-
-.detail-table-row > p9r-input {
-    min-width: 0;
-}
-
-.detail-table[data-table-editable="false"] .detail-table-row:not(.detail-table-head) {
-    color: #16231f;
-    font-size: 13px;
-}
-
-.detail-table p9r-input {
-    --_field-min-height: 34px;
-    --_field-padding-y: 5px;
-    --_field-padding-x: 9px;
-    --_field-font-size: 13px;
-}
-
-.detail-table-add,
-.detail-table-remove {
-    min-height: 30px;
-    border: 1px solid #cfd8d4;
-    border-radius: 6px;
-    background: #fff;
-    color: #0f1f1a;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 700;
-    padding: 4px 8px;
-    font-size: 12px;
-}
-
-.detail-table-add:hover,
-.detail-table-remove:hover {
-    background: #f3f7f5;
-}
-
-.detail-table-add {
-    width: fit-content;
-}
-
-.detail-table-remove {
-    color: #8a1f12;
-}
-
-.badge,
-.chip {
-    display: inline-flex;
-    align-items: center;
-    width: fit-content;
-    border-radius: 999px;
-    background: #edf7f0;
-    color: #105d3e;
-    font-size: 12px;
-    font-weight: 750;
-    padding: 3px 8px;
-}
-
-.chip-group {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.chip {
-    border: 0;
-    cursor: pointer;
-    font: inherit;
-}
-
-.chip[aria-pressed="false"] {
-    background: #f3f4f3;
-    color: #3d4a46;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/template.html
-  var template_default11 = `<cms-shell-detail>
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/template.html
+  var template_default9 = `<cms-shell-detail>
     <button type="button" slot="back" data-back aria-label="Back to table">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <rect x="4" y="5" width="16" height="14" rx="2"></rect>
@@ -20215,50 +19237,32 @@ p9r-token-input {
 </template>
 `;
 
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail.ts
-  var styles = [style_default11, style_default10].join(`
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/index.ts
+  var styles = [base_default2, controls_default, style_default8].join(`
 `);
 
   class DashboardWDetail extends U2 {
     value = emptyDetailData();
-    fields;
-    view;
-    requests;
-    lookups;
-    schemas;
-    events;
+    runtime;
+    syncScheduler = new DetailSyncScheduler;
     mode = "bound";
     bindingRevision = 0;
-    lifecycleRevision = 0;
-    syncScheduled = false;
     constructor() {
-      super({ css: styles, template: template_default11 });
-      const root = this.shadowRoot;
-      this.fields = new DetailFieldState(root, this.dataset, () => this.value);
-      this.view = new DetailView(root);
-      this.requests = new DetailRequestCoordinator;
-      this.lookups = new DetailLookups(this.dataset, this.fields, this.requests, {
+      super({ css: styles, template: template_default9 });
+      this.runtime = createDetailRuntime(this, this.shadowRoot, {
+        data: () => this.value,
         setData: (value) => {
           this.value = value;
         },
         render: () => this.render(),
         isConnected: () => this.isConnected,
-        schemas: () => this.schemas.values
+        isBound: () => this.mode === "bound",
+        refreshConditionalFields: () => this.refreshConditionalFields()
       });
-      this.schemas = new DetailSchemasState(this.dataset, this.fields, this.requests, {
-        setData: (value) => {
-          this.value = value;
-        },
-        render: () => this.render(),
-        isConnected: () => this.isConnected,
-        options: () => this.lookups.options
-      });
-      this.events = new DetailEvents(this, root, this.fields, this.lookups, this.schemas, () => this.mode === "bound", () => this.value, () => this.refreshConditionalFields());
     }
     set data(value) {
       this.mode = "manual";
-      this.lifecycleRevision += 1;
-      this.syncScheduled = false;
+      this.syncScheduler.advanceLifecycle();
       this.clearRuntimeState();
       this.value = value;
       if (this.isConnected) {
@@ -20266,8 +19270,8 @@ p9r-token-input {
       }
     }
     applyLookupCreate(fieldId, value, option) {
-      const control = this.fields.control(fieldId);
-      const field = control ? this.fields.find(fieldId) : undefined;
+      const control = this.runtime.fields.control(fieldId);
+      const field = control ? this.runtime.fields.find(fieldId) : undefined;
       if (control && field) {
         applyLookupOption(control, value, option);
       }
@@ -20281,9 +19285,8 @@ p9r-token-input {
       this.scheduleBoundDataSync();
     }
     connectedCallback() {
-      this.lifecycleRevision += 1;
-      this.syncScheduled = false;
-      this.events.bind();
+      this.syncScheduler.advanceLifecycle();
+      this.runtime.events.bind();
       if (this.mode === "manual") {
         this.render();
       } else {
@@ -20291,13 +19294,12 @@ p9r-token-input {
       }
     }
     disconnectedCallback() {
-      this.lifecycleRevision += 1;
-      this.syncScheduled = false;
-      this.events.unbind();
+      this.syncScheduler.advanceLifecycle();
+      this.runtime.events.unbind();
       this.resetState(true);
     }
     render() {
-      this.view.render(this.value);
+      this.runtime.view.render(this.value);
     }
     refreshConditionalFields() {
       if (this.mode !== "bound") {
@@ -20308,9 +19310,9 @@ p9r-token-input {
         return;
       }
       const previous = this.value;
-      const next = this.mapData(binding.widget, binding.resource, this.value.rowKey, this.fields.currentFields());
+      const next = mapDetailData(this.runtime, binding.widget, binding.resource, this.value.rowKey, this.runtime.fields.currentFields(), this.dataset.sourceId ?? "");
       this.value = next;
-      this.view.refresh(previous, next);
+      this.runtime.view.refresh(previous, next);
     }
     syncBoundData() {
       const binding = readDetailBinding(this.dataset);
@@ -20320,11 +19322,11 @@ p9r-token-input {
       }
       const { widget, resource, rowKey, sourceId } = binding;
       const scopeKey = JSON.stringify([sourceId, widget.id, rowKey, this.bindingRevision]);
-      this.requests.syncScope(scopeKey);
-      this.fields.syncScope(scopeKey);
-      this.lookups.syncScope(scopeKey);
-      this.schemas.syncScope(scopeKey);
-      this.value = this.mapData(widget, resource, rowKey, this.fields.draft);
+      this.runtime.requests.syncScope(scopeKey);
+      this.runtime.fields.syncScope(scopeKey);
+      this.runtime.lookups.syncScope(scopeKey);
+      this.runtime.schemas.syncScope(scopeKey);
+      this.value = mapDetailData(this.runtime, widget, resource, rowKey, this.runtime.fields.draft, this.dataset.sourceId ?? "");
       if (this.isConnected) {
         this.render();
       }
@@ -20332,40 +19334,20 @@ p9r-token-input {
         return;
       }
       const fields = fieldValues(widget, resource);
-      this.lookups.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
-      this.schemas.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
-    }
-    mapData(widget, resource, rowKey, fields) {
-      return detailData(widget, resource, rowKey, fields, this.lookups.options, this.dataset.sourceId ?? "", this.schemas.values);
+      this.runtime.lookups.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
+      this.runtime.schemas.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
     }
     scheduleBoundDataSync() {
-      if (!this.isConnected) {
-        return;
-      }
-      this.invalidateRequests();
-      if (this.syncScheduled) {
-        return;
-      }
-      this.syncScheduled = true;
-      const lifecycleRevision = this.lifecycleRevision;
-      queueMicrotask(() => {
-        if (this.lifecycleRevision !== lifecycleRevision || this.mode !== "bound") {
-          return;
-        }
-        this.syncScheduled = false;
-        if (this.isConnected) {
-          this.syncBoundData();
-        }
-      });
+      this.syncScheduler.schedule(() => this.isConnected, () => this.mode === "bound", () => this.invalidateRequests(), () => this.syncBoundData());
     }
     invalidateRequests() {
-      this.lookups.clear();
-      this.schemas.clear();
-      this.requests.clear();
+      this.runtime.lookups.clear();
+      this.runtime.schemas.clear();
+      this.runtime.requests.clear();
     }
     clearRuntimeState() {
       this.invalidateRequests();
-      this.fields.clear();
+      this.runtime.fields.clear();
     }
     resetState(forceRender = false) {
       this.clearRuntimeState();
@@ -20382,58 +19364,528 @@ p9r-token-input {
     return { rowKey: "", eyebrow: "", title: "", actions: [], main: [], aside: [] };
   }
 
-  // src/components/admin/Resources/Dashboards/widgets/example.ts
+  // src/components/admin/Resources/Dashboards/widgets/w-table/WCell.ts
+  var template = document.createElement("template");
+  template.innerHTML = `
+    <style>
+        :host {
+            display: block;
+            min-width: 0;
+            color: #0f1f1a;
+        }
+
+        .cell {
+            display: grid;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .title {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        :host([primary]) .title {
+            font-weight: 700;
+        }
+
+        small {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #66736f;
+        }
+
+        small:empty {
+            display: none;
+        }
+
+        :host([tone="badge"]) .title {
+            justify-self: start;
+            border-radius: 999px;
+            background: #edf7f0;
+            color: #105d3e;
+            font-size: 12px;
+            font-weight: 750;
+            padding: 3px 8px;
+        }
+
+        :host([tone="muted"]) {
+            color: #66736f;
+        }
+    </style>
+    <span class="cell">
+        <span class="title"><slot></slot></span>
+        <small data-meta></small>
+    </span>
+`;
+
+  class DashboardWCell extends HTMLElement {
+    static get observedAttributes() {
+      return ["meta"];
+    }
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.render();
+    }
+    attributeChangedCallback() {
+      this.render();
+    }
+    render() {
+      const meta = this.shadowRoot?.querySelector("[data-meta]");
+      if (meta) {
+        meta.textContent = this.getAttribute("meta") ?? "";
+      }
+    }
+  }
+  if (!customElements.get("cms-dashboard-w-cell")) {
+    customElements.define("cms-dashboard-w-cell", DashboardWCell);
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/WRow.ts
+  var template2 = document.createElement("template");
+  template2.innerHTML = `
+    <style>
+        :host {
+            display: block;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: var(--dashboard-table-columns, 46px 1fr);
+            align-items: center;
+            min-height: 54px;
+            border-top: 1px solid #e8ecea;
+            cursor: default;
+            min-width: 0;
+        }
+
+        :host([collection]) .row {
+            cursor: pointer;
+        }
+
+        :host([collection]) .row:hover,
+        :host([selected]) .row {
+            background: #f3f7f5;
+        }
+
+        .check {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        input {
+            margin: 0;
+        }
+
+        slot {
+            display: contents;
+        }
+
+        ::slotted(cms-dashboard-w-cell) {
+            min-width: 0;
+            padding: 12px 16px;
+        }
+    </style>
+    <div class="row" role="row" tabindex="0">
+        <span class="check" role="cell">
+            <input type="checkbox" data-check aria-label="Select row">
+        </span>
+        <slot></slot>
+    </div>
+`;
+
+  class DashboardWRow extends HTMLElement {
+    onClick = (event) => {
+      if (event.target?.closest("input")) {
+        return;
+      }
+      this.select();
+    };
+    onKeydown = (event) => {
+      const key = event instanceof KeyboardEvent ? event.key : "";
+      if (key !== "Enter" && key !== " ") {
+        return;
+      }
+      event.preventDefault();
+      this.select();
+    };
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template2.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.shadowRoot?.querySelector("[data-check]")?.setAttribute("aria-label", `Select row ${this.rowKey}`);
+      this.shadowRoot?.querySelector(".row")?.addEventListener("click", this.onClick);
+      this.shadowRoot?.querySelector(".row")?.addEventListener("keydown", this.onKeydown);
+    }
+    disconnectedCallback() {
+      this.shadowRoot?.querySelector(".row")?.removeEventListener("click", this.onClick);
+      this.shadowRoot?.querySelector(".row")?.removeEventListener("keydown", this.onKeydown);
+    }
+    get rowKey() {
+      return this.getAttribute("row-key") ?? "";
+    }
+    get collection() {
+      return this.getAttribute("collection") ?? "";
+    }
+    set checked(value) {
+      const input = this.shadowRoot?.querySelector("[data-check]");
+      if (input) {
+        input.checked = value;
+      }
+    }
+    select() {
+      if (!this.collection || !this.rowKey) {
+        return;
+      }
+      emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: this.collection, rowKey: this.rowKey });
+    }
+  }
+  if (!customElements.get("cms-dashboard-w-row")) {
+    customElements.define("cms-dashboard-w-row", DashboardWRow);
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/render.ts
+  function tableActionButtons(actions) {
+    return actions.map((action) => {
+      const button = document.createElement("p9r-button");
+      button.dataset.action = action.action;
+      if (action.widget) {
+        button.dataset.widget = action.widget;
+      }
+      if (action.target) {
+        button.dataset.target = action.target;
+      }
+      if (action.confirm) {
+        button.dataset.confirm = action.confirm;
+      }
+      button.setAttribute("tone", action.tone ?? "primary");
+      button.textContent = action.label;
+      return button;
+    });
+  }
+  function renderTableColumns(host, head, columns2) {
+    head.querySelectorAll("[data-column-header]").forEach((element) => element.remove());
+    host.style.setProperty("--dashboard-table-columns", tableColumns2(columns2));
+    for (const column of columns2) {
+      const header = document.createElement("span");
+      header.dataset.columnHeader = column.key;
+      header.setAttribute("role", "columnheader");
+      header.textContent = column.label;
+      head.append(header);
+    }
+  }
+  function createTableRow(row, columns2) {
+    const element = document.createElement("cms-dashboard-w-row");
+    element.setAttribute("row-key", row.id);
+    if (row.collection) {
+      element.setAttribute("collection", row.collection);
+    }
+    for (const column of columns2) {
+      const cell = document.createElement("cms-dashboard-w-cell");
+      const value = row.cells[column.key];
+      if (column.primary) {
+        cell.toggleAttribute("primary", true);
+      }
+      if (typeof value === "object") {
+        if (value.tone) {
+          cell.setAttribute("tone", value.tone);
+        }
+        if (value.meta) {
+          cell.setAttribute("meta", value.meta);
+        }
+        cell.textContent = value.title;
+      } else {
+        cell.textContent = value ?? "";
+      }
+      element.append(cell);
+    }
+    return element;
+  }
+  function tableColumns2(columns2) {
+    return ["46px", ...columns2.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" ");
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
+  var style_default9 = `:host {
+    display: block;
+    --dashboard-table-columns: 46px 1fr;
+}
+
+.w-table-shell {
+    min-width: 0;
+    overflow: clip;
+    border: 1px solid #e3e8e5;
+    border-radius: 7px;
+    background: #fff;
+}
+
+:host([embedded]) .w-table-shell {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.w-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e8ecea;
+}
+
+.w-table-header[hidden] {
+    display: none;
+}
+
+.w-table-header h3,
+.w-table-header p {
+    margin: 0;
+}
+
+.w-table-header p,
+small,
+.muted {
+    color: #66736f;
+}
+
+.w-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.w-table-actions p9r-button {
+    --_btn-padding-y: 0.48rem;
+    --_btn-padding-x: 0.82rem;
+    --_btn-font-size: 12px;
+    --_btn-radius: 6px;
+}
+
+.w-table-frame {
+    min-width: 0;
+    overflow: auto;
+}
+
+.w-table-grid {
+    min-width: 0;
+}
+
+.w-table-head {
+    display: grid;
+    grid-template-columns: var(--dashboard-table-columns);
+    align-items: center;
+    background: #f7f8f7;
+}
+
+:host([embedded]) .w-table-head {
+    border-radius: 6px 6px 0 0;
+}
+
+.w-table-head span {
+    color: #3d4a46;
+    font-size: 12px;
+    font-weight: 750;
+    padding: 12px 16px;
+    text-align: left;
+}
+
+.check-cell {
+    display: flex;
+    justify-content: center;
+    padding-inline: 0;
+}
+
+.w-table-body {
+    min-width: 0;
+}
+
+slot {
+    display: contents;
+}
+
+.w-table-empty {
+    margin: 0;
+    padding: 22px 16px;
+    color: #66736f;
+}
+
+:host([embedded]) .w-table-empty {
+    padding-inline: 0;
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
+  var template_default10 = `<section class="w-table-shell">
+    <header class="w-table-header" data-header>
+        <div>
+            <h3 data-title></h3>
+            <p data-subtitle></p>
+        </div>
+        <div class="w-table-actions" data-actions></div>
+    </header>
+
+    <div class="w-table-frame">
+        <div class="w-table-grid" role="table">
+            <div class="w-table-head" role="row" data-head-row>
+                <span class="check-cell" role="columnheader">
+                    <input type="checkbox" aria-label="Select all rows" data-select-all>
+                </span>
+            </div>
+            <div class="w-table-body" data-body>
+                <slot></slot>
+            </div>
+        </div>
+        <p class="w-table-empty" data-empty hidden>No rows.</p>
+    </div>
+</section>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/WTable.ts
+  class DashboardWTable extends U2 {
+    value = { title: "", actions: [], columns: [], rows: [] };
+    selectedRow = "";
+    constructor() {
+      super({ css: style_default9, template: template_default10 });
+    }
+    set data(value) {
+      this.value = value;
+      this.replaceChildren(...value.rows.map((row) => createTableRow(row, value.columns)));
+      if (this.isConnected) {
+        this.render();
+        this.syncRows();
+      }
+    }
+    set selected(value) {
+      this.selectedRow = value;
+      this.setAttribute("data-selected", value);
+    }
+    static get observedAttributes() {
+      return ["data-config-json", "data-selected"];
+    }
+    attributeChangedCallback() {
+      this.syncConfig();
+      if (this.isConnected) {
+        this.render();
+      }
+    }
+    connectedCallback() {
+      this.shadowRoot.querySelector("slot")?.addEventListener("slotchange", this.onSlotChange);
+      this.shadowRoot.querySelector("[data-select-all]")?.addEventListener("change", this.onSelectAll);
+      this.shadowRoot.querySelector("[data-actions]")?.addEventListener("click", this.onActionClick);
+      this.syncConfig();
+      this.render();
+    }
+    disconnectedCallback() {
+      this.shadowRoot?.querySelector("slot")?.removeEventListener("slotchange", this.onSlotChange);
+      this.shadowRoot?.querySelector("[data-select-all]")?.removeEventListener("change", this.onSelectAll);
+      this.shadowRoot?.querySelector("[data-actions]")?.removeEventListener("click", this.onActionClick);
+    }
+    render() {
+      setText(this.shadowRoot, "[data-title]", this.value.title);
+      setText(this.shadowRoot, "[data-subtitle]", this.value.subtitle ?? "");
+      this.query("[data-header]").hidden = !this.value.title && !this.value.subtitle && !this.value.actions?.length;
+      this.renderActions();
+      this.renderColumns();
+      this.syncRows();
+    }
+    renderActions() {
+      const root = this.query("[data-actions]");
+      root.replaceChildren(...tableActionButtons(this.value.actions ?? []));
+    }
+    renderColumns() {
+      renderTableColumns(this, this.query("[data-head-row]"), this.value.columns);
+    }
+    syncConfig() {
+      this.selectedRow = this.dataset.selected ?? "";
+      const widget = parseJson2(this.dataset.configJson ?? "");
+      if (!widget || widget.widget !== "w-table") {
+        return;
+      }
+      this.value = {
+        title: widget.title ?? widget.source.endpoint,
+        actions: (widget.actions ?? []).map((action) => ({
+          label: action.label,
+          action: action.id,
+          widget: widget.id,
+          ...action.selection?.opens ? { target: action.selection.opens } : {},
+          tone: action.tone,
+          ...action.confirm ? { confirm: action.confirm } : {}
+        })),
+        columns: widget.columns.map((column) => ({
+          key: column.id,
+          label: column.label,
+          ...column.width ? { width: column.width } : {},
+          ...column.primary ? { primary: true } : {}
+        })),
+        rows: []
+      };
+    }
+    syncRows() {
+      const rows = this.rows();
+      for (const row of rows) {
+        row.toggleAttribute("selected", Boolean(this.selectedRow && row.rowKey === this.selectedRow));
+      }
+      this.query("[data-empty]").hidden = rows.length > 0;
+    }
+    rows() {
+      return Array.from(this.querySelectorAll("cms-dashboard-w-row"));
+    }
+    onSlotChange = () => this.syncRows();
+    onActionClick = (event) => {
+      const action = event.target?.closest("[data-action]");
+      if (action?.dataset.confirm && !window.confirm(action.dataset.confirm)) {
+        return;
+      }
+      if (action?.dataset.action) {
+        emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
+          action: action.dataset.action,
+          widget: action.dataset.widget,
+          target: action.dataset.target
+        });
+      }
+    };
+    onSelectAll = (event) => {
+      const checked = Boolean(event.target?.checked);
+      for (const row of this.rows()) {
+        row.checked = checked;
+      }
+    };
+    query(selector) {
+      return this.shadowRoot.querySelector(selector);
+    }
+  }
+  if (!customElements.get("cms-dashboard-w-table")) {
+    customElements.define("cms-dashboard-w-table", DashboardWTable);
+  }
+  function parseJson2(value) {
+    if (!value) {
+      return null;
+    }
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/example/data.ts
   var PRODUCTS = [
     product("prod_1001", "Racket Pro 300", "Active", "Babolat", "Tennis rackets", "Online store", "Today"),
     product("prod_1002", "Court Shoes Clay", "Draft", "Adidas", "Shoes", "Hidden", "Yesterday"),
     product("prod_1003", "Training Grip Pack", "Active", "Wilson", "Accessories", "Online store", "Jul 1"),
     product("prod_1004", "Junior Ball Basket", "Archived", "Head", "Training", "Hidden", "Jun 28")
   ];
-  function mountDashboardWidgetExample(root, selectedId) {
-    root.replaceChildren();
-    const selected = selectedId ? PRODUCTS.find((item) => item.id === selectedId) ?? null : null;
-    root.append(selected ? detailElement(selected) : tableElement());
-  }
-  function updateDashboardWidgetExampleField(rowKey, field, value) {
-    const product = PRODUCTS.find((item) => item.id === rowKey);
-    if (!product) {
-      return;
-    }
-    if (field === "title" && typeof value === "string") {
-      product.title = value;
-    }
-    if (field === "status" && typeof value === "string") {
-      product.status = value;
-    }
-    if (field === "vendor" && typeof value === "string") {
-      product.vendor = value;
-    }
-    if (field === "category" && typeof value === "string") {
-      product.category = value;
-    }
-    if (field === "description" && typeof value === "string") {
-      product.description = value;
-    }
-    if (field === "visibility" && typeof value === "string") {
-      product.visibility = value;
-    }
-    if (field === "tags" && isStringArray(value)) {
-      product.tags = value;
-    }
-    if (field === "media" && isMediaItems(value)) {
-      product.media = value;
-    }
-  }
-  function tableElement() {
-    const element = document.createElement("cms-dashboard-w-table");
-    element.data = tableData2();
-    return element;
-  }
-  function detailElement(product) {
-    const element = document.createElement("cms-dashboard-w-detail");
-    element.data = detailData2(product);
-    return element;
-  }
   function tableData2() {
     return {
       title: "Products",
@@ -20446,19 +19898,6 @@ p9r-token-input {
         { key: "updated", label: "Updated", width: "140px" }
       ],
       rows: PRODUCTS.map(tableRow2)
-    };
-  }
-  function tableRow2(product) {
-    return {
-      id: product.id,
-      collection: "example-products",
-      cells: {
-        title: { title: product.title, meta: product.id },
-        status: { title: product.status, tone: "badge" },
-        vendor: product.vendor,
-        category: product.category,
-        updated: { title: product.updated, tone: "muted" }
-      }
     };
   }
   function detailData2(product) {
@@ -20534,14 +19973,33 @@ p9r-token-input {
       ]
     };
   }
-  function product(id, title, status, vendor, category, visibility, updated) {
+  function isStringArray(value) {
+    return Array.isArray(value) && value.every((item) => typeof item === "string");
+  }
+  function isMediaItems(value) {
+    return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null && ("url" in item));
+  }
+  function tableRow2(product) {
+    return {
+      id: product.id,
+      collection: "example-products",
+      cells: {
+        title: { title: product.title, meta: product.id },
+        status: { title: product.status, tone: "badge" },
+        vendor: product.vendor,
+        category: product.category,
+        updated: { title: product.updated, tone: "muted" }
+      }
+    };
+  }
+  function product(id, title, status, vendor, category, visibility2, updated) {
     return {
       id,
       title,
       status,
       vendor,
       category,
-      visibility,
+      visibility: visibility2,
       updated,
       description: "Editable sandbox content before any data source is wired.",
       media: media(id, title),
@@ -20560,11 +20018,363 @@ p9r-token-input {
       }
     ];
   }
-  function isStringArray(value) {
-    return Array.isArray(value) && value.every((item) => typeof item === "string");
+
+  // src/components/admin/Resources/Dashboards/widgets/example/index.ts
+  function mountDashboardWidgetExample(root, selectedId) {
+    root.replaceChildren();
+    const selected = selectedId ? PRODUCTS.find((item) => item.id === selectedId) ?? null : null;
+    root.append(selected ? detailElement(selected) : tableElement());
   }
-  function isMediaItems(value) {
-    return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null && ("url" in item));
+  function updateDashboardWidgetExampleField(rowKey, field, value) {
+    const product2 = PRODUCTS.find((item) => item.id === rowKey);
+    if (!product2) {
+      return;
+    }
+    if (field === "title" && typeof value === "string") {
+      product2.title = value;
+    }
+    if (field === "status" && typeof value === "string") {
+      product2.status = value;
+    }
+    if (field === "vendor" && typeof value === "string") {
+      product2.vendor = value;
+    }
+    if (field === "category" && typeof value === "string") {
+      product2.category = value;
+    }
+    if (field === "description" && typeof value === "string") {
+      product2.description = value;
+    }
+    if (field === "visibility" && typeof value === "string") {
+      product2.visibility = value;
+    }
+    if (field === "tags" && isStringArray(value)) {
+      product2.tags = value;
+    }
+    if (field === "media" && isMediaItems(value)) {
+      product2.media = value;
+    }
+  }
+  function tableElement() {
+    const element = document.createElement("cms-dashboard-w-table");
+    element.data = tableData2();
+    return element;
+  }
+  function detailElement(product2) {
+    const element = document.createElement("cms-dashboard-w-detail");
+    element.data = detailData2(product2);
+    return element;
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/actions/endpoint.ts
+  async function executeEndpointAction(group, groups, action, vars) {
+    if (!action.endpoint) {
+      throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
+    }
+    const method = endpointMethod(group, groups, action.endpoint);
+    if (action.download) {
+      const download = await sendSourceDownload(group.source.id, action.endpoint, method, vars);
+      return {
+        kind: "download",
+        blob: download.blob,
+        filename: action.download.filename ?? download.filename ?? `${action.id}.download`,
+        ...actionMeta(group, groups, action)
+      };
+    }
+    return {
+      kind: "value",
+      value: await sendSourceJson(group.source.id, action.endpoint, method, vars),
+      ...actionMeta(group, groups, action)
+    };
+  }
+  function endpointMethod(group, groups, ref) {
+    const sourceId = ref.sourceId ?? group.source.id;
+    const sourceGroup = groups.find((candidate) => candidate.source.id === sourceId);
+    const endpoint = sourceGroup?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
+    if (!endpoint) {
+      throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
+    }
+    return endpoint.method;
+  }
+  function actionMeta(group, groups, action) {
+    return {
+      ...action.after ? { after: action.after } : {},
+      ...action.endpoint && endpointInvalidatesSchema(group, groups, action.endpoint) ? { invalidatesSchema: true } : {}
+    };
+  }
+  function endpointInvalidatesSchema(group, groups, ref) {
+    const sourceId = ref.sourceId ?? group.source.id;
+    return groups.find((candidate) => candidate.source.id === sourceId)?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.effects?.invalidatesSchema === true;
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/actions/widgets.ts
+  function findDetailWidget(widgets, id) {
+    for (const widget of widgets) {
+      if (widget.widget === "w-detail" && widget.id === id) {
+        return widget;
+      }
+      if (widget.widget === "w-section") {
+        const found = findDetailWidget(widget.children, id);
+        if (found) {
+          return found;
+        }
+      }
+      if (widget.widget === "w-tabs") {
+        for (const tab of widget.tabs) {
+          const found = findDetailWidget(tab.children, id);
+          if (found) {
+            return found;
+          }
+        }
+      }
+    }
+    return null;
+  }
+  function findCollectionAction(widgets, actionId, widgetId) {
+    for (const widget of widgets) {
+      if ((widget.widget === "w-table" || widget.widget === "w-navigation-list") && (!widgetId || widget.id === widgetId)) {
+        const action = widget.actions?.find((item) => item.id === actionId);
+        if (action) {
+          return action;
+        }
+      }
+      if (widget.widget === "w-section") {
+        const found = findCollectionAction(widget.children, actionId, widgetId);
+        if (found) {
+          return found;
+        }
+      }
+      if (widget.widget === "w-tabs") {
+        for (const tab of widget.tabs) {
+          const found = findCollectionAction(tab.children, actionId, widgetId);
+          if (found) {
+            return found;
+          }
+        }
+      }
+    }
+    return null;
+  }
+  function findMediaField(widget, fieldId) {
+    const fields = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+    return fields.find((field) => field.id === fieldId && field.type === "media") ?? null;
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/actions/index.ts
+  async function executeDashboardAction(group, dashboard, detail, actionId, draft, currentResource, groups = [group]) {
+    const widget = findDetailWidget(dashboard.views, detail.collection);
+    if (!widget) {
+      throw new Error(`Dashboard action target "${detail.collection}" was not found`);
+    }
+    const action = widget.actions?.find((item) => item.id === actionId);
+    if (!action) {
+      throw new Error(`Dashboard action "${actionId}" was not found`);
+    }
+    if (!action.endpoint) {
+      throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
+    }
+    const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
+    const fields = { ...fieldValues(widget, resource), ...draft };
+    if (!matchesDashboardVisibility(action.visibleWhen, { resource, fields })) {
+      throw new Error(`Dashboard action "${actionId}" is not available in the current state`);
+    }
+    return executeEndpointAction(group, groups, action, {
+      selection: { id: detail.row },
+      resource,
+      fields
+    });
+  }
+  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value, groups = [group]) {
+    const action = findCollectionAction(dashboard.views, actionId, widgetId);
+    if (!action) {
+      throw new Error(`Dashboard table action "${actionId}" was not found`);
+    }
+    if (!action.endpoint) {
+      throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
+    }
+    return executeEndpointAction(group, groups, action, { filters: {}, value });
+  }
+  async function executeDashboardMediaAction(group, dashboard, detail, media2, draft, groups = [group]) {
+    const widget = findDetailWidget(dashboard.views, detail.collection);
+    if (!widget) {
+      throw new Error(`Dashboard media target "${detail.collection}" was not found`);
+    }
+    const field = findMediaField(widget, media2.field);
+    const ref = field?.actions?.[media2.action];
+    if (!field || !ref) {
+      return [];
+    }
+    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
+    const resource = itemFrom(data, widget.source);
+    const fields = { ...fieldValues(widget, resource), ...draft };
+    const mediaVars = mediaActionVars(media2);
+    const files = media2.files ?? (media2.file ? [media2.file] : []);
+    if (!files.length) {
+      return [
+        await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), {
+          resource,
+          fields,
+          media: mediaVars
+        })
+      ];
+    }
+    return Promise.all(files.map((file) => {
+      const body = new FormData;
+      body.set("file", file);
+      return sendSourceForm(group.source.id, ref, endpointMethod(group, groups, ref), { resource, fields, media: mediaVars }, body);
+    }));
+  }
+  async function fetchActionResource(sourceId, widget, row) {
+    const data = await fetchSourceJson(sourceId, widget.source, { selection: { id: row } });
+    return itemFrom(data, widget.source);
+  }
+  function mediaActionVars(media2) {
+    return {
+      action: media2.action,
+      index: media2.index,
+      from: media2.from,
+      to: media2.to,
+      item: media2.item,
+      previousItem: media2.previousItem,
+      value: media2.value,
+      valueIds: media2.value.map(mediaId).filter(Boolean)
+    };
+  }
+  function mediaId(item) {
+    return item.id;
+  }
+
+  // src/components/admin/Resources/Dashboards/view/controller/actionResult.ts
+  function downloadBlob(blob, filename) {
+    if (typeof URL.createObjectURL !== "function") {
+      throw new Error("Downloads are not supported in this browser");
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    if (typeof URL.revokeObjectURL === "function") {
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
+  }
+  function createdId(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return null;
+    }
+    const id = value.id;
+    if (typeof id === "string" && id.trim()) {
+      return id;
+    }
+    if (typeof id === "number" && Number.isFinite(id)) {
+      return String(id);
+    }
+    return null;
+  }
+  function afterTarget(after, result, detail) {
+    if (!after?.opens) {
+      return null;
+    }
+    const rowValue = after.row === undefined ? createdId(result) : resolveExpression(after.row, {
+      result,
+      ...detail ? { selection: { id: detail.row } } : {}
+    });
+    const row = stringValue(rowValue);
+    return row ? { collection: after.opens, row } : null;
+  }
+  function stringValue(value) {
+    if (value === null || value === undefined) {
+      return "";
+    }
+    if (typeof value === "string") {
+      return value;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+    return "";
+  }
+
+  // src/components/admin/Resources/Dashboards/view/DashboardViewActions.ts
+  async function runDashboardWidgetAction(context, action) {
+    const { group, dashboard, detail } = context;
+    if (!group || !dashboard) {
+      return;
+    }
+    const actionDetail = detail ?? (action.detail && action.widget ? { collection: action.widget, row: action.row ?? "" } : null);
+    const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
+    try {
+      const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, {
+        ...context.drafts.get(key) ?? {},
+        ...action.fields ?? {}
+      }, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group]);
+      if (actionDetail) {
+        context.drafts.delete(key);
+      }
+      if (result.invalidatesSchema && context.reloadDefinitions) {
+        try {
+          await context.reloadDefinitions();
+        } catch {
+          $u(`${action.action} completed, but CMS definitions could not be reloaded`, { type: "warning" });
+        }
+      }
+      if (result.kind === "download") {
+        downloadBlob(result.blob, result.filename);
+        $u(`${action.action} downloaded`, { type: "success" });
+        return;
+      }
+      $u(`${action.action} completed`, { type: "success" });
+      const after = result.kind === "value" ? afterTarget(result.after, result.value, actionDetail) : null;
+      if (after) {
+        context.openDetail(after.collection, after.row);
+      } else if (!detail) {
+        context.render();
+      } else if (action.action.startsWith("delete")) {
+        context.clearDetail();
+      } else if (detail.row === "__new__" && createdId(result.value)) {
+        context.openDetail(detail.collection, createdId(result.value));
+      } else {
+        context.reload(detail.collection, detail.row);
+      }
+    } catch (error) {
+      $u(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
+    }
+  }
+  async function runDashboardMediaAction(context, media2) {
+    const { group, dashboard, detail } = context;
+    if (!group || !dashboard || !detail) {
+      return;
+    }
+    const key = detailKey(detail.collection, detail.row);
+    try {
+      await executeDashboardMediaAction(group, dashboard, detail, media2, context.drafts.get(key) ?? {}, context.groups ?? [group]);
+      removeDraftField(context.drafts, key, media2.field);
+      $u(`Media ${media2.action} completed`, { type: "success" });
+      context.reload(detail.collection, detail.row);
+    } catch (error) {
+      $u(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
+    }
+  }
+  function removeDraftField(drafts, key, field) {
+    const draft = { ...drafts.get(key) ?? {} };
+    delete draft[field];
+    Object.keys(draft).length ? drafts.set(key, draft) : drafts.delete(key);
+  }
+
+  // src/components/admin/Resources/Dashboards/navigation/mode.ts
+  function isDashboardExampleMode(host) {
+    return host.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/reload.ts
+  function detailReloadEvent(sourceId, dashboardId, collection, row) {
+    return `cms-dashboard:${encodePart(sourceId)}:${encodePart(dashboardId)}:${encodePart(collection)}:${encodePart(row || "new")}:reload`;
+  }
+  function encodePart(value) {
+    return encodeURIComponent(value);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationItem.ts
@@ -20672,8 +20482,28 @@ p9r-token-input {
     }
   }
 
+  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/drag.ts
+  function navigationDragItem(event) {
+    const fromPath = event.composedPath().find((target2) => target2 instanceof HTMLElement && target2.matches("cms-dashboard-w-navigation-item"));
+    if (fromPath) {
+      return fromPath;
+    }
+    const target = event.target;
+    return target instanceof Element ? target.closest("cms-dashboard-w-navigation-item") : null;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/config.ts
+  function parseNavigationListWidget(value) {
+    try {
+      const widget = value ? JSON.parse(value) : null;
+      return widget?.widget === "w-navigation-list" ? widget : null;
+    } catch {
+      return null;
+    }
+  }
+
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/style.css
-  var style_default12 = `:host {
+  var style_default10 = `:host {
     display: block;
     max-inline-size: 960px;
 }
@@ -20717,7 +20547,7 @@ slot { display: contents; }
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/template.html
-  var template_default12 = `<section class="navigation-list-shell">
+  var template_default11 = `<section class="navigation-list-shell">
     <header class="navigation-list-header" data-header>
         <h3 data-title></h3>
         <div class="navigation-list-actions" data-actions></div>
@@ -20734,7 +20564,7 @@ slot { display: contents; }
     value = null;
     dragging = null;
     constructor() {
-      super({ css: style_default12, template: template_default12 });
+      super({ css: style_default10, template: template_default11 });
     }
     static get observedAttributes() {
       return ["data-config-json"];
@@ -20764,8 +20594,8 @@ slot { display: contents; }
       this.removeEventListener("dragend", this.onDragEnd);
     }
     syncConfig() {
-      const widget = parseJson3(this.dataset.configJson ?? "");
-      if (widget?.widget === "w-navigation-list") {
+      const widget = parseNavigationListWidget(this.dataset.configJson ?? "");
+      if (widget) {
         this.value = widget;
       }
     }
@@ -20814,7 +20644,7 @@ slot { display: contents; }
       });
     };
     onDragStart = (event) => {
-      const item = dragItem(event);
+      const item = navigationDragItem(event);
       if (!item || !this.value?.reorderable) {
         return;
       }
@@ -20826,7 +20656,7 @@ slot { display: contents; }
       }
     };
     onDragOver = (event) => {
-      const item = dragItem(event);
+      const item = navigationDragItem(event);
       if (!item || !this.dragging || item === this.dragging) {
         return;
       }
@@ -20837,7 +20667,7 @@ slot { display: contents; }
       }
     };
     onDrop = (event) => {
-      const target = dragItem(event);
+      const target = navigationDragItem(event);
       const dragging = this.dragging;
       if (!target || !dragging || target === dragging || !this.value?.reorderable) {
         return;
@@ -20875,31 +20705,8 @@ slot { display: contents; }
   if (!customElements.get("cms-dashboard-w-navigation-list")) {
     customElements.define("cms-dashboard-w-navigation-list", DashboardWNavigationList);
   }
-  function dragItem(event) {
-    const fromPath = event.composedPath().find((target2) => target2 instanceof HTMLElement && target2.matches("cms-dashboard-w-navigation-item"));
-    if (fromPath) {
-      return fromPath;
-    }
-    const target = event.target;
-    return target instanceof Element ? target.closest("cms-dashboard-w-navigation-item") : null;
-  }
-  function parseJson3(value) {
-    try {
-      return value ? JSON.parse(value) : null;
-    } catch {
-      return null;
-    }
-  }
 
-  // src/components/admin/Resources/Dashboards/runtime/reload.ts
-  function detailReloadEvent(sourceId, dashboardId, collection, row) {
-    return `cms-dashboard:${encodePart(sourceId)}:${encodePart(dashboardId)}:${encodePart(collection)}:${encodePart(row || "new")}:reload`;
-  }
-  function encodePart(value) {
-    return encodeURIComponent(value);
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mountSource.ts
+  // src/components/admin/Resources/Dashboards/runtime/mounting/mountSource.ts
   function sourceWrapper(sourceId, ref, vars, alias) {
     return urlSourceWrapper(sourceUrl2(sourceId, ref, vars), alias);
   }
@@ -21013,7 +20820,7 @@ slot { display: contents; }
     target.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/mountRelations.ts
+  // src/components/admin/Resources/Dashboards/runtime/mounting/mountRelations.ts
   function relationDetailSectionElement(widget) {
     const section = document.createElement("cms-detail-section");
     section.setAttribute("slot", widget.placement === "aside" ? "aside-extra" : "main-extra");
@@ -21063,7 +20870,7 @@ slot { display: contents; }
     return `${url.pathname}${url.search}`;
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/mount.ts
+  // src/components/admin/Resources/Dashboards/runtime/mounting/mount.ts
   function mountDashboardWidgets(root, widgets, context, key, tabState, detail) {
     const core = document.createElement("cms-binding-core");
     core.className = "dashboard-widget-binding";
@@ -21158,41 +20965,41 @@ slot { display: contents; }
     return wrapper;
   }
 
-  // src/components/admin/Resources/Dashboards/rendering.ts
+  // src/components/admin/Resources/Dashboards/view/rendering.ts
   function renderDashboardShell(root, group, dashboard, detail, tabState, drafts) {
-    query2(root, "[data-empty]").hidden = Boolean(group);
-    query2(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
-    query2(root, "[data-dashboard-head]").hidden = !dashboard;
-    query2(root, "[data-detail-toolbar]").hidden = true;
-    query2(root, "[data-widgets]").hidden = !dashboard;
+    query4(root, "[data-empty]").hidden = Boolean(group);
+    query4(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
+    query4(root, "[data-dashboard-head]").hidden = !dashboard;
+    query4(root, "[data-detail-toolbar]").hidden = true;
+    query4(root, "[data-widgets]").hidden = !dashboard;
     if (!group || !dashboard) {
       return;
     }
-    query2(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
-    renderIcon(query2(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
+    query4(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
+    renderIcon(query4(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
     const selectedRows = new Map;
     if (detail) {
       selectedRows.set(detail.collection, detail.row);
     }
     const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
-    mountDashboardWidgets(query2(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
+    mountDashboardWidgets(query4(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
   }
   function renderExampleShell(root, selectedRow) {
-    query2(root, "[data-empty]").hidden = true;
-    query2(root, "[data-source-empty]").hidden = true;
-    query2(root, "[data-detail-toolbar]").hidden = true;
-    query2(root, "[data-dashboard-head]").hidden = false;
-    query2(root, "[data-widgets]").hidden = false;
-    query2(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
-    renderIcon(query2(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
-    mountDashboardWidgetExample(query2(root, "[data-widgets]"), selectedRow);
+    query4(root, "[data-empty]").hidden = true;
+    query4(root, "[data-source-empty]").hidden = true;
+    query4(root, "[data-detail-toolbar]").hidden = true;
+    query4(root, "[data-dashboard-head]").hidden = false;
+    query4(root, "[data-widgets]").hidden = false;
+    query4(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
+    renderIcon(query4(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
+    mountDashboardWidgetExample(query4(root, "[data-widgets]"), selectedRow);
   }
-  function query2(root, selector) {
+  function query4(root, selector) {
     return root.querySelector(selector);
   }
 
-  // src/components/admin/Resources/Dashboards/DashboardView.ts
-  class DashboardView extends U2 {
+  // src/components/admin/Resources/Dashboards/view/controller/DashboardViewController.ts
+  class DashboardViewController extends U2 {
     groups = [];
     selectedSource = "";
     selectedDashboard = "";
@@ -21200,57 +21007,25 @@ slot { display: contents; }
     tabState = new Map;
     drafts = new Map;
     observer = null;
-    constructor() {
-      super({ css: style_default6, template: template_default7 });
-      configureDashboardBindingFilters();
-    }
-    connectedCallback() {
-      super.connectedCallback();
-      this.syncFromSelection(currentSelection());
-      this.shadowRoot.addEventListener("click", this.onClick);
-      this.shadowRoot.addEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect);
-      this.shadowRoot.addEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
-      this.shadowRoot.addEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction);
-      this.shadowRoot.addEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange);
-      this.shadowRoot.addEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction);
-      window.addEventListener("popstate", this.onPopState);
-      window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
-      this.startBoundSource();
-    }
-    disconnectedCallback() {
-      this.shadowRoot?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.removeEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect);
-      this.shadowRoot?.removeEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
-      this.shadowRoot?.removeEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction);
-      this.shadowRoot?.removeEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange);
-      this.shadowRoot?.removeEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction);
-      window.removeEventListener("popstate", this.onPopState);
-      window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
-      this.observer?.disconnect();
-      this.observer = null;
+    constructor(css, template4) {
+      super({ css, template: template4 });
     }
     startBoundSource() {
       if (this.isExampleMode()) {
-        return this.render();
+        this.renderDashboard();
+        return;
       }
-      const source = this.shadowRoot.querySelector("[data-dashboard-list-source]");
-      source?.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
+      const source2 = this.shadowRoot.querySelector("[data-dashboard-list-source]");
+      source2?.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
       this.observer = new MutationObserver(() => this.readBoundGroups());
-      if (source) {
-        this.observer.observe(source, { attributes: true, childList: true, subtree: true });
+      if (source2) {
+        this.observer.observe(source2, { attributes: true, childList: true, subtree: true });
       }
       this.readBoundGroups();
     }
-    readBoundGroups() {
-      const target = this.shadowRoot.querySelector("[data-dashboard-groups-json]");
-      const next = parseGroups2(target?.dataset.dashboardGroupsJson ?? "");
-      if (!next) {
-        return;
-      }
-      this.groups = next;
-      this.selectedSource ||= defaultDashboardSource(this.groups);
-      this.ensureDashboardSelection();
-      this.render();
+    disconnectBoundSource() {
+      this.observer?.disconnect();
+      this.observer = null;
     }
     ensureDashboardSelection() {
       const group = this.activeGroup();
@@ -21264,7 +21039,7 @@ slot { display: contents; }
         this.detailSelection = null;
       }
     }
-    render() {
+    renderDashboard() {
       if (this.isExampleMode()) {
         renderExampleShell(this.shadowRoot, this.detailSelection?.row ?? null);
         return;
@@ -21292,72 +21067,10 @@ slot { display: contents; }
       this.selectedDashboard = selection.dashboard;
       this.detailSelection = selection.collection && selection.row ? { collection: selection.collection, row: selection.row } : null;
     }
-    onClick = (event) => {
-      const tabButton = event.target?.closest("[data-tab-key]");
-      if (!tabButton?.dataset.tabKey || !tabButton.dataset.tabIndex) {
-        return;
-      }
-      this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
-      this.render();
-    };
-    onSelection = (event) => this.syncSelectionAndRender(event.detail);
-    onPopState = () => this.syncSelectionAndRender(currentSelection());
-    onWidgetRowSelect = (event) => {
-      this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
-      if (!this.isExampleMode()) {
-        pushSelectionUrl(this.selection());
-      }
-      this.render();
-    };
-    onWidgetBack = () => {
-      this.detailSelection = null;
-      if (!this.isExampleMode()) {
-        replaceSelectionUrl(this.selection());
-      }
-      this.render();
-    };
-    onWidgetAction = (event) => {
-      if (this.isExampleMode()) {
-        ku(`${event.detail.action} clicked`, { type: "success" });
-        return;
-      }
-      if (event.detail.target) {
-        this.detailSelection = { collection: event.detail.target, row: "__new__" };
-        if (!this.isExampleMode()) {
-          pushSelectionUrl(this.selection());
-        }
-        this.render();
-        return;
-      }
-      runDashboardWidgetAction(this.actionContext(), event.detail);
-    };
-    onWidgetMediaAction = (event) => {
-      if (this.isExampleMode()) {
-        ku(`Media ${event.detail.action} event captured`, { type: "success" });
-        return;
-      }
-      runDashboardMediaAction(this.actionContext(), event.detail);
-    };
-    onWidgetFieldChange = (event) => {
-      if (this.isExampleMode()) {
-        updateDashboardWidgetExampleField(event.detail.rowKey, event.detail.field, event.detail.value);
-        this.render();
-        return;
-      }
-      if (!this.detailSelection) {
-        return;
-      }
-      const key = detailKey(this.detailSelection.collection, event.detail.rowKey);
-      const previousDraft = this.drafts.get(key) ?? {};
-      this.drafts.set(key, { ...previousDraft, [event.detail.field]: event.detail.value });
-      if (event.detail.created) {
-        runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft, event.target);
-      }
-    };
     syncSelectionAndRender(selection) {
       this.syncFromSelection(selection);
       this.ensureDashboardSelection();
-      this.render();
+      this.renderDashboard();
     }
     actionContext() {
       return {
@@ -21366,7 +21079,7 @@ slot { display: contents; }
         dashboard: this.activeDashboard(),
         detail: this.detailSelection,
         drafts: this.drafts,
-        render: () => this.render(),
+        render: () => this.renderDashboard(),
         reloadDefinitions: () => this.reloadDefinitions(),
         reload: (collection, row) => this.reloadDetail(collection, row),
         clearDetail: () => this.clearDetail(),
@@ -21378,14 +21091,25 @@ slot { display: contents; }
       if (!this.isExampleMode()) {
         replaceSelectionUrl(this.selection());
       }
-      this.render();
+      this.renderDashboard();
     }
     clearDetail() {
       this.detailSelection = null;
       if (!this.isExampleMode()) {
         replaceSelectionUrl(this.selection());
       }
-      this.render();
+      this.renderDashboard();
+    }
+    readBoundGroups() {
+      const target = this.shadowRoot.querySelector("[data-dashboard-groups-json]");
+      const next = parseGroups2(target?.dataset.dashboardGroupsJson ?? "");
+      if (!next) {
+        return;
+      }
+      this.groups = next;
+      this.selectedSource ||= defaultDashboardSource(this.groups);
+      this.ensureDashboardSelection();
+      this.renderDashboard();
     }
     reloadDetail(collection, row) {
       const dashboard = this.activeDashboard();
@@ -21398,11 +21122,8 @@ slot { display: contents; }
       this.groups = await fetchDashboards();
       this.selectedSource ||= defaultDashboardSource(this.groups);
       this.ensureDashboardSelection();
-      this.render();
+      this.renderDashboard();
     }
-  }
-  if (!customElements.get("cms-dashboards-admin")) {
-    customElements.define("cms-dashboards-admin", DashboardView);
   }
   function parseGroups2(value) {
     if (!value) {
@@ -21414,6 +21135,440 @@ slot { display: contents; }
     } catch {
       return null;
     }
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/lookups/create.ts
+  async function executeLookupCreate(group, dashboard, detail, fieldId, previousDraft, nextDraft, groups = [group]) {
+    const widget = findDetailWidget2(dashboard.views, detail.collection);
+    const field = widget ? lookupField(widget, fieldId) : null;
+    const create = field?.lookup?.create;
+    if (!widget || !field || !create || create.mode !== "inline") {
+      return;
+    }
+    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
+    const resource = itemFrom(data, widget.source);
+    const baseFields = fieldValues(widget, resource);
+    const previousValue = previousDraft[fieldId] ?? baseFields[fieldId];
+    const nextValue = nextDraft[fieldId];
+    const createdValue = createdInput(previousValue, nextValue);
+    if (!createdValue) {
+      return;
+    }
+    const created = await sendSourceJson(group.source.id, create, endpointMethod2(group, groups, create), {
+      resource,
+      fields: { ...baseFields, ...previousDraft, [fieldId]: createdValue },
+      value: createdValue
+    });
+    const createdId2 = valueAt(created, create.valuePath);
+    if (createdId2 === undefined || createdId2 === null || createdId2 === "") {
+      return;
+    }
+    const id = String(createdId2);
+    return {
+      value: replaceCreatedValue(nextValue, createdValue, id),
+      option: { value: id, label: textValue5(valueAt(created, create.labelPath)) || createdValue }
+    };
+  }
+  function textValue5(value) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+    return typeof value === "string" ? value.trim() : "";
+  }
+  function createdInput(previous, next) {
+    if (Array.isArray(next)) {
+      const previousValues = new Set(arrayValue2(previous));
+      return arrayValue2(next).find((value) => !previousValues.has(value)) ?? "";
+    }
+    return typeof next === "string" ? next.trim() : "";
+  }
+  function replaceCreatedValue(next, created, id) {
+    if (Array.isArray(next)) {
+      return arrayValue2(next).map((value) => value === created ? id : value);
+    }
+    return id;
+  }
+  function arrayValue2(value) {
+    if (Array.isArray(value)) {
+      return value.map((item) => String(item)).filter(Boolean);
+    }
+    return typeof value === "string" ? value.split(",").map((item) => item.trim()).filter(Boolean) : [];
+  }
+  function lookupField(widget, fieldId) {
+    const fields = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+    return fields.find((field) => (field.type === "combobox" || field.type === "tokens") && field.id === fieldId) ?? null;
+  }
+  function endpointMethod2(group, groups, ref) {
+    const sourceId = ref.sourceId ?? group.source.id;
+    const endpoint = groups.find((candidate) => candidate.source.id === sourceId)?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
+    if (!endpoint) {
+      throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
+    }
+    return endpoint.method;
+  }
+  function findDetailWidget2(widgets, id) {
+    for (const widget of widgets) {
+      if (widget.widget === "w-detail" && widget.id === id) {
+        return widget;
+      }
+      if (widget.widget === "w-section") {
+        const found = findDetailWidget2(widget.children, id);
+        if (found) {
+          return found;
+        }
+      }
+      if (widget.widget === "w-tabs") {
+        for (const tab of widget.tabs) {
+          const found = findDetailWidget2(tab.children, id);
+          if (found) {
+            return found;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  // src/components/admin/Resources/Dashboards/view/DashboardViewLookups.ts
+  async function runDashboardLookupCreate(context, change, previousDraft, target) {
+    const { group, dashboard, detail } = context;
+    if (!change.created || !group || !dashboard || !detail) {
+      return;
+    }
+    const key = detailKey(detail.collection, change.rowKey);
+    const nextDraft = context.drafts.get(key) ?? {};
+    try {
+      const result = await executeLookupCreate(group, dashboard, detail, change.field, previousDraft, nextDraft, context.groups ?? [group]);
+      if (result === undefined) {
+        return;
+      }
+      context.drafts.set(key, { ...nextDraft, [change.field]: result.value });
+      applyLookupCreate(target, change.field, result.value, result.option);
+      $u("Item created", { type: "success" });
+    } catch (error) {
+      $u(error instanceof Error ? error.message : "Lookup creation failed", { type: "error" });
+    }
+  }
+  function applyLookupCreate(target, field, value, option) {
+    const detail = target;
+    detail?.applyLookupCreate?.(field, value, option);
+  }
+
+  // src/components/admin/Resources/Dashboards/view/styles/base.css
+  var base_default3 = `:host {
+    display: block;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.binding-source {
+    display: none;
+}
+
+h3,
+p {
+    margin: 0;
+}
+
+.content,
+.widgets,
+.widget-stack,
+.tab-body,
+.dashboard-widget-binding {
+    display: grid;
+    align-content: start;
+    min-width: 0;
+}
+
+.content {
+    gap: 24px;
+}
+
+.widgets,
+.widget-stack,
+.tab-body,
+.dashboard-widget-binding {
+    gap: 16px;
+}
+
+.dashboard-source-state {
+    align-items: center;
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 8px;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    padding: 16px;
+}
+
+.dashboard-source-state > div {
+    display: grid;
+    gap: 4px;
+}
+
+.dashboard-source-state span,
+.dashboard-source-state small {
+    color: var(--text-muted, #66736f);
+}
+
+.dashboard-source-loading {
+    color: var(--text-muted, #66736f);
+}
+
+.dashboard-source-error {
+    background: var(--danger-muted, #fff3f1);
+    border-color: var(--danger-border, #e8b7af);
+}
+
+.dashboard-source-error button {
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 6px;
+    color: var(--text-default, #0f1f1a);
+    cursor: pointer;
+    flex: none;
+    font: inherit;
+    font-weight: 700;
+    min-height: 36px;
+    padding: 6px 12px;
+}
+
+.dashboard-source-error button:hover {
+    background: var(--bg-hover, #f3f6f5);
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/view/styles/panels.css
+  var panels_default = `.dashboard-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 34px;
+    border-bottom: 1px solid var(--border-default, #dfe5e2);
+    padding: 0 2px 18px;
+}
+
+.dashboard-head h3 {
+    color: var(--text-default, #0f1f1a);
+    font-size: 18px;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+.title-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 8px;
+    background: var(--primary-muted, #e3f2ed);
+    color: var(--primary-base, #165f4b);
+}
+
+.title-icon.compact {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+}
+
+.title-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+}
+
+.title-icon.compact svg {
+    width: 15px;
+    height: 15px;
+}
+
+.panel,
+.tabs-panel {
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+}
+
+.panel {
+    padding: 16px;
+}
+
+.empty {
+    display: grid;
+    gap: 4px;
+}
+
+.empty span,
+.migration-placeholder {
+    color: var(--text-muted, #66736f);
+}
+
+.tabs-panel {
+    display: grid;
+    gap: 14px;
+    overflow: visible;
+    padding: 0;
+}
+
+.tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border-default, #dfe5e2);
+    padding: 0 14px;
+}
+
+.tab {
+    min-height: 42px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-default, #0f1f1a);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 0 10px;
+}
+
+.tab.active {
+    border-bottom-color: var(--primary-base, #165f4b);
+    color: var(--primary-base, #165f4b);
+}
+
+.tab:hover {
+    background: var(--bg-hover, #f3f6f5);
+}
+
+.tab-body {
+    padding: 0 14px 14px;
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/view/template.html
+  var template_default12 = `<main class="content">
+    <cms-binding-core class="binding-source">
+        <span data-dashboard-list-source hidden>
+            <span data-dashboard-groups-json="{{ dashboards | json }}"></span>
+        </span>
+    </cms-binding-core>
+
+    <section class="panel empty" data-empty>
+        <strong>No dashboards</strong>
+        <span>Install an integration that provides dashboard artifacts.</span>
+    </section>
+
+    <section class="panel empty" data-source-empty hidden>
+        <strong>No dashboards for this source</strong>
+        <span>This source exposes endpoints, but no dashboard artifact has been installed for it yet.</span>
+    </section>
+
+    <section class="dashboard-head" data-dashboard-head hidden>
+        <span class="title-icon compact" data-dashboard-icon></span>
+        <h3 data-dashboard-name></h3>
+    </section>
+
+    <section class="detail-toolbar" data-detail-toolbar hidden>
+        <button type="button" data-dashboard-back>Back</button>
+        <span data-detail-row></span>
+    </section>
+
+    <div class="widgets" data-widgets hidden></div>
+</main>
+`;
+
+  // src/components/admin/Resources/Dashboards/view/DashboardView.ts
+  var styles2 = [base_default3, panels_default].join(`
+`);
+
+  class DashboardView extends DashboardViewController {
+    constructor() {
+      super(styles2, template_default12);
+      configureDashboardBindingFilters();
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      this.syncFromSelection(currentSelection());
+      this.shadowRoot.addEventListener("click", this.onClick);
+      this.shadowRoot.addEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect);
+      this.shadowRoot.addEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
+      this.shadowRoot.addEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction);
+      this.shadowRoot.addEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange);
+      this.shadowRoot.addEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction);
+      window.addEventListener("popstate", this.onPopState);
+      window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
+      this.startBoundSource();
+    }
+    disconnectedCallback() {
+      this.shadowRoot?.removeEventListener("click", this.onClick);
+      this.shadowRoot?.removeEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect);
+      this.shadowRoot?.removeEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
+      this.shadowRoot?.removeEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction);
+      this.shadowRoot?.removeEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange);
+      this.shadowRoot?.removeEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction);
+      window.removeEventListener("popstate", this.onPopState);
+      window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
+      this.disconnectBoundSource();
+    }
+    onClick = (event) => {
+      const tabButton = event.target?.closest("[data-tab-key]");
+      if (!tabButton?.dataset.tabKey || !tabButton.dataset.tabIndex) {
+        return;
+      }
+      this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
+      this.renderDashboard();
+    };
+    onSelection = (event) => this.syncSelectionAndRender(event.detail);
+    onPopState = () => this.syncSelectionAndRender(currentSelection());
+    onWidgetRowSelect = (event) => {
+      this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
+      if (!this.isExampleMode()) {
+        pushSelectionUrl(this.selection());
+      }
+      this.renderDashboard();
+    };
+    onWidgetBack = () => this.clearDetail();
+    onWidgetAction = (event) => {
+      if (this.isExampleMode()) {
+        $u(`${event.detail.action} clicked`, { type: "success" });
+        return;
+      }
+      if (event.detail.target) {
+        this.detailSelection = { collection: event.detail.target, row: "__new__" };
+        pushSelectionUrl(this.selection());
+        this.renderDashboard();
+        return;
+      }
+      runDashboardWidgetAction(this.actionContext(), event.detail);
+    };
+    onWidgetMediaAction = (event) => {
+      if (this.isExampleMode()) {
+        $u(`Media ${event.detail.action} event captured`, { type: "success" });
+        return;
+      }
+      runDashboardMediaAction(this.actionContext(), event.detail);
+    };
+    onWidgetFieldChange = (event) => {
+      if (this.isExampleMode()) {
+        updateDashboardWidgetExampleField(event.detail.rowKey, event.detail.field, event.detail.value);
+        this.renderDashboard();
+        return;
+      }
+      if (!this.detailSelection) {
+        return;
+      }
+      const key = detailKey(this.detailSelection.collection, event.detail.rowKey);
+      const previousDraft = this.drafts.get(key) ?? {};
+      this.drafts.set(key, { ...previousDraft, [event.detail.field]: event.detail.value });
+      if (event.detail.created) {
+        runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft, event.target);
+      }
+    };
+  }
+  if (!customElements.get("cms-dashboards-admin")) {
+    customElements.define("cms-dashboards-admin", DashboardView);
   }
 
   // src/components/admin/Resources/Functions/api.ts
@@ -21472,8 +21627,8 @@ slot { display: contents; }
       contentType
     };
   }
-  async function fetchSourceEndpoint(source, endpoint, params = {}) {
-    const url = new URL(route2(`/.cms/sources/${encodeURIComponent(source)}/${encodeURIComponent(endpoint)}`), window.location.origin);
+  async function fetchSourceEndpoint(source2, endpoint, params = {}) {
+    const url = new URL(route2(`/.cms/sources/${encodeURIComponent(source2)}/${encodeURIComponent(endpoint)}`), window.location.origin);
     for (const [key, value] of Object.entries(params)) {
       if (value !== "") {
         url.searchParams.set(key, value);
@@ -21497,14 +21652,14 @@ slot { display: contents; }
     return text2 || null;
   }
 
-  // src/components/admin/Resources/Functions/draft.ts
+  // src/components/admin/Resources/Functions/create/draft.ts
   function initialDraft(params, body) {
     return { params: structuredClone(params), body: structuredClone(body ?? {}) };
   }
   function readFallbackDraft(root, hasBody) {
     return {
       params: parseObject(root.querySelector("[data-role='params']")?.value ?? "{}", "Params"),
-      body: hasBody ? parseJson4(root.querySelector("[data-role='body']")?.value ?? "{}", "Body") : undefined
+      body: hasBody ? parseJson3(root.querySelector("[data-role='body']")?.value ?? "{}", "Body") : undefined
     };
   }
   function readPathDraft(root, draft) {
@@ -21599,13 +21754,13 @@ slot { display: contents; }
     return JSON.stringify(value, null, 2);
   }
   function parseObject(value, label) {
-    const parsed = parseJson4(value || "{}", label);
+    const parsed = parseJson3(value || "{}", label);
     if (!isRecord6(parsed)) {
       throw new Error(`${label} must be a JSON object.`);
     }
     return parsed;
   }
-  function parseJson4(value, label) {
+  function parseJson3(value, label) {
     try {
       return JSON.parse(value);
     } catch {
@@ -21726,7 +21881,7 @@ slot { display: contents; }
     return el2;
   }
 
-  // src/components/admin/Resources/Functions/fields.ts
+  // src/components/admin/Resources/Functions/create/fields.ts
   function executeFields(detail, draft, onChange) {
     const fields = detail.ui?.execute?.fields ?? [];
     if (!fields.length) {
@@ -21863,8 +22018,8 @@ slot { display: contents; }
     return Array.isArray(messages) ? messages.length : null;
   }
 
-  // src/components/admin/Resources/Functions/style.css
-  var style_default13 = `:host {
+  // src/components/admin/Resources/Functions/detail/style.css
+  var style_default11 = `:host {
     display: block;
 }
 * {
@@ -21999,7 +22154,61 @@ pre {
 }
 `;
 
-  // src/components/admin/Resources/Functions/FunctionDetail.ts
+  // src/components/admin/Resources/Functions/detail/view.ts
+  function headerActions() {
+    const wrap = div("header-actions");
+    wrap.slot = "actions";
+    const reset = button("Reset draft", "secondary");
+    const run = button("Run", "primary");
+    reset.dataset.role = "reset";
+    run.dataset.role = "run";
+    wrap.append(reset, run);
+    return wrap;
+  }
+  function inputsSection(detail, draft, onInputChange) {
+    const section = detailSection("main", "Inputs");
+    section.append(executeFields(detail, draft, onInputChange));
+    return section;
+  }
+  function resultSection() {
+    const section = detailSection("main", "Result");
+    const status = div("status", "Not executed");
+    const message = div("result-message empty", "Run the function to see its result.");
+    const raw = document.createElement("details");
+    status.dataset.role = "result-status";
+    message.dataset.role = "result-message";
+    raw.className = "raw-result";
+    raw.append(summary("Raw response"), pre(""));
+    raw.querySelector("pre").dataset.role = "result-body";
+    section.append(div("result-header", status), message, raw);
+    return section;
+  }
+  function functionSummarySection(detail) {
+    const section = detailSection("aside", "Function");
+    section.append(keyValues([
+      ["Id", detail.id],
+      ["Method", detail.method],
+      ["Access", detail.access],
+      ["Input", detail.inputLabel],
+      ["Steps", detail.stepsLabel],
+      ["Return", detail.returnLabel]
+    ]));
+    return section;
+  }
+  function contractSection(detail) {
+    const section = detailSection("aside", "Contract");
+    const details = document.createElement("details");
+    details.append(summary("Schemas"), schemaBlock("Params", detail.params ?? null), schemaBlock("Body", detail.body ?? null), schemaBlock("Output", detail.output ?? null));
+    section.append(details);
+    return section;
+  }
+  function summary(text2) {
+    const element = document.createElement("summary");
+    element.textContent = text2;
+    return element;
+  }
+
+  // src/components/admin/Resources/Functions/detail/FunctionDetail.ts
   class CmsFunctionDetail extends HTMLElement {
     initialized = false;
     detail = null;
@@ -22035,7 +22244,7 @@ pre {
       }
     }
     renderState(message) {
-      this.replaceChildren(styleNode(style_default13), state(message));
+      this.replaceChildren(styleNode(style_default11), state(message));
     }
     renderDetail() {
       if (!this.detail) {
@@ -22043,8 +22252,8 @@ pre {
       }
       const shell = document.createElement("cms-shell-detail");
       shell.className = "functions-shell";
-      shell.append(backLink(), title(this.detail), this.headerActions(), this.inputsSection(), this.resultSection(), this.summarySection(), this.contractSection());
-      this.replaceChildren(styleNode(style_default13), shell);
+      shell.append(backLink(), title(this.detail), headerActions(), inputsSection(this.detail, this.draft, (path) => void this.onInputChange(path)), resultSection(), functionSummarySection(this.detail), contractSection(this.detail));
+      this.replaceChildren(styleNode(style_default11), shell);
       this.bindRefs();
       hydrateExecuteFields(this, this.detail, this.draft);
     }
@@ -22058,57 +22267,6 @@ pre {
         this.resetDraft();
         this.renderDetail();
       });
-    }
-    headerActions() {
-      const wrap = div("header-actions");
-      wrap.slot = "actions";
-      const reset = button("Reset draft", "secondary");
-      const run = button("Run", "primary");
-      reset.dataset.role = "reset";
-      run.dataset.role = "run";
-      wrap.append(reset, run);
-      return wrap;
-    }
-    inputsSection() {
-      const section = detailSection("main", "Inputs");
-      if (this.detail) {
-        section.append(executeFields(this.detail, this.draft, (path) => void this.onInputChange(path)));
-      }
-      return section;
-    }
-    resultSection() {
-      const section = detailSection("main", "Result");
-      const status = div("status", "Not executed");
-      const message = div("result-message empty", "Run the function to see its result.");
-      const raw = document.createElement("details");
-      status.dataset.role = "result-status";
-      message.dataset.role = "result-message";
-      raw.className = "raw-result";
-      raw.append(summary("Raw response"), pre(""));
-      raw.querySelector("pre").dataset.role = "result-body";
-      section.append(div("result-header", status), message, raw);
-      return section;
-    }
-    summarySection() {
-      const d = this.detail;
-      const section = detailSection("aside", "Function");
-      section.append(keyValues([
-        ["Id", d.id],
-        ["Method", d.method],
-        ["Access", d.access],
-        ["Input", d.inputLabel],
-        ["Steps", d.stepsLabel],
-        ["Return", d.returnLabel]
-      ]));
-      return section;
-    }
-    contractSection() {
-      const d = this.detail;
-      const section = detailSection("aside", "Contract");
-      const details = document.createElement("details");
-      details.append(summary("Schemas"), schemaBlock("Params", d.params ?? null), schemaBlock("Body", d.body ?? null), schemaBlock("Output", d.output ?? null));
-      section.append(details);
-      return section;
     }
     async onInputChange(path) {
       this.clearResult();
@@ -22178,14 +22336,529 @@ pre {
   if (!customElements.get("cms-function-detail")) {
     customElements.define("cms-function-detail", CmsFunctionDetail);
   }
-  function summary(text2) {
-    const el2 = document.createElement("summary");
-    el2.textContent = text2;
+
+  // src/components/admin/Resources/WorkflowEditor/mappingValues.ts
+  function mappedObject(draft) {
+    const result = {};
+    for (const [path, value] of Object.entries(draft)) {
+      if (!value.value) {
+        continue;
+      }
+      setPath(result, path, resolvedDraftValue(value));
+    }
+    return result;
+  }
+  function resolvedDraftValue(draft) {
+    if (draft.mode === "reference") {
+      return draft.value;
+    }
+    const raw = draft.value.trim();
+    if (!raw) {
+      return "";
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return raw;
+    }
+  }
+  function setPath(target, path, value) {
+    if (!path) {
+      target.value = value;
+      return;
+    }
+    const parts = path.split(".").filter(Boolean);
+    let current = target;
+    for (const [index, part] of parts.entries()) {
+      if (index === parts.length - 1) {
+        current[part] = value;
+        return;
+      }
+      const existing = current[part];
+      if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
+        current[part] = {};
+      }
+      current = current[part];
+    }
+  }
+
+  // src/components/admin/Resources/WorkflowEditor/mapping.ts
+  function referencesFromShape(shape, prefix, label2) {
+    if (!shape) {
+      return [];
+    }
+    const options2 = [{ value: prefix, label: label2, shape }];
+    if (shape.type !== "object") {
+      return options2;
+    }
+    for (const [name, child] of Object.entries(shape.properties ?? {})) {
+      options2.push(...referencesFromShape(child, `${prefix}.${name}`, `${label2} / ${name}`));
+    }
+    return options2;
+  }
+  function targetsFromShape(shape, prefix = "") {
+    if (!shape) {
+      return [];
+    }
+    if (shape.type !== "object" || !Object.keys(shape.properties ?? {}).length) {
+      return [{ path: prefix, label: prefix || "Value", shape }];
+    }
+    return Object.entries(shape.properties ?? {}).flatMap(([name, child]) => {
+      const path = prefix ? `${prefix}.${name}` : name;
+      if (child.type === "object" && Object.keys(child.properties ?? {}).length) {
+        return targetsFromShape(child, path);
+      }
+      return [
+        {
+          path,
+          label: path,
+          required: shape.required?.includes(name),
+          shape: child
+        }
+      ];
+    });
+  }
+  function mappingEditor(targets, references, draft, emptyMessage) {
+    const root = document.createElement("div");
+    root.className = "mapping-editor";
+    if (!targets.length) {
+      const empty = document.createElement("div");
+      empty.className = "mapping-empty";
+      empty.textContent = emptyMessage;
+      root.append(empty);
+      return root;
+    }
+    for (const target of targets) {
+      draft[target.path] ??= { mode: "reference", value: "" };
+      root.append(mappingRow(target, references, draft[target.path]));
+    }
+    return root;
+  }
+  function valuePicker(draft, references, label2 = "Choose a value") {
+    const wrap = document.createElement("div");
+    wrap.className = "value-picker";
+    const select2 = document.createElement("select");
+    select2.append(option2("", label2));
+    for (const reference of references) {
+      select2.append(option2(reference.value, reference.label));
+    }
+    select2.append(option2("__literal__", "Fixed value…"));
+    select2.value = draft.mode === "literal" ? "__literal__" : draft.value;
+    const literal = document.createElement("input");
+    literal.type = "text";
+    literal.placeholder = "Text, number, boolean, or JSON";
+    literal.value = draft.mode === "literal" ? draft.value : "";
+    literal.hidden = draft.mode !== "literal";
+    select2.addEventListener("change", () => {
+      if (select2.value === "__literal__") {
+        draft.mode = "literal";
+        draft.value = literal.value;
+        literal.hidden = false;
+        literal.focus();
+        return;
+      }
+      draft.mode = "reference";
+      draft.value = select2.value;
+      literal.hidden = true;
+    });
+    literal.addEventListener("input", () => draft.value = literal.value);
+    wrap.append(select2, literal);
+    return wrap;
+  }
+  function mappingRow(target, references, draft) {
+    const row = document.createElement("div");
+    row.className = "mapping-row";
+    const identity = document.createElement("div");
+    identity.className = "mapping-target";
+    const name = document.createElement("strong");
+    name.textContent = target.label;
+    const meta = document.createElement("span");
+    const semantic = target.shape?.semantic?.kind === "user-id" ? " · user identity" : "";
+    meta.textContent = `${target.shape?.type ?? "value"}${semantic}${target.required ? " · required" : ""}`;
+    identity.append(name, meta);
+    row.append(identity, valuePicker(draft, compatibleReferences(references, target.shape)));
+    return row;
+  }
+  function compatibleReferences(references, shape) {
+    if (!shape) {
+      return references;
+    }
+    return references.filter((reference) => {
+      if (!reference.shape) {
+        return true;
+      }
+      if (shape.semantic?.kind === "user-id") {
+        return reference.shape.semantic?.kind === "user-id";
+      }
+      return reference.shape.type === shape.type && reference.shape.semantic?.kind !== "user-id";
+    });
+  }
+  function option2(value, label2) {
+    const el2 = document.createElement("option");
+    el2.value = value;
+    el2.textContent = label2;
     return el2;
   }
 
-  // src/components/admin/Resources/Functions/create.css
-  var create_default = `:host {
+  // src/components/admin/Resources/WorkflowEditor/schemaFields.ts
+  function schemaFieldsEditor(fields, onChange, showRequired = true) {
+    const root = document.createElement("div");
+    root.className = "schema-fields";
+    if (!fields.length) {
+      const empty = document.createElement("div");
+      empty.className = "mapping-empty";
+      empty.textContent = "No fields defined.";
+      root.append(empty);
+    }
+    fields.forEach((field, index) => root.append(schemaFieldRow(field, index, fields, onChange, showRequired)));
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "button secondary small";
+    add.textContent = "+ Add field";
+    add.addEventListener("click", () => {
+      fields.push({ name: `field${fields.length + 1}`, type: "string", required: false });
+      onChange();
+    });
+    root.append(add);
+    return root;
+  }
+  function paramsFromFields(fields) {
+    return Object.fromEntries(fields.filter((field) => field.name.trim()).map((field) => [field.name.trim(), { type: field.type }]));
+  }
+  function objectShapeFromFields(fields) {
+    const properties = paramsFromFields(fields);
+    if (!Object.keys(properties).length) {
+      return;
+    }
+    const required = fields.filter((field) => field.required && field.name.trim()).map((field) => field.name.trim());
+    return {
+      type: "object",
+      properties,
+      ...required.length ? { required } : {}
+    };
+  }
+  function schemaFieldRow(field, index, fields, onChange, showRequired) {
+    const row = document.createElement("div");
+    row.className = "schema-field-row";
+    const name = document.createElement("input");
+    name.value = field.name;
+    name.placeholder = "fieldName";
+    name.setAttribute("aria-label", "Field name");
+    name.addEventListener("input", () => field.name = name.value);
+    name.addEventListener("change", onChange);
+    const type = document.createElement("select");
+    for (const value of ["string", "number", "boolean", "object", "array"]) {
+      const option3 = document.createElement("option");
+      option3.value = value;
+      option3.textContent = value;
+      type.append(option3);
+    }
+    type.value = field.type;
+    type.setAttribute("aria-label", "Field type");
+    type.addEventListener("change", () => {
+      field.type = type.value;
+      onChange();
+    });
+    const requiredLabel = document.createElement("label");
+    requiredLabel.className = "check compact-check";
+    const required = document.createElement("input");
+    required.type = "checkbox";
+    required.checked = field.required;
+    required.addEventListener("change", () => {
+      field.required = required.checked;
+      onChange();
+    });
+    requiredLabel.append(required, document.createTextNode("Required"));
+    requiredLabel.hidden = !showRequired;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "icon-button";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", `Remove ${field.name || `field ${index + 1}`}`);
+    remove.addEventListener("click", () => {
+      fields.splice(index, 1);
+      onChange();
+    });
+    row.append(name, type, requiredLabel, remove);
+    return row;
+  }
+
+  // src/components/admin/Resources/Functions/create/editor/controls.ts
+  function value(root, fieldName) {
+    return root.querySelector(`[data-field="${fieldName}"]`)?.value ?? "";
+  }
+  function parseOptional(raw, label2) {
+    return raw.trim() ? parseJson4(raw, label2) : undefined;
+  }
+  function field(labelText, control) {
+    const label2 = document.createElement("label");
+    label2.append(document.createTextNode(labelText), control);
+    return label2;
+  }
+  function mappingGroup(title2, editor) {
+    const group = document.createElement("div");
+    group.className = "mapping-group";
+    const heading4 = document.createElement("strong");
+    heading4.textContent = title2;
+    group.append(heading4, editor);
+    return group;
+  }
+  function grid(...children) {
+    const element = document.createElement("div");
+    element.className = "grid";
+    element.append(...children);
+    return element;
+  }
+  function input(current, onChange, placeholder = "", type = "text") {
+    const element = document.createElement("input");
+    element.type = type;
+    element.value = current;
+    element.placeholder = placeholder;
+    element.addEventListener("input", () => onChange(element.value));
+    return element;
+  }
+  function select2(options2, current, onChange) {
+    const element = document.createElement("select");
+    for (const [optionValue, label2] of options2) {
+      const option3 = document.createElement("option");
+      option3.value = optionValue;
+      option3.textContent = label2;
+      element.append(option3);
+    }
+    element.value = current;
+    element.addEventListener("change", () => onChange(element.value));
+    return element;
+  }
+  function identifier(value2) {
+    const words = value2.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
+    return words.map((word, index) => index ? word[0]?.toUpperCase() + word.slice(1) : word.toLowerCase()).join("");
+  }
+  function dataShapeType(value2) {
+    return value2 === "number" || value2 === "boolean" || value2 === "object" || value2 === "array" ? value2 : "string";
+  }
+  function parseJson4(raw, label2) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      throw new Error(`${label2} is not valid JSON.`);
+    }
+  }
+
+  // src/components/admin/Resources/Functions/create/editor/references.ts
+  function referencesBefore(context, stepIndex) {
+    const params = paramsFromFields(context.paramsFields);
+    const body = objectShapeFromFields(context.bodyFields);
+    const references = [
+      ...Object.entries(params).flatMap(([name, shape]) => referencesFromShape(shape, `$input.params.${name}`, `Input parameter / ${name}`)),
+      ...referencesFromShape(body, "$input.body", "Input body"),
+      {
+        value: "$ctx.user.id",
+        label: "Current user / id",
+        shape: { type: "string", semantic: { kind: "user-id", authority: "cms" } }
+      },
+      { value: "$ctx.user.role", label: "Current user / role", shape: { type: "string" } }
+    ];
+    context.steps.slice(0, stepIndex).forEach((step) => {
+      if (step.kind !== "call") {
+        return;
+      }
+      const endpoint = endpointContract(context.catalog, step);
+      const output = endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status))?.body ?? endpoint?.output?.find((entry) => entry.status === "default")?.body;
+      references.push(...referencesFromShape(output, `$steps.${step.id}`, `Step ${step.id}`));
+    });
+    return references;
+  }
+  function endpointContract(catalog, step) {
+    return catalog.find((source2) => source2.id === step.source)?.endpoints.find((endpoint) => endpoint.endpointId === step.endpoint);
+  }
+
+  // src/components/admin/Resources/Functions/create/editor/definition.ts
+  function buildDefinition(root, context, returnValue) {
+    const id = value(root, "id").trim();
+    const name = value(root, "name").trim();
+    const description = value(root, "description").trim();
+    const advancedParams = parseOptional(value(root, "params"), "Params schema");
+    const advancedBody = parseOptional(value(root, "body"), "Body schema");
+    const params = advancedParams ?? paramsFromFields(context.paramsFields);
+    const body = advancedBody ?? objectShapeFromFields(context.bodyFields);
+    const advancedOutput = parseOptional(value(root, "output"), "Output contract");
+    const returnBody = returnValue.value ? resolvedDraftValue(returnValue) : undefined;
+    const returnShape = referencesBefore(context, context.steps.length).find((reference) => reference.value === returnValue.value)?.shape;
+    const returnStatus = Number(value(root, "return-status") || 200);
+    const output = advancedOutput ?? (returnShape ? [{ status: String(returnStatus), body: returnShape }] : undefined);
+    return {
+      id,
+      method: value(root, "method"),
+      access: { mode: value(root, "access") },
+      meta: { name: name || id, ...description ? { description } : {} },
+      input: {
+        ...Object.keys(params).length ? { params } : {},
+        ...body !== undefined ? { body } : {}
+      },
+      ...output !== undefined ? { output } : {},
+      steps: context.steps.map((step) => buildStep(step)),
+      return: {
+        status: returnStatus,
+        ...returnBody !== undefined ? { body: returnBody } : {}
+      }
+    };
+  }
+  function buildStep(step) {
+    if (step.kind === "call") {
+      const params = mappedObject(step.params);
+      const body = mappedDraft(step.body);
+      return {
+        id: step.id,
+        call: {
+          source: step.source,
+          endpoint: step.endpoint,
+          ...Object.keys(params).length ? { params } : {},
+          ...body !== undefined ? { body } : {}
+        }
+      };
+    }
+    const left = resolvedDraftValue(step.left);
+    const condition = step.operator === "exists" ? { exists: left } : { [step.operator]: [left, resolvedDraftValue(step.right)] };
+    return {
+      assert: {
+        condition,
+        failure: { status: Number(step.status || 403), error: step.error || "Condition failed" }
+      }
+    };
+  }
+  function mappedDraft(draft) {
+    const root = draft[""];
+    if (root?.value) {
+      return resolvedDraftValue(root);
+    }
+    const mapped = mappedObject(draft);
+    return Object.keys(mapped).length ? mapped : undefined;
+  }
+
+  // src/components/admin/Resources/Functions/create/styles/controls.css
+  var controls_default2 = `.workflow-help {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .65rem;
+}
+
+.workflow-help > div {
+    display: grid;
+    gap: .2rem;
+    padding: .7rem .8rem;
+    border-radius: 7px;
+    background: #f1f5f9;
+    font-size: .8rem;
+}
+
+.workflow-help span {
+    color: #64748b;
+}
+
+.grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.short-row {
+    display: grid;
+    grid-template-columns: minmax(0, 180px) minmax(0, 260px);
+    gap: 1rem;
+}
+
+.narrow-field {
+    max-width: 180px;
+}
+
+label {
+    display: grid;
+    gap: .4rem;
+    color: var(--p9r-color-muted, #64748b);
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+label span {
+    font-weight: 500;
+}
+
+label.check {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    color: var(--p9r-color-text, #0f172a);
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    border: 1px solid var(--p9r-color-border, #d8e1ea);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--p9r-color-text, #0f172a);
+    font: inherit;
+}
+
+input,
+select {
+    min-height: 2.35rem;
+    padding: 0 .625rem;
+}
+
+input[type="checkbox"] {
+    width: 1rem;
+    min-height: 1rem;
+    padding: 0;
+}
+
+textarea {
+    min-height: 6.5rem;
+    padding: .75rem;
+    resize: vertical;
+    font: 500 .8125rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+textarea.compact {
+    min-height: 4.5rem;
+    font-family: inherit;
+}
+
+.button {
+    min-height: 2.1rem;
+    border: 1px solid #047857;
+    border-radius: 6px;
+    padding: 0 .75rem;
+    cursor: pointer;
+    font: inherit;
+    font-size: .8125rem;
+    font-weight: 700;
+}
+
+.button.primary {
+    background: #047857;
+    color: #fff;
+}
+
+.button.secondary {
+    background: #fff;
+    color: #047857;
+}
+
+.button.quiet {
+    border-color: transparent;
+    background: transparent;
+    color: #475569;
+}
+
+.button:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+`;
+
+  // src/components/admin/Resources/Functions/create/styles/layout.css
+  var layout_default = `:host {
     display: block;
 }
 
@@ -22310,8 +22983,10 @@ details[open] > summary > .chevron {
     border-top: 1px solid var(--p9r-color-border, #e2e8f0);
     background: #fbfdff;
 }
+`;
 
-.callout {
+  // src/components/admin/Resources/Functions/create/styles/mapping.css
+  var mapping_default = `.callout {
     padding: .7rem .8rem;
     border-left: 3px solid #0f766e;
     background: #f0fdfa;
@@ -22408,128 +23083,10 @@ details[open] > summary > .chevron {
     gap: 1rem;
     padding-top: .8rem;
 }
+`;
 
-.workflow-help {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: .65rem;
-}
-
-.workflow-help > div {
-    display: grid;
-    gap: .2rem;
-    padding: .7rem .8rem;
-    border-radius: 7px;
-    background: #f1f5f9;
-    font-size: .8rem;
-}
-
-.workflow-help span {
-    color: #64748b;
-}
-
-.grid {
-    display: grid;
-    gap: 1rem;
-}
-
-.short-row {
-    display: grid;
-    grid-template-columns: minmax(0, 180px) minmax(0, 260px);
-    gap: 1rem;
-}
-
-.narrow-field {
-    max-width: 180px;
-}
-
-label {
-    display: grid;
-    gap: .4rem;
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .75rem;
-    font-weight: 700;
-}
-
-label span {
-    font-weight: 500;
-}
-
-label.check {
-    display: flex;
-    align-items: center;
-    gap: .4rem;
-    color: var(--p9r-color-text, #0f172a);
-}
-
-input,
-select,
-textarea {
-    width: 100%;
-    border: 1px solid var(--p9r-color-border, #d8e1ea);
-    border-radius: 6px;
-    background: #fff;
-    color: var(--p9r-color-text, #0f172a);
-    font: inherit;
-}
-
-input,
-select {
-    min-height: 2.35rem;
-    padding: 0 .625rem;
-}
-
-input[type="checkbox"] {
-    width: 1rem;
-    min-height: 1rem;
-    padding: 0;
-}
-
-textarea {
-    min-height: 6.5rem;
-    padding: .75rem;
-    resize: vertical;
-    font: 500 .8125rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-textarea.compact {
-    min-height: 4.5rem;
-    font-family: inherit;
-}
-
-.button {
-    min-height: 2.1rem;
-    border: 1px solid #047857;
-    border-radius: 6px;
-    padding: 0 .75rem;
-    cursor: pointer;
-    font: inherit;
-    font-size: .8125rem;
-    font-weight: 700;
-}
-
-.button.primary {
-    background: #047857;
-    color: #fff;
-}
-
-.button.secondary {
-    background: #fff;
-    color: #047857;
-}
-
-.button.quiet {
-    border-color: transparent;
-    background: transparent;
-    color: #475569;
-}
-
-.button:disabled {
-    cursor: wait;
-    opacity: .65;
-}
-
-.steps {
+  // src/components/admin/Resources/Functions/create/styles/steps.css
+  var steps_default = `.steps {
     display: grid;
     gap: .75rem;
     margin-top: 1rem;
@@ -22648,8 +23205,47 @@ textarea.compact {
 }
 `;
 
-  // src/components/admin/Resources/Functions/create.template.html
-  var create_template_default = `<a slot="back" class="back" aria-label="Back to functions">&lt;</a>
+  // src/components/admin/Resources/Functions/create/styles/index.ts
+  var styles_default2 = [layout_default, mapping_default, controls_default2, steps_default].join(`
+`);
+
+  // src/components/admin/Resources/Functions/create/templates/aside.html
+  var aside_default = `
+<details slot="aside" class="side-panel" open>
+    <summary>
+        <strong>Reference guide</strong>
+        <span class="chevron">⌄</span>
+    </summary>
+    <div class="side-body reference-list">
+        <span>Use these values in mappings:</span>
+        <code>$input.params.name</code>
+        <code>$input.body.field</code>
+        <code>$ctx.user.id</code>
+        <code>$ctx.user.role</code>
+        <code>$steps.stepId.field</code>
+    </div>
+</details>
+
+<details slot="aside" class="side-panel">
+    <summary>
+        <strong>Before creating</strong>
+        <span class="chevron">⌄</span>
+    </summary>
+    <div class="side-body checklist">
+        <span>✓ Give every call a unique identifier</span>
+        <span>✓ Reference only earlier steps</span>
+        <span>✓ Keep GET functions free of side effects</span>
+    </div>
+</details>
+
+<div slot="aside" class="status-panel">
+    <strong>Status</strong>
+    <div class="message" data-role="message">Complete the four sections, then create the function.</div>
+</div>
+`;
+
+  // src/components/admin/Resources/Functions/create/templates/general.html
+  var general_default = `<a slot="back" class="back" aria-label="Back to functions">&lt;</a>
 
 <span slot="title">Create function</span>
 
@@ -22716,7 +23312,10 @@ textarea.compact {
         </div>
     </div>
 </details>
+`;
 
+  // src/components/admin/Resources/Functions/create/templates/input.html
+  var input_default = `
 <details slot="main" class="editor-panel" data-panel="input">
     <summary>
         <span class="step-number">2</span>
@@ -22765,7 +23364,44 @@ textarea.compact {
         </details>
     </div>
 </details>
+`;
 
+  // src/components/admin/Resources/Functions/create/templates/return.html
+  var return_default = `
+<details slot="main" class="editor-panel" data-panel="return">
+    <summary>
+        <span class="step-number">4</span>
+        <span>
+            <strong>Choose the result</strong>
+            <small>Return a status and optionally expose workflow data.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <label class="narrow-field">
+            Success status
+            <input data-field="return-status" type="number" min="200" max="599" value="200" />
+        </label>
+
+        <label>
+            Returned value
+            <span>Choose one of the values produced by the workflow.</span>
+            <div data-role="return-picker"></div>
+        </label>
+
+        <label>
+            Documented responses
+            <span>Optional JSON response contract.</span>
+            <textarea data-field="output"
+                placeholder='Advanced override: [{"status":"200","body":{"type":"object"}}]'></textarea>
+        </label>
+    </div>
+</details>
+`;
+
+  // src/components/admin/Resources/Functions/create/templates/workflow.html
+  var workflow_default = `
 <details slot="main" class="editor-panel" data-panel="workflow">
     <summary>
         <span class="step-number">3</span>
@@ -22801,73 +23437,37 @@ textarea.compact {
         </div>
     </div>
 </details>
-
-<details slot="main" class="editor-panel" data-panel="return">
-    <summary>
-        <span class="step-number">4</span>
-        <span>
-            <strong>Choose the result</strong>
-            <small>Return a status and optionally expose workflow data.</small>
-        </span>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="panel-body">
-        <label class="narrow-field">
-            Success status
-            <input data-field="return-status" type="number" min="200" max="599" value="200" />
-        </label>
-
-        <label>
-            Returned value
-            <span>Choose one of the values produced by the workflow.</span>
-            <div data-role="return-picker"></div>
-        </label>
-
-        <label>
-            Documented responses
-            <span>Optional JSON response contract.</span>
-            <textarea data-field="output"
-                placeholder='Advanced override: [{"status":"200","body":{"type":"object"}}]'></textarea>
-        </label>
-    </div>
-</details>
-
-<details slot="aside" class="side-panel" open>
-    <summary>
-        <strong>Reference guide</strong>
-        <span class="chevron">⌄</span>
-    </summary>
-    <div class="side-body reference-list">
-        <span>Use these values in mappings:</span>
-        <code>$input.params.name</code>
-        <code>$input.body.field</code>
-        <code>$ctx.user.id</code>
-        <code>$ctx.user.role</code>
-        <code>$steps.stepId.field</code>
-    </div>
-</details>
-
-<details slot="aside" class="side-panel">
-    <summary>
-        <strong>Before creating</strong>
-        <span class="chevron">⌄</span>
-    </summary>
-    <div class="side-body checklist">
-        <span>✓ Give every call a unique identifier</span>
-        <span>✓ Reference only earlier steps</span>
-        <span>✓ Keep GET functions free of side effects</span>
-    </div>
-</details>
-
-<div slot="aside" class="status-panel">
-    <strong>Status</strong>
-    <div class="message" data-role="message">Complete the four sections, then create the function.</div>
-</div>
 `;
 
-  // src/components/admin/Resources/Functions/step.template.html
-  var step_template_default = `<summary>
+  // src/components/admin/Resources/Functions/create/templates/index.ts
+  var templateHtml = [general_default, input_default, workflow_default, return_default, aside_default].join("");
+  function appendCreateTemplate(shell) {
+    const template4 = document.createElement("template");
+    template4.innerHTML = templateHtml;
+    shell.append(template4.content.cloneNode(true));
+  }
+
+  // src/components/admin/Resources/Functions/create/editor/shell.ts
+  function renderCreateShell(host, state2) {
+    const style = document.createElement("style");
+    style.textContent = styles_default2;
+    if (state2) {
+      const message = document.createElement("div");
+      message.className = "state";
+      message.textContent = state2;
+      host.replaceChildren(style, message);
+      return false;
+    }
+    const shell = document.createElement("cms-shell-detail");
+    shell.className = "create-shell";
+    appendCreateTemplate(shell);
+    shell.querySelector(".back").href = route2("/admin/functions");
+    host.replaceChildren(style, shell);
+    return true;
+  }
+
+  // src/components/admin/Resources/Functions/create/templates/step.html
+  var step_default = `<summary>
     <span class="step-kind" data-role="kind"></span>
     <span class="step-summary">
         <strong data-role="title"></strong>
@@ -22884,251 +23484,118 @@ textarea.compact {
 <div class="step-fields"></div>
 `;
 
-  // src/components/admin/Resources/WorkflowEditor/mapping.ts
-  function referencesFromShape(shape, prefix, label2) {
-    if (!shape) {
-      return [];
-    }
-    const options2 = [{ value: prefix, label: label2, shape }];
-    if (shape.type !== "object") {
-      return options2;
-    }
-    for (const [name, child] of Object.entries(shape.properties ?? {})) {
-      options2.push(...referencesFromShape(child, `${prefix}.${name}`, `${label2} / ${name}`));
-    }
-    return options2;
-  }
-  function targetsFromShape(shape, prefix = "") {
-    if (!shape) {
-      return [];
-    }
-    if (shape.type !== "object" || !Object.keys(shape.properties ?? {}).length) {
-      return [{ path: prefix, label: prefix || "Value", shape }];
-    }
-    return Object.entries(shape.properties ?? {}).flatMap(([name, child]) => {
-      const path = prefix ? `${prefix}.${name}` : name;
-      if (child.type === "object" && Object.keys(child.properties ?? {}).length) {
-        return targetsFromShape(child, path);
-      }
-      return [
-        {
-          path,
-          label: path,
-          required: shape.required?.includes(name),
-          shape: child
-        }
-      ];
+  // src/components/admin/Resources/Functions/create/editor/callFields.ts
+  function renderCallFields(root, step, context) {
+    const id = input(step.id, (value2) => step.id = value2);
+    const source2 = select2(context.catalog.map((item) => [item.id, item.label]), step.source, (value2) => {
+      step.source = value2;
+      step.endpoint = context.catalog.find((item) => item.id === value2)?.endpoints[0]?.endpointId ?? "";
+      step.params = {};
+      step.body = {};
+      context.renderSteps();
     });
-  }
-  function mappingEditor(targets, references, draft, emptyMessage) {
-    const root = document.createElement("div");
-    root.className = "mapping-editor";
-    if (!targets.length) {
-      const empty = document.createElement("div");
-      empty.className = "mapping-empty";
-      empty.textContent = emptyMessage;
-      root.append(empty);
-      return root;
-    }
-    for (const target of targets) {
-      draft[target.path] ??= { mode: "reference", value: "" };
-      root.append(mappingRow(target, references, draft[target.path]));
-    }
-    return root;
-  }
-  function valuePicker(draft, references, label2 = "Choose a value") {
-    const wrap = document.createElement("div");
-    wrap.className = "value-picker";
-    const select2 = document.createElement("select");
-    select2.append(option2("", label2));
-    for (const reference of references) {
-      select2.append(option2(reference.value, reference.label));
-    }
-    select2.append(option2("__literal__", "Fixed value…"));
-    select2.value = draft.mode === "literal" ? "__literal__" : draft.value;
-    const literal = document.createElement("input");
-    literal.type = "text";
-    literal.placeholder = "Text, number, boolean, or JSON";
-    literal.value = draft.mode === "literal" ? draft.value : "";
-    literal.hidden = draft.mode !== "literal";
-    select2.addEventListener("change", () => {
-      if (select2.value === "__literal__") {
-        draft.mode = "literal";
-        draft.value = literal.value;
-        literal.hidden = false;
-        literal.focus();
-        return;
-      }
-      draft.mode = "reference";
-      draft.value = select2.value;
-      literal.hidden = true;
+    const endpoints = context.catalog.find((item) => item.id === step.source)?.endpoints ?? [];
+    const endpoint = select2(endpoints.map((item) => [item.endpointId, `${item.method} ${item.meta?.name ?? item.endpointId}`]), step.endpoint, (value2) => {
+      step.endpoint = value2;
+      step.params = {};
+      step.body = {};
+      context.renderSteps();
     });
-    literal.addEventListener("input", () => draft.value = literal.value);
-    wrap.append(select2, literal);
-    return wrap;
-  }
-  function mappedObject(draft) {
-    const result = {};
-    for (const [path, value] of Object.entries(draft)) {
-      if (!value.value) {
-        continue;
+    const contract = endpoints.find((item) => item.endpointId === step.endpoint);
+    const references = referencesBefore(context, context.steps.indexOf(step));
+    const paramTargets = (contract?.params ?? []).map((param) => ({
+      path: param.name,
+      label: param.name,
+      required: param.required,
+      shape: {
+        type: dataShapeType(param.type),
+        ...param.semantic ? { semantic: param.semantic } : {}
       }
-      setPath(result, path, resolvedDraftValue(value));
-    }
-    return result;
-  }
-  function resolvedDraftValue(draft) {
-    if (draft.mode === "reference") {
-      return draft.value;
-    }
-    const raw = draft.value.trim();
-    if (!raw) {
-      return "";
-    }
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return raw;
-    }
-  }
-  function mappingRow(target, references, draft) {
-    const row = document.createElement("div");
-    row.className = "mapping-row";
-    const identity = document.createElement("div");
-    identity.className = "mapping-target";
-    const name = document.createElement("strong");
-    name.textContent = target.label;
-    const meta = document.createElement("span");
-    const semantic = target.shape?.semantic?.kind === "user-id" ? " · user identity" : "";
-    meta.textContent = `${target.shape?.type ?? "value"}${semantic}${target.required ? " · required" : ""}`;
-    identity.append(name, meta);
-    row.append(identity, valuePicker(draft, compatibleReferences(references, target.shape)));
-    return row;
-  }
-  function compatibleReferences(references, shape) {
-    if (!shape) {
-      return references;
-    }
-    return references.filter((reference) => {
-      if (!reference.shape) {
-        return true;
-      }
-      if (shape.semantic?.kind === "user-id") {
-        return reference.shape.semantic?.kind === "user-id";
-      }
-      return reference.shape.type === shape.type && reference.shape.semantic?.kind !== "user-id";
-    });
-  }
-  function setPath(target, path, value) {
-    if (!path) {
-      target.value = value;
-      return;
-    }
-    const parts = path.split(".").filter(Boolean);
-    let current = target;
-    for (const [index, part] of parts.entries()) {
-      if (index === parts.length - 1) {
-        current[part] = value;
-        return;
-      }
-      const existing = current[part];
-      if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
-        current[part] = {};
-      }
-      current = current[part];
-    }
-  }
-  function option2(value, label2) {
-    const el2 = document.createElement("option");
-    el2.value = value;
-    el2.textContent = label2;
-    return el2;
+    }));
+    const bodyTargets = targetsFromShape(contract?.body);
+    root.append(grid(field("Step identifier", id), field("Source", source2), field("Endpoint", endpoint), mappingGroup("Parameter mapping", mappingEditor(paramTargets, references, step.params, "This endpoint has no request parameters.")), mappingGroup("Body mapping", mappingEditor(bodyTargets, references, step.body, "This endpoint has no request body."))));
   }
 
-  // src/components/admin/Resources/WorkflowEditor/schemaFields.ts
-  function schemaFieldsEditor(fields, onChange, showRequired = true) {
-    const root = document.createElement("div");
-    root.className = "schema-fields";
-    if (!fields.length) {
-      const empty = document.createElement("div");
-      empty.className = "mapping-empty";
-      empty.textContent = "No fields defined.";
-      root.append(empty);
+  // src/components/admin/Resources/Functions/create/editor/stepCards.ts
+  function stepCard(step, index, context) {
+    const card = document.createElement("details");
+    card.className = "step-card";
+    card.open = true;
+    const body = document.createElement("template");
+    body.innerHTML = step_default;
+    card.append(body.content.cloneNode(true));
+    card.querySelector("[data-role='kind']").textContent = step.kind === "call" ? "CALL" : "RULE";
+    card.querySelector("[data-role='title']").textContent = step.kind === "call" ? step.id || `Step ${index + 1}` : `Business rule ${index + 1}`;
+    card.querySelector("[data-role='subtitle']").textContent = step.kind === "call" ? `${step.source || "Choose a source"}.${step.endpoint || "endpoint"}` : "Execution stops when this condition fails";
+    const fields = card.querySelector(".step-fields");
+    if (step.kind === "call") {
+      renderCallFields(fields, step, context);
+    } else {
+      renderAssertFields(fields, step, context);
     }
-    fields.forEach((field, index) => root.append(schemaFieldRow(field, index, fields, onChange, showRequired)));
-    const add = document.createElement("button");
-    add.type = "button";
-    add.className = "button secondary small";
-    add.textContent = "+ Add field";
-    add.addEventListener("click", () => {
-      fields.push({ name: `field${fields.length + 1}`, type: "string", required: false });
-      onChange();
+    card.querySelector("[data-remove]")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      context.steps.splice(index, 1);
+      context.renderSteps();
     });
-    root.append(add);
-    return root;
+    card.querySelector("[data-move='up']")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      context.moveStep(index, -1);
+    });
+    card.querySelector("[data-move='down']")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      context.moveStep(index, 1);
+    });
+    return card;
   }
-  function paramsFromFields(fields) {
-    return Object.fromEntries(fields.filter((field) => field.name.trim()).map((field) => [field.name.trim(), { type: field.type }]));
-  }
-  function objectShapeFromFields(fields) {
-    const properties = paramsFromFields(fields);
-    if (!Object.keys(properties).length) {
-      return;
+  function renderAssertFields(root, step, context) {
+    const operator = select2([
+      ["equals", "Equals"],
+      ["notEquals", "Not equals"],
+      ["exists", "Exists"],
+      ["in", "In"],
+      ["gt", "Greater than"],
+      ["gte", "Greater or equal"],
+      ["lt", "Less than"],
+      ["lte", "Less or equal"]
+    ], step.operator, (value2) => {
+      step.operator = value2;
+      context.renderSteps();
+    });
+    const references = referencesBefore(context, context.steps.indexOf(step));
+    const children = [field("Operator", operator), field("Value to inspect", valuePicker(step.left, references))];
+    if (step.operator !== "exists") {
+      children.push(field("Expected value", valuePicker(step.right, references)));
     }
-    const required = fields.filter((field) => field.required && field.name.trim()).map((field) => field.name.trim());
+    children.push(field("Failure status", input(step.status, (value2) => step.status = value2, "403", "number")));
+    children.push(field("Failure message", input(step.error, (value2) => step.error = value2, "Condition failed")));
+    root.append(grid(...children));
+  }
+
+  // src/components/admin/Resources/Functions/create/editor/types.ts
+  function newCall(catalog, index) {
+    const source2 = catalog[0];
     return {
-      type: "object",
-      properties,
-      ...required.length ? { required } : {}
+      kind: "call",
+      id: `step${index + 1}`,
+      source: source2?.id ?? "",
+      endpoint: source2?.endpoints[0]?.endpointId ?? "",
+      params: {},
+      body: {}
     };
   }
-  function schemaFieldRow(field, index, fields, onChange, showRequired) {
-    const row = document.createElement("div");
-    row.className = "schema-field-row";
-    const name = document.createElement("input");
-    name.value = field.name;
-    name.placeholder = "fieldName";
-    name.setAttribute("aria-label", "Field name");
-    name.addEventListener("input", () => field.name = name.value);
-    name.addEventListener("change", onChange);
-    const type = document.createElement("select");
-    for (const value of ["string", "number", "boolean", "object", "array"]) {
-      const option3 = document.createElement("option");
-      option3.value = value;
-      option3.textContent = value;
-      type.append(option3);
-    }
-    type.value = field.type;
-    type.setAttribute("aria-label", "Field type");
-    type.addEventListener("change", () => {
-      field.type = type.value;
-      onChange();
-    });
-    const requiredLabel = document.createElement("label");
-    requiredLabel.className = "check compact-check";
-    const required = document.createElement("input");
-    required.type = "checkbox";
-    required.checked = field.required;
-    required.addEventListener("change", () => {
-      field.required = required.checked;
-      onChange();
-    });
-    requiredLabel.append(required, document.createTextNode("Required"));
-    requiredLabel.hidden = !showRequired;
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "icon-button";
-    remove.textContent = "×";
-    remove.setAttribute("aria-label", `Remove ${field.name || `field ${index + 1}`}`);
-    remove.addEventListener("click", () => {
-      fields.splice(index, 1);
-      onChange();
-    });
-    row.append(name, type, requiredLabel, remove);
-    return row;
+  function newAssert() {
+    return {
+      kind: "assert",
+      operator: "equals",
+      left: { mode: "reference", value: "" },
+      right: { mode: "literal", value: "ready" },
+      status: "403",
+      error: "Condition failed"
+    };
   }
 
-  // src/components/admin/Resources/Functions/FunctionCreate.ts
+  // src/components/admin/Resources/Functions/create/FunctionCreate.ts
   class CmsFunctionCreate extends HTMLElement {
     initialized = false;
     catalog = [];
@@ -23156,33 +23623,28 @@ textarea.compact {
       }
     }
     render(state2) {
-      const style = document.createElement("style");
-      style.textContent = create_default;
-      if (state2) {
-        const message = document.createElement("div");
-        message.className = "state";
-        message.textContent = state2;
-        this.replaceChildren(style, message);
+      if (!renderCreateShell(this, state2)) {
         return;
       }
-      const shell = document.createElement("cms-shell-detail");
-      shell.className = "create-shell";
-      const body = document.createElement("template");
-      body.innerHTML = create_template_default;
-      shell.append(body.content.cloneNode(true));
-      shell.querySelector(".back").href = route2("/admin/functions");
-      this.replaceChildren(style, shell);
       this.stepsRoot = this.querySelector("[data-role='steps']");
       this.message = this.querySelector("[data-role='message']");
       this.saveButton = this.querySelector("[data-role='save']");
-      this.querySelector("[data-role='add-call']")?.addEventListener("click", () => this.addCall());
-      this.querySelector("[data-role='add-assert']")?.addEventListener("click", () => this.addAssert());
+      this.bindActions();
+      this.renderInputSchemas();
+      this.renderSteps();
+    }
+    bindActions() {
+      this.querySelector("[data-role='add-call']")?.addEventListener("click", () => {
+        this.steps.push(newCall(this.catalog, this.steps.length));
+        this.renderSteps();
+      });
+      this.querySelector("[data-role='add-assert']")?.addEventListener("click", () => {
+        this.steps.push(newAssert());
+        this.renderSteps();
+      });
       this.querySelector("[data-role='collapse']")?.addEventListener("click", (event) => this.togglePanels(event.currentTarget));
       this.bindGuidance();
       this.saveButton?.addEventListener("click", () => void this.save());
-      this.renderInputSchemas();
-      this.renderSteps();
-      this.renderReturnPicker();
     }
     bindGuidance() {
       const name = this.querySelector("[data-field='name']");
@@ -23203,34 +23665,12 @@ textarea.compact {
       }
       button2.textContent = shouldOpen ? "Collapse all" : "Expand all";
     }
-    addCall() {
-      const source = this.catalog[0];
-      this.steps.push({
-        kind: "call",
-        id: `step${this.steps.length + 1}`,
-        source: source?.id ?? "",
-        endpoint: source?.endpoints[0]?.endpointId ?? "",
-        params: {},
-        body: {}
-      });
-      this.renderSteps();
-    }
-    addAssert() {
-      this.steps.push({
-        kind: "assert",
-        operator: "equals",
-        left: { mode: "reference", value: "" },
-        right: { mode: "literal", value: "ready" },
-        status: "403",
-        error: "Condition failed"
-      });
-      this.renderSteps();
-    }
     renderSteps() {
       if (!this.stepsRoot) {
         return;
       }
-      this.stepsRoot.replaceChildren(...this.steps.map((step, index) => this.stepCard(step, index)));
+      const context = this.editorContext();
+      this.stepsRoot.replaceChildren(...this.steps.map((step, index) => stepCard(step, index, context)));
       const empty = this.querySelector("[data-role='steps-empty']");
       if (empty) {
         empty.hidden = this.steps.length > 0;
@@ -23238,130 +23678,15 @@ textarea.compact {
       this.renderReturnPicker();
     }
     renderInputSchemas() {
-      const paramsRoot = this.querySelector("[data-role='params-schema']");
-      const bodyRoot = this.querySelector("[data-role='body-schema']");
-      paramsRoot?.replaceChildren(schemaFieldsEditor(this.paramsFields, () => {
+      const refresh = () => {
         this.renderInputSchemas();
         this.renderSteps();
-      }, false));
-      bodyRoot?.replaceChildren(schemaFieldsEditor(this.bodyFields, () => {
-        this.renderInputSchemas();
-        this.renderSteps();
-      }));
-    }
-    stepCard(step, index) {
-      const card = document.createElement("details");
-      card.className = "step-card";
-      card.open = true;
-      const body = document.createElement("template");
-      body.innerHTML = step_template_default;
-      card.append(body.content.cloneNode(true));
-      card.querySelector("[data-role='kind']").textContent = step.kind === "call" ? "CALL" : "RULE";
-      card.querySelector("[data-role='title']").textContent = step.kind === "call" ? step.id || `Step ${index + 1}` : `Business rule ${index + 1}`;
-      card.querySelector("[data-role='subtitle']").textContent = step.kind === "call" ? `${step.source || "Choose a source"}.${step.endpoint || "endpoint"}` : "Execution stops when this condition fails";
-      const fields = card.querySelector(".step-fields");
-      if (step.kind === "call") {
-        this.renderCallFields(fields, step);
-      } else {
-        this.renderAssertFields(fields, step);
-      }
-      card.querySelector("[data-remove]")?.addEventListener("click", (event) => {
-        event.preventDefault();
-        this.steps.splice(index, 1);
-        this.renderSteps();
-      });
-      card.querySelector("[data-move='up']")?.addEventListener("click", (event) => {
-        event.preventDefault();
-        this.move(index, -1);
-      });
-      card.querySelector("[data-move='down']")?.addEventListener("click", (event) => {
-        event.preventDefault();
-        this.move(index, 1);
-      });
-      return card;
-    }
-    renderCallFields(root, step) {
-      const id = input(step.id, (value) => step.id = value);
-      const source = select2(this.catalog.map((item) => [item.id, item.label]), step.source, (value) => {
-        step.source = value;
-        step.endpoint = this.catalog.find((item) => item.id === value)?.endpoints[0]?.endpointId ?? "";
-        step.params = {};
-        step.body = {};
-        this.renderSteps();
-      });
-      const endpoints = this.catalog.find((item) => item.id === step.source)?.endpoints ?? [];
-      const endpoint = select2(endpoints.map((item) => [item.endpointId, `${item.method} ${item.meta?.name ?? item.endpointId}`]), step.endpoint, (value) => {
-        step.endpoint = value;
-        step.params = {};
-        step.body = {};
-        this.renderSteps();
-      });
-      const contract = endpoints.find((item) => item.endpointId === step.endpoint);
-      const references = this.referencesBefore(this.steps.indexOf(step));
-      const paramTargets = (contract?.params ?? []).map((param) => ({
-        path: param.name,
-        label: param.name,
-        required: param.required,
-        shape: {
-          type: dataShapeType(param.type),
-          ...param.semantic ? { semantic: param.semantic } : {}
-        }
-      }));
-      const bodyTargets = targetsFromShape(contract?.body);
-      root.append(grid(field("Step identifier", id), field("Source", source), field("Endpoint", endpoint), mappingGroup("Parameter mapping", mappingEditor(paramTargets, references, step.params, "This endpoint has no request parameters.")), mappingGroup("Body mapping", mappingEditor(bodyTargets, references, step.body, "This endpoint has no request body."))));
-    }
-    renderAssertFields(root, step) {
-      const operator = select2([
-        ["equals", "Equals"],
-        ["notEquals", "Not equals"],
-        ["exists", "Exists"],
-        ["in", "In"],
-        ["gt", "Greater than"],
-        ["gte", "Greater or equal"],
-        ["lt", "Less than"],
-        ["lte", "Less or equal"]
-      ], step.operator, (value) => {
-        step.operator = value;
-        this.renderSteps();
-      });
-      const references = this.referencesBefore(this.steps.indexOf(step));
-      const children = [field("Operator", operator), field("Value to inspect", valuePicker(step.left, references))];
-      if (step.operator !== "exists") {
-        children.push(field("Expected value", valuePicker(step.right, references)));
-      }
-      children.push(field("Failure status", input(step.status, (value) => step.status = value, "403", "number")));
-      children.push(field("Failure message", input(step.error, (value) => step.error = value, "Condition failed")));
-      root.append(grid(...children));
+      };
+      this.querySelector("[data-role='params-schema']")?.replaceChildren(schemaFieldsEditor(this.paramsFields, refresh, false));
+      this.querySelector("[data-role='body-schema']")?.replaceChildren(schemaFieldsEditor(this.bodyFields, refresh));
     }
     renderReturnPicker() {
-      const root = this.querySelector("[data-role='return-picker']");
-      root?.replaceChildren(valuePicker(this.returnValue, this.referencesBefore(this.steps.length), "No response body"));
-    }
-    referencesBefore(stepIndex) {
-      const params = paramsFromFields(this.paramsFields);
-      const body = objectShapeFromFields(this.bodyFields);
-      const references = [
-        ...Object.entries(params).flatMap(([name, shape]) => referencesFromShape(shape, `$input.params.${name}`, `Input parameter / ${name}`)),
-        ...referencesFromShape(body, "$input.body", "Input body"),
-        {
-          value: "$ctx.user.id",
-          label: "Current user / id",
-          shape: { type: "string", semantic: { kind: "user-id", authority: "cms" } }
-        },
-        { value: "$ctx.user.role", label: "Current user / role", shape: { type: "string" } }
-      ];
-      this.steps.slice(0, stepIndex).forEach((step) => {
-        if (step.kind !== "call") {
-          return;
-        }
-        const endpoint = this.endpointContract(step);
-        const output = endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status))?.body ?? endpoint?.output?.find((entry) => entry.status === "default")?.body;
-        references.push(...referencesFromShape(output, `$steps.${step.id}`, `Step ${step.id}`));
-      });
-      return references;
-    }
-    endpointContract(step) {
-      return this.catalog.find((source) => source.id === step.source)?.endpoints.find((endpoint) => endpoint.endpointId === step.endpoint);
+      this.querySelector("[data-role='return-picker']")?.replaceChildren(valuePicker(this.returnValue, referencesBefore(this.editorContext(), this.steps.length), "No response body"));
     }
     move(index, offset) {
       const target = index + offset;
@@ -23378,44 +23703,22 @@ textarea.compact {
       this.setMessage("Validating function...", "");
       this.saveButton.disabled = true;
       try {
-        const definition = this.definition();
-        const created = await createFunctionDefinition(definition);
+        const created = await createFunctionDefinition(buildDefinition(this, this.editorContext(), this.returnValue));
         window.location.href = route2(`/admin/functions/detail?id=${encodeURIComponent(created.id)}`);
       } catch (error) {
         this.setMessage(error instanceof Error ? error.message : "Failed to create function.", "error");
         this.saveButton.disabled = false;
       }
     }
-    definition() {
-      const id = value(this, "id").trim();
-      const name = value(this, "name").trim();
-      const description = value(this, "description").trim();
-      const advancedParams = parseOptional(value(this, "params"), "Params schema");
-      const advancedBody = parseOptional(value(this, "body"), "Body schema");
-      const params = advancedParams ?? paramsFromFields(this.paramsFields);
-      const body = advancedBody ?? objectShapeFromFields(this.bodyFields);
-      const advancedOutput = parseOptional(value(this, "output"), "Output contract");
-      const returnBody = this.returnValue.value ? resolvedDraftValue(this.returnValue) : undefined;
-      const returnShape = this.referencesBefore(this.steps.length).find((reference) => reference.value === this.returnValue.value)?.shape;
-      const returnStatus = Number(value(this, "return-status") || 200);
-      const output = advancedOutput ?? (returnShape ? [{ status: String(returnStatus), body: returnShape }] : undefined);
-      const definition = {
-        id,
-        method: value(this, "method"),
-        access: { mode: value(this, "access") },
-        meta: { name: name || id, ...description ? { description } : {} },
-        input: {
-          ...Object.keys(params).length ? { params } : {},
-          ...body !== undefined ? { body } : {}
-        },
-        ...output !== undefined ? { output } : {},
-        steps: this.steps.map((step) => buildStep(step)),
-        return: {
-          status: returnStatus,
-          ...returnBody !== undefined ? { body: returnBody } : {}
-        }
+    editorContext() {
+      return {
+        catalog: this.catalog,
+        steps: this.steps,
+        paramsFields: this.paramsFields,
+        bodyFields: this.bodyFields,
+        renderSteps: () => this.renderSteps(),
+        moveStep: (index, offset) => this.move(index, offset)
       };
-      return definition;
     }
     setMessage(text2, kind) {
       if (!this.message) {
@@ -23427,96 +23730,6 @@ textarea.compact {
   }
   if (!customElements.get("cms-function-create")) {
     customElements.define("cms-function-create", CmsFunctionCreate);
-  }
-  function buildStep(step) {
-    if (step.kind === "call") {
-      const params = mappedObject(step.params);
-      const body = mappedDraft(step.body);
-      return {
-        id: step.id,
-        call: {
-          source: step.source,
-          endpoint: step.endpoint,
-          ...Object.keys(params).length ? { params } : {},
-          ...body !== undefined ? { body } : {}
-        }
-      };
-    }
-    const left = resolvedDraftValue(step.left);
-    const condition = step.operator === "exists" ? { exists: left } : { [step.operator]: [left, resolvedDraftValue(step.right)] };
-    return {
-      assert: {
-        condition,
-        failure: { status: Number(step.status || 403), error: step.error || "Condition failed" }
-      }
-    };
-  }
-  function mappedDraft(draft) {
-    const root = draft[""];
-    if (root?.value) {
-      return resolvedDraftValue(root);
-    }
-    const mapped = mappedObject(draft);
-    return Object.keys(mapped).length ? mapped : undefined;
-  }
-  function value(root, fieldName) {
-    return root.querySelector(`[data-field="${fieldName}"]`)?.value ?? "";
-  }
-  function parseOptional(raw, label2) {
-    return raw.trim() ? parseJson5(raw, label2) : undefined;
-  }
-  function parseJson5(raw, label2) {
-    try {
-      return JSON.parse(raw);
-    } catch {
-      throw new Error(`${label2} is not valid JSON.`);
-    }
-  }
-  function field(labelText, control) {
-    const label2 = document.createElement("label");
-    label2.append(document.createTextNode(labelText), control);
-    return label2;
-  }
-  function mappingGroup(title2, editor) {
-    const group = document.createElement("div");
-    group.className = "mapping-group";
-    const heading4 = document.createElement("strong");
-    heading4.textContent = title2;
-    group.append(heading4, editor);
-    return group;
-  }
-  function grid(...children) {
-    const el2 = document.createElement("div");
-    el2.className = "grid";
-    el2.append(...children);
-    return el2;
-  }
-  function input(current, onChange, placeholder = "", type = "text") {
-    const el2 = document.createElement("input");
-    el2.type = type;
-    el2.value = current;
-    el2.placeholder = placeholder;
-    el2.addEventListener("input", () => onChange(el2.value));
-    return el2;
-  }
-  function select2(options2, current, onChange) {
-    const el2 = document.createElement("select");
-    for (const [optionValue, label2] of options2) {
-      const option3 = document.createElement("option");
-      option3.value = optionValue;
-      option3.textContent = label2;
-      el2.append(option3);
-    }
-    el2.value = current;
-    el2.addEventListener("change", () => onChange(el2.value));
-    return el2;
-  }
-  function identifier(value2) {
-    const words = value2.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
-    return words.map((word, index) => index ? word[0]?.toUpperCase() + word.slice(1) : word.toLowerCase()).join("");
-  }
-  function dataShapeType(value2) {
-    return value2 === "number" || value2 === "boolean" || value2 === "object" || value2 === "array" ? value2 : "string";
   }
 
   // src/components/admin/Resources/Integrations/template.html
@@ -23977,8 +24190,8 @@ textarea.compact {
 
   // src/components/admin/Resources/Integrations/ui/resources/format.ts
   function artifactLabels(definition) {
-    const types = Array.from(new Set((definition.artifacts ?? []).map((artifact) => artifact.type)));
-    return types.length ? types.map(typeLabel) : ["No artifacts"];
+    const types2 = Array.from(new Set((definition.artifacts ?? []).map((artifact) => artifact.type)));
+    return types2.length ? types2.map(typeLabel) : ["No artifacts"];
   }
   function formatRelativeDate(value2) {
     if (!value2) {
@@ -24167,12 +24380,12 @@ textarea.compact {
     }
     if (artifact.type === "trigger") {
       const event = artifact.trigger.event;
-      const source = event.source ?? "*";
+      const source2 = event.source ?? "*";
       const endpoint = event.endpoint ?? "*";
       return {
         type: "Trigger",
         label: artifact.trigger.label ?? artifact.trigger.id,
-        detail: `${event.phase} ${source}.${endpoint} -> ${artifact.trigger.function.id}`
+        detail: `${event.phase} ${source2}.${endpoint} -> ${artifact.trigger.function.id}`
       };
     }
     if (artifact.type === "sourceOverlay") {
@@ -24510,7 +24723,7 @@ textarea.compact {
   }
 
   // src/components/admin/Resources/Integrations/ui/styles/base.css
-  var base_default = `cms-integrations-admin {
+  var base_default4 = `cms-integrations-admin {
     display: block;
 }
 
@@ -25059,7 +25272,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Integrations/ui/styles/index.ts
-  var styles_default = [base_default, browser_default2, detail_default2, setup_default2, responsive_default].join(`
+  var styles_default3 = [base_default4, browser_default2, detail_default2, setup_default2, responsive_default].join(`
 `);
 
   // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
@@ -25178,7 +25391,7 @@ button[slot="back"]:disabled {
     onPopState = () => this.renderAll();
     mountTemplate() {
       const style = document.createElement("style");
-      style.textContent = styles_default;
+      style.textContent = styles_default3;
       const body = document.createElement("template");
       body.innerHTML = template_default13;
       this.replaceChildren(style, body.content.cloneNode(true));
@@ -25212,7 +25425,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Triggers/style.css
-  var style_default14 = `.triggers-surface {
+  var style_default12 = `.triggers-surface {
     max-width: 1120px;
 }
 
@@ -25357,7 +25570,7 @@ input[type="checkbox"] {
     }
     mount() {
       const style = document.createElement("style");
-      style.textContent = style_default14;
+      style.textContent = style_default12;
       const body = document.createElement("template");
       body.innerHTML = template_default14;
       this.replaceChildren(style, body.content.cloneNode(true));
@@ -25406,13 +25619,13 @@ input[type="checkbox"] {
     customElements.define("cms-triggers-admin", TriggersAdmin);
   }
   function cell(content) {
-    const td = document.createElement("td");
+    const td2 = document.createElement("td");
     if (typeof content === "string") {
-      td.textContent = content;
+      td2.textContent = content;
     } else {
-      td.append(content);
+      td2.append(content);
     }
-    return td;
+    return td2;
   }
   function textBlock(primary, secondary) {
     const wrap = document.createElement("div");
@@ -25442,8 +25655,306 @@ input[type="checkbox"] {
     return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
 
-  // src/components/admin/Resources/Triggers/create.css
-  var create_default2 = `:host {
+  // src/components/admin/Resources/Triggers/create/controls.ts
+  function input2(root, name) {
+    return root.querySelector(`[data-field="${name}"]`);
+  }
+  function textarea4(root, name) {
+    return root.querySelector(`[data-field="${name}"]`);
+  }
+  function select4(root, name) {
+    return root.querySelector(`[data-field="${name}"]`);
+  }
+  function checkbox2(root, name) {
+    return input2(root, name);
+  }
+  function option3(value2, label2) {
+    const element = document.createElement("option");
+    element.value = value2;
+    element.textContent = label2;
+    return element;
+  }
+  function parseOptionalObject(raw, label2) {
+    if (!raw.trim()) {
+      return;
+    }
+    try {
+      const value2 = JSON.parse(raw);
+      if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
+        throw new Error;
+      }
+      return value2;
+    } catch {
+      throw new Error(`${label2} must be a JSON object.`);
+    }
+  }
+  function mappedDraft2(draft) {
+    const root = draft[""];
+    if (root?.value) {
+      return resolvedDraftValue(root);
+    }
+    const mapped = mappedObject(draft);
+    return Object.keys(mapped).length ? mapped : undefined;
+  }
+  function parseOptionalValue(raw) {
+    if (!raw.trim()) {
+      return;
+    }
+    const text3 = raw.trim();
+    if (text3.startsWith("$")) {
+      return text3;
+    }
+    try {
+      return JSON.parse(text3);
+    } catch {
+      return text3;
+    }
+  }
+  function identifier2(value2) {
+    const words = value2.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
+    return words.map((word) => word.toLowerCase()).join("-");
+  }
+  function dataShapeType2(value2) {
+    return value2 === "number" || value2 === "boolean" || value2 === "object" || value2 === "array" ? value2 : "string";
+  }
+  function uniqueReferences(references) {
+    const seen = new Set;
+    return references.filter((reference) => {
+      if (seen.has(reference.value)) {
+        return false;
+      }
+      seen.add(reference.value);
+      return true;
+    });
+  }
+
+  // src/components/admin/Resources/Triggers/create/definition.ts
+  function buildTriggerDefinition(root, conditionLeft, conditionRight, functionParams, functionBody) {
+    const id = input2(root, "id").value.trim();
+    const label2 = input2(root, "label").value.trim();
+    const advancedParams = parseOptionalObject(textarea4(root, "params").value, "Params mapping");
+    const advancedBody = parseOptionalValue(textarea4(root, "body").value);
+    const params = advancedParams ?? mappedObject(functionParams);
+    const body = advancedBody ?? mappedDraft2(functionBody);
+    const mode = select4(root, "mode").value;
+    return {
+      id,
+      ...label2 ? { label: label2 } : {},
+      event: {
+        kind: "endpoint",
+        source: select4(root, "source").value,
+        endpoint: select4(root, "endpoint").value,
+        phase: select4(root, "phase").value
+      },
+      mode,
+      failureMode: select4(root, "failure").value,
+      ...checkbox2(root, "condition-enabled").checked ? { condition: buildCondition(root, conditionLeft, conditionRight) } : {},
+      function: {
+        id: select4(root, "function").value,
+        ...Object.keys(params).length ? { params } : {},
+        ...body !== undefined ? { body } : {}
+      }
+    };
+  }
+  function buildCondition(root, leftDraft, rightDraft) {
+    const operator = select4(root, "operator").value;
+    const left = resolvedDraftValue(leftDraft);
+    if (operator === "exists") {
+      return { exists: left };
+    }
+    return { [operator]: [left, resolvedDraftValue(rightDraft)] };
+  }
+
+  // src/components/admin/Resources/Triggers/create/references.ts
+  function eventReferences(root, sources) {
+    const endpoint = selectedEndpoint(root, sources);
+    const references = [
+      { value: "$request.method", label: "Request / method", shape: { type: "string" } },
+      { value: "$endpoint.urn", label: "Endpoint / URN", shape: { type: "string" } },
+      { value: "$endpoint.source", label: "Endpoint / source", shape: { type: "string" } },
+      { value: "$endpoint.endpoint", label: "Endpoint / identifier", shape: { type: "string" } },
+      {
+        value: "$ctx.user.id",
+        label: "Current user / id",
+        shape: { type: "string", semantic: { kind: "user-id", authority: "cms" } }
+      },
+      { value: "$ctx.user.role", label: "Current user / role", shape: { type: "string" } }
+    ];
+    for (const param of endpoint?.params ?? []) {
+      references.push({
+        value: `$request.params.${param.name}`,
+        label: `Request parameter / ${param.name}`,
+        shape: {
+          type: dataShapeType2(param.type),
+          ...param.semantic ? { semantic: param.semantic } : {}
+        }
+      });
+    }
+    references.push(...referencesFromShape(endpoint?.body, "$request.body", "Request body"));
+    if (select4(root, "phase").value === "response") {
+      references.push({ value: "$response.status", label: "Response / status", shape: { type: "number" } });
+      const output = endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status)) ?? endpoint?.output?.find((entry) => entry.status === "default");
+      references.push(...referencesFromShape(output?.body, "$response.body", "Response body"));
+      references.push(...referencesFromShape(output?.triggerBody, "$response.body", "Response body / trigger-only"));
+    }
+    return uniqueReferences(references);
+  }
+  function selectedEndpoint(root, sources) {
+    return sources.find((item) => item.id === select4(root, "source").value)?.endpoints.find((endpoint) => endpoint.endpointId === select4(root, "endpoint").value);
+  }
+
+  // src/components/admin/Resources/Triggers/create/mappings.ts
+  function renderConditionPickers(root, sources, left, right) {
+    const references = eventReferences(root, sources);
+    root.querySelector("[data-role='condition-left']")?.replaceChildren(valuePicker(left, references, "Choose an event value"));
+    root.querySelector("[data-role='condition-right']")?.replaceChildren(valuePicker(right, references, "Choose a value"));
+  }
+  function renderFunctionMappings(root, sources, functions, functionParams, functionBody) {
+    const fn = functions.find((item) => item.id === select4(root, "function").value);
+    const references = eventReferences(root, sources);
+    const params = Object.entries(fn?.params ?? {}).map(([name, shape]) => ({
+      path: name,
+      label: name,
+      shape
+    }));
+    const body = targetsFromShape(fn?.body);
+    root.querySelector("[data-role='function-params']")?.replaceChildren(mappingEditor(params, references, functionParams, "This function has no parameters."));
+    root.querySelector("[data-role='function-body']")?.replaceChildren(mappingEditor(body, references, functionBody, "This function has no request body."));
+  }
+
+  // src/components/admin/Resources/Triggers/create/styles/controls.css
+  var controls_default3 = `.narrow-field {
+    max-width: 320px;
+}
+
+label {
+    display: grid;
+    gap: .4rem;
+    color: var(--p9r-color-muted, #64748b);
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+label span {
+    font-weight: 500;
+}
+
+label.check {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--p9r-color-text, #0f172a);
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    border: 1px solid var(--p9r-color-border, #d8e1ea);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--p9r-color-text, #0f172a);
+    font: inherit;
+}
+
+input,
+select {
+    min-height: 2.35rem;
+    padding: 0 .625rem;
+}
+
+input[type="checkbox"] {
+    width: 1rem;
+    min-height: 1rem;
+    padding: 0;
+}
+
+textarea {
+    min-height: 7rem;
+    padding: .75rem;
+    resize: vertical;
+    font: 500 .8125rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.button {
+    min-height: 2.1rem;
+    border: 1px solid #047857;
+    border-radius: 6px;
+    padding: 0 .75rem;
+    cursor: pointer;
+    font: inherit;
+    font-size: .8125rem;
+    font-weight: 700;
+}
+
+.button.primary {
+    background: #047857;
+    color: #fff;
+}
+
+.button.quiet {
+    border-color: transparent;
+    background: transparent;
+    color: #475569;
+}
+
+.button:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+`;
+
+  // src/components/admin/Resources/Triggers/create/styles/feedback.css
+  var feedback_default = `.callout,
+.function-contract,
+.message,
+.reference-list {
+    color: var(--p9r-color-muted, #64748b);
+    font-size: .8125rem;
+}
+
+.callout {
+    padding: .7rem .8rem;
+    border-left: 3px solid #0f766e;
+    background: #f0fdfa;
+    color: #115e59;
+}
+
+.function-contract {
+    padding: .65rem .75rem;
+    border-radius: 6px;
+    background: #f1f5f9;
+}
+
+.reference-list {
+    display: grid;
+    gap: .55rem;
+}
+
+.reference-list code {
+    overflow-wrap: anywhere;
+}
+
+.status-panel {
+    display: grid;
+    gap: .45rem;
+    padding: .85rem .9rem;
+}
+
+.message.error {
+    color: #b91c1c;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 760px) {
+    .mapping-row {
+        grid-template-columns: 1fr;
+    }
+}
+`;
+
+  // src/components/admin/Resources/Triggers/create/styles/layout.css
+  var layout_default2 = `:host {
     display: block;
 }
 
@@ -25574,8 +26085,10 @@ details[open] > summary > .chevron {
     border-top: 1px solid var(--p9r-color-border, #e2e8f0);
     background: #fbfdff;
 }
+`;
 
-.condition-fields {
+  // src/components/admin/Resources/Triggers/create/styles/mapping.css
+  var mapping_default2 = `.condition-fields {
     display: grid;
     gap: 1rem;
     padding-top: .25rem;
@@ -25634,137 +26147,115 @@ details[open] > summary > .chevron {
     gap: 1rem;
     padding-top: .8rem;
 }
-
-.narrow-field {
-    max-width: 320px;
-}
-
-label {
-    display: grid;
-    gap: .4rem;
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .75rem;
-    font-weight: 700;
-}
-
-label span {
-    font-weight: 500;
-}
-
-label.check {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    color: var(--p9r-color-text, #0f172a);
-}
-
-input,
-select,
-textarea {
-    width: 100%;
-    border: 1px solid var(--p9r-color-border, #d8e1ea);
-    border-radius: 6px;
-    background: #fff;
-    color: var(--p9r-color-text, #0f172a);
-    font: inherit;
-}
-
-input,
-select {
-    min-height: 2.35rem;
-    padding: 0 .625rem;
-}
-
-input[type="checkbox"] {
-    width: 1rem;
-    min-height: 1rem;
-    padding: 0;
-}
-
-textarea {
-    min-height: 7rem;
-    padding: .75rem;
-    resize: vertical;
-    font: 500 .8125rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-.button {
-    min-height: 2.1rem;
-    border: 1px solid #047857;
-    border-radius: 6px;
-    padding: 0 .75rem;
-    cursor: pointer;
-    font: inherit;
-    font-size: .8125rem;
-    font-weight: 700;
-}
-
-.button.primary {
-    background: #047857;
-    color: #fff;
-}
-
-.button.quiet {
-    border-color: transparent;
-    background: transparent;
-    color: #475569;
-}
-
-.button:disabled {
-    cursor: wait;
-    opacity: .65;
-}
-
-.callout,
-.function-contract,
-.message,
-.reference-list {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .8125rem;
-}
-
-.callout {
-    padding: .7rem .8rem;
-    border-left: 3px solid #0f766e;
-    background: #f0fdfa;
-    color: #115e59;
-}
-
-.function-contract {
-    padding: .65rem .75rem;
-    border-radius: 6px;
-    background: #f1f5f9;
-}
-
-.reference-list {
-    display: grid;
-    gap: .55rem;
-}
-
-.reference-list code {
-    overflow-wrap: anywhere;
-}
-
-.status-panel {
-    display: grid;
-    gap: .45rem;
-    padding: .85rem .9rem;
-}
-
-.message.error {
-    color: #b91c1c;
-    white-space: pre-wrap;
-}
-
-@media (max-width: 760px) {
-    .mapping-row {
-        grid-template-columns: 1fr;
-    }
-}
 `;
 
-  // src/components/admin/Resources/Triggers/create.template.html
-  var create_template_default2 = `<a slot="back" class="back" aria-label="Back to triggers">&lt;</a>
+  // src/components/admin/Resources/Triggers/create/styles/index.ts
+  var styles_default4 = [layout_default2, mapping_default2, controls_default3, feedback_default].join(`
+`);
+
+  // src/components/admin/Resources/Triggers/create/templates/aside.html
+  var aside_default2 = `
+<details slot="aside" class="side-panel" open>
+    <summary>
+        <strong>Execution</strong>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="side-body">
+        <label>
+            Mode
+            <select data-field="mode">
+                <option value="async">Async — recommended</option>
+                <option value="sync">Synchronous</option>
+            </select>
+        </label>
+
+        <label>
+            On failure
+            <select data-field="failure">
+                <option value="ignore">Record and continue</option>
+                <option value="block">Block the source response</option>
+            </select>
+        </label>
+
+        <label class="check">
+            <input type="checkbox" data-field="enabled" />
+            Enable immediately
+        </label>
+    </div>
+</details>
+
+<details slot="aside" class="side-panel">
+    <summary>
+        <strong>Available references</strong>
+        <span class="chevron">⌄</span>
+    </summary>
+    <div class="side-body reference-list">
+        <code>$request.method</code>
+        <code>$request.params.name</code>
+        <code>$request.body.field</code>
+        <code>$response.status</code>
+        <code>$response.body.field</code>
+        <code>$ctx.user.id</code>
+        <code>$endpoint.urn</code>
+    </div>
+</details>
+
+<div slot="aside" class="status-panel">
+    <strong>Status</strong>
+    <div class="message" data-role="message">New triggers are disabled unless explicitly enabled.</div>
+</div>
+`;
+
+  // src/components/admin/Resources/Triggers/create/templates/condition.html
+  var condition_default = `
+<details slot="main" class="editor-panel" data-panel="condition">
+    <summary>
+        <span class="step-number optional">3</span>
+        <span class="summary-copy">
+            <strong>Add a condition</strong>
+            <small>Optional — fire only when a value matches your rule.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <label class="check">
+            <input type="checkbox" data-field="condition-enabled" />
+            Fire only when a condition matches
+        </label>
+
+        <div class="condition-fields" data-role="condition" hidden>
+            <label>
+                Value to inspect
+                <div data-role="condition-left"></div>
+            </label>
+
+            <label>
+                Comparison
+                <select data-field="operator">
+                    <option value="equals">Equals</option>
+                    <option value="notEquals">Does not equal</option>
+                    <option value="exists">Exists</option>
+                    <option value="in">Is contained in</option>
+                    <option value="gt">Is greater than</option>
+                    <option value="gte">Is greater than or equal</option>
+                    <option value="lt">Is less than</option>
+                    <option value="lte">Is less than or equal</option>
+                </select>
+            </label>
+
+            <label data-role="right-field">
+                Expected value
+                <div data-role="condition-right"></div>
+            </label>
+        </div>
+    </div>
+</details>
+`;
+
+  // src/components/admin/Resources/Triggers/create/templates/event.html
+  var event_default = `<a slot="back" class="back" aria-label="Back to triggers">&lt;</a>
 
 <span slot="title">Create trigger</span>
 
@@ -25836,51 +26327,10 @@ textarea {
         </div>
     </div>
 </details>
+`;
 
-<details slot="main" class="editor-panel" data-panel="condition">
-    <summary>
-        <span class="step-number optional">3</span>
-        <span class="summary-copy">
-            <strong>Add a condition</strong>
-            <small>Optional — fire only when a value matches your rule.</small>
-        </span>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="panel-body">
-        <label class="check">
-            <input type="checkbox" data-field="condition-enabled" />
-            Fire only when a condition matches
-        </label>
-
-        <div class="condition-fields" data-role="condition" hidden>
-            <label>
-                Value to inspect
-                <div data-role="condition-left"></div>
-            </label>
-
-            <label>
-                Comparison
-                <select data-field="operator">
-                    <option value="equals">Equals</option>
-                    <option value="notEquals">Does not equal</option>
-                    <option value="exists">Exists</option>
-                    <option value="in">Is contained in</option>
-                    <option value="gt">Is greater than</option>
-                    <option value="gte">Is greater than or equal</option>
-                    <option value="lt">Is less than</option>
-                    <option value="lte">Is less than or equal</option>
-                </select>
-            </label>
-
-            <label data-role="right-field">
-                Expected value
-                <div data-role="condition-right"></div>
-            </label>
-        </div>
-    </div>
-</details>
-
+  // src/components/admin/Resources/Triggers/create/templates/function.html
+  var function_default = `
 <details slot="main" class="editor-panel" open data-panel="function">
     <summary>
         <span class="step-number">4</span>
@@ -25928,58 +26378,92 @@ textarea {
         </details>
     </div>
 </details>
-
-<details slot="aside" class="side-panel" open>
-    <summary>
-        <strong>Execution</strong>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="side-body">
-        <label>
-            Mode
-            <select data-field="mode">
-                <option value="async">Async — recommended</option>
-                <option value="sync">Synchronous</option>
-            </select>
-        </label>
-
-        <label>
-            On failure
-            <select data-field="failure">
-                <option value="ignore">Record and continue</option>
-                <option value="block">Block the source response</option>
-            </select>
-        </label>
-
-        <label class="check">
-            <input type="checkbox" data-field="enabled" />
-            Enable immediately
-        </label>
-    </div>
-</details>
-
-<details slot="aside" class="side-panel">
-    <summary>
-        <strong>Available references</strong>
-        <span class="chevron">⌄</span>
-    </summary>
-    <div class="side-body reference-list">
-        <code>$request.method</code>
-        <code>$request.params.name</code>
-        <code>$request.body.field</code>
-        <code>$response.status</code>
-        <code>$response.body.field</code>
-        <code>$ctx.user.id</code>
-        <code>$endpoint.urn</code>
-    </div>
-</details>
-
-<div slot="aside" class="status-panel">
-    <strong>Status</strong>
-    <div class="message" data-role="message">New triggers are disabled unless explicitly enabled.</div>
-</div>
 `;
+
+  // src/components/admin/Resources/Triggers/create/templates/index.ts
+  var templateHtml2 = [event_default, condition_default, function_default, aside_default2].join("");
+  function appendCreateTemplate2(shell) {
+    const template4 = document.createElement("template");
+    template4.innerHTML = templateHtml2;
+    shell.append(template4.content.cloneNode(true));
+  }
+
+  // src/components/admin/Resources/Triggers/create/view.ts
+  function renderState(host, text3) {
+    const style = document.createElement("style");
+    style.textContent = styles_default4;
+    const state2 = document.createElement("div");
+    state2.className = "state";
+    state2.textContent = text3;
+    host.replaceChildren(style, state2);
+  }
+  function renderShell(host) {
+    const style = document.createElement("style");
+    style.textContent = styles_default4;
+    const shell = document.createElement("cms-shell-detail");
+    shell.className = "create-shell";
+    appendCreateTemplate2(shell);
+    shell.querySelector(".back").href = route4("/admin/triggers");
+    host.replaceChildren(style, shell);
+  }
+  function populateSources(host, sources) {
+    const sourceSelect = select4(host, "source");
+    for (const source2 of sources) {
+      sourceSelect.append(option3(source2.id, source2.label));
+    }
+  }
+  function syncEndpointOptions(host, sources) {
+    const endpointSelect = select4(host, "endpoint");
+    const source2 = sources.find((item) => item.id === select4(host, "source").value);
+    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option3(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
+  }
+  function populateFunctions(host, functions) {
+    const functionSelect = select4(host, "function");
+    for (const fn of functions) {
+      functionSelect.append(option3(fn.id, `${fn.label} (${fn.method})`));
+    }
+  }
+  function syncFunctionContract(host, functions) {
+    const root = host.querySelector("[data-role='function-contract']");
+    const fn = functions.find((item) => item.id === select4(host, "function").value);
+    if (!root) {
+      return;
+    }
+    if (!fn) {
+      root.textContent = "Create a function before creating a trigger.";
+      return;
+    }
+    const params = Object.keys(fn.params ?? {});
+    root.textContent = `${params.length ? `Params: ${params.join(", ")}` : "No params"} · ${fn.body ? "Accepts a body" : "No body"}`;
+  }
+  function syncPhaseHelp(host) {
+    const help = host.querySelector("[data-role='phase-help']");
+    if (help) {
+      help.textContent = select4(host, "phase").value === "request" ? "Request triggers run before the endpoint and cannot inspect $response values." : "Response triggers can inspect both the request and response.";
+    }
+  }
+  function syncExecutionOptions(host) {
+    const failure = select4(host, "failure");
+    const asyncMode = select4(host, "mode").value === "async";
+    const block = failure.querySelector('option[value="block"]');
+    if (block) {
+      block.disabled = asyncMode;
+    }
+    if (asyncMode && failure.value === "block") {
+      failure.value = "ignore";
+    }
+  }
+  function syncConditionVisibility(host) {
+    const enabled = checkbox2(host, "condition-enabled").checked;
+    const root = host.querySelector("[data-role='condition']");
+    const right = host.querySelector("[data-role='right-field']");
+    if (root) {
+      root.hidden = !enabled;
+    }
+    if (right) {
+      right.hidden = select4(host, "operator").value === "exists";
+    }
+  }
 
   // src/components/admin/Resources/Triggers/TriggerCreate.ts
   class CmsTriggerCreate extends HTMLElement {
@@ -26000,72 +26484,58 @@ textarea {
       this.load();
     }
     async load() {
-      this.renderState("Loading sources and functions...");
+      renderState(this, "Loading sources and functions...");
       try {
         const catalog = await fetchTriggerCatalog();
         this.sources = catalog.sources;
         this.functions = catalog.functions;
         this.render();
       } catch (error) {
-        this.renderState(error instanceof Error ? error.message : "Failed to load trigger catalog.");
+        renderState(this, error instanceof Error ? error.message : "Failed to load trigger catalog.");
       }
     }
-    renderState(text3) {
-      const style = document.createElement("style");
-      style.textContent = create_default2;
-      const state2 = document.createElement("div");
-      state2.className = "state";
-      state2.textContent = text3;
-      this.replaceChildren(style, state2);
-    }
     render() {
-      const style = document.createElement("style");
-      style.textContent = create_default2;
-      const shell = document.createElement("cms-shell-detail");
-      shell.className = "create-shell";
-      const body = document.createElement("template");
-      body.innerHTML = create_template_default2;
-      shell.append(body.content.cloneNode(true));
-      shell.querySelector(".back").href = route4("/admin/triggers");
-      this.replaceChildren(style, shell);
+      renderShell(this);
       this.message = this.querySelector("[data-role='message']");
       this.saveButton = this.querySelector("[data-role='save']");
-      this.populateSources();
-      this.populateFunctions();
+      populateSources(this, this.sources);
+      populateFunctions(this, this.functions);
       this.bind();
-      this.syncEndpointOptions();
-      this.syncFunctionContract();
-      this.syncExecutionOptions();
-      this.syncPhaseHelp();
-      this.renderConditionPickers();
-      this.renderFunctionMappings();
+      syncEndpointOptions(this, this.sources);
+      syncFunctionContract(this, this.functions);
+      syncExecutionOptions(this);
+      syncPhaseHelp(this);
+      this.renderCondition();
+      this.renderMappings();
     }
     bind() {
-      this.select("source").addEventListener("change", () => {
-        this.syncEndpointOptions();
+      select4(this, "source").addEventListener("change", () => {
+        syncEndpointOptions(this, this.sources);
         this.resetEventMappings();
       });
-      this.select("endpoint").addEventListener("change", () => this.resetEventMappings());
-      this.select("function").addEventListener("change", () => {
+      select4(this, "endpoint").addEventListener("change", () => this.resetEventMappings());
+      select4(this, "function").addEventListener("change", () => {
         this.functionParams = {};
         this.functionBody = {};
-        this.syncFunctionContract();
-        this.renderFunctionMappings();
+        syncFunctionContract(this, this.functions);
+        this.renderMappings();
       });
-      this.select("mode").addEventListener("change", () => this.syncExecutionOptions());
-      this.select("phase").addEventListener("change", () => {
-        this.syncPhaseHelp();
+      select4(this, "mode").addEventListener("change", () => syncExecutionOptions(this));
+      select4(this, "phase").addEventListener("change", () => {
+        syncPhaseHelp(this);
         this.resetEventMappings();
       });
-      this.select("operator").addEventListener("change", () => this.syncCondition());
-      this.checkbox("condition-enabled").addEventListener("change", () => this.syncCondition());
-      this.querySelector("[data-role='collapse']")?.addEventListener("click", (event) => this.togglePanels(event.currentTarget));
+      select4(this, "operator").addEventListener("change", () => this.renderCondition());
+      checkbox2(this, "condition-enabled").addEventListener("change", () => this.renderCondition());
+      this.querySelector("[data-role='collapse']")?.addEventListener("click", (event) => {
+        this.togglePanels(event.currentTarget);
+      });
       this.bindIdentifier();
       this.saveButton?.addEventListener("click", () => void this.save());
     }
     bindIdentifier() {
-      const label2 = this.input("label");
-      const id = this.input("id");
+      const label2 = input2(this, "label");
+      const id = input2(this, "id");
       let idWasEdited = false;
       id.addEventListener("input", () => idWasEdited = true);
       label2.addEventListener("input", () => {
@@ -26082,126 +26552,20 @@ textarea {
       }
       button2.textContent = shouldOpen ? "Collapse all" : "Expand all";
     }
-    populateSources() {
-      const select4 = this.select("source");
-      for (const source of this.sources) {
-        select4.append(option3(source.id, source.label));
-      }
-    }
-    syncEndpointOptions() {
-      const select4 = this.select("endpoint");
-      const source = this.sources.find((item) => item.id === this.select("source").value);
-      select4.replaceChildren(...(source?.endpoints ?? []).map((endpoint) => option3(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
-    }
-    populateFunctions() {
-      const select4 = this.select("function");
-      for (const fn2 of this.functions) {
-        select4.append(option3(fn2.id, `${fn2.label} (${fn2.method})`));
-      }
-    }
-    syncFunctionContract() {
-      const root = this.querySelector("[data-role='function-contract']");
-      const fn2 = this.functions.find((item) => item.id === this.select("function").value);
-      if (!root) {
-        return;
-      }
-      if (!fn2) {
-        root.textContent = "Create a function before creating a trigger.";
-        return;
-      }
-      const params = Object.keys(fn2.params ?? {});
-      root.textContent = `${params.length ? `Params: ${params.join(", ")}` : "No params"} · ${fn2.body ? "Accepts a body" : "No body"}`;
-    }
-    syncCondition() {
-      const enabled = this.checkbox("condition-enabled").checked;
-      const root = this.querySelector("[data-role='condition']");
-      const right = this.querySelector("[data-role='right-field']");
-      if (root) {
-        root.hidden = !enabled;
-      }
-      if (right) {
-        right.hidden = this.select("operator").value === "exists";
-      }
-      this.renderConditionPickers();
-    }
     resetEventMappings() {
       this.conditionLeft.value = "";
       this.conditionLeft.mode = "reference";
       this.functionParams = {};
       this.functionBody = {};
-      this.renderConditionPickers();
-      this.renderFunctionMappings();
+      this.renderCondition();
+      this.renderMappings();
     }
-    renderConditionPickers() {
-      const references = this.eventReferences();
-      this.querySelector("[data-role='condition-left']")?.replaceChildren(valuePicker(this.conditionLeft, references, "Choose an event value"));
-      this.querySelector("[data-role='condition-right']")?.replaceChildren(valuePicker(this.conditionRight, references, "Choose a value"));
+    renderCondition() {
+      syncConditionVisibility(this);
+      renderConditionPickers(this, this.sources, this.conditionLeft, this.conditionRight);
     }
-    renderFunctionMappings() {
-      const fn2 = this.functions.find((item) => item.id === this.select("function").value);
-      const references = this.eventReferences();
-      const params = Object.entries(fn2?.params ?? {}).map(([name, shape]) => ({
-        path: name,
-        label: name,
-        shape
-      }));
-      const body = targetsFromShape(fn2?.body);
-      this.querySelector("[data-role='function-params']")?.replaceChildren(mappingEditor(params, references, this.functionParams, "This function has no parameters."));
-      this.querySelector("[data-role='function-body']")?.replaceChildren(mappingEditor(body, references, this.functionBody, "This function has no request body."));
-    }
-    eventReferences() {
-      const endpoint = this.selectedEndpoint();
-      const references = [
-        { value: "$request.method", label: "Request / method", shape: { type: "string" } },
-        { value: "$endpoint.urn", label: "Endpoint / URN", shape: { type: "string" } },
-        { value: "$endpoint.source", label: "Endpoint / source", shape: { type: "string" } },
-        { value: "$endpoint.endpoint", label: "Endpoint / identifier", shape: { type: "string" } },
-        {
-          value: "$ctx.user.id",
-          label: "Current user / id",
-          shape: { type: "string", semantic: { kind: "user-id", authority: "cms" } }
-        },
-        { value: "$ctx.user.role", label: "Current user / role", shape: { type: "string" } }
-      ];
-      for (const param of endpoint?.params ?? []) {
-        references.push({
-          value: `$request.params.${param.name}`,
-          label: `Request parameter / ${param.name}`,
-          shape: {
-            type: dataShapeType2(param.type),
-            ...param.semantic ? { semantic: param.semantic } : {}
-          }
-        });
-      }
-      references.push(...referencesFromShape(endpoint?.body, "$request.body", "Request body"));
-      if (this.select("phase").value === "response") {
-        references.push({ value: "$response.status", label: "Response / status", shape: { type: "number" } });
-        const output = endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status)) ?? endpoint?.output?.find((entry) => entry.status === "default");
-        references.push(...referencesFromShape(output?.body, "$response.body", "Response body"));
-        references.push(...referencesFromShape(output?.triggerBody, "$response.body", "Response body / trigger-only"));
-      }
-      return uniqueReferences(references);
-    }
-    selectedEndpoint() {
-      return this.sources.find((item) => item.id === this.select("source").value)?.endpoints.find((endpoint) => endpoint.endpointId === this.select("endpoint").value);
-    }
-    syncPhaseHelp() {
-      const help = this.querySelector("[data-role='phase-help']");
-      if (!help) {
-        return;
-      }
-      help.textContent = this.select("phase").value === "request" ? "Request triggers run before the endpoint and cannot inspect $response values." : "Response triggers can inspect both the request and response.";
-    }
-    syncExecutionOptions() {
-      const failure = this.select("failure");
-      const asyncMode = this.select("mode").value === "async";
-      const block = failure.querySelector('option[value="block"]');
-      if (block) {
-        block.disabled = asyncMode;
-      }
-      if (asyncMode && failure.value === "block") {
-        failure.value = "ignore";
-      }
+    renderMappings() {
+      renderFunctionMappings(this, this.sources, this.functions, this.functionParams, this.functionBody);
     }
     async save() {
       if (!this.saveButton) {
@@ -26210,59 +26574,13 @@ textarea {
       this.saveButton.disabled = true;
       this.setMessage("Validating trigger...", "");
       try {
-        await createTriggerDefinition(this.definition(), this.checkbox("enabled").checked);
+        const definition = buildTriggerDefinition(this, this.conditionLeft, this.conditionRight, this.functionParams, this.functionBody);
+        await createTriggerDefinition(definition, checkbox2(this, "enabled").checked);
         window.location.href = route4("/admin/triggers");
       } catch (error) {
         this.setMessage(error instanceof Error ? error.message : "Failed to create trigger.", "error");
         this.saveButton.disabled = false;
       }
-    }
-    definition() {
-      const id = this.input("id").value.trim();
-      const label2 = this.input("label").value.trim();
-      const advancedParams = parseOptionalObject(this.textarea("params").value, "Params mapping");
-      const advancedBody = parseOptionalValue(this.textarea("body").value);
-      const params = advancedParams ?? mappedObject(this.functionParams);
-      const body = advancedBody ?? mappedDraft2(this.functionBody);
-      const mode = this.select("mode").value;
-      return {
-        id,
-        ...label2 ? { label: label2 } : {},
-        event: {
-          kind: "endpoint",
-          source: this.select("source").value,
-          endpoint: this.select("endpoint").value,
-          phase: this.select("phase").value
-        },
-        mode,
-        failureMode: this.select("failure").value,
-        ...this.checkbox("condition-enabled").checked ? { condition: this.condition() } : {},
-        function: {
-          id: this.select("function").value,
-          ...Object.keys(params).length ? { params } : {},
-          ...body !== undefined ? { body } : {}
-        }
-      };
-    }
-    condition() {
-      const operator = this.select("operator").value;
-      const left = resolvedDraftValue(this.conditionLeft);
-      if (operator === "exists") {
-        return { exists: left };
-      }
-      return { [operator]: [left, resolvedDraftValue(this.conditionRight)] };
-    }
-    input(name) {
-      return this.querySelector(`[data-field="${name}"]`);
-    }
-    textarea(name) {
-      return this.querySelector(`[data-field="${name}"]`);
-    }
-    select(name) {
-      return this.querySelector(`[data-field="${name}"]`);
-    }
-    checkbox(name) {
-      return this.input(name);
     }
     setMessage(text3, kind) {
       if (!this.message) {
@@ -26274,65 +26592,6 @@ textarea {
   }
   if (!customElements.get("cms-trigger-create")) {
     customElements.define("cms-trigger-create", CmsTriggerCreate);
-  }
-  function option3(value2, label2) {
-    const el2 = document.createElement("option");
-    el2.value = value2;
-    el2.textContent = label2;
-    return el2;
-  }
-  function parseOptionalObject(raw, label2) {
-    if (!raw.trim()) {
-      return;
-    }
-    try {
-      const value2 = JSON.parse(raw);
-      if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
-        throw new Error;
-      }
-      return value2;
-    } catch {
-      throw new Error(`${label2} must be a JSON object.`);
-    }
-  }
-  function mappedDraft2(draft) {
-    const root = draft[""];
-    if (root?.value) {
-      return resolvedDraftValue(root);
-    }
-    const mapped = mappedObject(draft);
-    return Object.keys(mapped).length ? mapped : undefined;
-  }
-  function parseOptionalValue(raw) {
-    return raw.trim() ? parseValue(raw) : undefined;
-  }
-  function parseValue(raw) {
-    const text3 = raw.trim();
-    if (text3.startsWith("$")) {
-      return text3;
-    }
-    try {
-      return JSON.parse(text3);
-    } catch {
-      return text3;
-    }
-  }
-  function identifier2(value2) {
-    const words = value2.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
-    return words.map((word) => word.toLowerCase()).join("-");
-  }
-  function dataShapeType2(value2) {
-    return value2 === "number" || value2 === "boolean" || value2 === "object" || value2 === "array" ? value2 : "string";
-  }
-  function uniqueReferences(references) {
-    const seen = new Set;
-    return references.filter((reference) => {
-      if (seen.has(reference.value)) {
-        return false;
-      }
-      seen.add(reference.value);
-      return true;
-    });
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
@@ -26386,8 +26645,8 @@ textarea {
 </header>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/style.css
-  var style_default15 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/part-1.css
+  var part_1_default = `:host {
     display: block;
     min-width: 0;
     border-bottom: 1px solid var(--editor-v2-border);
@@ -26524,8 +26783,10 @@ button {
 .state-switch button {
     min-width: 58px;
 }
+`;
 
-.view-reload {
+  // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/part-2.css
+  var part_2_default = `.view-reload {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -26644,9 +26905,11 @@ button:hover {
 }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
-  var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(style_default15)}</style>${String(template_default15)}`;
+  // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/index.ts
+  var styles_default5 = [String(part_1_default), String(part_2_default)].join(`
+`);
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/topBarEvents.ts
   var TOPBAR_VIEWPORT_CHANGE_EVENT = "editor-v2:viewport-change";
   var TOPBAR_EDITOR_MODE_CHANGE_EVENT = "editor-v2:editor-mode-change";
   var TOPBAR_SOURCE_STATE_CHANGE_EVENT = "editor-v2:source-state-change";
@@ -26654,6 +26917,57 @@ button:hover {
   var TOPBAR_SAVE_EVENT = "editor-v2:save";
   var TOPBAR_DELETE_EVENT = "editor-v2:topbar-delete-document";
   var TOPBAR_PAGE_SETTINGS_EVENT = "editor-v2:page-settings";
+  function handleTopBarClick(host, event, handlers) {
+    const button2 = event.target?.closest("button");
+    if (!button2) {
+      return;
+    }
+    const viewport = button2.dataset.viewport;
+    if (viewport) {
+      handlers.setViewport(viewport);
+      return;
+    }
+    const mode = button2.dataset.editorMode;
+    if (mode) {
+      handlers.setMode(mode);
+      return;
+    }
+    const sourceState = button2.dataset.sourceState;
+    if (sourceState) {
+      handlers.setSourceState(sourceState);
+      return;
+    }
+    const eventName = actionEventName(button2.dataset.action);
+    if (eventName) {
+      host.dispatchEvent(new CustomEvent(eventName, { bubbles: true, composed: true }));
+    }
+  }
+  function syncTopBarButtonGroup(root, selector, dataKey, value2) {
+    for (const button2 of Array.from(root.querySelectorAll(selector))) {
+      const isActive = button2.dataset[dataKey] === value2;
+      button2.classList.toggle("active", isActive);
+      button2.setAttribute("aria-pressed", String(isActive));
+    }
+  }
+  function actionEventName(action) {
+    if (action === "save") {
+      return TOPBAR_SAVE_EVENT;
+    }
+    if (action === "delete") {
+      return TOPBAR_DELETE_EVENT;
+    }
+    if (action === "page-settings") {
+      return TOPBAR_PAGE_SETTINGS_EVENT;
+    }
+    if (action === "view-reload") {
+      return TOPBAR_VIEW_RELOAD_EVENT;
+    }
+    return null;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
+  var template4 = document.createElement("template");
+  template4.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default15)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -26699,53 +27013,18 @@ button:hover {
       this.shadowRoot.querySelector(".name").textContent = title2;
       this.shadowRoot.querySelector(".path").textContent = path;
     }
-    setNavigation(input2) {
+    setNavigation(input3) {
       const back = this.shadowRoot.querySelector(".back");
-      back.setAttribute("href", input2.backHref);
-      this.shadowRoot.querySelector(".back-label").textContent = input2.backLabel;
-      this.shadowRoot.querySelector(".settings-label").textContent = input2.settingsLabel;
+      back.setAttribute("href", input3.backHref);
+      this.shadowRoot.querySelector(".back-label").textContent = input3.backLabel;
+      this.shadowRoot.querySelector(".settings-label").textContent = input3.settingsLabel;
     }
     _onClick = (event) => {
-      const button2 = event.target?.closest("button");
-      if (!button2) {
-        return;
-      }
-      const viewport = button2.dataset.viewport;
-      if (viewport) {
-        this._setViewport(viewport, true);
-        return;
-      }
-      const mode = button2.dataset.editorMode;
-      if (mode) {
-        this._setMode(mode, true);
-        return;
-      }
-      const sourceState = button2.dataset.sourceState;
-      if (sourceState) {
-        this._setSourceState(sourceState, true);
-        return;
-      }
-      if (button2.dataset.action === "save") {
-        this.dispatchEvent(new CustomEvent(TOPBAR_SAVE_EVENT, {
-          bubbles: true,
-          composed: true
-        }));
-      } else if (button2.dataset.action === "delete") {
-        this.dispatchEvent(new CustomEvent(TOPBAR_DELETE_EVENT, {
-          bubbles: true,
-          composed: true
-        }));
-      } else if (button2.dataset.action === "page-settings") {
-        this.dispatchEvent(new CustomEvent(TOPBAR_PAGE_SETTINGS_EVENT, {
-          bubbles: true,
-          composed: true
-        }));
-      } else if (button2.dataset.action === "view-reload") {
-        this.dispatchEvent(new CustomEvent(TOPBAR_VIEW_RELOAD_EVENT, {
-          bubbles: true,
-          composed: true
-        }));
-      }
+      handleTopBarClick(this, event, {
+        setViewport: (viewport) => this._setViewport(viewport, true),
+        setMode: (mode) => this._setMode(mode, true),
+        setSourceState: (sourceState) => this._setSourceState(sourceState, true)
+      });
     };
     _setViewport(viewport, emit) {
       if (this._viewport === viewport) {
@@ -26790,22 +27069,15 @@ button:hover {
       }));
     }
     _syncButtons() {
-      this._syncButtonGroup("[data-viewport]", "viewport", this._viewport);
-      this._syncButtonGroup("[data-editor-mode]", "editorMode", this._mode);
-      this._syncButtonGroup("[data-source-state]", "sourceState", this._sourceState);
+      syncTopBarButtonGroup(this.shadowRoot, "[data-viewport]", "viewport", this._viewport);
+      syncTopBarButtonGroup(this.shadowRoot, "[data-editor-mode]", "editorMode", this._mode);
+      syncTopBarButtonGroup(this.shadowRoot, "[data-source-state]", "sourceState", this._sourceState);
     }
     _syncModeAttribute() {
       this.setAttribute("mode", this._mode);
       const reload = this.shadowRoot.querySelector('[data-action="view-reload"]');
       if (reload) {
         reload.disabled = this._mode !== "view";
-      }
-    }
-    _syncButtonGroup(selector, dataKey, value2) {
-      for (const button2 of Array.from(this.shadowRoot.querySelectorAll(selector))) {
-        const isActive = button2.dataset[dataKey] === value2;
-        button2.classList.toggle("active", isActive);
-        button2.setAttribute("aria-pressed", String(isActive));
       }
     }
     _emitViewportChange() {
@@ -26837,7 +27109,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default16 = `:host {
+  var style_default13 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -26937,7 +27209,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default16)}</style>${String(template_default16)}`;
+  template5.innerHTML = `<style>${String(style_default13)}</style>${String(template_default16)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -26957,32 +27229,32 @@ button:hover {
     customElements.define("cms-editor-v2-panel", Panel);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Binding/dataSourceBinding.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBinding.ts
   function sourceForBinding(sources, binding) {
     if (!binding) {
       return null;
     }
-    return sources.find((source) => sourceMatchesBinding(source, binding)) ?? null;
+    return sources.find((source2) => sourceMatchesBinding(source2, binding)) ?? null;
   }
-  function sourceMatchesBinding(source, binding) {
-    if (binding.method && (source.method ?? "GET") !== binding.method) {
+  function sourceMatchesBinding(source2, binding) {
+    if (binding.method && (source2.method ?? "GET") !== binding.method) {
       return false;
     }
-    return bindingQuery(source.url, binding.url) !== null;
+    return bindingQuery(source2.url, binding.url) !== null;
   }
-  function paramsForBinding(source, binding) {
+  function paramsForBinding(source2, binding) {
     if (!binding) {
       return {};
     }
     if (binding.params) {
       return binding.params;
     }
-    const query3 = bindingQuery(source.url, binding.url);
-    if (!query3) {
+    const query5 = bindingQuery(source2.url, binding.url);
+    if (!query5) {
       return {};
     }
     const params = {};
-    for (const [name, value2] of new URLSearchParams(query3).entries()) {
+    for (const [name, value2] of new URLSearchParams(query5).entries()) {
       params[name] = paramValue(value2);
     }
     return params;
@@ -27015,15 +27287,15 @@ button:hover {
     return null;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Binding/dataSourceFormReader.ts
-  function readSourceBinding(root, source) {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceFormReader.ts
+  function readSourceBinding(root, source2) {
     const alias = root.querySelector(".source-alias")?.value.trim();
     const trigger = selectedTrigger(root.querySelector(".source-trigger"));
-    const method = source.method ?? "GET";
+    const method = source2.method ?? "GET";
     const params = readRows(root, "param");
     const body = readRows(root, "body");
     return {
-      url: source.url,
+      url: source2.url,
       ...alias ? { alias } : {},
       ...method !== "GET" || trigger !== "auto" ? { method } : {},
       ...trigger !== "auto" ? { trigger } : {},
@@ -27049,39 +27321,31 @@ button:hover {
     }
     return params;
   }
-  function selectedMode(select4) {
-    const value2 = select4.options[select4.selectedIndex]?.value;
+  function selectedMode(select5) {
+    const value2 = select5.options[select5.selectedIndex]?.value;
     return value2 === "raw" || value2 === "state" ? value2 : "queryParam";
   }
-  function selectedTrigger(select4) {
-    const value2 = select4?.options[select4.selectedIndex]?.value;
+  function selectedTrigger(select5) {
+    const value2 = select5?.options[select5.selectedIndex]?.value;
     return value2 === "submit" || value2 === "change" ? value2 : "auto";
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/State/dataSourceGroups.ts
-  function filteredSources(sources, query3) {
-    const normalized = query3.trim().toLowerCase();
-    if (!normalized) {
-      return sources;
-    }
-    return sources.filter((source) => [source.label, source.description, source.provider, source.providerLabel, source.url].some((value2) => value2?.toLowerCase().includes(normalized)));
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerEvents.ts
+  var DATA_SOURCE_PICKER_SELECT_EVENT = "editor-v2:data-source-select";
+  var DATA_SOURCE_PICKER_REMOVE_EVENT = "editor-v2:data-source-remove";
+  function dispatchDataSourceSelection(host, source2, binding) {
+    host.dispatchEvent(new CustomEvent(DATA_SOURCE_PICKER_SELECT_EVENT, {
+      bubbles: true,
+      composed: true,
+      detail: { source: source2, binding }
+    }));
   }
-  function providerGroups(sources) {
-    const groups = new Map;
-    for (const source of sources) {
-      const key = source.provider ?? "default";
-      const current = groups.get(key) ?? {
-        key,
-        label: source.providerLabel ?? source.provider ?? "Sources",
-        count: 0
-      };
-      current.count += 1;
-      groups.set(key, current);
-    }
-    return [...groups.values()];
+  function dispatchDataSourceRemoval(host) {
+    host.dispatchEvent(new CustomEvent(DATA_SOURCE_PICKER_REMOVE_EVENT, {
+      bubbles: true,
+      composed: true
+    }));
   }
-
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/State/dataSourcePickerEvents.ts
   function connectDataSourcePickerEvents(target, handlers) {
     target.closeButton.addEventListener("click", handlers.close);
     target.backdrop.addEventListener("click", handlers.backdropClick);
@@ -27097,7 +27361,7 @@ button:hover {
     };
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Renderers/dataSourceListRenderer.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Renderers/dataSourceListRenderer.ts
   function renderProviderButtons(container, groups, activeProvider, onSelect) {
     container.replaceChildren();
     if (groups.length === 0) {
@@ -27120,29 +27384,29 @@ button:hover {
       container.append(empty2("No matching sources."));
       return;
     }
-    for (const source of sources) {
+    for (const source2 of sources) {
       const button2 = document.createElement("button");
       button2.className = "source";
       button2.type = "button";
-      button2.ariaSelected = String(source === activeSource);
+      button2.ariaSelected = String(source2 === activeSource);
       const header = document.createElement("span");
       header.className = "source-header";
       const method = document.createElement("span");
       method.className = "method";
-      method.textContent = source.method ?? "GET";
+      method.textContent = source2.method ?? "GET";
       const name = document.createElement("span");
       name.className = "name";
-      name.textContent = source.label;
+      name.textContent = source2.label;
       header.append(method, name);
       const description = document.createElement("span");
       description.className = "description";
-      description.textContent = source.description ?? "No description.";
+      description.textContent = source2.description ?? "No description.";
       const url = document.createElement("span");
       url.className = "url";
-      url.textContent = source.url;
+      url.textContent = source2.url;
       button2.append(header, description, url);
-      button2.addEventListener("click", () => onSelect(source));
-      button2.addEventListener("dblclick", () => onConfirm(source));
+      button2.addEventListener("click", () => onSelect(source2));
+      button2.addEventListener("dblclick", () => onConfirm(source2));
       container.append(button2);
     }
   }
@@ -27156,97 +27420,7 @@ button:hover {
     return value2.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/State/dataSourcePickerState.ts
-  function cloneSources(sources) {
-    return sources.map((source) => ({
-      ...source,
-      params: source.params?.map((param) => ({ ...param })),
-      body: source.body ? { ...source.body, fields: cloneBodyFields(source.body.fields) } : undefined,
-      fields: [...source.fields]
-    }));
-  }
-  function cloneBodyFields(fields) {
-    return fields.map((field2) => ({
-      ...field2,
-      children: field2.children ? cloneBodyFields(field2.children) : undefined
-    }));
-  }
-  function firstProviderKey(sources, query3) {
-    return providerGroups(filteredSources(sources, query3))[0]?.key ?? "";
-  }
-  function visibleSources(sources, query3, activeProvider) {
-    return filteredSources(sources, query3).filter((source) => (source.provider ?? "default") === activeProvider);
-  }
-  function initialAlias(binding) {
-    return binding?.alias ?? "data";
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Binding/dataSourceBindingRenderer.ts
-  function renderBindingConfig(source, initialBinding) {
-    const section = document.createElement("section");
-    section.className = "binding-config";
-    section.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source)));
-    renderRequestParams(section, source, initialBinding);
-    renderRequestBody(section, source, initialBinding);
-    return section;
-  }
-  function renderAliasInput(value2) {
-    const aliasLabel = document.createElement("label");
-    aliasLabel.textContent = "Alias";
-    const alias = document.createElement("input");
-    alias.className = "source-alias";
-    alias.value = value2;
-    alias.placeholder = "data";
-    aliasLabel.append(alias);
-    return aliasLabel;
-  }
-  function renderTriggerSelect(value2) {
-    const label2 = document.createElement("label");
-    label2.textContent = "Trigger";
-    const trigger = document.createElement("select");
-    trigger.className = "source-trigger";
-    trigger.append(option4("auto", "Auto"), option4("submit", "Submit"), option4("change", "Change"));
-    selectOption(trigger, value2);
-    label2.append(trigger);
-    return label2;
-  }
-  function defaultTrigger(source) {
-    return (source.method ?? "GET") === "GET" ? "auto" : "submit";
-  }
-  function renderRequestParams(section, source, initialBinding) {
-    const params = source.params ?? [];
-    if (params.length === 0) {
-      return;
-    }
-    section.append(renderHeading("Request params"));
-    const initialParams = paramsForBinding(source, initialBinding);
-    for (const param of params) {
-      section.append(renderBindingRow({
-        kind: "param",
-        name: param.name,
-        location: param.in,
-        type: param.type,
-        required: param.required,
-        description: param.description
-      }, initialParams[param.name]));
-    }
-  }
-  function renderRequestBody(section, source, initialBinding) {
-    const fields = bodyBindingFields(source.body?.fields ?? []);
-    if (fields.length === 0) {
-      return;
-    }
-    section.append(renderHeading("Request body"));
-    for (const field2 of fields) {
-      section.append(renderBindingRow({
-        kind: "body",
-        name: field2.name,
-        location: "body",
-        type: field2.type,
-        required: field2.required
-      }, initialBinding?.body?.[field2.name]));
-    }
-  }
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBindingRows.ts
   function renderBindingRow(rowConfig, initialValue) {
     const row = document.createElement("div");
     row.className = "param-row";
@@ -27255,11 +27429,20 @@ button:hover {
     row.append(renderParamHeader(rowConfig), renderParamDescription(rowConfig), renderParamControls(rowConfig.name, initialValue));
     return row;
   }
-  function renderHeading(text3) {
+  function renderBindingHeading(text3) {
     const heading4 = document.createElement("div");
     heading4.className = "config-heading";
     heading4.textContent = text3;
     return heading4;
+  }
+  function bodyBindingFields(fields) {
+    const rows = [];
+    for (const field2 of fields) {
+      if (field2.path !== "." && field2.type !== "object" && field2.type !== "array") {
+        rows.push({ name: field2.path, type: field2.type, required: field2.required });
+      }
+    }
+    return rows;
   }
   function renderParamHeader(param) {
     const header = document.createElement("div");
@@ -27289,23 +27472,11 @@ button:hover {
     value2.className = "param-value";
     value2.placeholder = name;
     if (initialValue) {
-      selectMode(mode, initialValue.from);
+      selectOption(mode, initialValue.from);
       value2.value = String(initialValue.from === "raw" ? initialValue.value : initialValue.name);
     }
     controls.append(mode, value2);
     return controls;
-  }
-  function bodyBindingFields(fields) {
-    const rows = [];
-    for (const field2 of fields) {
-      if (field2.path !== "." && isBindableBodyType(field2.type)) {
-        rows.push({ name: field2.path, type: field2.type, required: field2.required });
-      }
-    }
-    return rows;
-  }
-  function isBindableBodyType(type) {
-    return type !== "object" && type !== "array";
   }
   function option4(value2, label2) {
     const element = document.createElement("option");
@@ -27318,17 +27489,141 @@ button:hover {
     element.textContent = value2;
     return element;
   }
-  function selectMode(select4, value2) {
-    selectOption(select4, value2);
-  }
-  function selectOption(select4, value2) {
-    const index = Array.from(select4.options).findIndex((option5) => option5.value === value2);
+  function selectOption(select5, value2) {
+    const index = Array.from(select5.options).findIndex((option5) => option5.value === value2);
     if (index >= 0) {
-      select4.selectedIndex = index;
+      select5.selectedIndex = index;
     }
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Renderers/dataSourceFieldRenderer.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourceGroups.ts
+  function filteredSources(sources, query5) {
+    const normalized = query5.trim().toLowerCase();
+    if (!normalized) {
+      return sources;
+    }
+    return sources.filter((source2) => [source2.label, source2.description, source2.provider, source2.providerLabel, source2.url].some((value2) => value2?.toLowerCase().includes(normalized)));
+  }
+  function providerGroups(sources) {
+    const groups = new Map;
+    for (const source2 of sources) {
+      const key = source2.provider ?? "default";
+      const current = groups.get(key) ?? {
+        key,
+        label: source2.providerLabel ?? source2.provider ?? "Sources",
+        count: 0
+      };
+      current.count += 1;
+      groups.set(key, current);
+    }
+    return [...groups.values()];
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerState.ts
+  function cloneSources(sources) {
+    return sources.map((source2) => ({
+      ...source2,
+      params: source2.params?.map((param) => ({ ...param })),
+      body: source2.body ? { ...source2.body, fields: cloneBodyFields(source2.body.fields) } : undefined,
+      fields: [...source2.fields]
+    }));
+  }
+  function cloneBodyFields(fields) {
+    return fields.map((field2) => ({
+      ...field2,
+      children: field2.children ? cloneBodyFields(field2.children) : undefined
+    }));
+  }
+  function firstProviderKey(sources, query5) {
+    return providerGroups(filteredSources(sources, query5))[0]?.key ?? "";
+  }
+  function visibleSources(sources, query5, activeProvider) {
+    return filteredSources(sources, query5).filter((source2) => (source2.provider ?? "default") === activeProvider);
+  }
+  function initialAlias(binding) {
+    return binding?.alias ?? "data";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBindingRenderer.ts
+  function renderBindingConfig(source2, initialBinding) {
+    const section = document.createElement("section");
+    section.className = "binding-config";
+    section.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source2)));
+    renderRequestParams(section, source2, initialBinding);
+    renderRequestBody(section, source2, initialBinding);
+    return section;
+  }
+  function renderAliasInput(value2) {
+    const aliasLabel = document.createElement("label");
+    aliasLabel.textContent = "Alias";
+    const alias = document.createElement("input");
+    alias.className = "source-alias";
+    alias.value = value2;
+    alias.placeholder = "data";
+    aliasLabel.append(alias);
+    return aliasLabel;
+  }
+  function renderTriggerSelect(value2) {
+    const label2 = document.createElement("label");
+    label2.textContent = "Trigger";
+    const trigger = document.createElement("select");
+    trigger.className = "source-trigger";
+    trigger.append(option5("auto", "Auto"), option5("submit", "Submit"), option5("change", "Change"));
+    selectOption2(trigger, value2);
+    label2.append(trigger);
+    return label2;
+  }
+  function defaultTrigger(source2) {
+    return (source2.method ?? "GET") === "GET" ? "auto" : "submit";
+  }
+  function renderRequestParams(section, source2, initialBinding) {
+    const params = source2.params ?? [];
+    if (params.length === 0) {
+      return;
+    }
+    section.append(renderBindingHeading("Request params"));
+    const initialParams = paramsForBinding(source2, initialBinding);
+    for (const param of params) {
+      section.append(renderBindingRow({
+        kind: "param",
+        name: param.name,
+        location: param.in,
+        type: param.type,
+        required: param.required,
+        description: param.description
+      }, initialParams[param.name]));
+    }
+  }
+  function renderRequestBody(section, source2, initialBinding) {
+    const fields = bodyBindingFields(source2.body?.fields ?? []);
+    if (fields.length === 0) {
+      return;
+    }
+    section.append(renderBindingHeading("Request body"));
+    for (const field2 of fields) {
+      section.append(renderBindingRow({
+        kind: "body",
+        name: field2.name,
+        location: "body",
+        type: field2.type,
+        required: field2.required
+      }, initialBinding?.body?.[field2.name]));
+    }
+  }
+  function option5(value2, label2) {
+    const element = document.createElement("option");
+    element.value = value2;
+    element.textContent = label2;
+    return element;
+  }
+  function selectOption2(select5, value2) {
+    const index = Array.from(select5.options).findIndex((option6) => option6.value === value2);
+    if (index >= 0) {
+      select5.selectedIndex = index;
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Renderers/dataSourceFieldRenderer.ts
   function renderDataSourceFields(fields) {
     return renderFieldList(fields, "No schema fields declared.");
   }
@@ -27377,27 +27672,27 @@ button:hover {
     return item;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Renderers/dataSourcePanelsRenderer.ts
-  function renderDetailsPanel(container, source) {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Renderers/dataSourcePanelsRenderer.ts
+  function renderDetailsPanel(container, source2) {
     container.replaceChildren();
-    if (!source) {
+    if (!source2) {
       container.append(detailsEmpty("Select a source to inspect its schema."));
       return;
     }
-    if (source.body) {
+    if (source2.body) {
       const requestHeading = document.createElement("div");
       requestHeading.className = "details-eyebrow";
       requestHeading.textContent = "Request body";
-      container.append(requestHeading, renderDataSourceBodyFields(source.body.fields));
+      container.append(requestHeading, renderDataSourceBodyFields(source2.body.fields));
     }
     const responseHeading = document.createElement("div");
     responseHeading.className = "details-eyebrow";
     responseHeading.textContent = "Response fields";
-    container.append(responseHeading, renderDataSourceFields(source.fields));
+    container.append(responseHeading, renderDataSourceFields(source2.fields));
   }
-  function renderBindingPanel(container, source, options2) {
+  function renderBindingPanel(container, source2, options2) {
     container.replaceChildren();
-    if (!source) {
+    if (!source2) {
       container.append(detailsEmpty("Select a source to configure its binding."));
       return;
     }
@@ -27406,7 +27701,7 @@ button:hover {
     title2.textContent = "Binding";
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
-    scroll.append(title2, renderBindingConfig(source, options2.initialBinding));
+    scroll.append(title2, renderBindingConfig(source2, options2.initialBinding));
     const footer = document.createElement("footer");
     footer.className = "binding-footer";
     if (options2.canRemove) {
@@ -27438,7 +27733,7 @@ button:hover {
     return remove;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Renderers/dataSourcePickerRenderer.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Renderers/dataSourcePickerRenderer.ts
   function renderDataSourcePicker(state2, handlers) {
     const activeSource = normalizeActiveSource(state2.activeSource, state2.visibleSources);
     renderProviderButtons(state2.providers, state2.groups, state2.activeProvider, handlers.providerSelect);
@@ -27459,7 +27754,60 @@ button:hover {
     return activeSource;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/template.html
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerFilters.ts
+  function dataSourceMethod(source2) {
+    return source2.method ?? "GET";
+  }
+  function methodSources(sources, activeMethod) {
+    return sources.filter((source2) => activeMethod === "all" || dataSourceMethod(source2) === activeMethod);
+  }
+  function pickerProviderGroups(sources, activeMethod, query5) {
+    return providerGroups(filteredSources(methodSources(sources, activeMethod), query5));
+  }
+  function pickerVisibleSources(sources, activeMethod, query5, activeProvider) {
+    return visibleSources(methodSources(sources, activeMethod), query5, activeProvider);
+  }
+  function selectMethodFilter(filter, value2) {
+    const options2 = Array.from(filter.options);
+    const index = options2.findIndex((option6) => option6.value === value2);
+    filter.selectedIndex = index >= 0 ? index : 0;
+    options2.forEach((option6, optionIndex) => {
+      option6.selected = optionIndex === filter.selectedIndex;
+      option6.toggleAttribute("selected", option6.selected);
+    });
+    filter.setAttribute("value", options2[filter.selectedIndex]?.value ?? "GET");
+  }
+  function selectedMethodFilter(filter) {
+    const options2 = Array.from(filter.options);
+    const selected = options2.find((option6) => option6.selected);
+    if (selected?.value) {
+      return selected.value;
+    }
+    const selectedIndexValue = filter.options[filter.selectedIndex]?.value;
+    if (selectedIndexValue) {
+      return selectedIndexValue;
+    }
+    const selectedAttribute = options2.find((option6) => option6.hasAttribute("selected"));
+    return selectedAttribute?.value ?? filter.getAttribute("value") ?? "GET";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerElements.ts
+  function queryDataSourcePickerElements(root) {
+    const query5 = (selector) => root.querySelector(selector);
+    return {
+      backdrop: query5(".backdrop"),
+      binding: query5(".binding"),
+      closeButton: query5(".close"),
+      details: query5(".details"),
+      methodFilter: query5(".method-filter"),
+      providers: query5(".providers"),
+      search: query5(".search"),
+      sourcesList: query5(".sources"),
+      subtitle: query5(".subtitle")
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/template.html
   var template_default17 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
@@ -27490,8 +27838,8 @@ button:hover {
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/style.css
-  var style_default17 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/part-1.css
+  var part_1_default2 = `:host {
     display: contents;
 }
 
@@ -27635,8 +27983,10 @@ h2 {
     text-align: left;
     cursor: pointer;
 }
+`;
 
-.provider:hover {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/part-2.css
+  var part_2_default2 = `.provider:hover {
     background: var(--editor-v2-surface);
     color: var(--editor-v2-text);
 }
@@ -27779,8 +28129,10 @@ h2 {
     font-size: 18px;
     font-weight: 780;
 }
+`;
 
-.details p {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/part-3.css
+  var part_3_default = `.details p {
     margin: 0;
     color: var(--editor-v2-muted);
     font-size: 12px;
@@ -27922,8 +28274,10 @@ h2 {
     min-width: 0;
     overflow-wrap: anywhere;
 }
+`;
 
-.field-children {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/part-4.css
+  var part_4_default = `.field-children {
     display: grid;
     grid-column: 1 / -1;
     gap: 2px;
@@ -27991,11 +28345,13 @@ h2 {
 }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/DataSourcePicker.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/index.ts
+  var styles_default6 = [String(part_1_default2), String(part_2_default2), String(part_3_default), String(part_4_default)].join(`
+`);
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(style_default17)}</style>${String(template_default17)}`;
-  var DATA_SOURCE_PICKER_SELECT_EVENT = "editor-v2:data-source-select";
-  var DATA_SOURCE_PICKER_REMOVE_EVENT = "editor-v2:data-source-remove";
+  template6.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default17)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -28005,16 +28361,19 @@ h2 {
     _initialBinding = null;
     _canRemove = false;
     _disconnectEvents = null;
+    elements;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template6.content.cloneNode(true));
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template6.content.cloneNode(true));
+      this.elements = queryDataSourcePickerElements(shadowRoot);
     }
     connectedCallback() {
       this._disconnectEvents = connectDataSourcePickerEvents({
-        closeButton: this.closeButton,
-        backdrop: this.backdrop,
-        search: this.search,
-        methodFilter: this.methodFilter,
+        closeButton: this.elements.closeButton,
+        backdrop: this.elements.backdrop,
+        search: this.elements.search,
+        methodFilter: this.elements.methodFilter,
         ownerDocument: this.ownerDocument
       }, {
         close: this.close,
@@ -28031,34 +28390,34 @@ h2 {
     open(sources, contextLabel, options2 = {}) {
       this._sources = cloneSources(sources);
       this._initialBinding = options2.initialBinding ?? null;
-      this.search.value = "";
-      this.methodFilter.onchange = this._onMethodChange;
+      this.elements.search.value = "";
+      this.elements.methodFilter.onchange = this._onMethodChange;
       this._activeSource = sourceForBinding(this._sources, this._initialBinding);
-      this._activeMethod = this._activeSource ? this._sourceMethod(this._activeSource) : "GET";
-      this._selectMethodFilter(this._activeMethod);
-      if (this._methodSources().length === 0) {
+      this._activeMethod = this._activeSource ? dataSourceMethod(this._activeSource) : "GET";
+      selectMethodFilter(this.elements.methodFilter, this._activeMethod);
+      if (methodSources(this._sources, this._activeMethod).length === 0) {
         this._activeMethod = "all";
-        this._selectMethodFilter("all");
+        selectMethodFilter(this.elements.methodFilter, "all");
       }
-      this._activeProvider = this._activeSource?.provider ?? firstProviderKey(this._methodSources(), this.search.value);
+      this._activeProvider = this._activeSource?.provider ?? firstProviderKey(methodSources(this._sources, this._activeMethod), this.elements.search.value);
       this._canRemove = options2.canRemove === true;
-      this.subtitle.textContent = contextLabel ? `Choose a data source for ${contextLabel}.` : "Choose a data source.";
-      this.backdrop.hidden = false;
+      this.elements.subtitle.textContent = contextLabel ? `Choose a data source for ${contextLabel}.` : "Choose a data source.";
+      this.elements.backdrop.hidden = false;
       this._render();
-      this.search.focus();
+      this.elements.search.focus();
     }
     close = () => {
-      this.backdrop.hidden = true;
+      this.elements.backdrop.hidden = true;
     };
     _render() {
       this._activeSource = renderDataSourcePicker({
-        providers: this.providers,
-        sourcesList: this.sourcesList,
-        details: this.details,
-        binding: this.binding,
-        groups: this._providerGroups(),
+        providers: this.elements.providers,
+        sourcesList: this.elements.sourcesList,
+        details: this.elements.details,
+        binding: this.elements.binding,
+        groups: pickerProviderGroups(this._sources, this._activeMethod, this.elements.search.value),
         activeProvider: this._activeProvider,
-        visibleSources: this._visibleSources(),
+        visibleSources: pickerVisibleSources(this._sources, this._activeMethod, this.elements.search.value, this._activeProvider),
         activeSource: this._activeSource,
         canRemove: this._canRemove,
         initialBinding: this._initialBinding
@@ -28068,131 +28427,53 @@ h2 {
           this._activeSource = null;
           this._render();
         },
-        sourceSelect: (source) => {
-          this._activeSource = source;
+        sourceSelect: (source2) => {
+          this._activeSource = source2;
           this._render();
         },
-        sourceConfirm: (source) => this._select(source),
+        sourceConfirm: (source2) => this._select(source2),
         bindingSelect: () => this._activeSource && this._select(this._activeSource),
         remove: this._remove
       });
     }
-    _select(source) {
-      this.dispatchEvent(new CustomEvent(DATA_SOURCE_PICKER_SELECT_EVENT, {
-        bubbles: true,
-        composed: true,
-        detail: {
-          source,
-          binding: this._sourceBinding(source)
-        }
-      }));
+    _select(source2) {
+      dispatchDataSourceSelection(this, source2, this._sourceBinding(source2));
       this.close();
     }
     _remove = () => {
-      this.dispatchEvent(new CustomEvent(DATA_SOURCE_PICKER_REMOVE_EVENT, {
-        bubbles: true,
-        composed: true
-      }));
+      dispatchDataSourceRemoval(this);
       this.close();
     };
-    _sourceBinding(source) {
-      return readSourceBinding(this.shadowRoot, source);
-    }
-    _providerGroups() {
-      return providerGroups(this._filteredSources());
-    }
-    _visibleSources() {
-      return visibleSources(this._methodSources(), this.search.value, this._activeProvider);
-    }
-    _filteredSources() {
-      return filteredSources(this._methodSources(), this.search.value);
-    }
-    _methodSources() {
-      return this._sources.filter((source) => this._activeMethod === "all" || this._sourceMethod(source) === this._activeMethod);
+    _sourceBinding(source2) {
+      return readSourceBinding(this.shadowRoot, source2);
     }
     _onBackdropClick = (event) => {
-      if (event.target === this.backdrop) {
+      if (event.target === this.elements.backdrop) {
         this.close();
       }
     };
     _onSearchInput = () => {
-      this._activeProvider = firstProviderKey(this._methodSources(), this.search.value);
+      this._activeProvider = firstProviderKey(methodSources(this._sources, this._activeMethod), this.elements.search.value);
       this._activeSource = null;
       this._render();
     };
     _onMethodChange = () => {
-      this._activeMethod = this._selectedMethodFilter();
-      this._activeProvider = firstProviderKey(this._methodSources(), this.search.value);
+      this._activeMethod = selectedMethodFilter(this.elements.methodFilter);
+      this._activeProvider = firstProviderKey(methodSources(this._sources, this._activeMethod), this.elements.search.value);
       this._activeSource = null;
       this._render();
     };
     _onKeydown = (event) => {
-      if (!this.backdrop.hidden && event.key === "Escape") {
+      if (!this.elements.backdrop.hidden && event.key === "Escape") {
         this.close();
       }
     };
-    get backdrop() {
-      return this.query(".backdrop");
-    }
-    get closeButton() {
-      return this.query(".close");
-    }
-    get subtitle() {
-      return this.query(".subtitle");
-    }
-    get search() {
-      return this.query(".search");
-    }
-    get methodFilter() {
-      return this.query(".method-filter");
-    }
-    get providers() {
-      return this.query(".providers");
-    }
-    get sourcesList() {
-      return this.query(".sources");
-    }
-    get details() {
-      return this.query(".details");
-    }
-    get binding() {
-      return this.query(".binding");
-    }
-    query(selector) {
-      return this.shadowRoot.querySelector(selector);
-    }
-    _sourceMethod(source) {
-      return source.method ?? "GET";
-    }
-    _selectMethodFilter(value2) {
-      const options2 = Array.from(this.methodFilter.options);
-      const index = options2.findIndex((option5) => option5.value === value2);
-      this.methodFilter.selectedIndex = index >= 0 ? index : 0;
-      options2.forEach((option5, i) => {
-        option5.selected = i === this.methodFilter.selectedIndex;
-        option5.toggleAttribute("selected", option5.selected);
-      });
-      this.methodFilter.setAttribute("value", options2[this.methodFilter.selectedIndex]?.value ?? "GET");
-    }
-    _selectedMethodFilter() {
-      const options2 = Array.from(this.methodFilter.options);
-      const selected = options2.find((option5) => option5.selected);
-      if (selected?.value) {
-        return selected.value;
-      }
-      const selectedIndexValue = this.methodFilter.options[this.methodFilter.selectedIndex]?.value;
-      if (selectedIndexValue) {
-        return selectedIndexValue;
-      }
-      const selectedAttr = options2.find((option5) => option5.hasAttribute("selected"));
-      return selectedAttr?.value ?? this.methodFilter.getAttribute("value") ?? "GET";
-    }
   }
   if (!customElements.get("cms-editor-v2-data-source-picker")) {
     customElements.define("cms-editor-v2-data-source-picker", DataSourcePicker);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/template.html
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/template.html
   var template_default18 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
@@ -28211,8 +28492,8 @@ h2 {
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/style.css
-  var style_default18 = `:host { display: contents; }
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
+  var style_default14 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -28355,7 +28636,7 @@ textarea { min-height: 92px; resize: vertical; }
 .remove:disabled { color: color-mix(in srgb, #b42318 36%, var(--editor-v2-muted)); cursor: not-allowed; }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/advancedMode.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/advancedMode.ts
   function renderAdvancedMode(expression, onInput) {
     const root = document.createElement("div");
     root.className = "mode-panel form-grid";
@@ -28363,17 +28644,31 @@ textarea { min-height: 92px; resize: vertical; }
     label2.className = "control";
     const text3 = document.createElement("span");
     text3.textContent = "Expression";
-    const textarea4 = document.createElement("textarea");
-    textarea4.className = "advanced-expression";
-    textarea4.value = expression;
-    textarea4.placeholder = 'plan.status == "active" && $source.loaded';
-    textarea4.addEventListener("input", () => onInput(textarea4.value));
-    label2.append(text3, textarea4);
+    const textarea5 = document.createElement("textarea");
+    textarea5.className = "advanced-expression";
+    textarea5.value = expression;
+    textarea5.placeholder = 'plan.status == "active" && $source.loaded';
+    textarea5.addEventListener("input", () => onInput(textarea5.value));
+    label2.append(text3, textarea5);
     root.append(label2);
     return root;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/fieldMode.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/conditionPickerEvents.ts
+  var CONDITION_PICKER_APPLY_EVENT = "editor-v2:condition-apply";
+  var CONDITION_PICKER_REMOVE_EVENT = "editor-v2:condition-remove";
+  function dispatchConditionApply(host, detail) {
+    host.dispatchEvent(new CustomEvent(CONDITION_PICKER_APPLY_EVENT, {
+      bubbles: true,
+      composed: true,
+      detail
+    }));
+  }
+  function dispatchConditionRemove(host) {
+    host.dispatchEvent(new CustomEvent(CONDITION_PICKER_REMOVE_EVENT, { bubbles: true, composed: true }));
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/fieldMode.ts
   var OPERATORS = [
     { value: "truthy", label: "is true / present", needsValue: false },
     { value: "falsy", label: "is false / missing", needsValue: false },
@@ -28395,58 +28690,58 @@ textarea { min-height: 92px; resize: vertical; }
     }
     root.append(fieldSelect(fields, draft, onChange), operatorSelect(draft, onChange));
     if (operatorNeedsValue(draft.operator)) {
-      root.append(valueInput(draft, onChange));
+      root.append(valueInput2(draft, onChange));
     }
     return root;
   }
   function fieldExpression(draft) {
-    return asFieldCondition(draft.path, draft.operator, parseValue2(draft.value));
+    return asFieldCondition(draft.path, draft.operator, parseValue(draft.value));
   }
   function defaultFieldDraft(fields) {
     return { path: fields[0]?.path ?? "", operator: "truthy", value: "" };
   }
   function fieldSelect(fields, draft, onChange) {
-    const select4 = document.createElement("select");
-    select4.className = "field-path";
+    const select5 = document.createElement("select");
+    select5.className = "field-path";
     for (const field2 of fields) {
-      const option5 = document.createElement("option");
-      option5.value = field2.path;
-      option5.textContent = `${field2.scopeLabel}: ${field2.path}`;
-      select4.append(option5);
+      const option6 = document.createElement("option");
+      option6.value = field2.path;
+      option6.textContent = `${field2.scopeLabel}: ${field2.path}`;
+      select5.append(option6);
     }
-    select4.selectedIndex = Math.max(0, fields.findIndex((field2) => field2.path === draft.path));
-    select4.addEventListener("change", () => {
-      draft.path = select4.options.item(select4.selectedIndex)?.value ?? "";
+    select5.selectedIndex = Math.max(0, fields.findIndex((field2) => field2.path === draft.path));
+    select5.addEventListener("change", () => {
+      draft.path = select5.options.item(select5.selectedIndex)?.value ?? "";
       onChange(false);
     });
-    return control2("Field", select4);
+    return control2("Field", select5);
   }
   function operatorSelect(draft, onChange) {
-    const select4 = document.createElement("select");
-    select4.className = "field-operator";
+    const select5 = document.createElement("select");
+    select5.className = "field-operator";
     for (const operator of OPERATORS) {
-      const option5 = document.createElement("option");
-      option5.value = operator.value;
-      option5.textContent = operator.label;
-      select4.append(option5);
+      const option6 = document.createElement("option");
+      option6.value = operator.value;
+      option6.textContent = operator.label;
+      select5.append(option6);
     }
-    select4.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
-    select4.addEventListener("change", () => {
-      draft.operator = select4.options.item(select4.selectedIndex)?.value ?? "truthy";
+    select5.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
+    select5.addEventListener("change", () => {
+      draft.operator = select5.options.item(select5.selectedIndex)?.value ?? "truthy";
       onChange(true);
     });
-    return control2("Operator", select4);
+    return control2("Operator", select5);
   }
-  function valueInput(draft, onChange) {
-    const input2 = document.createElement("input");
-    input2.className = "field-value";
-    input2.placeholder = "Value";
-    input2.value = draft.value;
-    input2.addEventListener("input", () => {
-      draft.value = input2.value;
+  function valueInput2(draft, onChange) {
+    const input3 = document.createElement("input");
+    input3.className = "field-value";
+    input3.placeholder = "Value";
+    input3.value = draft.value;
+    input3.addEventListener("input", () => {
+      draft.value = input3.value;
       onChange(false);
     });
-    return control2("Value", input2);
+    return control2("Value", input3);
   }
   function operatorNeedsValue(operator) {
     return OPERATORS.find((candidate) => candidate.value === operator)?.needsValue === true;
@@ -28459,7 +28754,7 @@ textarea { min-height: 92px; resize: vertical; }
     wrapper.append(text3, controlElement);
     return wrapper;
   }
-  function parseValue2(value2) {
+  function parseValue(value2) {
     const trimmed = value2.trim();
     if (trimmed === "true") {
       return true;
@@ -28482,10 +28777,10 @@ textarea { min-height: 92px; resize: vertical; }
     return element;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/sourceStateMode.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/sourceStateMode.ts
   var STATES = ["loaded", "loading", "empty", "error"];
   function sourceStateKey(sources, editor, state2) {
-    return `${sources.findIndex((source) => source.editor === editor)}:${state2}`;
+    return `${sources.findIndex((source2) => source2.editor === editor)}:${state2}`;
   }
   function renderSourceStateMode(options2) {
     const root = document.createElement("div");
@@ -28497,50 +28792,50 @@ textarea { min-height: 92px; resize: vertical; }
       root.append(empty4);
       return root;
     }
-    for (const source of options2.sources) {
-      root.append(renderSource(source, options2));
+    for (const source2 of options2.sources) {
+      root.append(renderSource(source2, options2));
     }
     return root;
   }
   function selectedSourceConditions(sources, selected) {
-    const conditions = [];
-    for (const source of sources) {
+    const conditions2 = [];
+    for (const source2 of sources) {
       for (const state2 of STATES) {
-        if (selected.has(sourceStateKey(sources, source.editor, state2))) {
-          conditions.push({ sourceEditor: source.editor, sourceState: state2 });
+        if (selected.has(sourceStateKey(sources, source2.editor, state2))) {
+          conditions2.push({ sourceEditor: source2.editor, sourceState: state2 });
         }
       }
     }
-    return conditions;
+    return conditions2;
   }
-  function renderSource(source, options2) {
+  function renderSource(source2, options2) {
     const section = document.createElement("section");
     section.className = "source";
-    section.append(textBlock2("source-title", source.label));
-    if (source.sourceName) {
-      section.append(textBlock2("source-name", `Source: ${source.sourceName}`));
+    section.append(textBlock2("source-title", source2.label));
+    if (source2.sourceName) {
+      section.append(textBlock2("source-name", `Source: ${source2.sourceName}`));
     }
     const states = document.createElement("div");
     states.className = "states";
     for (const state2 of STATES) {
-      states.append(renderState(source, state2, options2));
+      states.append(renderState2(source2, state2, options2));
     }
     section.append(states);
     return section;
   }
-  function renderState(source, state2, options2) {
-    const key = sourceStateKey(options2.sources, source.editor, state2);
+  function renderState2(source2, state2, options2) {
+    const key = sourceStateKey(options2.sources, source2.editor, state2);
     const label2 = document.createElement("label");
-    const input2 = document.createElement("input");
-    input2.type = "checkbox";
-    input2.checked = options2.selected.has(key);
-    input2.addEventListener("change", () => {
-      input2.checked ? options2.selected.add(key) : options2.selected.delete(key);
+    const input3 = document.createElement("input");
+    input3.type = "checkbox";
+    input3.checked = options2.selected.has(key);
+    input3.addEventListener("change", () => {
+      input3.checked ? options2.selected.add(key) : options2.selected.delete(key);
       options2.onChange();
     });
     const text3 = document.createElement("span");
     text3.textContent = state2;
-    label2.append(input2, text3);
+    label2.append(input3, text3);
     return label2;
   }
   function textBlock2(className, text3) {
@@ -28550,11 +28845,59 @@ textarea { min-height: 92px; resize: vertical; }
     return element;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/ConditionPicker.ts
-  var CONDITION_PICKER_APPLY_EVENT = "editor-v2:condition-apply";
-  var CONDITION_PICKER_REMOVE_EVENT = "editor-v2:condition-remove";
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/conditionPickerView.ts
+  function queryConditionPickerElements(root) {
+    const query5 = (selector) => root.querySelector(selector);
+    return {
+      applyButton: query5(".apply"),
+      backdrop: query5(".backdrop"),
+      body: query5(".body"),
+      closeButton: query5(".close"),
+      removeButton: query5(".remove"),
+      subtitle: query5(".subtitle")
+    };
+  }
+  function conditionExpression(input3) {
+    if (input3.mode === "advanced") {
+      return input3.advancedExpression.trim();
+    }
+    if (input3.mode === "field" && input3.fieldDraft.path) {
+      return fieldExpression(input3.fieldDraft);
+    }
+    return selectedSourceConditions(input3.sources, input3.selected).map((condition) => `${condition.sourceEditor.target.localName}.${condition.sourceState}`).join(" || ");
+  }
+  function renderConditionModes(activeMode, onSelect) {
+    const group = document.createElement("div");
+    group.className = "modes";
+    group.append(modeButton("source", "Source state", activeMode, onSelect), modeButton("field", "Data field", activeMode, onSelect), modeButton("advanced", "Advanced", activeMode, onSelect));
+    return group;
+  }
+  function renderConditionSummary(expression) {
+    const summary2 = document.createElement("div");
+    summary2.className = "summary";
+    summary2.append(...conditionSummaryParts(expression));
+    return summary2;
+  }
+  function conditionSummaryParts(expression) {
+    const label2 = document.createElement("span");
+    label2.textContent = "Expression";
+    const code = document.createElement("code");
+    code.textContent = expression || "No condition selected.";
+    return [label2, code];
+  }
+  function modeButton(mode, label2, activeMode, onSelect) {
+    const button2 = document.createElement("button");
+    button2.type = "button";
+    button2.className = "mode";
+    button2.textContent = label2;
+    button2.setAttribute("aria-pressed", String(activeMode === mode));
+    button2.addEventListener("click", () => onSelect(mode));
+    return button2;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default18)}</style>${String(template_default18)}`;
+  template7.innerHTML = `<style>${String(style_default14)}</style>${String(template_default18)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -28564,13 +28907,16 @@ textarea { min-height: 92px; resize: vertical; }
     _fieldDraft = defaultFieldDraft([]);
     _advancedExpression = "";
     _canRemove = false;
+    elements;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template7.content.cloneNode(true));
-      this.closeButton.addEventListener("click", this.close);
-      this.backdrop.addEventListener("click", this.onBackdropClick);
-      this.applyButton.addEventListener("click", this.apply);
-      this.removeButton.addEventListener("click", this.removeCondition);
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template7.content.cloneNode(true));
+      this.elements = queryConditionPickerElements(shadowRoot);
+      this.elements.closeButton.addEventListener("click", this.close);
+      this.elements.backdrop.addEventListener("click", this.onBackdropClick);
+      this.elements.applyButton.addEventListener("click", this.apply);
+      this.elements.removeButton.addEventListener("click", this.removeCondition);
     }
     connectedCallback() {
       this.ownerDocument.addEventListener("keydown", this.onKeydown);
@@ -28586,34 +28932,19 @@ textarea { min-height: 92px; resize: vertical; }
       this._advancedExpression = options2.expression ?? "";
       this._mode = this._selected.size > 0 ? "source" : this._advancedExpression ? "advanced" : "source";
       this._canRemove = options2.canRemove === true;
-      this.subtitle.textContent = options2.contextLabel ? `Conditions for ${options2.contextLabel}.` : "Conditions";
-      this.backdrop.hidden = false;
+      this.elements.subtitle.textContent = options2.contextLabel ? `Conditions for ${options2.contextLabel}.` : "Conditions";
+      this.elements.backdrop.hidden = false;
       this.render();
     }
     close = () => {
-      this.backdrop.hidden = true;
+      this.elements.backdrop.hidden = true;
     };
     render() {
-      this.body.replaceChildren(this.renderModes(), this.renderPanel(), this.renderSummary());
-      this.syncActions();
-    }
-    renderModes() {
-      const group = document.createElement("div");
-      group.className = "modes";
-      group.append(this.modeButton("source", "Source state"), this.modeButton("field", "Data field"), this.modeButton("advanced", "Advanced"));
-      return group;
-    }
-    modeButton(mode, label2) {
-      const button2 = document.createElement("button");
-      button2.type = "button";
-      button2.className = "mode";
-      button2.textContent = label2;
-      button2.setAttribute("aria-pressed", String(this._mode === mode));
-      button2.addEventListener("click", () => {
+      this.elements.body.replaceChildren(renderConditionModes(this._mode, (mode) => {
         this._mode = mode;
         this.render();
-      });
-      return button2;
+      }), this.renderPanel(), renderConditionSummary(this.currentExpression()));
+      this.syncActions();
     }
     renderPanel() {
       if (this._mode === "field") {
@@ -28631,95 +28962,51 @@ textarea { min-height: 92px; resize: vertical; }
         onChange: () => this.syncSummary()
       });
     }
-    renderSummary() {
-      const summary2 = document.createElement("div");
-      summary2.className = "summary";
-      summary2.append(this.summaryLabel(), this.summaryCode());
-      return summary2;
-    }
-    summaryLabel() {
-      const label2 = document.createElement("span");
-      label2.textContent = "Expression";
-      return label2;
-    }
-    summaryCode() {
-      const code = document.createElement("code");
-      code.textContent = this.currentExpression() || "No condition selected.";
-      return code;
-    }
     syncSummary() {
-      this.summary.replaceChildren(this.summaryLabel(), this.summaryCode());
+      this.shadowRoot.querySelector(".summary").replaceChildren(...conditionSummaryParts(this.currentExpression()));
       this.syncActions();
     }
     syncActions() {
-      this.applyButton.disabled = !this.canApply();
-      this.removeButton.disabled = !this._canRemove;
+      this.elements.applyButton.disabled = !this.canApply();
+      this.elements.removeButton.disabled = !this._canRemove;
     }
     currentExpression() {
-      if (this._mode === "advanced") {
-        return this._advancedExpression.trim();
-      }
-      if (this._mode === "field" && this._fieldDraft.path) {
-        return fieldExpression(this._fieldDraft);
-      }
-      return selectedSourceConditions(this._sources, this._selected).map((condition) => `${condition.sourceEditor.target.localName}.${condition.sourceState}`).join(" || ");
+      return conditionExpression({
+        mode: this._mode,
+        advancedExpression: this._advancedExpression,
+        fieldDraft: this._fieldDraft,
+        sources: this._sources,
+        selected: this._selected
+      });
     }
     canApply() {
-      if (this._mode === "source") {
-        return this._selected.size > 0;
-      }
-      return this.currentExpression().trim().length > 0;
+      return this._mode === "source" ? this._selected.size > 0 : this.currentExpression().trim().length > 0;
     }
     apply = () => {
       if (!this.canApply()) {
         return;
       }
       const detail = this._mode === "source" ? { conditions: selectedSourceConditions(this._sources, this._selected) } : { conditions: [], expression: this.currentExpression().trim() };
-      this.dispatchEvent(new CustomEvent(CONDITION_PICKER_APPLY_EVENT, {
-        bubbles: true,
-        composed: true,
-        detail
-      }));
+      dispatchConditionApply(this, detail);
       this.close();
     };
     removeCondition = () => {
       if (!this._canRemove) {
         return;
       }
-      this.dispatchEvent(new CustomEvent(CONDITION_PICKER_REMOVE_EVENT, { bubbles: true, composed: true }));
+      dispatchConditionRemove(this);
       this.close();
     };
     onBackdropClick = (event) => {
-      if (event.target === this.backdrop) {
+      if (event.target === this.elements.backdrop) {
         this.close();
       }
     };
     onKeydown = (event) => {
-      if (!this.backdrop.hidden && event.key === "Escape") {
+      if (!this.elements.backdrop.hidden && event.key === "Escape") {
         this.close();
       }
     };
-    get backdrop() {
-      return this.shadowRoot.querySelector(".backdrop");
-    }
-    get closeButton() {
-      return this.shadowRoot.querySelector(".close");
-    }
-    get subtitle() {
-      return this.shadowRoot.querySelector(".subtitle");
-    }
-    get body() {
-      return this.shadowRoot.querySelector(".body");
-    }
-    get summary() {
-      return this.shadowRoot.querySelector(".summary");
-    }
-    get applyButton() {
-      return this.shadowRoot.querySelector(".apply");
-    }
-    get removeButton() {
-      return this.shadowRoot.querySelector(".remove");
-    }
   }
   if (!customElements.get("cms-editor-v2-condition-picker")) {
     customElements.define("cms-editor-v2-condition-picker", ConditionPicker);
@@ -28740,7 +29027,7 @@ textarea { min-height: 92px; resize: vertical; }
         detail: { editor }
       }));
     }
-    emitAction(action, editor, item, slot, sourceState, sourceEditor, dataSource, sourceBinding, sourceConditions, conditionExpression) {
+    emitAction(action, editor, item, slot, sourceState, sourceEditor, dataSource, sourceBinding, sourceConditions, conditionExpression2) {
       this.host.dispatchEvent(new CustomEvent("editor-v2:structure-action", {
         bubbles: true,
         composed: true,
@@ -28752,7 +29039,7 @@ textarea { min-height: 92px; resize: vertical; }
           dataSource,
           sourceBinding,
           sourceConditions,
-          conditionExpression,
+          conditionExpression: conditionExpression2,
           entry: item?.kind === "block" ? item.entry : undefined,
           slot,
           sourceState
@@ -28764,7 +29051,42 @@ textarea { min-height: 92px; resize: vertical; }
     }
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/template.html
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureKeyboard.ts
+  function onStructureDocumentKeydown(event, context) {
+    if (event.key === "Escape") {
+      context.closeContextMenu();
+      return;
+    }
+    if ((event.key === "Delete" || event.key === "Backspace") && context.selectedEditor && !isEditableKeyEvent(event)) {
+      event.preventDefault();
+      context.emitDelete(context.selectedEditor);
+      return;
+    }
+    if (!event.ctrlKey && !event.metaKey) {
+      return;
+    }
+    if (isEditableKeyEvent(event)) {
+      return;
+    }
+    const key = event.key.toLowerCase();
+    if (key === "c" && context.selectedEditor) {
+      event.preventDefault();
+      context.emitCopy(context.selectedEditor);
+    } else if (key === "v") {
+      event.preventDefault();
+      context.emitPaste(context.selectedEditor ?? undefined);
+    }
+  }
+  function isEditableKeyEvent(event) {
+    return event.composedPath().some((target) => {
+      if (!(target instanceof Element)) {
+        return false;
+      }
+      return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/template.html
   var template_default19 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
@@ -28794,8 +29116,8 @@ textarea { min-height: 92px; resize: vertical; }
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/style.css
-  var style_default19 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/part-1.css
+  var part_1_default3 = `:host {
     display: contents;
 }
 
@@ -28936,8 +29258,10 @@ h2 {
     min-height: 0;
     overflow: auto;
 }
+`;
 
-.sidebar {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/part-2.css
+  var part_2_default3 = `.sidebar {
     display: grid;
     align-content: start;
     gap: 18px;
@@ -29082,8 +29406,10 @@ h2 {
     font-weight: 720;
     text-transform: uppercase;
 }
+`;
 
-.details {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/part-3.css
+  var part_3_default2 = `.details {
     display: grid;
     align-content: start;
     gap: 12px;
@@ -29188,34 +29514,38 @@ dd {
 }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/blockPickerItems.ts
-  function normalizeBlockPickerOption(option5) {
-    if (option5.item) {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/index.ts
+  var styles_default7 = [String(part_1_default3), String(part_2_default3), String(part_3_default2)].join(`
+`);
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
+  function normalizeBlockPickerOption(option6) {
+    if (option6.item) {
       return {
-        ...option5,
-        kind: option5.item.kind
+        ...option6,
+        kind: option6.item.kind
       };
     }
-    if (!option5.entry) {
+    if (!option6.entry) {
       throw new Error("Block picker option requires either item or entry.");
     }
     return {
-      ...option5,
+      ...option6,
       kind: "block",
       item: {
         kind: "block",
-        entry: option5.entry
+        entry: option6.entry
       }
     };
   }
-  function blockPickerOptionItem(option5) {
-    if (option5.item) {
-      return option5.item;
+  function blockPickerOptionItem(option6) {
+    if (option6.item) {
+      return option6.item;
     }
-    if (option5.entry) {
+    if (option6.entry) {
       return {
         kind: "block",
-        entry: option5.entry
+        entry: option6.entry
       };
     }
     throw new Error("Block picker option requires either item or entry.");
@@ -29259,31 +29589,236 @@ dd {
   function blockPickerIconText(item) {
     return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
   }
-  function blockPickerCategoryLabel(option5) {
-    const item = blockPickerOptionItem(option5);
+  function blockPickerCategoryLabel(option6) {
+    const item = blockPickerOptionItem(option6);
     const category = blockPickerItemCategory(item) ?? blockPickerSourceLabel(item.kind);
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option5, query3) {
-    if (!query3) {
+  function blockPickerOptionMatches(option6, query5) {
+    if (!query5) {
       return true;
     }
-    const item = blockPickerOptionItem(option5);
+    const item = blockPickerOptionItem(option6);
     return [
       blockPickerItemLabel(item),
       blockPickerItemDescription(item),
       blockPickerItemCategory(item),
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
-      option5.slotLabel
-    ].some((value2) => value2?.toLowerCase().includes(query3));
+      option6.slotLabel
+    ].some((value2) => value2?.toLowerCase().includes(query5));
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/BlockPickerModal.ts
-  var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(style_default19)}</style>${String(template_default19)}`;
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
+  function blockPickerVisibleOptions(group, source2, category, query5) {
+    return group?.options.filter((option6) => {
+      const item = blockPickerOptionItem(option6);
+      if (item.kind !== source2) {
+        return false;
+      }
+      if (category && blockPickerCategoryLabel(option6) !== category) {
+        return false;
+      }
+      return blockPickerOptionMatches(option6, query5);
+    }) ?? [];
+  }
+  function blockPickerOptionsForSource(group, source2) {
+    return group?.options.filter((option6) => blockPickerOptionItem(option6).kind === source2) ?? [];
+  }
+  function blockPickerSourceCount(group, source2) {
+    return blockPickerOptionsForSource(group, source2).length;
+  }
+  function blockPickerCategoryCount(group, source2, category) {
+    return group?.options.filter((option6) => blockPickerOptionItem(option6).kind === source2 && blockPickerCategoryLabel(option6) === category).length ?? 0;
+  }
+  function blockPickerCategories(group, source2) {
+    const categories = new Set;
+    for (const option6 of group?.options ?? []) {
+      if (blockPickerOptionItem(option6).kind === source2) {
+        categories.add(blockPickerCategoryLabel(option6));
+      }
+    }
+    return [...categories].sort((left, right) => left.localeCompare(right));
+  }
+  function activeBlockPickerGroup(groups, activeSlotKey) {
+    return groups.find((group) => (group.slot ?? "") === activeSlotKey) ?? groups[0];
+  }
+  function firstEnabledBlockPickerGroup(groups) {
+    return groups.find((group) => !group.disabledReason) ?? groups[0];
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerTypes.ts
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerView.ts
+  function renderBlockPickerDetails(container, option6, onSelect) {
+    container.replaceChildren();
+    if (!option6) {
+      const empty4 = document.createElement("div");
+      empty4.className = "details-empty";
+      empty4.textContent = "Select content to see details.";
+      container.append(empty4);
+      return;
+    }
+    const item = blockPickerOptionItem(option6);
+    const eyebrow = document.createElement("div");
+    eyebrow.className = "details-eyebrow";
+    eyebrow.textContent = blockPickerSourceLabel(item.kind);
+    const title2 = document.createElement("h3");
+    title2.textContent = blockPickerItemLabel(item);
+    const description = document.createElement("p");
+    description.textContent = blockPickerItemDescription(item);
+    const preview = document.createElement("div");
+    preview.className = "preview";
+    const previewIcon = document.createElement("span");
+    previewIcon.className = "preview-icon";
+    previewIcon.textContent = blockPickerIconText(item);
+    preview.append(previewIcon);
+    const meta = document.createElement("dl");
+    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option6.slotLabel), metaRow("Category", blockPickerCategoryLabel(option6)));
+    const insert = document.createElement("button");
+    insert.className = "insert";
+    insert.type = "button";
+    insert.textContent = "Insert";
+    insert.addEventListener("click", () => onSelect(option6));
+    container.append(preview, eyebrow, title2, description, meta, insert);
+  }
+  function renderBlockPickerOption(option6, activeOption, onActivate, onSelect) {
+    const button2 = document.createElement("button");
+    button2.className = "block";
+    button2.type = "button";
+    button2.ariaSelected = String(option6 === activeOption);
+    button2.addEventListener("click", () => onActivate(option6));
+    button2.addEventListener("dblclick", () => onSelect(option6));
+    const item = blockPickerOptionItem(option6);
+    const icon = document.createElement("span");
+    icon.className = "icon";
+    icon.textContent = blockPickerIconText(item);
+    const body = document.createElement("span");
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = blockPickerItemLabel(item);
+    const description = document.createElement("span");
+    description.className = "description";
+    description.textContent = blockPickerItemDescription(item);
+    const category = document.createElement("span");
+    category.className = "category";
+    category.textContent = blockPickerCategoryLabel(option6);
+    body.append(name, description, category);
+    button2.append(icon, body);
+    return button2;
+  }
+  function renderBlockPickerTabs(container, groups, activeSlotKey, onSelect) {
+    container.replaceChildren();
+    for (const group of groups) {
+      const button2 = document.createElement("button");
+      const slotKey = group.slot ?? "";
+      button2.className = "tab";
+      button2.type = "button";
+      button2.role = "tab";
+      button2.textContent = group.label;
+      button2.disabled = Boolean(group.disabledReason);
+      button2.ariaSelected = String(slotKey === activeSlotKey);
+      if (group.disabledReason) {
+        button2.title = group.disabledReason;
+      }
+      button2.addEventListener("click", () => {
+        if (!button2.disabled) {
+          onSelect(slotKey);
+        }
+      });
+      container.append(button2);
+    }
+  }
+  function metaRow(label2, value2) {
+    const wrapper = document.createElement("div");
+    const term = document.createElement("dt");
+    const detail = document.createElement("dd");
+    term.textContent = label2;
+    detail.textContent = value2;
+    wrapper.append(term, detail);
+    return wrapper;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerResults.ts
+  function renderBlockPickerResults(input3) {
+    const options2 = blockPickerVisibleOptions(input3.group, input3.activeSource, input3.activeCategory, input3.query);
+    input3.results.replaceChildren();
+    if (input3.group?.disabledReason || options2.length === 0) {
+      const empty4 = document.createElement("div");
+      empty4.className = "empty";
+      empty4.textContent = input3.group?.disabledReason ?? "No content available";
+      input3.results.append(empty4);
+      renderBlockPickerDetails(input3.details, null, input3.onSelect);
+      return null;
+    }
+    const activeOption = input3.activeOption && options2.includes(input3.activeOption) ? input3.activeOption : options2[0];
+    for (const option6 of options2) {
+      input3.results.append(renderBlockPickerOption(option6, activeOption, input3.onActivate, input3.onSelect));
+    }
+    renderBlockPickerDetails(input3.details, activeOption, input3.onSelect);
+    return activeOption;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerSidebar.ts
+  function renderBlockPickerSidebar(input3) {
+    input3.sources.replaceChildren();
+    input3.categories.replaceChildren();
+    input3.sources.append(sourceButton("Blocks", "block", input3), sourceButton("Templates", "template", input3), sourceButton("Media", "media", input3));
+    input3.categories.append(filterButton("All", input3.activeCategory === "", () => input3.onCategory(""), blockPickerSourceCount(input3.group, input3.activeSource)));
+    for (const category of blockPickerCategories(input3.group, input3.activeSource)) {
+      input3.categories.append(filterButton(category, input3.activeCategory === category, () => input3.onCategory(category), blockPickerCategoryCount(input3.group, input3.activeSource, category)));
+    }
+  }
+  function sourceButton(label2, source2, input3) {
+    const count = blockPickerSourceCount(input3.group, source2);
+    return filterButton(label2, input3.activeSource === source2, () => {
+      if (source2 === "media" && input3.onSingleMedia()) {
+        return;
+      }
+      input3.onSource(source2);
+    }, count, source2 !== "block" && count === 0);
+  }
+  function filterButton(label2, active, onClick, count, disabled = false) {
+    const button2 = document.createElement("button");
+    button2.className = "filter";
+    button2.type = "button";
+    button2.disabled = disabled;
+    button2.ariaPressed = String(active);
+    button2.addEventListener("click", () => {
+      if (!button2.disabled) {
+        onClick();
+      }
+    });
+    const text3 = document.createElement("span");
+    text3.textContent = label2;
+    const badge3 = document.createElement("span");
+    badge3.className = "count";
+    badge3.textContent = String(count);
+    button2.append(text3, badge3);
+    return button2;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerElements.ts
+  function queryBlockPickerElements(root) {
+    const query5 = (selector) => root.querySelector(selector);
+    return {
+      backdrop: query5(".backdrop"),
+      categories: query5(".categories"),
+      closeButton: query5(".close"),
+      details: query5(".details"),
+      results: query5(".results"),
+      search: query5(".search"),
+      sources: query5(".sources"),
+      subtitle: query5(".subtitle"),
+      tabs: query5(".slot-tabs")
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
+  var template8 = document.createElement("template");
+  template8.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default19)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -29291,284 +29826,118 @@ dd {
     _activeSource = "block";
     _activeCategory = "";
     _activeOption = null;
+    elements;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template8.content.cloneNode(true));
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template8.content.cloneNode(true));
+      this.elements = queryBlockPickerElements(shadowRoot);
     }
     connectedCallback() {
-      this.closeButton.addEventListener("click", this.close);
-      this.backdrop.addEventListener("click", this._onBackdropClick);
-      this.search.addEventListener("input", this._onSearchInput);
+      this.elements.closeButton.addEventListener("click", this.close);
+      this.elements.backdrop.addEventListener("click", this._onBackdropClick);
+      this.elements.search.addEventListener("input", this._onSearchInput);
       this.ownerDocument.addEventListener("keydown", this._onKeydown);
     }
     disconnectedCallback() {
-      this.closeButton.removeEventListener("click", this.close);
-      this.backdrop.removeEventListener("click", this._onBackdropClick);
-      this.search.removeEventListener("input", this._onSearchInput);
+      this.elements.closeButton.removeEventListener("click", this.close);
+      this.elements.backdrop.removeEventListener("click", this._onBackdropClick);
+      this.elements.search.removeEventListener("input", this._onSearchInput);
       this.ownerDocument.removeEventListener("keydown", this._onKeydown);
     }
     open(groups, contextLabel) {
       this._groups = groups.map((group) => ({
         ...group,
-        options: group.options.map((option5) => normalizeBlockPickerOption(option5))
+        options: group.options.map((option6) => normalizeBlockPickerOption(option6))
       }));
-      this._activeSlotKey = this._firstEnabledGroup()?.slot ?? "";
+      this._activeSlotKey = firstEnabledBlockPickerGroup(this._groups)?.slot ?? "";
       this._activeSource = "block";
       this._activeCategory = "";
       this._activeOption = null;
-      this.subtitle.textContent = contextLabel ? `Choose content to add inside ${contextLabel}.` : "Choose content to add.";
-      this.search.value = "";
-      this.backdrop.hidden = false;
+      this.elements.subtitle.textContent = contextLabel ? `Choose content to add inside ${contextLabel}.` : "Choose content to add.";
+      this.elements.search.value = "";
+      this.elements.backdrop.hidden = false;
       this._render();
-      this.search.focus();
+      this.elements.search.focus();
     }
     close = () => {
-      this.backdrop.hidden = true;
+      this.elements.backdrop.hidden = true;
     };
     _onSearchInput = () => {
       this._activeOption = null;
       this._renderEntries();
     };
-    _render = () => {
-      this._renderTabs();
+    _render() {
+      renderBlockPickerTabs(this.elements.tabs, this._groups, this._activeSlotKey, (slotKey) => {
+        this._activeSlotKey = slotKey;
+        this._activeCategory = "";
+        this._activeOption = null;
+        this._render();
+      });
       this._renderSidebar();
       this._renderEntries();
-    };
+    }
     _renderEntries() {
-      const query3 = this.search.value.trim().toLowerCase();
-      const group = this._activeGroup();
-      const options2 = group?.options.filter((option5) => this._isVisibleOption(option5, query3)) ?? [];
-      this.results.replaceChildren();
-      if (group?.disabledReason) {
-        const empty4 = document.createElement("div");
-        empty4.className = "empty";
-        empty4.textContent = group.disabledReason;
-        this.results.append(empty4);
-        this._activeOption = null;
-        this._renderDetails();
-        return;
-      }
-      if (options2.length === 0) {
-        const empty4 = document.createElement("div");
-        empty4.className = "empty";
-        empty4.textContent = "No content available";
-        this.results.append(empty4);
-        this._activeOption = null;
-        this._renderDetails();
-        return;
-      }
-      if (!this._activeOption || !options2.includes(this._activeOption)) {
-        this._activeOption = options2[0] ?? null;
-      }
-      for (const option5 of options2) {
-        this.results.append(this._renderOption(option5));
-      }
-      this._renderDetails();
+      this._activeOption = renderBlockPickerResults({
+        activeCategory: this._activeCategory,
+        activeOption: this._activeOption,
+        activeSource: this._activeSource,
+        details: this.elements.details,
+        group: this._activeGroup(),
+        onActivate: (option6) => {
+          this._activeOption = option6;
+          this._renderEntries();
+        },
+        onSelect: (option6) => this._selectOption(option6),
+        query: this.elements.search.value.trim().toLowerCase(),
+        results: this.elements.results
+      });
     }
     _renderSidebar() {
-      this.sources.replaceChildren();
-      this.categories.replaceChildren();
-      this.sources.append(this._filterButton("Blocks", this._activeSource === "block", () => {
-        this._activeSource = "block";
-        this._activeCategory = "";
-        this._renderSidebar();
-        this._renderEntries();
-      }, this._sourceCount("block")), this._filterButton("Templates", this._activeSource === "template", () => {
-        this._activeSource = "template";
-        this._activeCategory = "";
-        this._activeOption = null;
-        this._renderSidebar();
-        this._renderEntries();
-      }, this._sourceCount("template"), this._sourceCount("template") === 0), this._filterButton("Media", this._activeSource === "media", () => {
-        if (this._selectSingleSourceOption("media")) {
-          return;
-        }
-        this._activeSource = "media";
-        this._activeCategory = "";
-        this._activeOption = null;
-        this._renderSidebar();
-        this._renderEntries();
-      }, this._sourceCount("media"), this._sourceCount("media") === 0));
-      const categories = this._categories();
-      this.categories.append(this._filterButton("All", this._activeCategory === "", () => {
-        this._activeCategory = "";
-        this._renderSidebar();
-        this._renderEntries();
-      }, this._sourceCount(this._activeSource)));
-      for (const category of categories) {
-        this.categories.append(this._filterButton(category, this._activeCategory === category, () => {
+      renderBlockPickerSidebar({
+        activeCategory: this._activeCategory,
+        activeSource: this._activeSource,
+        categories: this.elements.categories,
+        group: this._activeGroup(),
+        onCategory: (category) => {
           this._activeCategory = category;
           this._renderSidebar();
           this._renderEntries();
-        }, this._categoryCount(category)));
-      }
-    }
-    _filterButton(label2, active, onClick, count, disabled = false) {
-      const button2 = document.createElement("button");
-      button2.className = "filter";
-      button2.type = "button";
-      button2.disabled = disabled;
-      button2.ariaPressed = String(active);
-      button2.addEventListener("click", () => {
-        if (button2.disabled) {
-          return;
-        }
-        onClick();
-      });
-      const text3 = document.createElement("span");
-      text3.textContent = label2;
-      const badge3 = document.createElement("span");
-      badge3.className = "count";
-      badge3.textContent = String(count);
-      button2.append(text3, badge3);
-      return button2;
-    }
-    _renderDetails() {
-      this.details.replaceChildren();
-      const option5 = this._activeOption;
-      if (!option5) {
-        const empty4 = document.createElement("div");
-        empty4.className = "details-empty";
-        empty4.textContent = "Select content to see details.";
-        this.details.append(empty4);
-        return;
-      }
-      const item = blockPickerOptionItem(option5);
-      const eyebrow = document.createElement("div");
-      eyebrow.className = "details-eyebrow";
-      eyebrow.textContent = blockPickerSourceLabel(item.kind);
-      const title2 = document.createElement("h3");
-      title2.textContent = blockPickerItemLabel(item);
-      const description = document.createElement("p");
-      description.textContent = blockPickerItemDescription(item);
-      const preview = document.createElement("div");
-      preview.className = "preview";
-      const previewIcon = document.createElement("span");
-      previewIcon.className = "preview-icon";
-      previewIcon.textContent = blockPickerIconText(item);
-      preview.append(previewIcon);
-      const meta = document.createElement("dl");
-      meta.append(this._metaRow("Source", blockPickerSourceLabel(item.kind)), this._metaRow("Handle", blockPickerItemHandle(item)), this._metaRow("Slot", option5.slotLabel), this._metaRow("Category", blockPickerCategoryLabel(option5)));
-      const insert = document.createElement("button");
-      insert.className = "insert";
-      insert.type = "button";
-      insert.textContent = "Insert";
-      insert.addEventListener("click", () => this._selectOption(option5));
-      this.details.append(preview, eyebrow, title2, description, meta, insert);
-    }
-    _metaRow(label2, value2) {
-      const wrapper = document.createElement("div");
-      const term = document.createElement("dt");
-      const detail = document.createElement("dd");
-      term.textContent = label2;
-      detail.textContent = value2;
-      wrapper.append(term, detail);
-      return wrapper;
-    }
-    _renderTabs() {
-      this.tabs.replaceChildren();
-      for (const group of this._groups) {
-        const button2 = document.createElement("button");
-        const slotKey = group.slot ?? "";
-        button2.className = "tab";
-        button2.type = "button";
-        button2.role = "tab";
-        button2.textContent = group.label;
-        button2.disabled = Boolean(group.disabledReason);
-        button2.ariaSelected = String(slotKey === this._activeSlotKey);
-        if (group.disabledReason) {
-          button2.title = group.disabledReason;
-        }
-        button2.addEventListener("click", () => {
-          if (button2.disabled) {
-            return;
-          }
-          this._activeSlotKey = slotKey;
+        },
+        onSingleMedia: () => this._selectSingleSourceOption("media"),
+        onSource: (source2) => {
+          this._activeSource = source2;
           this._activeCategory = "";
-          this._activeOption = null;
-          this._render();
-        });
-        this.tabs.append(button2);
-      }
-    }
-    _renderOption(option5) {
-      const button2 = document.createElement("button");
-      button2.className = "block";
-      button2.type = "button";
-      button2.ariaSelected = String(option5 === this._activeOption);
-      button2.addEventListener("click", () => {
-        this._activeOption = option5;
-        this._renderEntries();
+          if (source2 !== "block") {
+            this._activeOption = null;
+          }
+          this._renderSidebar();
+          this._renderEntries();
+        },
+        sources: this.elements.sources
       });
-      button2.addEventListener("dblclick", () => this._selectOption(option5));
-      const item = blockPickerOptionItem(option5);
-      const icon = document.createElement("span");
-      icon.className = "icon";
-      icon.textContent = blockPickerIconText(item);
-      const body = document.createElement("span");
-      const name = document.createElement("span");
-      name.className = "name";
-      name.textContent = blockPickerItemLabel(item);
-      const description = document.createElement("span");
-      description.className = "description";
-      description.textContent = blockPickerItemDescription(item);
-      const category = document.createElement("span");
-      category.className = "category";
-      category.textContent = blockPickerCategoryLabel(option5);
-      body.append(name, description, category);
-      button2.append(icon, body);
-      return button2;
     }
-    _selectOption(option5) {
+    _selectOption(option6) {
       this.dispatchEvent(new CustomEvent(BLOCK_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { option: option5 }
+        detail: { option: option6 }
       }));
       this.close();
     }
-    _isVisibleOption(option5, query3) {
-      const item = blockPickerOptionItem(option5);
-      if (item.kind !== this._activeSource) {
-        return false;
-      }
-      if (this._activeCategory && blockPickerCategoryLabel(option5) !== this._activeCategory) {
-        return false;
-      }
-      return blockPickerOptionMatches(option5, query3);
-    }
-    _sourceCount(source) {
-      return this._activeGroup()?.options.filter((option5) => blockPickerOptionItem(option5).kind === source).length ?? 0;
-    }
-    _selectSingleSourceOption(source) {
-      const options2 = this._activeGroup()?.options.filter((option5) => blockPickerOptionItem(option5).kind === source) ?? [];
+    _selectSingleSourceOption(source2) {
+      const options2 = blockPickerOptionsForSource(this._activeGroup(), source2);
       if (options2.length !== 1) {
         return false;
       }
       this._selectOption(options2[0]);
       return true;
     }
-    _categoryCount(category) {
-      return this._activeGroup()?.options.filter((option5) => blockPickerOptionItem(option5).kind === this._activeSource && blockPickerCategoryLabel(option5) === category).length ?? 0;
-    }
-    _categories() {
-      const categories = new Set;
-      for (const option5 of this._activeGroup()?.options ?? []) {
-        if (blockPickerOptionItem(option5).kind !== this._activeSource) {
-          continue;
-        }
-        categories.add(blockPickerCategoryLabel(option5));
-      }
-      return [...categories].sort((a, b) => a.localeCompare(b));
-    }
     _activeGroup() {
-      return this._groups.find((group) => (group.slot ?? "") === this._activeSlotKey) ?? this._groups[0];
-    }
-    _firstEnabledGroup() {
-      return this._groups.find((group) => !group.disabledReason) ?? this._groups[0];
+      return activeBlockPickerGroup(this._groups, this._activeSlotKey);
     }
     _onBackdropClick = (event) => {
-      if (event.target === this.backdrop) {
+      if (event.target === this.elements.backdrop) {
         this.close();
       }
     };
@@ -29577,36 +29946,28 @@ dd {
         this.close();
       }
     };
-    get backdrop() {
-      return this.shadowRoot.querySelector(".backdrop");
-    }
-    get closeButton() {
-      return this.shadowRoot.querySelector(".close");
-    }
-    get search() {
-      return this.shadowRoot.querySelector(".search");
-    }
-    get tabs() {
-      return this.shadowRoot.querySelector(".slot-tabs");
-    }
-    get subtitle() {
-      return this.shadowRoot.querySelector(".subtitle");
-    }
-    get sources() {
-      return this.shadowRoot.querySelector(".sources");
-    }
-    get categories() {
-      return this.shadowRoot.querySelector(".categories");
-    }
-    get results() {
-      return this.shadowRoot.querySelector(".results");
-    }
-    get details() {
-      return this.shadowRoot.querySelector(".details");
-    }
   }
   if (!customElements.get("cms-editor-v2-block-picker-modal")) {
     customElements.define("cms-editor-v2-block-picker-modal", BlockPickerModal);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureTreeEventBindings.ts
+  function connectStructureTreeEvents(tree, handlers) {
+    updateStructureTreeEvents(tree, handlers, "addEventListener");
+  }
+  function disconnectStructureTreeEvents(tree, handlers) {
+    updateStructureTreeEvents(tree, handlers, "removeEventListener");
+  }
+  function updateStructureTreeEvents(tree, handlers, action) {
+    tree.host.ownerDocument[action]("click", handlers.documentClick);
+    tree.host.ownerDocument[action]("keydown", handlers.documentKeydown);
+    tree.refs.blockPicker[action](BLOCK_PICKER_SELECT_EVENT, handlers.blockPickerSelect);
+    tree.refs.dataSourcePicker[action](DATA_SOURCE_PICKER_SELECT_EVENT, handlers.dataSourceSelect);
+    tree.refs.dataSourcePicker[action](DATA_SOURCE_PICKER_REMOVE_EVENT, handlers.dataSourceRemove);
+    tree.refs.conditionPicker[action](CONDITION_PICKER_APPLY_EVENT, handlers.conditionApply);
+    tree.refs.conditionPicker[action](CONDITION_PICKER_REMOVE_EVENT, handlers.conditionRemove);
+    tree.refs.tree[action]("click", handlers.treeClick);
+    tree.refs.tree[action]("contextmenu", handlers.treeContextMenu);
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureDragDrop.ts
@@ -29655,39 +30016,30 @@ dd {
     return Boolean(state2.draggedNode && state2.draggedNode !== node && !context.isDescendantNode(node, state2.draggedNode));
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureKeyboard.ts
-  function onStructureDocumentKeydown(event, context) {
-    if (event.key === "Escape") {
-      context.closeContextMenu();
-      return;
-    }
-    if ((event.key === "Delete" || event.key === "Backspace") && context.selectedEditor && !isEditableKeyEvent(event)) {
-      event.preventDefault();
-      context.emitDelete(context.selectedEditor);
-      return;
-    }
-    if (!event.ctrlKey && !event.metaKey) {
-      return;
-    }
-    if (isEditableKeyEvent(event)) {
-      return;
-    }
-    const key = event.key.toLowerCase();
-    if (key === "c" && context.selectedEditor) {
-      event.preventDefault();
-      context.emitCopy(context.selectedEditor);
-    } else if (key === "v") {
-      event.preventDefault();
-      context.emitPaste(context.selectedEditor ?? undefined);
-    }
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureTreeDragEvents.ts
+  function startStructureTreeDrag(tree, node, event) {
+    onStructureDragStart(tree.state.dragDrop, node, event);
   }
-  function isEditableKeyEvent(event) {
-    return event.composedPath().some((target) => {
-      if (!(target instanceof Element)) {
-        return false;
-      }
-      return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
-    });
+  function overStructureTreeDrag(tree, node, row, event) {
+    onStructureDragOver(tree.state.dragDrop, node, row, event, dragDropContext(tree));
+  }
+  function dropStructureTreeDrag(tree, node, event) {
+    onStructureDrop(tree.state.dragDrop, node, event, dragDropContext(tree));
+  }
+  function clearStructureTreeDrag(tree) {
+    clearStructureDragState(tree.state.dragDrop);
+  }
+  function clearStructureTreeDropRow(tree) {
+    clearStructureDropRow(tree.state.dragDrop);
+  }
+  function dragDropContext(tree) {
+    return {
+      clearDropRow: () => clearStructureTreeDropRow(tree),
+      emitMove: (action, target, dragged) => {
+        tree.emitter.emitAction(action, target.editor, undefined, undefined, undefined, dragged.editor);
+      },
+      isDescendantNode: (candidate, parent) => tree.nodes.isDescendantNode(candidate, parent)
+    };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeEvents.ts
@@ -29749,41 +30101,25 @@ dd {
       this.tree = tree;
     }
     connect() {
-      this.tree.host.ownerDocument.addEventListener("click", this.onDocumentClick);
-      this.tree.host.ownerDocument.addEventListener("keydown", this.onDocumentKeydown);
-      this.tree.refs.blockPicker.addEventListener(BLOCK_PICKER_SELECT_EVENT, this.onBlockPickerSelect);
-      this.tree.refs.dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this.onDataSourceSelect);
-      this.tree.refs.dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this.onDataSourceRemove);
-      this.tree.refs.conditionPicker.addEventListener(CONDITION_PICKER_APPLY_EVENT, this.onConditionApply);
-      this.tree.refs.conditionPicker.addEventListener(CONDITION_PICKER_REMOVE_EVENT, this.onConditionRemove);
-      this.tree.refs.tree.addEventListener("click", this.onTreeClick);
-      this.tree.refs.tree.addEventListener("contextmenu", this.onTreeContextMenu);
+      connectStructureTreeEvents(this.tree, this.eventHandlers());
     }
     disconnect() {
-      this.tree.host.ownerDocument.removeEventListener("click", this.onDocumentClick);
-      this.tree.host.ownerDocument.removeEventListener("keydown", this.onDocumentKeydown);
-      this.tree.refs.blockPicker.removeEventListener(BLOCK_PICKER_SELECT_EVENT, this.onBlockPickerSelect);
-      this.tree.refs.dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this.onDataSourceSelect);
-      this.tree.refs.dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this.onDataSourceRemove);
-      this.tree.refs.conditionPicker.removeEventListener(CONDITION_PICKER_APPLY_EVENT, this.onConditionApply);
-      this.tree.refs.conditionPicker.removeEventListener(CONDITION_PICKER_REMOVE_EVENT, this.onConditionRemove);
-      this.tree.refs.tree.removeEventListener("click", this.onTreeClick);
-      this.tree.refs.tree.removeEventListener("contextmenu", this.onTreeContextMenu);
+      disconnectStructureTreeEvents(this.tree, this.eventHandlers());
     }
     onDragStart(node, event) {
-      onStructureDragStart(this.tree.state.dragDrop, node, event);
+      startStructureTreeDrag(this.tree, node, event);
     }
     onDragOver(node, row, event) {
-      onStructureDragOver(this.tree.state.dragDrop, node, row, event, this.dragDropContext());
+      overStructureTreeDrag(this.tree, node, row, event);
     }
     onDrop(node, event) {
-      onStructureDrop(this.tree.state.dragDrop, node, event, this.dragDropContext());
+      dropStructureTreeDrag(this.tree, node, event);
     }
     clearDragState() {
-      clearStructureDragState(this.tree.state.dragDrop);
+      clearStructureTreeDrag(this.tree);
     }
     clearDropRow() {
-      clearStructureDropRow(this.tree.state.dragDrop);
+      clearStructureTreeDropRow(this.tree);
     }
     onTreeClick = (event) => {
       if (event.target === this.tree.refs.tree) {
@@ -29798,13 +30134,17 @@ dd {
       const mouseEvent = event;
       this.tree.menus.openRootContextMenu(mouseEvent.clientX, mouseEvent.clientY);
     };
-    dragDropContext() {
+    eventHandlers() {
       return {
-        clearDropRow: () => this.clearDropRow(),
-        emitMove: (action, target, dragged) => {
-          this.tree.emitter.emitAction(action, target.editor, undefined, undefined, undefined, dragged.editor);
-        },
-        isDescendantNode: (candidate, parent) => this.tree.nodes.isDescendantNode(candidate, parent)
+        blockPickerSelect: this.onBlockPickerSelect,
+        conditionApply: this.onConditionApply,
+        conditionRemove: this.onConditionRemove,
+        dataSourceRemove: this.onDataSourceRemove,
+        dataSourceSelect: this.onDataSourceSelect,
+        documentClick: this.onDocumentClick,
+        documentKeydown: this.onDocumentKeydown,
+        treeClick: this.onTreeClick,
+        treeContextMenu: this.onTreeContextMenu
       };
     }
   }
@@ -29866,6 +30206,59 @@ dd {
     positionContextMenu(menu, clientX, clientY);
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreePresentation.ts
+  function renderStructureBadge(value2) {
+    const badge3 = document.createElement("span");
+    badge3.className = structureBadgeClass(value2);
+    const icon = structureBadgeIcon(value2);
+    if (icon) {
+      const iconEl = document.createElement("span");
+      iconEl.className = "badge-icon";
+      iconEl.textContent = icon;
+      badge3.append(iconEl);
+    }
+    const label2 = document.createElement("span");
+    label2.textContent = value2;
+    badge3.append(label2);
+    return badge3;
+  }
+  function structureBadgeClass(value2) {
+    if (CMS_SOURCE_STATES.includes(value2)) {
+      return `badge source-status ${value2}`;
+    }
+    return value2 === "Source" || value2 === "Repeat" ? "badge data" : "badge";
+  }
+  function structureBadgeIcon(value2) {
+    if (value2 === "Source") {
+      return "▦";
+    }
+    if (value2 === "Repeat") {
+      return "↻";
+    }
+    return null;
+  }
+  function structureIconText(node) {
+    if (node.icon) {
+      return node.icon.slice(0, 1).toUpperCase();
+    }
+    return node.label.slice(0, 1).toUpperCase();
+  }
+  function structureNodeLabel(node) {
+    return node.label;
+  }
+  function structureRowClass(_node) {
+    return "row";
+  }
+  function structureItemClass(_node) {
+    return "item";
+  }
+  function structureIconClass(_node) {
+    return "icon";
+  }
+  function sourceActionLabel(node) {
+    return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source) ? "Update source" : "Add source";
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeMenus.ts
   class StructureTreeMenus {
     tree;
@@ -29899,7 +30292,7 @@ dd {
       };
     }
     sourceActionLabel(node) {
-      return this.tree.nodes.sourceActionLabel(node);
+      return sourceActionLabel(node);
     }
   }
 
@@ -29990,57 +30383,61 @@ dd {
     });
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreePresentation.ts
-  function renderStructureBadge(value2) {
-    const badge3 = document.createElement("span");
-    badge3.className = structureBadgeClass(value2);
-    const icon = structureBadgeIcon(value2);
-    if (icon) {
-      const iconEl = document.createElement("span");
-      iconEl.className = "badge-icon";
-      iconEl.textContent = icon;
-      badge3.append(iconEl);
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureSourceConditions.ts
+  function sourceAncestorNodes(node, parentNode) {
+    const sources = [];
+    for (let current = parentNode(node);current; current = parentNode(current)) {
+      if (current.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
+        sources.push(current);
+      }
     }
-    const label2 = document.createElement("span");
-    label2.textContent = value2;
-    badge3.append(label2);
-    return badge3;
+    return sources;
   }
-  function structureBadgeClass(value2) {
-    if (CMS_SOURCE_STATES.includes(value2)) {
-      return `badge source-status ${value2}`;
-    }
-    return value2 === "Source" || value2 === "Repeat" ? "badge data" : "badge";
+  function sourceStatusCondition(node) {
+    return sourceStatusConditionDetailsFromElement(node.target)?.state ?? null;
   }
-  function structureBadgeIcon(value2) {
-    if (value2 === "Source") {
-      return "▦";
+  function sourceStatusConditionDetails(node) {
+    return sourceStatusConditionDetailsFromElement(node.target);
+  }
+  function sourceStatusConditions(node) {
+    return sourceStatusConditionsFromElement(node.target);
+  }
+  function canSetSourceStatusCondition(node, source2) {
+    if (!source2 || !source2.target.contains(node.target) || source2.target === node.target) {
+      return false;
     }
-    if (value2 === "Repeat") {
-      return "↻";
+    if (hasNonSourceStatusCondition(node.target)) {
+      return false;
+    }
+    return !hasSourceStatusConditionAncestor(node.target, source2.target);
+  }
+  function nearestSourceAncestor(target) {
+    for (let current = target.parentElement;current; current = current.parentElement) {
+      if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
+        return current;
+      }
     }
     return null;
   }
-  function structureIconText(node) {
-    if (node.icon) {
-      return node.icon.slice(0, 1).toUpperCase();
+  function hasSourceStatusConditionAncestor(target, source2) {
+    for (let current = target.parentElement;current && current !== source2; current = current.parentElement) {
+      if (sourceStatusConditionTargetsSource(current, source2)) {
+        return true;
+      }
     }
-    return node.label.slice(0, 1).toUpperCase();
+    return false;
   }
-  function structureNodeLabel(node) {
-    return node.label;
+  function hasNonSourceStatusCondition(target) {
+    return target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target).length === 0;
   }
-  function structureRowClass(_node) {
-    return "row";
-  }
-  function structureItemClass(_node) {
-    return "item";
-  }
-  function structureIconClass(_node) {
-    return "icon";
-  }
-  function sourceActionLabel(node) {
-    return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source) ? "Update source" : "Add source";
+  function sourceStatusConditionTargetsSource(target, source2) {
+    const conditions2 = sourceStatusConditionsFromElement(target);
+    return conditions2.some((condition) => {
+      if (condition.sourceId) {
+        return condition.sourceId === source2.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
+      }
+      return nearestSourceAncestor(target) === source2;
+    });
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeNodes.ts
@@ -30134,122 +30531,27 @@ dd {
       return this.sourceAncestorNodes(node)[0] ?? null;
     }
     sourceAncestorNodes(node) {
-      const sources = [];
-      for (let current = this.parentNode(node);current; current = this.parentNode(current)) {
-        if (current.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
-          sources.push(current);
-        }
-      }
-      return sources;
+      return sourceAncestorNodes(node, (candidate) => this.parentNode(candidate));
     }
     sourceStatusCondition(node) {
-      return sourceStatusConditionDetailsFromElement(node.target)?.state ?? null;
+      return sourceStatusCondition(node);
     }
     sourceStatusConditionDetails(node) {
-      return sourceStatusConditionDetailsFromElement(node.target);
+      return sourceStatusConditionDetails(node);
     }
     sourceStatusConditions(node) {
-      return sourceStatusConditionsFromElement(node.target);
+      return sourceStatusConditions(node);
     }
-    canSetSourceStatusCondition(node, source = this.nearestSourceNode(node)) {
-      if (!source) {
-        return false;
-      }
-      if (!source.target.contains(node.target) || source.target === node.target) {
-        return false;
-      }
-      if (hasNonSourceStatusCondition(node.target)) {
-        return false;
-      }
-      return !hasSourceStatusConditionAncestor(node.target, source.target);
+    canSetSourceStatusCondition(node, source2 = this.nearestSourceNode(node)) {
+      return canSetSourceStatusCondition(node, source2);
     }
-    iconText(node) {
-      return structureIconText(node);
-    }
-    nodeLabel(node) {
-      return structureNodeLabel(node);
-    }
-    rowClass(node) {
-      return structureRowClass(node);
-    }
-    itemClass(node) {
-      return structureItemClass(node);
-    }
-    iconClass(node) {
-      return structureIconClass(node);
-    }
-    sourceActionLabel(node) {
-      return sourceActionLabel(node);
-    }
-  }
-  function nearestSourceAncestor(target) {
-    for (let current = target.parentElement;current; current = current.parentElement) {
-      if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
-        return current;
-      }
-    }
-    return null;
-  }
-  function hasSourceStatusConditionAncestor(target, source) {
-    for (let current = target.parentElement;current && current !== source; current = current.parentElement) {
-      if (sourceStatusConditionTargetsSource(current, source)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  function hasNonSourceStatusCondition(target) {
-    return target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target).length === 0;
-  }
-  function sourceStatusConditionTargetsSource(target, source) {
-    const conditions = sourceStatusConditionsFromElement(target);
-    return conditions.some((condition) => {
-      if (condition.sourceId) {
-        return condition.sourceId === source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
-      }
-      return nearestSourceAncestor(target) === source;
-    });
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/fieldOptions.ts
-  function conditionFieldOptions(scopes) {
-    const byPath = new Map;
-    for (const scope of scopes) {
-      for (const option5 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
-        if (!byPath.has(option5.path)) {
-          byPath.set(option5.path, option5);
-        }
-      }
-    }
-    return [...byPath.values()];
-  }
-  function fieldOptions(fields, scopeName, scopeLabel, prefix = "") {
-    const options2 = [];
-    for (const field2 of fields) {
-      const relative = relativePath(field2.path, prefix);
-      const path = relative ? `${scopeName}.${relative}` : scopeName;
-      options2.push({
-        path,
-        label: field2.label ?? field2.path,
-        scopeLabel,
-        type: field2.type
-      });
-      options2.push(...fieldOptions(field2.children ?? [], scopeName, scopeLabel, relative));
-    }
-    return options2;
-  }
-  function relativePath(path, prefix) {
-    if (path === ".") {
-      return prefix;
-    }
-    return prefix ? `${prefix}.${path}` : path;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureBlockPicker.ts
   function openPickerOrEmitSingleMedia(action, groups, contextLabel, context) {
-    const option5 = singleEnabledOption(groups);
-    if (option5?.item?.kind === "media") {
-      context.emitAction(action.action, option5.item, option5.slot);
+    const option6 = singleEnabledOption(groups);
+    if (option6?.item?.kind === "media") {
+      context.emitAction(action.action, option6.item, option6.slot);
       return;
     }
     context.setPendingPickerAction(action);
@@ -30286,13 +30588,13 @@ dd {
     });
   }
   function sourceBindingForNode(node) {
-    const source = parseSource(node.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    const source2 = parseSource(node.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
     const body = parseSourceBody(node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceBody));
     const trigger = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
     const method = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
-    return source ? {
-      url: source.url,
-      ...source.alias ? { alias: source.alias } : {},
+    return source2 ? {
+      url: source2.url,
+      ...source2.alias ? { alias: source2.alias } : {},
       ...method ? { method } : {},
       ...body ? { body } : {},
       ...isCmsSourceTrigger(trigger) && trigger !== "auto" ? { trigger } : {}
@@ -30337,9 +30639,9 @@ dd {
       }
     ] : [];
     return [
-      ...blockOptions.filter((option5) => canFitItem(context, parent, slot, option5.item, replaced)),
+      ...blockOptions.filter((option6) => canFitItem(context, parent, slot, option6.item, replaced)),
       ...externalOptions,
-      ...mediaOptions.filter((option5) => option5.item && canFitItem(context, parent, slot, option5.item, replaced))
+      ...mediaOptions.filter((option6) => option6.item && canFitItem(context, parent, slot, option6.item, replaced))
     ];
   }
   function mediaAcceptForSlot(slot) {
@@ -30481,6 +30783,92 @@ dd {
     return typeof slot.max === "number" && context.slotChildCount(parent, slot) >= slot.max;
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/fieldOptions.ts
+  function conditionFieldOptions(scopes) {
+    const byPath = new Map;
+    for (const scope of scopes) {
+      for (const option6 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
+        if (!byPath.has(option6.path)) {
+          byPath.set(option6.path, option6);
+        }
+      }
+    }
+    return [...byPath.values()];
+  }
+  function fieldOptions(fields, scopeName, scopeLabel, prefix = "") {
+    const options2 = [];
+    for (const field2 of fields) {
+      const relative = relativePath(field2.path, prefix);
+      const path = relative ? `${scopeName}.${relative}` : scopeName;
+      options2.push({
+        path,
+        label: field2.label ?? field2.path,
+        scopeLabel,
+        type: field2.type
+      });
+      options2.push(...fieldOptions(field2.children ?? [], scopeName, scopeLabel, relative));
+    }
+    return options2;
+  }
+  function relativePath(path, prefix) {
+    if (path === ".") {
+      return prefix;
+    }
+    return prefix ? `${prefix}.${path}` : path;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureConditionPickerOptions.ts
+  function structureConditionPickerOptions(tree, node) {
+    return {
+      sources: conditionSources(tree, node),
+      selected: selectedConditions(tree, node),
+      fields: conditionFieldOptions(dataScopes(tree, node)),
+      expression: customConditionExpression(node),
+      contextLabel: node.label,
+      canRemove: node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition)
+    };
+  }
+  function conditionSources(tree, node) {
+    return tree.nodes.sourceAncestorNodes(node).filter((source2) => tree.nodes.canSetSourceStatusCondition(node, source2)).map((source2) => ({
+      editor: source2.editor,
+      label: source2.label,
+      sourceName: sourceName(tree, source2)
+    }));
+  }
+  function selectedConditions(tree, node) {
+    const sources = tree.nodes.sourceAncestorNodes(node);
+    const selected = [];
+    for (const condition of tree.nodes.sourceStatusConditions(node)) {
+      const source2 = condition.sourceId ? sources.find((candidate) => candidate.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === condition.sourceId) : sources[0];
+      if (source2) {
+        selected.push({ sourceEditor: source2.editor, sourceState: condition.state });
+      }
+    }
+    return selected;
+  }
+  function sourceName(tree, source2) {
+    const binding = parseSource(source2.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    if (!binding) {
+      return;
+    }
+    const dataSource = tree.state.dataSources.find((candidate) => sourceUrlMatchesBinding(candidate.url, binding.url));
+    return dataSource?.label ?? binding.alias ?? binding.url;
+  }
+  function dataScopes(tree, node) {
+    const nodes = [];
+    for (let current = node;current; current = tree.nodes.parentNode(current)) {
+      nodes.unshift(current);
+    }
+    return nodes.flatMap((candidate) => candidate.editor.getDataScopes());
+  }
+  function customConditionExpression(node) {
+    const value2 = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition)?.trim() ?? "";
+    return value2 && sourceStatusConditionsFromElement(node.target).length === 0 ? value2 : "";
+  }
+  function sourceUrlMatchesBinding(sourceUrl3, bindingUrl) {
+    return bindingUrl === sourceUrl3 || bindingUrl.startsWith(`${sourceUrl3}?`) || sourceUrl3.includes("?") && bindingUrl.startsWith(`${sourceUrl3}&`);
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreePickers.ts
   class StructureTreePickers {
     tree;
@@ -30530,19 +30918,7 @@ dd {
       picker.removeEventListener(CONDITION_PICKER_REMOVE_EVENT, this.tree.events.onConditionRemove);
       picker.addEventListener(CONDITION_PICKER_APPLY_EVENT, this.tree.events.onConditionApply);
       picker.addEventListener(CONDITION_PICKER_REMOVE_EVENT, this.tree.events.onConditionRemove);
-      const sources = this.tree.nodes.sourceAncestorNodes(node).filter((source) => this.tree.nodes.canSetSourceStatusCondition(node, source)).map((source) => ({
-        editor: source.editor,
-        label: source.label,
-        sourceName: this.sourceName(source)
-      }));
-      picker.open({
-        sources,
-        selected: this.selectedConditions(node),
-        fields: conditionFieldOptions(this.dataScopes(node)),
-        expression: this.customConditionExpression(node),
-        contextLabel: node.label,
-        canRemove: node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition)
-      });
+      picker.open(structureConditionPickerOptions(this.tree, node));
     }
     defaultTemplateItems() {
       return defaultTemplateItems(this.groupContext());
@@ -30572,43 +30948,9 @@ dd {
         slotForChild: (parent, child) => this.tree.nodes.slotForChild(parent, child)
       };
     }
-    selectedConditions(node) {
-      const sources = this.tree.nodes.sourceAncestorNodes(node);
-      const selected = [];
-      for (const condition of this.tree.nodes.sourceStatusConditions(node)) {
-        const source = condition.sourceId ? sources.find((candidate) => candidate.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === condition.sourceId) : sources[0];
-        if (!source) {
-          continue;
-        }
-        selected.push({ sourceEditor: source.editor, sourceState: condition.state });
-      }
-      return selected;
-    }
-    sourceName(source) {
-      const binding = parseSource(source.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-      if (!binding) {
-        return;
-      }
-      const dataSource = this.tree.state.dataSources.find((candidate) => sourceUrlMatchesBinding(candidate.url, binding.url));
-      return dataSource?.label ?? binding.alias ?? binding.url;
-    }
-    dataScopes(node) {
-      const nodes = [];
-      for (let current = node;current; current = this.tree.nodes.parentNode(current)) {
-        nodes.unshift(current);
-      }
-      return nodes.flatMap((candidate) => candidate.editor.getDataScopes());
-    }
-    customConditionExpression(node) {
-      const value2 = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition)?.trim() ?? "";
-      return value2 && sourceStatusConditionsFromElement(node.target).length === 0 ? value2 : "";
-    }
-  }
-  function sourceUrlMatchesBinding(sourceUrl3, bindingUrl) {
-    return bindingUrl === sourceUrl3 || bindingUrl.startsWith(`${sourceUrl3}?`) || sourceUrl3.includes("?") && bindingUrl.startsWith(`${sourceUrl3}&`);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeRefs.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureTreeRefs.ts
   class StructureTreeRefs {
     host;
     constructor(host) {
@@ -30801,17 +31143,17 @@ dd {
         selectedEditor: this.tree.state.selectedEditor,
         clearDragState: () => this.tree.events.clearDragState(),
         clearDropRow: () => this.tree.events.clearDropRow(),
-        iconClass: (value2) => this.tree.nodes.iconClass(value2),
-        iconText: (value2) => this.tree.nodes.iconText(value2),
+        iconClass: structureIconClass,
+        iconText: structureIconText,
         isCollapsed: (value2) => this.tree.nodes.isCollapsed(value2),
-        itemClass: (value2) => this.tree.nodes.itemClass(value2),
-        nodeLabel: (value2) => this.tree.nodes.nodeLabel(value2),
+        itemClass: structureItemClass,
+        nodeLabel: structureNodeLabel,
         onDragOver: (value2, row, event) => this.tree.events.onDragOver(value2, row, event),
         onDragStart: (value2, event) => this.tree.events.onDragStart(value2, event),
         onDrop: (value2, event) => this.tree.events.onDrop(value2, event),
         openContextMenu: (value2, clientX, clientY) => this.tree.menus.openContextMenu(value2, clientX, clientY),
         renderBadge: (value2) => renderStructureBadge(value2),
-        rowClass: (value2) => this.tree.nodes.rowClass(value2),
+        rowClass: structureRowClass,
         selectEditor: (editor) => this.tree.emitter.selectEditor(editor),
         toggleBadges: (value2) => this.toggleBadges(value2),
         toggleNode: (value2) => this.toggleNode(value2),
@@ -30929,7 +31271,7 @@ dd {
       this.renderer.render();
     }
     setDataSources(sources) {
-      this.state.dataSources = sources.map((source) => ({ ...source, fields: [...source.fields] }));
+      this.state.dataSources = sources.map((source2) => ({ ...source2, fields: [...source2.fields] }));
     }
     get catalog() {
       return this.state.catalog;
@@ -31121,7 +31463,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default20 = `:host {
+  var style_default15 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -31262,7 +31604,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${[style_default20, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+  template9.innerHTML = `<style>${[style_default15, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default20)}`;
 
   class StructureTree extends HTMLElement {
@@ -31316,7 +31658,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default21 = `:host {
+  var style_default16 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -31401,9 +31743,31 @@ iframe {
 }
 `;
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/canvasFrame.ts
+  var EDITOR_FORM_GUARD_KEY = "__cmsEditorFormGuardInstalled";
+  function installEditorFormGuard(document2) {
+    const state2 = document2;
+    if (state2[EDITOR_FORM_GUARD_KEY]) {
+      return;
+    }
+    state2[EDITOR_FORM_GUARD_KEY] = true;
+    document2.addEventListener("submit", (event) => {
+      if (!event.defaultPrevented) {
+        event.preventDefault();
+      }
+    }, true);
+  }
+  function cssViewportSize(value2) {
+    const size = value2?.trim();
+    if (!size) {
+      return null;
+    }
+    return /^\d+$/.test(size) ? `${size}px` : size;
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(style_default21)}</style>${String(template_default21)}`;
+  template10.innerHTML = `<style>${String(style_default16)}</style>${String(template_default21)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -31519,8 +31883,8 @@ iframe {
       return this.getAttribute("view-frame-url")?.trim() || this.getAttribute("frame-url")?.trim() || "about:blank";
     }
     syncViewportSize() {
-      const width = this.cssSize(this.getAttribute("viewport-width") ?? this.getAttribute("max-width"));
-      const height = this.cssSize(this.getAttribute("viewport-height"));
+      const width = cssViewportSize(this.getAttribute("viewport-width") ?? this.getAttribute("max-width"));
+      const height = cssViewportSize(this.getAttribute("viewport-height"));
       if (width) {
         this.style.setProperty("--editor-v2-viewport-width", width);
       } else {
@@ -31532,13 +31896,6 @@ iframe {
         this.style.removeProperty("--editor-v2-viewport-height");
       }
     }
-    cssSize(value2) {
-      const size = value2?.trim();
-      if (!size) {
-        return null;
-      }
-      return /^\d+$/.test(size) ? `${size}px` : size;
-    }
     get editorFrame() {
       return this.shadowRoot.querySelector(".editor-frame");
     }
@@ -31548,19 +31905,6 @@ iframe {
   }
   if (!customElements.get("cms-editor-v2-canvas")) {
     customElements.define("cms-editor-v2-canvas", Canvas);
-  }
-  var EDITOR_FORM_GUARD_KEY = "__cmsEditorFormGuardInstalled";
-  function installEditorFormGuard(document2) {
-    const state2 = document2;
-    if (state2[EDITOR_FORM_GUARD_KEY]) {
-      return;
-    }
-    state2[EDITOR_FORM_GUARD_KEY] = true;
-    document2.addEventListener("submit", (event) => {
-      if (!event.defaultPrevented) {
-        event.preventDefault();
-      }
-    }, true);
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
@@ -31576,7 +31920,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default22 = `:host {
+  var style_default17 = `:host {
     display: block;
 }
 
@@ -31642,9 +31986,9 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/fieldElement.ts
-  function createFieldTemplate(templateHtml, componentCss) {
+  function createFieldTemplate(templateHtml3, componentCss) {
     const template11 = document.createElement("template");
-    template11.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
+    template11.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml3)}`;
     return template11;
   }
   function attachFieldShadow(host, template11) {
@@ -31665,7 +32009,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template11 = createFieldTemplate(template_default22, style_default22);
+  var template11 = createFieldTemplate(template_default22, style_default17);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -31710,7 +32054,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default23 = `:host {
+  var style_default18 = `:host {
     display: block;
 }
 
@@ -31943,9 +32287,9 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
-  function matchingDynamicDataOptions(options2, query3) {
-    const normalized = query3.trim().toLowerCase();
-    return normalized ? options2.filter((option5) => `${option5.label} ${option5.path}`.toLowerCase().includes(normalized)) : options2;
+  function matchingDynamicDataOptions(options2, query5) {
+    const normalized = query5.trim().toLowerCase();
+    return normalized ? options2.filter((option6) => `${option6.label} ${option6.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
     list.replaceChildren();
@@ -31956,18 +32300,18 @@ input:disabled {
       list.append(empty4);
       return;
     }
-    for (const option5 of options2) {
+    for (const option6 of options2) {
       const button2 = document.createElement("button");
       button2.className = "data-option";
       button2.type = "button";
-      button2.dataset.path = option5.path;
+      button2.dataset.path = option6.path;
       const label2 = document.createElement("span");
       label2.className = "data-label";
-      label2.textContent = option5.label;
+      label2.textContent = option6.label;
       const path = document.createElement("code");
-      path.textContent = option5.path;
+      path.textContent = option6.path;
       button2.append(label2, path);
-      button2.addEventListener("click", () => onSelect(option5.path));
+      button2.addEventListener("click", () => onSelect(option6.path));
       list.append(button2);
     }
   }
@@ -31977,9 +32321,9 @@ input:disabled {
     const byPath = new Map;
     for (const scope of scopes) {
       const options2 = fieldOptions2(scope.fields, scope.name, scope.label ?? scope.name);
-      for (const option5 of options2) {
-        if (!byPath.has(option5.path)) {
-          byPath.set(option5.path, option5);
+      for (const option6 of options2) {
+        if (!byPath.has(option6.path)) {
+          byPath.set(option6.path, option6);
         }
       }
     }
@@ -32147,7 +32491,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template12 = createFieldTemplate(template_default23, `${String(style_default23)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default23, `${String(style_default18)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -32166,9 +32510,9 @@ input:disabled {
     }
     connectedCallback() {
       syncFieldCopy(this);
-      const input2 = this.shadowRoot.querySelector("input");
-      input2.value = this.getAttribute("value") ?? "";
-      input2.placeholder = this.getAttribute("placeholder") ?? "";
+      const input3 = this.shadowRoot.querySelector("input");
+      input3.value = this.getAttribute("value") ?? "";
+      input3.placeholder = this.getAttribute("placeholder") ?? "";
       if (this._connected) {
         this._dynamicData.sync();
         return;
@@ -32228,7 +32572,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default24 = `:host {
+  var style_default19 = `:host {
     display: block;
 }
 
@@ -32300,7 +32644,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template13 = createFieldTemplate(template_default24, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
+  var template13 = createFieldTemplate(template_default24, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -32639,8 +32983,8 @@ textarea:disabled {
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/style.css
-  var style_default25 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/part-1.css
+  var part_1_default4 = `:host {
     display: block;
 }
 
@@ -32784,8 +33128,10 @@ textarea:disabled {
     font-size: 12px;
     outline: none;
 }
+`;
 
-.data-search:focus {
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/part-2.css
+  var part_2_default4 = `.data-search:focus {
     border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
 }
@@ -32871,9 +33217,13 @@ textarea:disabled {
 }
 `;
 
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/index.ts
+  var styles_default8 = [String(part_1_default4), String(part_2_default4)].join(`
+`);
+
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template14 = document.createElement("template");
-  template14.innerHTML = `<style>${String(style_default25)}</style>${String(template_default25)}`;
+  template14.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default25)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -33011,7 +33361,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default26 = `:host {
+  var style_default20 = `:host {
     display: block;
 }
 
@@ -33115,7 +33465,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template15 = createFieldTemplate(template_default26, style_default26);
+  var template15 = createFieldTemplate(template_default26, style_default20);
 
   class Select extends HTMLElement {
     constructor() {
@@ -33126,11 +33476,11 @@ select:disabled {
       syncFieldCopy(this);
       const current = this.getAttribute("value");
       const options2 = this._parseOptions();
-      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option5) => {
+      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option6) => {
         const element = document.createElement("option");
-        element.textContent = option5.label;
-        element.value = option5.value;
-        element.selected = option5.value === current;
+        element.textContent = option6.label;
+        element.value = option6.value;
+        element.selected = option6.value === current;
         return element;
       }));
     }
@@ -33162,7 +33512,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default27 = `:host {
+  var style_default21 = `:host {
     display: block;
 }
 
@@ -33275,7 +33625,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template16 = createFieldTemplate(template_default27, style_default27);
+  var template16 = createFieldTemplate(template_default27, style_default21);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -33298,7 +33648,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default28 = `:host {
+  var style_default22 = `:host {
     display: block;
 }
 
@@ -33344,7 +33694,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template17 = createFieldTemplate(template_default28, style_default28);
+  var template17 = createFieldTemplate(template_default28, style_default22);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -33393,8 +33743,8 @@ select:disabled {
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/style.css
-  var style_default29 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-1.css
+  var part_1_default5 = `:host {
     display: block;
 }
 
@@ -33538,7 +33888,10 @@ button {
 }
 
 .file-title,
-.file-value {
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-2.css
+  var part_2_default5 = `.file-value {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -33683,7 +34036,10 @@ code {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+`;
 
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-3.css
+  var part_3_default3 = `
 :host([disabled]) button,
 :host([disabled]) input,
 :host([disabled]) .target {
@@ -33691,6 +34047,199 @@ code {
     cursor: not-allowed;
 }
 `;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts
+  var styles_default9 = [String(part_1_default5), String(part_2_default5), String(part_3_default3)].join("");
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
+  function allowedLinkModes(options2) {
+    const modes = [];
+    if (options2.allowPage) {
+      modes.push("page");
+    }
+    if (options2.allowExternal) {
+      modes.push("external");
+    }
+    if (options2.allowMedia) {
+      modes.push("media");
+    }
+    return modes;
+  }
+  function modeForLinkValue(value2, options2) {
+    if (value2 && isMediaLink(value2)) {
+      return "media";
+    }
+    if (value2 && isExternalLink(value2)) {
+      return "external";
+    }
+    if (!options2.allowPage && !options2.allowExternal && options2.allowMedia) {
+      return "media";
+    }
+    if (!options2.allowPage && options2.allowExternal) {
+      return "external";
+    }
+    return "page";
+  }
+  function isExternalLink(value2) {
+    return /^[a-z][a-z0-9+.-]*:/i.test(value2) || value2.startsWith("//");
+  }
+  function isMediaLink(value2) {
+    return value2.includes("/.cms/files/by-id/");
+  }
+  function isImageMediaLink(value2) {
+    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value2) || value2.includes("/.cms/files/by-id/");
+  }
+  function mediaDisplayName(value2, isImage, mediaLabel = "") {
+    if (mediaLabel) {
+      return mediaLabel;
+    }
+    if (value2.includes("/.cms/files/by-id/")) {
+      return isImage ? "Image" : "Selected file";
+    }
+    const clean = value2.split(/[?#]/, 1)[0] ?? value2;
+    const segment = clean.split("/").filter(Boolean).at(-1);
+    if (!segment) {
+      return "File";
+    }
+    try {
+      return decodeURIComponent(segment);
+    } catch {
+      return segment;
+    }
+  }
+  function mediaSelectionLabel(isImage) {
+    return isImage ? "Image" : "File selected";
+  }
+  function linkSummaryFallback(mode) {
+    if (mode === "external") {
+      return "External URL";
+    }
+    if (mode === "media") {
+      return "File";
+    }
+    return "Internal page";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkMediaView.ts
+  function renderPageLinkPanels(input3) {
+    const { elements } = input3;
+    elements.pagePanel.hidden = input3.mode !== "page" || !input3.allowPage;
+    elements.externalPanel.hidden = input3.mode !== "external" || !input3.allowExternal;
+    elements.mediaPanel.hidden = input3.mode !== "media" || !input3.allowMedia;
+    elements.searchInput.disabled = input3.disabled;
+    elements.externalInput.disabled = input3.disabled;
+    elements.fileButton.disabled = input3.disabled;
+    elements.picker.hidden = !input3.pickerOpen || elements.pagePanel.hidden;
+    if (input3.mode === "external") {
+      elements.externalInput.value = input3.value;
+    }
+    renderPageLinkMedia(elements, input3.mode, input3.value, input3.mediaLabel);
+  }
+  function renderPageLinkMedia(elements, mode, value2, mediaLabel) {
+    const hasValue = mode === "media" && value2 !== "";
+    const isImage = hasValue && isImageMediaLink(value2);
+    elements.fileTitle.textContent = hasValue ? mediaDisplayName(value2, isImage, mediaLabel) : "Choose file";
+    elements.fileValue.textContent = hasValue ? mediaSelectionLabel(isImage) : "No file selected";
+    elements.fileValue.toggleAttribute("hidden", hasValue && isImage);
+    elements.fileAction.textContent = hasValue ? "Change" : "Choose";
+    elements.filePreview.replaceChildren();
+    elements.filePreview.dataset.kind = isImage ? "image" : "file";
+    if (isImage) {
+      const image2 = document.createElement("img");
+      image2.src = value2;
+      image2.alt = "";
+      image2.loading = "lazy";
+      elements.filePreview.append(image2);
+      return;
+    }
+    elements.filePreview.textContent = "↗";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkNavigationView.ts
+  function renderPageLinkTabs(input3) {
+    input3.elements.tabs.replaceChildren();
+    if (input3.allowedModes.length <= 1) {
+      input3.elements.tabs.hidden = true;
+      return;
+    }
+    input3.elements.tabs.hidden = false;
+    for (const mode of input3.allowedModes) {
+      input3.elements.tabs.append(modeTab(mode, input3.mode, input3.disabled, input3.onMode));
+    }
+  }
+  function renderPageLinkPages(input3) {
+    input3.elements.pageList.replaceChildren();
+    input3.elements.picker.hidden = !input3.pickerOpen || input3.elements.pagePanel.hidden;
+    const query5 = input3.query.trim().toLowerCase();
+    const pages = input3.pages.filter((page) => !query5 || page.title.toLowerCase().includes(query5) || page.path.toLowerCase().includes(query5));
+    input3.elements.empty.hidden = !input3.pickerOpen || pages.length > 0;
+    for (const page of pages) {
+      const button2 = document.createElement("button");
+      button2.className = "page-option";
+      button2.type = "button";
+      button2.ariaSelected = String(page.path === input3.value);
+      button2.disabled = input3.disabled;
+      button2.addEventListener("click", () => {
+        if (!input3.disabled) {
+          input3.onSelect(page.path);
+        }
+      });
+      const title2 = document.createElement("span");
+      title2.className = "page-title";
+      title2.textContent = page.title;
+      const path = document.createElement("span");
+      path.className = "page-path";
+      path.textContent = page.path;
+      button2.append(title2, path);
+      input3.elements.pageList.append(button2);
+    }
+  }
+  function renderPageLinkSummary(elements, pages, mode, value2) {
+    const page = pages.find((candidate) => candidate.path === value2);
+    elements.summaryTitle.textContent = page?.title ?? (value2 ? linkSummaryFallback(mode) : "No link selected");
+    elements.summaryValue.textContent = value2 || "Choose a target";
+    elements.target.hidden = !value2 || mode === "media";
+  }
+  function modeTab(mode, activeMode, disabled, onMode) {
+    const button2 = document.createElement("button");
+    button2.type = "button";
+    button2.role = "tab";
+    button2.textContent = mode === "page" ? "Page" : mode === "external" ? "External" : "Media";
+    button2.ariaSelected = String(activeMode === mode);
+    button2.disabled = disabled;
+    button2.addEventListener("click", () => {
+      if (!disabled) {
+        onMode(mode);
+      }
+    });
+    return button2;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
+  function queryPageLinkElements(root) {
+    const query5 = (selector) => root.querySelector(selector);
+    return {
+      empty: query5(".empty"),
+      externalInput: query5(".external-input"),
+      externalPanel: query5(".external-panel"),
+      fileAction: query5(".file-action"),
+      fileButton: query5(".file-button"),
+      filePreview: query5(".file-preview"),
+      fileTitle: query5(".file-title"),
+      fileValue: query5(".file-value"),
+      hint: query5(".hint"),
+      label: query5(".label"),
+      mediaPanel: query5(".media-panel"),
+      pageList: query5(".page-list"),
+      pagePanel: query5(".page-panel"),
+      picker: query5(".picker"),
+      searchInput: query5(".search"),
+      summaryTitle: query5(".target strong"),
+      summaryValue: query5(".target code"),
+      tabs: query5(".tabs"),
+      target: query5(".target")
+    };
+  }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
   var template_default30 = `<div class="backdrop" hidden>
@@ -33725,8 +34274,8 @@ code {
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/style.css
-  var style_default30 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-1.css
+  var part_1_default6 = `:host {
     color: var(--editor-v2-text, #111);
     font: 12px/1.35 system-ui, sans-serif;
 }
@@ -33861,8 +34410,10 @@ input {
     overflow-y: auto;
     padding: 12px;
 }
+`;
 
-.item {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-2.css
+  var part_2_default6 = `.item {
     display: grid;
     grid-template-rows: 108px auto;
     gap: 8px;
@@ -34003,8 +34554,10 @@ input {
     background: var(--editor-v2-accent, #176b58);
     color: #fff;
 }
+`;
 
-.primary:disabled {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-3.css
+  var part_3_default4 = `.primary:disabled {
     opacity: .45;
     cursor: not-allowed;
 }
@@ -34020,7 +34573,25 @@ input {
 }
 `;
 
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts
+  var styles_default10 = [String(part_1_default6), String(part_2_default6), String(part_3_default4)].join(`
+`);
+
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
+  async function loadFilesPage(basePath5, folder, accept) {
+    const params = new URLSearchParams;
+    if (folder) {
+      params.set("parentId", folder);
+    }
+    params.set("accept", accept.join(","));
+    params.set("sortBy", "name");
+    params.set("limit", "10000");
+    const response = await fetch(`${basePath5}/api/files?${params.toString()}`);
+    if (!response.ok) {
+      return [];
+    }
+    return (await response.json()).items;
+  }
   function fileUrl(basePath5, id) {
     return `${basePath5}/.cms/files/by-id/${encodeURIComponent(id)}`;
   }
@@ -34083,9 +34654,167 @@ input {
     return `${(size / 1024 / 1024).toFixed(1)} MB`;
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
+  function queryFilesCenterElements(root) {
+    const query5 = (selector) => root.querySelector(selector);
+    return {
+      backdrop: query5(".backdrop"),
+      breadcrumb: query5(".breadcrumb"),
+      cancelButton: query5(".cancel"),
+      closeButton: query5(".close"),
+      empty: query5(".empty"),
+      grid: query5(".grid"),
+      searchInput: query5(".search"),
+      selectButton: query5(".select"),
+      selectionTitle: query5(".selection strong"),
+      selectionValue: query5(".selection code")
+    };
+  }
+  function wireFilesCenterElements(elements, callbacks) {
+    elements.closeButton.addEventListener("click", callbacks.close);
+    elements.cancelButton.addEventListener("click", callbacks.close);
+    elements.backdrop.addEventListener("click", (event) => {
+      if (event.target === elements.backdrop) {
+        callbacks.close();
+      }
+    });
+    elements.selectButton.addEventListener("click", callbacks.confirm);
+    elements.searchInput.addEventListener("input", callbacks.search);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterList.ts
+  function renderFilesBreadcrumb(container, trail, onOpen) {
+    container.replaceChildren();
+    trail.forEach((entry, index) => {
+      const button2 = document.createElement("button");
+      button2.type = "button";
+      button2.textContent = entry.label;
+      button2.ariaCurrent = index === trail.length - 1 ? "page" : null;
+      button2.addEventListener("click", () => onOpen(entry, index));
+      container.append(button2);
+    });
+  }
+  function renderFilesList(input3) {
+    input3.grid.replaceChildren();
+    const query5 = input3.query.trim().toLowerCase();
+    const items = input3.items.filter((item) => {
+      if (item.type === "file" && !matchesFileAccept(item, input3.fileAccept)) {
+        return false;
+      }
+      return !query5 || item.name.toLowerCase().includes(query5);
+    });
+    input3.empty.hidden = items.length > 0;
+    for (const item of items) {
+      const button2 = document.createElement("button");
+      button2.className = "item";
+      button2.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
+      button2.type = "button";
+      button2.ariaSelected = String(input3.isSelected(item));
+      button2.addEventListener("click", () => {
+        if (item.type === "folder") {
+          input3.onOpenFolder(item);
+          return;
+        }
+        input3.onSelectFile(item);
+      });
+      button2.addEventListener("dblclick", () => {
+        if (item.type === "file" && !input3.multiple) {
+          input3.onConfirm();
+        }
+      });
+      button2.append(renderFilePreview(item, input3.basePath), renderFileCopy(item));
+      input3.grid.append(button2);
+    }
+  }
+  function renderFileCopy(item) {
+    const copy = document.createElement("span");
+    copy.className = "copy";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = item.name;
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
+    copy.append(name, meta);
+    return copy;
+  }
+  function renderFilePreview(item, basePath5) {
+    const preview = document.createElement("span");
+    preview.className = "preview";
+    if (item.type === "folder") {
+      preview.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.8A2.8 2.8 0 0 1 5.8 4h4.1l2 2H18.2A2.8 2.8 0 0 1 21 8.8v8.4a2.8 2.8 0 0 1-2.8 2.8H5.8A2.8 2.8 0 0 1 3 17.2Z"/></svg>`;
+      return preview;
+    }
+    if (item.mimeType?.startsWith("image/")) {
+      const image2 = document.createElement("img");
+      image2.alt = "";
+      image2.loading = "lazy";
+      image2.src = fileUrl(basePath5, item.id);
+      preview.append(image2);
+      return preview;
+    }
+    preview.innerHTML = fileKind(item) === "pdf" ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
+    return preview;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterSelection.ts
+  function renderFilesSelection(elements, selection) {
+    if (selection.multiple) {
+      const count = selection.selectedMany.length;
+      elements.selectButton.disabled = count === 0;
+      elements.selectButton.textContent = count === 1 ? "Select 1 file" : `Select ${count} files`;
+      elements.selectionTitle.textContent = count === 0 ? "No files selected" : `${count} files selected`;
+      elements.selectionValue.textContent = selection.maxSelection ? `Up to ${selection.maxSelection} files` : "Choose files";
+      return;
+    }
+    elements.selectButton.disabled = !selection.selected;
+    elements.selectButton.textContent = "Select file";
+    elements.selectionTitle.textContent = selection.selected?.name ?? "No file selected";
+    elements.selectionValue.textContent = selection.selected ? fileMeta(selection.selected) : "Choose a file";
+  }
+  function toggleSelectedFile(item, selection) {
+    if (!selection.multiple) {
+      return item;
+    }
+    const existingIndex = selection.selectedMany.findIndex((selected) => selected.id === item.id);
+    if (existingIndex >= 0) {
+      selection.selectedMany.splice(existingIndex, 1);
+      return selection.selected;
+    }
+    if (!selection.maxSelection || selection.selectedMany.length < selection.maxSelection) {
+      selection.selectedMany.push(item);
+    }
+    return selection.selected;
+  }
+  function isFileSelected(item, selection) {
+    return selection.multiple ? selection.selectedMany.some((selected) => selected.id === item.id) : selection.selected?.id === item.id;
+  }
+  function dispatchFilesSelection(host, basePath5, selection) {
+    if (selection.multiple) {
+      if (selection.selectedMany.length === 0) {
+        return false;
+      }
+      host.dispatchEvent(new CustomEvent("select-files", {
+        bubbles: true,
+        composed: true,
+        detail: { files: selection.selectedMany.map((file) => fileDetail(basePath5, file)) }
+      }));
+      return true;
+    }
+    if (!selection.selected) {
+      return false;
+    }
+    host.dispatchEvent(new CustomEvent("select-file", {
+      bubbles: true,
+      composed: true,
+      detail: fileDetail(basePath5, selection.selected)
+    }));
+    return true;
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
   var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(style_default30)}</style>${String(template_default30)}`;
+  template18.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default30)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -34098,9 +34827,12 @@ input {
     _fileAccept = null;
     _multiple = false;
     _maxSelection = null;
+    elements;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template18.content.cloneNode(true));
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template18.content.cloneNode(true));
+      this.elements = queryFilesCenterElements(shadowRoot);
     }
     connectedCallback() {
       this._wire();
@@ -34115,8 +34847,8 @@ input {
       this._trail = [{ id: null, label: "Files" }];
       this._selected = null;
       this._selectedMany = [];
-      this.searchInput.value = "";
-      this.backdrop.hidden = false;
+      this.elements.searchInput.value = "";
+      this.elements.backdrop.hidden = false;
       this._load();
     }
     _wire() {
@@ -34124,33 +34856,16 @@ input {
         return;
       }
       this._wired = true;
-      this.closeButton.addEventListener("click", () => this._close());
-      this.cancelButton.addEventListener("click", () => this._close());
-      this.backdrop.addEventListener("click", (event) => {
-        if (event.target === this.backdrop) {
-          this._close();
-        }
+      wireFilesCenterElements(this.elements, {
+        close: () => this._close(),
+        confirm: () => this._confirm(),
+        search: () => this._renderItems()
       });
-      this.selectButton.addEventListener("click", () => this._confirm());
-      this.searchInput.addEventListener("input", () => this._renderItems());
     }
     async _load() {
       this._selected = null;
       this._updateSelection();
-      const params = new URLSearchParams;
-      if (this._folder) {
-        params.set("parentId", this._folder);
-      }
-      params.set("accept", this._accept.join(","));
-      params.set("sortBy", "name");
-      params.set("limit", "10000");
-      const response = await fetch(`${this._basePath()}/api/files?${params.toString()}`);
-      if (!response.ok) {
-        this._items = [];
-      } else {
-        const page = await response.json();
-        this._items = page.items;
-      }
+      this._items = await loadFilesPage(this._basePath(), this._folder, this._accept);
       this._render();
     }
     _render() {
@@ -34159,615 +34874,321 @@ input {
       this._updateSelection();
     }
     _renderBreadcrumb() {
-      this.breadcrumb.replaceChildren();
-      this._trail.forEach((entry, index) => {
-        const button2 = document.createElement("button");
-        button2.type = "button";
-        button2.textContent = entry.label;
-        button2.ariaCurrent = index === this._trail.length - 1 ? "page" : null;
-        button2.addEventListener("click", () => {
-          this._folder = entry.id;
-          this._trail = this._trail.slice(0, index + 1);
-          this._load();
-        });
-        this.breadcrumb.append(button2);
+      renderFilesBreadcrumb(this.elements.breadcrumb, this._trail, (entry, index) => {
+        this._folder = entry.id;
+        this._trail = this._trail.slice(0, index + 1);
+        this._load();
       });
     }
     _renderItems() {
-      this.grid.replaceChildren();
-      const query3 = this.searchInput.value.trim().toLowerCase();
-      const items = this._items.filter((item) => {
-        if (item.type === "file" && !matchesFileAccept(item, this._fileAccept)) {
-          return false;
-        }
-        if (!query3) {
-          return true;
-        }
-        return item.name.toLowerCase().includes(query3);
-      });
-      this.empty.hidden = items.length > 0;
-      for (const item of items) {
-        const button2 = document.createElement("button");
-        button2.className = "item";
-        button2.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
-        button2.type = "button";
-        button2.ariaSelected = String(this._isSelected(item));
-        button2.addEventListener("click", () => {
-          if (item.type === "folder") {
-            this._openFolder(item);
-            return;
-          }
+      renderFilesList({
+        basePath: this._basePath(),
+        empty: this.elements.empty,
+        fileAccept: this._fileAccept,
+        grid: this.elements.grid,
+        isSelected: (item) => this._isSelected(item),
+        items: this._items,
+        multiple: this._multiple,
+        onConfirm: () => this._confirm(),
+        onOpenFolder: (item) => this._openFolder(item),
+        onSelectFile: (item) => {
           this._selectFile(item);
           this._renderItems();
           this._updateSelection();
-        });
-        button2.addEventListener("dblclick", () => {
-          if (item.type === "file" && !this._multiple) {
-            this._confirm();
-          }
-        });
-        const preview = this._preview(item);
-        const copy = document.createElement("span");
-        copy.className = "copy";
-        const name = document.createElement("span");
-        name.className = "name";
-        name.textContent = item.name;
-        const meta = document.createElement("span");
-        meta.className = "meta";
-        meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
-        copy.append(name, meta);
-        button2.append(preview, copy);
-        this.grid.append(button2);
-      }
+        },
+        query: this.elements.searchInput.value
+      });
     }
     _openFolder(item) {
       this._folder = item.id;
       this._trail.push({ id: item.id, label: item.name });
-      this.searchInput.value = "";
+      this.elements.searchInput.value = "";
       this._load();
     }
     _updateSelection() {
-      if (this._multiple) {
-        const count = this._selectedMany.length;
-        this.selectButton.disabled = count === 0;
-        this.selectButton.textContent = count === 1 ? "Select 1 file" : `Select ${count} files`;
-        this.selectionTitle.textContent = count === 0 ? "No files selected" : `${count} files selected`;
-        this.selectionValue.textContent = this._maxSelection ? `Up to ${this._maxSelection} files` : "Choose files";
-        return;
-      }
-      this.selectButton.disabled = !this._selected;
-      this.selectButton.textContent = "Select file";
-      this.selectionTitle.textContent = this._selected?.name ?? "No file selected";
-      this.selectionValue.textContent = this._selected ? fileMeta(this._selected) : "Choose a file";
+      renderFilesSelection(this.elements, this._selection());
     }
     _confirm() {
-      if (this._multiple) {
-        if (this._selectedMany.length === 0) {
-          return;
-        }
-        this.dispatchEvent(new CustomEvent("select-files", {
-          bubbles: true,
-          composed: true,
-          detail: {
-            files: this._selectedMany.map((file) => fileDetail(this._basePath(), file))
-          }
-        }));
+      if (dispatchFilesSelection(this, this._basePath(), this._selection())) {
         this._close();
-        return;
       }
-      if (!this._selected) {
-        return;
-      }
-      this.dispatchEvent(new CustomEvent("select-file", {
-        bubbles: true,
-        composed: true,
-        detail: fileDetail(this._basePath(), this._selected)
-      }));
-      this._close();
     }
     _selectFile(item) {
-      if (!this._multiple) {
-        this._selected = item;
-        return;
-      }
-      const existingIndex = this._selectedMany.findIndex((selected) => selected.id === item.id);
-      if (existingIndex >= 0) {
-        this._selectedMany.splice(existingIndex, 1);
-        return;
-      }
-      if (this._maxSelection && this._selectedMany.length >= this._maxSelection) {
-        return;
-      }
-      this._selectedMany.push(item);
+      this._selected = toggleSelectedFile(item, this._selection());
     }
     _isSelected(item) {
-      if (this._multiple) {
-        return this._selectedMany.some((selected) => selected.id === item.id);
-      }
-      return this._selected?.id === item.id;
+      return isFileSelected(item, this._selection());
     }
     _close() {
-      this.backdrop.hidden = true;
+      this.elements.backdrop.hidden = true;
       this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
-    }
-    _preview(item) {
-      const preview = document.createElement("span");
-      preview.className = "preview";
-      if (item.type === "folder") {
-        preview.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.8A2.8 2.8 0 0 1 5.8 4h4.1l2 2H18.2A2.8 2.8 0 0 1 21 8.8v8.4a2.8 2.8 0 0 1-2.8 2.8H5.8A2.8 2.8 0 0 1 3 17.2Z"/></svg>`;
-        return preview;
-      }
-      if (item.mimeType?.startsWith("image/")) {
-        const image2 = document.createElement("img");
-        image2.alt = "";
-        image2.loading = "lazy";
-        image2.src = fileUrl(this._basePath(), item.id);
-        preview.append(image2);
-        return preview;
-      }
-      preview.innerHTML = fileKind(item) === "pdf" ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
-      return preview;
     }
     _basePath() {
       return document.querySelector('meta[name="basePath"]')?.content ?? "";
     }
-    get backdrop() {
-      return this.shadowRoot.querySelector(".backdrop");
-    }
-    get closeButton() {
-      return this.shadowRoot.querySelector(".close");
-    }
-    get cancelButton() {
-      return this.shadowRoot.querySelector(".cancel");
-    }
-    get selectButton() {
-      return this.shadowRoot.querySelector(".select");
-    }
-    get searchInput() {
-      return this.shadowRoot.querySelector(".search");
-    }
-    get breadcrumb() {
-      return this.shadowRoot.querySelector(".breadcrumb");
-    }
-    get grid() {
-      return this.shadowRoot.querySelector(".grid");
-    }
-    get empty() {
-      return this.shadowRoot.querySelector(".empty");
-    }
-    get selectionTitle() {
-      return this.shadowRoot.querySelector(".selection strong");
-    }
-    get selectionValue() {
-      return this.shadowRoot.querySelector(".selection code");
+    _selection() {
+      return {
+        maxSelection: this._maxSelection,
+        multiple: this._multiple,
+        selected: this._selected,
+        selectedMany: this._selectedMany
+      };
     }
   }
   if (!customElements.get("cms-editor-v2-files-center")) {
     customElements.define("cms-editor-v2-files-center", FilesCenter);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
-  function allowedLinkModes(options2) {
-    const modes = [];
-    if (options2.allowPage) {
-      modes.push("page");
-    }
-    if (options2.allowExternal) {
-      modes.push("external");
-    }
-    if (options2.allowMedia) {
-      modes.push("media");
-    }
-    return modes;
-  }
-  function modeForLinkValue(value2, options2) {
-    if (value2 && isMediaLink(value2)) {
-      return "media";
-    }
-    if (value2 && isExternalLink(value2)) {
-      return "external";
-    }
-    if (!options2.allowPage && !options2.allowExternal && options2.allowMedia) {
-      return "media";
-    }
-    if (!options2.allowPage && options2.allowExternal) {
-      return "external";
-    }
-    return "page";
-  }
-  function isExternalLink(value2) {
-    return /^[a-z][a-z0-9+.-]*:/i.test(value2) || value2.startsWith("//");
-  }
-  function isMediaLink(value2) {
-    return value2.includes("/.cms/files/by-id/");
-  }
-  function isImageMediaLink(value2) {
-    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value2) || value2.includes("/.cms/files/by-id/");
-  }
-  function mediaDisplayName(value2, isImage, mediaLabel = "") {
-    if (mediaLabel) {
-      return mediaLabel;
-    }
-    if (value2.includes("/.cms/files/by-id/")) {
-      return isImage ? "Image" : "Selected file";
-    }
-    const clean = value2.split(/[?#]/, 1)[0] ?? value2;
-    const segment = clean.split("/").filter(Boolean).at(-1);
-    if (!segment) {
-      return "File";
-    }
-    try {
-      return decodeURIComponent(segment);
-    } catch {
-      return segment;
-    }
-  }
-  function mediaSelectionLabel(isImage) {
-    return isImage ? "Image" : "File selected";
-  }
-  function linkSummaryFallback(mode) {
-    if (mode === "external") {
-      return "External URL";
-    }
-    if (mode === "media") {
-      return "File";
-    }
-    return "Internal page";
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkMediaPicker.ts
+  function openPageLinkMediaPicker(onSelect) {
+    const center = new FilesCenter;
+    const cleanup = () => center.remove();
+    center.addEventListener("close", cleanup, { once: true });
+    center.addEventListener("select-file", (event) => {
+      const detail = event.detail;
+      if (detail?.src) {
+        onSelect(detail.src, detail.label);
+      }
+    }, { once: true });
+    document.body.append(center);
+    center.show({ accept: ["folder", "file"] });
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
-  var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(style_default29)}</style>${String(template_default29)}`;
-
-  class PageLink extends HTMLElement {
-    _pages = [];
-    _mode = "page";
-    _value = "";
-    _loaded = false;
-    _wired = false;
-    _pickerOpen = false;
-    _isReflectingValue = false;
-    _mediaLabel = "";
-    constructor() {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkState.ts
+  class PageLinkState extends HTMLElement {
+    pages = [];
+    mode = "page";
+    currentValue = "";
+    loaded = false;
+    wired = false;
+    pickerOpen = false;
+    reflectingValue = false;
+    mediaLabel = "";
+    elements;
+    constructor(template19) {
       super();
-      this.attachShadow({ mode: "open" }).append(template19.content.cloneNode(true));
-    }
-    connectedCallback() {
-      this._syncFromAttributes();
-      this._wire();
-      this._loadPages();
-      this._render();
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template19.content.cloneNode(true));
+      this.elements = queryPageLinkElements(shadowRoot);
     }
     static get observedAttributes() {
       return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "disabled"];
     }
     attributeChangedCallback() {
-      if (!this.shadowRoot) {
+      if (!this.shadowRoot || this.reflectingValue) {
         return;
       }
-      if (this._isReflectingValue) {
-        return;
-      }
-      this._syncFromAttributes();
-      this._render();
+      this.syncFromAttributes();
+      this.render();
     }
     get value() {
-      return this._value;
+      return this.currentValue;
     }
     set value(value2) {
-      this._value = value2;
-      this._reflectValue(value2);
-      this._render();
+      this.currentValue = value2;
+      this.reflectValue(value2);
+      this.render();
     }
-    _syncFromAttributes() {
-      this._value = this.getAttribute("value") ?? "";
-      this._mode = modeForLinkValue(this._value, this._modeOptions());
+    syncFromAttributes() {
+      this.currentValue = this.getAttribute("value") ?? "";
+      this.mode = modeForLinkValue(this.currentValue, this.modeOptions());
     }
-    _wire() {
-      if (this._wired) {
-        return;
-      }
-      this._wired = true;
-      this.searchInput.addEventListener("focus", () => this._openPicker());
-      this.searchInput.addEventListener("click", () => this._openPicker());
-      this.searchInput.addEventListener("input", () => {
-        this._pickerOpen = true;
-        this._renderPages();
-      });
-      this.externalInput.addEventListener("input", () => {
-        if (this.disabled) {
-          return;
-        }
-        this._setValue(this.externalInput.value);
-      });
-      this.fileButton.addEventListener("click", () => this._openFilesCenter());
-      this.pagePanel.addEventListener("focusout", () => {
-        setTimeout(() => {
-          if (this.shadowRoot?.activeElement && this.pagePanel.contains(this.shadowRoot.activeElement)) {
-            return;
-          }
-          this._closePicker();
-        }, 0);
-      });
-      this.target.addEventListener("click", () => {
-        if (this.disabled || this._mode !== "page") {
-          return;
-        }
-        this.searchInput.focus();
-        this._openPicker();
-      });
-    }
-    async _loadPages() {
-      if (this._loaded || !this._allowPage()) {
-        return;
-      }
-      this._loaded = true;
-      try {
-        const response = await fetch(`${this._basePath()}/api/page/links`);
-        if (!response.ok) {
-          return;
-        }
-        this._pages = await response.json();
-        this._renderPages();
-        this._renderSummary();
-      } catch {
-        this._pages = [];
-        this._renderPages();
-      }
-    }
-    _render() {
-      this.label.textContent = this.getAttribute("label") ?? "Link";
-      this.hint.textContent = this.getAttribute("hint") ?? "";
-      this.hint.toggleAttribute("hidden", !this.hint.textContent);
-      this._renderTabs();
-      this._renderPanels();
-      this._renderPages();
-      this._renderSummary();
-    }
-    _renderTabs() {
-      this.tabs.replaceChildren();
-      if (this._allowedModes().length <= 1) {
-        this.tabs.hidden = true;
-        return;
-      }
-      this.tabs.hidden = false;
-      if (this._allowPage()) {
-        this.tabs.append(this._tab("Page", "page"));
-      }
-      if (this._allowExternal()) {
-        this.tabs.append(this._tab("External", "external"));
-      }
-      if (this._allowMedia()) {
-        this.tabs.append(this._tab("Media", "media"));
-      }
-    }
-    _tab(label2, mode) {
-      const button2 = document.createElement("button");
-      button2.type = "button";
-      button2.role = "tab";
-      button2.textContent = label2;
-      button2.ariaSelected = String(this._mode === mode);
-      button2.disabled = this.disabled;
-      button2.addEventListener("click", () => {
-        if (this.disabled) {
-          return;
-        }
-        this._mode = mode;
-        if (mode !== "page") {
-          this._pickerOpen = false;
-        }
-        if (mode === "external") {
-          this.externalInput.value = this._value;
-        }
-        this._render();
-      });
-      return button2;
-    }
-    _renderPanels() {
-      this.pagePanel.hidden = this._mode !== "page" || !this._allowPage();
-      this.externalPanel.hidden = this._mode !== "external" || !this._allowExternal();
-      this.mediaPanel.hidden = this._mode !== "media" || !this._allowMedia();
-      this.searchInput.disabled = this.disabled;
-      this.externalInput.disabled = this.disabled;
-      this.fileButton.disabled = this.disabled;
-      this.picker.hidden = !this._pickerOpen || this.pagePanel.hidden;
-      if (this._mode === "external") {
-        this.externalInput.value = this._value;
-      }
-      this._renderMediaFile();
-    }
-    _renderPages() {
-      this.pageList.replaceChildren();
-      this.picker.hidden = !this._pickerOpen || this.pagePanel.hidden;
-      const query3 = this.searchInput.value.trim().toLowerCase();
-      const pages = this._pages.filter((page) => {
-        if (!query3) {
-          return true;
-        }
-        return page.title.toLowerCase().includes(query3) || page.path.toLowerCase().includes(query3);
-      });
-      this.empty.hidden = !this._pickerOpen || pages.length > 0;
-      for (const page of pages) {
-        const button2 = document.createElement("button");
-        button2.className = "page-option";
-        button2.type = "button";
-        button2.ariaSelected = String(page.path === this._value);
-        button2.disabled = this.disabled;
-        button2.addEventListener("click", () => {
-          if (this.disabled) {
-            return;
-          }
-          this._setValue(page.path);
-          this.searchInput.value = "";
-          this._closePicker();
-        });
-        const title2 = document.createElement("span");
-        title2.className = "page-title";
-        title2.textContent = page.title;
-        const path = document.createElement("span");
-        path.className = "page-path";
-        path.textContent = page.path;
-        button2.append(title2, path);
-        this.pageList.append(button2);
-      }
-    }
-    _renderSummary() {
-      const page = this._pages.find((candidate) => candidate.path === this._value);
-      this.summaryTitle.textContent = page?.title ?? (this._value ? linkSummaryFallback(this._mode) : "No link selected");
-      this.summaryValue.textContent = this._value || "Choose a target";
-      this.target.hidden = !this._value || this._mode === "media";
-    }
-    _setValue(value2) {
-      this._value = value2;
-      this._reflectValue(value2);
-      this._renderPages();
-      this._renderSummary();
-      this._renderMediaFile();
+    setValue(value2) {
+      this.currentValue = value2;
+      this.reflectValue(value2);
+      this.renderPages();
+      this.renderSummary();
+      this.renderMediaFile();
       this.dispatchEvent(new CustomEvent("input", {
         bubbles: true,
         composed: true,
         detail: { value: value2 }
       }));
     }
-    _openPicker() {
-      if (this.disabled || this._mode !== "page") {
+    openPicker() {
+      if (this.disabled || this.mode !== "page") {
         return;
       }
-      this._pickerOpen = true;
-      this._renderPages();
+      this.pickerOpen = true;
+      this.renderPages();
     }
-    _closePicker() {
-      this._pickerOpen = false;
-      this._renderPages();
+    closePicker() {
+      this.pickerOpen = false;
+      this.renderPages();
     }
-    _openFilesCenter() {
+    openFilesCenter() {
       if (this.disabled) {
         return;
       }
-      const center = new FilesCenter;
-      const cleanup = () => center.remove();
-      center.addEventListener("close", cleanup, { once: true });
-      center.addEventListener("select-file", (event) => {
-        const detail = event.detail;
-        if (!detail?.src) {
-          return;
-        }
-        this._mode = "media";
-        this._mediaLabel = detail.label;
-        this._setValue(detail.src);
-      }, { once: true });
-      document.body.append(center);
-      center.show({ accept: ["folder", "file"] });
+      openPageLinkMediaPicker((source2, label2) => {
+        this.mode = "media";
+        this.mediaLabel = label2;
+        this.setValue(source2);
+      });
     }
-    _renderMediaFile() {
-      const title2 = this.fileTitle;
-      const value2 = this.fileValue;
-      const preview = this.filePreview;
-      const action = this.fileAction;
-      const hasValue = this._mode === "media" && this._value !== "";
-      const isImage = hasValue && isImageMediaLink(this._value);
-      title2.textContent = hasValue ? mediaDisplayName(this._value, isImage, this._mediaLabel) : "Choose file";
-      value2.textContent = hasValue ? mediaSelectionLabel(isImage) : "No file selected";
-      value2.toggleAttribute("hidden", hasValue && isImage);
-      action.textContent = hasValue ? "Change" : "Choose";
-      preview.replaceChildren();
-      preview.dataset.kind = isImage ? "image" : "file";
-      if (isImage) {
-        const image2 = document.createElement("img");
-        image2.src = this._value;
-        image2.alt = "";
-        image2.loading = "lazy";
-        preview.append(image2);
-        return;
-      }
-      preview.textContent = "↗";
+    renderMediaFile() {
+      renderPageLinkMedia(this.elements, this.mode, this.currentValue, this.mediaLabel);
     }
-    _reflectValue(value2) {
-      this._isReflectingValue = true;
-      this.setAttribute("value", value2);
-      this._isReflectingValue = false;
+    allowedModes() {
+      return allowedLinkModes(this.modeOptions());
     }
-    _allowPage() {
+    allowPage() {
       return this.getAttribute("allow-page") !== "false";
     }
-    _allowExternal() {
+    allowExternal() {
       return this.getAttribute("allow-external") !== "false";
     }
-    _allowMedia() {
+    allowMedia() {
       return this.getAttribute("allow-media") !== "false";
     }
-    _allowedModes() {
-      return allowedLinkModes(this._modeOptions());
-    }
-    _modeOptions() {
-      return {
-        allowPage: this._allowPage(),
-        allowExternal: this._allowExternal(),
-        allowMedia: this._allowMedia()
-      };
-    }
-    _basePath() {
+    basePath() {
       return document.querySelector('meta[name="basePath"]')?.content ?? "";
     }
     get disabled() {
       return this.hasAttribute("disabled");
     }
-    get label() {
-      return this.shadowRoot.querySelector(".label");
+    modeOptions() {
+      return {
+        allowPage: this.allowPage(),
+        allowExternal: this.allowExternal(),
+        allowMedia: this.allowMedia()
+      };
     }
-    get hint() {
-      return this.shadowRoot.querySelector(".hint");
+    reflectValue(value2) {
+      this.reflectingValue = true;
+      this.setAttribute("value", value2);
+      this.reflectingValue = false;
     }
-    get tabs() {
-      return this.shadowRoot.querySelector(".tabs");
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkController.ts
+  class PageLinkController extends PageLinkState {
+    constructor(template19) {
+      super(template19);
     }
-    get pagePanel() {
-      return this.shadowRoot.querySelector(".page-panel");
+    connectedCallback() {
+      this.syncFromAttributes();
+      this.wire();
+      this.loadPages();
+      this.render();
     }
-    get externalPanel() {
-      return this.shadowRoot.querySelector(".external-panel");
+    render() {
+      this.elements.label.textContent = this.getAttribute("label") ?? "Link";
+      this.elements.hint.textContent = this.getAttribute("hint") ?? "";
+      this.elements.hint.toggleAttribute("hidden", !this.elements.hint.textContent);
+      this.renderTabs();
+      this.renderPanels();
+      this.renderPages();
+      this.renderSummary();
     }
-    get mediaPanel() {
-      return this.shadowRoot.querySelector(".media-panel");
+    renderPages() {
+      renderPageLinkPages({
+        disabled: this.disabled,
+        elements: this.elements,
+        onSelect: (value2) => {
+          this.setValue(value2);
+          this.elements.searchInput.value = "";
+          this.closePicker();
+        },
+        pages: this.pages,
+        pickerOpen: this.pickerOpen,
+        query: this.elements.searchInput.value,
+        value: this.currentValue
+      });
     }
-    get searchInput() {
-      return this.shadowRoot.querySelector(".search");
+    renderSummary() {
+      renderPageLinkSummary(this.elements, this.pages, this.mode, this.currentValue);
     }
-    get externalInput() {
-      return this.shadowRoot.querySelector(".external-input");
+    wire() {
+      if (this.wired) {
+        return;
+      }
+      this.wired = true;
+      this.elements.searchInput.addEventListener("focus", () => this.openPicker());
+      this.elements.searchInput.addEventListener("click", () => this.openPicker());
+      this.elements.searchInput.addEventListener("input", () => {
+        this.pickerOpen = true;
+        this.renderPages();
+      });
+      this.elements.externalInput.addEventListener("input", () => {
+        if (!this.disabled) {
+          this.setValue(this.elements.externalInput.value);
+        }
+      });
+      this.elements.fileButton.addEventListener("click", () => this.openFilesCenter());
+      this.elements.pagePanel.addEventListener("focusout", () => {
+        setTimeout(() => {
+          if (this.shadowRoot?.activeElement && this.elements.pagePanel.contains(this.shadowRoot.activeElement)) {
+            return;
+          }
+          this.closePicker();
+        }, 0);
+      });
+      this.elements.target.addEventListener("click", () => {
+        if (!this.disabled && this.mode === "page") {
+          this.elements.searchInput.focus();
+          this.openPicker();
+        }
+      });
     }
-    get fileButton() {
-      return this.shadowRoot.querySelector(".file-button");
+    async loadPages() {
+      if (this.loaded || !this.allowPage()) {
+        return;
+      }
+      this.loaded = true;
+      try {
+        const response = await fetch(`${this.basePath()}/api/page/links`);
+        if (!response.ok) {
+          return;
+        }
+        this.pages = await response.json();
+        this.renderPages();
+        this.renderSummary();
+      } catch {
+        this.pages = [];
+        this.renderPages();
+      }
     }
-    get filePreview() {
-      return this.shadowRoot.querySelector(".file-preview");
+    renderTabs() {
+      renderPageLinkTabs({
+        allowedModes: this.allowedModes(),
+        disabled: this.disabled,
+        elements: this.elements,
+        mode: this.mode,
+        onMode: (mode) => {
+          this.mode = mode;
+          if (mode !== "page") {
+            this.pickerOpen = false;
+          }
+          if (mode === "external") {
+            this.elements.externalInput.value = this.currentValue;
+          }
+          this.render();
+        }
+      });
     }
-    get fileTitle() {
-      return this.shadowRoot.querySelector(".file-title");
+    renderPanels() {
+      renderPageLinkPanels({
+        allowExternal: this.allowExternal(),
+        allowMedia: this.allowMedia(),
+        allowPage: this.allowPage(),
+        disabled: this.disabled,
+        elements: this.elements,
+        mediaLabel: this.mediaLabel,
+        mode: this.mode,
+        pickerOpen: this.pickerOpen,
+        value: this.currentValue
+      });
     }
-    get fileValue() {
-      return this.shadowRoot.querySelector(".file-value");
-    }
-    get fileAction() {
-      return this.shadowRoot.querySelector(".file-action");
-    }
-    get pageList() {
-      return this.shadowRoot.querySelector(".page-list");
-    }
-    get picker() {
-      return this.shadowRoot.querySelector(".picker");
-    }
-    get empty() {
-      return this.shadowRoot.querySelector(".empty");
-    }
-    get summaryTitle() {
-      return this.shadowRoot.querySelector(".target strong");
-    }
-    get summaryValue() {
-      return this.shadowRoot.querySelector(".target code");
-    }
-    get target() {
-      return this.shadowRoot.querySelector(".target");
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
+  var template19 = document.createElement("template");
+  template19.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default29)}`;
+
+  class PageLink extends PageLinkController {
+    constructor() {
+      super(template19);
     }
   }
   if (!customElements.get("cms-editor-v2-page-link")) {
@@ -34777,18 +35198,18 @@ input {
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/endpointBinding.ts
   function endpointOptions(setting, dataSources) {
     const methods = new Set(setting.methods ?? []);
-    return dataSources.filter((source) => methods.size === 0 || methods.has(endpointMethod3(source)));
+    return dataSources.filter((source2) => methods.size === 0 || methods.has(endpointMethod3(source2)));
   }
-  function selectedEndpoint(setting, dataSources) {
+  function selectedEndpoint2(setting, dataSources) {
     if (!setting.defaultValue) {
       return null;
     }
     const binding = initialEndpointBinding(setting);
-    return endpointOptions(setting, dataSources).find((source) => {
+    return endpointOptions(setting, dataSources).find((source2) => {
       if (usesSourceBinding(setting) && binding) {
-        return binding.url === source.url || binding.url.startsWith(`${source.url}?`) || source.url.includes("?") && binding.url.startsWith(`${source.url}&`);
+        return binding.url === source2.url || binding.url.startsWith(`${source2.url}?`) || source2.url.includes("?") && binding.url.startsWith(`${source2.url}&`);
       }
-      return source.url === setting.defaultValue;
+      return source2.url === setting.defaultValue;
     }) ?? null;
   }
   function initialEndpointBinding(setting) {
@@ -34798,11 +35219,11 @@ input {
     if (!usesSourceBinding(setting)) {
       return { url: setting.defaultValue };
     }
-    const source = parseSource(setting.defaultValue);
+    const source2 = parseSource(setting.defaultValue);
     const body = parseSourceBody(setting.defaultBody);
-    return source ? {
-      url: source.url,
-      ...source.alias ? { alias: source.alias } : {},
+    return source2 ? {
+      url: source2.url,
+      ...source2.alias ? { alias: source2.alias } : {},
       ...setting.defaultMethod ? { method: setting.defaultMethod } : {},
       ...body ? { body } : {}
     } : null;
@@ -34833,8 +35254,8 @@ input {
     }
     return attributes;
   }
-  function endpointMethod3(source) {
-    return source.method ?? "GET";
+  function endpointMethod3(source2) {
+    return source2.method ?? "GET";
   }
   function usesSourceBinding(setting) {
     return setting.attribute === CMS_BINDING_ATTRIBUTES.source;
@@ -34881,7 +35302,7 @@ input {
       }
       return wrapper;
     }
-    syncButton(button2, setting, selected = selectedEndpoint(setting, this.dataSources), fallbackValue = setting.defaultValue) {
+    syncButton(button2, setting, selected = selectedEndpoint2(setting, this.dataSources), fallbackValue = setting.defaultValue) {
       button2.replaceChildren();
       const method = selected?.method ?? setting.defaultMethod;
       if (method) {
@@ -34935,7 +35356,7 @@ input {
     }
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/colorSetting.ts
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/colorSetting.ts
   function renderColorSetting(setting, themeTokens, renderFieldLabel, emitColorChange) {
     const wrapper = document.createElement("div");
     wrapper.className = "field color-field";
@@ -34946,10 +35367,10 @@ input {
     const controls = document.createElement("div");
     controls.className = "color-custom";
     const picker = createColorPicker(setting);
-    const input2 = createColorInput(setting);
-    wireColorInputs(setting, picker, input2, emitColorChange);
+    const input3 = createColorInput(setting);
+    wireColorInputs(setting, picker, input3, emitColorChange);
     if (themeTokens.length) {
-      wrapper.append(createTokenSelect(setting, themeTokens, picker, input2, emitColorChange));
+      wrapper.append(createTokenSelect(setting, themeTokens, picker, input3, emitColorChange));
     }
     const apply = document.createElement("button");
     apply.className = "color-custom-apply";
@@ -34958,10 +35379,10 @@ input {
     apply.disabled = setting.disabled === true;
     apply.addEventListener("click", () => {
       if (!setting.disabled) {
-        emitColorChange(input2.value.trim());
+        emitColorChange(input3.value.trim());
       }
     });
-    controls.append(picker, input2, apply);
+    controls.append(picker, input3, apply);
     wrapper.append(controls);
     if (setting.help) {
       const help = document.createElement("div");
@@ -34971,23 +35392,23 @@ input {
     }
     return wrapper;
   }
-  function createTokenSelect(setting, tokens, picker, input2, emitColorChange) {
-    const select4 = document.createElement("select");
-    select4.className = "color-token-select";
-    select4.ariaLabel = `${setting.label} theme token`;
-    select4.disabled = setting.disabled === true;
+  function createTokenSelect(setting, tokens, picker, input3, emitColorChange) {
+    const select5 = document.createElement("select");
+    select5.className = "color-token-select";
+    select5.ariaLabel = `${setting.label} theme token`;
+    select5.disabled = setting.disabled === true;
     const custom = document.createElement("option");
     custom.value = "";
     custom.textContent = "Custom color";
-    select4.append(custom);
+    select5.append(custom);
     const groups = new Map;
     for (const token of tokens) {
-      const option5 = document.createElement("option");
-      option5.value = `var(--${token.variable})`;
-      option5.textContent = token.label;
+      const option6 = document.createElement("option");
+      option6.value = `var(--${token.variable})`;
+      option6.textContent = token.label;
       const category = token.category?.trim();
       if (!category) {
-        select4.append(option5);
+        select5.append(option6);
         continue;
       }
       let group = groups.get(category);
@@ -34995,23 +35416,23 @@ input {
         group = document.createElement("optgroup");
         group.label = category;
         groups.set(category, group);
-        select4.append(group);
+        select5.append(group);
       }
-      group.append(option5);
+      group.append(option6);
     }
-    const selected = Array.from(select4.querySelectorAll("option")).find((option5) => option5.value === (setting.defaultValue ?? ""));
+    const selected = Array.from(select5.querySelectorAll("option")).find((option6) => option6.value === (setting.defaultValue ?? ""));
     if (selected) {
       selected.selected = true;
     }
-    select4.addEventListener("change", () => {
-      if (setting.disabled || !select4.value) {
+    select5.addEventListener("change", () => {
+      if (setting.disabled || !select5.value) {
         return;
       }
-      input2.value = select4.value;
-      picker.value = colorPickerValue(select4.value);
-      emitColorChange(select4.value);
+      input3.value = select5.value;
+      picker.value = colorPickerValue(select5.value);
+      emitColorChange(select5.value);
     });
-    return select4;
+    return select5;
   }
   function createColorPicker(setting) {
     const picker = document.createElement("input");
@@ -35023,28 +35444,28 @@ input {
     return picker;
   }
   function createColorInput(setting) {
-    const input2 = document.createElement("input");
-    input2.className = "color-custom-input";
-    input2.type = "text";
-    input2.placeholder = setting.placeholder ?? "#f6f7f8";
-    input2.value = setting.defaultValue ?? "";
-    input2.disabled = setting.disabled === true;
-    return input2;
+    const input3 = document.createElement("input");
+    input3.className = "color-custom-input";
+    input3.type = "text";
+    input3.placeholder = setting.placeholder ?? "#f6f7f8";
+    input3.value = setting.defaultValue ?? "";
+    input3.disabled = setting.disabled === true;
+    return input3;
   }
-  function wireColorInputs(setting, picker, input2, emitColorChange) {
+  function wireColorInputs(setting, picker, input3, emitColorChange) {
     picker.addEventListener("input", () => {
       if (setting.disabled) {
         return;
       }
-      input2.value = picker.value;
+      input3.value = picker.value;
       emitColorChange(picker.value);
     });
-    input2.addEventListener("change", () => {
+    input3.addEventListener("change", () => {
       if (setting.disabled) {
         return;
       }
-      picker.value = colorPickerValue(input2.value);
-      emitColorChange(input2.value.trim());
+      picker.value = colorPickerValue(input3.value);
+      emitColorChange(input3.value.trim());
     });
   }
   function colorPickerValue(value2) {
@@ -35061,26 +35482,26 @@ input {
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/controlWiring.ts
   function wireTextControl(control3, selector, setting, emitValue) {
     whenDefined(control3, () => {
-      const input2 = control3.shadowRoot?.querySelector(selector);
-      if (!input2) {
+      const input3 = control3.shadowRoot?.querySelector(selector);
+      if (!input3) {
         return;
       }
-      input2.disabled = setting.disabled === true;
+      input3.disabled = setting.disabled === true;
       if (setting.disabled) {
         return;
       }
-      input2.addEventListener("input", () => emitValue(input2.value));
-      input2.addEventListener("change", () => emitValue(input2.value));
+      input3.addEventListener("input", () => emitValue(input3.value));
+      input3.addEventListener("change", () => emitValue(input3.value));
     });
   }
   function wireContentControl(control3, selector, emitValue) {
     whenDefined(control3, () => {
-      const input2 = control3.shadowRoot?.querySelector(selector);
-      if (!input2) {
+      const input3 = control3.shadowRoot?.querySelector(selector);
+      if (!input3) {
         return;
       }
-      input2.addEventListener("input", () => emitValue(input2.value));
-      input2.addEventListener("change", () => emitValue(input2.value));
+      input3.addEventListener("input", () => emitValue(input3.value));
+      input3.addEventListener("change", () => emitValue(input3.value));
     });
   }
   function wireRichTextControl(control3, emitValue) {
@@ -35132,8 +35553,8 @@ input {
       control3.removeAttribute("aria-disabled");
     }
   }
-  function setDataScopes(control3, dataScopes) {
-    control3.setAttribute("data-scopes", JSON.stringify(dataScopes));
+  function setDataScopes(control3, dataScopes2) {
+    control3.setAttribute("data-scopes", JSON.stringify(dataScopes2));
   }
   function whenDefined(control3, callback) {
     if (customElements.get(control3.localName)) {
@@ -35143,7 +35564,7 @@ input {
     }
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/icons.ts
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/icons.ts
   var SETTING_ICON_PATHS = {
     "layout-none": `<rect x="8" y="8" width="8" height="8" rx="1.5"></rect>`,
     "layout-column": `<path d="M8 4h8M8 12h8M8 20h8"></path>`,
@@ -35182,15 +35603,15 @@ input {
     return svg2;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/settingControls.ts
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingControls.ts
   class SettingControlRenderer {
     endpointSettings;
     dataScopes;
     themeTokens;
     emitSettingChange;
-    constructor(endpointSettings, dataScopes, themeTokens, emitSettingChange) {
+    constructor(endpointSettings, dataScopes2, themeTokens, emitSettingChange) {
       this.endpointSettings = endpointSettings;
-      this.dataScopes = dataScopes;
+      this.dataScopes = dataScopes2;
       this.themeTokens = themeTokens;
       this.emitSettingChange = emitSettingChange;
     }
@@ -35267,15 +35688,15 @@ input {
       const label2 = renderFieldLabel(setting.label, setting.labelDisplay);
       const control3 = document.createElement("cms-editor-v2-segmented-control");
       control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-      for (const option5 of setting.options) {
+      for (const option6 of setting.options) {
         const button2 = document.createElement("button");
         button2.type = "button";
-        button2.value = option5.value;
+        button2.value = option6.value;
         button2.disabled = setting.disabled === true;
-        button2.title = option5.ariaLabel ?? option5.label;
-        button2.ariaLabel = option5.ariaLabel ?? option5.label;
-        button2.ariaPressed = String(option5.value === setting.defaultValue);
-        button2.append(...renderOptionContent(setting.display, option5.display, option5.icon ?? setting.icon, option5.label));
+        button2.title = option6.ariaLabel ?? option6.label;
+        button2.ariaLabel = option6.ariaLabel ?? option6.label;
+        button2.ariaPressed = String(option6.value === setting.defaultValue);
+        button2.append(...renderOptionContent(setting.display, option6.display, option6.icon ?? setting.icon, option6.label));
         button2.addEventListener("click", () => {
           if (setting.disabled) {
             return;
@@ -35283,7 +35704,7 @@ input {
           for (const item of Array.from(control3.querySelectorAll("button"))) {
             item.ariaPressed = String(item === button2);
           }
-          this.emitSettingChange(setting, option5.value);
+          this.emitSettingChange(setting, option6.value);
         });
         control3.append(button2);
       }
@@ -35394,8 +35815,46 @@ input {
     return typeof value2 === "boolean" ? value2 : String(value2 ?? "");
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/textCapability.ts
-  function renderTextCapability(capability, value2, dataScopes, emitContentChange) {
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts
+  function renderSettingsStates(states, onToggle) {
+    const section = document.createElement("cms-editor-v2-section");
+    section.setAttribute("label", "States");
+    for (const state2 of states) {
+      const button2 = document.createElement("button");
+      button2.className = "state-button";
+      button2.type = "button";
+      button2.ariaPressed = String(state2.isActive());
+      const label2 = document.createElement("span");
+      label2.className = "state-label";
+      label2.textContent = state2.label;
+      const description = document.createElement("span");
+      description.className = "state-description";
+      description.textContent = state2.description ?? (state2.isActive() ? "Active" : "Inactive");
+      button2.append(label2, description);
+      button2.addEventListener("click", () => onToggle(state2));
+      section.append(button2);
+    }
+    return section;
+  }
+  function renderSettingSection(section, controls) {
+    const element = document.createElement("cms-editor-v2-section");
+    element.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
+    const settings = visibleSettings(section.settings);
+    if (settings.length === 0) {
+      const empty4 = document.createElement("div");
+      empty4.className = "section-empty";
+      empty4.textContent = "No settings";
+      element.append(empty4);
+      return element;
+    }
+    for (const setting of settings) {
+      element.append(controls.render(setting));
+    }
+    return element;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/textCapability.ts
+  function renderTextCapability(capability, value2, dataScopes2, emitContentChange) {
     const section = document.createElement("cms-editor-v2-section");
     section.setAttribute("label", "Content");
     const setting = {
@@ -35408,11 +35867,11 @@ input {
     const control3 = createSettingControl(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
     if (capability.format === "richtext") {
       control3.setAttribute("capability", JSON.stringify(capability));
-      control3.setAttribute("data-scopes", JSON.stringify(dataScopes));
+      control3.setAttribute("data-scopes", JSON.stringify(dataScopes2));
       wireRichTextControl(control3, (content) => emitContentChange(content, "html"));
     } else {
       if (capability.dynamic) {
-        setDataScopes(control3, dataScopes);
+        setDataScopes(control3, dataScopes2);
       }
       wireContentControl(control3, "input", (content) => emitContentChange(content, "text"));
     }
@@ -35426,7 +35885,7 @@ input {
       capability.link ? "link" : null,
       capability.code ? "code" : null,
       capability.dynamic ? "dynamic" : null
-    ].filter((option5) => Boolean(option5));
+    ].filter((option6) => Boolean(option6));
     return options2.length > 0 ? options2.join(", ") : "Plain text";
   }
 
@@ -35436,8 +35895,8 @@ input {
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/style.css
-  var style_default31 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/styles/part-1.css
+  var part_1_default7 = `:host {
     display: block;
 }
 
@@ -35574,8 +36033,10 @@ cms-editor-v2-segmented-control button svg:only-child {
     background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
     cursor: pointer;
 }
+`;
 
-.color-custom-input {
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/styles/part-2.css
+  var part_2_default7 = `.color-custom-input {
     width: 100%;
     min-height: 27px;
     border: 1px solid transparent;
@@ -35705,9 +36166,13 @@ cms-editor-v2-segmented-control button svg:only-child {
 }
 `;
 
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/styles/index.ts
+  var styles_default11 = [String(part_1_default7), String(part_2_default7)].join(`
+`);
+
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(style_default31)}</style>${String(template_default31)}`;
+  template20.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default31)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -35727,9 +36192,9 @@ cms-editor-v2-segmented-control button svg:only-child {
     setThemeTokens(tokens) {
       this._themeTokens = tokens.filter((token) => token.label && /^[a-z][a-z0-9-]*$/.test(token.variable));
     }
-    setSettings(sections2, textCapability = null, textValue6 = "", mode = "settings", states = [], dataScopes = [], dataSources = []) {
+    setSettings(sections2, textCapability = null, textValue6 = "", mode = "settings", states = [], dataScopes2 = [], dataSources = []) {
       this._endpointSettings.setDataSources(dataSources);
-      this._dataScopes = dataScopes;
+      this._dataScopes = dataScopes2;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
       const visibleSections = sections2.filter((section) => mode === "settings" ? section.kind === "self" : section.kind === "surcharge");
@@ -35743,56 +36208,21 @@ cms-editor-v2-segmented-control button svg:only-child {
         return;
       }
       if (shouldRenderText) {
-        view.append(renderTextCapability(textCapability, textValue6, dataScopes, (value2, format) => this._emitContentChange(value2, format)));
+        view.append(renderTextCapability(textCapability, textValue6, dataScopes2, (value2, format) => this._emitContentChange(value2, format)));
       }
       if (shouldRenderStates) {
-        view.append(this._renderStates(states));
+        view.append(renderSettingsStates(states, (state2) => this._emitStateToggle(state2)));
       }
       for (const section of visibleSections) {
-        view.append(this._renderSettingSection(section));
+        view.append(renderSettingSection(section, this._settingControls));
       }
     }
-    _renderStates(states) {
-      const section = document.createElement("cms-editor-v2-section");
-      section.setAttribute("label", "States");
-      for (const state2 of states) {
-        const button2 = document.createElement("button");
-        button2.className = "state-button";
-        button2.type = "button";
-        button2.ariaPressed = String(state2.isActive());
-        const label2 = document.createElement("span");
-        label2.className = "state-label";
-        label2.textContent = state2.label;
-        const description = document.createElement("span");
-        description.className = "state-description";
-        description.textContent = state2.description ?? (state2.isActive() ? "Active" : "Inactive");
-        button2.append(label2, description);
-        button2.addEventListener("click", () => {
-          this.dispatchEvent(new CustomEvent(SETTINGS_VIEW_STATE_TOGGLE_EVENT, {
-            bubbles: true,
-            composed: true,
-            detail: { state: state2 }
-          }));
-        });
-        section.append(button2);
-      }
-      return section;
-    }
-    _renderSettingSection(section) {
-      const element = document.createElement("cms-editor-v2-section");
-      element.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
-      const settings = visibleSettings(section.settings);
-      if (settings.length === 0) {
-        const empty4 = document.createElement("div");
-        empty4.className = "section-empty";
-        empty4.textContent = "No settings";
-        element.append(empty4);
-        return element;
-      }
-      for (const setting of settings) {
-        element.append(this._settingControls.render(setting));
-      }
-      return element;
+    _emitStateToggle(state2) {
+      this.dispatchEvent(new CustomEvent(SETTINGS_VIEW_STATE_TOGGLE_EVENT, {
+        bubbles: true,
+        composed: true,
+        detail: { state: state2 }
+      }));
     }
     _emitSettingChange(setting, value2, attributes) {
       const changes = attributes ?? attributesForSettingValue(setting, value2);
@@ -35814,7 +36244,7 @@ cms-editor-v2-segmented-control button svg:only-child {
     customElements.define("cms-editor-v2-settings-view", SettingsView);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/template.html
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/template.html
   var template_default32 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
@@ -35834,8 +36264,8 @@ cms-editor-v2-segmented-control button svg:only-child {
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/style.css
-  var style_default32 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/part-1.css
+  var part_1_default8 = `:host {
     display: contents;
 }
 
@@ -35976,8 +36406,10 @@ h2 {
     border-color: color-mix(in srgb, var(--editor-v2-accent) 56%, var(--editor-v2-border));
     background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
 }
+`;
 
-.name {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/part-2.css
+  var part_2_default8 = `.name {
     overflow: hidden;
     color: var(--editor-v2-text);
     font-size: 12px;
@@ -36111,8 +36543,10 @@ label {
     color: var(--editor-v2-muted);
     font-size: 10px;
 }
+`;
 
-.insert {
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/part-3.css
+  var part_3_default5 = `.insert {
     min-height: 32px;
     border: 1px solid var(--editor-v2-accent);
     border-radius: 7px;
@@ -36137,12 +36571,16 @@ label {
 }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/repeatOptions.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/index.ts
+  var styles_default12 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
+`);
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
   function repeatArrayOptions(scopes) {
     const byPath = new Map;
-    for (const option5 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-      if (!byPath.has(option5.path)) {
-        byPath.set(option5.path, option5);
+    for (const option6 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
+      if (!byPath.has(option6.path)) {
+        byPath.set(option6.path, option6);
       }
     }
     return [...byPath.values()];
@@ -36164,12 +36602,12 @@ label {
       ];
     });
   }
-  function visibleRepeatOptions(options2, query3) {
-    const normalizedQuery = query3.trim().toLowerCase();
+  function visibleRepeatOptions(options2, query5) {
+    const normalizedQuery = query5.trim().toLowerCase();
     if (!normalizedQuery) {
       return options2;
     }
-    return options2.filter((option5) => [option5.path, option5.label, option5.scopeLabel].some((value2) => value2.toLowerCase().includes(normalizedQuery)));
+    return options2.filter((option6) => [option6.path, option6.label, option6.scopeLabel].some((value2) => value2.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
     const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
@@ -36177,9 +36615,101 @@ label {
     return singular.replace(/[^A-Za-z0-9_$]/g, "") || "item";
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/RepeatPicker.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatPickerDetails.ts
+  function renderRepeatDetails(container, option6) {
+    container.replaceChildren();
+    if (!option6) {
+      const empty4 = document.createElement("div");
+      empty4.className = "details-empty";
+      empty4.textContent = "Select an array field to inspect item fields.";
+      container.append(empty4);
+      return;
+    }
+    const heading4 = document.createElement("div");
+    heading4.className = "details-eyebrow";
+    heading4.textContent = "Response fields";
+    container.append(heading4, renderFields2(option6.fields));
+  }
+  function renderRepeatBinding(container, option6, onSelect) {
+    container.replaceChildren();
+    if (!option6) {
+      const empty4 = document.createElement("div");
+      empty4.className = "details-empty";
+      empty4.textContent = "Select an array field to configure repeat.";
+      container.append(empty4);
+      return;
+    }
+    const heading4 = document.createElement("div");
+    heading4.className = "details-eyebrow";
+    heading4.textContent = "Binding";
+    const path = document.createElement("div");
+    path.className = "repeat-path";
+    const pathLabel2 = document.createElement("span");
+    pathLabel2.textContent = "Array";
+    const pathValue = document.createElement("strong");
+    pathValue.textContent = option6.path;
+    path.append(pathLabel2, pathValue);
+    const config = document.createElement("section");
+    config.className = "binding-config";
+    const label2 = document.createElement("label");
+    label2.textContent = "Alias";
+    const alias = document.createElement("input");
+    alias.className = "alias";
+    alias.value = defaultRepeatAlias(option6.path);
+    label2.append(alias);
+    config.append(label2);
+    const insert = document.createElement("button");
+    insert.className = "insert";
+    insert.type = "button";
+    insert.textContent = "Use repeat";
+    insert.addEventListener("click", () => onSelect(option6, alias.value));
+    const scroll = document.createElement("div");
+    scroll.className = "binding-scroll";
+    scroll.append(heading4, path, config);
+    const footer = document.createElement("footer");
+    footer.className = "binding-footer";
+    footer.append(insert);
+    container.append(scroll, footer);
+  }
+  function renderFields2(fields) {
+    const list = document.createElement("ul");
+    list.className = "fields";
+    for (const field2 of fields) {
+      list.append(renderField2(field2, 0));
+    }
+    if (list.children.length === 0) {
+      const empty4 = document.createElement("p");
+      empty4.className = "details-empty";
+      empty4.textContent = "No item fields declared.";
+      return empty4;
+    }
+    return list;
+  }
+  function renderField2(field2, depth) {
+    const item = document.createElement("li");
+    item.className = "field";
+    item.style.setProperty("--field-depth", String(depth));
+    const path = document.createElement("span");
+    path.className = "field-path";
+    path.textContent = field2.path;
+    const type = document.createElement("span");
+    type.className = "field-type";
+    type.textContent = field2.type ?? "unknown";
+    item.append(path, type);
+    if (field2.children?.length) {
+      const children = document.createElement("ul");
+      children.className = "field-children";
+      for (const child of field2.children) {
+        children.append(renderField2(child, depth + 1));
+      }
+      item.append(children);
+    }
+    return item;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
   var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(style_default32)}</style>${String(template_default32)}`;
+  template21.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default32)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -36215,8 +36745,8 @@ label {
     };
     _render() {
       this._renderOptions();
-      this._renderDetails();
-      this._renderBinding();
+      renderRepeatDetails(this.details, this._activeOption);
+      renderRepeatBinding(this.binding, this._activeOption, (option6, alias) => this._select(option6, alias));
     }
     _renderOptions() {
       this.arrays.replaceChildren();
@@ -36232,119 +36762,27 @@ label {
       if (!this._activeOption || !options2.includes(this._activeOption)) {
         this._activeOption = options2[0] ?? null;
       }
-      for (const option5 of options2) {
+      for (const option6 of options2) {
         const button2 = document.createElement("button");
         button2.className = "array";
         button2.type = "button";
-        button2.ariaSelected = String(option5 === this._activeOption);
+        button2.ariaSelected = String(option6 === this._activeOption);
         const name = document.createElement("span");
         name.className = "name";
-        name.textContent = option5.path;
+        name.textContent = option6.path;
         const scope = document.createElement("span");
         scope.className = "scope";
-        scope.textContent = option5.scopeLabel;
+        scope.textContent = option6.scopeLabel;
         button2.append(name, scope);
         button2.addEventListener("click", () => {
-          this._activeOption = option5;
+          this._activeOption = option6;
           this._render();
         });
-        button2.addEventListener("dblclick", () => this._select(option5));
+        button2.addEventListener("dblclick", () => this._select(option6));
         this.arrays.append(button2);
       }
     }
-    _renderDetails() {
-      this.details.replaceChildren();
-      if (!this._activeOption) {
-        const empty4 = document.createElement("div");
-        empty4.className = "details-empty";
-        empty4.textContent = "Select an array field to inspect item fields.";
-        this.details.append(empty4);
-        return;
-      }
-      const option5 = this._activeOption;
-      const heading4 = document.createElement("div");
-      heading4.className = "details-eyebrow";
-      heading4.textContent = "Response fields";
-      this.details.append(heading4, this._renderFields(option5.fields));
-    }
-    _renderBinding() {
-      this.binding.replaceChildren();
-      if (!this._activeOption) {
-        const empty4 = document.createElement("div");
-        empty4.className = "details-empty";
-        empty4.textContent = "Select an array field to configure repeat.";
-        this.binding.append(empty4);
-        return;
-      }
-      const option5 = this._activeOption;
-      const heading4 = document.createElement("div");
-      heading4.className = "details-eyebrow";
-      heading4.textContent = "Binding";
-      const path = document.createElement("div");
-      path.className = "repeat-path";
-      const pathLabel2 = document.createElement("span");
-      pathLabel2.textContent = "Array";
-      const pathValue = document.createElement("strong");
-      pathValue.textContent = option5.path;
-      path.append(pathLabel2, pathValue);
-      const config = document.createElement("section");
-      config.className = "binding-config";
-      const label2 = document.createElement("label");
-      label2.textContent = "Alias";
-      const alias = document.createElement("input");
-      alias.className = "alias";
-      alias.value = defaultRepeatAlias(option5.path);
-      label2.append(alias);
-      config.append(label2);
-      const insert = document.createElement("button");
-      insert.className = "insert";
-      insert.type = "button";
-      insert.textContent = "Use repeat";
-      insert.addEventListener("click", () => this._select(option5, alias.value));
-      const scroll = document.createElement("div");
-      scroll.className = "binding-scroll";
-      scroll.append(heading4, path, config);
-      const footer = document.createElement("footer");
-      footer.className = "binding-footer";
-      footer.append(insert);
-      this.binding.append(scroll, footer);
-    }
-    _renderFields(fields) {
-      const list = document.createElement("ul");
-      list.className = "fields";
-      for (const field2 of fields) {
-        list.append(this._renderField(field2, 0));
-      }
-      if (list.children.length === 0) {
-        const empty4 = document.createElement("p");
-        empty4.className = "details-empty";
-        empty4.textContent = "No item fields declared.";
-        return empty4;
-      }
-      return list;
-    }
-    _renderField(field2, depth) {
-      const item = document.createElement("li");
-      item.className = "field";
-      item.style.setProperty("--field-depth", String(depth));
-      const path = document.createElement("span");
-      path.className = "field-path";
-      path.textContent = field2.path;
-      const type = document.createElement("span");
-      type.className = "field-type";
-      type.textContent = field2.type ?? "unknown";
-      item.append(path, type);
-      if (field2.children?.length) {
-        const children = document.createElement("ul");
-        children.className = "field-children";
-        for (const child of field2.children) {
-          children.append(this._renderField(child, depth + 1));
-        }
-        item.append(children);
-      }
-      return item;
-    }
-    _select(option5, alias = defaultRepeatAlias(option5.path)) {
+    _select(option6, alias = defaultRepeatAlias(option6.path)) {
       const cleanAlias = alias.trim();
       if (!cleanAlias) {
         return;
@@ -36353,7 +36791,7 @@ label {
         bubbles: true,
         composed: true,
         detail: {
-          path: option5.path,
+          path: option6.path,
           alias: cleanAlias
         }
       }));
@@ -36610,7 +37048,7 @@ label {
     return content.innerHTML;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellBindingPreview.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Bindings/shellBindingPreview.ts
   var BINDING_PREVIEW_STYLE_ID = "cms-editor-binding-preview-style";
   function syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce) {
     const editorCore = bindingPreviewCore(editorDocument);
@@ -36682,13 +37120,13 @@ label {
   }
   function bindingPreviewCss() {
     const core = `${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`;
-    const source = `[${CMS_BINDING_ATTRIBUTES.source}]`;
+    const source2 = `[${CMS_BINDING_ATTRIBUTES.source}]`;
     const condition = CMS_BINDING_ATTRIBUTES.condition;
     const state2 = CMS_BINDING_ATTRIBUTES.sourceStateForce;
     const hiddenFor = (current) => {
       const selectors = [
-        `${core}[${state2}="${current}"] ${source} [${condition}^="$source."]:not([${condition}*=".${current}"])`,
-        `${core}[${state2}="${current}"] ${source} [${condition}^="$sources."]:not([${condition}*=".${current}"])`
+        `${core}[${state2}="${current}"] ${source2} [${condition}^="$source."]:not([${condition}*=".${current}"])`,
+        `${core}[${state2}="${current}"] ${source2} [${condition}^="$sources."]:not([${condition}*=".${current}"])`
       ];
       return `${selectors.join(",")}{display:none!important}`;
     };
@@ -36762,7 +37200,7 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/insertion.ts
-  function createInsertion(document2, item, slotName, sourceStatusConditions) {
+  function createInsertion(document2, item, slotName, sourceStatusConditions2) {
     if (!document2) {
       return null;
     }
@@ -36774,7 +37212,7 @@ label {
       const slotElements2 = slotElementChildren(fragment2);
       for (const child of slotElements2) {
         applySlot(child, slotName);
-        applyCondition(child, sourceStatusConditions);
+        applyCondition(child, sourceStatusConditions2);
       }
       const selectionTarget2 = slotElements2.find((child) => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements2[0] ?? null;
       if (!selectionTarget2) {
@@ -36792,7 +37230,7 @@ label {
     const slotElements = slotElementChildren(fragment);
     for (const child of slotElements) {
       applySlot(child, slotName);
-      applyCondition(child, sourceStatusConditions);
+      applyCondition(child, sourceStatusConditions2);
     }
     const selectionTarget = slotElements[0] ?? null;
     if (!selectionTarget) {
@@ -36811,9 +37249,9 @@ label {
       element.removeAttribute("slot");
     }
   }
-  function applyCondition(element, sourceStatusConditions) {
-    if (sourceStatusConditions?.length) {
-      applySourceStatusConditions(element, sourceStatusConditions);
+  function applyCondition(element, sourceStatusConditions2) {
+    if (sourceStatusConditions2?.length) {
+      applySourceStatusConditions(element, sourceStatusConditions2);
     }
   }
   function createBlockFragment(document2, entry) {
@@ -36847,8 +37285,8 @@ label {
     const replacedCount = (replaced.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined) ? 1 : 0;
     return slotChildCount2(parent, slot) - replacedCount + insertedElements.length <= slot.max;
   }
-  function canDuplicate(runtime, editor) {
-    const parent = parentEditor(runtime, editor);
+  function canDuplicate(runtime2, editor) {
+    const parent = parentEditor(runtime2, editor);
     if (!parent) {
       return true;
     }
@@ -36858,8 +37296,8 @@ label {
     }
     return !isSlotFull2(parent, slot);
   }
-  function canDelete(runtime, editor) {
-    const parent = parentEditor(runtime, editor);
+  function canDelete(runtime2, editor) {
+    const parent = parentEditor(runtime2, editor);
     if (!parent) {
       return true;
     }
@@ -36869,8 +37307,8 @@ label {
     }
     return slotChildCount2(parent, slot) > slot.min;
   }
-  function canInsertSibling(runtime, reference, insertedElement, applySourceConditions, sourceConditionsForSibling) {
-    const parent = parentEditor(runtime, reference);
+  function canInsertSibling(runtime2, reference, insertedElement, applySourceConditions, sourceConditionsForSibling) {
+    const parent = parentEditor(runtime2, reference);
     if (!parent) {
       applySlot(insertedElement, undefined);
       applySourceConditions(insertedElement, []);
@@ -36885,11 +37323,11 @@ label {
     applySourceConditions(insertedElement, sourceConditionsForSibling(reference));
     return true;
   }
-  function canMoveEditor(runtime, source, target) {
-    if (!canDelete(runtime, source)) {
+  function canMoveEditor(runtime2, source2, target) {
+    if (!canDelete(runtime2, source2)) {
       return false;
     }
-    const targetParent = parentEditor(runtime, target);
+    const targetParent = parentEditor(runtime2, target);
     if (!targetParent) {
       return true;
     }
@@ -36898,12 +37336,12 @@ label {
     if (!targetSlot) {
       return false;
     }
-    const sourceParent = parentEditor(runtime, source);
-    const isSameSlot = sourceParent === targetParent && (source.target.getAttribute("slot") ?? undefined) === targetSlotName;
+    const sourceParent = parentEditor(runtime2, source2);
+    const isSameSlot = sourceParent === targetParent && (source2.target.getAttribute("slot") ?? undefined) === targetSlotName;
     if (isSameSlot) {
       return true;
     }
-    return canInsertNodeCount(targetParent, targetSlot, [source.target]);
+    return canInsertNodeCount(targetParent, targetSlot, [source2.target]);
   }
   function isSlotFull2(parent, slot) {
     return typeof slot.max === "number" && slotChildCount2(parent, slot) >= slot.max;
@@ -36917,11 +37355,11 @@ label {
     }
     return Math.max(0, slot.max - slotChildCount2(parent, slot));
   }
-  function parentEditor(runtime, editor) {
-    if (!runtime || !editor.target.parentElement) {
+  function parentEditor(runtime2, editor) {
+    if (!runtime2 || !editor.target.parentElement) {
       return null;
     }
-    return runtime.getClosestEditor(editor.target.parentElement)?.target === editor.target ? null : runtime.getClosestEditor(editor.target.parentElement) ?? null;
+    return runtime2.getClosestEditor(editor.target.parentElement)?.target === editor.target ? null : runtime2.getClosestEditor(editor.target.parentElement) ?? null;
   }
   function slotChildCount2(parent, slot) {
     return Array.from(parent.target.children).filter((child) => (child.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined)).length;
@@ -36989,7 +37427,22 @@ label {
     return link;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/shellContentMutations.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Content/reloadFrameDocument.ts
+  function reloadFrameDocument(context, selectedTarget = null) {
+    const frameDocument = context.frameDocument();
+    if (!frameDocument) {
+      return;
+    }
+    const root = frameDocument.querySelector("[data-cms-editor-root]") ?? frameDocument.querySelector(CMS_BINDING_CORE_TAG);
+    const contentRoot = frameDocument.querySelector("[data-cms-content]");
+    if (!root || !contentRoot) {
+      return;
+    }
+    context.loadDocument({ root, contentRoot }, selectedTarget);
+    context.syncViewFrameContent();
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Content/shellContentMutations.ts
   class ShellContentMutations {
     context;
     constructor(context) {
@@ -37034,11 +37487,11 @@ label {
       if (!slot) {
         return;
       }
-      const sourceStatusConditions = sourceStatusConditionsFromElement(editor.target);
+      const sourceStatusConditions2 = sourceStatusConditionsFromElement(editor.target);
       if (item.kind === "media") {
-        return this.replaceWithMedia(editor, parent, item, slot, slotName, sourceStatusConditions);
+        return this.replaceWithMedia(editor, parent, item, slot, slotName, sourceStatusConditions2);
       }
-      const insertion = this.createInsertion(item, slotName, sourceStatusConditions);
+      const insertion = this.createInsertion(item, slotName, sourceStatusConditions2);
       if (!insertion || !canReplaceNodeCount(parent, editor, slot, insertion.slotElements)) {
         return;
       }
@@ -37046,17 +37499,7 @@ label {
       this.reloadFrameDocument(insertion.selectionTarget);
     }
     reloadFrameDocument(selectedTarget = null) {
-      const frameDocument = this.context.frameDocument();
-      if (!frameDocument) {
-        return;
-      }
-      const root = frameDocument.querySelector("[data-cms-editor-root]") ?? frameDocument.querySelector(CMS_BINDING_CORE_TAG);
-      const contentRoot = frameDocument.querySelector("[data-cms-content]");
-      if (!root || !contentRoot) {
-        return;
-      }
-      this.context.loadDocument({ root, contentRoot }, selectedTarget);
-      this.context.syncViewFrameContent();
+      reloadFrameDocument(this.context, selectedTarget);
     }
     replaceRootEditor(editor, item) {
       if (item.kind === "media") {
@@ -37069,10 +37512,10 @@ label {
       editor.target.replaceWith(insertion.fragment);
       this.reloadFrameDocument(insertion.selectionTarget);
     }
-    createInsertion(item, slotName, sourceStatusConditions) {
-      return createInsertion(this.context.frameDocument(), item, slotName, sourceStatusConditions);
+    createInsertion(item, slotName, sourceStatusConditions2) {
+      return createInsertion(this.context.frameDocument(), item, slotName, sourceStatusConditions2);
     }
-    insertMedia(parent, item, slot, slotName, sourceStatusConditions) {
+    insertMedia(parent, item, slot, slotName, sourceStatusConditions2) {
       const remaining = remainingSlotCapacity(parent, slot);
       if (remaining <= 0) {
         return;
@@ -37080,22 +37523,22 @@ label {
       openMediaPicker(this.context.frameDocument(), item.accept, {
         multiple: remaining > 1,
         maxSelection: typeof slot.max === "number" ? remaining : undefined
-      }, (elements) => this.appendMedia(parent, slot, elements, slotName, sourceStatusConditions));
+      }, (elements) => this.appendMedia(parent, slot, elements, slotName, sourceStatusConditions2));
     }
-    appendMedia(parent, slot, elements, slotName, sourceStatusConditions) {
+    appendMedia(parent, slot, elements, slotName, sourceStatusConditions2) {
       if (elements.length === 0 || !canInsertNodeCount(parent, slot, elements)) {
         return;
       }
       for (const element of elements) {
         applySlot(element, slotName);
-        if (sourceStatusConditions?.length) {
-          applySourceStatusConditions(element, sourceStatusConditions);
+        if (sourceStatusConditions2?.length) {
+          applySourceStatusConditions(element, sourceStatusConditions2);
         }
       }
       parent.target.append(...elements);
       this.reloadFrameDocument(elements[0] ?? null);
     }
-    replaceWithMedia(editor, parent, item, slot, slotName, sourceStatusConditions) {
+    replaceWithMedia(editor, parent, item, slot, slotName, sourceStatusConditions2) {
       if (!canReplaceNodeCount(parent, editor, slot, [editor.target])) {
         return;
       }
@@ -37105,8 +37548,8 @@ label {
           return;
         }
         applySlot(element, slotName);
-        if (sourceStatusConditions?.length) {
-          applySourceStatusConditions(element, sourceStatusConditions);
+        if (sourceStatusConditions2?.length) {
+          applySourceStatusConditions(element, sourceStatusConditions2);
         }
         editor.target.replaceWith(element);
         this.reloadFrameDocument(element);
@@ -37163,21 +37606,21 @@ label {
       editor.target.after(clone);
       this.content.reloadFrameDocument(clone);
     }
-    moveEditor(source, target, position) {
-      if (source === target || source.target.contains(target.target)) {
+    moveEditor(source2, target, position) {
+      if (source2 === target || source2.target.contains(target.target)) {
         return;
       }
-      if (!canMoveEditor(this.context.runtime(), source, target)) {
+      if (!canMoveEditor(this.context.runtime(), source2, target)) {
         return;
       }
-      applySlot(source.target, target.target.getAttribute("slot") ?? undefined);
-      applySiblingSourceStatus(source.target, sourceStatusConditionsFromElement(target.target));
+      applySlot(source2.target, target.target.getAttribute("slot") ?? undefined);
+      applySiblingSourceStatus(source2.target, sourceStatusConditionsFromElement(target.target));
       if (position === "before") {
-        target.target.before(source.target);
+        target.target.before(source2.target);
       } else {
-        target.target.after(source.target);
+        target.target.after(source2.target);
       }
-      this.content.reloadFrameDocument(source.target);
+      this.content.reloadFrameDocument(source2.target);
     }
     findNextSelectionTargetAfterDelete(editor) {
       const parent = editor.target.parentElement;
@@ -37195,7 +37638,45 @@ label {
     }
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/sourceDependencyCleanup.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Bindings/sourceDependencyExpressions.ts
+  function bindingTextDependsOn(value2, scope) {
+    for (const alias of scope.aliases) {
+      if (expressionReferencesScope(value2, alias)) {
+        return true;
+      }
+    }
+    if (!scope.sourceLocal) {
+      return false;
+    }
+    return containsBindingSyntax(value2, scope);
+  }
+  function withoutBindingExpressions(value2) {
+    return value2.replace(/\{\{\s*[\s\S]*?\s*\}\}/g, "").replace(/\s+/g, " ").trim();
+  }
+  function expressionReferencesScope(value2, scope) {
+    const escaped = scope.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?:^|[^A-Za-z0-9_$])${escaped}(?:\\b|\\s*\\.)`).test(value2);
+  }
+  function containsBindingSyntax(value2, scope) {
+    const statusConditions = parseSourceStatusConditions(value2);
+    if (statusConditions.length > 0) {
+      return statusConditions.some((condition) => !condition.sourceId || condition.sourceId === scope.sourceId);
+    }
+    if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value2)) {
+      return true;
+    }
+    const matches = value2.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);
+    for (const match of matches) {
+      const expression = match[1]?.trim() ?? "";
+      const head = /^[A-Za-z_$][\w$]*/.exec(expression)?.[0] ?? "";
+      if (head && expression[head.length] !== ".") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Bindings/sourceDependencyCleanup.ts
   function collectSourceDependencyUsages(editor, sourceAlias, sourceId) {
     const usages = [];
     const scope = collectElementDependencies(editor.target, {
@@ -37291,42 +37772,6 @@ label {
   function isBindingBoundary(element) {
     return element.hasAttribute(CMS_BINDING_ATTRIBUTES.source) || element.localName === CMS_BINDING_CORE_TAG;
   }
-  function bindingTextDependsOn(value2, scope) {
-    for (const alias of scope.aliases) {
-      if (expressionReferencesScope(value2, alias)) {
-        return true;
-      }
-    }
-    if (!scope.sourceLocal) {
-      return false;
-    }
-    return containsBindingSyntax(value2, scope);
-  }
-  function expressionReferencesScope(value2, scope) {
-    const escaped = scope.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return new RegExp(`(?:^|[^A-Za-z0-9_$])${escaped}(?:\\b|\\s*\\.)`).test(value2);
-  }
-  function containsBindingSyntax(value2, scope) {
-    const statusConditions = parseSourceStatusConditions(value2);
-    if (statusConditions.length > 0) {
-      return statusConditions.some((condition) => !condition.sourceId || condition.sourceId === scope.sourceId);
-    }
-    if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value2)) {
-      return true;
-    }
-    const matches = value2.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);
-    for (const match of matches) {
-      const expression = match[1]?.trim() ?? "";
-      const head = /^[A-Za-z_$][\w$]*/.exec(expression)?.[0] ?? "";
-      if (head && expression[head.length] !== ".") {
-        return true;
-      }
-    }
-    return false;
-  }
-  function withoutBindingExpressions(value2) {
-    return value2.replace(/\{\{\s*[\s\S]*?\s*\}\}/g, "").replace(/\s+/g, " ").trim();
-  }
   function dedupeDependencyUsages(usages) {
     const seen = new Set;
     const ids = new WeakMap;
@@ -37347,16 +37792,136 @@ label {
     });
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/sourceBindings.ts
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Bindings/sourceStatusBindings.ts
+  function setSourceStatusCondition(editor, sourceEditor, state2) {
+    if (!canUseSourceForStatusCondition(editor.target, sourceEditor.target)) {
+      return false;
+    }
+    if (hasNonSourceStatusCondition2(editor.target)) {
+      return false;
+    }
+    const sourceId = ensureSourceId(sourceEditor.target);
+    if (hasSourceStatusConditionAncestor2(editor.target, sourceEditor.target)) {
+      return false;
+    }
+    applySourceStatusCondition(editor.target, state2, sourceId);
+    return true;
+  }
+  function setSourceStatusConditions(editor, conditions2) {
+    if (conditions2.length === 0 || hasNonSourceStatusCondition2(editor.target)) {
+      return false;
+    }
+    const next = [];
+    for (const condition of conditions2) {
+      if (!canUseSourceForStatusCondition(editor.target, condition.sourceEditor.target)) {
+        return false;
+      }
+      if (hasSourceStatusConditionAncestor2(editor.target, condition.sourceEditor.target)) {
+        return false;
+      }
+      next.push({
+        sourceId: ensureSourceId(condition.sourceEditor.target),
+        state: condition.sourceState
+      });
+    }
+    applySourceStatusConditions(editor.target, dedupeSourceStatusConditions(next));
+    return true;
+  }
+  function removeSourceStatusCondition(editor) {
+    if (sourceStatusConditionsFromElement(editor.target).length === 0) {
+      return false;
+    }
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
+    return true;
+  }
+  function canUseSourceForStatusCondition(target, source2) {
+    return target !== source2 && source2.contains(target);
+  }
+  function hasNonSourceStatusCondition2(target) {
+    return target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target).length === 0;
+  }
+  function hasSourceStatusConditionAncestor2(target, source2) {
+    for (let current = target.parentElement;current && current !== source2; current = current.parentElement) {
+      if (sourceStatusConditionTargetsSource2(current, source2)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  function sourceStatusConditionTargetsSource2(target, source2) {
+    const conditions2 = sourceStatusConditionsFromElement(target);
+    return conditions2.some((condition) => {
+      if (condition.sourceId) {
+        return condition.sourceId === source2.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
+      }
+      return nearestSourceAncestor2(target) === source2;
+    });
+  }
+  function nearestSourceAncestor2(target) {
+    for (let current = target.parentElement;current; current = current.parentElement) {
+      if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
+        return current;
+      }
+    }
+    return null;
+  }
+  function ensureSourceId(source2) {
+    const current = source2.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId)?.trim();
+    if (current && isSourceId(current)) {
+      return current;
+    }
+    const parsed = parseSource(source2.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    const base = normalizeSourceId(parsed?.alias ?? source2.localName) || "source";
+    const id = uniqueSourceId(source2, base);
+    source2.setAttribute(CMS_BINDING_ATTRIBUTES.sourceId, id);
+    return id;
+  }
+  function uniqueSourceId(source2, base) {
+    let candidate = base;
+    let index = 2;
+    while (sourceIdExists(source2, candidate)) {
+      candidate = `${base}-${index}`;
+      index += 1;
+    }
+    return candidate;
+  }
+  function sourceIdExists(source2, id) {
+    const root = source2.getRootNode();
+    for (const element of Array.from(root.querySelectorAll?.(`[${CMS_BINDING_ATTRIBUTES.sourceId}]`) ?? [])) {
+      if (element !== source2 && element.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === id) {
+        return true;
+      }
+    }
+    return false;
+  }
+  function normalizeSourceId(value2) {
+    return value2.trim().replace(/[^A-Za-z0-9_$-]+/g, "-").replace(/^-+|-+$/g, "").replace(/^[^A-Za-z_$]+/, "");
+  }
+  function isSourceId(value2) {
+    return /^[A-Za-z_$][\w$-]*$/.test(value2);
+  }
+  function dedupeSourceStatusConditions(conditions2) {
+    const seen = new Set;
+    return conditions2.filter((condition) => {
+      const key = `${condition.sourceId ?? ""}:${condition.state}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Bindings/sourceBindings.ts
   var BINDING_READY_ATTRIBUTE = "cms-ready";
-  function setSource(editor, source, binding = { url: source.url }) {
+  function setSource(editor, source2, binding = { url: source2.url }) {
     editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, asSource(binding));
     if (binding.trigger === "submit" || binding.trigger === "change") {
       editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger, binding.trigger);
     } else {
       editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
     }
-    const method = binding.method ?? source.method ?? "GET";
+    const method = binding.method ?? source2.method ?? "GET";
     if (method && (method !== "GET" || binding.trigger === "submit" || binding.trigger === "change")) {
       editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod, method);
     } else {
@@ -37389,8 +37954,8 @@ label {
     return true;
   }
   function sourceDependentBindings(editor) {
-    const source = parseSource(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-    const alias = source?.alias?.trim();
+    const source2 = parseSource(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    const alias = source2?.alias?.trim();
     const sourceId = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId)?.trim();
     return collectSourceDependencyUsages(editor, alias, sourceId || undefined);
   }
@@ -37408,127 +37973,6 @@ label {
   function removeRepeat(editor) {
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.repeat);
   }
-  function setSourceStatusCondition(editor, sourceEditor, state2) {
-    if (!canUseSourceForStatusCondition(editor.target, sourceEditor.target)) {
-      return false;
-    }
-    if (hasNonSourceStatusCondition2(editor.target)) {
-      return false;
-    }
-    const sourceId = ensureSourceId(sourceEditor.target);
-    if (hasSourceStatusConditionAncestor2(editor.target, sourceEditor.target)) {
-      return false;
-    }
-    applySourceStatusCondition(editor.target, state2, sourceId);
-    return true;
-  }
-  function setSourceStatusConditions(editor, conditions) {
-    if (conditions.length === 0) {
-      return false;
-    }
-    if (hasNonSourceStatusCondition2(editor.target)) {
-      return false;
-    }
-    const next = [];
-    for (const condition of conditions) {
-      if (!canUseSourceForStatusCondition(editor.target, condition.sourceEditor.target)) {
-        return false;
-      }
-      if (hasSourceStatusConditionAncestor2(editor.target, condition.sourceEditor.target)) {
-        return false;
-      }
-      next.push({
-        sourceId: ensureSourceId(condition.sourceEditor.target),
-        state: condition.sourceState
-      });
-    }
-    applySourceStatusConditions(editor.target, dedupeSourceStatusConditions(next));
-    return true;
-  }
-  function removeSourceStatusCondition(editor) {
-    if (sourceStatusConditionsFromElement(editor.target).length === 0) {
-      return false;
-    }
-    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
-    return true;
-  }
-  function canUseSourceForStatusCondition(target, source) {
-    return target !== source && source.contains(target);
-  }
-  function hasNonSourceStatusCondition2(target) {
-    return target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target).length === 0;
-  }
-  function hasSourceStatusConditionAncestor2(target, source) {
-    for (let current = target.parentElement;current && current !== source; current = current.parentElement) {
-      if (sourceStatusConditionTargetsSource2(current, source)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  function sourceStatusConditionTargetsSource2(target, source) {
-    const conditions = sourceStatusConditionsFromElement(target);
-    return conditions.some((condition) => {
-      if (condition.sourceId) {
-        return condition.sourceId === source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
-      }
-      return nearestSourceAncestor2(target) === source;
-    });
-  }
-  function nearestSourceAncestor2(target) {
-    for (let current = target.parentElement;current; current = current.parentElement) {
-      if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
-        return current;
-      }
-    }
-    return null;
-  }
-  function ensureSourceId(source) {
-    const current = source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId)?.trim();
-    if (current && isSourceId(current)) {
-      return current;
-    }
-    const parsed = parseSource(source.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-    const base = normalizeSourceId(parsed?.alias ?? source.localName) || "source";
-    const id = uniqueSourceId(source, base);
-    source.setAttribute(CMS_BINDING_ATTRIBUTES.sourceId, id);
-    return id;
-  }
-  function uniqueSourceId(source, base) {
-    let candidate = base;
-    let index = 2;
-    while (sourceIdExists(source, candidate)) {
-      candidate = `${base}-${index}`;
-      index += 1;
-    }
-    return candidate;
-  }
-  function sourceIdExists(source, id) {
-    const root = source.getRootNode();
-    for (const element of Array.from(root.querySelectorAll?.(`[${CMS_BINDING_ATTRIBUTES.sourceId}]`) ?? [])) {
-      if (element !== source && element.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === id) {
-        return true;
-      }
-    }
-    return false;
-  }
-  function normalizeSourceId(value2) {
-    return value2.trim().replace(/[^A-Za-z0-9_$-]+/g, "-").replace(/^-+|-+$/g, "").replace(/^[^A-Za-z_$]+/, "");
-  }
-  function isSourceId(value2) {
-    return /^[A-Za-z_$][\w$-]*$/.test(value2);
-  }
-  function dedupeSourceStatusConditions(conditions) {
-    const seen = new Set;
-    return conditions.filter((condition) => {
-      const key = `${condition.sourceId ?? ""}:${condition.state}`;
-      if (seen.has(key)) {
-        return false;
-      }
-      seen.add(key);
-      return true;
-    });
-  }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/shellBindingMutations.ts
   class ShellBindingMutations {
@@ -37537,8 +37981,8 @@ label {
     constructor(context) {
       this.context = context;
     }
-    setSource(editor, source, binding = { url: source.url }) {
-      setSource(editor, source, binding);
+    setSource(editor, source2, binding = { url: source2.url }) {
+      setSource(editor, source2, binding);
       this.reload(editor.target);
     }
     removeSource(editor) {
@@ -37548,13 +37992,13 @@ label {
       this.reload(editor.target);
     }
     openRepeatPicker(editor) {
-      const runtime = this.context.runtime();
-      if (!runtime) {
+      const runtime2 = this.context.runtime();
+      if (!runtime2) {
         return;
       }
       this._pendingRepeatEditor = editor;
-      runtime.select(editor);
-      this.context.repeatPicker().open(runtime.getSelectedDataScopes(), this.context.findStructureNodeLabel(editor) ?? editor.target.localName);
+      runtime2.select(editor);
+      this.context.repeatPicker().open(runtime2.getSelectedDataScopes(), this.context.findStructureNodeLabel(editor) ?? editor.target.localName);
     }
     applyRepeatSelection(path, alias) {
       if (!this._pendingRepeatEditor) {
@@ -37577,8 +38021,8 @@ label {
       }
       this.reload(editor.target);
     }
-    setSourceStatusConditions(editor, conditions) {
-      if (!setSourceStatusConditions(editor, conditions)) {
+    setSourceStatusConditions(editor, conditions2) {
+      if (!setSourceStatusConditions(editor, conditions2)) {
         return;
       }
       this.reload(editor.target);
@@ -37676,8 +38120,8 @@ label {
     setRepeat(editor, path, alias) {
       this.bindings.setRepeat(editor, path, alias);
     }
-    setSource(editor, source, binding = { url: source.url }) {
-      this.bindings.setSource(editor, source, binding);
+    setSource(editor, source2, binding = { url: source2.url }) {
+      this.bindings.setSource(editor, source2, binding);
     }
     removeSource(editor) {
       this.bindings.removeSource(editor);
@@ -37688,8 +38132,8 @@ label {
     setCondition(editor, expression) {
       this.bindings.setCondition(editor, expression);
     }
-    setSourceStatusConditions(editor, conditions) {
-      this.bindings.setSourceStatusConditions(editor, conditions);
+    setSourceStatusConditions(editor, conditions2) {
+      this.bindings.setSourceStatusConditions(editor, conditions2);
     }
     removeSourceStatusCondition(editor) {
       this.bindings.removeSourceStatusCondition(editor);
@@ -38034,11 +38478,11 @@ label {
       this.context = context;
     }
     select(editor, options2 = {}) {
-      const runtime = this.context.runtime();
-      if (!runtime) {
+      const runtime2 = this.context.runtime();
+      if (!runtime2) {
         return;
       }
-      const selection = runtime.select(editor);
+      const selection = runtime2.select(editor);
       this.context.renderStructure(options2);
       if (!selection) {
         this.context.settings().setSettings([]);
@@ -38051,16 +38495,16 @@ label {
       });
     }
     renderSettings() {
-      const runtime = this.context.runtime();
-      if (!runtime) {
+      const runtime2 = this.context.runtime();
+      if (!runtime2) {
         return;
       }
-      const selection = runtime.getSelection();
+      const selection = runtime2.getSelection();
       if (!selection) {
         this.context.settings().setSettings([]);
         return;
       }
-      this.context.settings().setSettings(resolveSettingsValues(selection.editor, settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings))), selection.textCapability, selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "", this.context.settingsMode(), selection.states, runtime.getSelectedDataScopes(), this.context.dataSources());
+      this.context.settings().setSettings(resolveSettingsValues(selection.editor, settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings))), selection.textCapability, selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "", this.context.settingsMode(), selection.states, runtime2.getSelectedDataScopes(), this.context.dataSources());
     }
     applySetting(editor, setting, value2, attributes) {
       if (attributes) {
@@ -38101,11 +38545,11 @@ label {
       toggleStateSession(this.context.stateSessions(), editor, state2);
     }
     exitAllStateSessions() {
-      const runtime = this.context.runtime();
-      if (!runtime) {
+      const runtime2 = this.context.runtime();
+      if (!runtime2) {
         return;
       }
-      exitAllStateSessions(this.context.stateSessions(), runtime.getStructure());
+      exitAllStateSessions(this.context.stateSessions(), runtime2.getStructure());
     }
   }
 
@@ -38240,21 +38684,21 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureRender.ts
-  function renderStructure(tree, runtime, catalog, _insertItems, isEmptyDocumentContent2, options2 = {}) {
-    if (!runtime || isEmptyDocumentContent2()) {
+  function renderStructure(tree, runtime2, catalog, _insertItems, isEmptyDocumentContent2, options2 = {}) {
+    if (!runtime2 || isEmptyDocumentContent2()) {
       tree.setStructure([], null, catalog);
       return;
     }
-    const structure = decorateStructure(runtime.getStructure());
-    tree.setStructure(structure, runtime.getSelection()?.editor ?? null, catalog, {
+    const structure = decorateStructure(runtime2.getStructure());
+    tree.setStructure(structure, runtime2.getSelection()?.editor ?? null, catalog, {
       scrollSelectedIntoView: options2.scrollStructureIntoView === true,
-      repeatableTargets: repeatableTargets(runtime, structure)
+      repeatableTargets: repeatableTargets(runtime2, structure)
     });
   }
   function decorateStructure(nodes) {
     return nodes.map((node) => decorateEditorStructureNode(node));
   }
-  function findStructureNodeLabel(runtime, editor) {
+  function findStructureNodeLabel(runtime2, editor) {
     const visit = (nodes) => {
       for (const node of nodes) {
         if (node.editor === editor) {
@@ -38267,7 +38711,7 @@ label {
       }
       return null;
     };
-    return runtime ? visit(runtime.getStructure()) : null;
+    return runtime2 ? visit(runtime2.getStructure()) : null;
   }
   function decorateEditorStructureNode(node) {
     return {
@@ -38275,8 +38719,8 @@ label {
       children: decorateStructure(node.children)
     };
   }
-  function repeatableTargets(runtime, nodes) {
-    return flattenStructure2(nodes).filter((node) => hasArrayFields(runtime.registry.collectDataScopes(node.target))).map((node) => node.target);
+  function repeatableTargets(runtime2, nodes) {
+    return flattenStructure2(nodes).filter((node) => hasArrayFields(runtime2.registry.collectDataScopes(node.target))).map((node) => node.target);
   }
   function hasArrayFields(scopes) {
     return scopes.some((scope) => fieldsContainArray(scope.fields));
@@ -38469,12 +38913,12 @@ label {
       this.context.mutations.applyRepeatSelection(event.detail.path, event.detail.alias);
     };
     onFrameClick = (event) => {
-      const runtime = this.context.state.runtime;
-      if (!runtime) {
+      const runtime2 = this.context.state.runtime;
+      if (!runtime2) {
         return;
       }
       event.preventDefault();
-      this.context.commands.select(runtime.getClosestEditor(this.context.frameClickTarget(event)) ?? null, {
+      this.context.commands.select(runtime2.getClosestEditor(this.context.frameClickTarget(event)) ?? null, {
         scrollStructureIntoView: true
       });
     };
@@ -38730,16 +39174,16 @@ label {
     declareRepeatDataScope(editor, registry2);
   }
   function declareSourceDataScope(editor, dataSources) {
-    const source = parseSourceBinding(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-    if (!source) {
+    const source2 = parseSourceBinding(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    if (!source2) {
       return;
     }
-    const schemaUrl = source.url.split("?")[0] ?? source.url;
+    const schemaUrl = source2.url.split("?")[0] ?? source2.url;
     const dataSource = dataSources.find((candidate) => candidate.url === schemaUrl);
     editor.declareDataScope({
-      name: source.alias ?? "data",
-      label: dataSource?.label ?? source.url,
-      source: source.url,
+      name: source2.alias ?? "data",
+      label: dataSource?.label ?? source2.url,
+      source: source2.url,
       fields: dataSource?.fields ?? []
     });
   }
@@ -39026,14 +39470,14 @@ label {
       this.context.renderSync.syncStructureTreeDefaultTemplateSelection();
     }
     setDataSources(sources) {
-      this.context.state.dataSources = sources.map((source) => ({
-        ...source,
-        fields: [...source.fields],
-        ...source.params ? { params: [...source.params] } : {},
-        ...source.body ? {
+      this.context.state.dataSources = sources.map((source2) => ({
+        ...source2,
+        fields: [...source2.fields],
+        ...source2.params ? { params: [...source2.params] } : {},
+        ...source2.body ? {
           body: {
-            ...source.body,
-            fields: [...source.body.fields]
+            ...source2.body,
+            fields: [...source2.body.fields]
           }
         } : {}
       }));
@@ -39054,11 +39498,11 @@ label {
       this.context.commands.exitAllStateSessions();
       this.context.state.runtime?.dispose();
       this.context.state.editorDocument = document2;
-      const runtime = new EditorRuntime(this.context.state.catalog, this.context.state.dataSources);
-      this.context.state.runtime = runtime;
-      runtime.load(document2);
+      const runtime2 = new EditorRuntime(this.context.state.catalog, this.context.state.dataSources);
+      this.context.state.runtime = runtime2;
+      runtime2.load(document2);
       this.context.commands.renderStructure();
-      this.context.commands.select(selectedTarget ? runtime.getEditor(selectedTarget) ?? runtime.getClosestEditor(selectedTarget) ?? null : null, { scrollStructureIntoView: true });
+      this.context.commands.select(selectedTarget ? runtime2.getEditor(selectedTarget) ?? runtime2.getClosestEditor(selectedTarget) ?? null : null, { scrollStructureIntoView: true });
     }
   }
 
@@ -39627,7 +40071,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default33 = `:host {
+  var style_default23 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -39755,7 +40199,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default33, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+    template22.innerHTML = `<style>${[style_default23, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default33)}`;
     return template22;
   }
@@ -39786,8 +40230,8 @@ label {
         renderSync: services.renderSync,
         highlight,
         runtime: () => state2.runtime,
-        setRuntime: (runtime) => {
-          state2.runtime = runtime;
+        setRuntime: (runtime2) => {
+          state2.runtime = runtime2;
         }
       }
     };
@@ -39933,177 +40377,24 @@ label {
   if (!customElements.get("cms-editor-shell")) {
     customElements.define("cms-editor-shell", Shell);
   }
-  // src/core/editorSystemV2/builtInEditors/BindingCoreEditor.ts
-  class BindingCoreEditor extends Editor {
-  }
-  // src/core/editorSystemV2/editorCatalog.ts
-  function createControlEditorCatalog() {
-    return [
-      {
-        tag: CMS_BINDING_CORE_TAG,
-        label: "Binding core",
-        description: "Provides global data scopes to editable content.",
-        icon: "database",
-        category: "Runtime",
-        bloc: cl,
-        editor: BindingCoreEditor
-      }
-    ];
-  }
-
-  // src/components/editorSystemV2/bootstrap.ts
-  var catalogPromise = null;
-  var configuredShells = new WeakSet;
-  var saveDocumentListener = (event) => {
-    onSaveDocument(event);
-  };
-  var deleteDocumentListener = (event) => {
-    onDeleteDocument(event);
-  };
+  // src/components/editorSystemV2/resource.ts
   function currentPageIdentifier() {
     return new URL(window.location.href).searchParams.get("id");
   }
   function shellResource(shell) {
-    const resource = shell.getAttribute("resource");
-    if (resource === "template") {
-      return resource;
-    }
-    return "page";
+    return shell.getAttribute("resource") === "template" ? "template" : "page";
   }
-  function configureShell(shell) {
-    if (!(shell instanceof Shell)) {
-      return;
-    }
-    if (configuredShells.has(shell)) {
-      return;
-    }
-    configuredShells.add(shell);
-    shell.addEventListener(EDITOR_V2_SAVE_DOCUMENT_EVENT, saveDocumentListener);
-    shell.addEventListener(EDITOR_V2_DELETE_DOCUMENT_EVENT, deleteDocumentListener);
-    configureShellCatalogAndFrame(shell);
-    if (currentPageIdentifier()) {
-      loadDocumentConfig(shell, shellResource(shell), currentPageIdentifier());
-    }
+  function listUrl(resource) {
+    return `${getMetaBasePath()}/admin/${resource === "page" ? "pages" : `${resource}s`}`;
   }
-  async function configureShellCatalogAndFrame(shell) {
-    const [catalog, insertItems, dataSources, settings] = await Promise.all([
-      loadEditorCatalog(),
-      loadInsertItems(),
-      loadDataSources(),
-      loadEditorSettings()
-    ]);
-    shell.setCatalog(catalog);
-    shell.setInsertItems(insertItems);
-    shell.setDataSources(dataSources);
-    shell.setDefaultTemplateSelection({
-      category: settings.editor?.layoutCategory || undefined
-    });
-    const themeTokens = (settings.theme?.sources ?? []).flatMap((source) => source.categories.flatMap((category) => category.tokens.filter((token) => token.type === "color").map((token) => ({
-      label: token.label,
-      variable: token.variable,
-      category: `${source.label} · ${category.label}`
-    }))));
-    const settingsView = shell.shadowRoot?.querySelector("cms-editor-v2-settings-view");
-    settingsView?.setThemeTokens(themeTokens);
-    const documentId = currentPageIdentifier();
-    const resource = shellResource(shell);
-    const frameUrl = documentId ? `${getMetaBasePath()}/api/editor/frame?type=${resource}&id=${encodeURIComponent(documentId)}` : `${getMetaBasePath()}/api/editor/frame?type=${resource}`;
-    shell.shadowRoot?.querySelector("cms-editor-v2-canvas")?.setAttribute("frame-url", frameUrl);
+  function resourceLabel(resource) {
+    return resource[0].toUpperCase() + resource.slice(1);
   }
-  async function loadInsertItems() {
-    return loadTemplateItems();
-  }
-  async function loadDataSources() {
-    return fetchJson("editor/sources", []);
-  }
-  async function loadEditorSettings() {
-    return fetchJson("system/settings", {});
-  }
-  async function loadTemplateItems() {
-    const templates = await fetchJson("template/list", []);
-    const details = await Promise.all(templates.map((template22) => fetchJson(`template?id=${encodeURIComponent(template22.id)}`, {
-      ...template22,
-      content: ""
-    })));
-    return details.filter((template22) => template22.content).map((template22) => ({
-      kind: "template",
-      id: template22.id,
-      label: template22.name,
-      description: template22.description,
-      category: template22.category || "Templates",
-      icon: "T",
-      content: template22.content ?? ""
-    }));
-  }
-  async function fetchJson(path, fallback) {
-    try {
-      const response = await fetch(`${getMetaBasePath()}/api/${path}`);
-      if (!response.ok) {
-        return fallback;
-      }
-      return await response.json();
-    } catch (error) {
-      console.error("[editor] failed to load picker source", path, error);
-      return fallback;
-    }
-  }
-  async function loadEditorCatalog() {
-    catalogPromise ??= loadEditorCatalogOnce();
-    return catalogPromise;
-  }
-  async function loadEditorCatalogOnce() {
-    const runtime = installEditorCatalogRuntime();
-    try {
-      await loadScript(`${getMetaBasePath()}/api/editor/script.js`);
-    } catch (error) {
-      console.error("[editor] editor catalog script failed", error);
-    }
-    return mergeEditorCatalogs(createControlEditorCatalog(), runtime.getCatalog());
-  }
-  function installEditorCatalogRuntime() {
-    const entries = [];
-    const runtime = {
-      Editor,
-      registerEditor(entry) {
-        try {
-          entries.push(createEditorCatalogEntry(entry, {
-            tag: entry.tag ?? "unknown-bloc",
-            label: entry.label ?? entry.tag ?? "Unknown bloc",
-            description: entry.description,
-            category: entry.category,
-            defaultContent: entry.defaultContent,
-            bloc: entry.bloc
-          }));
-        } catch (error) {
-          console.error("[editor] invalid editor catalog entry", entry, error);
-        }
-      },
-      getCatalog() {
-        return [...entries];
-      }
-    };
-    window.p9rEditor = runtime;
-    return runtime;
-  }
-  async function loadScript(src) {
-    await new Promise((resolve, reject) => {
-      const existing = document.querySelector(`script[data-editor-catalog-script="${src}"]`);
-      if (existing) {
-        resolve();
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = src;
-      script.async = true;
-      script.dataset.editorCatalogScript = src;
-      script.addEventListener("load", () => resolve(), { once: true });
-      script.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)), { once: true });
-      document.head.append(script);
-    });
-  }
+
+  // src/components/editorSystemV2/documentLoad.ts
   async function loadDocumentConfig(shell, resource, id) {
     if (resource !== "page") {
-      await loadReusableConfig(shell, resource, id);
+      await loadTemplateConfig(shell, id);
       return;
     }
     await loadPageConfig(shell, id);
@@ -40129,14 +40420,14 @@ label {
       defaultTemplateCategory: page.defaultTemplateCategory
     });
   }
-  async function loadReusableConfig(shell, resource, id) {
-    const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id)}`);
+  async function loadTemplateConfig(shell, id) {
+    const response = await fetch(`${getMetaBasePath()}/api/template?id=${encodeURIComponent(id)}`);
     if (response.redirected) {
       window.location.href = response.url;
       return;
     }
     if (!response.ok) {
-      shell.setSaveStatus(`${resourceLabel(resource)} load failed`);
+      shell.setSaveStatus(`${resourceLabel("template")} load failed`);
       return;
     }
     const detail = await response.json();
@@ -40148,6 +40439,209 @@ label {
       tags: detail.category ? [detail.category] : [],
       published: true
     });
+  }
+
+  // src/components/editorSystemV2/documentMutations.ts
+  async function saveDocument(resource, page, content) {
+    if (resource === "page") {
+      await savePage(page, content);
+      return;
+    }
+    await saveTemplate(page, content);
+  }
+  async function deleteDocument(resource, id) {
+    const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id)}`, {
+      method: "DELETE"
+    });
+    if (!response.ok) {
+      throw new Error(`${resourceLabel(resource)} delete failed with ${response.status}`);
+    }
+  }
+  async function savePage(page, content) {
+    const response = await fetch(`${getMetaBasePath()}/api/page`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        id: page.id,
+        title: page.title,
+        path: page.path,
+        description: page.description,
+        visible: page.published,
+        tags: page.tags,
+        content
+      })
+    });
+    if (!response.ok) {
+      throw new Error(`Page save failed with ${response.status}`);
+    }
+  }
+  async function saveTemplate(page, content) {
+    const response = await fetch(`${getMetaBasePath()}/api/template`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        id: page.id,
+        name: page.title,
+        category: page.tags[0] ?? "",
+        description: page.description,
+        content
+      })
+    });
+    if (!response.ok) {
+      throw new Error(`${resourceLabel("template")} save failed with ${response.status}`);
+    }
+  }
+
+  // src/core/editorSystemV2/builtInEditors/BindingCoreEditor.ts
+  class BindingCoreEditor extends Editor {
+  }
+  // src/core/editorSystemV2/editorCatalog.ts
+  function createControlEditorCatalog() {
+    return [
+      {
+        tag: CMS_BINDING_CORE_TAG,
+        label: "Binding core",
+        description: "Provides global data scopes to editable content.",
+        icon: "database",
+        category: "Runtime",
+        bloc: Cl,
+        editor: BindingCoreEditor
+      }
+    ];
+  }
+
+  // src/components/editorSystemV2/catalog.ts
+  var catalogPromise = null;
+  async function loadEditorCatalog() {
+    catalogPromise ??= loadEditorCatalogOnce();
+    return catalogPromise;
+  }
+  async function loadEditorCatalogOnce() {
+    const runtime2 = installEditorCatalogRuntime();
+    try {
+      await loadScript(`${getMetaBasePath()}/api/editor/script.js`);
+    } catch (error) {
+      console.error("[editor] editor catalog script failed", error);
+    }
+    return mergeEditorCatalogs(createControlEditorCatalog(), runtime2.getCatalog());
+  }
+  function installEditorCatalogRuntime() {
+    const entries = [];
+    const runtime2 = {
+      Editor,
+      registerEditor(entry) {
+        try {
+          entries.push(createEditorCatalogEntry(entry, {
+            tag: entry.tag ?? "unknown-bloc",
+            label: entry.label ?? entry.tag ?? "Unknown bloc",
+            description: entry.description,
+            category: entry.category,
+            defaultContent: entry.defaultContent,
+            bloc: entry.bloc
+          }));
+        } catch (error) {
+          console.error("[editor] invalid editor catalog entry", entry, error);
+        }
+      },
+      getCatalog: () => [...entries]
+    };
+    window.p9rEditor = runtime2;
+    return runtime2;
+  }
+  async function loadScript(src) {
+    await new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[data-editor-catalog-script="${src}"]`);
+      if (existing) {
+        resolve();
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.dataset.editorCatalogScript = src;
+      script.addEventListener("load", () => resolve(), { once: true });
+      script.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)), { once: true });
+      document.head.append(script);
+    });
+  }
+
+  // src/components/editorSystemV2/shellSetup.ts
+  async function configureShellCatalogAndFrame(shell) {
+    const [catalog, insertItems, dataSources, settings] = await Promise.all([
+      loadEditorCatalog(),
+      loadTemplateItems(),
+      fetchJson("editor/sources", []),
+      fetchJson("system/settings", {})
+    ]);
+    shell.setCatalog(catalog);
+    shell.setInsertItems(insertItems);
+    shell.setDataSources(dataSources);
+    shell.setDefaultTemplateSelection({ category: settings.editor?.layoutCategory || undefined });
+    setThemeTokens(shell, settings);
+    const documentId = currentPageIdentifier();
+    const resource = shellResource(shell);
+    const frameUrl = documentId ? `${getMetaBasePath()}/api/editor/frame?type=${resource}&id=${encodeURIComponent(documentId)}` : `${getMetaBasePath()}/api/editor/frame?type=${resource}`;
+    shell.shadowRoot?.querySelector("cms-editor-v2-canvas")?.setAttribute("frame-url", frameUrl);
+  }
+  function setThemeTokens(shell, settings) {
+    const themeTokens = (settings.theme?.sources ?? []).flatMap((source2) => source2.categories.flatMap((category) => category.tokens.filter((token) => token.type === "color").map((token) => ({
+      label: token.label,
+      variable: token.variable,
+      category: `${source2.label} · ${category.label}`
+    }))));
+    const settingsView = shell.shadowRoot?.querySelector("cms-editor-v2-settings-view");
+    settingsView?.setThemeTokens(themeTokens);
+  }
+  async function loadTemplateItems() {
+    const templates = await fetchJson("template/list", []);
+    const details = await Promise.all(templates.map((template22) => fetchJson(`template?id=${encodeURIComponent(template22.id)}`, {
+      ...template22,
+      content: ""
+    })));
+    return details.filter((template22) => template22.content).map((template22) => ({
+      kind: "template",
+      id: template22.id,
+      label: template22.name,
+      description: template22.description,
+      category: template22.category || "Templates",
+      icon: "T",
+      content: template22.content ?? ""
+    }));
+  }
+  async function fetchJson(path, fallback) {
+    try {
+      const response = await fetch(`${getMetaBasePath()}/api/${path}`);
+      return response.ok ? await response.json() : fallback;
+    } catch (error) {
+      console.error("[editor] failed to load picker source", path, error);
+      return fallback;
+    }
+  }
+
+  // src/components/editorSystemV2/bootstrap.ts
+  var configuredShells = new WeakSet;
+  var saveDocumentListener = (event) => {
+    onSaveDocument(event);
+  };
+  var deleteDocumentListener = (event) => {
+    onDeleteDocument(event);
+  };
+  function configureShell(shell) {
+    if (!(shell instanceof Shell) || configuredShells.has(shell)) {
+      return;
+    }
+    configuredShells.add(shell);
+    shell.addEventListener(EDITOR_V2_SAVE_DOCUMENT_EVENT, saveDocumentListener);
+    shell.addEventListener(EDITOR_V2_DELETE_DOCUMENT_EVENT, deleteDocumentListener);
+    configureShellCatalogAndFrame(shell);
+    const documentId = currentPageIdentifier();
+    if (documentId) {
+      loadDocumentConfig(shell, shellResource(shell), documentId);
+    }
   }
   async function onSaveDocument(event) {
     const shell = event.currentTarget;
@@ -40184,65 +40678,6 @@ label {
       shell.setSaveStatus(`${resourceLabel(resource)} delete failed`);
     }
   }
-  async function saveDocument(resource, page, content) {
-    if (resource === "page") {
-      await savePage(page, content);
-      return;
-    }
-    await saveReusable(resource, page, content);
-  }
-  async function savePage(page, content) {
-    const response = await fetch(`${getMetaBasePath()}/api/page`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        id: page.id,
-        title: page.title,
-        path: page.path,
-        description: page.description,
-        visible: page.published,
-        tags: page.tags,
-        content
-      })
-    });
-    if (!response.ok) {
-      throw new Error(`Page save failed with ${response.status}`);
-    }
-  }
-  async function saveReusable(resource, page, content) {
-    const response = await fetch(`${getMetaBasePath()}/api/${resource}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        id: page.id,
-        name: page.title,
-        category: page.tags[0] ?? "",
-        description: page.description,
-        content
-      })
-    });
-    if (!response.ok) {
-      throw new Error(`${resourceLabel(resource)} save failed with ${response.status}`);
-    }
-  }
-  async function deleteDocument(resource, id) {
-    const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id)}`, {
-      method: "DELETE"
-    });
-    if (!response.ok) {
-      throw new Error(`${resourceLabel(resource)} delete failed with ${response.status}`);
-    }
-  }
-  function listUrl(resource) {
-    return `${getMetaBasePath()}/admin/${resource === "page" ? "pages" : `${resource}s`}`;
-  }
-  function resourceLabel(resource) {
-    return resource[0].toUpperCase() + resource.slice(1);
-  }
   function configureExistingShells() {
     document.querySelectorAll("cms-editor-shell").forEach(configureShell);
   }
@@ -40264,10 +40699,7 @@ label {
       for (const mutation of mutations) {
         mutation.addedNodes.forEach(configureAddedShells);
       }
-    }).observe(document.documentElement, {
-      childList: true,
-      subtree: true
-    });
+    }).observe(document.documentElement, { childList: true, subtree: true });
   });
 
   // src/components/media/CardMedia/template.html
@@ -40293,7 +40725,7 @@ label {
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default34 = `:host {
+  var style_default24 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -40418,7 +40850,7 @@ label {
   class CardMedia extends U2 {
     constructor() {
       super({
-        css: style_default34,
+        css: style_default24,
         template: template_default34
       });
     }
@@ -40466,8 +40898,82 @@ label {
 </div>
 `;
 
-  // src/components/media/CropSystem/style.css
-  var style_default35 = `:host {
+  // src/components/media/CropSystem/styles/controls.css
+  var controls_default4 = `.ratio-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.ratio-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--modal-border);
+    border-radius: 6px;
+    background: none;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--value-color);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.ratio-btn:hover {
+    border-color: var(--primary);
+}
+
+.ratio-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--modal-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-cancel {
+    padding: 8px 16px;
+    background: none;
+    border: 1px solid var(--modal-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--close-color);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-cancel:hover {
+    color: var(--header-color);
+    border-color: var(--header-color);
+}
+
+.btn-apply {
+    padding: 8px 16px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+
+.btn-apply:hover {
+    background: var(--primary-hover);
+}
+`;
+
+  // src/components/media/CropSystem/styles/layout.css
+  var layout_default3 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -40591,85 +41097,14 @@ label {
     font-size: 13px;
     color: var(--value-color);
 }
-
-.ratio-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-}
-
-.ratio-btn {
-    padding: 4px 10px;
-    border: 1px solid var(--modal-border);
-    border-radius: 6px;
-    background: none;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--value-color);
-    cursor: pointer;
-    font-family: inherit;
-    transition: border-color 0.15s, background 0.15s;
-}
-
-.ratio-btn:hover {
-    border-color: var(--primary);
-}
-
-.ratio-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-}
-
-.footer {
-    padding: 16px 24px;
-    border-top: 1px solid var(--modal-border);
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
-.btn-cancel {
-    padding: 8px 16px;
-    background: none;
-    border: 1px solid var(--modal-border);
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--close-color);
-    cursor: pointer;
-    font-family: inherit;
-    transition: color 0.15s, border-color 0.15s;
-}
-
-.btn-cancel:hover {
-    color: var(--header-color);
-    border-color: var(--header-color);
-}
-
-.btn-apply {
-    padding: 8px 16px;
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.15s;
-}
-
-.btn-apply:hover {
-    background: var(--primary-hover);
-}
 `;
 
   // src/components/media/CropSystem/CropSystem.ts
   class CropSystem extends U2 {
     constructor() {
       super({
-        css: style_default35,
+        css: [layout_default3, controls_default4].join(`
+`),
         template: template_default35
       });
     }
@@ -40749,8 +41184,8 @@ label {
 </div>
 `;
 
-  // src/components/media/DetailMedia/style.css
-  var style_default36 = `:host {
+  // src/components/media/DetailMedia/styles/layout.css
+  var layout_default4 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -40887,8 +41322,10 @@ label {
     object-fit: contain;
     display: block;
 }
+`;
 
-/* ── Tools ── */
+  // src/components/media/DetailMedia/styles/tools.css
+  var tools_default = `/* ── Tools ── */
 .tools {
     display: flex;
     gap: 6px;
@@ -40963,7 +41400,8 @@ label {
   class DetailMedia extends U2 {
     constructor() {
       super({
-        css: style_default36,
+        css: [layout_default4, tools_default].join(`
+`),
         template: template_default36
       });
     }
@@ -41059,8 +41497,220 @@ label {
 <p9r-crop-system id="crop"></p9r-crop-system>
 `;
 
-  // src/components/media/GridMedia/view/style.css
-  var style_default37 = `:host {
+  // src/components/media/GridMedia/view/styles/detail.css
+  var detail_default3 = `/* ── Detail fields (injected into detail-media slot) ── */
+.detail-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+.detail-field:last-child {
+    margin-bottom: 0;
+}
+
+.detail-field label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.detail-field input,
+.detail-field textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.15s;
+    resize: vertical;
+}
+
+.detail-field input:focus,
+.detail-field textarea:focus {
+    border-color: var(--primary);
+}
+
+.detail-value {
+    font-size: 13px;
+    color: var(--text-body, #475569);
+    word-break: break-all;
+}
+
+.detail-value.mono {
+    font-family: monospace;
+    font-size: 12px;
+    background: var(--bg);
+    padding: 6px 8px;
+    border-radius: 6px;
+    user-select: all;
+}
+
+.detail-meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* ── URL row with copy ── */
+.url-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.url-row .detail-value {
+    flex: 1;
+    min-width: 0;
+}
+
+.btn-copy {
+    flex-shrink: 0;
+    padding: 4px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-copy:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* ── Detail actions ── */
+.detail-actions {
+    display: flex;
+    gap: 8px;
+}
+`;
+
+  // src/components/media/GridMedia/view/styles/interactions.css
+  var interactions_default = `/* ── Context menu ── */
+.ctx-menu {
+    display: none;
+    position: fixed;
+    z-index: 800;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 4px;
+    min-width: 140px;
+    flex-direction: column;
+}
+
+.ctx-menu.visible {
+    display: flex;
+}
+
+.ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border: none;
+    border-radius: 7px;
+    background: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s;
+}
+
+.ctx-item:hover {
+    background: var(--bg);
+}
+
+.ctx-item.ctx-danger:hover {
+    background: rgba(239, 68, 68, 0.06);
+    color: var(--danger);
+}
+
+.ctx-item svg {
+    flex-shrink: 0;
+}
+
+/* ── Grid ── */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--grid-min-col), 1fr));
+    gap: var(--grid-gap);
+    justify-items: center;
+}
+
+.grid > * {
+    width: 100%;
+    max-width: var(--grid-max-col);
+}
+
+.grid:empty + .empty {
+    display: flex;
+}
+
+/* ── Empty state ── */
+.empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 64px 24px;
+    color: var(--empty-color);
+    text-align: center;
+}
+
+.empty svg {
+    width: 48px;
+    height: 48px;
+    opacity: 0.4;
+}
+
+.empty p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* ── Drop overlay ── */
+.drop-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(67, 97, 238, 0.08);
+    border: 3px dashed var(--primary);
+    border-radius: 16px;
+    margin: 16px;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.drop-overlay.visible {
+    display: flex;
+}
+
+.drop-overlay span {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary);
+}
+`;
+
+  // src/components/media/GridMedia/view/styles/navigation.css
+  var navigation_default = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
     --grid-max-col: 240px;
@@ -41221,217 +41871,9 @@ label {
 .nf-confirm:hover {
     background: var(--primary-hover);
 }
-
-/* ── Context menu ── */
-.ctx-menu {
-    display: none;
-    position: fixed;
-    z-index: 800;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    padding: 4px;
-    min-width: 140px;
-    flex-direction: column;
-}
-
-.ctx-menu.visible {
-    display: flex;
-}
-
-.ctx-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 12px;
-    border: none;
-    border-radius: 7px;
-    background: none;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.1s;
-}
-
-.ctx-item:hover {
-    background: var(--bg);
-}
-
-.ctx-item.ctx-danger:hover {
-    background: rgba(239, 68, 68, 0.06);
-    color: var(--danger);
-}
-
-.ctx-item svg {
-    flex-shrink: 0;
-}
-
-/* ── Grid ── */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(var(--grid-min-col), 1fr));
-    gap: var(--grid-gap);
-    justify-items: center;
-}
-
-.grid > * {
-    width: 100%;
-    max-width: var(--grid-max-col);
-}
-
-.grid:empty + .empty {
-    display: flex;
-}
-
-/* ── Empty state ── */
-.empty {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 64px 24px;
-    color: var(--empty-color);
-    text-align: center;
-}
-
-.empty svg {
-    width: 48px;
-    height: 48px;
-    opacity: 0.4;
-}
-
-.empty p {
-    margin: 0;
-    font-size: 14px;
-}
-
-/* ── Drop overlay ── */
-.drop-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    background: rgba(67, 97, 238, 0.08);
-    border: 3px dashed var(--primary);
-    border-radius: 16px;
-    margin: 16px;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-}
-
-.drop-overlay.visible {
-    display: flex;
-}
-
-.drop-overlay span {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--primary);
-}
-
-/* ── Detail fields (injected into detail-media slot) ── */
-.detail-field {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 14px;
-}
-
-.detail-field:last-child {
-    margin-bottom: 0;
-}
-
-.detail-field label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-}
-
-.detail-field input,
-.detail-field textarea {
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 13px;
-    font-family: inherit;
-    color: var(--text);
-    background: var(--bg);
-    outline: none;
-    transition: border-color 0.15s;
-    resize: vertical;
-}
-
-.detail-field input:focus,
-.detail-field textarea:focus {
-    border-color: var(--primary);
-}
-
-.detail-value {
-    font-size: 13px;
-    color: var(--text-body, #475569);
-    word-break: break-all;
-}
-
-.detail-value.mono {
-    font-family: monospace;
-    font-size: 12px;
-    background: var(--bg);
-    padding: 6px 8px;
-    border-radius: 6px;
-    user-select: all;
-}
-
-.detail-meta-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-/* ── URL row with copy ── */
-.url-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.url-row .detail-value {
-    flex: 1;
-    min-width: 0;
-}
-
-.btn-copy {
-    flex-shrink: 0;
-    padding: 4px;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.15s, border-color 0.15s;
-}
-
-.btn-copy:hover {
-    color: var(--primary);
-    border-color: var(--primary);
-}
-
-/* ── Detail actions ── */
-.detail-actions {
-    display: flex;
-    gap: 8px;
-}
 `;
 
-  // ../../features/cms-files/src/core/fileUrls.ts
+  // ../../features/cms-files/src/core/media/fileUrls.ts
   var CMS_FILES_ROUTE = "/.cms/files";
   var CMS_FILES_BY_ID_SEGMENT = "by-id";
   var CMS_FILES_BY_ID_ROUTE = `${CMS_FILES_ROUTE}/${CMS_FILES_BY_ID_SEGMENT}`;
@@ -41473,12 +41915,12 @@ label {
   }
 
   // src/components/media/GridMedia/api/read.ts
-  async function fetchItems(folder, types) {
+  async function fetchItems(folder, types2) {
     const url = new URL(filesBase(), window.location.origin);
     if (folder) {
       url.searchParams.set("parentId", folder);
     }
-    const accept = expandAccept(types);
+    const accept = expandAccept(types2);
     if (accept) {
       url.searchParams.set("accept", accept);
     }
@@ -41490,8 +41932,8 @@ label {
     }
     const page = await res.json();
     let items = page.items.map(toLocal);
-    if (types && types.length > 0) {
-      items = items.filter((i) => types.includes(i.type));
+    if (types2 && types2.length > 0) {
+      items = items.filter((i) => types2.includes(i.type));
     }
     items.sort((a, b) => {
       if (a.type === "folder" && b.type !== "folder") {
@@ -41504,15 +41946,15 @@ label {
     });
     return items;
   }
-  function expandAccept(types) {
-    if (!types || types.length === 0) {
+  function expandAccept(types2) {
+    if (!types2 || types2.length === 0) {
       return;
     }
     const accept = new Set;
-    if (types.includes("folder")) {
+    if (types2.includes("folder")) {
       accept.add("folder");
     }
-    if (types.includes("image") || types.includes("other")) {
+    if (types2.includes("image") || types2.includes("other")) {
       accept.add("file");
     }
     return accept.size > 0 ? [...accept].join(",") : undefined;
@@ -41723,7 +42165,7 @@ label {
   // src/components/media/GridMedia/features/rename.ts
   function setupRename(s2, callbacks) {
     const backdrop = s2.getElementById("rename-backdrop");
-    const input2 = s2.getElementById("rename-input");
+    const input3 = s2.getElementById("rename-input");
     const confirmBtn = s2.getElementById("rename-confirm");
     const cancelBtn = s2.getElementById("rename-cancel");
     let currentItem = null;
@@ -41732,7 +42174,7 @@ label {
       currentItem = null;
     };
     const apply = () => {
-      const name = input2.value.trim();
+      const name = input3.value.trim();
       if (!name || !currentItem) {
         return;
       }
@@ -41747,7 +42189,7 @@ label {
         hide();
       }
     });
-    input2.addEventListener("keydown", (e) => {
+    input3.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         apply();
       }
@@ -41758,11 +42200,11 @@ label {
     return {
       open(item) {
         currentItem = item;
-        input2.value = item.label;
+        input3.value = item.label;
         backdrop.classList.add("visible");
         requestAnimationFrame(() => {
-          input2.focus();
-          input2.select();
+          input3.focus();
+          input3.select();
         });
       }
     };
@@ -41771,17 +42213,17 @@ label {
   // src/components/media/GridMedia/features/new-folder.ts
   function setupNewFolder(host, s2, callbacks) {
     const backdrop = s2.getElementById("nf-backdrop");
-    const input2 = s2.getElementById("nf-input");
+    const input3 = s2.getElementById("nf-input");
     const confirmBtn = s2.getElementById("nf-confirm");
     const cancelBtn = s2.getElementById("nf-cancel");
     const hide = () => backdrop.classList.remove("visible");
     const show = () => {
-      input2.value = "";
+      input3.value = "";
       backdrop.classList.add("visible");
-      requestAnimationFrame(() => input2.focus());
+      requestAnimationFrame(() => input3.focus());
     };
     const create = () => {
-      const name = input2.value.trim();
+      const name = input3.value.trim();
       if (!name) {
         return;
       }
@@ -41796,7 +42238,7 @@ label {
         hide();
       }
     });
-    input2.addEventListener("keydown", (e) => {
+    input3.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         create();
       }
@@ -41984,13 +42426,13 @@ label {
   }
   function pickFile(accept) {
     return new Promise((resolve) => {
-      const input2 = document.createElement("input");
-      input2.type = "file";
+      const input3 = document.createElement("input");
+      input3.type = "file";
       if (accept) {
-        input2.accept = accept;
+        input3.accept = accept;
       }
-      input2.addEventListener("change", () => resolve(input2.files?.[0] ?? null), { once: true });
-      input2.click();
+      input3.addEventListener("change", () => resolve(input3.files?.[0] ?? null), { once: true });
+      input3.click();
     });
   }
   function readFields(detail) {
@@ -42108,7 +42550,8 @@ label {
     _items = [];
     constructor() {
       super({
-        css: style_default37,
+        css: [navigation_default, interactions_default, detail_default3].join(`
+`),
         template: template_default37
       });
     }
@@ -42237,8 +42680,8 @@ label {
     }
     async _handleCreateFolder() {
       const button2 = this.querySelector('[data-action="create-folder"]');
-      const input2 = this.querySelector('[data-role="folder-name"]');
-      const name = input2?.value?.trim();
+      const input3 = this.querySelector('[data-role="folder-name"]');
+      const name = input3?.value?.trim();
       if (!name) {
         return;
       }
@@ -42246,8 +42689,8 @@ label {
       if (!ok) {
         return;
       }
-      if (input2) {
-        input2.value = "";
+      if (input3) {
+        input3.value = "";
       }
       button2?.dispatchEvent(new BubblesEvent("form:success"));
       this._grid?.refresh();
@@ -42328,8 +42771,8 @@ label {
 </dialog>
 `;
 
-  // src/components/media/MediaCenter/style.css
-  var style_default38 = `:host {
+  // src/components/media/MediaCenter/styles/chrome.css
+  var chrome_default = `:host {
     --mc-bg: #ffffff;
     --mc-border: #e2e8f0;
     --mc-grid-item-max: 180px;
@@ -42493,8 +42936,10 @@ dialog::backdrop {
     font-weight: 600;
     padding: 2px 6px;
 }
+`;
 
-/* ── Grid ── */
+  // src/components/media/MediaCenter/styles/content.css
+  var content_default = `/* ── Grid ── */
 
 .media-grid {
     flex: 1;
@@ -42633,8 +43078,10 @@ dialog::backdrop {
 .btn-secondary:hover {
     background: #e2e8f0;
 }
+`;
 
-/* ── New folder popover ── */
+  // src/components/media/MediaCenter/styles/folder.css
+  var folder_default = `/* ── New folder popover ── */
 
 .nf-backdrop {
     display: none;
@@ -42724,6 +43171,111 @@ dialog::backdrop {
 }
 `;
 
+  // src/components/media/MediaCenter/events.ts
+  function wireMediaCenterEvents(bindings) {
+    wireDialog(bindings);
+    wireFolderCreation(bindings);
+    wireUploads(bindings);
+    wireGrid2(bindings);
+    wireBreadcrumb2(bindings);
+    wireFileDrop(bindings);
+  }
+  function wireDialog({ root, dialog }) {
+    root.getElementById("btnClose").addEventListener("click", () => dialog.close());
+    root.getElementById("btnCancel").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) {
+        dialog.close();
+      }
+    });
+  }
+  function wireFolderCreation(bindings) {
+    const { root } = bindings;
+    root.getElementById("btnCreateFolder").addEventListener("click", bindings.openNewFolder);
+    const backdrop = root.getElementById("nf-backdrop");
+    const input3 = root.getElementById("nf-input");
+    root.getElementById("nf-cancel").addEventListener("click", () => backdrop.classList.remove("open"));
+    root.getElementById("nf-confirm").addEventListener("click", () => bindings.createFolder(input3, backdrop));
+    input3.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        bindings.createFolder(input3, backdrop);
+      }
+      if (event.key === "Escape") {
+        backdrop.classList.remove("open");
+      }
+    });
+  }
+  function wireUploads(bindings) {
+    const input3 = bindings.root.getElementById("file-input");
+    bindings.root.getElementById("btnUpload").addEventListener("click", () => input3.click());
+    input3.addEventListener("change", async () => {
+      if (!input3.files?.length) {
+        return;
+      }
+      await uploadFiles(input3.files, bindings.getFolder());
+      input3.value = "";
+      bindings.refresh();
+    });
+  }
+  function wireGrid2(bindings) {
+    bindings.grid.addEventListener("click", (event) => {
+      const card = event.target.closest("p9r-card-media");
+      if (!card) {
+        return;
+      }
+      const id = card.dataset.id;
+      if (card.dataset.type === "folder") {
+        bindings.navigate(id, bindings.findItem(id)?.label);
+      } else {
+        bindings.select(card, id);
+      }
+    });
+    bindings.grid.addEventListener("dblclick", (event) => {
+      const card = event.target.closest("p9r-card-media");
+      if (card && card.dataset.type !== "folder") {
+        bindings.confirmSelection();
+      }
+    });
+  }
+  function wireBreadcrumb2(bindings) {
+    bindings.root.getElementById("breadcrumb").addEventListener("click", (event) => {
+      const target = event.target;
+      if (!target.classList.contains("bc-item")) {
+        return;
+      }
+      bindings.navigateBreadcrumb(target.dataset.folder || null, parseInt(target.dataset.index || "-1"));
+    });
+  }
+  function wireFileDrop(bindings) {
+    const container = bindings.root.querySelector(".modal-container");
+    const overlay = bindings.root.getElementById("drop-overlay");
+    let dragCounter = 0;
+    container.addEventListener("dragenter", (event) => {
+      if (event.dataTransfer?.types.includes("Files")) {
+        event.preventDefault();
+        dragCounter++;
+        overlay.classList.add("active");
+      }
+    });
+    container.addEventListener("dragleave", () => {
+      dragCounter--;
+      if (dragCounter <= 0) {
+        dragCounter = 0;
+        overlay.classList.remove("active");
+      }
+    });
+    container.addEventListener("dragover", (event) => event.preventDefault());
+    container.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      dragCounter = 0;
+      overlay.classList.remove("active");
+      if (event.dataTransfer?.files.length) {
+        await uploadFiles(event.dataTransfer.files, bindings.getFolder());
+        bindings.refresh();
+      }
+    });
+  }
+
   // src/components/media/MediaCenter/MediaCenter.ts
   class MediaCenter extends U2 {
     _dialog = null;
@@ -42734,10 +43286,10 @@ dialog::backdrop {
     _items = [];
     _selectedItem = null;
     _types = [];
-    _dragCounter = 0;
     constructor() {
       super({
-        css: style_default38,
+        css: [chrome_default, content_default, folder_default].join(`
+`),
         template: template_default38
       });
     }
@@ -42746,97 +43298,27 @@ dialog::backdrop {
       this._dialog = s2.querySelector("dialog");
       this._grid = s2.getElementById("grid");
       this._btnSelect = s2.getElementById("btnSelect");
-      s2.getElementById("btnClose").addEventListener("click", () => this._dialog?.close());
-      s2.getElementById("btnCancel").addEventListener("click", () => this._dialog?.close());
-      this._dialog.addEventListener("click", (e) => {
-        if (e.target === this._dialog) {
-          this._dialog?.close();
-        }
-      });
-      s2.getElementById("btnCreateFolder").addEventListener("click", () => this._openNewFolder());
-      const nfBackdrop = s2.getElementById("nf-backdrop");
-      const nfInput = s2.getElementById("nf-input");
-      s2.getElementById("nf-cancel").addEventListener("click", () => nfBackdrop.classList.remove("open"));
-      s2.getElementById("nf-confirm").addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
-      nfInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          this._createFolder(nfInput, nfBackdrop);
-        }
-        if (e.key === "Escape") {
-          nfBackdrop.classList.remove("open");
-        }
-      });
-      const fileInput = s2.getElementById("file-input");
-      s2.getElementById("btnUpload").addEventListener("click", () => fileInput.click());
-      fileInput.addEventListener("change", async () => {
-        if (!fileInput.files?.length) {
-          return;
-        }
-        await uploadFiles(fileInput.files, this._folder);
-        fileInput.value = "";
-        this._refresh();
-      });
       this._btnSelect.addEventListener("click", () => this._confirmSelection());
-      this._grid.addEventListener("click", (e) => {
-        const card = e.target.closest("p9r-card-media");
-        if (!card) {
-          return;
-        }
-        const id = card.dataset.id;
-        const type = card.dataset.type;
-        if (type === "folder") {
-          const folder = this._items.find((i) => i.id === id);
-          this._navigateTo(id, folder?.label);
-        } else {
-          this._select(card, id);
-        }
-      });
-      this._grid.addEventListener("dblclick", (e) => {
-        const card = e.target.closest("p9r-card-media");
-        if (!card || card.dataset.type === "folder") {
-          return;
-        }
-        this._confirmSelection();
-      });
-      s2.getElementById("breadcrumb").addEventListener("click", (e) => {
-        const target = e.target;
-        if (!target.classList.contains("bc-item")) {
-          return;
-        }
-        const folder = target.dataset.folder || null;
-        const index = parseInt(target.dataset.index || "-1");
-        this._breadcrumb = this._breadcrumb.slice(0, index + 1);
-        this._navigateTo(folder);
-      });
-      const container = s2.querySelector(".modal-container");
-      const overlay = s2.getElementById("drop-overlay");
-      container.addEventListener("dragenter", (e) => {
-        if (e.dataTransfer?.types.includes("Files")) {
-          e.preventDefault();
-          this._dragCounter++;
-          overlay.classList.add("active");
-        }
-      });
-      container.addEventListener("dragleave", () => {
-        this._dragCounter--;
-        if (this._dragCounter <= 0) {
-          this._dragCounter = 0;
-          overlay.classList.remove("active");
-        }
-      });
-      container.addEventListener("dragover", (e) => e.preventDefault());
-      container.addEventListener("drop", async (e) => {
-        e.preventDefault();
-        this._dragCounter = 0;
-        overlay.classList.remove("active");
-        if (e.dataTransfer?.files.length) {
-          await uploadFiles(e.dataTransfer.files, this._folder);
-          this._refresh();
-        }
+      wireMediaCenterEvents({
+        root: s2,
+        dialog: this._dialog,
+        grid: this._grid,
+        getFolder: () => this._folder,
+        findItem: (id) => this._items.find((item) => item.id === id),
+        navigate: (folderId, label2) => this._navigateTo(folderId, label2),
+        navigateBreadcrumb: (folderId, index) => {
+          this._breadcrumb = this._breadcrumb.slice(0, index + 1);
+          this._navigateTo(folderId);
+        },
+        select: (card, id) => this._select(card, id),
+        confirmSelection: () => this._confirmSelection(),
+        openNewFolder: () => this._openNewFolder(),
+        createFolder: (input3, backdrop) => this._createFolder(input3, backdrop),
+        refresh: () => this._refresh()
       });
     }
-    show(types) {
-      this._types = types ?? ["folder", "image", "other"];
+    show(types2) {
+      this._types = types2 ?? ["folder", "image", "other"];
       this._folder = null;
       this._breadcrumb = [];
       this._selectedItem = null;
@@ -42900,13 +43382,13 @@ dialog::backdrop {
     _openNewFolder() {
       const s2 = this.shadowRoot;
       const backdrop = s2.getElementById("nf-backdrop");
-      const input2 = s2.getElementById("nf-input");
-      input2.value = "";
+      const input3 = s2.getElementById("nf-input");
+      input3.value = "";
       backdrop.classList.add("open");
-      setTimeout(() => input2.focus(), 50);
+      setTimeout(() => input3.focus(), 50);
     }
-    async _createFolder(input2, backdrop) {
-      const name = input2.value.trim();
+    async _createFolder(input3, backdrop) {
+      const name = input3.value.trim();
       if (!name) {
         return;
       }
@@ -43083,50 +43565,50 @@ dialog::backdrop {
       customElements.define(tag, constructor);
     }
   }
-  define(CMS_BINDING_CORE_TAG, cl);
-  Mp({
+  define(CMS_BINDING_CORE_TAG, Cl);
+  Gp({
     json: (value2) => value2 === undefined ? undefined : JSON.stringify(value2)
   });
-  define("p9r-accordion", Xe);
-  define("p9r-accordion-item", Qe);
-  define("p9r-action-menu", vn);
-  define("p9r-action-menu-item", xn);
-  define("p9r-action-menu-section", wn);
-  define("p9r-alert", tr);
-  define("p9r-avatar", ir);
-  define("p9r-badge", ar);
-  define("p9r-button", Jr);
-  define("p9r-card", vr);
-  define("w13c-checkbox", ni);
-  define("p9r-combobox", ci);
-  define("p9r-container", tn);
-  define("p9r-grid", on);
-  define("p9r-icon-button", fi);
-  define("w13c-lateral-dialog", Rr);
-  define("w13c-lateral-menu", Cn);
-  define("w13c-lateral-menu-item", In);
-  define("w13c-left-menu-layout", sn);
-  define("p9r-modal", Nr);
-  define("p9r-open-modal", $r);
-  define("p9r-input", zi);
-  define("p9r-select", Ji);
-  define("p9r-photo-album", hn);
-  define("p9r-segmented-switch", ho);
-  define("p9r-stack", cn);
-  define("p9r-tab-panel", Fa);
-  define("p9r-table", na);
-  define("p9r-cell", la);
-  define("p9r-header-cell", fa);
-  define("p9r-row", ka);
-  define("p9r-tabs", Ha);
-  define("p9r-tag", qa);
-  define("p9r-tag-suggest", Fo);
-  define("p9r-textarea", Vo);
-  define("p9r-token-input", Zo);
-  define("p9r-toast", Oa);
-  define("p9r-toast-stack", Ka);
-  define("p9r-stat", rs);
-  define("p9r-line-chart", ns);
-  define("p9r-bar-list", ls);
-  define("p9r-range-tabs", us);
+  define("p9r-accordion", ur);
+  define("p9r-accordion-item", mr);
+  define("p9r-action-menu", Nn);
+  define("p9r-action-menu-item", qn);
+  define("p9r-action-menu-section", $n);
+  define("p9r-alert", gr);
+  define("p9r-avatar", _r);
+  define("p9r-badge", Er);
+  define("p9r-button", bi);
+  define("p9r-card", Rr);
+  define("w13c-checkbox", ki);
+  define("p9r-combobox", Ci);
+  define("p9r-container", xn);
+  define("p9r-grid", wn);
+  define("p9r-icon-button", Bi);
+  define("w13c-lateral-dialog", Jr);
+  define("w13c-lateral-menu", Yn);
+  define("w13c-lateral-menu-item", ta);
+  define("w13c-left-menu-layout", An);
+  define("p9r-modal", ni);
+  define("p9r-open-modal", li);
+  define("p9r-input", Qi);
+  define("p9r-select", fo);
+  define("p9r-photo-album", Pn);
+  define("p9r-segmented-switch", Ho);
+  define("p9r-stack", Cn);
+  define("p9r-tab-panel", rs);
+  define("p9r-table", La);
+  define("p9r-cell", Ma);
+  define("p9r-header-cell", Oa);
+  define("p9r-row", Ua);
+  define("p9r-tabs", Ja);
+  define("p9r-tag", as);
+  define("p9r-tag-suggest", Wo);
+  define("p9r-textarea", nn);
+  define("p9r-token-input", hn);
+  define("p9r-toast", cs);
+  define("p9r-toast-stack", hs);
+  define("p9r-stat", Es);
+  define("p9r-line-chart", Ls);
+  define("p9r-bar-list", Ms);
+  define("p9r-range-tabs", zs);
 })();

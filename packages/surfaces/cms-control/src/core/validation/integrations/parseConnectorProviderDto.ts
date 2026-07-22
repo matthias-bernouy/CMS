@@ -1,5 +1,5 @@
-import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import MissingParam from "cms-control/errors/Http/MissingParam";
+import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
+import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 
 export type ConnectorProviderUpdateDto = {
     provider: "supabase";

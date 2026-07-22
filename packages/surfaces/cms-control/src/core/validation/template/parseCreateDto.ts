@@ -1,4 +1,4 @@
-import MissingParam from "cms-control/errors/Http/MissingParam";
+import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 
 export type TemplateCreateDto = {
     identifier: string;

@@ -1,5 +1,7 @@
 import template from "./view/template.html" with { type: "text" };
-import css from "./view/style.css" with { type: "text" };
+import detailCss from "./view/styles/detail.css" with { type: "text" };
+import interactionsCss from "./view/styles/interactions.css" with { type: "text" };
+import navigationCss from "./view/styles/navigation.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
 import type { DetailMedia } from "../DetailMedia/DetailMedia";
 import type { CropSystem } from "../CropSystem/CropSystem";
@@ -17,7 +19,7 @@ export class GridMedia extends Component {
 
     constructor() {
         super({
-            css: css as unknown as string,
+            css: [navigationCss, interactionsCss, detailCss].join("\n"),
             template: template as unknown as string,
         });
     }

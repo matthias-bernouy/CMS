@@ -13,18 +13,16 @@
             "default": "./index.ts"
         },
         "./component": {
-            "bun": "./component.ts",
-            "default": "./component.ts"
+            "bun": "./src/exports/component.ts",
+            "default": "./src/exports/component.ts"
         },
         "./editor": {
-            "bun": "./editor.ts",
-            "default": "./editor.ts"
+            "bun": "./src/exports/editor.ts",
+            "default": "./src/exports/editor.ts"
         }
     },
     "files": [
         "index.ts",
-        "component.ts",
-        "editor.ts",
         "src/",
         "types/",
         "dist/",
@@ -34,9 +32,9 @@
         "CLAUDE.md"
     ],
     "scripts": {
-        "build": "bun run build.ts",
+        "build": "bun run src/tooling/build.ts",
         "typecheck": "bun x tsc --noEmit",
-        "test": "bun test",
+        "test": "bun test --preload ./tests/setup.ts",
         "prepublishOnly": "bun run build"
     },
     "devDependencies": {

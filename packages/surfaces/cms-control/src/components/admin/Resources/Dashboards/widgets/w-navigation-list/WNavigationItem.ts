@@ -1,5 +1,5 @@
 import { emitWidgetEvent, WIDGET_ROW_SELECT_EVENT } from "../shared";
-import { renderIcon } from "../../icons";
+import { renderIcon } from "../../navigation/icons";
 
 const template = document.createElement("template");
 template.innerHTML = `

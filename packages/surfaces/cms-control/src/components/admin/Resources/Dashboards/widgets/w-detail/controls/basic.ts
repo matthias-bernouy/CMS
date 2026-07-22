@@ -1,13 +1,7 @@
 import type { WDetailField, WDetailFieldValue } from "../types";
 import { badge, image, readonlyValue } from "./display";
-import {
-    bindFieldControl,
-    isTokenControl,
-    isValueControl,
-    optionElement,
-    type TokenControl,
-    type ValueControl,
-} from "./shared";
+import { combobox, numberInput, select, textInput, textarea, tokenInput } from "./inputFields";
+import { bindFieldControl, isTokenControl, isValueControl } from "./shared";
 
 export function createBasicControl(field: WDetailField): HTMLElement {
     if (field.input === "number") {
@@ -72,34 +66,6 @@ export function readBasicControlValue(field: WDetailField, control: HTMLElement)
     return Array.isArray(field.value) ? field.value : String(field.value);
 }
 
-function textInput(field: WDetailField): HTMLElement {
-    const input = document.createElement("p9r-input") as ValueControl;
-    input.setAttribute("label", field.label);
-    input.setAttribute("type", "text");
-    input.setAttribute("value", String(field.value));
-    applyInputMetadata(input, field);
-    input.value = String(field.value);
-    bindFieldControl(input, field);
-    return input;
-}
-
-function numberInput(field: WDetailField): HTMLElement {
-    const input = document.createElement("p9r-input") as ValueControl;
-    input.setAttribute("label", field.label);
-    input.setAttribute("type", "number");
-    input.setAttribute("value", String(field.value));
-    for (const attribute of ["min", "max", "step"] as const) {
-        const value = field[attribute];
-        if (value !== undefined) {
-            input.setAttribute(attribute, String(value));
-        }
-    }
-    applyInputMetadata(input, field);
-    input.value = String(field.value);
-    bindFieldControl(input, field);
-    return input;
-}
-
 function checkbox(field: WDetailField): HTMLElement {
     const input = document.createElement("input");
     input.type = "checkbox";
@@ -107,62 +73,6 @@ function checkbox(field: WDetailField): HTMLElement {
     input.checked = field.value === true;
     input.required = field.required === true;
     input.setAttribute("aria-label", field.label);
-    bindFieldControl(input, field);
-    return input;
-}
-
-function textarea(field: WDetailField): HTMLElement {
-    const input = document.createElement("p9r-textarea") as ValueControl;
-    input.setAttribute("label", field.label);
-    input.setAttribute("rows", String(field.rows ?? 4));
-    input.setAttribute("value", String(field.value));
-    applyInputMetadata(input, field);
-    input.value = String(field.value);
-    bindFieldControl(input, field);
-    return input;
-}
-
-function select(field: WDetailField): HTMLElement {
-    const input = document.createElement("p9r-select") as ValueControl;
-    input.setAttribute("label", field.label);
-    input.setAttribute("value", String(field.value));
-    if (field.required) {
-        input.setAttribute("required", "");
-    }
-    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
-    bindFieldControl(input, field);
-    return input;
-}
-
-function combobox(field: WDetailField): HTMLElement {
-    const input = document.createElement("p9r-combobox") as ValueControl;
-    input.setAttribute("label", field.label);
-    input.setAttribute("value", String(field.value));
-    input.setAttribute("placeholder", field.placeholder ?? "");
-    if (field.required) {
-        input.setAttribute("required", "");
-    }
-    if (field.creatable) {
-        input.setAttribute("creatable", "");
-    }
-    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
-    input.value = String(field.value);
-    bindFieldControl(input, field);
-    return input;
-}
-
-function tokenInput(field: WDetailField): HTMLElement {
-    const input = document.createElement("p9r-token-input") as TokenControl;
-    input.setAttribute("label", field.label);
-    input.setAttribute("value", arrayValue(field).join(","));
-    input.setAttribute("placeholder", field.placeholder ?? "");
-    if (field.required) {
-        input.setAttribute("required", "");
-    }
-    if (field.creatable) {
-        input.setAttribute("creatable", "");
-    }
-    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, "")));
     bindFieldControl(input, field);
     return input;
 }
@@ -192,13 +102,4 @@ function arrayValue(field: WDetailField): string[] {
             .filter(Boolean);
     }
     return field.value.filter((item): item is string => typeof item === "string");
-}
-
-function applyInputMetadata(input: HTMLElement, field: WDetailField): void {
-    if (field.placeholder) {
-        input.setAttribute("placeholder", field.placeholder);
-    }
-    if (field.required) {
-        input.setAttribute("required", "");
-    }
 }

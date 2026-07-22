@@ -1,5 +1,5 @@
 import { route, type FunctionDetail } from "./api";
-import { stringify } from "./draft";
+import { stringify } from "./create/draft";
 
 export function styleNode(css: string): HTMLStyleElement {
     const el = document.createElement("style");

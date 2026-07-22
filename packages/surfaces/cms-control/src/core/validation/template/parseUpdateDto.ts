@@ -1,5 +1,5 @@
-import MissingParam from "cms-control/errors/Http/MissingParam";
-import { DEFAULT_TEMPLATE_CONTENT } from "../contentDefaults";
+import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
+import { DEFAULT_TEMPLATE_CONTENT } from "./defaults";
 
 export type TemplateUpdateDto = {
     id: string;

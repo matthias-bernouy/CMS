@@ -1,0 +1,83 @@
+/* ── Body shape tree ──────────────────────────────────────────────── */
+/* "Root type [select]" header */
+cms-endpoints-input .ep-root-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+/* Inline type picker; for arrays it also holds "of <elementType>" */
+cms-endpoints-input .ep-type-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+}
+cms-endpoints-input .ep-of { color: var(--text-muted, #94a3b8); font-size: 12px; }
+
+/* A nested object/array element groups its rows in a shaded, indented box */
+cms-endpoints-input .ep-box {
+    margin-top: 0.4rem;
+    margin-left: 1.1rem;
+    padding: 0.6rem;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-subtle, #f8fafc);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+/* The root object isn't boxed — it reads as the top level */
+cms-endpoints-input .ep-box-root {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+cms-endpoints-input .ep-prop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+/* One property: the row, plus any nested box below it */
+cms-endpoints-input .ep-prop {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+cms-endpoints-input .ep-prop-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+cms-endpoints-input .ep-prop-name { flex: 1; min-width: 0; }
+cms-endpoints-input .ep-required { flex: 0 0 auto; white-space: nowrap; }
+
+/* Bordered "+ Add property" button */
+cms-endpoints-input .ep-add-prop {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--border-default, #d1d5db);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-main, #1e293b);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+cms-endpoints-input .ep-add-prop:hover { border-color: var(--primary-base, #4361ee); color: var(--primary-base, #4361ee); }
+
+cms-endpoints-input .ep-remove-body {
+    align-self: flex-start;
+    background: transparent;
+    border: 0;
+    color: var(--text-muted, #94a3b8);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0.25rem 0;
+}
+cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); }

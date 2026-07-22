@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import importBloc from "cms-control/api/bloc/bloc.post";
+import importBloc from "cms-control/api/_content/bloc/bloc.post";
 
 function makeSystem() {
     return {

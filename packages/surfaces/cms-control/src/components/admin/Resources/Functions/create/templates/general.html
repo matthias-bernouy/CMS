@@ -1,0 +1,67 @@
+<a slot="back" class="back" aria-label="Back to functions">&lt;</a>
+
+<span slot="title">Create function</span>
+
+<div slot="actions" class="header-actions">
+    <button type="button" class="button quiet" data-role="collapse">Collapse all</button>
+    <button type="button" class="button primary" data-role="save">Create function</button>
+</div>
+
+<div slot="main" class="journey-intro">
+    <strong>Build a workflow in four steps</strong>
+    <span>Complete one section at a time. Close it when you are done.</span>
+</div>
+
+<details slot="main" class="editor-panel" open data-panel="general">
+    <summary>
+        <span class="step-number">1</span>
+        <span>
+            <strong>Describe the function</strong>
+            <small>Name the workflow and choose who can execute it.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <label>
+            Function name
+            <input data-field="name" placeholder="Ship paid order" />
+        </label>
+
+        <label>
+            Identifier
+            <span>Generated from the name. You can adjust it before creation.</span>
+            <input data-field="id" placeholder="shipPaidOrder" />
+        </label>
+
+        <label>
+            Description
+            <span>Explain the outcome, not the implementation.</span>
+            <textarea class="compact" data-field="description"
+                placeholder="Creates a shipment after checking that the order is paid."></textarea>
+        </label>
+
+        <div class="short-row">
+            <label>
+                HTTP method
+                <select data-field="method">
+                    <option>GET</option>
+                    <option selected>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
+                </select>
+            </label>
+
+            <label>
+                Who can execute it?
+                <select data-field="access">
+                    <option value="admin">Administrators</option>
+                    <option value="auth">Authenticated users</option>
+                    <option value="public">Everyone</option>
+                    <option value="system">System only</option>
+                </select>
+            </label>
+        </div>
+    </div>
+</details>

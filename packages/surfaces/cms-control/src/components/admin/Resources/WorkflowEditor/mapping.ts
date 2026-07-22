@@ -1,33 +1,7 @@
-import type { FunctionValue } from "@bernouy/cms-functions";
+import type { MappingShape, MappingTarget, ReferenceOption, ValueDraft } from "./mappingTypes";
 
-export type MappingShape = {
-    type: "string" | "number" | "boolean" | "object" | "array";
-    properties?: Record<string, MappingShape>;
-    items?: MappingShape;
-    required?: string[];
-    semantic?: {
-        kind: "user-id";
-        authority?: string;
-    };
-};
-
-export type ReferenceOption = {
-    value: string;
-    label: string;
-    shape?: MappingShape;
-};
-
-export type MappingTarget = {
-    path: string;
-    label: string;
-    required?: boolean;
-    shape?: MappingShape;
-};
-
-export type ValueDraft = {
-    mode: "reference" | "literal";
-    value: string;
-};
+export type { MappingShape, MappingTarget, ReferenceOption, ValueDraft } from "./mappingTypes";
+export { mappedObject, resolvedDraftValue } from "./mappingValues";
 
 export function referencesFromShape(shape: MappingShape | undefined, prefix: string, label: string): ReferenceOption[] {
     if (!shape) {
@@ -123,32 +97,6 @@ export function valuePicker(draft: ValueDraft, references: ReferenceOption[], la
     return wrap;
 }
 
-export function mappedObject(draft: Record<string, ValueDraft>): Record<string, FunctionValue> {
-    const result: Record<string, FunctionValue> = {};
-    for (const [path, value] of Object.entries(draft)) {
-        if (!value.value) {
-            continue;
-        }
-        setPath(result, path, resolvedDraftValue(value));
-    }
-    return result;
-}
-
-export function resolvedDraftValue(draft: ValueDraft): FunctionValue {
-    if (draft.mode === "reference") {
-        return draft.value;
-    }
-    const raw = draft.value.trim();
-    if (!raw) {
-        return "";
-    }
-    try {
-        return JSON.parse(raw) as FunctionValue;
-    } catch {
-        return raw;
-    }
-}
-
 function mappingRow(target: MappingTarget, references: ReferenceOption[], draft: ValueDraft): HTMLElement {
     const row = document.createElement("div");
     row.className = "mapping-row";
@@ -177,26 +125,6 @@ function compatibleReferences(references: ReferenceOption[], shape: MappingShape
         }
         return reference.shape.type === shape.type && reference.shape.semantic?.kind !== "user-id";
     });
-}
-
-function setPath(target: Record<string, FunctionValue>, path: string, value: FunctionValue): void {
-    if (!path) {
-        target.value = value;
-        return;
-    }
-    const parts = path.split(".").filter(Boolean);
-    let current = target;
-    for (const [index, part] of parts.entries()) {
-        if (index === parts.length - 1) {
-            current[part] = value;
-            return;
-        }
-        const existing = current[part];
-        if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
-            current[part] = {};
-        }
-        current = current[part] as Record<string, FunctionValue>;
-    }
 }
 
 function option(value: string, label: string): HTMLOptionElement {

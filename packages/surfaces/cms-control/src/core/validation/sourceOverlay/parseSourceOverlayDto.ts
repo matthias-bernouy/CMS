@@ -1,22 +1,23 @@
 import {
-    SOURCE_OVERLAY_EDITABLE_SCOPES,
-    SOURCE_OVERLAY_FIELD_TYPES,
     type SourceOverlay,
-    type SourceOverlayEditableScope,
     type SourceOverlayEndpointTarget,
     type SourceOverlayField,
     type SourceOverlayFieldSource,
     type SourceOverlayFieldSourceMap,
-    type SourceOverlayFieldType,
     type SourceOverlaySection,
 } from "@bernouy/cms-sources";
-import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import MissingParam from "cms-control/errors/Http/MissingParam";
+import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import { parseSourceOverlayOptions } from "./parseSourceOverlayOptions";
-
-const SIMPLE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
-const SAFE_PATH = /^[A-Za-z_$][\w$]*(\[\])?(\.[A-Za-z_$][\w$]*(\[\])?)*$/;
-const FIELD_PATH = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
+import {
+    editableScope,
+    fieldPath,
+    fieldType,
+    isRecord,
+    isSimpleId,
+    requiredId,
+    requiredText,
+    targetPath,
+} from "./valueParsers";
 
 export function parseSourceOverlayDto(body: Record<string, unknown>): SourceOverlay {
     const overlay: SourceOverlay = {
@@ -57,7 +58,7 @@ function parseStringParams(value: unknown, name: string): Record<string, string>
     }
     return Object.fromEntries(
         Object.entries(value).map(([key, raw]) => {
-            if (!SIMPLE_ID.test(key)) {
+            if (!isSimpleId(key)) {
                 throw new InvalidParam(`${name}.${key}`, "must use a simple parameter name.");
             }
             if (typeof raw !== "string") {
@@ -151,56 +152,4 @@ function parseTargets(value: unknown, name: string): SourceOverlayEndpointTarget
                 : {}),
         };
     });
-}
-
-function requiredId(value: unknown, name: string): string {
-    const result = requiredText(value, name);
-    if (!SIMPLE_ID.test(result)) {
-        throw new InvalidParam(name, "must be a simple id.");
-    }
-    return result;
-}
-
-function requiredText(value: unknown, name: string): string {
-    if (typeof value !== "string" || !value.trim()) {
-        throw new MissingParam(name);
-    }
-    return value.trim();
-}
-
-function fieldType(value: unknown, name: string): SourceOverlayFieldType {
-    if ((SOURCE_OVERLAY_FIELD_TYPES as readonly unknown[]).includes(value)) {
-        return value as SourceOverlayFieldType;
-    }
-    throw new InvalidParam(name, `must be ${SOURCE_OVERLAY_FIELD_TYPES.join("|")}.`);
-}
-
-function editableScope(value: unknown, name: string): SourceOverlayEditableScope {
-    if ((SOURCE_OVERLAY_EDITABLE_SCOPES as readonly unknown[]).includes(value)) {
-        return value as SourceOverlayEditableScope;
-    }
-    throw new InvalidParam(name, `must be ${SOURCE_OVERLAY_EDITABLE_SCOPES.join("|")}.`);
-}
-
-function fieldPath(value: unknown, name: string): string {
-    const result = requiredText(value, name);
-    if (!FIELD_PATH.test(result)) {
-        throw new InvalidParam(name, "must be a dotted object path.");
-    }
-    return result;
-}
-
-function targetPath(value: unknown, name: string): string {
-    if (value === "") {
-        return "";
-    }
-    const result = requiredText(value, name);
-    if (!SAFE_PATH.test(result)) {
-        throw new InvalidParam(name, "must be a dotted shape path.");
-    }
-    return result;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
 }

@@ -1,6 +1,6 @@
 import type { SourceOverlayDashboardOption } from "@bernouy/cms-sources";
-import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import MissingParam from "cms-control/errors/Http/MissingParam";
+import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
+import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 
 export function parseSourceOverlayOptions(value: unknown, name: string): SourceOverlayDashboardOption[] {
     if (!Array.isArray(value)) {

@@ -1,0 +1,44 @@
+
+<details slot="main" class="editor-panel" data-panel="condition">
+    <summary>
+        <span class="step-number optional">3</span>
+        <span class="summary-copy">
+            <strong>Add a condition</strong>
+            <small>Optional — fire only when a value matches your rule.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <label class="check">
+            <input type="checkbox" data-field="condition-enabled" />
+            Fire only when a condition matches
+        </label>
+
+        <div class="condition-fields" data-role="condition" hidden>
+            <label>
+                Value to inspect
+                <div data-role="condition-left"></div>
+            </label>
+
+            <label>
+                Comparison
+                <select data-field="operator">
+                    <option value="equals">Equals</option>
+                    <option value="notEquals">Does not equal</option>
+                    <option value="exists">Exists</option>
+                    <option value="in">Is contained in</option>
+                    <option value="gt">Is greater than</option>
+                    <option value="gte">Is greater than or equal</option>
+                    <option value="lt">Is less than</option>
+                    <option value="lte">Is less than or equal</option>
+                </select>
+            </label>
+
+            <label data-role="right-field">
+                Expected value
+                <div data-role="condition-right"></div>
+            </label>
+        </div>
+    </div>
+</details>

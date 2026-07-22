@@ -1,0 +1,31 @@
+
+<details slot="main" class="editor-panel" data-panel="return">
+    <summary>
+        <span class="step-number">4</span>
+        <span>
+            <strong>Choose the result</strong>
+            <small>Return a status and optionally expose workflow data.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <label class="narrow-field">
+            Success status
+            <input data-field="return-status" type="number" min="200" max="599" value="200" />
+        </label>
+
+        <label>
+            Returned value
+            <span>Choose one of the values produced by the workflow.</span>
+            <div data-role="return-picker"></div>
+        </label>
+
+        <label>
+            Documented responses
+            <span>Optional JSON response contract.</span>
+            <textarea data-field="output"
+                placeholder='Advanced override: [{"status":"200","body":{"type":"object"}}]'></textarea>
+        </label>
+    </div>
+</details>

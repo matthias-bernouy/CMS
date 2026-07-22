@@ -2,14 +2,10 @@ import { Component } from "@bernouy/components/base";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 import { MediaDragController } from "./drag";
+import { dispatchMediaChange, LocalMediaFiles } from "./mediaState";
 import { renderAddTile, renderMediaTile } from "./render";
-import {
-    W_MEDIA_FIELD_ACTION_EVENT,
-    type DashboardMediaAction,
-    type DashboardMediaActionDetail,
-    type DashboardMediaItem,
-} from "./types";
-import { localId, numberData, tileFromEvent } from "./utils";
+import { type DashboardMediaAction, type DashboardMediaActionDetail, type DashboardMediaItem } from "./types";
+import { numberData, tileFromEvent } from "./utils";
 
 type PendingPick = { action: "upload"; index?: never } | { action: "replace"; index: number };
 
@@ -22,7 +18,7 @@ export class DashboardWMediaField extends Component {
             this.suppressClick = value;
         },
     );
-    private localUrls = new Set<string>();
+    private readonly localFiles = new LocalMediaFiles();
     private pendingPick: PendingPick = { action: "upload" };
     private suppressClick = false;
 
@@ -121,7 +117,7 @@ export class DashboardWMediaField extends Component {
     };
 
     private upload(files: File[]): void {
-        const inserted = files.map((file) => this.itemFromFile(file));
+        const inserted = files.map((file) => this.localFiles.create(file));
         this.currentItems = [...this.currentItems, ...inserted];
         this.changed("upload", { files });
     }
@@ -131,8 +127,8 @@ export class DashboardWMediaField extends Component {
         if (!previousItem) {
             return;
         }
-        const item = { ...previousItem, ...this.itemFromFile(file), id: previousItem.id };
-        this.revokeLocalUrl(previousItem.url);
+        const item = { ...previousItem, ...this.localFiles.create(file), id: previousItem.id };
+        this.localFiles.revoke(previousItem.url);
         this.currentItems = this.currentItems.map((entry, entryIndex) => (entryIndex === index ? item : entry));
         this.changed("replace", { index, item, previousItem, file });
     }
@@ -142,7 +138,7 @@ export class DashboardWMediaField extends Component {
         if (!item) {
             return;
         }
-        this.revokeLocalUrl(item.url);
+        this.localFiles.revoke(item.url);
         this.currentItems = this.currentItems.filter((_, entryIndex) => entryIndex !== index);
         this.changed("remove", { index, item });
     }
@@ -161,30 +157,9 @@ export class DashboardWMediaField extends Component {
         this.changed("reorder", { from, to, item });
     }
 
-    private itemFromFile(file: File): DashboardMediaItem {
-        const url = URL.createObjectURL(file);
-        this.localUrls.add(url);
-        return { id: `local-${localId()}`, url, thumbnailUrl: url, alt: file.name, name: file.name, pending: true };
-    }
-
     private changed(action: DashboardMediaAction, detail: Partial<DashboardMediaActionDetail>): void {
         this.renderGrid();
-        this.dispatchEvent(
-            new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, {
-                bubbles: true,
-                composed: true,
-                detail: { ...detail, action, value: this.items },
-            }),
-        );
-        this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    }
-
-    private revokeLocalUrl(url: string | undefined): void {
-        if (!url || !this.localUrls.has(url)) {
-            return;
-        }
-        URL.revokeObjectURL(url);
-        this.localUrls.delete(url);
+        dispatchMediaChange(this, action, this.items, detail);
     }
 
     private query<T extends Element>(selector: string): T {

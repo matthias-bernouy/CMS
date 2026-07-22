@@ -1,0 +1,141 @@
+:host {
+    display: block;
+}
+
+cms-shell-detail {
+    --shell-detail-main-width: 620px;
+    --shell-detail-aside-width: 270px;
+}
+
+.mode-switch {
+    display: inline-flex;
+    gap: 2px;
+    margin-bottom: 16px;
+    padding: 3px;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    background: var(--bg-base);
+}
+
+.mode-switch button {
+    min-height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+}
+
+.mode-switch button[aria-pressed="true"] {
+    background: var(--bg-surface);
+    color: var(--text-main);
+    box-shadow: 0 1px 2px rgb(15 31 26 / 12%);
+    font-weight: 700;
+}
+
+.groups {
+    display: grid;
+    gap: 16px;
+}
+
+.group {
+    display: grid;
+    gap: 7px;
+}
+
+.group h4 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+
+.group p {
+    margin: -3px 0 2px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.element-list {
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+}
+
+.element-row {
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) minmax(160px, 1.1fr);
+    gap: 12px;
+    align-items: center;
+    min-height: 58px;
+    padding: 10px 11px;
+    border-top: 1px solid var(--border-default);
+}
+
+.element-row:first-child {
+    border-top: 0;
+}
+
+.element-label {
+    display: grid;
+    gap: 2px;
+}
+
+.token-label-input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-main);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.token-label-input:focus {
+    outline: 0;
+    box-shadow: 0 1px 0 var(--primary-base);
+}
+
+.element-label span {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.color-control {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.color-control input[type="color"] {
+    width: 31px;
+    height: 31px;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.color-control input[type="text"],
+.value-control {
+    width: 100%;
+    min-width: 0;
+    min-height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--bg-base);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 12px;
+}

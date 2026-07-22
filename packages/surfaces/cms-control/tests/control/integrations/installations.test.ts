@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import getIntegrationInstallations from "cms-control/api/integrations/installations.get";
-import postIntegrationImport from "cms-control/api/integrations/import.post";
-import { getInstallations, makeCms, manualSourceDefinition, postImport, sourceWithFunctionDefinition } from "./helpers";
+import getIntegrationInstallations from "cms-control/api/_platform/integrations/installations.get";
+import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
+import {
+    getInstallations,
+    makeCms,
+    manualSourceDefinition,
+    postImport,
+    sourceWithFunctionDefinition,
+} from "./support/helpers";
 
 describe("GET /api/integrations/installations", () => {
     test("lists tracked installations and reconciles missing source artifacts", async () => {

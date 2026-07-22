@@ -1,0 +1,49 @@
+
+<details slot="main" class="editor-panel" data-panel="input">
+    <summary>
+        <span class="step-number">2</span>
+        <span>
+            <strong>Define what it receives</strong>
+            <small>Skip this section when callers do not provide data.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <div class="callout">
+            No input is required by default. Add a schema only when the workflow needs caller-provided data.
+        </div>
+
+        <div class="contract-group">
+            <div class="group-heading">
+                <strong>URL parameters</strong>
+                <span>Each parameter becomes available as <code>$input.params.name</code>.</span>
+            </div>
+            <div data-role="params-schema"></div>
+        </div>
+
+        <div class="contract-group">
+            <div class="group-heading">
+                <strong>Request body fields</strong>
+                <span>Each field becomes available as <code>$input.body.field</code>.</span>
+            </div>
+            <div data-role="body-schema"></div>
+        </div>
+
+        <details class="advanced-panel">
+            <summary>Advanced JSON override</summary>
+            <div class="advanced-body">
+                <label>
+                    Parameters schema
+                    <span>Leave empty to use the visual fields above.</span>
+                    <textarea data-field="params"></textarea>
+                </label>
+                <label>
+                    Body schema
+                    <span>Leave empty to use the visual fields above.</span>
+                    <textarea data-field="body"></textarea>
+                </label>
+            </div>
+        </details>
+    </div>
+</details>

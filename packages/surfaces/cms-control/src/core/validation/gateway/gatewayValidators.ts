@@ -1,4 +1,4 @@
-import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import type { ComputedParamRef, SourceMeta, ParamIn, ParamValueSource, SourceParamDto } from "@bernouy/cms-sources";
 import { COMPUTED_PARAM_REFS, PARAM_INS, extractPathParamNames } from "@bernouy/cms-sources";
 

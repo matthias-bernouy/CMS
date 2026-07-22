@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { renderIcon } from "cms-control/components/admin/Resources/Dashboards/icons";
+import { renderIcon } from "cms-control/components/admin/Resources/Dashboards/navigation/icons";
 import {
     DASHBOARD_ICONS,
     type DashboardIconName,
-} from "cms-control/components/admin/Resources/Dashboards/icons/catalog";
+} from "cms-control/components/admin/Resources/Dashboards/navigation/icons/catalog";
 
 const SEMANTIC_ICONS = [
     "user",

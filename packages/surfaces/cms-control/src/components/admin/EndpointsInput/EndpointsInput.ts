@@ -1,6 +1,8 @@
-import css from "./EndpointsInput.css" with { type: "text" };
-import { makeAddButton } from "./controls";
-import { makeEndpointRow } from "./rows";
+import actionsCss from "./styles/actions.css" with { type: "text" };
+import baseCss from "./styles/base.css" with { type: "text" };
+import shapeCss from "./styles/shape.css" with { type: "text" };
+import { makeAddButton } from "./fields/controls";
+import { makeEndpointRow } from "./rows/rows";
 import type { EndpointSeed } from "./shared";
 
 /**
@@ -113,7 +115,7 @@ function ensureStyles(): void {
     stylesInjected = true;
     const style = document.createElement("style");
     style.id = "cms-endpoints-input-styles";
-    style.textContent = css;
+    style.textContent = [baseCss, shapeCss, actionsCss].join("\n");
     document.head.appendChild(style);
 }
 

@@ -1,4 +1,4 @@
-import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 
 export type SecretDto = { key: string; value: string };
 

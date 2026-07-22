@@ -1,0 +1,110 @@
+/* ── Context menu ── */
+.ctx-menu {
+    display: none;
+    position: fixed;
+    z-index: 800;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 4px;
+    min-width: 140px;
+    flex-direction: column;
+}
+
+.ctx-menu.visible {
+    display: flex;
+}
+
+.ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border: none;
+    border-radius: 7px;
+    background: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s;
+}
+
+.ctx-item:hover {
+    background: var(--bg);
+}
+
+.ctx-item.ctx-danger:hover {
+    background: rgba(239, 68, 68, 0.06);
+    color: var(--danger);
+}
+
+.ctx-item svg {
+    flex-shrink: 0;
+}
+
+/* ── Grid ── */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--grid-min-col), 1fr));
+    gap: var(--grid-gap);
+    justify-items: center;
+}
+
+.grid > * {
+    width: 100%;
+    max-width: var(--grid-max-col);
+}
+
+.grid:empty + .empty {
+    display: flex;
+}
+
+/* ── Empty state ── */
+.empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 64px 24px;
+    color: var(--empty-color);
+    text-align: center;
+}
+
+.empty svg {
+    width: 48px;
+    height: 48px;
+    opacity: 0.4;
+}
+
+.empty p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* ── Drop overlay ── */
+.drop-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(67, 97, 238, 0.08);
+    border: 3px dashed var(--primary);
+    border-radius: 16px;
+    margin: 16px;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.drop-overlay.visible {
+    display: flex;
+}
+
+.drop-overlay span {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary);
+}

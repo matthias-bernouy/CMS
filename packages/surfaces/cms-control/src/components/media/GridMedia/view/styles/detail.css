@@ -1,0 +1,96 @@
+/* ── Detail fields (injected into detail-media slot) ── */
+.detail-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+.detail-field:last-child {
+    margin-bottom: 0;
+}
+
+.detail-field label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.detail-field input,
+.detail-field textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.15s;
+    resize: vertical;
+}
+
+.detail-field input:focus,
+.detail-field textarea:focus {
+    border-color: var(--primary);
+}
+
+.detail-value {
+    font-size: 13px;
+    color: var(--text-body, #475569);
+    word-break: break-all;
+}
+
+.detail-value.mono {
+    font-family: monospace;
+    font-size: 12px;
+    background: var(--bg);
+    padding: 6px 8px;
+    border-radius: 6px;
+    user-select: all;
+}
+
+.detail-meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* ── URL row with copy ── */
+.url-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.url-row .detail-value {
+    flex: 1;
+    min-width: 0;
+}
+
+.btn-copy {
+    flex-shrink: 0;
+    padding: 4px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-copy:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* ── Detail actions ── */
+.detail-actions {
+    display: flex;
+    gap: 8px;
+}
