@@ -89,12 +89,8 @@ describe("commerce public offer listing", () => {
 
     test("does not expose media belonging to an unpublished offer", async () => {
         setRestResponder((request) => {
-            const table = new URL(request.url).pathname.split("/").at(-1);
-            if (table === "offer_media") {
-                return jsonResponse([{ offer_id: 91 }]);
-            }
-            if (table === "offers") {
-                return jsonResponse([{ publication_status: "draft" }]);
+            if (new URL(request.url).pathname.endsWith("/rpc/get_offer_media_download_context")) {
+                return jsonResponse({ state: "not_found" });
             }
             return jsonResponse([]);
         });
@@ -102,6 +98,11 @@ describe("commerce public offer listing", () => {
         const response = await requestCommerce("/offer/image?id=12");
         expect(response.status).toBe(404);
         expect(await response.json()).toEqual({ error: "offer image not found" });
+        expect(expectSingleRpc("get_offer_media_download_context").body).toEqual({
+            p_scope: "public",
+            p_media_id: 12,
+            p_cms_user_id: null,
+        });
     });
 
     test("allows pending sellers in public listings when verification is optional", async () => {

@@ -3,7 +3,7 @@ import { installCommerceTestEnvironment, requestCommerce } from "../../../../har
 import {
     callKinds,
     callsSince,
-    expectExactDatabaseReads,
+    expectSingleDownloadContextRpc,
     expectedStorageSignature,
     fetchCount,
     storageSignature,
@@ -14,7 +14,7 @@ import { offerImageBytes, offerImageMediaId, useOfferImageResponder } from "./fi
 installCommerceTestEnvironment();
 
 describe("commerce offer image download call budgets", () => {
-    test("preserves the public 5, self 4, and admin 1 database reads before the same Storage GET", async () => {
+    test("reduces public, self, and admin access to one database RPC before the same Storage GET", async () => {
         const scenarios: Array<{
             scope: OfferImageScope;
             route: string;
@@ -24,18 +24,18 @@ describe("commerce offer image download call budgets", () => {
             {
                 scope: "public",
                 route: "/offer/image",
-                expectedKinds: ["offer_media", "offers", "settings", "sellers", "media", "storage:GET"],
+                expectedKinds: ["rpc:get_offer_media_download_context", "storage:GET"],
             },
             {
                 scope: "self",
                 route: "/me/offer/image",
                 userId: "seller-user-123",
-                expectedKinds: ["offer_media", "offers", "sellers", "media", "storage:GET"],
+                expectedKinds: ["rpc:get_offer_media_download_context", "storage:GET"],
             },
             {
                 scope: "admin",
                 route: "/admin/offer/image",
-                expectedKinds: ["media", "storage:GET"],
+                expectedKinds: ["rpc:get_offer_media_download_context", "storage:GET"],
             },
         ];
         const storageCalls: Array<Record<string, unknown>> = [];
@@ -52,7 +52,7 @@ describe("commerce offer image download call budgets", () => {
             expect(response.status).toBe(200);
             expect(Array.from(new Uint8Array(await response.arrayBuffer()))).toEqual(Array.from(offerImageBytes));
             expect(callKinds(calls)).toEqual(scenario.expectedKinds);
-            expectExactDatabaseReads(scenario.scope, calls);
+            expectSingleDownloadContextRpc(scenario.scope, calls);
             storageCalls.push(storageSignature(calls));
         }
 
@@ -76,7 +76,7 @@ describe("commerce offer image download call budgets", () => {
         const calls = callsSince(0);
 
         expect(response.status).toBe(200);
-        expect(callKinds(calls)).toEqual(["media", "storage:GET"]);
-        expectExactDatabaseReads("admin", calls);
+        expect(callKinds(calls)).toEqual(["rpc:get_offer_media_download_context", "storage:GET"]);
+        expectSingleDownloadContextRpc("admin", calls);
     });
 });

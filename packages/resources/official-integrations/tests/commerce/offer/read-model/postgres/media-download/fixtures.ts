@@ -47,15 +47,77 @@ export type OfferImageFixtureOptions = {
 };
 
 export function useOfferImageResponder(options: OfferImageFixtureOptions = {}): void {
-    setRestResponder((request) => {
+    setRestResponder(async (request) => {
         const url = new URL(request.url);
         if (url.pathname.includes("/storage/v1/object/")) {
             return storageResponse(options.storage);
+        }
+        if (url.pathname.endsWith("/rpc/get_offer_media_download_context")) {
+            return jsonResponse(offerMediaDownloadContext(options, await request.json()));
         }
 
         const row = tableRow(url.pathname.split("/").at(-1)!, options);
         return jsonResponse(row ? [row] : []);
     });
+}
+
+function offerMediaDownloadContext(options: OfferImageFixtureOptions, body: unknown): JsonRecord {
+    const input = body as { p_scope?: unknown; p_cms_user_id?: unknown };
+    const scope = input.p_scope;
+    const media = configured(options.media, offerImageMediaRow);
+    if (scope === "admin") {
+        return mediaContext(media);
+    }
+
+    const link = configured(options.offerMedia, linkedOfferRow);
+    const offer = configured(options.offer, activeOfferRow);
+    if (!link || !offer || (scope === "public" && offer.publication_status !== "active")) {
+        return { state: "not_found" };
+    }
+
+    if (scope === "public") {
+        const settings = configured(options.settings, verifiedSellerSettings);
+        if (!settings) {
+            return { state: "settings_unavailable" };
+        }
+        const seller = configured(options.seller, verifiedOwnerRow);
+        const status = String(seller?.verification_status ?? "");
+        if (
+            !seller ||
+            ["rejected", "suspended"].includes(status) ||
+            (settings.require_verified_seller === true && status !== "verified")
+        ) {
+            return { state: "seller_unavailable" };
+        }
+        return mediaContext(media);
+    }
+
+    if (scope === "self") {
+        const seller = configured(options.seller, verifiedOwnerRow);
+        if (!seller) {
+            return { state: "not_found" };
+        }
+        if (input.p_cms_user_id === null) {
+            return { state: "identity_required" };
+        }
+        return seller.cms_user_id === input.p_cms_user_id ? mediaContext(media) : { state: "not_found" };
+    }
+    return { state: "invalid_scope" };
+}
+
+function mediaContext(media: JsonRecord | null): JsonRecord {
+    if (!media) {
+        return { state: "not_found" };
+    }
+    return {
+        state: "ok",
+        media: {
+            id: media.id,
+            storage_bucket: media.storage_bucket,
+            storage_path: media.storage_path,
+            mime_type: media.mime_type,
+        },
+    };
 }
 
 function tableRow(table: string, options: OfferImageFixtureOptions): JsonRecord | null {

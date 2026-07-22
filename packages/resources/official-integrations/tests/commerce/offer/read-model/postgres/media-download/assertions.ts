@@ -1,13 +1,10 @@
 import { expect } from "bun:test";
 import { capturedFetches, supabaseUrl, type CapturedFetch } from "../../../../harness";
-import { offerImageMediaId, offerImageOfferId, offerImagePath, offerImageSellerId } from "./fixtures";
+import { offerImageMediaId, offerImagePath } from "./fixtures";
 
 export type OfferImageScope = "public" | "self" | "admin";
 
-type ExpectedRead = {
-    table: string;
-    search: string;
-};
+const downloadContextFunction = "get_offer_media_download_context";
 
 export function callsSince(index: number): CapturedFetch[] {
     return capturedFetches().slice(index);
@@ -16,9 +13,11 @@ export function callsSince(index: number): CapturedFetch[] {
 export function callKinds(calls: CapturedFetch[]): string[] {
     return calls.map((call) => {
         const url = new URL(call.url);
-        return url.pathname.includes("/storage/v1/object/")
-            ? `storage:${call.method}`
-            : url.pathname.split("/").at(-1)!;
+        if (url.pathname.includes("/storage/v1/object/")) {
+            return `storage:${call.method}`;
+        }
+        const resource = url.pathname.split("/").at(-1)!;
+        return url.pathname.includes("/rest/v1/rpc/") ? `rpc:${resource}` : resource;
     });
 }
 
@@ -26,22 +25,21 @@ export function expectNoStorage(calls: CapturedFetch[]): void {
     expect(calls.some((call) => call.url.includes("/storage/v1/object/"))).toBeFalse();
 }
 
-export function expectExactDatabaseReads(scope: OfferImageScope, calls: CapturedFetch[]): void {
+export function expectSingleDownloadContextRpc(scope: OfferImageScope, calls: CapturedFetch[]): void {
     const database = calls.filter((call) => call.url.includes("/rest/v1/"));
-    const expected = expectedReads(scope);
-    expect(database).toHaveLength(expected.length);
-
-    for (const [index, read] of expected.entries()) {
-        const call = database[index]!;
-        const url = new URL(call.url);
-        expect(`${url.pathname}${url.search}`).toBe(`/rest/v1/${read.table}${read.search}`);
-        expect(call.method).toBe("GET");
-        expect(call.headers.get("apikey")).toBe("sb_secret_test");
-        expect(call.headers.get("authorization")).toBeNull();
-        expect(call.headers.get("accept-profile")).toBe("commerce");
-        expect(call.headers.get("content-profile")).toBeNull();
-        expect(call.body).toEqual({});
-    }
+    expect(database).toHaveLength(1);
+    const call = database[0]!;
+    expect(call.url).toBe(`${supabaseUrl}/rest/v1/rpc/${downloadContextFunction}`);
+    expect(call.method).toBe("POST");
+    expect(call.headers.get("apikey")).toBe("sb_secret_test");
+    expect(call.headers.get("authorization")).toBeNull();
+    expect(call.headers.get("accept-profile")).toBe("commerce");
+    expect(call.headers.get("content-profile")).toBe("commerce");
+    expect(call.body).toEqual({
+        p_scope: scope,
+        p_media_id: offerImageMediaId,
+        p_cms_user_id: scope === "self" ? "seller-user-123" : null,
+    });
 }
 
 export function storageSignature(calls: CapturedFetch[]): Record<string, unknown> {
@@ -58,48 +56,6 @@ export function storageSignature(calls: CapturedFetch[]): Record<string, unknown
         contentProfile: call.headers.get("content-profile"),
         body: call.body,
     };
-}
-
-function expectedReads(scope: OfferImageScope): ExpectedRead[] {
-    const media: ExpectedRead = {
-        table: "media",
-        search: `?select=id%2Cstorage_bucket%2Cstorage_path%2Cmime_type&limit=1&id=eq.${offerImageMediaId}`,
-    };
-    if (scope === "admin") {
-        return [media];
-    }
-
-    const ownership: ExpectedRead[] = [
-        {
-            table: "offer_media",
-            search: `?select=offer_id&limit=1&media_id=eq.${offerImageMediaId}`,
-        },
-        {
-            table: "offers",
-            search:
-                scope === "public"
-                    ? `?select=publication_status%2Cseller_id&limit=1&id=eq.${offerImageOfferId}`
-                    : `?select=seller_id&limit=1&id=eq.${offerImageOfferId}`,
-        },
-    ];
-    if (scope === "public") {
-        ownership.push(
-            {
-                table: "settings",
-                search: "?select=require_verified_seller&limit=1&id=eq.default",
-            },
-            {
-                table: "sellers",
-                search: `?select=verification_status&limit=1&id=eq.${offerImageSellerId}`,
-            },
-        );
-    } else {
-        ownership.push({
-            table: "sellers",
-            search: `?select=cms_user_id&limit=1&id=eq.${offerImageSellerId}`,
-        });
-    }
-    return [...ownership, media];
 }
 
 export function fetchCount(): number {
