@@ -3,7 +3,7 @@ import { freshEvent, oldEvent, publicEvent } from "./fixtures";
 import { useClaimReturnDatabase } from "./harness";
 
 describe("Mondial Relay shipment tracking context", () => {
-    test("builds both legacy DTOs from one coherent local read", async () => {
+    test("preserves both legacy DTO snapshots without provider refresh", async () => {
         const database = await useClaimReturnDatabase();
 
         const response = await database.requestContext();
@@ -24,6 +24,8 @@ describe("Mondial Relay shipment tracking context", () => {
         });
         expect(database.calls.map(({ method, pathname }) => [method, pathname])).toEqual([
             ["GET", "/rest/v1/shipments"],
+            ["GET", "/rest/v1/shipments"],
+            ["GET", "/rest/v1/shipment_events"],
         ]);
     });
 
@@ -54,6 +56,7 @@ describe("Mondial Relay shipment tracking context", () => {
         expect(body.tracking.events[0]).toEqual(publicEvent(freshEvent));
         expect(database.calls.map(({ method, pathname }) => [method, pathname])).toEqual([
             ["GET", "/rest/v1/shipments"],
+            ["GET", "/rest/v1/shipments"],
             ["POST", "/WebService.asmx"],
             ["POST", "/rest/v1/shipment_events"],
             ["PATCH", "/rest/v1/shipments"],
@@ -78,7 +81,52 @@ describe("Mondial Relay shipment tracking context", () => {
         });
         expect(database.calls.map(({ method, pathname }) => [method, pathname])).toEqual([
             ["GET", "/rest/v1/shipments"],
+            ["GET", "/rest/v1/shipments"],
             ["POST", "/WebService.asmx"],
+        ]);
+    });
+
+    test("observes tracking becoming stale after the shipment snapshot", async () => {
+        const database = await useClaimReturnDatabase({
+            afterFirstShipmentRead: { tracking_checked_at: "2020-01-01T00:00:00.000Z" },
+        });
+
+        const response = await database.requestContext();
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.shipment.status).toBe("carrier_accepted");
+        expect(body.tracking.status).toBe("collected_by_recipient");
+        expect(database.calls.map(({ method, pathname }) => [method, pathname])).toEqual([
+            ["GET", "/rest/v1/shipments"],
+            ["GET", "/rest/v1/shipments"],
+            ["POST", "/WebService.asmx"],
+            ["POST", "/rest/v1/shipment_events"],
+            ["PATCH", "/rest/v1/shipments"],
+            ["GET", "/rest/v1/shipment_events"],
+        ]);
+    });
+
+    test("skips provider refresh when a terminal shipment wins after the first snapshot", async () => {
+        const database = await useClaimReturnDatabase({
+            refreshDue: true,
+            afterFirstShipmentRead: {
+                status: "collected_by_recipient",
+                recipient_handoff_at: "2026-07-13T12:30:00.000Z",
+            },
+        });
+
+        const response = await database.requestContext();
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.shipment.status).toBe("carrier_accepted");
+        expect(body.tracking.status).toBe("collected_by_recipient");
+        expect(body.tracking.recipientHandoffAt).toBe("2026-07-13T12:30:00.000Z");
+        expect(database.calls.map(({ method, pathname }) => [method, pathname])).toEqual([
+            ["GET", "/rest/v1/shipments"],
+            ["GET", "/rest/v1/shipments"],
+            ["GET", "/rest/v1/shipment_events"],
         ]);
     });
 
