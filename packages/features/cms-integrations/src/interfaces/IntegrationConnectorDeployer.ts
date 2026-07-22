@@ -1,8 +1,8 @@
 import type { IntegrationAnswerValue } from "./Integration";
 
-export type IntegrationConnectorSchemaDeployment = {
-    path: string;
-};
+export type IntegrationConnectorSchemaDeployment =
+    | { path: string; manifest?: never }
+    | { manifest: string; path?: never };
 
 export type IntegrationConnectorFunctionDeployment = {
     name: string;

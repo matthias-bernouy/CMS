@@ -24,6 +24,10 @@ export async function createSupabaseConnectorFixture(options: SupabaseFixtureOpt
     return root;
 }
 
+export function supabaseConnectorRoot(root: string): string {
+    return join(root, "user-account", "versions", "1.0.0", "connectors", "supabase");
+}
+
 export function userAccountDeployment(secret = "cms_abc"): IntegrationConnectorDeployment {
     return {
         integrationKind: "user-account",

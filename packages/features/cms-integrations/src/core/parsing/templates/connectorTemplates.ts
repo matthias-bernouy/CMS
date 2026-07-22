@@ -1,6 +1,7 @@
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import type { DeclarativeConnectorTemplate } from "../../../interfaces/Integration";
 import { isRecord, text } from "../definition/values";
+import { parseConnectorSchemas } from "./connectorSchemaTemplates";
 
 export function parseConnectorTemplates(value: unknown): DeclarativeConnectorTemplate[] {
     if (value === undefined || value === null) {
@@ -25,8 +26,12 @@ export function validateConnectorDefinition(connector: DeclarativeConnectorTempl
         }
     }
     for (const schema of connector.schemas ?? []) {
-        if (!schema.path) {
-            throw new IntegrationInputError(`definition.connectors.${connector.provider}.schemas.path`, "is required");
+        const reference = "path" in schema ? schema.path : schema.manifest;
+        if (!reference) {
+            throw new IntegrationInputError(
+                `definition.connectors.${connector.provider}.schemas`,
+                "must define exactly one path or manifest",
+            );
         }
     }
     for (const fn of connector.functions ?? []) {
@@ -76,25 +81,6 @@ function parseConnectorStringList(value: unknown, name: string): string[] {
             throw new IntegrationInputError(`${name}.${index}`, "must be a non-empty string");
         }
         return parsed;
-    });
-}
-
-function parseConnectorSchemas(value: unknown, name: string): NonNullable<DeclarativeConnectorTemplate["schemas"]> {
-    if (!Array.isArray(value)) {
-        throw new IntegrationInputError(name, "must be an array");
-    }
-    return value.map((entry, index) => {
-        if (typeof entry === "string") {
-            return { path: entry };
-        }
-        if (!isRecord(entry)) {
-            throw new IntegrationInputError(`${name}.${index}`, "must be a string or object");
-        }
-        const path = text(entry.path);
-        if (!path) {
-            throw new MissingIntegrationParam(`${name}.${index}.path`);
-        }
-        return { path };
     });
 }
 

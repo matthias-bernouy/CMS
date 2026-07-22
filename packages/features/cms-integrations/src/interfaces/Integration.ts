@@ -76,9 +76,9 @@ export type DeclarativeGeneratedSecretTemplate = {
     prefix?: string;
 };
 
-export type DeclarativeConnectorSchemaTemplate = {
-    path: string;
-};
+export type DeclarativeConnectorSchemaTemplate =
+    | { path: string; manifest?: never }
+    | { manifest: string; path?: never };
 
 export type DeclarativeConnectorFunctionTemplate = {
     name: string;

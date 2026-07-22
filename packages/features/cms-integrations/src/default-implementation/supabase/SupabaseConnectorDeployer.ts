@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import { IntegrationRuntimeError } from "../../core/errors";
 import type {
     IntegrationConnectorDeployer,
@@ -11,7 +10,8 @@ import type {
 import { IntegrationPackageLocator } from "../fs-definition/packageLocator";
 import { resolveExistingPathWithin } from "../fs-definition/repositorySupport";
 import { buildFunctionBody } from "./functionBundle";
-import { requiredText, resolveExistingSupabasePath } from "./paths";
+import { requiredText } from "./paths";
+import { loadSupabaseSqlSchemas } from "./sql/schemaLoader";
 import { SupabaseManagementClient } from "./SupabaseManagementClient";
 import type { SupabaseConnectorDeployerConfig, SupabaseConnectorFunctionSecrets } from "./types";
 
@@ -46,12 +46,11 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
         const connectorRoot = await this.connectorRoot(deployment);
         const resources: IntegrationConnectorResourceResult[] = [];
         let reloadSchemaCache = false;
+        const schemas = await loadSupabaseSqlSchemas(connectorRoot, deployment.schemas);
 
-        for (const schema of deployment.schemas) {
-            const schemaPath = await resolveExistingSupabasePath(connectorRoot, schema.path);
-            const sql = await readFile(schemaPath, "utf-8");
-            await this.client.applySchema(sql);
-            resources.push({ type: "schema", id: schema.path, action: "applied" });
+        for (const schema of schemas) {
+            await this.client.applySchema(schema.sql);
+            resources.push({ type: "schema", id: schema.id, action: "applied" });
             reloadSchemaCache = true;
         }
 
