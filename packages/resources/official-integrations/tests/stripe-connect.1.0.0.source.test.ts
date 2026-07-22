@@ -21,6 +21,9 @@ import { registerAccountOnboardingContracts } from "./stripe-connect/accounts/on
 import { registerPayoutScheduleConcurrencyContracts } from "./stripe-connect/accounts/payout-schedule/concurrency";
 import { registerPayoutScheduleContracts } from "./stripe-connect/accounts/payout-schedule/contracts";
 import { registerPayoutScheduleFailureContracts } from "./stripe-connect/accounts/payout-schedule/failures";
+import { registerPayoutScheduleCleanupContracts } from "./stripe-connect/accounts/payout-schedule/cleanup";
+import { registerPayoutScheduleRiskContracts } from "./stripe-connect/accounts/payout-schedule/risk";
+import { registerPayoutScheduleValidationContracts } from "./stripe-connect/accounts/payout-schedule/validation";
 import { registerOperationAndExceptionDashboardContracts } from "./stripe-connect/dashboard/operations-exceptions.contracts";
 import { registerPaymentDashboardContracts } from "./stripe-connect/dashboard/payments.contracts";
 import { registerPaymentProjectionContracts } from "./stripe-connect/payment-projection/contracts";
@@ -10747,3 +10750,6 @@ registerAccountLifecycleContracts(createAccountHandlerHarness);
 registerPayoutScheduleContracts(createAccountHandlerHarness);
 registerPayoutScheduleFailureContracts(createAccountHandlerHarness);
 registerPayoutScheduleConcurrencyContracts(createAccountHandlerHarness);
+registerPayoutScheduleCleanupContracts(createAccountHandlerHarness);
+registerPayoutScheduleRiskContracts(createAccountHandlerHarness);
+registerPayoutScheduleValidationContracts(createAccountHandlerHarness);

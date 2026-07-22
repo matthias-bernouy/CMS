@@ -18,6 +18,7 @@ export type StripeRequestRecord = {
 export type AccountHandlerHarness = {
     apiKey: string;
     rest: {
+        readonly balanceSettingsUpdateCount: number;
         readonly accountCreationRequests: Array<{ body: JsonRecord; idempotencyKey: string | null }>;
         readonly accountLinkRequests: JsonRecord[];
         readonly externalRequestOrder: string[];
@@ -27,10 +28,14 @@ export type AccountHandlerHarness = {
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;
         failNextAccountReloadAfterTermsAcceptance(): void;
+        failNextPostgrestWrite(table: string, method: "POST" | "PATCH"): void;
+        exposeSellerFinancialRisk(userId: string, amount: number): void;
+        loseNextSellerPayoutSettingsResponse(): void;
         rows(table: string): JsonRecord[];
         pauseNextSellerBalanceSettingsUpdate(): { entered: Promise<void>; resume: () => void };
         seedActiveLegacyAccount(userId: string): void;
         seedPayoutScheduleAccount(userId: string, connected: boolean): void;
+        setConnectedPayoutSettings(interval: string, minimumBalanceEur: number): void;
     };
     edgeRequest(request: Request): Promise<Response>;
     submit(userId: string, role: string | undefined, endpoint: string, body: unknown): Promise<Response>;
