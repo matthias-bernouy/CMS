@@ -9,7 +9,7 @@ describe("Commerce Mondial Relay claim return event contracts", () => {
 
             expect(response.status).toBe(200);
             expect(await response.json()).toEqual({ shipment, tracking, claim: claims[kind] });
-            expect(calls[2]?.body).toEqual(commerceBody(kind));
+            expect(calls.at(-1)?.body).toEqual(commerceBody(kind));
         });
     }
 

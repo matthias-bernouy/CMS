@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { afterAll } from "bun:test";
 import { ClaimReturnDatabase, type Scenario } from "./database";
-import { expeditionNumber } from "./fixtures";
+import { expeditionNumber, expectedExternalOrderId } from "./fixtures";
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 
@@ -35,6 +35,12 @@ export async function useClaimReturnDatabase(scenario: Scenario = {}) {
             const tracking = await edgeRequest("/tracking", { expeditionNumber }, authorization);
             return { shipment, tracking };
         },
+        requestContext: async (expected = expectedExternalOrderId, authorization = "Bearer delivery-test-key") =>
+            await edgeRequest(
+                "/system/shipment-tracking-context",
+                { expeditionNumber, expectedExternalOrderId: expected },
+                authorization,
+            ),
         request: async (
             path: string,
             params: Record<string, string> = {},

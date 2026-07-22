@@ -625,6 +625,130 @@
                         ]
                     },
                     {
+                        "endpointId": "shipmentTrackingContext",
+                        "method": "GET",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/shipment-tracking-context",
+                        "params": [
+                            {
+                                "name": "expeditionNumber",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            },
+                            {
+                                "name": "expectedExternalOrderId",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "shipment": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": { "type": "string" },
+                                                "externalOrderId": { "type": "string", "nullable": true },
+                                                "expeditionNumber": { "type": "string", "nullable": true },
+                                                "status": { "type": "string" },
+                                                "createdAt": { "type": "string" },
+                                                "lastError": { "type": "string", "nullable": true },
+                                                "trackingUrl": { "type": "string", "nullable": true },
+                                                "recipientName": { "type": "string" },
+                                                "recipientEmail": { "type": "string", "nullable": true },
+                                                "recipientPhone": { "type": "string", "nullable": true },
+                                                "recipientAddressLine1": { "type": "string", "nullable": true },
+                                                "recipientAddressLine2": { "type": "string", "nullable": true },
+                                                "recipientPostalCode": { "type": "string" },
+                                                "recipientCity": { "type": "string" },
+                                                "recipientCountry": { "type": "string" },
+                                                "weightGrams": { "type": "number" },
+                                                "packageCount": { "type": "number" },
+                                                "latestEventLabel": { "type": "string", "nullable": true },
+                                                "latestEventAt": { "type": "string", "nullable": true },
+                                                "carrierAcceptedAt": { "type": "string", "nullable": true },
+                                                "arrivedAtPickupPointAt": { "type": "string", "nullable": true },
+                                                "availableForPickupAt": { "type": "string", "nullable": true },
+                                                "recipientHandoffAt": { "type": "string", "nullable": true },
+                                                "pickupExpiredAt": { "type": "string", "nullable": true },
+                                                "returningToSenderAt": { "type": "string", "nullable": true },
+                                                "returnedToSenderAt": { "type": "string", "nullable": true },
+                                                "incidentAt": { "type": "string", "nullable": true },
+                                                "lostAt": { "type": "string", "nullable": true },
+                                                "sellerHandoffDeclaredAt": { "type": "string", "nullable": true },
+                                                "events": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "eventLabel": { "type": "string" },
+                                                            "eventDate": { "type": "string", "nullable": true },
+                                                            "eventTime": { "type": "string", "nullable": true },
+                                                            "normalizedStatus": { "type": "string", "nullable": true },
+                                                            "occurredAt": { "type": "string", "nullable": true },
+                                                            "location": { "type": "string", "nullable": true }
+                                                        }
+                                                    }
+                                                },
+                                                "deliveryRelayLocation": { "type": "string" }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status",
+                                                "recipientName",
+                                                "recipientPostalCode",
+                                                "recipientCity",
+                                                "createdAt"
+                                            ]
+                                        },
+                                        "tracking": {
+                                            "type": "object",
+                                            "properties": {
+                                                "expeditionNumber": { "type": "string" },
+                                                "status": { "type": "string" },
+                                                "latestEventLabel": { "type": "string" },
+                                                "latestEventAt": { "type": "string" },
+                                                "carrierAcceptedAt": { "type": "string" },
+                                                "recipientHandoffAt": { "type": "string" },
+                                                "events": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "eventLabel": { "type": "string" },
+                                                            "eventDate": { "type": "string", "nullable": true },
+                                                            "eventTime": { "type": "string", "nullable": true },
+                                                            "normalizedStatus": { "type": "string", "nullable": true },
+                                                            "occurredAt": { "type": "string", "nullable": true },
+                                                            "location": { "type": "string", "nullable": true }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "required": ["expeditionNumber", "status", "events"]
+                                        }
+                                    },
+                                    "required": ["shipment", "tracking"]
+                                }
+                            }
+                        ]
+                    },
+                    {
                         "endpointId": "relayPoints",
                         "method": "GET",
                         "access": "public",

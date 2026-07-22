@@ -1071,35 +1071,34 @@
         }, "required": ["claimId", "expeditionNumber"] } },
         "output": [{ "status": "200", "body": { "type": "object" } }],
         "steps": [
-          { "id": "shipment", "call": {
-            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipment",
-            "params": { "expeditionNumber": "$input.body.expeditionNumber" }
+          { "id": "deliveryContext", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipmentTrackingContext",
+            "params": {
+              "expeditionNumber": "$input.body.expeditionNumber",
+              "expectedExternalOrderId": { "$concat": ["claim-return:", "$input.body.claimId"] }
+            }
           } },
           { "assert": {
-            "condition": { "equals": ["$steps.shipment.externalOrderId", { "$concat": ["claim-return:", "$input.body.claimId"] }] },
+            "condition": { "equals": ["$steps.deliveryContext.shipment.externalOrderId", { "$concat": ["claim-return:", "$input.body.claimId"] }] },
             "failure": { "status": 409, "error": "Shipment is not bound to this marketplace claim return" }
           } },
-          { "id": "tracking", "call": {
-            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "tracking",
-            "params": { "expeditionNumber": "$input.body.expeditionNumber" }
-          } },
           { "assert": {
-            "condition": { "notEquals": ["$steps.tracking.carrierAcceptedAt", null] },
+            "condition": { "notEquals": ["$steps.deliveryContext.tracking.carrierAcceptedAt", null] },
             "failure": { "status": 409, "error": "Return has no trusted carrier acceptance yet" }
           } },
           { "id": "commerceClaim", "call": {
             "source": "{{dependencies.commerce.sourceId}}", "endpoint": "recordClaimReturnDelivery",
             "body": {
               "claimId": "$input.body.claimId",
-              "providerEventId": { "$concat": ["mondial-relay-return|", "$input.body.expeditionNumber", "|carrier_accepted|", "$steps.tracking.carrierAcceptedAt"] },
+              "providerEventId": { "$concat": ["mondial-relay-return|", "$input.body.expeditionNumber", "|carrier_accepted|", "$steps.deliveryContext.tracking.carrierAcceptedAt"] },
               "providerReference": "$input.body.expeditionNumber",
               "normalizedStatus": "carrier_accepted",
-              "occurredAt": "$steps.tracking.carrierAcceptedAt",
-              "providerEvidence": { "provider": "mondial-relay", "shipmentId": "$steps.shipment.id", "providerStatus": "$steps.tracking.status" }
+              "occurredAt": "$steps.deliveryContext.tracking.carrierAcceptedAt",
+              "providerEvidence": { "provider": "mondial-relay", "shipmentId": "$steps.deliveryContext.shipment.id", "providerStatus": "$steps.deliveryContext.tracking.status" }
             }
           } }
         ],
-        "return": { "status": 200, "body": { "shipment": "$steps.shipment", "tracking": "$steps.tracking", "claim": "$steps.commerceClaim" } }
+        "return": { "status": 200, "body": { "shipment": "$steps.deliveryContext.shipment", "tracking": "$steps.deliveryContext.tracking", "claim": "$steps.commerceClaim" } }
       }
     },
     {
@@ -1117,35 +1116,34 @@
         }, "required": ["claimId", "expeditionNumber"] } },
         "output": [{ "status": "200", "body": { "type": "object" } }],
         "steps": [
-          { "id": "shipment", "call": {
-            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipment",
-            "params": { "expeditionNumber": "$input.body.expeditionNumber" }
+          { "id": "deliveryContext", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipmentTrackingContext",
+            "params": {
+              "expeditionNumber": "$input.body.expeditionNumber",
+              "expectedExternalOrderId": { "$concat": ["claim-return:", "$input.body.claimId"] }
+            }
           } },
           { "assert": {
-            "condition": { "equals": ["$steps.shipment.externalOrderId", { "$concat": ["claim-return:", "$input.body.claimId"] }] },
+            "condition": { "equals": ["$steps.deliveryContext.shipment.externalOrderId", { "$concat": ["claim-return:", "$input.body.claimId"] }] },
             "failure": { "status": 409, "error": "Shipment is not bound to this marketplace claim return" }
           } },
-          { "id": "tracking", "call": {
-            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "tracking",
-            "params": { "expeditionNumber": "$input.body.expeditionNumber" }
-          } },
           { "assert": {
-            "condition": { "notEquals": ["$steps.tracking.recipientHandoffAt", null] },
+            "condition": { "notEquals": ["$steps.deliveryContext.tracking.recipientHandoffAt", null] },
             "failure": { "status": 409, "error": "Return has not been handed to the seller by the carrier" }
           } },
           { "id": "commerceClaim", "call": {
             "source": "{{dependencies.commerce.sourceId}}", "endpoint": "recordClaimReturnDelivery",
             "body": {
               "claimId": "$input.body.claimId",
-              "providerEventId": { "$concat": ["mondial-relay-return|", "$input.body.expeditionNumber", "|recipient_handoff|", "$steps.tracking.recipientHandoffAt"] },
+              "providerEventId": { "$concat": ["mondial-relay-return|", "$input.body.expeditionNumber", "|recipient_handoff|", "$steps.deliveryContext.tracking.recipientHandoffAt"] },
               "providerReference": "$input.body.expeditionNumber",
               "normalizedStatus": "recipient_handoff",
-              "occurredAt": "$steps.tracking.recipientHandoffAt",
-              "providerEvidence": { "provider": "mondial-relay", "shipmentId": "$steps.shipment.id", "providerStatus": "$steps.tracking.status" }
+              "occurredAt": "$steps.deliveryContext.tracking.recipientHandoffAt",
+              "providerEvidence": { "provider": "mondial-relay", "shipmentId": "$steps.deliveryContext.shipment.id", "providerStatus": "$steps.deliveryContext.tracking.status" }
             }
           } }
         ],
-        "return": { "status": 200, "body": { "shipment": "$steps.shipment", "tracking": "$steps.tracking", "claim": "$steps.commerceClaim" } }
+        "return": { "status": 200, "body": { "shipment": "$steps.deliveryContext.shipment", "tracking": "$steps.deliveryContext.tracking", "claim": "$steps.commerceClaim" } }
       }
     },
     {

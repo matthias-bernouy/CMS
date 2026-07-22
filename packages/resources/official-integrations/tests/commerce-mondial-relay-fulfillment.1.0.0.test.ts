@@ -1381,23 +1381,23 @@ describe("commerce-mondial-relay-fulfillment 1.0.0", () => {
                     fetchImpl: async (input, init) => {
                         const req = new Request(input, init);
                         const path = new URL(req.url).pathname;
-                        if (path === "/shipment") {
+                        if (path === "/shipmentTrackingContext") {
                             expect(new URL(req.url).searchParams.get("expeditionNumber")).toBe("87654321");
                             return Response.json({
-                                id: "return-shipment-7",
-                                externalOrderId: "claim-return:7",
-                                expeditionNumber: "87654321",
-                                status: "collected_by_recipient",
-                                recipientHandoffAt: "2026-07-13T14:30:00.000Z",
-                            });
-                        }
-                        if (path === "/tracking") {
-                            return Response.json({
-                                expeditionNumber: "87654321",
-                                status: "collected_by_recipient",
-                                carrierAcceptedAt: "2026-07-12T09:00:00.000Z",
-                                recipientHandoffAt: "2026-07-13T14:30:00.000Z",
-                                events: [],
+                                shipment: {
+                                    id: "return-shipment-7",
+                                    externalOrderId: "claim-return:7",
+                                    expeditionNumber: "87654321",
+                                    status: "collected_by_recipient",
+                                    recipientHandoffAt: "2026-07-13T14:30:00.000Z",
+                                },
+                                tracking: {
+                                    expeditionNumber: "87654321",
+                                    status: "collected_by_recipient",
+                                    carrierAcceptedAt: "2026-07-12T09:00:00.000Z",
+                                    recipientHandoffAt: "2026-07-13T14:30:00.000Z",
+                                    events: [],
+                                },
                             });
                         }
                         if (path === "/recordClaimReturnDelivery") {
@@ -2134,6 +2134,38 @@ async function sourcesForFulfillment(): Promise<InMemorySourceRepository> {
             "system",
         ),
         endpoint(
+            "shipmentTrackingContext",
+            "GET",
+            "/shipmentTrackingContext",
+            object({
+                shipment: object({
+                    id: string(),
+                    externalOrderId: string(),
+                    expeditionNumber: string(),
+                    status: string(),
+                    recipientHandoffAt: string(),
+                }),
+                tracking: object({
+                    expeditionNumber: string(),
+                    status: string(),
+                    carrierAcceptedAt: string(),
+                    recipientHandoffAt: string(),
+                    events: array({
+                        providerEventKey: string(),
+                        normalizedStatus: string(),
+                        occurredAt: string(),
+                        eventLabel: string(),
+                        eventDate: string(),
+                        eventTime: string(),
+                        location: string(),
+                    }),
+                }),
+            }),
+            { expeditionNumber: string(), expectedExternalOrderId: string() },
+            undefined,
+            "system",
+        ),
+        endpoint(
             "issueLabelAccess",
             "POST",
             "/issueLabelAccess",
@@ -2358,6 +2390,7 @@ function deliveryPath(path: string): boolean {
         "/shipmentForExternalOrder",
         "/shipment",
         "/tracking",
+        "/shipmentTrackingContext",
         "/issueLabelAccess",
         "/declareSellerHandoff",
         "/reconcileShipments",

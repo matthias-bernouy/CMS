@@ -19,7 +19,7 @@ describe("Commerce Mondial Relay claim return event boundaries", () => {
 
             expect(response.status).toBe(409);
             expect(await response.json()).toEqual({ error: message });
-            expect(calls.map(({ url }) => url.pathname)).toEqual(["/shipment", "/tracking"]);
+            expect(calls.map(({ url }) => url.pathname)).toEqual(["/shipmentTrackingContext"]);
         });
     }
 
@@ -37,9 +37,6 @@ describe("Commerce Mondial Relay claim return event boundaries", () => {
 
     test("does not call Commerce after a Delivery tracking failure", async () => {
         const { response, calls } = await executeClaimReturnEvent("carrier", (request) => {
-            if (new URL(request.url).pathname === "/shipment") {
-                return successfulResponder("carrier")(request);
-            }
             return Response.json({ error: "private provider failure" }, { status: 502 });
         });
 
@@ -48,7 +45,7 @@ describe("Commerce Mondial Relay claim return event boundaries", () => {
             error: "Function execution failed",
             correlationId: expect.any(String),
         });
-        expect(calls.map(({ url }) => url.pathname)).toEqual(["/shipment", "/tracking"]);
+        expect(calls.map(({ url }) => url.pathname)).toEqual(["/shipmentTrackingContext"]);
     });
 
     test("does not attempt tracking after a missing shipment", async () => {
@@ -57,7 +54,7 @@ describe("Commerce Mondial Relay claim return event boundaries", () => {
         );
 
         expect(response.status).toBe(502);
-        expect(calls.map(({ url }) => url.pathname)).toEqual(["/shipment"]);
+        expect(calls.map(({ url }) => url.pathname)).toEqual(["/shipmentTrackingContext"]);
         expect(JSON.stringify(await response.json())).not.toContain("shipment not found");
     });
 });

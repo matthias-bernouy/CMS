@@ -51,6 +51,12 @@ export function successfulResponder(
 ): Responder {
     return (request) => {
         const path = new URL(request.url).pathname;
+        if (path === "/shipmentTrackingContext") {
+            return Response.json({
+                shipment: { ...shipment, ...overrides.shipment },
+                tracking: { ...tracking, ...overrides.tracking },
+            });
+        }
         if (path === "/shipment") {
             return Response.json({ ...shipment, ...overrides.shipment });
         }

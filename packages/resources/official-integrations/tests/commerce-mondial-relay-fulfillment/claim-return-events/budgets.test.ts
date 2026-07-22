@@ -7,12 +7,13 @@ describe("Commerce Mondial Relay claim return event call budgets", () => {
 
         expect(response.status).toBe(200);
         expect(calls.map(({ method, url }) => [method, url.pathname])).toEqual([
-            ["GET", "/shipment"],
-            ["GET", "/tracking"],
+            ["GET", "/shipmentTrackingContext"],
             ["POST", "/recordClaimReturnDelivery"],
         ]);
-        expect(Object.fromEntries(calls[0]!.url.searchParams)).toEqual({ expeditionNumber: "87654321" });
-        expect(Object.fromEntries(calls[1]!.url.searchParams)).toEqual({ expeditionNumber: "87654321" });
+        expect(Object.fromEntries(calls[0]!.url.searchParams)).toEqual({
+            expeditionNumber: "87654321",
+            expectedExternalOrderId: "claim-return:7",
+        });
     });
 
     test("stops after one Delivery call when the shipment binding differs", async () => {
@@ -23,6 +24,6 @@ describe("Commerce Mondial Relay claim return event call budgets", () => {
 
         expect(response.status).toBe(409);
         expect(await response.json()).toEqual({ error: "Shipment is not bound to this marketplace claim return" });
-        expect(calls.map(({ url }) => url.pathname)).toEqual(["/shipment"]);
+        expect(calls.map(({ url }) => url.pathname)).toEqual(["/shipmentTrackingContext"]);
     });
 });

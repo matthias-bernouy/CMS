@@ -25,6 +25,7 @@ import {
     readRelaySelectionSetupContext,
     trackingSummaryContextByExpedition,
 } from "./shipment/read-contexts.ts";
+import { readShipmentTrackingContext } from "./shipment/tracking-context.ts";
 import { mondialRelayConnectEndpoint } from "./provider/provider-endpoints.ts";
 import { reconcileDueShipments, reconcileShipment, trackingRefreshDue } from "./shipment/reconciliation.ts";
 import { relayPointsFromUrl } from "./provider/relay.ts";
@@ -76,6 +77,9 @@ Deno.serve(async (request) => {
         }
         if (request.method === "GET" && route === "/system/shipment-for-external-order") {
             return await shipmentForExternalOrder(request);
+        }
+        if (request.method === "GET" && route === "/system/shipment-tracking-context") {
+            return await systemShipmentTrackingContext(request);
         }
         if (request.method === "POST" && route === "/shipments") {
             return await createShipment(request);
@@ -218,6 +222,18 @@ async function shipmentForExternalOrder(request: Request): Promise<Response> {
     const externalOrderId = requiredQuery(new URL(request.url), "externalOrderId");
     const row = await shipmentWithEventsRowByExternalOrderId(externalOrderId);
     return json({ items: row ? [shipmentTrackingJson(row)] : [] });
+}
+
+async function systemShipmentTrackingContext(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+    const url = new URL(request.url);
+    const expeditionNumber = requiredQuery(url, "expeditionNumber");
+    const expectedExternalOrderId = requiredQuery(url, "expectedExternalOrderId");
+    const context = await readShipmentTrackingContext(expeditionNumber, expectedExternalOrderId);
+    return json({
+        shipment: shipmentDetailJson(context.shipment),
+        tracking: trackingJson(expeditionNumber, context.tracking, context.events),
+    });
 }
 
 async function createShipment(request: Request): Promise<Response> {
@@ -1031,7 +1047,11 @@ async function tracking(request: Request): Promise<Response> {
         });
     }
     const events = await shipmentEvents(String(row.id));
-    return json({
+    return json(trackingJson(expeditionNumber, row, events));
+}
+
+function trackingJson(expeditionNumber: string, row: JsonRecord, events: JsonRecord[]): JsonRecord {
+    return {
         expeditionNumber,
         status: row.status ?? "created",
         latestEventLabel: row.latest_event_label ?? "",
@@ -1039,7 +1059,7 @@ async function tracking(request: Request): Promise<Response> {
         carrierAcceptedAt: row.carrier_accepted_at ?? "",
         recipientHandoffAt: row.recipient_handoff_at ?? "",
         events: events.map(publicTrackingEvent),
-    });
+    };
 }
 
 async function parseTrackingLink(request: Request): Promise<Response> {

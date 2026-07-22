@@ -26,9 +26,22 @@ const shipmentShape = object({
 
 export async function claimReturnEventSources(): Promise<InMemorySourceRepository> {
     const repository = new InMemorySourceRepository();
-    await repository.createSource(source("delivery", [shipmentEndpoint(), trackingEndpoint()]));
+    await repository.createSource(
+        source("delivery", [shipmentEndpoint(), trackingEndpoint(), shipmentTrackingContextEndpoint()]),
+    );
     await repository.createSource(source("commerce", [recordClaimEndpoint()]));
     return repository;
+}
+
+function shipmentTrackingContextEndpoint(): SourceEndpoint {
+    return endpoint(
+        "delivery",
+        "shipmentTrackingContext",
+        "GET",
+        "/shipmentTrackingContext",
+        object({ shipment: shipmentShape, tracking: trackingShape }, ["shipment", "tracking"]),
+        ["expeditionNumber", "expectedExternalOrderId"],
+    );
 }
 
 function shipmentEndpoint(): SourceEndpoint {
