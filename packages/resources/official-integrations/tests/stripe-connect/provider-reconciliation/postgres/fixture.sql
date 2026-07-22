@@ -49,6 +49,8 @@ begin
     );
     delete from stripe_connect.financial_operations
     where business_key like 'provider-reconciliation-pg-%';
+    delete from stripe_connect.payment_lifecycle_guards
+    where client_reference_id like 'provider-reconciliation-pg-%';
     delete from stripe_connect.payments
     where client_reference_id like 'provider-reconciliation-pg-%';
     delete from stripe_connect.accounts

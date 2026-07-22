@@ -54,6 +54,12 @@ where procedure.oid in (
         'stripe_connect.read_financial_operation_recovery_context(bigint,bigint,text)'
     ),
     pg_catalog.to_regprocedure(
+        'stripe_connect.reserve_payment_cancellation_intent(text,text,text)'
+    ),
+    pg_catalog.to_regprocedure(
+        'stripe_connect.reserve_payment_cancellation_operation(bigint,text,text,jsonb)'
+    ),
+    pg_catalog.to_regprocedure(
         'stripe_connect.claim_commerce_projection_outbox(text,integer)'
     ),
     pg_catalog.to_regprocedure(
@@ -63,8 +69,13 @@ where procedure.oid in (
 
 do $fresh_install$
 begin
+    if pg_catalog.to_regprocedure(
+        'stripe_connect.reserve_payment_cancellation_operation(bigint,text,text,jsonb)'
+    ) is null then
+        raise exception 'provider reconciliation: fresh install omitted cancellation operation RPC';
+    end if;
     if (select pg_catalog.count(*)
-        from provider_reconciliation_install_fingerprint) <> 11 then
+        from provider_reconciliation_install_fingerprint) <> 13 then
         raise exception 'provider reconciliation: fresh install omitted RPCs';
     end if;
 end;

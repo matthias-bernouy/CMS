@@ -10,6 +10,10 @@ set statement_timeout = '15s';
 
 \ir fixture.sql
 \ir security.sql
+\ir behavior/payment-cancellation/lifecycle.sql
+\ir behavior/payment-cancellation/security.sql
+\ir behavior/payment-cancellation/operation.sql
+\ir behavior/payment-cancellation/freshness.sql
 \ir behavior/read-operations.sql
 \ir behavior/read-contexts/payment-ledger.sql
 \ir behavior/read-contexts/payment-local.sql
