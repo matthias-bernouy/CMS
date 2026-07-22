@@ -202,7 +202,12 @@ import type {
     StripeRefund,
     StripeTransfer,
 } from "./provider/types.ts";
-import { listFinancialOperations } from "./routes/admin/dashboard.ts";
+import {
+    getProviderException,
+    listFinancialOperations,
+    listProviderExceptions,
+    requeueCommerceProjection,
+} from "./routes/admin/dashboard.ts";
 import { getStripeDispute, listStripeDisputes } from "./routes/disputes/dashboard.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { connectConfig, health } from "./routes/system.ts";
@@ -2289,41 +2294,6 @@ async function acceptStripeDispute(request: Request): Promise<Response> {
     });
 }
 
-async function listProviderExceptions(request: Request): Promise<Response> {
-    requireDashboardAdmin(request);
-    return json(
-        await listTable(request, "provider_exceptions", "*", "exception_type,message", "exceptions", "detected_at"),
-    );
-}
-
-async function getProviderException(request: Request): Promise<Response> {
-    requireDashboardAdmin(request);
-    const exceptionId = requiredQueryInteger(request, "id");
-    const exception = await getRowByField<JsonRecord>("provider_exceptions", "id", String(exceptionId), "*");
-    if (!exception) {
-        throw new HttpError(404, "provider exception not found");
-    }
-    return json(exception);
-}
-
-async function requeueCommerceProjection(request: Request): Promise<Response> {
-    const { userId } = requireDashboardAdmin(request);
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, ["projectionId", "expectedInterventionRevision", "reason"]);
-    const result = await callRpcObject<JsonRecord>("requeue_commerce_projection_outbox", {
-        p_projection_id: requiredInteger(body, "projectionId"),
-        p_expected_intervention_revision: requiredInteger(body, "expectedInterventionRevision"),
-        p_actor_id: userId,
-        p_reason: requiredString(body, "reason", 2000),
-    });
-    return json({
-        projectionId: result.id,
-        projectionStatus: result.projection_status,
-        interventionRevision: result.intervention_revision,
-        nextAttemptAt: result.next_attempt_at,
-    });
-}
-
 async function reconcileProviderPayment(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
     const body = await readJsonObject(request);
@@ -3679,38 +3649,6 @@ function optionalOperationInteger(operation: FinancialOperationRow, name: string
         throw new Error(`operation ${operation.id} has invalid ${name}`);
     }
     return Number(value);
-}
-
-async function listTable(
-    request: Request,
-    table: string,
-    select: string,
-    searchFields: string,
-    itemsKey: string,
-    orderField = "created_at",
-): Promise<JsonRecord> {
-    const params = new URL(request.url).searchParams;
-    const query = new URLSearchParams({
-        select,
-        order: `${orderField}.desc`,
-        limit: String(queryLimit(params.get("limit"))),
-    });
-    const search = searchPattern(params.get("q"));
-    if (search) {
-        query.set(
-            "or",
-            `(${searchFields
-                .split(",")
-                .map((field) => `${field}.ilike.${search}`)
-                .join(",")})`,
-        );
-    }
-    const status = params.get("status")?.trim();
-    if (status) {
-        query.set("status", `eq.${status}`);
-    }
-    const rows = await listRows<JsonRecord>(`${table}?${query.toString()}`);
-    return { [itemsKey]: rows, total: rows.length };
 }
 
 function assertTransferReplay(
