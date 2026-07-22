@@ -6,7 +6,7 @@ import {
     shipmentWithEventsRowByExpedition,
     shipmentWithEventsRowByExternalOrderId,
     shipmentWithEventsRowById,
-} from "../../shipment/supabase.ts";
+} from "../../shipment/supabase/index.ts";
 import type { JsonRecord } from "../../shipment/types.ts";
 import { shipmentDetailJson, shipmentTrackingJson, toShipmentJson, trackingJson } from "./presentation.ts";
 

@@ -1,5 +1,5 @@
 import { HttpError, json } from "../../http.ts";
-import { updateShipment } from "../../shipment/supabase.ts";
+import { updateShipment } from "../../shipment/supabase/index.ts";
 import type { JsonRecord } from "../../shipment/types.ts";
 
 export function shipmentReplayResponse(row: JsonRecord): Response {

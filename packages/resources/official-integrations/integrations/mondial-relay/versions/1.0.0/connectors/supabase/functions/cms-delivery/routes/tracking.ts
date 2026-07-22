@@ -1,7 +1,7 @@
 import { HttpError, json, requireCmsRequest, requiredQuery } from "../http.ts";
 import { trackingSummaryContextByExpedition } from "../shipment/read-contexts.ts";
 import { reconcileShipment, trackingRefreshDue } from "../shipment/reconciliation.ts";
-import { shipmentEvents, shipmentRowByExpedition } from "../shipment/supabase.ts";
+import { shipmentEvents, shipmentRowByExpedition } from "../shipment/supabase/index.ts";
 import type { JsonRecord } from "../shipment/types.ts";
 import { publicTrackingEvent, trackingJson } from "./shipments/presentation.ts";
 

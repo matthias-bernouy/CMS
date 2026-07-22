@@ -1,5 +1,5 @@
 import { HttpError, isRecord } from "../http.ts";
-import { restJson } from "./supabase.ts";
+import { restJson } from "./supabase/index.ts";
 import type { JsonRecord } from "./types.ts";
 
 export type RelaySelectionContext =

@@ -6,7 +6,7 @@ import {
     claimShipmentsDueForTracking,
     updateShipment,
     upsertShipmentEvents,
-} from "./supabase.ts";
+} from "./supabase/index.ts";
 import type { JsonRecord } from "./types.ts";
 
 export async function reconcileShipment(row: JsonRecord): Promise<JsonRecord> {

@@ -1,5 +1,5 @@
 import { HttpError, json, queryText, readJsonObject, requireCmsRequest, requireCmsWriteRequest } from "../../http.ts";
-import { settingsRow, upsertSettingsRow } from "../../shipment/supabase.ts";
+import { settingsRow, upsertSettingsRow } from "../../shipment/supabase/index.ts";
 import { settingsFromRow, settingsJson } from "./presentation.ts";
 import { settingsRowFromBody } from "./update.ts";
 

@@ -1,6 +1,6 @@
 import { HttpError, isRecord } from "../http.ts";
 import { reconcileShipment, trackingRefreshDue } from "./reconciliation.ts";
-import { shipmentEvents, shipmentWithEventsRowByExpedition } from "./supabase.ts";
+import { shipmentEvents, shipmentWithEventsRowByExpedition } from "./supabase/index.ts";
 import type { JsonRecord } from "./types.ts";
 
 export type ShipmentTrackingContext = {

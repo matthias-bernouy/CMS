@@ -6,7 +6,7 @@ import {
     insertShipmentRecoveryEvent,
     shipmentRowById,
     updateShipment,
-} from "./supabase.ts";
+} from "./supabase/index.ts";
 import type { JsonRecord } from "./types.ts";
 
 export async function declareSellerHandoff(externalOrderId: string, sellerCmsUserId: string): Promise<JsonRecord> {

@@ -2,7 +2,7 @@ import { HttpError, json, readJsonObject, requireCmsWriteRequest } from "../../h
 import { relayPointsFromUrl } from "../../provider/relay.ts";
 import { stringValue } from "../../shipment/payload.ts";
 import { readRelaySelectionSetupContext } from "../../shipment/read-contexts.ts";
-import { reserveDeliveryQuote } from "../../shipment/supabase.ts";
+import { reserveDeliveryQuote } from "../../shipment/supabase/index.ts";
 import { requiredBodyInteger, requiredBodyText } from "../body.ts";
 import { settingsFromRow } from "../settings/presentation.ts";
 import { deliveryQuoteJson } from "./presentation.ts";

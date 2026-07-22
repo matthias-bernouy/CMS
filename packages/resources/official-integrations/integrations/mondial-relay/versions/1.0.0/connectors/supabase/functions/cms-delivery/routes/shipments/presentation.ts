@@ -1,5 +1,5 @@
 import { isRecord } from "../../http.ts";
-import { camelizeRecord } from "../../shipment/supabase.ts";
+import { camelizeRecord } from "../../shipment/supabase/index.ts";
 import type { JsonRecord } from "../../shipment/types.ts";
 
 export function trackingJson(expeditionNumber: string, row: JsonRecord, events: JsonRecord[]): JsonRecord {

@@ -10,7 +10,7 @@ export {
     statusAfterObservation,
 } from "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/provider/tracking-status.ts";
 export { handleError } from "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/http.ts";
-export { dataApiError } from "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/shipment/supabase.ts";
+export { dataApiError } from "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/shipment/supabase/index.ts";
 export * from "./support/fixtures/definition.ts";
 export * from "./support/fixtures/delivery.ts";
 export * from "./support/harness.ts";

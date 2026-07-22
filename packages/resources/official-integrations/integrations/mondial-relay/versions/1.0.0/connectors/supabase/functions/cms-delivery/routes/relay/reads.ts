@@ -1,7 +1,7 @@
 import { HttpError, json, requireCmsRequest, requiredQuery } from "../../http.ts";
 import { relayPointsFromUrl } from "../../provider/relay.ts";
 import { readRelaySelectionContext } from "../../shipment/read-contexts.ts";
-import { settingsRow } from "../../shipment/supabase.ts";
+import { settingsRow } from "../../shipment/supabase/index.ts";
 import { settingsFromRow } from "../settings/presentation.ts";
 import { deliveryQuoteJson, relaySelectionJson } from "./presentation.ts";
 

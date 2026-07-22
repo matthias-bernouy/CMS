@@ -17,7 +17,7 @@ import {
     projectionHealth,
     reviewShipmentEventProjection,
     shipmentProjectionExceptionRows,
-} from "../shipment/supabase.ts";
+} from "../shipment/supabase/index.ts";
 import { requiredBodyInteger, requiredBodyText } from "./body.ts";
 
 export async function deliveryProjectionHealth(request: Request): Promise<Response> {
