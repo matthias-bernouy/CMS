@@ -1,24 +1,27 @@
 import { describe, expect, test } from "bun:test";
-import { expectRpc, installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "./harness";
+import {
+    capturedFetches,
+    expectRpc,
+    installCommerceTestEnvironment,
+    jsonResponse,
+    requestCommerce,
+    setRestResponder,
+} from "./harness";
 
 installCommerceTestEnvironment();
 
 describe("commerce order requests", () => {
     test("resolves protected-checkout seller identities without creating or mutating an order", async () => {
-        const requestedPaths: string[] = [];
         setRestResponder((request) => {
             const url = new URL(request.url);
-            requestedPaths.push(`${url.pathname}?${url.searchParams.toString()}`);
-            if (url.pathname.endsWith("/offers")) {
-                expect(url.searchParams.get("id")).toBe("in.(91)");
-                return jsonResponse([{ id: 91, seller_id: 7 }]);
-            }
-            if (url.pathname.endsWith("/orders")) {
-                expect(url.searchParams.get("id")).toBe("eq.42");
-                return jsonResponse([{ id: 42, seller_id: 7, buyer_cms_user_id: "buyer-user-456" }]);
-            }
-            if (url.pathname.endsWith("/sellers")) {
-                return jsonResponse([{ id: 7, kind: "user", cms_user_id: "seller-user-123" }]);
+            if (url.pathname.endsWith("/rpc/get_protected_seller_context")) {
+                return jsonResponse({
+                    state: "ok",
+                    context: {
+                        seller_cms_user_id: "seller-user-123",
+                        buyer_cms_user_id: "buyer-user-456",
+                    },
+                });
             }
             return jsonResponse({ error: "unexpected request" }, 500);
         });
@@ -42,18 +45,25 @@ describe("commerce order requests", () => {
             sellerCmsUserId: "seller-user-123",
             buyerCmsUserId: "buyer-user-456",
         });
-        expect(requestedPaths.filter((path) => path.startsWith("/rest/v1/sellers?"))).toHaveLength(2);
-        expect(requestedPaths.every((path) => !path.includes("rpc/create_order_from_offers"))).toBeTrue();
+        expect(capturedFetches().map((call) => call.body)).toEqual([
+            {
+                p_scope: "checkout",
+                p_offer_ids: [91],
+                p_order_id: null,
+                p_buyer_cms_user_id: "buyer-user-456",
+            },
+            {
+                p_scope: "payment",
+                p_offer_ids: null,
+                p_order_id: 42,
+                p_buyer_cms_user_id: "buyer-user-456",
+            },
+        ]);
+        expect(capturedFetches().every((call) => !call.url.includes("rpc/create_order_from_offers"))).toBeTrue();
     });
 
     test("does not disclose an order seller context to another buyer", async () => {
-        setRestResponder((request) => {
-            const url = new URL(request.url);
-            if (url.pathname.endsWith("/orders")) {
-                return jsonResponse([{ id: 42, seller_id: 7, buyer_cms_user_id: "actual-buyer" }]);
-            }
-            return jsonResponse({ error: "seller lookup must not run" }, 500);
-        });
+        setRestResponder(() => jsonResponse({ state: "order_not_found" }));
 
         const response = await requestCommerce("/system/protected-payment/seller-context", {
             userId: "other-buyer",
@@ -62,6 +72,7 @@ describe("commerce order requests", () => {
 
         expect(response.status).toBe(404);
         expect(await response.json()).toEqual({ error: "order not found" });
+        expect(capturedFetches()).toHaveLength(1);
     });
 
     test("enriches order lists with one bounded read-model query", async () => {

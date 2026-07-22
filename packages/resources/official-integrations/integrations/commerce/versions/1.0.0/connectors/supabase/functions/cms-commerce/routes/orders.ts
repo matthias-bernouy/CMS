@@ -2,9 +2,10 @@ import { cmsUserId } from "../core/auth.ts";
 import { HttpError } from "../core/errors.ts";
 import { json } from "../core/http.ts";
 import { camelize, integer, isRecord, readJsonObject, requiredText, text } from "../core/records.ts";
-import { one, restJson, rpc } from "../core/rest.ts";
+import { rpc } from "../core/rest.ts";
 import type { JsonRecord } from "../core/types.ts";
 import { publicOrderMetadataDefinitions, withPublicOrderResult } from "../core/order-metadata.ts";
+import { loadProtectedSellerContext } from "./order/read-model/contexts/protected-seller.ts";
 
 const paymentContextFunctionName = "get_order_payment_context";
 const paymentContextFields = ["id", "public_id", "buyer_cms_user_id"] as const;
@@ -59,19 +60,19 @@ export async function getProtectedCheckoutSellerContext(request: Request): Promi
             }),
         ),
     ];
-    const params = new URLSearchParams({
-        select: "id,seller_id",
-        id: `in.(${offerIds.join(",")})`,
-    });
-    const offers = await restJson<JsonRecord[]>(`offers?${params.toString()}`);
-    if (offers.length !== offerIds.length) {
-        throw new HttpError(404, "offer not found");
-    }
-    const sellerIds = [...new Set(offers.map((offer) => integer(offer.seller_id, "seller id", true)!))];
-    if (sellerIds.length !== 1) {
-        throw new HttpError(409, "one protected order cannot contain multiple sellers");
-    }
-    return json(await protectedSellerContext(sellerIds[0]!, cmsUserId(request)));
+    const buyerCmsUserId = text(request.headers.get("x-cms-user-id"));
+    return json(
+        await loadProtectedSellerContext(
+            "checkout",
+            {
+                p_scope: "checkout",
+                p_offer_ids: offerIds,
+                p_order_id: null,
+                p_buyer_cms_user_id: buyerCmsUserId ?? null,
+            },
+            buyerCmsUserId,
+        ),
+    );
 }
 
 export async function getProtectedPaymentSellerContext(request: Request): Promise<Response> {
@@ -81,11 +82,18 @@ export async function getProtectedPaymentSellerContext(request: Request): Promis
         throw new HttpError(400, "orderId must be positive");
     }
     const buyerCmsUserId = cmsUserId(request);
-    const order = await one("orders", { id: orderId }, "id,seller_id,buyer_cms_user_id");
-    if (!order || order.buyer_cms_user_id !== buyerCmsUserId) {
-        throw new HttpError(404, "order not found");
-    }
-    return json(await protectedSellerContext(integer(order.seller_id, "seller id", true)!, buyerCmsUserId));
+    return json(
+        await loadProtectedSellerContext(
+            "payment",
+            {
+                p_scope: "payment",
+                p_offer_ids: null,
+                p_order_id: orderId,
+                p_buyer_cms_user_id: buyerCmsUserId,
+            },
+            buyerCmsUserId,
+        ),
+    );
 }
 
 export async function getOrderPaymentContext(request: Request): Promise<Response> {
@@ -107,15 +115,6 @@ export async function getOrderPaymentContext(request: Request): Promise<Response
         throw invalidPaymentContext();
     }
     return json(projectPaymentContext(result.context));
-}
-
-async function protectedSellerContext(sellerId: number, buyerCmsUserId: string): Promise<JsonRecord> {
-    const seller = await one("sellers", { id: sellerId }, "id,kind,cms_user_id");
-    const sellerCmsUserId = text(seller?.cms_user_id);
-    if (!seller || seller.kind !== "user" || !sellerCmsUserId) {
-        throw new HttpError(409, "protected marketplace seller identity is unavailable");
-    }
-    return { sellerCmsUserId, buyerCmsUserId };
 }
 
 function projectPaymentContext(value: unknown): JsonRecord {

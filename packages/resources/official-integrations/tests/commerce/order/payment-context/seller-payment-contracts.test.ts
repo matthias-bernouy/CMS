@@ -2,115 +2,75 @@ import { describe, expect, test } from "bun:test";
 import { installCommerceTestEnvironment, requestCommerce } from "../../harness";
 import {
     buyerCmsUserId,
-    expectDatabaseReads,
-    expectQuery,
+    expectSellerContextRpc,
     paymentRoute,
     responseBody,
     sellerCmsUserId,
-    useSellerContextData,
+    sellerContextResult,
+    useSellerContextResponse,
 } from "./seller-context-fixtures";
 
 installCommerceTestEnvironment();
 
+const expectedPaymentBody = {
+    p_scope: "payment",
+    p_offer_ids: null,
+    p_order_id: 42,
+    p_buyer_cms_user_id: buyerCmsUserId,
+};
+
 describe("commerce protected-payment seller context contracts", () => {
-    test("returns the exact buyer-owned identities through two bounded reads", async () => {
-        useSellerContextData({
-            orders: [
-                {
-                    id: 42,
-                    seller_id: 7,
-                    buyer_cms_user_id: buyerCmsUserId,
-                    shipping_address: { line1: "must not leak" },
-                    billing_address: { line1: "must not leak" },
-                    financial_terms: { seller_proceeds_amount: 8_000 },
-                },
-            ],
-            sellers: [
-                {
-                    id: 7,
-                    kind: "user",
-                    cms_user_id: `  ${sellerCmsUserId}  `,
-                    email: "seller-private@example.test",
-                    stripe_account_id: "acct_must_not_leak",
-                },
-            ],
-        });
+    test("returns only normalized buyer-owned identities through one RPC", async () => {
+        useSellerContextResponse(
+            sellerContextResult({
+                seller_cms_user_id: `  ${sellerCmsUserId}  `,
+                shipping_address: { line1: "must not leak" },
+                billing_address: { line1: "must not leak" },
+                seller_email: "seller-private@example.test",
+                stripe_account_id: "acct_must_not_leak",
+                seller_proceeds_amount: 8_000,
+            }),
+        );
 
         const response = await requestCommerce(paymentRoute, {
-            userId: buyerCmsUserId,
+            userId: `  ${buyerCmsUserId}  `,
             body: { orderId: "42" },
         });
 
         expect(await responseBody(response)).toEqual([200, { sellerCmsUserId, buyerCmsUserId }]);
-        const [order, seller] = expectDatabaseReads(["orders", "sellers"]);
-        expectQuery(order!, {
-            select: "id,seller_id,buyer_cms_user_id",
-            limit: "1",
-            id: "eq.42",
-        });
-        expectQuery(seller!, {
-            select: "id,kind,cms_user_id",
-            limit: "1",
-            id: "eq.7",
-        });
+        expectSellerContextRpc(expectedPaymentBody);
     });
 
-    for (const [label, orders] of [
-        ["is absent", []],
-        ["belongs to another buyer", [{ id: 42, seller_id: 7, buyer_cms_user_id: "other-buyer" }]],
-        ["has no buyer identity", [{ id: 42, seller_id: 7, buyer_cms_user_id: null }]],
+    for (const [label, state, status, error] of [
+        ["missing order", "order_not_found", 404, "order not found"],
+        ["strict stored-buyer mismatch", "order_not_found", 404, "order not found"],
+        ["unavailable seller", "seller_unavailable", 409, "protected marketplace seller identity is unavailable"],
     ] as const) {
-        test(`returns the same not-found contract when the order ${label}`, async () => {
-            useSellerContextData({ orders: [...orders] });
+        test(`preserves the ${label} contract`, async () => {
+            useSellerContextResponse({ state, private_details: "must not leak" });
 
             const response = await requestCommerce(paymentRoute, {
-                userId: buyerCmsUserId,
+                userId: `  ${buyerCmsUserId}  `,
                 body: { orderId: 42 },
             });
 
-            expect(await responseBody(response)).toEqual([404, { error: "order not found" }]);
-            expectDatabaseReads(["orders"]);
+            expect(await responseBody(response)).toEqual([status, { error }]);
+            expectSellerContextRpc(expectedPaymentBody);
         });
     }
 
-    test("does not normalize the stored buyer identity when matching the trimmed caller", async () => {
-        useSellerContextData({
-            orders: [
-                {
-                    id: 42,
-                    seller_id: 7,
-                    buyer_cms_user_id: `  ${buyerCmsUserId}  `,
-                },
-            ],
-        });
+    test("rejects a success context for a different buyer", async () => {
+        useSellerContextResponse(sellerContextResult({ buyer_cms_user_id: "other-buyer" }));
 
         const response = await requestCommerce(paymentRoute, {
-            userId: `  ${buyerCmsUserId}  `,
+            userId: buyerCmsUserId,
             body: { orderId: 42 },
         });
 
-        expect(await responseBody(response)).toEqual([404, { error: "order not found" }]);
-        expectDatabaseReads(["orders"]);
+        expect(await responseBody(response)).toEqual([
+            502,
+            { error: "get_protected_seller_context returned an invalid response" },
+        ]);
+        expectSellerContextRpc(expectedPaymentBody);
     });
-
-    for (const [label, sellers] of [
-        ["absent", []],
-        ["not a user", [{ id: 7, kind: "merchant", cms_user_id: null }]],
-        ["missing its CMS user id", [{ id: 7, kind: "user", cms_user_id: null }]],
-    ] as const) {
-        test(`rejects a seller that is ${label} after exactly two reads`, async () => {
-            useSellerContextData({ sellers: [...sellers] });
-
-            const response = await requestCommerce(paymentRoute, {
-                userId: buyerCmsUserId,
-                body: { orderId: 42 },
-            });
-
-            expect(await responseBody(response)).toEqual([
-                409,
-                { error: "protected marketplace seller identity is unavailable" },
-            ]);
-            expectDatabaseReads(["orders", "sellers"]);
-        });
-    }
 });

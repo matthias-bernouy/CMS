@@ -2,13 +2,23 @@ import { describe, expect, test } from "bun:test";
 import { capturedFetches, installCommerceTestEnvironment, requestCommerce } from "../../harness";
 import {
     buyerCmsUserId,
-    expectDatabaseReads,
+    expectSellerContextRpc,
     paymentRoute,
     responseBody,
-    useSellerContextData,
+    sellerCmsUserId,
+    sellerContextFunction,
+    useSellerContextFailure,
+    useSellerContextResponse,
 } from "./seller-context-fixtures";
 
 installCommerceTestEnvironment();
+
+const paymentBody = {
+    p_scope: "payment",
+    p_offer_ids: null,
+    p_order_id: 42,
+    p_buyer_cms_user_id: buyerCmsUserId,
+};
 
 describe("commerce protected-payment seller context boundaries", () => {
     test("rejects invalid CMS authentication and methods before PostgREST", async () => {
@@ -50,34 +60,47 @@ describe("commerce protected-payment seller context boundaries", () => {
         expect(capturedFetches()).toEqual([]);
     });
 
-    test("requires actor identity before the order read for a valid selector", async () => {
-        useSellerContextData();
-
+    test("requires actor identity before the RPC for a valid selector", async () => {
         const response = await requestCommerce(paymentRoute, { body: { orderId: 42 } });
 
         expect(await responseBody(response)).toEqual([401, { error: "missing CMS user id" }]);
         expect(capturedFetches()).toEqual([]);
     });
 
-    test("preserves first- and second-read PostgREST failures without extra calls", async () => {
-        useSellerContextData({
-            failures: { orders: { status: 503, body: { message: "order context unavailable" } } },
-        });
-        let start = capturedFetches().length;
-        const orderFailure = await requestCommerce(paymentRoute, {
-            userId: buyerCmsUserId,
-            body: { orderId: 42 },
-        });
-        expect(await responseBody(orderFailure)).toEqual([502, { error: "order context unavailable" }]);
-        expectDatabaseReads(["orders"], start);
+    test("preserves PostgREST failure mapping without retries", async () => {
+        for (const [message, expected] of [
+            ["order context unavailable", "order context unavailable"],
+            [undefined, "Supabase request failed (503)"],
+        ] as const) {
+            useSellerContextFailure(503, message);
+            const start = capturedFetches().length;
+            const response = await requestCommerce(paymentRoute, {
+                userId: buyerCmsUserId,
+                body: { orderId: 42 },
+            });
+            expect(await responseBody(response)).toEqual([502, { error: expected }]);
+            expectSellerContextRpc(paymentBody, start);
+        }
+    });
 
-        useSellerContextData({ failures: { sellers: { status: 503 } } });
-        start = capturedFetches().length;
-        const sellerFailure = await requestCommerce(paymentRoute, {
-            userId: buyerCmsUserId,
-            body: { orderId: 42 },
-        });
-        expect(await responseBody(sellerFailure)).toEqual([502, { error: "Supabase request failed (503)" }]);
-        expectDatabaseReads(["orders", "sellers"], start);
+    test("fails closed for malformed, unknown, and wrong-scope RPC responses", async () => {
+        for (const value of [
+            null,
+            {},
+            { state: "ok" },
+            { state: "ok", context: { seller_cms_user_id: sellerCmsUserId } },
+            { state: "unknown" },
+            { state: "offer_not_found" },
+        ]) {
+            useSellerContextResponse(value);
+            const response = await requestCommerce(paymentRoute, {
+                userId: buyerCmsUserId,
+                body: { orderId: 42 },
+            });
+            expect(await responseBody(response)).toEqual([
+                502,
+                { error: `${sellerContextFunction} returned an invalid response` },
+            ]);
+        }
     });
 });
