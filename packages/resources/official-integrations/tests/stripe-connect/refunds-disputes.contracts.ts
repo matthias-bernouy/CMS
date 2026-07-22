@@ -218,7 +218,7 @@ function seedDispute(
     });
     const approval = harness.rest.seedDashboardRow("irreversible_dispute_action_approvals", {
         dispute_id: row.id,
-        action_type: "submit_evidence",
+        action_type: "dispute_evidence_submit",
         status: "pending_second_approval",
         first_actor_id: "admin-first",
         first_approved_at: at,
