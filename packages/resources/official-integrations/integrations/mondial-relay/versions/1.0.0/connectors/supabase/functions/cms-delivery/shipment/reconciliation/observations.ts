@@ -1,4 +1,4 @@
-import { normalizedStatuses } from "../../provider/tracking-status.ts";
+import { normalizedStatuses } from "../../provider/tracking-status/index.ts";
 import type { JsonRecord } from "../types.ts";
 
 export function cancellationCarrierActivity(status: string): boolean {

@@ -1,5 +1,5 @@
 import { fetchTracking } from "../../provider/tracking.ts";
-import { statusAfterObservation } from "../../provider/tracking-status.ts";
+import { statusAfterObservation } from "../../provider/tracking-status/index.ts";
 import { upsertShipmentEvents } from "../supabase/index.ts";
 import type { JsonRecord } from "../types.ts";
 import {

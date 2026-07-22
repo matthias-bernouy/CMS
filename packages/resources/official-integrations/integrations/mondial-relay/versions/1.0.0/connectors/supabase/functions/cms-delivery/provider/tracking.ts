@@ -8,7 +8,7 @@ import {
     providerOccurredAt,
     statusAfterObservation,
     trackingEventKey,
-} from "./tracking-status.ts";
+} from "./tracking-status/index.ts";
 import type { JsonRecord } from "../shipment/types.ts";
 import { xmlBlocks, xmlEscape, xmlTag } from "./xml.ts";
 

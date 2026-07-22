@@ -8,7 +8,7 @@ export {
     fallbackTrackingStatus,
     normalizeTrackingLabel,
     statusAfterObservation,
-} from "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/provider/tracking-status.ts";
+} from "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/provider/tracking-status/index.ts";
 export { handleError } from "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/http.ts";
 export { dataApiError } from "../../../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/shipment/supabase/index.ts";
 export * from "./support/fixtures/definition.ts";

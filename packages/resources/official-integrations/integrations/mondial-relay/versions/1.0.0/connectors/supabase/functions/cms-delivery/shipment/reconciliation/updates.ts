@@ -1,4 +1,4 @@
-import { statusAfterObservation } from "../../provider/tracking-status.ts";
+import { statusAfterObservation } from "../../provider/tracking-status/index.ts";
 import { shipmentRowById, updateShipment } from "../supabase/index.ts";
 import type { JsonRecord } from "../types.ts";
 import { cancellationCarrierActivity } from "./observations.ts";
