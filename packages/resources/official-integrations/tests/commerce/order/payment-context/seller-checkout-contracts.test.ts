@@ -85,7 +85,7 @@ describe("commerce protected-checkout seller context contracts", () => {
 
     for (const [label, sellers] of [
         ["absent", []],
-        ["not a user", [{ id: 7, kind: "organization", cms_user_id: sellerCmsUserId }]],
+        ["not a user", [{ id: 7, kind: "merchant", cms_user_id: null }]],
         ["missing its CMS user id", [{ id: 7, kind: "user", cms_user_id: null }]],
     ] as const) {
         test(`rejects a seller that is ${label} after exactly two reads`, async () => {

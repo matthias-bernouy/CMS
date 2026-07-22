@@ -29,7 +29,7 @@ describe("commerce protected-payment seller context contracts", () => {
                 {
                     id: 7,
                     kind: "user",
-                    cms_user_id: sellerCmsUserId,
+                    cms_user_id: `  ${sellerCmsUserId}  `,
                     email: "seller-private@example.test",
                     stripe_account_id: "acct_must_not_leak",
                 },
@@ -73,9 +73,29 @@ describe("commerce protected-payment seller context contracts", () => {
         });
     }
 
+    test("does not normalize the stored buyer identity when matching the trimmed caller", async () => {
+        useSellerContextData({
+            orders: [
+                {
+                    id: 42,
+                    seller_id: 7,
+                    buyer_cms_user_id: `  ${buyerCmsUserId}  `,
+                },
+            ],
+        });
+
+        const response = await requestCommerce(paymentRoute, {
+            userId: `  ${buyerCmsUserId}  `,
+            body: { orderId: 42 },
+        });
+
+        expect(await responseBody(response)).toEqual([404, { error: "order not found" }]);
+        expectDatabaseReads(["orders"]);
+    });
+
     for (const [label, sellers] of [
         ["absent", []],
-        ["not a user", [{ id: 7, kind: "organization", cms_user_id: sellerCmsUserId }]],
+        ["not a user", [{ id: 7, kind: "merchant", cms_user_id: null }]],
         ["missing its CMS user id", [{ id: 7, kind: "user", cms_user_id: null }]],
     ] as const) {
         test(`rejects a seller that is ${label} after exactly two reads`, async () => {
