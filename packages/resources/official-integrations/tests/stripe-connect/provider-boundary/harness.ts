@@ -44,11 +44,12 @@ export type ProviderBoundaryHarness = {
         failNextProtectedPaymentReservation(mode: "missing" | "raced"): void;
         linkNextProtectedPaymentReservationToIntent(): void;
         loseNextRefundCreationResponse(): void;
+        omitNextPaymentRead(): void;
         patchPaymentLedger(paymentId: number, patch: JsonRecord): void;
         patchRefundLedger(refundId: number, patch: JsonRecord): void;
         pauseNextPlatformBalanceSettingsRead(): { entered: Promise<void>; resume: () => void };
         pauseNextPostgrestRead(
-            table: "payments" | "refunds",
+            table: "payments" | "refunds" | "transfer_reversals",
             readsToSkip?: number,
         ): { entered: Promise<void>; resume: () => void };
         pauseNextRefundReload(): { entered: Promise<void>; resume: () => void };
@@ -61,7 +62,7 @@ export type ProviderBoundaryHarness = {
         setPaymentIntentSucceeded(paymentIntentId: string): void;
         setNextRefundSearchScenario(scenario: ProtectedRefundSearchScenario): void;
         setNextRefundStatus(status: "succeeded" | "pending" | "failed"): void;
-        seedSettlementLedgerRow(table: "refunds", row: JsonRecord): JsonRecord;
+        seedSettlementLedgerRow(table: "refunds" | "transfer_reversals", row: JsonRecord): JsonRecord;
         succeedNextPaymentIntentOperation(): void;
         succeedNextRefundOperation(): void;
     };
@@ -75,7 +76,6 @@ export type ProviderBoundaryHarness = {
 };
 
 export type CreateProviderBoundaryHarness = () => Promise<ProviderBoundaryHarness>;
-
 export const financialTermsHash = "a".repeat(64);
 export const marketplaceTermsHash = "c".repeat(64);
 export const marketplaceTermsVersion = "courtside-seller-2026-07";

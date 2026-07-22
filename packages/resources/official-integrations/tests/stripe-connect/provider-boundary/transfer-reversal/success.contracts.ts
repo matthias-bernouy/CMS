@@ -1,25 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { clearRequests, type CreateProviderBoundaryHarness, postgrestBudget, responseBody } from "../harness";
 import { expectedRecovery, initialPayoutHoldRequests, reversalIdempotencyKey } from "./expectations";
-import { initialReversalBudget, releasedTransferFixture, replayReversalBudget, requestReversal } from "./harness";
-
-const successfulWriteBudget = [
-    { method: "PATCH", table: "financial_operations" },
-    { method: "PATCH", table: "transfer_reversals" },
-    { method: "PATCH", table: "transfer_reversals" },
-    { method: "PATCH", table: "financial_operations" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "PATCH", table: "transfers" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "PATCH", table: "transfer_recovery_requests" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "PATCH", table: "transfer_recovery_requests" },
-    { method: "GET", table: "transfer_reversals" },
-    { method: "GET", table: "payments" },
-    { method: "PATCH", table: "payments" },
-    { method: "POST", table: "rpc/upsert_seller_recovery_exposure_and_refresh" },
-    { method: "POST", table: "rpc/claim_seller_payout_hold" },
-];
+import {
+    expectTransferReversalCompletionReads,
+    initialReversalBudget,
+    releasedTransferFixture,
+    replayReversalBudget,
+    requestReversal,
+    successfulReversalWriteBudget,
+} from "./harness";
 
 export function registerTransferReversalSuccessContracts(createHarness: CreateProviderBoundaryHarness): void {
     describe("stripe-connect direct transfer reversal contracts", () => {
@@ -33,7 +22,11 @@ export function registerTransferReversalSuccessContracts(createHarness: CreatePr
 
             expect(response.status).toBe(200);
             expect(body).toEqual(expectedRecovery(fixture, body, "trr_1"));
-            expect(postgrestBudget(fixture.harness)).toEqual([...initialReversalBudget, ...successfulWriteBudget]);
+            expect(postgrestBudget(fixture.harness)).toEqual([
+                ...initialReversalBudget,
+                ...successfulReversalWriteBudget,
+            ]);
+            expectTransferReversalCompletionReads(fixture.harness, fixture.paymentId);
             expect(fixture.harness.rest.stripeRequests).toEqual([
                 ...(await initialPayoutHoldRequests(fixture)),
                 {
@@ -63,8 +56,9 @@ export function registerTransferReversalSuccessContracts(createHarness: CreatePr
             expect(replayBody).toEqual(expectedRecovery(fixture, replayBody, "trr_1"));
             expect(postgrestBudget(fixture.harness)).toEqual([
                 ...replayReversalBudget,
-                ...successfulWriteBudget.slice(6),
+                ...successfulReversalWriteBudget.slice(6),
             ]);
+            expectTransferReversalCompletionReads(fixture.harness, fixture.paymentId);
             expect(fixture.harness.rest.stripeRequests).toEqual([]);
             expect(fixture.harness.rest.transferReversalRequests).toHaveLength(1);
             expect(fixture.harness.rest.rows("transfer_recovery_requests")).toHaveLength(1);

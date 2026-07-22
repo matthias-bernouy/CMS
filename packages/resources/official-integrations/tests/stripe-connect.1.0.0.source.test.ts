@@ -45,6 +45,7 @@ import { registerProtectedRefundProjectionInterleavingContracts } from "./stripe
 import { registerProtectedRefundProjectionStatusContracts } from "./stripe-connect/provider-boundary/protected-refund/success/projection-statuses.contracts";
 import { registerProtectedRefundPreflightInterleavingContracts } from "./stripe-connect/provider-boundary/protected-refund/success/preflight-interleavings.contracts";
 import { registerProtectedRefundValidationContracts } from "./stripe-connect/provider-boundary/protected-refund/validations.contracts";
+import { registerTransferReversalCompletionSnapshotContracts } from "./stripe-connect/provider-boundary/transfer-reversal/completion-snapshots.contracts";
 import { registerTransferReversalFailureContracts } from "./stripe-connect/provider-boundary/transfer-reversal/failures.contracts";
 import { registerTransferReversalRecoveryContracts } from "./stripe-connect/provider-boundary/transfer-reversal/recovery.contracts";
 import { registerTransferReversalSuccessContracts } from "./stripe-connect/provider-boundary/transfer-reversal/success.contracts";
@@ -5790,6 +5791,7 @@ class StripeConnectMock {
     private failPaymentReconciliationLocalContextRead = false;
     private failAccountReloadAfterTermsAcceptance = false;
     private omitNextAccountRead = false;
+    private omitNextPaymentReadResult = false;
     private providerTransferContextReadsBeforeFailure: number | null = null;
     private failProviderTransferList = false;
     private losePaymentProjectionEnqueueResponse = false;
@@ -6351,6 +6353,10 @@ class StripeConnectMock {
             throw new Error(`unknown payment ${paymentId}`);
         }
         this.update(payment, patch);
+    }
+
+    omitNextPaymentRead(): void {
+        this.omitNextPaymentReadResult = true;
     }
 
     patchRefundLedger(refundId: number, patch: JsonRecord): void {
@@ -8666,6 +8672,10 @@ class StripeConnectMock {
                 this.omitNextAccountRead = false;
                 return jsonResponse([]);
             }
+            if (table === "payments" && this.omitNextPaymentReadResult) {
+                this.omitNextPaymentReadResult = false;
+                return jsonResponse([]);
+            }
             if (table === "refunds" && url.searchParams.has("id") && this.nextRefundReloadPause) {
                 const pause = this.nextRefundReloadPause;
                 this.nextRefundReloadPause = null;
@@ -10512,6 +10522,7 @@ registerProtectedRefundProjectionInterleavingContracts(createProviderBoundaryHar
 registerProtectedRefundProjectionStatusContracts(createProviderBoundaryHarness);
 registerProtectedRefundPreflightInterleavingContracts(createProviderBoundaryHarness);
 registerProtectedRefundValidationContracts(createProviderBoundaryHarness);
+registerTransferReversalCompletionSnapshotContracts(createProviderBoundaryHarness);
 registerTransferReversalFailureContracts(createProviderBoundaryHarness);
 registerTransferReversalRecoveryContracts(createProviderBoundaryHarness);
 registerTransferReversalSuccessContracts(createProviderBoundaryHarness);
