@@ -1,5 +1,5 @@
 import { HttpError } from "../http/errors.ts";
-import { isRecord, unique } from "../shared/data.ts";
+import { isRecord, unique } from "./data.ts";
 
 export const stripeV1ApiBase = "https://api.stripe.com/v1";
 export const stripeV2ApiBase = "https://api.stripe.com/v2";

@@ -7,7 +7,7 @@ import {
     stripeV2ApiVersion,
     stripeWebhookMaximumBytes,
     stripeWebhookToleranceSeconds,
-} from "./config/runtime.ts";
+} from "./shared/runtime.ts";
 import {
     callRpcObject,
     callRpcRows,

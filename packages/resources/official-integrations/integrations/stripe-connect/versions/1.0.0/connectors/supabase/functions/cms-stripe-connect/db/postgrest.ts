@@ -1,4 +1,4 @@
-import { connectSchema, requiredEnv, serviceRoleKey } from "../config/runtime.ts";
+import { connectSchema, requiredEnv, serviceRoleKey } from "../shared/runtime.ts";
 import { HttpError } from "../http/errors.ts";
 import { isRecord, stripUndefined } from "../shared/data.ts";
 import type { JsonRecord } from "../shared/types.ts";

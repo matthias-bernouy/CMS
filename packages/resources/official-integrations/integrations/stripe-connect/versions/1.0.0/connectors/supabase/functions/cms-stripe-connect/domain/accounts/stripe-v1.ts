@@ -1,4 +1,4 @@
-import { defaultCountry } from "../../config/runtime.ts";
+import { defaultCountry } from "../../shared/runtime.ts";
 import { validBusinessType } from "../../http/body.ts";
 import type { StripeAccount } from "../../provider/types.ts";
 import { arrayAt, isRecord, numberAt, objectAt, stringArrayAt, stringAt } from "../../shared/data.ts";

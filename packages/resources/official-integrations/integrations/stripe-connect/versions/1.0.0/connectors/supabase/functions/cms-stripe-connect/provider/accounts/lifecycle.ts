@@ -3,7 +3,7 @@ import {
     defaultCurrency,
     sellerActivityDescription,
     stripeV2AccountIncludes,
-} from "../../config/runtime.ts";
+} from "../../shared/runtime.ts";
 import { digest } from "../../shared/crypto.ts";
 import { stripeV1, stripeV2 } from "../stripe-client.ts";
 import type { StripeAccount, StripeAccountApiVersion } from "../types.ts";

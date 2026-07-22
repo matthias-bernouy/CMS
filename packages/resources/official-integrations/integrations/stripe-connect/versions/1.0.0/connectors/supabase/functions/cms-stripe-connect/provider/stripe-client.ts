@@ -4,7 +4,7 @@ import {
     stripeV1ApiVersion,
     stripeV2ApiBase,
     stripeV2ApiVersion,
-} from "../config/runtime.ts";
+} from "../shared/runtime.ts";
 import { HttpError } from "../http/errors.ts";
 import { isRecord } from "../shared/data.ts";
 import type { JsonRecord } from "../shared/types.ts";

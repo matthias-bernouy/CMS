@@ -1,4 +1,4 @@
-import { requiredEnv, stripeLivemode } from "../config/runtime.ts";
+import { requiredEnv, stripeLivemode } from "../shared/runtime.ts";
 import { requireCmsRequest } from "../http/auth.ts";
 import { json } from "../http/responses.ts";
 

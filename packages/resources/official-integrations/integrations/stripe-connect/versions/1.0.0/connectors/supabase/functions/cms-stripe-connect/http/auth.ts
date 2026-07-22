@@ -1,4 +1,4 @@
-import { requiredEnv } from "../config/runtime.ts";
+import { requiredEnv } from "../shared/runtime.ts";
 import { safeEqual } from "../shared/crypto.ts";
 import { HttpError } from "./errors.ts";
 

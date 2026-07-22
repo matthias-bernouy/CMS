@@ -1,4 +1,4 @@
-import { defaultCountry } from "../../config/runtime.ts";
+import { defaultCountry } from "../../shared/runtime.ts";
 import { getAccountRow, updateAccountRow, upsertAccountRow } from "../../db/repositories/accounts.ts";
 import type { ConnectAccountRow } from "../../db/records/accounts.ts";
 import { publicAccount } from "../../domain/accounts/presentation.ts";

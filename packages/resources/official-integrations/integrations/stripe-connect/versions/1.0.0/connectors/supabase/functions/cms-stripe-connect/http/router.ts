@@ -1,4 +1,4 @@
-import { assertStripeKeyModeCoherence } from "../config/runtime.ts";
+import { assertStripeKeyModeCoherence } from "../shared/runtime.ts";
 import { handleError, json, optionsResponse, withMethod } from "./responses.ts";
 
 type RouteHandler = (request: Request) => Promise<Response>;
