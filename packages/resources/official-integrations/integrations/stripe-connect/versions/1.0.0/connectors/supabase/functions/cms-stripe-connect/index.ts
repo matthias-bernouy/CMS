@@ -88,7 +88,7 @@ import { publicPayment, publicPaymentWithClientSecret } from "./domain/payments/
 import { chargeId } from "./domain/payments/provider-state.ts";
 import { publicFinancialOperation } from "./domain/admin/financial-operation.ts";
 import { projectPublicDisputeWithContext } from "./domain/disputes/presentation.ts";
-import { requireCmsRequest, requireDashboardAdmin } from "./http/auth.ts";
+import { requireCmsRequest } from "./http/auth.ts";
 import {
     assertAllowedKeys,
     marketplaceTermsExpectationFromBody,
@@ -114,13 +114,7 @@ import {
     updateBalanceSettings,
 } from "./provider/accounts/balances.ts";
 import { retrieveAccount } from "./provider/accounts/lifecycle.ts";
-import {
-    closeStripeDispute,
-    listStripeDisputesByCharge,
-    retrieveStripeDispute,
-    updateStripeDisputeEvidence,
-    uploadStripeDisputeEvidenceFile,
-} from "./provider/disputes.ts";
+import { listStripeDisputesByCharge, retrieveStripeDispute } from "./provider/disputes.ts";
 import {
     createStripePaymentIntent,
     retrievePaymentIntent,
@@ -150,7 +144,11 @@ import {
 } from "./routes/accounts/onboarding.ts";
 import { connectStatus, connectWallet, getSellerProviderRisk } from "./routes/accounts/status.ts";
 import { syncAccountForIdentity } from "./routes/accounts/sync.ts";
+import { createAcceptStripeDispute } from "./routes/disputes/acceptance.ts";
 import { getStripeDispute, listStripeDisputes } from "./routes/disputes/dashboard.ts";
+import { createUploadStripeDisputeFile } from "./routes/disputes/files.ts";
+import { createStageStripeDisputeEvidence } from "./routes/disputes/staging.ts";
+import { createSubmitStripeDisputeEvidence } from "./routes/disputes/submission.ts";
 import { requestPaymentIntentCancellation } from "./routes/payments/cancellation.ts";
 import { getProviderPayment, listProviderPayments } from "./routes/payments/dashboard.ts";
 import { createProtectedPaymentRoutes } from "./routes/payments/protected.ts";
@@ -164,7 +162,6 @@ import {
     arrayAt,
     errorMessage,
     isRecord,
-    jsonEqual,
     numberAt,
     objectAt,
     recordArrayAt,
@@ -229,6 +226,16 @@ const requestProtectedRefund = createRequestProtectedRefund({
     reconcilePayment,
     requiredPayment,
 });
+const uploadStripeDisputeFile = createUploadStripeDisputeFile({ requiredDispute });
+const stageStripeDisputeEvidence = createStageStripeDisputeEvidence({ requiredDispute, terminalDisputeStatus });
+const disputeRouteDependencies = {
+    requiredDispute,
+    terminalDisputeStatus,
+    authorizeIrreversibleDisputeAction,
+    moveOperationToManualReview,
+};
+const submitStripeDisputeEvidence = createSubmitStripeDisputeEvidence(disputeRouteDependencies);
+const acceptStripeDispute = createAcceptStripeDispute(disputeRouteDependencies);
 
 serveStripeConnect({
     ingestPlatformWebhook: (request) => ingestStripeWebhook(request, "platform"),
@@ -631,330 +638,6 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
         }
         throw error;
     }
-}
-
-async function uploadStripeDisputeFile(request: Request): Promise<Response> {
-    const { userId, actorKind } = requireDashboardAdmin(request);
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, ["disputeId", "fileName", "mimeType", "base64"]);
-    const disputeId = requiredString(body, "disputeId", 200);
-    const dispute = await requiredDispute(disputeId);
-    const fileName = requiredString(body, "fileName", 200);
-    const mimeType = requiredString(body, "mimeType", 100);
-    if (!["image/jpeg", "image/png", "application/pdf"].includes(mimeType)) {
-        throw new HttpError(400, "unsupported dispute evidence file type");
-    }
-    const bytes = decodeBase64(requiredString(body, "base64", 8_000_000));
-    if (!bytes.length || bytes.length > 5 * 1024 * 1024) {
-        throw new HttpError(413, "dispute evidence file is too large");
-    }
-    const form = new FormData();
-    form.set("purpose", "dispute_evidence");
-    const fileBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-    form.set("file", new Blob([fileBuffer], { type: mimeType }), fileName);
-    const stripeFile = await uploadStripeDisputeEvidenceFile(form);
-    await insertPaymentEvent(dispute.payment_id, "stripe_dispute_file_uploaded", actorKind, userId, {
-        disputeId,
-        stripeFileId: stripeFile.id,
-        fileName,
-    });
-    return json({ fileId: stripeFile.id, fileName: stripeFile.filename ?? fileName, purpose: stripeFile.purpose }, 201);
-}
-
-async function stageStripeDisputeEvidence(request: Request): Promise<Response> {
-    const { userId, actorKind } = requireDashboardAdmin(request);
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, [
-        "disputeId",
-        "evidenceOperationId",
-        "evidence",
-        "evidenceText",
-        "customerCommunicationFileId",
-        "shippingDocumentationFileId",
-        "shippingTrackingNumber",
-        "shippingDate",
-        "receiptFileId",
-        "productDescription",
-        "customerName",
-        "customerEmailAddress",
-    ]);
-    const disputeId = requiredString(body, "disputeId", 200);
-    const evidenceOperationId = requiredString(body, "evidenceOperationId", 200);
-    const dispute = await requiredDispute(disputeId);
-    if (terminalDisputeStatus(dispute.status)) {
-        throw new HttpError(409, "Stripe dispute is already terminal");
-    }
-    const evidence = sanitizeDisputeEvidence(flattenDisputeEvidence(body));
-    let row = await getRowByField<JsonRecord>(
-        "stripe_dispute_evidence",
-        "evidence_operation_id",
-        evidenceOperationId,
-        "*",
-    );
-    if (row) {
-        if (Number(row.dispute_id) !== dispute.id || !jsonEqual(row.evidence, evidence)) {
-            throw new HttpError(409, "dispute evidence replay mismatch");
-        }
-    } else {
-        row = await insertRow<JsonRecord>("stripe_dispute_evidence", "*", {
-            dispute_id: dispute.id,
-            evidence_operation_id: evidenceOperationId,
-            evidence,
-            staged_by: userId,
-        });
-        await updateRow("stripe_disputes", dispute.id, { evidence_status: "staged" });
-        await insertPaymentEvent(dispute.payment_id, "stripe_dispute_evidence_staged", actorKind, userId, {
-            disputeId,
-            evidenceOperationId,
-        });
-    }
-    return json({ evidenceOperationId, disputeId, status: "staged", stagedAt: row.staged_at });
-}
-
-async function submitStripeDisputeEvidence(request: Request): Promise<Response> {
-    const { userId, actorKind } = requireDashboardAdmin(request);
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, ["disputeId", "submissionOperationId", "evidenceOperationId", "confirmation"]);
-    const dispute = await requiredDispute(requiredString(body, "disputeId", 200));
-    if (requiredString(body, "confirmation", 50) !== "SUBMIT STRIPE EVIDENCE") {
-        throw new HttpError(400, "explicit evidence submission confirmation is required");
-    }
-    const evidenceOperationId = requiredString(body, "evidenceOperationId", 200);
-    const staged = await getRowByField<JsonRecord>(
-        "stripe_dispute_evidence",
-        "evidence_operation_id",
-        evidenceOperationId,
-        "*",
-    );
-    if (!staged || Number(staged.dispute_id) !== dispute.id) {
-        throw new HttpError(404, "staged dispute evidence not found");
-    }
-    const submissionOperationId = requiredString(body, "submissionOperationId", 200);
-    const businessKey = `dispute-evidence:${dispute.stripe_dispute_id}:${submissionOperationId}`;
-    const operationRequest = { disputeId: dispute.stripe_dispute_id, evidenceOperationId };
-    const existingOperation = await getRowByField<FinancialOperationRow>(
-        "financial_operations",
-        "business_key",
-        businessKey,
-        operationSelect,
-    );
-    if (existingOperation?.status === "succeeded" && jsonEqual(existingOperation.request, operationRequest)) {
-        return json({
-            disputeId: dispute.stripe_dispute_id,
-            evidenceStatus: "submitted",
-            operationId: existingOperation.id,
-        });
-    }
-    if (existingOperation && !jsonEqual(existingOperation.request, operationRequest)) {
-        throw new HttpError(409, "dispute evidence submission replay mismatch");
-    }
-    if (terminalDisputeStatus(dispute.status)) {
-        throw new HttpError(409, "Stripe dispute is already terminal");
-    }
-    if (dispute.evidence_due_by && Date.parse(dispute.evidence_due_by) <= Date.now()) {
-        throw new HttpError(409, "Stripe evidence deadline has passed");
-    }
-    if (["submitted", "accepted", "closed"].includes(dispute.evidence_status) || staged.submitted_at) {
-        throw new HttpError(409, "Stripe dispute evidence was already submitted irreversibly");
-    }
-    const approval = await authorizeIrreversibleDisputeAction({
-        actionKey: businessKey,
-        actionType: "dispute_evidence_submit",
-        dispute,
-        actorId: userId,
-        actorKind,
-        payload: operationRequest,
-    });
-    if (!approval.approved) {
-        await insertPaymentEvent(
-            dispute.payment_id,
-            "stripe_dispute_evidence_first_approval_recorded",
-            actorKind,
-            userId,
-            {
-                disputeId: dispute.stripe_dispute_id,
-                submissionOperationId,
-                approvalStatus: approval.approvalStatus,
-            },
-        );
-        return json(
-            {
-                disputeId: dispute.stripe_dispute_id,
-                evidenceStatus: "staged",
-                approvalStatus: approval.approvalStatus,
-                dualApprovalRequired: approval.dualApprovalRequired,
-                firstApprovedBy: approval.firstApprovedBy,
-            },
-            202,
-        );
-    }
-    const operation = await reserveFinancialOperation(dispute.payment_id, {
-        businessKey,
-        operationType: "dispute_evidence_submit",
-        request: operationRequest,
-    });
-    if (operation.status !== "succeeded") {
-        try {
-            await updateFinancialOperation(operation.id, {
-                status: "processing",
-                attempt_count: operation.attempt_count + 1,
-            });
-            const provider = await updateStripeDisputeEvidence(
-                dispute.stripe_dispute_id,
-                staged.evidence as JsonRecord,
-                await stableStripeIdempotencyKey("dispute-evidence", operation.business_key),
-            );
-            await updateFinancialOperation(operation.id, {
-                status: "succeeded",
-                stripe_object_id: dispute.stripe_dispute_id,
-                response: provider,
-                completed_at: new Date().toISOString(),
-            });
-            await updateRow("stripe_dispute_evidence", Number(staged.id), {
-                submitted_operation_id: operation.id,
-                submitted_at: new Date().toISOString(),
-            });
-            await updateRow("stripe_disputes", dispute.id, {
-                evidence_status: "submitted",
-                provider_snapshot: provider,
-            });
-            await insertPaymentEvent(dispute.payment_id, "stripe_dispute_evidence_submitted", actorKind, userId, {
-                disputeId: dispute.stripe_dispute_id,
-                operationId: operation.id,
-                approvalStatus: approval.approvalStatus,
-                firstApprovedBy: approval.firstApprovedBy,
-                secondApprovedBy: approval.secondApprovedBy ?? null,
-            });
-        } catch (error) {
-            await moveOperationToManualReview(
-                dispute.payment_id,
-                operation,
-                error,
-                "dispute_evidence_submission_ambiguous",
-            );
-            throw error;
-        }
-    }
-    return json({
-        disputeId: dispute.stripe_dispute_id,
-        evidenceStatus: "submitted",
-        operationId: operation.id,
-        approvalStatus: approval.approvalStatus,
-        dualApprovalRequired: approval.dualApprovalRequired,
-    });
-}
-
-async function acceptStripeDispute(request: Request): Promise<Response> {
-    const { userId, actorKind } = requireDashboardAdmin(request);
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, ["disputeId", "acceptanceOperationId", "confirmation"]);
-    const dispute = await requiredDispute(requiredString(body, "disputeId", 200));
-    if (requiredString(body, "confirmation", 50) !== "ACCEPT STRIPE DISPUTE") {
-        throw new HttpError(400, "explicit dispute acceptance confirmation is required");
-    }
-    const acceptanceOperationId = requiredString(body, "acceptanceOperationId", 200);
-    const businessKey = `dispute-accept:${dispute.stripe_dispute_id}:${acceptanceOperationId}`;
-    const operationRequest = { disputeId: dispute.stripe_dispute_id };
-    const existingOperation = await getRowByField<FinancialOperationRow>(
-        "financial_operations",
-        "business_key",
-        businessKey,
-        operationSelect,
-    );
-    if (existingOperation?.status === "succeeded" && jsonEqual(existingOperation.request, operationRequest)) {
-        return json({
-            disputeId: dispute.stripe_dispute_id,
-            evidenceStatus: "accepted",
-            operationId: existingOperation.id,
-        });
-    }
-    if (existingOperation && !jsonEqual(existingOperation.request, operationRequest)) {
-        throw new HttpError(409, "dispute acceptance replay mismatch");
-    }
-    if (terminalDisputeStatus(dispute.status)) {
-        throw new HttpError(409, "Stripe dispute is already terminal");
-    }
-    if (["accepted", "closed"].includes(dispute.evidence_status)) {
-        throw new HttpError(409, "Stripe dispute was already accepted irreversibly");
-    }
-    if (dispute.evidence_due_by && Date.parse(dispute.evidence_due_by) <= Date.now()) {
-        throw new HttpError(409, "Stripe dispute deadline has passed; refresh provider state before acceptance");
-    }
-    const approval = await authorizeIrreversibleDisputeAction({
-        actionKey: businessKey,
-        actionType: "dispute_accept",
-        dispute,
-        actorId: userId,
-        actorKind,
-        payload: operationRequest,
-    });
-    if (!approval.approved) {
-        await insertPaymentEvent(
-            dispute.payment_id,
-            "stripe_dispute_acceptance_first_approval_recorded",
-            actorKind,
-            userId,
-            {
-                disputeId: dispute.stripe_dispute_id,
-                acceptanceOperationId,
-                approvalStatus: approval.approvalStatus,
-            },
-        );
-        return json(
-            {
-                disputeId: dispute.stripe_dispute_id,
-                evidenceStatus: dispute.evidence_status,
-                approvalStatus: approval.approvalStatus,
-                dualApprovalRequired: approval.dualApprovalRequired,
-                firstApprovedBy: approval.firstApprovedBy,
-            },
-            202,
-        );
-    }
-    const operation = await reserveFinancialOperation(dispute.payment_id, {
-        businessKey,
-        operationType: "dispute_accept",
-        request: operationRequest,
-    });
-    if (operation.status !== "succeeded") {
-        try {
-            await updateFinancialOperation(operation.id, {
-                status: "processing",
-                attempt_count: operation.attempt_count + 1,
-            });
-            const provider = await closeStripeDispute(
-                dispute.stripe_dispute_id,
-                await stableStripeIdempotencyKey("dispute-accept", operation.business_key),
-            );
-            await updateFinancialOperation(operation.id, {
-                status: "succeeded",
-                stripe_object_id: dispute.stripe_dispute_id,
-                response: provider,
-                completed_at: new Date().toISOString(),
-            });
-            await updateRow("stripe_disputes", dispute.id, {
-                evidence_status: "accepted",
-                provider_snapshot: provider,
-            });
-            await insertPaymentEvent(dispute.payment_id, "stripe_dispute_accepted", actorKind, userId, {
-                disputeId: dispute.stripe_dispute_id,
-                operationId: operation.id,
-                approvalStatus: approval.approvalStatus,
-                firstApprovedBy: approval.firstApprovedBy,
-                secondApprovedBy: approval.secondApprovedBy ?? null,
-            });
-        } catch (error) {
-            await moveOperationToManualReview(dispute.payment_id, operation, error, "dispute_acceptance_ambiguous");
-            throw error;
-        }
-    }
-    return json({
-        disputeId: dispute.stripe_dispute_id,
-        evidenceStatus: "accepted",
-        operationId: operation.id,
-        approvalStatus: approval.approvalStatus,
-        dualApprovalRequired: approval.dualApprovalRequired,
-    });
 }
 
 async function reconcileProviderPayment(request: Request): Promise<Response> {
@@ -3012,101 +2695,4 @@ function stripeEventCreatedAt(event: JsonRecord): string {
 
 function terminalDisputeStatus(status: string): boolean {
     return ["won", "lost", "warning_closed", "prevented"].includes(status);
-}
-
-function sanitizeDisputeEvidence(value: unknown): JsonRecord {
-    if (!isRecord(value)) {
-        throw new HttpError(400, "evidence must be an object");
-    }
-    const allowed = new Set([
-        "access_activity_log",
-        "billing_address",
-        "cancellation_policy",
-        "cancellation_policy_disclosure",
-        "cancellation_rebuttal",
-        "customer_communication",
-        "customer_email_address",
-        "customer_name",
-        "customer_purchase_ip",
-        "customer_signature",
-        "duplicate_charge_documentation",
-        "duplicate_charge_explanation",
-        "duplicate_charge_id",
-        "product_description",
-        "receipt",
-        "refund_policy",
-        "refund_policy_disclosure",
-        "refund_refusal_explanation",
-        "service_date",
-        "service_documentation",
-        "shipping_address",
-        "shipping_carrier",
-        "shipping_date",
-        "shipping_documentation",
-        "shipping_tracking_number",
-        "uncategorized_file",
-        "uncategorized_text",
-    ]);
-    const sanitized: JsonRecord = {};
-    for (const [key, entry] of Object.entries(value)) {
-        if (!allowed.has(key)) {
-            throw new HttpError(400, `unsupported Stripe evidence field: ${key}`);
-        }
-        if (typeof entry !== "string" || !entry.trim() || entry.length > 20_000) {
-            throw new HttpError(400, `Stripe evidence field ${key} must be a non-empty string`);
-        }
-        if (
-            [
-                "customer_communication",
-                "customer_signature",
-                "duplicate_charge_documentation",
-                "receipt",
-                "service_documentation",
-                "shipping_documentation",
-                "uncategorized_file",
-            ].includes(key) &&
-            !entry.startsWith("file_")
-        ) {
-            throw new HttpError(400, `Stripe evidence field ${key} requires a Stripe file id`);
-        }
-        sanitized[key] = entry.trim();
-    }
-    if (!Object.keys(sanitized).length) {
-        throw new HttpError(400, "at least one evidence field is required");
-    }
-    return sanitized;
-}
-
-function flattenDisputeEvidence(body: JsonRecord): JsonRecord {
-    const evidence = isRecord(body.evidence) ? { ...body.evidence } : {};
-    const mappings: Array<[string, string]> = [
-        ["evidenceText", "uncategorized_text"],
-        ["customerCommunicationFileId", "customer_communication"],
-        ["shippingDocumentationFileId", "shipping_documentation"],
-        ["shippingTrackingNumber", "shipping_tracking_number"],
-        ["shippingDate", "shipping_date"],
-        ["receiptFileId", "receipt"],
-        ["productDescription", "product_description"],
-        ["customerName", "customer_name"],
-        ["customerEmailAddress", "customer_email_address"],
-    ];
-    for (const [input, provider] of mappings) {
-        if (body[input] !== undefined && body[input] !== null && body[input] !== "") {
-            evidence[provider] = body[input];
-        }
-    }
-    return evidence;
-}
-
-function decodeBase64(value: string): Uint8Array {
-    try {
-        const binary = atob(value);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
-    } catch {
-        throw new HttpError(400, "base64 evidence is invalid");
-    }
 }
