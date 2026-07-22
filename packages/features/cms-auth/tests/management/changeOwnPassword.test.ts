@@ -33,6 +33,13 @@ describe("changeOwnPassword", () => {
         ).rejects.toMatchObject({ field: "provider" });
     });
 
+    test("rejects a local membership without an email address", async () => {
+        const credentials = new InMemoryLocalCredentialStore();
+        await expect(
+            changeOwnPassword({ credentials }, user({ email: undefined }), "old-password", "new-password"),
+        ).rejects.toMatchObject({ field: "email" });
+    });
+
     test("rejects an incorrect current password", async () => {
         const credentials = new InMemoryLocalCredentialStore();
         await credentials.create({ email: "a@x.com", password: "old-password" });
