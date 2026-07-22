@@ -18,6 +18,9 @@ import { isDeepStrictEqual } from "node:util";
 import { registerAccountEnrollmentContracts } from "./stripe-connect/accounts/enrollment.contracts";
 import { registerAccountLifecycleContracts } from "./stripe-connect/accounts/lifecycle.contracts";
 import { registerAccountOnboardingContracts } from "./stripe-connect/accounts/onboarding.contracts";
+import { registerPayoutScheduleConcurrencyContracts } from "./stripe-connect/accounts/payout-schedule/concurrency";
+import { registerPayoutScheduleContracts } from "./stripe-connect/accounts/payout-schedule/contracts";
+import { registerPayoutScheduleFailureContracts } from "./stripe-connect/accounts/payout-schedule/failures";
 import { registerOperationAndExceptionDashboardContracts } from "./stripe-connect/dashboard/operations-exceptions.contracts";
 import { registerPaymentDashboardContracts } from "./stripe-connect/dashboard/payments.contracts";
 import { registerPaymentProjectionContracts } from "./stripe-connect/payment-projection/contracts";
@@ -7135,6 +7138,27 @@ class StripeConnectMock {
         });
     }
 
+    seedPayoutScheduleAccount(userId: string, connected: boolean): void {
+        const now = "2026-07-06T12:00:00.000Z";
+        this.tables.accounts.push({
+            ...defaultAccountRow(userId, now),
+            stripe_account_id: connected ? `acct_payout_schedule_${userId.replace(/[^a-z0-9]+/gi, "_")}` : null,
+            stripe_account_api_version: "v2",
+            application_controlled_recipient: true,
+            terms_accepted: true,
+            business_type: "individual",
+            onboarding_status: "enabled",
+            payouts_enabled: true,
+            details_submitted: true,
+            capabilities: {
+                stripe_balance: {
+                    stripe_transfers: { status: "active", status_details: [] },
+                    payouts: { status: "active", status_details: [] },
+                },
+            },
+        });
+    }
+
     seedHostedV2AccountWithRequirements(userId: string): void {
         const now = "2026-07-06T11:00:00.000Z";
         this.tables.accounts.push({
@@ -10648,3 +10672,6 @@ registerProtectedPaymentReadContracts(createRoutingHarness);
 registerAccountOnboardingContracts(createAccountHandlerHarness);
 registerAccountEnrollmentContracts(createAccountHandlerHarness);
 registerAccountLifecycleContracts(createAccountHandlerHarness);
+registerPayoutScheduleContracts(createAccountHandlerHarness);
+registerPayoutScheduleFailureContracts(createAccountHandlerHarness);
+registerPayoutScheduleConcurrencyContracts(createAccountHandlerHarness);

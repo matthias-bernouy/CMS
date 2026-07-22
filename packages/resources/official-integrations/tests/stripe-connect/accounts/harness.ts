@@ -28,7 +28,9 @@ export type AccountHandlerHarness = {
         clearStripeRequests(): void;
         failNextAccountReloadAfterTermsAcceptance(): void;
         rows(table: string): JsonRecord[];
+        pauseNextSellerBalanceSettingsUpdate(): { entered: Promise<void>; resume: () => void };
         seedActiveLegacyAccount(userId: string): void;
+        seedPayoutScheduleAccount(userId: string, connected: boolean): void;
     };
     edgeRequest(request: Request): Promise<Response>;
     submit(userId: string, role: string | undefined, endpoint: string, body: unknown): Promise<Response>;
