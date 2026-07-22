@@ -1,7 +1,7 @@
 import { expect } from "bun:test";
 import type { JsonRecord, SettlementReleaseFixture, StripeRequestRecord } from "./harness";
 
-export function expectedTransfer(fixture: SettlementReleaseFixture, transfer: JsonRecord): JsonRecord {
+export function expectedTransfer(fixture: SettlementReleaseFixture, transfer: JsonRecord, amount = 1080): JsonRecord {
     return {
         transferId: transfer.id,
         providerOperationId: transfer.operation_id,
@@ -11,7 +11,7 @@ export function expectedTransfer(fixture: SettlementReleaseFixture, transfer: Js
         releaseKind: "initial",
         sourceChargeId: fixture.chargeId,
         destinationAccountId: fixture.accountId,
-        amount: 1080,
+        amount,
         currency: "eur",
         status: "succeeded",
         occurredAt: "2026-07-06T12:10:00.000Z",
@@ -91,6 +91,27 @@ export const providerReconciliationRequests: Array<[string, string]> = [
     ["GET", "/v1/disputes"],
     ["GET", "/v1/refunds"],
     ["GET", "/v1/transfers"],
+];
+
+export const successfulSettlementDatabaseCalls: Array<[string, string]> = [
+    ["GET", "payments"],
+    ["POST", "rpc/apply_payment_provider_projection"],
+    ["POST", "rpc/read_payment_reconciliation_local_context"],
+    ["POST", "rpc/read_payment_reconciliation_ledger"],
+    ["PATCH", "payments"],
+    ["GET", "accounts"],
+    ["GET", "transfers"],
+    ["GET", "refunds"],
+    ["POST", "rpc/reserve_financial_operation"],
+    ["POST", "transfers"],
+    ["PATCH", "financial_operations"],
+    ["PATCH", "transfers"],
+    ["PATCH", "transfers"],
+    ["PATCH", "financial_operations"],
+    ["GET", "transfers"],
+    ["GET", "transfer_reversals"],
+    ["GET", "refunds"],
+    ["PATCH", "payments"],
 ];
 
 export const nonterminalRecoveryDatabaseCalls: Array<[string, string]> = [

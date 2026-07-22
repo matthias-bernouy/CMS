@@ -27,6 +27,12 @@ export type SettlementReleaseHarness = {
         omitProviderTransfersOnNextList(): void;
         removeAccount(userId: string): void;
         patchPaymentLedger(paymentId: number, patch: JsonRecord): void;
+        pauseNextPostgrestRead(
+            table: "accounts" | "transfers" | "transfer_reversals" | "refunds",
+            readsToSkip?: number,
+        ): { entered: Promise<void>; resume: () => void };
+        setAccountState(userId: string, patch: JsonRecord): void;
+        seedSettlementLedgerRow(table: "transfers" | "transfer_reversals" | "refunds", row: JsonRecord): JsonRecord;
         addProviderTransfer(transferGroup: string, patch?: JsonRecord): string;
         seedNonterminalSettlementRelease(paymentId: number, releaseAuthorizationId: string): NonterminalSettlementSeed;
         rows(table: string): JsonRecord[];

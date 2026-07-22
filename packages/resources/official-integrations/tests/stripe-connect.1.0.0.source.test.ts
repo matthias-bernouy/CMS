@@ -63,6 +63,9 @@ import { registerProviderTransferContextFailureContracts } from "./stripe-connec
 import { registerTerminalOperationRecoveryContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/terminal-contracts";
 import { registerSettlementReleaseFailureContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/failures.contracts";
 import { registerSettlementReleaseRecoveryContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/recovery.contracts";
+import { registerSettlementReleaseReadOrderContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/read-order.contracts";
+import { registerSettlementReleaseLedgerFreshnessContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/ledger-freshness.contracts";
+import { registerSettlementReleaseReplayContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/replay.contracts";
 import { registerSettlementReleaseValidationContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/settlement-release/validations.contracts";
 import type {
     OperationRecoveryKind,
@@ -5739,6 +5742,12 @@ class StripeConnectMock {
     private nextRefundSearchScenario: ProtectedRefundSearchScenario | null = null;
     private nextRefundOperationSucceeded = false;
     private nextRefundReloadPause: { entered: () => void; wait: Promise<void> } | null = null;
+    private nextPostgrestReadPause: {
+        table: string;
+        readsToSkip: number;
+        entered: () => void;
+        wait: Promise<void>;
+    } | null = null;
     private failTransferReversals = false;
     private failNextTransferCreation = false;
     private loseNextTransferCreationResponse = false;
@@ -6837,6 +6846,19 @@ class StripeConnectMock {
         return { entered, resume };
     }
 
+    pauseNextPostgrestRead(table: string, readsToSkip = 0): { entered: Promise<void>; resume: () => void } {
+        let markEntered!: () => void;
+        let resume!: () => void;
+        const entered = new Promise<void>((resolve) => {
+            markEntered = resolve;
+        });
+        const wait = new Promise<void>((resolve) => {
+            resume = resolve;
+        });
+        this.nextPostgrestReadPause = { table, readsToSkip, entered: markEntered, wait };
+        return { entered, resume };
+    }
+
     loseNextPlatformPayoutProtectionResponse(): void {
         this.loseNextPlatformBalanceSettingsResponse = true;
     }
@@ -6877,6 +6899,10 @@ class StripeConnectMock {
             created_at: now,
             updated_at: now,
         });
+    }
+
+    seedSettlementLedgerRow(table: "transfers" | "transfer_reversals" | "refunds", row: JsonRecord): JsonRecord {
+        return this.insertGeneric(table, row);
     }
 
     seedDispute(disputeId: string, status: string, evidenceStatus: string, submitted: boolean): void {
@@ -8500,6 +8526,16 @@ class StripeConnectMock {
             throw new Error(`unexpected table: ${table}`);
         }
         if (method === "GET") {
+            const pause = this.nextPostgrestReadPause;
+            if (pause?.table === table) {
+                if (pause.readsToSkip > 0) {
+                    pause.readsToSkip--;
+                } else {
+                    this.nextPostgrestReadPause = null;
+                    pause.entered();
+                    await pause.wait;
+                }
+            }
             if (table === "accounts" && this.omitNextAccountRead) {
                 this.omitNextAccountRead = false;
                 return jsonResponse([]);
@@ -10373,6 +10409,9 @@ registerTerminalOperationRecoveryContracts(createProviderReconciliationHarness);
 registerSettlementReleaseValidationContracts(createProviderReconciliationHarness);
 registerSettlementReleaseRecoveryContracts(createProviderReconciliationHarness);
 registerSettlementReleaseFailureContracts(createProviderReconciliationHarness);
+registerSettlementReleaseReplayContracts(createProviderReconciliationHarness);
+registerSettlementReleaseReadOrderContracts(createProviderReconciliationHarness);
+registerSettlementReleaseLedgerFreshnessContracts(createProviderReconciliationHarness);
 registerStripeConnectRoutingContracts(createRoutingHarness);
 registerProtectedPaymentValidationContracts(createRoutingHarness);
 registerProtectedPaymentReadContracts(createRoutingHarness);
