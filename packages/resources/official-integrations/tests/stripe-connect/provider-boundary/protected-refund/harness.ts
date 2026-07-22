@@ -29,7 +29,21 @@ export async function refundablePaymentFixture(
 ): Promise<ProtectedRefundFixture> {
     const harness = (await createHarness()) as ProtectedRefundHarness;
     expect((await enrollSeller(harness)).status).toBe(200);
-    const createdResponse = await harness.submit("buyer-1", "admin", "createProtectedPayment", protectedPaymentBody());
+    const paymentId = await createRefundablePayment(harness, "provider-order-1");
+    clearRequests(harness);
+    return { harness, paymentId };
+}
+
+export async function createRefundablePayment(
+    harness: ProtectedRefundHarness,
+    clientReferenceId: string,
+): Promise<number> {
+    const createdResponse = await harness.submit(
+        "buyer-1",
+        "admin",
+        "createProtectedPayment",
+        protectedPaymentBody({ clientReferenceId }),
+    );
     expect(createdResponse.status).toBe(200);
     const created = await responseBody(createdResponse);
     const paymentId = Number(created.paymentId);
@@ -41,8 +55,7 @@ export async function refundablePaymentFixture(
             })
         ).status,
     ).toBe(200);
-    clearRequests(harness);
-    return { harness, paymentId };
+    return paymentId;
 }
 
 export function protectedRefundBody(paymentId: number, patch: JsonRecord = {}): JsonRecord {

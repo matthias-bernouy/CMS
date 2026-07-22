@@ -7,9 +7,28 @@ import {
 } from "./expectations";
 import { refundablePaymentFixture, refundOperation, requestProtectedRefund } from "./harness";
 
-const refundIdempotencyKey = "cms:refund:40a6874eb08b0ca64d575b5edb62f56c01d20532f8c15346bc82f8705d4eed6c";
+export const refundIdempotencyKey = "cms:refund:40a6874eb08b0ca64d575b5edb62f56c01d20532f8c15346bc82f8705d4eed6c";
 
-const createRefundBudget = [
+export const refundCreateProviderRequest = {
+    method: "POST",
+    pathname: "/v1/refunds",
+    searchParams: [],
+    idempotencyKey: refundIdempotencyKey,
+    stripeAccount: null,
+};
+
+export const refundCreateCall = {
+    parameters: [
+        ["charge", "ch_1"],
+        ["amount", "300"],
+        ["metadata[refund_request_id]", "protected-refund-1"],
+        ["expand[]", "balance_transaction"],
+        ["metadata[commerce_reason]", "partial buyer remedy"],
+    ],
+    idempotencyKey: refundIdempotencyKey,
+};
+
+export const createRefundBudget = [
     { method: "GET", table: "payments" },
     { method: "POST", table: "rpc/apply_payment_provider_projection" },
     { method: "POST", table: "rpc/read_payment_reconciliation_local_context" },
@@ -86,26 +105,9 @@ export function registerProtectedRefundSuccessContracts(createHarness: CreatePro
             assertProtectedRefundPrivacy(body);
             expect(fixture.harness.rest.stripeRequests).toEqual([
                 ...expectedRefundPreflightRequests(),
-                {
-                    method: "POST",
-                    pathname: "/v1/refunds",
-                    searchParams: [],
-                    idempotencyKey: refundIdempotencyKey,
-                    stripeAccount: null,
-                },
+                refundCreateProviderRequest,
             ]);
-            expect(fixture.harness.rest.refundCreateRequests).toEqual([
-                {
-                    parameters: [
-                        ["charge", "ch_1"],
-                        ["amount", "300"],
-                        ["metadata[refund_request_id]", "protected-refund-1"],
-                        ["expand[]", "balance_transaction"],
-                        ["metadata[commerce_reason]", "partial buyer remedy"],
-                    ],
-                    idempotencyKey: refundIdempotencyKey,
-                },
-            ]);
+            expect(fixture.harness.rest.refundCreateRequests).toEqual([refundCreateCall]);
             expect(postgrestBudget(fixture.harness)).toEqual(createRefundBudget);
             expect(fixture.harness.rest.externalRequestOrder).toEqual(createRefundExternalOrder);
             expect(fixture.harness.rest.rows("refunds")).toHaveLength(1);
@@ -115,6 +117,32 @@ export function registerProtectedRefundSuccessContracts(createHarness: CreatePro
                 attempt_count: 1,
                 last_error: null,
             });
+        });
+
+        test("returns refund and payment values reloaded after the refund application completes", async () => {
+            const fixture = await refundablePaymentFixture(createHarness);
+            const pause = fixture.harness.rest.pauseNextRefundReload();
+            const pendingResponse = requestProtectedRefund(fixture);
+            await pause.entered;
+            const refundId = Number(fixture.harness.rest.rows("refunds")[0]?.id);
+            fixture.harness.rest.patchRefundLedger(refundId, { reason: "concurrent refund value" });
+            fixture.harness.rest.patchPaymentLedger(fixture.paymentId, { description: "concurrent payment value" });
+            pause.resume();
+
+            const response = await pendingResponse;
+            const body = await responseBody(response);
+            const expected = expectedProtectedRefundResponse(body, {
+                providerId: "re_1",
+                balanceTransactionId: "txn_refund_1",
+            });
+
+            expect(response.status).toBe(200);
+            expect(body).toEqual({
+                ...expected,
+                payment: { ...(expected.payment as object), description: "concurrent payment value" },
+                refund: { ...(expected.refund as object), reason: "concurrent refund value" },
+            });
+            expect(postgrestBudget(fixture.harness)).toEqual(createRefundBudget);
         });
     });
 }

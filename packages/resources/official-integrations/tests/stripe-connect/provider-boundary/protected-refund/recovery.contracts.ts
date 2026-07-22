@@ -8,7 +8,7 @@ import {
 } from "./expectations";
 import { refundablePaymentFixture, refundOperation, requestProtectedRefund } from "./harness";
 
-const recoveredRefundBudget = [
+export const recoveredRefundBudget = [
     { method: "GET", table: "payments" },
     { method: "POST", table: "rpc/apply_payment_provider_projection" },
     { method: "GET", table: "refunds" },

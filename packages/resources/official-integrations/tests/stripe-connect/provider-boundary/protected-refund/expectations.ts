@@ -116,19 +116,23 @@ export function expectedRefundListRequest(): StripeRequestRecord {
     };
 }
 
-export function expectedRefundPreflightRequests(): StripeRequestRecord[] {
+export function expectedRefundPreflightRequests(
+    paymentIntentId = "pi_1",
+    chargeId = "ch_1",
+    transferGroup = "cms_order_5a66e34d5f14d1ea34206f0ee2e0c236b961ff46e95cbb568d051704dae96881",
+): StripeRequestRecord[] {
     return [
-        paymentIntentRequest("pi_1"),
+        paymentIntentRequest(paymentIntentId),
         stripeGet("/v1/disputes", [
-            ["charge", "ch_1"],
+            ["charge", chargeId],
             ["limit", "100"],
         ]),
         stripeGet("/v1/refunds", [
-            ["charge", "ch_1"],
+            ["charge", chargeId],
             ["limit", "100"],
         ]),
         stripeGet("/v1/transfers", [
-            ["transfer_group", "cms_order_5a66e34d5f14d1ea34206f0ee2e0c236b961ff46e95cbb568d051704dae96881"],
+            ["transfer_group", transferGroup],
             ["limit", "100"],
         ]),
     ];

@@ -10,7 +10,7 @@ export type StripeRequestRecord = {
     stripeAccount: string | null;
 };
 
-export type ProtectedRefundSearchScenario = "no-match" | "ambiguous" | "has-more";
+export type ProtectedRefundSearchScenario = "no-match" | "ambiguous" | "has-more" | "has-more-match";
 
 export type ProviderBoundaryHarness = {
     rest: {
@@ -44,7 +44,10 @@ export type ProviderBoundaryHarness = {
         failNextProtectedPaymentReservation(mode: "missing" | "raced"): void;
         linkNextProtectedPaymentReservationToIntent(): void;
         loseNextRefundCreationResponse(): void;
+        patchPaymentLedger(paymentId: number, patch: JsonRecord): void;
+        patchRefundLedger(refundId: number, patch: JsonRecord): void;
         pauseNextPlatformBalanceSettingsRead(): { entered: Promise<void>; resume: () => void };
+        pauseNextRefundReload(): { entered: Promise<void>; resume: () => void };
         quarantineNextPaymentIntentProjection(): void;
         removePlatformPayoutControl(): void;
         rows(table: string): JsonRecord[];
@@ -135,51 +138,6 @@ export function paymentIntentRequest(paymentIntentId: string): StripeRequestReco
     return stripeGetRequest(`/v1/payment_intents/${paymentIntentId}`, [
         ["expand[]", "latest_charge.balance_transaction"],
     ]);
-}
-
-export function expectedProtectedPayment(actual: JsonRecord, patch: JsonRecord = {}): JsonRecord {
-    return {
-        paymentId: 1,
-        providerPaymentId: 1,
-        clientReferenceId: "provider-order-1",
-        financialTermsHash,
-        financialRevision: 1,
-        dualApprovalThresholdAmount: 1000,
-        buyerUserId: "buyer-1",
-        sellerUserId: "seller-1",
-        stripePaymentIntentId: "pi_1",
-        stripeChargeId: null,
-        providerEventId: null,
-        transferGroup: "cms_order_5a66e34d5f14d1ea34206f0ee2e0c236b961ff46e95cbb568d051704dae96881",
-        currency: "eur",
-        amountTotal: 1200,
-        sellerTransferAmount: 1080,
-        platformRetainedAmount: 120,
-        refundedAmount: 0,
-        transferredAmount: 0,
-        reversedAmount: 0,
-        stripeChargeBalanceTransactionId: null,
-        actualStripeChargeFeeAmount: 0,
-        actualStripeRefundFeeAmount: 0,
-        actualStripeProcessingFeeAmount: 0,
-        actualStripeChargeNetAmount: null,
-        actualStripeFeeCurrency: null,
-        actualStripeChargeFeeDetails: [],
-        actualPlatformMarginAfterStripeAmount: 120,
-        paymentStatus: "created",
-        commercePaymentStatus: "created",
-        settlementStatus: "held",
-        disputeStatus: "none",
-        manualReviewReason: null,
-        paidAt: null,
-        cancelledAt: null,
-        lastProviderSyncAt: actual.lastProviderSyncAt,
-        occurredAt: "2026-07-06T12:10:00.000Z",
-        createdAt: "2026-07-06T12:05:00.000Z",
-        updatedAt: "2026-07-06T12:10:00.000Z",
-        clientSecret: "pi_1_secret",
-        ...patch,
-    };
 }
 
 function stripeGetRequest(pathname: string, searchParams: Array<[string, string]>): StripeRequestRecord {

@@ -5,7 +5,6 @@ import {
     clearRequests,
     type CreateProviderBoundaryHarness,
     enrollSeller,
-    expectedProtectedPayment,
     financialTermsHash,
     paymentIntentRequest,
     postgrestBody,
@@ -14,6 +13,7 @@ import {
     responseBody,
     type ProviderBoundaryHarness,
 } from "../harness";
+import { expectedProtectedPayment } from "./expectations";
 
 const reservationBudget = [
     { method: "GET", table: "accounts" },

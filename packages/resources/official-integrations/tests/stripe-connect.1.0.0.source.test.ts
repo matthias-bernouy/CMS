@@ -5737,6 +5737,7 @@ class StripeConnectMock {
     private loseNextRefundResponse = false;
     private nextRefundSearchScenario: ProtectedRefundSearchScenario | null = null;
     private nextRefundOperationSucceeded = false;
+    private nextRefundReloadPause: { entered: () => void; wait: Promise<void> } | null = null;
     private failTransferReversals = false;
     private failNextTransferCreation = false;
     private loseNextTransferCreationResponse = false;
@@ -6333,6 +6334,14 @@ class StripeConnectMock {
         this.update(payment, patch);
     }
 
+    patchRefundLedger(refundId: number, patch: JsonRecord): void {
+        const refund = this.tables.refunds.find((row) => same(row.id, refundId));
+        if (!refund) {
+            throw new Error(`unknown refund ${refundId}`);
+        }
+        this.update(refund, patch);
+    }
+
     replacePaymentIntentDuringNextRetrieve(paymentId: number, replacementId: string): void {
         this.paymentIntentReplacementOnNextRetrieve = { paymentId, replacementId };
     }
@@ -6811,6 +6820,19 @@ class StripeConnectMock {
             resume = resolve;
         });
         this.nextPlatformBalanceSettingsReadPause = { entered: markEntered, wait };
+        return { entered, resume };
+    }
+
+    pauseNextRefundReload(): { entered: Promise<void>; resume: () => void } {
+        let markEntered!: () => void;
+        let resume!: () => void;
+        const entered = new Promise<void>((resolve) => {
+            markEntered = resolve;
+        });
+        const wait = new Promise<void>((resolve) => {
+            resume = resolve;
+        });
+        this.nextRefundReloadPause = { entered: markEntered, wait };
         return { entered, resume };
     }
 
@@ -8481,6 +8503,12 @@ class StripeConnectMock {
                 this.omitNextAccountRead = false;
                 return jsonResponse([]);
             }
+            if (table === "refunds" && url.searchParams.has("id") && this.nextRefundReloadPause) {
+                const pause = this.nextRefundReloadPause;
+                this.nextRefundReloadPause = null;
+                pause.entered();
+                await pause.wait;
+            }
             return jsonResponse(this.select(table, url));
         }
         if (method === "POST") {
@@ -9151,7 +9179,7 @@ class StripeConnectMock {
                       : matching;
             return jsonResponse({
                 data,
-                has_more: scenario === "has-more",
+                has_more: scenario === "has-more" || scenario === "has-more-match",
             });
         }
         if (url.pathname === "/v1/refunds" && method === "POST") {

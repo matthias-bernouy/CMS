@@ -5,7 +5,6 @@ import {
     clearRequests,
     type CreateProviderBoundaryHarness,
     enrollSeller,
-    expectedProtectedPayment,
     paymentIntentRequest,
     postgrestBody,
     postgrestBudget,
@@ -13,6 +12,7 @@ import {
     responseBody,
     type ProviderBoundaryHarness,
 } from "../harness";
+import { expectedProtectedPayment } from "./expectations";
 
 const accountSyncBudget = [
     { method: "GET", table: "accounts" },

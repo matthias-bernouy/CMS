@@ -5,12 +5,12 @@ import {
     clearRequests,
     type CreateProviderBoundaryHarness,
     enrollSeller,
-    expectedProtectedPayment,
     financialTermsHash,
     postgrestBudget,
     protectedPaymentBody,
     responseBody,
 } from "../harness";
+import { expectedProtectedPayment } from "./expectations";
 
 const protectionBudget = [
     { method: "GET", table: "accounts" },

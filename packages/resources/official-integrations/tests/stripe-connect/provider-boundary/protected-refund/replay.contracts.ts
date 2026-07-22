@@ -3,9 +3,22 @@ import { clearRequests, type CreateProviderBoundaryHarness, postgrestBudget, res
 import {
     assertProtectedRefundPrivacy,
     expectedProtectedRefundResponse,
+    expectedRefundListRequest,
     expectedRefundPreflightRequests,
 } from "./expectations";
-import { refundablePaymentFixture, requestProtectedRefund } from "./harness";
+import { createRefundablePayment, refundablePaymentFixture, refundOperation, requestProtectedRefund } from "./harness";
+import { recoveredRefundBudget } from "./recovery.contracts";
+
+const collisionBudget = [
+    { method: "GET", table: "payments" },
+    { method: "POST", table: "rpc/apply_payment_provider_projection" },
+    { method: "POST", table: "rpc/read_payment_reconciliation_local_context" },
+    { method: "POST", table: "rpc/read_payment_reconciliation_ledger" },
+    { method: "PATCH", table: "payments" },
+    { method: "GET", table: "refunds" },
+    { method: "GET", table: "transfer_recovery_requests" },
+    { method: "GET", table: "refunds" },
+];
 
 const mismatchCases = [
     {
@@ -87,6 +100,57 @@ export function registerProtectedRefundReplayContracts(createHarness: CreateProv
                 expect(fixture.harness.rest.refundCreateRequests).toHaveLength(1);
                 expect(fixture.harness.rest.rows("refunds")).toHaveLength(1);
             }
+        });
+
+        test("rejects one refund request identity reused for a different payment", async () => {
+            const fixture = await refundablePaymentFixture(createHarness);
+            expect((await requestProtectedRefund(fixture)).status).toBe(200);
+            const secondPaymentId = await createRefundablePayment(fixture.harness, "provider-order-2");
+            const secondPayment = fixture.harness.rest
+                .rows("payments")
+                .find((row) => Number(row.id) === secondPaymentId)!;
+            clearRequests(fixture.harness);
+
+            const response = await requestProtectedRefund({ harness: fixture.harness, paymentId: secondPaymentId });
+            const body = await responseBody(response);
+
+            expect(response.status).toBe(409);
+            expect(body).toEqual({ error: "refund request replay mismatch" });
+            expect(fixture.harness.rest.stripeRequests).toEqual(
+                expectedRefundPreflightRequests("pi_2", "ch_2", String(secondPayment.transfer_group)),
+            );
+            expect(postgrestBudget(fixture.harness)).toEqual(collisionBudget);
+            expect(fixture.harness.rest.refundCreateRequests).toHaveLength(1);
+            expect(fixture.harness.rest.rows("refunds")).toHaveLength(1);
+        });
+
+        test("documents the current risk of accepting one recovery match from an incomplete Stripe page", async () => {
+            const fixture = await refundablePaymentFixture(createHarness);
+            fixture.harness.rest.loseNextRefundCreationResponse();
+            expect((await requestProtectedRefund(fixture)).status).toBe(500);
+            clearRequests(fixture.harness);
+            fixture.harness.rest.setNextRefundSearchScenario("has-more-match");
+
+            const response = await requestProtectedRefund(fixture);
+            const body = await responseBody(response);
+
+            expect(response.status).toBe(200);
+            expect(body).toEqual(
+                expectedProtectedRefundResponse(body, {
+                    providerId: "re_1",
+                    balanceTransactionId: "txn_refund_1",
+                    settlementStatus: "manual_review",
+                    manualReviewReason: "untracked Stripe refund re_1",
+                }),
+            );
+            assertProtectedRefundPrivacy(body);
+            expect(fixture.harness.rest.stripeRequests).toEqual([
+                ...expectedRefundPreflightRequests(),
+                expectedRefundListRequest(),
+            ]);
+            expect(postgrestBudget(fixture.harness)).toEqual(recoveredRefundBudget);
+            expect(fixture.harness.rest.refundCreateRequests).toHaveLength(1);
+            expect(refundOperation(fixture)).toMatchObject({ status: "succeeded", stripe_object_id: "re_1" });
         });
     });
 }
