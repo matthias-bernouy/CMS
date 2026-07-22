@@ -30,6 +30,10 @@ import { registerPaymentCancellationReservationContracts } from "./stripe-connec
 import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
 import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
 import { registerDisputeApplicationReadContextContracts } from "./stripe-connect/provider-boundary/dispute-application/read-context.contracts";
+import { registerDisputeApprovalContracts } from "./stripe-connect/provider-boundary/dispute-approval/approval.contracts";
+import { registerDisputeApprovalCompletionContracts } from "./stripe-connect/provider-boundary/dispute-approval/completion.contracts";
+import { registerDisputeApprovalFailureContracts } from "./stripe-connect/provider-boundary/dispute-approval/failures.contracts";
+import { registerDisputeApprovalSubmissionContracts } from "./stripe-connect/provider-boundary/dispute-approval/submission.contracts";
 import type { ProtectedRefundSearchScenario } from "./stripe-connect/provider-boundary/harness";
 import { registerProtectedPaymentFailureContracts } from "./stripe-connect/provider-boundary/protected-payment/failures.contracts";
 import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment/payout.contracts";
@@ -6356,6 +6360,14 @@ class StripeConnectMock {
         this.update(payment, patch);
     }
 
+    removePayment(paymentId: number): void {
+        const index = this.tables.payments.findIndex((row) => same(row.id, paymentId));
+        if (index < 0) {
+            throw new Error(`unknown payment ${paymentId}`);
+        }
+        this.tables.payments.splice(index, 1);
+    }
+
     omitNextPaymentRead(): void {
         this.omitNextPaymentReadResult = true;
     }
@@ -8138,6 +8150,14 @@ class StripeConnectMock {
             if (body.p_actor_kind !== "admin") {
                 return jsonResponse({ message: "forbidden: admin approval actor is required" }, 400);
             }
+            if (Number(body.p_amount) < Number(body.p_threshold_amount)) {
+                return jsonResponse({
+                    approved: true,
+                    dualApprovalRequired: false,
+                    approvalStatus: "not_required",
+                    firstApprovedBy: body.p_actor_id,
+                });
+            }
             const actionKey = String(body.p_action_key);
             let approval = this.tables.irreversible_dispute_action_approvals.find(
                 (row) => row.action_key === actionKey,
@@ -8156,6 +8176,14 @@ class StripeConnectMock {
                     second_actor_kind: null,
                     second_actor_id: null,
                 });
+            } else if (
+                approval.action_type !== body.p_action_type ||
+                !same(approval.dispute_id, body.p_dispute_id) ||
+                !same(approval.amount, body.p_amount) ||
+                !same(approval.threshold_amount, body.p_threshold_amount) ||
+                approval.payload_sha256 !== body.p_payload_sha256
+            ) {
+                return jsonResponse({ message: "conflict: irreversible dispute approval replay mismatch" }, 400);
             } else if (approval.status !== "approved" && approval.first_actor_id !== body.p_actor_id) {
                 this.update(approval, {
                     status: "approved",
@@ -10558,6 +10586,10 @@ registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
 registerPaymentDashboardContracts(createDashboardReadHarness);
 registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
 registerDisputeApplicationReadContextContracts(createProviderBoundaryHarness);
+registerDisputeApprovalContracts(createProviderBoundaryHarness);
+registerDisputeApprovalCompletionContracts(createProviderBoundaryHarness);
+registerDisputeApprovalFailureContracts(createProviderBoundaryHarness);
+registerDisputeApprovalSubmissionContracts(createProviderBoundaryHarness);
 registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
 registerProtectedPaymentFailureContracts(createProviderBoundaryHarness);
 registerProtectedPaymentPayoutContracts(createProviderBoundaryHarness);

@@ -48,6 +48,7 @@ export type ProviderBoundaryHarness = {
         omitNextPaymentRead(): void;
         patchPaymentLedger(paymentId: number, patch: JsonRecord): void;
         patchRefundLedger(refundId: number, patch: JsonRecord): void;
+        removePayment(paymentId: number): void;
         pauseNextPlatformBalanceSettingsRead(): { entered: Promise<void>; resume: () => void };
         pauseNextPostgrestRead(
             table: "payments" | "refunds" | "transfer_reversals",
