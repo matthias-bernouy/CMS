@@ -9,7 +9,6 @@ import {
 } from "./db/repositories/events-exceptions.ts";
 import {
     enqueueCommerceProviderProjection,
-    enqueueCommerceRefundProjection,
     reserveAccountFinancialOperation,
     reserveFinancialOperation,
     updateFinancialOperation,
@@ -28,11 +27,9 @@ import {
 import { markPaymentManualReview, sellerPayoutHoldRpc } from "./db/repositories/payout-controls.ts";
 import type { ConnectAccountRow } from "./db/records/accounts.ts";
 import { disputeSelect, type StripeDisputeRow } from "./db/records/disputes.ts";
-import { operationSelect, type FinancialOperationRow, type PlatformPayoutControlRow } from "./db/records/operations.ts";
-import { paymentSelect, type ConnectPaymentRow } from "./db/records/payments.ts";
-import { refundSelect, type RefundRow } from "./db/records/refunds.ts";
-import type { TransferRecoveryRow, TransferRow } from "./db/records/transfers.ts";
-import { readFinancialOperationRecoveryContext, readStripeDisputeApplicationContext } from "./db/reconciliation.ts";
+import type { FinancialOperationRow, PlatformPayoutControlRow } from "./db/records/operations.ts";
+import type { ConnectPaymentRow } from "./db/records/payments.ts";
+import { readStripeDisputeApplicationContext } from "./db/reconciliation.ts";
 import {
     bankPayoutsStatus,
     sellerCanAcceptHeldPayments,
@@ -52,26 +49,18 @@ import {
     validBusinessType,
 } from "./http/body.ts";
 import { HttpError } from "./http/errors.ts";
-import { requiredQueryInteger, requiredQueryText, requiredReleaseKind } from "./http/query.ts";
+import { requiredQueryInteger, requiredQueryText } from "./http/query.ts";
 import { json } from "./http/responses.ts";
 import { serveStripeConnect } from "./http/router.ts";
-import {
-    retrieveConnectedBalanceSettings,
-    retrievePlatformBalanceSettings,
-    updateBalanceSettings,
-} from "./provider/accounts/balances.ts";
-import {
-    createStripePaymentIntent,
-    retrievePaymentIntent,
-    retrieveStripeBalanceTransaction,
-} from "./provider/payments.ts";
+import { retrieveConnectedBalanceSettings, updateBalanceSettings } from "./provider/accounts/balances.ts";
+import { retrieveStripeBalanceTransaction } from "./provider/payments.ts";
 import { retrieveStripeRefundSnapshot } from "./provider/refunds.ts";
 import {
     createStripeTransferReversal,
     listStripeTransferReversals,
     retrieveStripeTransferReversal,
 } from "./provider/transfers.ts";
-import type { StripeBalanceSettings, StripeDispute, StripePaymentIntent } from "./provider/types.ts";
+import type { StripeDispute } from "./provider/types.ts";
 import {
     getProviderException,
     listFinancialOperations,
@@ -118,21 +107,15 @@ import {
     unique,
 } from "./shared/data.ts";
 import type { JsonRecord } from "./shared/types.ts";
-import {
-    optionalOperationInteger,
-    optionalOperationString,
-    requiredOperationInteger,
-    requiredOperationString,
-} from "./workflows/operations/request-values.ts";
 import { createRefundExecutionWorkflow } from "./workflows/refunds/execution.ts";
 import { createRefundProjectionWorkflow } from "./workflows/refunds/projection.ts";
 import { createProtectedRefundWorkflow } from "./workflows/refunds/protected.ts";
-import { executePaymentIntentCancellation } from "./workflows/payments/cancellation.ts";
 import { createProtectedPaymentWorkflow } from "./workflows/payments/creation/workflow.ts";
 import { createSettlementReleaseWorkflow } from "./workflows/payments/settlement-release.ts";
 import { createTransferReversalWorkflow } from "./workflows/payments/transfer-reversal/workflow.ts";
-import { applyPaymentIntent, paymentClientSecret } from "./workflows/payments/projection.ts";
 import { createPaymentReconciliationWorkflow } from "./workflows/reconciliation/payment.ts";
+import { createPaymentOperationRecovery } from "./workflows/reconciliation/operations/payment.ts";
+import { createPayoutScheduleOperationRecovery } from "./workflows/reconciliation/operations/payout-schedule.ts";
 import { createProviderObjectReconciliation } from "./workflows/reconciliation/provider-objects.ts";
 import { createAccountPayoutHoldReconciliation } from "./workflows/reconciliation/account-holds.ts";
 import { createProviderReconciliationRun } from "./workflows/reconciliation/run.ts";
@@ -184,6 +167,17 @@ const requestSettlementRelease = createRequestSettlementRelease({
     requiredPayment,
 });
 const executeRefund = createRefundExecutionWorkflow({ applyStripeRefund, moveOperationToManualReview });
+const recoverPayoutScheduleOperation = createPayoutScheduleOperationRecovery({
+    sellerRiskAccount,
+    applyClaimedSellerRecoveryPayoutHold,
+    restoreSellerAutomaticPayoutSchedule,
+});
+const recoverPaymentOperation = createPaymentOperationRecovery({
+    requiredPayment,
+    executeSettlementRelease,
+    executeTransferReversal,
+    executeRefund,
+});
 const executeProtectedRefund = createProtectedRefundWorkflow({
     executeRefund,
     executeTransferReversal,
@@ -285,269 +279,9 @@ async function failCommerceProjection(request: Request): Promise<Response> {
 
 async function processClaimedFinancialOperation(operation: FinancialOperationRow): Promise<boolean> {
     if (operation.operation_type === "payout_schedule_update" && !operation.payment_id) {
-        const scope = optionalOperationString(operation, "scope");
-        const stripeAccountId = optionalOperationString(operation, "stripeAccountId");
-        const cmsUserId = optionalOperationString(operation, "cmsUserId");
-        if (cmsUserId && stripeAccountId) {
-            const owner = crypto.randomUUID();
-            const claim = await sellerPayoutHoldRpc("claim_seller_payout_hold", {
-                p_seller_cms_user_id: cmsUserId,
-                p_owner: owner,
-                p_require_risk: false,
-            });
-            if (claim.claimed !== true) {
-                throw new Error("seller payout control is already being synchronized");
-            }
-            const account = sellerRiskAccount(claim);
-            let current: StripeBalanceSettings;
-            try {
-                current = await retrieveConnectedBalanceSettings(stripeAccountId);
-            } catch (error) {
-                await sellerPayoutHoldRpc("complete_seller_payout_hold", {
-                    p_seller_cms_user_id: cmsUserId,
-                    p_owner: owner,
-                    p_expected_risk_revision: account.risk_revision,
-                    p_applied_minimum_amount: account.provider_hold_minimum_amount,
-                    p_succeeded: false,
-                    p_error: errorMessage(error),
-                }).catch(() => null);
-                throw error;
-            }
-            if (operation.business_key.startsWith("seller-risk-hold:")) {
-                const requiredHold = account.outstanding_debt_amount + account.financial_exposure_amount;
-                let protectedByHold: boolean;
-                if (requiredHold > 0) {
-                    protectedByHold = await applyClaimedSellerRecoveryPayoutHold(cmsUserId, owner, claim);
-                } else {
-                    let readyToRestore = false;
-                    if (!account.manual_payout_hold_started_at || !account.manual_payout_hold_restore_settings) {
-                        const currentMinimum =
-                            numberAt(
-                                objectAt(
-                                    objectAt(objectAt(current, "payments"), "payouts"),
-                                    "minimum_balance_by_currency",
-                                ),
-                                "eur",
-                            ) ?? 0;
-                        const completed = await sellerPayoutHoldRpc("complete_seller_payout_hold", {
-                            p_seller_cms_user_id: cmsUserId,
-                            p_owner: owner,
-                            p_expected_risk_revision: account.risk_revision,
-                            p_applied_minimum_amount: currentMinimum,
-                            p_succeeded: true,
-                            p_error: null,
-                            p_restore_settings: objectAt(operation.request, "restoreSettings"),
-                        });
-                        if (completed.accepted !== true) {
-                            throw new Error("seller payout hold recovery lease was superseded");
-                        }
-                        if (completed.needsReapply === true) {
-                            protectedByHold = await applyClaimedSellerRecoveryPayoutHold(cmsUserId, owner, {
-                                claimed: true,
-                                account: objectAt(completed, "account"),
-                            });
-                        } else {
-                            readyToRestore = true;
-                        }
-                    } else {
-                        const cancelled = await sellerPayoutHoldRpc("cancel_seller_payout_configuration", {
-                            p_seller_cms_user_id: cmsUserId,
-                            p_owner: owner,
-                            p_expected_risk_revision: account.risk_revision,
-                        });
-                        if (cancelled.accepted !== true) {
-                            throw new Error("seller payout hold recovery lease was superseded");
-                        }
-                        if (cancelled.superseded === true) {
-                            protectedByHold = await applyClaimedSellerRecoveryPayoutHold(cmsUserId, owner, {
-                                claimed: true,
-                                account: objectAt(cancelled, "account"),
-                            });
-                        } else {
-                            readyToRestore = true;
-                        }
-                    }
-                    if (readyToRestore) {
-                        protectedByHold = await restoreSellerAutomaticPayoutSchedule(cmsUserId);
-                    }
-                }
-                if (!protectedByHold) {
-                    throw new Error("seller payout hold recovery requires finance review");
-                }
-            } else {
-                if (!balanceSettingsMatchRequest(current, operation.request)) {
-                    const cancelled = await sellerPayoutHoldRpc("cancel_seller_payout_configuration", {
-                        p_seller_cms_user_id: cmsUserId,
-                        p_owner: owner,
-                        p_expected_risk_revision: account.risk_revision,
-                    }).catch(() => null);
-                    if (cancelled?.accepted === true && cancelled.superseded === true) {
-                        await applyClaimedSellerRecoveryPayoutHold(cmsUserId, owner, cancelled).catch(() => false);
-                    }
-                    throw new Error("payout schedule operation does not match current Stripe Balance Settings");
-                }
-                const expectedRiskRevision = numberAt(operation.request, "riskRevision");
-                if (!Number.isSafeInteger(expectedRiskRevision) || expectedRiskRevision! < 0) {
-                    await applyClaimedSellerRecoveryPayoutHold(cmsUserId, owner, claim);
-                    throw new Error("legacy payout schedule operation has no coherent seller risk revision");
-                }
-                const finalized = await sellerPayoutHoldRpc("finalize_seller_payout_configuration", {
-                    p_seller_cms_user_id: cmsUserId,
-                    p_owner: owner,
-                    p_expected_risk_revision: expectedRiskRevision!,
-                    p_interval: requiredOperationString(operation, "interval"),
-                });
-                if (finalized.accepted !== true || finalized.superseded === true) {
-                    if (finalized.accepted === true) {
-                        await applyClaimedSellerRecoveryPayoutHold(cmsUserId, owner, finalized);
-                    }
-                    throw new Error("payout schedule operation was superseded by seller financial risk");
-                }
-            }
-            const finalProvider = await retrieveConnectedBalanceSettings(stripeAccountId);
-            await updateFinancialOperation(operation.id, {
-                status: "succeeded",
-                response: finalProvider,
-                last_error: null,
-                completed_at: new Date().toISOString(),
-            });
-            return true;
-        }
-        const current = scope === "platform" ? await retrievePlatformBalanceSettings() : null;
-        if (!current || !balanceSettingsMatchRequest(current, operation.request)) {
-            throw new Error("payout schedule operation does not match current Stripe Balance Settings");
-        }
-        await updateFinancialOperation(operation.id, {
-            status: "succeeded",
-            response: current,
-            last_error: null,
-            completed_at: new Date().toISOString(),
-        });
-        return true;
+        return await recoverPayoutScheduleOperation(operation);
     }
-    if (!operation.payment_id) {
-        return false;
-    }
-    const usesRecoveryContext =
-        operation.operation_type === "transfer_create" ||
-        operation.operation_type === "transfer_reversal_create" ||
-        operation.operation_type === "refund_create";
-    const rawRecoveryRequestId = operation.request.recoveryRequestId;
-    const recoveryContext = usesRecoveryContext
-        ? await readFinancialOperationRecoveryContext(
-              operation.payment_id,
-              operation.id,
-              typeof rawRecoveryRequestId === "string" ? rawRecoveryRequestId : null,
-          )
-        : null;
-    const payment = recoveryContext
-        ? (recoveryContext.payment as unknown as ConnectPaymentRow | null)
-        : await requiredPayment(operation.payment_id);
-    if (!payment) {
-        throw new HttpError(404, "payment not found");
-    }
-    if (operation.operation_type === "payment_intent_create") {
-        let intent: StripePaymentIntent;
-        if (operation.stripe_object_id) {
-            intent = await retrievePaymentIntent(operation.stripe_object_id);
-        } else if (payment.stripe_payment_intent_id) {
-            intent = await retrievePaymentIntent(payment.stripe_payment_intent_id);
-        } else {
-            const operationAge = Date.now() - Date.parse(operation.created_at);
-            if (!Number.isFinite(operationAge) || operationAge >= 23 * 60 * 60 * 1000) {
-                throw new Error("PaymentIntent recovery exceeded the Stripe idempotency safety window");
-            }
-            intent = await createStripePaymentIntent(payment);
-        }
-        const applied = await applyPaymentIntent(payment, intent, {
-            actorKind: "reconciliation",
-            actorId: "financial-operation-recovery",
-        });
-        await updateFinancialOperation(operation.id, {
-            status: applied.settlement_status === "manual_review" ? "manual_review" : "succeeded",
-            stripe_object_id: intent.id,
-            response: intent,
-            last_error: applied.settlement_status === "manual_review" ? applied.manual_review_reason : null,
-            completed_at: new Date().toISOString(),
-        });
-        return true;
-    }
-    if (operation.operation_type === "payment_intent_cancel") {
-        await executePaymentIntentCancellation(
-            payment,
-            operation,
-            "reconciliation",
-            requiredOperationString(operation, "cancellationRequestId"),
-        );
-        return true;
-    }
-    if (operation.operation_type === "transfer_create") {
-        const localTransfer = recoveryContext?.transfer as unknown as TransferRow | null;
-        if (localTransfer?.stripe_transfer_id && localTransfer.status === "succeeded") {
-            await updateFinancialOperation(operation.id, {
-                status: "succeeded",
-                stripe_object_id: localTransfer.stripe_transfer_id,
-                response: localTransfer.provider_snapshot ?? {},
-                last_error: null,
-                completed_at: new Date().toISOString(),
-            });
-            return true;
-        }
-        await executeSettlementRelease(
-            payment,
-            requiredOperationString(operation, "releaseAuthorizationId"),
-            requiredReleaseKind(requiredOperationString(operation, "releaseKind")),
-            requiredOperationInteger(operation, "amount"),
-            requiredOperationString(operation, "currency"),
-        );
-        return true;
-    }
-    if (operation.operation_type === "transfer_reversal_create") {
-        const localReversal = recoveryContext?.transfer_reversal;
-        if (localReversal?.stripe_transfer_reversal_id && localReversal.status === "succeeded") {
-            await updateFinancialOperation(operation.id, {
-                status: "succeeded",
-                stripe_object_id: localReversal.stripe_transfer_reversal_id,
-                response: isRecord(localReversal.provider_snapshot) ? localReversal.provider_snapshot : {},
-                last_error: null,
-                completed_at: new Date().toISOString(),
-            });
-            return true;
-        }
-        const recoveryRequestId = requiredOperationString(operation, "recoveryRequestId");
-        const recovery = recoveryContext?.transfer_recovery as unknown as TransferRecoveryRow | null;
-        if (!recovery) {
-            throw new Error(`operation ${operation.id} has no Transfer recovery parent`);
-        }
-        await executeTransferReversal(payment, recoveryRequestId, recovery.requested_amount, recovery.reason);
-        return true;
-    }
-    if (operation.operation_type === "refund_create") {
-        const localRefund = recoveryContext?.refund as unknown as RefundRow | null;
-        if (localRefund?.stripe_refund_id && ["pending", "succeeded"].includes(localRefund.status)) {
-            await updateFinancialOperation(operation.id, {
-                status: localRefund.status === "succeeded" ? "succeeded" : "processing",
-                stripe_object_id: localRefund.stripe_refund_id,
-                response: localRefund.provider_snapshot ?? {},
-                last_error: null,
-                completed_at: localRefund.status === "succeeded" ? new Date().toISOString() : null,
-            });
-            await enqueueCommerceRefundProjection(localRefund.id);
-            return true;
-        }
-        await executeRefund(
-            payment,
-            requiredOperationString(operation, "refundRequestId"),
-            optionalOperationInteger(operation, "commerceRefundRequestId"),
-            requiredOperationInteger(operation, "amount"),
-            requiredOperationInteger(operation, "requiredReversalAmount"),
-            requiredOperationInteger(operation, "sellerEntitlementReductionAmount"),
-            requiredOperationInteger(operation, "authorizedSellerAmount"),
-            optionalOperationString(operation, "reason"),
-        );
-        return true;
-    }
-    return false;
+    return await recoverPaymentOperation(operation);
 }
 
 async function requiredPayment(paymentId: number): Promise<ConnectPaymentRow> {
