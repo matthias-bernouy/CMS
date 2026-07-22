@@ -2,7 +2,7 @@ import { HttpError, json, requireCmsRequest, requiredQuery } from "../../http.ts
 import { relayPointsFromUrl } from "../../provider/relay.ts";
 import { readRelaySelectionContext } from "../../shipment/read-contexts.ts";
 import { settingsRow } from "../../shipment/supabase.ts";
-import { settingsFromRow } from "../settings/routes.ts";
+import { settingsFromRow } from "../settings/presentation.ts";
 import { deliveryQuoteJson, relaySelectionJson } from "./presentation.ts";
 
 export async function relayPoints(request: Request): Promise<Response> {

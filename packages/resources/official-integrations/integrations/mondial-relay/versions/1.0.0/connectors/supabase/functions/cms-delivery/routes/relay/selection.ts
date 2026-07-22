@@ -4,7 +4,7 @@ import { stringValue } from "../../shipment/payload.ts";
 import { readRelaySelectionSetupContext } from "../../shipment/read-contexts.ts";
 import { reserveDeliveryQuote } from "../../shipment/supabase.ts";
 import { requiredBodyInteger, requiredBodyText } from "../body.ts";
-import { settingsFromRow } from "../settings/routes.ts";
+import { settingsFromRow } from "../settings/presentation.ts";
 import { deliveryQuoteJson } from "./presentation.ts";
 import { captureValidation, fulfillmentAddressSnapshot, requiredMinorAmount, sha256Hex } from "./validation.ts";
 

@@ -4,7 +4,7 @@ import { stringValue } from "../../shipment/payload.ts";
 import { readRelaySelectionSetupContext } from "../../shipment/read-contexts.ts";
 import { upsertRelaySelectionRow } from "../../shipment/supabase.ts";
 import { requiredBodyText } from "../body.ts";
-import { settingsFromRow } from "../settings/routes.ts";
+import { settingsFromRow } from "../settings/presentation.ts";
 import { relaySelectionJson } from "./presentation.ts";
 import { captureValidation } from "./validation.ts";
 

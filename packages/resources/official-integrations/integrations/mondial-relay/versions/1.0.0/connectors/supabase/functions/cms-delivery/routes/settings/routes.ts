@@ -3,8 +3,6 @@ import { settingsRow, upsertSettingsRow } from "../../shipment/supabase.ts";
 import { settingsFromRow, settingsJson } from "./presentation.ts";
 import { settingsRowFromBody } from "./update.ts";
 
-export { settingsFromRow } from "./presentation.ts";
-
 export async function settings(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const url = new URL(request.url);

@@ -2,7 +2,7 @@ import { HttpError, isRecord, json, ProviderStatusError, readJsonObject, require
 import { createConnectShipment } from "../../provider/connect.ts";
 import { shipmentPayload, stringValue } from "../../shipment/payload.ts";
 import { reserveShipmentCreation, settingsRow, updateShipment } from "../../shipment/supabase.ts";
-import { settingsFromRow } from "../settings/routes.ts";
+import { settingsFromRow } from "../settings/presentation.ts";
 import { existingCreatingShipmentResponse, shipmentReplayResponse, trackingUrl } from "./creation-responses.ts";
 
 export async function createShipment(request: Request): Promise<Response> {
