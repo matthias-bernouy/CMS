@@ -5,10 +5,10 @@ import { registerPaymentCancellationReservationContracts } from "../../payments/
 import { registerPaymentProjectionContracts } from "../../payments/projection/contracts";
 import { registerPaymentProjectionFailureContracts } from "../../payments/projection/failures";
 import { registerPaymentProjectionReplayContracts } from "../../payments/projection/replay";
-import { registerAccountTermsRepositoryContracts } from "../../repository-boundary/accounts-terms.contracts";
-import { registerLedgerRepositoryContracts } from "../../repository-boundary/ledger.contracts";
-import { registerPaymentOperationRepositoryContracts } from "../../repository-boundary/payments-operations.contracts";
-import { registerProtectedPaymentEligibilityContracts } from "../../repository-boundary/protected-payment-eligibility.contracts";
+import { registerAccountTermsRepositoryContracts } from "../../contracts/repository-boundary/accounts-terms.contracts";
+import { registerLedgerRepositoryContracts } from "../../contracts/repository-boundary/ledger.contracts";
+import { registerPaymentOperationRepositoryContracts } from "../../contracts/repository-boundary/payments-operations.contracts";
+import { registerProtectedPaymentEligibilityContracts } from "../../contracts/repository-boundary/protected-payment-eligibility.contracts";
 import type { BoundaryHarnesses } from "./harnesses";
 
 export function registerRepositoryAndPaymentContracts(harnesses: BoundaryHarnesses): void {
