@@ -111,6 +111,7 @@ function parseOverlayFields(value: unknown, name: string): SourceOverlayField[] 
             ...(text(entry.path) ? { path: text(entry.path)! } : {}),
             ...(text(entry.section) ? { section: text(entry.section)! } : {}),
             ...(entry.required === true ? { required: true } : {}),
+            ...(entry.nullable === true ? { nullable: true } : {}),
             ...(entry.multiple === true ? { multiple: true } : {}),
             ...(entry.selfEditable === false ? { selfEditable: false } : {}),
             ...(entry.adminEditable === false ? { adminEditable: false } : {}),

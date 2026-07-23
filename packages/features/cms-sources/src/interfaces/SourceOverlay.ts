@@ -36,6 +36,7 @@ export type SourceOverlayField = {
     path?: string;
     section?: string;
     required?: boolean;
+    nullable?: boolean;
     multiple?: boolean;
     selfEditable?: boolean;
     adminEditable?: boolean;
@@ -67,6 +68,7 @@ export type SourceOverlayFieldSourceMap = {
     path?: string;
     section?: string;
     required?: string;
+    nullable?: string;
     multiple?: string;
     selfEditable?: string;
     adminEditable?: string;
@@ -142,8 +144,14 @@ export interface SourceOverlayRepository {
     deleteOverlay(id: string): Promise<boolean>;
 }
 
-export function sourceOverlayFieldShape(field: Pick<SourceOverlayField, "type" | "label" | "multiple">): DataShape {
-    return field.multiple
+export function sourceOverlayFieldShape(
+    field: Pick<SourceOverlayField, "type" | "label" | "multiple" | "nullable">,
+): DataShape {
+    const shape: DataShape = field.multiple
         ? { type: "array", items: { type: field.type }, title: field.label }
         : { type: field.type, title: field.label };
+    if (field.nullable === true) {
+        shape.nullable = true;
+    }
+    return shape;
 }

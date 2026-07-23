@@ -17,12 +17,16 @@ describe("source overlays API", () => {
                     sourceId: "user-account",
                     input: [{ endpointId: "updateAccount", editable: "self" }],
                     output: [{ endpointId: "getAccount" }],
-                    fieldSource: { endpointId: "listExtraFields", map: { options: "choices" } },
+                    fieldSource: {
+                        endpointId: "listExtraFields",
+                        map: { nullable: "allowsNull", options: "choices" },
+                    },
                     fields: [
                         {
                             id: "company",
                             label: "Company",
                             type: "string",
+                            nullable: true,
                             options: [{ value: "acme", label: "Acme" }],
                         },
                     ],
@@ -40,11 +44,15 @@ describe("source overlays API", () => {
         expect(await listed.json()).toEqual([
             expect.objectContaining({
                 id: "user-account-extra-fields",
-                fieldSource: { endpointId: "listExtraFields", map: { options: "choices" } },
+                fieldSource: {
+                    endpointId: "listExtraFields",
+                    map: { nullable: "allowsNull", options: "choices" },
+                },
                 fields: [
                     expect.objectContaining({
                         id: "company",
                         label: "Company",
+                        nullable: true,
                         options: [{ value: "acme", label: "Acme" }],
                     }),
                 ],

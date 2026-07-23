@@ -3,6 +3,7 @@ import {
     applySourceOverlays,
     InMemorySourceOverlayRepository,
     InMemorySourceRepository,
+    projectStrictDataShape,
     SourceOverlaySourceRepository,
 } from "@bernouy/cms-sources";
 import { overlay, source } from "../helpers/sourceOverlayFixtures";
@@ -69,6 +70,75 @@ describe("source overlays", () => {
         expect(
             listAccounts.output?.[0]?.body?.properties?.accounts?.items?.properties?.metadata?.properties?.company,
         ).toEqual(expected);
+    });
+
+    test("preserves nullability when an overlay targets an existing output field", () => {
+        const nullableSource = structuredClone(source);
+        const output = nullableSource.endpoints.find((endpoint) => endpoint.urn.endsWith(":getAccount"))?.output?.[0];
+        if (!output?.body) {
+            throw new Error("Missing getAccount output");
+        }
+        output.body.properties = {
+            ...output.body.properties,
+            metadata: {
+                type: "object",
+                properties: {
+                    company: { type: "string", nullable: true },
+                },
+            },
+        };
+
+        const enriched = applySourceOverlays(nullableSource, [overlay]);
+        const shape = enriched.endpoints.find((endpoint) => endpoint.urn.endsWith(":getAccount"))?.output?.[0]?.body;
+        if (!shape) {
+            throw new Error("Missing enriched getAccount output");
+        }
+
+        expect(shape.properties?.metadata?.properties?.company).toEqual({
+            type: "string",
+            title: "Company",
+            nullable: true,
+        });
+        expect(projectStrictDataShape({ metadata: { company: null } }, shape)).toEqual({
+            metadata: { company: null },
+        });
+    });
+
+    test("admits null for added nullable fields and their created object parents", () => {
+        const enriched = applySourceOverlays(source, [
+            {
+                ...overlay,
+                fields: [
+                    { id: "brandId", label: "Brand id", type: "number", path: "brandId", nullable: true },
+                    { id: "brandName", label: "Brand", type: "string", path: "brand.name", nullable: true },
+                ],
+            },
+        ]);
+        const shape = enriched.endpoints.find((endpoint) => endpoint.urn.endsWith(":getAccount"))?.output?.[0]?.body;
+        if (!shape) {
+            throw new Error("Missing enriched getAccount output");
+        }
+
+        expect(shape.properties?.brandId).toEqual({
+            type: "number",
+            title: "Brand id",
+            nullable: true,
+        });
+        expect(shape.properties?.brand).toEqual({
+            type: "object",
+            nullable: true,
+            properties: {
+                name: {
+                    type: "string",
+                    title: "Brand",
+                    nullable: true,
+                },
+            },
+        });
+        expect(projectStrictDataShape({ brandId: null, brand: null }, shape)).toEqual({
+            brandId: null,
+            brand: null,
+        });
     });
 
     test("wraps a source repository without changing writes", async () => {

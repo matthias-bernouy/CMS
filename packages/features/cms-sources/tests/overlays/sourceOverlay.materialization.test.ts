@@ -81,13 +81,16 @@ describe("source overlay materialization", () => {
         expect(materialized?.fields[0]?.id).toBe("brand");
     });
 
-    test("materializes mapped field options without changing the data shape", async () => {
+    test("materializes mapped field options and nullability", async () => {
         const [materialized] = await materializeSourceOverlays(
             sourceWithFieldEndpoint,
             [
                 {
                     ...overlay,
-                    fieldSource: { endpointId: "listExtraFields", map: { options: "choices" } },
+                    fieldSource: {
+                        endpointId: "listExtraFields",
+                        map: { nullable: "allowsNull", options: "choices" },
+                    },
                     fields: [],
                 },
             ],
@@ -99,6 +102,7 @@ describe("source overlay materialization", () => {
                                 id: "accountStatus",
                                 label: "Account status",
                                 type: "string",
+                                allowsNull: true,
                                 choices: [
                                     { value: "pending", label: "Pending", subtitle: "Waiting for review" },
                                     { value: "active", label: "Active" },
@@ -112,6 +116,7 @@ describe("source overlay materialization", () => {
             id: "accountStatus",
             label: "Account status",
             type: "string",
+            nullable: true,
             options: [
                 { value: "pending", label: "Pending", subtitle: "Waiting for review" },
                 { value: "active", label: "Active" },
@@ -123,6 +128,7 @@ describe("source overlay materialization", () => {
         expect(output?.properties?.metadata?.properties?.accountStatus).toEqual({
             type: "string",
             title: "Account status",
+            nullable: true,
         });
     });
 });

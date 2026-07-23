@@ -110,12 +110,18 @@ function attachExtraFields(shape: DataShape, fields: readonly SourceOverlayField
     if (shape.type !== "object") {
         return;
     }
+    const createdIntermediateObjects = new Set<DataShape>();
     for (const field of fields) {
-        attachExtraField(shape, sourceOverlayFieldPath(field), field);
+        attachExtraField(shape, sourceOverlayFieldPath(field), field, createdIntermediateObjects);
     }
 }
 
-function attachExtraField(shape: DataShape, path: string, field: SourceOverlayField): void {
+function attachExtraField(
+    shape: DataShape,
+    path: string,
+    field: SourceOverlayField,
+    createdIntermediateObjects: Set<DataShape>,
+): void {
     const parts = path
         .split(".")
         .map((part) => part.trim())
@@ -129,14 +135,25 @@ function attachExtraField(shape: DataShape, path: string, field: SourceOverlayFi
         current.properties ??= {};
         const existing = current.properties[part];
         if (!existing || existing.type !== "object") {
-            current.properties[part] = { type: "object", properties: {} };
+            const intermediate: DataShape = {
+                type: "object",
+                properties: {},
+                ...(field.nullable === true ? { nullable: true } : {}),
+            };
+            current.properties[part] = intermediate;
+            createdIntermediateObjects.add(intermediate);
+        } else if (field.nullable === true && createdIntermediateObjects.has(existing)) {
+            existing.nullable = true;
         }
         current = current.properties[part]!;
     }
 
     const leaf = parts[parts.length - 1]!;
     current.properties ??= {};
-    current.properties[leaf] = sourceOverlayFieldShape(field);
+    current.properties[leaf] = {
+        ...current.properties[leaf],
+        ...sourceOverlayFieldShape(field),
+    };
     const required = new Set(current.required ?? []);
     if (field.required) {
         required.add(leaf);

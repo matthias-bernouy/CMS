@@ -10,6 +10,7 @@ import {
 const SIMPLE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 type BoolFieldKey =
     | "required"
+    | "nullable"
     | "multiple"
     | "selfEditable"
     | "adminEditable"
@@ -54,6 +55,7 @@ function fieldFromEntry(entry: unknown, map: SourceOverlayFieldSourceMap = {}): 
         ...optionalText(entry, map.path ?? "path", "path"),
         ...optionalText(entry, map.section ?? "section", "section"),
         ...optionalBool(entry, map.required ?? "required", "required"),
+        ...optionalBool(entry, map.nullable ?? "nullable", "nullable"),
         ...optionalBool(entry, map.multiple ?? "multiple", "multiple"),
         ...optionalBool(entry, map.selfEditable ?? "selfEditable", "selfEditable"),
         ...optionalBool(entry, map.adminEditable ?? "adminEditable", "adminEditable"),

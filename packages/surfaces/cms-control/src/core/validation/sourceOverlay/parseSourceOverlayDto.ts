@@ -101,6 +101,7 @@ function parseFields(value: unknown): SourceOverlayField[] {
             ...(entry.path !== undefined ? { path: fieldPath(entry.path, `fields.${index}.path`) } : {}),
             ...(entry.section !== undefined ? { section: requiredId(entry.section, `fields.${index}.section`) } : {}),
             ...(entry.required === true ? { required: true } : {}),
+            ...(entry.nullable === true ? { nullable: true } : {}),
             ...(entry.selfEditable === false ? { selfEditable: false } : {}),
             ...(entry.adminEditable === false ? { adminEditable: false } : {}),
             ...(entry.showInDashboardTable === true ? { showInDashboardTable: true } : {}),
