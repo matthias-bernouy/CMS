@@ -93,6 +93,11 @@ export {
     type EndpointPerformanceFlusher,
 } from "../core/rollups/endpoint-performance/flusher";
 export { ENDPOINT_PERFORMANCE_HISTOGRAM_BOUNDS_MS } from "../core/rollups/endpoint-performance/histogram";
+export {
+    ENDPOINT_PERFORMANCE_ROUTE,
+    endpointPerformanceHandler,
+    parseEndpointPerformanceQuery,
+} from "../http/endpointPerformanceHandler";
 
 // ── Default implementations (instantiated in the composition root) ──
 export { InMemoryAnalyticsStore } from "../default-implementation/InMemoryAnalyticsStore";
