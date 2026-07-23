@@ -105,6 +105,9 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
         const noExternal = readMemoryTop([...this._rollups.values()], "pv", "referrer", from, to, 0);
         return Promise.resolve(mergeKeyCounts([noExternal, this.referrers.read(from, to)], limit));
     }
+    referrerSaturated(from: Date, to: Date): Promise<boolean> {
+        return Promise.resolve(this.referrers.saturated(from, to));
+    }
 
     async flows(from: Date, to: Date, limit: number): Promise<FlowCount[]> {
         return readMemoryFlows([...this._rollups.values()], from, to, limit);

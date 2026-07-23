@@ -1,0 +1,112 @@
+import { describe, expect, test } from "bun:test";
+import {
+    analyticsPreferencePost,
+    analyticsPrivacyPage,
+    analyticsSelfAssessment,
+} from "cms-delivery/core/analytics/privacyAnalyticsEndpoints";
+import {
+    analyticsOptOutCookieName,
+    analyticsPreferenceCookie,
+    isAnalyticsCollectionAllowed,
+} from "cms-delivery/core/analytics/privacyPreference";
+
+const delivery = {
+    analytics: {},
+    analyticsVisitorSecret: "shared-secret",
+    analyticsSiteScope: "https://example.test",
+    analyticsTrustProxy: false,
+    analyticsHonorDnt: true,
+    analyticsPrivacyPolicyUrl: "https://example.test/privacy",
+    basePath: "",
+} as never;
+
+describe("analytics privacy preference", () => {
+    test("uses a site-scoped boolean cookie with strict attributes", () => {
+        const name = analyticsOptOutCookieName("https://example.test");
+        expect(name).toMatch(/^p9r_analytics_opt_out_[0-9a-f]{8}$/);
+        expect(analyticsPreferenceCookie(name, true, "/", true)).toContain(
+            `${name}=1; Path=/; HttpOnly; SameSite=Lax; Max-Age=`,
+        );
+        expect(analyticsPreferenceCookie(name, true, "/", true)).toEndWith("; Secure");
+        expect(analyticsPreferenceCookie(name, false, "/", false)).toContain("Max-Age=0");
+    });
+
+    test("checks opt-out, GPC, and optional DNT before collection", () => {
+        const name = analyticsOptOutCookieName("https://example.test");
+        expect(
+            isAnalyticsCollectionAllowed(
+                new Request("https://example.test/", { headers: { cookie: `${name}=1` } }),
+                name,
+                true,
+            ),
+        ).toBe(false);
+        expect(
+            isAnalyticsCollectionAllowed(
+                new Request("https://example.test/", { headers: { "sec-gpc": "1" } }),
+                name,
+                false,
+            ),
+        ).toBe(false);
+        expect(
+            isAnalyticsCollectionAllowed(new Request("https://example.test/", { headers: { dnt: "1" } }), name, true),
+        ).toBe(false);
+    });
+});
+
+describe("public analytics privacy endpoints", () => {
+    test("registers privacy routes before the page wildcard", async () => {
+        const source = await Bun.file(new URL("../../src/registerDeliveryEndpoints.ts", import.meta.url)).text();
+        expect(source.indexOf('runner.addEndpoint("GET", PRIVACY_ANALYTICS_ROUTES.page')).toBeGreaterThan(-1);
+        expect(source.indexOf('runner.addEndpoint("GET", PRIVACY_ANALYTICS_ROUTES.page')).toBeLessThan(
+            source.indexOf('runner.setDefaultEndpoint("GET"'),
+        );
+    });
+
+    test("GET is non-mutating, no-store HTML with an accessible form", async () => {
+        const response = analyticsPrivacyPage(new Request("https://example.test/.cms/privacy/analytics"), delivery);
+        expect(response.headers.get("cache-control")).toBe("private, no-store");
+        expect(response.headers.get("vary")).toBe("Cookie");
+        expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+        expect(response.headers.has("set-cookie")).toBe(false);
+        expect(await response.text()).toContain('method="post"');
+    });
+
+    test("POST validates the public origin and sets or clears the preference", () => {
+        const invalid = analyticsPreferencePost(
+            new Request("https://example.test/.cms/privacy/analytics/opt-out", {
+                method: "POST",
+                headers: { origin: "https://attacker.test" },
+            }),
+            delivery,
+            true,
+        );
+        expect(invalid.status).toBe(403);
+        const valid = analyticsPreferencePost(
+            new Request("https://example.test/.cms/privacy/analytics/opt-out", {
+                method: "POST",
+                headers: { origin: "https://example.test" },
+            }),
+            delivery,
+            true,
+        );
+        expect(valid.status).toBe(303);
+        expect(valid.headers.get("set-cookie")).toContain("=1;");
+        expect(valid.headers.get("set-cookie")).toContain("Secure");
+    });
+
+    test("publishes a non-secret technical self-assessment", async () => {
+        const response = analyticsSelfAssessment(
+            new Request("https://example.test/.cms/privacy/analytics/self-assessment"),
+            delivery,
+        );
+        const body = await response.json();
+        expect(body).toMatchObject({
+            status: "configured",
+            profile: "privacy-strict",
+            collection: { rawEvents: false, campaigns: false },
+            publication: { threshold: 10, completedBucketsOnly: true },
+            readiness: { secretReady: true, secureCookie: true },
+        });
+        expect(JSON.stringify(body)).not.toContain("shared-secret");
+    });
+});

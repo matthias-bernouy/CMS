@@ -27,4 +27,10 @@ export class MemoryReferrerStore {
                 .map((bucket) => bucket.snapshot),
         );
     }
+
+    saturated(from: Date, to: Date): boolean {
+        return [...this.buckets.values()].some(
+            (bucket) => bucket.bucket >= from && bucket.bucket < to && bucket.snapshot.saturated,
+        );
+    }
 }

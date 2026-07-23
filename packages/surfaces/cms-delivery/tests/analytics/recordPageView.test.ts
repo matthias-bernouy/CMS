@@ -4,6 +4,7 @@ import { P9R_CACHE, type TPage } from "@bernouy/cms-content";
 import { TtlCache, type CacheEntry } from "@bernouy/http-runner";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
+import { analyticsOptOutCookieName } from "cms-delivery/core/analytics/privacyPreference";
 
 const page = (id: string, path: string): TPage => ({
     id,
@@ -97,5 +98,20 @@ describe("Delivery strict analytics collection", () => {
         await done;
         expect(mounted.events[0]).toMatchObject({ exclusionReason: "automation" });
         expect(mounted.events[0]).not.toHaveProperty("visitorHash");
+    });
+
+    test("opt-out prevents event construction and store invocation", async () => {
+        const mounted = mount([page("home", "/")]);
+        const cookie = analyticsOptOutCookieName("https://example.test");
+        await mounted.handler(
+            new Request("https://example.test/", {
+                headers: {
+                    host: "example.test",
+                    "user-agent": "Mozilla/5.0 Chrome/120 Safari/537.36",
+                    cookie: `${cookie}=1`,
+                },
+            }),
+        );
+        expect(mounted.events).toEqual([]);
     });
 });

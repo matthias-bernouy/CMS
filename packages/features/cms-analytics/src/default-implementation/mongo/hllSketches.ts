@@ -62,6 +62,7 @@ export async function finalizeHllSketches(
                         bucket,
                         count: merged.estimate(),
                         expiresAt: new Date(bucket.getTime() + retentionDays * DAY_MS),
+                        rollupVersion: ANALYTICS_VERSIONS.rollup,
                     },
                 },
                 { upsert: true },

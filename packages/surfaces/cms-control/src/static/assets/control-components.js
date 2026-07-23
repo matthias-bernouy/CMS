@@ -13968,11 +13968,8 @@ p {
       return { view, pages, flows, devices, browsers };
     }
     if (view === "acquisition") {
-      const [channels, referrers] = await Promise.all([
-        getJson("breakdown", range, signal, undefined, "acquisition"),
-        getJson("referrers", range, signal, 10)
-      ]);
-      return { view, channels, referrers };
+      const referrers = await getJson("referrers", range, signal, 10);
+      return { view, channels: [], referrers };
     }
     const [health, statuses] = await Promise.all([
       getJson("health", range, signal),
@@ -13998,7 +13995,8 @@ p {
     if (!response.ok) {
       throw new Error(`Analytics request failed with status ${response.status}`);
     }
-    return response.json();
+    const report = await response.json();
+    return report.data;
   }
 
   // src/components/admin/Layout/Analytics/styles/nav.css
@@ -14118,7 +14116,7 @@ w13c-lateral-menu-item {
     return DECIMAL.format(value);
   }
   function formatMilliseconds(value) {
-    return `${formatInteger(value)} ms`;
+    return value === null ? "—" : `${formatInteger(value)} ms`;
   }
   function formatPercent(value) {
     return new Intl.NumberFormat(undefined, { style: "percent", maximumFractionDigits: 1 }).format(value);

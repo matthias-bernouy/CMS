@@ -98,6 +98,14 @@ export class DeliveryCmsContext {
         return this.config.analyticsTrustProxy ?? false;
     }
 
+    get analyticsHonorDnt(): boolean {
+        return this.config.analyticsHonorDnt ?? true;
+    }
+
+    get analyticsPrivacyPolicyUrl(): string | undefined {
+        return this.config.analyticsPrivacyPolicyUrl;
+    }
+
     get filesMetadata(): CmsFilesMetadataRepository {
         if (!this.config.filesMetadata) {
             throw new Error("files metadata backend not configured");

@@ -16,6 +16,9 @@ describe("production runtime stores", () => {
                         indexedCollections.push(name);
                         return `${name}-index`;
                     },
+                    async deleteMany() {
+                        return { deletedCount: 0 };
+                    },
                 };
             },
         } as unknown as Db;

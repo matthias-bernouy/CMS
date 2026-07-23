@@ -2,6 +2,7 @@ import type { Collection } from "mongodb";
 import { hourKey, truncateToHour } from "../../core/rollups/buckets";
 import { aggregateFrequentItems, emptyFrequentItems, updateFrequentItems } from "../../core/referrers/FrequentItems";
 import type { ReferrerBucketDoc } from "./types";
+import { ANALYTICS_VERSIONS } from "../../interfaces/AnalyticsPrivacy";
 
 const MAX_CAS_ATTEMPTS = 8;
 
@@ -31,6 +32,8 @@ export async function updateReferrerBucket(
                           ...next,
                           revision: 1,
                           expiresAt: new Date(bucket.getTime() + retentionDays * 86_400_000),
+                          filterVersion: ANALYTICS_VERSIONS.filter,
+                          rollupVersion: ANALYTICS_VERSIONS.rollup,
                       },
                   },
                   { upsert: true },
@@ -49,4 +52,12 @@ export async function readReferrerBuckets(
 ): Promise<Array<{ key: string; count: number }>> {
     const documents = await buckets.find({ bucket: { $gte: from, $lt: to } }).toArray();
     return aggregateFrequentItems(documents);
+}
+
+export async function hasSaturatedReferrerBucket(
+    buckets: Collection<ReferrerBucketDoc>,
+    from: Date,
+    to: Date,
+): Promise<boolean> {
+    return Boolean(await buckets.findOne({ bucket: { $gte: from, $lt: to }, saturated: true }));
 }

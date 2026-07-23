@@ -18,8 +18,8 @@ export function formatDecimal(value: number): string {
     return DECIMAL.format(value);
 }
 
-export function formatMilliseconds(value: number): string {
-    return `${formatInteger(value)} ms`;
+export function formatMilliseconds(value: number | null): string {
+    return value === null ? "—" : `${formatInteger(value)} ms`;
 }
 
 export function formatPercent(value: number): string {

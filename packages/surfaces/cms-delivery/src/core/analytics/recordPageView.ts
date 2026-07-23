@@ -1,6 +1,7 @@
 import { buildPageViewEvent } from "@bernouy/cms-analytics";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { handlePageRequest, handlePageRequestWithResult } from "cms-delivery/core/pages/handlePageRequest";
+import { analyticsOptOutCookieName, isAnalyticsCollectionAllowed } from "./privacyPreference";
 
 /**
  * Wraps the default page handler: serve the request normally, then record a
@@ -17,6 +18,10 @@ export async function recordPageView(req: Request, delivery: DeliveryCms): Promi
     const t0 = Date.now();
     const result = await handlePageRequestWithResult(req, delivery);
     const durationMs = Date.now() - t0;
+    const cookieName = analyticsOptOutCookieName(delivery.analyticsSiteScope ?? "");
+    if (!isAnalyticsCollectionAllowed(req, cookieName, delivery.analyticsHonorDnt)) {
+        return result.response;
+    }
     void collectPageView(req, delivery, result.response, result.pageId, durationMs);
     return result.response;
 }

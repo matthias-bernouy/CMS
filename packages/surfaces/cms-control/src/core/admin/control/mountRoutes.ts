@@ -10,7 +10,9 @@ import {
 } from "@bernouy/cms-auth";
 import {
     ANALYTICS_ROUTES,
+    StrictAnalyticsReports,
     analyticsBreakdownHandler,
+    analyticsEntriesHandler,
     analyticsFlowsHandler,
     analyticsHealthHandler,
     analyticsReferrersHandler,
@@ -117,20 +119,17 @@ export function mountControlCmsRoutes(
             if (!state.analytics) {
                 return;
             }
-            const analytics = state.analytics;
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.summary, (req) => analyticsSummaryHandler(analytics, req));
+            const reports = new StrictAnalyticsReports(state.analytics);
+            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.summary, (req) => analyticsSummaryHandler(reports, req));
             apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.timeseries, (req) =>
-                analyticsTimeseriesHandler(analytics, req),
+                analyticsTimeseriesHandler(reports, req),
             );
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.topPages, (req) => analyticsTopPagesHandler(analytics, req));
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.breakdown, (req) =>
-                analyticsBreakdownHandler(analytics, req),
-            );
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.referrers, (req) =>
-                analyticsReferrersHandler(analytics, req),
-            );
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.flows, (req) => analyticsFlowsHandler(analytics, req));
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.health, (req) => analyticsHealthHandler(analytics, req));
+            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.topPages, (req) => analyticsTopPagesHandler(reports, req));
+            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.entries, (req) => analyticsEntriesHandler(reports, req));
+            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.breakdown, (req) => analyticsBreakdownHandler(reports, req));
+            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.referrers, (req) => analyticsReferrersHandler(reports, req));
+            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.flows, (req) => analyticsFlowsHandler(reports, req));
+            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.health, (req) => analyticsHealthHandler(reports, req));
         },
         [authGuard],
     );

@@ -16,10 +16,11 @@ import { eventToWrites, isCountedEvent } from "../core/rollups/eventToWrites";
 import { readFlows, readTimeseries, readTop } from "./mongo/readSeries";
 import { readHealth, readSummary } from "./mongo/readSummaries";
 import { finalizeHllSketches, updateHllSketch } from "./mongo/hllSketches";
-import { readReferrerBuckets, updateReferrerBucket } from "./mongo/referrerBuckets";
+import { hasSaturatedReferrerBucket, readReferrerBuckets, updateReferrerBucket } from "./mongo/referrerBuckets";
 import type { HllSketchDoc, ReferrerBucketDoc, RollupDoc } from "./mongo/types";
 import { isIgnoredReferrer } from "../core/collection/analyticsPolicy";
 import { mergeKeyCounts } from "../core/referrers/FrequentItems";
+import { migrateLegacyAnalytics } from "./mongo/migrateLegacyAnalytics";
 
 /** NB: only `type` imports from `mongodb` → no runtime coupling; the `Db` is injected by the caller. */
 export type MongoAnalyticsStoreConfig = AnalyticsStoreConfig & {
@@ -54,6 +55,7 @@ export class MongoAnalyticsStore implements AnalyticsStore {
     }
 
     async init(): Promise<void> {
+        await migrateLegacyAnalytics(this.db, this._prefix);
         await Promise.all([
             this.rollups.createIndex({ metric: 1, dim: 1, bucket: 1 }),
             this.rollups.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
@@ -79,6 +81,7 @@ export class MongoAnalyticsStore implements AnalyticsStore {
                     key: w.key,
                     bucket: w.bucket,
                     expiresAt: w.expiresAt,
+                    rollupVersion: w.rollupVersion,
                 },
             };
             if (w.msMax !== undefined) {
@@ -143,6 +146,9 @@ export class MongoAnalyticsStore implements AnalyticsStore {
             readReferrerBuckets(this.referrerBuckets, from, to),
         ]);
         return mergeKeyCounts([noExternal, external], limit);
+    }
+    referrerSaturated(from: Date, to: Date): Promise<boolean> {
+        return hasSaturatedReferrerBucket(this.referrerBuckets, from, to);
     }
     flows(from: Date, to: Date, limit: number): Promise<FlowCount[]> {
         return readFlows(this.rollups, from, to, limit);

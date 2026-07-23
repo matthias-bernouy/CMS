@@ -13,6 +13,7 @@ describe("production surface mounting", () => {
         let controlArguments: unknown[] = [];
         let deliveryConfig: Record<string, unknown> | undefined;
         let workerOptions: Record<string, unknown> | undefined;
+        let finalizerStore: unknown;
         let releaseControl!: () => void;
         const controlReady = new Promise<void>((resolve) => {
             releaseControl = resolve;
@@ -70,6 +71,10 @@ describe("production surface mounting", () => {
                 events.push("workers");
                 return {};
             },
+            startAnalyticsFinalizer(store: unknown) {
+                finalizerStore = store;
+                return {};
+            },
             log(message: string) {
                 logs.push(message);
             },
@@ -125,6 +130,7 @@ describe("production surface mounting", () => {
                 identities: options.features.identities,
             },
         });
+        expect(finalizerStore).toBe(options.features.analytics);
         expect(starts).toEqual([
             ["control", 3100],
             ["delivery", 3101],

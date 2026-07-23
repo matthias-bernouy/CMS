@@ -8,6 +8,7 @@ export type RollupDoc = {
     msSum?: number;
     msMax?: number;
     expiresAt: Date;
+    rollupVersion: string;
 };
 
 export type HllSketchDoc = {
@@ -29,4 +30,6 @@ export type ReferrerBucketDoc = {
     saturated: boolean;
     revision: number;
     expiresAt: Date;
+    filterVersion: string;
+    rollupVersion: string;
 };

@@ -19,17 +19,19 @@ describe("MongoAnalyticsStore", () => {
     test("initializes query and TTL indexes without analytics_seen", async () => {
         const names: string[] = [];
         const createIndex = mock(async () => "index");
+        const deleteMany = mock(async () => ({ deletedCount: 0 }));
         const db = {
             collection: (name: string) => {
                 names.push(name);
-                return { createIndex };
+                return { createIndex, deleteMany };
             },
         };
         await new MongoAnalyticsStore(db as never).init();
         expect(new Set(names)).toEqual(
-            new Set(["analytics_rollups", "analytics_hll_sketches", "analytics_referrer_buckets"]),
+            new Set(["analytics_rollups", "analytics_hll_sketches", "analytics_referrer_buckets", "analytics_seen"]),
         );
         expect(createIndex).toHaveBeenCalledWith({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+        expect(deleteMany).toHaveBeenCalledTimes(4);
     });
 
     test("records counters and one register-max update without storing the hash", async () => {

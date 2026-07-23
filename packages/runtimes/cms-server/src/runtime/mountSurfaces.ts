@@ -1,5 +1,6 @@
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
+import { startAnalyticsFinalizer } from "@bernouy/cms-analytics";
 import { RepositoryCms } from "@bernouy/cms-repository";
 import { BunRunner } from "@bernouy/http-runner";
 import type { RuntimeEnv } from "../runtimeEnv";
@@ -24,6 +25,7 @@ export type ProductionSurfaceRuntime = {
     Delivery: typeof DeliveryCms;
     Repository: typeof RepositoryCms;
     startWorkers: typeof startProductionSystemFunctionWorkers;
+    startAnalyticsFinalizer: typeof startAnalyticsFinalizer;
     log: (message: string) => void;
 };
 
@@ -33,6 +35,7 @@ const PRODUCTION_SURFACE_RUNTIME: ProductionSurfaceRuntime = {
     Delivery: DeliveryCms,
     Repository: RepositoryCms,
     startWorkers: startProductionSystemFunctionWorkers,
+    startAnalyticsFinalizer,
     log: console.log,
 };
 
@@ -116,6 +119,9 @@ export async function mountProductionSurfaces(
         functions: features.functions,
         sources: features.deliverySources,
         deps: { resolveSecret: features.resolveSecret, identities: features.identities },
+    });
+    runtime.startAnalyticsFinalizer(features.analytics, {
+        onError: (error) => console.error("Analytics visitor finalization failed:", error),
     });
 
     controlRunner.start(env.CONTROL_PORT);

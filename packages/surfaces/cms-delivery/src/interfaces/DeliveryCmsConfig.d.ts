@@ -47,6 +47,10 @@ export type DeliveryCmsConfig = {
     analyticsSiteScope?: string;
     /** Trust X-Forwarded-For only behind an overwriting proxy. Defaults to false. */
     analyticsTrustProxy?: boolean;
+    /** Optional defence-in-depth support for the legacy DNT request header. */
+    analyticsHonorDnt?: boolean;
+    /** Public privacy-policy link shown next to the audience-measurement opt-out. */
+    analyticsPrivacyPolicyUrl?: string;
     /** File metadata and bytes backing the public file route. */
     filesMetadata?: CmsFilesMetadataRepository;
     filesBlob?: CmsFilesBlobStore;

@@ -28,6 +28,14 @@ export {
     STRICT_ANALYTICS_LIMITS,
     assertSupportedAnalyticsProfile,
 } from "../interfaces/AnalyticsPrivacy";
+export { StrictAnalyticsReports } from "../core/reporting/StrictAnalyticsReports";
+export { startAnalyticsFinalizer, type AnalyticsFinalizer } from "../core/hll/AnalyticsFinalizer";
+export type {
+    AnalyticsReport,
+    AnalyticsReportMetadata,
+    AnalyticsReports,
+    AnalyticsReportWindow,
+} from "../core/reporting/types";
 
 // ── Default implementations (instantiated in the composition root) ──
 export { InMemoryAnalyticsStore } from "../default-implementation/InMemoryAnalyticsStore";

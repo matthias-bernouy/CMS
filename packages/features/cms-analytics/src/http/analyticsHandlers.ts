@@ -1,5 +1,4 @@
-import type { AnalyticsStore } from "../interfaces/AnalyticsStore";
-import { parseRange } from "../core/parseRange";
+import type { AnalyticsReports, AnalyticsReportWindow } from "../core/reporting/types";
 
 export const ANALYTICS_ROUTES = {
     summary: "/analytics/summary",
@@ -12,54 +11,72 @@ export const ANALYTICS_ROUTES = {
     health: "/analytics/health",
 } as const;
 
-export async function analyticsSummaryHandler(store: AnalyticsStore, req: Request): Promise<Response> {
-    const { from, to } = parseRange(new URL(req.url).searchParams.get("range"), new Date());
-    await store.finalizeVisitors(new Date());
-    return Response.json(await store.summary(from, to));
+export async function analyticsSummaryHandler(reports: AnalyticsReports, req: Request): Promise<Response> {
+    const window = reportWindow(req);
+    return window instanceof Response ? window : Response.json(await reports.summary(window));
 }
 
-export async function analyticsTimeseriesHandler(store: AnalyticsStore, req: Request): Promise<Response> {
-    const q = parseRange(new URL(req.url).searchParams.get("range"), new Date());
-    return Response.json(await store.timeseries(q));
+export async function analyticsTimeseriesHandler(reports: AnalyticsReports, req: Request): Promise<Response> {
+    const window = reportWindow(req);
+    return window instanceof Response ? window : Response.json(await reports.timeseries(window));
 }
 
-export async function analyticsTopPagesHandler(store: AnalyticsStore, req: Request): Promise<Response> {
+export async function analyticsTopPagesHandler(reports: AnalyticsReports, req: Request): Promise<Response> {
+    const window = reportWindow(req);
+    return window instanceof Response
+        ? window
+        : Response.json(await reports.topPages(window, parseLimit(new URL(req.url).searchParams)));
+}
+
+export async function analyticsEntriesHandler(reports: AnalyticsReports, req: Request): Promise<Response> {
+    const window = reportWindow(req);
+    return window instanceof Response
+        ? window
+        : Response.json(await reports.entries(window, parseLimit(new URL(req.url).searchParams)));
+}
+
+export async function analyticsBreakdownHandler(reports: AnalyticsReports, req: Request): Promise<Response> {
     const params = new URL(req.url).searchParams;
-    const { from, to } = parseRange(params.get("range"), new Date());
-    return Response.json(await store.topPages(from, to, parseLimit(params)));
-}
-
-export async function analyticsEntriesHandler(store: AnalyticsStore, req: Request): Promise<Response> {
-    const params = new URL(req.url).searchParams;
-    const { from, to } = parseRange(params.get("range"), new Date());
-    return Response.json(await store.entries(from, to, parseLimit(params)));
-}
-
-export async function analyticsBreakdownHandler(store: AnalyticsStore, req: Request): Promise<Response> {
-    const params = new URL(req.url).searchParams;
-    const dim = params.get("dim");
-    if (dim !== "status" && dim !== "device" && dim !== "browser" && dim !== "exclusion") {
+    const dimension = params.get("dim");
+    if (dimension !== "status" && dimension !== "device" && dimension !== "browser" && dimension !== "exclusion") {
         return new Response("dim must be status|device|browser|exclusion", { status: 400 });
     }
-    const { from, to } = parseRange(params.get("range"), new Date());
-    return Response.json(await store.breakdown(dim, from, to));
+    const window = parseWindow(params.get("range"));
+    return window ? Response.json(await reports.breakdown(dimension, window)) : invalidWindow();
 }
 
-export async function analyticsReferrersHandler(store: AnalyticsStore, req: Request): Promise<Response> {
-    const params = new URL(req.url).searchParams;
-    const { from, to } = parseRange(params.get("range"), new Date());
-    return Response.json(await store.topReferrers(from, to, parseLimit(params)));
+export async function analyticsReferrersHandler(reports: AnalyticsReports, req: Request): Promise<Response> {
+    const window = reportWindow(req);
+    return window instanceof Response
+        ? window
+        : Response.json(await reports.referrers(window, parseLimit(new URL(req.url).searchParams)));
 }
 
-export async function analyticsFlowsHandler(store: AnalyticsStore, req: Request): Promise<Response> {
-    const params = new URL(req.url).searchParams;
-    const { from, to } = parseRange(params.get("range"), new Date());
-    return Response.json(await store.flows(from, to, parseLimit(params)));
+export async function analyticsFlowsHandler(reports: AnalyticsReports, req: Request): Promise<Response> {
+    const window = reportWindow(req);
+    return window instanceof Response
+        ? window
+        : Response.json(await reports.flows(window, parseLimit(new URL(req.url).searchParams)));
 }
 
-export async function analyticsHealthHandler(store: AnalyticsStore, req: Request): Promise<Response> {
-    const { from, to } = parseRange(new URL(req.url).searchParams.get("range"), new Date());
-    return Response.json(await store.health(from, to));
+export async function analyticsHealthHandler(reports: AnalyticsReports, req: Request): Promise<Response> {
+    const window = reportWindow(req);
+    return window instanceof Response ? window : Response.json(await reports.health(window));
+}
+
+function reportWindow(req: Request): AnalyticsReportWindow | Response {
+    return parseWindow(new URL(req.url).searchParams.get("range")) ?? invalidWindow();
+}
+
+function parseWindow(value: string | null): AnalyticsReportWindow | null {
+    if (value === null) {
+        return "7d";
+    }
+    return value === "24h" || value === "7d" || value === "30d" ? value : null;
+}
+
+function invalidWindow(): Response {
+    return new Response("range must be 24h|7d|30d", { status: 400 });
 }
 
 function parseLimit(params: URLSearchParams): number {

@@ -36,9 +36,9 @@ export type AnalyticsSummary = {
     estimatedVisitors: number;
     visitorDays: number;
     averageDailyVisitors: number;
-    avgMs: number;
+    avgMs: number | null;
     /** Request error rate, including non-content responses. */
-    errorRate: number;
+    errorRate: number | null;
 };
 
 export type AnalyticsHealthSummary = {
@@ -46,8 +46,8 @@ export type AnalyticsHealthSummary = {
     notFound: number;
     clientErrors: number;
     serverErrors: number;
-    avgMs: number;
-    maxMs: number;
+    avgMs: number | null;
+    maxMs: number | null;
 };
 
 /** A time-range query plus the bucketing granularity for the series. */
@@ -78,6 +78,8 @@ export interface AnalyticsStore {
     entries(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
     /** External referrer hosts for content views. */
     topReferrers(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
+    /** Whether a bounded referrer bucket overflowed in the selected range. */
+    referrerSaturated(from: Date, to: Date): Promise<boolean>;
     /** Observed same-origin transitions. */
     flows(from: Date, to: Date, limit: number): Promise<FlowCount[]>;
     /** Operational request health, separate from content-view metrics. */

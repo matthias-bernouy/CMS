@@ -1,4 +1,11 @@
-import type { AnalyticsHealthSummary, AnalyticsSummary, FlowCount, KeyCount, TimeBucket } from "@bernouy/cms-analytics";
+import type {
+    AnalyticsHealthSummary,
+    AnalyticsReport,
+    AnalyticsSummary,
+    FlowCount,
+    KeyCount,
+    TimeBucket,
+} from "@bernouy/cms-analytics";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
 export const ANALYTICS_VIEWS = ["overview", "content", "acquisition", "health"] as const;
@@ -72,11 +79,8 @@ export async function fetchAnalyticsDashboard(
         return { view, pages, flows, devices, browsers };
     }
     if (view === "acquisition") {
-        const [channels, referrers] = await Promise.all([
-            getJson<KeyCount[]>("breakdown", range, signal, undefined, "acquisition"),
-            getJson<KeyCount[]>("referrers", range, signal, 10),
-        ]);
-        return { view, channels, referrers };
+        const referrers = await getJson<KeyCount[]>("referrers", range, signal, 10);
+        return { view, channels: [], referrers };
     }
     const [health, statuses] = await Promise.all([
         getJson<AnalyticsHealthSummary>("health", range, signal),
@@ -110,5 +114,6 @@ async function getJson<T>(
     if (!response.ok) {
         throw new Error(`Analytics request failed with status ${response.status}`);
     }
-    return response.json() as Promise<T>;
+    const report = (await response.json()) as AnalyticsReport<T>;
+    return report.data;
 }

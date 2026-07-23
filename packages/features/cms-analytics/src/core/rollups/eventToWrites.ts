@@ -8,6 +8,7 @@ import { DEFAULT_ANALYTICS_COLLECTION_POLICY, type AnalyticsCollectionPolicy } f
 import { isContentView } from "../collection/analyticsPolicy";
 import { NO_EXTERNAL_REFERRER } from "../referrers/FrequentItems";
 import { truncateToHour, hourKey, rollupId } from "./buckets";
+import { ANALYTICS_VERSIONS } from "../../interfaces/AnalyticsPrivacy";
 
 /** One counter upsert: $inc count (+ msSum), $max msMax, on a deterministic _id. */
 export type RollupUpsert = {
@@ -20,6 +21,7 @@ export type RollupUpsert = {
     msSum?: number;
     msMax?: number;
     expiresAt: Date;
+    rollupVersion: string;
 };
 
 /** Whether an event counts toward content views/visitors. PURE. */
@@ -49,6 +51,7 @@ export function eventToWrites(
         bucket,
         count: 1,
         expiresAt: new Date(bucket.getTime() + policy.rollupRetentionDays * 86_400_000),
+        rollupVersion: ANALYTICS_VERSIONS.rollup,
         ...extra,
     });
 

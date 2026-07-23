@@ -45,6 +45,7 @@ export class MemoryHllStore {
             bucket,
             count: merged.estimate(),
             expiresAt: new Date(bucket.getTime() + retentionDays * 86_400_000),
+            rollupVersion: ANALYTICS_VERSIONS.rollup,
         };
     }
 }

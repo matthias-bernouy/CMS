@@ -111,6 +111,9 @@ export class ValidatingAnalyticsStore implements AnalyticsStore {
     topReferrers(from: Date, to: Date, limit: number) {
         return this.inner.topReferrers(from, to, limit);
     }
+    referrerSaturated(from: Date, to: Date) {
+        return this.inner.referrerSaturated(from, to);
+    }
     flows(from: Date, to: Date, limit: number) {
         return this.inner.flows(from, to, limit);
     }
