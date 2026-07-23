@@ -51,10 +51,24 @@ describe("ValidatingAnalyticsStore", () => {
         await expect(store().record(event({ durationMs: -1 }))).rejects.toBeInstanceOf(AnalyticsValidationError);
     });
 
+    test("rejects unbounded or non-normalized dimensions", async () => {
+        await expect(store().record(event({ pageId: " " }))).rejects.toBeInstanceOf(AnalyticsValidationError);
+        await expect(store().record(event({ fromPath: "/from?q=1" }))).rejects.toBeInstanceOf(AnalyticsValidationError);
+        await expect(store().record(event({ referrerHost: "Example.COM" }))).rejects.toBeInstanceOf(
+            AnalyticsValidationError,
+        );
+        await expect(store().record(event({ browser: "unknown" as never }))).rejects.toBeInstanceOf(
+            AnalyticsValidationError,
+        );
+    });
+
     test("reads pass straight through", async () => {
         const s = store();
-        await s.record(event());
+        await s.record(event({ referrerHost: "google.com", fromPath: "/home" }));
         expect(await s.topPaths(new Date("2026-06-10"), new Date("2026-06-11"), 5)).toHaveLength(1);
         expect(await s.breakdown("device", new Date("2026-06-10"), new Date("2026-06-11"))).toHaveLength(1);
+        expect(await s.topReferrers(new Date("2026-06-10"), new Date("2026-06-11"), 5)).toHaveLength(1);
+        expect(await s.flows(new Date("2026-06-10"), new Date("2026-06-11"), 5)).toHaveLength(1);
+        expect((await s.health(new Date("2026-06-10"), new Date("2026-06-11"))).requests).toBe(1);
     });
 });

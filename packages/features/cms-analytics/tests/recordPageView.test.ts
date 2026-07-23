@@ -55,6 +55,29 @@ describe("buildPageViewEvent", () => {
         expect(c.visitorId).not.toBe(a.visitorId);
     });
 
+    test("can ignore spoofable forwarding headers outside a trusted proxy", async () => {
+        const a = await buildPageViewEvent(req({ "user-agent": CHROME, "x-forwarded-for": "1.2.3.4" }), 200, 1, "s", {
+            trustProxy: false,
+        });
+        const b = await buildPageViewEvent(req({ "user-agent": CHROME, "x-forwarded-for": "9.9.9.9" }), 200, 1, "s", {
+            trustProxy: false,
+        });
+        expect(a.visitorId).toBe(b.visitorId);
+    });
+
+    test("accepts a stable page id supplied after content resolution", async () => {
+        const event = await buildPageViewEvent(req({ "user-agent": CHROME }), 200, 1, "s", {
+            pageId: "page-about",
+        });
+        expect(event.pageId).toBe("page-about");
+    });
+
+    test("rejects an empty visitor secret", async () => {
+        await expect(buildPageViewEvent(req({ "user-agent": CHROME }), 200, 1, "")).rejects.toThrow(
+            "analytics visitor secret is required",
+        );
+    });
+
     test("malformed referer is ignored", async () => {
         const e = await buildPageViewEvent(req({ "user-agent": CHROME, referer: "not a url" }), 200, 1, "s");
         expect(e.referrerHost).toBeUndefined();

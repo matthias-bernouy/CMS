@@ -4,15 +4,19 @@
  * device/browser breakdowns. Bots are flagged so callers can exclude them from counters.
  */
 
-import type { AnalyticsEvent } from "../interfaces/AnalyticsEvent";
+import type { AnalyticsEvent } from "../../interfaces/AnalyticsEvent";
 
 export type UserAgentClass = {
     device: AnalyticsEvent["device"];
-    browser: string;
+    browser: AnalyticsEvent["browser"];
 };
 
 const BOT_RE =
-    /bot|crawl|spider|slurp|mediapartners|facebookexternalhit|embedly|bingpreview|whatsapp|telegram|ia_archiver|lighthouse|headless|pingdom|uptimerobot/i;
+    /bot|crawl|spider|slurp|mediapartners|externalhit|embedly|bingpreview|whatsapp|telegram|ia_archiver|lighthouse|headless|pingdom|uptimerobot|crawler|scanner|scrapy/i;
+const AUTOMATION_RE =
+    /curl|wget|python-requests|python-urllib|go-http-client|libwww-perl|httpie|postmanruntime|node-fetch|axios\//i;
+const KNOWN_CRAWLER_RE =
+    /gptbot|chatgpt-user|oai-searchbot|claudebot|claude-web|anthropic-ai|perplexitybot|cohere-ai|bytespider|ccbot|meta-externalagent|amazonbot|applebot-extended|ahrefs|semrush|mj12bot|dotbot|petalbot/i;
 const TABLET_RE = /ipad|tablet|kindle|playbook|silk/i;
 const MOBILE_RE = /mobi|iphone|ipod|android|blackberry|iemobile|opera mini/i;
 
@@ -22,7 +26,7 @@ export function classifyUserAgent(ua: string | undefined): UserAgentClass {
     if (!s) {
         return { device: "other", browser: "other" };
     }
-    if (BOT_RE.test(s)) {
+    if (BOT_RE.test(s) || AUTOMATION_RE.test(s) || KNOWN_CRAWLER_RE.test(s)) {
         return { device: "bot", browser: detectBrowser(s) };
     }
     const device = TABLET_RE.test(s) ? "tablet" : MOBILE_RE.test(s) ? "mobile" : "desktop";
@@ -30,7 +34,7 @@ export function classifyUserAgent(ua: string | undefined): UserAgentClass {
 }
 
 /** Coarse browser family from a lowercased UA. Order matters (edge/opera before chrome). PURE. */
-function detectBrowser(s: string): string {
+function detectBrowser(s: string): AnalyticsEvent["browser"] {
     if (s.includes("edg")) {
         return "edge";
     }

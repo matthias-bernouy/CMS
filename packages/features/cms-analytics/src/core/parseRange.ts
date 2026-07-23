@@ -1,4 +1,5 @@
 import type { RangeQuery } from "../interfaces/AnalyticsStore";
+import { truncateToDay, truncateToHour } from "./buckets";
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
@@ -11,11 +12,11 @@ export function parseRange(range: string | null, now: Date): RangeQuery {
     const to = now;
     switch (range) {
         case "24h":
-            return { from: new Date(now.getTime() - 24 * HOUR_MS), to, interval: "hour" };
+            return { from: new Date(truncateToHour(now).getTime() - 23 * HOUR_MS), to, interval: "hour" };
         case "30d":
-            return { from: new Date(now.getTime() - 30 * DAY_MS), to, interval: "day" };
+            return { from: new Date(truncateToDay(now).getTime() - 29 * DAY_MS), to, interval: "day" };
         case "7d":
         default:
-            return { from: new Date(now.getTime() - 7 * DAY_MS), to, interval: "day" };
+            return { from: new Date(truncateToDay(now).getTime() - 6 * DAY_MS), to, interval: "day" };
     }
 }

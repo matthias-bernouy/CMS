@@ -12,7 +12,7 @@ describe("buckets", () => {
     });
     test("hourKey", () => expect(hourKey(T)).toBe("2026-06-02T14"));
     test("dayKey", () => expect(dayKey(T)).toBe("2026-06-02"));
-    test("rollupId joins with |", () =>
-        expect(rollupId("pv", "path", "/about", "2026-06-02T14")).toBe("pv|path|/about|2026-06-02T14"));
+    test("rollupId escapes dimension keys", () =>
+        expect(rollupId("pv", "path", "/about", "2026-06-02T14")).toBe("pv|path|%2Fabout|2026-06-02T14"));
     test("seenId joins visitor + day", () => expect(seenId("abc123", "2026-06-02")).toBe("abc123|2026-06-02"));
 });

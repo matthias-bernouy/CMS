@@ -1,10 +1,11 @@
 /**
  * The AnalyticsStore contract: one writer used by delivery and a small set of read
  * methods backing the control dashboards. Reads return pre-aggregated shapes
- * (counters/buckets), never raw events — see §5 of ANALYTICS_PLAN.md.
+ * (counters/buckets), never raw events.
  */
 
 import type { AnalyticsEvent } from "./AnalyticsEvent";
+import type { AnalyticsCollectionPolicy } from "./AnalyticsPolicy";
 
 /** One point of a time series: a bucket, its count, and latency for the "all" metric. */
 export type TimeBucket = {
@@ -20,12 +21,31 @@ export type KeyCount = {
     count: number;
 };
 
+export type FlowCount = {
+    from: string;
+    to: string;
+    count: number;
+};
+
 /** Headline numbers for the dashboard cards over a period. */
 export type AnalyticsSummary = {
     views: number;
+    /** Sum of daily unique visitors. Kept as the legacy API field. */
     uniqueVisitors: number;
+    visitorDays: number;
+    averageDailyVisitors: number;
     avgMs: number;
-    errorRate: number; // (4xx + 5xx) / total
+    /** Request error rate, including non-content responses. */
+    errorRate: number;
+};
+
+export type AnalyticsHealthSummary = {
+    requests: number;
+    notFound: number;
+    clientErrors: number;
+    serverErrors: number;
+    avgMs: number;
+    maxMs: number;
 };
 
 /** A time-range query plus the bucketing granularity for the series. */
@@ -44,8 +64,20 @@ export interface AnalyticsStore {
     summary(from: Date, to: Date): Promise<AnalyticsSummary>;
     /** Views (+ latency) per bucket over the range. */
     timeseries(q: RangeQuery): Promise<TimeBucket[]>;
-    /** Most-viewed paths over [from, to), capped at `limit`. */
+    /** @deprecated Compatibility alias for `topPages`. */
     topPaths(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
+    /** Most-viewed stable page ids, falling back to paths for legacy producers. */
+    topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
     /** Counts grouped by a dimension over [from, to). */
-    breakdown(dim: "status" | "device" | "browser", from: Date, to: Date): Promise<KeyCount[]>;
+    breakdown(dim: "status" | "device" | "browser" | "acquisition", from: Date, to: Date): Promise<KeyCount[]>;
+    /** External referrer hosts for content views. */
+    topReferrers(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
+    /** Observed same-origin transitions. */
+    flows(from: Date, to: Date, limit: number): Promise<FlowCount[]>;
+    /** Operational request health, separate from content-view metrics. */
+    health(from: Date, to: Date): Promise<AnalyticsHealthSummary>;
 }
+
+export type AnalyticsStoreConfig = {
+    policy?: Partial<AnalyticsCollectionPolicy>;
+};

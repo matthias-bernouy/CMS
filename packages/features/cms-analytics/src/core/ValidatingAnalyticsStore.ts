@@ -31,6 +31,9 @@ export function validateAnalyticsEvent(event: AnalyticsEvent): void {
     if (event.path.includes("?")) {
         throw new AnalyticsValidationError("path", "expected a normalized pathname (no query string)");
     }
+    if (event.path.length > 2_048) {
+        throw new AnalyticsValidationError("path", "must be at most 2048 characters");
+    }
     if (!Number.isInteger(event.status) || event.status < 100 || event.status > 599) {
         throw new AnalyticsValidationError("status", "expected an HTTP status code");
     }
@@ -39,6 +42,40 @@ export function validateAnalyticsEvent(event: AnalyticsEvent): void {
     }
     if (!event.visitorId) {
         throw new AnalyticsValidationError("visitorId", "required");
+    }
+    if (event.visitorId.length > 256) {
+        throw new AnalyticsValidationError("visitorId", "must be at most 256 characters");
+    }
+    if (
+        event.pageId !== undefined &&
+        (!event.pageId.trim() || event.pageId !== event.pageId.trim() || event.pageId.length > 256)
+    ) {
+        throw new AnalyticsValidationError("pageId", "must be normalized, non-blank, and at most 256 characters");
+    }
+    if (event.fromPath !== undefined) {
+        if (!event.fromPath.startsWith("/") || event.fromPath.includes("?") || event.fromPath.length > 2_048) {
+            throw new AnalyticsValidationError("fromPath", "expected a pathname of at most 2048 characters");
+        }
+    }
+    if (event.referrerHost !== undefined && !isNormalizedHostname(event.referrerHost)) {
+        throw new AnalyticsValidationError("referrerHost", "expected a normalized hostname");
+    }
+    if (!["mobile", "tablet", "desktop", "bot", "other"].includes(event.device)) {
+        throw new AnalyticsValidationError("device", "unknown device class");
+    }
+    if (!["chrome", "edge", "firefox", "opera", "safari", "other"].includes(event.browser)) {
+        throw new AnalyticsValidationError("browser", "unknown browser class");
+    }
+}
+
+function isNormalizedHostname(host: string): boolean {
+    if (!host || host.length > 253 || host !== host.toLowerCase() || host.includes("/") || host.includes(":")) {
+        return false;
+    }
+    try {
+        return new URL(`http://${host}`).hostname === host;
+    } catch {
+        return false;
     }
 }
 
@@ -69,7 +106,19 @@ export class ValidatingAnalyticsStore implements AnalyticsStore {
     topPaths(from: Date, to: Date, limit: number) {
         return this.inner.topPaths(from, to, limit);
     }
-    breakdown(dim: "status" | "device" | "browser", from: Date, to: Date) {
+    topPages(from: Date, to: Date, limit: number) {
+        return this.inner.topPages(from, to, limit);
+    }
+    breakdown(dim: "status" | "device" | "browser" | "acquisition", from: Date, to: Date) {
         return this.inner.breakdown(dim, from, to);
+    }
+    topReferrers(from: Date, to: Date, limit: number) {
+        return this.inner.topReferrers(from, to, limit);
+    }
+    flows(from: Date, to: Date, limit: number) {
+        return this.inner.flows(from, to, limit);
+    }
+    health(from: Date, to: Date) {
+        return this.inner.health(from, to);
     }
 }

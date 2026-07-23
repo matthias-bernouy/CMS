@@ -23,9 +23,11 @@ describe("InMemoryAnalyticsStore", () => {
         await s.record(ev({ durationMs: 10 }));
         await s.record(ev({ durationMs: 30, status: 404, visitorId: "v2" }));
         const sum = await s.summary(FROM, TO);
-        expect(sum.views).toBe(2);
-        expect(sum.avgMs).toBe(20);
+        expect(sum.views).toBe(1);
+        expect(sum.avgMs).toBe(10);
         expect(sum.errorRate).toBe(0.5);
+        expect(sum.visitorDays).toBe(1);
+        expect(sum.averageDailyVisitors).toBe(0.5);
     });
 
     test("unique visitors dedup within a day, recount on a new day", async () => {
@@ -40,12 +42,13 @@ describe("InMemoryAnalyticsStore", () => {
         expect(sum.views).toBe(5);
     });
 
-    test("bots are not counted anywhere", async () => {
+    test("bots are excluded from content and request health", async () => {
         const s = new InMemoryAnalyticsStore();
         await s.record(ev({ device: "bot", visitorId: "bot1" }));
         const sum = await s.summary(FROM, TO);
         expect(sum.views).toBe(0);
         expect(sum.uniqueVisitors).toBe(0);
+        expect((await s.health(FROM, TO)).requests).toBe(0);
     });
 
     test("topPaths sorts by count and respects limit", async () => {
@@ -55,6 +58,14 @@ describe("InMemoryAnalyticsStore", () => {
         }
         await s.record(ev({ path: "/b", visitorId: "vb" }));
         expect(await s.topPaths(FROM, TO, 1)).toEqual([{ key: "/a", count: 3 }]);
+    });
+
+    test("topPages uses pageId and excludes unmatched failures", async () => {
+        const s = new InMemoryAnalyticsStore();
+        await s.record(ev({ pageId: "page-a", path: "/old-a" }));
+        await s.record(ev({ pageId: "page-a", path: "/new-a", visitorId: "v2" }));
+        await s.record(ev({ status: 404, path: "/.env", visitorId: "scanner" }));
+        expect(await s.topPages(FROM, TO, 10)).toEqual([{ key: "page-a", count: 2 }]);
     });
 
     test("breakdown by device, descending", async () => {
@@ -73,11 +84,16 @@ describe("InMemoryAnalyticsStore", () => {
         await s.record(ev({ ts: new Date("2026-06-02T14:10:00.000Z"), visitorId: "v1" }));
         await s.record(ev({ ts: new Date("2026-06-02T14:50:00.000Z"), visitorId: "v2" }));
         await s.record(ev({ ts: new Date("2026-06-02T16:00:00.000Z"), visitorId: "v3" }));
-        const ts = await s.timeseries({ from: FROM, to: TO, interval: "hour" });
-        expect(ts).toHaveLength(2);
+        const ts = await s.timeseries({
+            from: new Date("2026-06-02T14:00:00.000Z"),
+            to: new Date("2026-06-02T17:00:00.000Z"),
+            interval: "hour",
+        });
+        expect(ts).toHaveLength(3);
         expect(ts[0]?.bucket.toISOString()).toBe("2026-06-02T14:00:00.000Z");
         expect(ts[0]?.count).toBe(2);
-        expect(ts[1]?.count).toBe(1);
+        expect(ts[1]?.count).toBe(0);
+        expect(ts[2]?.count).toBe(1);
     });
 
     test("timeseries groups by day", async () => {

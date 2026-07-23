@@ -3,14 +3,19 @@
  * Public surface: the event contract and the store interface (read + write).
  */
 
-export type { AnalyticsEvent, AnalyticsEventType } from "../interfaces/AnalyticsEvent";
+export type { AnalyticsBrowser, AnalyticsEvent, AnalyticsEventType } from "../interfaces/AnalyticsEvent";
 export type {
     AnalyticsStore,
     AnalyticsSummary,
     TimeBucket,
     KeyCount,
+    FlowCount,
     RangeQuery,
+    AnalyticsHealthSummary,
+    AnalyticsStoreConfig,
 } from "../interfaces/AnalyticsStore";
+export type { AnalyticsCollectionPolicy } from "../interfaces/AnalyticsPolicy";
+export { DEFAULT_ANALYTICS_COLLECTION_POLICY } from "../interfaces/AnalyticsPolicy";
 
 // ── Default implementations (instantiated in the composition root) ──
 export { InMemoryAnalyticsStore } from "../default-implementation/InMemoryAnalyticsStore";
@@ -27,5 +32,11 @@ export {
     analyticsTimeseriesHandler,
     analyticsTopPagesHandler,
     analyticsBreakdownHandler,
+    analyticsReferrersHandler,
+    analyticsFlowsHandler,
+    analyticsHealthHandler,
 } from "../http/analyticsHandlers";
-export { buildPageViewEvent } from "../core/buildPageViewEvent";
+export {
+    buildPageViewEvent,
+    type BuildPageViewEventOptions,
+} from "../core/collection/buildPageViewEvent";
