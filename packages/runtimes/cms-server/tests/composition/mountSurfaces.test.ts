@@ -132,7 +132,8 @@ describe("production surface mounting", () => {
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],
             repository: options.core.repo,
-            sources: options.features.deliverySources,
+            sources: options.features.sources,
+            sourceOverlays: options.features.sourceOverlays,
             sourceTelemetry: expect.any(Object),
             sourceTrustedConnectorTarget: expect.any(Function),
             analyticsVisitorSecret: options.analyticsVisitorSecret,
