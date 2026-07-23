@@ -14,10 +14,18 @@ export function createRequestScopedSourceContextResolver(resolve: SourceContextR
     };
 }
 
+/**
+ * Caches plaintext secrets for one execution only. Construct this resolver once
+ * per ingress request and never retain it in a surface or runtime singleton.
+ * References that normalize to one key must represent the same secret.
+ */
 export function createRequestScopedSecretResolver(
     resolve: SourceSecretResolver,
     normalizeReference: (reference: string) => string = (reference) => reference,
 ): SourceSecretResolver {
     const secrets = new Map<string, Promise<string | undefined>>();
-    return (reference) => memoizeRequestPromise(secrets, normalizeReference(reference), () => resolve(reference));
+    return async (reference) => {
+        const normalizedReference = normalizeReference(reference);
+        return memoizeRequestPromise(secrets, normalizedReference, () => resolve(normalizedReference));
+    };
 }

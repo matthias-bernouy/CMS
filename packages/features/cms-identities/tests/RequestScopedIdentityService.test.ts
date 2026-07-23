@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import type { IdentityAlias, IdentityService, IdentityValue } from "@bernouy/cms-identities";
+import {
+    InMemoryIdentityService,
+    InvalidIdentityError,
+    type IdentityAlias,
+    type IdentityService,
+    type IdentityValue,
+} from "@bernouy/cms-identities";
 import { RequestScopedIdentityService } from "@bernouy/cms-identities/requestScope";
+import { identityServiceContract } from "./identityService.contract";
 
 const alias: IdentityAlias = { authority: "provider", kind: "user", value: "external-1" };
 
@@ -40,7 +47,18 @@ describe("RequestScopedIdentityService", () => {
         expect(await scoped.resolve(alias, "cms")).toBe("after");
         expect(inner.resolveCalls).toBe(3);
     });
+
+    test("returns rejected promises for invalid inputs", async () => {
+        const scoped = new RequestScopedIdentityService(new CountingIdentityService(null));
+
+        await expect(scoped.resolve(alias, "")).rejects.toBeInstanceOf(InvalidIdentityError);
+        await expect(scoped.resolve(null as unknown as IdentityAlias, "cms")).rejects.toBeInstanceOf(
+            InvalidIdentityError,
+        );
+    });
 });
+
+identityServiceContract("request-scoped", () => new RequestScopedIdentityService(new InMemoryIdentityService()));
 
 class CountingIdentityService implements IdentityService {
     resolveCalls = 0;

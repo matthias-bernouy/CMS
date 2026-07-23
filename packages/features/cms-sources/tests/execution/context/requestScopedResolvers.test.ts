@@ -39,9 +39,11 @@ describe("request-scoped source resolvers", () => {
     test("single-flights secrets by normalized reference and evicts failures", async () => {
         let calls = 0;
         let reject = false;
+        const references: string[] = [];
         const resolve = createRequestScopedSecretResolver(
-            async () => {
+            async (reference) => {
                 calls++;
+                references.push(reference);
                 if (reject) {
                     reject = false;
                     throw new Error("transient");
@@ -57,9 +59,44 @@ describe("request-scoped source resolvers", () => {
             "secret",
         ]);
         expect(calls).toBe(1);
+        expect(references).toEqual(["TOKEN"]);
         reject = true;
         await expect(resolve("OTHER")).rejects.toThrow("transient");
         expect(await resolve("${OTHER}")).toBe("secret");
         expect(calls).toBe(3);
+    });
+
+    test("keeps plaintext and missing values inside one execution scope", async () => {
+        let value: string | undefined = "first";
+        let calls = 0;
+        const resolver = async () => {
+            calls++;
+            return value;
+        };
+        const firstScope = createRequestScopedSecretResolver(resolver);
+
+        expect(await firstScope("TOKEN")).toBe("first");
+        value = "second";
+        expect(await firstScope("TOKEN")).toBe("first");
+        expect(await createRequestScopedSecretResolver(resolver)("TOKEN")).toBe("second");
+
+        value = undefined;
+        const missingScope = createRequestScopedSecretResolver(resolver);
+        expect(await missingScope("MISSING")).toBeUndefined();
+        value = "created";
+        expect(await missingScope("MISSING")).toBeUndefined();
+        expect(await createRequestScopedSecretResolver(resolver)("MISSING")).toBe("created");
+        expect(calls).toBe(4);
+    });
+
+    test("returns a rejected promise when secret normalization fails", async () => {
+        const resolve = createRequestScopedSecretResolver(
+            async () => "secret",
+            () => {
+                throw new Error("invalid reference");
+            },
+        );
+
+        await expect(resolve("INVALID")).rejects.toThrow("invalid reference");
     });
 });

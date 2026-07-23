@@ -8,7 +8,7 @@ export class RequestScopedIdentityService implements IdentityService {
 
     constructor(private readonly inner: IdentityService) {}
 
-    resolve(candidate: IdentityAlias, candidateTargetAuthority: string): Promise<IdentityValue | null> {
+    async resolve(candidate: IdentityAlias, candidateTargetAuthority: string): Promise<IdentityValue | null> {
         const alias = normalizeIdentityAlias(candidate);
         const targetAuthority = normalizeTargetAuthority(candidateTargetAuthority);
         const key = JSON.stringify([aliasKey(alias), targetAuthority]);

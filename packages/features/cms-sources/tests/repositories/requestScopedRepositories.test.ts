@@ -25,7 +25,7 @@ describe("request-scoped source repositories", () => {
         expect(inner.sourceReads).toBe(3);
     });
 
-    test("evicts rejected reads and keeps authorization and enriched lookups separate", async () => {
+    test("evicts rejected reads and preserves repositories without an authorization lookup", async () => {
         const inner = new CountingSourceRepository();
         await inner.createSource(source());
         inner.rejectSourceOnce = true;
@@ -33,14 +33,26 @@ describe("request-scoped source repositories", () => {
 
         await expect(scoped.getSource("urn:shop")).rejects.toThrow("transient");
         expect((await scoped.getSource("urn:shop"))?.urn).toBe("urn:shop");
+        expect(scoped.getEndpointForAuthorization).toBeUndefined();
+        await Promise.all([scoped.getEndpoint("urn:shop:list"), scoped.getEndpoint("urn:shop:list")]);
+
+        expect(inner.sourceReads).toBe(2);
+        expect(inner.endpointReads).toBe(1);
+    });
+
+    test("keeps explicit authorization and enriched lookups separate", async () => {
+        const inner = new AuthorizationAwareSourceRepository();
+        await inner.createSource(source());
+        const scoped = new RequestScopedSourceRepository(inner);
+
         await Promise.all([
-            scoped.getEndpointForAuthorization("urn:shop:list"),
-            scoped.getEndpointForAuthorization("urn:shop:list"),
+            scoped.getEndpointForAuthorization!("urn:shop:list"),
+            scoped.getEndpointForAuthorization!("urn:shop:list"),
         ]);
         await scoped.getEndpoint("urn:shop:list");
 
-        expect(inner.sourceReads).toBe(2);
-        expect(inner.endpointReads).toBe(2);
+        expect(inner.authorizationEndpointReads).toBe(1);
+        expect(inner.endpointReads).toBe(1);
     });
 
     test("shares overlays by source and invalidates the request snapshot after writes", async () => {
@@ -79,6 +91,21 @@ class CountingSourceRepository extends InMemorySourceRepository {
             throw new Error("transient");
         }
         return super.getSource(urn);
+    }
+
+    override async getEndpoint(urn: string) {
+        this.endpointReads++;
+        return super.getEndpoint(urn);
+    }
+}
+
+class AuthorizationAwareSourceRepository extends InMemorySourceRepository {
+    authorizationEndpointReads = 0;
+    endpointReads = 0;
+
+    async getEndpointForAuthorization(urn: string) {
+        this.authorizationEndpointReads++;
+        return super.getEndpoint(urn);
     }
 
     override async getEndpoint(urn: string) {

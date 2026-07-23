@@ -11,8 +11,13 @@ export class RequestScopedSourceRepository implements SourceRepository {
     private readonly endpoints = new Map<string, Promise<SourceEndpoint | null>>();
     private readonly authorizationEndpoints = new Map<string, Promise<SourceEndpoint | null>>();
     private allSources: Promise<Source[]> | undefined;
+    readonly getEndpointForAuthorization?: (urn: string) => Promise<SourceEndpoint | null>;
 
-    constructor(private readonly inner: SourceRepository) {}
+    constructor(private readonly inner: SourceRepository) {
+        if (inner.getEndpointForAuthorization) {
+            this.getEndpointForAuthorization = (urn) => this.getAuthorizationEndpoint(urn);
+        }
+    }
 
     async createSource(source: Source): Promise<Source> {
         try {
@@ -67,9 +72,9 @@ export class RequestScopedSourceRepository implements SourceRepository {
         return cloneNullable(endpoint);
     }
 
-    async getEndpointForAuthorization(urn: string): Promise<SourceEndpoint | null> {
+    private async getAuthorizationEndpoint(urn: string): Promise<SourceEndpoint | null> {
         const endpoint = await memoizeRequestPromise(this.authorizationEndpoints, urn, async () =>
-            cloneNullable(await (this.inner.getEndpointForAuthorization?.(urn) ?? this.inner.getEndpoint(urn))),
+            cloneNullable(await this.inner.getEndpointForAuthorization!(urn)),
         );
         return cloneNullable(endpoint);
     }
