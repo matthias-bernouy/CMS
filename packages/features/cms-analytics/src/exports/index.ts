@@ -105,6 +105,10 @@ export {
 // ── Default implementations (instantiated in the composition root) ──
 export { InMemoryAnalyticsStore } from "../default-implementation/InMemoryAnalyticsStore";
 export {
+    InMemoryEndpointPerformanceStore,
+    type InMemoryEndpointPerformanceStoreConfig,
+} from "../default-implementation/memory/endpoint-performance/InMemoryEndpointPerformanceStore";
+export {
     ValidatingAnalyticsStore,
     validateAnalyticsEvent,
     AnalyticsValidationError,
