@@ -6,6 +6,7 @@ import type {
     AnalyticsSettings,
 } from "../interfaces/AnalyticsGovernance";
 import type { AnalyticsStore } from "../interfaces/AnalyticsStore";
+import { StrictAnalyticsReports } from "../core/reporting/StrictAnalyticsReports";
 
 export const ANALYTICS_GOVERNANCE_ROUTES = {
     settings: "/analytics/settings",
@@ -36,14 +37,15 @@ export async function analyticsComplianceHandler(
     store: AnalyticsStore,
     context: AnalyticsComplianceContext,
 ): Promise<Response> {
-    const latest = await store.latestPublishedComplianceSnapshot();
-    const evaluation = await evaluateAnalyticsCompliance(
-        await store.getSettings(),
-        context,
-        latest?.manualAttestations,
-    );
+    const [latest, settings, reporting] = await Promise.all([
+        store.latestPublishedComplianceSnapshot(),
+        store.getSettings(),
+        new StrictAnalyticsReports(store).summary("24h"),
+    ]);
+    const evaluation = await evaluateAnalyticsCompliance(settings, context, latest?.manualAttestations);
     return Response.json({
         evaluation,
+        reporting: reporting.meta,
         latestPublished: latest
             ? {
                   id: latest.id,

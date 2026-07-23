@@ -17,6 +17,7 @@ export type RuntimeEnv = {
     CMS_CONTROL_AUTH_PASSWORD_RESET_URL: string;
     ANALYTICS_SALT_SECRET: string;
     ANALYTICS_TRUST_PROXY: boolean;
+    ANALYTICS_TRUSTED_PROXY_VERIFIED: boolean;
 };
 
 type EnvSource = Record<string, string | undefined>;
@@ -70,6 +71,7 @@ export function readRuntimeEnv(source: EnvSource): RuntimeEnv {
         ),
         ANALYTICS_SALT_SECRET: required(source, "ANALYTICS_SALT_SECRET"),
         ANALYTICS_TRUST_PROXY: parseBoolean(source.ANALYTICS_TRUST_PROXY, false),
+        ANALYTICS_TRUSTED_PROXY_VERIFIED: parseBoolean(source.ANALYTICS_TRUSTED_PROXY_VERIFIED, false),
     };
 }
 

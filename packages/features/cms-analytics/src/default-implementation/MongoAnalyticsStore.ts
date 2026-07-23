@@ -52,7 +52,7 @@ export class MongoAnalyticsStore implements AnalyticsStore {
                 this.policy = resolveAnalyticsPolicy({ ...this.policy, ...settings });
             },
         );
-        this.hllStripes = config.hllStripes ?? 4;
+        this.hllStripes = config.hllStripes ?? 16;
     }
 
     private get rollups(): Collection<RollupDoc> {

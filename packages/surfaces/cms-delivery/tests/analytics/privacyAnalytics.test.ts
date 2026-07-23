@@ -24,6 +24,8 @@ const delivery = {
     analyticsVisitorSecret: "shared-secret",
     analyticsSiteScope: "https://example.test",
     analyticsTrustProxy: false,
+    analyticsTrustedProxyVerified: false,
+    analyticsCmsVersion: "development",
     analyticsHonorDnt: true,
     analyticsPrivacyPolicyUrl: "https://example.test/privacy",
     basePath: "",
@@ -115,7 +117,7 @@ describe("public analytics privacy endpoints", () => {
             trustProxy: false,
             trustedProxyVerified: false,
             secureCookie: true,
-            optOutUrl: "/.cms/privacy/analytics",
+            optOutUrl: "https://example.test/.cms/privacy/analytics",
         };
         const evaluatedAt = new Date("2026-07-23T12:00:00Z");
         await analytics.saveComplianceSnapshot({
@@ -134,6 +136,7 @@ describe("public analytics privacy endpoints", () => {
             status: "incomplete",
             checklistVersion: "cnil-audience-measurement-2026-01",
             releaseReady: false,
+            stale: false,
         });
         expect(JSON.stringify(body)).not.toContain("shared-secret");
         expect(JSON.stringify(body)).not.toContain("evidence");

@@ -14,7 +14,6 @@ export const STRICT_ANALYTICS_LIMITS = {
     referrerCapacity: 64,
     sketchTtlHours: 48,
     rollupRetentionDays: 395,
-    maximumRollupRetentionDays: 762,
 } as const;
 
 export function assertSupportedAnalyticsProfile(profile: AnalyticsPrivacyProfile): void {

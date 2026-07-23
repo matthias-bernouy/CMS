@@ -1,6 +1,7 @@
 # Analytics Privacy and CNIL Compliance Plan
 
-Status: accepted architecture and sequenced implementation plan.
+Status: implemented technical architecture; deployment governance remains
+site-specific.
 
 This document defines the CmsCore `privacy-strict` analytics profile intended
 to fit the French CNIL audience-measurement consent exemption. It is an
@@ -64,11 +65,34 @@ to retain a credible consent-exempt default. They still provide useful content,
 traffic-origin, navigation, device, browser, performance, and request-health
 analytics.
 
-## Verified current gaps
+## Implementation status
 
-The existing counters-at-write architecture and absence of raw-event
-persistence are useful foundations, but the current implementation is not
-sufficient:
+The `privacy-strict` technical path is implemented across `cms-analytics`,
+Delivery, Control, and the production/development composition roots:
+
+- minimized page observations are converted directly into versioned aggregate
+  counters;
+- one global site/day HLL++ estimate replaces per-visitor rows;
+- Delivery applies opt-out and GPC before event construction;
+- strict reports enforce closed windows, `k = 10`, suppression, `Other`, and
+  rounding for every API consumer;
+- Settings owns collection controls, retention, evidence, and publishable
+  compliance snapshots;
+- Analytics exposes Overview, Content, Traffic origins, and Request health
+  through its secondary navigation;
+- legacy unversioned rollups and `analytics_seen` rows are purged by the
+  idempotent store migration at initialization.
+
+This implementation does not itself authorize removal of a banner. The
+automatic checks cover the CmsCore component; the published notice, full-site
+tracker audit, infrastructure logs, roles, transfers, legal basis, and
+legal/DPO review remain deployment gates.
+
+## Legacy gaps addressed
+
+The implementation started from the following verified legacy gaps. They are
+retained here as migration rationale and are no longer descriptions of the
+current strict path:
 
 - the visitor fingerprint receives the complete IP address and User-Agent;
 - the daily salt is not scoped to the visited site;
@@ -160,6 +184,10 @@ visitor estimation and must be an explicit operational action.
 
 Proxy trust defaults to disabled. A runtime may trust `X-Forwarded-For` only
 behind a known proxy that overwrites client-supplied forwarding headers.
+Production enables it with `ANALYTICS_TRUST_PROXY=true` and records the
+deployment verification separately with
+`ANALYTICS_TRUSTED_PROXY_VERIFIED=true`; the compliance gate fails closed when
+trust is enabled without that attestation.
 
 ## Daily visitor estimation
 
@@ -169,10 +197,10 @@ are the normal case for early CmsCore sites.
 
 The initial precision is `p = 12`, or 4,096 logical registers, yielding an
 approximate standard error of 1.6%. The implementation uses a 64-bit hash,
-native sparse representation, empirical bias correction, small-range
-correction, and a bounded transition to dense registers. Each request derives a
-register index and rank from the site/day HMAC and atomically applies the
-register maximum.
+native sparse representation, linear counting at low cardinality, LogLog-Beta
+bias correction, and a bounded transition to dense registers. Each request
+derives a register index and rank from the site/day HMAC and atomically applies
+the register maximum.
 
 Register maximum is idempotent and commutative. Duplicate updates are harmless,
 update order does not matter, and lost best-effort writes only cause
@@ -194,9 +222,31 @@ A single tenant/day document is nevertheless a potential WiredTiger hot
 document. The store therefore supports `N` striped sub-sketches. Each update
 chooses a stripe independently without putting visitor-derived material in the
 document key. Finalization merges every stripe register-by-register with
-`max`, producing the same logical sketch as an unstriped stream. Stage 0 decides
-whether `N = 1`, `4`, `8`, or `16` is the appropriate default from measured
-contention rather than assumptions.
+`max`, producing the same logical sketch as an unstriped stream.
+
+The default is 16 stripes. A repeatable local MongoDB 8 benchmark
+(`tests/hll/stripeBenchmark.ts`) paced 50, 100, 250, 500, and 1,000 atomic
+register-max updates per second with 1, 4, 8, and 16 stripes. One representative
+run produced:
+
+| Target updates/s | 1 stripe conflicts | 4 stripes | 8 stripes | 16 stripes |
+| ---: | ---: | ---: | ---: | ---: |
+| 50 | 73 | 1 | 1 | 1 |
+| 100 | 332 | 40 | 4 | 4 |
+| 250 | 1,457 | 441 | 135 | 11 |
+| 500 | 2,593 | 919 | 391 | 90 |
+| 1,000 | 5,067 | 2,291 | 906 | 439 |
+
+Every run completed without operation errors and sustained the target rate on
+the local single-node container. Across two runs at 1,000 updates/s, p95 was
+10.63–15.09 ms for one stripe, 6.16–7.12 ms for four, and 6.20–6.74 ms for
+sixteen. The paced burst harness makes p99 unsuitable as a capacity promise;
+it ranged roughly 304–351 ms. Average BSON document size at 1,000 updates was
+8,563 bytes for one stripe and 674 bytes per document for sixteen stripes.
+A container sample observed 22.98% CPU and 136.6 MiB memory, but this local
+sample is not a production sizing guarantee. Sixteen stripes cut measured
+write conflicts by about 91% versus one stripe and 81% versus four at the
+highest tested rate, for only sixteen bounded site/day documents.
 
 An hourly finalizer processes closed UTC days:
 
@@ -459,8 +509,9 @@ Active HLL++ sketches expire after 48 hours. Rollups gain an `expiresAt`
 field and TTL index. Expiry is fixed on bucket creation and is never extended
 by later increments.
 
-Strict rollup retention is 13 months by default, configurable only downward,
-with a technical ceiling of 25 months. Retention is periodically reviewed.
+Strict rollup retention is 395 days by default and configurable only downward
+to one day. Shortening retention also shortens existing Mongo expiry dates and
+removes already-out-of-range aggregates. Retention is periodically reviewed.
 Deleting a site deletes its tenant-scoped sketches and rollups.
 
 Every customer has separate storage scope and site-scoped HMAC input. CmsCore
@@ -546,11 +597,13 @@ processing register, DPA and processor role, lack of provider reuse, hosting
 and transfers, customer isolation, other site trackers, data-subject request
 handling, and CDN/proxy/server log policies.
 
-## Sequenced implementation
+## Implemented sequence
 
-Incomplete stages may be deployed while the current banner remains. The banner
-may be removed for this analytics component only after the no-prior-consent
-release gate and all technical and organizational requirements are met.
+Stages 0 through 4 below are implemented for the CmsCore technical component.
+The list remains the traceability map for code review and future migrations.
+The banner may be removed for this analytics component only after the
+deployment-specific no-prior-consent release gate and all organizational
+requirements are met.
 
 ### Stage 0 — contracts and visitor-estimation spike
 
@@ -559,7 +612,8 @@ release gate and all technical and organizational requirements are met.
   health counters, and visitor estimates;
 - prototype 64-bit HLL++ sparse/dense behavior, bias correction, atomic
   register updates, estimation, and idempotent finalization;
-- prototype bounded in-process register combining and bulk counter writes;
+- use one ordered bulk counter write per request; an in-process HLL combiner
+  remains optional because striped atomic updates met the local benchmark;
 - compare unstriped storage with `4`, `8`, and `16` striped sketches;
 - load-test `50`, `100`, `250`, `500`, and `1,000` updates per second;
 - measure Mongo write conflicts, retries, p95/p99 latency, CPU, and BSON size;
@@ -570,9 +624,8 @@ release gate and all technical and organizational requirements are met.
 - document the measured threshold that requires striping;
 - freeze the visitor algorithm, sketch schema, filter, and rollup versions.
 
-If the HLL++ spike fails its concurrency or recovery criteria, retain
-`analytics_seen` temporarily with its 48-hour TTL, but do not weaken any other
-strict-profile requirement. The target architecture remains HLL++.
+The HLL++ spike passed its local concurrency and recovery criteria.
+`analytics_seen` is not part of the resulting architecture.
 
 ### Stage 1 — stop over-collection and add opposition
 
@@ -592,7 +645,7 @@ strict-profile requirement. The target architecture remains HLL++.
 - mount public privacy routes before the page wildcard;
 - enforce opt-out before all visitor processing.
 
-This stage is deployable immediately with the existing banner still present.
+This stage was implemented before the anonymous publication boundary.
 
 ### Stage 2 — anonymous publication
 
@@ -612,7 +665,7 @@ This stage is deployable immediately with the existing banner still present.
 - purge acquisition, legacy referrer, unsafe raw-path, and unsafe flow rollups;
 - start a fresh referrer series under the strict normalization version;
 - stop creating `analytics_seen` rows after HLL++ activation;
-- let legacy seen rows expire within 48 hours;
+- purge legacy seen rows during the controlled idempotent migration;
 - do not combine incompatible visitor algorithms;
 - verify TTLs, site scopes, and shared secrets in every environment.
 

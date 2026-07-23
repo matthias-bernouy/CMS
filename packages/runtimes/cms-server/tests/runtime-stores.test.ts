@@ -19,6 +19,12 @@ describe("production runtime stores", () => {
                     async deleteMany() {
                         return { deletedCount: 0 };
                     },
+                    async updateOne() {
+                        return {};
+                    },
+                    async findOne() {
+                        return null;
+                    },
                 };
             },
         } as unknown as Db;
@@ -39,6 +45,7 @@ describe("production runtime stores", () => {
                 "analytics_rollups",
                 "analytics_hll_sketches",
                 "analytics_referrer_buckets",
+                "analytics_governance",
                 "integrationInstallations",
             ]),
         );

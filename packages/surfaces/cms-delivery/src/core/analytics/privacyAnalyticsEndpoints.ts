@@ -85,6 +85,7 @@ export async function analyticsSelfAssessment(req: Request, delivery: DeliveryCm
 }
 
 function complianceContext(delivery: DeliveryCms, context: ReturnType<typeof privacyContext>) {
+    const publicUrl = safeUrl(delivery.analyticsSiteScope ?? "");
     return {
         cmsVersion: delivery.analyticsCmsVersion,
         secretReady: context.secretReady,
@@ -92,7 +93,9 @@ function complianceContext(delivery: DeliveryCms, context: ReturnType<typeof pri
         trustProxy: delivery.analyticsTrustProxy,
         trustedProxyVerified: delivery.analyticsTrustedProxyVerified,
         secureCookie: context.secure,
-        optOutUrl: delivery.basePath + PRIVACY_ANALYTICS_ROUTES.page,
+        optOutUrl: publicUrl
+            ? new URL(delivery.basePath + PRIVACY_ANALYTICS_ROUTES.page, publicUrl.origin).href
+            : delivery.basePath + PRIVACY_ANALYTICS_ROUTES.page,
     };
 }
 

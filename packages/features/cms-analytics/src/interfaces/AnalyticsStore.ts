@@ -98,5 +98,6 @@ export interface AnalyticsStore {
 
 export type AnalyticsStoreConfig = {
     policy?: Partial<AnalyticsCollectionPolicy>;
+    /** Per-site/day HLL++ documents. Defaults to 16 from the local Mongo contention benchmark. */
     hllStripes?: 1 | 4 | 8 | 16;
 };

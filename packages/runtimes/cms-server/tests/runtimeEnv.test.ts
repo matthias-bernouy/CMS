@@ -22,6 +22,14 @@ describe("runtime env validation", () => {
         expect(env.CMS_AUTH_EMAIL_VERIFICATION_URL).toBe("https://www.example.com/auth/confirm-email");
         expect(env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL).toBe("https://admin.example.com/auth/reset-password");
         expect(env.ANALYTICS_TRUST_PROXY).toBe(false);
+        expect(env.ANALYTICS_TRUSTED_PROXY_VERIFIED).toBe(false);
+        expect(
+            readRuntimeEnv({
+                ...validEnv(),
+                ANALYTICS_TRUST_PROXY: "true",
+                ANALYTICS_TRUSTED_PROXY_VERIFIED: "true",
+            }),
+        ).toMatchObject({ ANALYTICS_TRUST_PROXY: true, ANALYTICS_TRUSTED_PROXY_VERIFIED: true });
     });
 
     test.failing("parses listener hosts with wildcard production defaults", () => {

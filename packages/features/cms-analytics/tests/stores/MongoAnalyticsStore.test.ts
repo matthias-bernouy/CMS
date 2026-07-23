@@ -54,6 +54,7 @@ describe("MongoAnalyticsStore", () => {
         expect(updateOne).toHaveBeenCalledTimes(1);
         const serialized = JSON.stringify(updateOne.mock.calls[0]);
         expect(serialized).toContain("registers.");
+        expect(serialized).toContain("expiresAt");
         expect(serialized).not.toContain(event.visitorHash);
         expect(serialized).not.toContain("analytics_seen");
     });
@@ -124,9 +125,8 @@ describe("MongoAnalyticsStore", () => {
         const db = {
             collection: (name: string) => (name === "analytics_rollups" ? { updateOne } : sketches),
         };
-        const store = new MongoAnalyticsStore(db as never);
-        await store.finalizeVisitors(new Date("2026-06-03"));
-        await store.finalizeVisitors(new Date("2026-06-03"));
+        await new MongoAnalyticsStore(db as never).finalizeVisitors(new Date("2026-06-03"));
+        await new MongoAnalyticsStore(db as never).finalizeVisitors(new Date("2026-06-03"));
         expect(updateOne).toHaveBeenCalledTimes(2);
         expect(updateOne.mock.calls[0]?.[1]).toMatchObject({ $set: { count: 2 } });
         expect(updateOne.mock.calls[0]?.[1]).not.toHaveProperty("$inc");

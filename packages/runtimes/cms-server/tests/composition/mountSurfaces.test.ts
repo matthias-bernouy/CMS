@@ -116,6 +116,7 @@ describe("production surface mounting", () => {
             analyticsVisitorSecret: options.analyticsVisitorSecret,
             analyticsSiteScope: options.env.DELIVERY_PUBLIC_URL,
             analyticsTrustProxy: false,
+            analyticsTrustedProxyVerified: false,
             auth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_AUTH_EMAIL_VERIFICATION_URL,

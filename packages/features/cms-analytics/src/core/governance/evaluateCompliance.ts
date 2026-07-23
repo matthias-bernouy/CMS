@@ -78,6 +78,18 @@ function automaticCriteria(
             "Configure a stable tenant id or normalized public origin.",
         ),
         criterion(
+            "visitor_minimisation",
+            "Visitor estimation uses minimized, rotating input",
+            "pass",
+            "IPv4 /24, IPv6 /48, coarse device/browser, and site/day HMAC; the HMAC is not persisted.",
+        ),
+        criterion(
+            "hll_state",
+            "Visitor state is one global daily HLL++ sketch",
+            "pass",
+            `p=12, 64-bit input, 48-hour sketch TTL, estimator ${ANALYTICS_VERSIONS.visitorEstimator}.`,
+        ),
+        criterion(
             "proxy_trust",
             "Forwarded client addresses are trusted only behind a verified proxy",
             !context.trustProxy || context.trustedProxyVerified ? "pass" : "manual-review",
@@ -101,6 +113,12 @@ function automaticCriteria(
             "Reports use closed buckets, k=10, and rounding",
             "pass",
             ANALYTICS_VERSIONS.publication,
+        ),
+        criterion(
+            "filter_version",
+            "The strict automation and route filter is versioned",
+            "pass",
+            ANALYTICS_VERSIONS.filter,
         ),
         criterion(
             "retention",

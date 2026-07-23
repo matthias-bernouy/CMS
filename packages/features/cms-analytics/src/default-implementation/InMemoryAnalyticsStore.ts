@@ -43,7 +43,7 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
         this.governance = new MemoryAnalyticsGovernance(settingsFromPolicy(this.policy), (settings) => {
             this.policy = resolveAnalyticsPolicy({ ...this.policy, ...settings });
         });
-        this.hll = new MemoryHllStore(config.hllStripes ?? 4);
+        this.hll = new MemoryHllStore(config.hllStripes ?? 16);
         this.referrers = new MemoryReferrerStore(this.policy.referrerCapacity);
     }
 

@@ -12,6 +12,7 @@ export function surfaceMountFixtures() {
             CMS_AUTH_PASSWORD_RESET_URL: "https://www.example.test/auth/reset-password",
             CMS_FILES_DIR: "/data/files",
             ANALYTICS_TRUST_PROXY: false,
+            ANALYTICS_TRUSTED_PROXY_VERIFIED: false,
         },
         analyticsVisitorSecret: "analytics-secret",
         core: {
