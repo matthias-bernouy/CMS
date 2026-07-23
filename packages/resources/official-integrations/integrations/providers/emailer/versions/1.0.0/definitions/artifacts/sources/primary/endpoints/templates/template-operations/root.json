@@ -117,5 +117,8 @@
     },
     {
         "$include": "send-template-email.json"
+    },
+    {
+        "$include": "install-templates.json"
     }
 ]

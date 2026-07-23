@@ -32,6 +32,7 @@ type MessageRow = {
     provider_message_id: string | null;
     error: string | null;
     idempotency_key: string | null;
+    reservation_token: string | null;
     created_at?: string;
     sent_at?: string | null;
     updated_at?: string;
@@ -126,6 +127,7 @@ const messageSelect = [
     "provider_message_id",
     "error",
     "idempotency_key",
+    "reservation_token",
     "created_at",
     "sent_at",
     "updated_at",
@@ -158,6 +160,9 @@ Deno.serve(async (request) => {
         }
         if (route === "/templates") {
             return await withMethod(request, "GET", () => listTemplates(request));
+        }
+        if (route === "/templates/install") {
+            return await withMethod(request, "POST", () => installTemplates(request));
         }
         if (route === "/template/archive") {
             return await withMethod(request, "POST", () => archiveTemplate(request));
@@ -277,6 +282,29 @@ async function upsertTemplate(request: Request): Promise<Response> {
     return json(publicTemplate(row));
 }
 
+async function installTemplates(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+    const body = await readJsonObject(request);
+    if (!Array.isArray(body.templates) || body.templates.length < 1 || body.templates.length > 100) {
+        throw new HttpError(400, "templates must contain between 1 and 100 items");
+    }
+    const templates = body.templates.map((item, index) => {
+        if (!isRecord(item)) {
+            throw new HttpError(400, `templates.${index} must be an object`);
+        }
+        return templatePayload(item);
+    });
+    const response = await rest("templates?on_conflict=key", {
+        method: "POST",
+        headers: { prefer: "resolution=ignore-duplicates,return=minimal" },
+        body: JSON.stringify(templates),
+    });
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    return json({ accepted: templates.length });
+}
+
 async function archiveTemplate(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const key = requiredQuery(request, "key");
@@ -320,12 +348,6 @@ async function sendTemplateEmail(request: Request): Promise<Response> {
         throw new HttpError(400, "template must be active");
     }
     const idempotencyKey = optionalTextValue(body.idempotencyKey, "idempotencyKey", 200);
-    if (idempotencyKey) {
-        const existing = await messageByIdempotencyKey(idempotencyKey);
-        if (existing) {
-            return json(publicMessage(existing));
-        }
-    }
     return json(
         await sendRenderedTemplate(template, {
             toEmails: emailList(body.toEmails ?? body.toEmail, "toEmails"),
@@ -355,6 +377,36 @@ async function sendRenderedTemplate(
     const rendered = renderTemplate(template, input.data);
     const fromEmail = input.fromEmail ?? template.from_email ?? defaultFromEmail(settings);
     const replyTo = input.replyTo ?? template.reply_to ?? defaultReplyTo(settings);
+    const reservationToken = crypto.randomUUID();
+    const reservation = await reserveMessageRow(
+        {
+            id: crypto.randomUUID(),
+            template_key: template.key,
+            status: "reserved",
+            to_emails: input.toEmails,
+            cc_emails: input.ccEmails,
+            bcc_emails: input.bccEmails,
+            from_email: fromEmail,
+            reply_to: replyTo ?? null,
+            subject: rendered.subject,
+            html_body: rendered.htmlBody,
+            text_body: rendered.textBody,
+            data_snapshot: input.data,
+            provider_message_id: null,
+            error: null,
+            idempotency_key: input.idempotencyKey ?? null,
+            reservation_token: reservationToken,
+            sent_at: null,
+        },
+        reservationToken,
+    );
+    if (!reservation.owned) {
+        return publicMessage(reservation.row);
+    }
+    await patchOwnedMessage(reservation.row.id, reservationToken, {
+        status: "sending",
+        error: null,
+    });
     try {
         const transport = await emailTransport(settings);
         const info = await transport.sendMail({
@@ -367,42 +419,18 @@ async function sendRenderedTemplate(
             html: rendered.htmlBody,
             ...(rendered.textBody ? { text: rendered.textBody } : {}),
         });
-        const message = await insertMessageRow({
-            id: crypto.randomUUID(),
-            template_key: template.key,
+        const message = await patchOwnedMessage(reservation.row.id, reservationToken, {
             status: "sent",
-            to_emails: input.toEmails,
-            cc_emails: input.ccEmails,
-            bcc_emails: input.bccEmails,
-            from_email: fromEmail,
-            reply_to: replyTo ?? null,
-            subject: rendered.subject,
-            html_body: rendered.htmlBody,
-            text_body: rendered.textBody,
-            data_snapshot: input.data,
             provider_message_id: info.messageId ?? info.response ?? null,
             error: null,
-            idempotency_key: input.idempotencyKey ?? null,
             sent_at: new Date().toISOString(),
         });
         return publicMessage(message);
     } catch (error) {
-        await insertMessageRow({
-            id: crypto.randomUUID(),
-            template_key: template.key,
+        await patchOwnedMessage(reservation.row.id, reservationToken, {
             status: "failed",
-            to_emails: input.toEmails,
-            cc_emails: input.ccEmails,
-            bcc_emails: input.bccEmails,
-            from_email: fromEmail,
-            reply_to: replyTo ?? null,
-            subject: rendered.subject,
-            html_body: rendered.htmlBody,
-            text_body: rendered.textBody,
-            data_snapshot: input.data,
             provider_message_id: null,
             error: safeError(error),
-            idempotency_key: input.idempotencyKey ?? null,
             sent_at: null,
         });
         throw new HttpError(502, "email delivery failed");
@@ -554,17 +582,97 @@ async function patchTemplateRow(key: string, patch: JsonRecord): Promise<Templat
     return rows[0];
 }
 
-async function insertMessageRow(payload: JsonRecord): Promise<MessageRow> {
+async function reserveMessageRow(
+    payload: JsonRecord,
+    reservationToken: string,
+): Promise<{ row: MessageRow; owned: boolean }> {
     const response = await rest("messages", {
         method: "POST",
         headers: { prefer: "return=representation" },
         body: JSON.stringify(payload),
     });
+    if (response.ok) {
+        const rows = (await response.json()) as MessageRow[];
+        return { row: rows[0]!, owned: true };
+    }
+    const idempotencyKey = typeof payload.idempotency_key === "string" ? payload.idempotency_key : "";
+    if (response.status !== 409 || !idempotencyKey) {
+        throw await restError(response);
+    }
+    const existing = await messageByIdempotencyKey(idempotencyKey);
+    if (!existing) {
+        throw new HttpError(409, "email idempotency reservation conflicted");
+    }
+    if (existing.status === "sent") {
+        return { row: existing, owned: false };
+    }
+    if (existing.status !== "failed" && !isStaleReservation(existing)) {
+        throw new HttpError(409, "email delivery is already in progress");
+    }
+    const reclaimed = await reclaimMessageRow(existing, payload, reservationToken);
+    if (reclaimed) {
+        return { row: reclaimed, owned: true };
+    }
+    const latest = await messageByIdempotencyKey(idempotencyKey);
+    if (latest?.status === "sent") {
+        return { row: latest, owned: false };
+    }
+    throw new HttpError(409, "email delivery is already in progress");
+}
+
+async function reclaimMessageRow(
+    existing: MessageRow,
+    payload: JsonRecord,
+    reservationToken: string,
+): Promise<MessageRow | null> {
+    const query = new URLSearchParams();
+    query.set("id", `eq.${existing.id}`);
+    query.set("status", `eq.${existing.status}`);
+    const response = await rest(`messages?${query.toString()}`, {
+        method: "PATCH",
+        headers: { prefer: "return=representation" },
+        body: JSON.stringify({
+            ...payload,
+            id: undefined,
+            status: "reserved",
+            reservation_token: reservationToken,
+            error: null,
+            provider_message_id: null,
+            sent_at: null,
+        }),
+    });
     if (!response.ok) {
         throw await restError(response);
     }
     const rows = (await response.json()) as MessageRow[];
-    return rows[0]!;
+    return rows[0] ?? null;
+}
+
+async function patchOwnedMessage(id: string, reservationToken: string, patch: JsonRecord): Promise<MessageRow> {
+    const query = new URLSearchParams();
+    query.set("id", `eq.${id}`);
+    query.set("reservation_token", `eq.${reservationToken}`);
+    const response = await rest(`messages?${query.toString()}`, {
+        method: "PATCH",
+        headers: { prefer: "return=representation" },
+        body: JSON.stringify(patch),
+    });
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as MessageRow[];
+    if (!rows[0]) {
+        throw new HttpError(409, "email reservation is no longer owned");
+    }
+    return rows[0];
+}
+
+function isStaleReservation(row: MessageRow): boolean {
+    if (!["reserved", "sending", "unknown"].includes(row.status)) {
+        return false;
+    }
+    const updatedAt = Date.parse(row.updated_at ?? row.created_at ?? "");
+    return Number.isFinite(updatedAt) && updatedAt <= Date.now() - 5 * 60_000;
 }
 
 async function messageById(id: string): Promise<MessageRow | null> {

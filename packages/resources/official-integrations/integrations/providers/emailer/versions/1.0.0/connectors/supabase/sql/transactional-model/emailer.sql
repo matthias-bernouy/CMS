@@ -46,11 +46,14 @@ create table if not exists emailer.messages (
     provider_message_id text,
     error text,
     idempotency_key text,
+    reservation_token text,
     created_at timestamptz not null default now(),
     sent_at timestamptz,
     updated_at timestamptz not null default now(),
     constraint emailer_messages_id_not_blank check (length(btrim(id)) > 0),
-    constraint emailer_messages_status_valid check (status in ('sent', 'failed')),
+    constraint emailer_messages_status_valid check (
+        status in ('reserved', 'sending', 'sent', 'failed', 'unknown')
+    ),
     constraint emailer_messages_to_emails_array check (jsonb_typeof(to_emails) = 'array'),
     constraint emailer_messages_cc_emails_array check (jsonb_typeof(cc_emails) = 'array'),
     constraint emailer_messages_bcc_emails_array check (jsonb_typeof(bcc_emails) = 'array'),
@@ -61,6 +64,15 @@ create table if not exists emailer.messages (
         idempotency_key is null or length(btrim(idempotency_key)) > 0
     )
 );
+
+alter table emailer.messages
+    add column if not exists reservation_token text;
+alter table emailer.messages
+    drop constraint if exists emailer_messages_status_valid;
+alter table emailer.messages
+    add constraint emailer_messages_status_valid check (
+        status in ('reserved', 'sending', 'sent', 'failed', 'unknown')
+    );
 
 create table if not exists emailer.settings (
     id text primary key default 'default',

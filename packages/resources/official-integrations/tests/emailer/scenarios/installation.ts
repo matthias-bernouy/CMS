@@ -82,6 +82,14 @@ export function registerInstallationTest(): void {
         expect(await harness.functions.getFunction("startNewsletterBroadcast")).toBeNull();
         expect(broadcastSource?.endpoints.some((endpoint) => endpoint.urn.endsWith(":startCampaign"))).toBe(false);
         const sendEndpoint = source?.endpoints.find((endpoint) => endpoint.urn === "urn:emailer:sendTemplateEmail");
+        const installEndpoint = source?.endpoints.find((endpoint) => endpoint.urn === "urn:emailer:installTemplates");
         expect(sendEndpoint?.access).toEqual({ mode: "system" });
+        expect(installEndpoint?.access).toEqual({ mode: "system" });
+        expect(installEndpoint?.input?.body?.properties?.templates?.items?.properties).toMatchObject({
+            key: { type: "string" },
+            subject: { type: "string" },
+            htmlBody: { type: "string" },
+            metadata: { type: "object" },
+        });
     });
 }

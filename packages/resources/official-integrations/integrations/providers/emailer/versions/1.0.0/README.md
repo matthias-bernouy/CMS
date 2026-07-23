@@ -47,6 +47,11 @@ The `sendTemplateEmail` endpoint is declared with `system` access. Pages and
 public browser code should call application functions or triggers instead of
 calling this source endpoint directly.
 
+The system-only `installTemplates` endpoint accepts a bounded template batch
+and inserts only missing keys. Duplicate keys are ignored atomically, so a
+domain integration can provide defaults without sharing Emailer's database or
+overwriting templates edited by an administrator.
+
 ## Template Model
 
 Templates use simple `{{ token.path }}` interpolation in subject, HTML body, and
