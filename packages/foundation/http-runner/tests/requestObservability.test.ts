@@ -51,6 +51,25 @@ describe("request correlation", () => {
             errorLog.mockRestore();
         }
     });
+
+    test("returns and propagates the correlation id on unmatched 404 responses", async () => {
+        const inbound = "11d38c6a-0e6a-4f68-9dad-2a92c17b8300";
+        const server = serveForTest(new BunRunner());
+
+        try {
+            const generated = await server.request("GET", "/missing");
+            const propagated = await server.request("GET", "/also-missing", {
+                headers: { [CMS_CORRELATION_HEADER]: inbound },
+            });
+
+            expect(generated.status).toBe(404);
+            expect(isValidCorrelationId(generated.headers.get(CMS_CORRELATION_HEADER) ?? "")).toBe(true);
+            expect(propagated.status).toBe(404);
+            expect(propagated.headers.get(CMS_CORRELATION_HEADER)).toBe(inbound);
+        } finally {
+            server.stop();
+        }
+    });
 });
 
 describe("request timing", () => {

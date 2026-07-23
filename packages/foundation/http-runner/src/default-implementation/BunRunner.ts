@@ -1,17 +1,13 @@
-import type { Runner, RouteHandler, Middleware } from "http-runner/interfaces/Runner";
-import { setRequestIP, getRequestIP as readRequestIP } from "http-runner/core/request/ip";
-import { dispatchRequest } from "http-runner/core/request/dispatch";
-import { matchPath, normalizePath, pathUnderPrefix, urlJoin } from "./runnerPaths";
+import { getRequestIP as readRequestIP } from "http-runner/core/request/ip";
+import type { Middleware, RouteHandler, Runner } from "http-runner/interfaces/Runner";
+import { dispatchBunRunnerRequest, type RegisteredDefaultEndpoint, type RegisteredRoute } from "./bunRequestDispatch";
+import { stopServerGracefully } from "./gracefulServerStop";
+import { normalizePath, urlJoin } from "./runnerPaths";
 
 export class BunRunner implements Runner {
     basePath: string = "/";
 
-    private routes: Array<{
-        method: string;
-        path: string;
-        handler: RouteHandler;
-        middlewares: Middleware[];
-    }> = [];
+    private routes: RegisteredRoute[] = [];
 
     private globalMiddlewares: Middleware[] = [];
 
@@ -23,12 +19,7 @@ export class BunRunner implements Runner {
         return this.server?.port;
     }
 
-    private defaultEndpoints: Array<{
-        method: string;
-        prefix: string;
-        handler: RouteHandler;
-        middlewares: Middleware[];
-    }> = [];
+    private defaultEndpoints: RegisteredDefaultEndpoint[] = [];
 
     addEndpoint(method: string, path: string, handler: RouteHandler, middlewares: Middleware[] = []): void {
         this.routes.push({
@@ -84,6 +75,7 @@ export class BunRunner implements Runner {
             },
 
             stop: () => this.stop(),
+            stopGracefully: (timeoutMs) => this.stopGracefully(timeoutMs),
         };
 
         callback(scopedRunner);
@@ -139,32 +131,8 @@ export class BunRunner implements Runner {
 
         this.server = Bun.serve({
             port,
-            async fetch(request, server) {
-                const peer = server.requestIP(request);
-                if (peer) {
-                    setRequestIP(request, peer.address);
-                }
-
-                const url = new URL(request.url);
-                const method = request.method;
-                const pathname = normalizePath(url.pathname);
-
-                const route = self.routes.find((r) => r.method === method && matchPath(r.path, pathname));
-
-                const fallback = route
-                    ? null
-                    : (self.defaultEndpoints
-                          .filter((d) => d.method === method && pathUnderPrefix(pathname, d.prefix))
-                          .sort((a, b) => b.prefix.length - a.prefix.length)[0] ?? null);
-
-                const effective = route ?? fallback;
-
-                if (!effective) {
-                    return new Response("Not Found", { status: 404 });
-                }
-
-                return dispatchRequest(request, effective, self.globalMiddlewares);
-            },
+            fetch: (request, server) =>
+                dispatchBunRunnerRequest(request, server, self.routes, self.defaultEndpoints, self.globalMiddlewares),
         });
 
         console.log(`🚀 Server started on http://localhost:${this.server.port}`);
@@ -174,5 +142,12 @@ export class BunRunner implements Runner {
     stop(): void {
         this.server?.stop(true);
         this.server = undefined;
+    }
+
+    /** Stop accepting traffic, wait for active requests, then force-close after the bounded grace period. */
+    async stopGracefully(timeoutMs?: number): Promise<void> {
+        const server = this.server;
+        this.server = undefined;
+        await stopServerGracefully(server, timeoutMs);
     }
 }

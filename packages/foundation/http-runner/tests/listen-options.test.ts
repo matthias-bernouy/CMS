@@ -1,5 +1,6 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { BunRunner } from "../src/default-implementation/BunRunner";
+import { stopServerGracefully } from "../src/default-implementation/gracefulServerStop";
 
 type CapturedServeOptions = {
     port?: unknown;
@@ -37,6 +38,58 @@ describe("BunRunner listen options", () => {
         const options = captureServeOptions((runner) => runner.start(4123));
 
         expect(options.port).toBe(4123);
+    });
+
+    test("graceful stop waits for an active request before closing", async () => {
+        let release!: () => void;
+        let markStarted!: () => void;
+        const started = new Promise<void>((resolve) => {
+            markStarted = resolve;
+        });
+        const pending = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+        const runner = new BunRunner();
+        runner.get("/pending", async () => {
+            markStarted();
+            await pending;
+            return new Response("done");
+        });
+        runner.start(0);
+        try {
+            const response = fetch(`http://localhost:${runner.port}/pending`);
+            await started;
+
+            let stopped = false;
+            const stopping = runner.stopGracefully(1_000).then(() => {
+                stopped = true;
+            });
+            await Promise.resolve();
+            expect(stopped).toBe(false);
+
+            release();
+            expect(await (await response).text()).toBe("done");
+            await stopping;
+            expect(stopped).toBe(true);
+        } finally {
+            release();
+            runner.stop();
+        }
+    });
+
+    test("graceful stop force-closes after its bounded timeout", async () => {
+        const calls: Array<boolean | undefined> = [];
+        await stopServerGracefully(
+            {
+                stop(closeActiveConnections) {
+                    calls.push(closeActiveConnections);
+                    return closeActiveConnections ? Promise.resolve() : new Promise<void>(() => {});
+                },
+            },
+            0,
+        );
+
+        expect(calls).toEqual([false, true]);
     });
 
     test.failing("forwards port and hostname options to Bun.serve", () => {
