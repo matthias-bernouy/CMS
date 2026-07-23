@@ -4,6 +4,9 @@ import css from "./style.css" with { type: "text" };
 import { errorMessage, positiveInteger, saleFilterDefaults, saleStatusDefaults, saleStatuses } from "./helpers";
 import { copyColors, renderSale } from "./render";
 
+const requestAttributes = new Set(["source-id", "source-prefix", "sales-endpoint", "page-size"]);
+const urlStateAttributes = new Set(["page-param", "status-param", "sync-url"]);
+
 export class CommerceAccountSales extends Component {
     static observedAttributes = [
         "source-id",
@@ -44,7 +47,13 @@ export class CommerceAccountSales extends Component {
         super({ css, template });
         this.page = 1;
         this.status = "all";
-        this.requestVersion = 0;
+        this.items = [];
+        this.total = 0;
+        this.hasLoaded = false;
+        this.loadScheduled = false;
+        this.lastLoadedKey = "";
+        this.inFlight = null;
+        this.controller = null;
     }
 
     connectedCallback() {
@@ -53,55 +62,114 @@ export class CommerceAccountSales extends Component {
         this.pagination.addEventListener("basic-pagination:change", this.onPageChange);
         window.addEventListener("popstate", this.onPopState);
         this.syncPresentation();
-        this.load();
+        this.scheduleLoad();
     }
 
     disconnectedCallback() {
         this.filter.removeEventListener("change", this.onFilterChange);
         this.pagination.removeEventListener("basic-pagination:change", this.onPageChange);
         window.removeEventListener("popstate", this.onPopState);
+        this.controller?.abort();
+        this.controller = null;
+        this.inFlight = null;
+        this.loadScheduled = false;
     }
 
-    attributeChangedCallback() {
+    attributeChangedCallback(name) {
         if (!this.isConnected) {
             return;
         }
+        if (urlStateAttributes.has(name)) {
+            this.readUrl();
+        }
         this.syncPresentation();
-        queueMicrotask(() => this.load());
+        if (requestAttributes.has(name) || urlStateAttributes.has(name)) {
+            this.scheduleLoad();
+        } else if (this.hasLoaded) {
+            this.renderItems();
+        }
     }
 
-    async load() {
-        const version = ++this.requestVersion;
+    scheduleLoad() {
+        if (this.loadScheduled) {
+            return;
+        }
+        this.loadScheduled = true;
+        queueMicrotask(() => {
+            this.loadScheduled = false;
+            if (this.isConnected) {
+                void this.load();
+            }
+        });
+    }
+
+    load({ force = false } = {}) {
+        const request = this.buildRequest();
+        if (!force && request.key === this.lastLoadedKey && this.hasLoaded) {
+            this.renderItems();
+            return Promise.resolve();
+        }
+        if (this.inFlight?.key === request.key) {
+            return this.inFlight.promise;
+        }
+        this.controller?.abort();
+        const controller = new AbortController();
+        this.controller = controller;
         this.show("loading");
+        const promise = this.executeLoad(request, controller);
+        this.inFlight = { key: request.key, promise };
+        return promise.finally(() => {
+            if (this.inFlight?.promise === promise) {
+                this.inFlight = null;
+            }
+        });
+    }
+
+    buildRequest() {
         const size = positiveInteger(this.getAttribute("page-size"), 10);
         const query = new URLSearchParams({ limit: String(size), offset: String((this.page - 1) * size) });
         if (this.status !== "all") {
             query.set("status", this.status);
         }
+        const path = `${this.sourceBase}/${encodeURIComponent(this.endpoint)}?${query}`;
+        return { key: path, path, size };
+    }
+
+    async executeLoad(request, controller) {
         try {
-            const data = await requestJson(`${this.sourceBase}/${encodeURIComponent(this.endpoint)}?${query}`);
-            if (version !== this.requestVersion) {
+            const data = await requestJson(request.path, controller.signal);
+            if (controller.signal.aborted || !this.isConnected) {
                 return;
             }
             const total = Number.isSafeInteger(Number(data.total)) ? Number(data.total) : 0;
-            const pages = Math.max(1, Math.ceil(total / size));
+            const pages = Math.max(1, Math.ceil(total / request.size));
             if (this.page > pages) {
                 this.page = pages;
                 this.writeUrl();
-                return this.load();
+                this.scheduleLoad();
+                return;
             }
-            const items = Array.isArray(data.items) ? data.items : [];
-            this.list.replaceChildren(...items.map((sale) => renderSale(this, sale)));
-            this.pagination.setAttribute("page", String(this.page));
-            this.pagination.setAttribute("page-size", String(size));
-            this.pagination.setAttribute("total", String(total));
-            this.pagination.hidden = total <= size;
-            this.show(items.length ? "content" : "empty");
+            this.items = Array.isArray(data.items) ? data.items : [];
+            this.total = total;
+            this.hasLoaded = true;
+            this.lastLoadedKey = request.key;
+            this.renderItems();
         } catch (error) {
-            if (version === this.requestVersion) {
-                this.fail(error);
+            if (controller.signal.aborted) {
+                return;
             }
+            this.fail(error);
         }
+    }
+
+    renderItems() {
+        const size = positiveInteger(this.getAttribute("page-size"), 10);
+        this.list.replaceChildren(...this.items.map((sale) => renderSale(this, sale)));
+        this.pagination.setAttribute("page", String(this.page));
+        this.pagination.setAttribute("page-size", String(size));
+        this.pagination.setAttribute("total", String(this.total));
+        this.pagination.hidden = this.total <= size;
+        this.show(this.items.length ? "content" : "empty");
     }
 
     syncPresentation() {
@@ -219,18 +287,18 @@ export class CommerceAccountSales extends Component {
         this.status = status;
         this.page = 1;
         this.writeUrl();
-        this.load();
+        this.scheduleLoad();
     };
     onPageChange = (event) => {
         this.page = positiveInteger(event.detail?.page, 1);
         this.writeUrl();
-        this.load();
+        this.scheduleLoad();
         this.scrollIntoView({ behavior: "smooth", block: "start" });
     };
     onPopState = () => {
         this.readUrl();
         this.syncPresentation();
-        this.load();
+        this.scheduleLoad();
     };
     get sourceBase() {
         return `${(this.getAttribute("source-prefix") || "/.cms/sources").replace(/\/+$/, "")}/${encodeURIComponent(this.getAttribute("source-id") || "commerce")}`;
@@ -273,8 +341,12 @@ export class CommerceAccountSales extends Component {
     }
 }
 
-async function requestJson(path) {
-    const response = await fetch(path, { credentials: "include", headers: { accept: "application/json" } });
+async function requestJson(path, signal) {
+    const response = await fetch(path, {
+        credentials: "include",
+        headers: { accept: "application/json" },
+        signal,
+    });
     const body = await response.json().catch(() => null);
     if (!response.ok) {
         throw new Error(body?.error || body?.message || `${response.status} ${response.statusText}`);

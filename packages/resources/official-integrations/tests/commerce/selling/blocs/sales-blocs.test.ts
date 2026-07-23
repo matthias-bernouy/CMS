@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { Component } from "@bernouy/components/base";
 import { declaredBlocViewSources } from "../../../helpers/blocArtifactSource";
 import {
     formatMoney as formatListMoney,
@@ -118,6 +119,74 @@ describe("Commerce seller blocs", () => {
         expect(compiled.editorSource).toContain('attribute: "detail-url"');
     });
 
+    test("coalesces initial sales loading, ignores cosmetic attributes, and aborts stale requests", async () => {
+        const tag = "test-commerce-account-sales-request-budget";
+        const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
+        const realFetch = globalThis.fetch;
+        const calls: Array<{ url: string; signal: AbortSignal }> = [];
+        let resolveStale: ((response: Response) => void) | undefined;
+        (window as typeof window & { p9r?: unknown }).p9r = { Component };
+        if (!customElements.get(tag)) {
+            const compiled = await compile("commerce-account-sales", tag);
+            new Function(compiled.viewJS)();
+        }
+        globalThis.fetch = (input, init) => {
+            const signal = init?.signal as AbortSignal;
+            calls.push({ url: String(input), signal });
+            if (calls.length === 2) {
+                return new Promise<Response>((resolve) => {
+                    resolveStale = resolve;
+                });
+            }
+            return Promise.resolve(jsonResponse());
+        };
+
+        const sales = document.createElement(tag);
+        for (const [name, value] of [
+            ["source-id", "commerce"],
+            ["sales-endpoint", "mySales"],
+            ["page-size", "8"],
+            ["detail-label", "Voir la vente"],
+            ["text-color", "#111111"],
+            ["card-background-color", "#ffffff"],
+        ]) {
+            sales.setAttribute(name, value);
+        }
+
+        try {
+            document.body.append(sales);
+            await settleLifecycle();
+            expect(calls).toHaveLength(1);
+
+            sales.setAttribute("text-color", "#222222");
+            sales.setAttribute("detail-label", "Consulter");
+            await settleLifecycle();
+            expect(calls).toHaveLength(1);
+
+            sales.setAttribute("source-id", "commerce-next");
+            await Promise.resolve();
+            expect(calls).toHaveLength(2);
+            expect(calls[1]!.signal.aborted).toBe(false);
+
+            sales.setAttribute("page-size", "9");
+            await settleLifecycle();
+            expect(calls).toHaveLength(3);
+            expect(calls[1]!.signal.aborted).toBe(true);
+            expect(calls[2]!.url).toContain("limit=9");
+
+            sales.setAttribute("source-prefix", "/.cms/sources-next");
+            sales.setAttribute("source-id", "commerce-final");
+            await settleLifecycle();
+            expect(calls).toHaveLength(4);
+            expect(calls[3]!.url).toContain("/.cms/sources-next/commerce-final/mySales");
+        } finally {
+            resolveStale?.(jsonResponse());
+            sales.remove();
+            globalThis.fetch = realFetch;
+            (window as typeof window & { p9r?: unknown }).p9r = previousP9r;
+        }
+    });
+
     test("renders the server-snapshotted seller proceeds instead of the buyer total", () => {
         const values = new Map<string, string>();
         const status = { dataset: {} as Record<string, string>, textContent: "" };
@@ -203,7 +272,7 @@ describe("Commerce seller blocs", () => {
     });
 });
 
-async function compile(tag: string) {
+async function compile(tag: string, runtimeTag = tag) {
     const directory = resolve(blocsRoot, tag);
     const files = await readdir(directory);
     const view = await readFile(resolve(directory, "Bloc.ts"), "utf8");
@@ -219,7 +288,7 @@ async function compile(tag: string) {
         tag,
         "Commerce",
         "",
-        tag,
+        runtimeTag,
         source,
     );
     return {
@@ -227,4 +296,17 @@ async function compile(tag: string) {
         viewSource: declaredBlocViewSources({ viewJS: view, source }),
         editorSource: editor,
     };
+}
+
+function jsonResponse(): Response {
+    return new Response(JSON.stringify({ items: [], total: 0 }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+    });
+}
+
+async function settleLifecycle(): Promise<void> {
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await Promise.resolve();
 }
