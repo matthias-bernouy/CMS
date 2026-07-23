@@ -16,6 +16,12 @@ export type {
 } from "../interfaces/AnalyticsStore";
 export type { AnalyticsCollectionPolicy } from "../interfaces/AnalyticsPolicy";
 export { DEFAULT_ANALYTICS_COLLECTION_POLICY } from "../interfaces/AnalyticsPolicy";
+export type { AnalyticsPrivacyProfile } from "../interfaces/AnalyticsPrivacy";
+export {
+    ANALYTICS_VERSIONS,
+    STRICT_ANALYTICS_LIMITS,
+    assertSupportedAnalyticsProfile,
+} from "../interfaces/AnalyticsPrivacy";
 
 // ── Default implementations (instantiated in the composition root) ──
 export { InMemoryAnalyticsStore } from "../default-implementation/InMemoryAnalyticsStore";
