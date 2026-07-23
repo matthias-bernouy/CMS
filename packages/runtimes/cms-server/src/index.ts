@@ -8,7 +8,9 @@ import { readRuntimeEnv } from "./runtimeEnv";
 const env = readRuntimeEnv(process.env);
 
 const core = await createCoreStores(env);
-const features = await createFeatureStores(core.db, core.secrets);
+const features = await createFeatureStores(core.db, core.secrets, {
+    endpointPerformanceEnabled: env.ENDPOINT_PERFORMANCE_ENABLED,
+});
 const integrations = createProductionIntegrationServices({
     providerRepository: features.integrationConnectorProviders,
     secrets: core.secrets,

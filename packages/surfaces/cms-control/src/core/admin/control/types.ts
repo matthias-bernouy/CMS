@@ -8,7 +8,7 @@ import type {
     PublicAuthRoutesConfig,
     UsersRepository,
 } from "@bernouy/cms-auth";
-import type { AnalyticsComplianceContext, AnalyticsStore } from "@bernouy/cms-analytics";
+import type { AnalyticsComplianceContext, AnalyticsStore, EndpointPerformanceReports } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { DashboardRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
@@ -24,7 +24,12 @@ import type {
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { RelationRepository } from "@bernouy/cms-relations";
 import type { SecretStore } from "@bernouy/cms-secrets";
-import type { SourceOverlayRepository, SourceRepository } from "@bernouy/cms-sources";
+import type {
+    ExecutorDeps,
+    SourceOverlayRepository,
+    SourceRepository,
+    SourceRequestTelemetryOptions,
+} from "@bernouy/cms-sources";
 import type { ScheduledTriggerRunResult, TriggerRepository } from "@bernouy/cms-triggers";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { CMS_ROLES } from "types/roles";
@@ -51,6 +56,9 @@ export type ControlCmsOptions = Configuration & {
     };
     identities?: IdentityService;
     sourceOverlays?: SourceOverlayRepository;
+    endpointPerformanceReports?: EndpointPerformanceReports;
+    sourceTelemetry?: SourceRequestTelemetryOptions;
+    sourceTrustedConnectorTarget?: NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>;
     integrationBlocRepository?: CmsRepository;
 };
 

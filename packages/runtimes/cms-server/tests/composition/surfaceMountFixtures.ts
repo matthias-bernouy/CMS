@@ -13,6 +13,9 @@ export function surfaceMountFixtures() {
             CMS_FILES_DIR: "/data/files",
             ANALYTICS_TRUST_PROXY: false,
             ANALYTICS_TRUSTED_PROXY_VERIFIED: false,
+            ENDPOINT_PERFORMANCE_ENABLED: true,
+            SOURCE_TIMING_SAMPLE_RATE: 0.01,
+            SOURCE_SLOW_REQUEST_THRESHOLD_MS: 1_000,
         },
         analyticsVisitorSecret: "analytics-secret",
         core: {
@@ -41,6 +44,8 @@ export function surfaceMountFixtures() {
             sources: token("sources"),
             deliverySources: token("delivery-sources"),
             analytics: token("analytics"),
+            endpointPerformanceRecorder: token("endpoint-performance-recorder"),
+            endpointPerformanceReports: token("endpoint-performance-reports"),
             resolveSecret: token("resolve-secret"),
         },
         integrations: {

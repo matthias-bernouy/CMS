@@ -6,7 +6,12 @@ import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type { IntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import type { RolesRepository } from "@bernouy/cms-permissions";
-import type { SourceRepository, SourceSecretResolver } from "@bernouy/cms-sources";
+import type {
+    ExecutorDeps,
+    SourceRepository,
+    SourceRequestTelemetryOptions,
+    SourceSecretResolver,
+} from "@bernouy/cms-sources";
 import type { TriggerRepository } from "@bernouy/cms-triggers";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { HeadInjector } from "./HeadInjector";
@@ -33,6 +38,10 @@ export type DeliveryCmsConfig = {
      * the appropriate source access policy should provide one.
      */
     sourceResolveSecret?: SourceSecretResolver;
+    /** Request timings and non-blocking endpoint metrics supplied by the runtime. */
+    sourceTelemetry?: SourceRequestTelemetryOptions;
+    /** Runtime-owned allowlist for forwarding the opaque correlation header. */
+    sourceTrustedConnectorTarget?: NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>;
     /** Optional first-party public authentication routes and system source. */
     auth?: PublicAuthRoutesConfig<string>;
     /** Role definitions used to authorize public source endpoint calls. */

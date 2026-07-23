@@ -6,7 +6,12 @@ import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type { IntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import type { RolesRepository } from "@bernouy/cms-permissions";
-import type { SourceRepository, SourceSecretResolver } from "@bernouy/cms-sources";
+import type {
+    ExecutorDeps,
+    SourceRepository,
+    SourceRequestTelemetryOptions,
+    SourceSecretResolver,
+} from "@bernouy/cms-sources";
 import type { TriggerRepository } from "@bernouy/cms-triggers";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
 import { PageOptimizer } from "cms-delivery/core/pages/PageOptimizer";
@@ -56,6 +61,14 @@ export class DeliveryCmsContext {
 
     get sourceResolveSecret(): SourceSecretResolver | undefined {
         return this.config.sourceResolveSecret;
+    }
+
+    get sourceTelemetry(): SourceRequestTelemetryOptions | undefined {
+        return this.config.sourceTelemetry;
+    }
+
+    get sourceTrustedConnectorTarget(): NonNullable<ExecutorDeps["isTrustedConnectorTarget"]> | undefined {
+        return this.config.sourceTrustedConnectorTarget;
     }
 
     get functions(): FunctionRepository | undefined {

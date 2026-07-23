@@ -1,15 +1,13 @@
-import { ControlCms } from "@bernouy/cms-control";
-import { DeliveryCms } from "@bernouy/cms-delivery";
-import { startAnalyticsFinalizer } from "@bernouy/cms-analytics";
-import { RepositoryCms } from "@bernouy/cms-repository";
-import { BunRunner } from "@bernouy/http-runner";
 import type { RuntimeEnv } from "../runtimeEnv";
-import { startProductionScheduledTriggers } from "../scheduledTriggers";
 import type { ScheduledTriggerRunner } from "@bernouy/cms-triggers";
 import type { ProductionAuthentication } from "./auth";
 import type { ProductionIntegrationServices } from "./integrations";
 import type { CoreStores } from "./stores/core";
 import type { FeatureStores } from "./stores/features";
+import { createSourceTelemetryOptions, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
+import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
+
+export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
 
 type MountOptions = {
     env: RuntimeEnv;
@@ -18,26 +16,6 @@ type MountOptions = {
     features: FeatureStores;
     integrations: ProductionIntegrationServices;
     authentication: ProductionAuthentication;
-};
-
-export type ProductionSurfaceRuntime = {
-    Runner: typeof BunRunner;
-    Control: typeof ControlCms;
-    Delivery: typeof DeliveryCms;
-    Repository: typeof RepositoryCms;
-    startWorkers: typeof startProductionScheduledTriggers;
-    startAnalyticsFinalizer: typeof startAnalyticsFinalizer;
-    log: (message: string) => void;
-};
-
-const PRODUCTION_SURFACE_RUNTIME: ProductionSurfaceRuntime = {
-    Runner: BunRunner,
-    Control: ControlCms,
-    Delivery: DeliveryCms,
-    Repository: RepositoryCms,
-    startWorkers: startProductionScheduledTriggers,
-    startAnalyticsFinalizer,
-    log: console.log,
 };
 
 export async function mountProductionSurfaces(
@@ -54,6 +32,24 @@ export async function mountProductionSurfaces(
         triggers: features.triggers,
     });
     await scheduledTriggers.ready;
+    const trustedConnectorTarget = await createTrustedConnectorTargetMatcher(
+        integrations.integrationConnectorDeployers,
+    );
+    const telemetryConfig = {
+        uniformSampleRate: env.SOURCE_TIMING_SAMPLE_RATE,
+        slowRequestThresholdMs: env.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
+        reportDiagnostic: runtime.log,
+    };
+    const controlTelemetry = createSourceTelemetryOptions(
+        "control",
+        features.endpointPerformanceRecorder,
+        telemetryConfig,
+    );
+    const deliveryTelemetry = createSourceTelemetryOptions(
+        "delivery",
+        features.endpointPerformanceRecorder,
+        telemetryConfig,
+    );
     const controlRunner = new runtime.Runner();
     controlRunner.group("/.cms/repository", (repositoryRunner) => {
         new runtime.Repository({
@@ -88,6 +84,9 @@ export async function mountProductionSurfaces(
             scheduledTriggers: { enabled: true, runNow: scheduledTriggers.runNow },
             identities: features.identities,
             sourceOverlays: features.sourceOverlays,
+            endpointPerformanceReports: features.endpointPerformanceReports,
+            sourceTelemetry: controlTelemetry,
+            sourceTrustedConnectorTarget: trustedConnectorTarget,
             publicAuth: {
                 ...authentication.publicAuthBase,
                 emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -116,6 +115,8 @@ export async function mountProductionSurfaces(
         repository: core.repo,
         cache: core.cache,
         sources: features.deliverySources,
+        sourceTelemetry: deliveryTelemetry,
+        sourceTrustedConnectorTarget: trustedConnectorTarget,
         analytics: features.analytics,
         functions: features.functions,
         triggers: features.triggers,
@@ -139,7 +140,10 @@ export async function mountProductionSurfaces(
     });
 
     runtime.startAnalyticsFinalizer(features.analytics, {
-        onError: (error) => console.error("Analytics visitor finalization failed:", error),
+        onError: (error) => runtime.reportError("Analytics visitor finalization failed", error),
+    });
+    const endpointPerformanceFlusher = runtime.startEndpointPerformanceFlusher(features.endpointPerformanceRecorder, {
+        onError: (error) => runtime.reportError("Endpoint performance flush failed", error),
     });
 
     controlRunner.start(env.CONTROL_PORT);
@@ -149,5 +153,13 @@ export async function mountProductionSurfaces(
     runtime.log(`   sign in:      ${env.CONTROL_PUBLIC_URL}/login`);
     runtime.log(`   public site:  ${env.DELIVERY_PUBLIC_URL}/`);
     runtime.log(`   storage:      mongo=${core.db.databaseName}, files=${env.CMS_FILES_DIR}`);
-    return scheduledTriggers;
+    return {
+        ready: scheduledTriggers.ready,
+        runNow: scheduledTriggers.runNow,
+        async stop() {
+            endpointPerformanceFlusher.stop();
+            await endpointPerformanceFlusher.run();
+            await scheduledTriggers.stop();
+        },
+    };
 }

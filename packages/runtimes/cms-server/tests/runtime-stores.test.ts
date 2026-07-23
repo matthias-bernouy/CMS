@@ -46,11 +46,17 @@ describe("production runtime stores", () => {
                 "analytics_hll_sketches",
                 "analytics_referrer_buckets",
                 "analytics_governance",
+                "analytics_source_performance_rollups",
                 "integrationInstallations",
             ]),
         );
         expect(stores.deliverySources).toBeInstanceOf(SourceOverlaySourceRepository);
         expect(typeof stores.resolveSecret).toBe("function");
+        expect(stores.endpointPerformanceRecorder.stats()).toMatchObject({
+            accepted: 0,
+            dropped: 0,
+            invalid: 0,
+        });
     });
 
     test("rejects an invalid Mongo connection string before initializing stores", async () => {

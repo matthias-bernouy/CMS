@@ -10,6 +10,7 @@ import {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
     SourceOverlaySourceRepository,
+    createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
     sourceEndpointAccessAllows,
     sourceEndpointAccessMode,
@@ -48,7 +49,14 @@ export function mountControlSourceProxy(
         const definitions = await state.roles.list();
         return can(effectiveGrantsFor(subject.role, { definitions }), endpoint.urn);
     };
-    const sourceDeps = { resolveSecret, resolveContext, identities: state.identities };
+    const sourceDeps = {
+        resolveSecret,
+        resolveContext,
+        identities: state.identities,
+        ...(state.configuration.sourceTrustedConnectorTarget
+            ? { isTrustedConnectorTarget: state.configuration.sourceTrustedConnectorTarget }
+            : {}),
+    };
     const overlaySources =
         state.sources && state.sourceOverlays
             ? new SourceOverlaySourceRepository(state.sources, state.sourceOverlays, { deps: sourceDeps })
@@ -102,6 +110,7 @@ export function mountControlSourceProxy(
                         prefix,
                         deps: {
                             ...sourceDeps,
+                            telemetry: state.configuration.sourceTelemetry,
                             executeSystemEndpoint,
                             authorizeEndpoint,
                             ...(interceptEndpoint ? { interceptEndpoint } : {}),
@@ -110,7 +119,12 @@ export function mountControlSourceProxy(
                 });
             }
         },
-        [authGuard],
+        [
+            ...(state.configuration.sourceTelemetry
+                ? [createSourceRequestTelemetryMiddleware(state.configuration.sourceTelemetry)]
+                : []),
+            authGuard,
+        ],
     );
 }
 

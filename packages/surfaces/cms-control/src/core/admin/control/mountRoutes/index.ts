@@ -8,23 +8,6 @@ import {
     oidcLoginHandler,
     registerPublicAuthRoutes,
 } from "@bernouy/cms-auth";
-import {
-    ANALYTICS_ROUTES,
-    ANALYTICS_GOVERNANCE_ROUTES,
-    StrictAnalyticsReports,
-    analyticsComplianceHandler,
-    analyticsBreakdownHandler,
-    analyticsEntriesHandler,
-    analyticsFlowsHandler,
-    analyticsHealthHandler,
-    analyticsReferrersHandler,
-    analyticsSummaryHandler,
-    analyticsTimeseriesHandler,
-    analyticsTopPagesHandler,
-    analyticsSettingsHandler,
-    createAnalyticsComplianceSnapshotHandler,
-    updateAnalyticsSettingsHandler,
-} from "@bernouy/cms-analytics";
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { CMS_FILES_ROUTE, filesPrefix, serveFilesRequest } from "@bernouy/cms-files";
 import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
@@ -32,6 +15,7 @@ import { renderLoginPage } from "cms-control/core/admin/auth/authPages";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
 import { createControlAccessGuard } from "cms-control/core/admin/control/adminAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
+import { mountAnalyticsRoutes } from "cms-control/core/admin/control/mountRoutes/analytics";
 import serveStaticFolder from "cms-control/core/admin/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "cms-control/core/admin/registerEndpoints/serveApiFolder";
 import type { ControlCms } from "cms-control/ControlCms";
@@ -121,56 +105,9 @@ export function mountControlCmsRoutes(
         "/api",
         (apiRunner) => {
             apiRoutesReady = serveApi(apiRunner, apiDir, cms);
-            if (!state.analytics) {
-                return;
-            }
-            const reports = new StrictAnalyticsReports(state.analytics);
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.summary, (req) => analyticsSummaryHandler(reports, req));
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.timeseries, (req) =>
-                analyticsTimeseriesHandler(reports, req),
-            );
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.topPages, (req) => analyticsTopPagesHandler(reports, req));
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.entries, (req) => analyticsEntriesHandler(reports, req));
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.breakdown, (req) => analyticsBreakdownHandler(reports, req));
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.referrers, (req) => analyticsReferrersHandler(reports, req));
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.flows, (req) => analyticsFlowsHandler(reports, req));
-            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.health, (req) => analyticsHealthHandler(reports, req));
-            const compliance = state.configuration.analyticsCompliance ?? defaultComplianceContext(state);
-            apiRunner.addEndpoint("GET", ANALYTICS_GOVERNANCE_ROUTES.settings, () =>
-                analyticsSettingsHandler(state.analytics!),
-            );
-            apiRunner.addEndpoint("POST", ANALYTICS_GOVERNANCE_ROUTES.settings, (req) =>
-                updateAnalyticsSettingsHandler(state.analytics!, req),
-            );
-            apiRunner.addEndpoint("GET", ANALYTICS_GOVERNANCE_ROUTES.compliance, () =>
-                analyticsComplianceHandler(state.analytics!, compliance),
-            );
-            apiRunner.addEndpoint("POST", ANALYTICS_GOVERNANCE_ROUTES.snapshots, (req) =>
-                createAnalyticsComplianceSnapshotHandler(state.analytics!, compliance, req),
-            );
+            mountAnalyticsRoutes(apiRunner, state);
         },
         [authGuard],
     );
     return Promise.all([staticRoutesReady, apiRoutesReady]).then(() => undefined);
-}
-
-function defaultComplianceContext(state: ControlCmsState) {
-    const delivery = safeUrl(state.configuration.deliveryUrl);
-    return {
-        cmsVersion: "development",
-        secretReady: false,
-        siteScope: delivery?.origin ?? "",
-        trustProxy: false,
-        trustedProxyVerified: false,
-        secureCookie: delivery?.protocol === "https:",
-        optOutUrl: delivery ? `${delivery.origin}/.cms/privacy/analytics` : "/.cms/privacy/analytics",
-    };
-}
-
-function safeUrl(value: string | undefined): URL | undefined {
-    try {
-        return value ? new URL(value) : undefined;
-    } catch {
-        return;
-    }
 }
