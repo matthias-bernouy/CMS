@@ -47,6 +47,12 @@ services:
             ANALYTICS_SALT_SECRET: ${ANALYTICS_SALT_SECRET:?ANALYTICS_SALT_SECRET must be set and shared by all replicas}
             ANALYTICS_TRUST_PROXY: ${ANALYTICS_TRUST_PROXY:-false}
 
+            # Source-endpoint observability. The aggregate collector is enabled
+            # by default; detailed diagnostics remain sampled separately.
+            ENDPOINT_PERFORMANCE_ENABLED:          "${ENDPOINT_PERFORMANCE_ENABLED:-true}"
+            SOURCE_TIMING_SAMPLE_RATE:             "${SOURCE_TIMING_SAMPLE_RATE:-0.01}"
+            SOURCE_SLOW_REQUEST_THRESHOLD_MS:      "${SOURCE_SLOW_REQUEST_THRESHOLD_MS:-1000}"
+
             # Required for both the server-wide MongoDB service and an external
             # cluster. The database path is dedicated to this instance; the
             # application credential may be shared, but must never be root.

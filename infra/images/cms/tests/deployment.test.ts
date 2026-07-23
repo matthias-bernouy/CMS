@@ -38,6 +38,11 @@ describe("per-instance Compose rendering", () => {
         expect(cms.security_opt).toContain("no-new-privileges:true");
         expect(cms.tmpfs).toContain("/tmp:rw,nosuid,nodev,noexec,size=256m");
         expect(cms.ports).toBeUndefined();
+        expect(cms.environment).toMatchObject({
+            ENDPOINT_PERFORMANCE_ENABLED: "true",
+            SOURCE_TIMING_SAMPLE_RATE: "0.01",
+            SOURCE_SLOW_REQUEST_THRESHOLD_MS: "1000",
+        });
     });
 
     composeTest("preserves an external cluster URL without requiring INSTANCE_ID", () => {

@@ -309,6 +309,9 @@ environment file.
 | --- | --- |
 | `CMS_ADMIN_EMAIL` | Defaults to `admin@${DOMAIN}`. |
 | `ANALYTICS_TRUST_PROXY` | Defaults to `false`; enable only behind a proxy that overwrites forwarding headers. |
+| `ENDPOINT_PERFORMANCE_ENABLED` | Defaults to `true`; set to `false` to stop new endpoint observations and flushes without deleting retained rollups. |
+| `SOURCE_TIMING_SAMPLE_RATE` | Uniform detailed source-diagnostic sampling rate from `0` to `1`; defaults to `0.01`. Aggregate endpoint metrics remain exhaustive. |
+| `SOURCE_SLOW_REQUEST_THRESHOLD_MS` | Duration threshold for the separate forced diagnostic cohort; defaults to `1000`. Errors are forced independently. |
 | `CMS_AUTH_SITE_NAME` | Public authentication site name; defaults to `CMS`. |
 | `CMS_AUTH_EMAIL_COOLDOWN_SECONDS` | Email throttle interval; defaults to 300 seconds. |
 | `CMS_AUTH_EMAIL_VERIFICATION_URL` | Delivery email-verification URL. |
