@@ -47,7 +47,15 @@ grant insert, update on
     commerce.seller_risk_states,
     commerce.outbox_events,
     commerce.custom_field_definitions,
-    commerce.category_custom_fields
+    commerce.category_custom_fields,
+    commerce.sale_capability_requirements,
+    commerce.seller_sale_capabilities,
+    commerce.price_agreements,
+    commerce.notification_configuration,
+    commerce.notification_rules,
+    commerce.notification_user_preferences,
+    commerce.notification_events,
+    commerce.notification_deliveries
 to service_role;
 grant delete on
     commerce.brands,

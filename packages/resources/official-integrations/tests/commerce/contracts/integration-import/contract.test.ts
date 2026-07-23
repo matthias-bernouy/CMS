@@ -7,9 +7,19 @@ import {
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
+import { ADMIN_ROLE, InMemoryRolesRepository, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
-import { InMemorySourceOverlayRepository, InMemorySourceRepository } from "@bernouy/cms-sources";
+import {
+    applySourceOverlays,
+    executeEndpoint,
+    handleSourceRequest,
+    InMemorySourceOverlayRepository,
+    InMemorySourceRepository,
+    projectStrictDataShape,
+    sourceEndpointAccessAllows,
+    sourceEndpointAccessMode,
+} from "@bernouy/cms-sources";
+import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { expectedEndpointUrns } from "./expectations";
 import { blocImporter, connectorDeployer, installedBasicBlocs } from "./setup";
 import { installCommerceTestEnvironment, supabaseUrl } from "../../harness";
@@ -25,6 +35,7 @@ describe("commerce 1.0.0 contract", () => {
         const sources = new InMemorySourceRepository(),
             sourceOverlays = new InMemorySourceOverlayRepository();
         const dashboards = new InMemoryDashboardRepository();
+        const triggers = new InMemoryTriggerRepository();
         const secrets = new InMemorySecretStore(),
             roles = new InMemoryRolesRepository();
         const importedBlocs: IntegrationBlocArtifact[] = [];
@@ -41,6 +52,7 @@ describe("commerce 1.0.0 contract", () => {
                 secrets,
                 roles,
                 installations,
+                triggers,
                 connectorDeployers: [deployer],
                 blocs: blocImporter(importedBlocs),
             },
@@ -68,7 +80,10 @@ describe("commerce 1.0.0 contract", () => {
 
         expect(catalog.map((entry) => entry.kind)).toContain("commerce");
         expect(definition).toMatchObject({ kind: "commerce", version: "1.0.0" });
-        expect(definition.dependencies).toEqual([{ name: "basicBlocs", kind: "basic-blocs" }]);
+        expect(definition.dependencies).toEqual([
+            { name: "basicBlocs", kind: "basic-blocs" },
+            { name: "emailer", kind: "emailer", optional: true },
+        ]);
         expect(JSON.stringify(definition).match(/\$selection\.(?!id)/g) ?? []).toEqual([]);
         expect(result.artifacts).toEqual(
             expect.arrayContaining([
@@ -76,6 +91,7 @@ describe("commerce 1.0.0 contract", () => {
                 { type: "bloc", id: "commerce-account-offers", action: "created" },
                 { type: "bloc", id: "commerce-account-sales", action: "created" },
                 { type: "bloc", id: "commerce-sale-detail", action: "created" },
+                { type: "bloc", id: "commerce-notification-preferences", action: "created" },
                 ...["product", "offer", "seller", "order"].map((entity) => ({
                     type: "sourceOverlay",
                     id: `commerce-${entity}-custom-fields`,
@@ -96,8 +112,9 @@ describe("commerce 1.0.0 contract", () => {
             "commerce-account-sales",
             "commerce-sale-detail",
             "commerce-offer-price-form",
+            "commerce-notification-preferences",
         ]);
-        expect(endpointUrns).toHaveLength(155);
+        expect(endpointUrns).toHaveLength(167);
         expect(endpointUrns).not.toEqual(
             expect.arrayContaining(["urn:commerce:variants", "urn:commerce:variant", "urn:commerce:upsertVariant"]),
         );
@@ -128,10 +145,26 @@ describe("commerce 1.0.0 contract", () => {
             "urn:commerce:reviewOffer": `${supabaseUrl}/functions/v1/cms-commerce/admin/offer/review`,
             "urn:commerce:offerCustomFields": `${supabaseUrl}/functions/v1/cms-commerce/configuration/offer-custom-fields`,
             "urn:commerce:entityCustomFields": `${supabaseUrl}/functions/v1/cms-commerce/configuration/custom-fields`,
+            "urn:commerce:getMyNotificationPreferences": `${supabaseUrl}/functions/v1/cms-commerce/notifications/preferences`,
+            "urn:commerce:claimNotifications": `${supabaseUrl}/functions/v1/cms-commerce/notifications/system/claim`,
+            "urn:commerce:listDefaultNotificationTemplates": `${supabaseUrl}/functions/v1/cms-commerce/notifications/templates`,
         });
         expect(
             source?.endpoints.find((endpoint) => endpoint.urn === "urn:commerce:upsertCustomField")?.effects,
         ).toEqual({ invalidatesSchema: true });
+        for (const endpointId of [
+            "listNotificationDeliveries",
+            "getNotificationConfiguration",
+            "updateNotificationConfiguration",
+        ]) {
+            const endpoint = source?.endpoints.find((candidate) => candidate.urn === `urn:commerce:${endpointId}`);
+            expect(endpoint?.access).toEqual({ mode: "admin" });
+            expect(endpoint?.headers?.map((header) => header.name)).toEqual([
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role",
+            ]);
+        }
         expect(
             source?.endpoints.find((endpoint) => endpoint.urn === "urn:commerce:verifyPendingSellerPayoutEligibility")
                 ?.access,
@@ -147,6 +180,96 @@ describe("commerce 1.0.0 contract", () => {
         );
         expect(negotiationContext?.access).toEqual({ mode: "system" });
         expect(negotiationContext?.output?.[0]?.body?.properties?.sellerCmsUserId?.semantic?.authority).toBe("cms");
+        for (const endpointId of ["submitMyOfferPrice", "createOrder"]) {
+            const rawEndpoint = source?.endpoints.find((endpoint) => endpoint.urn === `urn:commerce:${endpointId}`);
+            if (!rawEndpoint) {
+                throw new Error(`${endpointId} endpoint not found`);
+            }
+            for (const [role, callerMode] of [
+                [USER_ROLE, "auth"],
+                [ADMIN_ROLE, "admin"],
+            ] as const) {
+                let upstreamCalls = 0;
+                const response = await handleSourceRequest(
+                    sources,
+                    new Request(`https://site.test/.cms/sources/commerce/${endpointId}`, {
+                        method: "POST",
+                    }),
+                    {
+                        prefix: "/.cms/sources/",
+                        deps: {
+                            authorizeEndpoint: async (endpoint) =>
+                                sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), callerMode)
+                                    ? true
+                                    : { authorized: false, status: 403 },
+                            fetchImpl: async () => {
+                                upstreamCalls += 1;
+                                return Response.json({ error: `${role} bypassed system access` });
+                            },
+                        },
+                    },
+                );
+                expect(response.status).toBe(403);
+                expect(upstreamCalls).toBe(0);
+            }
+        }
+        const claimNotifications = source?.endpoints.find(
+            (endpoint) => endpoint.urn === "urn:commerce:claimNotifications",
+        );
+        if (!claimNotifications) {
+            throw new Error("claimNotifications endpoint not found");
+        }
+        const acceptedAgreementContext = {
+            contractVersion: 1,
+            event: {
+                type: "commerce.price_agreement.accepted",
+                occurredAt: "2026-07-23T12:00:00.000Z",
+            },
+            recipient: { userId: "agreement-buyer" },
+            agreement: {
+                id: "11111111-1111-4111-8111-111111111111",
+                version: 2,
+                status: "active",
+                unitAmountMinor: 12000,
+                quantity: 1,
+                subtotalAmountMinor: 12000,
+                subtotalAmountFormatted: "120.00 EUR",
+                currency: "EUR",
+                expiresAt: "2026-07-24T12:00:00.000Z",
+            },
+            offer: { id: 42, slug: "racket", title: "Racket" },
+            delivery: { status: "accepted", label: "Offer accepted" },
+            action: {
+                path: "/checkout?agreementId=11111111-1111-4111-8111-111111111111",
+            },
+            source: {},
+        };
+        const claimResponse = await executeEndpoint(
+            claimNotifications,
+            new Request("https://cms.test/.cms/sources/commerce/claimNotifications", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ runKey: "strict-agreement-context" }),
+            }),
+            {
+                responseProjectionMode: "strict",
+                resolveSecret: async () => "commerce-api-key",
+                fetchImpl: async () =>
+                    Response.json({
+                        items: [
+                            {
+                                deliveryId: "22222222-2222-4222-8222-222222222222",
+                                recipientCmsUserId: "agreement-buyer",
+                                templateKey: "commerce.price_agreement.accepted",
+                                idempotencyKey: "agreement-notification-1",
+                                context: acceptedAgreementContext,
+                            },
+                        ],
+                    }),
+            },
+        );
+        expect(claimResponse.status).toBe(200);
+        expect((await claimResponse.json()).items[0].context).toEqual(acceptedAgreementContext);
         const deliveryAuthorization = source?.endpoints.find(
             (endpoint) => endpoint.urn === "urn:commerce:getOrderDeliveryQuoteAuthorization",
         )?.output?.[0]?.body;
@@ -179,6 +302,35 @@ describe("commerce 1.0.0 contract", () => {
                 ),
             ),
         );
+        const classification = overlays.find((overlay) => overlay.id === "commerce-product-classification");
+        if (!source || !classification) {
+            throw new Error("commerce product classification overlay was not imported");
+        }
+        const enrichedSource = applySourceOverlays(source, [classification]);
+        const nullableClassification = {
+            brandId: null,
+            brand: null,
+            primaryCategoryId: null,
+            primaryCategory: null,
+        };
+        const classificationCases: Array<[string, unknown]> = [
+            ["product", nullableClassification],
+            ["manageProduct", nullableClassification],
+            ["upsertProduct", nullableClassification],
+            ["offer", { product: nullableClassification }],
+            ["offers", { items: [{ product: nullableClassification }] }],
+            ["manageOffer", { product: nullableClassification }],
+            ["myOffer", { product: nullableClassification }],
+        ];
+        for (const [endpointId, value] of classificationCases) {
+            const shape = enrichedSource.endpoints
+                .find((endpoint) => endpoint.urn === `urn:commerce:${endpointId}`)
+                ?.output?.find((output) => output.status === "200")?.body;
+            if (!shape) {
+                throw new Error(`missing 200 output shape for ${endpointId}`);
+            }
+            expect(projectStrictDataShape(value, shape, "response", { enforceRequired: false })).toEqual(value);
+        }
         expect(source?.meta).toMatchObject({
             icon: "assets/icon.svg",
             svg: expect.stringContaining("<svg"),
@@ -197,7 +349,7 @@ describe("commerce 1.0.0 contract", () => {
         ).toMatchObject({
             "commerce-configuration": {
                 name: "Settings",
-                views: ["commerceSettings", "protectedC2cPolicySettings", "conditionsTable", "conditionDetail"],
+                views: ["settingsTabs"],
             },
             "commerce-workflow": {
                 name: "Workflow",
@@ -210,6 +362,50 @@ describe("commerce 1.0.0 contract", () => {
             },
             "commerce-metadata": { name: "Metadata", views: ["customFieldsTable", "customFieldDetail"] },
         });
+        const settingsTabs = installedDashboards
+            .find((dashboard) => dashboard.id === "commerce-configuration")
+            ?.views.find((view) => view.id === "settingsTabs");
+        if (settingsTabs?.widget !== "w-tabs") {
+            throw new Error("commerce settings tabs not installed");
+        }
+        expect(settingsTabs.tabs.map((tab) => tab.id)).toEqual([
+            "general",
+            "notifications",
+            "protectedC2c",
+            "offerConditions",
+        ]);
+        expect(settingsTabs.tabs.flatMap((tab) => tab.children.map((child) => child.id))).toEqual(
+            expect.arrayContaining([
+                "commerceSettings",
+                "notificationSettings",
+                "protectedC2cPolicySettings",
+                "conditionsTable",
+                "conditionDetail",
+            ]),
+        );
+        const offerDetail = installedDashboards
+            .find((dashboard) => dashboard.id === "commerce-offers")
+            ?.views.find((view) => view.id === "offerDetail");
+        if (offerDetail?.widget !== "w-detail") {
+            throw new Error("commerce offer detail not installed");
+        }
+        const priceFields = offerDetail.main
+            .flatMap((section) => section.fields)
+            .filter((field) => ["acceptedPriceAmount", "minimumAmount", "maximumAmount"].includes(field.id));
+        expect(priceFields).toHaveLength(3);
+        expect(priceFields).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    type: "money",
+                    currencyPath: "currency",
+                    allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
+                }),
+            ]),
+        );
+        expect(
+            source?.endpoints.find((endpoint) => endpoint.urn === "urn:commerce:manageOffer")?.output?.[0]?.body
+                ?.properties?.wholeUnitPrices,
+        ).toMatchObject({ type: "boolean" });
         for (const dashboard of installedDashboards) {
             expect(dashboard.meta).toMatchObject({
                 icon:

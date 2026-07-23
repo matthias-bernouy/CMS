@@ -65,4 +65,13 @@ export const expectedEndpointUrns = [
     "urn:commerce:mySale",
     "urn:commerce:offerCustomFields",
     "urn:commerce:entityCustomFields",
+    "urn:commerce:getMyNotificationPreferences",
+    "urn:commerce:updateMyNotificationPreferences",
+    "urn:commerce:listDefaultNotificationTemplates",
+    "urn:commerce:claimNotifications",
+    "urn:commerce:completeNotification",
+    "urn:commerce:failNotification",
+    "urn:commerce:listNotificationDeliveries",
+    "urn:commerce:getNotificationConfiguration",
+    "urn:commerce:updateNotificationConfiguration",
 ];

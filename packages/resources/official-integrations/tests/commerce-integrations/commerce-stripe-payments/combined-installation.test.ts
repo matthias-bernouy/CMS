@@ -29,6 +29,7 @@ import {
     type SourceEndpoint,
 } from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository, validateTrigger } from "@bernouy/cms-triggers";
+import { stripeWebhookProvisioner } from "../../helpers/stripeWebhookProvisioner";
 
 const INTEGRATION_KINDS = ["basic-blocs", "commerce", "stripe-connect", "commerce-stripe-payments"] as const;
 
@@ -51,6 +52,9 @@ describe("Commerce protected Stripe combined installation", () => {
         const deployments: IntegrationConnectorDeployment[] = [];
         const connectorDeployer: IntegrationConnectorDeployer = {
             provider: "supabase",
+            async previewOutputs() {
+                return { functionsBaseUrl: "https://combined-install.test/functions/v1" };
+            },
             async deploy(deployment) {
                 deployments.push(structuredClone(deployment));
                 return {
@@ -70,6 +74,11 @@ describe("Commerce protected Stripe combined installation", () => {
             secrets,
             installations,
             connectorDeployers: [connectorDeployer],
+            provisioners: [stripeWebhookProvisioner()],
+            sourceExecutorDeps: {
+                fetchImpl: async (input) => afterInstallationResponse(new Request(input)),
+                resolveSecret: async () => "combined-install-cms-api-key",
+            },
             blocs: repositoryBackedBlocImporter(blocs),
         };
 
@@ -81,9 +90,6 @@ describe("Commerce protected Stripe combined installation", () => {
                 id: "stripe-connect",
                 stripeSecretKey: "sk_test_combined_install",
                 stripePublishableKey: "pk_test_combined_install",
-                stripeWebhookSecret: "whsec_test_combined_install",
-                stripeConnectWebhookSecret: "whsec_connect_test_combined_install",
-                stripeConnectV2WebhookSecret: "whsec_connect_v2_test_combined_install",
                 defaultCountry: "FR",
                 defaultCurrency: "eur",
                 sellerActivityDescription: "Second-hand marketplace test activity.",
@@ -127,7 +133,7 @@ describe("Commerce protected Stripe combined installation", () => {
         expect(linkingResult.installation.status).toBe("success");
         expect(linkingResult.artifacts.map((artifact) => artifact.type)).toEqual([
             ...Array(16).fill("function"),
-            ...Array(10).fill("trigger"),
+            ...Array(15).fill("trigger"),
             "dashboard",
             "bloc",
         ]);
@@ -201,14 +207,73 @@ describe("Commerce protected Stripe combined installation", () => {
             "execute-reviewed-payment-cancellation",
             "execute-seller-cancellation-refund",
             "execute-seller-payment-cancellation",
+            "schedule-dispatch-commerce-notifications",
+            "schedule-dispatch-due-protected-settlements",
+            "schedule-dispatch-pending-payment-cancellations",
+            "schedule-dispatch-pending-protected-refunds",
+            "schedule-process-due-order-deadlines",
+            "schedule-reconcile-protected-payment-systems",
         ]);
         for (const trigger of installedTriggers) {
             expect(validateTrigger(trigger)).toEqual([]);
-            expect(await functions.getFunction(trigger.function.id)).not.toBeNull();
-            expect(
-                await sources.getEndpoint(makeEndpointUrn(trigger.event.source ?? "", trigger.event.endpoint ?? "")),
-            ).not.toBeNull();
+            if (trigger.function) {
+                expect(await functions.getFunction(trigger.function.id)).not.toBeNull();
+            }
+            if (trigger.event.kind === "endpoint") {
+                expect(
+                    await sources.getEndpoint(
+                        makeEndpointUrn(trigger.event.source ?? "", trigger.event.endpoint ?? ""),
+                    ),
+                ).not.toBeNull();
+            }
         }
+        expect(
+            installedTriggers
+                .filter((trigger) => trigger.event.kind === "schedule" && !!trigger.function)
+                .map((trigger) => ({
+                    id: trigger.id,
+                    intervalMs: trigger.event.kind === "schedule" ? trigger.event.intervalMs : 0,
+                    initialDelayMs: trigger.event.kind === "schedule" ? trigger.event.initialDelayMs : 0,
+                    functionId: trigger.function?.id,
+                    body: trigger.function?.body,
+                })),
+        ).toEqual([
+            {
+                id: "schedule-reconcile-protected-payment-systems",
+                intervalMs: 15_000,
+                initialDelayMs: 5_000,
+                functionId: "reconcileProtectedPaymentSystems",
+                body: { runKey: "$schedule.runKey", limit: 5 },
+            },
+            {
+                id: "schedule-process-due-order-deadlines",
+                intervalMs: 60_000,
+                initialDelayMs: 10_000,
+                functionId: "processDueOrderDeadlines",
+                body: { runKey: "$schedule.runKey", limit: 5 },
+            },
+            {
+                id: "schedule-dispatch-pending-payment-cancellations",
+                intervalMs: 60_000,
+                initialDelayMs: 15_000,
+                functionId: "dispatchPendingPaymentCancellations",
+                body: { runKey: "$schedule.runKey", limit: 5 },
+            },
+            {
+                id: "schedule-dispatch-pending-protected-refunds",
+                intervalMs: 60_000,
+                initialDelayMs: 20_000,
+                functionId: "dispatchPendingProtectedRefunds",
+                body: { runKey: "$schedule.runKey", limit: 5 },
+            },
+            {
+                id: "schedule-dispatch-due-protected-settlements",
+                intervalMs: 60_000,
+                initialDelayMs: 35_000,
+                functionId: "dispatchDueProtectedSettlements",
+                body: { runKey: "$schedule.runKey", limit: 5 },
+            },
+        ]);
 
         const installedDashboards = await dashboards.getAllDashboards();
         expect(installedDashboards.map((dashboard) => dashboard.id).sort()).toEqual([
@@ -288,6 +353,26 @@ describe("Commerce protected Stripe combined installation", () => {
         expect(persistedJson).not.toContain("whsec_test_combined_install");
     }, 60_000);
 });
+
+function afterInstallationResponse(request: Request): Response {
+    if (request.url.includes("/cms-stripe-connect/payments/seller-capabilities")) {
+        return Response.json({
+            readySellerCmsUserIds: [],
+            snapshot: "seller-capabilities:test-empty",
+            snapshotAt: "2026-07-23T12:00:00.000Z",
+        });
+    }
+    if (request.url.includes("/cms-commerce/system/seller/sale-capability/activate")) {
+        return Response.json({
+            capabilityKey: "protected_payment",
+            sellerKind: "user",
+            enabled: true,
+            readyCount: 0,
+            notReadyCount: 0,
+        });
+    }
+    return Response.json({ error: `unexpected after-installation request: ${request.url}` }, { status: 500 });
+}
 
 async function loadDefinitions(): Promise<IntegrationDefinition[]> {
     const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);

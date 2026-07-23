@@ -11,6 +11,9 @@
     "dependencies": {
         "$include": "configuration/dependencies.json"
     },
+    "afterInstallation": {
+        "$include": "configuration/after-installation.json"
+    },
     "ui": {
         "$include": "configuration/ui.json"
     },
@@ -42,6 +45,11 @@
             "artifacts/functions/operations/dispatch-due-protected-settlements/root.json",
             "artifacts/functions/operations/dispatch-pending-protected-refunds.json",
             "artifacts/functions/operations/reconcile-protected-payment-systems/definition.json",
+            "artifacts/triggers/schedules/reconcile-protected-payment-systems.json",
+            "artifacts/triggers/schedules/process-due-order-deadlines.json",
+            "artifacts/triggers/schedules/dispatch-pending-payment-cancellations.json",
+            "artifacts/triggers/schedules/dispatch-pending-protected-refunds.json",
+            "artifacts/triggers/schedules/dispatch-due-protected-settlements.json",
             "artifacts/dashboards/commerce-stripe-payments-operations/definition.json",
             "artifacts/blocs/commerce-stripe-payment.json"
         ]

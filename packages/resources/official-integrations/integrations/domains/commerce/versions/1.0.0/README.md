@@ -14,6 +14,7 @@ The integration owns:
 - multiple seller offers for the same product or variant, each with private image media;
 - fixed publication status plus configurable, bounded workflow states;
 - administrator price ranges and seller price proposals;
+- optional whole-unit offer prices enforced for administrator ranges, seller proposals, and publication;
 - authenticated buyer carts with live price and availability issue projections;
 - seller-grouped checkout that creates one single-seller order per seller;
 - single-seller orders with server-side price and catalogue snapshots;
@@ -31,6 +32,43 @@ Provider integrations may only record idempotent projections through the
 system commands; they cannot calculate fees, authorize a release or refund,
 or mark an order complete themselves. Checkout group ids correlate an internal
 checkout and never replace public order ids.
+
+## Native notifications
+
+Commerce owns notification intent because payment, cancellation, refund, and
+fulfillment facts are part of its normalized domain state. The Supabase
+connector writes versioned `notification_events` and per-recipient
+`notification_deliveries` in the same transaction as the corresponding
+`audit_events`. It does not reuse the finance outbox and does not write into an
+Emailer or another provider database.
+
+The notification configuration has three exclusive modes:
+
+- `builtin` is the default and lets the CmsCore notification worker deliver
+  through the installed Emailer source;
+- `external` keeps capturing the Commerce queue for a replacement consumer;
+- `disabled` stops new notification capture and prevents both consumers from
+  claiming queued deliveries.
+
+Commerce publishes stable default template descriptors through its source. Its
+declarative `afterInstallation` hook registers them through Emailer's
+`installTemplates` endpoint when the optional Emailer dependency is available.
+The generic installation lifecycle also reconciles that hook when Emailer is
+installed later. Create-if-absent behavior preserves administrator edits. The
+scheduled notification task repeats the operation only as a recovery path
+before sending claimed work by template key. Emailer may use another database
+or provider because the boundary is HTTP/source-based rather than cross-schema
+SQL.
+
+Commerce also installs `schedule-dispatch-commerce-notifications`. The generic
+CmsCore trigger scheduler claims it every 30 seconds and invokes the registered
+`cms.notifications.dispatch` task. Runtime composition contains no
+Commerce-specific interval or function id.
+
+Payment, cancellation, and refund emails are required. Fulfillment emails are
+enabled by default and can be changed from the authenticated
+`commerce-notification-preferences` bloc. Email addresses are resolved from the
+current CMS user at dispatch time and are not copied into the Commerce queue.
 
 ## Protected C2C settlement
 
@@ -134,6 +172,12 @@ The administrator can request a price between two amounts. A seller proposal
 is checked inside a PostgreSQL transaction. The browser cannot bypass the
 range, seller ownership, seller verification, expected row version, or current
 workflow state.
+
+The optional `wholeUnitPrices` setting rejects offer amounts with fractional
+EUR units across administrator entry, seller pricing, and negotiation. Enabling
+it is blocked while a non-archived offer has a non-whole accepted price, active
+price rule, or pending or accepted proposal. Historical orders and calculated
+fees remain immutable minor-unit amounts and are not rounded by this policy.
 
 Settings, Workflow, and Metadata are separate dashboards. Settings also owns
 offer conditions because they remain a required first-class Commerce taxonomy.

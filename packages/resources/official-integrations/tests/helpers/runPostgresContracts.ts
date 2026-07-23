@@ -4,17 +4,27 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadSupabaseSchemaSql } from "./supabaseSql";
 
-type BundleName = "mondialRelay" | "stripeConnect";
+type BundleName = "commerceNotifications" | "commerceNegotiatedCheckout" | "mondialRelay" | "stripeConnect";
 type ContractStep = { file: string; variables?: string[] };
 type PostgresContract = { bundle: BundleName; label: string; steps: ContractStep[] };
 
 const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
 const integrationRoots: Record<BundleName, string> = {
+    commerceNotifications: resolve(packageRoot, "integrations/domains/commerce/versions/1.0.0"),
+    commerceNegotiatedCheckout: resolve(packageRoot, "integrations/domains/commerce/versions/1.0.0"),
     mondialRelay: resolve(packageRoot, "integrations/providers/mondial-relay/versions/1.0.0"),
     stripeConnect: resolve(packageRoot, "integrations/providers/stripe-connect/versions/1.0.0"),
 };
 
 const contracts: PostgresContract[] = [
+    contract("Commerce notification queue", "commerceNotifications", "commerce/sql/notifications", [
+        "run_commerce_notification_install_contract=true",
+        "allow_commerce_notification_schema_reset=true",
+    ]),
+    contract("Commerce negotiated checkout", "commerceNegotiatedCheckout", "commerce/order/price-agreement", [
+        "run_price_agreement_install_contract=true",
+        "allow_price_agreement_schema_reset=true",
+    ]),
     contract("Mondial Relay label access", "mondialRelay", "mondial-relay/label-access", [
         "run_label_access_install_contract=true",
     ]),
@@ -69,19 +79,31 @@ async function main(): Promise<void> {
 }
 
 async function loadBundles(): Promise<Record<BundleName, string>> {
-    const [mondialRelay, stripeConnect] = await Promise.all([
+    const [commerceNotifications, commerce, negotiation, mondialRelay, stripeConnect] = await Promise.all([
+        loadSupabaseSchemaSql(integrationRoots.commerceNotifications, "sql/foundation/notifications/manifest.json"),
+        loadSupabaseSchemaSql(integrationRoots.commerceNegotiatedCheckout),
+        loadSupabaseSchemaSql(resolve(packageRoot, "integrations/extensions/commerce-negotiation/versions/1.0.0")),
         loadSupabaseSchemaSql(integrationRoots.mondialRelay),
         loadSupabaseSchemaSql(integrationRoots.stripeConnect),
     ]);
-    return { mondialRelay, stripeConnect };
+    return {
+        commerceNotifications,
+        commerceNegotiatedCheckout: `${commerce}\n${negotiation}`,
+        mondialRelay,
+        stripeConnect,
+    };
 }
 
 async function writeBundles(root: string, sql: Record<BundleName, string>): Promise<Record<BundleName, string>> {
     const files = {
+        commerceNotifications: join(root, "commerce-notification-module.sql"),
+        commerceNegotiatedCheckout: join(root, "commerce-negotiated-checkout.sql"),
         mondialRelay: join(root, "mondial-relay.sql"),
         stripeConnect: join(root, "stripe-connect.sql"),
     };
     await Promise.all([
+        writeFile(files.commerceNotifications, sql.commerceNotifications),
+        writeFile(files.commerceNegotiatedCheckout, sql.commerceNegotiatedCheckout),
         writeFile(files.mondialRelay, sql.mondialRelay),
         writeFile(files.stripeConnect, sql.stripeConnect),
     ]);

@@ -16,6 +16,7 @@ import { InMemoryRelationRepository } from "@bernouy/cms-relations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository, validateSource } from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository, validateTrigger } from "@bernouy/cms-triggers";
+import { stripeWebhookProvisioner } from "../helpers/stripeWebhookProvisioner";
 
 const kinds = [
     "basic-blocs",
@@ -38,6 +39,9 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
         const deployments: string[] = [];
         const deployer: IntegrationConnectorDeployer = {
             provider: "supabase",
+            async previewOutputs() {
+                return { functionsBaseUrl: "https://combined.test/functions/v1" };
+            },
             async deploy(deployment) {
                 deployments.push(deployment.integrationKind);
                 return { provider: "supabase", outputs: { functionsBaseUrl: "https://combined.test/functions/v1" } };
@@ -54,6 +58,11 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
             secrets: new InMemorySecretStore(),
             installations,
             connectorDeployers: [deployer],
+            provisioners: [stripeWebhookProvisioner()],
+            sourceExecutorDeps: {
+                fetchImpl: async (input) => afterInstallationResponse(new Request(input)),
+                resolveSecret: async () => "combined-install-cms-api-key",
+            },
             blocs: {
                 async importBloc(artifact) {
                     return { id: artifact.tag, action: "created" };
@@ -108,6 +117,43 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
         for (const trigger of await triggers.getAllTriggers()) {
             expect(validateTrigger(trigger)).toEqual([]);
         }
+        const schedules = (await triggers.getAllTriggers())
+            .filter((trigger) => trigger.event.kind === "schedule")
+            .map((trigger) => ({
+                id: trigger.id,
+                intervalMs: trigger.event.kind === "schedule" ? trigger.event.intervalMs : 0,
+                target: trigger.function?.id ?? trigger.task?.id,
+                body: trigger.function?.body ?? trigger.task?.body,
+            }));
+        expect(schedules).toEqual(
+            expect.arrayContaining([
+                {
+                    id: "schedule-dispatch-commerce-notifications",
+                    intervalMs: 30_000,
+                    target: "cms.notifications.dispatch",
+                    body: { notificationKind: "commerce", emailerKind: "emailer", limit: 10 },
+                },
+                {
+                    id: "schedule-reconcile-mondial-relay-shipment-operations",
+                    intervalMs: 60_000,
+                    target: "reconcileMondialRelayShipmentOperations",
+                    body: { runKey: "$schedule.runKey", limit: 5 },
+                },
+                {
+                    id: "schedule-reconcile-mondial-relay-fulfillments",
+                    intervalMs: 300_000,
+                    target: "reconcileMondialRelayFulfillments",
+                    body: { runKey: "$schedule.runKey", limit: 8 },
+                },
+                {
+                    id: "schedule-publish-mondial-relay-delivery-health",
+                    intervalMs: 60_000,
+                    target: "publishMondialRelayDeliveryHealth",
+                    body: { runKey: "$schedule.runKey", limit: 24 },
+                },
+            ]),
+        );
+        expect(schedules).toHaveLength(9);
         for (const kind of kinds) {
             expect((await installations.get(kind))?.status).toBe("success");
         }
@@ -124,6 +170,26 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
         expect(serialized).not.toContain("applyDeliveryQuoteToMyOrder");
     }, 60_000);
 });
+
+function afterInstallationResponse(request: Request): Response {
+    if (request.url.includes("/cms-stripe-connect/payments/seller-capabilities")) {
+        return Response.json({
+            readySellerCmsUserIds: [],
+            snapshot: "seller-capabilities:test-empty",
+            snapshotAt: "2026-07-23T12:00:00.000Z",
+        });
+    }
+    if (request.url.includes("/cms-commerce/system/seller/sale-capability/activate")) {
+        return Response.json({
+            capabilityKey: "protected_payment",
+            sellerKind: "user",
+            enabled: true,
+            readyCount: 0,
+            notReadyCount: 0,
+        });
+    }
+    return Response.json({ error: `unexpected after-installation request: ${request.url}` }, { status: 500 });
+}
 
 async function definitionsForGraph(): Promise<IntegrationDefinition[]> {
     const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
@@ -172,9 +238,6 @@ function stripeAnswers(): Record<string, string> {
         id: "stripe-connect",
         stripeSecretKey: "sk_test_combined_delivery",
         stripePublishableKey: "pk_test_combined_delivery",
-        stripeWebhookSecret: "whsec_combined_delivery",
-        stripeConnectWebhookSecret: "whsec_connect_combined_delivery",
-        stripeConnectV2WebhookSecret: "whsec_connect_v2_combined_delivery",
         defaultCountry: "FR",
         defaultCurrency: "eur",
         sellerActivityDescription: "Second-hand marketplace delivery integration tests.",

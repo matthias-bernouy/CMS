@@ -14,6 +14,7 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository, validateSource } from "@bernouy/cms-sources";
+import { stripeWebhookProvisioner } from "../../helpers/stripeWebhookProvisioner";
 
 describe("public integrations 1.0.0", () => {
     test.each([
@@ -47,6 +48,7 @@ describe("public integrations 1.0.0", () => {
                 "upsertTemplate",
                 "sendTestEmail",
                 "sendTemplateEmail",
+                "installTemplates",
                 "listMessages",
                 "getSettings",
                 "updateSettings",
@@ -61,9 +63,6 @@ describe("public integrations 1.0.0", () => {
                 id: "stripe-connect",
                 stripeSecretKey: "sk_test_123",
                 stripePublishableKey: "pk_test_123",
-                stripeWebhookSecret: "whsec_test_123",
-                stripeConnectWebhookSecret: "whsec_connect_test_456",
-                stripeConnectV2WebhookSecret: "whsec_connect_v2_test_789",
                 defaultCountry: "FR",
                 defaultCurrency: "eur",
                 sellerActivityDescription: "Sale of second-hand goods between individuals.",
@@ -206,6 +205,9 @@ export async function importScenario(kind: string, answers: Record<string, strin
     let deployment: IntegrationConnectorDeployment | undefined;
     const deployer: IntegrationConnectorDeployer = {
         provider: "supabase",
+        async previewOutputs() {
+            return { functionsBaseUrl: "https://project.supabase.co/functions/v1" };
+        },
         async deploy(next) {
             deployment = next;
             return {
@@ -233,6 +235,7 @@ export async function importScenario(kind: string, answers: Record<string, strin
             sourceOverlays,
             installations,
             connectorDeployers: [deployer],
+            provisioners: [stripeWebhookProvisioner()],
             blocs: {
                 async importBloc(artifact) {
                     importedBlocs.push(artifact);

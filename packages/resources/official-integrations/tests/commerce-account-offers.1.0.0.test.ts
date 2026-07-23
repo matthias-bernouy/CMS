@@ -189,7 +189,10 @@ describe("commerce account offers 1.0.0", () => {
         const viewSource = declaredBlocViewSources(artifact.bloc);
         const editorSource = artifact.bloc.editorJS;
 
-        expect(definition.dependencies).toEqual([{ name: "basicBlocs", kind: "basic-blocs" }]);
+        expect(definition.dependencies).toEqual([
+            { name: "basicBlocs", kind: "basic-blocs" },
+            { name: "emailer", kind: "emailer", optional: true },
+        ]);
         expect(compiled.viewJS).toContain("window.p9r.Composition");
         expect(compiled.viewJS).toContain('cms-repeat="items as offer"');
         expect(compiled.viewJS).toContain('<img slot="media"');
@@ -410,7 +413,7 @@ describe("commerce account offers 1.0.0", () => {
         }
         expect(source.source.endpoints.find((item) => item.endpointId === "myOffer")?.access).toEqual({ mode: "auth" });
         expect(source.source.endpoints.find((item) => item.endpointId === "submitMyOfferPrice")?.access).toEqual({
-            mode: "auth",
+            mode: "system",
         });
     });
 });
