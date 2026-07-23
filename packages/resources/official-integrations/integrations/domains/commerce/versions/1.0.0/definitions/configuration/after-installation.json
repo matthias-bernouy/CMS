@@ -1,0 +1,27 @@
+[
+    {
+        "id": "install-notification-templates",
+        "requires": [
+            "emailer"
+        ],
+        "steps": [
+            {
+                "id": "templates",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "listDefaultNotificationTemplates"
+                }
+            },
+            {
+                "id": "installation",
+                "call": {
+                    "source": "{{dependencies.emailer.answers.id}}",
+                    "endpoint": "installTemplates",
+                    "body": {
+                        "templates": "$steps.templates.items"
+                    }
+                }
+            }
+        ]
+    }
+]

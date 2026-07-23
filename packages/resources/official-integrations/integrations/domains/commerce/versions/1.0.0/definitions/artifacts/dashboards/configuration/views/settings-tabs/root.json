@@ -1,0 +1,7 @@
+{
+    "widget": "w-tabs",
+    "id": "settingsTabs",
+    "tabs": {
+        "$include": "tabs.json"
+    }
+}

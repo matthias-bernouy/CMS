@@ -1,7 +1,5 @@
 {
     "$files": [
-        "views/commerce-settings/root.json",
-        "views/protected-c2c-policy-settings.json",
-        "views/condition-management.json"
+        "views/settings-tabs/root.json"
     ]
 }

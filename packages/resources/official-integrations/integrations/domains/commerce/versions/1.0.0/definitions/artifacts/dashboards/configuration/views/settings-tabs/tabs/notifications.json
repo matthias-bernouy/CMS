@@ -1,0 +1,9 @@
+{
+    "id": "notifications",
+    "label": "Notifications",
+    "children": [
+        {
+            "$include": "../../notification-settings.json"
+        }
+    ]
+}

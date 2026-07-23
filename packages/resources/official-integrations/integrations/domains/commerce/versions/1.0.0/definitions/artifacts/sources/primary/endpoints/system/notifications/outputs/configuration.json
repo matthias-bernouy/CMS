@@ -1,0 +1,16 @@
+{
+    "type": "object",
+    "properties": {
+        "mode": {
+            "type": "string"
+        },
+        "updated_at": {
+            "type": "string",
+            "nullable": true
+        }
+    },
+    "required": [
+        "mode",
+        "updated_at"
+    ]
+}

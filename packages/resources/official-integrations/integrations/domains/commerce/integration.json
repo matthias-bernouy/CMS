@@ -3,7 +3,7 @@
     "kind": "commerce",
     "label": "Commerce",
     "category": "Commerce",
-    "description": "Run a catalogue, marketplace offers, price review workflows, and orders from one coherent commerce model.",
+    "description": "Run a catalogue, marketplace, orders, and replaceable buyer notifications from one coherent commerce model.",
     "stable": "1.0.0",
     "latest": "1.0.0",
     "versions": [

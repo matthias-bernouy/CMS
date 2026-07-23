@@ -26,6 +26,8 @@
         "Authenticated buyer carts and seller-grouped checkout",
         "Administrator seller and offer review",
         "Atomic single-seller ordering",
+        "Built-in buyer notifications with optional Emailer delivery",
+        "External or disabled notification delivery modes",
         "Commerce settings, workflows, conditions, and metadata",
         "Public offer list and preview blocs plus authenticated seller offer listing",
         "Backoffice Commerce dashboards"
@@ -48,7 +50,7 @@
         ],
         [
             "Blocs",
-            "Public offer browsing and authenticated seller offer listing"
+            "Public offer browsing, authenticated seller offers, and buyer notification preferences"
         ],
         [
             "Dashboards",
@@ -60,14 +62,15 @@
         ],
         [
             "Supabase",
-            "Private commerce schema and modular cms-commerce Edge Function"
+            "Private commerce schema, native notification queue, and modular cms-commerce Edge Function"
         ]
     ],
     "review": [
         "Keep publication status separate from configurable workflow state.",
         "Keep price ranges, access rules, and seller verification out of custom metadata.",
         "Do not trust client-provided seller ids, buyer ids, prices, cart projections, order totals, or snapshots.",
-        "Use metadata only for validated descriptive information."
+        "Use metadata only for validated descriptive information.",
+        "Keep notification delivery behind the Commerce source contract; never write into a provider database."
     ],
     "sync": [
         "Validate answers",
@@ -78,5 +81,5 @@
         "Install Commerce dashboards",
         "Refresh Sources"
     ],
-    "syncNote": "Commerce keeps catalogue, marketplace, buyer cart, price review, and ordering data in one private transactional schema."
+    "syncNote": "Commerce keeps domain state and notification intent in one transactional schema; the configured sender owns message delivery."
 }

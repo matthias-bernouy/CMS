@@ -10,7 +10,10 @@ export function registerPolicyDashboardTest(): void {
         const dashboard = definition.artifacts.find(
             (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-configuration",
         ).dashboard;
-        const detail = dashboard.views.find((view: any) => view.id === "protectedC2cPolicySettings");
+        const settingsTabs = dashboard.views.find((view: any) => view.id === "settingsTabs");
+        const detail = settingsTabs.tabs
+            .flatMap((tab: any) => tab.children)
+            .find((view: any) => view.id === "protectedC2cPolicySettings");
         const action = detail.actions.find((candidate: any) => candidate.id === "publishProtectedC2cPolicyRevision");
         const endpoint = source.endpoints.find((candidate: any) => candidate.endpointId === "createC2cPolicyRevision");
         const fields = detail.main.flatMap((section: any) => section.fields);

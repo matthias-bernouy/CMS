@@ -5,6 +5,7 @@ import { handleAdminMarketplaceRoute } from "./routing/admin-marketplace.ts";
 import { handleCatalogRoute } from "./routing/catalog.ts";
 import { handleMarketplaceRoute } from "./routing/marketplace.ts";
 import { handleInternalSettlementRoute } from "./routing/internal-settlement.ts";
+import { handleNotificationRoute } from "./routing/notifications.ts";
 
 const routeHandlers = [
     handleCatalogRoute,
@@ -12,6 +13,7 @@ const routeHandlers = [
     handleInternalSettlementRoute,
     handleAdminMarketplaceRoute,
     handleAdminConfigurationRoute,
+    handleNotificationRoute,
 ];
 
 export async function handleCommerceRequest(request: Request): Promise<Response> {

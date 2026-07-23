@@ -4,7 +4,7 @@
     "label": "Commerce",
     "version": "1.0.0",
     "category": "Commerce",
-    "description": "Run a catalogue, marketplace offers, buyer carts, bounded price review workflows, sellers, and orders from one Supabase-backed commerce model.",
+    "description": "Run a catalogue, marketplace, orders, and replaceable buyer notifications from one Supabase-backed commerce model.",
     "icon": {
         "path": "assets/icon.svg"
     },
@@ -23,6 +23,9 @@
     "connectors": {
         "$include": "configuration/connectors.json"
     },
+    "afterInstallation": {
+        "$include": "configuration/after-installation.json"
+    },
     "artifacts": {
         "$files": [
             "artifacts/sources/primary/definition.json",
@@ -38,6 +41,8 @@
             "artifacts/blocs/commerce-account-sales.json",
             "artifacts/blocs/commerce-sale-detail.json",
             "artifacts/blocs/commerce-offer-price-form.json",
+            "artifacts/blocs/commerce-notification-preferences.json",
+            "artifacts/triggers/dispatch-notifications.json",
             "artifacts/dashboards/products/definition.json",
             "artifacts/dashboards/offers/definition.json",
             "artifacts/dashboards/orders/root.json",

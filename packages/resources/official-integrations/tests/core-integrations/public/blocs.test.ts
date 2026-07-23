@@ -14,6 +14,7 @@ const expectedBlocs = new Map([
         [
             "commerce-account-offers",
             "commerce-account-sales",
+            "commerce-notification-preferences",
             "commerce-offer-filter",
             "commerce-offer-list",
             "commerce-offer-preview",

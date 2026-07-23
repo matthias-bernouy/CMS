@@ -1,0 +1,11 @@
+[
+    {
+        "$include": "deliveries.json"
+    },
+    {
+        "$include": "get-configuration.json"
+    },
+    {
+        "$include": "update-configuration.json"
+    }
+]

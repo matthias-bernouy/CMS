@@ -1,0 +1,8 @@
+[
+    {
+        "$include": "get.json"
+    },
+    {
+        "$include": "update.json"
+    }
+]

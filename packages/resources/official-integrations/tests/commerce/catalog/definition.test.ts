@@ -32,7 +32,7 @@ describe("commerce product dashboard definition", () => {
         const source = definition.artifacts.find((artifact) => artifact.type === "source")?.source;
         const dashboards = definition.artifacts.flatMap((artifact) => (artifact.dashboard ? [artifact.dashboard] : []));
         const products = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-products");
-        const views = dashboards.flatMap((dashboard) => dashboard.views);
+        const views = products?.views ?? [];
         const productDetail = products?.views.find((view) => view.id === "productDetail");
         const fields = [...(productDetail?.main ?? []), ...(productDetail?.aside ?? [])].flatMap(
             (section) => section.fields,

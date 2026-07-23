@@ -1,0 +1,12 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "file": "model.sql" },
+        { "file": "rules.sql" },
+        { "file": "claim.sql" },
+        { "file": "delivery-results.sql" },
+        { "file": "capture.sql" },
+        { "file": "access.sql" }
+    ]
+}
