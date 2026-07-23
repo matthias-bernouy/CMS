@@ -35,13 +35,12 @@ describe("endpoint performance flushing", () => {
         const recorder = new BufferedEndpointPerformanceRecorder(writer, { now: () => now });
         recorder.observe(observation);
         const first = recorder.flush();
-        const shared = recorder.flush();
         recorder.observe({ ...observation, status: 503 });
-        expect(first).toBe(shared);
+        const final = recorder.flush();
+        expect(first).toBe(final);
         expect(recorder.stats().bufferedSeries).toBe(1);
         release();
-        await first;
-        await recorder.flush();
+        await final;
         expect(batches).toHaveLength(2);
         expect(batches[0]?.rollups[0]?.statusClass).toBe("2xx");
         expect(batches[1]?.rollups[0]?.statusClass).toBe("5xx");

@@ -30,6 +30,7 @@ export type BufferedEndpointPerformanceStats = {
 export class BufferedEndpointPerformanceRecorder implements EndpointPerformanceRecorder {
     private rollups = new Map<string, EndpointPerformanceAggregate>();
     private inFlight: Promise<void> | null = null;
+    private additionalFlushRequested = false;
     private readonly enabled: boolean;
     private readonly maxSeries: number;
     private readonly now: () => Date;
@@ -80,19 +81,10 @@ export class BufferedEndpointPerformanceRecorder implements EndpointPerformanceR
             return Promise.resolve();
         }
         if (this.inFlight) {
+            this.additionalFlushRequested = true;
             return this.inFlight;
         }
-        this.collector.heartbeat(this.safeNow());
-        const batch = this.drain();
-        const lost = batch.rollups.reduce((sum, aggregate) => sum + aggregate.requestCount, 0);
-        const operation = this.writer.write(batch).catch((error) => {
-            this.collector.retry(batch.collectors);
-            const now = this.safeNow();
-            this.collector.note(now, { dropped: lost, flushFailures: 1, uncertain: true });
-            this.totals.dropped += lost;
-            this.totals.flushFailures++;
-            throw error;
-        });
+        const operation = this.flushUntilSettled();
         this.inFlight = operation.finally(() => {
             this.inFlight = null;
         });
@@ -101,6 +93,27 @@ export class BufferedEndpointPerformanceRecorder implements EndpointPerformanceR
 
     stats(): BufferedEndpointPerformanceStats {
         return { bufferedSeries: this.rollups.size, ...this.totals };
+    }
+
+    private async flushUntilSettled(): Promise<void> {
+        do {
+            this.additionalFlushRequested = false;
+            await this.flushOnce();
+        } while (this.additionalFlushRequested);
+    }
+
+    private async flushOnce(): Promise<void> {
+        this.collector.heartbeat(this.safeNow());
+        const batch = this.drain();
+        const lost = batch.rollups.reduce((sum, aggregate) => sum + aggregate.requestCount, 0);
+        await this.writer.write(batch).catch((error) => {
+            this.collector.retry(batch.collectors);
+            const now = this.safeNow();
+            this.collector.note(now, { dropped: lost, flushFailures: 1, uncertain: true });
+            this.totals.dropped += lost;
+            this.totals.flushFailures++;
+            throw error;
+        });
     }
 
     private drain(): EndpointPerformanceBatch {
