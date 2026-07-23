@@ -1,3 +1,4 @@
+import { resolveRequestSubject } from "@bernouy/cms-auth";
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 
@@ -22,7 +23,7 @@ export type ProfilResponse = {
  * subject id may not be a stored user).
  */
 export default async function profil(req: Request, cms: ControlCms): Promise<Response> {
-    const subject = await cms.auth.getSubject(req);
+    const subject = await resolveRequestSubject(cms.auth, req);
     if (!subject) {
         throw new MissingParam("session");
     }

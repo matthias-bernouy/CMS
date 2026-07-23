@@ -1,3 +1,4 @@
+import { resolveRequestSubject } from "@bernouy/cms-auth";
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
@@ -6,7 +7,7 @@ import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
  *  is a query param (the admin UI revokes via `<cms-confirm-form>`, which sends
  *  no body). */
 export default async function revokePat(req: Request, cms: ControlCms) {
-    const subject = await cms.auth.getSubject(req);
+    const subject = await resolveRequestSubject(cms.auth, req);
     if (!subject) {
         throw new MissingParam("session");
     }

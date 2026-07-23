@@ -1,3 +1,4 @@
+import { resolveRequestSubject } from "@bernouy/cms-auth";
 import { executeFunction } from "@bernouy/cms-functions";
 import type { ControlCms } from "cms-control/ControlCms";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
@@ -30,7 +31,7 @@ export async function executeAdminFunction(
         init.body = JSON.stringify(payload.body);
     }
 
-    const subject = await cms.auth.getSubject(request).catch(() => null);
+    const subject = await resolveRequestSubject(cms.auth, request).catch(() => null);
     return executeFunction(fn, new Request(executionUrl(request, id, params), init), {
         sources: cms.sources,
         deps: cms.sourceExecutorDeps,

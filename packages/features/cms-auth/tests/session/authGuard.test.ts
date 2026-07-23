@@ -1,5 +1,6 @@
 import { describe, expect, mock, spyOn, test } from "bun:test";
 import { createAuthGuard, InMemoryAuthentication, resolveRequestSubject } from "@bernouy/cms-auth";
+import { requestTimingSnapshot } from "@bernouy/http-runner/observability";
 import { TestAuthentication } from "./requestSubjectSupport";
 
 type Role = "admin" | "user" | "custom";
@@ -29,6 +30,7 @@ describe("createAuthGuard role access", () => {
 
         expect(response.status).toBe(200);
         expect(authentication.calls).toBe(1);
+        expect(requestTimingSnapshot(request).cms_auth).toBeGreaterThanOrEqual(0);
         expect(await response.json()).toEqual({
             subject: { identifier: "admin-1", role: "admin" },
         });

@@ -1,4 +1,9 @@
-import { executeAuthSystemSourceEndpoint, type PublicAuthRoutesConfig } from "@bernouy/cms-auth";
+import {
+    executeAuthSystemSourceEndpoint,
+    resolveRequestSubject,
+    type PublicAuthRoutesConfig,
+    type Subject,
+} from "@bernouy/cms-auth";
 import {
     executeFunctionSystemSourceEndpoint,
     RequestScopedFunctionRepository,
@@ -12,6 +17,7 @@ import {
     SourceOverlaySourceRepository,
     createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
+    measureActiveSourceTiming,
     sourceEndpointAccessAllows,
     sourceEndpointAccessMode,
     sourcesPrefix,
@@ -31,12 +37,16 @@ export function mountControlSourceProxy(
 ): void {
     const runner = state.runner;
     const resolveSecret = createSecretResolver(state.secrets);
+    const resolveSubject = (request: Request): Promise<Subject<CMS_ROLES> | null> =>
+        measureActiveSourceTiming(request, "cms_auth", () => resolveRequestSubject(state.auth, request)).catch(
+            () => null,
+        );
     const resolveContext = async (req: Request) => {
-        const subject = await state.auth.getSubject(req).catch(() => null);
+        const subject = await resolveSubject(req);
         return subject ? { userID: subject.identifier, userRole: subject.role } : {};
     };
     const authorizeEndpoint = async (endpoint: SourceEndpoint, req: Request) => {
-        const subject = await state.auth.getSubject(req).catch(() => null);
+        const subject = await resolveSubject(req);
         if (!subject) {
             return false;
         }
@@ -46,7 +56,7 @@ export function mountControlSourceProxy(
         if (subject.role === ADMIN_ROLE) {
             return true;
         }
-        const definitions = await state.roles.list();
+        const definitions = await measureActiveSourceTiming(req, "cms_roles", () => state.roles.list());
         return can(effectiveGrantsFor(subject.role, { definitions }), endpoint.urn);
     };
     const sourceDeps = {
@@ -69,7 +79,7 @@ export function mountControlSourceProxy(
                   sources: overlaySources,
                   deps: sourceDeps,
                   resolveUser: async (req) => {
-                      const subject = await state.auth.getSubject(req).catch(() => null);
+                      const subject = await resolveSubject(req);
                       return subject ? { id: subject.identifier, role: subject.role } : {};
                   },
               })
@@ -92,7 +102,7 @@ export function mountControlSourceProxy(
                             if (!requestFunctions || !overlaySources) {
                                 return new Response("function executor not configured", { status: 501 });
                             }
-                            const subject = await state.auth.getSubject(request).catch(() => null);
+                            const subject = await resolveSubject(request);
                             return executeFunctionSystemSourceEndpoint(endpoint, request, {
                                 functions: requestFunctions,
                                 sources: overlaySources,
