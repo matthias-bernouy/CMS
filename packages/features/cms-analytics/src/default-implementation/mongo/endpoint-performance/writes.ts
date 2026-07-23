@@ -10,8 +10,7 @@ import type {
     EndpointPerformanceCollectorAggregate,
 } from "../../../core/rollups/endpoint-performance/types";
 import type { EndpointPerformanceDoc } from "./types";
-
-export const ENDPOINT_PERFORMANCE_ROLLUP_VERSION = "endpoint-performance-v1";
+import { ENDPOINT_PERFORMANCE_ROLLUP_VERSION } from "./types";
 
 export function endpointPerformanceWriteOperations(
     batch: EndpointPerformanceBatch,
@@ -45,6 +44,14 @@ function endpointOperation(
             }
         });
     }
+    for (const [counter, summary] of Object.entries(aggregate.counters)) {
+        if (!summary) {
+            continue;
+        }
+        increment[`counters.${counter}.observations`] = summary.observations;
+        increment[`counters.${counter}.sum`] = summary.sum;
+        maximum[`counters.${counter}.max`] = summary.max;
+    }
     return {
         updateOne: {
             filter: { _id: endpointDocumentId(aggregate) },
@@ -73,23 +80,27 @@ function collectorOperation(
     aggregate: EndpointPerformanceCollectorAggregate,
     retentionDays: number,
 ): AnyBulkWriteOperation<EndpointPerformanceDoc> {
+    const setOnInsert: Record<string, unknown> = {
+        kind: "collector",
+        collectorId: aggregate.collectorId,
+        bucket: aggregate.bucket,
+        expiresAt: expiry(aggregate.bucket, retentionDays),
+        rollupVersion: ENDPOINT_PERFORMANCE_ROLLUP_VERSION,
+        ...(!aggregate.uncertain ? { uncertain: false } : {}),
+    };
     return {
         updateOne: {
-            filter: { _id: collectorDocumentId(aggregate.bucket) },
+            filter: { _id: collectorDocumentId(aggregate.collectorId, aggregate.bucket) },
             update: {
-                $inc: {
+                $max: {
                     accepted: aggregate.accepted,
                     dropped: aggregate.dropped,
                     invalid: aggregate.invalid,
                     flushFailures: aggregate.flushFailures,
+                    lastFlushAt: aggregate.lastFlushAt,
                 },
-                $max: { lastFlushAt: aggregate.lastFlushAt },
-                $setOnInsert: {
-                    kind: "collector",
-                    bucket: aggregate.bucket,
-                    expiresAt: expiry(aggregate.bucket, retentionDays),
-                    rollupVersion: ENDPOINT_PERFORMANCE_ROLLUP_VERSION,
-                },
+                ...(aggregate.uncertain ? { $set: { uncertain: true } } : {}),
+                $setOnInsert: setOnInsert,
             },
             upsert: true,
         },
@@ -107,8 +118,8 @@ function endpointDocumentId(aggregate: EndpointPerformanceAggregate): string {
     ]);
 }
 
-function collectorDocumentId(bucket: Date): string {
-    return JSON.stringify([ENDPOINT_PERFORMANCE_ROLLUP_VERSION, "collector", bucket.toISOString()]);
+function collectorDocumentId(collectorId: string, bucket: Date): string {
+    return JSON.stringify([ENDPOINT_PERFORMANCE_ROLLUP_VERSION, "collector", collectorId, bucket.toISOString()]);
 }
 
 function expiry(bucket: Date, retentionDays: number): Date {

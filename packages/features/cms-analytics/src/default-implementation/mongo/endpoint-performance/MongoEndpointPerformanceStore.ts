@@ -34,12 +34,25 @@ export class MongoEndpointPerformanceStore implements EndpointPerformanceBatchWr
             this.rollups.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
             this.rollups.createIndex({
                 kind: 1,
+                rollupVersion: 1,
                 bucket: 1,
                 surface: 1,
                 endpointUrn: 1,
                 method: 1,
                 statusClass: 1,
             }),
+            this.rollups.createIndex(
+                {
+                    kind: 1,
+                    rollupVersion: 1,
+                    endpointUrn: 1,
+                    surface: 1,
+                    method: 1,
+                    statusClass: 1,
+                    bucket: 1,
+                },
+                { partialFilterExpression: { kind: "endpoint" } },
+            ),
         ]);
     }
 

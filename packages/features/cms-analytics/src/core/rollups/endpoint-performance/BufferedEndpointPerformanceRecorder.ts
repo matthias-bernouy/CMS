@@ -7,17 +7,15 @@ import {
     createEndpointPerformanceAggregate,
     endpointPerformanceAggregateKey,
 } from "./aggregate";
-import { normalizeEndpointPerformanceObservation, truncateEndpointPerformanceBucket } from "./normalization";
-import type {
-    EndpointPerformanceAggregate,
-    EndpointPerformanceBatch,
-    EndpointPerformanceBatchWriter,
-    EndpointPerformanceCollectorAggregate,
-} from "./types";
+import { EndpointPerformanceCollectorTracker, endpointPerformanceCollectorId } from "./collector";
+import { normalizeEndpointPerformanceObservation } from "./normalization";
+import type { EndpointPerformanceAggregate, EndpointPerformanceBatch, EndpointPerformanceBatchWriter } from "./types";
 
 export type BufferedEndpointPerformanceRecorderConfig = {
     enabled?: boolean;
     maxSeries?: number;
+    /** Unique for this process lifetime; invalid or missing values are replaced with a random identifier. */
+    collectorId?: string;
     now?: () => Date;
 };
 
@@ -31,11 +29,11 @@ export type BufferedEndpointPerformanceStats = {
 
 export class BufferedEndpointPerformanceRecorder implements EndpointPerformanceRecorder {
     private rollups = new Map<string, EndpointPerformanceAggregate>();
-    private collectors = new Map<number, EndpointPerformanceCollectorAggregate>();
     private inFlight: Promise<void> | null = null;
     private readonly enabled: boolean;
     private readonly maxSeries: number;
     private readonly now: () => Date;
+    private readonly collector: EndpointPerformanceCollectorTracker;
     private totals = { accepted: 0, dropped: 0, invalid: 0, flushFailures: 0 };
 
     constructor(
@@ -45,14 +43,15 @@ export class BufferedEndpointPerformanceRecorder implements EndpointPerformanceR
         this.enabled = config.enabled ?? true;
         this.maxSeries = validCapacity(config.maxSeries);
         this.now = config.now ?? (() => new Date());
+        this.collector = new EndpointPerformanceCollectorTracker(endpointPerformanceCollectorId(config.collectorId));
     }
 
     observe(observation: EndpointPerformanceObservation): void {
         if (!this.enabled) {
             return;
         }
+        const now = this.safeNow();
         try {
-            const now = this.now();
             const normalized = normalizeEndpointPerformanceObservation(observation, now);
             if (!normalized) {
                 this.noteDrop(now, true);
@@ -69,26 +68,27 @@ export class BufferedEndpointPerformanceRecorder implements EndpointPerformanceR
                 this.rollups.set(key, aggregate);
             }
             appendEndpointPerformanceObservation(aggregate, normalized);
-            this.noteCollector(normalized.ts, { accepted: 1 });
+            this.collector.note(normalized.ts, { accepted: 1 });
             this.totals.accepted++;
         } catch {
-            this.totals.dropped++;
-            this.totals.invalid++;
+            this.noteDrop(now, true);
         }
     }
 
     flush(): Promise<void> {
+        if (!this.enabled) {
+            return Promise.resolve();
+        }
         if (this.inFlight) {
             return this.inFlight;
         }
+        this.collector.heartbeat(this.safeNow());
         const batch = this.drain();
-        if (batch.rollups.length === 0 && batch.collectors.length === 0) {
-            return Promise.resolve();
-        }
         const lost = batch.rollups.reduce((sum, aggregate) => sum + aggregate.requestCount, 0);
         const operation = this.writer.write(batch).catch((error) => {
-            const now = this.now();
-            this.noteCollector(now, { dropped: lost, flushFailures: 1 });
+            this.collector.retry(batch.collectors);
+            const now = this.safeNow();
+            this.collector.note(now, { dropped: lost, flushFailures: 1, uncertain: true });
             this.totals.dropped += lost;
             this.totals.flushFailures++;
             throw error;
@@ -104,43 +104,28 @@ export class BufferedEndpointPerformanceRecorder implements EndpointPerformanceR
     }
 
     private drain(): EndpointPerformanceBatch {
-        const flushAt = this.now();
+        const flushAt = this.safeNow();
         const batch = {
             rollups: [...this.rollups.values()],
-            collectors: [...this.collectors.values()].map((value) => ({ ...value, lastFlushAt: flushAt })),
+            collectors: this.collector.snapshots(flushAt),
         };
         this.rollups = new Map();
-        this.collectors = new Map();
         return batch;
     }
 
     private noteDrop(ts: Date, invalid: boolean): void {
-        this.noteCollector(ts, { dropped: 1, ...(invalid ? { invalid: 1 } : {}) });
+        this.collector.note(ts, { dropped: 1, ...(invalid ? { invalid: 1 } : {}) });
         this.totals.dropped++;
         this.totals.invalid += invalid ? 1 : 0;
     }
 
-    private noteCollector(
-        ts: Date,
-        delta: Partial<
-            Pick<EndpointPerformanceCollectorAggregate, "accepted" | "dropped" | "invalid" | "flushFailures">
-        >,
-    ): void {
-        const bucket = truncateEndpointPerformanceBucket(ts);
-        const key = bucket.getTime();
-        const current = this.collectors.get(key) ?? {
-            bucket,
-            accepted: 0,
-            dropped: 0,
-            invalid: 0,
-            flushFailures: 0,
-            lastFlushAt: ts,
-        };
-        current.accepted += delta.accepted ?? 0;
-        current.dropped += delta.dropped ?? 0;
-        current.invalid += delta.invalid ?? 0;
-        current.flushFailures += delta.flushFailures ?? 0;
-        this.collectors.set(key, current);
+    private safeNow(): Date {
+        try {
+            const value = this.now();
+            return value instanceof Date && Number.isFinite(value.getTime()) ? new Date(value) : new Date();
+        } catch {
+            return new Date();
+        }
     }
 }
 

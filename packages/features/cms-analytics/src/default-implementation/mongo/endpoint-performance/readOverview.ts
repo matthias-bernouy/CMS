@@ -1,4 +1,4 @@
-import type { Collection, Document } from "mongodb";
+import type { Document } from "mongodb";
 import type { EndpointPerformanceQuery } from "../../../interfaces/EndpointPerformance";
 import type {
     EndpointPerformanceRow,
@@ -6,50 +6,32 @@ import type {
     EndpointRequestSummary,
 } from "../../../interfaces/EndpointPerformanceDashboard";
 import { requestGroupFields, requestProjectionFields } from "./aggregation";
-import type { EndpointPerformanceDoc } from "./types";
 
-type Match = Record<string, unknown>;
+export type EndpointPerformanceSummaryRow = EndpointRequestSummary & { lastObservationAt: Date };
 
-export async function readEndpointPerformanceSummary(
-    collection: Collection<EndpointPerformanceDoc>,
-    match: Match,
-): Promise<EndpointRequestSummary & { lastObservationAt: Date | null }> {
-    const rows = await collection
-        .aggregate<EndpointRequestSummary & { lastObservationAt: Date }>([
-            { $match: match },
-            { $group: { _id: null, ...requestGroupFields() } },
-            { $project: { _id: 0, ...requestProjectionFields(), lastObservationAt: 1 } },
-        ])
-        .toArray();
-    return rows[0] ?? { ...emptyRequestSummary(), lastObservationAt: null };
+export function endpointPerformanceSummaryFacet(): Document[] {
+    return [
+        { $match: { kind: "endpoint" } },
+        { $group: { _id: null, ...requestGroupFields() } },
+        { $project: { _id: 0, ...requestProjectionFields(), lastObservationAt: 1 } },
+    ];
 }
 
-export async function readEndpointPerformanceTimeline(
-    collection: Collection<EndpointPerformanceDoc>,
-    match: Match,
-    range: EndpointPerformanceQuery["range"],
-): Promise<EndpointPerformanceTimelinePoint[]> {
-    const truncation = timelineTruncation(range);
-    return collection
-        .aggregate<EndpointPerformanceTimelinePoint>([
-            { $match: match },
-            {
-                $group: {
-                    _id: { $dateTrunc: { date: "$bucket", ...truncation } },
-                    ...requestGroupFields(),
-                },
+export function endpointPerformanceTimelineFacet(range: EndpointPerformanceQuery["range"]): Document[] {
+    return [
+        { $match: { kind: "endpoint" } },
+        {
+            $group: {
+                _id: { $dateTrunc: { date: "$bucket", ...timelineTruncation(range) } },
+                ...requestGroupFields(),
             },
-            { $project: { _id: 0, bucket: "$_id", ...requestProjectionFields() } },
-            { $sort: { bucket: 1 } },
-        ])
-        .toArray();
+        },
+        { $project: { _id: 0, bucket: "$_id", ...requestProjectionFields() } },
+        { $sort: { bucket: 1 } },
+    ];
 }
 
-export async function readEndpointPerformanceRows(
-    collection: Collection<EndpointPerformanceDoc>,
-    match: Match,
-    query: EndpointPerformanceQuery,
-): Promise<EndpointPerformanceRow[]> {
+export function endpointPerformanceRowsFacet(query: EndpointPerformanceQuery): Document[] {
     const sortField = {
         requests: "requests",
         errorRate: "errorRate",
@@ -59,40 +41,48 @@ export async function readEndpointPerformanceRows(
         max: "maxMs",
     }[query.sort];
     const direction = query.order === "asc" ? 1 : -1;
-    return collection
-        .aggregate<EndpointPerformanceRow>([
-            { $match: match },
-            {
-                $group: {
-                    _id: { surface: "$surface", endpointUrn: "$endpointUrn", method: "$method" },
-                    ...requestGroupFields(),
-                },
+    return [
+        { $match: { kind: "endpoint" } },
+        {
+            $group: {
+                _id: { surface: "$surface", endpointUrn: "$endpointUrn", method: "$method" },
+                ...requestGroupFields(),
             },
-            {
-                $project: {
-                    _id: 0,
-                    surface: "$_id.surface",
-                    endpointUrn: "$_id.endpointUrn",
-                    method: "$_id.method",
-                    ...requestProjectionFields(),
-                },
+        },
+        {
+            $project: {
+                _id: 0,
+                surface: "$_id.surface",
+                endpointUrn: "$_id.endpointUrn",
+                method: "$_id.method",
+                ...requestProjectionFields(),
             },
-            { $sort: { [sortField]: direction, endpointUrn: 1, surface: 1, method: 1 } },
-            { $limit: query.limit },
-        ] as Document[])
-        .toArray();
+        },
+        { $sort: { [sortField]: direction, endpointUrn: 1, surface: 1, method: 1 } },
+        { $limit: query.limit },
+    ];
 }
 
-function emptyRequestSummary(): EndpointRequestSummary {
+export function emptyEndpointPerformanceSummary(): EndpointRequestSummary {
     return { requests: 0, errors: 0, errorRate: null, p50Ms: null, p95Ms: null, p99Ms: null, maxMs: null };
 }
 
-function timelineTruncation(range: EndpointPerformanceQuery["range"]) {
+export function endpointPerformanceTimelineBucketMs(range: EndpointPerformanceQuery["range"]): number {
     if (range === "1h") {
-        return { unit: "minute", binSize: 5 } as const;
+        return 300_000;
     }
-    if (range === "24h") {
-        return { unit: "minute", binSize: 15 } as const;
-    }
-    return { unit: "hour", binSize: 1 } as const;
+    return range === "24h" ? 900_000 : 3_600_000;
+}
+
+export type EndpointPerformanceOverviewSnapshot = {
+    summary: EndpointPerformanceSummaryRow[];
+    timeline: EndpointPerformanceTimelinePoint[];
+    endpoints: EndpointPerformanceRow[];
+};
+
+function timelineTruncation(range: EndpointPerformanceQuery["range"]) {
+    const bucketMs = endpointPerformanceTimelineBucketMs(range);
+    return bucketMs < 3_600_000
+        ? { unit: "minute", binSize: bucketMs / 60_000 }
+        : { unit: "hour", binSize: bucketMs / 3_600_000 };
 }

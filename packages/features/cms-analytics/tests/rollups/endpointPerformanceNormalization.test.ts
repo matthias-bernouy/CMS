@@ -26,7 +26,19 @@ describe("endpoint performance normalization", () => {
             statusClass: "2xx",
             outcome: "success",
             stagesMs: { cms_upstream: 150, cms_total: 175 },
+            counters: {},
         });
+    });
+
+    test("uses the source URN grammar while retaining a hard length bound", () => {
+        expect(
+            normalizeEndpointPerformanceObservation(observation({ endpointUrn: "urn:commerce.v2:products/by-id" }), now)
+                ?.endpointUrn,
+        ).toBe("urn:commerce.v2:products/by-id");
+        expect(
+            normalizeEndpointPerformanceObservation(observation({ endpointUrn: `urn:source:${"x".repeat(250)}` }), now)
+                ?.endpointUrn,
+        ).toBe("__unresolved__");
     });
 
     test("replaces unsafe endpoint and method dimensions with fixed sentinels", () => {
@@ -40,6 +52,21 @@ describe("endpoint performance normalization", () => {
         expect(normalized).toMatchObject({ endpointUrn: "__unresolved__", method: "OTHER" });
         expect(JSON.stringify(normalized)).not.toContain("upstream.test");
         expect(JSON.stringify(normalized)).not.toContain("alice");
+    });
+
+    test("keeps count metrics separate from duration stages", () => {
+        expect(
+            normalizeEndpointPerformanceObservation(
+                observation({ counters: { edge_db_calls: 3 }, stagesMs: { cms_total: 20 } }),
+                now,
+            ),
+        ).toMatchObject({ stagesMs: { cms_total: 20 }, counters: { edge_db_calls: 3 } });
+        expect(
+            normalizeEndpointPerformanceObservation(
+                observation({ counters: { edge_db_calls: 1.5 }, stagesMs: { cms_total: 20 } }),
+                now,
+            )?.counters,
+        ).toEqual({});
     });
 
     test("ignores unknown or invalid stages but requires a complete total", () => {

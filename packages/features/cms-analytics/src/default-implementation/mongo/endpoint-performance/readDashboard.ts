@@ -1,20 +1,39 @@
-import type { Collection } from "mongodb";
-import type { EndpointPerformanceQuery } from "../../../interfaces/EndpointPerformance";
-import type { EndpointPerformanceDashboard } from "../../../interfaces/EndpointPerformanceDashboard";
+import type { Collection, Document } from "mongodb";
+import { ENDPOINT_PERFORMANCE_HISTOGRAM_BOUNDS_MS } from "../../../core/rollups/endpoint-performance/histogram";
 import {
     ENDPOINT_PERFORMANCE_BUCKET_MS,
     truncateEndpointPerformanceBucket,
 } from "../../../core/rollups/endpoint-performance/normalization";
-import { readEndpointPerformanceDetail } from "./readDetail";
+import type { EndpointPerformanceQuery } from "../../../interfaces/EndpointPerformance";
+import type { EndpointPerformanceDashboard } from "../../../interfaces/EndpointPerformanceDashboard";
 import {
-    readEndpointPerformanceRows,
-    readEndpointPerformanceSummary,
-    readEndpointPerformanceTimeline,
+    endpointPerformanceDetailFacets,
+    endpointPerformanceDetailFromSnapshot,
+    type EndpointPerformanceDetailSnapshot,
+} from "./readDetail";
+import {
+    emptyEndpointPerformanceSummary,
+    endpointPerformanceRowsFacet,
+    endpointPerformanceSummaryFacet,
+    endpointPerformanceTimelineBucketMs,
+    endpointPerformanceTimelineFacet,
+    type EndpointPerformanceOverviewSnapshot,
 } from "./readOverview";
-import type { EndpointPerformanceDoc } from "./types";
-import { ENDPOINT_PERFORMANCE_HISTOGRAM_BOUNDS_MS } from "../../../core/rollups/endpoint-performance/histogram";
+import { ENDPOINT_PERFORMANCE_ROLLUP_VERSION, type EndpointPerformanceDoc } from "./types";
 
 const RANGE_MS = { "1h": 3_600_000, "24h": 86_400_000, "7d": 604_800_000 } as const;
+
+type CollectorHealth = {
+    accepted: number;
+    dropped: number;
+    invalid: number;
+    flushFailures: number;
+    lastFlushAt: Date | null;
+    uncertain: number;
+};
+
+type DashboardSnapshot = EndpointPerformanceOverviewSnapshot &
+    EndpointPerformanceDetailSnapshot & { health: CollectorHealth[] };
 
 export async function readEndpointPerformanceDashboard(
     collection: Collection<EndpointPerformanceDoc>,
@@ -22,27 +41,37 @@ export async function readEndpointPerformanceDashboard(
     now: Date,
 ): Promise<EndpointPerformanceDashboard> {
     const from = truncateEndpointPerformanceBucket(new Date(now.getTime() - RANGE_MS[query.range]));
-    const match = endpointMatch(query, from, now);
-    const [summary, timeline, endpoints, detail, health] = await Promise.all([
-        readEndpointPerformanceSummary(collection, match),
-        readEndpointPerformanceTimeline(collection, match, query.range),
-        readEndpointPerformanceRows(collection, match, query),
-        readEndpointPerformanceDetail(collection, match, query),
-        readCollectorHealth(collection, from, now),
-    ]);
-    const lastObservationAt = summary.lastObservationAt;
-    const { lastObservationAt: _lastObservationAt, ...publicSummary } = summary;
+    const rows = await collection
+        .aggregate<DashboardSnapshot>([
+            { $match: dashboardMatch(query, from, now) },
+            {
+                $facet: {
+                    summary: endpointPerformanceSummaryFacet(),
+                    timeline: endpointPerformanceTimelineFacet(query.range),
+                    endpoints: endpointPerformanceRowsFacet(query),
+                    health: collectorHealthFacet(),
+                    ...endpointPerformanceDetailFacets(query),
+                },
+            },
+        ])
+        .toArray();
+    const snapshot = { ...emptySnapshot(), ...(rows[0] ?? {}) };
+    const summary = snapshot.summary[0] ?? { ...emptyEndpointPerformanceSummary(), lastObservationAt: null };
+    const health = snapshot.health[0] ?? emptyCollectorHealth();
+    const { lastObservationAt, ...publicSummary } = summary;
+    const uncertain = health.uncertain > 0;
     return {
         summary: publicSummary,
-        timeline,
-        endpoints,
-        detail,
+        timeline: snapshot.timeline,
+        endpoints: snapshot.endpoints,
+        detail: endpointPerformanceDetailFromSnapshot(snapshot, query),
         meta: {
             query,
             generatedAt: now,
             from,
             to: now,
-            bucketMs: ENDPOINT_PERFORMANCE_BUCKET_MS,
+            bucketMs: endpointPerformanceTimelineBucketMs(query.range),
+            rollupBucketMs: ENDPOINT_PERFORMANCE_BUCKET_MS,
             histogramBoundsMs: ENDPOINT_PERFORMANCE_HISTOGRAM_BOUNDS_MS,
             lastObservationAt,
             lastFlushAt: health.lastFlushAt,
@@ -50,55 +79,54 @@ export async function readEndpointPerformanceDashboard(
             dropped: health.dropped,
             invalid: health.invalid,
             flushFailures: health.flushFailures,
-            partial: health.dropped > 0 || health.invalid > 0 || health.flushFailures > 0,
+            collectorHealthScope: "global",
+            collectorCountsExact: !uncertain,
+            partial: health.dropped > 0 || health.invalid > 0 || health.flushFailures > 0 || uncertain,
             stale:
-                lastObservationAt !== null &&
-                now.getTime() - lastObservationAt.getTime() > ENDPOINT_PERFORMANCE_BUCKET_MS * 2,
+                health.lastFlushAt === null ||
+                now.getTime() - health.lastFlushAt.getTime() > ENDPOINT_PERFORMANCE_BUCKET_MS * 2 ||
+                (lastObservationAt !== null &&
+                    now.getTime() - lastObservationAt.getTime() > ENDPOINT_PERFORMANCE_BUCKET_MS * 2),
         },
     };
 }
 
-function endpointMatch(query: EndpointPerformanceQuery, from: Date, to: Date): Record<string, unknown> {
-    return {
-        kind: "endpoint",
-        bucket: { $gte: from, $lt: to },
+function dashboardMatch(query: EndpointPerformanceQuery, from: Date, to: Date): Document {
+    const dimensions = {
         ...(query.surface ? { surface: query.surface } : {}),
         ...(query.endpointUrn ? { endpointUrn: query.endpointUrn } : {}),
         ...(query.method ? { method: query.method } : {}),
         ...(query.statusClass ? { statusClass: query.statusClass } : {}),
     };
+    return {
+        rollupVersion: ENDPOINT_PERFORMANCE_ROLLUP_VERSION,
+        bucket: { $gte: from, $lt: to },
+        $or: [{ kind: "collector" }, { kind: "endpoint", ...dimensions }],
+    };
 }
 
-async function readCollectorHealth(collection: Collection<EndpointPerformanceDoc>, from: Date, to: Date) {
-    const rows = await collection
-        .aggregate<{
-            accepted: number;
-            dropped: number;
-            invalid: number;
-            flushFailures: number;
-            lastFlushAt: Date | null;
-        }>([
-            { $match: { kind: "collector", bucket: { $gte: from, $lt: to } } },
-            {
-                $group: {
-                    _id: null,
-                    accepted: { $sum: "$accepted" },
-                    dropped: { $sum: "$dropped" },
-                    invalid: { $sum: "$invalid" },
-                    flushFailures: { $sum: "$flushFailures" },
-                    lastFlushAt: { $max: "$lastFlushAt" },
-                },
+function collectorHealthFacet(): Document[] {
+    return [
+        { $match: { kind: "collector" } },
+        {
+            $group: {
+                _id: null,
+                accepted: { $sum: "$accepted" },
+                dropped: { $sum: "$dropped" },
+                invalid: { $sum: "$invalid" },
+                flushFailures: { $sum: "$flushFailures" },
+                lastFlushAt: { $max: "$lastFlushAt" },
+                uncertain: { $max: { $cond: [{ $eq: ["$uncertain", true] }, 1, 0] } },
             },
-            { $project: { _id: 0 } },
-        ])
-        .toArray();
-    return (
-        rows[0] ?? {
-            accepted: 0,
-            dropped: 0,
-            invalid: 0,
-            flushFailures: 0,
-            lastFlushAt: null,
-        }
-    );
+        },
+        { $project: { _id: 0 } },
+    ];
+}
+
+function emptySnapshot(): DashboardSnapshot {
+    return { summary: [], timeline: [], endpoints: [], health: [] };
+}
+
+function emptyCollectorHealth(): CollectorHealth {
+    return { accepted: 0, dropped: 0, invalid: 0, flushFailures: 0, lastFlushAt: null, uncertain: 0 };
 }

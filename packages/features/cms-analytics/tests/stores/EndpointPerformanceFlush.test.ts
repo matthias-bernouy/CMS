@@ -59,7 +59,10 @@ describe("endpoint performance flushing", () => {
                 }
             },
         };
-        const recorder = new BufferedEndpointPerformanceRecorder(writer, { now: () => now });
+        const recorder = new BufferedEndpointPerformanceRecorder(writer, {
+            collectorId: "ambiguous-flush",
+            now: () => now,
+        });
         recorder.observe(observation);
         await expect(recorder.flush()).rejects.toThrow(/connection lost/);
         expect(recorder.stats()).toMatchObject({ accepted: 1, dropped: 1, flushFailures: 1 });
@@ -67,9 +70,66 @@ describe("endpoint performance flushing", () => {
         await recorder.flush();
         expect(batches).toHaveLength(2);
         expect(batches[1]?.rollups).toHaveLength(0);
-        expect(batches[1]?.collectors[0]).toMatchObject({ dropped: 1, flushFailures: 1 });
+        expect(batches[1]?.collectors[0]).toMatchObject({
+            collectorId: "ambiguous-flush",
+            accepted: 1,
+            dropped: 1,
+            flushFailures: 1,
+            uncertain: true,
+        });
     });
 
+    test("retries absolute collector health safely across consecutive failures", async () => {
+        const batches: EndpointPerformanceBatch[] = [];
+        let failures = 2;
+        const recorder = new BufferedEndpointPerformanceRecorder(
+            {
+                async write(batch) {
+                    batches.push(batch);
+                    if (failures-- > 0) {
+                        throw new Error("offline");
+                    }
+                },
+            },
+            { collectorId: "consecutive-failures", now: () => now },
+        );
+        recorder.observe(observation);
+        await expect(recorder.flush()).rejects.toThrow("offline");
+        await expect(recorder.flush()).rejects.toThrow("offline");
+        await recorder.flush();
+        expect(batches.map((batch) => batch.rollups.length)).toEqual([1, 0, 0]);
+        expect(batches[2]?.collectors[0]).toMatchObject({
+            collectorId: "consecutive-failures",
+            accepted: 1,
+            dropped: 1,
+            invalid: 0,
+            flushFailures: 2,
+            uncertain: true,
+        });
+    });
+
+    test("emits an idempotent collector heartbeat without endpoint traffic", async () => {
+        const batches: EndpointPerformanceBatch[] = [];
+        const recorder = new BufferedEndpointPerformanceRecorder(
+            { write: async (batch) => void batches.push(batch) },
+            { collectorId: "idle-process", now: () => now },
+        );
+        await recorder.flush();
+        expect(batches[0]).toMatchObject({
+            rollups: [],
+            collectors: [
+                {
+                    collectorId: "idle-process",
+                    accepted: 0,
+                    dropped: 0,
+                    invalid: 0,
+                    flushFailures: 0,
+                    uncertain: false,
+                    lastFlushAt: now,
+                },
+            ],
+        });
+    });
     test("scheduler reports background errors without rejecting foreground work", async () => {
         let calls = 0;
         let reported: unknown;

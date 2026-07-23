@@ -25,14 +25,29 @@ describe("MongoEndpointPerformanceStore writes", () => {
         await new MongoEndpointPerformanceStore(db as never).init();
         expect(new Set(names)).toEqual(new Set(["analytics_source_performance_rollups"]));
         expect(createIndex).toHaveBeenCalledWith({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-        expect(createIndex).toHaveBeenCalledTimes(2);
+        expect(createIndex).toHaveBeenCalledWith(
+            {
+                kind: 1,
+                rollupVersion: 1,
+                endpointUrn: 1,
+                surface: 1,
+                method: 1,
+                statusClass: 1,
+                bucket: 1,
+            },
+            { partialFilterExpression: { kind: "endpoint" } },
+        );
+        expect(createIndex).toHaveBeenCalledTimes(3);
     });
 
     test("flushes additive merge-safe deltas in one unordered batch", async () => {
         const bulkWrite = mock(async () => ({}));
         const db = { collection: () => ({ bulkWrite }) };
         const store = new MongoEndpointPerformanceStore(db as never);
-        const recorder = new BufferedEndpointPerformanceRecorder(store, { now: () => now });
+        const recorder = new BufferedEndpointPerformanceRecorder(store, {
+            collectorId: "mongo-writer",
+            now: () => now,
+        });
         recorder.observe(observation);
         recorder.observe({ ...observation, status: 503, stagesMs: { cms_total: 900 } });
         await recorder.flush();
@@ -48,6 +63,17 @@ describe("MongoEndpointPerformanceStore writes", () => {
         expect(serialized).toContain("stages.cms_total");
         expect(serialized).not.toContain("correlation");
         expect(serialized).not.toContain("targetUrl");
+        const collector = operations.find(
+            (operation: any) => operation.updateOne.update.$setOnInsert.kind === "collector",
+        );
+        expect((collector as any).updateOne.update).not.toHaveProperty("$inc");
+        expect((collector as any).updateOne.update.$max).toMatchObject({
+            accepted: 2,
+            dropped: 0,
+            invalid: 0,
+            flushFailures: 0,
+            lastFlushAt: now,
+        });
     });
 
     test("uses the same deterministic id for concurrent-instance dimensions", async () => {

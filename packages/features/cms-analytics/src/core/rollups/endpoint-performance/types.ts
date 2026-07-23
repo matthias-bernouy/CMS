@@ -1,4 +1,5 @@
 import type {
+    EndpointCounterStage,
     EndpointPerformanceMethod,
     EndpointPerformanceOutcome,
     EndpointPerformanceStatusClass,
@@ -14,6 +15,12 @@ export type EndpointPerformanceStageAggregate = {
     histogram: FixedHistogram;
 };
 
+export type EndpointPerformanceCounterAggregate = {
+    observations: number;
+    sum: number;
+    max: number;
+};
+
 export type EndpointPerformanceAggregate = {
     bucket: Date;
     surface: EndpointPerformanceSurface;
@@ -26,14 +33,17 @@ export type EndpointPerformanceAggregate = {
     firstObservedAt: Date;
     lastObservedAt: Date;
     stages: Partial<Record<EndpointTimingStage, EndpointPerformanceStageAggregate>>;
+    counters: Partial<Record<EndpointCounterStage, EndpointPerformanceCounterAggregate>>;
 };
 
 export type EndpointPerformanceCollectorAggregate = {
+    collectorId: string;
     bucket: Date;
     accepted: number;
     dropped: number;
     invalid: number;
     flushFailures: number;
+    uncertain: boolean;
     lastFlushAt: Date;
 };
 

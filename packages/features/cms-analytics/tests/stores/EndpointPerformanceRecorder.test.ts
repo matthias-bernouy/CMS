@@ -77,6 +77,37 @@ describe("BufferedEndpointPerformanceRecorder", () => {
         expect(writer.batches[0]?.collectors[0]).toMatchObject({ dropped: 1, invalid: 1 });
     });
 
+    test("persists health for malformed runtime input without retaining it", async () => {
+        const writer = new CapturingWriter();
+        const recorder = new BufferedEndpointPerformanceRecorder(writer, {
+            collectorId: "runtime-validation",
+            now: () => now,
+        });
+        recorder.observe({ ...observation(), endpointUrn: null } as unknown as EndpointPerformanceObservation);
+        await recorder.flush();
+        expect(writer.batches[0]?.rollups).toHaveLength(0);
+        expect(writer.batches[0]?.collectors[0]).toMatchObject({
+            collectorId: "runtime-validation",
+            accepted: 0,
+            dropped: 1,
+            invalid: 1,
+        });
+    });
+
+    test("aggregates edge database calls as a counter rather than milliseconds", async () => {
+        const writer = new CapturingWriter();
+        const recorder = new BufferedEndpointPerformanceRecorder(writer, { now: () => now });
+        recorder.observe(observation({ counters: { edge_db_calls: 3 } }));
+        recorder.observe(observation({ counters: { edge_db_calls: 2 } }));
+        await recorder.flush();
+        expect(writer.batches[0]?.rollups[0]?.counters.edge_db_calls).toEqual({
+            observations: 2,
+            sum: 5,
+            max: 3,
+        });
+        expect(writer.batches[0]?.rollups[0]?.stages).not.toHaveProperty("edge_db_calls");
+    });
+
     test("can disable collection without deleting or writing persisted data", async () => {
         const writer = new CapturingWriter();
         const recorder = new BufferedEndpointPerformanceRecorder(writer, { enabled: false, now: () => now });

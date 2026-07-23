@@ -1,4 +1,5 @@
 import type {
+    EndpointCounterStage,
     EndpointPerformanceMethod,
     EndpointPerformanceQuery,
     EndpointPerformanceStatusClass,
@@ -35,10 +36,23 @@ export type EndpointPerformanceHistogramBucket = {
 };
 
 export type EndpointPerformanceStageSummary = EndpointLatencySummary & {
+    kind: "duration";
+    unit: "ms";
     stage: EndpointTimingStage;
     observations: number;
     coverage: number;
     avgMs: number | null;
+};
+
+export type EndpointPerformanceCounterSummary = {
+    kind: "counter";
+    unit: "count";
+    stage: EndpointCounterStage;
+    observations: number;
+    coverage: number;
+    total: number;
+    avg: number | null;
+    max: number | null;
 };
 
 export type EndpointPerformanceDetail = {
@@ -47,7 +61,7 @@ export type EndpointPerformanceDetail = {
     method: EndpointPerformanceMethod | null;
     statuses: Array<{ statusClass: EndpointPerformanceStatusClass; count: number }>;
     latencyHistogram: EndpointPerformanceHistogramBucket[];
-    stages: EndpointPerformanceStageSummary[];
+    stages: Array<EndpointPerformanceStageSummary | EndpointPerformanceCounterSummary>;
 };
 
 export type EndpointPerformanceMetadata = {
@@ -56,6 +70,7 @@ export type EndpointPerformanceMetadata = {
     from: Date;
     to: Date;
     bucketMs: number;
+    rollupBucketMs: number;
     histogramBoundsMs: readonly number[];
     lastObservationAt: Date | null;
     lastFlushAt: Date | null;
@@ -63,6 +78,10 @@ export type EndpointPerformanceMetadata = {
     dropped: number;
     invalid: number;
     flushFailures: number;
+    /** Collector health is process-global for the requested time range, never dimension-filtered. */
+    collectorHealthScope: "global";
+    /** False when an ambiguous endpoint write makes exact persisted-loss accounting impossible. */
+    collectorCountsExact: boolean;
     partial: boolean;
     stale: boolean;
 };

@@ -40,12 +40,14 @@ export const ENDPOINT_TIMING_STAGES = [
     "edge_route",
     "edge_db_wall",
     "edge_db_sum",
-    "edge_db_calls",
     "edge_provider",
     "edge_projection",
     "edge_total",
 ] as const;
 export type EndpointTimingStage = (typeof ENDPOINT_TIMING_STAGES)[number];
+
+export const ENDPOINT_COUNTER_STAGES = ["edge_db_calls"] as const;
+export type EndpointCounterStage = (typeof ENDPOINT_COUNTER_STAGES)[number];
 
 export type EndpointPerformanceObservation = {
     ts: Date;
@@ -53,7 +55,10 @@ export type EndpointPerformanceObservation = {
     endpointUrn: string | typeof ENDPOINT_PERFORMANCE_UNRESOLVED;
     method: string;
     status: number;
+    /** Elapsed durations only. Non-duration measurements belong in `counters`. */
     stagesMs: Readonly<Partial<Record<EndpointTimingStage, number>>>;
+    /** Bounded per-request counts; currently limited to Edge database calls. */
+    counters?: Readonly<Partial<Record<EndpointCounterStage, number>>>;
 };
 
 export interface EndpointPerformanceRecorder {

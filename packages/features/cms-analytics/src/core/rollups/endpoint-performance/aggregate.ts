@@ -1,7 +1,11 @@
-import type { EndpointTimingStage } from "../../../interfaces/EndpointPerformance";
+import type { EndpointCounterStage, EndpointTimingStage } from "../../../interfaces/EndpointPerformance";
 import { addEndpointPerformanceDuration, emptyEndpointPerformanceHistogram } from "./histogram";
 import { truncateEndpointPerformanceBucket, type NormalizedEndpointPerformanceObservation } from "./normalization";
-import type { EndpointPerformanceAggregate, EndpointPerformanceStageAggregate } from "./types";
+import type {
+    EndpointPerformanceAggregate,
+    EndpointPerformanceCounterAggregate,
+    EndpointPerformanceStageAggregate,
+} from "./types";
 
 export function endpointPerformanceAggregateKey(observation: NormalizedEndpointPerformanceObservation): string {
     return JSON.stringify([
@@ -28,6 +32,7 @@ export function createEndpointPerformanceAggregate(
         firstObservedAt: observation.ts,
         lastObservedAt: observation.ts,
         stages: {},
+        counters: {},
     };
 }
 
@@ -47,6 +52,17 @@ export function appendEndpointPerformanceObservation(
         addEndpointPerformanceDuration(current.histogram, duration);
         aggregate.stages[stage] = current;
     }
+    for (const [counter, value] of Object.entries(observation.counters) as Array<[EndpointCounterStage, number]>) {
+        const current = aggregate.counters[counter] ?? emptyCounterAggregate();
+        current.observations++;
+        current.sum += value;
+        current.max = Math.max(current.max, value);
+        aggregate.counters[counter] = current;
+    }
+}
+
+function emptyCounterAggregate(): EndpointPerformanceCounterAggregate {
+    return { observations: 0, sum: 0, max: 0 };
 }
 
 function emptyStageAggregate(): EndpointPerformanceStageAggregate {

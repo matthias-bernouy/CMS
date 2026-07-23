@@ -51,6 +51,7 @@ export type {
     AnalyticsReportWindow,
 } from "../core/reporting/types";
 export {
+    ENDPOINT_COUNTER_STAGES,
     ENDPOINT_PERFORMANCE_METHODS,
     ENDPOINT_PERFORMANCE_RANGES,
     ENDPOINT_PERFORMANCE_SORTS,
@@ -60,6 +61,7 @@ export {
     ENDPOINT_TIMING_STAGES,
 } from "../interfaces/EndpointPerformance";
 export type {
+    EndpointCounterStage,
     EndpointPerformanceMethod,
     EndpointPerformanceObservation,
     EndpointPerformanceOutcome,
@@ -75,6 +77,7 @@ export type {
 export type {
     EndpointLatencySummary,
     EndpointPerformanceDashboard,
+    EndpointPerformanceCounterSummary,
     EndpointPerformanceDetail,
     EndpointPerformanceHistogramBucket,
     EndpointPerformanceMetadata,

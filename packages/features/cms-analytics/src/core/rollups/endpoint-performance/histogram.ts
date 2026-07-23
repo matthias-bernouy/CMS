@@ -35,7 +35,8 @@ export function endpointPerformancePercentile(
     for (let index = 0; index < histogram.length; index++) {
         cumulative += Math.max(0, histogram[index] ?? 0);
         if (cumulative >= rank) {
-            return ENDPOINT_PERFORMANCE_HISTOGRAM_BOUNDS_MS[index] ?? maxMs;
+            const upperBound = ENDPOINT_PERFORMANCE_HISTOGRAM_BOUNDS_MS[index];
+            return upperBound === undefined ? maxMs : maxMs === null ? upperBound : Math.min(upperBound, maxMs);
         }
     }
     return maxMs;

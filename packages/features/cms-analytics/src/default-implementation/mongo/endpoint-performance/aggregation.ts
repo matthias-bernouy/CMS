@@ -72,12 +72,17 @@ function percentileExpression(prefix: string, percentile: number): Record<string
         cumulative.push(bin);
         return {
             case: { $lte: [rank, cumulative.length === 1 ? bin : { $add: [...cumulative] }] },
-            then: ENDPOINT_PERFORMANCE_HISTOGRAM_BOUNDS_MS[index] ?? `$${prefix}MaxMs`,
+            then: percentileUpperBound(prefix, index),
         };
     });
     return {
         $cond: [{ $eq: [total, 0] }, null, { $switch: { branches, default: { $ifNull: [`$${prefix}MaxMs`, null] } } }],
     };
+}
+
+function percentileUpperBound(prefix: string, index: number): unknown {
+    const upperBound = ENDPOINT_PERFORMANCE_HISTOGRAM_BOUNDS_MS[index];
+    return upperBound === undefined ? `$${prefix}MaxMs` : { $min: [upperBound, `$${prefix}MaxMs`] };
 }
 
 function finiteNumber(value: unknown): number | null {

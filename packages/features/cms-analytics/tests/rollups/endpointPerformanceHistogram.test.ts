@@ -44,4 +44,11 @@ describe("endpoint performance fixed histograms", () => {
         expect(buckets).toHaveLength(ENDPOINT_PERFORMANCE_HISTOGRAM_BOUNDS_MS.length + 1);
         expect(buckets.at(-1)).toEqual({ upperBoundMs: null, count: 1 });
     });
+
+    test("never reports a percentile above the exact measured maximum", () => {
+        const histogram = emptyEndpointPerformanceHistogram();
+        addEndpointPerformanceDuration(histogram, 180, 20);
+        expect(endpointPerformancePercentile(histogram, 0.5, 180)).toBe(180);
+        expect(endpointPerformancePercentile(histogram, 0.99, 180)).toBe(180);
+    });
 });
