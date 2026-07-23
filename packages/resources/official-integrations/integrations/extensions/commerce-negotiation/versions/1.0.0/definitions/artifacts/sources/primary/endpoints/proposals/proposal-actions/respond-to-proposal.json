@@ -1,11 +1,9 @@
 {
-    "endpointId": "getProposalPolicy",
-    "method": "GET",
-    "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/policy",
-    "params": {
-        "$include": "get-proposal-policy/params.json"
-    },
+    "endpointId": "respondToProposal",
+    "method": "POST",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/proposal/respond",
+    "params": [],
     "headers": [
         {
             "name": "authorization",
@@ -23,53 +21,33 @@
             }
         }
     ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "action": {
+                "type": "string"
+            },
+            "expectedVersion": {
+                "type": "number"
+            },
+            "message": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "action",
+            "expectedVersion"
+        ]
+    },
     "output": [
         {
             "status": "200",
             "body": {
-                "type": "object",
-                "properties": {
-                    "enabled": {
-                        "type": "boolean"
-                    },
-                    "canPropose": {
-                        "type": "boolean"
-                    },
-                    "ineligibilityReason": {
-                        "type": "string"
-                    },
-                    "offerId": {
-                        "type": "number"
-                    },
-                    "referenceAmount": {
-                        "type": "number"
-                    },
-                    "minimumAmount": {
-                        "type": "number"
-                    },
-                    "maximumAmount": {
-                        "type": "number"
-                    },
-                    "currency": {
-                        "type": "string"
-                    },
-                    "wholeUnitPrices": {
-                        "type": "boolean"
-                    },
-                    "expiresAfterHours": {
-                        "type": "number"
-                    }
-                },
-                "required": [
-                    "enabled",
-                    "canPropose",
-                    "offerId",
-                    "referenceAmount",
-                    "minimumAmount",
-                    "maximumAmount",
-                    "currency",
-                    "wholeUnitPrices"
-                ]
+                "type": "object"
             }
         },
         {
