@@ -14,6 +14,14 @@ describe("local CMS listener composition", () => {
         expect(listen).toBeGreaterThan(ready);
     });
 
+    test("shares an in-memory analytics store between Control and Delivery", async () => {
+        const text = await source();
+
+        expect(text).toContain("new ValidatingAnalyticsStore(new InMemoryAnalyticsStore())");
+        expect(text).toMatch(/services\.sources,\s*analytics,\s*services\.roles/);
+        expect(text).toMatch(/new DeliveryCms\(\{[\s\S]*analytics,\s*analyticsSalt,/);
+    });
+
     test.failing("binds both local listeners to the parsed host", async () => {
         const text = await source();
 

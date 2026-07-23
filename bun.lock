@@ -266,6 +266,7 @@
         "p9r": "./src/index.ts",
       },
       "dependencies": {
+        "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-content": "workspace:*",

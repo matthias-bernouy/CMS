@@ -1,3 +1,4 @@
+import { InMemoryAnalyticsStore, ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { ControlCms } from "@bernouy/cms-control";
 import { P9R_CACHE } from "@bernouy/cms-content";
 import { DeliveryCms } from "@bernouy/cms-delivery";
@@ -23,6 +24,8 @@ type ServerOptions = {
 
 export async function startLocalServers(options: ServerOptions) {
     const { flags, services } = options;
+    const analytics = new ValidatingAnalyticsStore(new InMemoryAnalyticsStore());
+    const analyticsSalt = crypto.randomUUID();
     const runner = new BunRunner();
     runner.addEndpoint("GET", "/dev/reload", sseHandler(options.reload));
     runner.group("/.cms/repository", (repositoryRunner) => {
@@ -60,7 +63,7 @@ export async function startLocalServers(options: ServerOptions) {
         services.pats,
         services.credentials,
         services.sources,
-        undefined,
+        analytics,
         services.roles,
     );
     await cms.ready;
@@ -93,6 +96,8 @@ export async function startLocalServers(options: ServerOptions) {
         triggers: services.triggers,
         identities: services.identities,
         integrationInstallations: services.integrationInstallations,
+        analytics,
+        analyticsSalt,
         sourceResolveSecret: services.resolveSecret,
         roles: services.roles,
         auth: services.publicAuth,
