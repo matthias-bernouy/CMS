@@ -37,6 +37,18 @@ export class MondialRelayPickerEditor extends Editor {
                     { type: "text", label: "Title", attribute: "title" },
                     { type: "textarea", label: "Description", attribute: "copy" },
                     { type: "text", label: "Search button", attribute: "button-label" },
+                    { type: "text", label: "Select relay", attribute: "selection-label", defaultValue: "Sélectionner" },
+                    { type: "text", label: "Change relay", attribute: "change-label", defaultValue: "Modifier" },
+                    {
+                        type: "segmented",
+                        label: "Search prefilled address automatically",
+                        attribute: "auto-search",
+                        defaultValue: "true",
+                        options: [
+                            { label: "Yes", value: "true" },
+                            { label: "No", value: "false" },
+                        ],
+                    },
                 ],
             },
             {

@@ -65,6 +65,53 @@ describe("mondial-relay-picker 1.0.0", () => {
             picker.remove();
         }
     });
+
+    test("automatically searches one prefilled address and exposes distinct secondary actions", async () => {
+        if (!customElements.get(tag)) {
+            await definePicker();
+        }
+
+        const picker = document.createElement(tag) as TestPicker;
+        picker.setAttribute("postal-code", "76930");
+        picker.setAttribute("city", "Octeville-sur-Mer");
+        const requestedUrls: URL[] = [];
+        picker.requestJson = async (url) => {
+            requestedUrls.push(new URL(url));
+            return {
+                items: [
+                    {
+                        location: "FR-024474",
+                        name: "Coccimarket Bois de Bléville",
+                        addressLine1: "21 rue des Ponts",
+                        postalCode: "76620",
+                        city: "Le Havre",
+                        country: "FR",
+                    },
+                ],
+            };
+        };
+        document.body.append(picker);
+
+        try {
+            await settleLifecycle();
+            expect(requestedUrls).toHaveLength(1);
+            expect(requestedUrls[0]?.searchParams.get("postalCode")).toBe("76930");
+            expect(requestedUrls[0]?.searchParams.get("city")).toBe("Octeville-sur-Mer");
+            expect(picker.shadowRoot?.querySelector("[data-search]")?.textContent).toBe("Rechercher");
+            expect(picker.shadowRoot?.querySelector(".choose")?.textContent).toBe("Sélectionner");
+            expect(picker.shadowRoot?.querySelector("[data-clear]")?.textContent).toBe("Modifier");
+            expect(picker.shadowRoot?.querySelector("[data-clear]")?.classList.contains("secondary")).toBe(true);
+
+            picker.setAttribute("postal-code", "76931");
+            picker.setAttribute("city", "Montivilliers");
+            await settleLifecycle();
+            expect(requestedUrls).toHaveLength(2);
+            expect(requestedUrls[1]?.searchParams.get("postalCode")).toBe("76931");
+            expect(requestedUrls[1]?.searchParams.get("city")).toBe("Montivilliers");
+        } finally {
+            picker.remove();
+        }
+    });
 });
 
 async function definePicker(): Promise<void> {
@@ -85,4 +132,10 @@ async function definePicker(): Promise<void> {
         artifact.bloc.source,
     );
     new Function(compiled.viewJS)();
+}
+
+async function settleLifecycle(): Promise<void> {
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await Promise.resolve();
 }

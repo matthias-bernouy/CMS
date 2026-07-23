@@ -18,6 +18,9 @@ export class MondialRelayPicker extends OperationalPicker {
             "title",
             "copy",
             "button-label",
+            "change-label",
+            "selection-label",
+            "auto-search",
             "appearance",
             "accent-color",
             "background-color",
@@ -35,6 +38,8 @@ export class MondialRelayPicker extends OperationalPicker {
         this.busy = false;
         this.formDisabled = false;
         this.defaultValue = null;
+        this.autoSearchScheduled = false;
+        this.lastAutoSearchKey = "";
     }
 
     connectedCallback() {
@@ -55,17 +60,14 @@ export class MondialRelayPicker extends OperationalPicker {
             );
             return;
         }
-        this.restoreSelection().catch((error) => {
-            if (!isNotFound(error)) {
-                this.fail(error);
-            }
-        });
+        void this.initialize();
     }
 
     disconnectedCallback() {
         this.form?.removeEventListener("submit", this.onSubmit);
         this.postalCodeInput?.removeEventListener("input", this.onPostalCodeInput);
         this.clearButton?.removeEventListener("click", this.onClear);
+        this.autoSearchScheduled = false;
     }
 
     attributeChangedCallback(name, _oldValue, value) {
@@ -77,11 +79,9 @@ export class MondialRelayPicker extends OperationalPicker {
         }
         this.syncPresentation(name);
         if (name === "order-id" && !isFramed()) {
-            this.restoreSelection().catch((error) => {
-                if (!isNotFound(error)) {
-                    this.fail(error);
-                }
-            });
+            void this.initialize();
+        } else if (["postal-code", "city", "auto-search"].includes(name) && !isFramed()) {
+            this.scheduleAutoSearch();
         }
     }
 
@@ -126,6 +126,49 @@ export class MondialRelayPicker extends OperationalPicker {
 
     focus() {
         this.postalCodeInput?.focus();
+    }
+
+    async initialize() {
+        try {
+            await this.restoreSelection();
+        } catch (error) {
+            if (!isNotFound(error)) {
+                this.fail(error);
+            }
+        }
+        if (!this.selectedItem) {
+            this.scheduleAutoSearch();
+        }
+    }
+
+    scheduleAutoSearch() {
+        if (
+            this.getAttribute("auto-search") === "false" ||
+            !this.postalCodeInput?.value.trim() ||
+            !this.cityInput?.value.trim() ||
+            this.selectedItem ||
+            this.autoSearchScheduled
+        ) {
+            return;
+        }
+        this.autoSearchScheduled = true;
+        queueMicrotask(() => {
+            this.autoSearchScheduled = false;
+            if (!this.isConnected || this.selectedItem) {
+                return;
+            }
+            const key = [
+                this.postalCodeInput.value.trim(),
+                this.cityInput.value.trim(),
+                this.country(),
+                this.getAttribute("weight-grams")?.trim() || "",
+            ].join("|");
+            if (key === this.lastAutoSearchKey) {
+                return;
+            }
+            this.lastAutoSearchKey = key;
+            this.search().catch((error) => this.fail(error));
+        });
     }
 
     onSubmit = (event) => {

@@ -7,6 +7,7 @@ export class PresentedPicker extends RenderedPicker {
         this.copyElement.textContent =
             this.getAttribute("copy") || "Trouvez les points relais Mondial Relay disponibles près de chez vous.";
         this.searchButton.textContent = this.getAttribute("button-label") || "Rechercher";
+        this.clearButton.textContent = this.getAttribute("change-label") || "Modifier";
         if (!changedAttribute || changedAttribute === "postal-code") {
             this.postalCodeInput.value = this.getAttribute("postal-code")?.trim() ?? "";
             this.syncPostalCodeValidity();
@@ -55,7 +56,7 @@ export class PresentedPicker extends RenderedPicker {
             address.textContent = relayAddress(item);
             const choose = document.createElement("span");
             choose.className = "choose";
-            choose.textContent = "Choisir";
+            choose.textContent = this.getAttribute("selection-label") || "Sélectionner";
             copy.append(title, address);
             button.append(copy, choose);
             button.addEventListener("click", () => {
@@ -95,6 +96,7 @@ export class PresentedPicker extends RenderedPicker {
         this.removeAttribute("value");
         this.internalsRef.setFormValue("");
         this.selectedBox.hidden = true;
+        this.renderList();
         this.setStatus("Recherchez un autre point relais.", "idle");
     }
     renderPreview() {

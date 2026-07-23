@@ -86,6 +86,11 @@ export class RenderedPicker extends HTMLElement {
                     background: transparent;
                 }
 
+                button.secondary:hover,
+                button.option:hover {
+                    background: color-mix(in srgb, var(--relay-accent) 7%, var(--relay-background));
+                }
+
                 input:focus-visible,
                 button:focus-visible {
                     outline: 2px solid var(--relay-accent);
@@ -114,7 +119,14 @@ export class RenderedPicker extends HTMLElement {
 
                 .option:hover { border-color: var(--relay-accent); }
                 .option-copy, .selected-copy { gap: .2rem; }
-                .option .choose { color: var(--relay-accent); font-weight: 750; }
+                .option .choose {
+                    padding: .4rem .65rem;
+                    border: 1px solid var(--relay-accent);
+                    border-radius: var(--radius-control, .375rem);
+                    color: var(--relay-accent);
+                    background: transparent;
+                    font-weight: 750;
+                }
                 .selected { border-color: var(--relay-accent); }
                 .selected[hidden], [hidden] { display: none !important; }
                 .status { min-height: 1.25rem; font-size: .925rem; }
