@@ -89,7 +89,7 @@ export function renderBars(
 
 export function renderFlows(host: HTMLElement, flows: FlowCount[]): void {
     if (!flows.length) {
-        renderEmpty(host, "No internal journeys recorded in this period.");
+        renderEmpty(host, "No publishable page transitions in this period.");
         return;
     }
     host.replaceChildren(

@@ -1,0 +1,137 @@
+cms-analytics-privacy-settings {
+    display: block;
+    padding: 1.5rem;
+}
+
+.governance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+.governance-card {
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border, #d9dfdd);
+    border-radius: 12px;
+    background: var(--color-background, #fff);
+}
+
+.governance-card--wide {
+    grid-column: 1 / -1;
+}
+
+header h2,
+header p {
+    margin: 0.25rem 0 0;
+}
+
+.eyebrow {
+    color: var(--color-primary, #087866);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+label,
+.manual-row {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.check {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+}
+
+input,
+select,
+button {
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--color-border, #c9d1ce);
+    border-radius: 7px;
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+    font-weight: 650;
+}
+
+.criteria,
+.manual-list {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.criterion,
+.manual-row {
+    padding: 0.8rem;
+    border-radius: 8px;
+    background: var(--color-background-subtle, #f4f7f6);
+}
+
+.criterion strong {
+    display: block;
+}
+
+.criterion span,
+.snapshot dd {
+    color: var(--color-text-muted, #5d6965);
+}
+
+.manual-row {
+    grid-template-columns: minmax(180px, 1fr) 180px minmax(240px, 2fr);
+    align-items: center;
+}
+
+.snapshot {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.4rem 0.8rem;
+    margin: 0;
+}
+
+.snapshot dd {
+    margin: 0;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.message {
+    min-height: 1.25rem;
+    margin: 0;
+}
+
+.governance-state {
+    max-width: 720px;
+    margin: 3rem auto;
+    text-align: center;
+}
+
+.governance-state--error {
+    display: grid;
+    gap: 0.75rem;
+}
+
+@media (max-width: 800px) {
+    .governance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manual-row {
+        grid-template-columns: 1fr;
+    }
+}

@@ -9,6 +9,11 @@ cms-analytics-dashboard {
     gap: 24px;
 }
 
+.analytics-surface > [data-state="ready"]:not([hidden]) {
+    display: grid;
+    gap: 24px;
+}
+
 .report-header,
 .panel-header {
     display: flex;

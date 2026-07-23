@@ -13514,6 +13514,15 @@ w13c-lateral-menu-item {
         Email
     </w13c-lateral-menu-item>
 
+    <w13c-lateral-menu-item data-settings-section="privacy-analytics">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3 5 6v5c0 4.6 2.9 8.1 7 10 4.1-1.9 7-5.4 7-10V6z" />
+            <path d="M8 15V9" /><path d="M12 15v-3" /><path d="M16 15V7" />
+        </svg>
+        Privacy &amp; analytics
+    </w13c-lateral-menu-item>
+
     <w13c-lateral-menu-item data-settings-section="secrets">
         <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -13549,7 +13558,7 @@ w13c-lateral-menu-item {
 `;
 
   // src/components/admin/Layout/SettingsSections/SettingsSections.ts
-  var SETTINGS_SECTIONS = ["general", "email", "secrets", "identity", "connectors"];
+  var SETTINGS_SECTIONS = ["general", "email", "privacy-analytics", "secrets", "identity", "connectors"];
   var DEFAULT_SECTION = "general";
 
   class CmsSettingsNav extends U2 {
@@ -13608,8 +13617,377 @@ w13c-lateral-menu-item {
     return SETTINGS_SECTIONS.includes(value);
   }
 
+  // src/core/dom/meta/getMetaBasePath.ts
+  function getMetaBasePath() {
+    const meta = document.querySelector('meta[name="basePath"]');
+    const content = meta?.getAttribute("content") ?? "";
+    if (!content || content === "/") {
+      return "";
+    }
+    return content.replace(/\/+$/, "");
+  }
+
+  // src/components/admin/Layout/AnalyticsPrivacySettings/api.ts
+  async function loadAnalyticsGovernance(signal) {
+    return Promise.all([
+      requestJson("analytics/settings", { signal }),
+      requestJson("analytics/compliance", { signal })
+    ]);
+  }
+  function saveAnalyticsSettings(settings) {
+    return requestJson("analytics/settings", {
+      method: "POST",
+      body: JSON.stringify(settings)
+    });
+  }
+  function saveComplianceSnapshot(manualAttestations, publish) {
+    return requestJson("analytics/compliance/snapshots", {
+      method: "POST",
+      body: JSON.stringify({ manualAttestations, publish })
+    });
+  }
+  async function requestJson(path, init = {}) {
+    const response = await fetch(`${getMetaBasePath()}/api/${path}`, {
+      ...init,
+      headers: { Accept: "application/json", "Content-Type": "application/json", ...init.headers }
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new Error(body?.error ?? `Request failed with status ${response.status}`);
+    }
+    return response.json();
+  }
+
+  // src/components/admin/Layout/AnalyticsPrivacySettings/style.css
+  var style_default5 = `cms-analytics-privacy-settings {
+    display: block;
+    padding: 1.5rem;
+}
+
+.governance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+.governance-card {
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border, #d9dfdd);
+    border-radius: 12px;
+    background: var(--color-background, #fff);
+}
+
+.governance-card--wide {
+    grid-column: 1 / -1;
+}
+
+header h2,
+header p {
+    margin: 0.25rem 0 0;
+}
+
+.eyebrow {
+    color: var(--color-primary, #087866);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+label,
+.manual-row {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.check {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+}
+
+input,
+select,
+button {
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--color-border, #c9d1ce);
+    border-radius: 7px;
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+    font-weight: 650;
+}
+
+.criteria,
+.manual-list {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.criterion,
+.manual-row {
+    padding: 0.8rem;
+    border-radius: 8px;
+    background: var(--color-background-subtle, #f4f7f6);
+}
+
+.criterion strong {
+    display: block;
+}
+
+.criterion span,
+.snapshot dd {
+    color: var(--color-text-muted, #5d6965);
+}
+
+.manual-row {
+    grid-template-columns: minmax(180px, 1fr) 180px minmax(240px, 2fr);
+    align-items: center;
+}
+
+.snapshot {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.4rem 0.8rem;
+    margin: 0;
+}
+
+.snapshot dd {
+    margin: 0;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.message {
+    min-height: 1.25rem;
+    margin: 0;
+}
+
+.governance-state {
+    max-width: 720px;
+    margin: 3rem auto;
+    text-align: center;
+}
+
+.governance-state--error {
+    display: grid;
+    gap: 0.75rem;
+}
+
+@media (max-width: 800px) {
+    .governance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manual-row {
+        grid-template-columns: 1fr;
+    }
+}
+`;
+
+  // src/components/admin/Layout/AnalyticsPrivacySettings/template.html
+  var template_default6 = `<div class="governance-state" data-state="loading">Loading analytics governance…</div>
+<div class="governance-state governance-state--error" data-state="error" hidden>
+    <strong>Analytics settings could not be loaded.</strong>
+    <span data-error-message></span>
+    <button type="button" data-retry>Try again</button>
+</div>
+
+<div class="governance-grid" data-state="ready" hidden>
+    <form class="governance-card" data-settings-form>
+        <header>
+            <span class="eyebrow">Collection</span>
+            <h2>Privacy-strict analytics</h2>
+            <p>These controls affect collection. Analytics reports remain read-only.</p>
+        </header>
+        <label class="check"><input type="checkbox" name="enabled"> Enable aggregate audience measurement</label>
+        <label class="check"><input type="checkbox" name="visitorEstimation"> Estimate daily visitors with HLL++</label>
+        <label>
+            Aggregate retention (days)
+            <input type="number" name="rollupRetentionDays" min="1" max="395" required>
+        </label>
+        <label>
+            Privacy notice URL
+            <input type="url" name="privacyNoticeUrl" placeholder="https://example.com/privacy">
+        </label>
+        <button type="submit">Save analytics settings</button>
+        <p class="message" data-settings-message aria-live="polite"></p>
+    </form>
+
+    <section class="governance-card">
+        <header>
+            <span class="eyebrow">Readiness</span>
+            <h2 data-readiness-title></h2>
+            <p data-disclaimer></p>
+        </header>
+        <dl class="snapshot" data-snapshot></dl>
+        <ul class="criteria" data-automatic-criteria></ul>
+    </section>
+
+    <form class="governance-card governance-card--wide" data-snapshot-form>
+        <header>
+            <span class="eyebrow">Operational checklist</span>
+            <h2>Manual evidence</h2>
+            <p>Technical checks run automatically. Complete the site-level checks before publishing a snapshot.</p>
+        </header>
+        <div class="manual-list" data-manual-criteria></div>
+        <div class="actions">
+            <button type="submit" name="publish" value="false">Save private snapshot</button>
+            <button type="submit" name="publish" value="true">Publish self-assessment</button>
+        </div>
+        <p class="message" data-snapshot-message aria-live="polite"></p>
+    </form>
+</div>
+`;
+
+  // src/components/admin/Layout/AnalyticsPrivacySettings/AnalyticsPrivacySettings.ts
+  class CmsAnalyticsPrivacySettings extends HTMLElement {
+    request = null;
+    connectedCallback() {
+      if (!this.hasChildNodes()) {
+        this.innerHTML = `<style>${style_default5}</style>${template_default6}`;
+        this.query("[data-retry]").addEventListener("click", () => void this.load());
+        this.query("[data-settings-form]").addEventListener("submit", (event) => void this.saveSettings(event));
+        this.query("[data-snapshot-form]").addEventListener("submit", (event) => void this.saveSnapshot(event));
+      }
+      this.load();
+    }
+    disconnectedCallback() {
+      this.request?.abort();
+    }
+    async load() {
+      this.request?.abort();
+      this.request = new AbortController;
+      this.show("loading");
+      try {
+        const [settings, compliance] = await loadAnalyticsGovernance(this.request.signal);
+        const form = this.query("[data-settings-form]");
+        setChecked(form, "enabled", settings.enabled);
+        setChecked(form, "visitorEstimation", settings.visitorEstimation);
+        setValue2(form, "rollupRetentionDays", String(settings.rollupRetentionDays));
+        setValue2(form, "privacyNoticeUrl", settings.privacyNoticeUrl);
+        this.renderCompliance(compliance);
+        this.show("ready");
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          this.query("[data-error-message]").textContent = error instanceof Error ? error.message : "Unknown error";
+          this.show("error");
+        }
+      }
+    }
+    async saveSettings(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const data = new FormData(form);
+      const message = this.query("[data-settings-message]");
+      try {
+        await saveAnalyticsSettings({
+          enabled: data.has("enabled"),
+          visitorEstimation: data.has("visitorEstimation"),
+          rollupRetentionDays: Number(data.get("rollupRetentionDays")),
+          privacyNoticeUrl: String(data.get("privacyNoticeUrl") ?? "")
+        });
+        message.textContent = "Analytics settings saved.";
+        await this.load();
+      } catch (error) {
+        message.textContent = error instanceof Error ? error.message : "Settings could not be saved.";
+      }
+    }
+    async saveSnapshot(event) {
+      event.preventDefault();
+      const submitter = event.submitter;
+      const form = event.currentTarget;
+      const attestations = {};
+      for (const row of Array.from(form.querySelectorAll("[data-manual-id]"))) {
+        const id = row.dataset.manualId;
+        const status = row.querySelector("select").value;
+        const evidence = row.querySelector("input").value;
+        if (evidence.trim()) {
+          attestations[id] = { status, evidence };
+        }
+      }
+      const message = this.query("[data-snapshot-message]");
+      try {
+        await saveComplianceSnapshot(attestations, submitter?.value === "true");
+        message.textContent = submitter?.value === "true" ? "Self-assessment published." : "Private snapshot saved.";
+        await this.load();
+      } catch (error) {
+        message.textContent = error instanceof Error ? error.message : "Snapshot could not be saved.";
+      }
+    }
+    renderCompliance(view) {
+      this.query("[data-readiness-title]").textContent = view.evaluation.releaseReady ? "Release checks passed" : "Review required";
+      this.query("[data-disclaimer]").textContent = view.disclaimer;
+      const automatic = view.evaluation.criteria.filter((criterion) => criterion.mode === "automatic");
+      const manual = view.evaluation.criteria.filter((criterion) => criterion.mode === "manual");
+      this.renderCriteria(automatic);
+      this.renderManual(manual);
+      const snapshot = view.latestPublished;
+      this.query("[data-snapshot]").innerHTML = snapshot ? `<dt>Published</dt><dd>${escapeText(new Date(snapshot.publishedAt).toLocaleString())}</dd>
+               <dt>Current</dt><dd>${snapshot.stale ? "No — settings changed" : "Yes"}</dd>
+               ${reportingRows(view)}` : `<dt>Published</dt><dd>No public snapshot</dd>${reportingRows(view)}`;
+    }
+    renderCriteria(criteria) {
+      this.query("[data-automatic-criteria]").innerHTML = criteria.map((item) => `<li class="criterion"><strong>${escapeText(item.label)}</strong><span>${escapeText(item.status)} · ${escapeText(item.evidence)}</span></li>`).join("");
+    }
+    renderManual(criteria) {
+      this.query("[data-manual-criteria]").innerHTML = criteria.map((item) => `<label class="manual-row" data-manual-id="${escapeText(item.id)}">
+                    <strong>${escapeText(item.label)}</strong>
+                    <select aria-label="${escapeText(item.label)} status">
+                        <option value="pass"${selected(item.status, "pass")}>Pass</option>
+                        <option value="fail"${selected(item.status, "fail")}>Fail</option>
+                        <option value="not-applicable"${selected(item.status, "not-applicable")}>Not applicable</option>
+                    </select>
+                    <input required maxlength="2000" value="${escapeText(item.status === "manual-review" ? "" : item.evidence)}" placeholder="Evidence or decision reference">
+                </label>`).join("");
+    }
+    show(state) {
+      for (const element of Array.from(this.querySelectorAll("[data-state]"))) {
+        element.hidden = element.dataset.state !== state;
+      }
+    }
+    query(selector) {
+      const element = this.querySelector(selector);
+      if (!element) {
+        throw new Error(`Missing analytics settings element: ${selector}`);
+      }
+      return element;
+    }
+  }
+  customElements.define("cms-analytics-privacy-settings", CmsAnalyticsPrivacySettings);
+  function setChecked(form, name, value) {
+    form.elements.namedItem(name).checked = value;
+  }
+  function setValue2(form, name, value) {
+    form.elements.namedItem(name).value = value;
+  }
+  function escapeText(value) {
+    return value.replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
+  }
+  function selected(current, value) {
+    return current === value ? " selected" : "";
+  }
+  function reportingRows(view) {
+    return `<dt>Last closed bucket</dt><dd>${escapeText(new Date(view.reporting.lastClosedBucket).toLocaleString())}</dd>
+        <dt>Referrer capacity</dt><dd>${view.reporting.referrerSaturated ? "Saturated — remainder grouped" : "Not saturated"}</dd>
+        <dt>Filter</dt><dd>${escapeText(view.reporting.versions.filter)}</dd>`;
+  }
+
   // src/components/admin/Layout/ShellDetail/style.css
-  var style_default5 = `:host {
+  var style_default6 = `:host {
     display: block;
 }
 
@@ -13752,7 +14130,7 @@ slot[name="aside"]::slotted(*) {
 `;
 
   // src/components/admin/Layout/ShellDetail/template.html
-  var template_default6 = `<article class="shell-detail">
+  var template_default7 = `<article class="shell-detail">
     <header class="shell-detail-header">
         <div class="shell-detail-identity">
             <slot name="back"></slot>
@@ -13915,25 +14293,15 @@ p {
   // src/components/admin/Layout/ShellDetail/ShellDetail.ts
   class CmsShellDetail extends U2 {
     constructor() {
-      super({ css: style_default5, template: template_default6 });
+      super({ css: style_default6, template: template_default7 });
     }
   }
   if (!customElements.get("cms-shell-detail")) {
     customElements.define("cms-shell-detail", CmsShellDetail);
   }
 
-  // src/core/dom/meta/getMetaBasePath.ts
-  function getMetaBasePath() {
-    const meta = document.querySelector('meta[name="basePath"]');
-    const content = meta?.getAttribute("content") ?? "";
-    if (!content || content === "/") {
-      return "";
-    }
-    return content.replace(/\/+$/, "");
-  }
-
   // src/components/admin/Layout/Analytics/api.ts
-  var ANALYTICS_VIEWS = ["overview", "content", "acquisition", "health"];
+  var ANALYTICS_VIEWS = ["overview", "content", "origins", "health"];
   function currentAnalyticsRange(search = window.location.search) {
     const range = new URLSearchParams(search).get("range");
     return range === "24h" || range === "30d" ? range : "7d";
@@ -13952,35 +14320,52 @@ p {
   }
   async function fetchAnalyticsDashboard(view, range, signal) {
     if (view === "overview") {
-      const [summary, timeseries] = await Promise.all([
-        getJson("summary", range, signal),
-        getJson("timeseries", range, signal)
+      const [summary, timeseries, devices, browsers] = await Promise.all([
+        getReport("summary", range, signal),
+        getReport("timeseries", range, signal),
+        getReport("breakdown", range, signal, undefined, "device"),
+        getReport("breakdown", range, signal, undefined, "browser")
       ]);
-      return { view, summary, timeseries };
+      return {
+        view,
+        meta: summary.meta,
+        summary: summary.data,
+        timeseries: timeseries.data,
+        devices: devices.data,
+        browsers: browsers.data
+      };
     }
     if (view === "content") {
-      const [pages, flows, devices, browsers] = await Promise.all([
-        getJson("top-pages", range, signal, 10),
-        getJson("flows", range, signal, 10),
-        getJson("breakdown", range, signal, undefined, "device"),
-        getJson("breakdown", range, signal, undefined, "browser")
+      const [pages, entries, flows] = await Promise.all([
+        getReport("top-pages", range, signal, 10),
+        getReport("entries", range, signal, 10),
+        getReport("flows", range, signal, 10)
       ]);
-      return { view, pages, flows, devices, browsers };
+      return { view, meta: pages.meta, pages: pages.data, entries: entries.data, flows: flows.data };
     }
-    if (view === "acquisition") {
-      const referrers = await getJson("referrers", range, signal, 10);
-      return { view, channels: [], referrers };
+    if (view === "origins") {
+      const referrers = await getReport("referrers", range, signal, 10);
+      return { view, meta: referrers.meta, referrers: referrers.data };
     }
-    const [health, statuses] = await Promise.all([
-      getJson("health", range, signal),
-      getJson("breakdown", range, signal, undefined, "status")
+    const [health, statuses, latency, exclusions] = await Promise.all([
+      getReport("health", range, signal),
+      getReport("breakdown", range, signal, undefined, "status"),
+      getReport("breakdown", range, signal, undefined, "latency"),
+      getReport("breakdown", range, signal, undefined, "exclusion")
     ]);
-    return { view, health, statuses };
+    return {
+      view,
+      meta: health.meta,
+      health: health.data,
+      statuses: statuses.data,
+      latency: latency.data,
+      exclusions: exclusions.data
+    };
   }
   function isAnalyticsView(value) {
     return ANALYTICS_VIEWS.includes(value);
   }
-  async function getJson(endpoint, range, signal, limit, dimension) {
+  async function getReport(endpoint, range, signal, limit, dimension) {
     const params = new URLSearchParams({ range });
     if (limit) {
       params.set("limit", String(limit));
@@ -13995,8 +14380,7 @@ p {
     if (!response.ok) {
       throw new Error(`Analytics request failed with status ${response.status}`);
     }
-    const report = await response.json();
-    return report.data;
+    return await response.json();
   }
 
   // src/components/admin/Layout/Analytics/styles/nav.css
@@ -14047,14 +14431,14 @@ w13c-lateral-menu-item {
         Content
     </w13c-lateral-menu-item>
 
-    <w13c-lateral-menu-item data-analytics-view="acquisition">
+    <w13c-lateral-menu-item data-analytics-view="origins">
         <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 12h12" />
             <path d="m12 6 6 6-6 6" />
             <circle cx="5" cy="12" r="3" />
         </svg>
-        Acquisition
+        Traffic origins
     </w13c-lateral-menu-item>
 
     <w13c-lateral-menu-item data-analytics-view="health">
@@ -14112,9 +14496,6 @@ w13c-lateral-menu-item {
   function formatInteger(value) {
     return INTEGER.format(Math.round(value));
   }
-  function formatDecimal(value) {
-    return DECIMAL.format(value);
-  }
   function formatMilliseconds(value) {
     return value === null ? "—" : `${formatInteger(value)} ms`;
   }
@@ -14170,7 +14551,7 @@ w13c-lateral-menu-item {
   }
   function renderFlows(host, flows) {
     if (!flows.length) {
-      renderEmpty(host, "No internal journeys recorded in this period.");
+      renderEmpty(host, "No publishable page transitions in this period.");
       return;
     }
     host.replaceChildren(...flows.map((flow) => {
@@ -14286,66 +14667,62 @@ w13c-lateral-menu-item {
   }
 
   // src/components/admin/Layout/Analytics/rendering/dashboard.ts
-  var CHANNEL_LABELS = {
-    direct: "Direct",
-    internal: "Internal navigation",
-    search: "Search engines",
-    social: "Social networks",
-    referral: "Referrals"
-  };
   function renderAnalyticsDashboard(root, data, range) {
     root.querySelectorAll("[data-range-label]").forEach((element) => {
       element.textContent = analyticsRangeLabel(range);
     });
+    renderReportMeta(target(root, "report-meta"), data);
     if (data.view === "overview") {
-      const viewsPerVisitorDay = data.summary.visitorDays ? data.summary.views / data.summary.visitorDays : 0;
+      const completedDay = new Date(data.summary.latestCompletedUtcDay).toLocaleDateString(undefined, {
+        timeZone: "UTC"
+      });
       renderMetrics(target(root, "overview-metrics"), [
-        { label: "Content views", value: formatInteger(data.summary.views), hint: "Successful page responses" },
+        { label: "Content views", value: formatInteger(data.summary.views), hint: "Successful resolved pages" },
         {
-          label: "Average daily visitors",
-          value: formatDecimal(data.summary.averageDailyVisitors),
-          hint: "Cookieless daily estimate"
+          label: "Estimated visitors",
+          value: formatInteger(data.summary.latestCompletedDayVisitors),
+          hint: `Completed UTC day · ${completedDay}`
         },
         {
-          label: "Visitor-days",
+          label: "Estimated visitor-days",
           value: formatInteger(data.summary.visitorDays),
-          hint: "Daily unique totals combined"
+          hint: "Daily estimates summed over this range"
         },
         {
-          label: "Views per visitor-day",
-          value: formatDecimal(viewsPerVisitorDay),
-          hint: "Content depth indicator"
+          label: "Average content latency",
+          value: formatMilliseconds(data.summary.avgMs),
+          hint: "Published after privacy threshold"
         }
       ]);
       renderTrafficChart(target(root, "traffic-chart"), data.timeseries);
+      renderBars(target(root, "devices"), data.devices, {
+        empty: "No publishable device data in this period.",
+        label: titleCase
+      });
+      renderBars(target(root, "browsers"), data.browsers, {
+        empty: "No publishable browser data in this period.",
+        label: titleCase
+      });
       return;
     }
     if (data.view === "content") {
       renderBars(target(root, "top-pages"), data.pages, { empty: "No content views recorded in this period." });
+      renderBars(target(root, "entries"), data.entries, {
+        empty: "No publishable entry-page counters in this period."
+      });
       renderFlows(target(root, "flows"), data.flows);
-      renderBars(target(root, "devices"), data.devices, {
-        empty: "No device data recorded in this period.",
-        label: titleCase
-      });
-      renderBars(target(root, "browsers"), data.browsers, {
-        empty: "No browser data recorded in this period.",
-        label: titleCase
-      });
       return;
     }
-    if (data.view === "acquisition") {
-      renderBars(target(root, "channels"), data.channels, {
-        empty: "No acquisition data recorded in this period.",
-        label: (key) => CHANNEL_LABELS[key] ?? titleCase(key)
-      });
+    if (data.view === "origins") {
       renderBars(target(root, "referrers"), data.referrers, {
-        empty: "No external referrers recorded in this period."
+        empty: "No publishable traffic-origin counters in this period.",
+        label: referrerLabel
       });
       return;
     }
     const errorRate = data.health.requests ? (data.health.clientErrors + data.health.serverErrors) / data.health.requests : 0;
     renderMetrics(target(root, "health-metrics"), [
-      { label: "Requests", value: formatInteger(data.health.requests), hint: "Non-bot delivery requests" },
+      { label: "Requests", value: formatInteger(data.health.requests), hint: "Non-automated delivery requests" },
       {
         label: "Not found",
         value: formatInteger(data.health.notFound),
@@ -14364,15 +14741,32 @@ w13c-lateral-menu-item {
         hint: "All HTTP 5xx responses",
         tone: data.health.serverErrors ? "danger" : undefined
       },
-      { label: "Average latency", value: formatMilliseconds(data.health.avgMs), hint: "Across all requests" },
-      { label: "Slowest request", value: formatMilliseconds(data.health.maxMs), hint: "Maximum observed latency" }
+      { label: "Average latency", value: formatMilliseconds(data.health.avgMs), hint: "Across published requests" },
+      { label: "Slowest request", value: formatMilliseconds(data.health.maxMs), hint: "Maximum aggregate value" }
     ]);
     target(root, "health-rate").textContent = `${formatPercent(errorRate)} error rate`;
     renderBars(target(root, "statuses"), data.statuses, {
-      empty: "No request statuses recorded in this period.",
+      empty: "No publishable request statuses in this period.",
       label: (key) => `HTTP ${key}`,
       tone: statusTone
     });
+    renderBars(target(root, "latency"), data.latency, {
+      empty: "No publishable latency distribution in this period.",
+      label: (key) => `${key} ms`
+    });
+    renderBars(target(root, "exclusions"), data.exclusions, {
+      empty: "No excluded automated requests in this period.",
+      label: (key) => titleCase(key.replaceAll("_", " "))
+    });
+  }
+  function renderReportMeta(host, data) {
+    const closed = new Date(data.meta.lastClosedBucket).toLocaleString();
+    const saturation = data.meta.referrerSaturated ? " · origin capacity reached; remainder grouped" : "";
+    const strong = document.createElement("strong");
+    const text2 = document.createElement("span");
+    strong.textContent = "Privacy publication boundary";
+    text2.textContent = `Closed through ${closed} · minimum ${data.meta.threshold} · rounded to ${data.meta.rounding} · ${data.meta.suppressedValueCount} suppressed · filter ${data.meta.versions.filter}${saturation}`;
+    host.replaceChildren(strong, text2);
   }
   function target(root, role) {
     const element = root.querySelector(`[data-role="${role}"]`);
@@ -14387,6 +14781,15 @@ w13c-lateral-menu-item {
   function statusTone(status) {
     return status.startsWith("5") ? "is-danger" : status.startsWith("4") ? "is-warning" : "";
   }
+  function referrerLabel(key) {
+    if (key === "__none__") {
+      return "No external referrer";
+    }
+    if (key === "__other__") {
+      return "Other external domains";
+    }
+    return key;
+  }
 
   // src/components/admin/Layout/Analytics/styles/dashboard.css
   var dashboard_default = `cms-analytics-dashboard {
@@ -14396,6 +14799,11 @@ w13c-lateral-menu-item {
 
 .analytics-surface,
 [data-view-host] {
+    display: grid;
+    gap: 24px;
+}
+
+.analytics-surface > [data-state="ready"]:not([hidden]) {
     display: grid;
     gap: 24px;
 }
@@ -14867,7 +15275,10 @@ w13c-lateral-menu-item {
         <button type="button" data-retry>Try again</button>
     </div>
 
-    <div data-state="ready" data-view-host hidden></div>
+    <div data-state="ready" hidden>
+        <div data-view-host></div>
+        <aside class="privacy-boundary privacy-boundary--technical" data-role="report-meta"></aside>
+    </div>
 </section>
 `;
 
@@ -14876,14 +15287,14 @@ w13c-lateral-menu-item {
     <div>
         <span class="eyebrow">Overview</span>
         <h2>Traffic at a glance</h2>
-        <p>Audience and content activity for <strong data-range-label></strong>.</p>
+        <p>Published aggregate activity for <strong data-range-label></strong>.</p>
     </div>
     <span class="privacy-pill">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M12 3 5 6v5c0 4.6 2.9 8.1 7 10 4.1-1.9 7-5.4 7-10V6z" />
             <path d="m9 12 2 2 4-4" />
         </svg>
-        Cookieless · counters only
+        No cookies · counters and HLL++
     </span>
 </header>
 
@@ -14900,9 +15311,20 @@ w13c-lateral-menu-item {
     <div class="chart-host" data-role="traffic-chart"></div>
 </section>
 
+<div class="report-grid">
+    <section class="analytics-panel">
+        <header class="panel-header"><h3>Device classes</h3></header>
+        <div class="bar-list" data-role="devices"></div>
+    </section>
+    <section class="analytics-panel">
+        <header class="panel-header"><h3>Browser families</h3></header>
+        <div class="bar-list" data-role="browsers"></div>
+    </section>
+</div>
+
 <aside class="privacy-boundary">
-    <strong>How visitors are counted</strong>
-    <span>Unique visitors are deduplicated per day. The overview reports visitor-days and never stores raw events.</span>
+    <strong>How the audience estimate works</strong>
+    <span>The visitor estimate covers the last completed UTC calendar day. Longer ranges show visitor-days, never a unique person count across days.</span>
 </aside>
 `;
 
@@ -14910,8 +15332,8 @@ w13c-lateral-menu-item {
   var content_default = `<header class="report-header">
     <div>
         <span class="eyebrow">Content</span>
-        <h2>What visitors consume</h2>
-        <p>Popular pages and internal journeys for <strong data-range-label></strong>.</p>
+        <h2>Content activity</h2>
+        <p>Published page and transition counters for <strong data-range-label></strong>.</p>
     </div>
 </header>
 
@@ -14929,51 +15351,47 @@ w13c-lateral-menu-item {
     <section class="analytics-panel">
         <header class="panel-header">
             <div>
+                <span class="eyebrow">Entry requests</span>
+                <h3>Observed entry pages</h3>
+            </div>
+        </header>
+        <div class="bar-list" data-role="entries"></div>
+    </section>
+</div>
+
+<div class="report-grid report-grid--primary">
+    <section class="analytics-panel analytics-panel--wide">
+        <header class="panel-header">
+            <div>
                 <span class="eyebrow">Navigation</span>
-                <h3>Common journeys</h3>
+                <h3>Observed page transitions</h3>
             </div>
         </header>
         <div class="flow-list" data-role="flows"></div>
     </section>
 </div>
 
-<div class="report-grid">
-    <section class="analytics-panel">
-        <header class="panel-header"><h3>Devices</h3></header>
-        <div class="bar-list" data-role="devices"></div>
-    </section>
-    <section class="analytics-panel">
-        <header class="panel-header"><h3>Browsers</h3></header>
-        <div class="bar-list" data-role="browsers"></div>
-    </section>
-</div>
+<aside class="privacy-boundary">
+    <strong>Aggregate transitions, not individual journeys</strong>
+    <span>Each same-site page-to-page edge is counted independently. No session path or person-level funnel is retained.</span>
+</aside>
 `;
 
-  // src/components/admin/Layout/Analytics/templates/acquisition.html
-  var acquisition_default = `<header class="report-header">
+  // src/components/admin/Layout/Analytics/templates/origins.html
+  var origins_default = `<header class="report-header">
     <div>
-        <span class="eyebrow">Acquisition</span>
-        <h2>How visitors arrive</h2>
-        <p>Entry channels and external referring domains for <strong data-range-label></strong>.</p>
+        <span class="eyebrow">Traffic origins</span>
+        <h2>Where entry requests originate</h2>
+        <p>Privacy-protected entry counters for <strong data-range-label></strong>.</p>
     </div>
 </header>
 
 <div class="report-grid report-grid--primary">
-    <section class="analytics-panel">
+    <section class="analytics-panel analytics-panel--wide">
         <header class="panel-header">
             <div>
-                <span class="eyebrow">Channels</span>
-                <h3>Traffic sources</h3>
-            </div>
-        </header>
-        <div class="bar-list" data-role="channels"></div>
-    </section>
-
-    <section class="analytics-panel">
-        <header class="panel-header">
-            <div>
-                <span class="eyebrow">Referrals</span>
-                <h3>External referrers</h3>
+                <span class="eyebrow">Entry provenance</span>
+                <h3>External registrable domains</h3>
             </div>
         </header>
         <div class="bar-list" data-role="referrers"></div>
@@ -14982,7 +15400,7 @@ w13c-lateral-menu-item {
 
 <aside class="privacy-boundary">
     <strong>Host-level attribution</strong>
-    <span>Only normalized referrer hosts are counted. Full referring URLs and query parameters are not retained.</span>
+    <span>Only bounded registrable-domain counters are retained. Full URLs, query parameters, UTM values and click identifiers are discarded.</span>
 </aside>
 `;
 
@@ -15008,6 +15426,17 @@ w13c-lateral-menu-item {
     <div class="bar-list bar-list--statuses" data-role="statuses"></div>
 </section>
 
+<div class="report-grid">
+    <section class="analytics-panel">
+        <header class="panel-header"><h3>Latency distribution</h3></header>
+        <div class="bar-list" data-role="latency"></div>
+    </section>
+    <section class="analytics-panel">
+        <header class="panel-header"><h3>Excluded automation</h3></header>
+        <div class="bar-list" data-role="exclusions"></div>
+    </section>
+</div>
+
 <aside class="privacy-boundary privacy-boundary--technical">
     <strong>No individual request logs</strong>
     <span>This dashboard uses hourly counters. Request URLs, IP addresses and error payloads cannot be inspected here.</span>
@@ -15018,7 +15447,7 @@ w13c-lateral-menu-item {
   var VIEW_TEMPLATES = {
     overview: overview_default,
     content: content_default,
-    acquisition: acquisition_default,
+    origins: origins_default,
     health: health_default
   };
 
@@ -16107,9 +16536,9 @@ w13c-lateral-menu-item.category-item {
     window.dispatchEvent(new CustomEvent(DASHBOARD_SELECTION_EVENT, { detail: selection }));
   }
   async function fetchDashboards() {
-    return getJson2(route("/api/dashboards"));
+    return getJson(route("/api/dashboards"));
   }
-  async function getJson2(url) {
+  async function getJson(url) {
     const response = await fetch(url, { headers: { Accept: "application/json" } });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -17651,7 +18080,7 @@ w13c-lateral-menu-item {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/style.css
-  var style_default6 = `:host {
+  var style_default7 = `:host {
     --media-grid-item-max: 120px;
     --media-grid-item-max-mobile: 112px;
     --media-grid-featured-item-max: calc((var(--media-grid-item-max) * 2) + 8px);
@@ -17797,7 +18226,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/template.html
-  var template_default7 = `<section class="media-field">
+  var template_default8 = `<section class="media-field">
     <div class="label-row">
         <span data-label></span>
     </div>
@@ -17965,7 +18394,7 @@ button {
     pendingPick = { action: "upload" };
     suppressClick = false;
     constructor() {
-      super({ css: style_default6, template: template_default7 });
+      super({ css: style_default7, template: template_default8 });
     }
     static get observedAttributes() {
       return ["label", "accept"];
@@ -18346,7 +18775,7 @@ button {
     return input;
   }
   function chips(field) {
-    const selected = new Set(arrayValue(field));
+    const selected2 = new Set(arrayValue(field));
     const group = document.createElement("div");
     group.className = "chip-group";
     bindFieldControl(group, field);
@@ -18355,7 +18784,7 @@ button {
       button.type = "button";
       button.className = "chip";
       button.dataset.value = option.value;
-      button.setAttribute("aria-pressed", String(selected.has(option.value)));
+      button.setAttribute("aria-pressed", String(selected2.has(option.value)));
       button.textContent = option.label;
       group.append(button);
     }
@@ -18430,14 +18859,14 @@ button {
     }
     if (definition.options?.length) {
       const input2 = document.createElement("p9r-select");
-      const selected = textValue2(value);
+      const selected2 = textValue2(value);
       input2.setAttribute("label", definition.label);
-      input2.setAttribute("value", selected);
+      input2.setAttribute("value", selected2);
       if (definition.required) {
         input2.setAttribute("required", "");
       }
-      input2.replaceChildren(...definition.options.map((option) => optionElement(option, selected)));
-      input2.value = selected;
+      input2.replaceChildren(...definition.options.map((option) => optionElement(option, selected2)));
+      input2.value = selected2;
       return input2;
     }
     const input = document.createElement("p9r-input");
@@ -18657,7 +19086,7 @@ button {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/style.css
-  var style_default7 = `:host { display: block; }
+  var style_default8 = `:host { display: block; }
 
 .reorderable-list { display: grid; gap: 8px; }
 
@@ -18726,7 +19155,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/template.html
-  var template_default8 = `<section class="reorderable-list">
+  var template_default9 = `<section class="reorderable-list">
     <div class="header" data-header></div>
     <div class="rows" data-rows></div>
     <button class="add" data-add type="button"></button>
@@ -18738,7 +19167,7 @@ button {
     value = emptyData();
     draggingIndex = null;
     constructor() {
-      super({ css: style_default7, template: template_default8 });
+      super({ css: style_default8, template: template_default9 });
     }
     connectedCallback() {
       this.shadowRoot.addEventListener("click", this.onClick);
@@ -19255,7 +19684,7 @@ button {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/style.css
-  var style_default8 = `.detail-schema {
+  var style_default9 = `.detail-schema {
     display: grid;
     gap: 12px;
 }
@@ -19867,16 +20296,16 @@ p9r-token-input {
     };
   }
   async function lookupEntry(sourceId, target2, resource, fields, loadData) {
-    const selected = selectedOptions(target2, resource, fields);
+    const selected2 = selectedOptions(target2, resource, fields);
     try {
       const items = await lookupItems(sourceId, target2.lookup, resource, fields, loadData);
       return {
         failed: false,
         key: target2.key,
-        options: dedupeOptions([...optionsFromItems(items, target2.lookup), ...selected])
+        options: dedupeOptions([...optionsFromItems(items, target2.lookup), ...selected2])
       };
     } catch {
-      return { failed: true, key: target2.key, options: selected };
+      return { failed: true, key: target2.key, options: selected2 };
     }
   }
   async function lookupItems(sourceId, lookup, resource, fields, loadData) {
@@ -19899,15 +20328,15 @@ p9r-token-input {
       return [];
     }
     const current = Object.hasOwn(fields, field.id) ? fields[field.id] : valueAt(resource, field.path);
-    const selected = new Set(selectedValues(current));
-    if (!selected.size) {
+    const selected2 = new Set(selectedValues(current));
+    if (!selected2.size) {
       return [];
     }
     const resolved = resolveExpression(expression, { resource, fields });
     const items = Array.isArray(resolved) ? resolved : [resolved];
     return dedupeOptions(items.flatMap((item) => {
       const option = optionFromItem(item, target2.lookup, false);
-      return option && selected.has(option.value) ? [option] : [];
+      return option && selected2.has(option.value) ? [option] : [];
     }));
   }
   function optionFromItem(item, lookup, fallbackToValue) {
@@ -20461,7 +20890,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/template.html
-  var template_default9 = `<cms-shell-detail>
+  var template_default10 = `<cms-shell-detail>
     <button type="button" slot="back" data-back aria-label="Back to table">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <rect x="4" y="5" width="16" height="14" rx="2"></rect>
@@ -20492,7 +20921,7 @@ p9r-token-input {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/index.ts
-  var styles = [base_default2, controls_default, style_default8].join(`
+  var styles = [base_default2, controls_default, style_default9].join(`
 `);
 
   class DashboardWDetail extends U2 {
@@ -20502,7 +20931,7 @@ p9r-token-input {
     mode = "bound";
     bindingRevision = 0;
     constructor() {
-      super({ css: styles, template: template_default9 });
+      super({ css: styles, template: template_default10 });
       this.runtime = createDetailRuntime(this, this.shadowRoot, {
         data: () => this.value,
         setData: (value) => {
@@ -20870,7 +21299,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
-  var style_default9 = `:host {
+  var style_default10 = `:host {
     display: block;
     --dashboard-table-columns: 46px 1fr;
 }
@@ -20980,7 +21409,7 @@ slot {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
-  var template_default10 = `<section class="w-table-shell">
+  var template_default11 = `<section class="w-table-shell">
     <header class="w-table-header" data-header>
         <div>
             <h3 data-title></h3>
@@ -21010,7 +21439,7 @@ slot {
     value = { title: "", actions: [], columns: [], rows: [] };
     selectedRow = "";
     constructor() {
-      super({ css: style_default9, template: template_default10 });
+      super({ css: style_default10, template: template_default11 });
     }
     set data(value) {
       this.value = value;
@@ -21276,8 +21705,8 @@ slot {
   // src/components/admin/Resources/Dashboards/widgets/example/index.ts
   function mountDashboardWidgetExample(root, selectedId) {
     root.replaceChildren();
-    const selected = selectedId ? PRODUCTS.find((item) => item.id === selectedId) ?? null : null;
-    root.append(selected ? detailElement(selected) : tableElement());
+    const selected2 = selectedId ? PRODUCTS.find((item) => item.id === selectedId) ?? null : null;
+    root.append(selected2 ? detailElement(selected2) : tableElement());
   }
   function updateDashboardWidgetExampleField(rowKey, field, value) {
     const product2 = PRODUCTS.find((item) => item.id === rowKey);
@@ -21828,7 +22257,7 @@ slot {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/style.css
-  var style_default10 = `:host {
+  var style_default11 = `:host {
     display: block;
     max-inline-size: 960px;
 }
@@ -21872,7 +22301,7 @@ slot { display: contents; }
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/template.html
-  var template_default11 = `<section class="navigation-list-shell">
+  var template_default12 = `<section class="navigation-list-shell">
     <header class="navigation-list-header" data-header>
         <h3 data-title></h3>
         <div class="navigation-list-actions" data-actions></div>
@@ -21889,7 +22318,7 @@ slot { display: contents; }
     value = null;
     dragging = null;
     constructor() {
-      super({ css: style_default10, template: template_default11 });
+      super({ css: style_default11, template: template_default12 });
     }
     static get observedAttributes() {
       return ["data-config-json"];
@@ -22866,7 +23295,7 @@ p {
 `;
 
   // src/components/admin/Resources/Dashboards/view/template.html
-  var template_default12 = `<main class="content">
+  var template_default13 = `<main class="content">
     <cms-binding-core class="binding-source">
         <span data-dashboard-list-source hidden>
             <span data-dashboard-groups-json="{{ dashboards | json }}"></span>
@@ -22903,7 +23332,7 @@ p {
 
   class DashboardView extends DashboardViewController {
     constructor() {
-      super(styles2, template_default12);
+      super(styles2, template_default13);
       configureDashboardBindingFilters();
     }
     connectedCallback() {
@@ -23442,7 +23871,7 @@ p {
   }
 
   // src/components/admin/Resources/Functions/detail/style.css
-  var style_default11 = `:host {
+  var style_default12 = `:host {
     display: block;
 }
 * {
@@ -23667,7 +24096,7 @@ pre {
       }
     }
     renderState(message) {
-      this.replaceChildren(styleNode(style_default11), state(message));
+      this.replaceChildren(styleNode(style_default12), state(message));
     }
     renderDetail() {
       if (!this.detail) {
@@ -23676,7 +24105,7 @@ pre {
       const shell = document.createElement("cms-shell-detail");
       shell.className = "functions-shell";
       shell.append(backLink(), title(this.detail), headerActions(), inputsSection(this.detail, this.draft, (path) => void this.onInputChange(path)), resultSection(), functionSummarySection(this.detail), contractSection(this.detail));
-      this.replaceChildren(styleNode(style_default11), shell);
+      this.replaceChildren(styleNode(style_default12), shell);
       this.bindRefs();
       hydrateExecuteFields(this, this.detail, this.draft);
     }
@@ -25156,7 +25585,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/template.html
-  var template_default13 = `<div class="integrations-root">
+  var template_default14 = `<div class="integrations-root">
     <div class="binding-feeds" aria-hidden="true">
         <div data-definitions-source cms-reload-on="integration:updated">
             <template>
@@ -26816,7 +27245,7 @@ button[slot="back"]:disabled {
       const style = document.createElement("style");
       style.textContent = styles_default3;
       const body = document.createElement("template");
-      body.innerHTML = template_default13;
+      body.innerHTML = template_default14;
       this.replaceChildren(style, body.content.cloneNode(true));
     }
   }
@@ -26825,7 +27254,7 @@ button[slot="back"]:disabled {
   }
 
   // src/components/admin/Resources/Triggers/template.html
-  var template_default14 = `<section class="triggers-surface">
+  var template_default15 = `<section class="triggers-surface">
     <div data-state="loading" class="state">Loading triggers...</div>
     <div data-state="error" class="state" hidden>Failed to load triggers.</div>
     <div data-state="empty" class="state" hidden>No triggers installed.</div>
@@ -26848,7 +27277,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Triggers/style.css
-  var style_default12 = `.triggers-surface {
+  var style_default13 = `.triggers-surface {
     max-width: 1120px;
 }
 
@@ -26993,9 +27422,9 @@ input[type="checkbox"] {
     }
     mount() {
       const style = document.createElement("style");
-      style.textContent = style_default12;
+      style.textContent = style_default13;
       const body = document.createElement("template");
-      body.innerHTML = template_default14;
+      body.innerHTML = template_default15;
       this.replaceChildren(style, body.content.cloneNode(true));
       this.rows = this.querySelector("[data-role='rows']");
     }
@@ -28018,7 +28447,7 @@ details[open] > summary > .chevron {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default15 = `<header class="topbar">
+  var template_default16 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -28390,7 +28819,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default15)}`;
+  template4.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default16)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -28516,7 +28945,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default16 = `<aside class="panel">
+  var template_default17 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -28532,7 +28961,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default13 = `:host {
+  var style_default14 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -28632,7 +29061,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default13)}</style>${String(template_default16)}`;
+  template5.innerHTML = `<style>${String(style_default14)}</style>${String(template_default17)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -29202,9 +29631,9 @@ button:hover {
   }
   function selectedMethodFilter(filter) {
     const options2 = Array.from(filter.options);
-    const selected = options2.find((option6) => option6.selected);
-    if (selected?.value) {
-      return selected.value;
+    const selected2 = options2.find((option6) => option6.selected);
+    if (selected2?.value) {
+      return selected2.value;
     }
     const selectedIndexValue = filter.options[filter.selectedIndex]?.value;
     if (selectedIndexValue) {
@@ -29231,7 +29660,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/template.html
-  var template_default17 = `<div class="backdrop" hidden>
+  var template_default18 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -29774,7 +30203,7 @@ h2 {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default17)}`;
+  template6.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default18)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -29897,7 +30326,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/template.html
-  var template_default18 = `<div class="backdrop" hidden>
+  var template_default19 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -29916,7 +30345,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
-  var style_default14 = `:host { display: contents; }
+  var style_default15 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -30220,11 +30649,11 @@ textarea { min-height: 92px; resize: vertical; }
     }
     return root;
   }
-  function selectedSourceConditions(sources, selected) {
+  function selectedSourceConditions(sources, selected2) {
     const conditions2 = [];
     for (const source2 of sources) {
       for (const state2 of STATES) {
-        if (selected.has(sourceStateKey(sources, source2.editor, state2))) {
+        if (selected2.has(sourceStateKey(sources, source2.editor, state2))) {
           conditions2.push({ sourceEditor: source2.editor, sourceState: state2 });
         }
       }
@@ -30320,7 +30749,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default14)}</style>${String(template_default18)}`;
+  template7.innerHTML = `<style>${String(style_default15)}</style>${String(template_default19)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -30510,7 +30939,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/template.html
-  var template_default19 = `<div class="backdrop" hidden>
+  var template_default20 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -31241,7 +31670,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
   var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default19)}`;
+  template8.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default20)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -32260,14 +32689,14 @@ dd {
   }
   function selectedConditions(tree, node) {
     const sources = tree.nodes.sourceAncestorNodes(node);
-    const selected = [];
+    const selected2 = [];
     for (const condition of tree.nodes.sourceStatusConditions(node)) {
       const source2 = condition.sourceId ? sources.find((candidate) => candidate.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === condition.sourceId) : sources[0];
       if (source2) {
-        selected.push({ sourceEditor: source2.editor, sourceState: condition.state });
+        selected2.push({ sourceEditor: source2.editor, sourceState: condition.state });
       }
     }
-    return selected;
+    return selected2;
   }
   function sourceName(tree, source2) {
     const binding = parseSource(source2.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
@@ -32622,12 +33051,12 @@ dd {
       if (requestId !== this.tree.state.scrollRequestId) {
         return;
       }
-      const selected = this.tree.host.shadowRoot.querySelector(".item.selected");
-      if (!selected) {
+      const selected2 = this.tree.host.shadowRoot.querySelector(".item.selected");
+      if (!selected2) {
         return;
       }
       const scrollContainer = this.tree.refs.scrollContainer;
-      const top = Math.max(0, selected.offsetTop - scrollContainer.clientHeight * 0.2 + selected.offsetHeight / 2);
+      const top = Math.max(0, selected2.offsetTop - scrollContainer.clientHeight * 0.2 + selected2.offsetHeight / 2);
       typeof scrollContainer.scrollTo === "function" ? scrollContainer.scrollTo({ top, behavior: "smooth" }) : scrollContainer.scrollTop = top;
     }
   }
@@ -32880,13 +33309,13 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default20 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default21 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default15 = `:host {
+  var style_default16 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -33027,8 +33456,8 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${[style_default15, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default20)}`;
+  template9.innerHTML = `<style>${[style_default16, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+`)}</style>${String(template_default21)}`;
 
   class StructureTree extends HTMLElement {
     controller;
@@ -33070,7 +33499,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default21 = `<main class="canvas">
+  var template_default22 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -33081,7 +33510,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default16 = `:host {
+  var style_default17 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -33190,7 +33619,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(style_default16)}</style>${String(template_default21)}`;
+  template10.innerHTML = `<style>${String(style_default17)}</style>${String(template_default22)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -33331,7 +33760,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default22 = `<section class="section">
+  var template_default23 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -33343,7 +33772,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default17 = `:host {
+  var style_default18 = `:host {
     display: block;
 }
 
@@ -33432,7 +33861,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template11 = createFieldTemplate(template_default22, style_default17);
+  var template11 = createFieldTemplate(template_default23, style_default18);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -33456,7 +33885,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default23 = `<div class="field">
+  var template_default24 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -33477,7 +33906,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default18 = `:host {
+  var style_default19 = `:host {
     display: block;
 }
 
@@ -33914,7 +34343,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template12 = createFieldTemplate(template_default23, `${String(style_default18)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default24, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -33974,7 +34403,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default24 = `<div class="field">
+  var template_default25 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -33995,7 +34424,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default19 = `:host {
+  var style_default20 = `:host {
     display: block;
 }
 
@@ -34067,7 +34496,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template13 = createFieldTemplate(template_default24, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
+  var template13 = createFieldTemplate(template_default25, `${String(style_default20)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -34390,7 +34819,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default25 = `<div class="field">
+  var template_default26 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -34646,7 +35075,7 @@ textarea:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template14 = document.createElement("template");
-  template14.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default25)}`;
+  template14.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default26)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -34776,7 +35205,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default26 = `<label class="field">
+  var template_default27 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -34784,7 +35213,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default20 = `:host {
+  var style_default21 = `:host {
     display: block;
 }
 
@@ -34888,7 +35317,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template15 = createFieldTemplate(template_default26, style_default20);
+  var template15 = createFieldTemplate(template_default27, style_default21);
 
   class Select extends HTMLElement {
     constructor() {
@@ -34925,7 +35354,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default27 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default28 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -34935,7 +35364,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default21 = `:host {
+  var style_default22 = `:host {
     display: block;
 }
 
@@ -35048,7 +35477,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template16 = createFieldTemplate(template_default27, style_default21);
+  var template16 = createFieldTemplate(template_default28, style_default22);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -35065,13 +35494,13 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default28 = `<div class="segmented">
+  var template_default29 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default22 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -35117,7 +35546,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template17 = createFieldTemplate(template_default28, style_default22);
+  var template17 = createFieldTemplate(template_default29, style_default23);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -35130,7 +35559,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
-  var template_default29 = `<div class="page-link">
+  var template_default30 = `<div class="page-link">
     <div class="head">
         <span class="label"></span>
         <span class="hint"></span>
@@ -35665,7 +36094,7 @@ code {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
-  var template_default30 = `<div class="backdrop" hidden>
+  var template_default31 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
         <header class="top">
             <div>
@@ -36199,7 +36628,7 @@ input {
     if (!selection.multiple) {
       return item;
     }
-    const existingIndex = selection.selectedMany.findIndex((selected) => selected.id === item.id);
+    const existingIndex = selection.selectedMany.findIndex((selected2) => selected2.id === item.id);
     if (existingIndex >= 0) {
       selection.selectedMany.splice(existingIndex, 1);
       return selection.selected;
@@ -36210,7 +36639,7 @@ input {
     return selection.selected;
   }
   function isFileSelected(item, selection) {
-    return selection.multiple ? selection.selectedMany.some((selected) => selected.id === item.id) : selection.selected?.id === item.id;
+    return selection.multiple ? selection.selectedMany.some((selected2) => selected2.id === item.id) : selection.selected?.id === item.id;
   }
   function dispatchFilesSelection(host, basePath5, selection) {
     if (selection.multiple) {
@@ -36237,7 +36666,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
   var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default30)}`;
+  template18.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default31)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -36607,7 +37036,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
   var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default29)}`;
+  template19.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default30)}`;
 
   class PageLink extends PageLinkController {
     constructor() {
@@ -36725,9 +37154,9 @@ input {
       }
       return wrapper;
     }
-    syncButton(button2, setting, selected = selectedEndpoint2(setting, this.dataSources), fallbackValue = setting.defaultValue) {
+    syncButton(button2, setting, selected2 = selectedEndpoint2(setting, this.dataSources), fallbackValue = setting.defaultValue) {
       button2.replaceChildren();
-      const method = selected?.method ?? setting.defaultMethod;
+      const method = selected2?.method ?? setting.defaultMethod;
       if (method) {
         const badge3 = document.createElement("span");
         badge3.className = "endpoint-method";
@@ -36735,8 +37164,8 @@ input {
         button2.append(badge3);
       }
       const value2 = document.createElement("span");
-      value2.className = selected ? "endpoint-value" : "endpoint-placeholder";
-      value2.textContent = selected?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
+      value2.className = selected2 ? "endpoint-value" : "endpoint-placeholder";
+      value2.textContent = selected2?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
       button2.append(value2);
     }
     open(setting, button2) {
@@ -36843,9 +37272,9 @@ input {
       }
       group.append(option6);
     }
-    const selected = Array.from(select5.querySelectorAll("option")).find((option6) => option6.value === (setting.defaultValue ?? ""));
-    if (selected) {
-      selected.selected = true;
+    const selected2 = Array.from(select5.querySelectorAll("option")).find((option6) => option6.value === (setting.defaultValue ?? ""));
+    if (selected2) {
+      selected2.selected = true;
     }
     select5.addEventListener("change", () => {
       if (setting.disabled || !select5.value) {
@@ -37313,7 +37742,7 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default31 = `<div class="settings-view">
+  var template_default32 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
@@ -37595,7 +38024,7 @@ cms-editor-v2-segmented-control button svg:only-child {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default31)}`;
+  template20.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default32)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -37668,7 +38097,7 @@ cms-editor-v2-segmented-control button svg:only-child {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/template.html
-  var template_default32 = `<div class="backdrop" hidden>
+  var template_default33 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -38132,7 +38561,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
   var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default32)}`;
+  template21.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default33)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -41432,7 +41861,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default33 = `<div class="shell">
+  var template_default34 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -41494,7 +41923,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default23 = `:host {
+  var style_default24 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -41622,8 +42051,8 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default23, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default33)}`;
+    template22.innerHTML = `<style>${[style_default24, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+`)}</style>${String(template_default34)}`;
     return template22;
   }
 
@@ -42136,7 +42565,7 @@ label {
   }
 
   // src/components/media/CardMedia/template.html
-  var template_default34 = `<div class="card">
+  var template_default35 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -42158,7 +42587,7 @@ label {
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default24 = `:host {
+  var style_default25 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -42283,8 +42712,8 @@ label {
   class CardMedia extends U2 {
     constructor() {
       super({
-        css: style_default24,
-        template: template_default34
+        css: style_default25,
+        template: template_default35
       });
     }
   }
@@ -42293,7 +42722,7 @@ label {
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default35 = `<div class="backdrop" id="backdrop">
+  var template_default36 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -42538,7 +42967,7 @@ label {
       super({
         css: [layout_default3, controls_default4].join(`
 `),
-        template: template_default35
+        template: template_default36
       });
     }
     connectedCallback() {
@@ -42576,7 +43005,7 @@ label {
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default36 = `<div class="backdrop" id="backdrop">
+  var template_default37 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -42835,7 +43264,7 @@ label {
       super({
         css: [layout_default4, tools_default].join(`
 `),
-        template: template_default36
+        template: template_default37
       });
     }
     connectedCallback() {
@@ -42869,7 +43298,7 @@ label {
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default37 = `<div class="toolbar">
+  var template_default38 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -43985,7 +44414,7 @@ label {
       super({
         css: [navigation_default, interactions_default, detail_default3].join(`
 `),
-        template: template_default37
+        template: template_default38
       });
     }
     get detail() {
@@ -44137,7 +44566,7 @@ label {
   }
 
   // src/components/media/MediaCenter/template.html
-  var template_default38 = `<dialog>
+  var template_default39 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -44723,7 +45152,7 @@ dialog::backdrop {
       super({
         css: [chrome_default, content_default2, folder_default].join(`
 `),
-        template: template_default38
+        template: template_default39
       });
     }
     connectedCallback() {

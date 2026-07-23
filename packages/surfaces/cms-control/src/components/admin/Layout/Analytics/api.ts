@@ -1,40 +1,55 @@
 import type {
     AnalyticsHealthSummary,
     AnalyticsReport,
-    AnalyticsSummary,
+    AnalyticsReportMetadata,
+    AnalyticsReportSummary,
     FlowCount,
     KeyCount,
     TimeBucket,
 } from "@bernouy/cms-analytics";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
-export const ANALYTICS_VIEWS = ["overview", "content", "acquisition", "health"] as const;
+export const ANALYTICS_VIEWS = ["overview", "content", "origins", "health"] as const;
 export type AnalyticsView = (typeof ANALYTICS_VIEWS)[number];
 export type AnalyticsRange = "24h" | "7d" | "30d";
 export type AnalyticsTimeBucket = Omit<TimeBucket, "bucket"> & { bucket: string };
+export type AnalyticsSummaryView = Omit<AnalyticsReportSummary, "latestCompletedUtcDay"> & {
+    latestCompletedUtcDay: string;
+};
+export type AnalyticsReportMetaView = Omit<AnalyticsReportMetadata, "from" | "to" | "lastClosedBucket"> & {
+    from: string;
+    to: string;
+    lastClosedBucket: string;
+};
 
 export type AnalyticsDashboardData =
     | {
           view: "overview";
-          summary: AnalyticsSummary;
+          meta: AnalyticsReportMetaView;
+          summary: AnalyticsSummaryView;
           timeseries: AnalyticsTimeBucket[];
-      }
-    | {
-          view: "content";
-          pages: KeyCount[];
-          flows: FlowCount[];
           devices: KeyCount[];
           browsers: KeyCount[];
       }
     | {
-          view: "acquisition";
-          channels: KeyCount[];
+          view: "content";
+          meta: AnalyticsReportMetaView;
+          pages: KeyCount[];
+          entries: KeyCount[];
+          flows: FlowCount[];
+      }
+    | {
+          view: "origins";
+          meta: AnalyticsReportMetaView;
           referrers: KeyCount[];
       }
     | {
           view: "health";
+          meta: AnalyticsReportMetaView;
           health: AnalyticsHealthSummary;
           statuses: KeyCount[];
+          latency: KeyCount[];
+          exclusions: KeyCount[];
       };
 
 export function currentAnalyticsRange(search = window.location.search): AnalyticsRange {
@@ -63,43 +78,60 @@ export async function fetchAnalyticsDashboard(
     signal?: AbortSignal,
 ): Promise<AnalyticsDashboardData> {
     if (view === "overview") {
-        const [summary, timeseries] = await Promise.all([
-            getJson<AnalyticsSummary>("summary", range, signal),
-            getJson<AnalyticsTimeBucket[]>("timeseries", range, signal),
+        const [summary, timeseries, devices, browsers] = await Promise.all([
+            getReport<AnalyticsSummaryView>("summary", range, signal),
+            getReport<AnalyticsTimeBucket[]>("timeseries", range, signal),
+            getReport<KeyCount[]>("breakdown", range, signal, undefined, "device"),
+            getReport<KeyCount[]>("breakdown", range, signal, undefined, "browser"),
         ]);
-        return { view, summary, timeseries };
+        return {
+            view,
+            meta: summary.meta,
+            summary: summary.data,
+            timeseries: timeseries.data,
+            devices: devices.data,
+            browsers: browsers.data,
+        };
     }
     if (view === "content") {
-        const [pages, flows, devices, browsers] = await Promise.all([
-            getJson<KeyCount[]>("top-pages", range, signal, 10),
-            getJson<FlowCount[]>("flows", range, signal, 10),
-            getJson<KeyCount[]>("breakdown", range, signal, undefined, "device"),
-            getJson<KeyCount[]>("breakdown", range, signal, undefined, "browser"),
+        const [pages, entries, flows] = await Promise.all([
+            getReport<KeyCount[]>("top-pages", range, signal, 10),
+            getReport<KeyCount[]>("entries", range, signal, 10),
+            getReport<FlowCount[]>("flows", range, signal, 10),
         ]);
-        return { view, pages, flows, devices, browsers };
+        return { view, meta: pages.meta, pages: pages.data, entries: entries.data, flows: flows.data };
     }
-    if (view === "acquisition") {
-        const referrers = await getJson<KeyCount[]>("referrers", range, signal, 10);
-        return { view, channels: [], referrers };
+    if (view === "origins") {
+        const referrers = await getReport<KeyCount[]>("referrers", range, signal, 10);
+        return { view, meta: referrers.meta, referrers: referrers.data };
     }
-    const [health, statuses] = await Promise.all([
-        getJson<AnalyticsHealthSummary>("health", range, signal),
-        getJson<KeyCount[]>("breakdown", range, signal, undefined, "status"),
+    const [health, statuses, latency, exclusions] = await Promise.all([
+        getReport<AnalyticsHealthSummary>("health", range, signal),
+        getReport<KeyCount[]>("breakdown", range, signal, undefined, "status"),
+        getReport<KeyCount[]>("breakdown", range, signal, undefined, "latency"),
+        getReport<KeyCount[]>("breakdown", range, signal, undefined, "exclusion"),
     ]);
-    return { view, health, statuses };
+    return {
+        view,
+        meta: health.meta,
+        health: health.data,
+        statuses: statuses.data,
+        latency: latency.data,
+        exclusions: exclusions.data,
+    };
 }
 
 function isAnalyticsView(value: string): value is AnalyticsView {
     return ANALYTICS_VIEWS.includes(value as AnalyticsView);
 }
 
-async function getJson<T>(
+async function getReport<T>(
     endpoint: string,
     range: AnalyticsRange,
     signal?: AbortSignal,
     limit?: number,
     dimension?: string,
-): Promise<T> {
+): Promise<{ data: T; meta: AnalyticsReportMetaView }> {
     const params = new URLSearchParams({ range });
     if (limit) {
         params.set("limit", String(limit));
@@ -114,6 +146,8 @@ async function getJson<T>(
     if (!response.ok) {
         throw new Error(`Analytics request failed with status ${response.status}`);
     }
-    const report = (await response.json()) as AnalyticsReport<T>;
-    return report.data;
+    return (await response.json()) as AnalyticsReport<T> as unknown as {
+        data: T;
+        meta: AnalyticsReportMetaView;
+    };
 }

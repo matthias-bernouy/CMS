@@ -22,7 +22,7 @@ describe("analytics navigation", () => {
 
         expect(analyticsViewPath("overview")).toBe("/cms/admin/analytics");
         expect(analyticsViewPath("content")).toBe("/cms/admin/analytics/content");
-        expect(analyticsViewFromPath("/cms/admin/analytics/acquisition", "/cms")).toBe("acquisition");
+        expect(analyticsViewFromPath("/cms/admin/analytics/origins", "/cms")).toBe("origins");
         expect(analyticsViewFromPath("/cms/admin/analytics", "/cms")).toBe("overview");
     });
 

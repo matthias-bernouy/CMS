@@ -7,13 +7,13 @@ import chartCss from "./styles/chart.css" with { type: "text" };
 import shellTemplate from "./templates/shell.html" with { type: "text" };
 import overviewTemplate from "./templates/overview.html" with { type: "text" };
 import contentTemplate from "./templates/content.html" with { type: "text" };
-import acquisitionTemplate from "./templates/acquisition.html" with { type: "text" };
+import originsTemplate from "./templates/origins.html" with { type: "text" };
 import healthTemplate from "./templates/health.html" with { type: "text" };
 
 const VIEW_TEMPLATES: Record<AnalyticsView, string> = {
     overview: overviewTemplate as unknown as string,
     content: contentTemplate as unknown as string,
-    acquisition: acquisitionTemplate as unknown as string,
+    origins: originsTemplate as unknown as string,
     health: healthTemplate as unknown as string,
 };
 

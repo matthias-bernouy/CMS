@@ -1,0 +1,52 @@
+<div class="governance-state" data-state="loading">Loading analytics governance…</div>
+<div class="governance-state governance-state--error" data-state="error" hidden>
+    <strong>Analytics settings could not be loaded.</strong>
+    <span data-error-message></span>
+    <button type="button" data-retry>Try again</button>
+</div>
+
+<div class="governance-grid" data-state="ready" hidden>
+    <form class="governance-card" data-settings-form>
+        <header>
+            <span class="eyebrow">Collection</span>
+            <h2>Privacy-strict analytics</h2>
+            <p>These controls affect collection. Analytics reports remain read-only.</p>
+        </header>
+        <label class="check"><input type="checkbox" name="enabled"> Enable aggregate audience measurement</label>
+        <label class="check"><input type="checkbox" name="visitorEstimation"> Estimate daily visitors with HLL++</label>
+        <label>
+            Aggregate retention (days)
+            <input type="number" name="rollupRetentionDays" min="1" max="395" required>
+        </label>
+        <label>
+            Privacy notice URL
+            <input type="url" name="privacyNoticeUrl" placeholder="https://example.com/privacy">
+        </label>
+        <button type="submit">Save analytics settings</button>
+        <p class="message" data-settings-message aria-live="polite"></p>
+    </form>
+
+    <section class="governance-card">
+        <header>
+            <span class="eyebrow">Readiness</span>
+            <h2 data-readiness-title></h2>
+            <p data-disclaimer></p>
+        </header>
+        <dl class="snapshot" data-snapshot></dl>
+        <ul class="criteria" data-automatic-criteria></ul>
+    </section>
+
+    <form class="governance-card governance-card--wide" data-snapshot-form>
+        <header>
+            <span class="eyebrow">Operational checklist</span>
+            <h2>Manual evidence</h2>
+            <p>Technical checks run automatically. Complete the site-level checks before publishing a snapshot.</p>
+        </header>
+        <div class="manual-list" data-manual-criteria></div>
+        <div class="actions">
+            <button type="submit" name="publish" value="false">Save private snapshot</button>
+            <button type="submit" name="publish" value="true">Publish self-assessment</button>
+        </div>
+        <p class="message" data-snapshot-message aria-live="polite"></p>
+    </form>
+</div>

@@ -3,7 +3,7 @@ import { Component } from "@bernouy/components/base";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
-const SETTINGS_SECTIONS = ["general", "email", "secrets", "identity", "connectors"] as const;
+const SETTINGS_SECTIONS = ["general", "email", "privacy-analytics", "secrets", "identity", "connectors"] as const;
 const DEFAULT_SECTION: SettingsSection = "general";
 
 type SettingsSection = (typeof SETTINGS_SECTIONS)[number];

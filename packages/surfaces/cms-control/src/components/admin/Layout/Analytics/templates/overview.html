@@ -2,14 +2,14 @@
     <div>
         <span class="eyebrow">Overview</span>
         <h2>Traffic at a glance</h2>
-        <p>Audience and content activity for <strong data-range-label></strong>.</p>
+        <p>Published aggregate activity for <strong data-range-label></strong>.</p>
     </div>
     <span class="privacy-pill">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M12 3 5 6v5c0 4.6 2.9 8.1 7 10 4.1-1.9 7-5.4 7-10V6z" />
             <path d="m9 12 2 2 4-4" />
         </svg>
-        Cookieless · counters only
+        No cookies · counters and HLL++
     </span>
 </header>
 
@@ -26,7 +26,18 @@
     <div class="chart-host" data-role="traffic-chart"></div>
 </section>
 
+<div class="report-grid">
+    <section class="analytics-panel">
+        <header class="panel-header"><h3>Device classes</h3></header>
+        <div class="bar-list" data-role="devices"></div>
+    </section>
+    <section class="analytics-panel">
+        <header class="panel-header"><h3>Browser families</h3></header>
+        <div class="bar-list" data-role="browsers"></div>
+    </section>
+</div>
+
 <aside class="privacy-boundary">
-    <strong>How visitors are counted</strong>
-    <span>Unique visitors are deduplicated per day. The overview reports visitor-days and never stores raw events.</span>
+    <strong>How the audience estimate works</strong>
+    <span>The visitor estimate covers the last completed UTC calendar day. Longer ranges show visitor-days, never a unique person count across days.</span>
 </aside>

@@ -1,8 +1,8 @@
 <header class="report-header">
     <div>
         <span class="eyebrow">Content</span>
-        <h2>What visitors consume</h2>
-        <p>Popular pages and internal journeys for <strong data-range-label></strong>.</p>
+        <h2>Content activity</h2>
+        <p>Published page and transition counters for <strong data-range-label></strong>.</p>
     </div>
 </header>
 
@@ -20,21 +20,27 @@
     <section class="analytics-panel">
         <header class="panel-header">
             <div>
+                <span class="eyebrow">Entry requests</span>
+                <h3>Observed entry pages</h3>
+            </div>
+        </header>
+        <div class="bar-list" data-role="entries"></div>
+    </section>
+</div>
+
+<div class="report-grid report-grid--primary">
+    <section class="analytics-panel analytics-panel--wide">
+        <header class="panel-header">
+            <div>
                 <span class="eyebrow">Navigation</span>
-                <h3>Common journeys</h3>
+                <h3>Observed page transitions</h3>
             </div>
         </header>
         <div class="flow-list" data-role="flows"></div>
     </section>
 </div>
 
-<div class="report-grid">
-    <section class="analytics-panel">
-        <header class="panel-header"><h3>Devices</h3></header>
-        <div class="bar-list" data-role="devices"></div>
-    </section>
-    <section class="analytics-panel">
-        <header class="panel-header"><h3>Browsers</h3></header>
-        <div class="bar-list" data-role="browsers"></div>
-    </section>
-</div>
+<aside class="privacy-boundary">
+    <strong>Aggregate transitions, not individual journeys</strong>
+    <span>Each same-site page-to-page edge is counted independently. No session path or person-level funnel is retained.</span>
+</aside>
