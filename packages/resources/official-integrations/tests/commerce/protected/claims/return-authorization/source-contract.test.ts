@@ -70,9 +70,6 @@ describe("commerce claim return authorization Source contract", () => {
             "buyerCmsUserId",
             "sellerId",
             "sellerCmsUserId",
-            "deliveryQuoteId",
-            "merchandiseSubtotalMinorAmount",
-            "currency",
         ]);
         expect(shape.properties?.returnShipByAt?.nullable).toBe(true);
         expect(shape.properties?.returnDeliveryStatus?.nullable).toBe(true);
@@ -87,7 +84,7 @@ describe("commerce claim return authorization Source contract", () => {
         expect(projectStrictDataShape(await response.json(), shape, "response")).toEqual(expectedAuthorization);
     });
 
-    test("records the existing missing-financial-row mismatch separately", async () => {
+    test("accepts the return authorization projection when no financial row exists", async () => {
         useReturnAuthorizationResponder({ financialTerms: null });
         const raw = await (await requestCommerce(route)).json();
         const shape = responseShape(await authorizationEndpoint());
@@ -98,12 +95,7 @@ describe("commerce claim return authorization Source contract", () => {
             ...withoutFinancialTerms
         } = expectedAuthorization;
 
-        expect(() => projectStrictDataShape(raw, shape, "response")).toThrow("response.deliveryQuoteId is required");
-        expect(
-            projectStrictDataShape(raw, shape, "response", {
-                enforceRequired: false,
-            }),
-        ).toEqual(withoutFinancialTerms);
+        expect(projectStrictDataShape(raw, shape, "response")).toEqual(withoutFinancialTerms);
     });
 });
 

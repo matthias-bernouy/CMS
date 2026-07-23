@@ -8,6 +8,7 @@ type Overlay = {
     fieldSource?: { endpointId: string; params?: Record<string, string> };
     input?: Target[];
     output?: Target[];
+    fields?: Array<{ id: string; nullable?: boolean }>;
 };
 type Definition = { artifacts: Array<{ type: string; overlay?: Overlay }> };
 
@@ -71,6 +72,14 @@ describe("commerce custom-field overlays", () => {
         );
         expect(byEntity.order.output).not.toContainEqual({ endpointId: "createOrder", path: "orders[]" });
         expect(dynamicOverlays.every((overlay) => overlay.fieldSource?.endpointId === "entityCustomFields")).toBeTrue();
-        expect(overlays.map((overlay) => overlay.id)).toContain("{{answers.id}}-product-classification");
+        const classification = overlays.find((overlay) => overlay.id === "{{answers.id}}-product-classification");
+        expect(classification?.fields).toEqual([
+            expect.objectContaining({ id: "brandId", nullable: true }),
+            expect.objectContaining({ id: "brandName", nullable: true }),
+            expect.objectContaining({ id: "brandSlug", nullable: true }),
+            expect.objectContaining({ id: "primaryCategoryId", nullable: true }),
+            expect.objectContaining({ id: "primaryCategoryLabel", nullable: true }),
+            expect.objectContaining({ id: "primaryCategoryFullSlug", nullable: true }),
+        ]);
     });
 });

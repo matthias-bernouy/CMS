@@ -34,16 +34,16 @@ describe("commerce protected C2C policy strict Source contract", () => {
         );
     });
 
-    test("records the current draft publishedAt null mismatch separately from performance", async () => {
+    test("preserves the draft policy projection with a null publishedAt", async () => {
         useC2cPolicyResponder();
         const raw = await (await requestCommerce("/admin/c2c-policies")).json();
         const shape = await sourceShape();
 
-        expect(() =>
+        expect(
             projectStrictDataShape(raw, shape, "response", {
                 enforceRequired: false,
             }),
-        ).toThrow();
+        ).toEqual(expectedC2cSourceResponse(expectedC2cPolicyResponse()));
     });
 });
 

@@ -99,10 +99,7 @@
                     "orderPublicId",
                     "buyerCmsUserId",
                     "sellerId",
-                    "sellerCmsUserId",
-                    "deliveryQuoteId",
-                    "merchandiseSubtotalMinorAmount",
-                    "currency"
+                    "sellerCmsUserId"
                 ]
             }
         }

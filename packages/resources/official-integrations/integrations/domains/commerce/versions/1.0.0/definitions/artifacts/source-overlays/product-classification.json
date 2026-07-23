@@ -36,37 +36,43 @@
                 "id": "brandId",
                 "label": "Brand id",
                 "type": "number",
-                "path": "brandId"
+                "path": "brandId",
+                "nullable": true
             },
             {
                 "id": "brandName",
                 "label": "Brand",
                 "type": "string",
-                "path": "brand.name"
+                "path": "brand.name",
+                "nullable": true
             },
             {
                 "id": "brandSlug",
                 "label": "Brand slug",
                 "type": "string",
-                "path": "brand.slug"
+                "path": "brand.slug",
+                "nullable": true
             },
             {
                 "id": "primaryCategoryId",
                 "label": "Primary category id",
                 "type": "number",
-                "path": "primaryCategoryId"
+                "path": "primaryCategoryId",
+                "nullable": true
             },
             {
                 "id": "primaryCategoryLabel",
                 "label": "Primary category",
                 "type": "string",
-                "path": "primaryCategory.label"
+                "path": "primaryCategory.label",
+                "nullable": true
             },
             {
                 "id": "primaryCategoryFullSlug",
                 "label": "Primary category path",
                 "type": "string",
-                "path": "primaryCategory.fullSlug"
+                "path": "primaryCategory.fullSlug",
+                "nullable": true
             }
         ]
     }

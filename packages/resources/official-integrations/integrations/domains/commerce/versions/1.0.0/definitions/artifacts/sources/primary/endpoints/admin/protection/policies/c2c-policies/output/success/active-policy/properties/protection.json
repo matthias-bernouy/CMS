@@ -44,7 +44,8 @@
             "type": "number"
         },
         "publishedAt": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
         },
         "createdBy": {
             "type": "string"

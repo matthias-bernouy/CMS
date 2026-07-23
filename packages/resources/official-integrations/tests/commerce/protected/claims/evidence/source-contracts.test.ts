@@ -150,17 +150,27 @@ describe("commerce claim evidence strict Source contracts", () => {
         });
     });
 
-    test("records the existing buyer nullable-description mismatch separately", async () => {
+    test("accepts a null description in the buyer evidence projection", async () => {
         const endpoints = await evidenceEndpoints();
 
-        expect(() =>
+        expect(
             projectStrictDataShape(
                 { ...attachedEvidence, description: null },
                 outputShape(endpoints, "uploadMyOrderClaimEvidence", "201"),
                 "response",
                 { enforceRequired: false },
             ),
-        ).toThrow();
+        ).toEqual({
+            id: attachedEvidence.id,
+            claimId: attachedEvidence.claimId,
+            submittedByKind: "buyer",
+            mimeType: attachedEvidence.mimeType,
+            fileSize: attachedEvidence.fileSize,
+            originalFilename: attachedEvidence.originalFilename,
+            sha256: attachedEvidence.sha256,
+            description: null,
+            createdAt: attachedEvidence.createdAt,
+        });
     });
 });
 
