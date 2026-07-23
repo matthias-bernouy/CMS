@@ -18,6 +18,7 @@
         { "path": "packages/features/cms-dashboards" },
         { "path": "packages/features/cms-relations" },
         { "path": "packages/features/cms-integrations" },
+        { "path": "packages/features/cms-notifications" },
         { "path": "packages/features/cms-analytics" },
         { "path": "packages/foundation/components" },
         { "path": "packages/surfaces/cms-repository" },
