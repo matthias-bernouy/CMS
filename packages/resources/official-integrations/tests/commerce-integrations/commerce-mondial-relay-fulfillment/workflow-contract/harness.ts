@@ -3,6 +3,7 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
+import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { sourcesForFulfillment } from "./sources";
 
 export { sourcesForFulfillment } from "./sources";
@@ -10,6 +11,7 @@ export { sourcesForFulfillment } from "./sources";
 export async function installedFunctions() {
     const sources = await sourcesForFulfillment();
     const functions = new InMemoryFunctionRepository();
+    const triggers = new InMemoryTriggerRepository();
     const installations = await installationsForFulfillment();
     const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
         "commerce-mondial-relay-fulfillment",
@@ -22,6 +24,7 @@ export async function installedFunctions() {
             sources,
             functions,
             installations,
+            triggers,
             roles: new InMemoryRolesRepository(),
             blocs: {
                 async importBloc(artifact) {

@@ -1,0 +1,23 @@
+{
+    "type": "trigger",
+    "trigger": {
+        "id": "schedule-reconcile-mondial-relay-shipment-operations",
+        "label": "Reconcile Mondial Relay shipment operations",
+        "critical": true,
+        "event": {
+            "kind": "schedule",
+            "intervalMs": 60000,
+            "initialDelayMs": 45000,
+            "timeoutMs": 120000
+        },
+        "mode": "async",
+        "failureMode": "ignore",
+        "function": {
+            "id": "reconcileMondialRelayShipmentOperations",
+            "body": {
+                "runKey": "$schedule.runKey",
+                "limit": 5
+            }
+        }
+    }
+}

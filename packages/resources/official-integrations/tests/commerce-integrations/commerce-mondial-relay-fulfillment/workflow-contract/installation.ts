@@ -8,6 +8,7 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-functions";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryRolesRepository, USER_ROLE } from "@bernouy/cms-permissions";
+import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { declaredBlocViewSources } from "../../../helpers/blocArtifactSource";
 import { installationsForFulfillment, sourcesForFulfillment } from "./harness";
 
@@ -17,6 +18,7 @@ export function registerInstallationTests(): void {
         const functions = new InMemoryFunctionRepository();
         const roles = new InMemoryRolesRepository();
         const installations = await installationsForFulfillment();
+        const triggers = new InMemoryTriggerRepository();
         const blocs: IntegrationBlocArtifact[] = [];
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
             "commerce-mondial-relay-fulfillment",
@@ -31,6 +33,7 @@ export function registerInstallationTests(): void {
                 functions,
                 roles,
                 installations,
+                triggers,
                 blocs: {
                     async importBloc(artifact) {
                         blocs.push(artifact);
@@ -63,6 +66,15 @@ export function registerInstallationTests(): void {
         ];
         expect(result.artifacts.filter((item) => item.type === "function").map((item) => item.id)).toEqual(ids);
         expect(await functions.getFunction("createShipmentForPaidOrder")).toBeNull();
+        expect(
+            (await triggers.getAllTriggers())
+                .filter((trigger) => trigger.event.kind === "schedule")
+                .map((trigger) => trigger.id),
+        ).toEqual([
+            "schedule-reconcile-mondial-relay-shipment-operations",
+            "schedule-reconcile-mondial-relay-fulfillments",
+            "schedule-publish-mondial-relay-delivery-health",
+        ]);
         for (const id of ids) {
             const fn = await functions.getFunction(id);
             expect(fn).toBeDefined();
