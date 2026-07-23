@@ -16,7 +16,6 @@ import {
     replaceOfferImage,
     uploadOfferImage,
 } from "../routes/offer/media.ts";
-import { estimateOfferPrice } from "../routes/offer/estimate.ts";
 import { createOrder } from "../routes/order/index.ts";
 import { cancelMyOrder, cancelMySale } from "../routes/order/cancellations.ts";
 import { openMyOrderClaim, respondToMySaleClaim } from "../routes/order/claims/index.ts";
@@ -38,9 +37,6 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
     }
     if (route === "/offer-conditions") {
         return request.method === "GET" ? await listOfferConditions() : methodNotAllowed("GET");
-    }
-    if (route === "/offer-estimate") {
-        return request.method === "GET" ? await estimateOfferPrice(request) : methodNotAllowed("GET");
     }
     if (route === "/me/seller") {
         if (request.method === "GET") {

@@ -28,7 +28,6 @@
         { "file": "checkout/validation/assert-order-address-sizes.sql" },
         { "file": "checkout/commands/checkout-cart.sql" },
         { "file": "orders/transition-order.sql" },
-        { "file": "orders/drop-legacy-apply-delivery-quote.sql" },
-        { "file": "checkout/commands/estimate-offer-price.sql" }
+        { "file": "orders/drop-legacy-apply-delivery-quote.sql" }
     ]
 }

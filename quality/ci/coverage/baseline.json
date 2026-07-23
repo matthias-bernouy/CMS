@@ -1360,7 +1360,6 @@
                 "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/connectors/supabase/functions/cms-commerce/routes/configuration/protected-policy/index.ts",
                 "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/connectors/supabase/functions/cms-commerce/routes/configuration/protected-policy/validation.ts",
                 "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/connectors/supabase/functions/cms-commerce/routes/configuration/read-model/policies.ts",
-                "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/connectors/supabase/functions/cms-commerce/routes/offer/estimate.ts",
                 "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/connectors/supabase/functions/cms-commerce/routes/offer/helpers.ts",
                 "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/connectors/supabase/functions/cms-commerce/routes/offer/index.ts",
                 "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/connectors/supabase/functions/cms-commerce/routes/offer/media.ts",
@@ -1684,16 +1683,16 @@
                 "packages/resources/official-integrations/integrations/providers/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/workflows/payments/transfer-reversal/types.ts"
             ],
             "files": {
-                "covered": 269,
-                "total": 359
+                "covered": 268,
+                "total": 358
             },
             "functions": {
-                "covered": 1812,
-                "total": 2064
+                "covered": 1810,
+                "total": 2062
             },
             "lines": {
-                "covered": 18287,
-                "total": 20743
+                "covered": 18272,
+                "total": 20728
             }
         },
         "@bernouy/cms-permissions": {

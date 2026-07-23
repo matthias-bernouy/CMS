@@ -97,7 +97,7 @@ describe("commerce 1.0.0 contract", () => {
             "commerce-sale-detail",
             "commerce-offer-price-form",
         ]);
-        expect(endpointUrns).toHaveLength(156);
+        expect(endpointUrns).toHaveLength(155);
         expect(endpointUrns).not.toEqual(
             expect.arrayContaining(["urn:commerce:variants", "urn:commerce:variant", "urn:commerce:upsertVariant"]),
         );
@@ -109,7 +109,6 @@ describe("commerce 1.0.0 contract", () => {
             "urn:commerce:reorderProductImages": `${supabaseUrl}/functions/v1/cms-commerce/admin/product/images/reorder`,
             "urn:commerce:offerImage": `${supabaseUrl}/functions/v1/cms-commerce/admin/offer/image`,
             "urn:commerce:createMyOffer": `${supabaseUrl}/functions/v1/cms-commerce/me/offers`,
-            "urn:commerce:offerEstimate": `${supabaseUrl}/functions/v1/cms-commerce/offer-estimate`,
             "urn:commerce:publicOfferImage": `${supabaseUrl}/functions/v1/cms-commerce/offer/image`,
             "urn:commerce:submitMyOfferPrice": `${supabaseUrl}/functions/v1/cms-commerce/me/offer/price`,
             "urn:commerce:verifyPendingSellerPayoutEligibility": `${supabaseUrl}/functions/v1/cms-commerce/system/seller/payout-eligibility`,

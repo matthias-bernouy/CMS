@@ -8,7 +8,7 @@
         "endpoints/public/offers/offer-filter-schema.json",
         "endpoints/public/offers/offers/root.json",
         "endpoints/public/offers/public-offer-details/root.json",
-        "endpoints/public/offers/offer-estimation.json",
+        "endpoints/public/offers/offer-conditions.json",
         "endpoints/seller/profile/my-seller.json",
         "endpoints/system/sellers/get-current-seller-identity.json",
         "endpoints/seller/profile/seller-profile-management/root.json",

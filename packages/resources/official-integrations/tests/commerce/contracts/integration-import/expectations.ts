@@ -28,7 +28,6 @@ export const expectedEndpointUrns = [
     "urn:commerce:uploadMyOfferImage",
     "urn:commerce:reorderMyOfferImages",
     "urn:commerce:createMyOffer",
-    "urn:commerce:offerEstimate",
     "urn:commerce:publicOfferImage",
     "urn:commerce:listMyOffers",
     "urn:commerce:updateMySeller",
