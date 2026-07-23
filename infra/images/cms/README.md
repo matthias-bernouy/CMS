@@ -301,13 +301,14 @@ environment file.
 | `CMS_SESSION_SECRET` | Session-cookie signing secret; use at least 32 random bytes. |
 | `CMS_KEK_HEX` | Exactly 32 random bytes encoded as 64 hexadecimal characters. |
 | `CMS_ADMIN_PASSWORD` | Initial local admin password; only used if the credential does not yet exist. |
+| `ANALYTICS_SALT_SECRET` | Stable HMAC secret shared by every Delivery replica for this site. |
 
 ### Optional CMS and authentication settings
 
 | Variable | Default or purpose |
 | --- | --- |
 | `CMS_ADMIN_EMAIL` | Defaults to `admin@${DOMAIN}`. |
-| `ANALYTICS_SALT_SECRET` | Keep stable across restarts to preserve analytics visitor continuity. |
+| `ANALYTICS_TRUST_PROXY` | Defaults to `false`; enable only behind a proxy that overwrites forwarding headers. |
 | `CMS_AUTH_SITE_NAME` | Public authentication site name; defaults to `CMS`. |
 | `CMS_AUTH_EMAIL_COOLDOWN_SECONDS` | Email throttle interval; defaults to 300 seconds. |
 | `CMS_AUTH_EMAIL_VERIFICATION_URL` | Delivery email-verification URL. |
@@ -476,7 +477,8 @@ Other instance secrets have different semantics:
   or encrypted secrets and protected fields become unreadable.
 - Changing `CMS_ADMIN_PASSWORD` does not reset an existing admin credential; it
   is bootstrap-only.
-- Changing `ANALYTICS_SALT_SECRET` breaks visitor-count continuity.
+- Changing `ANALYTICS_SALT_SECRET` resets daily visitor estimation and must be
+  coordinated across every replica.
 
 ## Migrate a legacy unauthenticated shared MongoDB volume
 

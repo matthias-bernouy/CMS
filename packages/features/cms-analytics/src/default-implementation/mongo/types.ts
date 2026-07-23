@@ -20,3 +20,13 @@ export type HllSketchDoc = {
     expiresAt: Date;
     finalizedAt?: Date;
 };
+
+export type ReferrerBucketDoc = {
+    _id: string;
+    bucket: Date;
+    total: number;
+    candidates: Array<{ key: string; count: number }>;
+    saturated: boolean;
+    revision: number;
+    expiresAt: Date;
+};

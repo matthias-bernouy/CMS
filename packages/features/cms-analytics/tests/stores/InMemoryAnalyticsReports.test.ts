@@ -9,6 +9,7 @@ const event = (over: Partial<AnalyticsEvent> = {}): AnalyticsEvent => ({
     ts: new Date("2026-06-02T14:00:00.000Z"),
     status: 200,
     durationMs: 20,
+    contentKind: "html",
     pageId: "page-about",
     entry: true,
     visitorHash: "a".repeat(64),
@@ -54,5 +55,24 @@ describe("InMemoryAnalyticsStore reports", () => {
         });
         expect(hours.map((bucket) => bucket.count)).toEqual([2, 0, 1]);
         expect((await store.timeseries({ from: FROM, to: TO, interval: "day" }))[0]?.count).toBe(3);
+    });
+
+    test("reports bounded external origins and the literal no-referrer category", async () => {
+        const store = new InMemoryAnalyticsStore({ policy: { referrerCapacity: 2 } });
+        await store.record(event());
+        await store.record(event({ referrerDomain: "news.example", visitorHash: "b".repeat(64) }));
+        await store.record(event({ referrerDomain: "news.example", visitorHash: "c".repeat(64) }));
+        expect(await store.topReferrers(FROM, TO, 10)).toEqual([
+            { key: "news.example", count: 2 },
+            { key: "__none__", count: 1 },
+        ]);
+    });
+
+    test("treats a policy-rejected external origin as no external referrer", async () => {
+        const store = new InMemoryAnalyticsStore({
+            policy: { ignoredReferrerDomains: ["spam.example"] },
+        });
+        await store.record(event({ referrerDomain: "sub.spam.example" }));
+        expect(await store.topReferrers(FROM, TO, 10)).toEqual([{ key: "__none__", count: 1 }]);
     });
 });

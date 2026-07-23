@@ -24,6 +24,7 @@ const runtimeEnv = () =>
         CMS_ADMIN_PASSWORD: "Correct-Horse-Battery-Staple-42!",
         CMS_FILES_DIR: "/data/files",
         MONGO_URL: "mongodb://mongo:27017/cms",
+        ANALYTICS_SALT_SECRET: "shared-analytics-secret",
     });
 
 function authStores(): CoreStores {

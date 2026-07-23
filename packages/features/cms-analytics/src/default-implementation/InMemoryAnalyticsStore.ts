@@ -11,8 +11,8 @@ import type {
 import type { AnalyticsEvent } from "../interfaces/AnalyticsEvent";
 import type { AnalyticsCollectionPolicy } from "../interfaces/AnalyticsPolicy";
 import { resolveAnalyticsPolicy } from "../core/collection/analyticsPolicy";
-import type { RollupUpsert } from "../core/eventToWrites";
-import { eventToWrites, isCountedEvent } from "../core/eventToWrites";
+import type { RollupUpsert } from "../core/rollups/eventToWrites";
+import { eventToWrites, isCountedEvent } from "../core/rollups/eventToWrites";
 import {
     readMemoryFlows,
     readMemoryHealth,
@@ -21,6 +21,9 @@ import {
     readMemoryTop,
 } from "./memory/readAnalytics";
 import { MemoryHllStore } from "./memory/MemoryHllStore";
+import { MemoryReferrerStore } from "./memory/MemoryReferrerStore";
+import { isIgnoredReferrer } from "../core/collection/analyticsPolicy";
+import { mergeKeyCounts } from "../core/referrers/FrequentItems";
 
 /**
  * In-memory AnalyticsStore — the dep-free reference implementation, for dev and tests.
@@ -30,20 +33,26 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
     private _rollups = new Map<string, RollupUpsert>(); // keyed by rollup id
     private readonly policy: AnalyticsCollectionPolicy;
     private readonly hll: MemoryHllStore;
+    private readonly referrers: MemoryReferrerStore;
 
     constructor(config: AnalyticsStoreConfig = {}) {
         this.policy = resolveAnalyticsPolicy(config.policy);
         this.hll = new MemoryHllStore(config.hllStripes ?? 4);
+        this.referrers = new MemoryReferrerStore(this.policy.referrerCapacity);
     }
 
     async init(): Promise<void> {}
 
     async record(event: AnalyticsEvent): Promise<void> {
-        for (const w of eventToWrites(event, this.policy)) {
+        const observation = this.applyReferrerPolicy(event);
+        for (const w of eventToWrites(observation, this.policy)) {
             this._merge(w);
         }
-        if (isCountedEvent(event, this.policy) && this.policy.visitorEstimation && event.visitorHash) {
-            this.hll.record(event.ts, event.visitorHash);
+        if (isCountedEvent(observation, this.policy) && this.policy.visitorEstimation && observation.visitorHash) {
+            this.hll.record(observation.ts, observation.visitorHash);
+        }
+        if (isCountedEvent(observation, this.policy) && observation.entry && observation.referrerDomain) {
+            this.referrers.record(observation.ts, observation.referrerDomain);
         }
     }
 
@@ -93,7 +102,8 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
         return Promise.resolve(readMemoryTop([...this._rollups.values()], "entry", "page", from, to, limit));
     }
     topReferrers(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
-        return Promise.resolve(readMemoryTop([...this._rollups.values()], "pv", "referrer", from, to, limit));
+        const noExternal = readMemoryTop([...this._rollups.values()], "pv", "referrer", from, to, 0);
+        return Promise.resolve(mergeKeyCounts([noExternal, this.referrers.read(from, to)], limit));
     }
 
     async flows(from: Date, to: Date, limit: number): Promise<FlowCount[]> {
@@ -102,5 +112,11 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
 
     async health(from: Date, to: Date): Promise<AnalyticsHealthSummary> {
         return readMemoryHealth([...this._rollups.values()], from, to);
+    }
+
+    private applyReferrerPolicy(event: AnalyticsEvent): AnalyticsEvent {
+        return event.referrerDomain && isIgnoredReferrer(event.referrerDomain, this.policy)
+            ? { ...event, referrerDomain: undefined }
+            : event;
     }
 }

@@ -11,7 +11,7 @@ import type { FeatureStores } from "./stores/features";
 
 type MountOptions = {
     env: RuntimeEnv;
-    analyticsSalt: string;
+    analyticsVisitorSecret: string;
     core: CoreStores;
     features: FeatureStores;
     integrations: ProductionIntegrationServices;
@@ -97,7 +97,9 @@ export async function mountProductionSurfaces(
         triggers: features.triggers,
         identities: features.identities,
         integrationInstallations: features.integrationInstallations,
-        analyticsSalt: options.analyticsSalt,
+        analyticsVisitorSecret: options.analyticsVisitorSecret,
+        analyticsSiteScope: env.DELIVERY_PUBLIC_URL,
+        analyticsTrustProxy: env.ANALYTICS_TRUST_PROXY,
         sourceResolveSecret: features.resolveSecret,
         roles: core.roles,
         filesMetadata: core.filesMetadata,

@@ -10,6 +10,7 @@ const validEnv = () => ({
     CMS_ADMIN_PASSWORD: "password",
     CMS_FILES_DIR: "/data/files",
     MONGO_URL: "mongodb://mongo:27017/cms",
+    ANALYTICS_SALT_SECRET: "shared-analytics-secret",
 });
 
 describe("runtime env validation", () => {
@@ -20,6 +21,7 @@ describe("runtime env validation", () => {
         expect(env.DELIVERY_PORT).toBe(3001);
         expect(env.CMS_AUTH_EMAIL_VERIFICATION_URL).toBe("https://www.example.com/auth/confirm-email");
         expect(env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL).toBe("https://admin.example.com/auth/reset-password");
+        expect(env.ANALYTICS_TRUST_PROXY).toBe(false);
     });
 
     test.failing("parses listener hosts with wildcard production defaults", () => {
@@ -58,6 +60,9 @@ describe("runtime env validation", () => {
 
     test("rejects missing required values and invalid email cooldowns", () => {
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_FILES_DIR: " " })).toThrow(/env CMS_FILES_DIR missing/);
+        expect(() => readRuntimeEnv({ ...validEnv(), ANALYTICS_SALT_SECRET: " " })).toThrow(
+            /env ANALYTICS_SALT_SECRET missing/,
+        );
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "-1" })).toThrow(
             /must be a non-negative integer/,
         );

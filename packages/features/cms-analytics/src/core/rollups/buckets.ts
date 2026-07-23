@@ -61,4 +61,4 @@ export function parseFlowKey(key: string): { from: string; to: string } | null {
         return separator > 0 ? { from: key.slice(0, separator), to: key.slice(separator + 1) } : null;
     }
 }
-import type { RangeQuery, TimeBucket } from "../interfaces/AnalyticsStore";
+import type { RangeQuery, TimeBucket } from "../../interfaces/AnalyticsStore";

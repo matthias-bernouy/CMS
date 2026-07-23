@@ -9,7 +9,13 @@
 export type AnalyticsEventType = "delivery_request";
 export type AnalyticsBrowser = "chrome" | "edge" | "firefox" | "opera" | "safari" | "other";
 export type AnalyticsDevice = "mobile" | "tablet" | "desktop" | "other";
-export type AnalyticsExclusionReason = "automation" | "invalid_user_agent" | "prefetch" | "prerender" | "system_route";
+export type AnalyticsExclusionReason =
+    | "automation"
+    | "invalid_user_agent"
+    | "prefetch"
+    | "prerender"
+    | "system_route"
+    | "unsupported_method";
 
 /**
  * One in-memory delivery observation. The visitor hash is consumed by HLL++
@@ -20,6 +26,7 @@ export type AnalyticsEvent = {
     ts: Date;
     status: number;
     durationMs: number;
+    contentKind: "html" | "other";
     pageId?: string;
     previousPageId?: string;
     entry: boolean;

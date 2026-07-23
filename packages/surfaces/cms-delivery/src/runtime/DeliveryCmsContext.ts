@@ -86,8 +86,16 @@ export class DeliveryCmsContext {
         return this.config.analytics;
     }
 
-    get analyticsSalt(): string | undefined {
-        return this.config.analyticsSalt;
+    get analyticsVisitorSecret(): string | undefined {
+        return this.config.analyticsVisitorSecret;
+    }
+
+    get analyticsSiteScope(): string | undefined {
+        return this.config.analyticsSiteScope;
+    }
+
+    get analyticsTrustProxy(): boolean {
+        return this.config.analyticsTrustProxy ?? false;
     }
 
     get filesMetadata(): CmsFilesMetadataRepository {

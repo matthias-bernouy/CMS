@@ -15,7 +15,8 @@ export type RuntimeEnv = {
     CMS_AUTH_PASSWORD_RESET_URL: string;
     CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL: string;
     CMS_CONTROL_AUTH_PASSWORD_RESET_URL: string;
-    ANALYTICS_SALT_SECRET?: string;
+    ANALYTICS_SALT_SECRET: string;
+    ANALYTICS_TRUST_PROXY: boolean;
 };
 
 type EnvSource = Record<string, string | undefined>;
@@ -67,7 +68,8 @@ export function readRuntimeEnv(source: EnvSource): RuntimeEnv {
             "CMS_CONTROL_AUTH_PASSWORD_RESET_URL",
             `${CONTROL_PUBLIC_URL}/auth/reset-password`,
         ),
-        ...(source.ANALYTICS_SALT_SECRET ? { ANALYTICS_SALT_SECRET: source.ANALYTICS_SALT_SECRET } : {}),
+        ANALYTICS_SALT_SECRET: required(source, "ANALYTICS_SALT_SECRET"),
+        ANALYTICS_TRUST_PROXY: parseBoolean(source.ANALYTICS_TRUST_PROXY, false),
     };
 }
 
@@ -121,4 +123,17 @@ function parseNonNegativeInteger(raw: string | undefined, name: string, fallback
         throw new Error(`${name} must be a non-negative integer`);
     }
     return Number(raw);
+}
+
+function parseBoolean(raw: string | undefined, fallback: boolean): boolean {
+    if (raw === undefined) {
+        return fallback;
+    }
+    if (raw === "true") {
+        return true;
+    }
+    if (raw === "false") {
+        return false;
+    }
+    throw new Error("boolean environment values must be true or false");
 }

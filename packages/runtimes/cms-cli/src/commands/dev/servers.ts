@@ -25,7 +25,7 @@ type ServerOptions = {
 export async function startLocalServers(options: ServerOptions) {
     const { flags, services } = options;
     const analytics = new ValidatingAnalyticsStore(new InMemoryAnalyticsStore());
-    const analyticsSalt = crypto.randomUUID();
+    const analyticsVisitorSecret = crypto.randomUUID();
     const runner = new BunRunner();
     runner.addEndpoint("GET", "/dev/reload", sseHandler(options.reload));
     runner.group("/.cms/repository", (repositoryRunner) => {
@@ -97,7 +97,8 @@ export async function startLocalServers(options: ServerOptions) {
         identities: services.identities,
         integrationInstallations: services.integrationInstallations,
         analytics,
-        analyticsSalt,
+        analyticsVisitorSecret,
+        analyticsSiteScope: `http://${flags.publicHost}:${flags.deliveryPort}`,
         sourceResolveSecret: services.resolveSecret,
         roles: services.roles,
         auth: services.publicAuth,

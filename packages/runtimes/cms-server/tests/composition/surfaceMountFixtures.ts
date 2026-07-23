@@ -11,8 +11,9 @@ export function surfaceMountFixtures() {
             CMS_AUTH_EMAIL_VERIFICATION_URL: "https://www.example.test/auth/confirm-email",
             CMS_AUTH_PASSWORD_RESET_URL: "https://www.example.test/auth/reset-password",
             CMS_FILES_DIR: "/data/files",
+            ANALYTICS_TRUST_PROXY: false,
         },
-        analyticsSalt: "analytics-salt",
+        analyticsVisitorSecret: "analytics-secret",
         core: {
             repo: token("repo"),
             cache: token("cache"),

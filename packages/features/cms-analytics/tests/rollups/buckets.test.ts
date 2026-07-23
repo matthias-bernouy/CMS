@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { truncateToHour, truncateToDay, hourKey, dayKey, rollupId } from "cms-analytics/core/buckets";
+import { truncateToHour, truncateToDay, hourKey, dayKey, rollupId } from "cms-analytics/core/rollups/buckets";
 
 const T = new Date("2026-06-02T14:37:45.123Z");
 

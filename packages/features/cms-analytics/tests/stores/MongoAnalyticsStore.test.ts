@@ -7,6 +7,7 @@ const event: AnalyticsEvent = {
     ts: new Date("2026-06-02T14:00:00Z"),
     status: 200,
     durationMs: 12,
+    contentKind: "html",
     pageId: "page-home",
     entry: true,
     visitorHash: "a".repeat(64),
@@ -25,7 +26,9 @@ describe("MongoAnalyticsStore", () => {
             },
         };
         await new MongoAnalyticsStore(db as never).init();
-        expect(new Set(names)).toEqual(new Set(["analytics_rollups", "analytics_hll_sketches"]));
+        expect(new Set(names)).toEqual(
+            new Set(["analytics_rollups", "analytics_hll_sketches", "analytics_referrer_buckets"]),
+        );
         expect(createIndex).toHaveBeenCalledWith({ expiresAt: 1 }, { expireAfterSeconds: 0 });
     });
 

@@ -1,7 +1,7 @@
-import { dayKey, rollupId, truncateToDay } from "../../core/buckets";
+import { dayKey, rollupId, truncateToDay } from "../../core/rollups/buckets";
 import { HyperLogLogPlus } from "../../core/hll/HyperLogLogPlus";
 import { ANALYTICS_VERSIONS, STRICT_ANALYTICS_LIMITS } from "../../interfaces/AnalyticsPrivacy";
-import type { RollupUpsert } from "../../core/eventToWrites";
+import type { RollupUpsert } from "../../core/rollups/eventToWrites";
 
 export class MemoryHllStore {
     private readonly sketches = new Map<string, HyperLogLogPlus>();

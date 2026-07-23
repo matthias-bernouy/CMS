@@ -11,6 +11,7 @@ const event = (over: Partial<AnalyticsEvent> = {}): AnalyticsEvent => ({
     ts: new Date("2026-06-10T12:00:00Z"),
     status: 200,
     durationMs: 12,
+    contentKind: "html",
     pageId: "page-products",
     entry: true,
     visitorHash: "a".repeat(64),

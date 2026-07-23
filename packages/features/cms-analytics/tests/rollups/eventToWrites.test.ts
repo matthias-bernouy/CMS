@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { eventToWrites, isCountedEvent } from "cms-analytics/core/eventToWrites";
+import { eventToWrites, isCountedEvent } from "cms-analytics/core/rollups/eventToWrites";
 import type { AnalyticsEvent } from "cms-analytics/interfaces/AnalyticsEvent";
 
 const event = (over: Partial<AnalyticsEvent> = {}): AnalyticsEvent => ({
@@ -7,6 +7,7 @@ const event = (over: Partial<AnalyticsEvent> = {}): AnalyticsEvent => ({
     ts: new Date("2026-06-02T14:37:45.123Z"),
     status: 200,
     durationMs: 12,
+    contentKind: "html",
     pageId: "page-about",
     entry: true,
     visitorHash: "a".repeat(64),
@@ -29,6 +30,7 @@ describe("eventToWrites", () => {
             "pv:device:desktop",
             "pv:browser:chrome",
             "entry:page:page-about",
+            "pv:referrer:__none__",
         ]);
         expect(writes.every((write) => write.expiresAt.toISOString() === "2027-07-02T14:00:00.000Z")).toBe(true);
     });

@@ -1,4 +1,4 @@
-import type { RollupUpsert } from "../../core/eventToWrites";
+import type { RollupUpsert } from "../../core/rollups/eventToWrites";
 import type {
     AnalyticsHealthSummary,
     AnalyticsSummary,
@@ -7,7 +7,13 @@ import type {
     RangeQuery,
     TimeBucket,
 } from "../../interfaces/AnalyticsStore";
-import { dayBucketCount, fillTimeBuckets, parseFlowKey, truncateToDay, truncateToHour } from "../../core/buckets";
+import {
+    dayBucketCount,
+    fillTimeBuckets,
+    parseFlowKey,
+    truncateToDay,
+    truncateToHour,
+} from "../../core/rollups/buckets";
 
 type RollupRows = readonly RollupUpsert[];
 

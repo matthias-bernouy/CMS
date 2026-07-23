@@ -1,6 +1,6 @@
 import type { Collection } from "mongodb";
 import type { AnalyticsHealthSummary, AnalyticsSummary } from "../../interfaces/AnalyticsStore";
-import { dayBucketCount } from "../../core/buckets";
+import { dayBucketCount } from "../../core/rollups/buckets";
 import type { RollupDoc } from "./types";
 
 export async function readSummary(rollups: Collection<RollupDoc>, from: Date, to: Date): Promise<AnalyticsSummary> {

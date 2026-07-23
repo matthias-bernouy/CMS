@@ -108,7 +108,9 @@ describe("production surface mounting", () => {
             runner: runners[1],
             repository: options.core.repo,
             sources: options.features.deliverySources,
-            analyticsSalt: options.analyticsSalt,
+            analyticsVisitorSecret: options.analyticsVisitorSecret,
+            analyticsSiteScope: options.env.DELIVERY_PUBLIC_URL,
+            analyticsTrustProxy: false,
             auth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_AUTH_EMAIL_VERIFICATION_URL,

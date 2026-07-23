@@ -3,9 +3,10 @@
  * separate from content views; bots only increment an exclusion-reason counter.
  */
 
-import type { AnalyticsEvent } from "../interfaces/AnalyticsEvent";
-import { DEFAULT_ANALYTICS_COLLECTION_POLICY, type AnalyticsCollectionPolicy } from "../interfaces/AnalyticsPolicy";
-import { isContentView } from "./collection/analyticsPolicy";
+import type { AnalyticsEvent } from "../../interfaces/AnalyticsEvent";
+import { DEFAULT_ANALYTICS_COLLECTION_POLICY, type AnalyticsCollectionPolicy } from "../../interfaces/AnalyticsPolicy";
+import { isContentView } from "../collection/analyticsPolicy";
+import { NO_EXTERNAL_REFERRER } from "../referrers/FrequentItems";
 import { truncateToHour, hourKey, rollupId } from "./buckets";
 
 /** One counter upsert: $inc count (+ msSum), $max msMax, on a deterministic _id. */
@@ -74,6 +75,9 @@ export function eventToWrites(
     );
     if (event.entry) {
         writes.push(write("entry", "page", event.pageId!));
+        if (!event.referrerDomain) {
+            writes.push(write("pv", "referrer", NO_EXTERNAL_REFERRER));
+        }
     }
     if (event.previousPageId && event.previousPageId !== event.pageId) {
         const key = JSON.stringify([event.previousPageId, event.pageId]);

@@ -34,7 +34,8 @@ describe("production runtime stores", () => {
                 "relations",
                 "dashboard_relation_projections",
                 "analytics_rollups",
-                "analytics_seen",
+                "analytics_hll_sketches",
+                "analytics_referrer_buckets",
                 "integrationInstallations",
             ]),
         );
@@ -52,6 +53,7 @@ describe("production runtime stores", () => {
             CMS_ADMIN_PASSWORD: "Correct-Horse-Battery-Staple-42!",
             CMS_FILES_DIR: "/data/files",
             MONGO_URL: "not-a-mongodb-url",
+            ANALYTICS_SALT_SECRET: "shared-analytics-secret",
         });
 
         await expect(createCoreStores(env)).rejects.toThrow(/Invalid scheme/);

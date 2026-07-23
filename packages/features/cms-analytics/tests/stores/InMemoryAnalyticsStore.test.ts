@@ -12,6 +12,7 @@ async function event(over: Partial<AnalyticsEvent> = {}): Promise<AnalyticsEvent
         ts: new Date("2026-06-02T14:00:00.000Z"),
         status: 200,
         durationMs: 10,
+        contentKind: "html",
         pageId: "page-home",
         entry: true,
         visitorHash: await sha256HexAsync(crypto.randomUUID()),

@@ -39,10 +39,14 @@ export type DeliveryCmsConfig = {
     roles?: RolesRepository;
     /** Successful integration snapshots used to extend the page CSP. */
     integrationInstallations?: IntegrationInstallationRepository;
-    /** Optional page-view writer. */
+    /** Optional strict aggregate analytics writer. */
     analytics?: AnalyticsStore;
-    /** Secret used to salt the cookieless, daily visitor identifier. */
-    analyticsSalt?: string;
+    /** Stable shared HMAC secret. Required by the production runtime. */
+    analyticsVisitorSecret?: string;
+    /** Stable tenant id or normalized public origin and base path. */
+    analyticsSiteScope?: string;
+    /** Trust X-Forwarded-For only behind an overwriting proxy. Defaults to false. */
+    analyticsTrustProxy?: boolean;
     /** File metadata and bytes backing the public file route. */
     filesMetadata?: CmsFilesMetadataRepository;
     filesBlob?: CmsFilesBlobStore;

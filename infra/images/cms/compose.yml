@@ -44,7 +44,8 @@ services:
             CMS_KEK_HEX:          ${CMS_KEK_HEX:?CMS_KEK_HEX must be set (32 bytes hex = 64 chars; openssl rand -hex 32)}
             CMS_ADMIN_EMAIL:      ${CMS_ADMIN_EMAIL:-admin@${DOMAIN}}
             CMS_ADMIN_PASSWORD:   ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
-            ANALYTICS_SALT_SECRET: ${ANALYTICS_SALT_SECRET:-}
+            ANALYTICS_SALT_SECRET: ${ANALYTICS_SALT_SECRET:?ANALYTICS_SALT_SECRET must be set and shared by all replicas}
+            ANALYTICS_TRUST_PROXY: ${ANALYTICS_TRUST_PROXY:-false}
 
             # Required for both the server-wide MongoDB service and an external
             # cluster. The database path is dedicated to this instance; the

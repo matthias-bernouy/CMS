@@ -1,5 +1,6 @@
 import type { AnalyticsStore, RangeQuery } from "../interfaces/AnalyticsStore";
 import type { AnalyticsEvent } from "../interfaces/AnalyticsEvent";
+import { isNormalizedRegistrableDomain } from "./referrers/normalizeReferrer";
 
 /** Thrown when an event breaks the analytics collection rules. Carries `.status`
  *  so any HTTP surface maps it to a 400 without importing surface errors. */
@@ -30,6 +31,9 @@ export function validateAnalyticsEvent(event: AnalyticsEvent): void {
     if (!Number.isFinite(event.durationMs) || event.durationMs < 0) {
         throw new AnalyticsValidationError("durationMs", "expected a non-negative duration");
     }
+    if (event.contentKind !== "html" && event.contentKind !== "other") {
+        throw new AnalyticsValidationError("contentKind", "expected html|other");
+    }
     if (event.pageId !== undefined && !isSafeIdentifier(event.pageId)) {
         throw new AnalyticsValidationError("pageId", "must be normalized, non-blank, and at most 256 characters");
     }
@@ -39,7 +43,7 @@ export function validateAnalyticsEvent(event: AnalyticsEvent): void {
             "must be normalized, non-blank, and at most 256 characters",
         );
     }
-    if (event.referrerDomain !== undefined && !isNormalizedHostname(event.referrerDomain)) {
+    if (event.referrerDomain !== undefined && !isNormalizedRegistrableDomain(event.referrerDomain)) {
         throw new AnalyticsValidationError("referrerDomain", "expected a normalized registrable domain");
     }
     if (event.visitorHash !== undefined && !/^[0-9a-f]{64}$/.test(event.visitorHash)) {
@@ -53,7 +57,9 @@ export function validateAnalyticsEvent(event: AnalyticsEvent): void {
     }
     if (
         event.exclusionReason !== undefined &&
-        !["automation", "invalid_user_agent", "prefetch", "prerender", "system_route"].includes(event.exclusionReason)
+        !["automation", "invalid_user_agent", "prefetch", "prerender", "system_route", "unsupported_method"].includes(
+            event.exclusionReason,
+        )
     ) {
         throw new AnalyticsValidationError("exclusionReason", "unknown exclusion reason");
     }
@@ -61,17 +67,6 @@ export function validateAnalyticsEvent(event: AnalyticsEvent): void {
 
 function isSafeIdentifier(value: string): boolean {
     return Boolean(value.trim()) && value === value.trim() && value.length <= 256;
-}
-
-function isNormalizedHostname(host: string): boolean {
-    if (!host || host.length > 253 || host !== host.toLowerCase() || host.includes("/") || host.includes(":")) {
-        return false;
-    }
-    try {
-        return new URL(`http://${host}`).hostname === host;
-    } catch {
-        return false;
-    }
 }
 
 /**

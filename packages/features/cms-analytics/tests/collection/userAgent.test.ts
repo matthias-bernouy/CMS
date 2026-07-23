@@ -22,9 +22,12 @@ describe("classifyUserAgent", () => {
             "curl/8.8",
             "Wget/1.21",
             "python-requests/2.32",
+            "aiohttp/3.11",
             "Go-http-client/2.0",
             "Scrapy/2.11",
             "HeadlessChrome/120",
+            "Playwright/1.50",
+            "Slackbot-LinkExpanding 1.0",
         ]) {
             expect(classifyUserAgent(userAgent).exclusionReason).toBe("automation");
         }
@@ -36,5 +39,6 @@ describe("classifyUserAgent", () => {
             browser: "other",
             exclusionReason: "invalid_user_agent",
         });
+        expect(classifyUserAgent("custom-client")).toMatchObject({ exclusionReason: "invalid_user_agent" });
     });
 });

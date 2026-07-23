@@ -20,6 +20,16 @@ import { preflightPageSourceAccess } from "cms-delivery/core/pages/preflightPage
  * (often a CDN's) gets the un-enhanced page.
  */
 export async function handlePageRequest(req: Request, delivery: DeliveryCms): Promise<Response> {
+    return (await handlePageRequestWithResult(req, delivery)).response;
+}
+
+export type PageRequestResult = {
+    response: Response;
+    pageId?: string;
+};
+
+/** Internal variant used by analytics so stable page identity is not reconstructed from a path. */
+export async function handlePageRequestWithResult(req: Request, delivery: DeliveryCms): Promise<PageRequestResult> {
     const pathname = new URL(req.url).pathname;
 
     // Short-circuit unknown asset URLs under Delivery's own prefix: they
@@ -27,20 +37,20 @@ export async function handlePageRequest(req: Request, delivery: DeliveryCms): Pr
     // DB lookup would always miss.
     const prefix = delivery.cmsPathPrefix;
     if (pathname === prefix || pathname.startsWith(prefix + "/")) {
-        return new Response("Not Found", { status: 404 });
+        return { response: new Response("Not Found", { status: 404 }) };
     }
 
     const page = await delivery.repository.getPublishedPage(pathname);
     if (!page) {
-        return renderRef(req, delivery, "notFound", 404, "Page not found");
+        return { response: await renderRef(req, delivery, "notFound", 404, "Page not found") };
     }
 
     const sourceAccess = await preflightPageSourceAccess(req, page, delivery);
     if (sourceAccess) {
-        return sourceAccess;
+        return { response: sourceAccess, pageId: page.id };
     }
 
-    return renderWithFallbacks(req, page, pathname, delivery);
+    return { response: await renderWithFallbacks(req, page, pathname, delivery), pageId: page.id };
 }
 
 async function renderWithFallbacks(

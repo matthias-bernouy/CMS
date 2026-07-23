@@ -1,6 +1,6 @@
 import type { Collection, Document } from "mongodb";
 import type { FlowCount, KeyCount, RangeQuery, TimeBucket } from "../../interfaces/AnalyticsStore";
-import { fillTimeBuckets, parseFlowKey } from "../../core/buckets";
+import { fillTimeBuckets, parseFlowKey } from "../../core/rollups/buckets";
 import type { RollupDoc } from "./types";
 
 export async function readTimeseries(rollups: Collection<RollupDoc>, query: RangeQuery): Promise<TimeBucket[]> {

@@ -37,7 +37,13 @@ export function isContentView(
     policy: AnalyticsCollectionPolicy = DEFAULT_ANALYTICS_COLLECTION_POLICY,
 ): boolean {
     const successfulHtmlStatus = (event.status >= 200 && event.status < 300) || event.status === 304;
-    return policy.enabled && !event.exclusionReason && successfulHtmlStatus && Boolean(event.pageId);
+    return (
+        policy.enabled &&
+        !event.exclusionReason &&
+        event.contentKind === "html" &&
+        successfulHtmlStatus &&
+        Boolean(event.pageId)
+    );
 }
 
 export function isIgnoredReferrer(domain: string, policy: AnalyticsCollectionPolicy): boolean {

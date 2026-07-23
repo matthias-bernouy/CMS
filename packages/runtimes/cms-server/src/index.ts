@@ -6,7 +6,6 @@ import { createFeatureStores } from "./runtime/stores/features";
 import { readRuntimeEnv } from "./runtimeEnv";
 
 const env = readRuntimeEnv(process.env);
-const analyticsSalt = env.ANALYTICS_SALT_SECRET || crypto.randomUUID();
 
 const core = await createCoreStores(env);
 const features = await createFeatureStores(core.db, core.secrets);
@@ -20,7 +19,7 @@ const authentication = await createProductionAuth(env, core);
 
 await mountProductionSurfaces({
     env,
-    analyticsSalt,
+    analyticsVisitorSecret: env.ANALYTICS_SALT_SECRET,
     core,
     features,
     integrations,

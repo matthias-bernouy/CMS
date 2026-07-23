@@ -1,5 +1,5 @@
 import type { RangeQuery } from "../interfaces/AnalyticsStore";
-import { truncateToDay, truncateToHour } from "./buckets";
+import { truncateToDay, truncateToHour } from "./rollups/buckets";
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;

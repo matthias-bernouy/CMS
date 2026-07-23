@@ -1,8 +1,9 @@
 import { getRequestIP } from "@bernouy/http-runner";
 import { classifyUserAgent } from "./userAgent";
 import { deriveVisitorHash } from "../visitor";
-import { dayKey } from "../buckets";
+import { dayKey } from "../rollups/buckets";
 import type { AnalyticsEvent, AnalyticsExclusionReason } from "../../interfaces/AnalyticsEvent";
+import { normalizeExternalReferrer } from "../referrers/normalizeReferrer";
 
 export type BuildPageViewEventOptions = {
     /** Stable page identity supplied by a surface after content resolution. */
@@ -11,6 +12,8 @@ export type BuildPageViewEventOptions = {
     previousPageId?: string;
     /** Tenant/site namespace included in the HMAC input. */
     siteScope?: string;
+    /** Route result classification; strict content views require `html`. */
+    contentKind?: AnalyticsEvent["contentKind"];
     /** Trust the first X-Forwarded-For hop. Keep false outside a trusted proxy boundary. */
     trustProxy?: boolean;
     /** Test or host clock injection. */
@@ -30,9 +33,10 @@ export async function buildPageViewEvent(
     const ua = req.headers.get("user-agent") ?? "";
     const classification = classifyUserAgent(ua);
     const ts = options.now ?? new Date();
+    const contentKind = options.contentKind ?? "other";
     const exclusionReason = requestExclusion(req, url) ?? classification.exclusionReason;
     const successfulStatus = (status >= 200 && status < 300) || status === 304;
-    const counted = !exclusionReason && successfulStatus && Boolean(options.pageId);
+    const counted = !exclusionReason && contentKind === "html" && successfulStatus && Boolean(options.pageId);
     const visitorHash = counted
         ? await deriveVisitorHash({
               secret,
@@ -43,12 +47,13 @@ export async function buildPageViewEvent(
               browser: classification.browser,
           })
         : undefined;
-    const referrerDomain = externalReferrerDomain(req, url);
+    const referrerDomain = normalizeExternalReferrer(req.headers.get("referer"), url, req.headers.get("host"));
     return {
         type: "delivery_request",
         ts,
         status,
         durationMs,
+        contentKind,
         entry: !options.previousPageId,
         device: classification.device,
         browser: classification.browser,
@@ -70,23 +75,10 @@ function clientIp(req: Request, trustProxy: boolean): string {
     return getRequestIP(req) ?? "";
 }
 
-/** Only the external hostname survives this helper; paths and query values are discarded. */
-function externalReferrerDomain(req: Request, url: URL): string | undefined {
-    const ref = req.headers.get("referer");
-    if (!ref) {
-        return;
-    }
-    try {
-        const r = new URL(ref);
-        const requestHostname = hostname(req.headers.get("host")) ?? url.hostname.toLowerCase();
-        const referrerHostname = r.hostname.toLowerCase();
-        return referrerHostname === requestHostname ? undefined : referrerHostname;
-    } catch {
-        return;
-    }
-}
-
 function requestExclusion(req: Request, url: URL): AnalyticsExclusionReason | undefined {
+    if (req.method !== "GET") {
+        return "unsupported_method";
+    }
     if (url.pathname.startsWith("/.cms/")) {
         return "system_route";
     }
@@ -98,15 +90,4 @@ function requestExclusion(req: Request, url: URL): AnalyticsExclusionReason | un
         return "prefetch";
     }
     return;
-}
-
-function hostname(host: string | null): string | null {
-    if (!host) {
-        return null;
-    }
-    try {
-        return new URL(`http://${host}`).hostname.toLowerCase();
-    } catch {
-        return null;
-    }
 }

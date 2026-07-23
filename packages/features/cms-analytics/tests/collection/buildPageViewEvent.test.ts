@@ -5,7 +5,12 @@ const CHROME =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
 const req = (headers: Record<string, string> = {}, path = "/about?utm_campaign=discarded") =>
     new Request(`http://cms:3000${path}`, { headers });
-const options = { pageId: "page-about", siteScope: "site-a", now: new Date("2026-06-02T12:00:00Z") };
+const options = {
+    pageId: "page-about",
+    siteScope: "site-a",
+    contentKind: "html" as const,
+    now: new Date("2026-06-02T12:00:00Z"),
+};
 
 describe("buildPageViewEvent", () => {
     test("emits only stable content identity and an ephemeral daily HMAC", async () => {
@@ -34,6 +39,7 @@ describe("buildPageViewEvent", () => {
     test("does not create a visitor hash for unresolved, failed, or automated requests", async () => {
         const unresolved = await buildPageViewEvent(req({ "user-agent": CHROME }), 200, 1, "secret", {
             siteScope: "site-a",
+            contentKind: "html",
         });
         const failed = await buildPageViewEvent(req({ "user-agent": CHROME }), 404, 1, "secret", options);
         const automated = await buildPageViewEvent(req({ "user-agent": "curl/8.8" }), 200, 1, "secret", options);
