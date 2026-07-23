@@ -67,7 +67,7 @@ export async function getProtectedPayment(request: Request): Promise<Response> {
         one("order_settlements", { order_id: id }),
         rows("marketplace_claims", id),
         rows("refund_requests", id),
-        rows("stripe_dispute_projections", id),
+        rows("stripe_dispute_projections", id, "opened_at.desc,id.desc"),
         rows("audit_events", id, "created_at.asc,id.asc"),
     ]);
     return json(

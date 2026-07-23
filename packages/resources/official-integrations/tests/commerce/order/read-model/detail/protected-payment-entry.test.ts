@@ -115,6 +115,36 @@ describe("commerce protected-payment entry contract", () => {
             expectOperationLookup(calls[0]!.url, "order_public_id", "eq.invalid");
         }
     });
+
+    test("orders Stripe dispute projections by their real opening timestamp", async () => {
+        setRestResponder((request) => {
+            const resource = new URL(request.url).pathname.split("/").at(-1);
+            if (resource === "protected_order_operations") {
+                return jsonResponse([
+                    {
+                        order_id: 42,
+                        order_public_id: "00000000-0000-4000-8000-000000000042",
+                        updated_at: "2026-07-23T12:00:00.000Z",
+                    },
+                ]);
+            }
+            return jsonResponse([]);
+        });
+
+        const response = await requestCommerce(`${route}?orderId=42`);
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({ orderId: 42, stripeDisputes: [] });
+        const disputeCalls = capturedFetches().filter(
+            (call) => new URL(call.url).pathname.split("/").at(-1) === "stripe_dispute_projections",
+        );
+        expect(disputeCalls).toHaveLength(1);
+        const disputeUrl = new URL(disputeCalls[0]!.url);
+        expect(disputeUrl.searchParams.get("select")).toBe("*");
+        expect(disputeUrl.searchParams.get("order_id")).toBe("eq.42");
+        expect(disputeUrl.searchParams.get("order")).toBe("opened_at.desc,id.desc");
+        expect([...disputeUrl.searchParams.keys()].sort()).toEqual(["order", "order_id", "select"]);
+    });
 });
 
 function expectOperationLookup(urlValue: string, filter: string, value: string): void {
