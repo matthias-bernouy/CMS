@@ -6,7 +6,7 @@
         "source": {
             "endpoint": "claimEvidenceItems",
             "params": {
-                "claimId": "$selection.id",
+                "claimId": "$selection.claimDetail.id",
                 "limit": "100",
                 "offset": "0"
             },

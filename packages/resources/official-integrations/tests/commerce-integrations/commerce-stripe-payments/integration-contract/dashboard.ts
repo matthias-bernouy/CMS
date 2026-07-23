@@ -31,6 +31,8 @@ export async function assertDashboardContracts({
     expect(claimsTab?.children?.map((child: any) => child.id)).toEqual(
         expect.arrayContaining(["claimsTable", "claimDetail", "claimEvidenceTable", "claimEvidenceDetail"]),
     );
+    const claimEvidenceTable = claimsTab?.children?.find((child: any) => child.id === "claimEvidenceTable");
+    expect(claimEvidenceTable?.source?.params?.claimId).toBe("$selection.claimDetail.id");
     expect(paymentsTab?.children?.map((child: any) => child.id)).not.toContain("claimEvidenceTable");
     const sectionFieldPaths = (detail: any, sectionId: string) =>
         detail?.main?.find((section: any) => section.id === sectionId)?.fields?.map((field: any) => field.path) ?? [];
