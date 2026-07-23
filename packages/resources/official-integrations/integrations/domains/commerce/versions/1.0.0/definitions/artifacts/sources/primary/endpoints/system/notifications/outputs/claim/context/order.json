@@ -1,0 +1,35 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "number": {
+            "type": "string"
+        },
+        "status": {
+            "type": "string"
+        },
+        "currency": {
+            "type": "string"
+        },
+        "subtotalAmountMinor": {
+            "type": "number"
+        },
+        "shippingAmountMinor": {
+            "type": "number"
+        },
+        "totalAmountMinor": {
+            "type": "number"
+        }
+    },
+    "required": [
+        "id",
+        "number",
+        "status",
+        "currency",
+        "subtotalAmountMinor",
+        "shippingAmountMinor",
+        "totalAmountMinor"
+    ]
+}
