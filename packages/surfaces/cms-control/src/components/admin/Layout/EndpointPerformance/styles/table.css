@@ -1,0 +1,78 @@
+.endpoint-table-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.endpoint-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-body);
+    font-size: .76rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.endpoint-table th,
+.endpoint-table td {
+    padding: 10px 9px;
+    border-bottom: 1px solid var(--border-light);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.endpoint-table th {
+    color: var(--text-muted);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .025em;
+    text-transform: uppercase;
+}
+
+.endpoint-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.endpoint-table tbody tr:hover {
+    background: var(--bg-subtle);
+}
+
+.endpoint-table th button,
+.endpoint-select {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+}
+
+.endpoint-table th button {
+    font-weight: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+}
+
+.endpoint-table th button:hover,
+.endpoint-table th button:focus-visible {
+    color: var(--primary-base);
+}
+
+.endpoint-select {
+    overflow: hidden;
+    max-width: 330px;
+    color: var(--primary-base);
+    font-family: var(--font-mono, monospace);
+    font-size: .73rem;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.endpoint-select:hover,
+.endpoint-select:focus-visible {
+    text-decoration: underline;
+}
+
+.endpoint-stage-table td:first-child {
+    color: var(--text-main);
+    font-weight: 620;
+}

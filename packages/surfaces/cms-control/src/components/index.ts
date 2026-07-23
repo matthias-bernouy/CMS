@@ -120,6 +120,7 @@ import "./admin/Layout/AnalyticsPrivacySettings/AnalyticsPrivacySettings";
 import "./admin/Layout/ShellDetail/ShellDetail";
 import "./admin/Layout/Analytics/AnalyticsNav";
 import "./admin/Layout/Analytics/AnalyticsDashboard";
+import "./admin/Layout/EndpointPerformance/EndpointPerformance";
 import "./admin/Theme/ThemeEditor";
 import "./admin/Theme/ThemeNav";
 import "./admin/Resources/Dashboards/navigation/DashboardNav";

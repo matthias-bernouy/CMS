@@ -14312,6 +14312,7 @@ p {
 
   // src/components/admin/Layout/Analytics/api.ts
   var ANALYTICS_VIEWS = ["overview", "content", "origins", "health"];
+  var ANALYTICS_NAV_VIEWS = [...ANALYTICS_VIEWS, "endpoints"];
   function currentAnalyticsRange(search = window.location.search) {
     const range = new URLSearchParams(search).get("range");
     return range === "24h" || range === "30d" ? range : "7d";
@@ -14326,7 +14327,7 @@ p {
   function analyticsViewFromPath(pathname, basePath = getMetaBasePath()) {
     const localPath = basePath && pathname.startsWith(`${basePath}/`) ? pathname.slice(basePath.length) : pathname;
     const section = localPath.match(/^\/admin\/analytics\/([^/]+)\/?$/)?.[1] ?? "";
-    return isAnalyticsView(section) && section !== "overview" ? section : "overview";
+    return isAnalyticsNavView(section) && section !== "overview" ? section : "overview";
   }
   async function fetchAnalyticsDashboard(view, range, signal) {
     if (view === "overview") {
@@ -14372,8 +14373,8 @@ p {
       exclusions: exclusions.data
     };
   }
-  function isAnalyticsView(value) {
-    return ANALYTICS_VIEWS.includes(value);
+  function isAnalyticsNavView(value) {
+    return ANALYTICS_NAV_VIEWS.includes(value);
   }
   async function getReport(endpoint, range, signal, limit, dimension) {
     const params = new URLSearchParams({ range });
@@ -14458,6 +14459,19 @@ w13c-lateral-menu-item {
         </svg>
         Request health
     </w13c-lateral-menu-item>
+
+    <div class="menu-section">Operations</div>
+
+    <w13c-lateral-menu-item data-analytics-view="endpoints">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 18V9" />
+            <path d="M10 18V5" />
+            <path d="M16 18v-6" />
+            <path d="M21 18H3" />
+        </svg>
+        Endpoint performance
+    </w13c-lateral-menu-item>
 </w13c-lateral-menu>
 `;
 
@@ -14478,7 +14492,7 @@ w13c-lateral-menu-item {
     configureLinks() {
       for (const item of this.items()) {
         const view = item.dataset.analyticsView ?? "";
-        if (isAnalyticsView2(view)) {
+        if (isAnalyticsNavView2(view)) {
           item.setAttribute("href", analyticsViewPath(view));
         }
       }
@@ -14496,8 +14510,8 @@ w13c-lateral-menu-item {
   if (!customElements.get("cms-analytics-nav")) {
     customElements.define("cms-analytics-nav", CmsAnalyticsNav);
   }
-  function isAnalyticsView2(value) {
-    return ANALYTICS_VIEWS.includes(value);
+  function isAnalyticsNavView2(value) {
+    return ANALYTICS_NAV_VIEWS.includes(value);
   }
 
   // src/components/admin/Layout/Analytics/rendering/common.ts
@@ -15539,6 +15553,1130 @@ w13c-lateral-menu-item {
     return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
   }
 
+  // src/components/admin/Layout/EndpointPerformance/api.ts
+  var RANGES = ["1h", "24h", "7d"];
+  var SURFACES = ["control", "delivery"];
+  var METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "HEAD",
+    "OPTIONS",
+    "OTHER"
+  ];
+  var STATUSES = ["1xx", "2xx", "3xx", "4xx", "5xx"];
+  var SORTS = [
+    "requests",
+    "errorRate",
+    "p50",
+    "p95",
+    "p99",
+    "max"
+  ];
+  var SAFE_ENDPOINT = /^urn:[A-Za-z0-9][A-Za-z0-9_-]{0,63}:[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
+
+  class EndpointPerformanceUnavailableError extends Error {
+    status;
+    constructor(status) {
+      super(`Endpoint performance request failed with status ${status}`);
+      this.status = status;
+    }
+  }
+  function readEndpointPerformanceQuery(search = window.location.search) {
+    const params = new URLSearchParams(search);
+    const endpointUrn = params.get("endpoint")?.trim();
+    return {
+      range: member(RANGES, params.get("range")) ?? "24h",
+      sort: member(SORTS, params.get("sort")) ?? "p95",
+      order: params.get("order") === "asc" ? "asc" : "desc",
+      limit: validLimit(params.get("limit")),
+      ...optional("surface", member(SURFACES, params.get("surface"))),
+      ...optional("endpointUrn", endpointUrn && isSafeEndpointFilter(endpointUrn) ? endpointUrn : undefined),
+      ...optional("method", member(METHODS, params.get("method"))),
+      ...optional("statusClass", member(STATUSES, params.get("status")))
+    };
+  }
+  async function fetchEndpointPerformance(query, signal) {
+    const response = await fetch(endpointPerformanceApiUrl(query), {
+      headers: { Accept: "application/json" },
+      signal
+    });
+    if (!response.ok) {
+      throw new EndpointPerformanceUnavailableError(response.status);
+    }
+    return await response.json();
+  }
+  function replaceEndpointPerformanceQuery(query) {
+    const url = new URL(window.location.href);
+    url.search = queryParams(query).toString();
+    history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  }
+  function isSafeEndpointFilter(value) {
+    return value === "__unresolved__" || value.length <= 256 && SAFE_ENDPOINT.test(value);
+  }
+  function endpointPerformanceApiUrl(query) {
+    return `${getMetaBasePath()}/api/analytics/endpoints?${queryParams(query)}`;
+  }
+  function queryParams(query) {
+    const params = new URLSearchParams({
+      range: query.range,
+      sort: query.sort,
+      order: query.order,
+      limit: String(query.limit)
+    });
+    if (query.surface) {
+      params.set("surface", query.surface);
+    }
+    if (query.endpointUrn) {
+      params.set("endpoint", query.endpointUrn);
+    }
+    if (query.method) {
+      params.set("method", query.method);
+    }
+    if (query.statusClass) {
+      params.set("status", query.statusClass);
+    }
+    return params;
+  }
+  function member(values, value) {
+    return value !== null && values.includes(value) ? value : undefined;
+  }
+  function optional(key, value) {
+    return value === undefined ? {} : { [key]: value };
+  }
+  function validLimit(value) {
+    const parsed = Number(value ?? 50);
+    return Number.isInteger(parsed) && parsed >= 1 && parsed <= 100 ? parsed : 50;
+  }
+
+  // src/components/admin/Layout/EndpointPerformance/filters.ts
+  function readEndpointPerformanceFilters(form, current) {
+    const endpoint = field(form, "endpoint");
+    const endpointUrn = endpoint.value.trim();
+    endpoint.setCustomValidity(endpointUrn && !isSafeEndpointFilter(endpointUrn) ? "Use a normalized endpoint URN such as urn:source:endpoint." : "");
+    if (!form.reportValidity()) {
+      return null;
+    }
+    return {
+      range: current.range,
+      sort: current.sort,
+      order: current.order,
+      limit: current.limit,
+      ...optional2("surface", value(form, "surface")),
+      ...optional2("endpointUrn", endpointUrn || undefined),
+      ...optional2("method", value(form, "method")),
+      ...optional2("statusClass", value(form, "status"))
+    };
+  }
+  function syncEndpointPerformanceFilters(form, queryState) {
+    field(form, "surface").value = queryState.surface ?? "";
+    field(form, "endpoint").value = queryState.endpointUrn ?? "";
+    field(form, "method").value = queryState.method ?? "";
+    field(form, "status").value = queryState.statusClass ?? "";
+  }
+  function field(form, name) {
+    const element = form.elements.namedItem(name);
+    if (!(element instanceof HTMLInputElement) && !(element instanceof HTMLSelectElement)) {
+      throw new Error(`Missing endpoint performance filter: ${name}`);
+    }
+    return element;
+  }
+  function value(form, name) {
+    const item = field(form, name).value.trim();
+    return item ? item : undefined;
+  }
+  function optional2(key, item) {
+    return item ? { [key]: item } : {};
+  }
+
+  // src/components/admin/Layout/EndpointPerformance/rendering/detail.ts
+  var STAGE_LABELS = {
+    cms_auth: "Authentication",
+    cms_endpoint_auth_lookup: "Authorization endpoint lookup",
+    cms_authorize: "Authorization",
+    cms_roles: "Roles",
+    cms_endpoint_resolve: "Source resolution",
+    cms_source: "Source read",
+    cms_overlays: "Overlays",
+    cms_context: "Context",
+    cms_secret: "Secrets",
+    cms_headers: "Request headers",
+    cms_body: "Request body",
+    cms_upstream: "Upstream execution",
+    cms_projection: "Projection",
+    cms_identity_binding: "Identity binding",
+    cms_total: "CMS total",
+    edge_route: "Edge routing",
+    edge_db_wall: "Edge database wall time",
+    edge_db_sum: "Edge database query time",
+    edge_db_calls: "Edge database calls",
+    edge_provider: "Edge provider",
+    edge_projection: "Edge projection",
+    edge_total: "Edge total"
+  };
+  function renderEndpointDetail(root, detail) {
+    const empty = query(root, "[data-detail-empty]");
+    const content = query(root, "[data-detail]");
+    empty.hidden = detail !== null;
+    content.hidden = detail === null;
+    if (!detail) {
+      return;
+    }
+    query(root, '[data-role="detail-title"]').textContent = detail.endpointUrn;
+    query(root, '[data-role="detail-context"]').textContent = [
+      detail.surface ? label(detail.surface) : "All surfaces",
+      detail.method ?? "All methods"
+    ].join(" · ");
+    renderBars(query(root, '[data-role="statuses"]'), detail.statuses.map((row) => ({ key: row.statusClass, count: row.count })), {
+      empty: "No status distribution is available.",
+      label: (status) => `HTTP ${status}`,
+      tone: (status) => status === "5xx" ? "is-danger" : status === "4xx" ? "is-warning" : ""
+    });
+    renderBars(query(root, '[data-role="histogram"]'), detail.latencyHistogram.map((row) => ({
+      key: row.upperBoundMs === null ? "overflow" : String(row.upperBoundMs),
+      count: row.count
+    })), {
+      empty: "No latency histogram is available.",
+      label: (bound) => bound === "overflow" ? "Above final bound" : `≤ ${formatInteger(Number(bound))} ms`
+    });
+    renderStages(query(root, '[data-role="stages"]'), detail.stages);
+  }
+  function renderStages(host, stages) {
+    if (!stages.length) {
+      renderEmpty(host, "No stage timings were reported for this endpoint.");
+      return;
+    }
+    const wrapper = document.createElement("div");
+    const table = document.createElement("table");
+    const head = document.createElement("thead");
+    const body = document.createElement("tbody");
+    wrapper.className = "endpoint-table-scroll";
+    table.className = "endpoint-table endpoint-stage-table";
+    table.setAttribute("aria-label", "Endpoint timing stage contribution");
+    head.append(headerRow(["Stage", "Coverage", "Samples", "Average", "p50", "p95", "p99", "Maximum"]));
+    for (const stage of stages) {
+      const row = document.createElement("tr");
+      const values = [
+        STAGE_LABELS[stage.stage] ?? label(stage.stage),
+        formatPercent(clampRate(stage.coverage)),
+        formatInteger(stage.observations),
+        formatMilliseconds(stage.avgMs),
+        formatMilliseconds(stage.p50Ms),
+        formatMilliseconds(stage.p95Ms),
+        formatMilliseconds(stage.p99Ms),
+        formatMilliseconds(stage.maxMs)
+      ];
+      for (const value2 of values) {
+        const cell = document.createElement("td");
+        cell.textContent = value2;
+        row.append(cell);
+      }
+      body.append(row);
+    }
+    table.append(head, body);
+    wrapper.append(table);
+    host.replaceChildren(wrapper);
+  }
+  function headerRow(labels) {
+    const row = document.createElement("tr");
+    for (const value2 of labels) {
+      const cell = document.createElement("th");
+      cell.scope = "col";
+      cell.textContent = value2;
+      row.append(cell);
+    }
+    return row;
+  }
+  function query(root, selector) {
+    const element = root.querySelector(selector);
+    if (!element) {
+      throw new Error(`Missing endpoint detail element: ${selector}`);
+    }
+    return element;
+  }
+  function label(value2) {
+    const normalized = value2.replaceAll("_", " ");
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  }
+  function clampRate(value2) {
+    return Number.isFinite(value2) ? Math.max(0, Math.min(value2, 1)) : 0;
+  }
+
+  // src/components/admin/Layout/EndpointPerformance/rendering/table.ts
+  var COLUMNS = [
+    { label: "Surface", value: (row) => row.surface },
+    { label: "Method", value: (row) => row.method },
+    { label: "Source endpoint", value: (row) => row.endpointUrn },
+    { label: "Calls", sort: "requests", value: (row) => formatInteger(row.requests) },
+    { label: "p50", sort: "p50", value: (row) => formatMilliseconds(row.p50Ms) },
+    { label: "p95", sort: "p95", value: (row) => formatMilliseconds(row.p95Ms) },
+    { label: "p99", sort: "p99", value: (row) => formatMilliseconds(row.p99Ms) },
+    { label: "Maximum", sort: "max", value: (row) => formatMilliseconds(row.maxMs) },
+    { label: "Error rate", sort: "errorRate", value: (row) => formatRate(row.errorRate) }
+  ];
+  function renderEndpointTable(host, rows, activeSort, order, actions) {
+    if (!rows.length) {
+      renderEmpty(host, "No endpoint rows match these filters.");
+      return;
+    }
+    const wrapper = document.createElement("div");
+    const table = document.createElement("table");
+    const head = document.createElement("thead");
+    const headerRow2 = document.createElement("tr");
+    wrapper.className = "endpoint-table-scroll";
+    table.className = "endpoint-table";
+    table.setAttribute("aria-label", "Endpoint aggregate performance");
+    for (const column of COLUMNS) {
+      const cell = document.createElement("th");
+      cell.scope = "col";
+      if (column.sort) {
+        const button = document.createElement("button");
+        const active = column.sort === activeSort;
+        button.type = "button";
+        button.dataset.sort = column.sort;
+        button.textContent = `${column.label}${active ? order === "asc" ? " ↑" : " ↓" : ""}`;
+        button.addEventListener("click", () => actions.sort(column.sort));
+        cell.setAttribute("aria-sort", active ? order === "asc" ? "ascending" : "descending" : "none");
+        cell.append(button);
+      } else {
+        cell.textContent = column.label;
+      }
+      headerRow2.append(cell);
+    }
+    head.append(headerRow2);
+    const body = document.createElement("tbody");
+    for (const row of rows) {
+      const tableRow = document.createElement("tr");
+      for (const [index, column] of COLUMNS.entries()) {
+        const cell = document.createElement("td");
+        if (index === 2) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "endpoint-select";
+          button.dataset.endpoint = row.endpointUrn;
+          button.textContent = row.endpointUrn;
+          button.title = row.endpointUrn;
+          button.addEventListener("click", () => actions.select(row.endpointUrn));
+          cell.append(button);
+        } else {
+          cell.textContent = column.value(row);
+        }
+        tableRow.append(cell);
+      }
+      body.append(tableRow);
+    }
+    table.append(head, body);
+    wrapper.append(table);
+    host.replaceChildren(wrapper);
+  }
+  function formatRate(value2) {
+    return value2 === null ? "—" : formatPercent(value2);
+  }
+
+  // src/components/admin/Layout/EndpointPerformance/rendering/timeline.ts
+  var SVG_NS2 = "http://www.w3.org/2000/svg";
+  function renderEndpointTimeline(host, rows) {
+    if (!rows.length || rows.every((row) => positive(row.requests) === 0)) {
+      renderEmpty(host, "No endpoint requests were observed in this range.");
+      return;
+    }
+    const width = 860;
+    const height = 260;
+    const plot = { left: 50, right: 52, top: 18, bottom: 38 };
+    const plotWidth = width - plot.left - plot.right;
+    const plotHeight = height - plot.top - plot.bottom;
+    const maxRequests = Math.max(...rows.map((row) => positive(row.requests)), 1);
+    const maxP95 = Math.max(...rows.map((row) => positive(row.p95Ms)), 1);
+    const x2 = (index) => plot.left + (rows.length === 1 ? plotWidth / 2 : index / (rows.length - 1) * plotWidth);
+    const svg = svgNode("svg", {
+      class: "endpoint-timeline",
+      viewBox: `0 0 ${width} ${height}`,
+      role: "img",
+      "aria-label": "Endpoint requests, p95 latency, and error rate over time"
+    });
+    svg.append(line2(plot.left, plot.top, plot.left, plot.top + plotHeight), line2(plot.left, plot.top + plotHeight, width - plot.right, plot.top + plotHeight));
+    const barWidth = Math.max(Math.min(plotWidth / Math.max(rows.length, 1) - 2, 16), 2);
+    rows.forEach((row, index) => {
+      const barHeight = positive(row.requests) / maxRequests * plotHeight;
+      svg.append(svgNode("rect", {
+        class: "endpoint-timeline__volume",
+        x: String(x2(index) - barWidth / 2),
+        y: String(plot.top + plotHeight - barHeight),
+        width: String(barWidth),
+        height: String(barHeight)
+      }));
+    });
+    appendSeries(svg, rows, "endpoint-timeline__p95", x2, (row) => nullablePositive(row.p95Ms), (value2) => plot.top + (1 - value2 / maxP95) * plotHeight);
+    appendSeries(svg, rows, "endpoint-timeline__errors", x2, (row) => nullableRate(row.errorRate), (value2) => plot.top + (1 - value2) * plotHeight);
+    svg.append(text2(plot.left - 8, plot.top + 4, formatInteger(maxRequests), "end"), text2(plot.left - 8, plot.top + plotHeight + 4, "0", "end"), text2(width - plot.right + 8, plot.top + 4, "100%", "start"), text2(width - plot.right + 8, plot.top + plotHeight + 4, "0%", "start"), text2(plot.left, height - 10, formatBucket(rows[0].bucket), "start"), text2(width - plot.right, height - 10, formatBucket(rows.at(-1).bucket), "end"));
+    host.replaceChildren(svg);
+  }
+  function appendSeries(svg, rows, className, x2, valueOf, y2) {
+    const points = rows.flatMap((row, index) => {
+      const value2 = valueOf(row);
+      return value2 === null ? [] : [{ x: x2(index), y: y2(value2) }];
+    });
+    if (!points.length) {
+      return;
+    }
+    svg.append(svgNode("polyline", {
+      class: className,
+      points: points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ")
+    }));
+    for (const point of points) {
+      svg.append(svgNode("circle", {
+        class: `${className} endpoint-timeline__point`,
+        cx: String(point.x),
+        cy: String(point.y),
+        r: "2.5"
+      }));
+    }
+  }
+  function svgNode(name, attributes) {
+    const element = document.createElementNS(SVG_NS2, name);
+    for (const [key, value2] of Object.entries(attributes)) {
+      element.setAttribute(key, value2);
+    }
+    return element;
+  }
+  function line2(x1, y1, x2, y2) {
+    return svgNode("line", {
+      class: "endpoint-timeline__axis",
+      x1: String(x1),
+      y1: String(y1),
+      x2: String(x2),
+      y2: String(y2)
+    });
+  }
+  function text2(x2, y2, value2, anchor) {
+    const element = svgNode("text", {
+      class: "endpoint-timeline__tick",
+      x: String(x2),
+      y: String(y2),
+      "text-anchor": anchor
+    });
+    element.textContent = value2;
+    return element;
+  }
+  function positive(value2) {
+    return typeof value2 === "number" && Number.isFinite(value2) && value2 > 0 ? value2 : 0;
+  }
+  function nullablePositive(value2) {
+    return value2 === null ? null : positive(value2);
+  }
+  function nullableRate(value2) {
+    return value2 === null || !Number.isFinite(value2) ? null : Math.max(0, Math.min(value2, 1));
+  }
+  function formatBucket(value2) {
+    const date = new Date(value2);
+    return Number.isNaN(date.getTime()) ? "Unknown" : new Intl.DateTimeFormat(undefined, { day: "numeric", hour: "2-digit", month: "short" }).format(date);
+  }
+
+  // src/components/admin/Layout/EndpointPerformance/rendering/dashboard.ts
+  function renderEndpointPerformanceDashboard(root, data, queryState, actions) {
+    const empty = query2(root, "[data-empty]");
+    const content = query2(root, "[data-content]");
+    const noData = data.summary.requests <= 0;
+    empty.hidden = !noData;
+    content.hidden = noData;
+    renderNotices(root, data);
+    renderMetadata(root, data);
+    if (noData) {
+      renderEndpointDetail(root, null);
+      return;
+    }
+    renderMetrics(query2(root, '[data-role="metrics"]'), [
+      {
+        label: "Requests",
+        value: formatInteger(data.summary.requests),
+        hint: rangeLabel(queryState.range)
+      },
+      {
+        label: "Error rate",
+        value: data.summary.errorRate === null ? "—" : formatPercent(data.summary.errorRate),
+        hint: `${formatInteger(data.summary.errors)} error responses`,
+        tone: data.summary.errors > 0 ? "danger" : undefined
+      },
+      {
+        label: "p50 latency",
+        value: formatMilliseconds(data.summary.p50Ms),
+        hint: "Median aggregate latency"
+      },
+      {
+        label: "p95 latency",
+        value: formatMilliseconds(data.summary.p95Ms),
+        hint: "95% completed at or below"
+      },
+      {
+        label: "p99 latency",
+        value: formatMilliseconds(data.summary.p99Ms),
+        hint: `Maximum ${formatMilliseconds(data.summary.maxMs)}`
+      }
+    ]);
+    renderEndpointTimeline(query2(root, '[data-role="timeline"]'), data.timeline);
+    renderEndpointTable(query2(root, '[data-role="endpoint-table"]'), data.endpoints, queryState.sort, queryState.order, actions);
+    renderEndpointDetail(root, data.detail);
+  }
+  function renderNotices(root, data) {
+    const partial = query2(root, "[data-partial]");
+    const stale = query2(root, "[data-stale]");
+    partial.hidden = !data.meta.partial;
+    stale.hidden = !data.meta.stale;
+    partial.textContent = [
+      "This report is partial.",
+      `${formatInteger(data.meta.dropped)} dropped,`,
+      `${formatInteger(data.meta.invalid)} invalid,`,
+      `${formatInteger(data.meta.flushFailures)} flush failures.`
+    ].join(" ");
+    stale.textContent = data.meta.lastObservationAt ? `This report is stale. Last observation: ${formatDate2(data.meta.lastObservationAt)}.` : "This report is stale. No recent observation timestamp is available.";
+  }
+  function renderMetadata(root, data) {
+    query2(root, '[data-role="report-meta"]').textContent = [
+      `Generated ${formatDate2(data.meta.generatedAt)}`,
+      `${formatInteger(data.meta.accepted)} accepted observations`,
+      `${formatInteger(data.meta.dropped)} dropped`,
+      `${formatInteger(data.meta.invalid)} invalid`,
+      `${formatInteger(data.meta.flushFailures)} flush failures`
+    ].join(" · ");
+  }
+  function query2(root, selector) {
+    const element = root.querySelector(selector);
+    if (!element) {
+      throw new Error(`Missing endpoint performance element: ${selector}`);
+    }
+    return element;
+  }
+  function formatDate2(value2) {
+    const date = new Date(value2);
+    return Number.isNaN(date.getTime()) ? "at an unknown time" : new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+  function rangeLabel(range) {
+    return range === "1h" ? "Last hour" : range === "7d" ? "Last 7 days" : "Last 24 hours";
+  }
+
+  // src/components/admin/Layout/EndpointPerformance/styles/chart.css
+  var chart_default2 = `.endpoint-timeline-host {
+    min-height: 260px;
+}
+
+.endpoint-timeline {
+    display: block;
+    width: 100%;
+    height: 260px;
+}
+
+.endpoint-timeline__axis {
+    stroke: var(--border-default);
+    stroke-width: 1;
+}
+
+.endpoint-timeline__volume {
+    fill: color-mix(in srgb, var(--primary-base) 24%, transparent);
+}
+
+.endpoint-timeline__p95,
+.endpoint-timeline__errors {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.2;
+    vector-effect: non-scaling-stroke;
+}
+
+.endpoint-timeline__p95 {
+    stroke: var(--primary-base);
+}
+
+.endpoint-timeline__errors {
+    stroke: var(--danger-base);
+}
+
+circle.endpoint-timeline__p95 {
+    fill: var(--primary-base);
+}
+
+circle.endpoint-timeline__errors {
+    fill: var(--danger-base);
+}
+
+.endpoint-timeline__tick {
+    fill: var(--text-muted);
+    font-size: 10px;
+}
+
+.endpoint-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: .72rem;
+}
+
+.endpoint-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.endpoint-legend span::before {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    background: var(--primary-muted);
+    content: "";
+}
+
+.endpoint-legend [data-series="p95"]::before {
+    height: 2px;
+    background: var(--primary-base);
+}
+
+.endpoint-legend [data-series="errors"]::before {
+    height: 2px;
+    background: var(--danger-base);
+}
+`;
+
+  // src/components/admin/Layout/EndpointPerformance/styles/layout.css
+  var layout_default = `cms-endpoint-performance {
+    display: block;
+    max-width: 1280px;
+}
+
+.endpoint-ready,
+.endpoint-content {
+    display: grid;
+    gap: 24px;
+}
+
+.endpoint-skeleton-grid,
+.endpoint-metrics {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.endpoint-filters {
+    display: grid;
+    grid-template-columns: minmax(130px, .65fr) minmax(240px, 1.5fr) minmax(120px, .6fr) minmax(120px, .6fr) auto;
+    align-items: end;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-default);
+    border-radius: 11px;
+    background: var(--bg-surface);
+}
+
+.endpoint-filters label {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    color: var(--text-body);
+    font-size: .76rem;
+    font-weight: 650;
+}
+
+.endpoint-filters input,
+.endpoint-filters select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 36px;
+    padding: 7px 9px;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font: inherit;
+    font-weight: 450;
+}
+
+.endpoint-filters input:focus,
+.endpoint-filters select:focus {
+    border-color: var(--primary-base);
+    outline: 2px solid color-mix(in srgb, var(--primary-base) 18%, transparent);
+}
+
+.endpoint-filter-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.endpoint-filter-actions button,
+.endpoint-detail-header button {
+    min-height: 36px;
+    padding: 7px 11px;
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    cursor: pointer;
+    font: inherit;
+    font-size: .78rem;
+}
+
+.endpoint-filter-actions button[type="submit"] {
+    border-color: var(--primary-base);
+    background: var(--primary-base);
+    color: var(--primary-contrast, white);
+}
+
+.endpoint-notice {
+    padding: 11px 14px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    font-size: .8rem;
+}
+
+.endpoint-notice--warning {
+    border-color: color-mix(in srgb, var(--warning-base) 38%, var(--border-default));
+    background: var(--warning-muted);
+    color: var(--warning-contrasted);
+}
+
+.endpoint-notice--danger {
+    border-color: color-mix(in srgb, var(--danger-base) 34%, var(--border-default));
+    background: var(--danger-muted);
+    color: var(--danger-contrasted);
+}
+
+.endpoint-empty,
+.endpoint-detail-empty {
+    display: grid;
+    place-items: center;
+    min-height: 140px;
+    padding: 28px;
+    border: 1px dashed var(--border-default);
+    border-radius: 11px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.endpoint-empty {
+    gap: 7px;
+}
+
+.endpoint-empty strong {
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.endpoint-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+}
+
+.endpoint-detail-grid h4,
+.endpoint-stages h4 {
+    margin: 0 0 16px;
+    color: var(--text-main);
+    font-size: .86rem;
+}
+
+.endpoint-stages {
+    margin-top: 28px;
+}
+
+.endpoint-meta {
+    color: var(--text-muted);
+    font-size: .72rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 1050px) {
+    .endpoint-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .endpoint-filter-actions {
+        grid-column: 1 / -1;
+    }
+
+    .endpoint-skeleton-grid,
+    .endpoint-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .endpoint-filters,
+    .endpoint-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .endpoint-filter-actions {
+        grid-column: auto;
+    }
+
+    .endpoint-skeleton-grid,
+    .endpoint-metrics {
+        grid-template-columns: 1fr;
+    }
+}
+`;
+
+  // src/components/admin/Layout/EndpointPerformance/styles/table.css
+  var table_default = `.endpoint-table-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.endpoint-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-body);
+    font-size: .76rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.endpoint-table th,
+.endpoint-table td {
+    padding: 10px 9px;
+    border-bottom: 1px solid var(--border-light);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.endpoint-table th {
+    color: var(--text-muted);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .025em;
+    text-transform: uppercase;
+}
+
+.endpoint-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.endpoint-table tbody tr:hover {
+    background: var(--bg-subtle);
+}
+
+.endpoint-table th button,
+.endpoint-select {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+}
+
+.endpoint-table th button {
+    font-weight: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+}
+
+.endpoint-table th button:hover,
+.endpoint-table th button:focus-visible {
+    color: var(--primary-base);
+}
+
+.endpoint-select {
+    overflow: hidden;
+    max-width: 330px;
+    color: var(--primary-base);
+    font-family: var(--font-mono, monospace);
+    font-size: .73rem;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.endpoint-select:hover,
+.endpoint-select:focus-visible {
+    text-decoration: underline;
+}
+
+.endpoint-stage-table td:first-child {
+    color: var(--text-main);
+    font-weight: 620;
+}
+`;
+
+  // src/components/admin/Layout/EndpointPerformance/template.html
+  var template_default8 = `<section class="analytics-surface endpoint-performance">
+    <div class="analytics-loading" data-view-state="loading" aria-label="Loading endpoint performance">
+        <div class="skeleton skeleton--heading"></div>
+        <div class="endpoint-skeleton-grid">
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+        </div>
+        <div class="skeleton skeleton--panel"></div>
+    </div>
+
+    <div class="analytics-error" data-view-state="unavailable" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v6" />
+            <path d="M12 17h.01" />
+        </svg>
+        <h2>Endpoint performance is unavailable</h2>
+        <p>The aggregate report could not be loaded. Source requests are not affected.</p>
+        <button type="button" data-retry>Try again</button>
+    </div>
+
+    <div class="endpoint-ready" data-view-state="ready" hidden>
+        <header class="report-header">
+            <div>
+                <span class="eyebrow">Operations</span>
+                <h2>Endpoint performance</h2>
+                <p>Latency, volume, and errors across Control and Delivery source endpoints.</p>
+            </div>
+            <span class="privacy-pill">Aggregates only</span>
+        </header>
+
+        <form class="endpoint-filters" data-filters>
+            <label>
+                <span>Surface</span>
+                <select name="surface">
+                    <option value="">All surfaces</option>
+                    <option value="control">Control</option>
+                    <option value="delivery">Delivery</option>
+                </select>
+            </label>
+            <label class="endpoint-filter">
+                <span>Source endpoint</span>
+                <input name="endpoint" type="search" placeholder="urn:source:endpoint" autocomplete="off">
+            </label>
+            <label>
+                <span>Method</span>
+                <select name="method">
+                    <option value="">All methods</option>
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
+                    <option>HEAD</option>
+                    <option>OPTIONS</option>
+                    <option>OTHER</option>
+                </select>
+            </label>
+            <label>
+                <span>Status</span>
+                <select name="status">
+                    <option value="">All statuses</option>
+                    <option>1xx</option>
+                    <option>2xx</option>
+                    <option>3xx</option>
+                    <option>4xx</option>
+                    <option>5xx</option>
+                </select>
+            </label>
+            <div class="endpoint-filter-actions">
+                <button type="submit">Apply filters</button>
+                <button type="button" data-reset>Reset</button>
+            </div>
+        </form>
+
+        <div class="endpoint-notice endpoint-notice--warning" data-partial hidden role="status">
+            This report is partial. Some observations were dropped, invalid, or could not be flushed.
+        </div>
+        <div class="endpoint-notice endpoint-notice--danger" data-stale hidden role="status">
+            This report is stale. Recent endpoint activity may be missing.
+        </div>
+
+        <div class="endpoint-empty" data-empty hidden>
+            <strong>No endpoint activity in this range</strong>
+            <span>Try a longer range or clear one of the filters.</span>
+        </div>
+
+        <div class="endpoint-content" data-content>
+            <div class="metric-grid endpoint-metrics" data-role="metrics"></div>
+
+            <section class="analytics-panel analytics-panel--wide">
+                <header class="panel-header">
+                    <div>
+                        <span class="eyebrow">Timeline</span>
+                        <h3>Volume, p95 latency, and error rate</h3>
+                    </div>
+                    <div class="endpoint-legend" aria-hidden="true">
+                        <span data-series="volume">Requests</span>
+                        <span data-series="p95">p95</span>
+                        <span data-series="errors">Error rate</span>
+                    </div>
+                </header>
+                <div class="chart-host endpoint-timeline-host" data-role="timeline"></div>
+            </section>
+
+            <section class="analytics-panel analytics-panel--wide">
+                <header class="panel-header">
+                    <div>
+                        <span class="eyebrow">Endpoints</span>
+                        <h3>Sortable aggregate performance</h3>
+                    </div>
+                    <span class="panel-context">Select an endpoint for details</span>
+                </header>
+                <div data-role="endpoint-table"></div>
+            </section>
+
+            <section class="analytics-panel analytics-panel--wide" data-role="detail-panel">
+                <div class="endpoint-detail-empty" data-detail-empty>Select an endpoint above to inspect its aggregate distribution.</div>
+                <div data-detail hidden>
+                    <header class="panel-header endpoint-detail-header">
+                        <div>
+                            <span class="eyebrow">Selected endpoint</span>
+                            <h3 data-role="detail-title"></h3>
+                            <span class="panel-context" data-role="detail-context"></span>
+                        </div>
+                        <button type="button" data-clear-endpoint>Clear selection</button>
+                    </header>
+                    <div class="endpoint-detail-grid">
+                        <div>
+                            <h4>Status distribution</h4>
+                            <div class="bar-list" data-role="statuses"></div>
+                        </div>
+                        <div>
+                            <h4>Latency histogram</h4>
+                            <div class="bar-list" data-role="histogram"></div>
+                        </div>
+                    </div>
+                    <div class="endpoint-stages">
+                        <h4>Stage contribution</h4>
+                        <div data-role="stages"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="privacy-boundary privacy-boundary--technical">
+            <strong>Aggregate operational telemetry</strong>
+            <span>No individual request logs, URLs, headers, identities, bodies, or secrets are stored or shown here.</span>
+        </aside>
+        <aside class="endpoint-meta" data-role="report-meta"></aside>
+    </div>
+</section>
+`;
+
+  // src/components/admin/Layout/EndpointPerformance/EndpointPerformance.ts
+  class CmsEndpointPerformance extends HTMLElement {
+    initialized = false;
+    request = null;
+    queryState = readEndpointPerformanceQuery();
+    connectedCallback() {
+      if (!this.initialized) {
+        this.mount();
+        this.initialized = true;
+      }
+      this.queryState = readEndpointPerformanceQuery();
+      this.syncFilters();
+      window.addEventListener("popstate", this.handlePopState);
+      this.load();
+    }
+    disconnectedCallback() {
+      this.request?.abort();
+      this.request = null;
+      window.removeEventListener("popstate", this.handlePopState);
+    }
+    mount() {
+      const style = document.createElement("style");
+      const template = document.createElement("template");
+      style.textContent = [dashboard_default, data_default, states_default, layout_default, table_default, chart_default2].join(`
+`);
+      template.innerHTML = template_default8;
+      this.replaceChildren(style, template.content.cloneNode(true));
+      this.query("[data-filters]").addEventListener("submit", this.applyFilters);
+      this.query("[data-reset]").addEventListener("click", this.resetFilters);
+      this.query("[data-retry]").addEventListener("click", () => void this.load());
+      this.query("[data-clear-endpoint]").addEventListener("click", () => {
+        const queryState = { ...this.queryState };
+        delete queryState.endpointUrn;
+        this.updateQuery(queryState);
+      });
+    }
+    async load() {
+      this.request?.abort();
+      const request = new AbortController;
+      const queryState = this.queryState;
+      this.request = request;
+      this.show("loading");
+      try {
+        const data = await fetchEndpointPerformance(queryState, request.signal);
+        if (this.request !== request) {
+          return;
+        }
+        renderEndpointPerformanceDashboard(this, data, queryState, {
+          select: (endpointUrn) => {
+            this.updateQuery({ ...this.queryState, endpointUrn });
+          },
+          sort: (sort) => {
+            this.sortBy(sort);
+          }
+        });
+        this.show("ready");
+      } catch (error) {
+        if (this.request === request && !isAbortError3(error)) {
+          this.show("unavailable");
+        }
+      } finally {
+        if (this.request === request) {
+          this.request = null;
+        }
+      }
+    }
+    applyFilters = (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const queryState = readEndpointPerformanceFilters(form, this.queryState);
+      if (queryState) {
+        this.updateQuery(queryState);
+      }
+    };
+    resetFilters = () => {
+      this.updateQuery({
+        range: this.queryState.range,
+        sort: this.queryState.sort,
+        order: this.queryState.order,
+        limit: this.queryState.limit
+      });
+    };
+    sortBy(sort) {
+      const order = this.queryState.sort === sort && this.queryState.order === "desc" ? "asc" : "desc";
+      return this.updateQuery({ ...this.queryState, sort, order });
+    }
+    async updateQuery(queryState) {
+      this.queryState = queryState;
+      replaceEndpointPerformanceQuery(queryState);
+      this.syncFilters();
+      await this.load();
+    }
+    syncFilters() {
+      syncEndpointPerformanceFilters(this.query("[data-filters]"), this.queryState);
+    }
+    show(state) {
+      for (const element of Array.from(this.querySelectorAll("[data-view-state]"))) {
+        element.hidden = element.dataset.viewState !== state;
+      }
+      this.setAttribute("aria-busy", state === "loading" ? "true" : "false");
+    }
+    handlePopState = () => {
+      this.queryState = readEndpointPerformanceQuery();
+      this.syncFilters();
+      this.load();
+    };
+    query(selector) {
+      const element = this.querySelector(selector);
+      if (!element) {
+        throw new Error(`Missing endpoint performance element: ${selector}`);
+      }
+      return element;
+    }
+  }
+  if (!customElements.get("cms-endpoint-performance")) {
+    customElements.define("cms-endpoint-performance", CmsEndpointPerformance);
+  }
+  function isAbortError3(error) {
+    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
+  }
+
   // src/components/admin/Theme/events.ts
   var THEME_CATEGORY_SELECTED_EVENT = "cms:theme-category-selected";
   var THEME_CATEGORY_ADDED_EVENT = "cms:theme-category-added";
@@ -15626,15 +16764,15 @@ w13c-lateral-menu-item {
         continue;
       }
       seen.add(variable);
-      const value = match[2].trim();
+      const value2 = match[2].trim();
       tokens.push({
         id: variable,
         variable,
         label: variable.split("-").map(capitalize).join(" "),
         description: `Existing --${variable} variable`,
-        type: looksLikeColor(value) ? "color" : "value"
+        type: looksLikeColor(value2) ? "color" : "value"
       });
-      values[variable] = value;
+      values[variable] = value2;
     }
     return {
       activeThemeId: "imported",
@@ -15657,18 +16795,18 @@ w13c-lateral-menu-item {
     };
   }
   function uniqueId(base, existing) {
-    let value = base;
+    let value2 = base;
     let suffix = 2;
-    while (existing.has(value)) {
-      value = `${base}-${suffix++}`;
+    while (existing.has(value2)) {
+      value2 = `${base}-${suffix++}`;
     }
-    return value;
+    return value2;
   }
-  function capitalize(value) {
-    return value ? value[0].toUpperCase() + value.slice(1) : value;
+  function capitalize(value2) {
+    return value2 ? value2[0].toUpperCase() + value2.slice(1) : value2;
   }
-  function looksLikeColor(value) {
-    return /^(#|rgb\(|rgba\(|hsl\(|hsla\(|oklch\(|oklab\(|lab\(|lch\(|color\(|transparent$|currentcolor$)/i.test(value);
+  function looksLikeColor(value2) {
+    return /^(#|rgb\(|rgba\(|hsl\(|hsla\(|oklch\(|oklab\(|lab\(|lch\(|color\(|transparent$|currentcolor$)/i.test(value2);
   }
 
   // src/components/admin/Theme/editor/api.ts
@@ -15712,15 +16850,15 @@ w13c-lateral-menu-item {
     const source2 = currentSource(context.settings, context.selection);
     if (input.matches("[data-category-label-input]") && category && source2) {
       category.label = input.value;
-      query(context.root, "[data-category-title]").textContent = category.label;
-      query(context.root, "[data-category-section]").setAttribute("heading", category.label);
+      query3(context.root, "[data-category-title]").textContent = category.label;
+      query3(context.root, "[data-category-section]").setAttribute("heading", category.label);
       dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
       return;
     }
     if (input.matches("[data-category-description-input]") && category && source2) {
       category.description = input.value;
-      query(context.root, "[data-category-section]").setAttribute("description", category.description);
-      query(context.root, "[data-category-description]").textContent = `${source2.label} · ${category.description}`;
+      query3(context.root, "[data-category-section]").setAttribute("description", category.description);
+      query3(context.root, "[data-category-description]").textContent = `${source2.label} · ${category.description}`;
       dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
       return;
     }
@@ -15742,9 +16880,9 @@ w13c-lateral-menu-item {
     theme.values[context.mode] ??= {};
     theme.values[context.mode][tokenId] = input.value;
     if (input.type === "color") {
-      const text2 = input.closest("[data-token-id]")?.querySelector('input[type="text"]');
-      if (text2) {
-        text2.value = input.value;
+      const text3 = input.closest("[data-token-id]")?.querySelector('input[type="text"]');
+      if (text3) {
+        text3.value = input.value;
       }
     }
   }
@@ -15767,7 +16905,7 @@ w13c-lateral-menu-item {
     }
     return;
   }
-  function query(root, selector) {
+  function query3(root, selector) {
     return root.querySelector(selector);
   }
 
@@ -16056,34 +17194,34 @@ cms-shell-detail {
     if (!source2 || !category || !theme) {
       return state.mode;
     }
-    query2(root, "[data-category-title]").textContent = category.label;
-    query2(root, "[data-category-description]").textContent = `${source2.label} · ${category.description}`;
-    query2(root, "[data-theme-name-input]").value = theme.name;
-    query2(root, "[data-category-label-input]").value = category.label;
-    query2(root, "[data-category-description-input]").value = category.description;
-    query2(root, "[data-site-name]").textContent = state.siteName ? `Editing the appearance of ${state.siteName}.` : "Editing the appearance of this site.";
-    const select = query2(root, "[data-theme-switch]");
+    query4(root, "[data-category-title]").textContent = category.label;
+    query4(root, "[data-category-description]").textContent = `${source2.label} · ${category.description}`;
+    query4(root, "[data-theme-name-input]").value = theme.name;
+    query4(root, "[data-category-label-input]").value = category.label;
+    query4(root, "[data-category-description-input]").value = category.description;
+    query4(root, "[data-site-name]").textContent = state.siteName ? `Editing the appearance of ${state.siteName}.` : "Editing the appearance of this site.";
+    const select = query4(root, "[data-theme-switch]");
     select.replaceChildren(...state.settings.themes.map(themeOption));
     select.value = theme.id;
     const active = theme.id === state.settings.activeThemeId;
-    const status = query2(root, "[data-theme-status]");
+    const status = query4(root, "[data-theme-status]");
     status.textContent = active ? "Active" : "Draft";
     status.setAttribute("color", active ? "success" : "warning");
-    query2(root, "[data-save-theme]").toggleAttribute("disabled", !state.canPersist);
-    query2(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
+    query4(root, "[data-save-theme]").toggleAttribute("disabled", !state.canPersist);
+    query4(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
     const mode = source2.supportsModes ? state.mode : "light";
-    const modeSwitch = query2(root, "[data-mode-switch]");
+    const modeSwitch = query4(root, "[data-mode-switch]");
     modeSwitch.hidden = !source2.supportsModes;
     for (const button of Array.from(modeSwitch.querySelectorAll("[data-mode]"))) {
       button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
     }
-    const section = query2(root, "[data-category-section]");
+    const section = query4(root, "[data-category-section]");
     section.setAttribute("heading", category.label);
     section.setAttribute("description", category.description);
     const list = document.createElement("div");
     list.className = "element-list";
     category.tokens.forEach((token) => list.append(renderToken(token, theme, mode)));
-    query2(root, "[data-groups]").replaceChildren(category.tokens.length ? list : emptyCategory());
+    query4(root, "[data-groups]").replaceChildren(category.tokens.length ? list : emptyCategory());
     return mode;
   }
   function setThemeMessage(root, message, error = false) {
@@ -16097,8 +17235,8 @@ cms-shell-detail {
     const row = document.createElement("div");
     row.className = "element-row";
     row.dataset.tokenId = token.id;
-    const label = document.createElement("div");
-    label.className = "element-label";
+    const label2 = document.createElement("div");
+    label2.className = "element-label";
     const name = document.createElement("input");
     name.className = "token-label-input";
     name.type = "text";
@@ -16107,28 +17245,28 @@ cms-shell-detail {
     name.dataset.tokenLabel = "true";
     const detail = document.createElement("span");
     detail.textContent = `${token.description} · var(--${token.variable})`;
-    label.append(name, detail);
-    row.append(label, renderControl(token, theme.values[mode]?.[token.id] ?? ""));
+    label2.append(name, detail);
+    row.append(label2, renderControl(token, theme.values[mode]?.[token.id] ?? ""));
     return row;
   }
-  function renderControl(token, value) {
+  function renderControl(token, value2) {
     if (token.type !== "color") {
-      return valueInput(value);
+      return valueInput(value2);
     }
     const control = document.createElement("div");
     control.className = "color-control";
     const picker = document.createElement("input");
     picker.type = "color";
-    picker.value = /^#[0-9a-f]{6}$/i.test(value) ? value : "#000000";
+    picker.value = /^#[0-9a-f]{6}$/i.test(value2) ? value2 : "#000000";
     picker.dataset.valueControl = "true";
-    control.append(picker, valueInput(value));
+    control.append(picker, valueInput(value2));
     return control;
   }
-  function valueInput(value) {
+  function valueInput(value2) {
     const input = document.createElement("input");
     input.className = "value-control";
     input.type = "text";
-    input.value = value;
+    input.value = value2;
     input.dataset.valueControl = "true";
     return input;
   }
@@ -16144,7 +17282,7 @@ cms-shell-detail {
     option.textContent = theme.name;
     return option;
   }
-  function query2(root, selector) {
+  function query4(root, selector) {
     return root.querySelector(selector);
   }
 
@@ -16564,7 +17702,7 @@ w13c-lateral-menu-item.category-item {
     }
     configured = true;
     Yp({
-      json: (value) => value === undefined ? undefined : JSON.stringify(value)
+      json: (value2) => value2 === undefined ? undefined : JSON.stringify(value2)
     });
   }
 
@@ -16700,11 +17838,11 @@ w13c-lateral-menu-item.category-item {
     element.setAttribute("focusable", "false");
     return element;
   }
-  function sanitizeSvg(value) {
-    if (!value || value.length > SVG_MAX_LENGTH) {
+  function sanitizeSvg(value2) {
+    if (!value2 || value2.length > SVG_MAX_LENGTH) {
       return null;
     }
-    const doc = new DOMParser().parseFromString(value, "image/svg+xml");
+    const doc = new DOMParser().parseFromString(value2, "image/svg+xml");
     if (doc.querySelector("parsererror")) {
       return null;
     }
@@ -16727,8 +17865,8 @@ w13c-lateral-menu-item.category-item {
     }
     return new XMLSerializer().serializeToString(root);
   }
-  function toIconName(value) {
-    return value && value in DASHBOARD_ICONS ? value : undefined;
+  function toIconName(value2) {
+    return value2 && value2 in DASHBOARD_ICONS ? value2 : undefined;
   }
 
   // src/components/admin/Resources/Dashboards/navigation/DashboardNavRendering.ts
@@ -16776,10 +17914,10 @@ w13c-lateral-menu-item.category-item {
       menu.append(item);
     }
   }
-  function createItem(label, svg2, icon, fallback) {
+  function createItem(label2, svg2, icon, fallback) {
     const item = document.createElement("w13c-lateral-menu-item");
     appendIconSlot(item, svg2, icon, fallback);
-    item.append(document.createTextNode(label));
+    item.append(document.createTextNode(label2));
     return item;
   }
   function clearGeneratedItems(menu) {
@@ -16955,12 +18093,12 @@ w13c-lateral-menu-item {
   if (!customElements.get("cms-dashboards-nav")) {
     customElements.define("cms-dashboards-nav", DashboardNav);
   }
-  function parseGroups(value) {
-    if (!value) {
+  function parseGroups(value2) {
+    if (!value2) {
       return null;
     }
     try {
-      const parsed = JSON.parse(value);
+      const parsed = JSON.parse(value2);
       return Array.isArray(parsed) ? parsed : null;
     } catch {
       return null;
@@ -17448,14 +18586,14 @@ w13c-lateral-menu-item {
     const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(revision));
     return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
   }
-  function canonicalJson(value) {
-    if (value === null || typeof value !== "object") {
-      return JSON.stringify(value) ?? "null";
+  function canonicalJson(value2) {
+    if (value2 === null || typeof value2 !== "object") {
+      return JSON.stringify(value2) ?? "null";
     }
-    if (Array.isArray(value)) {
-      return `[${value.map(canonicalJson).join(",")}]`;
+    if (Array.isArray(value2)) {
+      return `[${value2.map(canonicalJson).join(",")}]`;
     }
-    const entries = Object.entries(value).filter(([, entry]) => entry !== undefined).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
+    const entries = Object.entries(value2).filter(([, entry]) => entry !== undefined).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
     return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`).join(",")}}`;
   }
   function cloneNullableFields(fields) {
@@ -17494,18 +18632,18 @@ w13c-lateral-menu-item {
   var PATH_SEGMENT = /^[A-Za-z_$][\w$]*$/;
   var EXPRESSION = /^\$([A-Za-z]+)(?:\.(.+))?$/;
   var UNSAFE_PATH_SEGMENTS = new Set(["__proto__", "constructor", "prototype"]);
-  function dashboardPathSegments(value) {
-    const segments = value.split(".");
+  function dashboardPathSegments(value2) {
+    const segments = value2.split(".");
     if (!segments.length || segments.some((segment) => !PATH_SEGMENT.test(segment) || UNSAFE_PATH_SEGMENTS.has(segment))) {
       return null;
     }
     return segments;
   }
-  function isSafeDashboardPath(value) {
-    return dashboardPathSegments(value) !== null;
+  function isSafeDashboardPath(value2) {
+    return dashboardPathSegments(value2) !== null;
   }
-  function isSafeDashboardExpression(value, roots, pathRequired = false) {
-    const match = EXPRESSION.exec(value);
+  function isSafeDashboardExpression(value2, roots, pathRequired = false) {
+    const match = EXPRESSION.exec(value2);
     if (!match || !roots.includes(match[1])) {
       return false;
     }
@@ -17515,8 +18653,8 @@ w13c-lateral-menu-item {
   // ../../features/cms-dashboards/src/core/dashboardVisibility.ts
   var DASHBOARD_VISIBILITY_MAX_DEPTH = 10;
   var DASHBOARD_VISIBILITY_MAX_NODES = 500;
-  function isDashboardVisibilityExpression(value) {
-    return typeof value === "string" && isSafeDashboardExpression(value, ["field", "resource"], true);
+  function isDashboardVisibilityExpression(value2) {
+    return typeof value2 === "string" && isSafeDashboardExpression(value2, ["field", "resource"], true);
   }
   function evaluateDashboardVisibility(rule, resolve) {
     if (rule === undefined) {
@@ -17525,21 +18663,21 @@ w13c-lateral-menu-item {
     const result = evaluateRule(rule, resolve, 0, { nodes: 0 });
     return result.valid && result.matches;
   }
-  function evaluateRule(value, resolve, depth, budget) {
+  function evaluateRule(value2, resolve, depth, budget) {
     if (depth >= DASHBOARD_VISIBILITY_MAX_DEPTH || ++budget.nodes > DASHBOARD_VISIBILITY_MAX_NODES) {
       return invalid();
     }
-    if (!isRecord2(value)) {
+    if (!isRecord2(value2)) {
       return invalid();
     }
-    const hasAll = Object.hasOwn(value, "all");
-    const hasAny = Object.hasOwn(value, "any");
-    const hasCondition = Object.hasOwn(value, "value") || Object.hasOwn(value, "equals") || Object.hasOwn(value, "notEquals");
+    const hasAll = Object.hasOwn(value2, "all");
+    const hasAny = Object.hasOwn(value2, "any");
+    const hasCondition = Object.hasOwn(value2, "value") || Object.hasOwn(value2, "equals") || Object.hasOwn(value2, "notEquals");
     if (hasAll || hasAny) {
-      if (hasAll === hasAny || hasCondition || Object.keys(value).length !== 1) {
+      if (hasAll === hasAny || hasCondition || Object.keys(value2).length !== 1) {
         return invalid();
       }
-      const rules = hasAll ? value.all : value.any;
+      const rules = hasAll ? value2.all : value2.any;
       if (!Array.isArray(rules) || rules.length === 0) {
         return invalid();
       }
@@ -17553,16 +18691,16 @@ w13c-lateral-menu-item {
       }
       return { valid: true, matches };
     }
-    const hasEquals = Object.hasOwn(value, "equals");
-    const hasNotEquals = Object.hasOwn(value, "notEquals");
-    if (!isDashboardVisibilityExpression(value.value) || hasEquals === hasNotEquals || Object.keys(value).length !== 2) {
+    const hasEquals = Object.hasOwn(value2, "equals");
+    const hasNotEquals = Object.hasOwn(value2, "notEquals");
+    if (!isDashboardVisibilityExpression(value2.value) || hasEquals === hasNotEquals || Object.keys(value2).length !== 2) {
       return invalid();
     }
-    const expected = hasEquals ? value.equals : value.notEquals;
+    const expected = hasEquals ? value2.equals : value2.notEquals;
     if (!isVisibilityValue(expected)) {
       return invalid();
     }
-    const actual = resolve(value.value);
+    const actual = resolve(value2.value);
     if (actual === undefined) {
       return { valid: true, matches: false };
     }
@@ -17571,17 +18709,17 @@ w13c-lateral-menu-item {
   function invalid() {
     return { valid: false, matches: false };
   }
-  function isVisibilityValue(value) {
-    return value === null || typeof value === "string" || typeof value === "boolean" || typeof value === "number" && Number.isFinite(value);
+  function isVisibilityValue(value2) {
+    return value2 === null || typeof value2 === "string" || typeof value2 === "boolean" || typeof value2 === "number" && Number.isFinite(value2);
   }
-  function isRecord2(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
+  function isRecord2(value2) {
+    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
   // src/components/admin/Resources/Dashboards/runtime/expressions.ts
   var DASHBOARD_PLACEHOLDER = /^\$[A-Za-z_][A-Za-z0-9_]*(?:\.|$)/;
-  function valueAt(value, path) {
+  function valueAt(value2, path) {
     if (!path) {
-      return value;
+      return value2;
     }
     const segments = dashboardPathSegments(path);
     if (!segments) {
@@ -17601,9 +18739,9 @@ w13c-lateral-menu-item {
         return;
       }
       return current[part];
-    }, value);
+    }, value2);
   }
-  function setValueAt(target2, path, value) {
+  function setValueAt(target2, path, value2) {
     const parts = dashboardPathSegments(path);
     if (!parts) {
       return false;
@@ -17616,11 +18754,11 @@ w13c-lateral-menu-item {
       }
       current = current[part];
     }
-    current[parts.at(-1)] = value;
+    current[parts.at(-1)] = value2;
     return true;
   }
-  function textAt(value, path, fallback = "") {
-    const found = valueAt(value, path);
+  function textAt(value2, path, fallback = "") {
+    const found = valueAt(value2, path);
     if (found === null || found === undefined) {
       return fallback;
     }
@@ -17632,8 +18770,8 @@ w13c-lateral-menu-item {
     }
     return fallback;
   }
-  function arrayAt(value, path) {
-    const found = valueAt(value, path);
+  function arrayAt(value2, path) {
+    const found = valueAt(value2, path);
     return Array.isArray(found) ? found : [];
   }
   function resolveExpression(expression, vars) {
@@ -17678,11 +18816,11 @@ w13c-lateral-menu-item {
   function resolveParams(params, vars) {
     const out = {};
     for (const [key, expression] of Object.entries(params ?? {})) {
-      const value = resolveExpression(expression, vars);
-      if (value === undefined || value === null || value === "") {
+      const value2 = resolveExpression(expression, vars);
+      if (value2 === undefined || value2 === null || value2 === "") {
         continue;
       }
-      out[key] = String(value);
+      out[key] = String(value2);
     }
     return out;
   }
@@ -17692,24 +18830,24 @@ w13c-lateral-menu-item {
     }
     const out = {};
     for (const [key, expression] of Object.entries(body)) {
-      const value = resolveExpression(expression, vars);
-      if (value === undefined) {
+      const value2 = resolveExpression(expression, vars);
+      if (value2 === undefined) {
         continue;
       }
-      setBodyValue(out, key, value);
+      setBodyValue(out, key, value2);
     }
     return out;
   }
-  function setBodyValue(target2, path, value) {
-    if (!setValueAt(target2, path, value)) {
+  function setBodyValue(target2, path, value2) {
+    if (!setValueAt(target2, path, value2)) {
       throw new Error(`Unsafe dashboard body path "${path}"`);
     }
   }
 
   // src/components/admin/Resources/Dashboards/runtime/media.ts
-  function mediaValue(value, field, sourceId) {
-    return (Array.isArray(value) ? value : arrayAt({ value }, "value")).map((item) => {
-      const source2 = sourceMediaItem(item, field, sourceId);
+  function mediaValue(value2, field2, sourceId) {
+    return (Array.isArray(value2) ? value2 : arrayAt({ value: value2 }, "value")).map((item) => {
+      const source2 = sourceMediaItem(item, field2, sourceId);
       return source2.id && source2.url ? source2 : normalizedMediaItem(item) ?? source2;
     }).filter((item) => item.id && item.url);
   }
@@ -17732,35 +18870,35 @@ w13c-lateral-menu-item {
       ...record.pending === true ? { pending: true } : {}
     };
   }
-  function sourceMediaItem(item, field, sourceId) {
+  function sourceMediaItem(item, field2, sourceId) {
     return {
-      id: textAt(item, field.item.idPath, textAt(item, field.item.urlPath)),
-      url: mediaUrl(item, field, sourceId),
-      alt: field.item.altPath ? textAt(item, field.item.altPath) : undefined
+      id: textAt(item, field2.item.idPath, textAt(item, field2.item.urlPath)),
+      url: mediaUrl(item, field2, sourceId),
+      alt: field2.item.altPath ? textAt(item, field2.item.altPath) : undefined
     };
   }
-  function mediaUrl(item, field, sourceId) {
-    const raw = textAt(item, field.item.urlPath);
+  function mediaUrl(item, field2, sourceId) {
+    const raw = textAt(item, field2.item.urlPath);
     if (isRenderableUrl(raw)) {
       return raw;
     }
-    const id = textAt(item, field.item.idPath);
-    const endpoint = mediaFileEndpoint(field);
+    const id = textAt(item, field2.item.idPath);
+    const endpoint = mediaFileEndpoint(field2);
     if (!sourceId || !endpoint || !id) {
       return raw;
     }
     return route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(endpoint)}?id=${encodeURIComponent(id)}`);
   }
-  function mediaFileEndpoint(field) {
-    const upload = field.actions?.upload?.endpoint ?? "";
+  function mediaFileEndpoint(field2) {
+    const upload = field2.actions?.upload?.endpoint ?? "";
     if (!upload.startsWith("upload") || upload.length <= "upload".length) {
       return "";
     }
     const rest = upload.slice("upload".length);
     return `${rest.charAt(0).toLowerCase()}${rest.slice(1)}`;
   }
-  function isRenderableUrl(value) {
-    return /^(https?:|blob:|data:|\/)/.test(value);
+  function isRenderableUrl(value2) {
+    return /^(https?:|blob:|data:|\/)/.test(value2);
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/fieldSupport.ts
@@ -17777,41 +18915,41 @@ w13c-lateral-menu-item {
       return true;
     }).map(optionData);
   }
-  function textValue(value) {
-    return value === null || value === undefined ? "" : String(value);
+  function textValue(value2) {
+    return value2 === null || value2 === undefined ? "" : String(value2);
   }
-  function numberValue(value) {
-    if (value === null || value === undefined || value === "") {
+  function numberValue(value2) {
+    if (value2 === null || value2 === undefined || value2 === "") {
       return "";
     }
-    const parsed = typeof value === "number" ? value : Number(value);
+    const parsed = typeof value2 === "number" ? value2 : Number(value2);
     return Number.isFinite(parsed) ? parsed : "";
   }
-  function readonlyValue(value) {
-    return Array.isArray(value) ? value.map(textValue).map((item) => item.trim()).filter(Boolean) : textValue(value);
+  function readonlyValue(value2) {
+    return Array.isArray(value2) ? value2.map(textValue).map((item) => item.trim()).filter(Boolean) : textValue(value2);
   }
-  function tokenValue(value) {
-    return Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
+  function tokenValue(value2) {
+    return Array.isArray(value2) ? value2.map(textValue).filter(Boolean) : [];
   }
-  function tableValue(value) {
-    return Array.isArray(value) ? value.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item)) : [];
+  function tableValue(value2) {
+    return Array.isArray(value2) ? value2.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item)) : [];
   }
-  function recordValue(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value) ? { ...value } : {};
+  function recordValue(value2) {
+    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? { ...value2 } : {};
   }
-  function schemaDefinitions(field, fields, definitions) {
-    if (!field.exclude) {
+  function schemaDefinitions(field2, fields, definitions) {
+    if (!field2.exclude) {
       return definitions;
     }
-    const source2 = valueAt(fields, field.exclude.from.slice("$field.".length));
+    const source2 = valueAt(fields, field2.exclude.from.slice("$field.".length));
     const excluded = new Set((Array.isArray(source2) ? source2 : [source2]).flatMap((item) => {
-      const value = valueAt(item, field.exclude.valuePath);
-      return typeof value === "string" || typeof value === "number" ? [String(value)] : [];
+      const value2 = valueAt(item, field2.exclude.valuePath);
+      return typeof value2 === "string" || typeof value2 === "number" ? [String(value2)] : [];
     }));
     return definitions.filter((definition) => !excluded.has(definition.id));
   }
-  function isCreatable(field) {
-    return Boolean(field.allowCustom || field.lookup?.create?.mode === "inline");
+  function isCreatable(field2) {
+    return Boolean(field2.allowCustom || field2.lookup?.create?.mode === "inline");
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/money.ts
@@ -17825,8 +18963,8 @@ w13c-lateral-menu-item {
       return 2;
     }
   }
-  function formatMinorUnits(value, fractionDigits, allowDecimals, locale = dashboardLocale()) {
-    const minorUnits = integerValue(value);
+  function formatMinorUnits(value2, fractionDigits, allowDecimals, locale = dashboardLocale()) {
+    const minorUnits = integerValue(value2);
     if (minorUnits === undefined) {
       return "";
     }
@@ -17842,12 +18980,12 @@ w13c-lateral-menu-item {
     return `${sign}${major}${separator}${remainder.toString().padStart(fractionDigits, "0")}`;
   }
   function parseMajorUnits(rawValue, fractionDigits, allowDecimals) {
-    const value = rawValue.trim().replaceAll(/\s/gu, "");
-    if (!value) {
+    const value2 = rawValue.trim().replaceAll(/\s/gu, "");
+    if (!value2) {
       return { ok: true, value: "" };
     }
     const pattern = allowDecimals && fractionDigits > 0 ? /^([+-]?)(\d+)(?:([,.])(\d+))?$/u : /^([+-]?)(\d+)$/u;
-    const match = pattern.exec(value);
+    const match = pattern.exec(value2);
     if (!match) {
       return {
         ok: false,
@@ -17868,12 +19006,12 @@ w13c-lateral-menu-item {
     }
     return { ok: true, value: parsed };
   }
-  function integerValue(value) {
-    if (typeof value === "number" && Number.isSafeInteger(value)) {
-      return BigInt(value);
+  function integerValue(value2) {
+    if (typeof value2 === "number" && Number.isSafeInteger(value2)) {
+      return BigInt(value2);
     }
-    if (typeof value === "string" && /^[+-]?\d+$/u.test(value)) {
-      const parsed = BigInt(value);
+    if (typeof value2 === "string" && /^[+-]?\d+$/u.test(value2)) {
+      const parsed = BigInt(value2);
       if (parsed <= BigInt(Number.MAX_SAFE_INTEGER) && parsed >= BigInt(Number.MIN_SAFE_INTEGER)) {
         return parsed;
       }
@@ -17895,15 +19033,15 @@ w13c-lateral-menu-item {
     return `${fieldId}::${nestedId}`;
   }
   function detailLookupTargets(widget) {
-    return detailFields(widget).flatMap((field) => {
-      if (isLookupField(field)) {
-        return [{ key: field.id, lookup: field.lookup, selectedField: field }];
+    return detailFields(widget).flatMap((field2) => {
+      if (isLookupField(field2)) {
+        return [{ key: field2.id, lookup: field2.lookup, selectedField: field2 }];
       }
-      if (field.type === "table") {
-        return field.columns.flatMap((column) => column.editable === true && column.type === "combobox" && column.lookup ? [{ key: nestedLookupKey(field.id, column.id), lookup: column.lookup }] : []);
+      if (field2.type === "table") {
+        return field2.columns.flatMap((column) => column.editable === true && column.type === "combobox" && column.lookup ? [{ key: nestedLookupKey(field2.id, column.id), lookup: column.lookup }] : []);
       }
-      if (field.type === "reorderable-list") {
-        return field.fields.flatMap((item) => item.type === "combobox" && item.lookup ? [{ key: nestedLookupKey(field.id, item.id), lookup: item.lookup }] : []);
+      if (field2.type === "reorderable-list") {
+        return field2.fields.flatMap((item) => item.type === "combobox" && item.lookup ? [{ key: nestedLookupKey(field2.id, item.id), lookup: item.lookup }] : []);
       }
       return [];
     });
@@ -17917,8 +19055,8 @@ w13c-lateral-menu-item {
     }
     return new Set(detailLookupTargets(widget).filter((target2) => Object.values(target2.lookup.params ?? {}).some((expression) => expression === `$field.${changedFieldId}` || expression.startsWith(`$field.${changedFieldId}.`))).map((target2) => target2.key));
   }
-  function isLookupField(field) {
-    return (field.type === "combobox" || field.type === "tokens") && Boolean(field.lookup);
+  function isLookupField(field2) {
+    return (field2.type === "combobox" || field2.type === "tokens") && Boolean(field2.lookup);
   }
   function detailFields(widget) {
     return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
@@ -17949,131 +19087,131 @@ w13c-lateral-menu-item {
     }
     return { ...base, editable: true, type };
   }
-  function reorderableField(fieldId, field, options) {
+  function reorderableField(fieldId, field2, options) {
     const base = {
-      id: field.id,
-      label: field.label,
-      path: field.path,
-      ...field.required ? { required: true } : {},
-      ...field.placeholder ? { placeholder: field.placeholder } : {}
+      id: field2.id,
+      label: field2.label,
+      path: field2.path,
+      ...field2.required ? { required: true } : {},
+      ...field2.placeholder ? { placeholder: field2.placeholder } : {}
     };
-    const type = field.type ?? "text";
+    const type = field2.type ?? "text";
     if (type === "select") {
-      return { ...base, type, options: (field.options ?? []).map(optionData) };
+      return { ...base, type, options: (field2.options ?? []).map(optionData) };
     }
     if (type === "combobox") {
-      return { ...base, type, options: optionList(field.options, options[nestedLookupKey(fieldId, field.id)] ?? []) };
+      return { ...base, type, options: optionList(field2.options, options[nestedLookupKey(fieldId, field2.id)] ?? []) };
     }
     return { ...base, type };
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/fields.ts
-  function detailField(field, resource, fields, options, sourceId, schemas = {}) {
-    const value = Object.hasOwn(fields, field.id) ? fields[field.id] : valueAt(resource, field.path);
+  function detailField(field2, resource, fields, options, sourceId, schemas = {}) {
+    const value2 = Object.hasOwn(fields, field2.id) ? fields[field2.id] : valueAt(resource, field2.path);
     const base = {
-      id: field.id,
-      label: field.label,
-      ...field.required ? { required: true } : {},
-      ..."placeholder" in field && field.placeholder ? { placeholder: field.placeholder } : {}
+      id: field2.id,
+      label: field2.label,
+      ...field2.required ? { required: true } : {},
+      ..."placeholder" in field2 && field2.placeholder ? { placeholder: field2.placeholder } : {}
     };
-    if (field.type === "number") {
+    if (field2.type === "number") {
       return {
         ...base,
         input: "number",
-        value: numberValue(value),
-        ...field.min !== undefined ? { min: field.min } : {},
-        ...field.max !== undefined ? { max: field.max } : {},
-        ...field.step !== undefined ? { step: field.step } : {}
+        value: numberValue(value2),
+        ...field2.min !== undefined ? { min: field2.min } : {},
+        ...field2.max !== undefined ? { max: field2.max } : {},
+        ...field2.step !== undefined ? { step: field2.step } : {}
       };
     }
-    if (field.type === "money") {
-      const currency = field.currencyPath ? textValue(valueAt(fields, field.currencyPath) ?? valueAt(resource, field.currencyPath)) : "";
-      const allowDecimals = field.allowDecimals === undefined ? true : typeof field.allowDecimals === "boolean" ? field.allowDecimals : matchesDashboardVisibility(field.allowDecimals, { fields, resource });
+    if (field2.type === "money") {
+      const currency = field2.currencyPath ? textValue(valueAt(fields, field2.currencyPath) ?? valueAt(resource, field2.currencyPath)) : "";
+      const allowDecimals = field2.allowDecimals === undefined ? true : typeof field2.allowDecimals === "boolean" ? field2.allowDecimals : matchesDashboardVisibility(field2.allowDecimals, { fields, resource });
       return {
         ...base,
         input: "money",
-        value: numberValue(value),
+        value: numberValue(value2),
         ...currency ? { currency } : {},
         fractionDigits: currencyFractionDigits(currency || undefined),
         allowDecimals
       };
     }
-    if (field.type === "checkbox") {
-      return { ...base, input: "checkbox", value: value === true };
+    if (field2.type === "checkbox") {
+      return { ...base, input: "checkbox", value: value2 === true };
     }
-    if (field.type === "textarea") {
+    if (field2.type === "textarea") {
       return {
         ...base,
         input: "textarea",
-        value: textValue(value),
-        ...field.rows !== undefined ? { rows: field.rows } : {}
+        value: textValue(value2),
+        ...field2.rows !== undefined ? { rows: field2.rows } : {}
       };
     }
-    if (field.type === "select") {
-      return { ...base, input: "select", value: textValue(value), options: field.options.map(optionData) };
+    if (field2.type === "select") {
+      return { ...base, input: "select", value: textValue(value2), options: field2.options.map(optionData) };
     }
-    if (field.type === "combobox") {
+    if (field2.type === "combobox") {
       return {
         ...base,
         input: "combobox",
-        value: textValue(value),
-        options: optionList(field.options, options[field.id] ?? []),
-        creatable: isCreatable(field)
+        value: textValue(value2),
+        options: optionList(field2.options, options[field2.id] ?? []),
+        creatable: isCreatable(field2)
       };
     }
-    if (field.type === "tokens") {
+    if (field2.type === "tokens") {
       return {
         ...base,
         input: "tokens",
-        value: tokenValue(value),
-        options: optionList(field.options, options[field.id] ?? []),
-        creatable: isCreatable(field)
+        value: tokenValue(value2),
+        options: optionList(field2.options, options[field2.id] ?? []),
+        creatable: isCreatable(field2)
       };
     }
-    if (field.type === "table") {
+    if (field2.type === "table") {
       return {
         ...base,
         input: "table",
-        value: tableValue(value),
-        columns: field.columns.map((column) => tableColumn(field.id, column, options)),
-        ...field.derive ? { derive: field.derive } : {},
-        ...field.editable === true ? { editable: true } : {},
-        ...field.addLabel ? { addLabel: field.addLabel } : {}
+        value: tableValue(value2),
+        columns: field2.columns.map((column) => tableColumn(field2.id, column, options)),
+        ...field2.derive ? { derive: field2.derive } : {},
+        ...field2.editable === true ? { editable: true } : {},
+        ...field2.addLabel ? { addLabel: field2.addLabel } : {}
       };
     }
-    if (field.type === "reorderable-list") {
+    if (field2.type === "reorderable-list") {
       return {
         ...base,
         input: "reorderable-list",
-        value: tableValue(value),
-        itemKey: field.itemKey,
-        ...field.positionPath ? { positionPath: field.positionPath } : {},
-        reorderableFields: field.fields.map((item) => reorderableField(field.id, item, options)),
-        ...field.addLabel ? { addLabel: field.addLabel } : {},
-        ...field.minItems !== undefined ? { minItems: field.minItems } : {},
-        ...field.maxItems !== undefined ? { maxItems: field.maxItems } : {}
+        value: tableValue(value2),
+        itemKey: field2.itemKey,
+        ...field2.positionPath ? { positionPath: field2.positionPath } : {},
+        reorderableFields: field2.fields.map((item) => reorderableField(field2.id, item, options)),
+        ...field2.addLabel ? { addLabel: field2.addLabel } : {},
+        ...field2.minItems !== undefined ? { minItems: field2.minItems } : {},
+        ...field2.maxItems !== undefined ? { maxItems: field2.maxItems } : {}
       };
     }
-    if (field.type === "schema") {
-      const schema = schemas[field.id];
+    if (field2.type === "schema") {
+      const schema = schemas[field2.id];
       return {
         ...base,
         input: "schema",
-        value: recordValue(value),
-        schemaDefinitions: schemaDefinitions(field, fields, schema?.definitions ?? []),
+        value: recordValue(value2),
+        schemaDefinitions: schemaDefinitions(field2, fields, schema?.definitions ?? []),
         schemaStatus: schema?.status ?? "loading"
       };
     }
-    if (field.type === "media") {
-      return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
+    if (field2.type === "media") {
+      return { ...base, input: "media-list", value: mediaValue(value2, field2, sourceId), accept: "image/*" };
     }
-    if (field.type === "readonly") {
-      if (field.format === "image") {
-        return { ...base, input: "image", value: textValue(value) };
+    if (field2.type === "readonly") {
+      if (field2.format === "image") {
+        return { ...base, input: "image", value: textValue(value2) };
       }
-      return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
+      return { ...base, input: field2.format === "badge" ? "badge" : "readonly", value: readonlyValue(value2) };
     }
-    return { ...base, input: "text", value: textValue(value) };
+    return { ...base, input: "text", value: textValue(value2) };
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/detail.ts
@@ -18092,13 +19230,13 @@ w13c-lateral-menu-item {
   }
   function fieldValues(widget, resource) {
     const all = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
-    return Object.fromEntries(all.map((field) => [field.id, valueAt(resource, field.path)]));
+    return Object.fromEntries(all.map((field2) => [field2.id, valueAt(resource, field2.path)]));
   }
   function sections(sections2, resource, fields, options, sourceId, schemas) {
     return sections2.map((section) => ({
       title: section.title,
       ...section.description ? { description: section.description } : {},
-      fields: section.fields.filter((field) => matchesDashboardVisibility(field.visibleWhen, { fields, resource })).map((field) => detailField(field, resource, fields, options, sourceId, schemas))
+      fields: section.fields.filter((field2) => matchesDashboardVisibility(field2.visibleWhen, { fields, resource })).map((field2) => detailField(field2, resource, fields, options, sourceId, schemas))
     }));
   }
   function actionData(action) {
@@ -18112,11 +19250,11 @@ w13c-lateral-menu-item {
       confirm: action.confirm
     };
   }
-  function isActionIcon(value) {
-    return value === "archive" || value === "download" || value === "link" || value === "trash";
+  function isActionIcon(value2) {
+    return value2 === "archive" || value2 === "download" || value2 === "link" || value2 === "trash";
   }
-  function record(value) {
-    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  function record(value2) {
+    return value2 && typeof value2 === "object" && !Array.isArray(value2) ? value2 : {};
   }
   // src/components/admin/Resources/Dashboards/widgets/w-section/WSection.ts
   class DashboardWSection extends CmsDetailSection {
@@ -18134,15 +19272,15 @@ w13c-lateral-menu-item {
   function emitWidgetEvent(host, type, detail) {
     host.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
   }
-  function setText(root, selector, value) {
+  function setText(root, selector, value2) {
     const element = root.querySelector(selector);
     if (element) {
-      element.textContent = value;
+      element.textContent = value2;
     }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/icons.ts
-  var SVG_NS2 = "http://www.w3.org/2000/svg";
+  var SVG_NS3 = "http://www.w3.org/2000/svg";
   var PATHS = {
     archive: ["M3 7h18", "M5 7l1 14h12l1-14", "M9 11h6"],
     download: ["M12 3v12", "m7 10 5 5 5-5", "M5 21h14"],
@@ -18156,13 +19294,13 @@ w13c-lateral-menu-item {
     if (!icon) {
       return null;
     }
-    const svg2 = document.createElementNS(SVG_NS2, "svg");
+    const svg2 = document.createElementNS(SVG_NS3, "svg");
     svg2.setAttribute("slot", "icon");
     svg2.setAttribute("aria-hidden", "true");
     svg2.setAttribute("viewBox", "0 0 24 24");
     svg2.setAttribute("focusable", "false");
     for (const data of PATHS[icon]) {
-      const path = document.createElementNS(SVG_NS2, "path");
+      const path = document.createElementNS(SVG_NS3, "path");
       path.setAttribute("d", data);
       svg2.append(path);
     }
@@ -18200,9 +19338,9 @@ w13c-lateral-menu-item {
   function renderOverflowMenu(actions) {
     const menu = document.createElement("p9r-action-menu");
     menu.setAttribute("label", "More actions");
-    for (const [label, sectionActions] of groupedSections(actions)) {
+    for (const [label2, sectionActions] of groupedSections(actions)) {
       const section = document.createElement("p9r-action-menu-section");
-      section.setAttribute("label", label);
+      section.setAttribute("label", label2);
       for (const action of sectionActions) {
         section.append(renderMenuItem(action));
       }
@@ -18229,8 +19367,8 @@ w13c-lateral-menu-item {
   function groupedSections(actions) {
     const sections2 = new Map;
     for (const action of actions) {
-      const label = action.section ?? "Other actions";
-      sections2.set(label, [...sections2.get(label) ?? [], action]);
+      const label2 = action.section ?? "Other actions";
+      sections2.set(label2, [...sections2.get(label2) ?? [], action]);
     }
     return Array.from(sections2);
   }
@@ -18382,7 +19520,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/template.html
-  var template_default8 = `<section class="media-field">
+  var template_default9 = `<section class="media-field">
     <div class="label-row">
         <span data-label></span>
     </div>
@@ -18392,11 +19530,11 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/utils.ts
-  function numberData(value) {
-    if (value === undefined) {
+  function numberData(value2) {
+    if (value2 === undefined) {
       return null;
     }
-    const number = Number(value);
+    const number = Number(value2);
     return Number.isInteger(number) ? number : null;
   }
   function tileFromEvent(event) {
@@ -18523,7 +19661,7 @@ button {
   function removeButton(index) {
     return mediaButton("remove", index, "x", true, "Remove media");
   }
-  function mediaButton(action, index, label, danger = false, ariaLabel = label) {
+  function mediaButton(action, index, label2, danger = false, ariaLabel = label2) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "tile-action";
@@ -18536,21 +19674,21 @@ button {
     }
     button.setAttribute("aria-label", ariaLabel);
     button.title = ariaLabel;
-    button.textContent = label;
+    button.textContent = label2;
     return button;
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/WMediaField.ts
   class DashboardWMediaField extends U2 {
     currentItems = [];
-    drag = new MediaDragController(() => this.shadowRoot, (from, to2) => this.move(from, to2), (value) => {
-      this.suppressClick = value;
+    drag = new MediaDragController(() => this.shadowRoot, (from, to2) => this.move(from, to2), (value2) => {
+      this.suppressClick = value2;
     });
     localFiles = new LocalMediaFiles;
     pendingPick = { action: "upload" };
     suppressClick = false;
     constructor() {
-      super({ css: style_default7, template: template_default8 });
+      super({ css: style_default7, template: template_default9 });
     }
     static get observedAttributes() {
       return ["label", "accept"];
@@ -18580,8 +19718,8 @@ button {
     get items() {
       return this.currentItems.map((item) => ({ ...item }));
     }
-    set items(value) {
-      this.currentItems = value.map((item) => ({ ...item }));
+    set items(value2) {
+      this.currentItems = value2.map((item) => ({ ...item }));
       if (this.isConnected) {
         this.sync();
       }
@@ -18682,54 +19820,54 @@ button {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/mediaControl.ts
-  function mediaList(field) {
+  function mediaList(field2) {
     const input = document.createElement("cms-dashboard-w-media-field");
-    input.setAttribute("label", field.label);
-    input.setAttribute("accept", field.accept ?? "image/*");
-    input.items = mediaValue2(field.value);
-    input.dataset.fieldControl = field.id;
+    input.setAttribute("label", field2.label);
+    input.setAttribute("accept", field2.accept ?? "image/*");
+    input.items = mediaValue2(field2.value);
+    input.dataset.fieldControl = field2.id;
     return input;
   }
   function isMediaControl(control) {
     return "items" in control && Array.isArray(control.items);
   }
-  function mediaValue2(value) {
-    if (!Array.isArray(value)) {
+  function mediaValue2(value2) {
+    if (!Array.isArray(value2)) {
       return [];
     }
-    return value.filter((item) => Boolean(item) && typeof item === "object" && ("url" in item));
+    return value2.filter((item) => Boolean(item) && typeof item === "object" && ("url" in item));
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/display.ts
-  function badge(value) {
+  function badge(value2) {
     const element = document.createElement("span");
     element.className = "badge";
-    element.textContent = value;
+    element.textContent = value2;
     return element;
   }
-  function image(field) {
-    const value = String(field.value ?? "").trim();
-    if (!value) {
+  function image(field2) {
+    const value2 = String(field2.value ?? "").trim();
+    if (!value2) {
       return readonlyValue2("No image");
     }
     const element = document.createElement("img");
     element.className = "detail-image";
-    element.src = value;
-    element.alt = field.label;
+    element.src = value2;
+    element.alt = field2.label;
     element.loading = "lazy";
     return element;
   }
-  function readonlyValue2(value) {
-    if (Array.isArray(value)) {
-      return readonlyList(value);
+  function readonlyValue2(value2) {
+    if (Array.isArray(value2)) {
+      return readonlyList(value2);
     }
     const element = document.createElement("span");
     element.className = "readonly";
-    element.textContent = String(value);
+    element.textContent = String(value2);
     return element;
   }
-  function readonlyList(value) {
-    if (!value.length) {
+  function readonlyList(value2) {
+    if (!value2.length) {
       const element = document.createElement("span");
       element.className = "readonly readonly-empty";
       element.textContent = "None";
@@ -18737,27 +19875,27 @@ button {
     }
     const list = document.createElement("ul");
     list.className = "readonly readonly-list";
-    for (const item of value) {
-      const text2 = typeof item === "string" ? item : String(item.id ?? "");
-      if (!text2) {
+    for (const item of value2) {
+      const text3 = typeof item === "string" ? item : String(item.id ?? "");
+      if (!text3) {
         continue;
       }
       const entry = document.createElement("li");
-      entry.textContent = text2;
+      entry.textContent = text3;
       list.append(entry);
     }
     return list;
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/shared.ts
-  function bindFieldControl(control, field) {
-    control.dataset.fieldControl = field.id;
+  function bindFieldControl(control, field2) {
+    control.dataset.fieldControl = field2.id;
   }
-  function optionElement(option, value) {
+  function optionElement(option, value2) {
     const element = document.createElement("option");
     element.value = option.value;
     element.textContent = option.label;
-    element.selected = option.value === value;
+    element.selected = option.value === value2;
     return element;
   }
   function isValueControl(control) {
@@ -18768,183 +19906,183 @@ button {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/inputFields.ts
-  function textInput(field) {
+  function textInput(field2) {
     const input = document.createElement("p9r-input");
-    input.setAttribute("label", field.label);
+    input.setAttribute("label", field2.label);
     input.setAttribute("type", "text");
-    input.setAttribute("value", String(field.value));
-    applyInputMetadata(input, field);
-    input.value = String(field.value);
-    bindFieldControl(input, field);
+    input.setAttribute("value", String(field2.value));
+    applyInputMetadata(input, field2);
+    input.value = String(field2.value);
+    bindFieldControl(input, field2);
     return input;
   }
-  function numberInput(field) {
+  function numberInput(field2) {
     const input = document.createElement("p9r-input");
-    input.setAttribute("label", field.label);
+    input.setAttribute("label", field2.label);
     input.setAttribute("type", "number");
-    input.setAttribute("value", String(field.value));
+    input.setAttribute("value", String(field2.value));
     for (const attribute of ["min", "max", "step"]) {
-      const value = field[attribute];
-      if (value !== undefined) {
-        input.setAttribute(attribute, String(value));
+      const value2 = field2[attribute];
+      if (value2 !== undefined) {
+        input.setAttribute(attribute, String(value2));
       }
     }
-    applyInputMetadata(input, field);
-    input.value = String(field.value);
-    bindFieldControl(input, field);
+    applyInputMetadata(input, field2);
+    input.value = String(field2.value);
+    bindFieldControl(input, field2);
     return input;
   }
-  function moneyInput(field) {
+  function moneyInput(field2) {
     const input = document.createElement("p9r-input");
-    const value = formatMinorUnits(field.value, field.fractionDigits ?? 2, field.allowDecimals !== false);
-    input.setAttribute("label", field.label);
+    const value2 = formatMinorUnits(field2.value, field2.fractionDigits ?? 2, field2.allowDecimals !== false);
+    input.setAttribute("label", field2.label);
     input.setAttribute("type", "text");
-    input.setAttribute("inputmode", field.allowDecimals === false ? "numeric" : "decimal");
-    input.setAttribute("value", value);
-    applyInputMetadata(input, field);
-    input.value = value;
-    bindFieldControl(input, field);
+    input.setAttribute("inputmode", field2.allowDecimals === false ? "numeric" : "decimal");
+    input.setAttribute("value", value2);
+    applyInputMetadata(input, field2);
+    input.value = value2;
+    bindFieldControl(input, field2);
     return input;
   }
-  function textarea(field) {
+  function textarea(field2) {
     const input = document.createElement("p9r-textarea");
-    input.setAttribute("label", field.label);
-    input.setAttribute("rows", String(field.rows ?? 4));
-    input.setAttribute("value", String(field.value));
-    applyInputMetadata(input, field);
-    input.value = String(field.value);
-    bindFieldControl(input, field);
+    input.setAttribute("label", field2.label);
+    input.setAttribute("rows", String(field2.rows ?? 4));
+    input.setAttribute("value", String(field2.value));
+    applyInputMetadata(input, field2);
+    input.value = String(field2.value);
+    bindFieldControl(input, field2);
     return input;
   }
-  function select(field) {
+  function select(field2) {
     const input = document.createElement("p9r-select");
-    input.setAttribute("label", field.label);
-    input.setAttribute("value", String(field.value));
-    if (field.required) {
+    input.setAttribute("label", field2.label);
+    input.setAttribute("value", String(field2.value));
+    if (field2.required) {
       input.setAttribute("required", "");
     }
-    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
-    bindFieldControl(input, field);
+    input.replaceChildren(...(field2.options ?? []).map((option) => optionElement(option, String(field2.value))));
+    bindFieldControl(input, field2);
     return input;
   }
-  function combobox(field) {
+  function combobox(field2) {
     const input = document.createElement("p9r-combobox");
-    input.setAttribute("label", field.label);
-    input.setAttribute("value", String(field.value));
-    input.setAttribute("placeholder", field.placeholder ?? "");
-    if (field.required) {
+    input.setAttribute("label", field2.label);
+    input.setAttribute("value", String(field2.value));
+    input.setAttribute("placeholder", field2.placeholder ?? "");
+    if (field2.required) {
       input.setAttribute("required", "");
     }
-    if (field.creatable) {
+    if (field2.creatable) {
       input.setAttribute("creatable", "");
     }
-    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
-    input.value = String(field.value);
-    bindFieldControl(input, field);
+    input.replaceChildren(...(field2.options ?? []).map((option) => optionElement(option, String(field2.value))));
+    input.value = String(field2.value);
+    bindFieldControl(input, field2);
     return input;
   }
-  function tokenInput(field) {
+  function tokenInput(field2) {
     const input = document.createElement("p9r-token-input");
-    input.setAttribute("label", field.label);
-    input.setAttribute("value", fieldArrayValue(field).join(","));
-    input.setAttribute("placeholder", field.placeholder ?? "");
-    if (field.required) {
+    input.setAttribute("label", field2.label);
+    input.setAttribute("value", fieldArrayValue(field2).join(","));
+    input.setAttribute("placeholder", field2.placeholder ?? "");
+    if (field2.required) {
       input.setAttribute("required", "");
     }
-    if (field.creatable) {
+    if (field2.creatable) {
       input.setAttribute("creatable", "");
     }
-    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, "")));
-    bindFieldControl(input, field);
+    input.replaceChildren(...(field2.options ?? []).map((option) => optionElement(option, "")));
+    bindFieldControl(input, field2);
     return input;
   }
-  function fieldArrayValue(field) {
-    if (!Array.isArray(field.value)) {
-      return String(field.value).split(",").map((item) => item.trim()).filter(Boolean);
+  function fieldArrayValue(field2) {
+    if (!Array.isArray(field2.value)) {
+      return String(field2.value).split(",").map((item) => item.trim()).filter(Boolean);
     }
-    return field.value.filter((item) => typeof item === "string");
+    return field2.value.filter((item) => typeof item === "string");
   }
-  function applyInputMetadata(input, field) {
-    if (field.placeholder) {
-      input.setAttribute("placeholder", field.placeholder);
+  function applyInputMetadata(input, field2) {
+    if (field2.placeholder) {
+      input.setAttribute("placeholder", field2.placeholder);
     }
-    if (field.required) {
+    if (field2.required) {
       input.setAttribute("required", "");
     }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/basic.ts
-  function createBasicControl(field) {
-    if (field.input === "number") {
-      return numberInput(field);
+  function createBasicControl(field2) {
+    if (field2.input === "number") {
+      return numberInput(field2);
     }
-    if (field.input === "money") {
-      return moneyInput(field);
+    if (field2.input === "money") {
+      return moneyInput(field2);
     }
-    if (field.input === "checkbox") {
-      return checkbox(field);
+    if (field2.input === "checkbox") {
+      return checkbox(field2);
     }
-    if (field.input === "textarea") {
-      return textarea(field);
+    if (field2.input === "textarea") {
+      return textarea(field2);
     }
-    if (field.input === "select") {
-      return select(field);
+    if (field2.input === "select") {
+      return select(field2);
     }
-    if (field.input === "combobox") {
-      return combobox(field);
+    if (field2.input === "combobox") {
+      return combobox(field2);
     }
-    if (field.input === "tokens") {
-      return tokenInput(field);
+    if (field2.input === "tokens") {
+      return tokenInput(field2);
     }
-    if (field.input === "chips") {
-      return chips(field);
+    if (field2.input === "chips") {
+      return chips(field2);
     }
-    if (field.input === "badge") {
-      return badge(String(field.value));
+    if (field2.input === "badge") {
+      return badge(String(field2.value));
     }
-    if (field.input === "image") {
-      return image(field);
+    if (field2.input === "image") {
+      return image(field2);
     }
-    if (field.input === "readonly") {
-      return readonlyValue2(field.value);
+    if (field2.input === "readonly") {
+      return readonlyValue2(field2.value);
     }
-    return textInput(field);
+    return textInput(field2);
   }
-  function fieldUsesBasicInternalLabel(field) {
-    return ["text", "number", "money", "textarea", "select", "combobox", "tokens"].includes(field.input);
+  function fieldUsesBasicInternalLabel(field2) {
+    return ["text", "number", "money", "textarea", "select", "combobox", "tokens"].includes(field2.input);
   }
-  function readBasicControlValue(field, control) {
-    if (field.input === "chips") {
+  function readBasicControlValue(field2, control) {
+    if (field2.input === "chips") {
       return Array.from(control.querySelectorAll("[aria-pressed='true']")).map((button) => button.dataset.value ?? "").filter(Boolean);
     }
-    if (field.input === "tokens" && isTokenControl(control)) {
+    if (field2.input === "tokens" && isTokenControl(control)) {
       return control.values;
     }
-    if (field.input === "checkbox" && control instanceof HTMLInputElement) {
+    if (field2.input === "checkbox" && control instanceof HTMLInputElement) {
       return control.checked;
     }
-    if (field.input === "number" && isValueControl(control)) {
+    if (field2.input === "number" && isValueControl(control)) {
       if (control.value === "") {
         return "";
       }
-      const value = Number(control.value);
-      return Number.isFinite(value) ? value : "";
+      const value2 = Number(control.value);
+      return Number.isFinite(value2) ? value2 : "";
     }
-    if (field.input === "money" && isValueControl(control)) {
-      return readMoneyControlValue(field, control);
+    if (field2.input === "money" && isValueControl(control)) {
+      return readMoneyControlValue(field2, control);
     }
     if (isValueControl(control)) {
       return control.value;
     }
-    return Array.isArray(field.value) ? field.value : String(field.value);
+    return Array.isArray(field2.value) ? field2.value : String(field2.value);
   }
-  function readMoneyControlValue(field, control) {
-    const result = parseMajorUnits(control.value, field.fractionDigits ?? 2, field.allowDecimals !== false);
+  function readMoneyControlValue(field2, control) {
+    const result = parseMajorUnits(control.value, field2.fractionDigits ?? 2, field2.allowDecimals !== false);
     if (!result.ok) {
       setMoneyError(control, result.message);
       return "";
     }
-    if (field.required && result.value === "") {
+    if (field2.required && result.value === "") {
       setMoneyError(control, "This field is required.");
       return "";
     }
@@ -18958,22 +20096,22 @@ button {
     control.setAttribute("hint", message);
     control.setAttribute("hint-level", "error");
   }
-  function checkbox(field) {
+  function checkbox(field2) {
     const input = document.createElement("input");
     input.type = "checkbox";
     input.className = "detail-checkbox";
-    input.checked = field.value === true;
-    input.required = field.required === true;
-    input.setAttribute("aria-label", field.label);
-    bindFieldControl(input, field);
+    input.checked = field2.value === true;
+    input.required = field2.required === true;
+    input.setAttribute("aria-label", field2.label);
+    bindFieldControl(input, field2);
     return input;
   }
-  function chips(field) {
-    const selected2 = new Set(arrayValue(field));
+  function chips(field2) {
+    const selected2 = new Set(arrayValue(field2));
     const group = document.createElement("div");
     group.className = "chip-group";
-    bindFieldControl(group, field);
-    for (const option of field.options ?? []) {
+    bindFieldControl(group, field2);
+    for (const option of field2.options ?? []) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "chip";
@@ -18984,39 +20122,39 @@ button {
     }
     return group;
   }
-  function arrayValue(field) {
-    if (!Array.isArray(field.value)) {
-      return String(field.value).split(",").map((item) => item.trim()).filter(Boolean);
+  function arrayValue(field2) {
+    if (!Array.isArray(field2.value)) {
+      return String(field2.value).split(",").map((item) => item.trim()).filter(Boolean);
     }
-    return field.value.filter((item) => typeof item === "string");
+    return field2.value.filter((item) => typeof item === "string");
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema.ts
-  function createSchemaControl(field) {
+  function createSchemaControl(field2) {
     const root = document.createElement("div");
     root.className = "detail-schema";
-    bindFieldControl(root, field);
+    bindFieldControl(root, field2);
     root.addEventListener("input", markDirty);
     root.addEventListener("change", markDirty);
-    const definitions = field.schemaDefinitions ?? [];
-    if (field.schemaStatus !== "ready") {
-      root.append(statusMessage(field.schemaStatus));
+    const definitions = field2.schemaDefinitions ?? [];
+    if (field2.schemaStatus !== "ready") {
+      root.append(statusMessage(field2.schemaStatus));
       return root;
     }
     if (definitions.length === 0) {
       root.append(statusMessage("empty"));
       return root;
     }
-    const values = recordValue2(field.value);
+    const values = recordValue2(field2.value);
     root.append(...definitions.map((definition) => schemaRow(definition, values[definition.id])));
     return root;
   }
-  function readSchemaControlValue(field, control) {
-    const result = recordValue2(field.value);
-    if (field.schemaStatus !== "ready") {
+  function readSchemaControlValue(field2, control) {
+    const result = recordValue2(field2.value);
+    if (field2.schemaStatus !== "ready") {
       return result;
     }
-    const definitions = new Map((field.schemaDefinitions ?? []).map((definition) => [definition.id, definition]));
+    const definitions = new Map((field2.schemaDefinitions ?? []).map((definition) => [definition.id, definition]));
     for (const element of Array.from(control.querySelectorAll("[data-schema-key]"))) {
       const key = element.dataset.schemaKey ?? "";
       const definition = definitions.get(key);
@@ -19027,10 +20165,10 @@ button {
     }
     return result;
   }
-  function schemaRow(definition, value) {
+  function schemaRow(definition, value2) {
     const row = document.createElement("div");
     row.className = "detail-schema-row";
-    const control = schemaInput(definition, value);
+    const control = schemaInput(definition, value2);
     control.dataset.schemaKey = definition.id;
     row.append(control);
     if (definition.unit) {
@@ -19041,19 +20179,19 @@ button {
     }
     return row;
   }
-  function schemaInput(definition, value) {
+  function schemaInput(definition, value2) {
     if (definition.type === "boolean") {
       const input2 = document.createElement("input");
       input2.type = "checkbox";
       input2.className = "detail-checkbox";
-      input2.checked = value === true;
+      input2.checked = value2 === true;
       input2.required = definition.required === true;
       input2.setAttribute("aria-label", definition.label);
       return input2;
     }
     if (definition.options?.length) {
       const input2 = document.createElement("p9r-select");
-      const selected2 = textValue2(value);
+      const selected2 = textValue2(value2);
       input2.setAttribute("label", definition.label);
       input2.setAttribute("value", selected2);
       if (definition.required) {
@@ -19066,11 +20204,11 @@ button {
     const input = document.createElement("p9r-input");
     input.setAttribute("label", definition.label);
     input.setAttribute("type", definition.type === "number" ? "number" : "text");
-    input.setAttribute("value", textValue2(value));
+    input.setAttribute("value", textValue2(value2));
     if (definition.required) {
       input.setAttribute("required", "");
     }
-    input.value = textValue2(value);
+    input.value = textValue2(value2);
     return input;
   }
   function readSchemaValue(definition, control) {
@@ -19083,8 +20221,8 @@ button {
     if (definition.type !== "number" || control.value === "") {
       return control.value;
     }
-    const value = Number(control.value);
-    return Number.isFinite(value) ? value : "";
+    const value2 = Number(control.value);
+    return Number.isFinite(value2) ? value2 : "";
   }
   function markDirty(event) {
     const control = event.target?.closest("[data-schema-key]");
@@ -19098,27 +20236,27 @@ button {
     message.textContent = status === "error" ? "Dynamic fields are temporarily unavailable. Existing values are preserved." : status === "empty" ? "No dynamic fields are configured." : "Loading dynamic fields…";
     return message;
   }
-  function recordValue2(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value) ? { ...value } : {};
+  function recordValue2(value2) {
+    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? { ...value2 } : {};
   }
-  function textValue2(value) {
-    return value === null || value === undefined ? "" : String(value);
+  function textValue2(value2) {
+    return value2 === null || value2 === undefined ? "" : String(value2);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/controls.ts
-  function createItemControl(item, index, field) {
-    const input = fieldControl(field, textAt2(item, field.path));
-    if (input instanceof HTMLInputElement && field.type === "checkbox") {
-      input.checked = booleanAt(item, field.path);
+  function createItemControl(item, index, field2) {
+    const input = fieldControl(field2, textAt2(item, field2.path));
+    if (input instanceof HTMLInputElement && field2.type === "checkbox") {
+      input.checked = booleanAt(item, field2.path);
     }
     input.dataset.itemIndex = String(index);
-    input.dataset.itemPath = field.path;
-    input.setAttribute("aria-label", field.label);
-    if (field.required) {
+    input.dataset.itemPath = field2.path;
+    input.setAttribute("aria-label", field2.label);
+    if (field2.required) {
       input.setAttribute("required", "");
     }
-    if (field.placeholder) {
-      input.setAttribute("placeholder", field.placeholder);
+    if (field2.placeholder) {
+      input.setAttribute("placeholder", field2.placeholder);
     }
     return input;
   }
@@ -19128,32 +20266,32 @@ button {
     }
     return "value" in control ? String(control.value ?? "") : "";
   }
-  function fieldControl(field, value) {
-    if (field.type === "select" || field.type === "combobox") {
-      const control = document.createElement(field.type === "select" ? "p9r-select" : "p9r-combobox");
-      control.setAttribute("aria-label", field.label);
-      control.setAttribute("value", value);
-      control.replaceChildren(...(field.options ?? []).map((option) => {
+  function fieldControl(field2, value2) {
+    if (field2.type === "select" || field2.type === "combobox") {
+      const control = document.createElement(field2.type === "select" ? "p9r-select" : "p9r-combobox");
+      control.setAttribute("aria-label", field2.label);
+      control.setAttribute("value", value2);
+      control.replaceChildren(...(field2.options ?? []).map((option) => {
         const element = document.createElement("option");
         element.value = option.value;
         element.textContent = option.label;
-        element.selected = option.value === value;
+        element.selected = option.value === value2;
         return element;
       }));
-      control.value = value;
+      control.value = value2;
       return control;
     }
     const input = document.createElement("input");
-    input.type = field.type ?? "text";
-    input.value = value;
+    input.type = field2.type ?? "text";
+    input.value = value2;
     return input;
   }
-  function textAt2(value, path) {
-    const resolved = valueAt(value, path);
+  function textAt2(value2, path) {
+    const resolved = valueAt(value2, path);
     return resolved === null || resolved === undefined ? "" : String(resolved);
   }
-  function booleanAt(value, path) {
-    const resolved = valueAt(value, path);
+  function booleanAt(value2, path) {
+    const resolved = valueAt(value2, path);
     return resolved === true || resolved === "true" || resolved === 1;
   }
 
@@ -19161,93 +20299,93 @@ button {
   function emptyData() {
     return { items: [], itemKey: "id", fields: [] };
   }
-  function normalizeData(value) {
-    const clone = structuredClone(value);
+  function normalizeData(value2) {
+    const clone = structuredClone(value2);
     return {
       ...clone,
       items: Array.isArray(clone.items) ? clone.items.filter(isRecord4) : [],
       fields: Array.isArray(clone.fields) ? clone.fields : []
     };
   }
-  function cloneData(value) {
-    return structuredClone(value);
+  function cloneData(value2) {
+    return structuredClone(value2);
   }
-  function cloneItems(value) {
-    return structuredClone(value.items);
+  function cloneItems(value2) {
+    return structuredClone(value2.items);
   }
-  function addItem(value) {
-    if (value.maxItems !== undefined && value.items.length >= value.maxItems) {
+  function addItem(value2) {
+    if (value2.maxItems !== undefined && value2.items.length >= value2.maxItems) {
       return false;
     }
-    value.items.push({});
+    value2.items.push({});
     return true;
   }
-  function removeItem(value, index) {
+  function removeItem(value2, index) {
     if (!Number.isInteger(index)) {
       return false;
     }
-    if (value.minItems !== undefined && value.items.length <= value.minItems) {
+    if (value2.minItems !== undefined && value2.items.length <= value2.minItems) {
       return false;
     }
-    value.items.splice(index, 1);
+    value2.items.splice(index, 1);
     return true;
   }
-  function moveItem(value, from, to2) {
-    if (!Number.isInteger(from) || !Number.isInteger(to2) || from === to2 || to2 < 0 || to2 >= value.items.length) {
+  function moveItem(value2, from, to2) {
+    if (!Number.isInteger(from) || !Number.isInteger(to2) || from === to2 || to2 < 0 || to2 >= value2.items.length) {
       return false;
     }
-    const [item] = value.items.splice(from, 1);
+    const [item] = value2.items.splice(from, 1);
     if (!item) {
       return false;
     }
-    value.items.splice(to2, 0, item);
+    value2.items.splice(to2, 0, item);
     return true;
   }
-  function updateItem(value, index, path, fieldValue) {
-    const item = value.items[index];
+  function updateItem(value2, index, path, fieldValue) {
+    const item = value2.items[index];
     if (!item) {
       return false;
     }
     setValueAt(item, path, fieldValue);
     return true;
   }
-  function persistPositions(value) {
-    const positionPath = value.positionPath ?? "position";
-    value.items.forEach((item, index) => setValueAt(item, positionPath, index));
+  function persistPositions(value2) {
+    const positionPath = value2.positionPath ?? "position";
+    value2.items.forEach((item, index) => setValueAt(item, positionPath, index));
   }
-  function isRecord4(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
+  function isRecord4(value2) {
+    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/view.ts
-  function renderList2(root, value) {
-    query3(root, "[data-rows]").replaceChildren(...value.items.map((item, index) => renderRow(value, item, index)));
-    renderHeader(root, value);
-    const add = query3(root, "[data-add]");
-    add.textContent = value.addLabel ?? "Add item";
-    add.disabled = value.maxItems !== undefined && value.items.length >= value.maxItems;
+  function renderList2(root, value2) {
+    query5(root, "[data-rows]").replaceChildren(...value2.items.map((item, index) => renderRow(value2, item, index)));
+    renderHeader(root, value2);
+    const add = query5(root, "[data-add]");
+    add.textContent = value2.addLabel ?? "Add item";
+    add.disabled = value2.maxItems !== undefined && value2.items.length >= value2.maxItems;
   }
   function renderedRows(root) {
     return Array.from(root.querySelectorAll(".row"));
   }
-  function renderHeader(root, value) {
-    const header = query3(root, "[data-header]");
-    header.style.setProperty("--reorderable-columns", columns(value));
+  function renderHeader(root, value2) {
+    const header = query5(root, "[data-header]");
+    header.style.setProperty("--reorderable-columns", columns(value2));
     const cells = [document.createElement("span")];
-    for (const field of value.fields) {
+    for (const field2 of value2.fields) {
       const cell = document.createElement("span");
-      cell.textContent = field.label;
+      cell.textContent = field2.label;
       cells.push(cell);
     }
     cells.push(document.createElement("span"));
     header.replaceChildren(...cells);
   }
-  function renderRow(value, item, index) {
+  function renderRow(value2, item, index) {
     const row = document.createElement("div");
     row.className = "row";
     row.dataset.index = String(index);
-    row.dataset.itemKey = String(valueAt(item, value.itemKey) ?? index);
-    row.style.setProperty("--reorderable-columns", columns(value));
+    row.dataset.itemKey = String(valueAt(item, value2.itemKey) ?? index);
+    row.style.setProperty("--reorderable-columns", columns(value2));
     const handle = document.createElement("span");
     handle.className = "handle";
     handle.title = "Drag to reorder";
@@ -19255,27 +20393,27 @@ button {
     handle.draggable = true;
     handle.textContent = "⠿";
     row.append(handle);
-    for (const field of value.fields) {
+    for (const field2 of value2.fields) {
       const fieldRoot = document.createElement("div");
       fieldRoot.className = "field";
-      fieldRoot.append(createItemControl(item, index, field));
+      fieldRoot.append(createItemControl(item, index, field2));
       row.append(fieldRoot);
     }
     const remove = document.createElement("button");
     remove.className = "remove";
     remove.type = "button";
     remove.dataset.remove = String(index);
-    remove.disabled = value.minItems !== undefined && value.items.length <= value.minItems;
+    remove.disabled = value2.minItems !== undefined && value2.items.length <= value2.minItems;
     remove.setAttribute("aria-label", "Remove item");
     remove.title = "Remove item";
     remove.textContent = "×";
     row.append(remove);
     return row;
   }
-  function columns(value) {
-    return ["24px", ...value.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" ");
+  function columns(value2) {
+    return ["24px", ...value2.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" ");
   }
-  function query3(root, selector) {
+  function query5(root, selector) {
     return root.querySelector(selector);
   }
 
@@ -19349,7 +20487,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/template.html
-  var template_default9 = `<section class="reorderable-list">
+  var template_default10 = `<section class="reorderable-list">
     <div class="header" data-header></div>
     <div class="rows" data-rows></div>
     <button class="add" data-add type="button"></button>
@@ -19361,7 +20499,7 @@ button {
     value = emptyData();
     draggingIndex = null;
     constructor() {
-      super({ css: style_default8, template: template_default9 });
+      super({ css: style_default8, template: template_default10 });
     }
     connectedCallback() {
       this.shadowRoot.addEventListener("click", this.onClick);
@@ -19385,8 +20523,8 @@ button {
     get data() {
       return cloneData(this.value);
     }
-    set data(value) {
-      this.value = normalizeData(value);
+    set data(value2) {
+      this.value = normalizeData(value2);
       if (this.isConnected) {
         this.render();
       }
@@ -19486,11 +20624,11 @@ button {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/editors.ts
-  function createTableEditor(column, value) {
+  function createTableEditor(column, value2) {
     if (column.editable !== true) {
       throw new Error("Cannot create an editor for a readonly column");
     }
-    const control = column.type === "select" ? selectEditor(column, value) : column.type === "combobox" ? comboboxEditor(column, value) : column.type === "tokens" ? tokensEditor(value) : textEditor(value);
+    const control = column.type === "select" ? selectEditor(column, value2) : column.type === "combobox" ? comboboxEditor(column, value2) : column.type === "tokens" ? tokensEditor(value2) : textEditor(value2);
     control.dataset.tableColumn = column.key;
     return control;
   }
@@ -19503,47 +20641,47 @@ button {
     }
     return isValueControl(control) ? control.value : "";
   }
-  function textEditor(value) {
+  function textEditor(value2) {
     const input = document.createElement("p9r-input");
-    const text2 = textValue3(value);
-    input.setAttribute("value", text2);
-    input.value = text2;
+    const text3 = textValue3(value2);
+    input.setAttribute("value", text3);
+    input.value = text3;
     return input;
   }
-  function selectEditor(column, value) {
+  function selectEditor(column, value2) {
     const input = document.createElement("p9r-select");
-    const text2 = textValue3(value);
-    input.setAttribute("value", text2);
-    input.replaceChildren(...column.options.map((option) => optionElement(option, text2)));
+    const text3 = textValue3(value2);
+    input.setAttribute("value", text3);
+    input.replaceChildren(...column.options.map((option) => optionElement(option, text3)));
     return input;
   }
-  function comboboxEditor(column, value) {
+  function comboboxEditor(column, value2) {
     const input = document.createElement("p9r-combobox");
-    const text2 = textValue3(value);
-    input.setAttribute("value", text2);
-    input.replaceChildren(...column.options.map((option) => optionElement(option, text2)));
-    input.value = text2;
+    const text3 = textValue3(value2);
+    input.setAttribute("value", text3);
+    input.replaceChildren(...column.options.map((option) => optionElement(option, text3)));
+    input.value = text3;
     return input;
   }
-  function tokensEditor(value) {
+  function tokensEditor(value2) {
     const input = document.createElement("p9r-token-input");
-    const values = Array.isArray(value) ? value.map(textValue3).filter(Boolean) : [];
+    const values = Array.isArray(value2) ? value2.map(textValue3).filter(Boolean) : [];
     input.setAttribute("value", values.join(","));
     return input;
   }
-  function textValue3(value) {
-    return value === null || value === undefined ? "" : String(value);
+  function textValue3(value2) {
+    return value2 === null || value2 === undefined ? "" : String(value2);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table.ts
   var tableRowSources = new WeakMap;
-  function createTableControl(field) {
+  function createTableControl(field2) {
     const root = document.createElement("div");
     root.className = "detail-table";
-    bindFieldControl(root, field);
-    root.dataset.tableEditable = String(field.editable === true);
-    const columns2 = field.columns ?? [];
-    root.style.setProperty("--detail-table-columns", tableColumns(columns2, field.editable === true));
+    bindFieldControl(root, field2);
+    root.dataset.tableEditable = String(field2.editable === true);
+    const columns2 = field2.columns ?? [];
+    root.style.setProperty("--detail-table-columns", tableColumns(columns2, field2.editable === true));
     const header = document.createElement("div");
     header.className = "detail-table-row detail-table-head";
     for (const column of columns2) {
@@ -19551,53 +20689,53 @@ button {
       cell.textContent = column.label;
       header.append(cell);
     }
-    if (field.editable) {
+    if (field2.editable) {
       header.append(document.createElement("span"));
     }
     root.append(header);
-    for (const row of tableRows(field.value)) {
-      root.append(tableRow(field, row));
+    for (const row of tableRows(field2.value)) {
+      root.append(tableRow(field2, row));
     }
-    if (field.editable) {
+    if (field2.editable) {
       const add = document.createElement("button");
       add.type = "button";
       add.className = "detail-table-add";
       add.dataset.tableAdd = "true";
-      add.textContent = field.addLabel ?? "Add row";
+      add.textContent = field2.addLabel ?? "Add row";
       root.append(add);
     }
     return root;
   }
-  function createReorderableListControl(field) {
+  function createReorderableListControl(field2) {
     const list = document.createElement("cms-dashboard-w-reorderable-list");
     const data = {
-      items: tableRows(field.value),
-      itemKey: field.itemKey ?? "id",
-      ...field.positionPath ? { positionPath: field.positionPath } : {},
-      fields: (field.reorderableFields ?? []).map((item) => ({ ...item })),
-      ...field.addLabel ? { addLabel: field.addLabel } : {},
-      ...field.minItems !== undefined ? { minItems: field.minItems } : {},
-      ...field.maxItems !== undefined ? { maxItems: field.maxItems } : {}
+      items: tableRows(field2.value),
+      itemKey: field2.itemKey ?? "id",
+      ...field2.positionPath ? { positionPath: field2.positionPath } : {},
+      fields: (field2.reorderableFields ?? []).map((item) => ({ ...item })),
+      ...field2.addLabel ? { addLabel: field2.addLabel } : {},
+      ...field2.minItems !== undefined ? { minItems: field2.minItems } : {},
+      ...field2.maxItems !== undefined ? { maxItems: field2.maxItems } : {}
     };
     list.data = data;
-    bindFieldControl(list, field);
+    bindFieldControl(list, field2);
     return list;
   }
-  function tableRow(field, row) {
+  function tableRow(field2, row) {
     const element = document.createElement("div");
     element.className = "detail-table-row";
     element.dataset.tableRow = "true";
     tableRowSources.set(element, structuredClone(row));
-    for (const column of field.columns ?? []) {
+    for (const column of field2.columns ?? []) {
       const cell = document.createElement("span");
-      if (field.editable && column.editable === true) {
+      if (field2.editable && column.editable === true) {
         cell.append(createTableEditor(column, valueAt(row, column.path)));
       } else {
         cell.textContent = tableCellDisplayValue(valueAt(row, column.path));
       }
       element.append(cell);
     }
-    if (field.editable) {
+    if (field2.editable) {
       const remove = document.createElement("button");
       remove.type = "button";
       remove.className = "detail-table-remove";
@@ -19607,49 +20745,49 @@ button {
     }
     return element;
   }
-  function readTableValue(field, control) {
-    if (!field.editable) {
-      return structuredClone(tableRows(field.value));
+  function readTableValue(field2, control) {
+    if (!field2.editable) {
+      return structuredClone(tableRows(field2.value));
     }
-    return Array.from(control.querySelectorAll("[data-table-row]")).map((row) => readTableRow(field, row)).filter(hasTableValue);
+    return Array.from(control.querySelectorAll("[data-table-row]")).map((row) => readTableRow(field2, row)).filter(hasTableValue);
   }
   function isReorderableListControl(control) {
     return control instanceof DashboardWReorderableList;
   }
-  function readTableRow(field, row) {
-    const value = structuredClone(tableRowSources.get(row) ?? {});
-    for (const column of field.columns ?? []) {
+  function readTableRow(field2, row) {
+    const value2 = structuredClone(tableRowSources.get(row) ?? {});
+    for (const column of field2.columns ?? []) {
       const input = row.querySelector(`[data-table-column="${cssEscape(column.key)}"]`);
       if (!input) {
         continue;
       }
-      setValueAt(value, column.path, readTableEditor(column, input));
+      setValueAt(value2, column.path, readTableEditor(column, input));
     }
-    return value;
+    return value2;
   }
-  function tableRows(value) {
-    if (!Array.isArray(value)) {
+  function tableRows(value2) {
+    if (!Array.isArray(value2)) {
       return [];
     }
-    return value.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item));
+    return value2.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item));
   }
-  function hasTableValue(value) {
-    if (Array.isArray(value)) {
-      return value.some(hasTableValue);
+  function hasTableValue(value2) {
+    if (Array.isArray(value2)) {
+      return value2.some(hasTableValue);
     }
-    if (isRecord5(value)) {
-      return Object.values(value).some(hasTableValue);
+    if (isRecord5(value2)) {
+      return Object.values(value2).some(hasTableValue);
     }
-    return String(value ?? "").trim().length > 0;
+    return String(value2 ?? "").trim().length > 0;
   }
-  function isRecord5(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
+  function isRecord5(value2) {
+    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
-  function tableCellDisplayValue(value) {
-    if (Array.isArray(value)) {
-      return value.map((item) => String(item)).join(", ");
+  function tableCellDisplayValue(value2) {
+    if (Array.isArray(value2)) {
+      return value2.map((item) => String(item)).join(", ");
     }
-    return value === null || value === undefined ? "" : String(value);
+    return value2 === null || value2 === undefined ? "" : String(value2);
   }
   function tableColumns(columns2, editable) {
     return [
@@ -19657,43 +20795,43 @@ button {
       ...editable ? ["72px"] : []
     ].join(" ");
   }
-  function cssEscape(value) {
-    return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value) : value.replace(/"/g, "\\\"");
+  function cssEscape(value2) {
+    return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value2) : value2.replace(/"/g, "\\\"");
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/index.ts
-  function createFieldControl(field) {
-    if (field.input === "media-list") {
-      return mediaList(field);
+  function createFieldControl(field2) {
+    if (field2.input === "media-list") {
+      return mediaList(field2);
     }
-    if (field.input === "table") {
-      return createTableControl(field);
+    if (field2.input === "table") {
+      return createTableControl(field2);
     }
-    if (field.input === "reorderable-list") {
-      return createReorderableListControl(field);
+    if (field2.input === "reorderable-list") {
+      return createReorderableListControl(field2);
     }
-    if (field.input === "schema") {
-      return createSchemaControl(field);
+    if (field2.input === "schema") {
+      return createSchemaControl(field2);
     }
-    return createBasicControl(field);
+    return createBasicControl(field2);
   }
-  function fieldUsesInternalLabel(field) {
-    return field.input === "media-list" || field.input === "reorderable-list" || field.input === "schema" || fieldUsesBasicInternalLabel(field);
+  function fieldUsesInternalLabel(field2) {
+    return field2.input === "media-list" || field2.input === "reorderable-list" || field2.input === "schema" || fieldUsesBasicInternalLabel(field2);
   }
-  function readFieldControlValue(field, control) {
-    if (field.input === "media-list" && isMediaControl(control)) {
+  function readFieldControlValue(field2, control) {
+    if (field2.input === "media-list" && isMediaControl(control)) {
       return control.items;
     }
-    if (field.input === "table") {
-      return readTableValue(field, control);
+    if (field2.input === "table") {
+      return readTableValue(field2, control);
     }
-    if (field.input === "reorderable-list" && isReorderableListControl(control)) {
+    if (field2.input === "reorderable-list" && isReorderableListControl(control)) {
       return control.items;
     }
-    if (field.input === "schema") {
-      return readSchemaControlValue(field, control);
+    if (field2.input === "schema") {
+      return readSchemaControlValue(field2, control);
     }
-    return readBasicControlValue(field, control);
+    return readBasicControlValue(field2, control);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/detailView.ts
@@ -19702,11 +20840,11 @@ button {
     constructor(root) {
       this.root = root;
     }
-    render(value) {
-      setText(this.root, "[data-title]", value.title);
-      this.renderActions(value.actions);
-      this.renderSections(this.query("[data-main]"), value.main);
-      this.renderSections(this.query("[data-aside]"), value.aside, "compact");
+    render(value2) {
+      setText(this.root, "[data-title]", value2.title);
+      this.renderActions(value2.actions);
+      this.renderSections(this.query("[data-main]"), value2.main);
+      this.renderSections(this.query("[data-aside]"), value2.aside, "compact");
     }
     refresh(previous, next) {
       if (previous.title !== next.title) {
@@ -19738,14 +20876,14 @@ button {
       if (density) {
         node.setAttribute("density", density);
       }
-      node.querySelector("[data-fields]").replaceChildren(...section.fields.map((field) => this.renderField(field)));
+      node.querySelector("[data-fields]").replaceChildren(...section.fields.map((field2) => this.renderField(field2)));
       return node;
     }
-    renderField(field) {
+    renderField(field2) {
       const node = this.template("field");
-      setText(node, "[data-field-label]", field.label);
-      node.toggleAttribute("data-internal-label", fieldUsesInternalLabel(field));
-      node.querySelector("[data-field-value]").append(createFieldControl(field));
+      setText(node, "[data-field-label]", field2.label);
+      node.toggleAttribute("data-internal-label", fieldUsesInternalLabel(field2));
+      node.querySelector("[data-field-value]").append(createFieldControl(field2));
       return node;
     }
     template(kind) {
@@ -19756,7 +20894,7 @@ button {
       return this.root.querySelector(selector);
     }
   }
-  function applyLookupOption(control, value, option) {
+  function applyLookupOption(control, value2, option) {
     const existing = Array.from(control.querySelectorAll("option")).find((item) => item.value === option.value);
     if (existing) {
       existing.textContent = option.label;
@@ -19766,7 +20904,7 @@ button {
       element.textContent = option.label;
       control.append(element);
     }
-    const nextValue = Array.isArray(value) ? value.map(String).join(",") : String(value ?? "");
+    const nextValue = Array.isArray(value2) ? value2.map(String).join(",") : String(value2 ?? "");
     control.setAttribute("value", nextValue);
     if ("value" in control && typeof control.value === "string") {
       control.value = nextValue;
@@ -19781,7 +20919,7 @@ button {
     }
     return current.every((section, sectionIndex) => {
       const nextSection = next[sectionIndex];
-      return nextSection !== undefined && section.fields.length === nextSection.fields.length && section.fields.every((field, fieldIndex) => sameFieldShape(field, nextSection.fields[fieldIndex]));
+      return nextSection !== undefined && section.fields.length === nextSection.fields.length && section.fields.every((field2, fieldIndex) => sameFieldShape(field2, nextSection.fields[fieldIndex]));
     });
   }
   function sameFieldShape(current, next) {
@@ -19820,11 +20958,11 @@ button {
       this.scopeKey = "";
       this.values = {};
     }
-    record(fieldId, value) {
-      this.values[fieldId] = value;
+    record(fieldId, value2) {
+      this.values[fieldId] = value2;
     }
     find(fieldId) {
-      return this.fields().find((field) => field.id === fieldId);
+      return this.fields().find((field2) => field2.id === fieldId);
     }
     fields() {
       const data = this.readData();
@@ -19835,11 +20973,11 @@ button {
     }
     currentFields() {
       const fields = { ...this.values };
-      const fieldsById = new Map(this.fields().map((field) => [field.id, field]));
+      const fieldsById = new Map(this.fields().map((field2) => [field2.id, field2]));
       for (const control of Array.from(this.root.querySelectorAll("[data-field-control]"))) {
-        const field = fieldsById.get(control.dataset.fieldControl ?? "");
-        if (field) {
-          fields[field.id] = readFieldControlValue(field, control);
+        const field2 = fieldsById.get(control.dataset.fieldControl ?? "");
+        if (field2) {
+          fields[field2.id] = readFieldControlValue(field2, control);
         }
       }
       return fields;
@@ -19872,12 +21010,12 @@ button {
       sourceId: dataset.sourceId ?? ""
     };
   }
-  function parseJson(value) {
-    if (!value) {
+  function parseJson(value2) {
+    if (!value2) {
       return null;
     }
     try {
-      return JSON.parse(value);
+      return JSON.parse(value2);
     } catch {
       return null;
     }
@@ -20194,13 +21332,13 @@ p9r-token-input {
   }
   function addTableRow(button, fields, emitFieldChange) {
     const control = button.closest("[data-field-control]");
-    const field = control ? fields.find(control.dataset.fieldControl ?? "") : undefined;
-    if (!control || !field || field.input !== "table") {
+    const field2 = control ? fields.find(control.dataset.fieldControl ?? "") : undefined;
+    if (!control || !field2 || field2.input !== "table") {
       return;
     }
-    control.insertBefore(tableRow(field, {}), button);
+    control.insertBefore(tableRow(field2, {}), button);
     emitFieldChange(control);
-    updateDerivedTables(field.id, fields);
+    updateDerivedTables(field2.id, fields);
   }
   function removeTableRow(button, fields, emitFieldChange) {
     const control = button.closest("[data-field-control]");
@@ -20219,39 +21357,39 @@ p9r-token-input {
       return;
     }
     const sourceValue = readFieldControlValue(sourceField, sourceControl);
-    for (const field of fields.fields()) {
-      if (field.input !== "table" || field.derive?.sourceField !== sourceFieldId) {
+    for (const field2 of fields.fields()) {
+      if (field2.input !== "table" || field2.derive?.sourceField !== sourceFieldId) {
         continue;
       }
-      const control = fields.control(field.id);
+      const control = fields.control(field2.id);
       if (!control) {
         continue;
       }
-      const rows = deriveTableRows(field, sourceValue);
-      field.value = rows;
-      replaceTableRows(control, field, rows);
+      const rows = deriveTableRows(field2, sourceValue);
+      field2.value = rows;
+      replaceTableRows(control, field2, rows);
     }
   }
-  function replaceTableRows(control, field, rows) {
+  function replaceTableRows(control, field2, rows) {
     control.querySelectorAll("[data-table-row]").forEach((row) => row.remove());
     const anchor = control.querySelector("[data-table-add]");
     for (const row of rows) {
-      control.insertBefore(tableRow(field, row), anchor);
+      control.insertBefore(tableRow(field2, row), anchor);
     }
   }
-  function deriveTableRows(field, sourceValue) {
-    if (field.derive?.type !== "cartesian") {
+  function deriveTableRows(field2, sourceValue) {
+    if (field2.derive?.type !== "cartesian") {
       return [];
     }
     const axes = Array.isArray(sourceValue) ? sourceValue.filter((row) => row !== null && typeof row === "object" && !Array.isArray(row)).map((row, index) => ({
-      label: textValue4(valueAt(row, field.derive.labelPath)),
-      values: listValue(valueAt(row, field.derive.valuesPath)),
+      label: textValue4(valueAt(row, field2.derive.labelPath)),
+      values: listValue(valueAt(row, field2.derive.valuesPath)),
       position: index
     })).filter((axis) => axis.label && axis.values.length) : [];
     if (!axes.length) {
       return [];
     }
-    return axes.reduce((sets, axis) => sets.flatMap((set) => axis.values.map((value) => [...set, { label: axis.label, value }])), [[]]).map((choices, index) => ({
+    return axes.reduce((sets, axis) => sets.flatMap((set) => axis.values.map((value2) => [...set, { label: axis.label, value: value2 }])), [[]]).map((choices, index) => ({
       key: choices.map((choice) => `${slug(choice.label)}:${slug(choice.value)}`).join("|"),
       options: choices.map((choice) => choice.value).join(" / "),
       title: choices.map((choice) => `${choice.label}: ${choice.value}`).join(" / "),
@@ -20259,20 +21397,20 @@ p9r-token-input {
       position: index
     }));
   }
-  function listValue(value) {
-    if (Array.isArray(value)) {
-      return value.map((item) => String(item).trim()).filter(Boolean);
+  function listValue(value2) {
+    if (Array.isArray(value2)) {
+      return value2.map((item) => String(item).trim()).filter(Boolean);
     }
-    if (typeof value === "string") {
-      return value.split(",").map((item) => item.trim()).filter(Boolean);
+    if (typeof value2 === "string") {
+      return value2.split(",").map((item) => item.trim()).filter(Boolean);
     }
     return [];
   }
-  function textValue4(value) {
-    return value === null || value === undefined ? "" : String(value).trim();
+  function textValue4(value2) {
+    return value2 === null || value2 === undefined ? "" : String(value2).trim();
   }
-  function slug(value) {
-    return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  function slug(value2) {
+    return value2.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/events.ts
@@ -20356,16 +21494,16 @@ p9r-token-input {
     };
     onInput = (event) => {
       const control = event.target?.closest("[data-field-control]");
-      const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
-      if (control && field?.input === "table") {
-        updateDerivedTables(field.id, this.fields);
+      const field2 = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
+      if (control && field2?.input === "table") {
+        updateDerivedTables(field2.id, this.fields);
       }
-      if (control && field?.input === "money") {
-        readFieldControlValue(field, control);
+      if (control && field2?.input === "money") {
+        readFieldControlValue(field2, control);
       }
-      if (field && this.isBound()) {
-        this.lookups.schedule(field.id);
-        this.schemas.schedule(field.id);
+      if (field2 && this.isBound()) {
+        this.lookups.schedule(field2.id);
+        this.schemas.schedule(field2.id);
       }
     };
     onChange = (event) => {
@@ -20380,27 +21518,27 @@ p9r-token-input {
     onMediaAction = (event) => {
       event.stopPropagation();
       const control = event.target?.closest("[data-field-control]");
-      const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
-      if (!field) {
+      const field2 = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
+      if (!field2) {
         return;
       }
       emitWidgetEvent(this.host, WIDGET_MEDIA_ACTION_EVENT, {
         ...event.detail,
         rowKey: this.readData().rowKey,
-        field: field.id
+        field: field2.id
       });
     };
     emitFieldChange = (control, created = false) => {
-      const field = this.fields.find(control.dataset.fieldControl ?? "");
-      if (!field) {
+      const field2 = this.fields.find(control.dataset.fieldControl ?? "");
+      if (!field2) {
         return;
       }
-      const value = readFieldControlValue(field, control);
-      this.fields.record(field.id, value);
+      const value2 = readFieldControlValue(field2, control);
+      this.fields.record(field2.id, value2);
       emitWidgetEvent(this.host, WIDGET_FIELD_CHANGE_EVENT, {
         rowKey: this.readData().rowKey,
-        field: field.id,
-        value,
+        field: field2.id,
+        value: value2,
         ...created ? { created } : {}
       });
     };
@@ -20463,8 +21601,8 @@ p9r-token-input {
   function sourceUrl(sourceId, ref, vars) {
     const targetSourceId = ref.sourceId ?? sourceId;
     const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) {
-      url.searchParams.set(key, value);
+    for (const [key, value2] of Object.entries(resolveParams(ref.params, vars))) {
+      url.searchParams.set(key, value2);
     }
     return url;
   }
@@ -20478,8 +21616,8 @@ p9r-token-input {
     }
     return response.json();
   }
-  function filenameFromDisposition(value) {
-    const match = value?.match(/filename="?([^";]+)"?/i);
+  function filenameFromDisposition(value2) {
+    const match = value2?.match(/filename="?([^";]+)"?/i);
     return match?.[1]?.trim() || undefined;
   }
   function itemsFrom(data, ref) {
@@ -20528,12 +21666,12 @@ p9r-token-input {
     });
   }
   function selectedOptions(target2, resource, fields) {
-    const field = target2.selectedField;
+    const field2 = target2.selectedField;
     const expression = target2.lookup.selected;
-    if (!field || typeof expression !== "string" || !isSafeDashboardExpression(expression, ["resource"], true)) {
+    if (!field2 || typeof expression !== "string" || !isSafeDashboardExpression(expression, ["resource"], true)) {
       return [];
     }
-    const current = Object.hasOwn(fields, field.id) ? fields[field.id] : valueAt(resource, field.path);
+    const current = Object.hasOwn(fields, field2.id) ? fields[field2.id] : valueAt(resource, field2.path);
     const selected2 = new Set(selectedValues(current));
     if (!selected2.size) {
       return [];
@@ -20546,31 +21684,31 @@ p9r-token-input {
     }));
   }
   function optionFromItem(item, lookup, fallbackToValue) {
-    const value = textAt(item, lookup.valuePath);
-    const label = textAt(item, lookup.labelPath, fallbackToValue ? value : "");
-    if (!value || !label) {
+    const value2 = textAt(item, lookup.valuePath);
+    const label2 = textAt(item, lookup.labelPath, fallbackToValue ? value2 : "");
+    if (!value2 || !label2) {
       return null;
     }
     return {
-      value,
-      label,
+      value: value2,
+      label: label2,
       subtitle: lookup.subtitlePath ? textAt(item, lookup.subtitlePath) : undefined,
       media: lookup.mediaPath ? textAt(item, lookup.mediaPath) : undefined
     };
   }
-  function selectedValues(value) {
-    if (Array.isArray(value)) {
-      return value.map(String).filter(Boolean);
+  function selectedValues(value2) {
+    if (Array.isArray(value2)) {
+      return value2.map(String).filter(Boolean);
     }
-    return value === null || value === undefined || value === "" ? [] : [String(value)];
+    return value2 === null || value2 === undefined || value2 === "" ? [] : [String(value2)];
   }
   function lookupDependenciesResolved(lookup, vars) {
     return Object.values(lookup.params ?? {}).every((expression) => {
       if (expression === "$search" || !expression.startsWith("$")) {
         return true;
       }
-      const value = resolveExpression(expression, vars);
-      return value !== undefined && value !== null && value !== "";
+      const value2 = resolveExpression(expression, vars);
+      return value2 !== undefined && value2 !== null && value2 !== "";
     });
   }
   function dedupeOptions(options) {
@@ -20837,51 +21975,51 @@ p9r-token-input {
   var UNIT_MAX_LENGTH = 32;
   function definitionsAt(data, path) {
     const definitions = new Map;
-    for (const value of arrayAt(data, path).slice(0, DASHBOARD_MAX_NESTED_FIELDS)) {
-      const definition = schemaDefinition(value);
+    for (const value2 of arrayAt(data, path).slice(0, DASHBOARD_MAX_NESTED_FIELDS)) {
+      const definition = schemaDefinition(value2);
       if (definition && !definitions.has(definition.id)) {
         definitions.set(definition.id, definition);
       }
     }
     return [...definitions.values()];
   }
-  function schemaDefinition(value) {
-    const row = record2(value);
+  function schemaDefinition(value2) {
+    const row = record2(value2);
     const nested = record2(row?.definition);
-    const id = text2(row?.id, KEY_MAX_LENGTH) ?? text2(row?.fieldKey, KEY_MAX_LENGTH) ?? text2(row?.key, KEY_MAX_LENGTH);
-    const label = text2(row?.label, LABEL_MAX_LENGTH) ?? text2(nested?.label, LABEL_MAX_LENGTH) ?? id;
-    const rawType = text2(row?.type, 16) ?? text2(row?.fieldType, 16) ?? text2(nested?.fieldType, 16);
+    const id = text3(row?.id, KEY_MAX_LENGTH) ?? text3(row?.fieldKey, KEY_MAX_LENGTH) ?? text3(row?.key, KEY_MAX_LENGTH);
+    const label2 = text3(row?.label, LABEL_MAX_LENGTH) ?? text3(nested?.label, LABEL_MAX_LENGTH) ?? id;
+    const rawType = text3(row?.type, 16) ?? text3(row?.fieldType, 16) ?? text3(nested?.fieldType, 16);
     const type = rawType === "enum" ? "string" : rawType;
-    if (!id || !label || !safeKey(id) || type !== "string" && type !== "number" && type !== "boolean") {
+    if (!id || !label2 || !safeKey(id) || type !== "string" && type !== "number" && type !== "boolean") {
       return null;
     }
     const options = schemaOptions(row?.options ?? nested?.options);
-    const unit = text2(row?.unit, UNIT_MAX_LENGTH) ?? text2(nested?.unit, UNIT_MAX_LENGTH);
+    const unit = text3(row?.unit, UNIT_MAX_LENGTH) ?? text3(nested?.unit, UNIT_MAX_LENGTH);
     return {
       id,
-      label,
+      label: label2,
       type,
       ...row?.required === true ? { required: true } : {},
       ...unit ? { unit } : {},
       ...options.length ? { options } : {}
     };
   }
-  function schemaOptions(value) {
-    if (!Array.isArray(value)) {
+  function schemaOptions(value2) {
+    if (!Array.isArray(value2)) {
       return [];
     }
     const seen = new Set;
-    return value.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option) => {
+    return value2.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option) => {
       let result;
       if (typeof option === "string" || typeof option === "number") {
-        const value2 = text2(option, LABEL_MAX_LENGTH);
-        if (value2) {
-          result = { value: value2, label: value2 };
+        const value3 = text3(option, LABEL_MAX_LENGTH);
+        if (value3) {
+          result = { value: value3, label: value3 };
         }
       } else {
         const entry = record2(option);
-        const optionValue = text2(entry?.value, LABEL_MAX_LENGTH);
-        const optionLabel = text2(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
+        const optionValue = text3(entry?.value, LABEL_MAX_LENGTH);
+        const optionLabel = text3(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
         if (optionValue && optionLabel) {
           result = { value: optionValue, label: optionLabel };
         }
@@ -20893,34 +22031,34 @@ p9r-token-input {
       return [result];
     });
   }
-  function safeKey(value) {
-    return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value) && !["__proto__", "prototype", "constructor"].includes(value);
+  function safeKey(value2) {
+    return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value2) && !["__proto__", "prototype", "constructor"].includes(value2);
   }
-  function text2(value, maxLength) {
-    if (typeof value !== "string" && typeof value !== "number") {
+  function text3(value2, maxLength) {
+    if (typeof value2 !== "string" && typeof value2 !== "number") {
       return;
     }
-    const result = String(value).trim();
+    const result = String(value2).trim();
     return result && result.length <= maxLength ? result : undefined;
   }
-  function record2(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value) ? value : undefined;
+  function record2(value2) {
+    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? value2 : undefined;
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/dependencies.ts
   function schemaFields(widget) {
-    return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields).filter((field) => field.type === "schema");
+    return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields).filter((field2) => field2.type === "schema");
   }
   function schemaKeysDependingOn(widget, fieldId) {
-    return new Set(schemaFields(widget).filter((field) => Object.values(field.schema.params ?? {}).some((expression) => expression === `$field.${fieldId}` || expression.startsWith(`$field.${fieldId}.`))).map((field) => field.id));
+    return new Set(schemaFields(widget).filter((field2) => Object.values(field2.schema.params ?? {}).some((expression) => expression === `$field.${fieldId}` || expression.startsWith(`$field.${fieldId}.`))).map((field2) => field2.id));
   }
-  function schemaDependenciesResolved(field, resource, fields) {
-    return Object.values(field.schema.params ?? {}).every((expression) => {
+  function schemaDependenciesResolved(field2, resource, fields) {
+    return Object.values(field2.schema.params ?? {}).every((expression) => {
       if (!expression.startsWith("$")) {
         return true;
       }
-      const value = resolveExpression(expression, { resource, fields });
-      return value !== undefined && value !== null && value !== "";
+      const value2 = resolveExpression(expression, { resource, fields });
+      return value2 !== undefined && value2 !== null && value2 !== "";
     });
   }
 
@@ -20954,9 +22092,9 @@ p9r-token-input {
       this.scopeKey = scopeKey;
     }
     async load(widget, resource, rowKey, sourceId, fields, options = {}) {
-      const configured2 = schemaFields(widget).filter((field) => !options.keys || options.keys.has(field.id));
+      const configured2 = schemaFields(widget).filter((field2) => !options.keys || options.keys.has(field2.id));
       const scopeGeneration = this.scopeGeneration;
-      const results = await Promise.all(configured2.map((field) => this.loadField(field, resource, sourceId, fields)));
+      const results = await Promise.all(configured2.map((field2) => this.loadField(field2, resource, sourceId, fields)));
       if (this.scopeGeneration !== scopeGeneration) {
         return;
       }
@@ -21025,22 +22163,22 @@ p9r-token-input {
       this.cancelTimer();
       this.current = {};
     }
-    async loadField(field, resource, sourceId, fields) {
-      const consumer = this.targets.consumer(field.id);
-      const generation = this.targets.invalidate(field.id);
-      if (!schemaDependenciesResolved(field, resource, fields)) {
-        return { definitions: [], failed: false, generation, key: field.id };
+    async loadField(field2, resource, sourceId, fields) {
+      const consumer = this.targets.consumer(field2.id);
+      const generation = this.targets.invalidate(field2.id);
+      if (!schemaDependenciesResolved(field2, resource, fields)) {
+        return { definitions: [], failed: false, generation, key: field2.id };
       }
       try {
-        const data = await this.requests.load(consumer, sourceId, field.schema, { resource, fields });
+        const data = await this.requests.load(consumer, sourceId, field2.schema, { resource, fields });
         return {
-          definitions: definitionsAt(data, field.schema.itemsPath),
+          definitions: definitionsAt(data, field2.schema.itemsPath),
           failed: false,
           generation,
-          key: field.id
+          key: field2.id
         };
       } catch {
-        return { definitions: [], failed: true, generation, key: field.id };
+        return { definitions: [], failed: true, generation, key: field2.id };
       }
     }
     invalidate(key) {
@@ -21108,7 +22246,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/template.html
-  var template_default10 = `<cms-shell-detail>
+  var template_default11 = `<cms-shell-detail>
     <button type="button" slot="back" data-back aria-label="Back to table">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <rect x="4" y="5" width="16" height="14" rx="2"></rect>
@@ -21149,11 +22287,11 @@ p9r-token-input {
     mode = "bound";
     bindingRevision = 0;
     constructor() {
-      super({ css: styles, template: template_default10 });
+      super({ css: styles, template: template_default11 });
       this.runtime = createDetailRuntime(this, this.shadowRoot, {
         data: () => this.value,
-        setData: (value) => {
-          this.value = value;
+        setData: (value2) => {
+          this.value = value2;
         },
         render: () => this.render(),
         isConnected: () => this.isConnected,
@@ -21161,20 +22299,20 @@ p9r-token-input {
         refreshConditionalFields: () => this.refreshConditionalFields()
       });
     }
-    set data(value) {
+    set data(value2) {
       this.mode = "manual";
       this.syncScheduler.advanceLifecycle();
       this.clearRuntimeState();
-      this.value = value;
+      this.value = value2;
       if (this.isConnected) {
         this.render();
       }
     }
-    applyLookupCreate(fieldId, value, option) {
+    applyLookupCreate(fieldId, value2, option) {
       const control = this.runtime.fields.control(fieldId);
-      const field = control ? this.runtime.fields.find(fieldId) : undefined;
-      if (control && field) {
-        applyLookupOption(control, value, option);
+      const field2 = control ? this.runtime.fields.find(fieldId) : undefined;
+      if (control && field2) {
+        applyLookupOption(control, value2, option);
       }
     }
     static get observedAttributes() {
@@ -21438,10 +22576,10 @@ p9r-token-input {
     get collection() {
       return this.getAttribute("collection") ?? "";
     }
-    set checked(value) {
+    set checked(value2) {
       const input = this.shadowRoot?.querySelector("[data-check]");
       if (input) {
-        input.checked = value;
+        input.checked = value2;
       }
     }
     select() {
@@ -21493,20 +22631,20 @@ p9r-token-input {
     }
     for (const column of columns2) {
       const cell = document.createElement("cms-dashboard-w-cell");
-      const value = row.cells[column.key];
+      const value2 = row.cells[column.key];
       if (column.primary) {
         cell.toggleAttribute("primary", true);
       }
-      if (typeof value === "object") {
-        if (value.tone) {
-          cell.setAttribute("tone", value.tone);
+      if (typeof value2 === "object") {
+        if (value2.tone) {
+          cell.setAttribute("tone", value2.tone);
         }
-        if (value.meta) {
-          cell.setAttribute("meta", value.meta);
+        if (value2.meta) {
+          cell.setAttribute("meta", value2.meta);
         }
-        cell.textContent = value.title;
+        cell.textContent = value2.title;
       } else {
-        cell.textContent = value ?? "";
+        cell.textContent = value2 ?? "";
       }
       element.append(cell);
     }
@@ -21627,7 +22765,7 @@ slot {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
-  var template_default11 = `<section class="w-table-shell">
+  var template_default12 = `<section class="w-table-shell">
     <header class="w-table-header" data-header>
         <div>
             <h3 data-title></h3>
@@ -21657,19 +22795,19 @@ slot {
     value = { title: "", actions: [], columns: [], rows: [] };
     selectedRow = "";
     constructor() {
-      super({ css: style_default10, template: template_default11 });
+      super({ css: style_default10, template: template_default12 });
     }
-    set data(value) {
-      this.value = value;
-      this.replaceChildren(...value.rows.map((row) => createTableRow(row, value.columns)));
+    set data(value2) {
+      this.value = value2;
+      this.replaceChildren(...value2.rows.map((row) => createTableRow(row, value2.columns)));
       if (this.isConnected) {
         this.render();
         this.syncRows();
       }
     }
-    set selected(value) {
-      this.selectedRow = value;
-      this.setAttribute("data-selected", value);
+    set selected(value2) {
+      this.selectedRow = value2;
+      this.setAttribute("data-selected", value2);
     }
     static get observedAttributes() {
       return ["data-config-json", "data-selected"];
@@ -21769,12 +22907,12 @@ slot {
   if (!customElements.get("cms-dashboard-w-table")) {
     customElements.define("cms-dashboard-w-table", DashboardWTable);
   }
-  function parseJson2(value) {
-    if (!value) {
+  function parseJson2(value2) {
+    if (!value2) {
       return null;
     }
     try {
-      return JSON.parse(value);
+      return JSON.parse(value2);
     } catch {
       return null;
     }
@@ -21874,11 +23012,11 @@ slot {
       ]
     };
   }
-  function isStringArray(value) {
-    return Array.isArray(value) && value.every((item) => typeof item === "string");
+  function isStringArray(value2) {
+    return Array.isArray(value2) && value2.every((item) => typeof item === "string");
   }
-  function isMediaItems(value) {
-    return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null && ("url" in item));
+  function isMediaItems(value2) {
+    return Array.isArray(value2) && value2.every((item) => typeof item === "object" && item !== null && ("url" in item));
   }
   function tableRow2(product) {
     return {
@@ -21908,7 +23046,7 @@ slot {
     };
   }
   function options(...values) {
-    return values.map((value) => ({ label: value, value }));
+    return values.map((value2) => ({ label: value2, value: value2 }));
   }
   function media(id, title) {
     return [
@@ -21926,34 +23064,34 @@ slot {
     const selected2 = selectedId ? PRODUCTS.find((item) => item.id === selectedId) ?? null : null;
     root.append(selected2 ? detailElement(selected2) : tableElement());
   }
-  function updateDashboardWidgetExampleField(rowKey, field, value) {
+  function updateDashboardWidgetExampleField(rowKey, field2, value2) {
     const product2 = PRODUCTS.find((item) => item.id === rowKey);
     if (!product2) {
       return;
     }
-    if (field === "title" && typeof value === "string") {
-      product2.title = value;
+    if (field2 === "title" && typeof value2 === "string") {
+      product2.title = value2;
     }
-    if (field === "status" && typeof value === "string") {
-      product2.status = value;
+    if (field2 === "status" && typeof value2 === "string") {
+      product2.status = value2;
     }
-    if (field === "vendor" && typeof value === "string") {
-      product2.vendor = value;
+    if (field2 === "vendor" && typeof value2 === "string") {
+      product2.vendor = value2;
     }
-    if (field === "category" && typeof value === "string") {
-      product2.category = value;
+    if (field2 === "category" && typeof value2 === "string") {
+      product2.category = value2;
     }
-    if (field === "description" && typeof value === "string") {
-      product2.description = value;
+    if (field2 === "description" && typeof value2 === "string") {
+      product2.description = value2;
     }
-    if (field === "visibility" && typeof value === "string") {
-      product2.visibility = value;
+    if (field2 === "visibility" && typeof value2 === "string") {
+      product2.visibility = value2;
     }
-    if (field === "tags" && isStringArray(value)) {
-      product2.tags = value;
+    if (field2 === "tags" && isStringArray(value2)) {
+      product2.tags = value2;
     }
-    if (field === "media" && isMediaItems(value)) {
-      product2.media = value;
+    if (field2 === "media" && isMediaItems(value2)) {
+      product2.media = value2;
     }
   }
   function tableElement() {
@@ -22058,7 +23196,7 @@ slot {
   }
   function findMediaField(widget, fieldId) {
     const fields = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
-    return fields.find((field) => field.id === fieldId && field.type === "media") ?? null;
+    return fields.find((field2) => field2.id === fieldId && field2.type === "media") ?? null;
   }
 
   // src/components/admin/Resources/Dashboards/runtime/actions/index.ts
@@ -22085,7 +23223,7 @@ slot {
       fields
     });
   }
-  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value, groups = [group]) {
+  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value2, groups = [group]) {
     const action = findCollectionAction(dashboard.views, actionId, widgetId);
     if (!action) {
       throw new Error(`Dashboard table action "${actionId}" was not found`);
@@ -22093,16 +23231,16 @@ slot {
     if (!action.endpoint) {
       throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
     }
-    return executeEndpointAction(group, groups, action, { filters: {}, value });
+    return executeEndpointAction(group, groups, action, { filters: {}, value: value2 });
   }
   async function executeDashboardMediaAction(group, dashboard, detail, media2, draft, groups = [group]) {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     if (!widget) {
       throw new Error(`Dashboard media target "${detail.collection}" was not found`);
     }
-    const field = findMediaField(widget, media2.field);
-    const ref = field?.actions?.[media2.action];
-    if (!field || !ref) {
+    const field2 = findMediaField(widget, media2.field);
+    const ref = field2?.actions?.[media2.action];
+    if (!field2 || !ref) {
       return [];
     }
     const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
@@ -22154,8 +23292,8 @@ slot {
     if (!after?.resource) {
       return { found: false };
     }
-    const value = resolveExpression(after.resource, { result });
-    return value === undefined ? { found: false } : { found: true, value };
+    const value2 = resolveExpression(after.resource, { result });
+    return value2 === undefined ? { found: false } : { found: true, value: value2 };
   }
   function postActionResourceTarget(declaredAfter, after, actionDetail, detail, actionId, result, resource) {
     if (declaredAfter?.opens) {
@@ -22208,11 +23346,11 @@ slot {
     const row = stringValue(rowValue);
     return row ? { collection: after.opens, row } : null;
   }
-  function createdId(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
+  function createdId(value2) {
+    if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
       return null;
     }
-    const id = value.id;
+    const id = value2.id;
     if (typeof id === "string" && id.trim()) {
       return id;
     }
@@ -22224,15 +23362,15 @@ slot {
   function postActionCreatedId(result, resource) {
     return createdId(result) ?? (resource.found ? createdId(resource.value) : null);
   }
-  function stringValue(value) {
-    if (value === null || value === undefined) {
+  function stringValue(value2) {
+    if (value2 === null || value2 === undefined) {
       return "";
     }
-    if (typeof value === "string") {
-      return value;
+    if (typeof value2 === "string") {
+      return value2;
     }
-    if (typeof value === "number" || typeof value === "boolean") {
-      return String(value);
+    if (typeof value2 === "number" || typeof value2 === "boolean") {
+      return String(value2);
     }
     return "";
   }
@@ -22253,9 +23391,9 @@ slot {
       Uu(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
     }
   }
-  function removeDraftField(drafts, key, field) {
+  function removeDraftField(drafts, key, field2) {
     const draft = { ...drafts.get(key) ?? {} };
-    delete draft[field];
+    delete draft[field2];
     Object.keys(draft).length ? drafts.set(key, draft) : drafts.delete(key);
   }
 
@@ -22345,8 +23483,8 @@ slot {
   function detailReloadEvent(sourceId, dashboardId, collection, row) {
     return `cms-dashboard:${encodePart(sourceId)}:${encodePart(dashboardId)}:${encodePart(collection)}:${encodePart(row || "new")}:reload`;
   }
-  function encodePart(value) {
-    return encodeURIComponent(value);
+  function encodePart(value2) {
+    return encodeURIComponent(value2);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationItem.ts
@@ -22447,10 +23585,10 @@ slot {
   if (!customElements.get("cms-dashboard-w-navigation-item")) {
     customElements.define("cms-dashboard-w-navigation-item", DashboardWNavigationItem);
   }
-  function setText2(root, selector, value) {
+  function setText2(root, selector, value2) {
     const element = root.querySelector(selector);
     if (element) {
-      element.textContent = value;
+      element.textContent = value2;
     }
   }
 
@@ -22465,9 +23603,9 @@ slot {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/config.ts
-  function parseNavigationListWidget(value) {
+  function parseNavigationListWidget(value2) {
     try {
-      const widget = value ? JSON.parse(value) : null;
+      const widget = value2 ? JSON.parse(value2) : null;
       return widget?.widget === "w-navigation-list" ? widget : null;
     } catch {
       return null;
@@ -22519,7 +23657,7 @@ slot { display: contents; }
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/template.html
-  var template_default12 = `<section class="navigation-list-shell">
+  var template_default13 = `<section class="navigation-list-shell">
     <header class="navigation-list-header" data-header>
         <h3 data-title></h3>
         <div class="navigation-list-actions" data-actions></div>
@@ -22536,7 +23674,7 @@ slot { display: contents; }
     value = null;
     dragging = null;
     constructor() {
-      super({ css: style_default11, template: template_default12 });
+      super({ css: style_default11, template: template_default13 });
     }
     static get observedAttributes() {
       return ["data-config-json"];
@@ -22651,11 +23789,11 @@ slot { display: contents; }
       } else {
         this.insertBefore(dragging, target2);
       }
-      const value = this.items().map((item) => item.rowKey).filter(Boolean);
+      const value2 = this.items().map((item) => item.rowKey).filter(Boolean);
       emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
         action: this.value.reorderable.action,
         widget: this.value.id,
-        value
+        value: value2
       });
       this.clearDragState();
     };
@@ -22707,8 +23845,8 @@ slot { display: contents; }
     content.setAttribute("cms-condition", "$source.loaded || $source.empty");
     wrapper.append(content);
   }
-  function jsonAttr(value) {
-    return JSON.stringify(value);
+  function jsonAttr(value2) {
+    return JSON.stringify(value2);
   }
   function tableRowsTemplate(widget) {
     const row = document.createElement("cms-dashboard-w-row");
@@ -22759,8 +23897,8 @@ slot { display: contents; }
   function sourceUrl2(sourceId, ref, vars) {
     const targetSourceId = ref.sourceId ?? sourceId;
     const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) {
-      url.searchParams.set(key, value);
+    for (const [key, value2] of Object.entries(resolveParams(ref.params, vars))) {
+      url.searchParams.set(key, value2);
     }
     return `${url.pathname}${url.search}`;
   }
@@ -22986,34 +24124,34 @@ slot { display: contents; }
 
   // src/components/admin/Resources/Dashboards/view/rendering.ts
   function renderDashboardShell(root, group, dashboard, detail, tabState, drafts, detailResource = null, groups = group ? [group] : []) {
-    query4(root, "[data-empty]").hidden = Boolean(group);
-    query4(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
-    query4(root, "[data-dashboard-head]").hidden = !dashboard;
-    query4(root, "[data-detail-toolbar]").hidden = true;
-    query4(root, "[data-widgets]").hidden = !dashboard;
+    query6(root, "[data-empty]").hidden = Boolean(group);
+    query6(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
+    query6(root, "[data-dashboard-head]").hidden = !dashboard;
+    query6(root, "[data-detail-toolbar]").hidden = true;
+    query6(root, "[data-widgets]").hidden = !dashboard;
     if (!group || !dashboard) {
       return;
     }
-    query4(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
-    renderIcon(query4(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
+    query6(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
+    renderIcon(query6(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
     const selectedRows = new Map;
     if (detail) {
       selectedRows.set(detail.collection, detail.row);
     }
     const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
-    mountDashboardWidgets(query4(root, "[data-widgets]"), widgets, { group, groups, dashboard, selectedRows, drafts, detailResource }, "root", tabState, detail);
+    mountDashboardWidgets(query6(root, "[data-widgets]"), widgets, { group, groups, dashboard, selectedRows, drafts, detailResource }, "root", tabState, detail);
   }
   function renderExampleShell(root, selectedRow) {
-    query4(root, "[data-empty]").hidden = true;
-    query4(root, "[data-source-empty]").hidden = true;
-    query4(root, "[data-detail-toolbar]").hidden = true;
-    query4(root, "[data-dashboard-head]").hidden = false;
-    query4(root, "[data-widgets]").hidden = false;
-    query4(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
-    renderIcon(query4(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
-    mountDashboardWidgetExample(query4(root, "[data-widgets]"), selectedRow);
+    query6(root, "[data-empty]").hidden = true;
+    query6(root, "[data-source-empty]").hidden = true;
+    query6(root, "[data-detail-toolbar]").hidden = true;
+    query6(root, "[data-dashboard-head]").hidden = false;
+    query6(root, "[data-widgets]").hidden = false;
+    query6(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
+    renderIcon(query6(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
+    mountDashboardWidgetExample(query6(root, "[data-widgets]"), selectedRow);
   }
-  function query4(root, selector) {
+  function query6(root, selector) {
     return root.querySelector(selector);
   }
 
@@ -23216,12 +24354,12 @@ slot { display: contents; }
       document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
     }
   }
-  function parseGroups2(value) {
-    if (!value) {
+  function parseGroups2(value2) {
+    if (!value2) {
       return null;
     }
     try {
-      const parsed = JSON.parse(value);
+      const parsed = JSON.parse(value2);
       return Array.isArray(parsed) ? parsed : null;
     } catch {
       return null;
@@ -23231,9 +24369,9 @@ slot { display: contents; }
   // src/components/admin/Resources/Dashboards/runtime/lookups/create.ts
   async function executeLookupCreate(group, dashboard, detail, fieldId, previousDraft, nextDraft, groups = [group]) {
     const widget = findDetailWidget2(dashboard.views, detail.collection);
-    const field = widget ? lookupField(widget, fieldId) : null;
-    const create = field?.lookup?.create;
-    if (!widget || !field || !create || create.mode !== "inline") {
+    const field2 = widget ? lookupField(widget, fieldId) : null;
+    const create = field2?.lookup?.create;
+    if (!widget || !field2 || !create || create.mode !== "inline") {
       return;
     }
     const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
@@ -23260,34 +24398,34 @@ slot { display: contents; }
       option: { value: id, label: textValue5(valueAt(created, create.labelPath)) || createdValue }
     };
   }
-  function textValue5(value) {
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return String(value);
+  function textValue5(value2) {
+    if (typeof value2 === "number" && Number.isFinite(value2)) {
+      return String(value2);
     }
-    return typeof value === "string" ? value.trim() : "";
+    return typeof value2 === "string" ? value2.trim() : "";
   }
   function createdInput(previous, next) {
     if (Array.isArray(next)) {
       const previousValues = new Set(arrayValue2(previous));
-      return arrayValue2(next).find((value) => !previousValues.has(value)) ?? "";
+      return arrayValue2(next).find((value2) => !previousValues.has(value2)) ?? "";
     }
     return typeof next === "string" ? next.trim() : "";
   }
   function replaceCreatedValue(next, created, id) {
     if (Array.isArray(next)) {
-      return arrayValue2(next).map((value) => value === created ? id : value);
+      return arrayValue2(next).map((value2) => value2 === created ? id : value2);
     }
     return id;
   }
-  function arrayValue2(value) {
-    if (Array.isArray(value)) {
-      return value.map((item) => String(item)).filter(Boolean);
+  function arrayValue2(value2) {
+    if (Array.isArray(value2)) {
+      return value2.map((item) => String(item)).filter(Boolean);
     }
-    return typeof value === "string" ? value.split(",").map((item) => item.trim()).filter(Boolean) : [];
+    return typeof value2 === "string" ? value2.split(",").map((item) => item.trim()).filter(Boolean) : [];
   }
   function lookupField(widget, fieldId) {
     const fields = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
-    return fields.find((field) => (field.type === "combobox" || field.type === "tokens") && field.id === fieldId) ?? null;
+    return fields.find((field2) => (field2.type === "combobox" || field2.type === "tokens") && field2.id === fieldId) ?? null;
   }
   function endpointMethod2(group, groups, ref) {
     const sourceId = ref.sourceId ?? group.source.id;
@@ -23340,9 +24478,9 @@ slot { display: contents; }
       Uu(error instanceof Error ? error.message : "Lookup creation failed", { type: "error" });
     }
   }
-  function applyLookupCreate(target2, field, value, option) {
+  function applyLookupCreate(target2, field2, value2, option) {
     const detail = target2;
-    detail?.applyLookupCreate?.(field, value, option);
+    detail?.applyLookupCreate?.(field2, value2, option);
   }
 
   // src/components/admin/Resources/Dashboards/view/styles/base.css
@@ -23539,7 +24677,7 @@ p {
 `;
 
   // src/components/admin/Resources/Dashboards/view/template.html
-  var template_default13 = `<main class="content">
+  var template_default14 = `<main class="content">
     <cms-binding-core class="binding-source">
         <span data-dashboard-list-source hidden>
             <span data-dashboard-groups-json="{{ dashboards | json }}"></span>
@@ -23576,7 +24714,7 @@ p {
 
   class DashboardView extends DashboardViewController {
     constructor() {
-      super(styles2, template_default13);
+      super(styles2, template_default14);
       configureDashboardBindingFilters();
     }
     connectedCallback() {
@@ -23725,9 +24863,9 @@ p {
   }
   async function fetchSourceEndpoint(source2, endpoint, params = {}) {
     const url = new URL(route2(`/.cms/sources/${encodeURIComponent(source2)}/${encodeURIComponent(endpoint)}`), window.location.origin);
-    for (const [key, value] of Object.entries(params)) {
-      if (value !== "") {
-        url.searchParams.set(key, value);
+    for (const [key, value2] of Object.entries(params)) {
+      if (value2 !== "") {
+        url.searchParams.set(key, value2);
       }
     }
     const response = await fetch(url, { headers: { Accept: "application/json" } });
@@ -23744,8 +24882,8 @@ p {
     if (contentType.includes("application/json")) {
       return response.json().catch(() => null);
     }
-    const text3 = await response.text();
-    return text3 || null;
+    const text4 = await response.text();
+    return text4 || null;
   }
 
   // src/components/admin/Resources/Functions/create/draft.ts
@@ -23762,15 +24900,15 @@ p {
     const next = structuredClone(draft);
     for (const input of Array.from(root.querySelectorAll("[data-path]"))) {
       const path = input.dataset.path ?? "";
-      const value = input instanceof HTMLTextAreaElement ? parseObject(input.value || "{}", path || "JSON") : input.value;
-      setDraftValue(next, path, value);
+      const value2 = input instanceof HTMLTextAreaElement ? parseObject(input.value || "{}", path || "JSON") : input.value;
+      setDraftValue(next, path, value2);
     }
     return next;
   }
   function resolvedParams(params, draft) {
     const out = {};
-    for (const [key, value] of Object.entries(params ?? {})) {
-      const resolved = resolveUiValue(value, draft);
+    for (const [key, value2] of Object.entries(params ?? {})) {
+      const resolved = resolveUiValue(value2, draft);
       if (resolved !== undefined && resolved !== null) {
         out[key] = String(resolved);
       }
@@ -23792,23 +24930,23 @@ p {
     }
     return;
   }
-  function setDraftValue(draft, path, value) {
+  function setDraftValue(draft, path, value2) {
     if (path === "body") {
-      draft.body = value;
+      draft.body = value2;
       return;
     }
     if (path.startsWith("body.")) {
       if (!isRecord6(draft.body)) {
         draft.body = {};
       }
-      setPathValue(draft.body, path.slice("body.".length), value);
+      setPathValue(draft.body, path.slice("body.".length), value2);
       return;
     }
     if (path.startsWith("params.")) {
-      setPathValue(draft.params, path.slice("params.".length), value);
+      setPathValue(draft.params, path.slice("params.".length), value2);
     }
   }
-  function setPathValue(target2, path, value) {
+  function setPathValue(target2, path, value2) {
     if (!isRecord6(target2)) {
       return;
     }
@@ -23816,7 +24954,7 @@ p {
     let current = target2;
     for (const [index, part] of parts.entries()) {
       if (index === parts.length - 1) {
-        current[part] = value;
+        current[part] = value2;
         return;
       }
       if (!isRecord6(current[part])) {
@@ -23825,9 +24963,9 @@ p {
       current = current[part];
     }
   }
-  function valueAt2(value, path) {
+  function valueAt2(value2, path) {
     if (!path) {
-      return value;
+      return value2;
     }
     return path.split(".").filter(Boolean).reduce((current, part) => {
       if (current === null || current === undefined) {
@@ -23840,47 +24978,47 @@ p {
         return;
       }
       return current[part];
-    }, value);
+    }, value2);
   }
-  function arrayAt2(value, path) {
-    const found = valueAt2(value, path);
+  function arrayAt2(value2, path) {
+    const found = valueAt2(value2, path);
     return Array.isArray(found) ? found : [];
   }
-  function stringify(value) {
-    return JSON.stringify(value, null, 2);
+  function stringify(value2) {
+    return JSON.stringify(value2, null, 2);
   }
-  function parseObject(value, label) {
-    const parsed = parseJson3(value || "{}", label);
+  function parseObject(value2, label2) {
+    const parsed = parseJson3(value2 || "{}", label2);
     if (!isRecord6(parsed)) {
-      throw new Error(`${label} must be a JSON object.`);
+      throw new Error(`${label2} must be a JSON object.`);
     }
     return parsed;
   }
-  function parseJson3(value, label) {
+  function parseJson3(value2, label2) {
     try {
-      return JSON.parse(value);
+      return JSON.parse(value2);
     } catch {
-      throw new Error(`${label} is not valid JSON.`);
+      throw new Error(`${label2} is not valid JSON.`);
     }
   }
-  function stringValue2(value) {
-    return typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? String(value) : "";
+  function stringValue2(value2) {
+    return typeof value2 === "string" || typeof value2 === "number" || typeof value2 === "boolean" ? String(value2) : "";
   }
   function labelFromPath(path) {
     const last = path.split(".").filter(Boolean).at(-1) ?? path;
     return last.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
   }
-  function cssEscape2(value) {
-    return globalThis.CSS?.escape?.(value) ?? value.replace(/["\\]/g, "\\$&");
+  function cssEscape2(value2) {
+    return globalThis.CSS?.escape?.(value2) ?? value2.replace(/["\\]/g, "\\$&");
   }
-  function resolveUiValue(value, draft) {
-    if (typeof value === "string" && value.startsWith("$")) {
-      return valueAtDraft(draft, value.slice(1));
+  function resolveUiValue(value2, draft) {
+    if (typeof value2 === "string" && value2.startsWith("$")) {
+      return valueAtDraft(draft, value2.slice(1));
     }
-    return value;
+    return value2;
   }
-  function isRecord6(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
+  function isRecord6(value2) {
+    return typeof value2 === "object" && value2 !== null && !Array.isArray(value2);
   }
 
   // src/components/admin/Resources/Functions/dom.ts
@@ -23914,58 +25052,58 @@ p {
     return section;
   }
   function fieldWrap(titleText, control, hint) {
-    const wrap = div("field", label(titleText), control);
+    const wrap = div("field", label2(titleText), control);
     if (hint) {
       wrap.append(hint);
     }
     return wrap;
   }
-  function schemaBlock(titleText, value) {
-    return div("schema-block", label(titleText), pre(value === null ? "None" : stringify(value)));
+  function schemaBlock(titleText, value2) {
+    return div("schema-block", label2(titleText), pre(value2 === null ? "None" : stringify(value2)));
   }
   function keyValues(rows) {
     const list = document.createElement("dl");
     list.className = "kv";
-    for (const [key, value] of rows) {
+    for (const [key, value2] of rows) {
       const dt2 = document.createElement("dt");
       const dd = document.createElement("dd");
       dt2.textContent = key;
-      dd.textContent = value;
+      dd.textContent = value2;
       list.append(dt2, dd);
     }
     return list;
   }
-  function label(text3) {
+  function label2(text4) {
     const el2 = document.createElement("label");
-    el2.textContent = text3;
+    el2.textContent = text4;
     return el2;
   }
-  function helper(text3) {
-    return div("helper", text3);
+  function helper(text4) {
+    return div("helper", text4);
   }
-  function textarea2(role, value) {
+  function textarea2(role, value2) {
     const el2 = document.createElement("textarea");
     el2.dataset.role = role;
     el2.spellcheck = false;
-    el2.value = value;
+    el2.value = value2;
     return el2;
   }
-  function button(text3, tone) {
+  function button(text4, tone) {
     const el2 = document.createElement("button");
     el2.type = "button";
     el2.className = `button ${tone}`;
-    el2.textContent = text3;
+    el2.textContent = text4;
     return el2;
   }
-  function option(value, text3) {
+  function option(value2, text4) {
     const el2 = document.createElement("option");
-    el2.value = value;
-    el2.textContent = text3;
+    el2.value = value2;
+    el2.textContent = text4;
     return el2;
   }
-  function pre(text3) {
+  function pre(text4) {
     const el2 = document.createElement("pre");
-    el2.textContent = text3;
+    el2.textContent = text4;
     return el2;
   }
   function div(className, ...children) {
@@ -23983,88 +25121,88 @@ p {
     if (!fields.length) {
       return fallbackJsonFields(detail);
     }
-    return div("fields-stack", ...fields.map((field) => executeField(field, draft, onChange)));
+    return div("fields-stack", ...fields.map((field2) => executeField(field2, draft, onChange)));
   }
   async function hydrateExecuteFields(root, detail, draft) {
-    for (const field of detail.ui?.execute?.fields ?? []) {
-      if (field.control === "source-select") {
-        await hydrateSourceSelect(root, field, draft);
+    for (const field2 of detail.ui?.execute?.fields ?? []) {
+      if (field2.control === "source-select") {
+        await hydrateSourceSelect(root, field2, draft);
       }
     }
   }
   async function seedDependents(root, detail, path, draft) {
-    for (const field of detail.ui?.execute?.fields ?? []) {
-      if (field.control !== "json-object" || field.seed?.dependsOn !== path) {
+    for (const field2 of detail.ui?.execute?.fields ?? []) {
+      if (field2.control !== "json-object" || field2.seed?.dependsOn !== path) {
         continue;
       }
-      const input = root.querySelector(`textarea[data-path="${cssEscape2(field.path)}"]`);
-      if (!input || !field.seed) {
+      const input = root.querySelector(`textarea[data-path="${cssEscape2(field2.path)}"]`);
+      if (!input || !field2.seed) {
         continue;
       }
-      const seed = await seedObject(field.seed, draft).catch(() => null);
+      const seed = await seedObject(field2.seed, draft).catch(() => null);
       if (seed === null) {
         continue;
       }
-      setDraftValue(draft, field.path, seed);
+      setDraftValue(draft, field2.path, seed);
       input.value = stringify(seed);
     }
   }
-  function executeField(field, draft, onChange) {
-    if (field.control === "source-select") {
-      return sourceSelectField(field, draft, onChange);
+  function executeField(field2, draft, onChange) {
+    if (field2.control === "source-select") {
+      return sourceSelectField(field2, draft, onChange);
     }
-    if (field.control === "json-object") {
-      return jsonObjectField(field, draft, onChange);
+    if (field2.control === "json-object") {
+      return jsonObjectField(field2, draft, onChange);
     }
-    return textField(field, draft, onChange);
+    return textField(field2, draft, onChange);
   }
-  function sourceSelectField(field, draft, onChange) {
+  function sourceSelectField(field2, draft, onChange) {
     const select2 = document.createElement("select");
-    select2.dataset.path = field.path;
+    select2.dataset.path = field2.path;
     select2.append(option("", "Loading..."));
-    select2.value = String(valueAtDraft(draft, field.path) ?? "");
+    select2.value = String(valueAtDraft(draft, field2.path) ?? "");
     select2.addEventListener("change", () => {
-      setDraftValue(draft, field.path, select2.value);
-      onChange(field.path);
+      setDraftValue(draft, field2.path, select2.value);
+      onChange(field2.path);
     });
-    return fieldWrap(field.label ?? labelFromPath(field.path), select2, helper("Choose a configured source value."));
+    return fieldWrap(field2.label ?? labelFromPath(field2.path), select2, helper("Choose a configured source value."));
   }
-  function jsonObjectField(field, draft, onChange) {
-    const input = textarea2("json-field", stringify(valueAtDraft(draft, field.path) ?? {}));
-    input.dataset.path = field.path;
+  function jsonObjectField(field2, draft, onChange) {
+    const input = textarea2("json-field", stringify(valueAtDraft(draft, field2.path) ?? {}));
+    input.dataset.path = field2.path;
     input.addEventListener("input", () => onChange());
-    const hint = field.seed ? "Seeded from the selected value when available." : "Edit a JSON object.";
-    return fieldWrap(field.label ?? labelFromPath(field.path), input, helper(hint));
+    const hint = field2.seed ? "Seeded from the selected value when available." : "Edit a JSON object.";
+    return fieldWrap(field2.label ?? labelFromPath(field2.path), input, helper(hint));
   }
-  function textField(field, draft, onChange) {
+  function textField(field2, draft, onChange) {
     const input = document.createElement("input");
     input.type = "text";
-    input.dataset.path = field.path;
-    input.value = String(valueAtDraft(draft, field.path) ?? "");
+    input.dataset.path = field2.path;
+    input.value = String(valueAtDraft(draft, field2.path) ?? "");
     input.addEventListener("input", () => {
-      setDraftValue(draft, field.path, input.value);
-      onChange(field.path);
+      setDraftValue(draft, field2.path, input.value);
+      onChange(field2.path);
     });
-    return fieldWrap(field.label ?? labelFromPath(field.path), input);
+    return fieldWrap(field2.label ?? labelFromPath(field2.path), input);
   }
-  async function hydrateSourceSelect(root, field, draft) {
-    const select2 = root.querySelector(`select[data-path="${cssEscape2(field.path)}"]`);
+  async function hydrateSourceSelect(root, field2, draft) {
+    const select2 = root.querySelector(`select[data-path="${cssEscape2(field2.path)}"]`);
     if (!select2) {
       return;
     }
     try {
-      const response = await fetchSourceEndpoint(field.source, field.endpoint, resolvedParams(field.params, draft));
-      const items = arrayAt2(response, field.itemsPath ?? "items");
+      const response = await fetchSourceEndpoint(field2.source, field2.endpoint, resolvedParams(field2.params, draft));
+      const items = arrayAt2(response, field2.itemsPath ?? "items");
       select2.replaceChildren(option("", "Select..."));
       for (const item of items) {
-        const value = stringValue2(valueAt2(item, field.valuePath ?? "id"));
-        if (!value) {
+        const value2 = stringValue2(valueAt2(item, field2.valuePath ?? "id"));
+        if (!value2) {
           continue;
         }
-        const label2 = stringValue2(valueAt2(item, field.labelPath ?? field.valuePath ?? "id")) || value;
-        select2.append(option(value, label2));
+        const label3 = stringValue2(valueAt2(item, field2.labelPath ?? field2.valuePath ?? "id")) || value2;
+        select2.append(option(value2, label3));
       }
-      select2.value = String(valueAtDraft(draft, field.path) ?? "");
+      select2.value = String(valueAtDraft(draft, field2.path) ?? "");
     } catch (error) {
       select2.replaceChildren(option("", error instanceof Error ? error.message : "Failed to load options"));
     }
@@ -24101,16 +25239,16 @@ p {
     }
     return result.status === 204 ? "Function completed without response body." : "Function completed.";
   }
-  function nestedError(value) {
-    for (const candidate of [valueAt2(value, "details.body.error"), valueAt2(value, "error")]) {
+  function nestedError(value2) {
+    for (const candidate of [valueAt2(value2, "details.body.error"), valueAt2(value2, "error")]) {
       if (typeof candidate === "string" && candidate.trim()) {
         return candidate;
       }
     }
     return null;
   }
-  function sentCount(value) {
-    const messages = valueAt2(value, "messages");
+  function sentCount(value2) {
+    const messages = valueAt2(value2, "messages");
     return Array.isArray(messages) ? messages.length : null;
   }
 
@@ -24298,9 +25436,9 @@ pre {
     section.append(details);
     return section;
   }
-  function summary(text3) {
+  function summary(text4) {
     const element = document.createElement("summary");
-    element.textContent = text3;
+    element.textContent = text4;
     return element;
   }
 
@@ -24436,11 +25574,11 @@ pre {
   // src/components/admin/Resources/WorkflowEditor/mappingValues.ts
   function mappedObject(draft) {
     const result = {};
-    for (const [path, value] of Object.entries(draft)) {
-      if (!value.value) {
+    for (const [path, value2] of Object.entries(draft)) {
+      if (!value2.value) {
         continue;
       }
-      setPath(result, path, resolvedDraftValue(value));
+      setPath(result, path, resolvedDraftValue(value2));
     }
     return result;
   }
@@ -24458,16 +25596,16 @@ pre {
       return raw;
     }
   }
-  function setPath(target2, path, value) {
+  function setPath(target2, path, value2) {
     if (!path) {
-      target2.value = value;
+      target2.value = value2;
       return;
     }
     const parts = path.split(".").filter(Boolean);
     let current = target2;
     for (const [index, part] of parts.entries()) {
       if (index === parts.length - 1) {
-        current[part] = value;
+        current[part] = value2;
         return;
       }
       const existing = current[part];
@@ -24479,16 +25617,16 @@ pre {
   }
 
   // src/components/admin/Resources/WorkflowEditor/mapping.ts
-  function referencesFromShape(shape, prefix, label2) {
+  function referencesFromShape(shape, prefix, label3) {
     if (!shape) {
       return [];
     }
-    const options2 = [{ value: prefix, label: label2, shape }];
+    const options2 = [{ value: prefix, label: label3, shape }];
     if (shape.type !== "object") {
       return options2;
     }
     for (const [name, child] of Object.entries(shape.properties ?? {})) {
-      options2.push(...referencesFromShape(child, `${prefix}.${name}`, `${label2} / ${name}`));
+      options2.push(...referencesFromShape(child, `${prefix}.${name}`, `${label3} / ${name}`));
     }
     return options2;
   }
@@ -24530,11 +25668,11 @@ pre {
     }
     return root;
   }
-  function valuePicker(draft, references, label2 = "Choose a value") {
+  function valuePicker(draft, references, label3 = "Choose a value") {
     const wrap = document.createElement("div");
     wrap.className = "value-picker";
     const select2 = document.createElement("select");
-    select2.append(option2("", label2));
+    select2.append(option2("", label3));
     for (const reference of references) {
       select2.append(option2(reference.value, reference.label));
     }
@@ -24589,10 +25727,10 @@ pre {
       return reference.shape.type === shape.type && reference.shape.semantic?.kind !== "user-id";
     });
   }
-  function option2(value, label2) {
+  function option2(value2, label3) {
     const el2 = document.createElement("option");
-    el2.value = value;
-    el2.textContent = label2;
+    el2.value = value2;
+    el2.textContent = label3;
     return el2;
   }
 
@@ -24606,7 +25744,7 @@ pre {
       empty.textContent = "No fields defined.";
       root.append(empty);
     }
-    fields.forEach((field, index) => root.append(schemaFieldRow(field, index, fields, onChange, showRequired)));
+    fields.forEach((field2, index) => root.append(schemaFieldRow(field2, index, fields, onChange, showRequired)));
     const add = document.createElement("button");
     add.type = "button";
     add.className = "button secondary small";
@@ -24619,49 +25757,49 @@ pre {
     return root;
   }
   function paramsFromFields(fields) {
-    return Object.fromEntries(fields.filter((field) => field.name.trim()).map((field) => [field.name.trim(), { type: field.type }]));
+    return Object.fromEntries(fields.filter((field2) => field2.name.trim()).map((field2) => [field2.name.trim(), { type: field2.type }]));
   }
   function objectShapeFromFields(fields) {
     const properties = paramsFromFields(fields);
     if (!Object.keys(properties).length) {
       return;
     }
-    const required = fields.filter((field) => field.required && field.name.trim()).map((field) => field.name.trim());
+    const required = fields.filter((field2) => field2.required && field2.name.trim()).map((field2) => field2.name.trim());
     return {
       type: "object",
       properties,
       ...required.length ? { required } : {}
     };
   }
-  function schemaFieldRow(field, index, fields, onChange, showRequired) {
+  function schemaFieldRow(field2, index, fields, onChange, showRequired) {
     const row = document.createElement("div");
     row.className = "schema-field-row";
     const name = document.createElement("input");
-    name.value = field.name;
+    name.value = field2.name;
     name.placeholder = "fieldName";
     name.setAttribute("aria-label", "Field name");
-    name.addEventListener("input", () => field.name = name.value);
+    name.addEventListener("input", () => field2.name = name.value);
     name.addEventListener("change", onChange);
     const type = document.createElement("select");
-    for (const value of ["string", "number", "boolean", "object", "array"]) {
+    for (const value2 of ["string", "number", "boolean", "object", "array"]) {
       const option3 = document.createElement("option");
-      option3.value = value;
-      option3.textContent = value;
+      option3.value = value2;
+      option3.textContent = value2;
       type.append(option3);
     }
-    type.value = field.type;
+    type.value = field2.type;
     type.setAttribute("aria-label", "Field type");
     type.addEventListener("change", () => {
-      field.type = type.value;
+      field2.type = type.value;
       onChange();
     });
     const requiredLabel = document.createElement("label");
     requiredLabel.className = "check compact-check";
     const required = document.createElement("input");
     required.type = "checkbox";
-    required.checked = field.required;
+    required.checked = field2.required;
     required.addEventListener("change", () => {
-      field.required = required.checked;
+      field2.required = required.checked;
       onChange();
     });
     requiredLabel.append(required, document.createTextNode("Required"));
@@ -24670,7 +25808,7 @@ pre {
     remove.type = "button";
     remove.className = "icon-button";
     remove.textContent = "×";
-    remove.setAttribute("aria-label", `Remove ${field.name || `field ${index + 1}`}`);
+    remove.setAttribute("aria-label", `Remove ${field2.name || `field ${index + 1}`}`);
     remove.addEventListener("click", () => {
       fields.splice(index, 1);
       onChange();
@@ -24680,16 +25818,16 @@ pre {
   }
 
   // src/components/admin/Resources/Functions/create/editor/controls.ts
-  function value(root, fieldName) {
+  function value2(root, fieldName) {
     return root.querySelector(`[data-field="${fieldName}"]`)?.value ?? "";
   }
-  function parseOptional(raw, label2) {
-    return raw.trim() ? parseJson4(raw, label2) : undefined;
+  function parseOptional(raw, label3) {
+    return raw.trim() ? parseJson4(raw, label3) : undefined;
   }
-  function field(labelText, control) {
-    const label2 = document.createElement("label");
-    label2.append(document.createTextNode(labelText), control);
-    return label2;
+  function field2(labelText, control) {
+    const label3 = document.createElement("label");
+    label3.append(document.createTextNode(labelText), control);
+    return label3;
   }
   function mappingGroup(title2, editor) {
     const group = document.createElement("div");
@@ -24715,28 +25853,28 @@ pre {
   }
   function select2(options2, current, onChange) {
     const element = document.createElement("select");
-    for (const [optionValue, label2] of options2) {
+    for (const [optionValue, label3] of options2) {
       const option3 = document.createElement("option");
       option3.value = optionValue;
-      option3.textContent = label2;
+      option3.textContent = label3;
       element.append(option3);
     }
     element.value = current;
     element.addEventListener("change", () => onChange(element.value));
     return element;
   }
-  function identifier(value2) {
-    const words = value2.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
+  function identifier(value3) {
+    const words = value3.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
     return words.map((word, index) => index ? word[0]?.toUpperCase() + word.slice(1) : word.toLowerCase()).join("");
   }
-  function dataShapeType(value2) {
-    return value2 === "number" || value2 === "boolean" || value2 === "object" || value2 === "array" ? value2 : "string";
+  function dataShapeType(value3) {
+    return value3 === "number" || value3 === "boolean" || value3 === "object" || value3 === "array" ? value3 : "string";
   }
-  function parseJson4(raw, label2) {
+  function parseJson4(raw, label3) {
     try {
       return JSON.parse(raw);
     } catch {
-      throw new Error(`${label2} is not valid JSON.`);
+      throw new Error(`${label3} is not valid JSON.`);
     }
   }
 
@@ -24770,22 +25908,22 @@ pre {
 
   // src/components/admin/Resources/Functions/create/editor/definition.ts
   function buildDefinition(root, context, returnValue) {
-    const id = value(root, "id").trim();
-    const name = value(root, "name").trim();
-    const description = value(root, "description").trim();
-    const advancedParams = parseOptional(value(root, "params"), "Params schema");
-    const advancedBody = parseOptional(value(root, "body"), "Body schema");
+    const id = value2(root, "id").trim();
+    const name = value2(root, "name").trim();
+    const description = value2(root, "description").trim();
+    const advancedParams = parseOptional(value2(root, "params"), "Params schema");
+    const advancedBody = parseOptional(value2(root, "body"), "Body schema");
     const params = advancedParams ?? paramsFromFields(context.paramsFields);
     const body = advancedBody ?? objectShapeFromFields(context.bodyFields);
-    const advancedOutput = parseOptional(value(root, "output"), "Output contract");
+    const advancedOutput = parseOptional(value2(root, "output"), "Output contract");
     const returnBody = returnValue.value ? resolvedDraftValue(returnValue) : undefined;
     const returnShape = referencesBefore(context, context.steps.length).find((reference) => reference.value === returnValue.value)?.shape;
-    const returnStatus = Number(value(root, "return-status") || 200);
+    const returnStatus = Number(value2(root, "return-status") || 200);
     const output = advancedOutput ?? (returnShape ? [{ status: String(returnStatus), body: returnShape }] : undefined);
     return {
       id,
-      method: value(root, "method"),
-      access: { mode: value(root, "access") },
+      method: value2(root, "method"),
+      access: { mode: value2(root, "access") },
       meta: { name: name || id, ...description ? { description } : {} },
       input: {
         ...Object.keys(params).length ? { params } : {},
@@ -24954,7 +26092,7 @@ textarea.compact {
 `;
 
   // src/components/admin/Resources/Functions/create/styles/layout.css
-  var layout_default = `:host {
+  var layout_default2 = `:host {
     display: block;
 }
 
@@ -25302,7 +26440,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Functions/create/styles/index.ts
-  var styles_default2 = [layout_default, mapping_default, controls_default2, steps_default].join(`
+  var styles_default2 = [layout_default2, mapping_default, controls_default2, steps_default].join(`
 `);
 
   // src/components/admin/Resources/Functions/create/templates/aside.html
@@ -25582,17 +26720,17 @@ details[open] > summary > .chevron {
 
   // src/components/admin/Resources/Functions/create/editor/callFields.ts
   function renderCallFields(root, step, context) {
-    const id = input(step.id, (value2) => step.id = value2);
-    const source2 = select2(context.catalog.map((item) => [item.id, item.label]), step.source, (value2) => {
-      step.source = value2;
-      step.endpoint = context.catalog.find((item) => item.id === value2)?.endpoints[0]?.endpointId ?? "";
+    const id = input(step.id, (value3) => step.id = value3);
+    const source2 = select2(context.catalog.map((item) => [item.id, item.label]), step.source, (value3) => {
+      step.source = value3;
+      step.endpoint = context.catalog.find((item) => item.id === value3)?.endpoints[0]?.endpointId ?? "";
       step.params = {};
       step.body = {};
       context.renderSteps();
     });
     const endpoints = context.catalog.find((item) => item.id === step.source)?.endpoints ?? [];
-    const endpoint = select2(endpoints.map((item) => [item.endpointId, `${item.method} ${item.meta?.name ?? item.endpointId}`]), step.endpoint, (value2) => {
-      step.endpoint = value2;
+    const endpoint = select2(endpoints.map((item) => [item.endpointId, `${item.method} ${item.meta?.name ?? item.endpointId}`]), step.endpoint, (value3) => {
+      step.endpoint = value3;
       step.params = {};
       step.body = {};
       context.renderSteps();
@@ -25609,7 +26747,7 @@ details[open] > summary > .chevron {
       }
     }));
     const bodyTargets = targetsFromShape(contract?.body);
-    root.append(grid(field("Step identifier", id), field("Source", source2), field("Endpoint", endpoint), mappingGroup("Parameter mapping", mappingEditor(paramTargets, references, step.params, "This endpoint has no request parameters.")), mappingGroup("Body mapping", mappingEditor(bodyTargets, references, step.body, "This endpoint has no request body."))));
+    root.append(grid(field2("Step identifier", id), field2("Source", source2), field2("Endpoint", endpoint), mappingGroup("Parameter mapping", mappingEditor(paramTargets, references, step.params, "This endpoint has no request parameters.")), mappingGroup("Body mapping", mappingEditor(bodyTargets, references, step.body, "This endpoint has no request body."))));
   }
 
   // src/components/admin/Resources/Functions/create/editor/stepCards.ts
@@ -25654,17 +26792,17 @@ details[open] > summary > .chevron {
       ["gte", "Greater or equal"],
       ["lt", "Less than"],
       ["lte", "Less or equal"]
-    ], step.operator, (value2) => {
-      step.operator = value2;
+    ], step.operator, (value3) => {
+      step.operator = value3;
       context.renderSteps();
     });
     const references = referencesBefore(context, context.steps.indexOf(step));
-    const children = [field("Operator", operator), field("Value to inspect", valuePicker(step.left, references))];
+    const children = [field2("Operator", operator), field2("Value to inspect", valuePicker(step.left, references))];
     if (step.operator !== "exists") {
-      children.push(field("Expected value", valuePicker(step.right, references)));
+      children.push(field2("Expected value", valuePicker(step.right, references)));
     }
-    children.push(field("Failure status", input(step.status, (value2) => step.status = value2, "403", "number")));
-    children.push(field("Failure message", input(step.error, (value2) => step.error = value2, "Condition failed")));
+    children.push(field2("Failure status", input(step.status, (value3) => step.status = value3, "403", "number")));
+    children.push(field2("Failure message", input(step.error, (value3) => step.error = value3, "Condition failed")));
     root.append(grid(...children));
   }
 
@@ -25816,12 +26954,12 @@ details[open] > summary > .chevron {
         moveStep: (index, offset) => this.move(index, offset)
       };
     }
-    setMessage(text3, kind) {
+    setMessage(text4, kind) {
       if (!this.message) {
         return;
       }
       this.message.className = `message ${kind}`.trim();
-      this.message.textContent = text3;
+      this.message.textContent = text4;
     }
   }
   if (!customElements.get("cms-function-create")) {
@@ -25829,7 +26967,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/template.html
-  var template_default14 = `<div class="integrations-root">
+  var template_default15 = `<div class="integrations-root">
     <div class="binding-feeds" aria-hidden="true">
         <div data-definitions-source cms-reload-on="integration:updated">
             <template>
@@ -26271,10 +27409,10 @@ details[open] > summary > .chevron {
     }
     return icon;
   }
-  function text3(root, selector, value2) {
+  function text4(root, selector, value3) {
     const element = root.querySelector(selector);
     if (element) {
-      element.textContent = String(value2 ?? "");
+      element.textContent = String(value3 ?? "");
     }
   }
   function fillIcon(root, selector, icon) {
@@ -26289,13 +27427,13 @@ details[open] > summary > .chevron {
     const types2 = Array.from(new Set((definition.artifacts ?? []).map((artifact) => artifact.type)));
     return types2.length ? types2.map(typeLabel) : ["No artifacts"];
   }
-  function formatRelativeDate(value2) {
-    if (!value2) {
+  function formatRelativeDate(value3) {
+    if (!value3) {
       return "Never";
     }
-    const date = new Date(value2);
+    const date = new Date(value3);
     if (Number.isNaN(date.getTime())) {
-      return value2;
+      return value3;
     }
     const now = new Date;
     const yesterday = new Date(now);
@@ -26384,8 +27522,8 @@ details[open] > summary > .chevron {
     root.replaceChildren();
     const visible = labels.slice(0, 4);
     const remaining = labels.length - visible.length;
-    for (const label2 of visible) {
-      root.append(badge2(label2));
+    for (const label3 of visible) {
+      root.append(badge2(label3));
     }
     if (remaining > 0) {
       const more = badge2(`+${remaining} others`);
@@ -26402,9 +27540,9 @@ details[open] > summary > .chevron {
     for (const row of rows) {
       const element = cloneElement("resource-row");
       fillIcon(element, "[data-icon-host]", iconForResourceType(row.type));
-      text3(element, "[data-label]", row.label);
-      text3(element, "[data-detail]", row.detail);
-      text3(element, "[data-type]", row.type);
+      text4(element, "[data-label]", row.label);
+      text4(element, "[data-detail]", row.detail);
+      text4(element, "[data-type]", row.type);
       root.append(element);
     }
   }
@@ -26412,16 +27550,16 @@ details[open] > summary > .chevron {
     const grid2 = cloneElement("summary-grid");
     for (const row of rows) {
       const element = cloneElement("summary-row");
-      text3(element, "[data-label]", row.label);
-      text3(element, "[data-value]", row.value);
+      text4(element, "[data-label]", row.label);
+      text4(element, "[data-value]", row.value);
       grid2.append(element);
     }
     root.replaceChildren(grid2);
   }
   function renderPlaceholder(root, title2, copy) {
     const element = cloneElement("placeholder");
-    text3(element, "[data-title]", title2);
-    text3(element, "[data-copy]", copy);
+    text4(element, "[data-title]", title2);
+    text4(element, "[data-copy]", copy);
     root.replaceChildren(element);
   }
   function empty(message) {
@@ -26430,9 +27568,9 @@ details[open] > summary > .chevron {
     element.textContent = message;
     return element;
   }
-  function badge2(label2) {
+  function badge2(label3) {
     const element = cloneElement("badge");
-    element.textContent = label2;
+    element.textContent = label3;
     return element;
   }
   // src/components/admin/Resources/Integrations/ui/resources/rows.ts
@@ -26521,8 +27659,8 @@ details[open] > summary > .chevron {
     renderCounts(host);
   }
   function renderCounts(host) {
-    text3(host, "[data-installed-count]", host.installations.length);
-    text3(host, "[data-catalogue-count]", availableDefinitions(host).length);
+    text4(host, "[data-installed-count]", host.installations.length);
+    text4(host, "[data-catalogue-count]", availableDefinitions(host).length);
   }
   function renderInstallations(host) {
     const root = host.query("[data-installations]");
@@ -26546,15 +27684,15 @@ details[open] > summary > .chevron {
     row.href = integrationRouteUrl({ view: "installation", id: installation.id });
     row.dataset.integrationId = installation.id;
     row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
-    text3(row, "[data-label]", installation.label);
-    text3(row, "[data-kind]", installation.id);
+    text4(row, "[data-label]", installation.label);
+    text4(row, "[data-kind]", installation.id);
     const status = row.querySelector("[data-status]");
     if (status) {
       status.textContent = statusLabel(installation.status);
       status.classList.add(`status-${installation.status}`);
     }
     appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
-    text3(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
+    text4(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
     return row;
   }
 
@@ -26569,8 +27707,8 @@ details[open] > summary > .chevron {
     const shell = cloneElement("detail-shell");
     const content = shell.querySelector("template").content;
     shell.setAttribute("cms-source", `${route3("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
-    text3(content, "[data-title]", installation.label);
-    text3(content, "[data-description]", definition?.description ?? "No description.");
+    text4(content, "[data-title]", installation.label);
+    text4(content, "[data-description]", definition?.description ?? "No description.");
     content.querySelector("[data-run-sync]").dataset.integrationId = installation.id;
     fillIcon(content, "[data-back-icon]", "table");
     fillIcon(content, "[data-grid-icon]", "grid");
@@ -26584,7 +27722,7 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Integrations/ui/setup.ts
   function renderSetup(host, definition, options2 = {}) {
     const shell = cloneElement("setup-shell");
-    text3(shell, "[data-title]", `Install ${definition.label}`);
+    text4(shell, "[data-title]", `Install ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
     const status = shell.querySelector("[data-setup-status]");
     status.textContent = options2.error ?? "";
@@ -26600,7 +27738,7 @@ details[open] > summary > .chevron {
   }
   function renderImporting(host, definition, answers) {
     const shell = cloneElement("importing-shell");
-    text3(shell, "[data-title]", `Installing ${definition.label}`);
+    text4(shell, "[data-title]", `Installing ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
     renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
     host.query("[data-detail-view]").replaceChildren(shell);
@@ -26616,20 +27754,20 @@ details[open] > summary > .chevron {
     ];
   }
   function applyAnswers(root, answers) {
-    for (const [name, value2] of Object.entries(answers)) {
+    for (const [name, value3] of Object.entries(answers)) {
       const element = root.querySelector(`[name="${cssEscape3(name)}"]`);
       if (!element) {
         continue;
       }
       if (element instanceof HTMLInputElement && element.type === "checkbox") {
-        element.checked = value2 === true;
+        element.checked = value3 === true;
       } else {
-        element.value = value2 == null ? "" : typeof value2 === "string" ? value2 : JSON.stringify(value2);
+        element.value = value3 == null ? "" : typeof value3 === "string" ? value3 : JSON.stringify(value3);
       }
     }
   }
-  function cssEscape3(value2) {
-    return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value2) : value2.replaceAll('"', "\\\"");
+  function cssEscape3(value3) {
+    return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
   }
 
   // src/components/admin/Resources/Integrations/ui/actions.ts
@@ -26807,12 +27945,12 @@ details[open] > summary > .chevron {
       waiter.resolve();
     }
   }
-  function parseArray(value2) {
-    if (!value2) {
+  function parseArray(value3) {
+    if (!value3) {
       return null;
     }
     try {
-      const parsed = JSON.parse(value2);
+      const parsed = JSON.parse(value3);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
@@ -27490,7 +28628,7 @@ button[slot="back"]:disabled {
       const style = document.createElement("style");
       style.textContent = styles_default3;
       const body = document.createElement("template");
-      body.innerHTML = template_default14;
+      body.innerHTML = template_default15;
       this.replaceChildren(style, body.content.cloneNode(true));
     }
   }
@@ -27499,7 +28637,7 @@ button[slot="back"]:disabled {
   }
 
   // src/components/admin/Resources/Triggers/template.html
-  var template_default15 = `<section class="triggers-surface">
+  var template_default16 = `<section class="triggers-surface">
     <div data-state="loading" class="state">Loading triggers...</div>
     <div data-state="error" class="state" hidden>Failed to load triggers.</div>
     <div data-state="empty" class="state" hidden>No triggers installed.</div>
@@ -27708,7 +28846,7 @@ button.run:disabled {
   function lastRun(trigger) {
     const badge3 = document.createElement("span");
     badge3.className = `status ${trigger.lastRun?.status ?? ""}`.trim();
-    badge3.textContent = trigger.lastRun ? `${trigger.lastRun.status} · ${formatDate2(trigger.lastRun.at)}${trigger.lastRun.durationMs === undefined ? "" : ` · ${formatDuration(trigger.lastRun.durationMs)}`}` : "Never";
+    badge3.textContent = trigger.lastRun ? `${trigger.lastRun.status} · ${formatDate3(trigger.lastRun.at)}${trigger.lastRun.durationMs === undefined ? "" : ` · ${formatDuration(trigger.lastRun.durationMs)}`}` : "Never";
     if (trigger.lastRun?.error) {
       badge3.title = trigger.lastRun.error;
     }
@@ -27722,23 +28860,23 @@ button.run:disabled {
       return textBlock("Scheduler paused", "This runtime used --no-workers");
     }
     if (trigger.scheduleState?.running) {
-      return textBlock("Running", `Since ${formatDate2(trigger.scheduleState.running.startedAt)}`);
+      return textBlock("Running", `Since ${formatDate3(trigger.scheduleState.running.startedAt)}`);
     }
     if (!trigger.enabled) {
       return textBlock("Disabled", "No future runs");
     }
-    return textBlock("Scheduled", trigger.scheduleState ? `Next ${formatDate2(trigger.scheduleState.nextRunAt)}` : "Pending");
+    return textBlock("Scheduled", trigger.scheduleState ? `Next ${formatDate3(trigger.scheduleState.nextRunAt)}` : "Pending");
   }
-  function formatDuration(value2) {
-    if (value2 < 1000) {
-      return `${value2} ms`;
+  function formatDuration(value3) {
+    if (value3 < 1000) {
+      return `${value3} ms`;
     }
-    return value2 % 60000 === 0 ? `${value2 / 60000} min` : `${value2 / 1000} s`;
+    return value3 % 60000 === 0 ? `${value3 / 60000} min` : `${value3 / 1000} s`;
   }
-  function formatDate2(value2) {
-    const date = new Date(value2);
+  function formatDate3(value3) {
+    const date = new Date(value3);
     if (Number.isNaN(date.getTime())) {
-      return value2;
+      return value3;
     }
     return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
@@ -27758,7 +28896,7 @@ button.run:disabled {
       const style = document.createElement("style");
       style.textContent = style_default13;
       const body = document.createElement("template");
-      body.innerHTML = template_default15;
+      body.innerHTML = template_default16;
       this.replaceChildren(style, body.content.cloneNode(true));
       this.rows = this.querySelector("[data-role='rows']");
     }
@@ -27838,24 +28976,24 @@ button.run:disabled {
   function checkbox2(root, name) {
     return input2(root, name);
   }
-  function option3(value2, label2) {
+  function option3(value3, label3) {
     const element = document.createElement("option");
-    element.value = value2;
-    element.textContent = label2;
+    element.value = value3;
+    element.textContent = label3;
     return element;
   }
-  function parseOptionalObject(raw, label2) {
+  function parseOptionalObject(raw, label3) {
     if (!raw.trim()) {
       return;
     }
     try {
-      const value2 = JSON.parse(raw);
-      if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
+      const value3 = JSON.parse(raw);
+      if (!value3 || typeof value3 !== "object" || Array.isArray(value3)) {
         throw new Error;
       }
-      return value2;
+      return value3;
     } catch {
-      throw new Error(`${label2} must be a JSON object.`);
+      throw new Error(`${label3} must be a JSON object.`);
     }
   }
   function mappedDraft2(draft) {
@@ -27870,22 +29008,22 @@ button.run:disabled {
     if (!raw.trim()) {
       return;
     }
-    const text4 = raw.trim();
-    if (text4.startsWith("$")) {
-      return text4;
+    const text5 = raw.trim();
+    if (text5.startsWith("$")) {
+      return text5;
     }
     try {
-      return JSON.parse(text4);
+      return JSON.parse(text5);
     } catch {
-      return text4;
+      return text5;
     }
   }
-  function identifier2(value2) {
-    const words = value2.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
+  function identifier2(value3) {
+    const words = value3.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
     return words.map((word) => word.toLowerCase()).join("-");
   }
-  function dataShapeType2(value2) {
-    return value2 === "number" || value2 === "boolean" || value2 === "object" || value2 === "array" ? value2 : "string";
+  function dataShapeType2(value3) {
+    return value3 === "number" || value3 === "boolean" || value3 === "object" || value3 === "array" ? value3 : "string";
   }
   function uniqueReferences(references) {
     const seen = new Set;
@@ -27901,7 +29039,7 @@ button.run:disabled {
   // src/components/admin/Resources/Triggers/create/definition.ts
   function buildTriggerDefinition(root, conditionLeft, conditionRight, functionParams, functionBody) {
     const id = input2(root, "id").value.trim();
-    const label2 = input2(root, "label").value.trim();
+    const label3 = input2(root, "label").value.trim();
     const advancedParams = parseOptionalObject(textarea4(root, "params").value, "Params mapping");
     const advancedBody = parseOptionalValue(textarea4(root, "body").value);
     const params = advancedParams ?? mappedObject(functionParams);
@@ -27909,7 +29047,7 @@ button.run:disabled {
     const mode = select4(root, "mode").value;
     return {
       id,
-      ...label2 ? { label: label2 } : {},
+      ...label3 ? { label: label3 } : {},
       event: {
         kind: "endpoint",
         source: select4(root, "source").value,
@@ -28124,7 +29262,7 @@ textarea {
 `;
 
   // src/components/admin/Resources/Triggers/create/styles/layout.css
-  var layout_default2 = `:host {
+  var layout_default3 = `:host {
     display: block;
 }
 
@@ -28320,7 +29458,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Triggers/create/styles/index.ts
-  var styles_default4 = [layout_default2, mapping_default2, controls_default3, feedback_default].join(`
+  var styles_default4 = [layout_default3, mapping_default2, controls_default3, feedback_default].join(`
 `);
 
   // src/components/admin/Resources/Triggers/create/templates/aside.html
@@ -28559,12 +29697,12 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Triggers/create/view.ts
-  function renderState(host, text4) {
+  function renderState(host, text5) {
     const style = document.createElement("style");
     style.textContent = styles_default4;
     const state2 = document.createElement("div");
     state2.className = "state";
-    state2.textContent = text4;
+    state2.textContent = text5;
     host.replaceChildren(style, state2);
   }
   function renderShell(host) {
@@ -28704,13 +29842,13 @@ details[open] > summary > .chevron {
       this.saveButton?.addEventListener("click", () => void this.save());
     }
     bindIdentifier() {
-      const label2 = input2(this, "label");
+      const label3 = input2(this, "label");
       const id = input2(this, "id");
       let idWasEdited = false;
       id.addEventListener("input", () => idWasEdited = true);
-      label2.addEventListener("input", () => {
+      label3.addEventListener("input", () => {
         if (!idWasEdited) {
-          id.value = identifier2(label2.value);
+          id.value = identifier2(label3.value);
         }
       });
     }
@@ -28752,12 +29890,12 @@ details[open] > summary > .chevron {
         this.saveButton.disabled = false;
       }
     }
-    setMessage(text4, kind) {
+    setMessage(text5, kind) {
       if (!this.message) {
         return;
       }
       this.message.className = `message ${kind}`.trim();
-      this.message.textContent = text4;
+      this.message.textContent = text5;
     }
   }
   if (!customElements.get("cms-trigger-create")) {
@@ -28765,7 +29903,7 @@ details[open] > summary > .chevron {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default16 = `<header class="topbar">
+  var template_default17 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -29112,9 +30250,9 @@ button:hover {
       host.dispatchEvent(new CustomEvent(eventName, { bubbles: true, composed: true }));
     }
   }
-  function syncTopBarButtonGroup(root, selector, dataKey, value2) {
+  function syncTopBarButtonGroup(root, selector, dataKey, value3) {
     for (const button2 of Array.from(root.querySelectorAll(selector))) {
-      const isActive = button2.dataset[dataKey] === value2;
+      const isActive = button2.dataset[dataKey] === value3;
       button2.classList.toggle("active", isActive);
       button2.setAttribute("aria-pressed", String(isActive));
     }
@@ -29137,7 +30275,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default16)}`;
+  template4.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default17)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -29173,10 +30311,10 @@ button:hover {
     set sourceState(sourceState) {
       this._setSourceState(sourceState, false);
     }
-    set saveStatus(label2) {
+    set saveStatus(label3) {
       const target2 = this.shadowRoot.querySelector(".save-label") ?? this.shadowRoot.querySelector('[data-action="save"]');
       if (target2) {
-        target2.textContent = label2;
+        target2.textContent = label3;
       }
     }
     setPageTitle(title2, path) {
@@ -29263,7 +30401,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default17 = `<aside class="panel">
+  var template_default18 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -29379,7 +30517,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default14)}</style>${String(template_default17)}`;
+  template5.innerHTML = `<style>${String(style_default14)}</style>${String(template_default18)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -29419,29 +30557,29 @@ button:hover {
     if (binding.params) {
       return binding.params;
     }
-    const query5 = bindingQuery(source2.url, binding.url);
-    if (!query5) {
+    const query7 = bindingQuery(source2.url, binding.url);
+    if (!query7) {
       return {};
     }
     const params = {};
-    for (const [name, value2] of new URLSearchParams(query5).entries()) {
-      params[name] = paramValue(value2);
+    for (const [name, value3] of new URLSearchParams(query7).entries()) {
+      params[name] = paramValue(value3);
     }
     return params;
   }
-  function paramValue(value2) {
-    const queryParam = tokenValue2(value2, "#");
+  function paramValue(value3) {
+    const queryParam = tokenValue2(value3, "#");
     if (queryParam) {
       return { from: "queryParam", name: queryParam };
     }
-    const state2 = tokenValue2(value2, "@");
+    const state2 = tokenValue2(value3, "@");
     if (state2) {
       return { from: "state", name: state2 };
     }
-    return { from: "raw", value: value2 };
+    return { from: "raw", value: value3 };
   }
-  function tokenValue2(value2, prefix) {
-    const match = new RegExp(`^\\${prefix}\\{([^}]+)\\}$`).exec(value2);
+  function tokenValue2(value3, prefix) {
+    const match = new RegExp(`^\\${prefix}\\{([^}]+)\\}$`).exec(value3);
     return match?.[1]?.trim() || null;
   }
   function bindingQuery(sourceUrl3, bindingUrl) {
@@ -29492,12 +30630,12 @@ button:hover {
     return params;
   }
   function selectedMode(select5) {
-    const value2 = select5.options[select5.selectedIndex]?.value;
-    return value2 === "raw" || value2 === "state" ? value2 : "queryParam";
+    const value3 = select5.options[select5.selectedIndex]?.value;
+    return value3 === "raw" || value3 === "state" ? value3 : "queryParam";
   }
   function selectedTrigger(select5) {
-    const value2 = select5?.options[select5.selectedIndex]?.value;
-    return value2 === "submit" || value2 === "change" ? value2 : "auto";
+    const value3 = select5?.options[select5.selectedIndex]?.value;
+    return value3 === "submit" || value3 === "change" ? value3 : "auto";
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerEvents.ts
@@ -29586,8 +30724,8 @@ button:hover {
     element.textContent = message;
     return element;
   }
-  function escapeHtml2(value2) {
-    return value2.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+  function escapeHtml2(value3) {
+    return value3.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBindingRows.ts
@@ -29599,17 +30737,17 @@ button:hover {
     row.append(renderParamHeader(rowConfig), renderParamDescription(rowConfig), renderParamControls(rowConfig.name, initialValue));
     return row;
   }
-  function renderBindingHeading(text4) {
+  function renderBindingHeading(text5) {
     const heading4 = document.createElement("div");
     heading4.className = "config-heading";
-    heading4.textContent = text4;
+    heading4.textContent = text5;
     return heading4;
   }
   function bodyBindingFields(fields) {
     const rows = [];
-    for (const field2 of fields) {
-      if (field2.path !== "." && field2.type !== "object" && field2.type !== "array") {
-        rows.push({ name: field2.path, type: field2.type, required: field2.required });
+    for (const field3 of fields) {
+      if (field3.path !== "." && field3.type !== "object" && field3.type !== "array") {
+        rows.push({ name: field3.path, type: field3.type, required: field3.required });
       }
     }
     return rows;
@@ -29638,41 +30776,41 @@ button:hover {
     const mode = document.createElement("select");
     mode.className = "param-mode";
     mode.append(option4("queryParam", "Query param"), option4("raw", "Raw value"), option4("state", "Page state"));
-    const value2 = document.createElement("input");
-    value2.className = "param-value";
-    value2.placeholder = name;
+    const value3 = document.createElement("input");
+    value3.className = "param-value";
+    value3.placeholder = name;
     if (initialValue) {
       selectOption(mode, initialValue.from);
-      value2.value = String(initialValue.from === "raw" ? initialValue.value : initialValue.name);
+      value3.value = String(initialValue.from === "raw" ? initialValue.value : initialValue.name);
     }
-    controls.append(mode, value2);
+    controls.append(mode, value3);
     return controls;
   }
-  function option4(value2, label2) {
+  function option4(value3, label3) {
     const element = document.createElement("option");
-    element.value = value2;
-    element.textContent = label2;
+    element.value = value3;
+    element.textContent = label3;
     return element;
   }
-  function textSpan(value2) {
+  function textSpan(value3) {
     const element = document.createElement("span");
-    element.textContent = value2;
+    element.textContent = value3;
     return element;
   }
-  function selectOption(select5, value2) {
-    const index = Array.from(select5.options).findIndex((option5) => option5.value === value2);
+  function selectOption(select5, value3) {
+    const index = Array.from(select5.options).findIndex((option5) => option5.value === value3);
     if (index >= 0) {
       select5.selectedIndex = index;
     }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourceGroups.ts
-  function filteredSources(sources, query5) {
-    const normalized = query5.trim().toLowerCase();
+  function filteredSources(sources, query7) {
+    const normalized = query7.trim().toLowerCase();
     if (!normalized) {
       return sources;
     }
-    return sources.filter((source2) => [source2.label, source2.description, source2.provider, source2.providerLabel, source2.url].some((value2) => value2?.toLowerCase().includes(normalized)));
+    return sources.filter((source2) => [source2.label, source2.description, source2.provider, source2.providerLabel, source2.url].some((value3) => value3?.toLowerCase().includes(normalized)));
   }
   function providerGroups(sources) {
     const groups = new Map;
@@ -29699,16 +30837,16 @@ button:hover {
     }));
   }
   function cloneBodyFields(fields) {
-    return fields.map((field2) => ({
-      ...field2,
-      children: field2.children ? cloneBodyFields(field2.children) : undefined
+    return fields.map((field3) => ({
+      ...field3,
+      children: field3.children ? cloneBodyFields(field3.children) : undefined
     }));
   }
-  function firstProviderKey(sources, query5) {
-    return providerGroups(filteredSources(sources, query5))[0]?.key ?? "";
+  function firstProviderKey(sources, query7) {
+    return providerGroups(filteredSources(sources, query7))[0]?.key ?? "";
   }
-  function visibleSources(sources, query5, activeProvider) {
-    return filteredSources(sources, query5).filter((source2) => (source2.provider ?? "default") === activeProvider);
+  function visibleSources(sources, query7, activeProvider) {
+    return filteredSources(sources, query7).filter((source2) => (source2.provider ?? "default") === activeProvider);
   }
   function initialAlias(binding) {
     return binding?.alias ?? "data";
@@ -29723,25 +30861,25 @@ button:hover {
     renderRequestBody(section, source2, initialBinding);
     return section;
   }
-  function renderAliasInput(value2) {
+  function renderAliasInput(value3) {
     const aliasLabel = document.createElement("label");
     aliasLabel.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "source-alias";
-    alias.value = value2;
+    alias.value = value3;
     alias.placeholder = "data";
     aliasLabel.append(alias);
     return aliasLabel;
   }
-  function renderTriggerSelect(value2) {
-    const label2 = document.createElement("label");
-    label2.textContent = "Trigger";
+  function renderTriggerSelect(value3) {
+    const label3 = document.createElement("label");
+    label3.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
     trigger.append(option5("auto", "Auto"), option5("submit", "Submit"), option5("change", "Change"));
-    selectOption2(trigger, value2);
-    label2.append(trigger);
-    return label2;
+    selectOption2(trigger, value3);
+    label3.append(trigger);
+    return label3;
   }
   function defaultTrigger(source2) {
     return (source2.method ?? "GET") === "GET" ? "auto" : "submit";
@@ -29770,24 +30908,24 @@ button:hover {
       return;
     }
     section.append(renderBindingHeading("Request body"));
-    for (const field2 of fields) {
+    for (const field3 of fields) {
       section.append(renderBindingRow({
         kind: "body",
-        name: field2.name,
+        name: field3.name,
         location: "body",
-        type: field2.type,
-        required: field2.required
-      }, initialBinding?.body?.[field2.name]));
+        type: field3.type,
+        required: field3.required
+      }, initialBinding?.body?.[field3.name]));
     }
   }
-  function option5(value2, label2) {
+  function option5(value3, label3) {
     const element = document.createElement("option");
-    element.value = value2;
-    element.textContent = label2;
+    element.value = value3;
+    element.textContent = label3;
     return element;
   }
-  function selectOption2(select5, value2) {
-    const index = Array.from(select5.options).findIndex((option6) => option6.value === value2);
+  function selectOption2(select5, value3) {
+    const index = Array.from(select5.options).findIndex((option6) => option6.value === value3);
     if (index >= 0) {
       select5.selectedIndex = index;
     }
@@ -29803,8 +30941,8 @@ button:hover {
   function renderFieldList(fields, emptyMessage) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field2 of fields) {
-      list.append(renderField(field2, 0));
+    for (const field3 of fields) {
+      list.append(renderField(field3, 0));
     }
     if (list.children.length === 0) {
       const empty3 = document.createElement("p");
@@ -29814,27 +30952,27 @@ button:hover {
     }
     return list;
   }
-  function renderField(field2, depth) {
+  function renderField(field3, depth) {
     const item = document.createElement("li");
     item.className = "field";
     item.style.setProperty("--field-depth", String(depth));
     const path = document.createElement("span");
     path.className = "field-path";
-    path.textContent = field2.path;
+    path.textContent = field3.path;
     const type = document.createElement("span");
     type.className = "field-type";
-    type.textContent = field2.type ?? "unknown";
+    type.textContent = field3.type ?? "unknown";
     item.append(path, type);
-    if (field2.required) {
+    if (field3.required) {
       const required = document.createElement("span");
       required.className = "field-required";
       required.textContent = "required";
       item.append(required);
     }
-    if (field2.children?.length) {
+    if (field3.children?.length) {
       const children = document.createElement("ul");
       children.className = "field-children";
-      for (const child of field2.children) {
+      for (const child of field3.children) {
         children.append(renderField(child, depth + 1));
       }
       item.append(children);
@@ -29931,15 +31069,15 @@ button:hover {
   function methodSources(sources, activeMethod) {
     return sources.filter((source2) => activeMethod === "all" || dataSourceMethod(source2) === activeMethod);
   }
-  function pickerProviderGroups(sources, activeMethod, query5) {
-    return providerGroups(filteredSources(methodSources(sources, activeMethod), query5));
+  function pickerProviderGroups(sources, activeMethod, query7) {
+    return providerGroups(filteredSources(methodSources(sources, activeMethod), query7));
   }
-  function pickerVisibleSources(sources, activeMethod, query5, activeProvider) {
-    return visibleSources(methodSources(sources, activeMethod), query5, activeProvider);
+  function pickerVisibleSources(sources, activeMethod, query7, activeProvider) {
+    return visibleSources(methodSources(sources, activeMethod), query7, activeProvider);
   }
-  function selectMethodFilter(filter, value2) {
+  function selectMethodFilter(filter, value3) {
     const options2 = Array.from(filter.options);
-    const index = options2.findIndex((option6) => option6.value === value2);
+    const index = options2.findIndex((option6) => option6.value === value3);
     filter.selectedIndex = index >= 0 ? index : 0;
     options2.forEach((option6, optionIndex) => {
       option6.selected = optionIndex === filter.selectedIndex;
@@ -29963,22 +31101,22 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerElements.ts
   function queryDataSourcePickerElements(root) {
-    const query5 = (selector) => root.querySelector(selector);
+    const query7 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query5(".backdrop"),
-      binding: query5(".binding"),
-      closeButton: query5(".close"),
-      details: query5(".details"),
-      methodFilter: query5(".method-filter"),
-      providers: query5(".providers"),
-      search: query5(".search"),
-      sourcesList: query5(".sources"),
-      subtitle: query5(".subtitle")
+      backdrop: query7(".backdrop"),
+      binding: query7(".binding"),
+      closeButton: query7(".close"),
+      details: query7(".details"),
+      methodFilter: query7(".method-filter"),
+      providers: query7(".providers"),
+      search: query7(".search"),
+      sourcesList: query7(".sources"),
+      subtitle: query7(".subtitle")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/template.html
-  var template_default18 = `<div class="backdrop" hidden>
+  var template_default19 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -30521,7 +31659,7 @@ h2 {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default18)}`;
+  template6.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default19)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -30644,7 +31782,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/template.html
-  var template_default19 = `<div class="backdrop" hidden>
+  var template_default20 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -30810,17 +31948,17 @@ textarea { min-height: 92px; resize: vertical; }
   function renderAdvancedMode(expression, onInput) {
     const root = document.createElement("div");
     root.className = "mode-panel form-grid";
-    const label2 = document.createElement("label");
-    label2.className = "control";
-    const text4 = document.createElement("span");
-    text4.textContent = "Expression";
+    const label3 = document.createElement("label");
+    label3.className = "control";
+    const text5 = document.createElement("span");
+    text5.textContent = "Expression";
     const textarea5 = document.createElement("textarea");
     textarea5.className = "advanced-expression";
     textarea5.value = expression;
     textarea5.placeholder = 'plan.status == "active" && $source.loaded';
     textarea5.addEventListener("input", () => onInput(textarea5.value));
-    label2.append(text4, textarea5);
-    root.append(label2);
+    label3.append(text5, textarea5);
+    root.append(label3);
     return root;
   }
 
@@ -30873,13 +32011,13 @@ textarea { min-height: 92px; resize: vertical; }
   function fieldSelect(fields, draft, onChange) {
     const select5 = document.createElement("select");
     select5.className = "field-path";
-    for (const field2 of fields) {
+    for (const field3 of fields) {
       const option6 = document.createElement("option");
-      option6.value = field2.path;
-      option6.textContent = `${field2.scopeLabel}: ${field2.path}`;
+      option6.value = field3.path;
+      option6.textContent = `${field3.scopeLabel}: ${field3.path}`;
       select5.append(option6);
     }
-    select5.selectedIndex = Math.max(0, fields.findIndex((field2) => field2.path === draft.path));
+    select5.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
     select5.addEventListener("change", () => {
       draft.path = select5.options.item(select5.selectedIndex)?.value ?? "";
       onChange(false);
@@ -30919,13 +32057,13 @@ textarea { min-height: 92px; resize: vertical; }
   function control2(labelText, controlElement) {
     const wrapper = document.createElement("label");
     wrapper.className = "control";
-    const text4 = document.createElement("span");
-    text4.textContent = labelText;
-    wrapper.append(text4, controlElement);
+    const text5 = document.createElement("span");
+    text5.textContent = labelText;
+    wrapper.append(text5, controlElement);
     return wrapper;
   }
-  function parseValue(value2) {
-    const trimmed = value2.trim();
+  function parseValue(value3) {
+    const trimmed = value3.trim();
     if (trimmed === "true") {
       return true;
     }
@@ -30940,10 +32078,10 @@ textarea { min-height: 92px; resize: vertical; }
     }
     return trimmed;
   }
-  function empty3(text4) {
+  function empty3(text5) {
     const element = document.createElement("div");
     element.className = "empty";
-    element.textContent = text4;
+    element.textContent = text5;
     return element;
   }
 
@@ -30995,7 +32133,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
   function renderState2(source2, state2, options2) {
     const key = sourceStateKey(options2.sources, source2.editor, state2);
-    const label2 = document.createElement("label");
+    const label3 = document.createElement("label");
     const input3 = document.createElement("input");
     input3.type = "checkbox";
     input3.checked = options2.selected.has(key);
@@ -31003,28 +32141,28 @@ textarea { min-height: 92px; resize: vertical; }
       input3.checked ? options2.selected.add(key) : options2.selected.delete(key);
       options2.onChange();
     });
-    const text4 = document.createElement("span");
-    text4.textContent = state2;
-    label2.append(input3, text4);
-    return label2;
+    const text5 = document.createElement("span");
+    text5.textContent = state2;
+    label3.append(input3, text5);
+    return label3;
   }
-  function textBlock2(className, text4) {
+  function textBlock2(className, text5) {
     const element = document.createElement("div");
     element.className = className;
-    element.textContent = text4;
+    element.textContent = text5;
     return element;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/conditionPickerView.ts
   function queryConditionPickerElements(root) {
-    const query5 = (selector) => root.querySelector(selector);
+    const query7 = (selector) => root.querySelector(selector);
     return {
-      applyButton: query5(".apply"),
-      backdrop: query5(".backdrop"),
-      body: query5(".body"),
-      closeButton: query5(".close"),
-      removeButton: query5(".remove"),
-      subtitle: query5(".subtitle")
+      applyButton: query7(".apply"),
+      backdrop: query7(".backdrop"),
+      body: query7(".body"),
+      closeButton: query7(".close"),
+      removeButton: query7(".remove"),
+      subtitle: query7(".subtitle")
     };
   }
   function conditionExpression(input3) {
@@ -31049,17 +32187,17 @@ textarea { min-height: 92px; resize: vertical; }
     return summary2;
   }
   function conditionSummaryParts(expression) {
-    const label2 = document.createElement("span");
-    label2.textContent = "Expression";
+    const label3 = document.createElement("span");
+    label3.textContent = "Expression";
     const code = document.createElement("code");
     code.textContent = expression || "No condition selected.";
-    return [label2, code];
+    return [label3, code];
   }
-  function modeButton(mode, label2, activeMode, onSelect) {
+  function modeButton(mode, label3, activeMode, onSelect) {
     const button2 = document.createElement("button");
     button2.type = "button";
     button2.className = "mode";
-    button2.textContent = label2;
+    button2.textContent = label3;
     button2.setAttribute("aria-pressed", String(activeMode === mode));
     button2.addEventListener("click", () => onSelect(mode));
     return button2;
@@ -31067,7 +32205,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default15)}</style>${String(template_default19)}`;
+  template7.innerHTML = `<style>${String(style_default15)}</style>${String(template_default20)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -31121,8 +32259,8 @@ textarea { min-height: 92px; resize: vertical; }
         return renderFieldMode(this._fields, this._fieldDraft, (render) => render ? this.render() : this.syncSummary());
       }
       if (this._mode === "advanced") {
-        return renderAdvancedMode(this._advancedExpression, (value2) => {
-          this._advancedExpression = value2;
+        return renderAdvancedMode(this._advancedExpression, (value3) => {
+          this._advancedExpression = value3;
           this.syncSummary();
         });
       }
@@ -31257,7 +32395,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/template.html
-  var template_default20 = `<div class="backdrop" hidden>
+  var template_default21 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -31765,8 +32903,8 @@ dd {
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option6, query5) {
-    if (!query5) {
+  function blockPickerOptionMatches(option6, query7) {
+    if (!query7) {
       return true;
     }
     const item = blockPickerOptionItem(option6);
@@ -31777,11 +32915,11 @@ dd {
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
       option6.slotLabel
-    ].some((value2) => value2?.toLowerCase().includes(query5));
+    ].some((value3) => value3?.toLowerCase().includes(query7));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
-  function blockPickerVisibleOptions(group, source2, category, query5) {
+  function blockPickerVisibleOptions(group, source2, category, query7) {
     return group?.options.filter((option6) => {
       const item = blockPickerOptionItem(option6);
       if (item.kind !== source2) {
@@ -31790,7 +32928,7 @@ dd {
       if (category && blockPickerCategoryLabel(option6) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option6, query5);
+      return blockPickerOptionMatches(option6, query7);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
@@ -31901,12 +33039,12 @@ dd {
       container.append(button2);
     }
   }
-  function metaRow(label2, value2) {
+  function metaRow(label3, value3) {
     const wrapper = document.createElement("div");
     const term = document.createElement("dt");
     const detail = document.createElement("dd");
-    term.textContent = label2;
-    detail.textContent = value2;
+    term.textContent = label3;
+    detail.textContent = value3;
     wrapper.append(term, detail);
     return wrapper;
   }
@@ -31941,16 +33079,16 @@ dd {
       input3.categories.append(filterButton(category, input3.activeCategory === category, () => input3.onCategory(category), blockPickerCategoryCount(input3.group, input3.activeSource, category)));
     }
   }
-  function sourceButton(label2, source2, input3) {
+  function sourceButton(label3, source2, input3) {
     const count = blockPickerSourceCount(input3.group, source2);
-    return filterButton(label2, input3.activeSource === source2, () => {
+    return filterButton(label3, input3.activeSource === source2, () => {
       if (source2 === "media" && input3.onSingleMedia()) {
         return;
       }
       input3.onSource(source2);
     }, count, source2 !== "block" && count === 0);
   }
-  function filterButton(label2, active, onClick, count, disabled = false) {
+  function filterButton(label3, active, onClick, count, disabled = false) {
     const button2 = document.createElement("button");
     button2.className = "filter";
     button2.type = "button";
@@ -31961,34 +33099,34 @@ dd {
         onClick();
       }
     });
-    const text4 = document.createElement("span");
-    text4.textContent = label2;
+    const text5 = document.createElement("span");
+    text5.textContent = label3;
     const badge3 = document.createElement("span");
     badge3.className = "count";
     badge3.textContent = String(count);
-    button2.append(text4, badge3);
+    button2.append(text5, badge3);
     return button2;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerElements.ts
   function queryBlockPickerElements(root) {
-    const query5 = (selector) => root.querySelector(selector);
+    const query7 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query5(".backdrop"),
-      categories: query5(".categories"),
-      closeButton: query5(".close"),
-      details: query5(".details"),
-      results: query5(".results"),
-      search: query5(".search"),
-      sources: query5(".sources"),
-      subtitle: query5(".subtitle"),
-      tabs: query5(".slot-tabs")
+      backdrop: query7(".backdrop"),
+      categories: query7(".categories"),
+      closeButton: query7(".close"),
+      details: query7(".details"),
+      results: query7(".results"),
+      search: query7(".search"),
+      sources: query7(".sources"),
+      subtitle: query7(".subtitle"),
+      tabs: query7(".slot-tabs")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
   var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default20)}`;
+  template8.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default21)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -32320,12 +33458,12 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureContextMenuItems.ts
-  function contextMenuButton(label2, action, closeContextMenu, variant, disabled = false) {
+  function contextMenuButton(label3, action, closeContextMenu, variant, disabled = false) {
     const button2 = document.createElement("button");
     button2.className = variant ? `context-item ${variant}` : "context-item";
     button2.type = "button";
     button2.disabled = disabled;
-    button2.textContent = label2;
+    button2.textContent = label3;
     button2.addEventListener("click", (event) => {
       event.stopPropagation();
       if (button2.disabled) {
@@ -32377,32 +33515,32 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreePresentation.ts
-  function renderStructureBadge(value2) {
+  function renderStructureBadge(value3) {
     const badge3 = document.createElement("span");
-    badge3.className = structureBadgeClass(value2);
-    const icon = structureBadgeIcon(value2);
+    badge3.className = structureBadgeClass(value3);
+    const icon = structureBadgeIcon(value3);
     if (icon) {
       const iconEl = document.createElement("span");
       iconEl.className = "badge-icon";
       iconEl.textContent = icon;
       badge3.append(iconEl);
     }
-    const label2 = document.createElement("span");
-    label2.textContent = value2;
-    badge3.append(label2);
+    const label3 = document.createElement("span");
+    label3.textContent = value3;
+    badge3.append(label3);
     return badge3;
   }
-  function structureBadgeClass(value2) {
-    if (CMS_SOURCE_STATES.includes(value2)) {
-      return `badge source-status ${value2}`;
+  function structureBadgeClass(value3) {
+    if (CMS_SOURCE_STATES.includes(value3)) {
+      return `badge source-status ${value3}`;
     }
-    return value2 === "Source" || value2 === "Repeat" ? "badge data" : "badge";
+    return value3 === "Source" || value3 === "Repeat" ? "badge data" : "badge";
   }
-  function structureBadgeIcon(value2) {
-    if (value2 === "Source") {
+  function structureBadgeIcon(value3) {
+    if (value3 === "Source") {
       return "▦";
     }
-    if (value2 === "Repeat") {
+    if (value3 === "Repeat") {
       return "↻";
     }
     return null;
@@ -32629,7 +33767,7 @@ dd {
       return sameSlot(left, right);
     }
     slotChildCount(parent, slot) {
-      return slotChildCount(parent, slot, (value2) => this.editorChildrenOf(value2));
+      return slotChildCount(parent, slot, (value3) => this.editorChildrenOf(value3));
     }
     editorChildrenOf(parent) {
       return editorChildrenOf(parent);
@@ -32967,16 +34105,16 @@ dd {
   }
   function fieldOptions(fields, scopeName, scopeLabel, prefix = "") {
     const options2 = [];
-    for (const field2 of fields) {
-      const relative = relativePath(field2.path, prefix);
+    for (const field3 of fields) {
+      const relative = relativePath(field3.path, prefix);
       const path = relative ? `${scopeName}.${relative}` : scopeName;
       options2.push({
         path,
-        label: field2.label ?? field2.path,
+        label: field3.label ?? field3.path,
         scopeLabel,
-        type: field2.type
+        type: field3.type
       });
-      options2.push(...fieldOptions(field2.children ?? [], scopeName, scopeLabel, relative));
+      options2.push(...fieldOptions(field3.children ?? [], scopeName, scopeLabel, relative));
     }
     return options2;
   }
@@ -33032,8 +34170,8 @@ dd {
     return nodes.flatMap((candidate) => candidate.editor.getDataScopes());
   }
   function customConditionExpression(node) {
-    const value2 = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition)?.trim() ?? "";
-    return value2 && sourceStatusConditionsFromElement(node.target).length === 0 ? value2 : "";
+    const value3 = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition)?.trim() ?? "";
+    return value3 && sourceStatusConditionsFromElement(node.target).length === 0 ? value3 : "";
   }
   function sourceUrlMatchesBinding(sourceUrl3, bindingUrl) {
     return bindingUrl === sourceUrl3 || bindingUrl.startsWith(`${sourceUrl3}?`) || sourceUrl3.includes("?") && bindingUrl.startsWith(`${sourceUrl3}&`);
@@ -33220,13 +34358,13 @@ dd {
     const icon = document.createElement("span");
     icon.className = context.iconClass(node);
     icon.textContent = context.iconText(node);
-    const label2 = document.createElement("span");
-    label2.className = "label";
-    label2.textContent = context.nodeLabel(node);
+    const label3 = document.createElement("span");
+    label3.className = "label";
+    label3.textContent = context.nodeLabel(node);
     const badges = document.createElement("span");
     badges.className = "badges";
     appendBadges2(badges, node, context);
-    item.append(icon, label2, badges);
+    item.append(icon, label3, badges);
     row.append(item);
     return row;
   }
@@ -33249,8 +34387,8 @@ dd {
   }
   function appendBadges2(badges, node, context) {
     const visibleBadges = context.visibleBadges(node);
-    for (const value2 of visibleBadges) {
-      badges.append(context.renderBadge(value2));
+    for (const value3 of visibleBadges) {
+      badges.append(context.renderBadge(value3));
     }
     const hiddenCount = node.badges.length - visibleBadges.length;
     if (hiddenCount > 0) {
@@ -33315,20 +34453,20 @@ dd {
         clearDropRow: () => this.tree.events.clearDropRow(),
         iconClass: structureIconClass,
         iconText: structureIconText,
-        isCollapsed: (value2) => this.tree.nodes.isCollapsed(value2),
+        isCollapsed: (value3) => this.tree.nodes.isCollapsed(value3),
         itemClass: structureItemClass,
         nodeLabel: structureNodeLabel,
-        onDragOver: (value2, row, event) => this.tree.events.onDragOver(value2, row, event),
-        onDragStart: (value2, event) => this.tree.events.onDragStart(value2, event),
-        onDrop: (value2, event) => this.tree.events.onDrop(value2, event),
-        openContextMenu: (value2, clientX, clientY) => this.tree.menus.openContextMenu(value2, clientX, clientY),
-        renderBadge: (value2) => renderStructureBadge(value2),
+        onDragOver: (value3, row, event) => this.tree.events.onDragOver(value3, row, event),
+        onDragStart: (value3, event) => this.tree.events.onDragStart(value3, event),
+        onDrop: (value3, event) => this.tree.events.onDrop(value3, event),
+        openContextMenu: (value3, clientX, clientY) => this.tree.menus.openContextMenu(value3, clientX, clientY),
+        renderBadge: (value3) => renderStructureBadge(value3),
         rowClass: structureRowClass,
         selectEditor: (editor) => this.tree.emitter.selectEditor(editor),
-        toggleBadges: (value2) => this.toggleBadges(value2),
-        toggleNode: (value2) => this.toggleNode(value2),
-        trackRenderedRow: (value2, row) => this.trackRenderedRow(value2, row),
-        visibleBadges: (value2) => this.tree.nodes.visibleBadges(value2)
+        toggleBadges: (value3) => this.toggleBadges(value3),
+        toggleNode: (value3) => this.toggleNode(value3),
+        trackRenderedRow: (value3, row) => this.trackRenderedRow(value3, row),
+        visibleBadges: (value3) => this.tree.nodes.visibleBadges(value3)
       });
     }
     toggleNode(node) {
@@ -33627,7 +34765,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default21 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default22 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
@@ -33775,7 +34913,7 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template9 = document.createElement("template");
   template9.innerHTML = `<style>${[style_default16, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default21)}`;
+`)}</style>${String(template_default22)}`;
 
   class StructureTree extends HTMLElement {
     controller;
@@ -33817,7 +34955,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default22 = `<main class="canvas">
+  var template_default23 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -33927,8 +35065,8 @@ iframe {
       }
     }, true);
   }
-  function cssViewportSize(value2) {
-    const size = value2?.trim();
+  function cssViewportSize(value3) {
+    const size = value3?.trim();
     if (!size) {
       return null;
     }
@@ -33937,7 +35075,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(style_default17)}</style>${String(template_default22)}`;
+  template10.innerHTML = `<style>${String(style_default17)}</style>${String(template_default23)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -34078,7 +35216,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default23 = `<section class="section">
+  var template_default24 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -34167,19 +35305,19 @@ iframe {
     return root;
   }
   function syncFieldCopy(host) {
-    const label2 = host.getAttribute("label") ?? "";
-    host.shadowRoot.querySelector(".label").textContent = label2;
+    const label3 = host.getAttribute("label") ?? "";
+    host.shadowRoot.querySelector(".label").textContent = label3;
     host.shadowRoot.querySelector(".hint").textContent = host.getAttribute("hint") ?? "";
     const labelDisplay = host.getAttribute("label-display") ?? "visible";
     const ariaLabel = host.getAttribute("aria-label");
     if (ariaLabel || labelDisplay !== "visible") {
       const control3 = host.shadowRoot.querySelector("input, select, textarea, button");
-      control3?.setAttribute("aria-label", ariaLabel ?? label2);
+      control3?.setAttribute("aria-label", ariaLabel ?? label3);
     }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template11 = createFieldTemplate(template_default23, style_default18);
+  var template11 = createFieldTemplate(template_default24, style_default18);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -34203,7 +35341,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default24 = `<div class="field">
+  var template_default25 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -34457,8 +35595,8 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
-  function matchingDynamicDataOptions(options2, query5) {
-    const normalized = query5.trim().toLowerCase();
+  function matchingDynamicDataOptions(options2, query7) {
+    const normalized = query7.trim().toLowerCase();
     return normalized ? options2.filter((option6) => `${option6.label} ${option6.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
@@ -34475,12 +35613,12 @@ input:disabled {
       button2.className = "data-option";
       button2.type = "button";
       button2.dataset.path = option6.path;
-      const label2 = document.createElement("span");
-      label2.className = "data-label";
-      label2.textContent = option6.label;
+      const label3 = document.createElement("span");
+      label3.className = "data-label";
+      label3.textContent = option6.label;
       const path = document.createElement("code");
       path.textContent = option6.path;
-      button2.append(label2, path);
+      button2.append(label3, path);
       button2.addEventListener("click", () => onSelect(option6.path));
       list.append(button2);
     }
@@ -34500,18 +35638,18 @@ input:disabled {
     return [...byPath.values()];
   }
   function fieldOptions2(fields, scopeName, scopeLabel, prefix = "") {
-    return fields.flatMap((field2) => {
-      const relativePath2 = prefix && field2.path !== "." ? `${prefix}.${field2.path}` : field2.path === "." ? prefix : field2.path;
+    return fields.flatMap((field3) => {
+      const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
       const path = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
-      if (field2.type === "array") {
+      if (field3.type === "array") {
         return [];
       }
-      const children = fieldOptions2(field2.children ?? [], scopeName, scopeLabel, relativePath2);
-      if (field2.type === "object" || field2.children?.length) {
+      const children = fieldOptions2(field3.children ?? [], scopeName, scopeLabel, relativePath2);
+      if (field3.type === "object" || field3.children?.length) {
         return children;
       }
-      const label2 = field2.label ? `${scopeLabel} / ${field2.label}` : `${scopeLabel} / ${relativePath2}`;
-      return [{ label: label2, path }, ...children];
+      const label3 = field3.label ? `${scopeLabel} / ${field3.label}` : `${scopeLabel} / ${relativePath2}`;
+      return [{ label: label3, path }, ...children];
     });
   }
 
@@ -34595,7 +35733,7 @@ input:disabled {
       }, {
         saveSelection: this.saveSelection,
         restoreSelection: this.restoreSelection,
-        insertText: (text4) => this.insertText(text4),
+        insertText: (text5) => this.insertText(text5),
         focusControl: () => this._refs.control().focus(),
         finish: this.emitInput
       });
@@ -34644,12 +35782,12 @@ input:disabled {
     restoreSelection = () => {
       this._refs.control().setSelectionRange?.(this._selectionStart, this._selectionEnd);
     };
-    insertText(text4) {
+    insertText(text5) {
       const control3 = this._refs.control();
       const start = control3.selectionStart ?? this._selectionStart;
       const end = control3.selectionEnd ?? this._selectionEnd;
-      control3.value = `${control3.value.slice(0, start)}${text4}${control3.value.slice(end)}`;
-      const next = start + text4.length;
+      control3.value = `${control3.value.slice(0, start)}${text5}${control3.value.slice(end)}`;
+      const next = start + text5.length;
       control3.setSelectionRange?.(next, next);
       this.saveSelection();
     }
@@ -34661,7 +35799,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template12 = createFieldTemplate(template_default24, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default25, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -34721,7 +35859,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default25 = `<div class="field">
+  var template_default26 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -34814,7 +35952,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template13 = createFieldTemplate(template_default25, `${String(style_default20)}${String(dynamicDataPicker_default)}`);
+  var template13 = createFieldTemplate(template_default26, `${String(style_default20)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -34883,8 +36021,8 @@ textarea:disabled {
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextRangeDom.ts
   function wrapRangeContents(range, tagName, attributes = {}) {
     const wrapper = document.createElement(tagName);
-    for (const [name, value2] of Object.entries(attributes)) {
-      wrapper.setAttribute(name, value2);
+    for (const [name, value3] of Object.entries(attributes)) {
+      wrapper.setAttribute(name, value3);
     }
     wrapper.append(range.extractContents());
     range.insertNode(wrapper);
@@ -34991,10 +36129,10 @@ textarea:disabled {
       this.setSavedRange(unwrapElement(this._editor(), wrapper));
       return true;
     }
-    insertText(text4) {
+    insertText(text5) {
       const range = this.getUsableRange();
       if (!range) {
-        this._editor().append(text4);
+        this._editor().append(text5);
         const nextRange2 = document.createRange();
         nextRange2.selectNodeContents(this._editor());
         nextRange2.collapse(false);
@@ -35002,7 +36140,7 @@ textarea:disabled {
         return;
       }
       range.deleteContents();
-      const node = document.createTextNode(text4);
+      const node = document.createTextNode(text5);
       range.insertNode(node);
       const nextRange = document.createRange();
       nextRange.setStartAfter(node);
@@ -35137,7 +36275,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default26 = `<div class="field">
+  var template_default27 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -35393,7 +36531,7 @@ textarea:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template14 = document.createElement("template");
-  template14.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default26)}`;
+  template14.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default27)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -35406,7 +36544,7 @@ textarea:disabled {
     }, {
       saveSelection: this._range.saveSelection,
       restoreSelection: () => this._range.restoreSelection(),
-      insertText: (text4) => this._range.insertText(text4),
+      insertText: (text5) => this._range.insertText(text5),
       focusControl: () => this.editor.focus(),
       finish: () => this.finishAction()
     });
@@ -35523,7 +36661,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default27 = `<label class="field">
+  var template_default28 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -35635,7 +36773,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template15 = createFieldTemplate(template_default27, style_default21);
+  var template15 = createFieldTemplate(template_default28, style_default21);
 
   class Select extends HTMLElement {
     constructor() {
@@ -35672,7 +36810,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default28 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default29 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -35795,7 +36933,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template16 = createFieldTemplate(template_default28, style_default22);
+  var template16 = createFieldTemplate(template_default29, style_default22);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -35812,7 +36950,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default29 = `<div class="segmented">
+  var template_default30 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
@@ -35864,7 +37002,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template17 = createFieldTemplate(template_default29, style_default23);
+  var template17 = createFieldTemplate(template_default30, style_default23);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -35877,7 +37015,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
-  var template_default30 = `<div class="page-link">
+  var template_default31 = `<div class="page-link">
     <div class="head">
         <span class="label"></span>
         <span class="hint"></span>
@@ -36235,11 +37373,11 @@ code {
     }
     return modes;
   }
-  function modeForLinkValue(value2, options2) {
-    if (value2 && isMediaLink(value2)) {
+  function modeForLinkValue(value3, options2) {
+    if (value3 && isMediaLink(value3)) {
       return "media";
     }
-    if (value2 && isExternalLink(value2)) {
+    if (value3 && isExternalLink(value3)) {
       return "external";
     }
     if (!options2.allowPage && !options2.allowExternal && options2.allowMedia) {
@@ -36250,23 +37388,23 @@ code {
     }
     return "page";
   }
-  function isExternalLink(value2) {
-    return /^[a-z][a-z0-9+.-]*:/i.test(value2) || value2.startsWith("//");
+  function isExternalLink(value3) {
+    return /^[a-z][a-z0-9+.-]*:/i.test(value3) || value3.startsWith("//");
   }
-  function isMediaLink(value2) {
-    return value2.includes("/.cms/files/by-id/");
+  function isMediaLink(value3) {
+    return value3.includes("/.cms/files/by-id/");
   }
-  function isImageMediaLink(value2) {
-    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value2) || value2.includes("/.cms/files/by-id/");
+  function isImageMediaLink(value3) {
+    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value3) || value3.includes("/.cms/files/by-id/");
   }
-  function mediaDisplayName(value2, isImage, mediaLabel = "") {
+  function mediaDisplayName(value3, isImage, mediaLabel = "") {
     if (mediaLabel) {
       return mediaLabel;
     }
-    if (value2.includes("/.cms/files/by-id/")) {
+    if (value3.includes("/.cms/files/by-id/")) {
       return isImage ? "Image" : "Selected file";
     }
-    const clean = value2.split(/[?#]/, 1)[0] ?? value2;
+    const clean = value3.split(/[?#]/, 1)[0] ?? value3;
     const segment = clean.split("/").filter(Boolean).at(-1);
     if (!segment) {
       return "File";
@@ -36305,10 +37443,10 @@ code {
     }
     renderPageLinkMedia(elements, input3.mode, input3.value, input3.mediaLabel);
   }
-  function renderPageLinkMedia(elements, mode, value2, mediaLabel) {
-    const hasValue = mode === "media" && value2 !== "";
-    const isImage = hasValue && isImageMediaLink(value2);
-    elements.fileTitle.textContent = hasValue ? mediaDisplayName(value2, isImage, mediaLabel) : "Choose file";
+  function renderPageLinkMedia(elements, mode, value3, mediaLabel) {
+    const hasValue = mode === "media" && value3 !== "";
+    const isImage = hasValue && isImageMediaLink(value3);
+    elements.fileTitle.textContent = hasValue ? mediaDisplayName(value3, isImage, mediaLabel) : "Choose file";
     elements.fileValue.textContent = hasValue ? mediaSelectionLabel(isImage) : "No file selected";
     elements.fileValue.toggleAttribute("hidden", hasValue && isImage);
     elements.fileAction.textContent = hasValue ? "Change" : "Choose";
@@ -36316,7 +37454,7 @@ code {
     elements.filePreview.dataset.kind = isImage ? "image" : "file";
     if (isImage) {
       const image2 = document.createElement("img");
-      image2.src = value2;
+      image2.src = value3;
       image2.alt = "";
       image2.loading = "lazy";
       elements.filePreview.append(image2);
@@ -36340,8 +37478,8 @@ code {
   function renderPageLinkPages(input3) {
     input3.elements.pageList.replaceChildren();
     input3.elements.picker.hidden = !input3.pickerOpen || input3.elements.pagePanel.hidden;
-    const query5 = input3.query.trim().toLowerCase();
-    const pages = input3.pages.filter((page) => !query5 || page.title.toLowerCase().includes(query5) || page.path.toLowerCase().includes(query5));
+    const query7 = input3.query.trim().toLowerCase();
+    const pages = input3.pages.filter((page) => !query7 || page.title.toLowerCase().includes(query7) || page.path.toLowerCase().includes(query7));
     input3.elements.empty.hidden = !input3.pickerOpen || pages.length > 0;
     for (const page of pages) {
       const button2 = document.createElement("button");
@@ -36364,11 +37502,11 @@ code {
       input3.elements.pageList.append(button2);
     }
   }
-  function renderPageLinkSummary(elements, pages, mode, value2) {
-    const page = pages.find((candidate) => candidate.path === value2);
-    elements.summaryTitle.textContent = page?.title ?? (value2 ? linkSummaryFallback(mode) : "No link selected");
-    elements.summaryValue.textContent = value2 || "Choose a target";
-    elements.target.hidden = !value2 || mode === "media";
+  function renderPageLinkSummary(elements, pages, mode, value3) {
+    const page = pages.find((candidate) => candidate.path === value3);
+    elements.summaryTitle.textContent = page?.title ?? (value3 ? linkSummaryFallback(mode) : "No link selected");
+    elements.summaryValue.textContent = value3 || "Choose a target";
+    elements.target.hidden = !value3 || mode === "media";
   }
   function modeTab(mode, activeMode, disabled, onMode) {
     const button2 = document.createElement("button");
@@ -36387,32 +37525,32 @@ code {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
   function queryPageLinkElements(root) {
-    const query5 = (selector) => root.querySelector(selector);
+    const query7 = (selector) => root.querySelector(selector);
     return {
-      empty: query5(".empty"),
-      externalInput: query5(".external-input"),
-      externalPanel: query5(".external-panel"),
-      fileAction: query5(".file-action"),
-      fileButton: query5(".file-button"),
-      filePreview: query5(".file-preview"),
-      fileTitle: query5(".file-title"),
-      fileValue: query5(".file-value"),
-      hint: query5(".hint"),
-      label: query5(".label"),
-      mediaPanel: query5(".media-panel"),
-      pageList: query5(".page-list"),
-      pagePanel: query5(".page-panel"),
-      picker: query5(".picker"),
-      searchInput: query5(".search"),
-      summaryTitle: query5(".target strong"),
-      summaryValue: query5(".target code"),
-      tabs: query5(".tabs"),
-      target: query5(".target")
+      empty: query7(".empty"),
+      externalInput: query7(".external-input"),
+      externalPanel: query7(".external-panel"),
+      fileAction: query7(".file-action"),
+      fileButton: query7(".file-button"),
+      filePreview: query7(".file-preview"),
+      fileTitle: query7(".file-title"),
+      fileValue: query7(".file-value"),
+      hint: query7(".hint"),
+      label: query7(".label"),
+      mediaPanel: query7(".media-panel"),
+      pageList: query7(".page-list"),
+      pagePanel: query7(".page-panel"),
+      picker: query7(".picker"),
+      searchInput: query7(".search"),
+      summaryTitle: query7(".target strong"),
+      summaryValue: query7(".target code"),
+      tabs: query7(".tabs"),
+      target: query7(".target")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
-  var template_default31 = `<div class="backdrop" hidden>
+  var template_default32 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
         <header class="top">
             <div>
@@ -36826,18 +37964,18 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
   function queryFilesCenterElements(root) {
-    const query5 = (selector) => root.querySelector(selector);
+    const query7 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query5(".backdrop"),
-      breadcrumb: query5(".breadcrumb"),
-      cancelButton: query5(".cancel"),
-      closeButton: query5(".close"),
-      empty: query5(".empty"),
-      grid: query5(".grid"),
-      searchInput: query5(".search"),
-      selectButton: query5(".select"),
-      selectionTitle: query5(".selection strong"),
-      selectionValue: query5(".selection code")
+      backdrop: query7(".backdrop"),
+      breadcrumb: query7(".breadcrumb"),
+      cancelButton: query7(".cancel"),
+      closeButton: query7(".close"),
+      empty: query7(".empty"),
+      grid: query7(".grid"),
+      searchInput: query7(".search"),
+      selectButton: query7(".select"),
+      selectionTitle: query7(".selection strong"),
+      selectionValue: query7(".selection code")
     };
   }
   function wireFilesCenterElements(elements, callbacks) {
@@ -36866,12 +38004,12 @@ input {
   }
   function renderFilesList(input3) {
     input3.grid.replaceChildren();
-    const query5 = input3.query.trim().toLowerCase();
+    const query7 = input3.query.trim().toLowerCase();
     const items = input3.items.filter((item) => {
       if (item.type === "file" && !matchesFileAccept(item, input3.fileAccept)) {
         return false;
       }
-      return !query5 || item.name.toLowerCase().includes(query5);
+      return !query7 || item.name.toLowerCase().includes(query7);
     });
     input3.empty.hidden = items.length > 0;
     for (const item of items) {
@@ -36984,7 +38122,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
   var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default31)}`;
+  template18.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default32)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -37154,25 +38292,25 @@ input {
     get value() {
       return this.currentValue;
     }
-    set value(value2) {
-      this.currentValue = value2;
-      this.reflectValue(value2);
+    set value(value3) {
+      this.currentValue = value3;
+      this.reflectValue(value3);
       this.render();
     }
     syncFromAttributes() {
       this.currentValue = this.getAttribute("value") ?? "";
       this.mode = modeForLinkValue(this.currentValue, this.modeOptions());
     }
-    setValue(value2) {
-      this.currentValue = value2;
-      this.reflectValue(value2);
+    setValue(value3) {
+      this.currentValue = value3;
+      this.reflectValue(value3);
       this.renderPages();
       this.renderSummary();
       this.renderMediaFile();
       this.dispatchEvent(new CustomEvent("input", {
         bubbles: true,
         composed: true,
-        detail: { value: value2 }
+        detail: { value: value3 }
       }));
     }
     openPicker() {
@@ -37190,9 +38328,9 @@ input {
       if (this.disabled) {
         return;
       }
-      openPageLinkMediaPicker((source2, label2) => {
+      openPageLinkMediaPicker((source2, label3) => {
         this.mode = "media";
-        this.mediaLabel = label2;
+        this.mediaLabel = label3;
         this.setValue(source2);
       });
     }
@@ -37224,9 +38362,9 @@ input {
         allowMedia: this.allowMedia()
       };
     }
-    reflectValue(value2) {
+    reflectValue(value3) {
       this.reflectingValue = true;
-      this.setAttribute("value", value2);
+      this.setAttribute("value", value3);
       this.reflectingValue = false;
     }
   }
@@ -37255,8 +38393,8 @@ input {
       renderPageLinkPages({
         disabled: this.disabled,
         elements: this.elements,
-        onSelect: (value2) => {
-          this.setValue(value2);
+        onSelect: (value3) => {
+          this.setValue(value3);
           this.elements.searchInput.value = "";
           this.closePicker();
         },
@@ -37354,7 +38492,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
   var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default30)}`;
+  template19.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default31)}`;
 
   class PageLink extends PageLinkController {
     constructor() {
@@ -37401,8 +38539,8 @@ input {
   function endpointValue(setting, detail) {
     return usesSourceBinding(setting) ? asSource(detail.binding) : detail.source.url;
   }
-  function endpointAttributes(setting, detail, value2) {
-    const attributes = { [setting.attribute]: value2 };
+  function endpointAttributes(setting, detail, value3) {
+    const attributes = { [setting.attribute]: value3 };
     if (setting.methodAttribute) {
       attributes[setting.methodAttribute] = detail.binding.method ?? endpointMethod3(detail.source);
     }
@@ -37450,7 +38588,7 @@ input {
     render(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field endpoint-field";
-      const label2 = this.renderFieldLabel(setting.label, setting.labelDisplay);
+      const label3 = this.renderFieldLabel(setting.label, setting.labelDisplay);
       const button2 = document.createElement("button");
       button2.className = "endpoint-button";
       button2.type = "button";
@@ -37460,8 +38598,8 @@ input {
       if (!setting.disabled) {
         button2.addEventListener("click", () => this.open(setting, button2));
       }
-      if (label2) {
-        wrapper.append(label2);
+      if (label3) {
+        wrapper.append(label3);
       }
       wrapper.append(button2);
       if (setting.help) {
@@ -37481,10 +38619,10 @@ input {
         badge3.textContent = method;
         button2.append(badge3);
       }
-      const value2 = document.createElement("span");
-      value2.className = selected2 ? "endpoint-value" : "endpoint-placeholder";
-      value2.textContent = selected2?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
-      button2.append(value2);
+      const value3 = document.createElement("span");
+      value3.className = selected2 ? "endpoint-value" : "endpoint-placeholder";
+      value3.textContent = selected2?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
+      button2.append(value3);
     }
     open(setting, button2) {
       const picker = this.ensurePicker();
@@ -37492,9 +38630,9 @@ input {
       const onSelect = (event) => {
         this.disconnectPickerEvents?.();
         const detail = event.detail;
-        const value2 = endpointValue(setting, detail);
-        this.syncButton(button2, setting, detail.source, value2);
-        this.emitSettingChange(setting, value2, endpointAttributes(setting, detail, value2));
+        const value3 = endpointValue(setting, detail);
+        this.syncButton(button2, setting, detail.source, value3);
+        this.emitSettingChange(setting, value3, endpointAttributes(setting, detail, value3));
       };
       const onRemove = () => {
         this.disconnectPickerEvents?.();
@@ -37530,9 +38668,9 @@ input {
   function renderColorSetting(setting, themeTokens, renderFieldLabel, emitColorChange) {
     const wrapper = document.createElement("div");
     wrapper.className = "field color-field";
-    const label2 = renderFieldLabel(setting.label, setting.labelDisplay);
-    if (label2) {
-      wrapper.append(label2);
+    const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
+    if (label3) {
+      wrapper.append(label3);
     }
     const controls = document.createElement("div");
     controls.className = "color-custom";
@@ -37638,8 +38776,8 @@ input {
       emitColorChange(input3.value.trim());
     });
   }
-  function colorPickerValue(value2) {
-    const normalized = value2?.trim() ?? "";
+  function colorPickerValue(value3) {
+    const normalized = value3?.trim() ?? "";
     if (/^#[\da-f]{6}$/i.test(normalized)) {
       return normalized;
     }
@@ -37677,9 +38815,9 @@ input {
   function wireRichTextControl(control3, emitValue) {
     whenDefined(control3, () => {
       control3.addEventListener("input", (event) => {
-        const value2 = event.detail?.value;
-        if (typeof value2 === "string") {
-          emitValue(value2);
+        const value3 = event.detail?.value;
+        if (typeof value3 === "string") {
+          emitValue(value3);
         }
       });
     });
@@ -37690,9 +38828,9 @@ input {
         return;
       }
       control3.addEventListener("input", (event) => {
-        const value2 = event.detail?.value;
-        if (typeof value2 === "string") {
-          emitValue(value2);
+        const value3 = event.detail?.value;
+        if (typeof value3 === "string") {
+          emitValue(value3);
         }
       });
     });
@@ -37791,11 +38929,11 @@ input {
     renderRow(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "setting-row";
-      const label2 = setting.label ? renderFieldLabel(setting.label, setting.labelDisplay) : null;
-      if (label2) {
-        label2.classList.add("setting-row-label");
+      const label3 = setting.label ? renderFieldLabel(setting.label, setting.labelDisplay) : null;
+      if (label3) {
+        label3.classList.add("setting-row-label");
         wrapper.classList.add("setting-row-labeled");
-        wrapper.append(label2);
+        wrapper.append(label3);
       }
       const controls = document.createElement("div");
       controls.className = "setting-row-controls";
@@ -37809,7 +38947,7 @@ input {
       return wrapper;
     }
     renderControl(setting) {
-      const emit = (value2) => this.emitSettingChange(setting, value2);
+      const emit = (value3) => this.emitSettingChange(setting, value3);
       if (setting.type === "textarea" || setting.type === "select") {
         const tag = setting.type === "textarea" ? "cms-editor-v2-textarea" : "cms-editor-v2-select";
         const selector = setting.type === "textarea" ? "textarea" : "select";
@@ -37855,7 +38993,7 @@ input {
     renderSegmented(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field";
-      const label2 = renderFieldLabel(setting.label, setting.labelDisplay);
+      const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
       const control3 = document.createElement("cms-editor-v2-segmented-control");
       control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
       for (const option6 of setting.options) {
@@ -37878,8 +39016,8 @@ input {
         });
         control3.append(button2);
       }
-      if (label2) {
-        wrapper.append(label2);
+      if (label3) {
+        wrapper.append(label3);
       }
       wrapper.append(control3);
       return wrapper;
@@ -37902,23 +39040,23 @@ input {
     applyDisabled(control3, setting);
     return control3;
   }
-  function renderFieldLabel(label2, display) {
+  function renderFieldLabel(label3, display) {
     if (display === "hidden") {
       return null;
     }
     const element = document.createElement("div");
     element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
-    element.textContent = label2;
+    element.textContent = label3;
     return element;
   }
-  function renderOptionContent(settingDisplay, optionDisplay, iconName, label2) {
+  function renderOptionContent(settingDisplay, optionDisplay, iconName, label3) {
     const display = optionDisplay ?? settingDisplay ?? (iconName ? "icon-label" : "label");
     const icon = iconName ? settingIcon(iconName) : null;
     const nodes = icon && (display === "icon" || display === "icon-label") ? [icon] : [];
     if (display !== "icon" || !icon) {
-      const text4 = document.createElement("span");
-      text4.textContent = label2;
-      nodes.push(text4);
+      const text5 = document.createElement("span");
+      text5.textContent = label3;
+      nodes.push(text5);
     }
     return nodes;
   }
@@ -37937,12 +39075,12 @@ input {
       return visibleChildren.length > 0 ? [{ ...setting, settings: visibleChildren }] : [];
     });
   }
-  function attributesForSettingValue(setting, value2) {
-    const matchingRules = setting.attributesOnValue?.filter((rule) => visibilityValueMatches(value2, rule.value)) ?? [];
+  function attributesForSettingValue(setting, value3) {
+    const matchingRules = setting.attributesOnValue?.filter((rule) => visibilityValueMatches(value3, rule.value)) ?? [];
     if (matchingRules.length === 0) {
       return;
     }
-    const attributes = { [setting.attribute]: value2 };
+    const attributes = { [setting.attribute]: value3 };
     for (const rule of matchingRules) {
       Object.assign(attributes, rule.attributes);
     }
@@ -37979,10 +39117,10 @@ input {
   }
   function visibilityValueMatches(actual, expected) {
     const expectedValues = Array.isArray(expected) ? expected : [expected];
-    return expectedValues.some((value2) => normalizeVisibilityValue(actual) === normalizeVisibilityValue(value2));
+    return expectedValues.some((value3) => normalizeVisibilityValue(actual) === normalizeVisibilityValue(value3));
   }
-  function normalizeVisibilityValue(value2) {
-    return typeof value2 === "boolean" ? value2 : String(value2 ?? "");
+  function normalizeVisibilityValue(value3) {
+    return typeof value3 === "boolean" ? value3 : String(value3 ?? "");
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts
@@ -37994,13 +39132,13 @@ input {
       button2.className = "state-button";
       button2.type = "button";
       button2.ariaPressed = String(state2.isActive());
-      const label2 = document.createElement("span");
-      label2.className = "state-label";
-      label2.textContent = state2.label;
+      const label3 = document.createElement("span");
+      label3.className = "state-label";
+      label3.textContent = state2.label;
       const description = document.createElement("span");
       description.className = "state-description";
       description.textContent = state2.description ?? (state2.isActive() ? "Active" : "Inactive");
-      button2.append(label2, description);
+      button2.append(label3, description);
       button2.addEventListener("click", () => onToggle(state2));
       section.append(button2);
     }
@@ -38024,14 +39162,14 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/textCapability.ts
-  function renderTextCapability(capability, value2, dataScopes2, emitContentChange) {
+  function renderTextCapability(capability, value3, dataScopes2, emitContentChange) {
     const section = document.createElement("cms-editor-v2-section");
     section.setAttribute("label", "Content");
     const setting = {
       type: "text",
       label: capability.format === "richtext" ? "Rich text" : "Text",
       attribute: "__text",
-      defaultValue: value2,
+      defaultValue: value3,
       help: capability.format === "richtext" ? undefined : formatTextCapability(capability)
     };
     const control3 = createSettingControl(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
@@ -38060,7 +39198,7 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default32 = `<div class="settings-view">
+  var template_default33 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
@@ -38342,7 +39480,7 @@ cms-editor-v2-segmented-control button svg:only-child {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default32)}`;
+  template20.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default33)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -38356,8 +39494,8 @@ cms-editor-v2-segmented-control button svg:only-child {
       super();
       const shadowRoot = this.attachShadow({ mode: "open" });
       shadowRoot.append(template20.content.cloneNode(true));
-      this._endpointSettings = new EndpointSettingController(shadowRoot, renderFieldLabel, (setting, value2, attributes) => this._emitSettingChange(setting, value2, attributes));
-      this._settingControls = new SettingControlRenderer(this._endpointSettings, () => this._dataScopes, () => this._themeTokens, (setting, value2) => this._emitSettingChange(setting, value2));
+      this._endpointSettings = new EndpointSettingController(shadowRoot, renderFieldLabel, (setting, value3, attributes) => this._emitSettingChange(setting, value3, attributes));
+      this._settingControls = new SettingControlRenderer(this._endpointSettings, () => this._dataScopes, () => this._themeTokens, (setting, value3) => this._emitSettingChange(setting, value3));
     }
     setThemeTokens(tokens) {
       this._themeTokens = tokens.filter((token) => token.label && /^[a-z][a-z0-9-]*$/.test(token.variable));
@@ -38378,7 +39516,7 @@ cms-editor-v2-segmented-control button svg:only-child {
         return;
       }
       if (shouldRenderText) {
-        view.append(renderTextCapability(textCapability, textValue6, dataScopes2, (value2, format) => this._emitContentChange(value2, format)));
+        view.append(renderTextCapability(textCapability, textValue6, dataScopes2, (value3, format) => this._emitContentChange(value3, format)));
       }
       if (shouldRenderStates) {
         view.append(renderSettingsStates(states, (state2) => this._emitStateToggle(state2)));
@@ -38394,19 +39532,19 @@ cms-editor-v2-segmented-control button svg:only-child {
         detail: { state: state2 }
       }));
     }
-    _emitSettingChange(setting, value2, attributes) {
-      const changes = attributes ?? attributesForSettingValue(setting, value2);
+    _emitSettingChange(setting, value3, attributes) {
+      const changes = attributes ?? attributesForSettingValue(setting, value3);
       this.dispatchEvent(new CustomEvent(SETTINGS_VIEW_SETTING_CHANGE_EVENT, {
         bubbles: true,
         composed: true,
-        detail: changes ? { setting, value: value2, attributes: changes } : { setting, value: value2 }
+        detail: changes ? { setting, value: value3, attributes: changes } : { setting, value: value3 }
       }));
     }
-    _emitContentChange(value2, format) {
+    _emitContentChange(value3, format) {
       this.dispatchEvent(new CustomEvent(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { value: value2, format }
+        detail: { value: value3, format }
       }));
     }
   }
@@ -38415,7 +39553,7 @@ cms-editor-v2-segmented-control button svg:only-child {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/template.html
-  var template_default33 = `<div class="backdrop" hidden>
+  var template_default34 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -38756,28 +39894,28 @@ label {
     return [...byPath.values()];
   }
   function repeatArrayFields(fields, scopeName, scopeLabel, prefix = "") {
-    return fields.flatMap((field2) => {
-      const relativePath2 = prefix && field2.path !== "." ? `${prefix}.${field2.path}` : field2.path === "." ? prefix : field2.path;
+    return fields.flatMap((field3) => {
+      const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
       const fullPath = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
-      if (field2.type !== "array") {
-        return repeatArrayFields(field2.children ?? [], scopeName, scopeLabel, relativePath2);
+      if (field3.type !== "array") {
+        return repeatArrayFields(field3.children ?? [], scopeName, scopeLabel, relativePath2);
       }
       return [
         {
           path: fullPath,
-          label: field2.path,
+          label: field3.path,
           scopeLabel,
-          fields: field2.children ?? []
+          fields: field3.children ?? []
         }
       ];
     });
   }
-  function visibleRepeatOptions(options2, query5) {
-    const normalizedQuery = query5.trim().toLowerCase();
+  function visibleRepeatOptions(options2, query7) {
+    const normalizedQuery = query7.trim().toLowerCase();
     if (!normalizedQuery) {
       return options2;
     }
-    return options2.filter((option6) => [option6.path, option6.label, option6.scopeLabel].some((value2) => value2.toLowerCase().includes(normalizedQuery)));
+    return options2.filter((option6) => [option6.path, option6.label, option6.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
     const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
@@ -38821,13 +39959,13 @@ label {
     path.append(pathLabel2, pathValue);
     const config = document.createElement("section");
     config.className = "binding-config";
-    const label2 = document.createElement("label");
-    label2.textContent = "Alias";
+    const label3 = document.createElement("label");
+    label3.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "alias";
     alias.value = defaultRepeatAlias(option6.path);
-    label2.append(alias);
-    config.append(label2);
+    label3.append(alias);
+    config.append(label3);
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
@@ -38844,8 +39982,8 @@ label {
   function renderFields2(fields) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field2 of fields) {
-      list.append(renderField2(field2, 0));
+    for (const field3 of fields) {
+      list.append(renderField2(field3, 0));
     }
     if (list.children.length === 0) {
       const empty4 = document.createElement("p");
@@ -38855,21 +39993,21 @@ label {
     }
     return list;
   }
-  function renderField2(field2, depth) {
+  function renderField2(field3, depth) {
     const item = document.createElement("li");
     item.className = "field";
     item.style.setProperty("--field-depth", String(depth));
     const path = document.createElement("span");
     path.className = "field-path";
-    path.textContent = field2.path;
+    path.textContent = field3.path;
     const type = document.createElement("span");
     type.className = "field-type";
-    type.textContent = field2.type ?? "unknown";
+    type.textContent = field3.type ?? "unknown";
     item.append(path, type);
-    if (field2.children?.length) {
+    if (field3.children?.length) {
       const children = document.createElement("ul");
       children.className = "field-children";
-      for (const child of field2.children) {
+      for (const child of field3.children) {
         children.append(renderField2(child, depth + 1));
       }
       item.append(children);
@@ -38879,7 +40017,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
   var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default33)}`;
+  template21.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default34)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -39809,33 +40947,33 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Bindings/sourceDependencyExpressions.ts
-  function bindingTextDependsOn(value2, scope) {
+  function bindingTextDependsOn(value3, scope) {
     for (const alias of scope.aliases) {
-      if (expressionReferencesScope(value2, alias)) {
+      if (expressionReferencesScope(value3, alias)) {
         return true;
       }
     }
     if (!scope.sourceLocal) {
       return false;
     }
-    return containsBindingSyntax(value2, scope);
+    return containsBindingSyntax(value3, scope);
   }
-  function withoutBindingExpressions(value2) {
-    return value2.replace(/\{\{\s*[\s\S]*?\s*\}\}/g, "").replace(/\s+/g, " ").trim();
+  function withoutBindingExpressions(value3) {
+    return value3.replace(/\{\{\s*[\s\S]*?\s*\}\}/g, "").replace(/\s+/g, " ").trim();
   }
-  function expressionReferencesScope(value2, scope) {
+  function expressionReferencesScope(value3, scope) {
     const escaped = scope.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return new RegExp(`(?:^|[^A-Za-z0-9_$])${escaped}(?:\\b|\\s*\\.)`).test(value2);
+    return new RegExp(`(?:^|[^A-Za-z0-9_$])${escaped}(?:\\b|\\s*\\.)`).test(value3);
   }
-  function containsBindingSyntax(value2, scope) {
-    const statusConditions = parseSourceStatusConditions(value2);
+  function containsBindingSyntax(value3, scope) {
+    const statusConditions = parseSourceStatusConditions(value3);
     if (statusConditions.length > 0) {
       return statusConditions.some((condition) => !condition.sourceId || condition.sourceId === scope.sourceId);
     }
-    if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value2)) {
+    if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value3)) {
       return true;
     }
-    const matches = value2.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);
+    const matches = value3.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);
     for (const match of matches) {
       const expression = match[1]?.trim() ?? "";
       const head = /^[A-Za-z_$][\w$]*/.exec(expression)?.[0] ?? "";
@@ -39881,9 +41019,9 @@ label {
   function collectBindingDependencies(root, inheritedScope, usages) {
     for (const child of Array.from(root.childNodes)) {
       if (child.nodeType === Node.TEXT_NODE) {
-        const text4 = child;
-        if (bindingTextDependsOn(text4.data, inheritedScope)) {
-          usages.push({ target: text4 });
+        const text5 = child;
+        if (bindingTextDependsOn(text5.data, inheritedScope)) {
+          usages.push({ target: text5 });
         }
         continue;
       }
@@ -40064,11 +41202,11 @@ label {
     }
     return false;
   }
-  function normalizeSourceId(value2) {
-    return value2.trim().replace(/[^A-Za-z0-9_$-]+/g, "-").replace(/^-+|-+$/g, "").replace(/^[^A-Za-z_$]+/, "");
+  function normalizeSourceId(value3) {
+    return value3.trim().replace(/[^A-Za-z0-9_$-]+/g, "-").replace(/^-+|-+$/g, "").replace(/^[^A-Za-z_$]+/, "");
   }
-  function isSourceId(value2) {
-    return /^[A-Za-z_$][\w$-]*$/.test(value2);
+  function isSourceId(value3) {
+    return /^[A-Za-z_$][\w$-]*$/.test(value3);
   }
   function dedupeSourceStatusConditions(conditions2) {
     const seen = new Set;
@@ -40198,11 +41336,11 @@ label {
       this.reload(editor.target);
     }
     setCondition(editor, expression) {
-      const value2 = expression.trim();
-      if (!value2) {
+      const value3 = expression.trim();
+      if (!value3) {
         return;
       }
-      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.condition, value2);
+      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.condition, value3);
       this.reload(editor.target);
     }
     removeSourceStatusCondition(editor) {
@@ -40317,9 +41455,9 @@ label {
       return false;
     }
     try {
-      const value2 = target2.value;
-      target2.value = value2;
-      return typeof value2 === "string";
+      const value3 = target2.value;
+      target2.value = value3;
+      return typeof value3 === "string";
     } catch {
       return false;
     }
@@ -40328,15 +41466,15 @@ label {
     const propertyName = "name" in target2 ? target2.name : undefined;
     return String(typeof propertyName === "string" ? propertyName : target2.getAttribute("name") ?? target2.id ?? "").trim();
   }
-  function isValidValueKey(value2) {
-    return VALUE_KEY_PATTERN.test(value2.trim());
+  function isValidValueKey(value3) {
+    return VALUE_KEY_PATTERN.test(value3.trim());
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/paramSync.ts
   var PARAM_SYNC_ENABLE_SETTING = "__cms-param-sync-enabled";
   var PARAM_SYNC_USE_NAME_SETTING = "__cms-param-sync-use-name";
   var PARAM_SYNC_NAME_SETTING = "__cms-param-sync-name";
-  function applyParamSyncSetting(editor, setting, value2) {
+  function applyParamSyncSetting(editor, setting, value3) {
     if (!isParamSyncSetting(setting)) {
       return false;
     }
@@ -40344,7 +41482,7 @@ label {
     const current = target2.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
     const fieldName = valueSurfaceName(target2);
     if (setting.attribute === PARAM_SYNC_ENABLE_SETTING) {
-      if (value2 !== true) {
+      if (value3 !== true) {
         target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
         return true;
       }
@@ -40355,15 +41493,15 @@ label {
       return true;
     }
     if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
-      if (value2 === true && isValidValueKey(fieldName)) {
+      if (value3 === true && isValidValueKey(fieldName)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
       } else if (current === fieldName) {
         target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
       }
       return true;
     }
-    if (typeof value2 === "string") {
-      const next = value2.trim();
+    if (typeof value3 === "string") {
+      const next = value3.trim();
       if (isValidValueKey(next)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
       }
@@ -40426,7 +41564,7 @@ label {
   var PAGE_STATE_ENABLE_SETTING = "__cms-page-state-enabled";
   var PAGE_STATE_USE_NAME_SETTING = "__cms-page-state-use-name";
   var PAGE_STATE_NAME_SETTING = "__cms-page-state-name";
-  function applyPageStateSetting(editor, setting, value2) {
+  function applyPageStateSetting(editor, setting, value3) {
     if (!isPageStateSetting(setting)) {
       return false;
     }
@@ -40434,7 +41572,7 @@ label {
     const current = target2.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
     const fieldName = valueSurfaceName(target2);
     if (setting.attribute === PAGE_STATE_ENABLE_SETTING) {
-      if (value2 !== true) {
+      if (value3 !== true) {
         target2.removeAttribute(CMS_BINDING_ATTRIBUTES.pageState);
         return true;
       }
@@ -40445,15 +41583,15 @@ label {
       return true;
     }
     if (setting.attribute === PAGE_STATE_USE_NAME_SETTING) {
-      if (value2 === true && isValidValueKey(fieldName)) {
+      if (value3 === true && isValidValueKey(fieldName)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, fieldName);
       } else if (current === fieldName) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, "");
       }
       return true;
     }
-    if (typeof value2 === "string") {
-      const next = value2.trim();
+    if (typeof value3 === "string") {
+      const next = value3.trim();
       if (isValidValueKey(next)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
       }
@@ -40519,10 +41657,10 @@ label {
   function getTextValue(editor, format) {
     assertTextSlotCompatibility(editor);
     const textFragment = textContentFragment(editor);
-    const value2 = format === "richtext" ? textFragment.innerHTML : textFragment.textContent ?? "";
-    return editor.getContentSlots().length > 0 ? value2.trim() : value2;
+    const value3 = format === "richtext" ? textFragment.innerHTML : textFragment.textContent ?? "";
+    return editor.getContentSlots().length > 0 ? value3.trim() : value3;
   }
-  function setTextValue(editor, format, value2) {
+  function setTextValue(editor, format, value3) {
     assertTextSlotCompatibility(editor);
     const reserved = reservedSlotNames(editor.getContentSlots());
     const currentNodes = Array.from(editor.target.childNodes);
@@ -40530,10 +41668,10 @@ label {
     const fragment = editor.target.ownerDocument.createDocumentFragment();
     if (format === "richtext") {
       const template22 = editor.target.ownerDocument.createElement("template");
-      template22.innerHTML = value2;
+      template22.innerHTML = value3;
       fragment.append(template22.content.cloneNode(true));
-    } else if (value2 !== "") {
-      fragment.append(editor.target.ownerDocument.createTextNode(value2));
+    } else if (value3 !== "") {
+      fragment.append(editor.target.ownerDocument.createTextNode(value3));
     }
     editor.target.insertBefore(fragment, referenceNode);
     for (const node of currentNodes) {
@@ -40676,37 +41814,37 @@ label {
       }
       this.context.settings().setSettings(resolveSettingsValues(selection.editor, settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings))), selection.textCapability, selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "", this.context.settingsMode(), selection.states, runtime2.getSelectedDataScopes(), this.context.dataSources());
     }
-    applySetting(editor, setting, value2, attributes) {
+    applySetting(editor, setting, value3, attributes) {
       if (attributes) {
         this.applyAttributes(editor, attributes);
         return;
       }
-      if (applyParamSyncSetting(editor, setting, value2) || applyPageStateSetting(editor, setting, value2)) {
+      if (applyParamSyncSetting(editor, setting, value3) || applyPageStateSetting(editor, setting, value3)) {
         this.renderSettings();
         this.context.syncViewFrameContent();
         this.context.highlight().show(editor);
         return;
       }
       const attribute = setting.attribute;
-      if (typeof value2 === "boolean") {
-        editor.target.toggleAttribute(attribute, value2);
-      } else if (value2 === "") {
+      if (typeof value3 === "boolean") {
+        editor.target.toggleAttribute(attribute, value3);
+      } else if (value3 === "") {
         editor.target.removeAttribute(attribute);
-      } else if (typeof value2 === "string") {
-        editor.target.setAttribute(attribute, value2);
+      } else if (typeof value3 === "string") {
+        editor.target.setAttribute(attribute, value3);
       }
       if (setting.type === "select" || setting.type === "segmented" || setting.type === "toggle") {
         this.renderSettings();
       }
     }
     applyAttributes(editor, attributes) {
-      for (const [attribute, value2] of Object.entries(attributes)) {
-        if (value2 === null || value2 === "") {
+      for (const [attribute, value3] of Object.entries(attributes)) {
+        if (value3 === null || value3 === "") {
           editor.target.removeAttribute(attribute);
-        } else if (typeof value2 === "boolean") {
-          editor.target.toggleAttribute(attribute, value2);
+        } else if (typeof value3 === "boolean") {
+          editor.target.toggleAttribute(attribute, value3);
         } else {
-          editor.target.setAttribute(attribute, value2);
+          editor.target.setAttribute(attribute, value3);
         }
       }
       this.renderSettings();
@@ -40796,15 +41934,15 @@ label {
       topBar.setPageTitle(config.title, config.path);
     }
   }
-  function parseTags(value2) {
+  function parseTags(value3) {
     return [
-      ...new Set(value2.split(",").map((tag) => tag.trim()).filter(Boolean))
+      ...new Set(value3.split(",").map((tag) => tag.trim()).filter(Boolean))
     ];
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellStructureTreeSync.ts
-  function isStructureTree(value2) {
-    return Boolean(value2 && "catalog" in value2 && "setStructure" in value2 && "setInsertItems" in value2 && "setDefaultTemplateSelection" in value2);
+  function isStructureTree(value3) {
+    return Boolean(value3 && "catalog" in value3 && "setStructure" in value3 && "setInsertItems" in value3 && "setDefaultTemplateSelection" in value3);
   }
   function syncStructureTreeCatalog(root, catalog, insertItems, defaultTemplateSelection) {
     withStructureTree(root, (tree) => {
@@ -40896,7 +42034,7 @@ label {
     return scopes.some((scope) => fieldsContainArray(scope.fields));
   }
   function fieldsContainArray(fields) {
-    return fields.some((field2) => field2.type === "array" || fieldsContainArray(field2.children ?? []));
+    return fields.some((field3) => field3.type === "array" || fieldsContainArray(field3.children ?? []));
   }
   function flattenStructure2(nodes) {
     return nodes.flatMap((node) => [node, ...flattenStructure2(node.children)]);
@@ -40932,8 +42070,8 @@ label {
       this.context.state.pageConfig = pageConfig;
       applyPageSettingsTitle(this.context.refs.topBar, pageConfig);
     }
-    setSaveStatus(label2) {
-      this.context.refs.topBar.saveStatus = label2;
+    setSaveStatus(label3) {
+      this.context.refs.topBar.saveStatus = label3;
     }
     syncStructureTreeCatalog() {
       syncStructureTreeCatalog(this.context.host.shadowRoot, this.context.state.catalog, this.context.state.insertItems, this.context.state.defaultTemplateSelection);
@@ -40950,8 +42088,8 @@ label {
     findStructureNodeLabel(editor) {
       return findStructureNodeLabel(this.context.state.runtime, editor);
     }
-    isStructureTree(value2) {
-      return isStructureTree(value2);
+    isStructureTree(value3) {
+      return isStructureTree(value3);
     }
     applyChromeLabels(topBar, resource, defaults) {
       applyShellChromeLabels(this.context.host, topBar, resource, defaults, (name) => this.pageField(name));
@@ -40977,8 +42115,8 @@ label {
     pageField(name) {
       return this.context.refs.pageField(name);
     }
-    isTopBar(value2) {
-      return Boolean(value2 && "setNavigation" in value2);
+    isTopBar(value3) {
+      return Boolean(value3 && "setNavigation" in value3);
     }
   }
 
@@ -41325,8 +42463,8 @@ label {
     }
     return RuntimeEditorClass;
   }
-  function toList(value2) {
-    return Array.isArray(value2) ? value2 : [value2];
+  function toList(value3) {
+    return Array.isArray(value3) ? value3 : [value3];
   }
 
   // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/createRuntimeEditor.ts
@@ -41357,8 +42495,8 @@ label {
       fields: dataSource?.fields ?? []
     });
   }
-  function parseSourceBinding(value2) {
-    const parsed = parseSource(value2);
+  function parseSourceBinding(value3) {
+    const parsed = parseSource(value3);
     if (!parsed) {
       return null;
     }
@@ -41369,17 +42507,17 @@ label {
     if (!repeat?.alias) {
       return;
     }
-    const field2 = findDataField(registry2.collectDataScopes(editor.target), repeat.path);
+    const field3 = findDataField(registry2.collectDataScopes(editor.target), repeat.path);
     editor.declareDataScope({
       name: repeat.alias,
       label: repeat.alias,
-      fields: field2?.children ?? []
+      fields: field3?.children ?? []
     });
   }
   function findDataField(scopes, path) {
     for (const scope of scopes) {
-      const field2 = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
-      const match = field2 ?? findDataFieldInList(scope.fields, path) ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
+      const field3 = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
+      const match = field3 ?? findDataFieldInList(scope.fields, path) ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
       if (match) {
         return match;
       }
@@ -41387,11 +42525,11 @@ label {
     return;
   }
   function findDataFieldInList(fields, path) {
-    for (const field2 of fields) {
-      if (field2.path === path) {
-        return field2;
+    for (const field3 of fields) {
+      if (field3.path === path) {
+        return field3;
       }
-      const child = field2.children ? findDataFieldInList(field2.children, path) : undefined;
+      const child = field3.children ? findDataFieldInList(field3.children, path) : undefined;
       if (child) {
         return child;
       }
@@ -41731,7 +42869,7 @@ label {
         pageConfig: () => this.context.state.pageConfig,
         contentHtml: () => this.getContentHtml(),
         syncEditorMode: () => this.syncEditorMode(),
-        setSaveStatus: (label2) => this.setSaveStatus(label2),
+        setSaveStatus: (label3) => this.setSaveStatus(label3),
         saveEventName: this.context.saveEventName
       });
     }
@@ -41755,8 +42893,8 @@ label {
     renderSettings() {
       this.context.selection.renderSettings();
     }
-    applySetting(editor, setting, value2, attributes) {
-      this.context.selection.applySetting(editor, setting, value2, attributes);
+    applySetting(editor, setting, value3, attributes) {
+      this.context.selection.applySetting(editor, setting, value3, attributes);
     }
     toggleState(editor, state2) {
       this.context.selection.toggleState(editor, state2);
@@ -41805,8 +42943,8 @@ label {
     getContentHtml() {
       return this.context.renderSync.getContentHtml();
     }
-    setSaveStatus(label2) {
-      this.context.renderSync.setSaveStatus(label2);
+    setSaveStatus(label3) {
+      this.context.renderSync.setSaveStatus(label3);
     }
   }
 
@@ -41911,8 +43049,8 @@ label {
     getContentHtml() {
       return this.context.frames.contentHtml();
     }
-    setSaveStatus(label2) {
-      this.context.sync.setSaveStatus(label2);
+    setSaveStatus(label3) {
+      this.context.sync.setSaveStatus(label3);
     }
     syncStructureTreeCatalog() {
       this.context.sync.syncStructureTreeCatalog();
@@ -42179,7 +43317,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default34 = `<div class="shell">
+  var template_default35 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -42370,7 +43508,7 @@ label {
   function createShellTemplate() {
     const template22 = document.createElement("template");
     template22.innerHTML = `<style>${[style_default24, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default34)}`;
+`)}</style>${String(template_default35)}`;
     return template22;
   }
 
@@ -42534,8 +43672,8 @@ label {
     setPageConfig(config) {
       this._parts.api.setPageConfig(config);
     }
-    setSaveStatus(label2) {
-      this._parts.renderSync.setSaveStatus(label2);
+    setSaveStatus(label3) {
+      this._parts.renderSync.setSaveStatus(label3);
     }
     loadDocument(document2, selectedTarget = null) {
       this._parts.api.loadDocument(document2, selectedTarget);
@@ -42883,7 +44021,7 @@ label {
   }
 
   // src/components/media/CardMedia/template.html
-  var template_default35 = `<div class="card">
+  var template_default36 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -43031,7 +44169,7 @@ label {
     constructor() {
       super({
         css: style_default25,
-        template: template_default35
+        template: template_default36
       });
     }
   }
@@ -43040,7 +44178,7 @@ label {
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default36 = `<div class="backdrop" id="backdrop">
+  var template_default37 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -43153,7 +44291,7 @@ label {
 `;
 
   // src/components/media/CropSystem/styles/layout.css
-  var layout_default3 = `:host {
+  var layout_default4 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -43283,9 +44421,9 @@ label {
   class CropSystem extends U2 {
     constructor() {
       super({
-        css: [layout_default3, controls_default4].join(`
+        css: [layout_default4, controls_default4].join(`
 `),
-        template: template_default36
+        template: template_default37
       });
     }
     connectedCallback() {
@@ -43323,7 +44461,7 @@ label {
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default37 = `<div class="backdrop" id="backdrop">
+  var template_default38 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -43365,7 +44503,7 @@ label {
 `;
 
   // src/components/media/DetailMedia/styles/layout.css
-  var layout_default4 = `:host {
+  var layout_default5 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -43580,9 +44718,9 @@ label {
   class DetailMedia extends U2 {
     constructor() {
       super({
-        css: [layout_default4, tools_default].join(`
+        css: [layout_default5, tools_default].join(`
 `),
-        template: template_default37
+        template: template_default38
       });
     }
     connectedCallback() {
@@ -43600,9 +44738,9 @@ label {
         }
       });
     }
-    open(label2) {
-      if (label2) {
-        this.shadowRoot.getElementById("title").textContent = label2;
+    open(label3) {
+      if (label3) {
+        this.shadowRoot.getElementById("title").textContent = label3;
       }
       this.setAttribute("open", "");
     }
@@ -43616,7 +44754,7 @@ label {
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default38 = `<div class="toolbar">
+  var template_default39 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -44156,13 +45294,13 @@ label {
     return trail;
   }
   // src/components/media/GridMedia/api/write.ts
-  async function renameItem(id, label2) {
+  async function renameItem(id, label3) {
     const url = new URL(filesBase(), window.location.origin);
     url.searchParams.set("id", id);
     const res = await fetch(url.toString(), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: label2 })
+      body: JSON.stringify({ name: label3 })
     });
     return res.ok;
   }
@@ -44173,11 +45311,11 @@ label {
     const res = await fetch(url.toString(), { method: "DELETE" });
     return res.ok;
   }
-  async function createFolder(label2, parent) {
+  async function createFolder(label3, parent) {
     const res = await fetch(`${filesBase()}/folder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: label2, parentId: parent })
+      body: JSON.stringify({ name: label3, parentId: parent })
     });
     return res.ok;
   }
@@ -44263,10 +45401,10 @@ label {
       } else {
         appendMediaPreview(card, item);
       }
-      const label2 = document.createElement("span");
-      label2.slot = "label";
-      label2.textContent = item.label;
-      card.appendChild(label2);
+      const label3 = document.createElement("span");
+      label3.slot = "label";
+      label3.textContent = item.label;
+      card.appendChild(label3);
       grid2.appendChild(card);
     }
   }
@@ -44732,7 +45870,7 @@ label {
       super({
         css: [navigation_default, interactions_default, detail_default3].join(`
 `),
-        template: template_default38
+        template: template_default39
       });
     }
     get detail() {
@@ -44768,7 +45906,7 @@ label {
       renderGrid(this.shadowRoot.getElementById("grid"), this._items);
       renderBreadcrumb(this.shadowRoot.getElementById("breadcrumb"), this._folder, this._breadcrumb);
     }
-    _navigateTo(folderId, label2) {
+    _navigateTo(folderId, label3) {
       const url = new URL(window.location.href);
       if (folderId) {
         url.searchParams.set("folder", folderId);
@@ -44779,8 +45917,8 @@ label {
       this._folder = folderId;
       if (!folderId) {
         this._breadcrumb = [];
-      } else if (label2) {
-        this._breadcrumb.push({ id: folderId, label: label2 });
+      } else if (label3) {
+        this._breadcrumb.push({ id: folderId, label: label3 });
       }
       this._refresh();
     }
@@ -44884,7 +46022,7 @@ label {
   }
 
   // src/components/media/MediaCenter/template.html
-  var template_default39 = `<dialog>
+  var template_default40 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -45470,7 +46608,7 @@ dialog::backdrop {
       super({
         css: [chrome_default, content_default2, folder_default].join(`
 `),
-        template: template_default39
+        template: template_default40
       });
     }
     connectedCallback() {
@@ -45485,7 +46623,7 @@ dialog::backdrop {
         grid: this._grid,
         getFolder: () => this._folder,
         findItem: (id) => this._items.find((item) => item.id === id),
-        navigate: (folderId, label2) => this._navigateTo(folderId, label2),
+        navigate: (folderId, label3) => this._navigateTo(folderId, label3),
         navigateBreadcrumb: (folderId, index) => {
           this._breadcrumb = this._breadcrumb.slice(0, index + 1);
           this._navigateTo(folderId);
@@ -45550,12 +46688,12 @@ dialog::backdrop {
       }));
       this._dialog?.close();
     }
-    _navigateTo(folderId, label2) {
+    _navigateTo(folderId, label3) {
       this._folder = folderId;
       if (!folderId) {
         this._breadcrumb = [];
-      } else if (label2) {
-        this._breadcrumb.push({ id: folderId, label: label2 });
+      } else if (label3) {
+        this._breadcrumb.push({ id: folderId, label: label3 });
       }
       this._refresh();
     }
@@ -45681,13 +46819,13 @@ dialog::backdrop {
         ...raw.split(",").map((t2) => t2.trim()).filter(Boolean)
       ];
     }
-    _build(label2) {
+    _build(label3) {
       const shadow = this.attachShadow({ mode: "open" });
       const size = this.getAttribute("size") || "64";
       shadow.innerHTML = `
             <style>${MediaInput_default}</style>
             <div class="field" style="--tile-size:${size}px">
-                ${label2 ? `<span class="label">${label2}</span>` : ""}
+                ${label3 ? `<span class="label">${label3}</span>` : ""}
                 <button class="tile" type="button" title="Choose a file">
                     <img class="preview" alt="" />
                     <span class="placeholder">
@@ -45747,7 +46885,7 @@ dialog::backdrop {
   }
   define(CMS_BINDING_CORE_TAG, Cl);
   Yp({
-    json: (value2) => value2 === undefined ? undefined : JSON.stringify(value2)
+    json: (value3) => value3 === undefined ? undefined : JSON.stringify(value3)
   });
   define("p9r-accordion", ur);
   define("p9r-accordion-item", mr);

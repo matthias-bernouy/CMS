@@ -10,7 +10,9 @@ import type {
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
 export const ANALYTICS_VIEWS = ["overview", "content", "origins", "health"] as const;
+export const ANALYTICS_NAV_VIEWS = [...ANALYTICS_VIEWS, "endpoints"] as const;
 export type AnalyticsView = (typeof ANALYTICS_VIEWS)[number];
+export type AnalyticsNavView = (typeof ANALYTICS_NAV_VIEWS)[number];
 export type AnalyticsRange = "24h" | "7d" | "30d";
 export type AnalyticsTimeBucket = Omit<TimeBucket, "bucket"> & { bucket: string };
 export type AnalyticsSummaryView = Omit<AnalyticsReportSummary, "latestCompletedUtcDay"> & {
@@ -61,15 +63,15 @@ export function analyticsRangeLabel(range: AnalyticsRange): string {
     return range === "24h" ? "Last 24 hours" : range === "30d" ? "Last 30 days" : "Last 7 days";
 }
 
-export function analyticsViewPath(view: AnalyticsView): string {
+export function analyticsViewPath(view: AnalyticsNavView): string {
     const suffix = view === "overview" ? "" : `/${view}`;
     return `${getMetaBasePath()}/admin/analytics${suffix}`;
 }
 
-export function analyticsViewFromPath(pathname: string, basePath = getMetaBasePath()): AnalyticsView {
+export function analyticsViewFromPath(pathname: string, basePath = getMetaBasePath()): AnalyticsNavView {
     const localPath = basePath && pathname.startsWith(`${basePath}/`) ? pathname.slice(basePath.length) : pathname;
     const section = localPath.match(/^\/admin\/analytics\/([^/]+)\/?$/)?.[1] ?? "";
-    return isAnalyticsView(section) && section !== "overview" ? section : "overview";
+    return isAnalyticsNavView(section) && section !== "overview" ? section : "overview";
 }
 
 export async function fetchAnalyticsDashboard(
@@ -121,8 +123,8 @@ export async function fetchAnalyticsDashboard(
     };
 }
 
-function isAnalyticsView(value: string): value is AnalyticsView {
-    return ANALYTICS_VIEWS.includes(value as AnalyticsView);
+function isAnalyticsNavView(value: string): value is AnalyticsNavView {
+    return ANALYTICS_NAV_VIEWS.includes(value as AnalyticsNavView);
 }
 
 async function getReport<T>(
