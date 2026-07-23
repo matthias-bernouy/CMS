@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { capturedFetches, expectRpc, installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import { useFilterSchemaResponder } from "./fixtures";
 
@@ -30,5 +32,22 @@ describe("commerce optimized offer filter schema budget", () => {
         expect(readModel!.headers.get("authorization")).toBeNull();
         expect(readModel!.headers.get("accept-profile")).toBe("commerce");
         expect(readModel!.headers.get("content-profile")).toBe("commerce");
+    });
+
+    test("scopes brand facets to active public products in the selected category tree", async () => {
+        const sql = await readFile(
+            resolve(
+                import.meta.dir,
+                "../../../../../integrations/domains/commerce/versions/1.0.0/connectors/supabase/sql/catalog/taxonomy/offer-filter-schema-read-model.sql",
+            ),
+            "utf8",
+        );
+
+        expect(sql).toContain("category_scope as");
+        expect(sql).toContain("join commerce.products product on product.brand_id = listed.id");
+        expect(sql).toContain("category_link.category_id in (select id from category_scope)");
+        expect(sql).toContain("product.status = 'active'");
+        expect(sql).toContain("product.visibility = 'public'");
+        expect(sql).toContain("limit 200");
     });
 });

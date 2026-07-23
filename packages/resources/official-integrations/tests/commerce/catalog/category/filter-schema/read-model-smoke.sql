@@ -11,6 +11,9 @@ select (commerce.upsert_category(null, jsonb_build_object(
     'slug', 'filter-read-model-child',
     'label', 'Filter read model child'
 ))->>'id')::bigint category_id \gset
+select (commerce.upsert_category(null, jsonb_build_object(
+    'slug', 'filter-read-model-outside', 'label', 'Filter read model outside'
+))->>'id')::bigint outside_category_id \gset
 update commerce.categories set status = 'inactive' where id = :root_id;
 
 insert into commerce.custom_field_definitions (
@@ -28,7 +31,8 @@ insert into commerce.brands (id, slug, name, status) values
     (9100000000002, 'filter-beta-two', 'Beta', 'active'),
     (9100000000001, 'filter-beta-one', 'Beta', 'active'),
     (9100000000003, 'filter-inactive', 'Aardvark inactive', 'inactive'),
-    (9100000000004, 'filter-archived', 'Aardvark archived', 'archived');
+    (9100000000004, 'filter-archived', 'Aardvark archived', 'archived'),
+    (9100000000005, 'filter-outside', 'Aardvark outside', 'active');
 insert into commerce.brands (id, slug, name, status)
 select
     9200000000000 + generated,
@@ -36,6 +40,28 @@ select
     'Filter ' || lpad(generated::text, 3, '0'),
     'active'
 from generate_series(1, 205) generated;
+
+insert into commerce.products (slug, title, brand_id, status, visibility)
+select
+    'product-' || brand.slug,
+    'Product ' || brand.name,
+    brand.id,
+    'active',
+    'public'
+from commerce.brands brand
+where brand.slug like 'filter-%';
+
+insert into commerce.product_categories (product_id, category_id, is_primary)
+select
+    product.id,
+    case when brand.slug = 'filter-outside'
+        then :outside_category_id
+        else :category_id
+    end,
+    true
+from commerce.products product
+join commerce.brands brand on brand.id = product.brand_id
+where product.slug like 'product-filter-%';
 
 do $$
 declare
@@ -61,7 +87,8 @@ begin
         select 1
         from jsonb_array_elements(v_actual->'brands') brand
         where brand->>'slug' in (
-            'filter-inactive', 'filter-archived', 'filter-generated-198'
+            'filter-inactive', 'filter-archived', 'filter-generated-198',
+            'filter-outside'
         )
     ) then
         raise exception 'offer filter read model: excluded brand was returned';

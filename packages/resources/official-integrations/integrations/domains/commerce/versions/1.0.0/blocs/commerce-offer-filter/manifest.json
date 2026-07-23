@@ -5,6 +5,6 @@
     "defaultContent": "./default.html",
     "meta": {
         "title": "Offer filter",
-        "description": "Maps a URL-synchronized control to a category product field."
+        "description": "Maps one control to a Product field or renders every public filter declared by the selected category schema."
     }
 }

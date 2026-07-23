@@ -83,8 +83,12 @@ export function activeMetadataFilters(metadataFilters, params) {
         if (!rawValue) {
             continue;
         }
-        const value = valueType === "number" ? Number(rawValue) : rawValue;
+        const value =
+            valueType === "number" ? Number(rawValue) : valueType === "boolean" ? rawValue === "true" : rawValue;
         if (valueType === "number" && !Number.isFinite(value)) {
+            continue;
+        }
+        if (valueType === "boolean" && rawValue !== "true" && rawValue !== "false") {
             continue;
         }
         filters[field] ||= {};

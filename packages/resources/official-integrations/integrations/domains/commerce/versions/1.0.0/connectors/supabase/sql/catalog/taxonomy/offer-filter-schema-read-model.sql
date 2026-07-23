@@ -52,8 +52,20 @@ stable
 security invoker
 set search_path = ''
 as $$
-    with filter_schema as materialized (
+    with recursive filter_schema as materialized (
         select commerce.offer_filter_schema(p_category_full_slug) value
+    ), selected_category as (
+        select category.id
+        from commerce.categories category
+        where category.full_slug = p_category_full_slug
+          and category.status = 'active'
+    ), category_scope as (
+        select selected.id from selected_category selected
+        union all
+        select child.id
+        from commerce.categories child
+        join category_scope parent on child.parent_id = parent.id
+        where child.status = 'active'
     )
     select case when filter_schema.value is null then null else
         filter_schema.value || jsonb_build_object(
@@ -64,9 +76,16 @@ as $$
                     'name', brand.name
                 ) order by brand.name, brand.id)
                 from (
-                    select listed.id, listed.slug, listed.name
+                    select distinct listed.id, listed.slug, listed.name
                     from commerce.brands listed
+                    join commerce.products product on product.brand_id = listed.id
+                    join commerce.product_categories category_link
+                      on category_link.product_id = product.id
+                     and category_link.is_primary
                     where listed.status = 'active'
+                      and product.status = 'active'
+                      and product.visibility = 'public'
+                      and category_link.category_id in (select id from category_scope)
                     order by listed.name, listed.id
                     limit 200
                 ) brand

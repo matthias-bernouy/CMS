@@ -29,6 +29,20 @@ describe("Commerce public offer list filters", () => {
         expect(activeMetadataFilters(filters, params)).toEqual({ weight: { lte: 315 } });
     });
 
+    test("serializes boolean metadata as JSON booleans and rejects ambiguous values", () => {
+        const filters = [
+            { field: "is_junior", operator: "eq", urlParam: "junior", valueType: "boolean" },
+            { field: "is_signed", operator: "eq", urlParam: "signed", valueType: "boolean" },
+            { field: "is_limited", operator: "eq", urlParam: "limited", valueType: "boolean" },
+        ];
+        const params = new URLSearchParams("junior=true&signed=false&limited=yes");
+
+        expect(activeMetadataFilters(filters, params)).toEqual({
+            is_junior: { eq: true },
+            is_signed: { eq: false },
+        });
+    });
+
     test("discovers an explicit category parameter declaration", () => {
         const attributes = new Map([
             ["data-commerce-param", "category"],

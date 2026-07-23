@@ -7,6 +7,16 @@ export class CommerceOfferFilterEditor extends Editor {
                 kind: "self",
                 label: "Filter",
                 settings: [
+                    {
+                        type: "segmented",
+                        label: "Schema-driven panel",
+                        attribute: "schema-driven",
+                        defaultValue: "false",
+                        options: [
+                            { label: "Static field", value: "false" },
+                            { label: "Dynamic panel", value: "true" },
+                        ],
+                    },
                     { type: "text", label: "Product field", attribute: "field" },
                     {
                         type: "select",
@@ -19,6 +29,19 @@ export class CommerceOfferFilterEditor extends Editor {
                             { label: "Minimum", value: "gte" },
                             { label: "Maximum", value: "lte" },
                         ],
+                    },
+                    { type: "text", label: "Commerce source", attribute: "source-id", defaultValue: "commerce" },
+                    {
+                        type: "text",
+                        label: "Schema endpoint",
+                        attribute: "schema-endpoint",
+                        defaultValue: "offerFilterSchema",
+                    },
+                    {
+                        type: "text",
+                        label: "Category URL parameter",
+                        attribute: "category-param",
+                        defaultValue: "category",
                     },
                 ],
             },
