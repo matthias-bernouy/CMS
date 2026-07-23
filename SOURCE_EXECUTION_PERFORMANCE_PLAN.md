@@ -14,6 +14,7 @@ The scope includes:
 - CMS authentication, authorization, Mongo-backed source resolution, overlays,
   secrets, functions, and triggers;
 - Supabase Edge Function and Data API latency;
+- an internal Analytics view for aggregate endpoint performance;
 - the Commerce Stripe Payments reconciliation worker;
 - staging benchmarks and a possible Nano-to-Micro compute comparison.
 
@@ -40,7 +41,8 @@ The recommended order is:
 
 The immediate core therefore contains three workstreams:
 
-1. request observability;
+1. request observability, aggregate endpoint reporting, and its internal
+   Analytics view;
 2. request-scoped subject resolution;
 3. request-scoped dependency deduplication.
 
@@ -52,6 +54,8 @@ the cost of the second Mongo read is isolated.
 ## Goals
 
 - Explain where CMS source-request time is spent.
+- Make endpoint volume, errors, percentiles, and stage contributions visible to
+  operators without requiring raw request inspection.
 - Remove duplicate Mongo, role, secret, function, trigger, and identity work
   where the same result is needed several times in one request.
 - Preserve authorization freshness between requests.
@@ -73,6 +77,10 @@ the cost of the second Mongo read is isolated.
   evidence.
 - Mutating an already-published integration version.
 - Gating normal pull requests on public Internet latency.
+- Building a general-purpose log explorer or retaining raw request traces in
+  Analytics.
+- Writing endpoint telemetry to Supabase or another measured upstream on every
+  request.
 - Treating the Stripe worker as the cause of foreground tails without a measured
   correlation.
 - Replacing the existing source, overlay, function, or trigger contracts in one
@@ -291,9 +299,14 @@ large generic cache framework first.
    feature adapters and composition roots.
 8. **Counters precede latency claims.** CI proves deterministic call budgets;
    staging measures network latency.
-9. **Financial safety remains fail-closed.** Worker efficiency must not weaken
+9. **Metrics and traces have different sampling rules.** Aggregate counters and
+   histograms remain representative; forced slow or error diagnostics never
+   bias published percentiles.
+10. **The observer stays off the critical path.** Endpoint metrics use bounded
+    in-memory aggregation and asynchronous batch persistence.
+11. **Financial safety remains fail-closed.** Worker efficiency must not weaken
    payment or transfer guards.
-10. **Published resources remain immutable.** Connector changes use a new
+12. **Published resources remain immutable.** Connector changes use a new
     integration release and append-only migration when required.
 
 ## Phase 0: Isolated Baseline
@@ -387,9 +400,15 @@ helper, rather than being repeated in every Commerce route.
 
 ### Exposure and sampling
 
-- Benchmark and staging: collect 100% of timings.
-- Production normal traffic: start with configurable 1% sampling.
-- Production errors, timeouts, and requests above 1,000 ms: collect 100%.
+- Aggregate counters and fixed timing histograms: collect 100% in every
+  environment. They are updated in memory and contain no raw request records.
+- Detailed benchmark and staging traces: collect 100%.
+- Detailed production traces and structured timing logs: start with
+  configurable uniform 1% sampling.
+- Production errors, timeouts, and requests above 1,000 ms: retain detailed
+  diagnostics at 100% in a separate forced cohort.
+- Never merge the forced cohort into percentile or error-rate calculations. It
+  deliberately over-represents slow and failed requests.
 - Delivery `Server-Timing`: disabled by default and available only for
   authorized diagnostics.
 - Do not emit `Timing-Allow-Origin: *`.
@@ -420,6 +439,215 @@ connection metrics.
 Automation created after 2026-07-23 must use the current Supabase Management
 API `logs` endpoint. The legacy `logs.all` endpoint is scheduled for removal on
 2026-09-23.
+
+## Phase 1b: Endpoint Performance Analytics
+
+The request-timing collector must have a durable operator-facing outcome before
+optimization work begins. Add a host-owned `Analytics > Endpoint performance`
+view at `/admin/analytics/endpoints`.
+
+This is not a declarative `cms-dashboards` resource. Integration dashboards are
+installed and versioned with integration resources, while endpoint
+observability is a host capability that must remain available when an
+integration or upstream is unhealthy.
+
+The existing `Request health` view remains focused on Delivery page quality.
+The new view covers source endpoint execution through both Delivery and
+Control.
+
+### Contract and package boundary
+
+Keep the implementation in `@bernouy/cms-analytics`, but do not add endpoint
+observations to the visitor-oriented `AnalyticsEvent` or `AnalyticsStore`.
+Those contracts apply collection policy, privacy publication thresholds,
+visitor estimation, and long-lived content reporting that do not belong to
+operator telemetry.
+
+Introduce separate contracts with responsibilities equivalent to:
+
+```ts
+type EndpointPerformanceObservation = {
+    ts: Date;
+    surface: "control" | "delivery";
+    endpointUrn: string | "__unresolved__";
+    method: string;
+    status: number;
+    stagesMs: Partial<Record<EndpointTimingStage, number>>;
+};
+
+interface EndpointPerformanceRecorder {
+    observe(observation: EndpointPerformanceObservation): void;
+}
+
+interface EndpointPerformanceReports {
+    dashboard(query: EndpointPerformanceQuery): Promise<EndpointPerformanceDashboard>;
+}
+```
+
+The recorder is synchronous only as an in-memory update. It must not expose a
+promise that callers are expected to await before returning the source
+response. Mongo implementations remain behind the package's explicit adapter
+subpath and are selected by the runtime composition root.
+
+### Bounded dimensions and privacy
+
+Durable rollups may contain only bounded operational dimensions:
+
+- the logical source endpoint URN, or one fixed unresolved sentinel;
+- `control` or `delivery`;
+- the normalized HTTP method;
+- response status class and outcome;
+- stable timing-stage names;
+- aggregate counts, sums, maxima, and fixed histogram buckets.
+
+They must never contain:
+
+- a raw request or upstream URL;
+- path parameters or query strings;
+- headers, cookies, IP addresses, user agents, or visitor hashes;
+- user, subject, role, session, or secret identifiers;
+- request or response bodies;
+- raw error messages, stack traces, or provider payloads;
+- correlation IDs.
+
+Correlation IDs remain short-lived diagnostic log keys. They are intentionally
+not a dashboard dimension because their cardinality is unbounded.
+
+The recorder validates dimensions before accepting an observation. Unknown
+methods, stages, outcomes, oversized URNs, and non-finite durations are rejected
+or normalized to fixed sentinels. This prevents accidental high-cardinality
+growth and unsafe data retention.
+
+### Aggregation and persistence
+
+Use a separate Mongo collection such as
+`analytics_source_performance_rollups`. Do not write operational telemetry to
+Supabase:
+
+- the measurements span CMS, Mongo, and non-Supabase endpoints;
+- the dashboard must still explain requests when Supabase is slow or
+  unavailable;
+- writing to the measured dependency would create an observer feedback loop.
+
+Every completed source request updates a bounded in-memory aggregate keyed by
+time bucket and the approved dimensions. Fixed mergeable histograms are
+required for `p50`, `p95`, and `p99`; averages and maxima alone are
+insufficient.
+
+The runtime flushes aggregates to Mongo in batches every five to ten seconds
+with atomic counter increments. Foreground requests never wait for a flush.
+Concurrent CMS instances merge into the same rollups. A crash may lose at most
+the current short buffer; metrics loss is preferable to delaying or failing a
+business request. Flush failures and dropped observations have their own
+bounded process counters and structured warnings.
+
+The initial retention policy is:
+
+- five-minute buckets;
+- fourteen days of endpoint performance history;
+- dashboard ranges of one hour, twenty-four hours, and seven days.
+
+Add hourly compaction and a thirty-day range only after operators demonstrate
+the need. Retention is enforced by TTL, and stopping collection must not require
+deleting existing rollups.
+
+### Metrics versus diagnostic traces
+
+All accepted endpoint requests contribute to aggregate counts, status rates,
+total-latency histograms, and stage histograms. This path performs only bounded
+memory updates.
+
+Detailed per-request timing logs remain governed by the sampling policy from
+Phase 1:
+
+- a uniform cohort for representative investigation;
+- a forced cohort for errors, timeouts, and requests above 1,000 ms.
+
+Dashboard percentiles and rates are computed only from the complete aggregate
+rollups. The forced diagnostic cohort stays separate in structured logs and can
+never be used as the source of a percentile. The UI displays observation
+coverage, freshness, and dropped-observation counts so incomplete data is
+visible.
+
+### Dashboard MVP
+
+The first view contains:
+
+- headline cards for request count, error rate, `p50`, `p95`, and `p99`;
+- a timeline for volume, `p95`, and error rate;
+- a sortable endpoint table with surface, method, calls, percentiles, maximum,
+  and error rate;
+- filters for range, surface, source endpoint, method, and status class;
+- one endpoint detail showing status distribution, latency histogram, and the
+  contribution of authorization, source resolution, overlays, context,
+  secrets, upstream execution, and projection;
+- explicit empty, stale, partial, loading, and unavailable states;
+- a visible statement that the view contains aggregates and no individual
+  request logs.
+
+Expose one aggregate admin endpoint initially:
+
+```text
+GET /api/analytics/endpoints?range=24h&surface=delivery&endpoint=...
+```
+
+It returns the complete dashboard projection in one guarded request. The route
+is mounted behind the existing Control authentication guard and is never
+available from public Delivery. The API enforces allowlisted ranges, filters,
+sort keys, and result limits.
+
+Reuse the current Analytics shell, navigation, range controls, cards, loading
+states, and visual language. Keep endpoint-specific fetching, rendering, and
+tests in dedicated files rather than further growing the existing central
+Analytics modules.
+
+### Supabase and Edge detail
+
+The CMS can always measure `cms_upstream`, which includes the complete
+connector call. It cannot infer the internal split between Edge routing,
+PostgREST pool wait, SQL execution, and provider work.
+
+The first dashboard therefore remains useful with `cms_upstream` alone.
+Additional `edge_*` stages appear only when a trusted connector returns
+allowlisted internal timing metadata or when a secure correlation pipeline can
+join aggregate Edge observations.
+
+Any response metadata path must:
+
+- be accepted only from trusted connector targets;
+- allow only the stable `edge_*` names defined in Phase 1;
+- parse bounded finite numeric values and reject duplicates or oversized
+  headers;
+- remain unavailable to arbitrary caller- or integration-defined headers;
+- avoid exposing SQL names, pool internals, secrets, or provider identifiers to
+  public clients.
+
+Edge Functions must not insert one telemetry row into Supabase or Mongo for
+every business request. Central wrappers may contribute timings to the trusted
+response metadata and structured sampled logs.
+
+The Analytics view complements rather than replaces Supabase Database Reports,
+Edge logs, `pg_stat_statements`, and connection diagnostics used during a
+benchmark window.
+
+### Acceptance criteria
+
+- Controlled traffic produces exact aggregate request and status counts.
+- Fixed-histogram percentile calculations pass deterministic boundary tests.
+- Forced slow and error diagnostics cannot change aggregate percentiles.
+- Concurrent runtime instances merge counters without overwriting one another.
+- A Mongo outage, full metrics buffer, or failed flush never changes the
+  business response.
+- No source request waits for telemetry persistence.
+- The recorder enforces the dimension allowlist and forbidden-data tests.
+- The admin API rejects unauthenticated access and invalid filters.
+- The dashboard handles zero data, partial data, stale data, and backend
+  unavailability.
+- Staging dashboard counts reconcile with the benchmark request count, and its
+  percentile buckets contain the benchmark percentiles within expected bucket
+  precision.
+- The combined timing and aggregation overhead remains below 5 ms at p95 and
+  below 2% of total request time.
 
 ## Phase 2: Request-Scoped Subject Resolution
 
@@ -969,6 +1197,11 @@ Use deterministic tests for:
 - authorization ordering;
 - correlation-ID validation and propagation;
 - timing header format and redaction;
+- endpoint-metric dimension validation and cardinality bounds;
+- histogram boundaries and percentile calculation;
+- complete-aggregate versus forced-diagnostic cohort separation;
+- asynchronous batch flush, multi-instance merge, and failure isolation;
+- endpoint-performance admin authorization and query validation;
 - financial worker claim, lease, fairness, idempotency, and no-work behavior.
 
 Do not fail a pull request based on public network latency.
@@ -979,6 +1212,7 @@ Run the remote benchmark manually at first. If it becomes sufficiently stable,
 add a nightly staging job that:
 
 - uploads JSON or CSV results as CI artifacts;
+- reconciles request counts with the endpoint performance rollups;
 - compares p95 with a seven-run moving median;
 - warns on a regression above 15%;
 - blocks a release only after three consecutive runs above budget.
@@ -990,20 +1224,24 @@ against the same commit and dataset.
 
 Keep changes small and independently measurable:
 
-1. **Observability:** correlation, timing collector, Edge database-call
-   instrumentation, and deterministic timing tests.
-2. **Subject scope:** one subject resolution across guard, authorization,
+1. **Observability primitives:** correlation, timing collector, Edge
+   database-call instrumentation, and deterministic timing tests.
+2. **Endpoint metric backend:** bounded in-memory aggregation, Mongo rollups,
+   report projection, guarded admin API, and failure-isolation tests.
+3. **Endpoint performance view:** Analytics navigation, cards, timeline,
+   endpoint table, filters, detail, and UI state tests.
+4. **Subject scope:** one subject resolution across guard, authorization,
    context, triggers, and functions.
-3. **Dependency scope:** context, secret, overlay, function, trigger, identity,
+5. **Dependency scope:** context, secret, overlay, function, trigger, identity,
    and identical source-read single-flight.
-4. **Measured source decision:** keep the current two reads, add canonical
+6. **Measured source decision:** keep the current two reads, add canonical
    below-overlay request composition, or introduce a two-phase contract.
-5. **Conditional shared caches:** coherently invalidated sources, overlays, and
+7. **Conditional shared caches:** coherently invalidated sources, overlays, and
    encrypted secret documents only.
-6. **Stripe efficiency:** expand-only migration, shadow comparison, worker
+8. **Stripe efficiency:** expand-only migration, shadow comparison, worker
    split, and gradual cutover.
-7. **Database hygiene:** independently justified indexes only.
-8. **Compute experiment:** sustained Nano-to-Micro comparison after software
+9. **Database hygiene:** independently justified indexes only.
+10. **Compute experiment:** sustained Nano-to-Micro comparison after software
    changes.
 
 Do not combine these into one large pull request.
@@ -1011,6 +1249,10 @@ Do not combine these into one large pull request.
 ## Rollback
 
 - Observability and public timing exposure must be configuration-controlled.
+- Endpoint metric recording, flushing, and reporting must have an emergency
+  disable flag and fail open for business requests.
+- Disabling endpoint metrics stops new observations without deleting existing
+  TTL-managed rollups.
 - Request-scoped deduplication can be reverted without persistence changes.
 - Shared caches must have an emergency disable flag.
 - Region selection must fall back to automatic routing.
@@ -1024,6 +1266,7 @@ Rollback immediately when a change:
 
 - alters response bodies or status codes unexpectedly;
 - exposes a secret or internal identifier;
+- retains a forbidden or unbounded endpoint-performance dimension;
 - weakens authorization freshness;
 - performs privileged enrichment before authorization;
 - adds more than 5 ms instrumentation overhead at p95;
@@ -1043,6 +1286,9 @@ Rollback immediately when a change:
 | Runner preserves the request instance | `packages/foundation/http-runner/src/core/requestDispatch.ts` |
 | Local auth rereads current roles | `packages/features/cms-auth/src/default-implementation/authentication/LocalAuthentication.ts` |
 | Existing function single-flight pattern | `packages/features/cms-functions/src/default-implementation/RequestScopedFunctionRepository.ts` |
+| Existing visitor-oriented analytics contract | `packages/features/cms-analytics/src/interfaces/AnalyticsStore.ts` |
+| Existing Analytics request-health view | `packages/surfaces/cms-control/src/components/admin/Layout/Analytics/templates/health.html` |
+| Existing Analytics navigation | `packages/surfaces/cms-control/src/components/admin/Layout/Analytics/nav.html` |
 | Stripe reconciliation loop | `packages/resources/official-integrations/integrations/providers/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/workflows/reconciliation/run.ts` |
 | Stripe payout-protection guard | `packages/resources/official-integrations/integrations/providers/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/workflows/payments/creation/platform-protection.ts` |
 | Reconciliation schedule | `packages/resources/official-integrations/integrations/extensions/commerce-stripe-payments/versions/1.0.0/definitions/artifacts/triggers/schedules/reconcile-protected-payment-systems.json` |
@@ -1063,6 +1309,8 @@ The following are intentionally deferred until instrumentation exists:
 - whether Delivery should receive a request-source factory;
 - whether source and overlay cross-request caches improve p95 enough to justify
   coherence machinery;
+- whether trusted Edge timing reaches the CMS through bounded internal response
+  metadata or aggregate log correlation; the initial dashboard requires neither;
 - whether a durable benchmark runner belongs in `quality/performance`;
 - whether Stripe worker changes ship as `1.1.0` or another new version, based on
   the publication status of `1.0.0`;
