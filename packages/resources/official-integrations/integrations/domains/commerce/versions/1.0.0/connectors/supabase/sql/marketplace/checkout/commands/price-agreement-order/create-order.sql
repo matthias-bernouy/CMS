@@ -187,7 +187,3 @@ begin
     return to_jsonb(v_order) || jsonb_build_object('idempotent_replay', false);
 end;
 $$;
-
-revoke execute on function commerce.create_order_from_price_agreement(
-    text, text, uuid, jsonb, jsonb, jsonb
-) from public, anon, authenticated;

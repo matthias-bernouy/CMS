@@ -19,7 +19,7 @@
         { "file": "cart/clear-cart.sql" },
         { "file": "cart/checkout-group-result.sql" },
         { "file": "checkout/read-models/get-price-agreement-checkout-context.sql" },
-        { "file": "checkout/commands/price-agreement-commands.sql" },
+        { "manifest": "checkout/commands/price-agreements/manifest.json" },
         { "file": "checkout/validation/validate-order-creation-batches.sql" },
         { "file": "checkout/validation/validate-order-creation-lines.sql" },
         { "file": "checkout/inventory/insert-order-batch-lines-and-reserve-inventory.sql" },
@@ -29,7 +29,7 @@
         { "file": "checkout/commands/create-checkout-orders.sql" },
         { "file": "checkout/commands/create-order-from-offers.sql" },
         { "file": "checkout/validation/assert-order-address-sizes.sql" },
-        { "file": "checkout/commands/create-order-from-price-agreement.sql" },
+        { "manifest": "checkout/commands/price-agreement-order/manifest.json" },
         { "file": "checkout/commands/checkout-cart.sql" },
         { "file": "orders/transition-order.sql" },
         { "file": "orders/drop-legacy-apply-delivery-quote.sql" }
