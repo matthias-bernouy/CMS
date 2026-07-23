@@ -33,13 +33,16 @@
                 }
             },
             "stripePaymentIntentId": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "stripeChargeId": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "providerEventId": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "transferGroup": {
                 "type": "string"
@@ -66,7 +69,8 @@
                 "type": "number"
             },
             "stripeChargeBalanceTransactionId": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "actualStripeChargeFeeAmount": {
                 "type": "number"
@@ -78,10 +82,12 @@
                 "type": "number"
             },
             "actualStripeChargeNetAmount": {
-                "type": "number"
+                "type": "number",
+                "nullable": true
             },
             "actualStripeFeeCurrency": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "actualStripeChargeFeeDetails": {
                 "type": "array",
@@ -102,19 +108,24 @@
                 "type": "string"
             },
             "manualReviewReason": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "description": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "paidAt": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "cancelledAt": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "lastProviderSyncAt": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "occurredAt": {
                 "type": "string"

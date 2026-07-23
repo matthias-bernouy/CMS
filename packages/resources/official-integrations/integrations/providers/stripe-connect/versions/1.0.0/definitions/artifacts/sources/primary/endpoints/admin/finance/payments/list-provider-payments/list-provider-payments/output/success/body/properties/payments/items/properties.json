@@ -29,7 +29,8 @@
         }
     },
     "stripePaymentIntentId": {
-        "type": "string"
+        "type": "string",
+        "nullable": true
     },
     "stripeChargeId": {
         "type": "string",
@@ -119,7 +120,8 @@
         "nullable": true
     },
     "lastProviderSyncAt": {
-        "type": "string"
+        "type": "string",
+        "nullable": true
     },
     "occurredAt": {
         "type": "string"

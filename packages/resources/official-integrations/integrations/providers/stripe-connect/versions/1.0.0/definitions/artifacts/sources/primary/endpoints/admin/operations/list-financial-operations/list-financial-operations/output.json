@@ -59,7 +59,8 @@
                                 "type": "object"
                             },
                             "response": {
-                                "type": "object"
+                                "type": "object",
+                                "nullable": true
                             },
                             "lastError": {
                                 "type": "string",
@@ -73,10 +74,12 @@
                                 "nullable": true
                             },
                             "claimedAt": {
-                                "type": "string"
+                                "type": "string",
+                                "nullable": true
                             },
                             "completedAt": {
-                                "type": "string"
+                                "type": "string",
+                                "nullable": true
                             },
                             "providerEventId": {
                                 "type": "string"

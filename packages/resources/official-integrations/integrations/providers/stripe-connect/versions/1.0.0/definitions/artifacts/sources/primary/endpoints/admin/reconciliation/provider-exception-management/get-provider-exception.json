@@ -47,13 +47,16 @@
                         "type": "number"
                     },
                     "deduplication_key": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "payment_id": {
-                        "type": "number"
+                        "type": "number",
+                        "nullable": true
                     },
                     "operation_id": {
-                        "type": "number"
+                        "type": "number",
+                        "nullable": true
                     },
                     "exception_type": {
                         "type": "string"
@@ -74,10 +77,12 @@
                         "type": "string"
                     },
                     "resolved_at": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "resolved_by": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "required": [
