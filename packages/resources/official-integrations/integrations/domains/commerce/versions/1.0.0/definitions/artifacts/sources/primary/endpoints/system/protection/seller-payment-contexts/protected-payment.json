@@ -1,11 +1,9 @@
 {
-    "endpointId": "getProposalPolicy",
-    "method": "GET",
+    "endpointId": "getProtectedPaymentSellerContext",
+    "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/policy",
-    "params": {
-        "$include": "get-proposal-policy/params.json"
-    },
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/protected-payment/seller-context",
+    "params": [],
     "headers": [
         {
             "name": "authorization",
@@ -23,52 +21,41 @@
             }
         }
     ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "orderId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "orderId"
+        ]
+    },
     "output": [
         {
             "status": "200",
             "body": {
                 "type": "object",
                 "properties": {
-                    "enabled": {
-                        "type": "boolean"
+                    "sellerCmsUserId": {
+                        "type": "string",
+                        "semantic": {
+                            "kind": "user-id",
+                            "authority": "cms"
+                        }
                     },
-                    "canPropose": {
-                        "type": "boolean"
-                    },
-                    "ineligibilityReason": {
-                        "type": "string"
-                    },
-                    "offerId": {
-                        "type": "number"
-                    },
-                    "referenceAmount": {
-                        "type": "number"
-                    },
-                    "minimumAmount": {
-                        "type": "number"
-                    },
-                    "maximumAmount": {
-                        "type": "number"
-                    },
-                    "currency": {
-                        "type": "string"
-                    },
-                    "wholeUnitPrices": {
-                        "type": "boolean"
-                    },
-                    "expiresAfterHours": {
-                        "type": "number"
+                    "buyerCmsUserId": {
+                        "type": "string",
+                        "semantic": {
+                            "kind": "user-id",
+                            "authority": "cms"
+                        }
                     }
                 },
                 "required": [
-                    "enabled",
-                    "canPropose",
-                    "offerId",
-                    "referenceAmount",
-                    "minimumAmount",
-                    "maximumAmount",
-                    "currency",
-                    "wholeUnitPrices"
+                    "sellerCmsUserId",
+                    "buyerCmsUserId"
                 ]
             }
         },
@@ -116,6 +103,20 @@
         },
         {
             "status": "409",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "422",
             "body": {
                 "type": "object",
                 "properties": {

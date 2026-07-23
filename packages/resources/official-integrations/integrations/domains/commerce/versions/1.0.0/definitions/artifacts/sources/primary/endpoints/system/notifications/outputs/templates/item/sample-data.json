@@ -1,41 +1,43 @@
 {
     "type": "object",
     "properties": {
-        "contractVersion": {
-            "type": "number"
-        },
-        "event": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "type": "string"
-                },
-                "occurredAt": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "type",
-                "occurredAt"
-            ]
-        },
         "recipient": {
             "type": "object",
             "properties": {
-                "userId": {
-                    "type": "string",
-                    "semantic": {
-                        "kind": "user-id",
-                        "authority": "cms"
-                    }
+                "email": {
+                    "type": "string"
                 }
             },
             "required": [
-                "userId"
+                "email"
             ]
         },
         "order": {
-            "$include": "context/order.json"
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "totalAmountMinor": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "id",
+                "number",
+                "status",
+                "currency",
+                "totalAmountMinor"
+            ]
         },
         "agreement": {
             "type": "object",
@@ -49,12 +51,6 @@
                 "status": {
                     "type": "string"
                 },
-                "unitAmountMinor": {
-                    "type": "number"
-                },
-                "quantity": {
-                    "type": "number"
-                },
                 "subtotalAmountMinor": {
                     "type": "number"
                 },
@@ -63,21 +59,15 @@
                 },
                 "currency": {
                     "type": "string"
-                },
-                "expiresAt": {
-                    "type": "string"
                 }
             },
             "required": [
                 "id",
                 "version",
                 "status",
-                "unitAmountMinor",
-                "quantity",
                 "subtotalAmountMinor",
                 "subtotalAmountFormatted",
-                "currency",
-                "expiresAt"
+                "currency"
             ]
         },
         "offer": {
@@ -124,28 +114,12 @@
             "required": [
                 "path"
             ]
-        },
-        "source": {
-            "type": "object",
-            "properties": {
-                "sourceEventId": {
-                    "type": "number"
-                },
-                "sourceEventType": {
-                    "type": "string"
-                },
-                "data": {
-                    "type": "object"
-                }
-            }
         }
     },
     "required": [
-        "contractVersion",
-        "event",
         "recipient",
+        "order",
         "delivery",
-        "action",
-        "source"
+        "action"
     ]
 }
