@@ -13912,6 +13912,1186 @@ p {
     customElements.define("cms-shell-detail", CmsShellDetail);
   }
 
+  // src/core/dom/meta/getMetaBasePath.ts
+  function getMetaBasePath() {
+    const meta = document.querySelector('meta[name="basePath"]');
+    const content = meta?.getAttribute("content") ?? "";
+    if (!content || content === "/") {
+      return "";
+    }
+    return content.replace(/\/+$/, "");
+  }
+
+  // src/components/admin/Layout/Analytics/api.ts
+  var ANALYTICS_VIEWS = ["overview", "content", "acquisition", "health"];
+  function currentAnalyticsRange(search = window.location.search) {
+    const range = new URLSearchParams(search).get("range");
+    return range === "24h" || range === "30d" ? range : "7d";
+  }
+  function analyticsRangeLabel(range) {
+    return range === "24h" ? "Last 24 hours" : range === "30d" ? "Last 30 days" : "Last 7 days";
+  }
+  function analyticsViewPath(view) {
+    const suffix = view === "overview" ? "" : `/${view}`;
+    return `${getMetaBasePath()}/admin/analytics${suffix}`;
+  }
+  function analyticsViewFromPath(pathname, basePath = getMetaBasePath()) {
+    const localPath = basePath && pathname.startsWith(`${basePath}/`) ? pathname.slice(basePath.length) : pathname;
+    const section = localPath.match(/^\/admin\/analytics\/([^/]+)\/?$/)?.[1] ?? "";
+    return isAnalyticsView(section) && section !== "overview" ? section : "overview";
+  }
+  async function fetchAnalyticsDashboard(view, range, signal) {
+    if (view === "overview") {
+      const [summary, timeseries] = await Promise.all([
+        getJson("summary", range, signal),
+        getJson("timeseries", range, signal)
+      ]);
+      return { view, summary, timeseries };
+    }
+    if (view === "content") {
+      const [pages, flows, devices, browsers] = await Promise.all([
+        getJson("top-pages", range, signal, 10),
+        getJson("flows", range, signal, 10),
+        getJson("breakdown", range, signal, undefined, "device"),
+        getJson("breakdown", range, signal, undefined, "browser")
+      ]);
+      return { view, pages, flows, devices, browsers };
+    }
+    if (view === "acquisition") {
+      const [channels, referrers] = await Promise.all([
+        getJson("breakdown", range, signal, undefined, "acquisition"),
+        getJson("referrers", range, signal, 10)
+      ]);
+      return { view, channels, referrers };
+    }
+    const [health, statuses] = await Promise.all([
+      getJson("health", range, signal),
+      getJson("breakdown", range, signal, undefined, "status")
+    ]);
+    return { view, health, statuses };
+  }
+  function isAnalyticsView(value) {
+    return ANALYTICS_VIEWS.includes(value);
+  }
+  async function getJson(endpoint, range, signal, limit, dimension) {
+    const params = new URLSearchParams({ range });
+    if (limit) {
+      params.set("limit", String(limit));
+    }
+    if (dimension) {
+      params.set("dim", dimension);
+    }
+    const response = await fetch(`${getMetaBasePath()}/api/analytics/${endpoint}?${params}`, {
+      headers: { Accept: "application/json" },
+      signal
+    });
+    if (!response.ok) {
+      throw new Error(`Analytics request failed with status ${response.status}`);
+    }
+    return response.json();
+  }
+
+  // src/components/admin/Layout/Analytics/styles/nav.css
+  var nav_default = `:host {
+    display: block;
+    height: 100%;
+}
+
+w13c-lateral-menu {
+    width: 100%;
+    height: 100%;
+    --menu-brand-mark-display: none;
+    --menu-header-font-size: .875rem;
+    --menu-item-font-size: .875rem;
+    --menu-section-font-size: .6875rem;
+}
+
+w13c-lateral-menu-item {
+    --item-font-size: .875rem;
+}
+`;
+
+  // src/components/admin/Layout/Analytics/nav.html
+  var nav_default2 = `<w13c-lateral-menu aria-label="Analytics navigation">
+    <span slot="header">Analytics</span>
+
+    <div class="menu-section">Reports</div>
+
+    <w13c-lateral-menu-item data-analytics-view="overview">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19V9" />
+            <path d="M10 19V5" />
+            <path d="M16 19v-7" />
+            <path d="M22 19V3" />
+        </svg>
+        Overview
+    </w13c-lateral-menu-item>
+
+    <w13c-lateral-menu-item data-analytics-view="content">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3h9l4 4v14H6z" />
+            <path d="M14 3v5h5" />
+            <path d="M9 13h7" />
+            <path d="M9 17h5" />
+        </svg>
+        Content
+    </w13c-lateral-menu-item>
+
+    <w13c-lateral-menu-item data-analytics-view="acquisition">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12h12" />
+            <path d="m12 6 6 6-6 6" />
+            <circle cx="5" cy="12" r="3" />
+        </svg>
+        Acquisition
+    </w13c-lateral-menu-item>
+
+    <w13c-lateral-menu-item data-analytics-view="health">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12h4l2-6 4 12 2-6h6" />
+        </svg>
+        Request health
+    </w13c-lateral-menu-item>
+</w13c-lateral-menu>
+`;
+
+  // src/components/admin/Layout/Analytics/AnalyticsNav.ts
+  class CmsAnalyticsNav extends U2 {
+    constructor() {
+      super({ css: nav_default, template: nav_default2 });
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      this.configureLinks();
+      this.syncActive();
+      window.addEventListener("popstate", this.syncActive);
+    }
+    disconnectedCallback() {
+      window.removeEventListener("popstate", this.syncActive);
+    }
+    configureLinks() {
+      for (const item of this.items()) {
+        const view = item.dataset.analyticsView ?? "";
+        if (isAnalyticsView2(view)) {
+          item.setAttribute("href", analyticsViewPath(view));
+        }
+      }
+    }
+    syncActive = () => {
+      const active = analyticsViewFromPath(window.location.pathname);
+      for (const item of this.items()) {
+        item.toggleAttribute("active", item.dataset.analyticsView === active);
+      }
+    };
+    items() {
+      return Array.from(this.shadowRoot.querySelectorAll("[data-analytics-view]"));
+    }
+  }
+  if (!customElements.get("cms-analytics-nav")) {
+    customElements.define("cms-analytics-nav", CmsAnalyticsNav);
+  }
+  function isAnalyticsView2(value) {
+    return ANALYTICS_VIEWS.includes(value);
+  }
+
+  // src/components/admin/Layout/Analytics/rendering/common.ts
+  var INTEGER = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+  var DECIMAL = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
+  function formatInteger(value) {
+    return INTEGER.format(Math.round(value));
+  }
+  function formatDecimal(value) {
+    return DECIMAL.format(value);
+  }
+  function formatMilliseconds(value) {
+    return `${formatInteger(value)} ms`;
+  }
+  function formatPercent(value) {
+    return new Intl.NumberFormat(undefined, { style: "percent", maximumFractionDigits: 1 }).format(value);
+  }
+  function renderMetrics(host, metrics) {
+    host.replaceChildren(...metrics.map((metric) => {
+      const card = document.createElement("article");
+      card.className = `metric${metric.tone ? ` metric--${metric.tone}` : ""}`;
+      const label = document.createElement("span");
+      const value = document.createElement("strong");
+      const hint = document.createElement("span");
+      label.className = "metric__label";
+      value.className = "metric__value";
+      hint.className = "metric__hint";
+      label.textContent = metric.label;
+      value.textContent = metric.value;
+      hint.textContent = metric.hint;
+      card.append(label, value, hint);
+      return card;
+    }));
+  }
+  function renderBars(host, rows, options) {
+    if (!rows.length) {
+      renderEmpty(host, options.empty);
+      return;
+    }
+    const total = rows.reduce((sum, row) => sum + row.count, 0) || 1;
+    host.replaceChildren(...rows.map((row) => {
+      const item = document.createElement("div");
+      const header = document.createElement("div");
+      const label = document.createElement("span");
+      const value = document.createElement("span");
+      const track = document.createElement("span");
+      const fill = document.createElement("span");
+      const percentage = row.count / total;
+      item.className = `bar-item ${options.tone?.(row.key) ?? ""}`.trim();
+      header.className = "bar-item__header";
+      label.className = "bar-item__label";
+      value.className = "bar-item__value";
+      track.className = "bar-item__track";
+      fill.className = "bar-item__fill";
+      label.textContent = options.label?.(row.key) ?? row.key;
+      label.title = label.textContent;
+      value.textContent = `${formatInteger(row.count)} · ${formatPercent(percentage)}`;
+      fill.style.width = `${Math.max(percentage * 100, 1)}%`;
+      header.append(label, value);
+      track.append(fill);
+      item.append(header, track);
+      return item;
+    }));
+  }
+  function renderFlows(host, flows) {
+    if (!flows.length) {
+      renderEmpty(host, "No internal journeys recorded in this period.");
+      return;
+    }
+    host.replaceChildren(...flows.map((flow) => {
+      const row = document.createElement("div");
+      const journey = document.createElement("div");
+      const from = document.createElement("span");
+      const arrow = document.createElement("span");
+      const to2 = document.createElement("span");
+      const count = document.createElement("strong");
+      row.className = "flow-row";
+      journey.className = "flow-row__journey";
+      from.textContent = flow.from;
+      arrow.className = "flow-row__arrow";
+      arrow.textContent = "→";
+      to2.textContent = flow.to;
+      count.textContent = formatInteger(flow.count);
+      journey.append(from, arrow, to2);
+      row.append(journey, count);
+      return row;
+    }));
+  }
+  function renderEmpty(host, message) {
+    const empty = document.createElement("div");
+    empty.className = "analytics-empty";
+    empty.textContent = message;
+    host.replaceChildren(empty);
+  }
+
+  // src/components/admin/Layout/Analytics/rendering/chart.ts
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  function renderTrafficChart(host, rows) {
+    const values = rows.map((row) => Number(row.count) || 0);
+    if (!rows.length || values.every((value) => value === 0)) {
+      renderEmpty(host, "No content views recorded in this period.");
+      return;
+    }
+    const width = 720;
+    const height = 250;
+    const left = 46;
+    const right = 16;
+    const top = 18;
+    const bottom = 38;
+    const plotWidth = width - left - right;
+    const plotHeight = height - top - bottom;
+    const maximum = Math.max(...values, 1);
+    const points = values.map((value, index) => {
+      const x2 = left + (values.length === 1 ? plotWidth / 2 : index / (values.length - 1) * plotWidth);
+      const y2 = top + (1 - value / maximum) * plotHeight;
+      return { x: x2, y: y2 };
+    });
+    const svg = svgElement("svg", {
+      class: "traffic-chart",
+      viewBox: `0 0 ${width} ${height}`,
+      role: "img",
+      "aria-label": `Content views over time, maximum ${formatInteger(maximum)}`
+    });
+    svg.append(line(left, top, left, top + plotHeight), line(left, top + plotHeight, width - right, top + plotHeight));
+    const area = svgElement("polygon", {
+      class: "traffic-chart__area",
+      points: `${left},${top + plotHeight} ${pointList(points)} ${width - right},${top + plotHeight}`
+    });
+    const stroke = svgElement("polyline", {
+      class: "traffic-chart__line",
+      points: pointList(points)
+    });
+    svg.append(area, stroke);
+    for (const point of points) {
+      svg.append(svgElement("circle", {
+        class: "traffic-chart__dot",
+        cx: String(point.x),
+        cy: String(point.y),
+        r: "3"
+      }));
+    }
+    svg.append(text(left - 8, top + 4, formatInteger(maximum), "end"), text(left - 8, top + plotHeight + 4, "0", "end"), text(left, height - 10, formatDate(rows[0].bucket), "start"), text(width - right, height - 10, formatDate(rows.at(-1).bucket), "end"));
+    host.replaceChildren(svg);
+  }
+  function line(x1, y1, x2, y2) {
+    return svgElement("line", {
+      class: "traffic-chart__axis",
+      x1: String(x1),
+      y1: String(y1),
+      x2: String(x2),
+      y2: String(y2)
+    });
+  }
+  function text(x2, y2, value, anchor) {
+    const node = svgElement("text", {
+      class: "traffic-chart__tick",
+      x: String(x2),
+      y: String(y2),
+      "text-anchor": anchor
+    });
+    node.textContent = value;
+    return node;
+  }
+  function pointList(points) {
+    return points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+  }
+  function svgElement(name, attributes) {
+    const element = document.createElementNS(SVG_NS, name);
+    for (const [key, value] of Object.entries(attributes)) {
+      element.setAttribute(key, value);
+    }
+    return element;
+  }
+  function formatDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+    return new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" }).format(date);
+  }
+
+  // src/components/admin/Layout/Analytics/rendering/dashboard.ts
+  var CHANNEL_LABELS = {
+    direct: "Direct",
+    internal: "Internal navigation",
+    search: "Search engines",
+    social: "Social networks",
+    referral: "Referrals"
+  };
+  function renderAnalyticsDashboard(root, data, range) {
+    root.querySelectorAll("[data-range-label]").forEach((element) => {
+      element.textContent = analyticsRangeLabel(range);
+    });
+    if (data.view === "overview") {
+      const viewsPerVisitorDay = data.summary.visitorDays ? data.summary.views / data.summary.visitorDays : 0;
+      renderMetrics(target(root, "overview-metrics"), [
+        { label: "Content views", value: formatInteger(data.summary.views), hint: "Successful page responses" },
+        {
+          label: "Average daily visitors",
+          value: formatDecimal(data.summary.averageDailyVisitors),
+          hint: "Cookieless daily estimate"
+        },
+        {
+          label: "Visitor-days",
+          value: formatInteger(data.summary.visitorDays),
+          hint: "Daily unique totals combined"
+        },
+        {
+          label: "Views per visitor-day",
+          value: formatDecimal(viewsPerVisitorDay),
+          hint: "Content depth indicator"
+        }
+      ]);
+      renderTrafficChart(target(root, "traffic-chart"), data.timeseries);
+      return;
+    }
+    if (data.view === "content") {
+      renderBars(target(root, "top-pages"), data.pages, { empty: "No content views recorded in this period." });
+      renderFlows(target(root, "flows"), data.flows);
+      renderBars(target(root, "devices"), data.devices, {
+        empty: "No device data recorded in this period.",
+        label: titleCase
+      });
+      renderBars(target(root, "browsers"), data.browsers, {
+        empty: "No browser data recorded in this period.",
+        label: titleCase
+      });
+      return;
+    }
+    if (data.view === "acquisition") {
+      renderBars(target(root, "channels"), data.channels, {
+        empty: "No acquisition data recorded in this period.",
+        label: (key) => CHANNEL_LABELS[key] ?? titleCase(key)
+      });
+      renderBars(target(root, "referrers"), data.referrers, {
+        empty: "No external referrers recorded in this period."
+      });
+      return;
+    }
+    const errorRate = data.health.requests ? (data.health.clientErrors + data.health.serverErrors) / data.health.requests : 0;
+    renderMetrics(target(root, "health-metrics"), [
+      { label: "Requests", value: formatInteger(data.health.requests), hint: "Non-bot delivery requests" },
+      {
+        label: "Not found",
+        value: formatInteger(data.health.notFound),
+        hint: "HTTP 404 responses",
+        tone: data.health.notFound ? "warning" : undefined
+      },
+      {
+        label: "Client errors",
+        value: formatInteger(data.health.clientErrors),
+        hint: "All HTTP 4xx responses",
+        tone: data.health.clientErrors ? "warning" : undefined
+      },
+      {
+        label: "Server errors",
+        value: formatInteger(data.health.serverErrors),
+        hint: "All HTTP 5xx responses",
+        tone: data.health.serverErrors ? "danger" : undefined
+      },
+      { label: "Average latency", value: formatMilliseconds(data.health.avgMs), hint: "Across all requests" },
+      { label: "Slowest request", value: formatMilliseconds(data.health.maxMs), hint: "Maximum observed latency" }
+    ]);
+    target(root, "health-rate").textContent = `${formatPercent(errorRate)} error rate`;
+    renderBars(target(root, "statuses"), data.statuses, {
+      empty: "No request statuses recorded in this period.",
+      label: (key) => `HTTP ${key}`,
+      tone: statusTone
+    });
+  }
+  function target(root, role) {
+    const element = root.querySelector(`[data-role="${role}"]`);
+    if (!element) {
+      throw new Error(`Missing analytics render target: ${role}`);
+    }
+    return element;
+  }
+  function titleCase(value) {
+    return value ? `${value[0].toUpperCase()}${value.slice(1)}` : value;
+  }
+  function statusTone(status) {
+    return status.startsWith("5") ? "is-danger" : status.startsWith("4") ? "is-warning" : "";
+  }
+
+  // src/components/admin/Layout/Analytics/styles/dashboard.css
+  var dashboard_default = `cms-analytics-dashboard {
+    display: block;
+    max-width: 1180px;
+}
+
+.analytics-surface,
+[data-view-host] {
+    display: grid;
+    gap: 24px;
+}
+
+.report-header,
+.panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.report-header {
+    min-height: 58px;
+}
+
+.report-header h2 {
+    margin: 3px 0 4px;
+    font-size: 1.45rem;
+    letter-spacing: -.025em;
+}
+
+.report-header p,
+.panel-header h3 {
+    margin: 0;
+}
+
+.report-header p {
+    color: var(--text-muted);
+}
+
+.report-header p strong {
+    color: var(--text-body);
+    font-weight: 650;
+}
+
+.eyebrow {
+    color: var(--primary-base);
+    font-size: .7rem;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.privacy-pill,
+.health-rate {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 0 11px;
+    border: 1px solid color-mix(in srgb, var(--primary-base) 22%, var(--border-default));
+    border-radius: 999px;
+    background: var(--primary-muted);
+    color: var(--primary-contrasted);
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.privacy-pill svg {
+    width: 15px;
+    height: 15px;
+}
+
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.report-grid--primary {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+}
+
+.analytics-panel {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    background: var(--bg-surface);
+    box-shadow: 0 1px 2px rgb(15 31 26 / 4%);
+}
+
+.analytics-panel--wide {
+    padding: 22px 24px 20px;
+}
+
+.panel-header {
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.panel-header h3 {
+    color: var(--text-main);
+    font-size: .96rem;
+    font-weight: 740;
+}
+
+.panel-context {
+    color: var(--text-muted);
+    font-size: .78rem;
+}
+
+.privacy-boundary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 15px;
+    border: 1px solid var(--border-default);
+    border-radius: 9px;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-size: .8rem;
+}
+
+.privacy-boundary strong {
+    flex: 0 0 auto;
+    color: var(--text-body);
+}
+
+.privacy-boundary--technical {
+    border-color: color-mix(in srgb, var(--info-base) 28%, var(--border-default));
+    background: var(--info-muted);
+}
+
+@media (max-width: 840px) {
+    .report-grid,
+    .report-grid--primary {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 560px) {
+    .report-header,
+    .privacy-boundary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+`;
+
+  // src/components/admin/Layout/Analytics/styles/data.css
+  var data_default = `.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.metric-grid--health {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding: 17px 18px;
+    border: 1px solid var(--border-default);
+    border-radius: 11px;
+    background: var(--bg-surface);
+    box-shadow: 0 1px 2px rgb(15 31 26 / 3%);
+}
+
+.metric--warning {
+    border-color: color-mix(in srgb, var(--warning-base) 35%, var(--border-default));
+}
+
+.metric--danger {
+    border-color: color-mix(in srgb, var(--danger-base) 32%, var(--border-default));
+}
+
+.metric__label,
+.metric__hint {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: .76rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metric__label {
+    color: var(--text-body);
+    font-weight: 650;
+}
+
+.metric__value {
+    overflow: hidden;
+    color: var(--text-main);
+    font-size: 1.75rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.035em;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+}
+
+.bar-list,
+.flow-list {
+    display: grid;
+    gap: 14px;
+}
+
+.bar-item {
+    display: grid;
+    gap: 7px;
+}
+
+.bar-item__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: .8rem;
+}
+
+.bar-item__label {
+    overflow: hidden;
+    color: var(--text-body);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bar-item__value {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    font-size: .75rem;
+}
+
+.bar-item__track {
+    display: block;
+    overflow: hidden;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--border-light);
+}
+
+.bar-item__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--primary-base);
+}
+
+.bar-item.is-warning .bar-item__fill {
+    background: var(--warning-base);
+}
+
+.bar-item.is-danger .bar-item__fill {
+    background: var(--danger-base);
+}
+
+.flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-width: 0;
+    padding-bottom: 11px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-muted);
+    font-size: .8rem;
+}
+
+.flow-row:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.flow-row__journey {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.flow-row__journey span:not(.flow-row__arrow) {
+    overflow: hidden;
+    max-width: 150px;
+    color: var(--text-body);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flow-row__arrow {
+    padding: 0 8px;
+    color: var(--primary-base);
+}
+
+.flow-row strong {
+    color: var(--text-main);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 920px) {
+    .metric-grid,
+    .metric-grid--health {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .metric-grid,
+    .metric-grid--health {
+        grid-template-columns: 1fr;
+    }
+}
+`;
+
+  // src/components/admin/Layout/Analytics/styles/states.css
+  var states_default = `.analytics-surface [hidden] {
+    display: none !important;
+}
+
+.analytics-loading {
+    display: grid;
+    gap: 20px;
+}
+
+.skeleton {
+    overflow: hidden;
+    border-radius: 10px;
+    background: linear-gradient(100deg, var(--border-light) 30%, var(--bg-surface) 50%, var(--border-light) 70%);
+    background-size: 240% 100%;
+    animation: analytics-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton--heading {
+    width: 38%;
+    height: 54px;
+}
+
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.skeleton--metric {
+    height: 112px;
+}
+
+.skeleton--panel {
+    height: 300px;
+}
+
+.analytics-error {
+    justify-items: center;
+    padding: 64px 24px;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    background: var(--bg-surface);
+    text-align: center;
+}
+
+.analytics-error svg {
+    width: 34px;
+    color: var(--danger-base);
+}
+
+.analytics-error h2 {
+    margin: 14px 0 4px;
+}
+
+.analytics-error p {
+    margin: 0 0 16px;
+    color: var(--text-muted);
+}
+
+.analytics-error button {
+    padding: 7px 13px;
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+@keyframes analytics-shimmer {
+    to {
+        background-position-x: -240%;
+    }
+}
+
+@media (max-width: 840px) {
+    .skeleton-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+`;
+
+  // src/components/admin/Layout/Analytics/styles/chart.css
+  var chart_default = `.chart-host {
+    min-height: 250px;
+}
+
+.traffic-chart {
+    display: block;
+    width: 100%;
+    height: 250px;
+}
+
+.traffic-chart__axis {
+    stroke: var(--border-default);
+    stroke-width: 1;
+}
+
+.traffic-chart__area {
+    fill: var(--primary-muted);
+    opacity: .8;
+}
+
+.traffic-chart__line {
+    fill: none;
+    stroke: var(--primary-base);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.25;
+    vector-effect: non-scaling-stroke;
+}
+
+.traffic-chart__dot {
+    fill: var(--bg-surface);
+    stroke: var(--primary-base);
+    stroke-width: 1.7;
+    vector-effect: non-scaling-stroke;
+}
+
+.traffic-chart__tick {
+    fill: var(--text-muted);
+    font-size: 10px;
+}
+
+.analytics-empty {
+    display: grid;
+    min-height: 92px;
+    place-items: center;
+    padding: 18px;
+    border: 1px dashed var(--border-default);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: .8rem;
+    text-align: center;
+}
+`;
+
+  // src/components/admin/Layout/Analytics/templates/shell.html
+  var shell_default = `<section class="analytics-surface">
+    <div class="analytics-loading" data-state="loading" aria-label="Loading analytics">
+        <div class="skeleton skeleton--heading"></div>
+        <div class="skeleton-grid">
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+        </div>
+        <div class="skeleton skeleton--panel"></div>
+    </div>
+
+    <div class="analytics-error" data-state="error" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v6" />
+            <path d="M12 17h.01" />
+        </svg>
+        <h2>Analytics could not be loaded</h2>
+        <p>The reports are temporarily unavailable. No data was changed.</p>
+        <button type="button" data-retry>Try again</button>
+    </div>
+
+    <div data-state="ready" data-view-host hidden></div>
+</section>
+`;
+
+  // src/components/admin/Layout/Analytics/templates/overview.html
+  var overview_default = `<header class="report-header">
+    <div>
+        <span class="eyebrow">Overview</span>
+        <h2>Traffic at a glance</h2>
+        <p>Audience and content activity for <strong data-range-label></strong>.</p>
+    </div>
+    <span class="privacy-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M12 3 5 6v5c0 4.6 2.9 8.1 7 10 4.1-1.9 7-5.4 7-10V6z" />
+            <path d="m9 12 2 2 4-4" />
+        </svg>
+        Cookieless · counters only
+    </span>
+</header>
+
+<div class="metric-grid" data-role="overview-metrics"></div>
+
+<section class="analytics-panel analytics-panel--wide">
+    <header class="panel-header">
+        <div>
+            <span class="eyebrow">Content activity</span>
+            <h3>Views over time</h3>
+        </div>
+        <span class="panel-context" data-range-label></span>
+    </header>
+    <div class="chart-host" data-role="traffic-chart"></div>
+</section>
+
+<aside class="privacy-boundary">
+    <strong>How visitors are counted</strong>
+    <span>Unique visitors are deduplicated per day. The overview reports visitor-days and never stores raw events.</span>
+</aside>
+`;
+
+  // src/components/admin/Layout/Analytics/templates/content.html
+  var content_default = `<header class="report-header">
+    <div>
+        <span class="eyebrow">Content</span>
+        <h2>What visitors consume</h2>
+        <p>Popular pages and internal journeys for <strong data-range-label></strong>.</p>
+    </div>
+</header>
+
+<div class="report-grid report-grid--primary">
+    <section class="analytics-panel">
+        <header class="panel-header">
+            <div>
+                <span class="eyebrow">Popularity</span>
+                <h3>Most viewed pages</h3>
+            </div>
+        </header>
+        <div class="bar-list" data-role="top-pages"></div>
+    </section>
+
+    <section class="analytics-panel">
+        <header class="panel-header">
+            <div>
+                <span class="eyebrow">Navigation</span>
+                <h3>Common journeys</h3>
+            </div>
+        </header>
+        <div class="flow-list" data-role="flows"></div>
+    </section>
+</div>
+
+<div class="report-grid">
+    <section class="analytics-panel">
+        <header class="panel-header"><h3>Devices</h3></header>
+        <div class="bar-list" data-role="devices"></div>
+    </section>
+    <section class="analytics-panel">
+        <header class="panel-header"><h3>Browsers</h3></header>
+        <div class="bar-list" data-role="browsers"></div>
+    </section>
+</div>
+`;
+
+  // src/components/admin/Layout/Analytics/templates/acquisition.html
+  var acquisition_default = `<header class="report-header">
+    <div>
+        <span class="eyebrow">Acquisition</span>
+        <h2>How visitors arrive</h2>
+        <p>Entry channels and external referring domains for <strong data-range-label></strong>.</p>
+    </div>
+</header>
+
+<div class="report-grid report-grid--primary">
+    <section class="analytics-panel">
+        <header class="panel-header">
+            <div>
+                <span class="eyebrow">Channels</span>
+                <h3>Traffic sources</h3>
+            </div>
+        </header>
+        <div class="bar-list" data-role="channels"></div>
+    </section>
+
+    <section class="analytics-panel">
+        <header class="panel-header">
+            <div>
+                <span class="eyebrow">Referrals</span>
+                <h3>External referrers</h3>
+            </div>
+        </header>
+        <div class="bar-list" data-role="referrers"></div>
+    </section>
+</div>
+
+<aside class="privacy-boundary">
+    <strong>Host-level attribution</strong>
+    <span>Only normalized referrer hosts are counted. Full referring URLs and query parameters are not retained.</span>
+</aside>
+`;
+
+  // src/components/admin/Layout/Analytics/templates/health.html
+  var health_default = `<header class="report-header">
+    <div>
+        <span class="eyebrow">Request health</span>
+        <h2>Delivery quality</h2>
+        <p>Operational request counters for <strong data-range-label></strong>.</p>
+    </div>
+    <span class="health-rate" data-role="health-rate"></span>
+</header>
+
+<div class="metric-grid metric-grid--health" data-role="health-metrics"></div>
+
+<section class="analytics-panel analytics-panel--wide">
+    <header class="panel-header">
+        <div>
+            <span class="eyebrow">Responses</span>
+            <h3>HTTP status distribution</h3>
+        </div>
+    </header>
+    <div class="bar-list bar-list--statuses" data-role="statuses"></div>
+</section>
+
+<aside class="privacy-boundary privacy-boundary--technical">
+    <strong>No individual request logs</strong>
+    <span>This dashboard uses hourly counters. Request URLs, IP addresses and error payloads cannot be inspected here.</span>
+</aside>
+`;
+
+  // src/components/admin/Layout/Analytics/AnalyticsDashboard.ts
+  var VIEW_TEMPLATES = {
+    overview: overview_default,
+    content: content_default,
+    acquisition: acquisition_default,
+    health: health_default
+  };
+
+  class CmsAnalyticsDashboard extends HTMLElement {
+    initialized = false;
+    request = null;
+    connectedCallback() {
+      if (!this.initialized) {
+        this.mount();
+        this.initialized = true;
+      }
+      this.load();
+    }
+    disconnectedCallback() {
+      this.request?.abort();
+      this.request = null;
+    }
+    mount() {
+      const style = document.createElement("style");
+      style.textContent = [
+        dashboard_default,
+        data_default,
+        states_default,
+        chart_default
+      ].join(`
+`);
+      const shell = document.createElement("template");
+      shell.innerHTML = shell_default;
+      this.replaceChildren(style, shell.content.cloneNode(true));
+      const template = document.createElement("template");
+      template.innerHTML = VIEW_TEMPLATES[this.view()];
+      this.query("[data-view-host]").replaceChildren(template.content.cloneNode(true));
+      this.query("[data-retry]").addEventListener("click", () => void this.load());
+    }
+    async load() {
+      this.request?.abort();
+      const request = new AbortController;
+      this.request = request;
+      this.show("loading");
+      try {
+        const data = await fetchAnalyticsDashboard(this.view(), currentAnalyticsRange(), request.signal);
+        if (this.request !== request) {
+          return;
+        }
+        renderAnalyticsDashboard(this, data, currentAnalyticsRange());
+        this.show("ready");
+      } catch (error) {
+        if (this.request === request && !isAbortError2(error)) {
+          this.show("error");
+        }
+      } finally {
+        if (this.request === request) {
+          this.request = null;
+        }
+      }
+    }
+    view() {
+      const view = this.getAttribute("view") ?? "";
+      return ANALYTICS_VIEWS.includes(view) ? view : "overview";
+    }
+    show(state) {
+      for (const element of Array.from(this.querySelectorAll("[data-state]"))) {
+        element.hidden = element.dataset.state !== state;
+      }
+      this.setAttribute("aria-busy", state === "loading" ? "true" : "false");
+    }
+    query(selector) {
+      const element = this.querySelector(selector);
+      if (!element) {
+        throw new Error(`Missing analytics element: ${selector}`);
+      }
+      return element;
+    }
+  }
+  if (!customElements.get("cms-analytics-dashboard")) {
+    customElements.define("cms-analytics-dashboard", CmsAnalyticsDashboard);
+  }
+  function isAbortError2(error) {
+    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
+  }
+
   // src/components/admin/Theme/events.ts
   var THEME_CATEGORY_SELECTED_EVENT = "cms:theme-category-selected";
   var THEME_CATEGORY_ADDED_EVENT = "cms:theme-category-added";
@@ -13928,16 +15108,6 @@ p {
   }
   function dispatchThemeSettingsChanged() {
     window.dispatchEvent(new CustomEvent(THEME_SETTINGS_CHANGED_EVENT));
-  }
-
-  // src/core/dom/meta/getMetaBasePath.ts
-  function getMetaBasePath() {
-    const meta = document.querySelector('meta[name="basePath"]');
-    const content = meta?.getAttribute("content") ?? "";
-    if (!content || content === "/") {
-      return "";
-    }
-    return content.replace(/\/+$/, "");
   }
 
   // src/components/admin/Theme/editor/model.ts
@@ -14125,27 +15295,27 @@ p {
     theme.values[context.mode] ??= {};
     theme.values[context.mode][tokenId] = input.value;
     if (input.type === "color") {
-      const text = input.closest("[data-token-id]")?.querySelector('input[type="text"]');
-      if (text) {
-        text.value = input.value;
+      const text2 = input.closest("[data-token-id]")?.querySelector('input[type="text"]');
+      if (text2) {
+        text2.value = input.value;
       }
     }
   }
   function clickAction(event) {
-    const target = event.target;
-    if (target?.closest("[data-add-theme]")) {
+    const target2 = event.target;
+    if (target2?.closest("[data-add-theme]")) {
       return "theme";
     }
-    if (target?.closest("[data-add-theme-category]")) {
+    if (target2?.closest("[data-add-theme-category]")) {
       return "category";
     }
-    if (target?.closest("[data-add-element]")) {
+    if (target2?.closest("[data-add-element]")) {
       return "token";
     }
-    if (target?.closest("[data-save-theme]")) {
+    if (target2?.closest("[data-save-theme]")) {
       return "save";
     }
-    if (target?.closest("[data-activate-theme]")) {
+    if (target2?.closest("[data-activate-theme]")) {
       return "activate";
     }
     return;
@@ -14654,9 +15824,9 @@ cms-shell-detail {
       }
     };
     onChange = (event) => {
-      const target = event.target;
-      if (target.matches?.("[data-theme-switch]") && target.value) {
-        this.selectedThemeId = target.value;
+      const target2 = event.target;
+      if (target2.matches?.("[data-theme-switch]") && target2.value) {
+        this.selectedThemeId = target2.value;
         this.render();
       }
     };
@@ -14829,13 +15999,13 @@ w13c-lateral-menu-item.category-item {
       dispatchThemeCategorySelected(this.selection);
     }
     onClick = (event) => {
-      const target = event.target;
-      const category = target?.closest("[data-category]");
+      const target2 = event.target;
+      const category = target2?.closest("[data-category]");
       if (category?.dataset.source && category.dataset.category) {
         this.select(category.dataset.source, category.dataset.category);
         return;
       }
-      const source2 = target?.closest("[data-source]");
+      const source2 = target2?.closest("[data-source]");
       if (source2?.dataset.source) {
         this.select(source2.dataset.source);
       }
@@ -14929,9 +16099,9 @@ w13c-lateral-menu-item.category-item {
     window.dispatchEvent(new CustomEvent(DASHBOARD_SELECTION_EVENT, { detail: selection }));
   }
   async function fetchDashboards() {
-    return getJson(route("/api/dashboards"));
+    return getJson2(route("/api/dashboards"));
   }
-  async function getJson(url) {
+  async function getJson2(url) {
     const response = await fetch(url, { headers: { Accept: "application/json" } });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -15063,11 +16233,11 @@ w13c-lateral-menu-item.category-item {
     element.setAttribute("slot", "icon");
     host.append(element);
   }
-  function renderIcon(target, svg2, icon, fallback) {
-    target.replaceChildren();
+  function renderIcon(target2, svg2, icon, fallback) {
+    target2.replaceChildren();
     const element = createIcon2(svg2, icon, fallback);
     if (element) {
-      target.append(element);
+      target2.append(element);
     }
   }
   function createIcon2(svg2, icon, fallback) {
@@ -15170,7 +16340,7 @@ w13c-lateral-menu-item.category-item {
   }
 
   // src/components/admin/Resources/Dashboards/navigation/nav.css
-  var nav_default = `:host {
+  var nav_default3 = `:host {
     display: block;
     height: 100%;
 }
@@ -15209,7 +16379,7 @@ w13c-lateral-menu-item {
 `;
 
   // src/components/admin/Resources/Dashboards/navigation/nav.html
-  var nav_default2 = `<cms-binding-core class="binding-source">
+  var nav_default4 = `<cms-binding-core class="binding-source">
     <span data-nav-list-source hidden>
         <span data-nav-groups-json="{{ dashboards | json }}"></span>
     </span>
@@ -15230,7 +16400,7 @@ w13c-lateral-menu-item {
     selectedDashboard = "";
     observer = null;
     constructor() {
-      super({ css: nav_default, template: nav_default2 });
+      super({ css: nav_default3, template: nav_default4 });
       configureDashboardBindingFilters();
     }
     connectedCallback() {
@@ -15260,8 +16430,8 @@ w13c-lateral-menu-item {
       this.readBoundGroups();
     }
     readBoundGroups() {
-      const target = this.shadowRoot.querySelector("[data-nav-groups-json]");
-      const next = parseGroups(target?.dataset.navGroupsJson ?? "");
+      const target2 = this.shadowRoot.querySelector("[data-nav-groups-json]");
+      const next = parseGroups(target2?.dataset.navGroupsJson ?? "");
       if (!next) {
         return;
       }
@@ -15308,13 +16478,13 @@ w13c-lateral-menu-item {
       return this.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
     }
     onClick = (event) => {
-      const target = event.target;
-      const dashboardButton = target?.closest("[data-dashboard]");
+      const target2 = event.target;
+      const dashboardButton = target2?.closest("[data-dashboard]");
       if (dashboardButton?.dataset.source && dashboardButton.dataset.dashboard) {
         this.select(dashboardButton.dataset.source, dashboardButton.dataset.dashboard);
         return;
       }
-      const sourceButton = target?.closest("[data-source]");
+      const sourceButton = target2?.closest("[data-source]");
       if (sourceButton?.dataset.source) {
         this.select(sourceButton.dataset.source);
       }
@@ -15931,12 +17101,12 @@ w13c-lateral-menu-item {
       return current[part];
     }, value);
   }
-  function setValueAt(target, path, value) {
+  function setValueAt(target2, path, value) {
     const parts = dashboardPathSegments(path);
     if (!parts) {
       return false;
     }
-    let current = target;
+    let current = target2;
     for (const part of parts.slice(0, -1)) {
       const existing = Object.hasOwn(current, part) ? current[part] : undefined;
       if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
@@ -16025,8 +17195,8 @@ w13c-lateral-menu-item {
     }
     return out;
   }
-  function setBodyValue(target, path, value) {
-    if (!setValueAt(target, path, value)) {
+  function setBodyValue(target2, path, value) {
+    if (!setValueAt(target2, path, value)) {
       throw new Error(`Unsafe dashboard body path "${path}"`);
     }
   }
@@ -16158,13 +17328,13 @@ w13c-lateral-menu-item {
     });
   }
   function allLookupTargetKeys(widget) {
-    return new Set(detailLookupTargets(widget).map((target) => target.key));
+    return new Set(detailLookupTargets(widget).map((target2) => target2.key));
   }
   function lookupTargetKeysDependingOn(widget, changedFieldId) {
     if (!changedFieldId) {
       return new Set;
     }
-    return new Set(detailLookupTargets(widget).filter((target) => Object.values(target.lookup.params ?? {}).some((expression) => expression === `$field.${changedFieldId}` || expression.startsWith(`$field.${changedFieldId}.`))).map((target) => target.key));
+    return new Set(detailLookupTargets(widget).filter((target2) => Object.values(target2.lookup.params ?? {}).some((expression) => expression === `$field.${changedFieldId}` || expression.startsWith(`$field.${changedFieldId}.`))).map((target2) => target2.key));
   }
   function isLookupField(field) {
     return (field.type === "combobox" || field.type === "tokens") && Boolean(field.lookup);
@@ -16379,7 +17549,7 @@ w13c-lateral-menu-item {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/icons.ts
-  var SVG_NS = "http://www.w3.org/2000/svg";
+  var SVG_NS2 = "http://www.w3.org/2000/svg";
   var PATHS = {
     archive: ["M3 7h18", "M5 7l1 14h12l1-14", "M9 11h6"],
     download: ["M12 3v12", "m7 10 5 5 5-5", "M5 21h14"],
@@ -16393,13 +17563,13 @@ w13c-lateral-menu-item {
     if (!icon) {
       return null;
     }
-    const svg2 = document.createElementNS(SVG_NS, "svg");
+    const svg2 = document.createElementNS(SVG_NS2, "svg");
     svg2.setAttribute("slot", "icon");
     svg2.setAttribute("aria-hidden", "true");
     svg2.setAttribute("viewBox", "0 0 24 24");
     svg2.setAttribute("focusable", "false");
     for (const data of PATHS[icon]) {
-      const path = document.createElementNS(SVG_NS, "path");
+      const path = document.createElementNS(SVG_NS2, "path");
       path.setAttribute("d", data);
       svg2.append(path);
     }
@@ -16692,10 +17862,10 @@ button {
       this.clear();
     };
     end = () => this.clear();
-    markDropTarget(target) {
+    markDropTarget(target2) {
       this.root().querySelectorAll("[data-drop-target]").forEach((tile) => tile.removeAttribute("data-drop-target"));
-      if (target && numberData(target.dataset.index) !== this.dragFrom) {
-        target.toggleAttribute("data-drop-target", true);
+      if (target2 && numberData(target2.dataset.index) !== this.dragFrom) {
+        target2.toggleAttribute("data-drop-target", true);
       }
     }
     clear() {
@@ -16975,12 +18145,12 @@ button {
     const list = document.createElement("ul");
     list.className = "readonly readonly-list";
     for (const item of value) {
-      const text = typeof item === "string" ? item : String(item.id ?? "");
-      if (!text) {
+      const text2 = typeof item === "string" ? item : String(item.id ?? "");
+      if (!text2) {
         continue;
       }
       const entry = document.createElement("li");
-      entry.textContent = text;
+      entry.textContent = text2;
       list.append(entry);
     }
     return list;
@@ -17597,11 +18767,11 @@ button {
       renderList2(this.shadowRoot, this.value);
     }
     onClick = (event) => {
-      const target = event.target;
-      if (target?.closest("[data-add]")) {
+      const target2 = event.target;
+      if (target2?.closest("[data-add]")) {
         return this.addItem();
       }
-      const remove = target?.closest("[data-remove]");
+      const remove = target2?.closest("[data-remove]");
       if (remove) {
         return this.removeItem(Number(remove.dataset.remove));
       }
@@ -17704,24 +18874,24 @@ button {
   }
   function textEditor(value) {
     const input = document.createElement("p9r-input");
-    const text = textValue3(value);
-    input.setAttribute("value", text);
-    input.value = text;
+    const text2 = textValue3(value);
+    input.setAttribute("value", text2);
+    input.value = text2;
     return input;
   }
   function selectEditor(column, value) {
     const input = document.createElement("p9r-select");
-    const text = textValue3(value);
-    input.setAttribute("value", text);
-    input.replaceChildren(...column.options.map((option) => optionElement(option, text)));
+    const text2 = textValue3(value);
+    input.setAttribute("value", text2);
+    input.replaceChildren(...column.options.map((option) => optionElement(option, text2)));
     return input;
   }
   function comboboxEditor(column, value) {
     const input = document.createElement("p9r-combobox");
-    const text = textValue3(value);
-    input.setAttribute("value", text);
-    input.replaceChildren(...column.options.map((option) => optionElement(option, text)));
-    input.value = text;
+    const text2 = textValue3(value);
+    input.setAttribute("value", text2);
+    input.replaceChildren(...column.options.map((option) => optionElement(option, text2)));
+    input.value = text2;
     return input;
   }
   function tokensEditor(value) {
@@ -18507,8 +19677,8 @@ p9r-token-input {
       this.bound = false;
     }
     onClick = (event) => {
-      const target = event.target;
-      if (target?.closest("[data-back]")) {
+      const target2 = event.target;
+      if (target2?.closest("[data-back]")) {
         emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
       }
       const action = findActionTarget(event);
@@ -18527,12 +19697,12 @@ p9r-token-input {
           fields: this.fields.currentFields()
         });
       }
-      const chip = target?.closest(".chip");
+      const chip = target2?.closest(".chip");
       if (chip) {
         toggleChip(chip, this.emitFieldChange);
       }
-      const tableAdd = target?.closest("[data-table-add]");
-      const tableRemove = target?.closest("[data-table-remove]");
+      const tableAdd = target2?.closest("[data-table-add]");
+      const tableRemove = target2?.closest("[data-table-remove]");
       const changedControl = (chip ?? tableAdd ?? tableRemove)?.closest("[data-field-control]");
       if (tableAdd) {
         addTableRow(tableAdd, this.fields, this.emitFieldChange);
@@ -18600,7 +19770,7 @@ p9r-token-input {
     }
   }
   function findActionTarget(event) {
-    return event.composedPath().find((target) => target instanceof HTMLElement && Boolean(target.dataset.action));
+    return event.composedPath().find((target2) => target2 instanceof HTMLElement && Boolean(target2.dataset.action));
   }
 
   // src/components/admin/Resources/Dashboards/runtime/source.ts
@@ -18682,23 +19852,23 @@ p9r-token-input {
   // src/components/admin/Resources/Dashboards/runtime/lookups/options.ts
   async function loadDetailLookupOptions(sourceId, widget, resource, fields, requestOptions = {}) {
     const loadData = requestOptions.loadData ?? fetchSourceJson;
-    const entries = await Promise.all(detailLookupTargets(widget).filter((target) => !requestOptions.targetKeys || requestOptions.targetKeys.has(target.key)).map((target) => lookupEntry(sourceId, target, resource, fields, loadData)));
+    const entries = await Promise.all(detailLookupTargets(widget).filter((target2) => !requestOptions.targetKeys || requestOptions.targetKeys.has(target2.key)).map((target2) => lookupEntry(sourceId, target2, resource, fields, loadData)));
     return {
       failedTargetKeys: new Set(entries.filter((entry) => entry.failed).map((entry) => entry.key)),
       options: Object.fromEntries(entries.map((entry) => [entry.key, entry.options]))
     };
   }
-  async function lookupEntry(sourceId, target, resource, fields, loadData) {
-    const selected = selectedOptions(target, resource, fields);
+  async function lookupEntry(sourceId, target2, resource, fields, loadData) {
+    const selected = selectedOptions(target2, resource, fields);
     try {
-      const items = await lookupItems(sourceId, target.lookup, resource, fields, loadData);
+      const items = await lookupItems(sourceId, target2.lookup, resource, fields, loadData);
       return {
         failed: false,
-        key: target.key,
-        options: dedupeOptions([...optionsFromItems(items, target.lookup), ...selected])
+        key: target2.key,
+        options: dedupeOptions([...optionsFromItems(items, target2.lookup), ...selected])
       };
     } catch {
-      return { failed: true, key: target.key, options: selected };
+      return { failed: true, key: target2.key, options: selected };
     }
   }
   async function lookupItems(sourceId, lookup, resource, fields, loadData) {
@@ -18714,9 +19884,9 @@ p9r-token-input {
       return option ? [option] : [];
     });
   }
-  function selectedOptions(target, resource, fields) {
-    const field = target.selectedField;
-    const expression = target.lookup.selected;
+  function selectedOptions(target2, resource, fields) {
+    const field = target2.selectedField;
+    const expression = target2.lookup.selected;
     if (!field || typeof expression !== "string" || !isSafeDashboardExpression(expression, ["resource"], true)) {
       return [];
     }
@@ -18728,7 +19898,7 @@ p9r-token-input {
     const resolved = resolveExpression(expression, { resource, fields });
     const items = Array.isArray(resolved) ? resolved : [resolved];
     return dedupeOptions(items.flatMap((item) => {
-      const option = optionFromItem(item, target.lookup, false);
+      const option = optionFromItem(item, target2.lookup, false);
       return option && selected.has(option.value) ? [option] : [];
     }));
   }
@@ -19035,15 +20205,15 @@ p9r-token-input {
   function schemaDefinition(value) {
     const row = record2(value);
     const nested = record2(row?.definition);
-    const id = text(row?.id, KEY_MAX_LENGTH) ?? text(row?.fieldKey, KEY_MAX_LENGTH) ?? text(row?.key, KEY_MAX_LENGTH);
-    const label = text(row?.label, LABEL_MAX_LENGTH) ?? text(nested?.label, LABEL_MAX_LENGTH) ?? id;
-    const rawType = text(row?.type, 16) ?? text(row?.fieldType, 16) ?? text(nested?.fieldType, 16);
+    const id = text2(row?.id, KEY_MAX_LENGTH) ?? text2(row?.fieldKey, KEY_MAX_LENGTH) ?? text2(row?.key, KEY_MAX_LENGTH);
+    const label = text2(row?.label, LABEL_MAX_LENGTH) ?? text2(nested?.label, LABEL_MAX_LENGTH) ?? id;
+    const rawType = text2(row?.type, 16) ?? text2(row?.fieldType, 16) ?? text2(nested?.fieldType, 16);
     const type = rawType === "enum" ? "string" : rawType;
     if (!id || !label || !safeKey(id) || type !== "string" && type !== "number" && type !== "boolean") {
       return null;
     }
     const options = schemaOptions(row?.options ?? nested?.options);
-    const unit = text(row?.unit, UNIT_MAX_LENGTH) ?? text(nested?.unit, UNIT_MAX_LENGTH);
+    const unit = text2(row?.unit, UNIT_MAX_LENGTH) ?? text2(nested?.unit, UNIT_MAX_LENGTH);
     return {
       id,
       label,
@@ -19061,14 +20231,14 @@ p9r-token-input {
     return value.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option) => {
       let result;
       if (typeof option === "string" || typeof option === "number") {
-        const value2 = text(option, LABEL_MAX_LENGTH);
+        const value2 = text2(option, LABEL_MAX_LENGTH);
         if (value2) {
           result = { value: value2, label: value2 };
         }
       } else {
         const entry = record2(option);
-        const optionValue = text(entry?.value, LABEL_MAX_LENGTH);
-        const optionLabel = text(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
+        const optionValue = text2(entry?.value, LABEL_MAX_LENGTH);
+        const optionLabel = text2(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
         if (optionValue && optionLabel) {
           result = { value: optionValue, label: optionLabel };
         }
@@ -19083,7 +20253,7 @@ p9r-token-input {
   function safeKey(value) {
     return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value) && !["__proto__", "prototype", "constructor"].includes(value);
   }
-  function text(value, maxLength) {
+  function text2(value, maxLength) {
     if (typeof value !== "string" && typeof value !== "number") {
       return;
     }
@@ -20345,9 +21515,9 @@ slot {
     const row = postActionCreatedId(result, resource);
     return row ? { collection: detail.collection, row } : null;
   }
-  function renderResourceTarget(context, target, after, detail) {
+  function renderResourceTarget(context, target2, after, detail) {
     if (after || detail?.row === "__new__") {
-      context.openDetail(target.collection, target.row);
+      context.openDetail(target2.collection, target2.row);
       return;
     }
     context.render();
@@ -20478,10 +21648,10 @@ slot {
         }
         return;
       }
-      const target = postActionResourceTarget(result.after, after, actionDetail, detail, action.action, result.value, resource);
-      if (completion === "reuse" && !result.invalidatesSchema && resource.found && resource.value !== null && target && context.setDetailResource) {
-        context.setDetailResource(target.collection, target.row, resource.value);
-        renderResourceTarget(context, target, after, detail);
+      const target2 = postActionResourceTarget(result.after, after, actionDetail, detail, action.action, result.value, resource);
+      if (completion === "reuse" && !result.invalidatesSchema && resource.found && resource.value !== null && target2 && context.setDetailResource) {
+        context.setDetailResource(target2.collection, target2.row, resource.value);
+        renderResourceTarget(context, target2, after, detail);
         return;
       }
       if (definitionsReloaded) {
@@ -20631,12 +21801,12 @@ slot {
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/drag.ts
   function navigationDragItem(event) {
-    const fromPath = event.composedPath().find((target2) => target2 instanceof HTMLElement && target2.matches("cms-dashboard-w-navigation-item"));
+    const fromPath = event.composedPath().find((target3) => target3 instanceof HTMLElement && target3.matches("cms-dashboard-w-navigation-item"));
     if (fromPath) {
       return fromPath;
     }
-    const target = event.target;
-    return target instanceof Element ? target.closest("cms-dashboard-w-navigation-item") : null;
+    const target2 = event.target;
+    return target2 instanceof Element ? target2.closest("cms-dashboard-w-navigation-item") : null;
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/config.ts
@@ -20777,17 +21947,17 @@ slot { display: contents; }
     }
     onSlotChange = () => this.syncItems();
     onActionClick = (event) => {
-      const target = event.target?.closest("[data-action]");
-      if (!target?.dataset.action) {
+      const target2 = event.target?.closest("[data-action]");
+      if (!target2?.dataset.action) {
         return;
       }
-      if (target.dataset.confirm && !window.confirm(target.dataset.confirm)) {
+      if (target2.dataset.confirm && !window.confirm(target2.dataset.confirm)) {
         return;
       }
       emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
-        action: target.dataset.action,
-        widget: target.dataset.widget,
-        target: target.dataset.target
+        action: target2.dataset.action,
+        widget: target2.dataset.widget,
+        target: target2.dataset.target
       });
     };
     onDragStart = (event) => {
@@ -20814,17 +21984,17 @@ slot { display: contents; }
       }
     };
     onDrop = (event) => {
-      const target = navigationDragItem(event);
+      const target2 = navigationDragItem(event);
       const dragging = this.dragging;
-      if (!target || !dragging || target === dragging || !this.value?.reorderable) {
+      if (!target2 || !dragging || target2 === dragging || !this.value?.reorderable) {
         return;
       }
       event.preventDefault();
-      const movesDown = Boolean(dragging.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING);
+      const movesDown = Boolean(dragging.compareDocumentPosition(target2) & Node.DOCUMENT_POSITION_FOLLOWING);
       if (movesDown) {
-        this.insertBefore(dragging, target.nextSibling);
+        this.insertBefore(dragging, target2.nextSibling);
       } else {
-        this.insertBefore(dragging, target);
+        this.insertBefore(dragging, target2);
       }
       const value = this.items().map((item) => item.rowKey).filter(Boolean);
       emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
@@ -20960,11 +22130,11 @@ slot { display: contents; }
     return state;
   }
   function retrySource(event) {
-    const target = event.target;
-    if (!(target instanceof Element) || !target.closest("[data-dashboard-source-retry]")) {
+    const target2 = event.target;
+    if (!(target2 instanceof Element) || !target2.closest("[data-dashboard-source-retry]")) {
       return;
     }
-    target.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
+    target2.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mounting/mountRelations.ts
@@ -21343,8 +22513,8 @@ slot { display: contents; }
       };
     }
     readBoundGroups() {
-      const target = this.shadowRoot.querySelector("[data-dashboard-groups-json]");
-      const next = parseGroups2(target?.dataset.dashboardGroupsJson ?? "");
+      const target2 = this.shadowRoot.querySelector("[data-dashboard-groups-json]");
+      const next = parseGroups2(target2?.dataset.dashboardGroupsJson ?? "");
       if (!next) {
         return;
       }
@@ -21470,7 +22640,7 @@ slot { display: contents; }
   }
 
   // src/components/admin/Resources/Dashboards/view/DashboardViewLookups.ts
-  async function runDashboardLookupCreate(context, change, previousDraft, target) {
+  async function runDashboardLookupCreate(context, change, previousDraft, target2) {
     const { group, dashboard, detail } = context;
     if (!change.created || !group || !dashboard || !detail) {
       return;
@@ -21483,14 +22653,14 @@ slot { display: contents; }
         return;
       }
       context.drafts.set(key, { ...nextDraft, [change.field]: result.value });
-      applyLookupCreate(target, change.field, result.value, result.option);
+      applyLookupCreate(target2, change.field, result.value, result.option);
       $u("Item created", { type: "success" });
     } catch (error) {
       $u(error instanceof Error ? error.message : "Lookup creation failed", { type: "error" });
     }
   }
-  function applyLookupCreate(target, field, value, option) {
-    const detail = target;
+  function applyLookupCreate(target2, field, value, option) {
+    const detail = target2;
     detail?.applyLookupCreate?.(field, value, option);
   }
 
@@ -21893,8 +23063,8 @@ p {
     if (contentType.includes("application/json")) {
       return response.json().catch(() => null);
     }
-    const text2 = await response.text();
-    return text2 || null;
+    const text3 = await response.text();
+    return text3 || null;
   }
 
   // src/components/admin/Resources/Functions/create/draft.ts
@@ -21957,12 +23127,12 @@ p {
       setPathValue(draft.params, path.slice("params.".length), value);
     }
   }
-  function setPathValue(target, path, value) {
-    if (!isRecord6(target)) {
+  function setPathValue(target2, path, value) {
+    if (!isRecord6(target2)) {
       return;
     }
     const parts = path.split(".").filter(Boolean);
-    let current = target;
+    let current = target2;
     for (const [index, part] of parts.entries()) {
       if (index === parts.length - 1) {
         current[part] = value;
@@ -22084,13 +23254,13 @@ p {
     }
     return list;
   }
-  function label(text2) {
+  function label(text3) {
     const el2 = document.createElement("label");
-    el2.textContent = text2;
+    el2.textContent = text3;
     return el2;
   }
-  function helper(text2) {
-    return div("helper", text2);
+  function helper(text3) {
+    return div("helper", text3);
   }
   function textarea2(role, value) {
     const el2 = document.createElement("textarea");
@@ -22099,22 +23269,22 @@ p {
     el2.value = value;
     return el2;
   }
-  function button(text2, tone) {
+  function button(text3, tone) {
     const el2 = document.createElement("button");
     el2.type = "button";
     el2.className = `button ${tone}`;
-    el2.textContent = text2;
+    el2.textContent = text3;
     return el2;
   }
-  function option(value, text2) {
+  function option(value, text3) {
     const el2 = document.createElement("option");
     el2.value = value;
-    el2.textContent = text2;
+    el2.textContent = text3;
     return el2;
   }
-  function pre(text2) {
+  function pre(text3) {
     const el2 = document.createElement("pre");
-    el2.textContent = text2;
+    el2.textContent = text3;
     return el2;
   }
   function div(className, ...children) {
@@ -22447,9 +23617,9 @@ pre {
     section.append(details);
     return section;
   }
-  function summary(text2) {
+  function summary(text3) {
     const element = document.createElement("summary");
-    element.textContent = text2;
+    element.textContent = text3;
     return element;
   }
 
@@ -22607,13 +23777,13 @@ pre {
       return raw;
     }
   }
-  function setPath(target, path, value) {
+  function setPath(target2, path, value) {
     if (!path) {
-      target.value = value;
+      target2.value = value;
       return;
     }
     const parts = path.split(".").filter(Boolean);
-    let current = target;
+    let current = target2;
     for (const [index, part] of parts.entries()) {
       if (index === parts.length - 1) {
         current[part] = value;
@@ -22673,9 +23843,9 @@ pre {
       root.append(empty);
       return root;
     }
-    for (const target of targets) {
-      draft[target.path] ??= { mode: "reference", value: "" };
-      root.append(mappingRow(target, references, draft[target.path]));
+    for (const target2 of targets) {
+      draft[target2.path] ??= { mode: "reference", value: "" };
+      root.append(mappingRow(target2, references, draft[target2.path]));
     }
     return root;
   }
@@ -22710,18 +23880,18 @@ pre {
     wrap.append(select2, literal);
     return wrap;
   }
-  function mappingRow(target, references, draft) {
+  function mappingRow(target2, references, draft) {
     const row = document.createElement("div");
     row.className = "mapping-row";
     const identity = document.createElement("div");
     identity.className = "mapping-target";
     const name = document.createElement("strong");
-    name.textContent = target.label;
+    name.textContent = target2.label;
     const meta = document.createElement("span");
-    const semantic = target.shape?.semantic?.kind === "user-id" ? " · user identity" : "";
-    meta.textContent = `${target.shape?.type ?? "value"}${semantic}${target.required ? " · required" : ""}`;
+    const semantic = target2.shape?.semantic?.kind === "user-id" ? " · user identity" : "";
+    meta.textContent = `${target2.shape?.type ?? "value"}${semantic}${target2.required ? " · required" : ""}`;
     identity.append(name, meta);
-    row.append(identity, valuePicker(draft, compatibleReferences(references, target.shape)));
+    row.append(identity, valuePicker(draft, compatibleReferences(references, target2.shape)));
     return row;
   }
   function compatibleReferences(references, shape) {
@@ -23934,11 +25104,11 @@ details[open] > summary > .chevron {
       this.querySelector("[data-role='return-picker']")?.replaceChildren(valuePicker(this.returnValue, referencesBefore(this.editorContext(), this.steps.length), "No response body"));
     }
     move(index, offset) {
-      const target = index + offset;
-      if (target < 0 || target >= this.steps.length) {
+      const target2 = index + offset;
+      if (target2 < 0 || target2 >= this.steps.length) {
         return;
       }
-      [this.steps[index], this.steps[target]] = [this.steps[target], this.steps[index]];
+      [this.steps[index], this.steps[target2]] = [this.steps[target2], this.steps[index]];
       this.renderSteps();
     }
     async save() {
@@ -23965,12 +25135,12 @@ details[open] > summary > .chevron {
         moveStep: (index, offset) => this.move(index, offset)
       };
     }
-    setMessage(text2, kind) {
+    setMessage(text3, kind) {
       if (!this.message) {
         return;
       }
       this.message.className = `message ${kind}`.trim();
-      this.message.textContent = text2;
+      this.message.textContent = text3;
     }
   }
   if (!customElements.get("cms-function-create")) {
@@ -24420,7 +25590,7 @@ details[open] > summary > .chevron {
     }
     return icon;
   }
-  function text2(root, selector, value2) {
+  function text3(root, selector, value2) {
     const element = root.querySelector(selector);
     if (element) {
       element.textContent = String(value2 ?? "");
@@ -24551,9 +25721,9 @@ details[open] > summary > .chevron {
     for (const row of rows) {
       const element = cloneElement("resource-row");
       fillIcon(element, "[data-icon-host]", iconForResourceType(row.type));
-      text2(element, "[data-label]", row.label);
-      text2(element, "[data-detail]", row.detail);
-      text2(element, "[data-type]", row.type);
+      text3(element, "[data-label]", row.label);
+      text3(element, "[data-detail]", row.detail);
+      text3(element, "[data-type]", row.type);
       root.append(element);
     }
   }
@@ -24561,16 +25731,16 @@ details[open] > summary > .chevron {
     const grid2 = cloneElement("summary-grid");
     for (const row of rows) {
       const element = cloneElement("summary-row");
-      text2(element, "[data-label]", row.label);
-      text2(element, "[data-value]", row.value);
+      text3(element, "[data-label]", row.label);
+      text3(element, "[data-value]", row.value);
       grid2.append(element);
     }
     root.replaceChildren(grid2);
   }
   function renderPlaceholder(root, title2, copy) {
     const element = cloneElement("placeholder");
-    text2(element, "[data-title]", title2);
-    text2(element, "[data-copy]", copy);
+    text3(element, "[data-title]", title2);
+    text3(element, "[data-copy]", copy);
     root.replaceChildren(element);
   }
   function empty(message) {
@@ -24669,8 +25839,8 @@ details[open] > summary > .chevron {
     renderCounts(host);
   }
   function renderCounts(host) {
-    text2(host, "[data-installed-count]", host.installations.length);
-    text2(host, "[data-catalogue-count]", availableDefinitions(host).length);
+    text3(host, "[data-installed-count]", host.installations.length);
+    text3(host, "[data-catalogue-count]", availableDefinitions(host).length);
   }
   function renderInstallations(host) {
     const root = host.query("[data-installations]");
@@ -24694,15 +25864,15 @@ details[open] > summary > .chevron {
     row.href = integrationRouteUrl({ view: "installation", id: installation.id });
     row.dataset.integrationId = installation.id;
     row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
-    text2(row, "[data-label]", installation.label);
-    text2(row, "[data-kind]", installation.id);
+    text3(row, "[data-label]", installation.label);
+    text3(row, "[data-kind]", installation.id);
     const status = row.querySelector("[data-status]");
     if (status) {
       status.textContent = statusLabel(installation.status);
       status.classList.add(`status-${installation.status}`);
     }
     appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
-    text2(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
+    text3(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
     return row;
   }
 
@@ -24717,8 +25887,8 @@ details[open] > summary > .chevron {
     const shell = cloneElement("detail-shell");
     const content = shell.querySelector("template").content;
     shell.setAttribute("cms-source", `${route3("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
-    text2(content, "[data-title]", installation.label);
-    text2(content, "[data-description]", definition?.description ?? "No description.");
+    text3(content, "[data-title]", installation.label);
+    text3(content, "[data-description]", definition?.description ?? "No description.");
     content.querySelector("[data-run-sync]").dataset.integrationId = installation.id;
     fillIcon(content, "[data-back-icon]", "table");
     fillIcon(content, "[data-grid-icon]", "grid");
@@ -24732,7 +25902,7 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Integrations/ui/setup.ts
   function renderSetup(host, definition, options2 = {}) {
     const shell = cloneElement("setup-shell");
-    text2(shell, "[data-title]", `Install ${definition.label}`);
+    text3(shell, "[data-title]", `Install ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
     const status = shell.querySelector("[data-setup-status]");
     status.textContent = options2.error ?? "";
@@ -24748,7 +25918,7 @@ details[open] > summary > .chevron {
   }
   function renderImporting(host, definition, answers) {
     const shell = cloneElement("importing-shell");
-    text2(shell, "[data-title]", `Installing ${definition.label}`);
+    text3(shell, "[data-title]", `Installing ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
     renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
     host.query("[data-detail-view]").replaceChildren(shell);
@@ -24782,28 +25952,28 @@ details[open] > summary > .chevron {
 
   // src/components/admin/Resources/Integrations/ui/actions.ts
   async function handleClick(host, event) {
-    const target = event.target instanceof Element ? event.target : null;
-    if (!target) {
+    const target2 = event.target instanceof Element ? event.target : null;
+    if (!target2) {
       return;
     }
-    const tab = target.closest("[data-tab]");
+    const tab = target2.closest("[data-tab]");
     if (tab) {
       return closeAndSetTab(host, tab.dataset.tab ?? "installed");
     }
-    if (target.closest("[data-detail-back]")) {
+    if (target2.closest("[data-detail-back]")) {
       return closeAndSetTab(host, "installed");
     }
-    if (target.closest("[data-setup-cancel]")) {
+    if (target2.closest("[data-setup-cancel]")) {
       return closeAndSetTab(host, "catalogue");
     }
-    if (target.closest("[data-import-setup]")) {
+    if (target2.closest("[data-import-setup]")) {
       return importActive(host);
     }
-    const runSync = target.closest("[data-run-sync]");
+    const runSync = target2.closest("[data-run-sync]");
     if (runSync) {
       return runIntegrationSync(host, runSync);
     }
-    const installation = target.closest("[data-installation-id]");
+    const installation = target2.closest("[data-installation-id]");
     if (installation?.dataset.integrationId) {
       if (!shouldInterceptNavigation(event)) {
         return;
@@ -24811,7 +25981,7 @@ details[open] > summary > .chevron {
       event.preventDefault();
       return host.openDetail(installation.dataset.integrationId);
     }
-    const definition = target.closest("[data-definition-kind]");
+    const definition = target2.closest("[data-definition-kind]");
     if (definition?.dataset.definitionKind) {
       if (!shouldInterceptNavigation(event)) {
         return;
@@ -25886,13 +27056,13 @@ input[type="checkbox"] {
   function lastRun(trigger) {
     const badge3 = document.createElement("span");
     badge3.className = `status ${trigger.lastRun?.status ?? ""}`.trim();
-    badge3.textContent = trigger.lastRun ? `${trigger.lastRun.status} - ${formatDate(trigger.lastRun.at)}` : "Never";
+    badge3.textContent = trigger.lastRun ? `${trigger.lastRun.status} - ${formatDate2(trigger.lastRun.at)}` : "Never";
     if (trigger.lastRun?.error) {
       badge3.title = trigger.lastRun.error;
     }
     return badge3;
   }
-  function formatDate(value2) {
+  function formatDate2(value2) {
     const date = new Date(value2);
     if (Number.isNaN(date.getTime())) {
       return value2;
@@ -25945,14 +27115,14 @@ input[type="checkbox"] {
     if (!raw.trim()) {
       return;
     }
-    const text3 = raw.trim();
-    if (text3.startsWith("$")) {
-      return text3;
+    const text4 = raw.trim();
+    if (text4.startsWith("$")) {
+      return text4;
     }
     try {
-      return JSON.parse(text3);
+      return JSON.parse(text4);
     } catch {
-      return text3;
+      return text4;
     }
   }
   function identifier2(value2) {
@@ -26634,12 +27804,12 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Triggers/create/view.ts
-  function renderState(host, text3) {
+  function renderState(host, text4) {
     const style = document.createElement("style");
     style.textContent = styles_default4;
     const state2 = document.createElement("div");
     state2.className = "state";
-    state2.textContent = text3;
+    state2.textContent = text4;
     host.replaceChildren(style, state2);
   }
   function renderShell(host) {
@@ -26827,12 +27997,12 @@ details[open] > summary > .chevron {
         this.saveButton.disabled = false;
       }
     }
-    setMessage(text3, kind) {
+    setMessage(text4, kind) {
       if (!this.message) {
         return;
       }
       this.message.className = `message ${kind}`.trim();
-      this.message.textContent = text3;
+      this.message.textContent = text4;
     }
   }
   if (!customElements.get("cms-trigger-create")) {
@@ -27249,9 +28419,9 @@ button:hover {
       this._setSourceState(sourceState, false);
     }
     set saveStatus(label2) {
-      const target = this.shadowRoot.querySelector(".save-label") ?? this.shadowRoot.querySelector('[data-action="save"]');
-      if (target) {
-        target.textContent = label2;
+      const target2 = this.shadowRoot.querySelector(".save-label") ?? this.shadowRoot.querySelector('[data-action="save"]');
+      if (target2) {
+        target2.textContent = label2;
       }
     }
     setPageTitle(title2, path) {
@@ -27591,18 +28761,18 @@ button:hover {
       composed: true
     }));
   }
-  function connectDataSourcePickerEvents(target, handlers) {
-    target.closeButton.addEventListener("click", handlers.close);
-    target.backdrop.addEventListener("click", handlers.backdropClick);
-    target.search.addEventListener("input", handlers.searchInput);
-    target.methodFilter.addEventListener("change", handlers.methodChange);
-    target.ownerDocument.addEventListener("keydown", handlers.keydown);
+  function connectDataSourcePickerEvents(target2, handlers) {
+    target2.closeButton.addEventListener("click", handlers.close);
+    target2.backdrop.addEventListener("click", handlers.backdropClick);
+    target2.search.addEventListener("input", handlers.searchInput);
+    target2.methodFilter.addEventListener("change", handlers.methodChange);
+    target2.ownerDocument.addEventListener("keydown", handlers.keydown);
     return () => {
-      target.closeButton.removeEventListener("click", handlers.close);
-      target.backdrop.removeEventListener("click", handlers.backdropClick);
-      target.search.removeEventListener("input", handlers.searchInput);
-      target.methodFilter.removeEventListener("change", handlers.methodChange);
-      target.ownerDocument.removeEventListener("keydown", handlers.keydown);
+      target2.closeButton.removeEventListener("click", handlers.close);
+      target2.backdrop.removeEventListener("click", handlers.backdropClick);
+      target2.search.removeEventListener("input", handlers.searchInput);
+      target2.methodFilter.removeEventListener("change", handlers.methodChange);
+      target2.ownerDocument.removeEventListener("keydown", handlers.keydown);
     };
   }
 
@@ -27674,10 +28844,10 @@ button:hover {
     row.append(renderParamHeader(rowConfig), renderParamDescription(rowConfig), renderParamControls(rowConfig.name, initialValue));
     return row;
   }
-  function renderBindingHeading(text3) {
+  function renderBindingHeading(text4) {
     const heading4 = document.createElement("div");
     heading4.className = "config-heading";
-    heading4.textContent = text3;
+    heading4.textContent = text4;
     return heading4;
   }
   function bodyBindingFields(fields) {
@@ -28887,14 +30057,14 @@ textarea { min-height: 92px; resize: vertical; }
     root.className = "mode-panel form-grid";
     const label2 = document.createElement("label");
     label2.className = "control";
-    const text3 = document.createElement("span");
-    text3.textContent = "Expression";
+    const text4 = document.createElement("span");
+    text4.textContent = "Expression";
     const textarea5 = document.createElement("textarea");
     textarea5.className = "advanced-expression";
     textarea5.value = expression;
     textarea5.placeholder = 'plan.status == "active" && $source.loaded';
     textarea5.addEventListener("input", () => onInput(textarea5.value));
-    label2.append(text3, textarea5);
+    label2.append(text4, textarea5);
     root.append(label2);
     return root;
   }
@@ -28994,9 +30164,9 @@ textarea { min-height: 92px; resize: vertical; }
   function control2(labelText, controlElement) {
     const wrapper = document.createElement("label");
     wrapper.className = "control";
-    const text3 = document.createElement("span");
-    text3.textContent = labelText;
-    wrapper.append(text3, controlElement);
+    const text4 = document.createElement("span");
+    text4.textContent = labelText;
+    wrapper.append(text4, controlElement);
     return wrapper;
   }
   function parseValue(value2) {
@@ -29015,10 +30185,10 @@ textarea { min-height: 92px; resize: vertical; }
     }
     return trimmed;
   }
-  function empty3(text3) {
+  function empty3(text4) {
     const element = document.createElement("div");
     element.className = "empty";
-    element.textContent = text3;
+    element.textContent = text4;
     return element;
   }
 
@@ -29078,15 +30248,15 @@ textarea { min-height: 92px; resize: vertical; }
       input3.checked ? options2.selected.add(key) : options2.selected.delete(key);
       options2.onChange();
     });
-    const text3 = document.createElement("span");
-    text3.textContent = state2;
-    label2.append(input3, text3);
+    const text4 = document.createElement("span");
+    text4.textContent = state2;
+    label2.append(input3, text4);
     return label2;
   }
-  function textBlock2(className, text3) {
+  function textBlock2(className, text4) {
     const element = document.createElement("div");
     element.className = className;
-    element.textContent = text3;
+    element.textContent = text4;
     return element;
   }
 
@@ -29323,11 +30493,11 @@ textarea { min-height: 92px; resize: vertical; }
     }
   }
   function isEditableKeyEvent(event) {
-    return event.composedPath().some((target) => {
-      if (!(target instanceof Element)) {
+    return event.composedPath().some((target2) => {
+      if (!(target2 instanceof Element)) {
         return false;
       }
-      return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+      return Boolean(target2.closest("input, textarea, select, [contenteditable='true']"));
     });
   }
 
@@ -30036,12 +31206,12 @@ dd {
         onClick();
       }
     });
-    const text3 = document.createElement("span");
-    text3.textContent = label2;
+    const text4 = document.createElement("span");
+    text4.textContent = label2;
     const badge3 = document.createElement("span");
     badge3.className = "count";
     badge3.textContent = String(count);
-    button2.append(text3, badge3);
+    button2.append(text4, badge3);
     return button2;
   }
 
@@ -30245,8 +31415,8 @@ dd {
     context.emitMove(position === "before" ? "move-before" : "move-after", node, state2.draggedNode);
     clearStructureDragState(state2);
   }
-  function structureDropPosition(target, event) {
-    const rect = target.getBoundingClientRect();
+  function structureDropPosition(target2, event) {
+    const rect = target2.getBoundingClientRect();
     return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
   }
   function clearStructureDragState(state2) {
@@ -30280,8 +31450,8 @@ dd {
   function dragDropContext(tree) {
     return {
       clearDropRow: () => clearStructureTreeDropRow(tree),
-      emitMove: (action, target, dragged) => {
-        tree.emitter.emitAction(action, target.editor, undefined, undefined, undefined, dragged.editor);
+      emitMove: (action, target2, dragged) => {
+        tree.emitter.emitAction(action, target2.editor, undefined, undefined, undefined, dragged.editor);
       },
       isDescendantNode: (candidate, parent) => tree.nodes.isDescendantNode(candidate, parent)
     };
@@ -30656,32 +31826,32 @@ dd {
     }
     return !hasSourceStatusConditionAncestor(node.target, source2.target);
   }
-  function nearestSourceAncestor(target) {
-    for (let current = target.parentElement;current; current = current.parentElement) {
+  function nearestSourceAncestor(target2) {
+    for (let current = target2.parentElement;current; current = current.parentElement) {
       if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
         return current;
       }
     }
     return null;
   }
-  function hasSourceStatusConditionAncestor(target, source2) {
-    for (let current = target.parentElement;current && current !== source2; current = current.parentElement) {
+  function hasSourceStatusConditionAncestor(target2, source2) {
+    for (let current = target2.parentElement;current && current !== source2; current = current.parentElement) {
       if (sourceStatusConditionTargetsSource(current, source2)) {
         return true;
       }
     }
     return false;
   }
-  function hasNonSourceStatusCondition(target) {
-    return target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target).length === 0;
+  function hasNonSourceStatusCondition(target2) {
+    return target2.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target2).length === 0;
   }
-  function sourceStatusConditionTargetsSource(target, source2) {
-    const conditions2 = sourceStatusConditionsFromElement(target);
+  function sourceStatusConditionTargetsSource(target2, source2) {
+    const conditions2 = sourceStatusConditionsFromElement(target2);
     return conditions2.some((condition) => {
       if (condition.sourceId) {
         return condition.sourceId === source2.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
       }
-      return nearestSourceAncestor(target) === source2;
+      return nearestSourceAncestor(target2) === source2;
     });
   }
 
@@ -30756,8 +31926,8 @@ dd {
           this.state.repeatableTargets.delete(node.target);
         }
       }
-      for (const target of targets) {
-        this.state.repeatableTargets.add(target);
+      for (const target2 of targets) {
+        this.state.repeatableTargets.add(target2);
       }
     }
     sourceDataSources() {
@@ -32094,11 +33264,11 @@ iframe {
       }));
     };
     onBackgroundClick = (event) => {
-      const target = event.target;
-      if (!(target instanceof Element)) {
+      const target2 = event.target;
+      if (!(target2 instanceof Element)) {
         return;
       }
-      if (target.closest(".page")) {
+      if (target2.closest(".page")) {
         return;
       }
       this.dispatchEvent(new CustomEvent(CANVAS_BACKGROUND_CLICK_EVENT, {
@@ -32670,7 +33840,7 @@ input:disabled {
       }, {
         saveSelection: this.saveSelection,
         restoreSelection: this.restoreSelection,
-        insertText: (text3) => this.insertText(text3),
+        insertText: (text4) => this.insertText(text4),
         focusControl: () => this._refs.control().focus(),
         finish: this.emitInput
       });
@@ -32719,12 +33889,12 @@ input:disabled {
     restoreSelection = () => {
       this._refs.control().setSelectionRange?.(this._selectionStart, this._selectionEnd);
     };
-    insertText(text3) {
+    insertText(text4) {
       const control3 = this._refs.control();
       const start = control3.selectionStart ?? this._selectionStart;
       const end = control3.selectionEnd ?? this._selectionEnd;
-      control3.value = `${control3.value.slice(0, start)}${text3}${control3.value.slice(end)}`;
-      const next = start + text3.length;
+      control3.value = `${control3.value.slice(0, start)}${text4}${control3.value.slice(end)}`;
+      const next = start + text4.length;
       control3.setSelectionRange?.(next, next);
       this.saveSelection();
     }
@@ -33066,10 +34236,10 @@ textarea:disabled {
       this.setSavedRange(unwrapElement(this._editor(), wrapper));
       return true;
     }
-    insertText(text3) {
+    insertText(text4) {
       const range = this.getUsableRange();
       if (!range) {
-        this._editor().append(text3);
+        this._editor().append(text4);
         const nextRange2 = document.createRange();
         nextRange2.selectNodeContents(this._editor());
         nextRange2.collapse(false);
@@ -33077,7 +34247,7 @@ textarea:disabled {
         return;
       }
       range.deleteContents();
-      const node = document.createTextNode(text3);
+      const node = document.createTextNode(text4);
       range.insertNode(node);
       const nextRange = document.createRange();
       nextRange.setStartAfter(node);
@@ -33481,7 +34651,7 @@ textarea:disabled {
     }, {
       saveSelection: this._range.saveSelection,
       restoreSelection: () => this._range.restoreSelection(),
-      insertText: (text3) => this._range.insertText(text3),
+      insertText: (text4) => this._range.insertText(text4),
       focusControl: () => this.editor.focus(),
       finish: () => this.finishAction()
     });
@@ -35991,9 +37161,9 @@ input {
     const icon = iconName ? settingIcon(iconName) : null;
     const nodes = icon && (display === "icon" || display === "icon-label") ? [icon] : [];
     if (display !== "icon" || !icon) {
-      const text3 = document.createElement("span");
-      text3.textContent = label2;
-      nodes.push(text3);
+      const text4 = document.createElement("span");
+      text4.textContent = label2;
+      nodes.push(text4);
     }
     return nodes;
   }
@@ -37169,8 +38339,8 @@ label {
       this._overlay.setAttribute(HIGHLIGHT_ATTR, "");
       doc.body.append(this._overlay);
       this._resizeObserver = new ResizeObserver(() => this.update());
-      for (const target of targets) {
-        this._resizeObserver.observe(target);
+      for (const target2 of targets) {
+        this._resizeObserver.observe(target2);
       }
       doc.defaultView?.addEventListener("scroll", this.update, true);
       doc.defaultView?.addEventListener("resize", this.update);
@@ -37205,13 +38375,13 @@ label {
       this._overlay.style.width = `${rect.width}px`;
       this._overlay.style.height = `${rect.height}px`;
     };
-    _measurementTargets(target) {
-      if (!t(target)) {
-        return [target];
+    _measurementTargets(target2) {
+      if (!t(target2)) {
+        return [target2];
       }
-      const output = Array.from(target.children).find((element) => element.hasAttribute(_2));
+      const output = Array.from(target2.children).find((element) => element.hasAttribute(_2));
       const children = output ? Array.from(output.children).flatMap((element) => visibleBoxes(element)) : [];
-      return children.length > 0 ? children : [target];
+      return children.length > 0 ? children : [target2];
     }
     _ensureStyle(doc) {
       if (doc.getElementById(STYLE_ID)) {
@@ -37434,14 +38604,14 @@ label {
     }
   }
   function eventElement(event) {
-    const target = event.target;
-    if (!target || !("nodeType" in target)) {
+    const target2 = event.target;
+    if (!target2 || !("nodeType" in target2)) {
       return null;
     }
-    if (target.nodeType === Node.ELEMENT_NODE) {
-      return target;
+    if (target2.nodeType === Node.ELEMENT_NODE) {
+      return target2;
     }
-    return target.parentElement;
+    return target2.parentElement;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/insertion.ts
@@ -37568,15 +38738,15 @@ label {
     applySourceConditions(insertedElement, sourceConditionsForSibling(reference));
     return true;
   }
-  function canMoveEditor(runtime2, source2, target) {
+  function canMoveEditor(runtime2, source2, target2) {
     if (!canDelete(runtime2, source2)) {
       return false;
     }
-    const targetParent = parentEditor(runtime2, target);
+    const targetParent = parentEditor(runtime2, target2);
     if (!targetParent) {
       return true;
     }
-    const targetSlotName = target.target.getAttribute("slot") ?? undefined;
+    const targetSlotName = target2.target.getAttribute("slot") ?? undefined;
     const targetSlot = findSlot(targetParent, targetSlotName);
     if (!targetSlot) {
       return false;
@@ -37851,19 +39021,19 @@ label {
       editor.target.after(clone);
       this.content.reloadFrameDocument(clone);
     }
-    moveEditor(source2, target, position) {
-      if (source2 === target || source2.target.contains(target.target)) {
+    moveEditor(source2, target2, position) {
+      if (source2 === target2 || source2.target.contains(target2.target)) {
         return;
       }
-      if (!canMoveEditor(this.context.runtime(), source2, target)) {
+      if (!canMoveEditor(this.context.runtime(), source2, target2)) {
         return;
       }
-      applySlot(source2.target, target.target.getAttribute("slot") ?? undefined);
-      applySiblingSourceStatus(source2.target, sourceStatusConditionsFromElement(target.target));
+      applySlot(source2.target, target2.target.getAttribute("slot") ?? undefined);
+      applySiblingSourceStatus(source2.target, sourceStatusConditionsFromElement(target2.target));
       if (position === "before") {
-        target.target.before(source2.target);
+        target2.target.before(source2.target);
       } else {
-        target.target.after(source2.target);
+        target2.target.after(source2.target);
       }
       this.content.reloadFrameDocument(source2.target);
     }
@@ -37875,11 +39045,11 @@ label {
       return this.context.runtime()?.getClosestEditor(parent)?.target ?? null;
     }
   }
-  function applySiblingSourceStatus(target, state2) {
+  function applySiblingSourceStatus(target2, state2) {
     if (state2.length) {
-      applySourceStatusConditions(target, state2);
-    } else if (sourceStatusConditionsFromElement(target).length) {
-      target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
+      applySourceStatusConditions(target2, state2);
+    } else if (sourceStatusConditionsFromElement(target2).length) {
+      target2.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
     }
   }
 
@@ -37956,9 +39126,9 @@ label {
   function collectBindingDependencies(root, inheritedScope, usages) {
     for (const child of Array.from(root.childNodes)) {
       if (child.nodeType === Node.TEXT_NODE) {
-        const text3 = child;
-        if (bindingTextDependsOn(text3.data, inheritedScope)) {
-          usages.push({ target: text3 });
+        const text4 = child;
+        if (bindingTextDependsOn(text4.data, inheritedScope)) {
+          usages.push({ target: text4 });
         }
         continue;
       }
@@ -38079,31 +39249,31 @@ label {
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
     return true;
   }
-  function canUseSourceForStatusCondition(target, source2) {
-    return target !== source2 && source2.contains(target);
+  function canUseSourceForStatusCondition(target2, source2) {
+    return target2 !== source2 && source2.contains(target2);
   }
-  function hasNonSourceStatusCondition2(target) {
-    return target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target).length === 0;
+  function hasNonSourceStatusCondition2(target2) {
+    return target2.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target2).length === 0;
   }
-  function hasSourceStatusConditionAncestor2(target, source2) {
-    for (let current = target.parentElement;current && current !== source2; current = current.parentElement) {
+  function hasSourceStatusConditionAncestor2(target2, source2) {
+    for (let current = target2.parentElement;current && current !== source2; current = current.parentElement) {
       if (sourceStatusConditionTargetsSource2(current, source2)) {
         return true;
       }
     }
     return false;
   }
-  function sourceStatusConditionTargetsSource2(target, source2) {
-    const conditions2 = sourceStatusConditionsFromElement(target);
+  function sourceStatusConditionTargetsSource2(target2, source2) {
+    const conditions2 = sourceStatusConditionsFromElement(target2);
     return conditions2.some((condition) => {
       if (condition.sourceId) {
         return condition.sourceId === source2.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
       }
-      return nearestSourceAncestor2(target) === source2;
+      return nearestSourceAncestor2(target2) === source2;
     });
   }
-  function nearestSourceAncestor2(target) {
-    for (let current = target.parentElement;current; current = current.parentElement) {
+  function nearestSourceAncestor2(target2) {
+    for (let current = target2.parentElement;current; current = current.parentElement) {
       if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
         return current;
       }
@@ -38387,21 +39557,21 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/valueSurface.ts
   var VALUE_KEY_PATTERN = /^[A-Za-z0-9_.-]+$/;
-  function hasStandardValueSurface(target) {
-    if (!("value" in target)) {
+  function hasStandardValueSurface(target2) {
+    if (!("value" in target2)) {
       return false;
     }
     try {
-      const value2 = target.value;
-      target.value = value2;
+      const value2 = target2.value;
+      target2.value = value2;
       return typeof value2 === "string";
     } catch {
       return false;
     }
   }
-  function valueSurfaceName(target) {
-    const propertyName = "name" in target ? target.name : undefined;
-    return String(typeof propertyName === "string" ? propertyName : target.getAttribute("name") ?? target.id ?? "").trim();
+  function valueSurfaceName(target2) {
+    const propertyName = "name" in target2 ? target2.name : undefined;
+    return String(typeof propertyName === "string" ? propertyName : target2.getAttribute("name") ?? target2.id ?? "").trim();
   }
   function isValidValueKey(value2) {
     return VALUE_KEY_PATTERN.test(value2.trim());
@@ -38415,32 +39585,32 @@ label {
     if (!isParamSyncSetting(setting)) {
       return false;
     }
-    const target = editor.target;
-    const current = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
-    const fieldName = valueSurfaceName(target);
+    const target2 = editor.target;
+    const current = target2.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target2);
     if (setting.attribute === PARAM_SYNC_ENABLE_SETTING) {
       if (value2 !== true) {
-        target.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
+        target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
         return true;
       }
       const next = current || fieldName;
       if (isValidValueKey(next)) {
-        target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
       }
       return true;
     }
     if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
       if (value2 === true && isValidValueKey(fieldName)) {
-        target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
       } else if (current === fieldName) {
-        target.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
+        target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
       }
       return true;
     }
     if (typeof value2 === "string") {
       const next = value2.trim();
       if (isValidValueKey(next)) {
-        target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
       }
     }
     return true;
@@ -38450,12 +39620,12 @@ label {
     return section ? [...sections2, section] : sections2;
   }
   function paramSyncSettings(editor) {
-    const target = editor.target;
-    if (!hasStandardValueSurface(target)) {
+    const target2 = editor.target;
+    if (!hasStandardValueSurface(target2)) {
       return null;
     }
-    const syncValue = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
-    const fieldName = valueSurfaceName(target);
+    const syncValue = target2.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target2);
     const hasFieldName = isValidValueKey(fieldName);
     const isEnabled = syncValue !== "";
     const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
@@ -38505,32 +39675,32 @@ label {
     if (!isPageStateSetting(setting)) {
       return false;
     }
-    const target = editor.target;
-    const current = target.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
-    const fieldName = valueSurfaceName(target);
+    const target2 = editor.target;
+    const current = target2.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target2);
     if (setting.attribute === PAGE_STATE_ENABLE_SETTING) {
       if (value2 !== true) {
-        target.removeAttribute(CMS_BINDING_ATTRIBUTES.pageState);
+        target2.removeAttribute(CMS_BINDING_ATTRIBUTES.pageState);
         return true;
       }
       const next = current || fieldName;
       if (isValidValueKey(next)) {
-        target.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
       }
       return true;
     }
     if (setting.attribute === PAGE_STATE_USE_NAME_SETTING) {
       if (value2 === true && isValidValueKey(fieldName)) {
-        target.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, fieldName);
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, fieldName);
       } else if (current === fieldName) {
-        target.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, "");
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, "");
       }
       return true;
     }
     if (typeof value2 === "string") {
       const next = value2.trim();
       if (isValidValueKey(next)) {
-        target.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
       }
     }
     return true;
@@ -38540,13 +39710,13 @@ label {
     return section ? [...sections2, section] : sections2;
   }
   function pageStateSettings(editor) {
-    const target = editor.target;
-    if (!hasStandardValueSurface(target)) {
+    const target2 = editor.target;
+    if (!hasStandardValueSurface(target2)) {
       return null;
     }
-    const hasSyncAttribute = target.hasAttribute(CMS_BINDING_ATTRIBUTES.pageState);
-    const syncValue = target.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
-    const fieldName = valueSurfaceName(target);
+    const hasSyncAttribute = target2.hasAttribute(CMS_BINDING_ATTRIBUTES.pageState);
+    const syncValue = target2.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target2);
     const hasFieldName = isValidValueKey(fieldName);
     const isEnabled = hasSyncAttribute;
     const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
@@ -39189,11 +40359,11 @@ label {
         this._editorsByTarget.delete(editor.target);
       }
     }
-    getEditor(target) {
-      return this._editorsByTarget.get(target);
+    getEditor(target2) {
+      return this._editorsByTarget.get(target2);
     }
-    getClosestEditor(target, stopAt) {
-      let current = target;
+    getClosestEditor(target2, stopAt) {
+      let current = target2;
       while (current) {
         const editor = this._editorsByTarget.get(current);
         if (editor) {
@@ -39206,11 +40376,11 @@ label {
       }
       return;
     }
-    getRichTextOwner(target) {
-      let current = target.parentElement;
+    getRichTextOwner(target2) {
+      let current = target2.parentElement;
       while (current) {
         const editor = this._editorsByTarget.get(current);
-        if (editor && this._containsTargetInRichText(editor, target)) {
+        if (editor && this._containsTargetInRichText(editor, target2)) {
           return editor;
         }
         current = current.parentElement;
@@ -39236,9 +40406,9 @@ label {
       }
       return children;
     }
-    getAncestors(target) {
+    getAncestors(target2) {
       const ancestors = [];
-      let current = target.parentElement;
+      let current = target2.parentElement;
       while (current) {
         const editor = this._editorsByTarget.get(current);
         if (editor) {
@@ -39248,15 +40418,15 @@ label {
       }
       return ancestors;
     }
-    collectDataScopes(target, options2 = {}) {
+    collectDataScopes(target2, options2 = {}) {
       const editors = [
-        ...this.getAncestors(target),
-        options2.includeTarget === false ? undefined : this.getEditor(target)
+        ...this.getAncestors(target2),
+        options2.includeTarget === false ? undefined : this.getEditor(target2)
       ].filter((editor) => Boolean(editor));
       return editors.flatMap((editor) => editor.getDataScopes());
     }
-    _getClosestRegisteredAncestor(target) {
-      let current = target.parentElement;
+    _getClosestRegisteredAncestor(target2) {
+      let current = target2.parentElement;
       while (current) {
         const editor = this._editorsByTarget.get(current);
         if (editor && !this.getRichTextOwner(editor.target)) {
@@ -39266,15 +40436,15 @@ label {
       }
       return;
     }
-    _containsTargetInRichText(editor, target) {
-      return editor.getTextCapability()?.format === "richtext" && editor.target !== target && editor.target.contains(target) && !this._isInsideNamedContentSlot(editor, target);
+    _containsTargetInRichText(editor, target2) {
+      return editor.getTextCapability()?.format === "richtext" && editor.target !== target2 && editor.target.contains(target2) && !this._isInsideNamedContentSlot(editor, target2);
     }
-    _isInsideNamedContentSlot(editor, target) {
+    _isInsideNamedContentSlot(editor, target2) {
       const namedSlots = new Set(editor.getContentSlots().map((slot) => slot.slot).filter((slot) => Boolean(slot)));
       if (namedSlots.size === 0) {
         return false;
       }
-      let current = target;
+      let current = target2;
       while (current && current !== editor.target) {
         const slot = current.getAttribute("slot");
         if (slot && namedSlots.has(slot)) {
@@ -39302,8 +40472,8 @@ label {
       _addedStates = [];
       _textCapabilityOverride;
       _isMounted = false;
-      constructor(target, _registry) {
-        super(target);
+      constructor(target2, _registry) {
+        super(target2);
         this._registry = _registry;
       }
       mount() {
@@ -39405,9 +40575,9 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/createRuntimeEditor.ts
-  function createRuntimeEditor(entry, target, registry2) {
+  function createRuntimeEditor(entry, target2, registry2) {
     const RuntimeEditorClass = createRuntimeEditorClass(entry.editor);
-    const editor = new RuntimeEditorClass(target, registry2);
+    const editor = new RuntimeEditorClass(target2, registry2);
     editor.catalogEntry = entry;
     registry2.register(editor);
     return editor;
@@ -39482,12 +40652,12 @@ label {
   function runtimeElements(root) {
     return [root, ...Array.from(root.querySelectorAll("*"))].filter((element) => !hasCompositionAncestor(element));
   }
-  function findClosestRuntimeEditor(context, target) {
+  function findClosestRuntimeEditor(context, target2) {
     const { document: document2, registry: registry2 } = context;
-    if (!target || !document2.contentRoot.contains(target)) {
+    if (!target2 || !document2.contentRoot.contains(target2)) {
       return;
     }
-    const closest = registry2.getClosestEditor(target, document2.contentRoot);
+    const closest = registry2.getClosestEditor(target2, document2.contentRoot);
     if (!closest) {
       return;
     }
@@ -39507,8 +40677,8 @@ label {
   function buildRuntimeStructure(context) {
     return structureChildren(context, context.document.contentRoot);
   }
-  function findRichTextOwner(context, target) {
-    const owner = context.registry.getRichTextOwner(target);
+  function findRichTextOwner(context, target2) {
+    const owner = context.registry.getRichTextOwner(target2);
     return owner && context.document.contentRoot.contains(owner.target) ? owner : undefined;
   }
   function structureChildren(context, parent) {
@@ -39567,8 +40737,8 @@ label {
     }
     return badges;
   }
-  function closestStructureParent(context, target, stopAt) {
-    let current = target.parentElement;
+  function closestStructureParent(context, target2, stopAt) {
+    let current = target2.parentElement;
     while (current && current !== stopAt) {
       if (context.document.contentRoot.contains(current)) {
         const editor = context.registry.getEditor(current);
@@ -39631,11 +40801,11 @@ label {
       this._document = null;
       this._selectedEditor = null;
     }
-    getEditor(target) {
-      return this.registry.getEditor(target);
+    getEditor(target2) {
+      return this.registry.getEditor(target2);
     }
-    getClosestEditor(target) {
-      return findClosestRuntimeEditor(this._structureContext(), target);
+    getClosestEditor(target2) {
+      return findClosestRuntimeEditor(this._structureContext(), target2);
     }
     getStructure() {
       return buildRuntimeStructure(this._structureContext());
@@ -42787,12 +43957,12 @@ label {
   // src/components/media/GridMedia/events/breadcrumb.ts
   function wireBreadcrumb(host, s2) {
     s2.getElementById("breadcrumb").addEventListener("click", (e) => {
-      const target = e.target;
-      if (!target.classList.contains("bc-item")) {
+      const target2 = e.target;
+      if (!target2.classList.contains("bc-item")) {
         return;
       }
-      const folder = target.dataset.folder || null;
-      const index = parseInt(target.dataset.index || "-1");
+      const folder = target2.dataset.folder || null;
+      const index = parseInt(target2.dataset.index || "-1");
       host._breadcrumb = host._breadcrumb.slice(0, index + 1);
       host._navigateTo(folder);
     });
@@ -43194,7 +44364,7 @@ dialog::backdrop {
 `;
 
   // src/components/media/MediaCenter/styles/content.css
-  var content_default = `/* ── Grid ── */
+  var content_default2 = `/* ── Grid ── */
 
 .media-grid {
     flex: 1;
@@ -43494,11 +44664,11 @@ dialog::backdrop {
   }
   function wireBreadcrumb2(bindings) {
     bindings.root.getElementById("breadcrumb").addEventListener("click", (event) => {
-      const target = event.target;
-      if (!target.classList.contains("bc-item")) {
+      const target2 = event.target;
+      if (!target2.classList.contains("bc-item")) {
         return;
       }
-      bindings.navigateBreadcrumb(target.dataset.folder || null, parseInt(target.dataset.index || "-1"));
+      bindings.navigateBreadcrumb(target2.dataset.folder || null, parseInt(target2.dataset.index || "-1"));
     });
   }
   function wireFileDrop(bindings) {
@@ -43543,7 +44713,7 @@ dialog::backdrop {
     _types = [];
     constructor() {
       super({
-        css: [chrome_default, content_default, folder_default].join(`
+        css: [chrome_default, content_default2, folder_default].join(`
 `),
         template: template_default38
       });

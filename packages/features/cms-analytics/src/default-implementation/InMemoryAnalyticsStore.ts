@@ -88,7 +88,8 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
         return Promise.resolve(readMemoryTop([...this._rollups.values()], "pv", ["page", "path"], from, to, limit));
     }
     breakdown(dim: "status" | "device" | "browser" | "acquisition", from: Date, to: Date): Promise<KeyCount[]> {
-        return Promise.resolve(readMemoryTop([...this._rollups.values()], "pv", dim, from, to, 0));
+        const metric = dim === "status" ? "request" : "pv";
+        return Promise.resolve(readMemoryTop([...this._rollups.values()], metric, dim, from, to, 0));
     }
     topReferrers(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
         return Promise.resolve(readMemoryTop([...this._rollups.values()], "pv", "referrer", from, to, limit));

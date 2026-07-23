@@ -33,6 +33,11 @@ describe("InMemoryAnalyticsStore reports", () => {
             avgMs: 40,
             maxMs: 60,
         });
+        expect(await store.breakdown("status", FROM, TO)).toEqual([
+            { key: "200", count: 1 },
+            { key: "404", count: 1 },
+            { key: "500", count: 1 },
+        ]);
     });
 
     test("reports acquisition channels and external referrers", async () => {

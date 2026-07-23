@@ -1,0 +1,148 @@
+cms-analytics-dashboard {
+    display: block;
+    max-width: 1180px;
+}
+
+.analytics-surface,
+[data-view-host] {
+    display: grid;
+    gap: 24px;
+}
+
+.report-header,
+.panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.report-header {
+    min-height: 58px;
+}
+
+.report-header h2 {
+    margin: 3px 0 4px;
+    font-size: 1.45rem;
+    letter-spacing: -.025em;
+}
+
+.report-header p,
+.panel-header h3 {
+    margin: 0;
+}
+
+.report-header p {
+    color: var(--text-muted);
+}
+
+.report-header p strong {
+    color: var(--text-body);
+    font-weight: 650;
+}
+
+.eyebrow {
+    color: var(--primary-base);
+    font-size: .7rem;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.privacy-pill,
+.health-rate {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 0 11px;
+    border: 1px solid color-mix(in srgb, var(--primary-base) 22%, var(--border-default));
+    border-radius: 999px;
+    background: var(--primary-muted);
+    color: var(--primary-contrasted);
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.privacy-pill svg {
+    width: 15px;
+    height: 15px;
+}
+
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.report-grid--primary {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+}
+
+.analytics-panel {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    background: var(--bg-surface);
+    box-shadow: 0 1px 2px rgb(15 31 26 / 4%);
+}
+
+.analytics-panel--wide {
+    padding: 22px 24px 20px;
+}
+
+.panel-header {
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.panel-header h3 {
+    color: var(--text-main);
+    font-size: .96rem;
+    font-weight: 740;
+}
+
+.panel-context {
+    color: var(--text-muted);
+    font-size: .78rem;
+}
+
+.privacy-boundary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 15px;
+    border: 1px solid var(--border-default);
+    border-radius: 9px;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-size: .8rem;
+}
+
+.privacy-boundary strong {
+    flex: 0 0 auto;
+    color: var(--text-body);
+}
+
+.privacy-boundary--technical {
+    border-color: color-mix(in srgb, var(--info-base) 28%, var(--border-default));
+    background: var(--info-muted);
+}
+
+@media (max-width: 840px) {
+    .report-grid,
+    .report-grid--primary {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 560px) {
+    .report-header,
+    .privacy-boundary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,25 @@
+<section class="analytics-surface">
+    <div class="analytics-loading" data-state="loading" aria-label="Loading analytics">
+        <div class="skeleton skeleton--heading"></div>
+        <div class="skeleton-grid">
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+        </div>
+        <div class="skeleton skeleton--panel"></div>
+    </div>
+
+    <div class="analytics-error" data-state="error" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v6" />
+            <path d="M12 17h.01" />
+        </svg>
+        <h2>Analytics could not be loaded</h2>
+        <p>The reports are temporarily unavailable. No data was changed.</p>
+        <button type="button" data-retry>Try again</button>
+    </div>
+
+    <div data-state="ready" data-view-host hidden></div>
+</section>

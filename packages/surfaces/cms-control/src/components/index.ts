@@ -117,6 +117,8 @@ import "./admin/Common/Tokens/TokenCreate";
 import "./admin/Secrets/Secrets";
 import "./admin/Layout/SettingsSections/SettingsSections";
 import "./admin/Layout/ShellDetail/ShellDetail";
+import "./admin/Layout/Analytics/AnalyticsNav";
+import "./admin/Layout/Analytics/AnalyticsDashboard";
 import "./admin/Theme/ThemeEditor";
 import "./admin/Theme/ThemeNav";
 import "./admin/Resources/Dashboards/navigation/DashboardNav";

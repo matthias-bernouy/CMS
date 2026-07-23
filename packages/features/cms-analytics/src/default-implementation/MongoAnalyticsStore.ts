@@ -116,7 +116,7 @@ export class MongoAnalyticsStore implements AnalyticsStore {
         return readTop(this.rollups, "pv", ["page", "path"], from, to, limit);
     }
     breakdown(dim: "status" | "device" | "browser" | "acquisition", from: Date, to: Date): Promise<KeyCount[]> {
-        return readTop(this.rollups, "pv", dim, from, to, 0);
+        return readTop(this.rollups, dim === "status" ? "request" : "pv", dim, from, to, 0);
     }
     topReferrers(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
         return readTop(this.rollups, "pv", "referrer", from, to, limit);

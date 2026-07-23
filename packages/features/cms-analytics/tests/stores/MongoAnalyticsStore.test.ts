@@ -60,4 +60,24 @@ describe("MongoAnalyticsStore", () => {
             maxMs: 70,
         });
     });
+
+    test("reads status breakdowns from request counters", async () => {
+        const pipelines: Array<Array<Record<string, any>>> = [];
+        const aggregate = mock((pipeline: Array<Record<string, any>>) => {
+            pipelines.push(pipeline);
+            return { toArray: async () => [] };
+        });
+        const db = {
+            collection: () => ({ aggregate }),
+        };
+        const store = new MongoAnalyticsStore(db as never);
+        const from = new Date("2026-06-02T00:00:00.000Z");
+        const to = new Date("2026-06-03T00:00:00.000Z");
+
+        await store.breakdown("status", from, to);
+        await store.breakdown("device", from, to);
+
+        expect(pipelines[0]?.[0]?.$match).toMatchObject({ metric: "request", dim: "status" });
+        expect(pipelines[1]?.[0]?.$match).toMatchObject({ metric: "pv", dim: "device" });
+    });
 });

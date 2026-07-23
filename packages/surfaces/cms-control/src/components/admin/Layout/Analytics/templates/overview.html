@@ -1,0 +1,32 @@
+<header class="report-header">
+    <div>
+        <span class="eyebrow">Overview</span>
+        <h2>Traffic at a glance</h2>
+        <p>Audience and content activity for <strong data-range-label></strong>.</p>
+    </div>
+    <span class="privacy-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M12 3 5 6v5c0 4.6 2.9 8.1 7 10 4.1-1.9 7-5.4 7-10V6z" />
+            <path d="m9 12 2 2 4-4" />
+        </svg>
+        Cookieless · counters only
+    </span>
+</header>
+
+<div class="metric-grid" data-role="overview-metrics"></div>
+
+<section class="analytics-panel analytics-panel--wide">
+    <header class="panel-header">
+        <div>
+            <span class="eyebrow">Content activity</span>
+            <h3>Views over time</h3>
+        </div>
+        <span class="panel-context" data-range-label></span>
+    </header>
+    <div class="chart-host" data-role="traffic-chart"></div>
+</section>
+
+<aside class="privacy-boundary">
+    <strong>How visitors are counted</strong>
+    <span>Unique visitors are deduplicated per day. The overview reports visitor-days and never stores raw events.</span>
+</aside>

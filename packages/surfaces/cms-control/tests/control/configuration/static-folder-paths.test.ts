@@ -26,6 +26,7 @@ describe("file-backed route paths", () => {
         expect(deriveRoute("_access/roles/roles")).toBe("roles");
         expect(publicStaticPath("admin/_content/pages.html")).toBe("admin/pages.html");
         expect(publicStaticPath("admin/_access/users.html")).toBe("admin/users.html");
+        expect(publicStaticPath("admin/_operations/analytics/health.html")).toBe("admin/analytics/health.html");
     });
 
     test("replaces static base-path placeholders for root and mounted runners", () => {

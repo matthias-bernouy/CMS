@@ -68,7 +68,7 @@ export interface AnalyticsStore {
     topPaths(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
     /** Most-viewed stable page ids, falling back to paths for legacy producers. */
     topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
-    /** Counts grouped by a dimension over [from, to). */
+    /** Counts grouped by a dimension over [from, to); status covers all non-bot requests. */
     breakdown(dim: "status" | "device" | "browser" | "acquisition", from: Date, to: Date): Promise<KeyCount[]>;
     /** External referrer hosts for content views. */
     topReferrers(from: Date, to: Date, limit: number): Promise<KeyCount[]>;

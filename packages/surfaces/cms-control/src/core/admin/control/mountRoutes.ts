@@ -11,6 +11,9 @@ import {
 import {
     ANALYTICS_ROUTES,
     analyticsBreakdownHandler,
+    analyticsFlowsHandler,
+    analyticsHealthHandler,
+    analyticsReferrersHandler,
     analyticsSummaryHandler,
     analyticsTimeseriesHandler,
     analyticsTopPagesHandler,
@@ -123,6 +126,11 @@ export function mountControlCmsRoutes(
             apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.breakdown, (req) =>
                 analyticsBreakdownHandler(analytics, req),
             );
+            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.referrers, (req) =>
+                analyticsReferrersHandler(analytics, req),
+            );
+            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.flows, (req) => analyticsFlowsHandler(analytics, req));
+            apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.health, (req) => analyticsHealthHandler(analytics, req));
         },
         [authGuard],
     );
