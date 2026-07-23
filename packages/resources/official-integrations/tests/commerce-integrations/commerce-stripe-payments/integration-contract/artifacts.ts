@@ -58,6 +58,11 @@ export async function assertArtifactContracts({
         { type: "trigger", id: "execute-buyer-payment-cancellation", action: "created" },
         { type: "trigger", id: "execute-seller-payment-cancellation", action: "created" },
         { type: "trigger", id: "execute-reviewed-payment-cancellation", action: "created" },
+        { type: "trigger", id: "schedule-reconcile-protected-payment-systems", action: "created" },
+        { type: "trigger", id: "schedule-process-due-order-deadlines", action: "created" },
+        { type: "trigger", id: "schedule-dispatch-pending-payment-cancellations", action: "created" },
+        { type: "trigger", id: "schedule-dispatch-pending-protected-refunds", action: "created" },
+        { type: "trigger", id: "schedule-dispatch-due-protected-settlements", action: "created" },
         { type: "dashboard", id: "commerce-stripe-payments-operations", action: "created" },
         { type: "bloc", id: "commerce-stripe-payment", action: "created" },
     ]);
