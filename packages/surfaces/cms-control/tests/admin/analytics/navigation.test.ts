@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { LateralMenu, LateralMenuItem } from "@bernouy/components";
 import "cms-control/components/admin/Layout/Analytics/AnalyticsNav";
 import { analyticsViewFromPath, analyticsViewPath } from "cms-control/components/admin/Layout/Analytics/api";
+
+if (!customElements.get("w13c-lateral-menu")) {
+    customElements.define("w13c-lateral-menu", LateralMenu);
+}
+if (!customElements.get("w13c-lateral-menu-item")) {
+    customElements.define("w13c-lateral-menu-item", LateralMenuItem);
+}
 
 afterEach(() => {
     document.head.innerHTML = "";
@@ -31,5 +39,6 @@ describe("analytics navigation", () => {
         expect(health.getAttribute("href")).toBe("/cms/admin/analytics/health");
         expect(health.hasAttribute("active")).toBe(true);
         expect(overview.hasAttribute("active")).toBe(false);
+        expect(items.filter((item) => item.hasAttribute("active"))).toEqual([health]);
     });
 });

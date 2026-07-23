@@ -58,10 +58,11 @@ export const checkActiveState = (host: HTMLElement, anchor: HTMLAnchorElement | 
         const currentURL = new URL(window.location.href);
         const currentPath = currentURL.pathname;
         const targetPath = resolvedURL.pathname;
-        const isActive =
-            targetPath === "/"
-                ? currentPath === "/"
-                : currentPath === targetPath || currentPath.startsWith(targetPath + "/");
+        const isActive = host.hasAttribute("exact")
+            ? currentPath === targetPath
+            : targetPath === "/"
+              ? currentPath === "/"
+              : currentPath === targetPath || currentPath.startsWith(targetPath + "/");
 
         setActiveState(host, anchor, isActive);
     } catch {

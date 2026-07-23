@@ -2044,7 +2044,7 @@ dialog[open]::backdrop { opacity: 1; }
     }
   }
 
-  class Q extends s {
+  class W extends s {
     static formAssociated = true;
     _internals;
     _defaultChecked = false;
@@ -2280,7 +2280,7 @@ input:focus-visible ~ .custom-box {
   };
   var xd = vi + gi;
 
-  class ki extends Q {
+  class ki extends W {
     _input;
     _labelText;
     _labelSlot;
@@ -2359,7 +2359,7 @@ input:focus-visible ~ .custom-box {
 </div>
 <div hidden><slot></slot></div>
 `;
-  var gt = `:host {
+  var xt = `:host {
     display: block;
 }
 
@@ -2471,7 +2471,7 @@ input:disabled {
     color: var(--text-main, #1e293b);
 }
 `;
-  var xt = `.listbox {
+  var yt = `.listbox {
     position: absolute;
     inset-block-start: calc(100% + 3px);
     inset-inline: 0;
@@ -2571,21 +2571,21 @@ input:disabled {
     transform: rotate(90deg);
 }
 `;
-  function yt(t) {
+  function _t(t) {
     return Array.from(t.querySelectorAll("option")).map((e) => ({ value: e.value, label: e.textContent ?? e.value, disabled: e.disabled }));
   }
-  function _t(t, e) {
+  function wt(t, e) {
     let r = e.toLowerCase();
     return (r ? t.filter((o) => o.label.toLowerCase().includes(r)) : t).slice(0, 8).map((o) => ({ ...o, kind: "option" }));
   }
-  function wt(t, e, r, i, o) {
+  function kt(t, e, r, i, o) {
     let n = document.createElement("div");
     return n.className = `option ${t.kind}`, n.id = `option-${e}`, n.dataset.active = String(e === r), n.dataset.selected = String(t.kind === "option" && t.value === i), n.setAttribute("role", "option"), n.setAttribute("aria-selected", n.dataset.active), n.addEventListener("mousedown", (a) => {
       if (a.preventDefault(), !t.disabled)
         o(t);
     }), n.append(Si(), Li(t.label)), n;
   }
-  function kt() {
+  function Et() {
     let t = document.createElement("div");
     return t.className = "empty", t.textContent = "No results", t;
   }
@@ -2645,8 +2645,8 @@ input:disabled {
     renderList(t, e, r, i) {
       if (!this.listbox)
         return;
-      if (this.listbox.replaceChildren(...t.map((o, n) => wt(o, n, e, r, i))), t.length === 0)
-        this.listbox.append(kt());
+      if (this.listbox.replaceChildren(...t.map((o, n) => kt(o, n, e, r, i))), t.length === 0)
+        this.listbox.append(Et());
       this.listbox.hidden = false, this.input?.setAttribute("aria-expanded", "true");
     }
     hideList() {
@@ -2671,7 +2671,7 @@ input:disabled {
     selectedValue = "";
     selectedLabel = "";
     constructor() {
-      super({ css: gt + xt, template: Ei });
+      super({ css: xt + yt, template: Ei });
       this.view = new Ut(this.shadowRoot, this.attachInternals());
     }
     connectedCallback() {
@@ -2714,13 +2714,13 @@ input:disabled {
       this.view.syncAttributes(this, this.disabled), this.syncDisplay();
     }
     syncOptions() {
-      this.options = yt(this), this.value = this.getAttribute("value") ?? this.selectedValue;
+      this.options = _t(this), this.value = this.getAttribute("value") ?? this.selectedValue;
     }
     syncDisplay() {
       this.view.syncDisplay(this.selectedValue, this.selectedLabel);
     }
     renderList(t) {
-      if (this.items = _t(this.options, t), this.items.length === 0 && t && this.hasAttribute("creatable"))
+      if (this.items = wt(this.options, t), this.items.length === 0 && t && this.hasAttribute("creatable"))
         this.items = [{ kind: "create", value: t, label: `Add "${t}"`, disabled: false }];
       this.view.renderList(this.items, this.activeIndex, this.selectedValue, this.selectItem);
     }
@@ -3743,7 +3743,7 @@ input:disabled {
   pointer-events: none;
 }
 `;
-  var tt = (t) => {
+  var et = (t) => {
     if (!t)
       return [];
     return t.assignedElements().filter((e) => e.tagName === "OPTION");
@@ -3752,7 +3752,7 @@ input:disabled {
     if (t)
       t.textContent = e;
   };
-  var St = (t, e, r) => {
+  var Lt = (t, e, r) => {
     let i = e.findIndex((o) => o.getAttribute("value") === r);
     if (i === -1)
       return;
@@ -3761,7 +3761,7 @@ input:disabled {
       o.setAttribute("aria-checked", a.toString()), o.setAttribute("tabindex", a ? "0" : "-1");
     });
   };
-  var Lt = (t, e) => {
+  var Ct = (t, e) => {
     t.forEach((r) => {
       if (r.getAttribute("value") === e)
         r.setAttribute("selected", "");
@@ -3770,7 +3770,7 @@ input:disabled {
     });
   };
   var ce = (t, e) => {
-    let r = tt(e);
+    let r = et(e);
     t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, o) => {
       if (i.setAttribute("role", "radio"), i.setAttribute("part", "segment"), !i.hasAttribute("tabindex"))
         i.setAttribute("tabindex", o === 0 ? "0" : "-1");
@@ -3779,14 +3779,14 @@ input:disabled {
           return;
         t.value = i.getAttribute("value") ?? "", i.focus();
       };
-    }), St(t, r, t.value), Lt(r, t.value);
+    }), Lt(t, r, t.value), Ct(r, t.value);
   };
   var Mo = (t, e, r) => {
     if (t.disabled)
       return;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
       return;
-    let o = tt(e);
+    let o = et(e);
     if (o.length === 0)
       return;
     let n = o.findIndex((d) => d.getAttribute("value") === t.value), a = n === -1 ? 0 : n, l = a;
@@ -3863,8 +3863,8 @@ input:disabled {
       if (this.getAttribute("value") !== t)
         this.setAttribute("value", t);
       this._internals.setFormValue(t);
-      let e = tt(this._slot);
-      if (St(this, e, t), Lt(e, t), !this._silentValueChange)
+      let e = et(this._slot);
+      if (Lt(this, e, t), Ct(e, t), !this._silentValueChange)
         this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: t } }));
     }
     get name() {
@@ -4073,7 +4073,7 @@ p9r-tag:hover {
     filter: brightness(0.92);
 }
 `;
-  var Ct = (t, e) => {
+  var Tt = (t, e) => {
     if (!t)
       return;
     t.textContent = "", window.setTimeout(() => {
@@ -4152,17 +4152,17 @@ p9r-tag:hover {
     return e ? [e.trim()] : [];
   };
   var _ = (t) => t;
-  var et = (t, e) => {
+  var rt = (t, e) => {
     let r = _(t), i = t.getAttribute("mode") || "multiple", o = e.trim();
     if (!o || !r._input)
       return;
     if (i === "multiple") {
       if (!r._tags.includes(o))
-        r._tags.push(o), Ct(r._liveRegion, `${o} added`);
+        r._tags.push(o), Tt(r._liveRegion, `${o} added`);
       r._input.value = "";
     } else
-      r._tags = [o], r._input.value = o, Ct(r._liveRegion, `${o} selected`);
-    r._activeIndex = -1, Tt(t), Ht(t);
+      r._tags = [o], r._input.value = o, Tt(r._liveRegion, `${o} selected`);
+    r._activeIndex = -1, Mt(t), It(t);
   };
   var Uo = (t, e) => {
     let r = _(t), i = e.trim();
@@ -4174,7 +4174,7 @@ p9r-tag:hover {
     let r = _(t), i = r._tags[e];
     if (i === undefined)
       return;
-    r._tags.splice(e, 1), Ct(r._liveRegion, `${i} removed`), Tt(t), r._input?.focus();
+    r._tags.splice(e, 1), Tt(r._liveRegion, `${i} removed`), Mt(t), r._input?.focus();
   };
   var Xo = (t) => {
     let e = _(t);
@@ -4182,7 +4182,7 @@ p9r-tag:hover {
       return;
     Ko(t, e._tags.length - 1);
   };
-  var Tt = (t) => {
+  var Mt = (t) => {
     let e = _(t);
     if (he(t), e._internals.setFormValue(e.value), e._silent)
       return;
@@ -4194,13 +4194,13 @@ p9r-tag:hover {
   };
   var me = (t, e) => {
     let r = _(t), o = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
-    r._suggestions = Vo(r._allSuggestions, o, e), r._activeIndex = -1, Mt(t);
-  };
-  var Mt = (t) => {
-    let e = _(t);
-    qo(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => et(t, r));
+    r._suggestions = Vo(r._allSuggestions, o, e), r._activeIndex = -1, Ht(t);
   };
   var Ht = (t) => {
+    let e = _(t);
+    qo(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => rt(t, r));
+  };
+  var It = (t) => {
     let e = _(t);
     pe(e._suggestionsEl, e._input), e._activeIndex = -1;
   };
@@ -4210,7 +4210,7 @@ p9r-tag:hover {
     me(t, e.value.trim().toLowerCase());
   };
   var Yo = (t) => {
-    setTimeout(() => Ht(t), 150);
+    setTimeout(() => It(t), 150);
   };
   var Zo = (t, e) => {
     if (!e)
@@ -4225,30 +4225,30 @@ p9r-tag:hover {
     if (r.key === "ArrowDown") {
       if (r.preventDefault(), o._suggestions.length === 0)
         return;
-      o._activeIndex = Math.min(o._activeIndex + 1, o._suggestions.length - 1), Mt(t);
+      o._activeIndex = Math.min(o._activeIndex + 1, o._suggestions.length - 1), Ht(t);
     } else if (r.key === "ArrowUp") {
       if (r.preventDefault(), o._suggestions.length === 0)
         return;
-      o._activeIndex = Math.max(o._activeIndex - 1, -1), Mt(t);
+      o._activeIndex = Math.max(o._activeIndex - 1, -1), Ht(t);
     } else if (r.key === "Enter") {
       r.preventDefault();
       let n = o._activeIndex >= 0 ? o._suggestions[o._activeIndex] : undefined;
       if (n)
-        et(t, n.value);
+        rt(t, n.value);
       else {
         let a = e.value.trim();
         if (a)
-          et(t, a);
+          rt(t, a);
       }
     } else if (r.key === "Escape")
-      r.preventDefault(), Ht(t);
+      r.preventDefault(), It(t);
     else if (r.key === "Backspace" && e.value === "" && i === "multiple")
       Xo(t);
     else if (r.key === "," && i === "multiple") {
       r.preventDefault();
       let n = e.value.trim();
       if (n)
-        et(t, n);
+        rt(t, n);
     }
   };
   var cc = No + Do;
@@ -4327,7 +4327,7 @@ p9r-tag:hover {
       let e = this.getAttribute("mode") || "multiple";
       if (this._tags = $o(e, t), this._input)
         this._input.value = e === "multiple" ? "" : this._tags[0] ?? "";
-      Tt(this);
+      Mt(this);
     }
     get name() {
       return this.getAttribute("name") || "";
@@ -4506,7 +4506,7 @@ p9r-tag:hover {
     let i = (t.textContent ?? "").length > 0, o = !e.hidden;
     r.hidden = !i && !o;
   };
-  var rt = (t, e) => {
+  var it = (t, e) => {
     if (!e || !t.hasAttribute("autosize"))
       return;
     e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
@@ -4589,7 +4589,7 @@ p9r-tag:hover {
   var rn = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), V(t, e, i, o), rt(t, e);
+    r.setFormValue(e.value), V(t, e, i, o), it(t, e);
   };
   var on = (t, e) => {
     if (!t)
@@ -4643,7 +4643,7 @@ p9r-tag:hover {
       else if (t === "max-count")
         ve(this, this._counter, this._max, this._hint, this._meta), V(this, this._textarea, this._counter, this._count);
       else if (t === "autosize")
-        rt(this, this._textarea);
+        it(this, this._textarea);
       else
         ge(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
     }
@@ -4653,7 +4653,7 @@ p9r-tag:hover {
     set value(t) {
       if (!this._textarea)
         return;
-      this._textarea.value = t, this._internals.setFormValue(t), V(this, this._textarea, this._counter, this._count), rt(this, this._textarea);
+      this._textarea.value = t, this._internals.setFormValue(t), V(this, this._textarea, this._counter, this._count), it(this, this._textarea);
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -4829,7 +4829,7 @@ input:hover:not(:disabled) {
     return t.map((r) => e.find((i) => i.value === r) ?? { value: r, label: r, disabled: false });
   }
   function un(t, e, r, i) {
-    let o = t.filter((a) => !e.includes(a.value)), n = _t(o, r);
+    let o = t.filter((a) => !e.includes(a.value)), n = wt(o, r);
     if (n.length > 0 || !r || !i || e.includes(r))
       return n;
     return [{ kind: "create", value: r, label: `Add "${r}"`, disabled: false }];
@@ -4877,7 +4877,7 @@ input:hover:not(:disabled) {
     renderList(t, e, r, i) {
       if (!this.listbox)
         return;
-      if (this.listbox.replaceChildren(...t.map((o, n) => wt(o, n, e, "", r))), t.length === 0)
+      if (this.listbox.replaceChildren(...t.map((o, n) => kt(o, n, e, "", r))), t.length === 0)
         this.listbox.append(i);
       this.listbox.hidden = false, this.input?.setAttribute("aria-expanded", "true");
     }
@@ -4902,7 +4902,7 @@ input:hover:not(:disabled) {
     selected = [];
     activeIndex = -1;
     constructor() {
-      super({ css: gt + xt + sn, template: an });
+      super({ css: xt + yt + sn, template: an });
       this.view = new ye(this.shadowRoot, this.attachInternals());
     }
     connectedCallback() {
@@ -4944,14 +4944,14 @@ input:hover:not(:disabled) {
       this.view.syncAttributes(this, this.disabled, this.selected.length), this.syncDisplay();
     }
     syncOptions() {
-      this.options = yt(this), this.value = this.getAttribute("value") ?? this.value;
+      this.options = _t(this), this.value = this.getAttribute("value") ?? this.value;
     }
     syncDisplay() {
       this.view.syncDisplay(this.value, this.selected, this.options, this.removeValue), this.view.syncAttributes(this, this.disabled, this.selected.length);
     }
     renderList(t) {
       this.items = un(this.options, this.selected, t, this.hasAttribute("creatable"));
-      let e = this.hasAttribute("creatable") ? Ai("Type to create", () => this.view.input?.focus()) : kt();
+      let e = this.hasAttribute("creatable") ? Ai("Type to create", () => this.view.input?.focus()) : Et();
       this.view.renderList(this.items, this.activeIndex, this.selectItem, e);
     }
     selectItem = (t) => {
@@ -6601,7 +6601,7 @@ p {
     else
       t.textContent = "", t.style.display = "none";
   };
-  var It = (t, e, r) => {
+  var zt = (t, e, r) => {
     if (r) {
       if (!t.hasAttribute("active"))
         t.setAttribute("active", "");
@@ -6612,9 +6612,9 @@ p {
       t.removeAttribute("aria-current"), e?.classList.remove("active");
     }
   };
-  var zt = (t, e) => {
+  var j = (t, e) => {
     if (t.hasAttribute("active")) {
-      It(t, e, true);
+      zt(t, e, true);
       return;
     }
     if (!e || !t.hasAttribute("href"))
@@ -6623,8 +6623,8 @@ p {
     if (!r)
       return;
     try {
-      let i = new URL(r, window.location.href), n = new URL(window.location.href).pathname, a = i.pathname, l = a === "/" ? n === "/" : n === a || n.startsWith(a + "/");
-      It(t, e, l);
+      let i = new URL(r, window.location.href), n = new URL(window.location.href).pathname, a = i.pathname, l = t.hasAttribute("exact") ? n === a : a === "/" ? n === "/" : n === a || n.startsWith(a + "/");
+      zt(t, e, l);
     } catch {
       console.warn("Invalid href in LateralMenuItem:", r);
     }
@@ -6648,16 +6648,16 @@ p {
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
     }
     static get observedAttributes() {
-      return ["href", "badge", "disabled", "active"];
+      return ["href", "badge", "disabled", "active", "exact"];
     }
     connectedCallback() {
-      for (let t of ["href", "badge", "disabled", "active"])
+      for (let t of ["href", "badge", "disabled", "active", "exact"])
         c(this, t);
       if (!this.hasAttribute("role"))
         this.setAttribute("role", "listitem");
       if (!this.hasAttribute("tabindex"))
         this.setAttribute("tabindex", "0");
-      we(this._anchor, this.getAttribute("href")), ke(this._badgeEl, this.getAttribute("badge")), zt(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
+      we(this._anchor, this.getAttribute("href")), ke(this._badgeEl, this.getAttribute("badge")), j(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
     }
     disconnectedCallback() {
       window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey);
@@ -6665,15 +6665,19 @@ p {
     attributeChangedCallback(t, e, r) {
       if (!this._anchor)
         return;
-      if (t === "href")
-        we(this._anchor, r);
+      if (t === "href") {
+        if (we(this._anchor, r), this.isConnected)
+          j(this, this._anchor);
+      }
       if (t === "badge")
         ke(this._badgeEl, r);
       if (t === "active")
         if (r !== null)
-          It(this, this._anchor, true);
+          zt(this, this._anchor, true);
         else
-          zt(this, this._anchor);
+          j(this, this._anchor);
+      if (t === "exact" && this.isConnected)
+        j(this, this._anchor);
       if (t === "disabled") {
         let i = this.hasAttribute("disabled");
         this.setAttribute("aria-disabled", i ? "true" : "false"), this.setAttribute("tabindex", i ? "-1" : "0");
@@ -6703,7 +6707,13 @@ p {
     set active(t) {
       t ? this.setAttribute("active", "") : this.removeAttribute("active");
     }
-    _onPopstate = () => zt(this, this._anchor);
+    get exact() {
+      return this.hasAttribute("exact");
+    }
+    set exact(t) {
+      t ? this.setAttribute("exact", "") : this.removeAttribute("exact");
+    }
+    _onPopstate = () => j(this, this._anchor);
     _onKey = (t) => Jn(this, this._anchor, t);
   }
   var wa = `:host {
@@ -7431,9 +7441,9 @@ p {
         d.setAttribute("disabled", "");
       e.appendChild(d), n.setAttribute("role", "tabpanel"), n.setAttribute("aria-labelledby", `tab-${l}`);
     }), o)
-      j(t, e, r, o);
+      $(t, e, r, o);
   };
-  var j = (t, e, r, i) => {
+  var $ = (t, e, r, i) => {
     let o = Le(r), n = Array.from(e?.querySelectorAll(".tab") ?? []), a = false;
     if (o.forEach((l) => {
       let u = l.id === i;
@@ -7452,7 +7462,7 @@ p {
       return;
     let n = o.dataset.target;
     if (n)
-      j(t, e, r, n);
+      $(t, e, r, n);
   };
   var Wa = (t, e, r, i) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(i.key))
@@ -7475,7 +7485,7 @@ p {
       return;
     let d = u.dataset.target;
     if (d)
-      j(t, e, r, d);
+      $(t, e, r, d);
     u.focus();
   };
   var Mu = Xa + Ga;
@@ -7498,7 +7508,7 @@ p {
     }
     attributeChangedCallback(t, e, r) {
       if (t === "active" && r !== null)
-        j(this, this._tablist, this._slot, r);
+        $(this, this._tablist, this._slot, r);
     }
     get active() {
       return this.getAttribute("active") ?? "";
@@ -8050,7 +8060,7 @@ p {
       e.searchParams.append(r, i);
     return e;
   }
-  async function $(t) {
+  async function U(t) {
     try {
       let e = await fetch(gs(t), { headers: { Accept: "application/json" } });
       return e.ok ? await e.json() : null;
@@ -8079,7 +8089,7 @@ p {
   function ys(t) {
     if (t.length === 0)
       return "";
-    let e = 320, r = 140, i = 32, o = 8, n = 10, a = 22, l = e - i - o, u = r - n - a, d = n + u, p = Math.max(...t.map((I) => I.value), 1), m = t.length, b = t.map((I, Y) => [i + (m === 1 ? l / 2 : Y / (m - 1) * l), n + (1 - I.value / p) * u]), A = b.map(([I, Y]) => `${I.toFixed(1)},${Y.toFixed(1)}`).join(" "), Tl = `${b[0][0].toFixed(1)},${d} ${A} ${b[m - 1][0].toFixed(1)},${d}`, Ml = b.map(([I, Y]) => `<circle class="dot" cx="${I.toFixed(1)}" cy="${Y.toFixed(1)}" r="2.5"/>`).join("");
+    let e = 320, r = 140, i = 32, o = 8, n = 10, a = 22, l = e - i - o, u = r - n - a, d = n + u, p = Math.max(...t.map((I) => I.value), 1), m = t.length, b = t.map((I, Z) => [i + (m === 1 ? l / 2 : Z / (m - 1) * l), n + (1 - I.value / p) * u]), A = b.map(([I, Z]) => `${I.toFixed(1)},${Z.toFixed(1)}`).join(" "), Tl = `${b[0][0].toFixed(1)},${d} ${A} ${b[m - 1][0].toFixed(1)},${d}`, Ml = b.map(([I, Z]) => `<circle class="dot" cx="${I.toFixed(1)}" cy="${Z.toFixed(1)}" r="2.5"/>`).join("");
     return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${n}" x2="${i}" y2="${d}"/><line class="axis" x1="${i}" y1="${d}" x2="${e - o}" y2="${d}"/><text class="tick" x="${i - 4}" y="${n + 3}" text-anchor="end">${Qu(p)}</text><text class="tick" x="${i - 4}" y="${d}" text-anchor="end">0</text><polygon class="area" points="${Tl}" fill="url(#lc-grad)"/><polyline class="stroke" points="${A}"/>${Ml}<text class="tick" x="${i}" y="${r - 6}">${k(t[0].label)}</text><text class="tick" x="${e - o}" y="${r - 6}" text-anchor="end">${k(t[m - 1].label)}</text></svg>`;
   }
   function _s(t, e) {
@@ -8151,7 +8161,7 @@ p {
       t.querySelector(".label").textContent = this.getAttribute("label") ?? "", this._load(t);
     }
     async _load(t) {
-      let e = t.querySelector(".value"), r = t.querySelector(".note"), i = this.getAttribute("url"), o = i ? await $(i) : null, n = o && typeof o === "object" ? o[this.getAttribute("field") ?? "value"] : undefined;
+      let e = t.querySelector(".value"), r = t.querySelector(".note"), i = this.getAttribute("url"), o = i ? await U(i) : null, n = o && typeof o === "object" ? o[this.getAttribute("field") ?? "value"] : undefined;
       if (n === undefined || n === null) {
         e.textContent = "—", e.classList.add("is-empty"), r.textContent = this.getAttribute("empty") ?? "Aucune donnée";
         return;
@@ -8246,7 +8256,7 @@ p {
       this._load();
     }
     async _load() {
-      let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), r = e ? await $(e) : null, i = Array.isArray(r) ? r : [];
+      let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), r = e ? await U(e) : null, i = Array.isArray(r) ? r : [];
       if (i.length === 0) {
         t.innerHTML = Pt(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
         return;
@@ -8338,7 +8348,7 @@ p {
       this._load();
     }
     async _load() {
-      let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), r = e ? await $(e) : null, i = Array.isArray(r) ? r : [];
+      let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), r = e ? await U(e) : null, i = Array.isArray(r) ? r : [];
       if (i.length === 0) {
         t.innerHTML = Pt(this.getAttribute("empty") ?? "Aucune donnée");
         return;
@@ -8383,7 +8393,7 @@ p {
 
 .tabs button.active {
     background: var(--primary-base, #4f46e5);
-    color: var(--primary-contrasted);
+    color: var(--primary-foreground, #fff);
 }
 `;
 
@@ -8403,17 +8413,17 @@ p {
     }
   }
   var g = "cms-binding-core";
-  var it = "cms-binding-disabled";
+  var ot = "cms-binding-disabled";
   var Bt = "cms-source-state-force";
   var h = "cms-source";
   var Me = "cms-source-body";
-  var ot = "cms-source-id";
-  var nt = "cms-source-trigger";
+  var nt = "cms-source-id";
+  var at = "cms-source-trigger";
   var Rs = "cms-source-method";
   var Ps = "cms-source-publish";
   var Bs = "cms-source-success-reset";
   var Fs = "cms-source-success-redirect";
-  var at = "cms-repeat";
+  var st = "cms-repeat";
   var L = "cms-condition";
   var v = "cms-page-state";
   var ap = ["loaded", "loading", "empty", "error"];
@@ -8437,10 +8447,10 @@ p {
   function Vs(t) {
     return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
   }
-  function U() {
+  function K() {
     return new URLSearchParams(typeof location > "u" ? "" : location.search);
   }
-  function js(t, e = U()) {
+  function js(t, e = K()) {
     return t.replace(lp, (r, i) => encodeURIComponent(e.get(i) ?? ""));
   }
   function $s(t, e = document) {
@@ -8448,7 +8458,7 @@ p {
     return t.replace(dp, (i, o) => encodeURIComponent(r.get(o) ?? ""));
   }
   function He(t, e) {
-    let r = U();
+    let r = K();
     if (e === "")
       r.delete(t);
     else
@@ -8456,7 +8466,7 @@ p {
     let i = r.toString();
     history.replaceState(history.state, "", location.pathname + (i ? `?${i}` : "") + location.hash), document.dispatchEvent(new Event("cms-params:change"));
   }
-  function K(t, e = document) {
+  function X(t, e = document) {
     return Ie(e).get(t.trim()) ?? "";
   }
   function Ft(t, e, r = document) {
@@ -8518,7 +8528,7 @@ p {
     reflect() {
       if (this.timer)
         return;
-      let t = K(this.key, this.el.ownerDocument), e = this.el;
+      let t = X(this.key, this.el.ownerDocument), e = this.el;
       if (e.type === "checkbox") {
         let r = t !== "" && t === (e.value || "true");
         if (e.checked !== r)
@@ -8601,7 +8611,7 @@ p {
     reflect() {
       if (this.timer)
         return;
-      let t = U().get(this.key) ?? "", e = this.el;
+      let t = K().get(this.key) ?? "", e = this.el;
       if (e.type === "checkbox") {
         let r = t !== "" && t === (e.value || "true");
         if (e.checked !== r)
@@ -8776,7 +8786,7 @@ p {
   var rl = "cms-reload-on";
   var il = "cms-source:reload";
   function Ot(t) {
-    let e = t.getAttribute(nt);
+    let e = t.getAttribute(at);
     return Ds(e) ? e : "auto";
   }
   function ol(t, e) {
@@ -8841,7 +8851,7 @@ p {
         t.unmount?.();
     }
   }
-  function st(t, e) {
+  function lt(t, e) {
     let r = t.nextSibling;
     while (r && r !== e) {
       let i = r.nextSibling;
@@ -8900,11 +8910,11 @@ p {
     if (t.kind === "path")
       return gp(t.path, e);
     if (t.kind === "not")
-      return !lt(E(t.node, e));
+      return !dt(E(t.node, e));
     if (t.kind === "and")
-      return lt(E(t.left, e)) && lt(E(t.right, e));
+      return dt(E(t.left, e)) && dt(E(t.right, e));
     if (t.kind === "or")
-      return lt(E(t.left, e)) || lt(E(t.right, e));
+      return dt(E(t.left, e)) || dt(E(t.right, e));
     if (t.kind === "compare")
       return xp(E(t.left, e), E(t.right, e), t.operator);
     return false;
@@ -8913,7 +8923,7 @@ p {
     let r = P(e, t.trim());
     return r.found ? r.value : undefined;
   }
-  function lt(t) {
+  function dt(t) {
     return Boolean(t);
   }
   function xp(t, e, r) {
@@ -9156,16 +9166,16 @@ p {
       return false;
     cl.lastIndex = 0;
     for (let r of t.matchAll(cl))
-      if (X(r[1] ?? "", e))
+      if (G(r[1] ?? "", e))
         return true;
     return false;
   }
   function De(t, e) {
     if (!e)
       return false;
-    return Fe(t).some((r) => X(r, e));
+    return Fe(t).some((r) => G(r, e));
   }
-  function X(t, e) {
+  function G(t, e) {
     if (!e)
       return false;
     let r = t.trim().split(".")[0] ?? "";
@@ -9191,8 +9201,8 @@ p {
     return { path: t.trim() };
   }
   function ml(t, e, r, i, o, n) {
-    let a = t.getAttribute(at) ?? "";
-    if (r.skipRepeat || !t.hasAttribute(at) || X(a, r.submitBoundary))
+    let a = t.getAttribute(st) ?? "";
+    if (r.skipRepeat || !t.hasAttribute(st) || G(a, r.submitBoundary))
       return false;
     let l = t.getAttribute(L), u = l ? De(l, r.submitBoundary) : false;
     return i.repeats.push({ path: e, spec: hl(a), template: fl(t, o, n, { removeRepeat: true, removeCondition: !!r.submitBoundary && !!l && !u, submitBoundary: r.submitBoundary }), rootCondition: u || !l ? null : Ne(l) }), true;
@@ -9206,7 +9216,7 @@ p {
   function fl(t, e, r, i) {
     let o = (t.ownerDocument ?? document).createDocumentFragment(), n = t.cloneNode(true);
     if (i.removeRepeat)
-      n.removeAttribute(at);
+      n.removeAttribute(st);
     if (i.removeCondition)
       n.removeAttribute(L);
     return o.appendChild(n), r(o, e, { skipRootCondition: true, skipRootRepeat: i.removeRepeat === true, submitBoundary: i.submitBoundary ?? null });
@@ -9233,7 +9243,7 @@ p {
       return;
     if (a.hasAttribute(h)) {
       jt(a, e, i, r.submitBoundary);
-      let u = a.getAttribute(nt)?.trim().toLowerCase();
+      let u = a.getAttribute(at)?.trim().toLowerCase();
       if (u === "submit" || u === "change")
         vl(a, e, i, o, n, ul(a));
       return;
@@ -9244,7 +9254,7 @@ p {
     }
     let l = pl(a);
     if (l) {
-      if (!X(l, r.submitBoundary))
+      if (!G(l, r.submitBoundary))
         i.rawHtml.push({ path: e, expression: l });
       return;
     }
@@ -9257,7 +9267,7 @@ p {
   }
   var Cp = { urlencode: (t) => encodeURIComponent(t == null ? "" : String(t)) };
   var Tp = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
-  function dt(t, e, r = {}) {
+  function ct(t, e, r = {}) {
     return t.replace(Tp, (i, o, n) => {
       let a = P(e, o);
       if (!a.found)
@@ -9277,7 +9287,7 @@ p {
       this.filters = r;
     }
     update(t) {
-      this.node.nodeValue = dt(this.template, t, this.filters);
+      this.node.nodeValue = ct(this.template, t, this.filters);
     }
   }
 
@@ -9293,7 +9303,7 @@ p {
       this.filters = i;
     }
     update(t) {
-      this.element.setAttribute(this.name, dt(this.template, t, this.filters));
+      this.element.setAttribute(this.name, ct(this.template, t, this.filters));
     }
   }
 
@@ -9323,7 +9333,7 @@ p {
         this.child = this.template.mount(e, t, this.end);
     }
     unmount() {
-      this.child?.unmount(), this.child = null, st(this.start, this.end);
+      this.child?.unmount(), this.child = null, lt(this.start, this.end);
     }
   }
 
@@ -9361,7 +9371,7 @@ p {
     unmount() {
       for (let t of this.regions)
         t.unmount();
-      this.regions = [], st(this.start, this.end);
+      this.regions = [], lt(this.start, this.end);
     }
   }
 
@@ -9375,7 +9385,7 @@ p {
       this.expression = r;
     }
     update(t) {
-      st(this.start, this.end);
+      lt(this.start, this.end);
       let e = this.end.parentNode;
       if (!e)
         return;
@@ -9383,11 +9393,11 @@ p {
       i.innerHTML = r.found && r.value != null ? String(r.value) : "", e.insertBefore(i.content, this.end);
     }
     unmount() {
-      st(this.start, this.end);
+      lt(this.start, this.end);
     }
   }
   function Xe(t, e, r) {
-    let i = [], o = e.text.map((d) => ({ item: d, node: ct(t, d.path) })), n = e.attributes.map((d) => ({ item: d, node: ct(t, d.path) })), a = e.conditions.map((d) => ({ item: d, node: ct(t, d.path) })), l = e.repeats.map((d) => ({ item: d, node: ct(t, d.path) })), u = e.rawHtml.map((d) => ({ item: d, node: ct(t, d.path) }));
+    let i = [], o = e.text.map((d) => ({ item: d, node: ut(t, d.path) })), n = e.attributes.map((d) => ({ item: d, node: ut(t, d.path) })), a = e.conditions.map((d) => ({ item: d, node: ut(t, d.path) })), l = e.repeats.map((d) => ({ item: d, node: ut(t, d.path) })), u = e.rawHtml.map((d) => ({ item: d, node: ut(t, d.path) }));
     for (let { item: d, node: p } of o) {
       if (p.nodeType !== Node.TEXT_NODE)
         throw Error("Compiled text binding no longer points to a text node.");
@@ -9412,7 +9422,7 @@ p {
     }
     return i;
   }
-  function ct(t, e) {
+  function ut(t, e) {
     let r = t;
     for (let i of e) {
       let o = r.childNodes.item(i);
@@ -9510,7 +9520,7 @@ p {
         e.add(n);
     return e;
   }
-  function G(t, e) {
+  function Y(t, e) {
     return { loading: t === "loading", loaded: t === "loaded", empty: t === "empty", error: t === "error", status: xl(e) ? e.status : undefined, message: xl(e) ? e.message : undefined };
   }
   function B(t, e, r) {
@@ -9532,7 +9542,7 @@ p {
     return typeof t === "object" && t !== null && (("status" in t) || ("message" in t));
   }
   function Hp(t, e) {
-    let r = t.getAttribute(ot)?.trim();
+    let r = t.getAttribute(nt)?.trim();
     return r ? { [r]: e } : {};
   }
 
@@ -9553,28 +9563,28 @@ p {
       B(this.el, e, this.options), this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
     }
     loading(t) {
-      let e = G("loading", undefined);
+      let e = Y("loading", undefined);
       if (B(this.el, e, this.options), this.renderedBody && !this.hasConditions("loading"))
         return;
       this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
     }
     error(t, e, r, i) {
-      let o = { status: r, message: i }, n = G("error", o);
+      let o = { status: r, message: i }, n = Y("error", o);
       if (B(this.el, n, this.options), this.renderer.body(this.scope(t, n, o)), this.renderedBody = true, !this.hasConditions("error"))
         console.warn(`cms-source "${e}": ${i}`);
     }
     data(t, e) {
-      let r = Js(e) ? "empty" : "loaded", i = G(r, e);
+      let r = Js(e) ? "empty" : "loaded", i = Y(r, e);
       B(this.el, i, this.options);
       let o = this.scope(t, i, e);
       this.renderer.body(o), this.renderedBody = true;
     }
     result(t, e) {
-      let r = e.ok ? "loaded" : "error", i = G(r, e);
+      let r = e.ok ? "loaded" : "error", i = Y(r, e);
       B(this.el, i, this.options), this.renderer.body(this.scope(t, i, e)), this.renderedBody = true;
     }
     forced(t) {
-      let e = t === "error" ? { status: 0, message: "Forced error state" } : undefined, r = G(t, e), i = T(this.el.getAttribute(h) ?? "");
+      let e = t === "error" ? { status: 0, message: "Forced error state" } : undefined, r = Y(t, e), i = T(this.el.getAttribute(h) ?? "");
       B(this.el, r, this.options), this.renderer.body(this.scope(i.alias, r, e)), this.renderedBody = true;
     }
     scope(t, e, r) {
@@ -9588,12 +9598,12 @@ p {
     let r = Ip(t);
     if (!r)
       return;
-    let i = {}, o = U();
+    let i = {}, o = K();
     for (let [n, a] of Object.entries(r))
       if (a.from === "queryParam")
         i[n] = o.get(a.name) ?? "";
       else if (a.from === "state")
-        i[n] = K(a.name, e);
+        i[n] = X(a.name, e);
       else
         i[n] = a.value;
     return Object.keys(i).length ? i : undefined;
@@ -9636,7 +9646,7 @@ p {
   function kl(t) {
     return typeof t === "object" && t !== null && !Array.isArray(t);
   }
-  function ut(t) {
+  function pt(t) {
     let e = new FormData(t);
     if (Array.from(e.keys()).length > 0)
       return e;
@@ -9693,7 +9703,7 @@ p {
     return e;
   }
   function We(t, e) {
-    let r = e.formData ?? ut(t);
+    let r = e.formData ?? pt(t);
     if (e.method === "GET" || e.method === "HEAD")
       return { kind: "query", url: Fp(e.url, r), formData: r, data: Ze(r) };
     let i = Np(Ze(r), r, e.bodyFields);
@@ -9793,11 +9803,11 @@ p {
       this.filters = e;
     }
     capture() {
-      let t = pt(this.element, this.element.ownerDocument);
+      let t = ht(this.element, this.element.ownerDocument);
       if (!t)
         return null;
       let e = this.sourceMethod();
-      return { form: t, method: e, formData: ut(t), bodyFields: e === "GET" || e === "HEAD" ? undefined : wl(this.element.getAttribute(Me), this.element.ownerDocument) };
+      return { form: t, method: e, formData: pt(t), bodyFields: e === "GET" || e === "HEAD" ? undefined : wl(this.element.getAttribute(Me), this.element.ownerDocument) };
     }
     async send(t, e, r) {
       return er(t.form, { url: this.submitUrl(e), method: t.method, signal: r, bodyFields: t.bodyFields, formData: t.formData });
@@ -9843,7 +9853,7 @@ p {
       if (!r)
         return "";
       let i = { value: t, vars: { ...e ? { [e]: t } : {}, result: t, $source: { loading: false, loaded: t.ok, empty: false, error: !t.ok, status: t.status, message: t.message } } };
-      return dt(r, i, this.filters).trim();
+      return ct(r, i, this.filters).trim();
     }
     redirect(t) {
       let e;
@@ -9856,7 +9866,7 @@ p {
         location.href = `${e.pathname}${e.search}${e.hash}`;
     }
   }
-  function pt(t, e) {
+  function ht(t, e) {
     let r = e.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
     return typeof r === "function" && t instanceof r ? t : null;
   }
@@ -9880,7 +9890,7 @@ p {
         this.run({ onlyIfUrlChanged: true });
     };
     onSubmit = (t) => {
-      let e = pt(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
+      let e = ht(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
       if (!(typeof e?.reportValidity === "function" ? e.reportValidity() : true)) {
         t.preventDefault();
         return;
@@ -9889,7 +9899,7 @@ p {
         this.run();
     };
     onChange = () => {
-      let t = pt(this.el, this.el.ownerDocument) ?? this.el.closest("form");
+      let t = ht(this.el, this.el.ownerDocument) ?? this.el.closest("form");
       if ((typeof t?.reportValidity === "function" ? t.reportValidity() : true) && this.el.isConnected)
         this.run();
     };
@@ -9897,7 +9907,7 @@ p {
       this.el = t;
       this.filters = e;
       this.options = r;
-      this.formOwned = pt(t, t.ownerDocument) !== null && Ot(t) !== "auto", this.submission = this.formOwned ? new rr(t, e) : null;
+      this.formOwned = ht(t, t.ownerDocument) !== null && Ot(t) !== "auto", this.submission = this.formOwned ? new rr(t, e) : null;
       let i = this.formOwned ? Ws(t) : Qs(t);
       this.renderer = new Ge(t, i, this.filters, { inPlace: this.formOwned }), this.presenter = new Ye(t, i, this.renderer, this.options);
     }
@@ -9961,7 +9971,7 @@ p {
     for (let n of Kp(t, r)) {
       if (!n.hasAttribute(h))
         continue;
-      let a = n.getAttribute(ot)?.trim();
+      let a = n.getAttribute(nt)?.trim();
       if (!a)
         continue;
       let l = n === r ? i : e.get(n);
@@ -10166,7 +10176,7 @@ p {
   class Cl extends HTMLElement {
     _runtime = null;
     static get observedAttributes() {
-      return [it, Bt];
+      return [ot, Bt];
     }
     connectedCallback() {
       Sl(this.ownerDocument ?? document), this._syncRuntime();
@@ -10201,10 +10211,10 @@ p {
       this.startRuntime();
     }
     _isRuntimeDisabled() {
-      if (this.hasAttribute(it) || this.closest(`[${x}]`) !== null)
+      if (this.hasAttribute(ot) || this.closest(`[${x}]`) !== null)
         return true;
       for (let t = this.parentElement;t; t = t.parentElement)
-        if (t.localName === g && t.hasAttribute(it))
+        if (t.localName === g && t.hasAttribute(ot))
           return true;
       return false;
     }
@@ -14017,7 +14027,7 @@ w13c-lateral-menu-item {
 
     <div class="menu-section">Reports</div>
 
-    <w13c-lateral-menu-item data-analytics-view="overview">
+    <w13c-lateral-menu-item data-analytics-view="overview" exact>
         <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 19V9" />

@@ -18,11 +18,11 @@ export class LateralMenuItem extends Component {
     }
 
     static get observedAttributes(): string[] {
-        return ["href", "badge", "disabled", "active"];
+        return ["href", "badge", "disabled", "active", "exact"];
     }
 
     override connectedCallback(): void {
-        for (const prop of ["href", "badge", "disabled", "active"]) {
+        for (const prop of ["href", "badge", "disabled", "active", "exact"]) {
             upgradeProperty(this, prop);
         }
 
@@ -52,6 +52,9 @@ export class LateralMenuItem extends Component {
         }
         if (name === "href") {
             updateHref(this._anchor, newVal);
+            if (this.isConnected) {
+                checkActiveState(this, this._anchor);
+            }
         }
         if (name === "badge") {
             updateBadge(this._badgeEl, newVal);
@@ -62,6 +65,9 @@ export class LateralMenuItem extends Component {
             } else {
                 checkActiveState(this, this._anchor);
             }
+        }
+        if (name === "exact" && this.isConnected) {
+            checkActiveState(this, this._anchor);
         }
         if (name === "disabled") {
             const isDisabled = this.hasAttribute("disabled");
@@ -96,6 +102,13 @@ export class LateralMenuItem extends Component {
     }
     set active(v: boolean) {
         v ? this.setAttribute("active", "") : this.removeAttribute("active");
+    }
+
+    get exact() {
+        return this.hasAttribute("exact");
+    }
+    set exact(v: boolean) {
+        v ? this.setAttribute("exact", "") : this.removeAttribute("exact");
     }
 
     private _onPopstate = () => checkActiveState(this, this._anchor);
