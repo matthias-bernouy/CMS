@@ -3,11 +3,54 @@ import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { RelationRepository } from "@bernouy/cms-relations";
 import type { TriggerRepository } from "@bernouy/cms-triggers";
 import type { RolesRepository } from "@bernouy/cms-permissions";
-import type { SourceOverlayRepository, SourceRepository } from "@bernouy/cms-sources";
+import type { ExecutorDeps, SourceOverlayRepository, SourceRepository } from "@bernouy/cms-sources";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { IntegrationAnswerValue, IntegrationDefinition } from "./Integration";
 import type { IntegrationInstallationRepository } from "./IntegrationInstallationRepository";
 import type { IntegrationConnectorDeployer, IntegrationConnectorDeployResult } from "./IntegrationConnectorDeployer";
+
+export type IntegrationProvisionOutput = {
+    name: string;
+    key: string;
+};
+
+export type IntegrationProvisionDeployment = {
+    integrationKind: string;
+    version?: string;
+    provider: string;
+    configuration: Record<string, IntegrationAnswerValue>;
+    outputs: IntegrationProvisionOutput[];
+};
+
+export type IntegrationProvisionContext = {
+    existingOutputs: Record<string, string>;
+    env: Record<string, string | undefined>;
+};
+
+export type IntegrationProvisionResourceResult = {
+    type: string;
+    id: string;
+    action: "created" | "updated" | "reused";
+};
+
+export type IntegrationProvisionExecutionResult = {
+    outputs: Record<string, string>;
+    resources?: IntegrationProvisionResourceResult[];
+    rollback?: () => Promise<void>;
+};
+
+export type IntegrationProvisionResult = {
+    provider: string;
+    resources?: IntegrationProvisionResourceResult[];
+};
+
+export interface IntegrationProvisioner {
+    provider: string;
+    provision(
+        deployment: IntegrationProvisionDeployment,
+        context: IntegrationProvisionContext,
+    ): Promise<IntegrationProvisionExecutionResult>;
+}
 
 export type IntegrationArtifactType =
     | "source"
@@ -37,6 +80,7 @@ export type IntegrationImportResult = {
     artifacts: IntegrationArtifactResult[];
     secrets?: IntegrationSecretResult[];
     connectors?: IntegrationConnectorDeployResult[];
+    provisions?: IntegrationProvisionResult[];
 };
 
 export type IntegrationImportOptions = {
@@ -66,6 +110,8 @@ export type IntegrationImportDeps = {
     installations?: IntegrationInstallationRepository;
     blocs?: IntegrationBlocImporter;
     connectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
+    provisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
+    sourceExecutorDeps?: ExecutorDeps;
     env?: Record<string, string | undefined>;
 };
 

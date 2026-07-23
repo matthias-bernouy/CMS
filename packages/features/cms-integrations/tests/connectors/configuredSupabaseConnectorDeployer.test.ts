@@ -8,6 +8,23 @@ import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/s
 import { createSchemaFixture, emptyContext, emptyDeployment, schemaDeployment } from "./supabaseFixtures";
 
 describe("ConfiguredSupabaseConnectorDeployer", () => {
+    test("previews the public function URL without reading the access token", async () => {
+        const providerRepository = new InMemoryIntegrationConnectorProviderRepository({
+            provider: "supabase",
+            enabled: true,
+            projectRef: "project-one",
+        });
+        const deployer = new ConfiguredSupabaseConnectorDeployer({
+            integrationsRoot: ".",
+            providerRepository,
+            secrets: new InMemorySecretStore(),
+        });
+
+        expect(await deployer.previewOutputs()).toEqual({
+            functionsBaseUrl: "https://project-one.supabase.co/functions/v1",
+        });
+    });
+
     test("reloads provider settings and the access token before every deployment", async () => {
         const integrationsRoot = await createSchemaFixture();
         const providerRepository = new InMemoryIntegrationConnectorProviderRepository();

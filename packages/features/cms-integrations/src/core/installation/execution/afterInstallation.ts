@@ -1,0 +1,99 @@
+import { executeFunction, validateFunction, type CmsFunction } from "@bernouy/cms-functions";
+import { secretKeyToRef } from "@bernouy/cms-secrets";
+import { IntegrationInputError, IntegrationRuntimeError } from "../../errors";
+import { resolveDependencyContext } from "../../import/dependencies";
+import { resolveTemplates, type TemplateContext } from "../../definitions/templates";
+import type { DeclarativeAfterInstallationTemplate, IntegrationDefinition } from "../../../interfaces/Integration";
+import type { IntegrationImportDeps } from "../../../interfaces/IntegrationImport";
+import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
+import type { IntegrationInstallationRepository } from "../../../interfaces/IntegrationInstallationRepository";
+import { integrationInstallationId } from "../ids";
+
+export async function reconcileAfterInstallation(
+    deps: IntegrationImportDeps,
+    installations: IntegrationInstallationRepository,
+    changedInstallationId: string,
+): Promise<void> {
+    const installed = await installations.list();
+    for (const installation of installed) {
+        const definition = installation.definitionSnapshot;
+        if (installation.status !== "success" || !definition?.afterInstallation?.length) {
+            continue;
+        }
+        const actions = definition.afterInstallation.filter((action) =>
+            isAffected(definition, installation.id, action, changedInstallationId),
+        );
+        if (!actions.length) {
+            continue;
+        }
+        const dependencies = await resolveDependencyContext(definition, installations);
+        for (const action of actions) {
+            if ((action.requires ?? []).some((name) => !dependencies[name])) {
+                continue;
+            }
+            await executeAction(deps, installation, dependencies, action);
+        }
+    }
+}
+
+function isAffected(
+    definition: IntegrationDefinition,
+    installationId: string,
+    action: DeclarativeAfterInstallationTemplate,
+    changedInstallationId: string,
+): boolean {
+    if (installationId === changedInstallationId) {
+        return true;
+    }
+    const requirements = new Set(action.requires ?? []);
+    return (definition.dependencies ?? []).some(
+        (dependency) =>
+            requirements.has(dependency.name) && integrationInstallationId(dependency.kind) === changedInstallationId,
+    );
+}
+
+async function executeAction(
+    deps: IntegrationImportDeps,
+    installation: IntegrationInstallation,
+    dependencies: NonNullable<TemplateContext["dependencies"]>,
+    action: DeclarativeAfterInstallationTemplate,
+): Promise<void> {
+    const context: TemplateContext = {
+        answers: installation.answersSnapshot,
+        dependencies,
+        secrets: Object.fromEntries(
+            Object.entries(installation.secretRefs).map(([name, key]) => [name, secretKeyToRef(key)]),
+        ),
+        secretInputs: new Set(installation.secretInputs),
+    };
+    const fn: CmsFunction = {
+        id: `afterInstallation-${action.id}`,
+        method: "POST",
+        access: { mode: "system" },
+        steps: resolveTemplates(action.steps, context),
+        return: { status: 204 },
+    };
+    const errors = await validateFunction(fn, { sources: deps.sources });
+    if (errors.length) {
+        throw new IntegrationInputError(`afterInstallation.${installation.id}.${action.id}`, errors.join("; "));
+    }
+    const response = await executeFunction(
+        fn,
+        new Request("https://cms.internal/integration/after-installation", {
+            method: "POST",
+        }),
+        {
+            sources: deps.sources,
+            deps: deps.sourceExecutorDeps,
+            identities: deps.sourceExecutorDeps?.identities,
+            user: {},
+        },
+    );
+    if (!response.ok) {
+        const detail = (await response.text().catch(() => "")).slice(0, 1_000);
+        throw new IntegrationRuntimeError(
+            `afterInstallation "${installation.id}.${action.id}" failed (${response.status})${detail ? `: ${detail}` : ""}`,
+            response.status,
+        );
+    }
+}

@@ -2,7 +2,9 @@ import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import { assertPasswordInputsDeclareSecrets, sensitiveInputNames } from "../../shared/inputSensitivity";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
 import { parseArtifactTemplates } from "../templates/sourceTemplates";
+import { parseAfterInstallationTemplates, validateAfterInstallationTemplates } from "./afterInstallation";
 import { parseConnectorTemplates, validateConnectorDefinition } from "../templates/connectorTemplates";
+import { parseProvisionTemplates, validateProvisionDefinition } from "../templates/provisionTemplates";
 import { parseDependencies, validateDependencies } from "./dependencies";
 import { parseIntegrationIcon } from "./icon";
 import { assertUniqueInputs, parseInput, validateInputDefinition } from "./inputDefinitions";
@@ -36,6 +38,10 @@ export function assertDefinitionUsable(definition: IntegrationDefinition): void 
     for (const connector of definition.connectors ?? []) {
         validateConnectorDefinition(connector);
     }
+    for (const provision of definition.provisions ?? []) {
+        validateProvisionDefinition(provision);
+    }
+    validateAfterInstallationTemplates(definition.afterInstallation ?? [], definition.dependencies ?? []);
     if (definition.security) {
         validateSecurityDefinition(definition.security);
     }
@@ -77,8 +83,11 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     const generatedSecrets = parseGeneratedSecretTemplates(value.generatedSecrets);
     assertUniqueSecretBindingNames(secrets, generatedSecrets);
     const connectors = parseConnectorTemplates(value.connectors);
+    const provisions = parseProvisionTemplates(value.provisions);
+    const afterInstallation = parseAfterInstallationTemplates(value.afterInstallation);
     const artifacts = parseArtifactTemplates(value.artifacts);
     const dependencies = parseDependencies(value.dependencies, kind);
+    validateAfterInstallationTemplates(afterInstallation, dependencies);
     const icon = parseIntegrationIcon(value.icon);
     const ui = parseUiDefinition(value.ui);
     const security = parseSecurityDefinition(value.security);
@@ -94,6 +103,8 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
         ...(secrets.length ? { secrets } : {}),
         ...(generatedSecrets.length ? { generatedSecrets } : {}),
         ...(connectors.length ? { connectors } : {}),
+        ...(provisions.length ? { provisions } : {}),
+        ...(afterInstallation.length ? { afterInstallation } : {}),
         ...(artifacts.length ? { artifacts } : {}),
         ...(ui ? { ui } : {}),
         ...(security ? { security } : {}),

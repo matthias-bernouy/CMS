@@ -42,6 +42,7 @@ export type IntegrationConnectorDeployResult = {
 
 export interface IntegrationConnectorDeployer {
     provider: string;
+    previewOutputs?(): Promise<Record<string, string>>;
     deploy(
         deployment: IntegrationConnectorDeployment,
         context: IntegrationConnectorDeployContext,

@@ -1,4 +1,5 @@
 import type { DeclarativeArtifactTemplate } from "./IntegrationArtifacts";
+import type { FunctionStep } from "@bernouy/cms-functions";
 
 export type {
     DeclarativeArtifactTemplate,
@@ -95,6 +96,23 @@ export type DeclarativeConnectorTemplate = {
     functions?: DeclarativeConnectorFunctionTemplate[];
 };
 
+export type DeclarativeProvisionOutputTemplate = {
+    name: string;
+    key: string;
+};
+
+export type DeclarativeProvisionTemplate = {
+    provider: string;
+    configuration: Record<string, IntegrationAnswerValue>;
+    outputs: DeclarativeProvisionOutputTemplate[];
+};
+
+export type DeclarativeAfterInstallationTemplate = {
+    id: string;
+    requires?: string[];
+    steps: FunctionStep[];
+};
+
 export type IntegrationDefinition = {
     kind: string;
     label: string;
@@ -109,5 +127,7 @@ export type IntegrationDefinition = {
     secrets?: DeclarativeSecretTemplate[];
     generatedSecrets?: DeclarativeGeneratedSecretTemplate[];
     connectors?: DeclarativeConnectorTemplate[];
+    provisions?: DeclarativeProvisionTemplate[];
+    afterInstallation?: DeclarativeAfterInstallationTemplate[];
     artifacts?: DeclarativeArtifactTemplate[];
 };

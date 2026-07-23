@@ -38,6 +38,10 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
         });
     }
 
+    async previewOutputs(): Promise<Record<string, string>> {
+        return { functionsBaseUrl: `https://${this.projectRef}.supabase.co/functions/v1` };
+    }
+
     async deploy(
         deployment: IntegrationConnectorDeployment,
         context: IntegrationConnectorDeployContext,

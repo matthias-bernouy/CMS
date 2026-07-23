@@ -31,6 +31,11 @@ export class ConfiguredSupabaseConnectorDeployer implements IntegrationConnector
 
     constructor(private readonly config: ConfiguredSupabaseConnectorDeployerConfig) {}
 
+    async previewOutputs(): Promise<Record<string, string>> {
+        const projectRef = await this.readProjectRef();
+        return { functionsBaseUrl: `https://${projectRef}.supabase.co/functions/v1` };
+    }
+
     async deploy(
         deployment: IntegrationConnectorDeployment,
         context: IntegrationConnectorDeployContext,
@@ -39,19 +44,7 @@ export class ConfiguredSupabaseConnectorDeployer implements IntegrationConnector
             throw new IntegrationRuntimeError(`Supabase deployer cannot deploy provider "${deployment.provider}"`);
         }
 
-        const configuredProvider = await this.config.providerRepository.get(this.provider);
-        if (!configuredProvider) {
-            throw new IntegrationRuntimeError("Supabase connector provider is not configured");
-        }
-        if (!configuredProvider.enabled) {
-            throw new IntegrationRuntimeError("Supabase connector provider is disabled");
-        }
-
-        const projectRef = configuredProvider.projectRef.trim();
-        if (!projectRef) {
-            throw new IntegrationRuntimeError("Supabase connector provider project reference is not configured");
-        }
-
+        const projectRef = await this.readProjectRef();
         const accessToken = await this.readAccessToken();
         const deployer = new SupabaseConnectorDeployer({
             integrationsRoot: this.config.integrationsRoot,
@@ -67,6 +60,22 @@ export class ConfiguredSupabaseConnectorDeployer implements IntegrationConnector
         } catch (error) {
             throw redactAccessToken(error, accessToken);
         }
+    }
+
+    private async readProjectRef(): Promise<string> {
+        const configuredProvider = await this.config.providerRepository.get(this.provider);
+        if (!configuredProvider) {
+            throw new IntegrationRuntimeError("Supabase connector provider is not configured");
+        }
+        if (!configuredProvider.enabled) {
+            throw new IntegrationRuntimeError("Supabase connector provider is disabled");
+        }
+
+        const projectRef = configuredProvider.projectRef.trim();
+        if (!projectRef) {
+            throw new IntegrationRuntimeError("Supabase connector provider project reference is not configured");
+        }
+        return projectRef;
     }
 
     private async readAccessToken(): Promise<string> {

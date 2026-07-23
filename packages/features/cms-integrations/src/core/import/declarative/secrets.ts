@@ -18,13 +18,27 @@ export function resolveSecretRefs(
     const secretInputNames = sensitiveInputs(definition);
     const inputSecrets = buildInputSecretWrites(definition.secrets ?? [], answers, secretInputNames);
     const generatedSecrets = buildGeneratedSecretWrites(definition.generatedSecrets ?? [], answers, false);
-    const writes = [...inputSecrets, ...generatedSecrets];
+    const provisionedSecrets = (definition.provisions ?? []).flatMap((provision) =>
+        provision.outputs.map((output) => {
+            const key = resolveTemplate(output.key, { answers, secrets: {}, secretInputs: secretInputNames });
+            const error = secretKeyError(key);
+            if (error) {
+                throw new IntegrationInputError(`provisions.${provision.provider}.outputs.${output.name}.key`, error);
+            }
+            return { input: output.name, key };
+        }),
+    );
+    const writes = [...inputSecrets, ...generatedSecrets, ...provisionedSecrets];
     assertUniqueSecretWrites(writes);
     return Object.fromEntries(writes.map((secret) => [secret.input, secret.key]));
 }
 
 export function declarativeSecretBindingNames(definition: IntegrationDefinition): string[] {
-    return [...sensitiveInputNames(definition), ...(definition.generatedSecrets ?? []).map((secret) => secret.name)];
+    return [
+        ...sensitiveInputNames(definition),
+        ...(definition.generatedSecrets ?? []).map((secret) => secret.name),
+        ...(definition.provisions ?? []).flatMap((provision) => provision.outputs.map((output) => output.name)),
+    ];
 }
 
 export function sensitiveInputs(definition: IntegrationDefinition): Set<string> {

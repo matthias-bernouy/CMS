@@ -14,6 +14,9 @@ export type {
     DeclarativeConnectorFunctionTemplate,
     DeclarativeConnectorSchemaTemplate,
     DeclarativeConnectorTemplate,
+    DeclarativeProvisionOutputTemplate,
+    DeclarativeProvisionTemplate,
+    DeclarativeAfterInstallationTemplate,
     DeclarativeFunctionArtifactTemplate,
     DeclarativeGeneratedSecretTemplate,
     DeclarativeRelationArtifactTemplate,
@@ -54,6 +57,13 @@ export type {
     IntegrationImportOptions,
     IntegrationImportRequest,
     IntegrationImportResult,
+    IntegrationProvisionContext,
+    IntegrationProvisionDeployment,
+    IntegrationProvisionExecutionResult,
+    IntegrationProvisioner,
+    IntegrationProvisionOutput,
+    IntegrationProvisionResourceResult,
+    IntegrationProvisionResult,
     IntegrationSecretResult,
 } from "../interfaces/IntegrationImport";
 export type {

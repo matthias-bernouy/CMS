@@ -1,6 +1,6 @@
 import { IntegrationRuntimeError } from "../errors";
 import { resolveTemplates, type TemplateContext } from "../definitions/templates";
-import type { DeclarativeConnectorTemplate } from "../../interfaces/Integration";
+import type { DeclarativeConnectorTemplate, IntegrationDefinition } from "../../interfaces/Integration";
 import type {
     IntegrationConnectorDeployer,
     IntegrationConnectorDeployment,
@@ -64,6 +64,30 @@ export async function deployConnectorDeployments(
     }
 
     return { results, outputs };
+}
+
+export async function previewConnectorOutputs(
+    deps: IntegrationImportDeps,
+    definition: Pick<IntegrationDefinition, "connectors">,
+    context: TemplateContext,
+): Promise<Record<string, Record<string, string>>> {
+    const deployers = connectorDeployersByProvider(deps.connectorDeployers);
+    const outputs: Record<string, Record<string, string>> = {};
+    for (const connector of definition.connectors ?? []) {
+        const provider = resolveTemplates(connector.provider, context);
+        const deployer = deployers.get(provider);
+        if (!deployer) {
+            throw new IntegrationRuntimeError(`connector deployer "${provider}" not configured`);
+        }
+        if (!deployer.previewOutputs) {
+            continue;
+        }
+        outputs[provider] = {
+            ...(outputs[provider] ?? {}),
+            ...(await deployer.previewOutputs()),
+        };
+    }
+    return outputs;
 }
 
 function connectorDeployersByProvider(
