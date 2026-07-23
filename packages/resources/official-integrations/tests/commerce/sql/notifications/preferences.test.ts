@@ -78,9 +78,9 @@ describe("native Commerce notifications", () => {
             items: Array<Record<string, unknown>>;
         };
         expect(templatePayload.contractVersion).toBe(1);
-        expect(templatePayload.items).toHaveLength(11);
+        expect(templatePayload.items).toHaveLength(12);
         expect(templatePayload.items[0]).toMatchObject({
-            key: "commerce.order.paid",
+            key: "commerce.price_agreement.accepted",
             metadata: { owner: "commerce", contractVersion: 1 },
         });
         const definition = await loadIntegrationDefinition<Definition>(
