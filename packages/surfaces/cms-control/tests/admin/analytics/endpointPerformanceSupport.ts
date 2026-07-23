@@ -57,6 +57,8 @@ export function endpointPerformanceDashboard(overrides: DashboardOverrides = {})
                       ],
                       stages: [
                           {
+                              kind: "duration",
+                              unit: "ms",
                               stage: "cms_authorize",
                               observations: 120,
                               coverage: 1,
@@ -67,6 +69,8 @@ export function endpointPerformanceDashboard(overrides: DashboardOverrides = {})
                               maxMs: 50,
                           },
                           {
+                              kind: "duration",
+                              unit: "ms",
                               stage: "cms_upstream",
                               observations: 110,
                               coverage: 0.92,
@@ -75,6 +79,16 @@ export function endpointPerformanceDashboard(overrides: DashboardOverrides = {})
                               p95Ms: 220,
                               p99Ms: 500,
                               maxMs: 800,
+                          },
+                          {
+                              kind: "counter",
+                              unit: "count",
+                              stage: "edge_db_calls",
+                              observations: 100,
+                              coverage: 0.83,
+                              total: 250,
+                              avg: 2.5,
+                              max: 8,
                           },
                       ],
                   }
@@ -85,6 +99,7 @@ export function endpointPerformanceDashboard(overrides: DashboardOverrides = {})
             from: "2026-07-22T12:00:00.000Z",
             to: "2026-07-23T12:00:00.000Z",
             bucketMs: 300_000,
+            rollupBucketMs: 300_000,
             histogramBoundsMs: [10, 50, 100, 500],
             lastObservationAt: "2026-07-23T11:58:00.000Z",
             lastFlushAt: "2026-07-23T11:59:00.000Z",
@@ -92,6 +107,8 @@ export function endpointPerformanceDashboard(overrides: DashboardOverrides = {})
             dropped: 0,
             invalid: 0,
             flushFailures: 0,
+            collectorHealthScope: "global",
+            collectorCountsExact: true,
             partial: false,
             stale: false,
             ...overrides.meta,

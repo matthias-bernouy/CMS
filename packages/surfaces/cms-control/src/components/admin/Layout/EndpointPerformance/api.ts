@@ -32,8 +32,6 @@ const SORTS = [
     "p99",
     "max",
 ] as const satisfies readonly EndpointPerformanceSort[];
-const SAFE_ENDPOINT = /^urn:[A-Za-z0-9][A-Za-z0-9_-]{0,63}:[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
-
 type TimelinePointView = Omit<EndpointPerformanceTimelinePoint, "bucket"> & { bucket: string };
 type MetadataView = Omit<
     EndpointPerformanceMetadata,
@@ -93,7 +91,11 @@ export function replaceEndpointPerformanceQuery(query: EndpointPerformanceQuery)
 }
 
 export function isSafeEndpointFilter(value: string): boolean {
-    return value === "__unresolved__" || (value.length <= 256 && SAFE_ENDPOINT.test(value));
+    if (value === "__unresolved__") {
+        return true;
+    }
+    const parts = value.split(":");
+    return value.length <= 256 && parts.length === 3 && parts[0] === "urn" && Boolean(parts[1]) && Boolean(parts[2]);
 }
 
 function endpointPerformanceApiUrl(query: EndpointPerformanceQuery): string {

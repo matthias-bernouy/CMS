@@ -59,6 +59,7 @@ describe("endpoint performance states", () => {
                         dropped: 7,
                         invalid: 2,
                         flushFailures: 1,
+                        collectorCountsExact: false,
                         lastObservationAt: "2026-07-23T09:00:00.000Z",
                     },
                 }),
@@ -72,6 +73,8 @@ describe("endpoint performance states", () => {
         expect(partial.hidden).toBe(false);
         expect(partial.textContent).toContain("7 dropped");
         expect(partial.textContent).toContain("1 flush failures");
+        expect(partial.textContent).toContain("Collector-wide");
+        expect(partial.textContent).toContain("estimates");
         expect(stale.hidden).toBe(false);
         expect(stale.textContent).toContain("Last observation");
     });

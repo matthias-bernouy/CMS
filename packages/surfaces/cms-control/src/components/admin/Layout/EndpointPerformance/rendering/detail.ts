@@ -1,4 +1,4 @@
-import type { EndpointPerformanceDetail, EndpointPerformanceStageSummary } from "@bernouy/cms-analytics";
+import type { EndpointPerformanceDetail } from "@bernouy/cms-analytics";
 import {
     formatInteger,
     formatMilliseconds,
@@ -69,7 +69,7 @@ export function renderEndpointDetail(root: HTMLElement, detail: EndpointPerforma
     renderStages(query(root, '[data-role="stages"]'), detail.stages);
 }
 
-function renderStages(host: HTMLElement, stages: EndpointPerformanceStageSummary[]): void {
+function renderStages(host: HTMLElement, stages: EndpointPerformanceDetail["stages"]): void {
     if (!stages.length) {
         renderEmpty(host, "No stage timings were reported for this endpoint.");
         return;
@@ -81,7 +81,7 @@ function renderStages(host: HTMLElement, stages: EndpointPerformanceStageSummary
     wrapper.className = "endpoint-table-scroll";
     table.className = "endpoint-table endpoint-stage-table";
     table.setAttribute("aria-label", "Endpoint timing stage contribution");
-    head.append(headerRow(["Stage", "Coverage", "Samples", "Average", "p50", "p95", "p99", "Maximum"]));
+    head.append(headerRow(["Stage", "Coverage", "Samples", "Average", "p50", "p95", "p99", "Total", "Maximum"]));
 
     for (const stage of stages) {
         const row = document.createElement("tr");
@@ -89,11 +89,12 @@ function renderStages(host: HTMLElement, stages: EndpointPerformanceStageSummary
             STAGE_LABELS[stage.stage] ?? label(stage.stage),
             formatPercent(clampRate(stage.coverage)),
             formatInteger(stage.observations),
-            formatMilliseconds(stage.avgMs),
-            formatMilliseconds(stage.p50Ms),
-            formatMilliseconds(stage.p95Ms),
-            formatMilliseconds(stage.p99Ms),
-            formatMilliseconds(stage.maxMs),
+            stage.kind === "duration" ? formatMilliseconds(stage.avgMs) : formatCount(stage.avg),
+            stage.kind === "duration" ? formatMilliseconds(stage.p50Ms) : "—",
+            stage.kind === "duration" ? formatMilliseconds(stage.p95Ms) : "—",
+            stage.kind === "duration" ? formatMilliseconds(stage.p99Ms) : "—",
+            stage.kind === "duration" ? "—" : formatCount(stage.total),
+            stage.kind === "duration" ? formatMilliseconds(stage.maxMs) : formatCount(stage.max),
         ];
         for (const value of values) {
             const cell = document.createElement("td");
@@ -105,6 +106,10 @@ function renderStages(host: HTMLElement, stages: EndpointPerformanceStageSummary
     table.append(head, body);
     wrapper.append(table);
     host.replaceChildren(wrapper);
+}
+
+function formatCount(value: number | null): string {
+    return value === null ? "—" : formatInteger(value);
 }
 
 function headerRow(labels: string[]): HTMLTableRowElement {

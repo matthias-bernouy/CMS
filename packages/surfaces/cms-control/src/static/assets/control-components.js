@@ -15575,7 +15575,6 @@ w13c-lateral-menu-item {
     "p99",
     "max"
   ];
-  var SAFE_ENDPOINT = /^urn:[A-Za-z0-9][A-Za-z0-9_-]{0,63}:[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 
   class EndpointPerformanceUnavailableError extends Error {
     status;
@@ -15614,7 +15613,11 @@ w13c-lateral-menu-item {
     history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
   }
   function isSafeEndpointFilter(value) {
-    return value === "__unresolved__" || value.length <= 256 && SAFE_ENDPOINT.test(value);
+    if (value === "__unresolved__") {
+      return true;
+    }
+    const parts = value.split(":");
+    return value.length <= 256 && parts.length === 3 && parts[0] === "urn" && Boolean(parts[1]) && Boolean(parts[2]);
   }
   function endpointPerformanceApiUrl(query) {
     return `${getMetaBasePath()}/api/analytics/endpoints?${queryParams(query)}`;
@@ -15755,18 +15758,19 @@ w13c-lateral-menu-item {
     wrapper.className = "endpoint-table-scroll";
     table.className = "endpoint-table endpoint-stage-table";
     table.setAttribute("aria-label", "Endpoint timing stage contribution");
-    head.append(headerRow(["Stage", "Coverage", "Samples", "Average", "p50", "p95", "p99", "Maximum"]));
+    head.append(headerRow(["Stage", "Coverage", "Samples", "Average", "p50", "p95", "p99", "Total", "Maximum"]));
     for (const stage of stages) {
       const row = document.createElement("tr");
       const values = [
         STAGE_LABELS[stage.stage] ?? label(stage.stage),
         formatPercent(clampRate(stage.coverage)),
         formatInteger(stage.observations),
-        formatMilliseconds(stage.avgMs),
-        formatMilliseconds(stage.p50Ms),
-        formatMilliseconds(stage.p95Ms),
-        formatMilliseconds(stage.p99Ms),
-        formatMilliseconds(stage.maxMs)
+        stage.kind === "duration" ? formatMilliseconds(stage.avgMs) : formatCount(stage.avg),
+        stage.kind === "duration" ? formatMilliseconds(stage.p50Ms) : "—",
+        stage.kind === "duration" ? formatMilliseconds(stage.p95Ms) : "—",
+        stage.kind === "duration" ? formatMilliseconds(stage.p99Ms) : "—",
+        stage.kind === "duration" ? "—" : formatCount(stage.total),
+        stage.kind === "duration" ? formatMilliseconds(stage.maxMs) : formatCount(stage.max)
       ];
       for (const value2 of values) {
         const cell = document.createElement("td");
@@ -15778,6 +15782,9 @@ w13c-lateral-menu-item {
     table.append(head, body);
     wrapper.append(table);
     host.replaceChildren(wrapper);
+  }
+  function formatCount(value2) {
+    return value2 === null ? "—" : formatInteger(value2);
   }
   function headerRow(labels) {
     const row = document.createElement("tr");
@@ -16025,10 +16032,11 @@ w13c-lateral-menu-item {
     partial.hidden = !data.meta.partial;
     stale.hidden = !data.meta.stale;
     partial.textContent = [
-      "This report is partial.",
+      "This report is partial. Collector-wide health:",
       `${formatInteger(data.meta.dropped)} dropped,`,
       `${formatInteger(data.meta.invalid)} invalid,`,
-      `${formatInteger(data.meta.flushFailures)} flush failures.`
+      `${formatInteger(data.meta.flushFailures)} flush failures.`,
+      ...data.meta.collectorCountsExact ? [] : ["Loss counters may be estimates."]
     ].join(" ");
     stale.textContent = data.meta.lastObservationAt ? `This report is stale. Last observation: ${formatDate2(data.meta.lastObservationAt)}.` : "This report is stale. No recent observation timestamp is available.";
   }
@@ -16036,9 +16044,9 @@ w13c-lateral-menu-item {
     query2(root, '[data-role="report-meta"]').textContent = [
       `Generated ${formatDate2(data.meta.generatedAt)}`,
       `${formatInteger(data.meta.accepted)} accepted observations`,
-      `${formatInteger(data.meta.dropped)} dropped`,
-      `${formatInteger(data.meta.invalid)} invalid`,
-      `${formatInteger(data.meta.flushFailures)} flush failures`
+      `${formatInteger(data.meta.dropped)} dropped collector-wide`,
+      `${formatInteger(data.meta.invalid)} invalid collector-wide`,
+      `${formatInteger(data.meta.flushFailures)} flush failures collector-wide`
     ].join(" · ");
   }
   function query2(root, selector) {

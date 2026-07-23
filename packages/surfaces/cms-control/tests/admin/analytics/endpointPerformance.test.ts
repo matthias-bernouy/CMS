@@ -48,6 +48,8 @@ describe("endpoint performance dashboard", () => {
         expect(dashboard.textContent).toContain("HTTP 5xx");
         expect(dashboard.textContent).toContain("Authorization");
         expect(dashboard.textContent).toContain("Upstream execution");
+        expect(dashboard.textContent).toContain("Edge database calls");
+        expect(dashboard.textContent).toContain("250");
         expect(dashboard.textContent).toContain("No individual request logs");
         expect(dashboard.textContent).toContain(unsafeUrn);
         expect(dashboard.querySelector("img")).toBeNull();

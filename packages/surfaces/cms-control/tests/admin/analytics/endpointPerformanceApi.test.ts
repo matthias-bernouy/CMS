@@ -31,4 +31,11 @@ describe("endpoint performance query state", () => {
             limit: 50,
         });
     });
+
+    test("uses the same non-empty URN segment grammar as source execution", () => {
+        expect(readEndpointPerformanceQuery("?endpoint=urn%3Acommerce.v2%3Alist.orders").endpointUrn).toBe(
+            "urn:commerce.v2:list.orders",
+        );
+        expect(readEndpointPerformanceQuery("?endpoint=urn%3Acommerce%3Alist%3Aextra").endpointUrn).toBeUndefined();
+    });
 });

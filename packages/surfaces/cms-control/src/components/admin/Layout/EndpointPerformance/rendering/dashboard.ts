@@ -74,10 +74,11 @@ function renderNotices(root: HTMLElement, data: EndpointPerformanceDashboardView
     partial.hidden = !data.meta.partial;
     stale.hidden = !data.meta.stale;
     partial.textContent = [
-        "This report is partial.",
+        "This report is partial. Collector-wide health:",
         `${formatInteger(data.meta.dropped)} dropped,`,
         `${formatInteger(data.meta.invalid)} invalid,`,
         `${formatInteger(data.meta.flushFailures)} flush failures.`,
+        ...(data.meta.collectorCountsExact ? [] : ["Loss counters may be estimates."]),
     ].join(" ");
     stale.textContent = data.meta.lastObservationAt
         ? `This report is stale. Last observation: ${formatDate(data.meta.lastObservationAt)}.`
@@ -88,9 +89,9 @@ function renderMetadata(root: HTMLElement, data: EndpointPerformanceDashboardVie
     query<HTMLElement>(root, '[data-role="report-meta"]').textContent = [
         `Generated ${formatDate(data.meta.generatedAt)}`,
         `${formatInteger(data.meta.accepted)} accepted observations`,
-        `${formatInteger(data.meta.dropped)} dropped`,
-        `${formatInteger(data.meta.invalid)} invalid`,
-        `${formatInteger(data.meta.flushFailures)} flush failures`,
+        `${formatInteger(data.meta.dropped)} dropped collector-wide`,
+        `${formatInteger(data.meta.invalid)} invalid collector-wide`,
+        `${formatInteger(data.meta.flushFailures)} flush failures collector-wide`,
     ].join(" · ");
 }
 
