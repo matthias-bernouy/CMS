@@ -5,6 +5,7 @@
         { "file": "model/commerce-negotiation.sql" },
         { "file": "model/version-and-updated-at-triggers.sql" },
         { "file": "queries/expire-pending-proposals.sql" },
+        { "file": "queries/project-proposal.sql" },
         { "file": "queries/list-participant-proposals.sql" },
         { "file": "queries/list-admin-proposals.sql" },
         { "file": "queries/get-participant-proposal-detail.sql" },

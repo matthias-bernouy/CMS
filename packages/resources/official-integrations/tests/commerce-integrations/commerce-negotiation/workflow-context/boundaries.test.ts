@@ -58,18 +58,17 @@ describe("Commerce negotiation workflow boundaries", () => {
     }
 
     for (const point of ["offer", "seller", "negotiation"] as const) {
-        test(`fails safely when the ${point} boundary refuses`, async () => {
+        test(`propagates the declared ${point} business refusal`, async () => {
             const { response, calls } = await executeNegotiationWorkflow(
                 "getProposalPolicy",
                 new Request("https://cms.test/functions/getProposalPolicy?offerId=42"),
                 failingResponder(point),
             );
 
-            expect(response.status).toBe(502);
+            expect(response.status).toBe(point === "negotiation" ? 409 : 404);
             const body = (await response.json()) as Record<string, unknown>;
             expect(body).toEqual({
-                error: "Function execution failed",
-                correlationId: expect.any(String),
+                error: point === "negotiation" ? "proposal policy unavailable" : `${point} not found`,
             });
             expect(JSON.stringify(body)).not.toContain("internal-row-7");
             expect(calls.some((call) => call.url.pathname === "/policy")).toBe(point === "negotiation");
@@ -111,17 +110,21 @@ describe("Commerce negotiation workflow boundaries", () => {
                 },
             );
 
-            expect(response.status).toBe(502);
-            expect(await response.json()).toEqual({
-                error: "Function execution failed",
-                correlationId: expect.any(String),
-            });
+            expect(response.status).toBe(field === "sellerCmsUserId" ? 400 : 502);
+            expect(await response.json()).toEqual(
+                field === "sellerCmsUserId"
+                    ? { error: "sellerCmsUserId is required" }
+                    : {
+                          error: "Function execution failed",
+                          correlationId: expect.any(String),
+                      },
+            );
             expect(calls.some((call) => call.url.pathname === "/proposals")).toBe(field === "sellerCmsUserId");
         });
     }
 
     for (const point of ["offer", "seller", "negotiation"] as const) {
-        test(`does not continue proposal creation after ${point} refuses`, async () => {
+        test(`propagates the declared proposal ${point} business refusal`, async () => {
             const { response, calls } = await executeNegotiationWorkflow(
                 "createMyProposal",
                 new Request("https://cms.test/functions/createMyProposal", {
@@ -132,12 +135,30 @@ describe("Commerce negotiation workflow boundaries", () => {
                 failingResponder(point),
             );
 
+            expect(response.status).toBe(point === "negotiation" ? 409 : 404);
+            expect(await response.json()).toEqual({
+                error: point === "negotiation" ? "proposal policy unavailable" : `${point} not found`,
+            });
+            expect(calls.some((call) => call.url.pathname === "/proposals")).toBe(point === "negotiation");
+        });
+    }
+
+    for (const status of [401, 500]) {
+        test(`keeps an upstream ${status} behind the function 502 boundary`, async () => {
+            const { response } = await executeNegotiationWorkflow(
+                "getProposalPolicy",
+                new Request("https://cms.test/functions/getProposalPolicy?offerId=42"),
+                (request) =>
+                    new URL(request.url).pathname === "/system/offer/negotiation-context"
+                        ? Response.json({ error: "provider detail" }, { status })
+                        : successfulResponder(request),
+            );
+
             expect(response.status).toBe(502);
             expect(await response.json()).toEqual({
                 error: "Function execution failed",
                 correlationId: expect.any(String),
             });
-            expect(calls.some((call) => call.url.pathname === "/proposals")).toBe(point === "negotiation");
         });
     }
 });

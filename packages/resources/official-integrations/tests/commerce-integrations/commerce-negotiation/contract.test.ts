@@ -289,6 +289,7 @@ describe("commerce negotiation 1.0.0", () => {
             minimum_ratio_bps: 8000,
             maximum_ratio_bps: 12000,
             proposal_ttl_hours: 72,
+            accepted_checkout_ttl_hours: 24,
             enabled: true,
             version: 1,
             created_at: "2026-07-12T00:00:00Z",
@@ -318,6 +319,10 @@ describe("commerce negotiation 1.0.0", () => {
             const request = input instanceof Request ? input : new Request(input, init);
             requests.push(request);
             const url = new URL(request.url);
+            if (url.pathname.endsWith("/rest/v1/rpc/expire_pending_proposals")) {
+                expect(await request.json()).toEqual({});
+                return Response.json(0);
+            }
             if (url.pathname.endsWith("/rest/v1/settings")) {
                 expect(request.headers.get("apikey")).toBe("service-role-key");
                 expect(request.headers.get("accept-profile")).toBe("commerce_negotiation");
@@ -371,6 +376,7 @@ describe("commerce negotiation 1.0.0", () => {
                 currency: "EUR",
                 publicationStatus: "active",
                 availability: "available",
+                wholeUnitPrices: "true",
             })) {
                 policyUrl.searchParams.set(name, value);
             }
@@ -388,6 +394,7 @@ describe("commerce negotiation 1.0.0", () => {
                 minimumAmount: 8000,
                 maximumAmount: 12000,
                 currency: "eur",
+                wholeUnitPrices: true,
                 expiresAfterHours: 72,
             });
             const ownOfferResponse = await handler!(
@@ -405,6 +412,7 @@ describe("commerce negotiation 1.0.0", () => {
                 minimumAmount: 8000,
                 maximumAmount: 12000,
                 currency: "eur",
+                wholeUnitPrices: true,
                 expiresAfterHours: 72,
             });
             const proposalsResponse = await handler!(
@@ -441,6 +449,7 @@ describe("commerce negotiation 1.0.0", () => {
                 minimumPercent: 85,
                 maximumPercent: 115,
                 proposalTtlHours: 48,
+                acceptedCheckoutTtlHours: 24,
                 enabled: false,
                 version: 2,
                 createdAt: "2026-07-12T00:00:00Z",
@@ -452,7 +461,9 @@ describe("commerce negotiation 1.0.0", () => {
             globalThis.fetch = realFetch;
         }
         expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
+            "/rest/v1/rpc/expire_pending_proposals",
             "/rest/v1/settings",
+            "/rest/v1/rpc/expire_pending_proposals",
             "/rest/v1/settings",
             "/rest/v1/rpc/list_participant_proposals",
             "/rest/v1/settings",
@@ -491,15 +502,25 @@ function commerceSource(): Source {
                                 offerId: { type: "number" },
                                 offerSlug: { type: "string" },
                                 offerTitle: { type: "string" },
+                                offerMainImageMediaId: { type: "number", nullable: true },
                                 sellerCmsUserId: { type: "string", nullable: true },
                                 sellerDisplayName: { type: "string" },
                                 referenceAmount: { type: "number", nullable: true },
                                 currency: { type: "string" },
                                 publicationStatus: { type: "string" },
                                 availability: { type: "string" },
+                                wholeUnitPrices: { type: "boolean" },
                             },
                         },
                     },
+                    ...[400, 404].map((status) => ({
+                        status: String(status),
+                        body: {
+                            type: "object" as const,
+                            properties: { error: { type: "string" as const } },
+                            required: ["error"],
+                        },
+                    })),
                 ],
             },
         ],

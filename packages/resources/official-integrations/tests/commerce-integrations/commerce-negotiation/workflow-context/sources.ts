@@ -7,6 +7,14 @@ import {
 } from "@bernouy/cms-sources";
 
 const openObject = { type: "object" } as const;
+const businessErrorOutputs = [400, 403, 404, 409].map((status) => ({
+    status: String(status),
+    body: {
+        type: "object" as const,
+        properties: { error: { type: "string" as const } },
+        required: ["error"],
+    },
+}));
 
 export async function workflowSources(): Promise<InMemorySourceRepository> {
     const sources = new InMemorySourceRepository();
@@ -84,7 +92,7 @@ export async function workflowSources(): Promise<InMemorySourceRepository> {
                         ],
                     },
                 },
-                output: [{ status: "201", body: openObject }],
+                output: [{ status: "201", body: openObject }, ...businessErrorOutputs],
             },
         ]),
     );
@@ -115,7 +123,7 @@ function get(id: string, targetUrl: string, params: string[], access?: SourceEnd
                 },
             })),
         },
-        output: [{ status: "200", body: openObject }],
+        output: [{ status: "200", body: openObject }, ...businessErrorOutputs],
     };
 }
 

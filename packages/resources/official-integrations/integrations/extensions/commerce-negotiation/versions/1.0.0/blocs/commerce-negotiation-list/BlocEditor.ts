@@ -50,6 +50,33 @@ export class CommerceNegotiationListEditor extends Editor {
                     { type: "text", label: "Accept", attribute: "accept-label", defaultValue: "Accepter" },
                     { type: "text", label: "Reject", attribute: "reject-label", defaultValue: "Refuser" },
                     { type: "text", label: "Withdraw", attribute: "withdraw-label", defaultValue: "Retirer" },
+                    {
+                        type: "text",
+                        label: "Buyer checkout action",
+                        attribute: "checkout-label-template",
+                        defaultValue: "Finaliser l’achat — {amount}",
+                    },
+                    {
+                        type: "text",
+                        label: "Order action",
+                        attribute: "order-label",
+                        defaultValue: "Voir ma commande",
+                    },
+                    {
+                        type: "text",
+                        label: "Decision date",
+                        attribute: "decision-label-template",
+                        defaultValue: "{status} le {date}",
+                    },
+                    {
+                        type: "text",
+                        label: "Checkout expiration",
+                        attribute: "checkout-expiration-label",
+                        defaultValue: "Paiement disponible jusqu’au {date}",
+                    },
+                    { type: "textarea", label: "Accept confirmation", attribute: "confirm-accept-message" },
+                    { type: "textarea", label: "Reject confirmation", attribute: "confirm-reject-message" },
+                    { type: "textarea", label: "Withdraw confirmation", attribute: "confirm-withdraw-message" },
                     { type: "text", label: "Empty title", attribute: "empty-title" },
                     { type: "textarea", label: "Empty message", attribute: "empty-message" },
                     {
@@ -76,8 +103,14 @@ export class CommerceNegotiationListEditor extends Editor {
                 settings: [
                     ...Object.entries(defaultStatusLabels).map(([value, label]) => ({
                         type: "text" as const,
-                        label,
+                        label: `Card · ${label}`,
                         attribute: `label-${value}`,
+                        defaultValue: label,
+                    })),
+                    ...Object.entries(defaultFilterLabels).map(([value, label]) => ({
+                        type: "text" as const,
+                        label: `Filter · ${label}`,
+                        attribute: `filter-label-${value}`,
                         defaultValue: label,
                     })),
                 ],
@@ -164,6 +197,34 @@ export class CommerceNegotiationListEditor extends Editor {
                     { type: "text", label: "Role URL parameter", attribute: "role-param", defaultValue: "role" },
                     { type: "text", label: "Status URL parameter", attribute: "status-param", defaultValue: "status" },
                     { type: "text", label: "Page URL parameter", attribute: "page-param", defaultValue: "page" },
+                    { type: "text", label: "Offer URL", attribute: "offer-url", defaultValue: "/annonce" },
+                    { type: "text", label: "Offer URL parameter", attribute: "offer-param", defaultValue: "slug" },
+                    { type: "text", label: "Checkout URL", attribute: "checkout-url", defaultValue: "/checkout" },
+                    {
+                        type: "text",
+                        label: "Checkout agreement parameter",
+                        attribute: "checkout-param",
+                        defaultValue: "agreementId",
+                    },
+                    {
+                        type: "text",
+                        label: "Order URL",
+                        attribute: "order-url",
+                        defaultValue: "/mon-espace/commande",
+                    },
+                    { type: "text", label: "Order URL parameter", attribute: "order-param", defaultValue: "orderId" },
+                    {
+                        type: "text",
+                        label: "Commerce source for images",
+                        attribute: "commerce-source-id",
+                        defaultValue: "commerce",
+                    },
+                    {
+                        type: "text",
+                        label: "Public offer image endpoint",
+                        attribute: "image-endpoint",
+                        defaultValue: "publicOfferImage",
+                    },
                 ],
             },
             {
@@ -189,6 +250,18 @@ export class CommerceNegotiationListEditor extends Editor {
                     color("Button background", "button-background-color"),
                     color("Button border", "button-border-color"),
                     color("Button focus", "button-accent-color"),
+                    color("Accept text", "accept-button-text-color"),
+                    color("Accept background", "accept-button-background-color"),
+                    color("Accept border", "accept-button-border-color"),
+                    color("Accept focus", "accept-button-accent-color"),
+                    color("Reject text", "reject-button-text-color"),
+                    color("Reject background", "reject-button-background-color"),
+                    color("Reject border", "reject-button-border-color"),
+                    color("Reject focus", "reject-button-accent-color"),
+                    color("Withdraw text", "withdraw-button-text-color"),
+                    color("Withdraw background", "withdraw-button-background-color"),
+                    color("Withdraw border", "withdraw-button-border-color"),
+                    color("Withdraw focus", "withdraw-button-accent-color"),
                     color("Success text", "toast-text-color"),
                     color("Success background", "toast-background-color"),
                     color("Success border", "toast-border-color"),
@@ -206,6 +279,17 @@ export class CommerceNegotiationListEditor extends Editor {
 registerEditor({ editor: CommerceNegotiationListEditor });
 
 const defaultStatusLabels = {
+    all: "Toutes",
+    pending: "En attente",
+    accepted: "Acceptée",
+    rejected: "Refusée",
+    withdrawn: "Retirée",
+    expired: "Expirée",
+    superseded: "Remplacée",
+    canceled: "Annulée",
+};
+
+const defaultFilterLabels = {
     all: "Toutes",
     pending: "En attente",
     accepted: "Acceptées",

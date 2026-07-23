@@ -239,6 +239,12 @@ export class CommerceOfferPriceFormEditor extends Editor {
                         attribute: "invalid-message",
                         defaultValue: "Indique un montant valide.",
                     },
+                    {
+                        type: "text",
+                        label: "Whole-unit price required",
+                        attribute: "whole-unit-message",
+                        defaultValue: "Indique un prix sans centimes.",
+                    },
                     { type: "textarea", label: "Out-of-range price", attribute: "range-error-message" },
                 ],
             },

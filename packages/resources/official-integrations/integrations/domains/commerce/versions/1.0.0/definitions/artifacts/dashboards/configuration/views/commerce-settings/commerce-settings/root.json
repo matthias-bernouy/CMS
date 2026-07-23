@@ -26,6 +26,7 @@
                     "requireVerifiedSeller": "$field.requireVerifiedSeller",
                     "offerModeration": "$field.offerModeration",
                     "pricePolicy": "$field.pricePolicy",
+                    "wholeUnitPrices": "$field.wholeUnitPrices",
                     "autoApprovePriceInRange": "$field.autoApprovePriceInRange",
                     "requireFinalPriceApproval": "$field.requireFinalPriceApproval",
                     "sellerCanPublish": "$field.sellerCanPublish"

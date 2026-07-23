@@ -32,6 +32,8 @@ as $$
           and offer.availability = 'available'
           and seller.verification_status in ('pending', 'verified')
           and (not settings.require_verified_seller or seller.verification_status = 'verified')
+          and commerce.seller_has_required_sale_capabilities(seller.id)
+          and not commerce.offer_has_active_price_agreement(offer.id)
           and (p_workflow_state is null or offer.workflow_state = p_workflow_state)
           and (p_condition_code is null or offer.condition_code = p_condition_code)
           and (p_product_id is null or offer.product_id = p_product_id::bigint)

@@ -229,6 +229,7 @@ export class CommerceNegotiationForm extends Composition {
         );
         setAttribute(this.amountInput, "min", decimalAmount(policy.minimumAmount));
         setAttribute(this.amountInput, "max", decimalAmount(policy.maximumAmount));
+        setAttribute(this.amountInput, "step", policy.wholeUnitPrices ? "1" : "0.01");
     }
 
     onSubmit = (event) => {
@@ -241,7 +242,12 @@ export class CommerceNegotiationForm extends Composition {
             return;
         }
         const amount = minorUnits(this.amountInput?.value);
-        if (amount === null || amount < this.policy.minimumAmount || amount > this.policy.maximumAmount) {
+        if (
+            amount === null ||
+            (this.policy.wholeUnitPrices && amount % 100 !== 0) ||
+            amount < this.policy.minimumAmount ||
+            amount > this.policy.maximumAmount
+        ) {
             this.showToast(this.getAttribute("error-message") || "Le montant proposé n’est pas valide.", true);
             this.amountInput?.focus();
             return;
@@ -396,6 +402,7 @@ function validPolicy(value) {
             typeof value.currency === "string" && /^[a-z]{3}$/i.test(value.currency)
                 ? value.currency.toLowerCase()
                 : null,
+        wholeUnitPrices: typeof value.wholeUnitPrices === "boolean" ? value.wholeUnitPrices : null,
     };
     if (
         !policy.offerId ||
@@ -403,6 +410,7 @@ function validPolicy(value) {
         policy.minimumAmount === null ||
         policy.maximumAmount === null ||
         !policy.currency ||
+        policy.wholeUnitPrices === null ||
         policy.minimumAmount > policy.maximumAmount
     ) {
         throw new Error("Les conditions de cette offre sont invalides.");

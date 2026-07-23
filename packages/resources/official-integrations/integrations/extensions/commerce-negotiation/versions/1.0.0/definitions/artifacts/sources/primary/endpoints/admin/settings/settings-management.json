@@ -27,9 +27,12 @@
                         "maximumPercent": {
                             "type": "number"
                         },
-                        "proposalTtlHours": {
-                            "type": "number"
-                        },
+            "proposalTtlHours": {
+              "type": "number"
+            },
+            "acceptedCheckoutTtlHours": {
+              "type": "number"
+            },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -40,7 +43,8 @@
                     "required": [
                         "minimumPercent",
                         "maximumPercent",
-                        "proposalTtlHours",
+            "proposalTtlHours",
+            "acceptedCheckoutTtlHours",
                         "enabled",
                         "version"
                     ]
@@ -76,9 +80,12 @@
                 "maximumPercent": {
                     "type": "number"
                 },
-                "proposalTtlHours": {
-                    "type": "number"
-                },
+        "proposalTtlHours": {
+          "type": "number"
+        },
+        "acceptedCheckoutTtlHours": {
+          "type": "number"
+        },
                 "enabled": {
                     "type": "boolean"
                 }
@@ -92,6 +99,34 @@
                 "status": "200",
                 "body": {
                     "type": "object"
+                }
+            },
+            {
+                "status": "400",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
                 }
             }
         ]

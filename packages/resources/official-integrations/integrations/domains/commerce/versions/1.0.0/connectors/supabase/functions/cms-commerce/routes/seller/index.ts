@@ -72,6 +72,36 @@ export async function verifyPendingSellerPayoutEligibility(request: Request): Pr
     return json(camelize(result));
 }
 
+export async function recordSellerSaleCapability(request: Request): Promise<Response> {
+    const body = await readJsonObject(request);
+    const result = await rpc("record_seller_sale_capability", {
+        p_cms_user_id: requiredText(body.sellerCmsUserId, "sellerCmsUserId"),
+        p_capability_key: requiredText(body.capabilityKey, "capabilityKey"),
+        p_ready: body.ready === true ? true : body.ready === false ? false : null,
+        p_evidence_reference: text(body.evidenceReference) ?? null,
+    });
+    return json(camelize(result));
+}
+
+export async function activateSellerSaleCapability(request: Request): Promise<Response> {
+    const body = await readJsonObject(request);
+    if (
+        !Array.isArray(body.readySellerCmsUserIds) ||
+        body.readySellerCmsUserIds.length > 10000 ||
+        body.readySellerCmsUserIds.some((value) => !text(value))
+    ) {
+        throw new HttpError(400, "readySellerCmsUserIds must be an array of CMS user ids");
+    }
+    const result = await rpc("activate_sale_capability_requirement", {
+        p_capability_key: requiredText(body.capabilityKey, "capabilityKey"),
+        p_seller_kind: requiredText(body.sellerKind, "sellerKind"),
+        p_ready_seller_cms_user_ids: [...new Set(body.readySellerCmsUserIds as string[])],
+        p_actor_id: requiredText(body.actorId, "actorId"),
+        p_snapshot_at: requiredText(body.snapshotAt, "snapshotAt"),
+    });
+    return json(camelize(result));
+}
+
 export async function listSellers(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const limit = Math.min(Math.max(integer(url.searchParams.get("limit"), "limit") ?? 50, 1), 100);

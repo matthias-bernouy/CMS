@@ -6,6 +6,16 @@ const statuses = ["all", "pending", "accepted", "rejected", "withdrawn", "expire
 const defaultStatusLabels = {
     all: "Toutes",
     pending: "En attente",
+    accepted: "Acceptée",
+    rejected: "Refusée",
+    withdrawn: "Retirée",
+    expired: "Expirée",
+    superseded: "Remplacée",
+    canceled: "Annulée",
+};
+const defaultFilterLabels = {
+    all: "Toutes",
+    pending: "En attente",
     accepted: "Acceptées",
     rejected: "Refusées",
     withdrawn: "Retirées",
@@ -13,10 +23,15 @@ const defaultStatusLabels = {
     superseded: "Remplacées",
     canceled: "Annulées",
 };
+const reloadAttributes = new Set(["source-id", "source-prefix", "page-size", "initial-role"]);
 
 export class CommerceNegotiationList extends Composition {
     static observedAttributes = [
         "accept-label",
+        "accept-button-accent-color",
+        "accept-button-background-color",
+        "accept-button-border-color",
+        "accept-button-text-color",
         "button-accent-color",
         "button-background-color",
         "button-border-color",
@@ -28,6 +43,15 @@ export class CommerceNegotiationList extends Composition {
         "card-muted-text-color",
         "card-text-color",
         "copy",
+        "checkout-expiration-label",
+        "checkout-label-template",
+        "checkout-param",
+        "checkout-url",
+        "commerce-source-id",
+        "confirm-accept-message",
+        "confirm-reject-message",
+        "confirm-withdraw-message",
+        "decision-label-template",
         "empty-filtered-message",
         "empty-filtered-title",
         "empty-message",
@@ -43,12 +67,22 @@ export class CommerceNegotiationList extends Composition {
         "grid-min",
         "initial-role",
         "locale",
+        "image-endpoint",
+        "offer-param",
+        "offer-url",
+        "order-label",
+        "order-param",
+        "order-url",
         "page-param",
         "page-size",
         "proposed-label",
         "received-label",
         "reference-label",
         "reject-label",
+        "reject-button-accent-color",
+        "reject-button-background-color",
+        "reject-button-border-color",
+        "reject-button-text-color",
         "show-expiration",
         "show-message",
         "show-reference-price",
@@ -81,7 +115,12 @@ export class CommerceNegotiationList extends Composition {
         "toast-error-text-color",
         "toast-text-color",
         "withdraw-label",
+        "withdraw-button-accent-color",
+        "withdraw-button-background-color",
+        "withdraw-button-border-color",
+        "withdraw-button-text-color",
         ...statuses.map((status) => `label-${status}`),
+        ...statuses.map((status) => `filter-label-${status}`),
     ];
 
     constructor() {
@@ -92,6 +131,9 @@ export class CommerceNegotiationList extends Composition {
         this.total = 0;
         this.items = [];
         this.controller = null;
+        this.loadScheduled = false;
+        this.inFlight = null;
+        this.lastLoadedKey = "";
     }
 
     connectedCallback() {
@@ -105,7 +147,7 @@ export class CommerceNegotiationList extends Composition {
         if (isFramed()) {
             this.showPreview();
         } else {
-            void this.load();
+            this.scheduleLoad();
         }
     }
 
@@ -114,6 +156,9 @@ export class CommerceNegotiationList extends Composition {
         this.removeEventListener("basic-pagination:change", this.onPageChange);
         this.removeEventListener("click", this.onActionClick);
         this.controller?.abort();
+        this.controller = null;
+        this.inFlight = null;
+        this.loadScheduled = false;
     }
 
     attributeChangedCallback(name) {
@@ -127,28 +172,71 @@ export class CommerceNegotiationList extends Composition {
             this.syncPresentation();
             this.renderItems();
         });
-        if (["source-id", "source-prefix", "page-size", "initial-role"].includes(name) && !isFramed()) {
+        if (reloadAttributes.has(name) && !isFramed()) {
             this.page = 1;
-            queueMicrotask(() => void this.load());
+            this.scheduleLoad();
         }
     }
 
-    async load(silent = false) {
+    scheduleLoad(options = {}) {
+        this.pendingLoadOptions = { ...(this.pendingLoadOptions || {}), ...options };
+        if (this.loadScheduled) {
+            return;
+        }
+        this.loadScheduled = true;
+        queueMicrotask(() => {
+            this.loadScheduled = false;
+            const pending = this.pendingLoadOptions || {};
+            this.pendingLoadOptions = null;
+            if (this.isConnected) {
+                void this.load(pending);
+            }
+        });
+    }
+
+    load({ silent = false, force = false } = {}) {
+        const request = this.listRequest();
+        if (!force && request.key === this.lastLoadedKey) {
+            this.renderItems();
+            return Promise.resolve();
+        }
+        if (this.inFlight?.key === request.key) {
+            return this.inFlight.promise;
+        }
         this.controller?.abort();
         const controller = new AbortController();
         this.controller = controller;
         if (!silent) {
             this.showLoading();
         }
+        const promise = this.executeLoad(request, controller, silent);
+        this.inFlight = { key: request.key, promise };
+        return promise.finally(() => {
+            if (this.inFlight?.promise === promise) {
+                this.inFlight = null;
+            }
+        });
+    }
+
+    listRequest() {
         const pageSize = positiveInteger(this.getAttribute("page-size"), 12);
+        const query = {
+            role: this.role,
+            ...(this.status === "all" ? {} : { status: this.status }),
+            limit: pageSize,
+            offset: (this.page - 1) * pageSize,
+        };
+        const url = new URL(this.sourceUrl("myProposals"), this.ownerDocument.baseURI);
+        for (const [name, value] of Object.entries(query)) {
+            url.searchParams.set(name, String(value));
+        }
+        return { key: url.href, query };
+    }
+
+    async executeLoad(request, controller, silent) {
         try {
             const result = await this.requestSource("myProposals", {
-                query: {
-                    role: this.role,
-                    ...(this.status === "all" ? {} : { status: this.status }),
-                    limit: pageSize,
-                    offset: (this.page - 1) * pageSize,
-                },
+                query: request.query,
                 signal: controller.signal,
             });
             if (controller.signal.aborted) {
@@ -156,6 +244,7 @@ export class CommerceNegotiationList extends Composition {
             }
             this.items = Array.isArray(result.items) ? result.items.filter(isProposal) : [];
             this.total = nonNegativeInteger(result.total, this.items.length);
+            this.lastLoadedKey = request.key;
             this.renderItems();
         } catch (error) {
             if (controller.signal.aborted) {
@@ -186,6 +275,11 @@ export class CommerceNegotiationList extends Composition {
                 version: 1,
                 expiresAt: new Date(Date.now() + 86400000).toISOString(),
                 viewerRole: this.role,
+                offerSlug: "raquette-de-tennis",
+                acceptedAt: null,
+                checkoutStatus: null,
+                agreementId: null,
+                orderId: null,
             },
         ];
         this.total = 1;
@@ -228,13 +322,15 @@ export class CommerceNegotiationList extends Composition {
         setAttribute(statusFilter, "value", this.status);
         copyColors(this, statusFilter, "field", ["accent-color", "text-color", "background-color", "border-color"]);
         for (const option of statusFilter?.querySelectorAll("basic-option") ?? []) {
-            setText(option, this.statusLabel(option.getAttribute("value")));
+            setText(option, this.filterLabel(option.getAttribute("value")));
         }
 
         const grid = this.querySelector("[data-items]");
         setAttribute(grid, "min", this.getAttribute("grid-min") || "md");
         setAttribute(grid, "max", this.getAttribute("grid-max") || "xl");
         setAttribute(grid, "gap", this.getAttribute("grid-gap") || "md");
+        setAttribute(grid, "packing", "fit");
+        setAttribute(grid, "justify-items", "stretch");
         for (const skeleton of this.querySelectorAll("basic-skeleton")) {
             copyAttribute(this, skeleton, "skeleton-base-color", "base-color");
             copyAttribute(this, skeleton, "skeleton-highlight-color", "highlight-color");
@@ -263,6 +359,8 @@ export class CommerceNegotiationList extends Composition {
             copyColors(this, card, "card", ["text-color", "background-color", "border-color", "muted-text-color"]);
             setText(fragment.querySelector("[data-offer-title]"), proposal.offerTitle);
             setText(fragment.querySelector("[data-status]"), this.statusLabel(proposal.status));
+            this.syncOfferLink(fragment, proposal);
+            this.syncOfferImage(fragment, proposal);
             setText(
                 fragment.querySelector("[data-proposed-label]"),
                 this.getAttribute("proposed-label") || "Prix proposé",
@@ -288,8 +386,27 @@ export class CommerceNegotiationList extends Composition {
             setHidden(message, this.getAttribute("show-message") === "false" || !proposal.buyerMessage);
             setText(message, proposal.buyerMessage ? `“${proposal.buyerMessage}”` : "");
             const expiration = fragment.querySelector("[data-expiration]");
-            setHidden(expiration, this.getAttribute("show-expiration") === "false" || !proposal.expiresAt);
+            setHidden(
+                expiration,
+                this.getAttribute("show-expiration") === "false" ||
+                    proposal.status !== "pending" ||
+                    !proposal.expiresAt,
+            );
             setText(expiration, proposal.expiresAt ? this.formatExpiration(proposal.expiresAt) : "");
+            const decision = fragment.querySelector("[data-decision]");
+            const decisionValue = this.decisionDate(proposal);
+            setHidden(decision, !decisionValue);
+            setText(decision, decisionValue ? this.formatDecision(proposal.status, decisionValue) : "");
+            const checkoutExpiration = fragment.querySelector("[data-checkout-expiration]");
+            const hasCheckoutExpiration =
+                proposal.status === "accepted" &&
+                proposal.checkoutStatus === "active" &&
+                typeof proposal.checkoutExpiresAt === "string";
+            setHidden(checkoutExpiration, !hasCheckoutExpiration);
+            setText(
+                checkoutExpiration,
+                hasCheckoutExpiration ? this.formatCheckoutExpiration(proposal.checkoutExpiresAt) : "",
+            );
 
             const canDecide = proposal.status === "pending" && this.role === "seller";
             const canWithdraw = proposal.status === "pending" && this.role === "buyer";
@@ -302,9 +419,10 @@ export class CommerceNegotiationList extends Composition {
             setText(accept, this.getAttribute("accept-label") || "Accepter");
             setText(reject, this.getAttribute("reject-label") || "Refuser");
             setText(withdraw, this.getAttribute("withdraw-label") || "Retirer");
-            for (const button of [accept, reject, withdraw]) {
-                copyColors(this, button, "button", ["accent-color", "text-color", "background-color", "border-color"]);
-            }
+            this.syncActionTheme(accept, "accept");
+            this.syncActionTheme(reject, "reject");
+            this.syncActionTheme(withdraw, "withdraw");
+            this.syncCheckoutActions(fragment, proposal);
             grid.append(fragment);
         }
 
@@ -360,7 +478,7 @@ export class CommerceNegotiationList extends Composition {
         if (isFramed()) {
             this.showPreview();
         } else {
-            void this.load();
+            this.scheduleLoad();
         }
     };
 
@@ -370,7 +488,7 @@ export class CommerceNegotiationList extends Composition {
         }
         this.page = positiveInteger(event.detail?.page, 1);
         this.writeUrlState();
-        void this.load();
+        this.scheduleLoad();
         this.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
@@ -433,6 +551,9 @@ export class CommerceNegotiationList extends Composition {
         if (!proposal) {
             return;
         }
+        if (!this.confirmAction(button.dataset.action, proposal)) {
+            return;
+        }
         void this.performAction(proposal, button.dataset.action, card);
     };
 
@@ -476,7 +597,7 @@ export class CommerceNegotiationList extends Composition {
                 }),
             );
             if (!isFramed()) {
-                void this.load(true);
+                this.scheduleLoad({ silent: true, force: true });
             }
         } catch (error) {
             for (const button of buttons) {
@@ -527,6 +648,127 @@ export class CommerceNegotiationList extends Composition {
         return this.getAttribute(`label-${code}`) || defaultStatusLabels[code];
     }
 
+    filterLabel(status) {
+        const code = statuses.includes(status) ? status : "pending";
+        return this.getAttribute(`filter-label-${code}`) || defaultFilterLabels[code];
+    }
+
+    syncOfferLink(fragment, proposal) {
+        const link = fragment.querySelector("[data-offer-title-link]");
+        const media = fragment.querySelector("[data-offer-media]");
+        const href = buildUrl(
+            this.getAttribute("offer-url") || "/annonce",
+            this.getAttribute("offer-param") || "slug",
+            proposal.offerSlug,
+        );
+        for (const target of [link, media]) {
+            setAttribute(target, "href", href);
+            setAttribute(target, "aria-label", `Voir l’annonce ${proposal.offerTitle}`);
+        }
+    }
+
+    syncOfferImage(fragment, proposal) {
+        const image = fragment.querySelector("[data-offer-image]");
+        const placeholder = fragment.querySelector("[data-offer-placeholder]");
+        const mediaId = positiveInteger(proposal.offerMainImageMediaId ?? proposal.mainImageMediaId);
+        setHidden(image, !mediaId);
+        setHidden(placeholder, Boolean(mediaId));
+        if (!mediaId) {
+            image?.removeAttribute("src");
+            return;
+        }
+        const prefix = (this.getAttribute("source-prefix") || "/.cms/sources").replace(/\/+$/, "");
+        const sourceId = encodeURIComponent(this.getAttribute("commerce-source-id") || "commerce");
+        const endpoint = encodeURIComponent(this.getAttribute("image-endpoint") || "publicOfferImage");
+        setAttribute(image, "src", `${prefix}/${sourceId}/${endpoint}?id=${encodeURIComponent(String(mediaId))}`);
+        setAttribute(image, "alt", proposal.offerTitle);
+    }
+
+    syncActionTheme(button, action) {
+        copyColors(this, button, "button", ["accent-color", "text-color", "background-color", "border-color"]);
+        copyColors(this, button, `${action}-button`, [
+            "accent-color",
+            "text-color",
+            "background-color",
+            "border-color",
+        ]);
+    }
+
+    syncCheckoutActions(fragment, proposal) {
+        const checkout = fragment.querySelector('[data-action-link="checkout"]');
+        const order = fragment.querySelector('[data-action-link="order"]');
+        const agreementId = typeof proposal.agreementId === "string" ? proposal.agreementId.trim() : "";
+        const buyerAccepted =
+            this.role === "buyer" &&
+            proposal.status === "accepted" &&
+            proposal.checkoutStatus === "active" &&
+            Boolean(agreementId);
+        setHidden(checkout, !buyerAccepted);
+        if (buyerAccepted) {
+            setAttribute(
+                checkout,
+                "href",
+                buildUrl(
+                    this.getAttribute("checkout-url") || "/checkout",
+                    this.getAttribute("checkout-param") || "agreementId",
+                    agreementId,
+                ),
+            );
+            const template = this.getAttribute("checkout-label-template") || "Finaliser l’achat — {amount}";
+            setText(
+                checkout,
+                template.replaceAll("{amount}", this.formatMoney(proposal.proposedAmount, proposal.currency)),
+            );
+            this.syncActionTheme(checkout, "accept");
+        }
+
+        const consumed =
+            this.role === "buyer" &&
+            proposal.status === "accepted" &&
+            proposal.checkoutStatus === "consumed" &&
+            proposal.orderId !== null &&
+            proposal.orderId !== undefined;
+        setHidden(order, !consumed);
+        if (consumed) {
+            setAttribute(
+                order,
+                "href",
+                buildUrl(
+                    this.getAttribute("order-url") || "/mon-espace/commande",
+                    this.getAttribute("order-param") || "orderId",
+                    proposal.orderId,
+                ),
+            );
+            setText(order, this.getAttribute("order-label") || "Voir ma commande");
+        }
+    }
+
+    decisionDate(proposal) {
+        if (proposal.status === "accepted") {
+            return proposal.acceptedAt;
+        }
+        if (proposal.status === "rejected") {
+            return proposal.rejectedAt;
+        }
+        if (proposal.status === "withdrawn") {
+            return proposal.withdrawnAt;
+        }
+        return ["expired", "superseded", "canceled"].includes(proposal.status) ? proposal.updatedAt : null;
+    }
+
+    confirmAction(action, proposal) {
+        const messages = {
+            accept:
+                this.getAttribute("confirm-accept-message") ||
+                `Accepter l’offre de ${this.formatMoney(proposal.proposedAmount, proposal.currency)} ?`,
+            reject: this.getAttribute("confirm-reject-message") || "Refuser définitivement cette offre ?",
+            withdraw: this.getAttribute("confirm-withdraw-message") || "Retirer cette offre ?",
+        };
+        return (
+            typeof window === "undefined" || typeof window.confirm !== "function" || window.confirm(messages[action])
+        );
+    }
+
     formatMoney(amount, currency) {
         try {
             return new Intl.NumberFormat(this.getAttribute("locale") || "fr-FR", {
@@ -549,6 +791,29 @@ export class CommerceNegotiationList extends Composition {
             timeStyle: "short",
         }).format(date);
         return label.replaceAll("{date}", formatted);
+    }
+
+    formatDecision(status, value) {
+        const date = this.formatDateTime(value);
+        const template = this.getAttribute("decision-label-template") || "{status} le {date}";
+        return template.replaceAll("{status}", this.statusLabel(status)).replaceAll("{date}", date);
+    }
+
+    formatCheckoutExpiration(value) {
+        const date = this.formatDateTime(value);
+        const template = this.getAttribute("checkout-expiration-label") || "Paiement disponible jusqu’au {date}";
+        return template.replaceAll("{date}", date);
+    }
+
+    formatDateTime(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return "";
+        }
+        return new Intl.DateTimeFormat(this.getAttribute("locale") || "fr-FR", {
+            dateStyle: "medium",
+            timeStyle: "short",
+        }).format(date);
     }
 
     showLoading() {
@@ -582,6 +847,16 @@ function isProposal(value) {
         statuses.includes(value.status) &&
         Number.isSafeInteger(value.version)
     );
+}
+
+function buildUrl(base, parameter, value) {
+    const stringValue = String(value ?? "").trim();
+    if (!stringValue) {
+        return base;
+    }
+    const url = new URL(base, "https://cms.invalid");
+    url.searchParams.set(parameter, stringValue);
+    return `${url.pathname}${url.search}${url.hash}`;
 }
 
 function positiveInteger(value, fallback = null) {

@@ -59,7 +59,12 @@
                 "id": "acceptedPriceAmount",
                 "label": "Accepted price amount",
                 "path": "acceptedPriceAmount",
-                "type": "text"
+                "type": "money",
+                "currencyPath": "currency",
+                "allowDecimals": {
+                    "value": "$resource.wholeUnitPrices",
+                    "equals": false
+                }
             },
             {
                 "id": "currency",
@@ -72,13 +77,23 @@
                 "id": "minimumAmount",
                 "label": "Minimum price",
                 "path": "priceRule.minimumAmount",
-                "type": "text"
+                "type": "money",
+                "currencyPath": "currency",
+                "allowDecimals": {
+                    "value": "$resource.wholeUnitPrices",
+                    "equals": false
+                }
             },
             {
                 "id": "maximumAmount",
                 "label": "Maximum price",
                 "path": "priceRule.maximumAmount",
-                "type": "text"
+                "type": "money",
+                "currencyPath": "currency",
+                "allowDecimals": {
+                    "value": "$resource.wholeUnitPrices",
+                    "equals": false
+                }
             },
             {
                 "id": "reviewReason",

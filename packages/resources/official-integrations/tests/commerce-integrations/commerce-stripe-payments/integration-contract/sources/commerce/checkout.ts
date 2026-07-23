@@ -23,8 +23,8 @@ export function commerceCheckoutEndpoints(): Source["endpoints"] {
                                 required: ["offerId", "quantity"],
                             },
                         },
+                        agreementId: { type: "string" },
                     },
-                    required: ["items"],
                 },
             },
             output: [
@@ -39,6 +39,7 @@ export function commerceCheckoutEndpoints(): Source["endpoints"] {
                         required: ["sellerCmsUserId", "buyerCmsUserId"],
                     },
                 },
+                ...businessErrorOutputs(),
             ],
         },
         {
@@ -68,11 +69,50 @@ export function commerceCheckoutEndpoints(): Source["endpoints"] {
                         required: ["sellerCmsUserId", "buyerCmsUserId"],
                     },
                 },
+                ...businessErrorOutputs(),
+            ],
+        },
+        {
+            urn: makeEndpointUrn("commerce", "recordSellerSaleCapability"),
+            method: "POST",
+            access: { mode: "system" },
+            targetUrl: "https://commerce.test/seller/sale-capability",
+            input: {
+                body: {
+                    type: "object",
+                    properties: {
+                        sellerCmsUserId: {
+                            type: "string",
+                            semantic: { kind: "user-id", authority: "cms" },
+                        },
+                        capabilityKey: { type: "string" },
+                        ready: { type: "boolean" },
+                        evidenceReference: { type: "string" },
+                    },
+                    required: ["sellerCmsUserId", "capabilityKey", "ready"],
+                },
+            },
+            output: [
+                {
+                    status: "200",
+                    body: {
+                        type: "object",
+                        properties: {
+                            sellerId: { type: "number" },
+                            capabilityKey: { type: "string" },
+                            ready: { type: "boolean" },
+                            confirmedAt: { type: "string", nullable: true },
+                            revokedAt: { type: "string", nullable: true },
+                        },
+                        required: ["sellerId", "capabilityKey", "ready", "confirmedAt", "revokedAt"],
+                    },
+                },
             ],
         },
         {
             urn: makeEndpointUrn("commerce", "createOrder"),
             method: "POST",
+            access: { mode: "system" },
             targetUrl: "https://commerce.test/order/create",
             headers: [{ name: "x-cms-user-id", source: { from: "computed", ref: "userID" } }],
             input: {
@@ -91,11 +131,12 @@ export function commerceCheckoutEndpoints(): Source["endpoints"] {
                                 required: ["offerId", "quantity"],
                             },
                         },
+                        agreementId: { type: "string" },
                         shippingAddress: { type: "object" },
                         billingAddress: { type: "object" },
                         metadata: { type: "object" },
                     },
-                    required: ["idempotencyKey", "items"],
+                    required: ["idempotencyKey"],
                 },
             },
             output: [
@@ -114,6 +155,7 @@ export function commerceCheckoutEndpoints(): Source["endpoints"] {
                         required: ["id", "publicId", "status", "currency", "subtotalAmount", "totalAmount"],
                     },
                 },
+                ...businessErrorOutputs(),
             ],
         },
         {
@@ -161,4 +203,15 @@ export function commerceCheckoutEndpoints(): Source["endpoints"] {
             ],
         },
     ];
+}
+
+function businessErrorOutputs(): NonNullable<Source["endpoints"][number]["output"]> {
+    return ["400", "403", "404", "409", "422"].map((status) => ({
+        status,
+        body: {
+            type: "object" as const,
+            properties: { error: { type: "string" as const } },
+            required: ["error"],
+        },
+    }));
 }

@@ -38,6 +38,9 @@
                         "pricePolicy": {
                             "type": "string"
                         },
+                        "wholeUnitPrices": {
+                            "type": "boolean"
+                        },
                         "autoApprovePriceInRange": {
                             "type": "boolean"
                         },

@@ -11,6 +11,7 @@ create table if not exists commerce_negotiation.settings (
     minimum_ratio_bps integer not null default 8000,
     maximum_ratio_bps integer not null default 12000,
     proposal_ttl_hours integer not null default 72,
+    accepted_checkout_ttl_hours integer not null default 24,
     enabled boolean not null default true,
     version integer not null default 1,
     created_at timestamptz not null default now(),
@@ -20,8 +21,12 @@ create table if not exists commerce_negotiation.settings (
     constraint negotiation_settings_maximum_ratio check (maximum_ratio_bps between 10000 and 20000),
     constraint negotiation_settings_ratio_order check (minimum_ratio_bps <= maximum_ratio_bps),
     constraint negotiation_settings_ttl check (proposal_ttl_hours between 1 and 720),
+    constraint negotiation_settings_checkout_ttl check (accepted_checkout_ttl_hours between 1 and 720),
     constraint negotiation_settings_version_positive check (version > 0)
 );
+
+alter table commerce_negotiation.settings
+    add column if not exists accepted_checkout_ttl_hours integer not null default 24;
 
 insert into commerce_negotiation.settings (id)
 values ('default')
@@ -33,6 +38,7 @@ create table if not exists commerce_negotiation.proposals (
     commerce_offer_id bigint not null,
     commerce_offer_slug text not null,
     commerce_offer_title text not null,
+    offer_main_image_media_id bigint,
     seller_cms_user_id text not null,
     seller_display_name text not null,
     buyer_cms_user_id text not null,
@@ -47,6 +53,8 @@ create table if not exists commerce_negotiation.proposals (
     version integer not null default 1,
     expires_at timestamptz not null,
     accepted_at timestamptz,
+    commerce_agreement_id uuid,
+    checkout_expires_at timestamptz,
     rejected_at timestamptz,
     withdrawn_at timestamptz,
     created_at timestamptz not null default now(),
@@ -54,6 +62,9 @@ create table if not exists commerce_negotiation.proposals (
     constraint negotiation_proposals_offer_positive check (commerce_offer_id > 0),
     constraint negotiation_proposals_offer_slug_not_blank check (length(btrim(commerce_offer_slug)) > 0),
     constraint negotiation_proposals_offer_title_not_blank check (length(btrim(commerce_offer_title)) > 0),
+    constraint negotiation_proposals_offer_media_positive check (
+        offer_main_image_media_id is null or offer_main_image_media_id > 0
+    ),
     constraint negotiation_proposals_seller_not_blank check (length(btrim(seller_cms_user_id)) > 0),
     constraint negotiation_proposals_buyer_not_blank check (length(btrim(buyer_cms_user_id)) > 0),
     constraint negotiation_proposals_distinct_parties check (seller_cms_user_id <> buyer_cms_user_id),
@@ -73,6 +84,13 @@ create table if not exists commerce_negotiation.proposals (
     ),
     constraint negotiation_proposals_version_positive check (version > 0),
     constraint negotiation_proposals_expiry_after_creation check (expires_at > created_at),
+    constraint negotiation_proposals_checkout_link check (
+        (commerce_agreement_id is null and checkout_expires_at is null)
+        or (commerce_agreement_id is not null and checkout_expires_at is not null)
+    ),
+    constraint negotiation_proposals_commerce_agreement_fk
+        foreign key (commerce_agreement_id)
+        references commerce.price_agreements(public_id) on delete restrict,
     constraint negotiation_proposals_decision_timestamps check (
         (status = 'accepted' and accepted_at is not null)
         or (status = 'rejected' and rejected_at is not null)
@@ -80,6 +98,63 @@ create table if not exists commerce_negotiation.proposals (
         or status not in ('accepted', 'rejected', 'withdrawn')
     )
 );
+
+alter table commerce_negotiation.proposals
+    add column if not exists offer_main_image_media_id bigint;
+
+alter table commerce_negotiation.proposals
+    add column if not exists commerce_agreement_id uuid;
+
+alter table commerce_negotiation.proposals
+    add column if not exists checkout_expires_at timestamptz;
+
+do $$
+begin
+    if not exists (
+        select 1 from pg_constraint
+        where conname = 'negotiation_settings_checkout_ttl'
+          and conrelid = 'commerce_negotiation.settings'::regclass
+    ) then
+        alter table commerce_negotiation.settings
+            add constraint negotiation_settings_checkout_ttl
+            check (accepted_checkout_ttl_hours between 1 and 720);
+    end if;
+    if not exists (
+        select 1 from pg_constraint
+        where conname = 'negotiation_proposals_offer_media_positive'
+          and conrelid = 'commerce_negotiation.proposals'::regclass
+    ) then
+        alter table commerce_negotiation.proposals
+            add constraint negotiation_proposals_offer_media_positive
+            check (offer_main_image_media_id is null or offer_main_image_media_id > 0);
+    end if;
+    if not exists (
+        select 1 from pg_constraint
+        where conname = 'negotiation_proposals_checkout_link'
+          and conrelid = 'commerce_negotiation.proposals'::regclass
+    ) then
+        alter table commerce_negotiation.proposals
+            add constraint negotiation_proposals_checkout_link
+            check (
+                (commerce_agreement_id is null and checkout_expires_at is null)
+                or (commerce_agreement_id is not null and checkout_expires_at is not null)
+            );
+    end if;
+    if not exists (
+        select 1 from pg_constraint
+        where conname = 'negotiation_proposals_commerce_agreement_fk'
+          and conrelid = 'commerce_negotiation.proposals'::regclass
+    ) then
+        alter table commerce_negotiation.proposals
+            add constraint negotiation_proposals_commerce_agreement_fk
+            foreign key (commerce_agreement_id)
+            references commerce.price_agreements(public_id) on delete restrict;
+    end if;
+end $$;
+
+create unique index if not exists negotiation_proposals_commerce_agreement_unique
+    on commerce_negotiation.proposals(commerce_agreement_id)
+    where commerce_agreement_id is not null;
 
 create unique index if not exists negotiation_proposals_one_pending_per_buyer_offer
     on commerce_negotiation.proposals(commerce_offer_id, buyer_cms_user_id)

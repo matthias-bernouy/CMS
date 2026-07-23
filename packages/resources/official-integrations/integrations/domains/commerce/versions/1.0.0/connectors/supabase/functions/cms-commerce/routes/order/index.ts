@@ -17,11 +17,15 @@ export async function createOrder(request: Request): Promise<Response> {
             throw new HttpError(400, `${key} must be an object`);
         }
     }
+    const agreementId = uuid(body.agreementId, "agreementId");
     const items = Array.isArray(body.items) ? body.items : null;
-    if (!items || items.some((item) => !isRecord(item))) {
+    if ((agreementId === null) === (items === null)) {
+        throw new HttpError(400, "provide exactly one of agreementId or items");
+    }
+    if (items?.some((item) => !isRecord(item))) {
         throw new HttpError(400, "items must be an array of objects");
     }
-    const trustedItems = items.map((item, index) => {
+    const trustedItems = items?.map((item, index) => {
         const row = item as JsonRecord;
         return {
             offerId: integer(row.offerId, `items.${index}.offerId`, true),
@@ -31,27 +35,62 @@ export async function createOrder(request: Request): Promise<Response> {
     const buyerCmsUserId = cmsUserId(request);
     const idempotencyKey = requiredText(body.idempotencyKey, "idempotencyKey");
     const definitions = await publicOrderMetadataDefinitions();
-    const result = await rpc("create_order_from_offers", {
+    const checkout = {
         p_buyer_cms_user_id: buyerCmsUserId,
         p_idempotency_key: idempotencyKey,
-        p_items: trustedItems,
         p_shipping_address: isRecord(body.shippingAddress) ? body.shippingAddress : {},
         p_billing_address: isRecord(body.billingAddress) ? body.billingAddress : {},
         p_metadata: isRecord(body.metadata) ? body.metadata : {},
-    });
+    };
+    const result =
+        agreementId === null
+            ? await rpc("create_order_from_offers", {
+                  ...checkout,
+                  p_items: trustedItems,
+              })
+            : await rpc("create_order_from_price_agreement", {
+                  ...checkout,
+                  p_agreement_public_id: agreementId,
+              });
     const response = withPublicOrderResult(withoutRequestHash(camelize(result)), definitions);
     const replay = isRecord(response) && response.idempotentReplay === true;
     return json(response, replay ? 200 : 201);
 }
+
+export async function getMyPriceAgreementCheckout(request: Request): Promise<Response> {
+    const agreementId = uuid(new URL(request.url).searchParams.get("agreementId"), "agreementId");
+    if (agreementId === null) {
+        throw new HttpError(400, "agreementId is required");
+    }
+    const result = await rpc("get_price_agreement_checkout_context", {
+        p_buyer_cms_user_id: cmsUserId(request),
+        p_agreement_public_id: agreementId,
+    });
+    if (!isRecord(result) || typeof result.state !== "string") {
+        throw new HttpError(502, "get_price_agreement_checkout_context returned an invalid response");
+    }
+    if (result.state === "not_found") {
+        throw new HttpError(404, "price agreement not found");
+    }
+    if (result.state !== "ok" || !isRecord(result.context)) {
+        throw new HttpError(502, "get_price_agreement_checkout_context returned an invalid response");
+    }
+    return json(camelize(result.context));
+}
+
 export async function getProtectedCheckoutSellerContext(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
+    const agreementId = uuid(body.agreementId, "agreementId");
     const items = Array.isArray(body.items) ? body.items : null;
-    if (!items?.length || items.some((item) => !isRecord(item))) {
+    if ((agreementId === null) === (items === null)) {
+        throw new HttpError(400, "provide exactly one of agreementId or items");
+    }
+    if (items && (!items.length || items.some((item) => !isRecord(item)))) {
         throw new HttpError(400, "items must be a non-empty array of objects");
     }
     const offerIds = [
         ...new Set(
-            items.map((item, index) => {
+            (items ?? []).map((item, index) => {
                 const offerId = integer((item as JsonRecord).offerId, `items.${index}.offerId`, true)!;
                 if (offerId < 1) {
                     throw new HttpError(400, `items.${index}.offerId must be positive`);
@@ -66,9 +105,10 @@ export async function getProtectedCheckoutSellerContext(request: Request): Promi
             "checkout",
             {
                 p_scope: "checkout",
-                p_offer_ids: offerIds,
+                p_offer_ids: agreementId === null ? offerIds : null,
                 p_order_id: null,
                 p_buyer_cms_user_id: buyerCmsUserId ?? null,
+                p_price_agreement_public_id: agreementId,
             },
             buyerCmsUserId,
         ),
@@ -145,4 +185,17 @@ function withoutRequestHash(value: unknown): unknown {
     const response = { ...value };
     delete response.requestHash;
     return response;
+}
+
+function uuid(value: unknown, name: string): string | null {
+    if (value === undefined || value === null || value === "") {
+        return null;
+    }
+    if (
+        typeof value !== "string" ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+    ) {
+        throw new HttpError(400, `${name} must be a UUID`);
+    }
+    return value.toLowerCase();
 }

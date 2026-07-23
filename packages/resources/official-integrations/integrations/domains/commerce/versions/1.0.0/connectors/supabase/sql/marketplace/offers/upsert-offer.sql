@@ -21,6 +21,12 @@ declare
     v_variant_id bigint;
 begin
     select * into v_settings from commerce.settings where id = 'default' for share;
+    if p_payload ? 'acceptedPriceAmount' then
+        perform commerce.assert_offer_price_increment(
+            nullif(p_payload->>'acceptedPriceAmount', '')::bigint,
+            'accepted price'
+        );
+    end if;
     if p_offer_id is null then
         v_seller_id := nullif(p_payload->>'sellerId', '')::bigint;
         if v_seller_id is null then

@@ -18,12 +18,14 @@ begin
     if p_price_amount is null or p_price_amount < 0 then
         raise exception 'validation: a non-negative accepted price is required for publication';
     end if;
+    perform commerce.assert_offer_price_increment(p_price_amount, 'accepted price');
     select * into v_settings from commerce.settings where id = 'default';
     select * into v_seller from commerce.sellers where id = p_seller_id;
     if not found then raise exception 'not_found: seller'; end if;
     if v_seller.verification_status in ('rejected', 'suspended') then
         raise exception 'forbidden: seller is not allowed to publish';
     end if;
+    perform commerce.assert_required_seller_sale_capabilities(p_seller_id);
     if v_settings.mode = 'ecommerce' and v_seller.kind = 'user' then
         raise exception 'forbidden: marketplace offers are disabled';
     end if;

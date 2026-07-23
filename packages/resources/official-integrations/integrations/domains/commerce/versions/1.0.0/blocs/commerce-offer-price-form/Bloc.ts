@@ -81,6 +81,7 @@ export class CommerceOfferPriceForm extends Composition {
         "title",
         "unavailable-message",
         "unavailable-title",
+        "whole-unit-message",
         ...colorGroups.flatMap((group) =>
             ["text", "background", "border", "accent"].map((color) => `${group}-${color}-color`),
         ),
@@ -268,6 +269,7 @@ export class CommerceOfferPriceForm extends Composition {
         this.range.textContent = `${formatMoney(rule.minimumAmount, rule.currency, this.locale)} – ${formatMoney(rule.maximumAmount, rule.currency, this.locale)}`;
         this.amount.setAttribute("min", minorToMajor(rule.minimumAmount));
         this.amount.setAttribute("max", minorToMajor(rule.maximumAmount));
+        this.amount.setAttribute("step", this.offer.wholeUnitPrices ? "1" : "0.01");
         if (!String(this.amount.value || "").trim()) {
             const draft = this.readPriceDraft();
             if (draft) {
@@ -481,6 +483,9 @@ export class CommerceOfferPriceForm extends Composition {
         const rule = this.offer?.priceRule;
         if (!Number.isSafeInteger(amount) || amount < 0) {
             return this.text("invalid-message", "Indique un montant valide.");
+        }
+        if (this.offer?.wholeUnitPrices && amount % 100 !== 0) {
+            return this.text("whole-unit-message", "Indique un prix sans centimes.");
         }
         if (rule && (amount < rule.minimumAmount || amount > rule.maximumAmount)) {
             return this.text(

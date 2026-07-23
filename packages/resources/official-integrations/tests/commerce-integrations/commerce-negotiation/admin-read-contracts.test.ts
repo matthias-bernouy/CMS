@@ -40,6 +40,7 @@ const publicProposal = {
     offerId: 43,
     offerSlug: "admin-racket",
     offerTitle: "Admin racket",
+    offerMainImageMediaId: null,
     sellerUserId: "seller-9",
     sellerDisplayName: "Seller Nine",
     buyerUserId: "buyer-9",
@@ -55,6 +56,12 @@ const publicProposal = {
     version: 4,
     expiresAt: "2026-07-21T12:00:00Z",
     acceptedAt: null,
+    agreementId: null,
+    agreementVersion: null,
+    checkoutExpiresAt: null,
+    checkoutStatus: null,
+    orderId: null,
+    consumedAt: null,
     rejectedAt: null,
     withdrawnAt: null,
     createdAt: "2026-07-18T12:00:00Z",
@@ -154,6 +161,52 @@ describe("commerce negotiation admin read contracts", () => {
         expect(await denied.json()).toEqual({ error: "invalid CMS API key" });
         expect(requests).toEqual([]);
     });
+
+    test("returns a 400 response instead of rejecting an invalid settings update", async () => {
+        requests.length = 0;
+        const outcome = await Promise.resolve(
+            handler(
+                new Request(`${functionUrl}/admin/settings`, {
+                    method: "POST",
+                    headers: {
+                        authorization: `Bearer ${apiKey}`,
+                        "content-type": "application/json",
+                    },
+                    body: JSON.stringify({}),
+                }),
+            ),
+        ).then(
+            async (response) => ({
+                kind: "response" as const,
+                status: response.status,
+                body: await response.json(),
+            }),
+            (error: unknown) => ({
+                kind: "rejection" as const,
+                message: error instanceof Error ? error.message : String(error),
+            }),
+        );
+
+        expect(outcome).toEqual({
+            kind: "response",
+            status: 400,
+            body: { error: "expectedVersion must be an integer" },
+        });
+        expect(requests).toEqual([]);
+    });
+
+    test("converts an asynchronous settings read failure into an HTTP response", async () => {
+        requests.length = 0;
+        const response = await handler(
+            new Request(`${functionUrl}/admin/settings`, {
+                headers: { authorization: `Bearer ${apiKey}` },
+            }),
+        );
+
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({ error: "settings read failed" });
+        expect(databasePaths()).toEqual(["/rest/v1/settings"]);
+    });
 });
 
 const captureDatabaseRequest = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -165,6 +218,9 @@ const captureDatabaseRequest = (async (input: RequestInfo | URL, init?: RequestI
     }
     if (path.endsWith("/rpc/get_admin_proposal_detail")) {
         return Response.json({ proposal: rawProposal, events: [rawEvent] });
+    }
+    if (path.endsWith("/settings")) {
+        return Response.json({ message: "settings read failed" }, { status: 503 });
     }
     return Response.json({ message: "not found" }, { status: 404 });
 }) as typeof fetch;

@@ -38,6 +38,9 @@ export async function assertProtectedOrderCreation(
                     if (request.url.startsWith("https://stripe.test/seller-eligibility")) {
                         return Response.json({ eligible: true, reasonCode: "eligible" });
                     }
+                    if (request.url.startsWith("https://commerce.test/seller/sale-capability")) {
+                        return saleCapabilityResponse(true);
+                    }
                     if (request.url.startsWith("https://commerce.test/order/create")) {
                         expect(await request.json()).toEqual(orderInput);
                         return Response.json(
@@ -92,6 +95,9 @@ export async function assertProtectedOrderCreation(
                     if (request.url.startsWith("https://stripe.test/seller-eligibility")) {
                         return Response.json({ eligible: false, reasonCode: "seller_terms_not_current" });
                     }
+                    if (request.url.startsWith("https://commerce.test/seller/sale-capability")) {
+                        return saleCapabilityResponse(false);
+                    }
                     reservationAttempted = true;
                     throw new Error(`unexpected mutation after failed eligibility: ${request.url}`);
                 },
@@ -127,6 +133,9 @@ export async function assertProtectedOrderCreation(
                     if (request.url.startsWith("https://stripe.test/seller-eligibility")) {
                         return Response.json({ eligible: false, reasonCode: "seller_terms_not_current" });
                     }
+                    if (request.url.startsWith("https://commerce.test/seller/sale-capability")) {
+                        return saleCapabilityResponse(false);
+                    }
                     paymentPreparationAttempted = true;
                     throw new Error(`unexpected payment mutation after failed eligibility: ${request.url}`);
                 },
@@ -136,4 +145,14 @@ export async function assertProtectedOrderCreation(
     expect(blockedPaymentResponse.status).toBe(409);
     expect(await blockedPaymentResponse.json()).toEqual({ error: "SELLER_PROTECTED_PAYMENT_NOT_READY" });
     expect(paymentPreparationAttempted).toBeFalse();
+}
+
+function saleCapabilityResponse(ready: boolean): Response {
+    return Response.json({
+        sellerId: 17,
+        capabilityKey: "protected_payment",
+        ready,
+        confirmedAt: ready ? "2026-07-23T12:00:00.000Z" : null,
+        revokedAt: ready ? null : "2026-07-23T12:00:00.000Z",
+    });
 }

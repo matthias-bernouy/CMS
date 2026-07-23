@@ -11,6 +11,7 @@ const offer = {
     workflowState: "pending_review",
     acceptedPriceAmount: 12500,
     currency: "eur",
+    wholeUnitPrices: false,
     availability: "available",
     quantityAvailable: null,
     metadata: { privateSellerNote: "owner-visible", internal_note: "keep-snake-case" },

@@ -7,6 +7,7 @@ create table if not exists commerce.settings (
     require_verified_seller boolean not null default true,
     offer_moderation text not null default 'always',
     price_policy text not null default 'admin_range',
+    whole_unit_prices boolean not null default false,
     auto_approve_price_in_range boolean not null default false,
     require_final_price_approval boolean not null default true,
     seller_can_publish boolean not null default false,
@@ -30,3 +31,5 @@ alter table commerce.settings
     add column if not exists active_c2c_protection_policy_id bigint references commerce.protection_policies(id) on delete restrict;
 alter table commerce.settings
     add column if not exists active_c2c_seller_risk_policy_id bigint references commerce.seller_risk_policies(id) on delete restrict;
+alter table commerce.settings
+    add column if not exists whole_unit_prices boolean not null default false;

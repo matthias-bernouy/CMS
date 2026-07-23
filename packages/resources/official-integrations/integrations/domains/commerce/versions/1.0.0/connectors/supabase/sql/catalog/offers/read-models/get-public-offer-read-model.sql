@@ -40,6 +40,8 @@ as $$
         cross join settings_state settings
         where seller.verification_status in ('pending', 'verified')
           and (not settings.require_verified_seller or seller.verification_status = 'verified')
+          and commerce.seller_has_required_sale_capabilities(seller.id)
+          and not commerce.offer_has_active_price_agreement(offer.id)
     ), media_rollup as (
         select link.offer_id,
                jsonb_agg(jsonb_build_object(

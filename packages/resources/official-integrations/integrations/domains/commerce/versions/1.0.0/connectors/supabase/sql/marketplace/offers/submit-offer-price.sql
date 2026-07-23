@@ -24,10 +24,12 @@ declare
 begin
     if p_amount is null or p_amount < 0 then raise exception 'validation: price must be non-negative'; end if;
     select * into v_settings from commerce.settings where id = 'default' for share;
+    perform commerce.assert_offer_price_increment(p_amount, 'price');
     if v_settings.mode = 'ecommerce' then raise exception 'forbidden: marketplace offers are disabled'; end if;
     select * into v_seller from commerce.sellers where cms_user_id = p_cms_user_id for share;
     if not found then raise exception 'not_found: seller'; end if;
     if v_seller.verification_status in ('rejected', 'suspended') then raise exception 'forbidden: seller is not allowed to sell'; end if;
+    perform commerce.assert_required_seller_sale_capabilities(v_seller.id);
     select * into v_offer from commerce.offers
     where id = p_offer_id and seller_id = v_seller.id
     for update;

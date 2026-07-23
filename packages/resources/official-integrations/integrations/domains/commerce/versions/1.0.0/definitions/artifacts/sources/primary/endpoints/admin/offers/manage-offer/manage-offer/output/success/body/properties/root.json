@@ -37,6 +37,9 @@
         "type": "number",
         "nullable": true
     },
+    "wholeUnitPrices": {
+        "type": "boolean"
+    },
     "currency": {
         "type": "string"
     },

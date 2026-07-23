@@ -25,7 +25,8 @@ begin
     perform commerce_negotiation.expire_pending_proposals();
     return (
         with filtered as materialized (
-            select proposal.*
+            select proposal.*,
+                commerce_negotiation.project_proposal(proposal) projected
             from commerce_negotiation.proposals proposal
             where case p_role
                 when 'buyer' then proposal.buyer_cms_user_id = p_user_id
@@ -43,7 +44,7 @@ begin
         )
         select jsonb_build_object(
             'items', coalesce(
-                (select jsonb_agg(to_jsonb(page) order by page.created_at desc) from page),
+                (select jsonb_agg(page.projected order by page.created_at desc) from page),
                 '[]'::jsonb
             ),
             'total', (select count(*) from filtered)

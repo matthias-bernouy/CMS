@@ -17,6 +17,12 @@ begin
     if not found then raise exception 'not_found: proposal'; end if;
     if v_proposal.version <> p_expected_version then raise exception 'conflict: stale proposal version'; end if;
     if v_proposal.status not in ('pending', 'accepted') then raise exception 'conflict: proposal cannot be canceled'; end if;
+    if v_proposal.status = 'accepted' and v_proposal.commerce_agreement_id is not null then
+        perform commerce.cancel_price_agreement(
+            'commerce-negotiation',
+            v_proposal.public_id::text
+        );
+    end if;
     update commerce_negotiation.proposals
     set status = 'canceled', decision_message = nullif(btrim(p_reason), '')
     where id = v_proposal.id returning * into v_proposal;
@@ -27,6 +33,6 @@ begin
         case when v_proposal.accepted_at is null then 'pending' else 'accepted' end, 'canceled',
         jsonb_build_object('reason', p_reason)
     );
-    return to_jsonb(v_proposal);
+    return commerce_negotiation.project_proposal(v_proposal);
 end;
 $$;

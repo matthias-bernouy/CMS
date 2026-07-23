@@ -23,8 +23,8 @@
             }
         }
     },
-    {
-        "id": "sellerEligibility",
+  {
+    "id": "sellerEligibility",
         "call": {
             "source": "{{dependencies.stripe.sourceId}}",
             "endpoint": "checkSellerHeldPaymentEligibility",
@@ -32,10 +32,23 @@
                 "sellerUserId": "$steps.sellerContext.sellerCmsUserId",
                 "marketplaceTermsVersion": "{{answers.sellerTermsVersion}}",
                 "marketplaceTermsHash": "{{answers.sellerTermsHash}}"
-            }
-        }
-    },
-    {
+      }
+    }
+  },
+  {
+    "id": "saleCapability",
+    "call": {
+      "source": "{{dependencies.commerce.sourceId}}",
+      "endpoint": "recordSellerSaleCapability",
+      "body": {
+        "sellerCmsUserId": "$steps.sellerContext.sellerCmsUserId",
+        "capabilityKey": "protected_payment",
+        "ready": "$steps.sellerEligibility.eligible",
+        "evidenceReference": "$steps.sellerEligibility.reasonCode"
+      }
+    }
+  },
+  {
         "assert": {
             "condition": {
                 "equals": [

@@ -12,10 +12,12 @@ const negotiationContextFields = [
     "offer_id",
     "offer_slug",
     "offer_title",
+    "offer_main_image_media_id",
     "seller_cms_user_id",
     "seller_display_name",
     "reference_amount",
     "currency",
+    "whole_unit_prices",
     "publication_status",
     "availability",
 ] as const;
@@ -76,10 +78,12 @@ function projectNegotiationContext(value: unknown): JsonRecord {
         !Number.isSafeInteger(value.offer_id) ||
         typeof value.offer_slug !== "string" ||
         typeof value.offer_title !== "string" ||
+        (value.offer_main_image_media_id !== null && !Number.isSafeInteger(value.offer_main_image_media_id)) ||
         (value.seller_cms_user_id !== null && typeof value.seller_cms_user_id !== "string") ||
         typeof value.seller_display_name !== "string" ||
         (value.reference_amount !== null && !Number.isSafeInteger(value.reference_amount)) ||
         typeof value.currency !== "string" ||
+        typeof value.whole_unit_prices !== "boolean" ||
         typeof value.publication_status !== "string" ||
         typeof value.availability !== "string"
     ) {
@@ -89,10 +93,12 @@ function projectNegotiationContext(value: unknown): JsonRecord {
         offerId: value.offer_id,
         offerSlug: value.offer_slug,
         offerTitle: value.offer_title,
+        offerMainImageMediaId: value.offer_main_image_media_id,
         sellerCmsUserId: value.seller_cms_user_id,
         sellerDisplayName: value.seller_display_name,
         referenceAmount: value.reference_amount,
         currency: value.currency,
+        wholeUnitPrices: value.whole_unit_prices,
         publicationStatus: value.publication_status,
         availability: value.availability,
     };

@@ -36,7 +36,12 @@ import {
     getOrderShipmentCreationSellerContext,
 } from "../routes/order/read-model/contexts/index.ts";
 import { getOfferNegotiationContext } from "../routes/offer/read-model/contexts.ts";
-import { getCurrentSellerIdentity, verifyPendingSellerPayoutEligibility } from "../routes/seller/index.ts";
+import {
+    activateSellerSaleCapability,
+    getCurrentSellerIdentity,
+    recordSellerSaleCapability,
+    verifyPendingSellerPayoutEligibility,
+} from "../routes/seller/index.ts";
 import {
     getOrderPaymentContext,
     getProtectedCheckoutSellerContext,
@@ -49,6 +54,12 @@ export async function handleInternalSettlementRoute(route: string, request: Requ
     }
     if (route === "/system/seller/identity") {
         return request.method === "GET" ? await getCurrentSellerIdentity(request) : methodNotAllowed("GET");
+    }
+    if (route === "/system/seller/sale-capability") {
+        return post(request, recordSellerSaleCapability);
+    }
+    if (route === "/system/seller/sale-capability/activate") {
+        return post(request, activateSellerSaleCapability);
     }
     if (route === "/system/protected-checkout/seller-context") {
         return post(request, getProtectedCheckoutSellerContext);

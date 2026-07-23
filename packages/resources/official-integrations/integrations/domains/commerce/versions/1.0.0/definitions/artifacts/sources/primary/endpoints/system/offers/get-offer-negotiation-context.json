@@ -34,9 +34,13 @@
                         "offerSlug": {
                             "type": "string"
                         },
-                        "offerTitle": {
-                            "type": "string"
-                        },
+            "offerTitle": {
+              "type": "string"
+            },
+            "offerMainImageMediaId": {
+              "type": "number",
+              "nullable": true
+            },
                         "sellerCmsUserId": {
                             "type": "string",
                             "nullable": true,
@@ -55,6 +59,9 @@
                         "currency": {
                             "type": "string"
                         },
+                        "wholeUnitPrices": {
+                            "type": "boolean"
+                        },
                         "publicationStatus": {
                             "type": "string"
                         },
@@ -65,13 +72,43 @@
                     "required": [
                         "offerId",
                         "offerSlug",
-                        "offerTitle",
+            "offerTitle",
+            "offerMainImageMediaId",
                         "sellerCmsUserId",
                         "sellerDisplayName",
                         "referenceAmount",
                         "currency",
+                        "wholeUnitPrices",
                         "publicationStatus",
                         "availability"
+                    ]
+                }
+            },
+            {
+                "status": "400",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "404",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
                     ]
                 }
             }

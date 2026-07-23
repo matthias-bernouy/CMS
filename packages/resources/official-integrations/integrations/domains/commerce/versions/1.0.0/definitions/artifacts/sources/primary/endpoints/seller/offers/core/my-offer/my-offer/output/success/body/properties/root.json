@@ -40,6 +40,9 @@
     "currency": {
         "type": "string"
     },
+    "wholeUnitPrices": {
+        "type": "boolean"
+    },
     "availability": {
         "type": "string"
     },

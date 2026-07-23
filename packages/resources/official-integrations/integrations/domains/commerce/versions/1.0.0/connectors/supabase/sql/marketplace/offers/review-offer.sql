@@ -80,6 +80,8 @@ begin
             or p_minimum_amount < 0 or p_maximum_amount < p_minimum_amount then
             raise exception 'validation: a valid minimum and maximum price are required';
         end if;
+        perform commerce.assert_offer_price_increment(p_minimum_amount, 'minimum price');
+        perform commerce.assert_offer_price_increment(p_maximum_amount, 'maximum price');
         if v_offer.workflow_state <> 'pending_review' then
             raise exception 'conflict: price can only be requested during review';
         end if;
@@ -114,6 +116,7 @@ begin
             where id = v_proposal.id;
             v_offer.accepted_price_amount := v_proposal.amount;
         end if;
+        perform commerce.assert_offer_price_increment(v_offer.accepted_price_amount, 'accepted price');
     elsif p_action = 'reject' then
         update commerce.offer_price_proposals
         set status = 'rejected', decided_by = coalesce(nullif(p_admin_id, ''), 'cms-admin'),

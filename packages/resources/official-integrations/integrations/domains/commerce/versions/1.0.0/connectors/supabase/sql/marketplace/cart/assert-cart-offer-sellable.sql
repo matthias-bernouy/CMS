@@ -28,6 +28,9 @@ begin
     if v_offer.quantity_available is not null and v_offer.quantity_available < p_quantity then
         raise exception 'conflict: insufficient quantity for offer %', v_offer.id;
     end if;
+    if commerce.offer_has_active_price_agreement(v_offer.id) then
+        raise exception 'conflict: offer % is reserved by a price agreement', v_offer.id;
+    end if;
     if not exists (
         select 1 from commerce.products
         where id = v_offer.product_id and status = 'active' and visibility = 'public'
@@ -38,6 +41,7 @@ begin
         or (v_settings.require_verified_seller and v_seller.verification_status <> 'verified') then
         raise exception 'conflict: seller for offer % is not allowed to sell', v_offer.id;
     end if;
+    perform commerce.assert_required_seller_sale_capabilities(v_seller.id);
     if v_settings.mode = 'ecommerce' and v_seller.kind = 'user' then
         raise exception 'conflict: marketplace offers are disabled';
     end if;

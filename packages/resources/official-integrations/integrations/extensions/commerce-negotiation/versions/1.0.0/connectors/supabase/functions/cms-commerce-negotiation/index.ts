@@ -6,6 +6,7 @@ type ProposalRow = {
     commerce_offer_id: number;
     commerce_offer_slug: string;
     commerce_offer_title: string;
+    offer_main_image_media_id: number | null;
     seller_cms_user_id: string;
     seller_display_name: string;
     buyer_cms_user_id: string;
@@ -20,6 +21,12 @@ type ProposalRow = {
     version: number;
     expires_at: string;
     accepted_at: string | null;
+    commerce_agreement_id: string | null;
+    agreement_version: number | null;
+    checkout_expires_at: string | null;
+    checkout_status: "active" | "consumed" | "expired" | "canceled" | null;
+    commerce_order_public_id: string | null;
+    agreement_consumed_at: string | null;
     rejected_at: string | null;
     withdrawn_at: string | null;
     created_at: string;
@@ -31,6 +38,7 @@ type SettingsRow = {
     minimum_ratio_bps: number;
     maximum_ratio_bps: number;
     proposal_ttl_hours: number;
+    accepted_checkout_ttl_hours: number;
     enabled: boolean;
     version: number;
     created_at: string;
@@ -41,10 +49,12 @@ type CommerceContext = {
     offerId: number;
     offerSlug: string;
     offerTitle: string;
+    offerMainImageMediaId: number | null;
     sellerCmsUserId: string;
     sellerDisplayName: string;
     referenceAmount: number;
     currency: string;
+    wholeUnitPrices: boolean;
 };
 
 class HttpError extends Error {
@@ -58,7 +68,7 @@ class HttpError extends Error {
 
 const schema = "commerce_negotiation";
 const settingsSelect =
-    "id,minimum_ratio_bps,maximum_ratio_bps,proposal_ttl_hours,enabled,version,created_at,updated_at";
+    "id,minimum_ratio_bps,maximum_ratio_bps,proposal_ttl_hours,accepted_checkout_ttl_hours,enabled,version,created_at,updated_at";
 const corsHeaders = {
     "access-control-allow-origin": "*",
     "access-control-allow-headers": "authorization, content-type, x-cms-user-id, x-cms-admin-id",
@@ -80,10 +90,10 @@ Deno.serve(async (request) => {
         }
         if (route === "/proposals") {
             if (request.method === "GET") {
-                return listMyProposals(request);
+                return await listMyProposals(request);
             }
             if (request.method === "POST") {
-                return createMyProposal(request);
+                return await createMyProposal(request);
             }
             return methodNotAllowed("GET, POST, OPTIONS");
         }
@@ -107,10 +117,10 @@ Deno.serve(async (request) => {
         }
         if (route === "/admin/settings") {
             if (request.method === "GET") {
-                return getSettings();
+                return await getSettings();
             }
             if (request.method === "POST") {
-                return updateSettings(request);
+                return await updateSettings(request);
             }
             return methodNotAllowed("GET, POST, OPTIONS");
         }
@@ -128,8 +138,9 @@ async function health(): Promise<Response> {
 async function getPolicy(request: Request): Promise<Response> {
     const buyerUserId = requireUserId(request);
     const context = commerceContext(Object.fromEntries(new URL(request.url).searchParams));
+    await rpcValue("expire_pending_proposals", {});
     const settings = await settingsRow();
-    const bounds = priceBounds(context.referenceAmount, settings);
+    const bounds = priceBounds(context.referenceAmount, settings, context.wholeUnitPrices);
     const canPropose = context.sellerCmsUserId !== buyerUserId;
     return json({
         enabled: settings.enabled,
@@ -140,6 +151,7 @@ async function getPolicy(request: Request): Promise<Response> {
         minimumAmount: bounds.minimumAmount,
         maximumAmount: bounds.maximumAmount,
         currency: context.currency,
+        wholeUnitPrices: context.wholeUnitPrices,
         expiresAfterHours: settings.proposal_ttl_hours,
     });
 }
@@ -164,6 +176,7 @@ async function createMyProposal(request: Request): Promise<Response> {
         p_proposed_amount: amount,
         p_currency: context.currency,
         p_buyer_message: message,
+        p_offer_main_image_media_id: context.offerMainImageMediaId,
     });
     return json(publicProposal(row, buyerUserId), 201);
 }
@@ -277,6 +290,9 @@ async function updateSettings(request: Request): Promise<Response> {
     if (Object.hasOwn(body, "proposalTtlHours")) {
         patch.proposal_ttl_hours = requiredInteger(body, "proposalTtlHours");
     }
+    if (Object.hasOwn(body, "acceptedCheckoutTtlHours")) {
+        patch.accepted_checkout_ttl_hours = requiredInteger(body, "acceptedCheckoutTtlHours");
+    }
     if (Object.hasOwn(body, "enabled")) {
         patch.enabled = requiredBoolean(body, "enabled");
     }
@@ -304,6 +320,7 @@ function commerceContext(value: JsonRecord): CommerceContext {
         offerId: safePositiveInteger(value.offerId, "offer id"),
         offerSlug: requiredRecordText(value, "offerSlug"),
         offerTitle: requiredRecordText(value, "offerTitle"),
+        offerMainImageMediaId: optionalSafePositiveInteger(value.offerMainImageMediaId, "offer main image media id"),
         sellerCmsUserId: requiredRecordText(value, "sellerCmsUserId"),
         sellerDisplayName:
             typeof value.sellerDisplayName === "string" && value.sellerDisplayName.trim()
@@ -311,6 +328,7 @@ function commerceContext(value: JsonRecord): CommerceContext {
                 : "Seller",
         referenceAmount: safePositiveInteger(value.referenceAmount, "offer price"),
         currency: normalizeCurrency(value.currency),
+        wholeUnitPrices: requiredTransportBoolean(value, "wholeUnitPrices"),
     };
 }
 
@@ -397,6 +415,7 @@ function publicProposal(row: ProposalRow, viewerId?: string): JsonRecord {
         offerId: row.commerce_offer_id,
         offerSlug: row.commerce_offer_slug,
         offerTitle: row.commerce_offer_title,
+        offerMainImageMediaId: row.offer_main_image_media_id ?? null,
         sellerUserId: row.seller_cms_user_id,
         sellerDisplayName: row.seller_display_name,
         buyerUserId: row.buyer_cms_user_id,
@@ -413,6 +432,12 @@ function publicProposal(row: ProposalRow, viewerId?: string): JsonRecord {
         version: row.version,
         expiresAt: row.expires_at,
         acceptedAt: row.accepted_at,
+        agreementId: row.commerce_agreement_id ?? null,
+        agreementVersion: row.agreement_version ?? null,
+        checkoutExpiresAt: row.checkout_expires_at ?? null,
+        checkoutStatus: row.checkout_status ?? null,
+        orderId: row.commerce_order_public_id ?? null,
+        consumedAt: row.agreement_consumed_at ?? null,
         rejectedAt: row.rejected_at,
         withdrawnAt: row.withdrawn_at,
         createdAt: row.created_at,
@@ -438,6 +463,7 @@ function publicSettings(row: SettingsRow): JsonRecord {
         minimumPercent: row.minimum_ratio_bps / 100,
         maximumPercent: row.maximum_ratio_bps / 100,
         proposalTtlHours: row.proposal_ttl_hours,
+        acceptedCheckoutTtlHours: row.accepted_checkout_ttl_hours,
         enabled: row.enabled,
         version: row.version,
         createdAt: row.created_at,
@@ -445,11 +471,19 @@ function publicSettings(row: SettingsRow): JsonRecord {
     };
 }
 
-function priceBounds(referenceAmount: number, settings: SettingsRow): { minimumAmount: number; maximumAmount: number } {
-    return {
-        minimumAmount: Math.ceil((referenceAmount * settings.minimum_ratio_bps) / 10000),
-        maximumAmount: Math.floor((referenceAmount * settings.maximum_ratio_bps) / 10000),
-    };
+function priceBounds(
+    referenceAmount: number,
+    settings: SettingsRow,
+    wholeUnitPrices: boolean,
+): { minimumAmount: number; maximumAmount: number } {
+    const minimumAmount = Math.ceil((referenceAmount * settings.minimum_ratio_bps) / 10000);
+    const maximumAmount = Math.floor((referenceAmount * settings.maximum_ratio_bps) / 10000);
+    return wholeUnitPrices
+        ? {
+              minimumAmount: Math.ceil(minimumAmount / 100) * 100,
+              maximumAmount: Math.floor(maximumAmount / 100) * 100,
+          }
+        : { minimumAmount, maximumAmount };
 }
 
 function routePath(request: Request): string {
@@ -549,6 +583,16 @@ function requiredBoolean(body: JsonRecord, name: string): boolean {
     return body[name] as boolean;
 }
 
+function requiredTransportBoolean(body: JsonRecord, name: string): boolean {
+    if (body[name] === "true") {
+        return true;
+    }
+    if (body[name] === "false") {
+        return false;
+    }
+    return requiredBoolean(body, name);
+}
+
 function requiredEnum(body: JsonRecord, name: string, allowed: readonly string[]): string {
     const value = optionalText(body, name, 64);
     if (!value || !allowed.includes(value)) {
@@ -607,6 +651,13 @@ function safePositiveInteger(value: unknown, name: string): number {
         throw new HttpError(409, `${name} is unavailable`);
     }
     return Number(parsed);
+}
+
+function optionalSafePositiveInteger(value: unknown, name: string): number | null {
+    if (value === undefined || value === null || value === "") {
+        return null;
+    }
+    return safePositiveInteger(value, name);
 }
 
 function requiredRecordText(record: JsonRecord, name: string): string {

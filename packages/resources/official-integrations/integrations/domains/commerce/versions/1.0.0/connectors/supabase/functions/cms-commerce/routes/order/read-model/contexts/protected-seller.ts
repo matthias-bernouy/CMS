@@ -42,6 +42,9 @@ function contextError(scope: SellerContextScope, state: string): HttpError {
     if (scope === "checkout" && state === "multiple_sellers") {
         return new HttpError(409, "one protected order cannot contain multiple sellers");
     }
+    if (scope === "checkout" && state === "agreement_not_found") {
+        return new HttpError(404, "price agreement not found");
+    }
     if (scope === "payment" && state === "order_not_found") {
         return new HttpError(404, "order not found");
     }

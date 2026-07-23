@@ -19,7 +19,7 @@ begin
     limit 1;
     if not found then return null; end if;
     return jsonb_build_object(
-        'proposal', to_jsonb(v_proposal),
+        'proposal', commerce_negotiation.project_proposal(v_proposal),
         'events', coalesce((
             select jsonb_agg(to_jsonb(event) order by event.created_at asc)
             from commerce_negotiation.proposal_events event

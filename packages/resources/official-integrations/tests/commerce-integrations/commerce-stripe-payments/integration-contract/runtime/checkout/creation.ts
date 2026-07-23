@@ -42,6 +42,15 @@ export async function assertPaymentCreation(
                         });
                         return Response.json({ eligible: true, reasonCode: "eligible" });
                     }
+                    if (request.url.startsWith("https://commerce.test/seller/sale-capability")) {
+                        return Response.json({
+                            sellerId: 17,
+                            capabilityKey: "protected_payment",
+                            ready: true,
+                            confirmedAt: "2026-07-23T12:00:00.000Z",
+                            revokedAt: null,
+                        });
+                    }
                     if (request.url.startsWith("https://commerce.test/payment/prepare")) {
                         expect(await request.json()).toEqual({ orderId: 42 });
                         return Response.json({

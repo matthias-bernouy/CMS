@@ -41,6 +41,7 @@ const expectedProposal = {
     offerId: 42,
     offerSlug: "smoke-racket",
     offerTitle: "Smoke racket",
+    offerMainImageMediaId: null,
     sellerUserId: "seller-user",
     sellerDisplayName: "Seller",
     buyerUserId: "buyer-user",
@@ -56,6 +57,12 @@ const expectedProposal = {
     version: 3,
     expiresAt: "2026-07-20T12:00:00Z",
     acceptedAt: null,
+    agreementId: null,
+    agreementVersion: null,
+    checkoutExpiresAt: null,
+    checkoutStatus: null,
+    orderId: null,
+    consumedAt: null,
     rejectedAt: null,
     withdrawnAt: null,
     createdAt: "2026-07-17T12:00:00Z",
@@ -158,13 +165,29 @@ describe("commerce negotiation read contracts", () => {
         expect(databasePaths()).toEqual(["/rest/v1/rpc/get_participant_proposal_detail"]);
 
         requests.length = 0;
-        await expect(
-            handler(
-                new Request(`${functionUrl}/proposals`, {
-                    headers: { authorization: `Bearer ${apiKey}` },
-                }),
-            ),
-        ).rejects.toMatchObject({ status: 401, message: "CMS user identity required" });
+        const missingIdentity = await handler(
+            new Request(`${functionUrl}/proposals`, {
+                headers: { authorization: `Bearer ${apiKey}` },
+            }),
+        );
+        expect(missingIdentity.status).toBe(401);
+        expect(await missingIdentity.json()).toEqual({ error: "CMS user identity required" });
+        expect(requests).toEqual([]);
+
+        requests.length = 0;
+        const invalidCreate = await handler(
+            new Request(`${functionUrl}/proposals`, {
+                method: "POST",
+                headers: {
+                    authorization: `Bearer ${apiKey}`,
+                    "content-type": "application/json",
+                    "x-cms-user-id": "buyer-user",
+                },
+                body: JSON.stringify({}),
+            }),
+        );
+        expect(invalidCreate.status).toBe(400);
+        expect(await invalidCreate.json()).toEqual({ error: "amount must be an integer" });
         expect(requests).toEqual([]);
     });
 });

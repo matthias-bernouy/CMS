@@ -64,6 +64,7 @@ as $$
             'workflow_state', offer.workflow_state,
             'accepted_price_amount', offer.accepted_price_amount,
             'currency', offer.currency,
+            'whole_unit_prices', settings.whole_unit_prices,
             'availability', offer.availability,
             'quantity_available', offer.quantity_available,
             'metadata', offer.metadata,
@@ -118,6 +119,7 @@ as $$
         ) value
         from authorized_offer offer
         cross join product_keys
+        cross join commerce.settings settings
         left join commerce.products product on product.id = offer.product_id
         left join commerce.product_variants variant
           on variant.id = offer.variant_id

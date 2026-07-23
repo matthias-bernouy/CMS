@@ -27,6 +27,23 @@ for each row execute function commerce.set_updated_at();
 drop trigger if exists sellers_set_updated_at on commerce.sellers;
 create trigger sellers_set_updated_at before update on commerce.sellers
 for each row execute function commerce.set_updated_at_and_version();
+drop trigger if exists sale_capability_requirements_set_updated_at
+on commerce.sale_capability_requirements;
+create trigger sale_capability_requirements_set_updated_at
+before update on commerce.sale_capability_requirements
+for each row execute function commerce.set_updated_at_and_version();
+drop trigger if exists seller_sale_capabilities_set_updated_at
+on commerce.seller_sale_capabilities;
+create trigger seller_sale_capabilities_set_updated_at
+before update on commerce.seller_sale_capabilities
+for each row execute function commerce.set_updated_at_and_version();
+drop trigger if exists price_agreements_set_updated_at on commerce.price_agreements;
+create trigger price_agreements_set_updated_at before update on commerce.price_agreements
+for each row execute function commerce.set_updated_at();
+drop trigger if exists price_agreements_enforce_immutability on commerce.price_agreements;
+create trigger price_agreements_enforce_immutability
+before update or delete on commerce.price_agreements
+for each row execute function commerce.enforce_price_agreement_immutability();
 drop trigger if exists offer_conditions_set_updated_at on commerce.offer_conditions;
 create trigger offer_conditions_set_updated_at before update on commerce.offer_conditions
 for each row execute function commerce.set_updated_at();

@@ -36,9 +36,13 @@
             "offerSlug": {
                 "type": "string"
             },
-            "offerTitle": {
-                "type": "string"
-            },
+      "offerTitle": {
+        "type": "string"
+      },
+      "offerMainImageMediaId": {
+        "type": "number",
+        "nullable": true
+      },
             "sellerCmsUserId": {
                 "type": "string"
             },
@@ -51,6 +55,9 @@
             "currency": {
                 "type": "string"
             },
+            "wholeUnitPrices": {
+                "type": "boolean"
+            },
             "publicationStatus": {
                 "type": "string"
             },
@@ -62,10 +69,12 @@
             "offerId",
             "amount",
             "offerSlug",
-            "offerTitle",
+      "offerTitle",
+      "offerMainImageMediaId",
             "sellerCmsUserId",
             "referenceAmount",
             "currency",
+            "wholeUnitPrices",
             "publicationStatus",
             "availability"
         ]
@@ -75,6 +84,62 @@
             "status": "201",
             "body": {
                 "type": "object"
+            }
+        },
+        {
+            "status": "400",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "403",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "404",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "409",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
             }
         }
     ]

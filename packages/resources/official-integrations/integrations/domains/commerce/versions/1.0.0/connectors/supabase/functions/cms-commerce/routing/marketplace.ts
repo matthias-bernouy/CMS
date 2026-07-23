@@ -16,7 +16,7 @@ import {
     replaceOfferImage,
     uploadOfferImage,
 } from "../routes/offer/media.ts";
-import { createOrder } from "../routes/order/index.ts";
+import { createOrder, getMyPriceAgreementCheckout } from "../routes/order/index.ts";
 import { cancelMyOrder, cancelMySale } from "../routes/order/cancellations.ts";
 import { openMyOrderClaim, respondToMySaleClaim } from "../routes/order/claims/index.ts";
 import { getClaimEvidenceFile, uploadMyClaimEvidence } from "../routes/order/claims/evidence.ts";
@@ -118,6 +118,9 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
             return await createOrder(request);
         }
         return methodNotAllowed("GET", "POST");
+    }
+    if (route === "/me/price-agreement-checkout") {
+        return request.method === "GET" ? await getMyPriceAgreementCheckout(request) : methodNotAllowed("GET");
     }
     if (route === "/me/order") {
         return request.method === "GET" ? await getMyOrder(request) : methodNotAllowed("GET");

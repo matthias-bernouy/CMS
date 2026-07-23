@@ -36,6 +36,62 @@
                 "body": {
                     "type": "object"
                 }
+            },
+            {
+                "status": "400",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "403",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "404",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
             }
         ],
         "steps": [
@@ -46,6 +102,18 @@
                     "endpoint": "getOfferNegotiationContext",
                     "params": {
                         "offerId": "$input.body.offerId"
+                    },
+                    "onError": {
+                        "propagate": [
+                            {
+                                "sourceStatus": 400,
+                                "status": 400
+                            },
+                            {
+                                "sourceStatus": 404,
+                                "status": 404
+                            }
+                        ]
                     }
                 }
             },
@@ -59,13 +127,35 @@
                         "amount": "$input.body.amount",
                         "message": "$input.body.message",
                         "offerSlug": "$steps.offer.offerSlug",
-                        "offerTitle": "$steps.offer.offerTitle",
-                        "sellerCmsUserId": "$steps.offer.sellerCmsUserId",
+            "offerTitle": "$steps.offer.offerTitle",
+            "offerMainImageMediaId": "$steps.offer.offerMainImageMediaId",
+            "sellerCmsUserId": "$steps.offer.sellerCmsUserId",
                         "sellerDisplayName": "$steps.offer.sellerDisplayName",
                         "referenceAmount": "$steps.offer.referenceAmount",
                         "currency": "$steps.offer.currency",
+                        "wholeUnitPrices": "$steps.offer.wholeUnitPrices",
                         "publicationStatus": "$steps.offer.publicationStatus",
                         "availability": "$steps.offer.availability"
+                    },
+                    "onError": {
+                        "propagate": [
+                            {
+                                "sourceStatus": 400,
+                                "status": 400
+                            },
+                            {
+                                "sourceStatus": 403,
+                                "status": 403
+                            },
+                            {
+                                "sourceStatus": 404,
+                                "status": 404
+                            },
+                            {
+                                "sourceStatus": 409,
+                                "status": 409
+                            }
+                        ]
                     }
                 }
             }

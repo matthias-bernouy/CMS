@@ -24,6 +24,6 @@ begin
     insert into commerce_negotiation.proposal_events (
         proposal_id, event_type, actor_kind, actor_id, previous_status, next_status
     ) values (v_proposal.id, 'withdrawn', 'buyer', p_buyer_cms_user_id, 'pending', 'withdrawn');
-    return to_jsonb(v_proposal);
+    return commerce_negotiation.project_proposal(v_proposal);
 end;
 $$;

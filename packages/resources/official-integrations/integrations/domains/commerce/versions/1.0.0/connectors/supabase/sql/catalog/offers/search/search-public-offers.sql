@@ -85,6 +85,8 @@ begin
               and offer.availability = 'available'
               and seller.verification_status not in ('rejected', 'suspended')
               and (not settings.require_verified_seller or seller.verification_status = 'verified')
+              and commerce.seller_has_required_sale_capabilities(seller.id)
+              and not commerce.offer_has_active_price_agreement(offer.id)
               and product.status = 'active' and product.visibility = 'public'
               and (p_category_full_slug is null or category_link.category_id in (select id from category_scope))
               and (p_brand_slug is null or brand.slug = p_brand_slug)

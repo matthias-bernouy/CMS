@@ -49,6 +49,7 @@ describe("commerce order requests", () => {
             {
                 p_scope: "checkout",
                 p_offer_ids: [91],
+                p_price_agreement_public_id: null,
                 p_order_id: null,
                 p_buyer_cms_user_id: "buyer-user-456",
             },
@@ -60,6 +61,32 @@ describe("commerce order requests", () => {
             },
         ]);
         expect(capturedFetches().every((call) => !call.url.includes("rpc/create_order_from_offers"))).toBeTrue();
+    });
+
+    test("resolves negotiated checkout seller context by agreement without offer ids", async () => {
+        setRestResponder(() =>
+            jsonResponse({
+                state: "ok",
+                context: {
+                    seller_cms_user_id: "seller-user-123",
+                    buyer_cms_user_id: "buyer-user-456",
+                },
+            }),
+        );
+
+        const response = await requestCommerce("/system/protected-checkout/seller-context", {
+            userId: "buyer-user-456",
+            body: { agreementId: "9254a543-930f-492d-a6d8-8ee9b2429e8d" },
+        });
+
+        expect(response.status).toBe(200);
+        expect(expectRpc("get_protected_seller_context").body).toEqual({
+            p_scope: "checkout",
+            p_offer_ids: null,
+            p_order_id: null,
+            p_buyer_cms_user_id: "buyer-user-456",
+            p_price_agreement_public_id: "9254a543-930f-492d-a6d8-8ee9b2429e8d",
+        });
     });
 
     test("does not disclose an order seller context to another buyer", async () => {

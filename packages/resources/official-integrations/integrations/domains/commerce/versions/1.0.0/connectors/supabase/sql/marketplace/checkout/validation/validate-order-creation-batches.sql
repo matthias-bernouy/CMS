@@ -66,6 +66,8 @@ begin
             seller.cms_user_id as seller_cms_user_id,
             seller.verification_status as seller_verification_status,
             seller.kind as seller_kind,
+            commerce.seller_has_required_sale_capabilities(seller.id) as sale_capability_ready,
+            commerce.offer_has_active_price_agreement(offer.id) as price_agreement_active,
             offer.currency,
             case when p_split_by_seller then
                 dense_rank() over (order by offer.seller_id)::integer
@@ -118,6 +120,8 @@ begin
             when context.quantity_available is not null
               and context.quantity_available < context.quantity then
                 format('conflict: insufficient quantity for offer %s', context.offer_id)
+            when context.price_agreement_active then
+                format('conflict: offer %s is reserved by a price agreement', context.offer_id)
             when context.product_status <> 'active'
               or context.product_visibility <> 'public' then
                 format('conflict: product for offer %s is not sellable', context.offer_id)
@@ -137,6 +141,8 @@ begin
               or (p_require_verified_seller
                 and context.seller_verification_status <> 'verified') then
                 format('conflict: seller for offer %s is not allowed to sell', context.offer_id)
+            when not context.sale_capability_ready then
+                format('conflict: seller for offer %s is not ready for protected sale', context.offer_id)
             when p_mode = 'ecommerce' and context.seller_kind = 'user' then
                 'conflict: marketplace offers are disabled'
             when not p_split_by_seller

@@ -31,9 +31,10 @@
                             "body": {
                                 "expectedVersion": "$resource.version",
                                 "minimumPercent": "$field.minimumPercent",
-                                "maximumPercent": "$field.maximumPercent",
-                                "proposalTtlHours": "$field.proposalTtlHours",
-                                "enabled": "$field.enabled"
+                "maximumPercent": "$field.maximumPercent",
+                "proposalTtlHours": "$field.proposalTtlHours",
+                "acceptedCheckoutTtlHours": "$field.acceptedCheckoutTtlHours",
+                "enabled": "$field.enabled"
                             }
                         },
                         "after": {
@@ -60,13 +61,20 @@
                                 "type": "text",
                                 "required": true
                             },
-                            {
-                                "id": "proposalTtlHours",
-                                "label": "Lifetime in hours",
-                                "path": "proposalTtlHours",
-                                "type": "text",
-                                "required": true
-                            },
+              {
+                "id": "proposalTtlHours",
+                "label": "Proposal lifetime in hours",
+                "path": "proposalTtlHours",
+                "type": "text",
+                "required": true
+              },
+              {
+                "id": "acceptedCheckoutTtlHours",
+                "label": "Accepted checkout lifetime in hours",
+                "path": "acceptedCheckoutTtlHours",
+                "type": "text",
+                "required": true
+              },
                             {
                                 "id": "enabled",
                                 "label": "Enabled",

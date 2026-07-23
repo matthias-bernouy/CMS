@@ -15,6 +15,9 @@
                 "idempotencyKey": {
                     "type": "string"
                 },
+                "agreementId": {
+                    "type": "string"
+                },
                 "items": {
                     "type": "array",
                     "items": {
@@ -44,8 +47,7 @@
                 }
             },
             "required": [
-                "idempotencyKey",
-                "items"
+                "idempotencyKey"
             ]
         }
     },
@@ -59,7 +61,32 @@
                 "source": "{{dependencies.commerce.sourceId}}",
                 "endpoint": "getProtectedCheckoutSellerContext",
                 "body": {
-                    "items": "$input.body.items"
+                    "items": "$input.body.items",
+                    "agreementId": "$input.body.agreementId"
+                },
+                "onError": {
+                    "propagate": [
+                        {
+                            "sourceStatus": 400,
+                            "status": 400
+                        },
+                        {
+                            "sourceStatus": 403,
+                            "status": 403
+                        },
+                        {
+                            "sourceStatus": 404,
+                            "status": 404
+                        },
+                        {
+                            "sourceStatus": 409,
+                            "status": 409
+                        },
+                        {
+                            "sourceStatus": 422,
+                            "status": 422
+                        }
+                    ]
                 }
             }
         },
@@ -90,6 +117,19 @@
             }
         },
         {
+            "id": "saleCapability",
+            "call": {
+                "source": "{{dependencies.commerce.sourceId}}",
+                "endpoint": "recordSellerSaleCapability",
+                "body": {
+                    "sellerCmsUserId": "$steps.sellerContext.sellerCmsUserId",
+                    "capabilityKey": "protected_payment",
+                    "ready": "$steps.sellerEligibility.eligible",
+                    "evidenceReference": "$steps.sellerEligibility.reasonCode"
+                }
+            }
+        },
+        {
             "assert": {
                 "condition": {
                     "equals": [
@@ -111,9 +151,34 @@
                 "body": {
                     "idempotencyKey": "$input.body.idempotencyKey",
                     "items": "$input.body.items",
+                    "agreementId": "$input.body.agreementId",
                     "shippingAddress": "$input.body.shippingAddress",
                     "billingAddress": "$input.body.billingAddress",
                     "metadata": "$input.body.metadata"
+                },
+                "onError": {
+                    "propagate": [
+                        {
+                            "sourceStatus": 400,
+                            "status": 400
+                        },
+                        {
+                            "sourceStatus": 403,
+                            "status": 403
+                        },
+                        {
+                            "sourceStatus": 404,
+                            "status": 404
+                        },
+                        {
+                            "sourceStatus": 409,
+                            "status": 409
+                        },
+                        {
+                            "sourceStatus": 422,
+                            "status": 422
+                        }
+                    ]
                 }
             }
         }

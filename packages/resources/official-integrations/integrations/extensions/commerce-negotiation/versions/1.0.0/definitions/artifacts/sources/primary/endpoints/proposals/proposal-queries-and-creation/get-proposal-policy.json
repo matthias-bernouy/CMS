@@ -46,6 +46,12 @@
             "required": true
         },
         {
+            "name": "wholeUnitPrices",
+            "in": "query",
+            "type": "boolean",
+            "required": true
+        },
+        {
             "name": "publicationStatus",
             "in": "query",
             "type": "string",
@@ -105,6 +111,9 @@
                     "currency": {
                         "type": "string"
                     },
+                    "wholeUnitPrices": {
+                        "type": "boolean"
+                    },
                     "expiresAfterHours": {
                         "type": "number"
                     }
@@ -116,7 +125,64 @@
                     "referenceAmount",
                     "minimumAmount",
                     "maximumAmount",
-                    "currency"
+                    "currency",
+                    "wholeUnitPrices"
+                ]
+            }
+        },
+        {
+            "status": "400",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "403",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "404",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "409",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
                 ]
             }
         }
