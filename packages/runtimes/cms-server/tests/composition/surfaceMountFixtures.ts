@@ -60,3 +60,9 @@ export function surfaceMountFixtures() {
         },
     };
 }
+
+export async function waitFor(condition: () => boolean): Promise<void> {
+    for (let attempt = 0; attempt < 10 && !condition(); attempt++) {
+        await Promise.resolve();
+    }
+}

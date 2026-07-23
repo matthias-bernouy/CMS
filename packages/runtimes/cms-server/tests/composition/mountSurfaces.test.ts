@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../src/runtime/mountSurfaces";
-import { surfaceMountFixtures } from "./surfaceMountFixtures";
+import { surfaceMountFixtures, waitFor } from "./surfaceMountFixtures";
 
 describe("production surface mounting", () => {
     test("waits for Control before wiring and starting both public surfaces", async () => {
@@ -176,9 +176,3 @@ describe("production surface mounting", () => {
         expect(flushes).toBe(1);
     });
 });
-
-async function waitFor(condition: () => boolean): Promise<void> {
-    for (let attempt = 0; attempt < 10 && !condition(); attempt++) {
-        await Promise.resolve();
-    }
-}

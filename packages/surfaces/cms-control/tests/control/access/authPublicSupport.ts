@@ -38,10 +38,9 @@ export class CaptureRunner implements Runner {
         handler: RouteHandler,
         middlewares: Middleware[] = [],
     ): void {
-        const key = `${method} ${joinPath(this.basePath, path)}`;
-        this.target.endpoints.set(key, middlewares.length);
-        this.target.handlers.set(key, handler);
-        this.target.middlewareChains.set(key, middlewares);
+        this.target.endpoints.set(`${method} ${joinPath(this.basePath, path)}`, middlewares.length);
+        this.target.handlers.set(`${method} ${joinPath(this.basePath, path)}`, handler);
+        this.target.middlewareChains.set(`${method} ${joinPath(this.basePath, path)}`, middlewares);
     }
     use() {}
     get(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
@@ -77,24 +76,9 @@ export class CaptureRunner implements Runner {
         handler: RouteHandler,
         middlewares: Middleware[] = [],
     ): void {
-        const key = `${method} ${this.basePath}`;
-        this.target.endpoints.set(key, middlewares.length);
-        this.target.handlers.set(key, handler);
-        this.target.middlewareChains.set(key, middlewares);
-    }
-
-    async handle(method: string, path: string, request: Request): Promise<Response> {
-        const key = `${method} ${path}`;
-        const handler = this.target.handlers.get(key);
-        if (!handler) {
-            throw new Error(`Route not mounted: ${key}`);
-        }
-        let next = () => Promise.resolve(handler(request));
-        for (const middleware of [...(this.target.middlewareChains.get(key) ?? [])].reverse()) {
-            const downstream = next;
-            next = () => middleware(request, downstream);
-        }
-        return next();
+        this.target.endpoints.set(`${method} ${this.basePath}`, middlewares.length);
+        this.target.handlers.set(`${method} ${this.basePath}`, handler);
+        this.target.middlewareChains.set(`${method} ${this.basePath}`, middlewares);
     }
 
     private get target(): CaptureRunner {

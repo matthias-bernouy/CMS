@@ -116,11 +116,15 @@ describe("Control analytics routes", () => {
         );
         await cms.ready;
 
-        const response = await runner.handle(
-            "GET",
-            "/api/analytics/endpoints",
-            new Request("http://control/api/analytics/endpoints"),
-        );
+        const key = "GET /api/analytics/endpoints";
+        const request = new Request("http://control/api/analytics/endpoints");
+        const handler = runner.handlers.get(key)!;
+        let next = () => Promise.resolve(handler(request));
+        for (const middleware of [...runner.middlewareChains.get(key)!].reverse()) {
+            const downstream = next;
+            next = () => middleware(request, downstream);
+        }
+        const response = await next();
 
         expect(response.status).toBe(403);
         expect(reportCalls).toBe(0);
