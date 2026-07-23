@@ -23,6 +23,9 @@
     "generatedSecrets": {
         "$include": "configuration/generated-secrets.json"
     },
+    "provisions": {
+        "$include": "configuration/provisions.json"
+    },
     "connectors": {
         "$include": "configuration/connectors.json"
     },

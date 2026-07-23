@@ -12,8 +12,8 @@
             "Apply the private Supabase schema and deploy the cms-stripe-connect Edge Function."
         ],
         [
-            "Register all Stripe event destinations",
-            "Register /webhooks/stripe for platform snapshot events, /webhooks/stripe-connect for connected-account v1 snapshot and payout events, and /webhooks/stripe-connect-v2 for Accounts v2 thin events. Use a distinct signing secret for each destination."
+            "Provision Stripe event destinations",
+            "The installation creates and configures the platform snapshot webhook, the connected-account snapshot webhook, and the Accounts v2 thin-event destination. Each signing secret is stored automatically."
         ],
         [
             "Install the composed dashboard",
@@ -39,11 +39,11 @@
     "review": [
         "Stripe indirect-charge refunds, disputes, fees, and negative balances remain the platform's liability.",
         "Configure Radar, operational reserves, seller risk limits, and payout controls before live mode.",
-        "The three Stripe event destinations must cover platform money events, connected-account payout snapshots, and Accounts v2 thin events."
+        "The automatically managed Stripe destinations cover platform money events, connected-account payout snapshots, and Accounts v2 thin events."
     ],
     "sync": [
         "Validate answers",
-        "Store secrets",
+        "Provision Stripe event destinations and store signing secrets",
         "Deploy Supabase connector",
         "Install protected provider source",
         "Install seller onboarding bloc",

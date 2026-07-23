@@ -20,27 +20,6 @@
         "required": true
     },
     {
-        "name": "stripeWebhookSecret",
-        "label": "Stripe webhook signing secret",
-        "type": "password",
-        "required": true,
-        "secret": true
-    },
-    {
-        "name": "stripeConnectWebhookSecret",
-        "label": "Stripe Connect webhook signing secret",
-        "type": "password",
-        "required": true,
-        "secret": true
-    },
-    {
-        "name": "stripeConnectV2WebhookSecret",
-        "label": "Stripe Connect v2 thin-event signing secret",
-        "type": "password",
-        "required": true,
-        "secret": true
-    },
-    {
         "name": "defaultCountry",
         "label": "Connected account country",
         "type": "select",

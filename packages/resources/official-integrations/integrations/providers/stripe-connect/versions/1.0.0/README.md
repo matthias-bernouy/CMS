@@ -103,16 +103,23 @@ pre-protection development schema before applying
 `connectors/supabase/sql/schema.manifest.json`; only the protected
 separate-Charges-and-Transfers ledger is supported.
 
-## Direct Stripe webhooks
+## Automatically managed Stripe webhooks
 
-Register three direct Edge Function URLs in Stripe, each with its own signing
-secret:
+Installing the integration provisions three direct Edge Function destinations
+through the Stripe API, each with its own signing secret:
 
 ```text
 {functionsBaseUrl}/cms-stripe-connect/webhooks/stripe
 {functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect
 {functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect-v2
 ```
+
+The installer owns destinations marked with CmsCore metadata. It creates them
+when absent, updates their URLs and enabled events on reruns, and reuses the
+signing secrets already held in the CMS secret store. Stripe exposes a signing
+secret only when a destination is created, so a destination that exists without
+its corresponding stored secret is reported as a configuration conflict instead
+of being replaced silently.
 
 The first endpoint receives platform snapshot events for indirect platform
 Charges, PaymentIntents, Refunds, disputes, Transfers, and payouts. The second

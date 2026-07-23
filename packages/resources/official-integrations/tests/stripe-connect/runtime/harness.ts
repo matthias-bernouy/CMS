@@ -15,6 +15,7 @@ import { edgeFunctionUrl, functionsBaseUrl, supabaseUrl } from "./constants";
 import { loadEdgeHandler, setActiveEnvironment, setActiveFetch } from "./environment";
 import { requestFromFetchInput } from "./http";
 import { StripeConnectMock } from "./mock/stripe-connect";
+import { stripeWebhookProvisioner } from "../../helpers/stripeWebhookProvisioner";
 
 export async function createStripeConnectHarness() {
     const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("stripe-connect");
@@ -31,6 +32,9 @@ export async function createStripeConnectHarness() {
     let deployment: IntegrationConnectorDeployment | undefined;
     const deployer: IntegrationConnectorDeployer = {
         provider: "supabase",
+        async previewOutputs() {
+            return { functionsBaseUrl };
+        },
         async deploy(next) {
             deployment = next;
             return {
@@ -51,6 +55,7 @@ export async function createStripeConnectHarness() {
             roles,
             dashboards,
             connectorDeployers: [deployer],
+            provisioners: [stripeWebhookProvisioner()],
             blocs: {
                 async importBloc(artifact) {
                     importedBlocs.push(artifact);
@@ -64,9 +69,6 @@ export async function createStripeConnectHarness() {
                 id: "stripe-connect",
                 stripeSecretKey: "sk_test_123",
                 stripePublishableKey: "pk_test_123",
-                stripeWebhookSecret: "whsec_test_123",
-                stripeConnectWebhookSecret: "whsec_connect_test_456",
-                stripeConnectV2WebhookSecret: "whsec_connect_v2_test_789",
                 defaultCountry: "FR",
                 defaultCurrency: "EUR",
                 sellerActivityDescription: "Sale of second-hand goods between individuals.",
