@@ -18,6 +18,19 @@ export class FunctionExecutionError extends Error {
 
 export class RecoverableFunctionCallError extends FunctionExecutionError {}
 
+export const PROPAGATABLE_FUNCTION_CALL_STATUSES = [400, 403, 404, 409, 422] as const;
+
+export class PropagatedFunctionCallError extends RecoverableFunctionCallError {
+    constructor(
+        message: string,
+        status: number,
+        readonly body: unknown,
+        context: FunctionExecutionErrorContext = {},
+    ) {
+        super(message, status, undefined, undefined, context);
+    }
+}
+
 export type FunctionExecutionErrorContext = {
     stepId?: string;
     source?: string;

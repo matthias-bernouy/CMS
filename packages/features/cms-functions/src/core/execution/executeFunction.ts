@@ -10,7 +10,11 @@ import {
 import { json } from "cms-functions/core/execution/output/response";
 import { runFunctionSteps } from "cms-functions/core/execution/calls/runFunctionSteps";
 import { withFunctionExecutionScope } from "cms-functions/core/execution/context/functionExecutionScope";
-import { FunctionExecutionError, UnexpectedFunctionExecutionError } from "cms-functions/core/model/errors";
+import {
+    FunctionExecutionError,
+    PropagatedFunctionCallError,
+    UnexpectedFunctionExecutionError,
+} from "cms-functions/core/model/errors";
 import { resolveFunctionValue, type FunctionRuntimeVars } from "cms-functions/core/model/expressions";
 
 export type FunctionUserContext = {
@@ -68,6 +72,13 @@ export async function executeFunction(
         return body === undefined ? new Response(null, { status }) : json(body, status);
     } catch (error) {
         if (error instanceof FunctionExecutionError) {
+            if (error instanceof PropagatedFunctionCallError) {
+                try {
+                    return functionErrorResponse(fn, error.status, error.body);
+                } catch {
+                    return await serverFailureResponse(fn, 500, options, error);
+                }
+            }
             if (error.status >= 500) {
                 return await serverFailureResponse(fn, error.status, options, error);
             }

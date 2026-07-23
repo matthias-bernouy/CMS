@@ -7,6 +7,8 @@ export type {
     CmsFunction,
     FunctionAssert,
     FunctionCall,
+    FunctionCallErrorMapping,
+    FunctionCallErrorPolicy,
     FunctionCondition,
     FunctionDefinition,
     FunctionDto,

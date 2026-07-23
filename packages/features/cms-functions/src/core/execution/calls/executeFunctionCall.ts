@@ -10,11 +10,8 @@ import {
 import type { FunctionRuntimeVars } from "cms-functions/core/model/expressions";
 import { MAX_FUNCTION_RESPONSE_BYTES } from "cms-functions/core/execution/context/limits";
 import { resolveCallMappings } from "cms-functions/core/execution/context/identityResolution";
-import {
-    callFailureError,
-    contextualizeFunctionError,
-    readLimitedText,
-} from "cms-functions/core/execution/calls/callResponse";
+import { callFailureError, contextualizeFunctionError } from "cms-functions/core/execution/calls/callResponse";
+import { readLimitedText } from "cms-functions/core/execution/calls/callBody";
 import { buildFunctionCallRequest } from "cms-functions/core/execution/calls/callRequest";
 
 export async function executeFunctionCall(
@@ -44,7 +41,7 @@ export async function executeFunctionCall(
         const mappings = await resolveCallMappings(definition, call, endpoint, vars, options);
         const response = await executeEndpoint(endpoint, buildFunctionCallRequest(endpoint, mappings), options.deps);
         if (!response.ok) {
-            throw await callFailureError(call.endpoint, response, options);
+            throw await callFailureError(call, endpoint, definition, response, options);
         }
         if (endpoint.effects?.invalidatesSchema) {
             options.sources.invalidateSchema?.({ sourceId: call.source });

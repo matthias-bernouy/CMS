@@ -9,11 +9,21 @@ export type FunctionEndpointInput = {
     body?: DataShape;
 };
 
+export type FunctionCallErrorMapping = {
+    sourceStatus: number;
+    status: number;
+};
+
+export type FunctionCallErrorPolicy = {
+    propagate: FunctionCallErrorMapping[];
+};
+
 export type FunctionCall = {
     source: string;
     endpoint: string;
     params?: Record<string, FunctionValue>;
     body?: FunctionValue;
+    onError?: FunctionCallErrorPolicy;
 };
 
 export type FunctionCondition =

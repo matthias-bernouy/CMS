@@ -1,20 +1,31 @@
+import type { SourceEndpoint } from "@bernouy/cms-sources";
 import type { ExecuteFunctionOptions } from "cms-functions/core/execution/executeFunction";
 import { MAX_FUNCTION_CALL_ERROR_BYTES } from "cms-functions/core/execution/context/limits";
+import type { CmsFunction, FunctionCall } from "cms-functions/interfaces/FunctionDefinition";
+import { readLimitedText } from "cms-functions/core/execution/calls/callBody";
+import { propagatedCallFailureError } from "cms-functions/core/execution/calls/callErrorPropagation";
 import {
     FunctionExecutionError,
+    PropagatedFunctionCallError,
     RecoverableFunctionCallError,
     withFunctionExecutionErrorContext,
     type FunctionExecutionErrorContext,
 } from "cms-functions/core/model/errors";
 
 export async function callFailureError(
-    endpoint: string,
+    call: FunctionCall,
+    endpoint: SourceEndpoint,
+    definition: CmsFunction,
     response: Response,
     options: ExecuteFunctionOptions,
 ): Promise<RecoverableFunctionCallError> {
-    const message = `Function call "${endpoint}" failed with status ${response.status}`;
+    const message = `Function call "${call.endpoint}" failed with status ${response.status}`;
     const correlationId = response.headers.get("x-correlation-id") ?? undefined;
     const context: FunctionExecutionErrorContext = { callStatus: response.status };
+    const propagated = await propagatedCallFailureError(call, endpoint, definition, response, options, context);
+    if (propagated) {
+        return propagated;
+    }
     if (!options.includeCallErrorDetails) {
         if (response.body) {
             await response.body.cancel().catch(() => undefined);
@@ -27,7 +38,7 @@ export async function callFailureError(
         options.maxCallErrorBytes ?? MAX_FUNCTION_CALL_ERROR_BYTES,
     );
     const detail: Record<string, unknown> = {
-        call: endpoint,
+        call: call.endpoint,
         status: response.status,
         contentType,
         body: parseErrorBody(text, contentType),
@@ -43,6 +54,9 @@ export function contextualizeFunctionError(
     context: FunctionExecutionErrorContext,
 ): FunctionExecutionError {
     const contextual = withFunctionExecutionErrorContext(error, context);
+    if (error instanceof PropagatedFunctionCallError) {
+        return new PropagatedFunctionCallError(contextual.message, contextual.status, error.body, contextual.context);
+    }
     if (!(error instanceof RecoverableFunctionCallError)) {
         return contextual;
     }
@@ -53,39 +67,6 @@ export function contextualizeFunctionError(
         contextual.correlationId,
         contextual.context,
     );
-}
-
-export async function readLimitedText(
-    response: Response,
-    maxBytes: number,
-): Promise<{ text: string; truncated: boolean }> {
-    if (!response.body) {
-        return { text: "", truncated: false };
-    }
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let text = "";
-    let bytes = 0;
-    let truncated = false;
-    while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-            break;
-        }
-        bytes += value.byteLength;
-        if (bytes > maxBytes) {
-            const remaining = maxBytes - (bytes - value.byteLength);
-            if (remaining > 0) {
-                text += decoder.decode(value.slice(0, remaining), { stream: true });
-            }
-            truncated = true;
-            await reader.cancel();
-            break;
-        }
-        text += decoder.decode(value, { stream: true });
-    }
-    text += decoder.decode();
-    return { text, truncated };
 }
 
 function parseErrorBody(text: string, contentType: string): unknown {
