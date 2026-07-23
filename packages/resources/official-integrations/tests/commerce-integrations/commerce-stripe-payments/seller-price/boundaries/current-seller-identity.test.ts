@@ -88,6 +88,11 @@ describe("Commerce current seller identity contract", () => {
                 endpoint: "enrollConnectSeller",
             },
             {
+                id: "saleCapability",
+                source: "{{dependencies.commerce.sourceId}}",
+                endpoint: "recordSellerSaleCapability",
+            },
+            {
                 id: "result",
                 source: "{{dependencies.commerce.sourceId}}",
                 endpoint: "submitMyOfferPrice",

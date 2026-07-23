@@ -1,8 +1,8 @@
 import { makeEndpointUrn, type DataShape, type SourceEndpoint } from "@bernouy/cms-sources";
-import { computedHeader, number, object, openObject, text } from "./shapes";
+import { boolean, computedHeader, number, object, openObject, text } from "./shapes";
 
 export function commerceEndpoints(): SourceEndpoint[] {
-    return [mySeller(), currentSellerIdentity(), submitPrice()];
+    return [mySeller(), currentSellerIdentity(), recordSaleCapability(), submitPrice()];
 }
 
 function mySeller(): SourceEndpoint {
@@ -74,6 +74,44 @@ function currentSellerIdentity(): SourceEndpoint {
                     },
                     cmsUserId: text(),
                 }),
+            },
+        ],
+    };
+}
+
+function recordSaleCapability(): SourceEndpoint {
+    return {
+        urn: makeEndpointUrn("commerce", "recordSellerSaleCapability"),
+        method: "POST",
+        access: { mode: "system" },
+        targetUrl: "https://commerce.test/seller/sale-capability",
+        input: {
+            body: object(
+                {
+                    sellerCmsUserId: {
+                        type: "string",
+                        semantic: { kind: "user-id", authority: "cms" },
+                    },
+                    capabilityKey: text(),
+                    ready: boolean(),
+                    evidenceReference: text(),
+                },
+                ["sellerCmsUserId", "capabilityKey", "ready"],
+            ),
+        },
+        output: [
+            {
+                status: "200",
+                body: object(
+                    {
+                        sellerId: number(),
+                        capabilityKey: text(),
+                        ready: boolean(),
+                        confirmedAt: text(true),
+                        revokedAt: text(true),
+                    },
+                    ["sellerId", "capabilityKey", "ready", "confirmedAt", "revokedAt"],
+                ),
             },
         ],
     };

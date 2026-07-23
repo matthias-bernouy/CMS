@@ -1,4 +1,4 @@
-import { connectStatus, offerResult, seller } from "./fixtures";
+import { connectStatus, offerResult, saleCapabilityResult, seller } from "./fixtures";
 
 type Reply = unknown | Response | ((request: Request) => unknown | Response | Promise<unknown | Response>);
 
@@ -6,6 +6,7 @@ export type SellerPriceReplies = {
     seller?: Reply;
     status?: Reply;
     enrollment?: Reply;
+    capability?: Reply;
     result?: Reply;
 };
 
@@ -27,6 +28,9 @@ export function sellerPriceResponder(replies: SellerPriceReplies = {}): (request
                     currentTermsAccepted: true,
                 }),
             );
+        }
+        if (path === "/seller/sale-capability") {
+            return await response(request, replies.capability, saleCapabilityResult);
         }
         if (path === "/offer/price") {
             return await response(request, replies.result, offerResult);

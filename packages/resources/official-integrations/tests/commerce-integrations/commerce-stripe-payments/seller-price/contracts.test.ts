@@ -13,6 +13,7 @@ describe("Commerce Stripe seller price contracts", () => {
             ["GET", "/seller"],
             ["GET", "/status"],
             ["POST", "/enrollment"],
+            ["POST", "/seller/sale-capability"],
             ["POST", "/offer/price"],
         ]);
         expect(Object.fromEntries(calls[1]!.url.searchParams)).toEqual({
@@ -25,15 +26,21 @@ describe("Commerce Stripe seller price contracts", () => {
             marketplaceTermsVersion: sellerTermsVersion,
             marketplaceTermsHash: sellerTermsHash,
         });
-        expect(Object.fromEntries(calls[3]!.url.searchParams)).toEqual({
+        expect(calls[3]?.body).toEqual({
+            sellerCmsUserId,
+            capabilityKey: "protected_payment",
+            ready: true,
+            evidenceReference: "stripe-connect:enrollment",
+        });
+        expect(Object.fromEntries(calls[4]!.url.searchParams)).toEqual({
             id: "42",
         });
-        expect(calls[3]?.body).toEqual({
+        expect(calls[4]?.body).toEqual({
             amount: 12_000,
             expectedVersion: 3,
         });
-        expect(calls.map((call) => call.cmsUserId)).toEqual([sellerCmsUserId, null, null, sellerCmsUserId]);
-        expect(calls.map((call) => call.stripeUserId)).toEqual([null, sellerCmsUserId, sellerCmsUserId, null]);
+        expect(calls.map((call) => call.cmsUserId)).toEqual([sellerCmsUserId, null, null, null, sellerCmsUserId]);
+        expect(calls.map((call) => call.stripeUserId)).toEqual([null, sellerCmsUserId, sellerCmsUserId, null, null]);
         expect(
             await identities.resolve(
                 {

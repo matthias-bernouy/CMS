@@ -17,6 +17,7 @@ describe("Commerce Stripe seller price response boundaries", () => {
                 "/seller",
                 "/status",
                 "/enrollment",
+                "/seller/sale-capability",
                 "/offer/price",
             ]);
         }
@@ -27,7 +28,7 @@ describe("Commerce Stripe seller price response boundaries", () => {
             const { response, calls } = await executeSellerPrice(sellerPriceResponder({ result }));
 
             await expectGenericFailure(response, 500);
-            expect(calls).toHaveLength(4);
+            expect(calls).toHaveLength(5);
         }
     });
 

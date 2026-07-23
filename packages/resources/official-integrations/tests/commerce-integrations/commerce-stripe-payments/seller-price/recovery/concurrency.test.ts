@@ -45,6 +45,7 @@ describe("Commerce Stripe seller price concurrent orchestration", () => {
                 "/seller",
                 "/status",
                 "/enrollment",
+                "/seller/sale-capability",
                 "/offer/price",
             ]);
         }
@@ -57,6 +58,13 @@ describe("Commerce Stripe seller price concurrent orchestration", () => {
         });
         expect(results[0]?.calls[3]?.body).toEqual(results[1]?.calls[3]?.body);
         expect(results[0]?.calls[3]?.body).toEqual({
+            sellerCmsUserId: "seller-subject",
+            capabilityKey: "protected_payment",
+            ready: true,
+            evidenceReference: "stripe-connect:enrollment",
+        });
+        expect(results[0]?.calls[4]?.body).toEqual(results[1]?.calls[4]?.body);
+        expect(results[0]?.calls[4]?.body).toEqual({
             amount: 12_000,
             expectedVersion: 3,
         });
@@ -101,14 +109,15 @@ describe("Commerce Stripe seller price concurrent orchestration", () => {
                 "/seller",
                 "/status",
                 "/enrollment",
+                "/seller/sale-capability",
                 "/offer/price",
             ]);
         }
-        expect(first.calls[3]?.body).toEqual({
+        expect(first.calls[4]?.body).toEqual({
             amount: 12_000,
             expectedVersion: 3,
         });
-        expect(retry.calls[3]?.body).toEqual(first.calls[3]?.body);
+        expect(retry.calls[4]?.body).toEqual(first.calls[4]?.body);
         expect(resultAttempts).toBe(2);
         expect(mutations).toBe(1);
     });

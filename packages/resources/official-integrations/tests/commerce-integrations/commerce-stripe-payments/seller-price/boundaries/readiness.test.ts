@@ -31,7 +31,15 @@ describe("Commerce Stripe seller enrollment readiness", () => {
             expect(await response.json()).toEqual({
                 error: "Seller enrollment is not ready for held payments",
             });
-            expect(calls.map((call) => call.url.pathname)).toEqual(["/seller", "/status", "/enrollment"]);
+            expect(calls.map((call) => call.url.pathname)).toEqual([
+                "/seller",
+                "/status",
+                "/enrollment",
+                "/seller/sale-capability",
+            ]);
+            expect(calls[3]?.body).toMatchObject({
+                ready: field === "canAcceptHeldPayments" ? false : true,
+            });
         }
     });
 });

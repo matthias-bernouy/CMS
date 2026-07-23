@@ -106,6 +106,19 @@
         }
     },
     {
+        "id": "saleCapability",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "recordSellerSaleCapability",
+            "body": {
+                "sellerCmsUserId": "$ctx.user.id",
+                "capabilityKey": "protected_payment",
+                "ready": "$steps.enrollment.canAcceptHeldPayments",
+                "evidenceReference": "stripe-connect:enrollment"
+            }
+        }
+    },
+    {
         "$include": "validate-seller-enrollment-not-ready-held-payments.json"
     },
     {

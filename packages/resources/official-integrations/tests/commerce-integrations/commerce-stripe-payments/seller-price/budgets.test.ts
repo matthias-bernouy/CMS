@@ -4,11 +4,17 @@ import { executeSellerPrice } from "./harness";
 import { sellerPriceResponder } from "./responders";
 
 describe("Commerce Stripe seller price call budgets", () => {
-    test("keeps four ordered Source calls and one call per dependency", async () => {
+    test("keeps five ordered Source calls and one call per dependency", async () => {
         const { response, calls } = await executeSellerPrice(sellerPriceResponder());
 
         expect(response.status).toBe(200);
-        expect(calls.map((call) => call.url.pathname)).toEqual(["/seller", "/status", "/enrollment", "/offer/price"]);
+        expect(calls.map((call) => call.url.pathname)).toEqual([
+            "/seller",
+            "/status",
+            "/enrollment",
+            "/seller/sale-capability",
+            "/offer/price",
+        ]);
         expect(
             Object.fromEntries(
                 calls.map((call) => [
@@ -20,6 +26,7 @@ describe("Commerce Stripe seller price call budgets", () => {
             "/seller": 1,
             "/status": 1,
             "/enrollment": 1,
+            "/seller/sale-capability": 1,
             "/offer/price": 1,
         });
     });
@@ -48,6 +55,7 @@ describe("Commerce Stripe seller price call budgets", () => {
                 "/seller",
                 "/status",
                 "/enrollment",
+                "/seller/sale-capability",
                 "/offer/price",
             ]);
         }

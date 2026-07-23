@@ -56,10 +56,11 @@ describe("Commerce Stripe seller price input boundaries", () => {
                 "/seller",
                 "/status",
                 "/enrollment",
+                "/seller/sale-capability",
                 "/offer/price",
             ]);
-            expect(calls[3]?.url.searchParams.get("id")).toBe(expectedQuery);
-            expect(calls[3]?.body).toEqual(expectedBody);
+            expect(calls[4]?.url.searchParams.get("id")).toBe(expectedQuery);
+            expect(calls[4]?.body).toEqual(expectedBody);
         }
     });
 });

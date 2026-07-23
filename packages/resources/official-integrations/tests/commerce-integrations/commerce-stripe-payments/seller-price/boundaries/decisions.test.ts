@@ -92,7 +92,7 @@ describe("Commerce Stripe seller price decision boundaries", () => {
         }
     });
 
-    test("stops before Commerce when enrollment remains incomplete", async () => {
+    test("records the capability before stopping when enrollment remains incomplete", async () => {
         const { response, calls } = await executeSellerPrice(
             sellerPriceResponder({
                 enrollment: connectStatus({
@@ -106,7 +106,18 @@ describe("Commerce Stripe seller price decision boundaries", () => {
         expect(await response.json()).toEqual({
             error: "Seller enrollment is not ready for held payments",
         });
-        expect(calls.map((call) => call.url.pathname)).toEqual(["/seller", "/status", "/enrollment"]);
+        expect(calls.map((call) => call.url.pathname)).toEqual([
+            "/seller",
+            "/status",
+            "/enrollment",
+            "/seller/sale-capability",
+        ]);
+        expect(calls[3]?.body).toEqual({
+            sellerCmsUserId: "seller-subject",
+            capabilityKey: "protected_payment",
+            ready: true,
+            evidenceReference: "stripe-connect:enrollment",
+        });
     });
 
     test("redacts every dependency failure and stops causally", async () => {
@@ -114,7 +125,8 @@ describe("Commerce Stripe seller price decision boundaries", () => {
             [{ seller: privateFailure(500, "private seller") }, 1],
             [{ status: privateFailure(409, "private Stripe status") }, 2],
             [{ enrollment: privateFailure(400, "private token") }, 3],
-            [{ result: privateFailure(409, "private offer") }, 4],
+            [{ capability: privateFailure(500, "private capability") }, 4],
+            [{ result: privateFailure(409, "private offer") }, 5],
         ];
 
         for (const [replies, count] of cases) {

@@ -56,6 +56,14 @@ export const offerResult = {
     },
 };
 
+export const saleCapabilityResult = {
+    sellerId: seller.id,
+    capabilityKey: "protected_payment",
+    ready: true,
+    confirmedAt: "2026-07-13T10:10:00.000Z",
+    revokedAt: null,
+};
+
 export const successfulInput = {
     offerId: "42",
     amount: 12_000,
