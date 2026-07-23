@@ -67,6 +67,9 @@ export async function executeEndpoint(
     if (identityBindings.length && !deps?.resolveContext) {
         return new Response("identity binding requires a configured context resolver", { status: 500 });
     }
+    if (identityBindings.length && isMutatingMethod(endpoint.method) && !deps?.identities) {
+        return new Response("identity service not configured", { status: 500 });
+    }
     const computed = needsContext && deps?.resolveContext ? await deps.resolveContext(request) : {};
     const built = buildUpstreamUrl(endpoint, new URL(request.url).searchParams, computed);
     if (!built.ok) {
@@ -124,6 +127,10 @@ function validEndpointTimeout(timeoutMs: number | undefined): number {
         return DEFAULT_SOURCE_ENDPOINT_TIMEOUT_MS;
     }
     return timeoutMs;
+}
+
+function isMutatingMethod(method: SourceEndpoint["method"]): boolean {
+    return method !== "GET" && method !== "HEAD" && method !== "OPTIONS";
 }
 
 async function projectSourceResponse(

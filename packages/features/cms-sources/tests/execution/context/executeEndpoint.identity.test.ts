@@ -77,4 +77,42 @@ describe("executeEndpoint identity bindings", () => {
             "subject-buyer",
         );
     });
+
+    test("rejects a mutating identity-binding endpoint before invoking upstream when identities are unavailable", async () => {
+        let upstreamCalls = 0;
+        const response = await executeEndpoint(
+            {
+                urn: makeEndpointUrn("commerce", "registerMySeller"),
+                method: "POST",
+                targetUrl: "https://commerce.test/me/seller",
+                effects: { identityBindings: [{ kind: "user", responsePath: "id" }] },
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object",
+                            properties: {
+                                id: {
+                                    type: "number",
+                                    semantic: { kind: "user-id", authority: "commerce" },
+                                },
+                            },
+                        },
+                    },
+                ],
+            },
+            new Request("https://cms.test/internal", { method: "POST" }),
+            {
+                resolveContext: async () => ({ userID: "subject-seller" }),
+                fetchImpl: async () => {
+                    upstreamCalls += 1;
+                    return Response.json({ id: 184 });
+                },
+            },
+        );
+
+        expect(response.status).toBe(500);
+        expect(await response.text()).toBe("identity service not configured");
+        expect(upstreamCalls).toBe(0);
+    });
 });

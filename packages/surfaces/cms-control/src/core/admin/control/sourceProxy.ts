@@ -101,8 +101,7 @@ export function mountControlSourceProxy(
                     return handleSourceRequest(proxiedSources, req, {
                         prefix,
                         deps: {
-                            resolveSecret,
-                            resolveContext,
+                            ...sourceDeps,
                             executeSystemEndpoint,
                             authorizeEndpoint,
                             ...(interceptEndpoint ? { interceptEndpoint } : {}),
