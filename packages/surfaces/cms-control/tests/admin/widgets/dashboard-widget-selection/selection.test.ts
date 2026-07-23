@@ -48,6 +48,73 @@ describe("dashboard widget selection", () => {
         expect(detailWidgets[0]?.id).toBe("productDetail");
     });
 
+    test("shows a selection-scoped table only with its owning detail", () => {
+        const dashboard = {
+            id: "payments",
+            source: "commerce",
+            views: [
+                {
+                    widget: "w-tabs",
+                    id: "operations",
+                    tabs: [
+                        {
+                            id: "claims",
+                            label: "Marketplace Claims",
+                            children: [
+                                {
+                                    widget: "w-table",
+                                    id: "claimsTable",
+                                    source: { endpoint: "claims" },
+                                    rowKey: "id",
+                                    columns: [],
+                                    selection: { opens: "claimDetail" },
+                                },
+                                {
+                                    widget: "w-detail",
+                                    id: "claimDetail",
+                                    source: { endpoint: "claim", params: { id: "$selection.id" } },
+                                    main: [],
+                                },
+                                {
+                                    widget: "w-table",
+                                    id: "claimEvidenceTable",
+                                    source: {
+                                        endpoint: "claimEvidenceItems",
+                                        params: { claimId: "$selection.claimDetail.id" },
+                                    },
+                                    rowKey: "id",
+                                    columns: [],
+                                    selection: { opens: "claimEvidenceDetail" },
+                                },
+                                {
+                                    widget: "w-detail",
+                                    id: "claimEvidenceDetail",
+                                    source: { endpoint: "claimEvidenceItem", params: { id: "$selection.id" } },
+                                    main: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        } as DashboardDto;
+
+        const main = widgetsForSelection(dashboard, null);
+        expect(main).toHaveLength(1);
+        expect(main[0]?.widget).toBe("w-tabs");
+        expect(main[0]?.widget === "w-tabs" ? main[0].tabs[0]?.children.map((widget) => widget.id) : []).toEqual([
+            "claimsTable",
+        ]);
+        expect(
+            widgetsForSelection(dashboard, { collection: "claimDetail", row: "claim-42" }).map((widget) => widget.id),
+        ).toEqual(["claimDetail", "claimEvidenceTable"]);
+        expect(
+            widgetsForSelection(dashboard, { collection: "claimEvidenceDetail", row: "evidence-7" }).map(
+                (widget) => widget.id,
+            ),
+        ).toEqual(["claimEvidenceDetail"]);
+    });
+
     test("drops a detail selection removed by refreshed definitions", () => {
         const dashboard = {
             id: "products",

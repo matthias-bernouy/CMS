@@ -2,7 +2,7 @@ import type { DetailSelection, RenderContext, RuntimeDetailWidget } from "../../
 import "../../widgets/w-detail/WDetail";
 import { detailReloadEvent } from "../reload";
 import { relationDetailSectionElement } from "./mountRelations";
-import { appendSourceContent, jsonAttr, sourceWrapper } from "./mountSource";
+import { appendSourceContent, jsonAttr, requiredSourceParams, sourceWrapper } from "./mountSource";
 
 export function detailElement(
     widget: RuntimeDetailWidget,
@@ -19,6 +19,7 @@ export function detailElement(
         widget.source,
         { selection: { id: rowKey } },
         "dashboardData",
+        requiredSourceParams(context, widget.source),
     );
     wrapper.setAttribute(
         "cms-reload-on",

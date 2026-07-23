@@ -74,6 +74,12 @@ export type DashboardField =
           max?: number;
           step?: number;
       })
+    | (DashboardFieldBase & {
+          type: "money";
+          placeholder?: string;
+          currencyPath?: string;
+          allowDecimals?: boolean | DashboardVisibilityRule;
+      })
     | (DashboardFieldBase & { type: "checkbox" })
     | (DashboardFieldBase & { type: "textarea"; rows?: number })
     | (DashboardFieldBase & { type: "select"; options: DashboardOption[] })

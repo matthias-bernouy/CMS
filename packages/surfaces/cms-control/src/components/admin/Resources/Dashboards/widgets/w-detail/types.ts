@@ -67,6 +67,7 @@ export type WDetailField = {
     input:
         | "text"
         | "number"
+        | "money"
         | "checkbox"
         | "textarea"
         | "select"
@@ -98,6 +99,9 @@ export type WDetailField = {
     min?: number;
     max?: number;
     step?: number;
+    currency?: string;
+    fractionDigits?: number;
+    allowDecimals?: boolean;
     creatable?: boolean;
     accept?: string;
 };

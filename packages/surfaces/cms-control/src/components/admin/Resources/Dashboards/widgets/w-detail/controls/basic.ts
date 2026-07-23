@@ -1,11 +1,15 @@
 import type { WDetailField, WDetailFieldValue } from "../types";
+import { parseMajorUnits } from "../../../runtime/mapping/money";
 import { badge, image, readonlyValue } from "./display";
-import { combobox, numberInput, select, textInput, textarea, tokenInput } from "./inputFields";
-import { bindFieldControl, isTokenControl, isValueControl } from "./shared";
+import { combobox, moneyInput, numberInput, select, textInput, textarea, tokenInput } from "./inputFields";
+import { bindFieldControl, isTokenControl, isValueControl, type ValueControl } from "./shared";
 
 export function createBasicControl(field: WDetailField): HTMLElement {
     if (field.input === "number") {
         return numberInput(field);
+    }
+    if (field.input === "money") {
+        return moneyInput(field);
     }
     if (field.input === "checkbox") {
         return checkbox(field);
@@ -38,7 +42,7 @@ export function createBasicControl(field: WDetailField): HTMLElement {
 }
 
 export function fieldUsesBasicInternalLabel(field: WDetailField): boolean {
-    return ["text", "number", "textarea", "select", "combobox", "tokens"].includes(field.input);
+    return ["text", "number", "money", "textarea", "select", "combobox", "tokens"].includes(field.input);
 }
 
 export function readBasicControlValue(field: WDetailField, control: HTMLElement): WDetailFieldValue {
@@ -60,10 +64,35 @@ export function readBasicControlValue(field: WDetailField, control: HTMLElement)
         const value = Number(control.value);
         return Number.isFinite(value) ? value : "";
     }
+    if (field.input === "money" && isValueControl(control)) {
+        return readMoneyControlValue(field, control);
+    }
     if (isValueControl(control)) {
         return control.value;
     }
     return Array.isArray(field.value) ? field.value : String(field.value);
+}
+
+function readMoneyControlValue(field: WDetailField, control: ValueControl): number | "" {
+    const result = parseMajorUnits(control.value, field.fractionDigits ?? 2, field.allowDecimals !== false);
+    if (!result.ok) {
+        setMoneyError(control, result.message);
+        return "";
+    }
+    if (field.required && result.value === "") {
+        setMoneyError(control, "This field is required.");
+        return "";
+    }
+    control.removeAttribute("invalid");
+    control.removeAttribute("hint");
+    control.removeAttribute("hint-level");
+    return result.value;
+}
+
+function setMoneyError(control: HTMLElement, message: string): void {
+    control.setAttribute("invalid", "");
+    control.setAttribute("hint", message);
+    control.setAttribute("hint-level", "error");
 }
 
 function checkbox(field: WDetailField): HTMLElement {

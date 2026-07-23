@@ -9,24 +9,37 @@ if (!customElements.get(tag)) {
 afterEach(() => document.body.replaceChildren());
 
 describe("P9rInput", () => {
-    test("forwards numeric constraints to its native input", () => {
+    test("forwards numeric constraints and the input mode to its native input", () => {
         const control = document.createElement(tag);
         control.setAttribute("type", "number");
+        control.setAttribute("inputmode", "decimal");
         control.setAttribute("min", "0");
         control.setAttribute("max", "10");
         control.setAttribute("step", "0.5");
         document.body.append(control);
 
         const input = control.shadowRoot!.querySelector("input")!;
-        expect({ type: input.type, min: input.min, max: input.max, step: input.step }).toEqual({
+        expect({
+            type: input.type,
+            inputMode: input.inputMode,
+            min: input.min,
+            max: input.max,
+            step: input.step,
+        }).toEqual({
             type: "number",
+            inputMode: "decimal",
             min: "0",
             max: "10",
             step: "0.5",
         });
 
         control.removeAttribute("max");
+        control.setAttribute("inputmode", "numeric");
         control.setAttribute("step", "1");
-        expect({ max: input.getAttribute("max"), step: input.step }).toEqual({ max: null, step: "1" });
+        expect({ inputMode: input.inputMode, max: input.getAttribute("max"), step: input.step }).toEqual({
+            inputMode: "numeric",
+            max: null,
+            step: "1",
+        });
     });
 });

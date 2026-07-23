@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import type { DashboardDto, DashboardWidget } from "@bernouy/cms-dashboards";
 import "cms-control/components";
+import { widgetsForSelection } from "cms-control/components/admin/Resources/Dashboards/domain";
+import type { DashboardSourceGroup } from "cms-control/components/admin/Resources/Dashboards/types";
+import { mountDashboardWidgets } from "cms-control/components/admin/Resources/Dashboards/runtime/mounting/mount";
 import {
     appendSourceContent,
     urlSourceWrapper,
@@ -64,7 +68,197 @@ describe("dashboard source states", () => {
         expect(wrapper.querySelector("[role='alert']")).toBeNull();
         expect(wrapper.querySelector("[data-creation-form]")).not.toBeNull();
     });
+
+    test("does not request a widget source while its required selection param is unresolved", async () => {
+        const requests: Request[] = [];
+        globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+            requests.push(new Request(input, init));
+            return Response.json({ items: [] });
+        }) as unknown as typeof fetch;
+        const dashboard: DashboardDto = {
+            id: "payments",
+            source: "commerce",
+            views: [],
+        };
+        const widget = {
+            widget: "w-table",
+            id: "claimEvidenceTable",
+            title: "Claim evidence",
+            source: {
+                endpoint: "claimEvidenceItems",
+                params: { claimId: "$selection.claimDetail.id", limit: "100" },
+                itemsPath: "items",
+            },
+            rowKey: "id",
+            columns: [{ id: "id", label: "ID", path: "id", primary: true }],
+        } satisfies Extract<DashboardWidget, { widget: "w-table" }>;
+        const group: DashboardSourceGroup = {
+            source: {
+                urn: "urn:commerce",
+                id: "commerce",
+                name: "Commerce",
+                endpointCount: 1,
+                dashboardCount: 1,
+                readonly: false,
+            },
+            endpoints: [
+                {
+                    endpointId: "claimEvidenceItems",
+                    method: "GET",
+                    targetUrl: "https://example.test/claim-evidence",
+                    params: [{ name: "claimId", in: "query", type: "string", required: true }],
+                },
+            ],
+            dashboards: [dashboard],
+        };
+        const root = document.createElement("div");
+        mountDashboardWidgets(
+            root,
+            [widget],
+            { group, dashboard, selectedRows: new Map(), drafts: new Map() },
+            "root",
+            new Map(),
+            null,
+        );
+        document.body.append(root);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+
+        expect(root.querySelector("[cms-source*='claimEvidenceItems']") !== null).toBeFalse();
+        expect(requests).toHaveLength(0);
+    });
+
+    test("loads selection-scoped evidence for the owning claim and not for an evidence detail", async () => {
+        const requests: string[] = [];
+        globalThis.fetch = (async (input: RequestInfo | URL) => {
+            requests.push(typeof input === "string" ? input : input instanceof URL ? input.href : input.url);
+            return Response.json({ items: [] });
+        }) as unknown as typeof fetch;
+        const dashboard = claimEvidenceDashboard();
+        const group = claimEvidenceSourceGroup(dashboard);
+        const claim = { collection: "claimDetail", row: "claim-42" };
+        const root = document.createElement("div");
+
+        mountDashboardWidgets(
+            root,
+            widgetsForSelection(dashboard, claim),
+            { group, dashboard, selectedRows: new Map(), drafts: new Map() },
+            "root",
+            new Map(),
+            claim,
+        );
+        document.body.append(root);
+        await waitFor(() => requests.some((url) => sourceEndpoint(url) === "claimEvidenceItems"));
+
+        const evidenceRequest = new URL(
+            requests.find((url) => sourceEndpoint(url) === "claimEvidenceItems")!,
+            window.location.origin,
+        );
+        expect(evidenceRequest.searchParams.get("claimId")).toBe("claim-42");
+        expect(evidenceRequest.searchParams.get("limit")).toBe("100");
+
+        root.remove();
+        requests.length = 0;
+        const evidence = { collection: "claimEvidenceDetail", row: "evidence-7" };
+        const evidenceRoot = document.createElement("div");
+        mountDashboardWidgets(
+            evidenceRoot,
+            widgetsForSelection(dashboard, evidence),
+            { group, dashboard, selectedRows: new Map(), drafts: new Map() },
+            "root",
+            new Map(),
+            evidence,
+        );
+        document.body.append(evidenceRoot);
+        await waitFor(() => requests.some((url) => sourceEndpoint(url) === "claimEvidenceItem"));
+
+        expect(requests.some((url) => sourceEndpoint(url) === "claimEvidenceItems")).toBeFalse();
+    });
 });
+
+function claimEvidenceDashboard(): DashboardDto {
+    return {
+        id: "payments",
+        source: "commerce",
+        views: [
+            {
+                widget: "w-table",
+                id: "claimsTable",
+                source: { endpoint: "claims", itemsPath: "items" },
+                rowKey: "id",
+                columns: [{ id: "id", label: "ID", path: "id", primary: true }],
+                selection: { opens: "claimDetail" },
+            },
+            {
+                widget: "w-detail",
+                id: "claimDetail",
+                source: { endpoint: "claim", params: { id: "$selection.id" } },
+                main: [],
+            },
+            {
+                widget: "w-table",
+                id: "claimEvidenceTable",
+                source: {
+                    endpoint: "claimEvidenceItems",
+                    params: { claimId: "$selection.claimDetail.id", limit: "100" },
+                    itemsPath: "items",
+                },
+                rowKey: "id",
+                columns: [{ id: "id", label: "ID", path: "id", primary: true }],
+                selection: { opens: "claimEvidenceDetail" },
+            },
+            {
+                widget: "w-detail",
+                id: "claimEvidenceDetail",
+                source: { endpoint: "claimEvidenceItem", params: { id: "$selection.id" } },
+                main: [],
+            },
+        ],
+    };
+}
+
+function claimEvidenceSourceGroup(dashboard: DashboardDto): DashboardSourceGroup {
+    return {
+        source: {
+            urn: "urn:commerce",
+            id: "commerce",
+            name: "Commerce",
+            endpointCount: 4,
+            dashboardCount: 1,
+            readonly: false,
+        },
+        endpoints: [
+            {
+                endpointId: "claims",
+                method: "GET",
+                targetUrl: "https://example.test/claims",
+                params: [],
+            },
+            {
+                endpointId: "claim",
+                method: "GET",
+                targetUrl: "https://example.test/claim",
+                params: [{ name: "id", in: "query", type: "string", required: true }],
+            },
+            {
+                endpointId: "claimEvidenceItems",
+                method: "GET",
+                targetUrl: "https://example.test/claim-evidence",
+                params: [{ name: "claimId", in: "query", type: "string", required: true }],
+            },
+            {
+                endpointId: "claimEvidenceItem",
+                method: "GET",
+                targetUrl: "https://example.test/claim-evidence-item",
+                params: [{ name: "id", in: "query", type: "string", required: true }],
+            },
+        ],
+        dashboards: [dashboard],
+    };
+}
+
+function sourceEndpoint(url: string): string {
+    return new URL(url, window.location.origin).pathname.split("/").at(-1) ?? "";
+}
 
 async function waitFor(predicate: () => boolean, timeout = 1_000): Promise<void> {
     const started = Date.now();

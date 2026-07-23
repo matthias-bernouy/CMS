@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { resolveBody, valueAt } from "cms-control/components/admin/Resources/Dashboards/runtime/expressions";
+import {
+    resolveBody,
+    resolveParams,
+    valueAt,
+} from "cms-control/components/admin/Resources/Dashboards/runtime/expressions";
 
 afterEach(() => delete (Object.prototype as Record<string, unknown>).dashboardPolluted);
 
@@ -51,5 +55,19 @@ describe("dashboard runtime expressions", () => {
         expect(prototype.dashboardPolluted).toBeUndefined();
         expect(valueAt({}, "__proto__.dashboardPolluted")).toBeUndefined();
         expect(valueAt({}, "toString")).toBeUndefined();
+    });
+
+    test("does not serialize unresolved dashboard param placeholders as literal query values", () => {
+        expect(
+            resolveParams(
+                {
+                    limit: "$param.limit",
+                    offset: "$param.offset",
+                    status: "$filter.status",
+                    fallbackLimit: "100",
+                },
+                {},
+            ),
+        ).toEqual({ fallbackLimit: "100" });
     });
 });

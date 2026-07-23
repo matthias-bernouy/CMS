@@ -8,6 +8,7 @@ import {
     appendSourceContent,
     jsonAttr,
     navigationItemsTemplate,
+    requiredSourceParams,
     sourceWrapper,
     tableRowsTemplate,
 } from "./mountSource";
@@ -42,10 +43,10 @@ function widgetElement(
         return tabsElement(widget, context, key, tabState, detail);
     }
     if (widget.widget === "w-table") {
-        return tableElement(widget, context);
+        return tableElement(widget, context, detail);
     }
     if (widget.widget === "w-navigation-list") {
-        return navigationListElement(widget, context);
+        return navigationListElement(widget, context, detail);
     }
     if (widget.widget === "w-detail") {
         return detailElement(widget, context, detail);
@@ -110,8 +111,18 @@ function tabsElement(
     return panel;
 }
 
-function tableElement(widget: Extract<DashboardWidget, { widget: "w-table" }>, context: RenderContext): HTMLElement {
-    const wrapper = sourceWrapper(context.dashboard.source, widget.source, {}, "dashboardData");
+function tableElement(
+    widget: Extract<DashboardWidget, { widget: "w-table" }>,
+    context: RenderContext,
+    detail: DetailSelection | null,
+): HTMLElement {
+    const wrapper = sourceWrapper(
+        context.dashboard.source,
+        widget.source,
+        selectionVars(detail),
+        "dashboardData",
+        requiredSourceParams(context, widget.source),
+    );
     const element = document.createElement("cms-dashboard-w-table");
     element.setAttribute("data-config-json", jsonAttr(widget));
     element.setAttribute("data-selected", context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "");
@@ -123,11 +134,33 @@ function tableElement(widget: Extract<DashboardWidget, { widget: "w-table" }>, c
 function navigationListElement(
     widget: Extract<DashboardWidget, { widget: "w-navigation-list" }>,
     context: RenderContext,
+    detail: DetailSelection | null,
 ): HTMLElement {
-    const wrapper = sourceWrapper(context.dashboard.source, widget.source, {}, "dashboardData");
+    const wrapper = sourceWrapper(
+        context.dashboard.source,
+        widget.source,
+        selectionVars(detail),
+        "dashboardData",
+        requiredSourceParams(context, widget.source),
+    );
     const element = document.createElement("cms-dashboard-w-navigation-list");
     element.setAttribute("data-config-json", jsonAttr(widget));
     element.append(navigationItemsTemplate(widget));
     appendSourceContent(wrapper, element);
     return wrapper;
+}
+
+function selectionVars(detail: DetailSelection | null): {
+    selection?: Record<string, unknown>;
+} {
+    if (!detail) {
+        return {};
+    }
+    const selected = { id: detail.row };
+    return {
+        selection: {
+            ...selected,
+            [detail.collection]: selected,
+        },
+    };
 }

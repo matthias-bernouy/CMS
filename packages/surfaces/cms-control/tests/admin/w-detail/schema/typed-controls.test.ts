@@ -20,7 +20,10 @@ if (!customElements.get("p9r-token-input")) {
     customElements.define("p9r-token-input", TokenInput);
 }
 
-afterEach(() => document.body.replaceChildren());
+afterEach(() => {
+    document.body.replaceChildren();
+    Reflect.deleteProperty(navigator, "language");
+});
 
 describe("typed dashboard detail controls", () => {
     test("reads number and checkbox controls as their declared types", () => {
@@ -51,6 +54,68 @@ describe("typed dashboard detail controls", () => {
 
         (number as HTMLElement & { value: string }).value = "";
         expect(readFieldControlValue(numberField(), number)).toBe("");
+    });
+
+    test("converts localized money inputs to minor units and can forbid decimals", () => {
+        Object.defineProperty(navigator, "language", { configurable: true, value: "fr-FR" });
+        const decimalField = moneyField(1526, true);
+        const decimal = createFieldControl(decimalField);
+        document.body.append(decimal);
+
+        expect({
+            input: decimalField.input,
+            value: (decimal as HTMLElement & { value: string }).value,
+            inputMode: decimal.shadowRoot?.querySelector("input")?.inputMode,
+        }).toEqual({ input: "money", value: "15,26", inputMode: "decimal" });
+        (decimal as HTMLElement & { value: string }).value = "18,75";
+        expect(readFieldControlValue(decimalField, decimal)).toBe(1875);
+
+        const wholeField = moneyField(1500, false);
+        const whole = createFieldControl(wholeField);
+        document.body.append(whole);
+        expect((whole as HTMLElement & { value: string }).value).toBe("15");
+        (whole as HTMLElement & { value: string }).value = "15,26";
+        expect(readFieldControlValue(wholeField, whole)).toBe("");
+        expect(whole.hasAttribute("invalid")).toBe(true);
+        expect(whole.getAttribute("hint")).toContain("without decimals");
+
+        (whole as HTMLElement & { value: string }).value = "16";
+        expect(readFieldControlValue(wholeField, whole)).toBe(1600);
+        expect(whole.hasAttribute("invalid")).toBe(false);
+    });
+
+    test("maps declarative decimal rules from the current resource", () => {
+        const widget = {
+            widget: "w-detail",
+            id: "offerDetail",
+            source: { endpoint: "offer" },
+            main: [
+                {
+                    id: "pricing",
+                    title: "Pricing",
+                    fields: [
+                        {
+                            id: "amount",
+                            label: "Amount",
+                            path: "amount",
+                            type: "money",
+                            currencyPath: "currency",
+                            allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
+                        },
+                    ],
+                },
+            ],
+        } as never;
+        const decimal = detailData(widget, { amount: 1526, currency: "EUR", wholeUnitPrices: false }, "offer-1");
+        const whole = detailData(widget, { amount: 1500, currency: "EUR", wholeUnitPrices: true }, "offer-1");
+
+        expect(decimal.main[0]!.fields[0]).toMatchObject({
+            input: "money",
+            value: 1526,
+            fractionDigits: 2,
+            allowDecimals: true,
+        });
+        expect(whole.main[0]!.fields[0]).toMatchObject({ allowDecimals: false });
     });
 
     test("maps readonly image fields to lazy previews", () => {
@@ -163,4 +228,16 @@ function numberField(): WDetailField {
 
 function checkboxField(): WDetailField {
     return { id: "enabled", label: "Enabled", input: "checkbox", value: false };
+}
+
+function moneyField(value: number, allowDecimals: boolean): WDetailField {
+    return {
+        id: "amount",
+        label: "Amount",
+        input: "money",
+        value,
+        currency: "EUR",
+        fractionDigits: 2,
+        allowDecimals,
+    };
 }

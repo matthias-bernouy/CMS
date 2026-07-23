@@ -68,6 +68,13 @@ export class DetailFieldState {
         return fields;
     }
 
+    validate(): boolean {
+        this.currentFields();
+        const invalid = this.root.querySelector<HTMLElement>("[data-field-control][invalid]");
+        invalid?.focus();
+        return invalid === null;
+    }
+
     control(fieldId: string): HTMLElement | null {
         return (
             Array.from(this.root.querySelectorAll<HTMLElement>("[data-field-control]")).find(

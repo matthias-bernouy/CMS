@@ -1,14 +1,37 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
+import type { RenderContext } from "../../domain";
 import { route } from "../../api";
 import { resolveParams, type RuntimeVars } from "../expressions";
 
+type SourceRef = {
+    sourceId?: string;
+    endpoint: string;
+    params?: Record<string, string>;
+};
+
 export function sourceWrapper(
     sourceId: string,
-    ref: { sourceId?: string; endpoint: string; params?: Record<string, string> },
+    ref: SourceRef,
     vars: RuntimeVars,
     alias: string,
+    requiredParams: readonly string[] = [],
 ): HTMLElement {
+    const params = resolveParams(ref.params, vars);
+    if (requiredParams.some((name) => params[name] === undefined)) {
+        return pendingSourceWrapper();
+    }
     return urlSourceWrapper(sourceUrl(sourceId, ref, vars), alias);
+}
+
+export function requiredSourceParams(context: RenderContext, ref: SourceRef): string[] {
+    const sourceId = ref.sourceId ?? context.dashboard.source;
+    const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
+    return (
+        group?.endpoints
+            .find((endpoint) => endpoint.endpointId === ref.endpoint)
+            ?.params.filter((param) => param.required)
+            .map((param) => param.name) ?? []
+    );
 }
 
 export function urlSourceWrapper(url: string, alias: string): HTMLElement {
@@ -16,6 +39,12 @@ export function urlSourceWrapper(url: string, alias: string): HTMLElement {
     wrapper.setAttribute("cms-source", `${url} as ${alias}`);
     wrapper.append(sourceLoadingState(), sourceErrorState());
     wrapper.addEventListener("click", retrySource);
+    return wrapper;
+}
+
+function pendingSourceWrapper(): HTMLElement {
+    const wrapper = document.createElement("div");
+    wrapper.dataset.dashboardSourcePending = "true";
     return wrapper;
 }
 
@@ -78,11 +107,7 @@ export function navigationItemsTemplate(
     return item;
 }
 
-function sourceUrl(
-    sourceId: string,
-    ref: { sourceId?: string; endpoint: string; params?: Record<string, string> },
-    vars: RuntimeVars,
-): string {
+function sourceUrl(sourceId: string, ref: SourceRef, vars: RuntimeVars): string {
     const targetSourceId = ref.sourceId ?? sourceId;
     const url = new URL(
         route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`),

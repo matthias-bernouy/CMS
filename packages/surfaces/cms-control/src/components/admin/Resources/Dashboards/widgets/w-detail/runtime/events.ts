@@ -54,6 +54,9 @@ export class DetailEvents {
         const action = findActionTarget(event);
         const widget = this.isBound() ? parseJson<DetailWidget>(this.host.dataset.configJson ?? "") : null;
         const data = this.readData();
+        if (action?.dataset.action && !this.fields.validate()) {
+            return;
+        }
         if (action?.dataset.confirm && !window.confirm(action.dataset.confirm)) {
             return;
         }
@@ -90,6 +93,9 @@ export class DetailEvents {
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
         if (control && field?.input === "table") {
             updateDerivedTables(field.id, this.fields);
+        }
+        if (control && field?.input === "money") {
+            readFieldControlValue(field, control);
         }
         if (field && this.isBound()) {
             this.lookups.schedule(field.id);

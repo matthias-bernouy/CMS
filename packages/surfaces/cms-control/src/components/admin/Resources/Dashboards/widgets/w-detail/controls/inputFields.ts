@@ -1,4 +1,5 @@
 import type { WDetailField } from "../types";
+import { formatMinorUnits } from "../../../runtime/mapping/money";
 import { bindFieldControl, optionElement, type TokenControl, type ValueControl } from "./shared";
 
 export function textInput(field: WDetailField): HTMLElement {
@@ -25,6 +26,19 @@ export function numberInput(field: WDetailField): HTMLElement {
     }
     applyInputMetadata(input, field);
     input.value = String(field.value);
+    bindFieldControl(input, field);
+    return input;
+}
+
+export function moneyInput(field: WDetailField): HTMLElement {
+    const input = document.createElement("p9r-input") as ValueControl;
+    const value = formatMinorUnits(field.value, field.fractionDigits ?? 2, field.allowDecimals !== false);
+    input.setAttribute("label", field.label);
+    input.setAttribute("type", "text");
+    input.setAttribute("inputmode", field.allowDecimals === false ? "numeric" : "decimal");
+    input.setAttribute("value", value);
+    applyInputMetadata(input, field);
+    input.value = value;
     bindFieldControl(input, field);
     return input;
 }

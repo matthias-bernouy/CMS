@@ -17,6 +17,7 @@ export class P9rInput extends Component {
             "label",
             "placeholder",
             "type",
+            "inputmode",
             "min",
             "max",
             "step",

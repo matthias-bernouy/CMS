@@ -28,6 +28,18 @@ export const syncType = (host: HTMLElement, input: HTMLInputElement | null) => {
     input.setAttribute("type", host.getAttribute("type") ?? "text");
 };
 
+export const syncInputMode = (host: HTMLElement, input: HTMLInputElement | null) => {
+    if (!input) {
+        return;
+    }
+    const value = host.getAttribute("inputmode");
+    if (value === null) {
+        input.removeAttribute("inputmode");
+    } else {
+        input.setAttribute("inputmode", value);
+    }
+};
+
 export const syncNumericConstraints = (host: HTMLElement, input: HTMLInputElement | null) => {
     if (!input) {
         return;
@@ -124,6 +136,7 @@ export const syncAll = (
     syncLabel(host, label);
     syncPlaceholder(host, input);
     syncType(host, input);
+    syncInputMode(host, input);
     syncNumericConstraints(host, input);
     syncDisabled(host, input);
     syncRequired(host, input);

@@ -13,6 +13,7 @@ export function renderDashboardShell(
     tabState: Map<string, number>,
     drafts: ReadonlyMap<string, Record<string, unknown>>,
     detailResource: DetailResourceOverride | null = null,
+    groups: readonly DashboardSourceGroup[] = group ? [group] : [],
 ): void {
     query(root, "[data-empty]").hidden = Boolean(group);
     query(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
@@ -32,7 +33,7 @@ export function renderDashboardShell(
     mountDashboardWidgets(
         query(root, "[data-widgets]"),
         widgets,
-        { group, dashboard, selectedRows, drafts, detailResource },
+        { group, groups, dashboard, selectedRows, drafts, detailResource },
         "root",
         tabState,
         detail,

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { validateDashboard, type DashboardField } from "@bernouy/cms-dashboards";
-import { detail, embeddedLookup } from "./typedDetailFixtures";
+import { detail, embeddedLookup, moneyField } from "./typedDetailFixtures";
 
 describe("typed dashboard detail fields", () => {
     test("rejects unsafe or legacy schema exclusions", () => {
@@ -166,5 +166,15 @@ describe("typed dashboard detail fields", () => {
                 "views.0.main.0.fields.1.min must be a finite number",
             ]),
         );
+    });
+    test("validates money currency paths and decimal rules", () => {
+        const errors = validateDashboard(
+            detail([
+                moneyField({ id: "unsafe", currencyPath: "__proto__.currency" }),
+                moneyField({ id: "unknown", allowDecimals: { value: "$field.missing", equals: true } }),
+            ]),
+        ).join("\n");
+        expect(errors).toContain("currencyPath must be a safe dotted data path");
+        expect(errors).toContain('allowDecimals.value references unknown field "missing"');
     });
 });

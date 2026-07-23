@@ -62,6 +62,62 @@ describe("dashboard detail widget actions", () => {
         expect(actions[0]?.fields).toEqual({ title: "Edited title" });
     });
 
+    test("blocks actions for invalid whole-unit money and submits valid amounts as minor units", async () => {
+        const detail = document.createElement("cms-dashboard-w-detail");
+        detail.setAttribute(
+            "data-config-json",
+            JSON.stringify({
+                widget: "w-detail",
+                id: "offerDetail",
+                source: { endpoint: "offer" },
+                actions: [{ id: "saveOffer", label: "Save", endpoint: { endpoint: "saveOffer" } }],
+                main: [
+                    {
+                        id: "pricing",
+                        title: "Pricing",
+                        fields: [
+                            {
+                                id: "amount",
+                                label: "Amount",
+                                path: "amount",
+                                type: "money",
+                                currencyPath: "currency",
+                                allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
+                            },
+                        ],
+                    },
+                ],
+            }),
+        );
+        detail.setAttribute(
+            "data-source-json",
+            JSON.stringify({ id: 1, amount: 1500, currency: "EUR", wholeUnitPrices: true }),
+        );
+        detail.setAttribute("data-row-key", "1");
+        const actions: WidgetActionDetail[] = [];
+        detail.addEventListener(WIDGET_ACTION_EVENT, (event) =>
+            actions.push((event as CustomEvent<WidgetActionDetail>).detail),
+        );
+        document.body.append(detail);
+        await Promise.resolve();
+
+        const input = detail.shadowRoot!.querySelector("p9r-input") as HTMLElement & {
+            value: string;
+            shadowRoot: ShadowRoot;
+        };
+        const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement;
+        input.value = "15,26";
+        input.shadowRoot.querySelector("input")!.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+        save.click();
+        expect(actions).toHaveLength(0);
+        expect(input.hasAttribute("invalid")).toBe(true);
+
+        input.value = "16";
+        input.shadowRoot.querySelector("input")!.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+        save.click();
+        expect(actions[0]?.fields).toEqual({ amount: 1600 });
+    });
+
     test("includes a reordered list in the field draft submitted by an action", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");
         detail.setAttribute(

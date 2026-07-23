@@ -1,6 +1,6 @@
 import type { DashboardField } from "@bernouy/cms-dashboards";
 import type { WDetailField } from "../../widgets/w-detail/types";
-import { valueAt } from "../expressions";
+import { matchesDashboardVisibility, valueAt } from "../expressions";
 import { mediaValue } from "../media";
 import {
     isCreatable,
@@ -14,6 +14,7 @@ import {
     textValue,
     tokenValue,
 } from "./fieldSupport";
+import { currencyFractionDigits } from "./money";
 import { reorderableField, tableColumn } from "./nestedFields";
 import type { DetailOptions, DetailSchemas } from "./types";
 
@@ -40,6 +41,25 @@ export function detailField(
             ...(field.min !== undefined ? { min: field.min } : {}),
             ...(field.max !== undefined ? { max: field.max } : {}),
             ...(field.step !== undefined ? { step: field.step } : {}),
+        };
+    }
+    if (field.type === "money") {
+        const currency = field.currencyPath
+            ? textValue(valueAt(fields, field.currencyPath) ?? valueAt(resource, field.currencyPath))
+            : "";
+        const allowDecimals =
+            field.allowDecimals === undefined
+                ? true
+                : typeof field.allowDecimals === "boolean"
+                  ? field.allowDecimals
+                  : matchesDashboardVisibility(field.allowDecimals, { fields, resource });
+        return {
+            ...base,
+            input: "money",
+            value: numberValue(value),
+            ...(currency ? { currency } : {}),
+            fractionDigits: currencyFractionDigits(currency || undefined),
+            allowDecimals,
         };
     }
     if (field.type === "checkbox") {

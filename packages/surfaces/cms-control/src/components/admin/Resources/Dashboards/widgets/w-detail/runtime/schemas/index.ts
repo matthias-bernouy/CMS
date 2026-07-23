@@ -4,7 +4,7 @@ import type { WDetailData, WDetailSchemaDefinition } from "../../types";
 import { DetailFieldState, readDetailBinding, type DetailWidget } from "../fieldState";
 import { DetailRequestCoordinator, DetailRequestTargets } from "../requests";
 import { definitionsAt } from "./definitions";
-import { schemaFields, schemaKeysDependingOn } from "./dependencies";
+import { schemaDependenciesResolved, schemaFields, schemaKeysDependingOn } from "./dependencies";
 
 type SchemaCallbacks = {
     setData(value: WDetailData): void;
@@ -153,6 +153,9 @@ export class DetailSchemasState {
     ): Promise<SchemaLoad> {
         const consumer = this.targets.consumer(field.id);
         const generation = this.targets.invalidate(field.id);
+        if (!schemaDependenciesResolved(field, resource, fields)) {
+            return { definitions: [], failed: false, generation, key: field.id };
+        }
         try {
             const data = await this.requests.load(consumer, sourceId, field.schema, { resource, fields });
             return {

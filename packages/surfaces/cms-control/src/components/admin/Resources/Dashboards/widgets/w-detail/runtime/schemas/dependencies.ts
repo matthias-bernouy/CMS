@@ -1,4 +1,5 @@
 import type { DashboardField } from "@bernouy/cms-dashboards";
+import { resolveExpression } from "../../../../runtime/expressions";
 import type { DetailWidget } from "../fieldState";
 
 export function schemaFields(widget: DetailWidget): Array<Extract<DashboardField, { type: "schema" }>> {
@@ -17,4 +18,18 @@ export function schemaKeysDependingOn(widget: DetailWidget, fieldId: string): Se
             )
             .map((field) => field.id),
     );
+}
+
+export function schemaDependenciesResolved(
+    field: Extract<DashboardField, { type: "schema" }>,
+    resource: unknown,
+    fields: Record<string, unknown>,
+): boolean {
+    return Object.values(field.schema.params ?? {}).every((expression) => {
+        if (!expression.startsWith("$")) {
+            return true;
+        }
+        const value = resolveExpression(expression, { resource, fields });
+        return value !== undefined && value !== null && value !== "";
+    });
 }

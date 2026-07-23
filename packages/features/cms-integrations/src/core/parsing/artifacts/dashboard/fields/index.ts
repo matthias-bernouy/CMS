@@ -1,4 +1,9 @@
-import type { DashboardField, DashboardFieldBase, DashboardSection } from "@bernouy/cms-dashboards";
+import {
+    isSafeDashboardPath,
+    type DashboardField,
+    type DashboardFieldBase,
+    type DashboardSection,
+} from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../../errors";
 import { isRecord, text } from "../../../definition/values";
 import { optionalBoolean, optionalFiniteNumber, optionalText, requiredText } from "../../common";
@@ -63,6 +68,9 @@ function parseField(value: unknown, name: string): DashboardField {
     if (type === "number") {
         return parseNumberField(base, value, name);
     }
+    if (type === "money") {
+        return parseMoneyField(base, value, name);
+    }
     if (type === "checkbox") {
         return { ...base, type };
     }
@@ -103,6 +111,30 @@ function parseField(value: unknown, name: string): DashboardField {
         return { ...base, type, ...(format ? { format } : {}) };
     }
     throw new IntegrationInputError(`${name}.type`, "is not a supported dashboard field type");
+}
+
+function parseMoneyField(
+    base: DashboardFieldBase,
+    value: Record<string, unknown>,
+    name: string,
+): Extract<DashboardField, { type: "money" }> {
+    const currencyPath = optionalText(value.currencyPath, `${name}.currencyPath`);
+    if (currencyPath && !isSafeDashboardPath(currencyPath)) {
+        throw new IntegrationInputError(`${name}.currencyPath`, "must be a safe dotted data path");
+    }
+    const allowDecimals =
+        typeof value.allowDecimals === "boolean"
+            ? value.allowDecimals
+            : value.allowDecimals === undefined
+              ? undefined
+              : parseVisibilityRule(value.allowDecimals, `${name}.allowDecimals`);
+    return {
+        ...base,
+        type: "money",
+        ...placeholder(value, name),
+        ...(currencyPath ? { currencyPath } : {}),
+        ...(allowDecimals !== undefined ? { allowDecimals } : {}),
+    };
 }
 
 function parseNumberField(

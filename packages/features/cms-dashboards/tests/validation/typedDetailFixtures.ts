@@ -39,3 +39,15 @@ export const embeddedLookup = () => ({
     valuePath: "id",
     labelPath: "name",
 });
+
+export const moneyField = (
+    extra: Partial<Extract<DashboardField, { type: "money" }>> = {},
+): Extract<DashboardField, { type: "money" }> => ({
+    id: "amount",
+    label: "Amount",
+    path: "amount",
+    type: "money",
+    currencyPath: "pricing.currency",
+    allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
+    ...extra,
+});

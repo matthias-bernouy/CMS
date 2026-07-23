@@ -16,6 +16,11 @@ describe("typed dashboard field parsing", () => {
     test("parses all field contracts without truncating exact limits", () => {
         const fields = parsedFields([
             { ...base("quantity", "number"), min: 0, max: 10, step: 0.5 },
+            {
+                ...base("amount", "money"),
+                currencyPath: "pricing.currency",
+                allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
+            },
             base("enabled", "checkbox"),
             { ...base("status", "select"), options: options(DASHBOARD_MAX_OPTIONS) },
             {
@@ -49,12 +54,17 @@ describe("typed dashboard field parsing", () => {
         ]);
 
         expect(fields[0]).toMatchObject({ type: "number", min: 0, max: 10, step: 0.5 });
-        expect(fields[1]).toMatchObject({ type: "checkbox" });
-        expect((fields[2] as any).options).toHaveLength(DASHBOARD_MAX_OPTIONS);
-        expect((fields[3] as any).columns).toHaveLength(DASHBOARD_MAX_NESTED_FIELDS);
-        expect((fields[3] as any).columns[3]).toMatchObject({ editable: true, type: "tokens" });
-        expect((fields[4] as any).fields).toHaveLength(DASHBOARD_MAX_NESTED_FIELDS);
-        expect(fields[5]).toMatchObject({ type: "schema", exclude: { from: "$field.axis", valuePath: "fieldKey" } });
+        expect(fields[1]).toMatchObject({
+            type: "money",
+            currencyPath: "pricing.currency",
+            allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
+        });
+        expect(fields[2]).toMatchObject({ type: "checkbox" });
+        expect((fields[3] as any).options).toHaveLength(DASHBOARD_MAX_OPTIONS);
+        expect((fields[4] as any).columns).toHaveLength(DASHBOARD_MAX_NESTED_FIELDS);
+        expect((fields[4] as any).columns[3]).toMatchObject({ editable: true, type: "tokens" });
+        expect((fields[5] as any).fields).toHaveLength(DASHBOARD_MAX_NESTED_FIELDS);
+        expect(fields[6]).toMatchObject({ type: "schema", exclude: { from: "$field.axis", valuePath: "fieldKey" } });
     });
 
     test("rejects arrays above each technical limit before parsing entries", () => {
@@ -91,6 +101,8 @@ describe("typed dashboard field parsing", () => {
             [{ ...base("number", "number"), min: Infinity }, /min.*finite number/],
             [{ ...base("number", "number"), step: 0 }, /step.*greater than zero/],
             [{ ...base("number", "number"), min: 2, max: 1 }, /max.*greater than or equal to min/],
+            [{ ...base("amount", "money"), currencyPath: "prototype.currency" }, /currencyPath.*safe dotted/],
+            [{ ...base("amount", "money"), allowDecimals: "yes" }, /allowDecimals.*object/],
             [{ ...base("text", "text"), required: "yes" }, /required.*boolean/],
             [{ ...base("table", "table"), editable: "yes", columns: [column("value")] }, /editable.*boolean/],
         ];

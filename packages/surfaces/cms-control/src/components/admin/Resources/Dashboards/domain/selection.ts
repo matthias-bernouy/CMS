@@ -12,9 +12,10 @@ export function widgetsForSelection(
         return mainWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
     }
     const relationWidgets = relationWidgetsFor(dashboard, detail, projections);
-    return detailWidgetsFor(dashboard.views, detail.collection).map((widget) =>
+    const details = detailWidgetsFor(dashboard.views, detail.collection).map((widget) =>
         relationWidgets.length ? { ...widget, relationWidgets } : widget,
     );
+    return [...details, ...selectionScopedWidgetsFor(dashboard.views, detail.collection)];
 }
 
 export function detailKey(collection: string, row: string): string {
@@ -30,6 +31,9 @@ function mainWidgetsFor(widgets: DashboardWidget[], detailTargets: ReadonlySet<s
         if (isDetailWidget(widget)) {
             return detailTargets.has(widget.id) ? [] : [widget];
         }
+        if (isSelectionScopedWidget(widget)) {
+            return [];
+        }
         if (widget.widget === "w-section") {
             return sectionWithChildren(widget, mainWidgetsFor(widget.children, detailTargets));
         }
@@ -38,6 +42,34 @@ function mainWidgetsFor(widgets: DashboardWidget[], detailTargets: ReadonlySet<s
         }
         return [widget];
     });
+}
+
+function selectionScopedWidgetsFor(widgets: DashboardWidget[], collection: string): DashboardWidget[] {
+    return widgets.flatMap((widget) => {
+        if (widget.widget === "w-section") {
+            return selectionScopedWidgetsFor(widget.children, collection);
+        }
+        if (widget.widget === "w-tabs") {
+            return widget.tabs.flatMap((tab) => selectionScopedWidgetsFor(tab.children, collection));
+        }
+        return selectionScopes(widget).has(collection) ? [widget] : [];
+    });
+}
+
+function isSelectionScopedWidget(widget: DashboardWidget): boolean {
+    return selectionScopes(widget).size > 0;
+}
+
+function selectionScopes(widget: DashboardWidget): Set<string> {
+    if (widget.widget !== "w-table" && widget.widget !== "w-navigation-list") {
+        return new Set();
+    }
+    return new Set(
+        Object.values(widget.source.params ?? {}).flatMap((expression) => {
+            const match = expression.match(/^\$selection\.([A-Za-z_][A-Za-z0-9_]*)\./);
+            return match?.[1] ? [match[1]] : [];
+        }),
+    );
 }
 
 function detailTargetsFor(widgets: DashboardWidget[]): Set<string> {

@@ -4,6 +4,7 @@ import {
     type WidgetActionDetail,
 } from "../../../../src/components/admin/Resources/Dashboards/widgets/shared";
 import { waitForDetail } from "../../dashboards/detail/detailTestHelpers";
+import { schemaDetailElement } from "./schemaTestHelpers";
 
 const realFetch = globalThis.fetch;
 
@@ -13,6 +14,42 @@ afterEach(() => {
 });
 
 describe("dashboard dynamic schema refresh", () => {
+    test("waits for a required field parameter before loading a dynamic schema", async () => {
+        const requests: Request[] = [];
+        globalThis.fetch = (async (input, init) => {
+            requests.push(new Request(input, init));
+            return Response.json({ fields: [{ id: "weight", label: "Weight", type: "number" }] });
+        }) as typeof fetch;
+        const detail = schemaDetailElement();
+        detail.setAttribute(
+            "data-source-json",
+            JSON.stringify({
+                id: 42,
+                primaryCategoryId: null,
+                metadata: {},
+                variantAxes: [],
+            }),
+        );
+        document.body.append(detail);
+
+        await waitForDetail(() =>
+            Boolean(detail.shadowRoot?.querySelector("[data-field-control='primaryCategoryId']")),
+        );
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(requests).toHaveLength(0);
+        expect(detail.shadowRoot?.querySelector(".detail-schema-status-empty")).not.toBeNull();
+
+        const category = detail.shadowRoot!.querySelector<HTMLElement & { value: string }>(
+            "[data-field-control='primaryCategoryId']",
+        )!;
+        category.value = "9";
+        category.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+
+        await waitForDetail(() => requests.length > 0);
+        expect(requests.every((request) => new URL(request.url).searchParams.get("categoryId") === "9")).toBeTrue();
+        await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("[data-schema-key='weight']")));
+    });
+
     test("reloads only when a declared schema parameter dependency changes", async () => {
         const requests: Request[] = [];
         let resolveRefresh: ((response: Response) => void) | undefined;

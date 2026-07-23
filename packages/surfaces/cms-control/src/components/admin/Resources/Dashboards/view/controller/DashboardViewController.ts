@@ -43,6 +43,7 @@ export class DashboardViewController extends DashboardStateController {
             this.tabState,
             this.drafts,
             dashboard ? this.detailResource.current(dashboard.source, dashboard.id, this.detailSelection) : null,
+            this.groups,
         );
     }
 

@@ -14,6 +14,8 @@ export type RuntimeVars = {
     result?: unknown;
 };
 
+const DASHBOARD_PLACEHOLDER = /^\$[A-Za-z_][A-Za-z0-9_]*(?:\.|$)/;
+
 export function valueAt(value: unknown, path: string | undefined): unknown {
     if (!path) {
         return value;
@@ -105,6 +107,9 @@ export function resolveExpression(expression: string, vars: RuntimeVars): unknow
     }
     if (expression.startsWith("$value.")) {
         return valueAt(vars.value, expression.slice("$value.".length));
+    }
+    if (DASHBOARD_PLACEHOLDER.test(expression)) {
+        return undefined;
     }
     return expression;
 }

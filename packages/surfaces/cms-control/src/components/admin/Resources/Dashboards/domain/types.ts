@@ -15,6 +15,7 @@ export type DetailResourceOverride = DetailSelection & {
 
 export type RenderContext = {
     group: DashboardSourceGroup;
+    groups?: readonly DashboardSourceGroup[];
     dashboard: DashboardDto;
     selectedRows: ReadonlyMap<string, string>;
     drafts: ReadonlyMap<string, Record<string, unknown>>;

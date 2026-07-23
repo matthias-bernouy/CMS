@@ -4,7 +4,14 @@ import { isSafeDashboardExpression } from "../dashboardPaths";
 import { validateMediaField, validateReorderableListField, validateTableField } from "./complexFields";
 import { validateDataRef } from "./endpointRefs";
 import { validateSelectableField } from "./selectableFields";
-import { isRecord, validateOptions, validateRequiredId, validateRequiredPath, validateVisibility } from "./shared";
+import {
+    isRecord,
+    validateOptions,
+    validatePath,
+    validateRequiredId,
+    validateRequiredPath,
+    validateVisibility,
+} from "./shared";
 
 export function validateSection(
     section: DashboardSection,
@@ -58,6 +65,9 @@ export function validateField(
         case "number":
             validateNumberField(field, path, errors);
             break;
+        case "money":
+            validateMoneyField(field, path, errors, visibilityFieldIds);
+            break;
         case "textarea":
             if (field.rows !== undefined && (!Number.isInteger(field.rows) || field.rows < 1)) {
                 errors.push(`${path}.rows must be a positive integer`);
@@ -84,6 +94,18 @@ export function validateField(
             break;
         default:
             errors.push(`${path}.type is not supported`);
+    }
+}
+
+function validateMoneyField(
+    field: Extract<DashboardField, { type: "money" }>,
+    path: string,
+    errors: string[],
+    fieldIds: ReadonlySet<string>,
+): void {
+    validatePath("currencyPath", field.currencyPath, path, errors);
+    if (field.allowDecimals !== undefined && typeof field.allowDecimals !== "boolean") {
+        validateVisibility(field.allowDecimals, `${path}.allowDecimals`, errors, fieldIds);
     }
 }
 
