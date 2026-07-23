@@ -30,8 +30,10 @@ export type FlowCount = {
 /** Headline numbers for the dashboard cards over a period. */
 export type AnalyticsSummary = {
     views: number;
-    /** Sum of daily unique visitors. Kept as the legacy API field. */
+    /** @deprecated Compatibility alias for `estimatedVisitors`. */
     uniqueVisitors: number;
+    /** Sum of closed-day HLL++ estimates in the selected range. */
+    estimatedVisitors: number;
     visitorDays: number;
     averageDailyVisitors: number;
     avgMs: number;
@@ -58,8 +60,10 @@ export type RangeQuery = {
 export interface AnalyticsStore {
     /** Create indexes; idempotent. Called once at boot. */
     init(): Promise<void>;
-    /** Record one event (delivery writer). Idempotent unique-visitor dedup; meant to be called fire-and-forget. */
+    /** Record one aggregate observation; meant to be called fire-and-forget. */
     record(event: AnalyticsEvent): Promise<void>;
+    /** Idempotently finalize visitor sketches for UTC days closed before this instant. */
+    finalizeVisitors(before: Date): Promise<void>;
     /** Headline numbers over [from, to). */
     summary(from: Date, to: Date): Promise<AnalyticsSummary>;
     /** Views (+ latency) per bucket over the range. */
@@ -69,7 +73,9 @@ export interface AnalyticsStore {
     /** Most-viewed stable page ids, falling back to paths for legacy producers. */
     topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
     /** Counts grouped by a dimension over [from, to); status covers all non-bot requests. */
-    breakdown(dim: "status" | "device" | "browser" | "acquisition", from: Date, to: Date): Promise<KeyCount[]>;
+    breakdown(dim: "status" | "device" | "browser" | "exclusion", from: Date, to: Date): Promise<KeyCount[]>;
+    /** CMS pages observed without a safe same-site predecessor. */
+    entries(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
     /** External referrer hosts for content views. */
     topReferrers(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
     /** Observed same-origin transitions. */
@@ -80,4 +86,5 @@ export interface AnalyticsStore {
 
 export type AnalyticsStoreConfig = {
     policy?: Partial<AnalyticsCollectionPolicy>;
+    hllStripes?: 1 | 4 | 8 | 16;
 };

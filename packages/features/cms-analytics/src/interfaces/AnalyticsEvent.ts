@@ -5,21 +5,27 @@
  * is a new AnalyticsStore, the producer is untouched. That decoupling is the point.
  */
 
-/** Kind of event. Page-views only in V1; namespaced events are added in V2. */
-export type AnalyticsEventType = "pageview";
+/** Kind of event. Delivery observations only in the strict profile. */
+export type AnalyticsEventType = "delivery_request";
 export type AnalyticsBrowser = "chrome" | "edge" | "firefox" | "opera" | "safari" | "other";
+export type AnalyticsDevice = "mobile" | "tablet" | "desktop" | "other";
+export type AnalyticsExclusionReason = "automation" | "invalid_user_agent" | "prefetch" | "prerender" | "system_route";
 
-/** A single server-side observation, built in delivery's page handler. */
+/**
+ * One in-memory delivery observation. The visitor hash is consumed by HLL++
+ * and never persisted as a raw event or per-visitor row.
+ */
 export type AnalyticsEvent = {
     type: AnalyticsEventType;
-    ts: Date; // server timestamp
-    path: string; // normalized pathname (no query string)
-    status: number; // 200 | 304 | 404 | 500 ...
-    durationMs: number; // server-side latency measured in the handler
-    pageId?: string; // stable TPage.id when the producer resolved a published page
-    referrerHost?: string; // EXTERNAL referer host only (cross-origin) — data minimization
-    fromPath?: string; // same-origin referer pathname (internal nav) → flow|edge counter
-    visitorId: string; // sha256(IP + UA + daily salt) — anonymous, rotated daily
-    device: "mobile" | "tablet" | "desktop" | "bot" | "other";
+    ts: Date;
+    status: number;
+    durationMs: number;
+    pageId?: string;
+    previousPageId?: string;
+    entry: boolean;
+    referrerDomain?: string;
+    visitorHash?: string;
+    device: AnalyticsDevice;
     browser: AnalyticsBrowser;
+    exclusionReason?: AnalyticsExclusionReason;
 };

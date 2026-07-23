@@ -7,9 +7,16 @@ export type RollupDoc = {
     count: number;
     msSum?: number;
     msMax?: number;
+    expiresAt: Date;
 };
 
-export type SeenDoc = {
+export type HllSketchDoc = {
     _id: string;
+    day: Date;
+    stripe: number;
+    precision: number;
+    registers: Record<string, number>;
+    profileVersion: string;
     expiresAt: Date;
+    finalizedAt?: Date;
 };

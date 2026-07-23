@@ -5,17 +5,18 @@ import type { RollupDoc } from "./types";
 
 export async function readSummary(rollups: Collection<RollupDoc>, from: Date, to: Date): Promise<AnalyticsSummary> {
     const range = { bucket: { $gte: from, $lt: to } };
-    const [pv, uv, health] = await Promise.all([
+    const [pv, visitors, health] = await Promise.all([
         aggregateTotals(rollups, { metric: "pv", dim: "all", ...range }),
-        aggregateTotals(rollups, { metric: "uv", dim: "all", ...range }),
+        aggregateTotals(rollups, { metric: "visitor", dim: "estimate", ...range }),
         readHealth(rollups, from, to),
     ]);
     const views = pv.count;
     return {
         views,
-        uniqueVisitors: uv.count,
-        visitorDays: uv.count,
-        averageDailyVisitors: average(uv.count, dayBucketCount(from, to)),
+        uniqueVisitors: visitors.count,
+        estimatedVisitors: visitors.count,
+        visitorDays: visitors.count,
+        averageDailyVisitors: average(visitors.count, dayBucketCount(from, to)),
         avgMs: views ? Math.round(pv.msSum / views) : 0,
         errorRate: health.requests ? (health.clientErrors + health.serverErrors) / health.requests : 0,
     };

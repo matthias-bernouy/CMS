@@ -29,11 +29,6 @@ export function rollupId(metric: string, dim: string, key: string, timeKey: stri
     return `${metric}|${dim}|${encodeURIComponent(key)}|${timeKey}`;
 }
 
-/** Dedup _id for the unique-visitor "seen" set: "visitorId|day". */
-export function seenId(visitorId: string, day: string): string {
-    return `${visitorId}|${day}`;
-}
-
 export function fillTimeBuckets(rows: TimeBucket[], query: RangeQuery): TimeBucket[] {
     const byTime = new Map(rows.map((row) => [row.bucket.getTime(), row]));
     const output: TimeBucket[] = [];

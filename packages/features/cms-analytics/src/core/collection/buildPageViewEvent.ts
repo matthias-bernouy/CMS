@@ -1,19 +1,23 @@
 import { getRequestIP } from "@bernouy/http-runner";
 import { classifyUserAgent } from "./userAgent";
-import { dailySalt, visitorId } from "../visitor";
+import { deriveVisitorHash } from "../visitor";
 import { dayKey } from "../buckets";
-import type { AnalyticsEvent } from "../../interfaces/AnalyticsEvent";
+import type { AnalyticsEvent, AnalyticsExclusionReason } from "../../interfaces/AnalyticsEvent";
 
 export type BuildPageViewEventOptions = {
     /** Stable page identity supplied by a surface after content resolution. */
     pageId?: string;
+    /** Stable predecessor supplied only after resolving a same-site referrer. */
+    previousPageId?: string;
+    /** Tenant/site namespace included in the HMAC input. */
+    siteScope?: string;
     /** Trust the first X-Forwarded-For hop. Keep false outside a trusted proxy boundary. */
     trustProxy?: boolean;
     /** Test or host clock injection. */
     now?: Date;
 };
 
-/** Assemble a pageview `AnalyticsEvent` from the request + response facts —
+/** Assemble a minimized delivery observation from request + response facts —
  *  the collection rule of the analytics feature, shared by any serving surface. */
 export async function buildPageViewEvent(
     req: Request,
@@ -22,25 +26,37 @@ export async function buildPageViewEvent(
     secret: string,
     options: BuildPageViewEventOptions = {},
 ): Promise<AnalyticsEvent> {
-    if (!secret.trim()) {
-        throw new Error("analytics visitor secret is required");
-    }
     const url = new URL(req.url);
     const ua = req.headers.get("user-agent") ?? "";
-    const { device, browser } = classifyUserAgent(ua);
+    const classification = classifyUserAgent(ua);
     const ts = options.now ?? new Date();
-    const salt = await dailySalt(secret, dayKey(ts));
+    const exclusionReason = requestExclusion(req, url) ?? classification.exclusionReason;
+    const successfulStatus = (status >= 200 && status < 300) || status === 304;
+    const counted = !exclusionReason && successfulStatus && Boolean(options.pageId);
+    const visitorHash = counted
+        ? await deriveVisitorHash({
+              secret,
+              siteScope: options.siteScope ?? "",
+              utcDay: dayKey(ts),
+              ip: clientIp(req, options.trustProxy ?? false),
+              device: classification.device,
+              browser: classification.browser,
+          })
+        : undefined;
+    const referrerDomain = externalReferrerDomain(req, url);
     return {
-        type: "pageview",
+        type: "delivery_request",
         ts,
-        path: url.pathname,
         status,
         durationMs,
-        visitorId: await visitorId(clientIp(req, options.trustProxy ?? true), ua, salt),
-        device,
-        browser,
+        entry: !options.previousPageId,
+        device: classification.device,
+        browser: classification.browser,
         ...(options.pageId ? { pageId: options.pageId } : {}),
-        ...referer(req, url),
+        ...(options.previousPageId ? { previousPageId: options.previousPageId } : {}),
+        ...(referrerDomain ? { referrerDomain } : {}),
+        ...(visitorHash ? { visitorHash } : {}),
+        ...(exclusionReason ? { exclusionReason } : {}),
     };
 }
 
@@ -54,20 +70,34 @@ function clientIp(req: Request, trustProxy: boolean): string {
     return getRequestIP(req) ?? "";
 }
 
-/** External referer → referrerHost; same-origin referer → fromPath (internal nav). */
-function referer(req: Request, url: URL): { referrerHost?: string; fromPath?: string } {
+/** Only the external hostname survives this helper; paths and query values are discarded. */
+function externalReferrerDomain(req: Request, url: URL): string | undefined {
     const ref = req.headers.get("referer");
     if (!ref) {
-        return {};
+        return;
     }
     try {
         const r = new URL(ref);
         const requestHostname = hostname(req.headers.get("host")) ?? url.hostname.toLowerCase();
         const referrerHostname = r.hostname.toLowerCase();
-        return referrerHostname === requestHostname ? { fromPath: r.pathname } : { referrerHost: referrerHostname };
+        return referrerHostname === requestHostname ? undefined : referrerHostname;
     } catch {
-        return {};
+        return;
     }
+}
+
+function requestExclusion(req: Request, url: URL): AnalyticsExclusionReason | undefined {
+    if (url.pathname.startsWith("/.cms/")) {
+        return "system_route";
+    }
+    const purpose = `${req.headers.get("sec-purpose") ?? ""} ${req.headers.get("purpose") ?? ""}`.toLowerCase();
+    if (purpose.includes("prerender")) {
+        return "prerender";
+    }
+    if (purpose.includes("prefetch")) {
+        return "prefetch";
+    }
+    return;
 }
 
 function hostname(host: string | null): string | null {

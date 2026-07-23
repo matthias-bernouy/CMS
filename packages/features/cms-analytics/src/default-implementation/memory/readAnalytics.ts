@@ -14,11 +14,12 @@ type RollupRows = readonly RollupUpsert[];
 export function readMemorySummary(rows: RollupRows, from: Date, to: Date): AnalyticsSummary {
     const content = selectRows(rows, "pv", "all", from, to);
     const views = sum(content, "count");
-    const visitorDays = sum(selectRows(rows, "uv", "all", from, to), "count");
+    const visitorDays = sum(selectRows(rows, "visitor", "estimate", from, to), "count");
     const health = readMemoryHealth(rows, from, to);
     return {
         views,
         uniqueVisitors: visitorDays,
+        estimatedVisitors: visitorDays,
         visitorDays,
         averageDailyVisitors: average(visitorDays, dayBucketCount(from, to)),
         avgMs: views ? Math.round(sum(content, "msSum") / views) : 0,

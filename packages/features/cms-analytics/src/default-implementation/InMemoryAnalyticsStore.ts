@@ -13,7 +13,6 @@ import type { AnalyticsCollectionPolicy } from "../interfaces/AnalyticsPolicy";
 import { resolveAnalyticsPolicy } from "../core/collection/analyticsPolicy";
 import type { RollupUpsert } from "../core/eventToWrites";
 import { eventToWrites, isCountedEvent } from "../core/eventToWrites";
-import { dayKey, truncateToDay, rollupId, seenId } from "../core/buckets";
 import {
     readMemoryFlows,
     readMemoryHealth,
@@ -21,18 +20,20 @@ import {
     readMemoryTimeseries,
     readMemoryTop,
 } from "./memory/readAnalytics";
+import { MemoryHllStore } from "./memory/MemoryHllStore";
 
 /**
  * In-memory AnalyticsStore — the dep-free reference implementation, for dev and tests.
- * Mirrors the Mongo counter semantics: same rollup buckets, same seen-dedup, JS aggregation.
+ * Mirrors the Mongo counter and HLL++ semantics with no persistence dependency.
  */
 export class InMemoryAnalyticsStore implements AnalyticsStore {
     private _rollups = new Map<string, RollupUpsert>(); // keyed by rollup id
-    private _seen = new Set<string>(); // visitorId|day
     private readonly policy: AnalyticsCollectionPolicy;
+    private readonly hll: MemoryHllStore;
 
     constructor(config: AnalyticsStoreConfig = {}) {
         this.policy = resolveAnalyticsPolicy(config.policy);
+        this.hll = new MemoryHllStore(config.hllStripes ?? 4);
     }
 
     async init(): Promise<void> {}
@@ -41,20 +42,8 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
         for (const w of eventToWrites(event, this.policy)) {
             this._merge(w);
         }
-        if (!isCountedEvent(event, this.policy)) {
-            return;
-        }
-        const sid = seenId(event.visitorId, dayKey(event.ts));
-        if (!this._seen.has(sid)) {
-            this._seen.add(sid);
-            this._merge({
-                id: rollupId("uv", "all", "_", dayKey(event.ts)),
-                metric: "uv",
-                dim: "all",
-                key: "_",
-                bucket: truncateToDay(event.ts),
-                count: 1,
-            });
+        if (isCountedEvent(event, this.policy) && this.policy.visitorEstimation && event.visitorHash) {
+            this.hll.record(event.ts, event.visitorHash);
         }
     }
 
@@ -73,6 +62,12 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
         }
     }
 
+    async finalizeVisitors(before: Date): Promise<void> {
+        for (const rollup of this.hll.finalize(before, this.policy.rollupRetentionDays)) {
+            this._rollups.set(rollup.id, rollup);
+        }
+    }
+
     async summary(from: Date, to: Date): Promise<AnalyticsSummary> {
         return readMemorySummary([...this._rollups.values()], from, to);
     }
@@ -85,11 +80,17 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
         return this.topPages(from, to, limit);
     }
     topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
-        return Promise.resolve(readMemoryTop([...this._rollups.values()], "pv", ["page", "path"], from, to, limit));
+        return Promise.resolve(readMemoryTop([...this._rollups.values()], "pv", "page", from, to, limit));
     }
-    breakdown(dim: "status" | "device" | "browser" | "acquisition", from: Date, to: Date): Promise<KeyCount[]> {
-        const metric = dim === "status" ? "request" : "pv";
+    breakdown(dim: "status" | "device" | "browser" | "exclusion", from: Date, to: Date): Promise<KeyCount[]> {
+        const metric = dim === "status" ? "request" : dim === "exclusion" ? "excluded" : "pv";
+        if (dim === "exclusion") {
+            return Promise.resolve(readMemoryTop([...this._rollups.values()], metric, "reason", from, to, 0));
+        }
         return Promise.resolve(readMemoryTop([...this._rollups.values()], metric, dim, from, to, 0));
+    }
+    entries(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
+        return Promise.resolve(readMemoryTop([...this._rollups.values()], "entry", "page", from, to, limit));
     }
     topReferrers(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
         return Promise.resolve(readMemoryTop([...this._rollups.values()], "pv", "referrer", from, to, limit));

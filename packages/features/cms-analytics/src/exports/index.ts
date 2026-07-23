@@ -3,7 +3,13 @@
  * Public surface: the event contract and the store interface (read + write).
  */
 
-export type { AnalyticsBrowser, AnalyticsEvent, AnalyticsEventType } from "../interfaces/AnalyticsEvent";
+export type {
+    AnalyticsBrowser,
+    AnalyticsDevice,
+    AnalyticsEvent,
+    AnalyticsEventType,
+    AnalyticsExclusionReason,
+} from "../interfaces/AnalyticsEvent";
 export type {
     AnalyticsStore,
     AnalyticsSummary,
@@ -37,6 +43,7 @@ export {
     analyticsSummaryHandler,
     analyticsTimeseriesHandler,
     analyticsTopPagesHandler,
+    analyticsEntriesHandler,
     analyticsBreakdownHandler,
     analyticsReferrersHandler,
     analyticsFlowsHandler,

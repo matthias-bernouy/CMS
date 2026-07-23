@@ -5,6 +5,7 @@ export const ANALYTICS_ROUTES = {
     summary: "/analytics/summary",
     timeseries: "/analytics/timeseries",
     topPages: "/analytics/top-pages",
+    entries: "/analytics/entries",
     breakdown: "/analytics/breakdown",
     referrers: "/analytics/referrers",
     flows: "/analytics/flows",
@@ -13,6 +14,7 @@ export const ANALYTICS_ROUTES = {
 
 export async function analyticsSummaryHandler(store: AnalyticsStore, req: Request): Promise<Response> {
     const { from, to } = parseRange(new URL(req.url).searchParams.get("range"), new Date());
+    await store.finalizeVisitors(new Date());
     return Response.json(await store.summary(from, to));
 }
 
@@ -27,11 +29,17 @@ export async function analyticsTopPagesHandler(store: AnalyticsStore, req: Reque
     return Response.json(await store.topPages(from, to, parseLimit(params)));
 }
 
+export async function analyticsEntriesHandler(store: AnalyticsStore, req: Request): Promise<Response> {
+    const params = new URL(req.url).searchParams;
+    const { from, to } = parseRange(params.get("range"), new Date());
+    return Response.json(await store.entries(from, to, parseLimit(params)));
+}
+
 export async function analyticsBreakdownHandler(store: AnalyticsStore, req: Request): Promise<Response> {
     const params = new URL(req.url).searchParams;
     const dim = params.get("dim");
-    if (dim !== "status" && dim !== "device" && dim !== "browser" && dim !== "acquisition") {
-        return new Response("dim must be status|device|browser|acquisition", { status: 400 });
+    if (dim !== "status" && dim !== "device" && dim !== "browser" && dim !== "exclusion") {
+        return new Response("dim must be status|device|browser|exclusion", { status: 400 });
     }
     const { from, to } = parseRange(params.get("range"), new Date());
     return Response.json(await store.breakdown(dim, from, to));

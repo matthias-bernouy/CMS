@@ -1,74 +1,68 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
-    ValidatingAnalyticsStore,
-    InMemoryAnalyticsStore,
     AnalyticsValidationError,
+    InMemoryAnalyticsStore,
+    ValidatingAnalyticsStore,
     type AnalyticsEvent,
 } from "@bernouy/cms-analytics";
 
 const event = (over: Partial<AnalyticsEvent> = {}): AnalyticsEvent => ({
-    type: "pageview",
+    type: "delivery_request",
     ts: new Date("2026-06-10T12:00:00Z"),
-    path: "/produits",
     status: 200,
     durationMs: 12,
-    visitorId: "v1",
+    pageId: "page-products",
+    entry: true,
+    visitorHash: "a".repeat(64),
     device: "desktop",
     browser: "chrome",
     ...over,
 });
-
 const store = () => new ValidatingAnalyticsStore(new InMemoryAnalyticsStore());
 
 describe("ValidatingAnalyticsStore", () => {
-    test("a conforming event is recorded (delegation, counters move)", async () => {
-        const s = store();
-        await s.record(event());
-        const sum = await s.summary(new Date("2026-06-10"), new Date("2026-06-11"));
-        expect(sum.views).toBe(1);
-        expect(sum.uniqueVisitors).toBe(1);
+    test("records a minimized conforming observation", async () => {
+        const analytics = store();
+        await analytics.record(event());
+        expect((await analytics.summary(new Date("2026-06-10"), new Date("2026-06-11"))).views).toBe(1);
     });
 
-    test("a path keeping its query string is rejected (counter-corruption guard)", async () => {
-        await expect(store().record(event({ path: "/p?page=2" }))).rejects.toBeInstanceOf(AnalyticsValidationError);
-    });
-
-    test("a non-pathname path is rejected", async () => {
-        await expect(store().record(event({ path: "https://x.com/p" }))).rejects.toMatchObject({ status: 400 });
-    });
-
-    test("a blank visitorId is rejected (unique-visitor dedup would degenerate)", async () => {
-        await expect(store().record(event({ visitorId: "" }))).rejects.toBeInstanceOf(AnalyticsValidationError);
-    });
-
-    test("an out-of-range or non-integer status is rejected", async () => {
+    test("rejects invalid time, status, duration, and type", async () => {
+        await expect(store().record(event({ type: "pageview" as never }))).rejects.toBeInstanceOf(
+            AnalyticsValidationError,
+        );
+        await expect(store().record(event({ ts: new Date("invalid") }))).rejects.toBeInstanceOf(
+            AnalyticsValidationError,
+        );
         await expect(store().record(event({ status: 42 }))).rejects.toBeInstanceOf(AnalyticsValidationError);
-        await expect(store().record(event({ status: 200.5 }))).rejects.toBeInstanceOf(AnalyticsValidationError);
-    });
-
-    test("invalid ts / negative duration are rejected", async () => {
-        await expect(store().record(event({ ts: new Date("nope") }))).rejects.toBeInstanceOf(AnalyticsValidationError);
         await expect(store().record(event({ durationMs: -1 }))).rejects.toBeInstanceOf(AnalyticsValidationError);
     });
 
-    test("rejects unbounded or non-normalized dimensions", async () => {
+    test("rejects unsafe identifiers, referrers, hashes, and dimensions", async () => {
         await expect(store().record(event({ pageId: " " }))).rejects.toBeInstanceOf(AnalyticsValidationError);
-        await expect(store().record(event({ fromPath: "/from?q=1" }))).rejects.toBeInstanceOf(AnalyticsValidationError);
-        await expect(store().record(event({ referrerHost: "Example.COM" }))).rejects.toBeInstanceOf(
+        await expect(store().record(event({ previousPageId: "x".repeat(257) }))).rejects.toBeInstanceOf(
             AnalyticsValidationError,
         );
-        await expect(store().record(event({ browser: "unknown" as never }))).rejects.toBeInstanceOf(
+        await expect(store().record(event({ referrerDomain: "Example.COM" }))).rejects.toBeInstanceOf(
+            AnalyticsValidationError,
+        );
+        await expect(store().record(event({ visitorHash: "raw-id" }))).rejects.toBeInstanceOf(AnalyticsValidationError);
+        await expect(store().record(event({ device: "bot" as never }))).rejects.toBeInstanceOf(
+            AnalyticsValidationError,
+        );
+        await expect(store().record(event({ exclusionReason: "unknown" as never }))).rejects.toBeInstanceOf(
             AnalyticsValidationError,
         );
     });
 
-    test("reads pass straight through", async () => {
-        const s = store();
-        await s.record(event({ referrerHost: "google.com", fromPath: "/home" }));
-        expect(await s.topPaths(new Date("2026-06-10"), new Date("2026-06-11"), 5)).toHaveLength(1);
-        expect(await s.breakdown("device", new Date("2026-06-10"), new Date("2026-06-11"))).toHaveLength(1);
-        expect(await s.topReferrers(new Date("2026-06-10"), new Date("2026-06-11"), 5)).toHaveLength(1);
-        expect(await s.flows(new Date("2026-06-10"), new Date("2026-06-11"), 5)).toHaveLength(1);
-        expect((await s.health(new Date("2026-06-10"), new Date("2026-06-11"))).requests).toBe(1);
+    test("delegates all strict report methods", async () => {
+        const analytics = store();
+        await analytics.record(event({ previousPageId: "page-home", entry: false }));
+        await analytics.finalizeVisitors(new Date("2026-06-11"));
+        const range = [new Date("2026-06-10"), new Date("2026-06-11")] as const;
+        expect(await analytics.topPaths(...range, 5)).toHaveLength(1);
+        expect(await analytics.breakdown("device", ...range)).toHaveLength(1);
+        expect(await analytics.flows(...range, 5)).toHaveLength(1);
+        expect((await analytics.health(...range)).requests).toBe(1);
     });
 });

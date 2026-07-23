@@ -24,10 +24,8 @@ export class HyperLogLogPlus {
     }
 
     addHex(hash: string): void {
-        if (!/^[0-9a-f]{16,64}$/i.test(hash)) {
-            throw new Error("HLL input must be a 64-bit or wider hexadecimal hash");
-        }
-        this.addHash64(BigInt(`0x${hash.slice(0, 16)}`));
+        const register = hllRegisterFromHex(hash, this.precision);
+        this.setRegister(register.index, register.rank);
     }
 
     addHash64(hash: bigint): void {
@@ -116,6 +114,22 @@ export class HyperLogLogPlus {
         }
         return registers;
     }
+}
+
+export function hllRegisterFromHex(hash: string, precision = 12): { index: number; rank: number } {
+    if (!/^[0-9a-f]{16,64}$/i.test(hash)) {
+        throw new Error("HLL input must be a 64-bit or wider hexadecimal hash");
+    }
+    if (!Number.isInteger(precision) || precision < 4 || precision > 18) {
+        throw new Error("HLL precision must be an integer between 4 and 18");
+    }
+    const value = BigInt(`0x${hash.slice(0, 16)}`);
+    const remainingBits = HASH_BITS - precision;
+    const index = Number(value >> BigInt(remainingBits));
+    const remainderMask = (1n << BigInt(remainingBits)) - 1n;
+    const remainder = value & remainderMask;
+    const rank = remainder === 0n ? remainingBits + 1 : remainingBits - bitLength(remainder) + 1;
+    return { index, rank };
 }
 
 function bitLength(value: bigint): number {

@@ -4,11 +4,12 @@
  * device/browser breakdowns. Bots are flagged so callers can exclude them from counters.
  */
 
-import type { AnalyticsEvent } from "../../interfaces/AnalyticsEvent";
+import type { AnalyticsEvent, AnalyticsExclusionReason } from "../../interfaces/AnalyticsEvent";
 
 export type UserAgentClass = {
     device: AnalyticsEvent["device"];
     browser: AnalyticsEvent["browser"];
+    exclusionReason?: AnalyticsExclusionReason;
 };
 
 const BOT_RE =
@@ -24,10 +25,10 @@ const MOBILE_RE = /mobi|iphone|ipod|android|blackberry|iemobile|opera mini/i;
 export function classifyUserAgent(ua: string | undefined): UserAgentClass {
     const s = (ua ?? "").toLowerCase();
     if (!s) {
-        return { device: "other", browser: "other" };
+        return { device: "other", browser: "other", exclusionReason: "invalid_user_agent" };
     }
     if (BOT_RE.test(s) || AUTOMATION_RE.test(s) || KNOWN_CRAWLER_RE.test(s)) {
-        return { device: "bot", browser: detectBrowser(s) };
+        return { device: "other", browser: detectBrowser(s), exclusionReason: "automation" };
     }
     const device = TABLET_RE.test(s) ? "tablet" : MOBILE_RE.test(s) ? "mobile" : "desktop";
     return { device, browser: detectBrowser(s) };

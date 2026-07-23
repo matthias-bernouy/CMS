@@ -5,7 +5,7 @@
 
 import type { AnalyticsEvent } from "../interfaces/AnalyticsEvent";
 import { DEFAULT_ANALYTICS_COLLECTION_POLICY, type AnalyticsCollectionPolicy } from "../interfaces/AnalyticsPolicy";
-import { isContentView, isIgnoredReferrer } from "./collection/analyticsPolicy";
+import { isContentView } from "./collection/analyticsPolicy";
 import { truncateToHour, hourKey, rollupId } from "./buckets";
 
 /** One counter upsert: $inc count (+ msSum), $max msMax, on a deterministic _id. */
@@ -18,6 +18,7 @@ export type RollupUpsert = {
     count: number;
     msSum?: number;
     msMax?: number;
+    expiresAt: Date;
 };
 
 /** Whether an event counts toward content views/visitors. PURE. */
@@ -34,6 +35,9 @@ export function eventToWrites(
     event: AnalyticsEvent,
     policy: AnalyticsCollectionPolicy = DEFAULT_ANALYTICS_COLLECTION_POLICY,
 ): RollupUpsert[] {
+    if (!policy.enabled) {
+        return [];
+    }
     const bucket = truncateToHour(event.ts);
     const tk = hourKey(event.ts);
     const write = (metric: string, dim: string, key: string, extra?: Partial<RollupUpsert>): RollupUpsert => ({
@@ -43,17 +47,19 @@ export function eventToWrites(
         key,
         bucket,
         count: 1,
+        expiresAt: new Date(bucket.getTime() + policy.rollupRetentionDays * 86_400_000),
         ...extra,
     });
 
-    if (event.device === "bot") {
-        return [write("excluded", "reason", "bot")];
+    if (event.exclusionReason) {
+        return [write("excluded", "reason", event.exclusionReason)];
     }
 
     const writes = [
         write("request", "all", "_", { msSum: event.durationMs, msMax: event.durationMs }),
         write("request", "status", String(event.status)),
         write("request", "outcome", requestOutcome(event.status)),
+        write("request", "latency", latencyBin(event.durationMs)),
     ];
     if (!isContentView(event, policy)) {
         return writes;
@@ -61,20 +67,16 @@ export function eventToWrites(
 
     writes.push(
         write("pv", "all", "_", { msSum: event.durationMs, msMax: event.durationMs }),
-        write("pv", "page", event.pageId ?? event.path),
+        write("pv", "page", event.pageId!),
         write("pv", "status", String(event.status)),
         write("pv", "device", event.device),
         write("pv", "browser", event.browser),
     );
-    const acquisition = acquisitionChannel(event, policy);
-    if (acquisition) {
-        writes.push(write("pv", "acquisition", acquisition));
+    if (event.entry) {
+        writes.push(write("entry", "page", event.pageId!));
     }
-    if (event.referrerHost && !isIgnoredReferrer(event.referrerHost, policy)) {
-        writes.push(write("pv", "referrer", event.referrerHost));
-    }
-    if (event.fromPath && event.fromPath !== event.path) {
-        const key = JSON.stringify([event.fromPath, event.path]);
+    if (event.previousPageId && event.previousPageId !== event.pageId) {
+        const key = JSON.stringify([event.previousPageId, event.pageId]);
         writes.push(write("flow", "edge", key));
     }
     return writes;
@@ -96,53 +98,21 @@ function requestOutcome(status: number): string {
     return "success";
 }
 
-function acquisitionChannel(
-    event: AnalyticsEvent,
-    policy: AnalyticsCollectionPolicy,
-): "direct" | "internal" | "search" | "social" | "referral" | null {
-    if (event.fromPath) {
-        return "internal";
+function latencyBin(durationMs: number): string {
+    if (durationMs <= 100) {
+        return "0-100";
     }
-    const host = event.referrerHost;
-    if (!host) {
-        return "direct";
+    if (durationMs <= 250) {
+        return "101-250";
     }
-    if (isIgnoredReferrer(host, policy)) {
-        return null;
+    if (durationMs <= 500) {
+        return "251-500";
     }
-    if (matchesHost(host, SEARCH_HOSTS)) {
-        return "search";
+    if (durationMs <= 1_000) {
+        return "501-1000";
     }
-    if (matchesHost(host, SOCIAL_HOSTS)) {
-        return "social";
+    if (durationMs <= 2_500) {
+        return "1001-2500";
     }
-    return "referral";
+    return "2501+";
 }
-
-function matchesHost(host: string, suffixes: readonly string[]): boolean {
-    const normalized = host.toLowerCase();
-    return suffixes.some((suffix) => normalized === suffix || normalized.endsWith(`.${suffix}`));
-}
-
-const SEARCH_HOSTS = [
-    "google.com",
-    "bing.com",
-    "duckduckgo.com",
-    "search.yahoo.com",
-    "ecosia.org",
-    "qwant.com",
-    "baidu.com",
-    "yandex.com",
-] as const;
-
-const SOCIAL_HOSTS = [
-    "facebook.com",
-    "instagram.com",
-    "linkedin.com",
-    "twitter.com",
-    "x.com",
-    "reddit.com",
-    "youtube.com",
-    "tiktok.com",
-    "pinterest.com",
-] as const;

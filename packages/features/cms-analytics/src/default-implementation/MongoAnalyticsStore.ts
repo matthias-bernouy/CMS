@@ -1,4 +1,4 @@
-import type { Collection, Db, AnyBulkWriteOperation, OptionalUnlessRequiredId } from "mongodb";
+import type { Collection, Db, AnyBulkWriteOperation } from "mongodb";
 import type {
     AnalyticsStore,
     AnalyticsSummary,
@@ -13,45 +13,46 @@ import type { AnalyticsEvent } from "../interfaces/AnalyticsEvent";
 import type { AnalyticsCollectionPolicy } from "../interfaces/AnalyticsPolicy";
 import { resolveAnalyticsPolicy } from "../core/collection/analyticsPolicy";
 import { eventToWrites, isCountedEvent } from "../core/eventToWrites";
-import { dayKey, truncateToDay, rollupId, seenId } from "../core/buckets";
 import { readFlows, readTimeseries, readTop } from "./mongo/readSeries";
 import { readHealth, readSummary } from "./mongo/readSummaries";
-import type { RollupDoc, SeenDoc } from "./mongo/types";
+import { finalizeHllSketches, updateHllSketch } from "./mongo/hllSketches";
+import type { HllSketchDoc, RollupDoc } from "./mongo/types";
 
 /** NB: only `type` imports from `mongodb` → no runtime coupling; the `Db` is injected by the caller. */
 export type MongoAnalyticsStoreConfig = AnalyticsStoreConfig & {
     /** Prefix prepended to collection names. Default `""` (single-tenant). */
     collectionPrefix?: string;
-    /** TTL of the unique-visitor "seen" docs, in hours. Default 48. */
-    seenTtlHours?: number;
 };
 
 /** Counter-at-write AnalyticsStore on MongoDB. Reads are aggregation pipelines over pre-bucketed rollups. */
 export class MongoAnalyticsStore implements AnalyticsStore {
     private readonly _prefix: string;
-    private readonly _ttlMs: number;
     private readonly policy: AnalyticsCollectionPolicy;
+    private readonly hllStripes: number;
+    private nextStripe = 0;
 
     constructor(
         private readonly db: Db,
         config: MongoAnalyticsStoreConfig = {},
     ) {
         this._prefix = config.collectionPrefix ?? "";
-        this._ttlMs = (config.seenTtlHours ?? 48) * 3_600_000;
         this.policy = resolveAnalyticsPolicy(config.policy);
+        this.hllStripes = config.hllStripes ?? 4;
     }
 
     private get rollups(): Collection<RollupDoc> {
         return this.db.collection<RollupDoc>(this._prefix + "analytics_rollups");
     }
-    private get seen(): Collection<SeenDoc> {
-        return this.db.collection<SeenDoc>(this._prefix + "analytics_seen");
+    private get sketches(): Collection<HllSketchDoc> {
+        return this.db.collection<HllSketchDoc>(this._prefix + "analytics_hll_sketches");
     }
 
     async init(): Promise<void> {
         await Promise.all([
             this.rollups.createIndex({ metric: 1, dim: 1, bucket: 1 }),
-            this.seen.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+            this.rollups.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+            this.sketches.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+            this.sketches.createIndex({ day: 1, stripe: 1 }),
         ]);
     }
 
@@ -63,42 +64,30 @@ export class MongoAnalyticsStore implements AnalyticsStore {
             }
             const update: Record<string, unknown> = {
                 $inc: inc,
-                $setOnInsert: { metric: w.metric, dim: w.dim, key: w.key, bucket: w.bucket },
+                $setOnInsert: {
+                    metric: w.metric,
+                    dim: w.dim,
+                    key: w.key,
+                    bucket: w.bucket,
+                    expiresAt: w.expiresAt,
+                },
             };
             if (w.msMax !== undefined) {
                 update.$max = { msMax: w.msMax };
             }
             return { updateOne: { filter: { _id: w.id }, update, upsert: true } } as AnyBulkWriteOperation<RollupDoc>;
         });
-        await this.rollups.bulkWrite(ops, { ordered: false });
-        if (!isCountedEvent(event, this.policy)) {
-            return;
+        if (ops.length > 0) {
+            await this.rollups.bulkWrite(ops, { ordered: false });
         }
-        await this._countVisitor(event);
+        if (isCountedEvent(event, this.policy) && this.policy.visitorEstimation && event.visitorHash) {
+            const stripe = this.nextStripe++ % this.hllStripes;
+            await updateHllSketch(this.sketches, event.ts, event.visitorHash, stripe);
+        }
     }
 
-    /** First view of the day for this visitor → bump uv|all; a repeat throws 11000, which means "already counted". */
-    private async _countVisitor(event: AnalyticsEvent): Promise<void> {
-        const day = dayKey(event.ts);
-        try {
-            await this.seen.insertOne({
-                _id: seenId(event.visitorId, day),
-                expiresAt: new Date(event.ts.getTime() + this._ttlMs),
-            } as OptionalUnlessRequiredId<SeenDoc>);
-        } catch (e) {
-            if ((e as { code?: number }).code === 11000) {
-                return;
-            }
-            throw e;
-        }
-        await this.rollups.updateOne(
-            { _id: rollupId("uv", "all", "_", day) },
-            {
-                $inc: { count: 1 },
-                $setOnInsert: { metric: "uv", dim: "all", key: "_", bucket: truncateToDay(event.ts) },
-            },
-            { upsert: true },
-        );
+    async finalizeVisitors(before: Date): Promise<void> {
+        await finalizeHllSketches(this.sketches, this.rollups, before, this.policy.rollupRetentionDays);
     }
 
     async summary(from: Date, to: Date): Promise<AnalyticsSummary> {
@@ -113,10 +102,16 @@ export class MongoAnalyticsStore implements AnalyticsStore {
         return this.topPages(from, to, limit);
     }
     topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
-        return readTop(this.rollups, "pv", ["page", "path"], from, to, limit);
+        return readTop(this.rollups, "pv", "page", from, to, limit);
     }
-    breakdown(dim: "status" | "device" | "browser" | "acquisition", from: Date, to: Date): Promise<KeyCount[]> {
+    breakdown(dim: "status" | "device" | "browser" | "exclusion", from: Date, to: Date): Promise<KeyCount[]> {
+        if (dim === "exclusion") {
+            return readTop(this.rollups, "excluded", "reason", from, to, 0);
+        }
         return readTop(this.rollups, dim === "status" ? "request" : "pv", dim, from, to, 0);
+    }
+    entries(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
+        return readTop(this.rollups, "entry", "page", from, to, limit);
     }
     topReferrers(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
         return readTop(this.rollups, "pv", "referrer", from, to, limit);

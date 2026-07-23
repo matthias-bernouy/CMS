@@ -14,25 +14,15 @@ export class AnalyticsValidationError extends Error {
 /**
  * The event invariants the counters depend on — `buildPageViewEvent` produces
  * conforming events by construction; this is the seam rule for any OTHER
- * writer (a V2 gateway collector, a buggy caller). A non-normalized path
- * (query string kept) or a blank visitorId would silently corrupt the
- * rollups/unique-visitor counters, so they are rejected instead.
+ * writer. Raw paths and durable visitor identifiers do not exist in this
+ * contract: only stable CMS page ids and an ephemeral daily HMAC may cross it.
  */
 export function validateAnalyticsEvent(event: AnalyticsEvent): void {
-    if (event.type !== "pageview") {
+    if (event.type !== "delivery_request") {
         throw new AnalyticsValidationError("type", `unknown event type "${event.type}"`);
     }
     if (!(event.ts instanceof Date) || Number.isNaN(event.ts.getTime())) {
         throw new AnalyticsValidationError("ts", "expected a valid Date");
-    }
-    if (!event.path.startsWith("/")) {
-        throw new AnalyticsValidationError("path", "expected a pathname starting with /");
-    }
-    if (event.path.includes("?")) {
-        throw new AnalyticsValidationError("path", "expected a normalized pathname (no query string)");
-    }
-    if (event.path.length > 2_048) {
-        throw new AnalyticsValidationError("path", "must be at most 2048 characters");
     }
     if (!Number.isInteger(event.status) || event.status < 100 || event.status > 599) {
         throw new AnalyticsValidationError("status", "expected an HTTP status code");
@@ -40,32 +30,37 @@ export function validateAnalyticsEvent(event: AnalyticsEvent): void {
     if (!Number.isFinite(event.durationMs) || event.durationMs < 0) {
         throw new AnalyticsValidationError("durationMs", "expected a non-negative duration");
     }
-    if (!event.visitorId) {
-        throw new AnalyticsValidationError("visitorId", "required");
-    }
-    if (event.visitorId.length > 256) {
-        throw new AnalyticsValidationError("visitorId", "must be at most 256 characters");
-    }
-    if (
-        event.pageId !== undefined &&
-        (!event.pageId.trim() || event.pageId !== event.pageId.trim() || event.pageId.length > 256)
-    ) {
+    if (event.pageId !== undefined && !isSafeIdentifier(event.pageId)) {
         throw new AnalyticsValidationError("pageId", "must be normalized, non-blank, and at most 256 characters");
     }
-    if (event.fromPath !== undefined) {
-        if (!event.fromPath.startsWith("/") || event.fromPath.includes("?") || event.fromPath.length > 2_048) {
-            throw new AnalyticsValidationError("fromPath", "expected a pathname of at most 2048 characters");
-        }
+    if (event.previousPageId !== undefined && !isSafeIdentifier(event.previousPageId)) {
+        throw new AnalyticsValidationError(
+            "previousPageId",
+            "must be normalized, non-blank, and at most 256 characters",
+        );
     }
-    if (event.referrerHost !== undefined && !isNormalizedHostname(event.referrerHost)) {
-        throw new AnalyticsValidationError("referrerHost", "expected a normalized hostname");
+    if (event.referrerDomain !== undefined && !isNormalizedHostname(event.referrerDomain)) {
+        throw new AnalyticsValidationError("referrerDomain", "expected a normalized registrable domain");
     }
-    if (!["mobile", "tablet", "desktop", "bot", "other"].includes(event.device)) {
+    if (event.visitorHash !== undefined && !/^[0-9a-f]{64}$/.test(event.visitorHash)) {
+        throw new AnalyticsValidationError("visitorHash", "expected a 64-character lowercase hexadecimal HMAC");
+    }
+    if (!["mobile", "tablet", "desktop", "other"].includes(event.device)) {
         throw new AnalyticsValidationError("device", "unknown device class");
     }
     if (!["chrome", "edge", "firefox", "opera", "safari", "other"].includes(event.browser)) {
         throw new AnalyticsValidationError("browser", "unknown browser class");
     }
+    if (
+        event.exclusionReason !== undefined &&
+        !["automation", "invalid_user_agent", "prefetch", "prerender", "system_route"].includes(event.exclusionReason)
+    ) {
+        throw new AnalyticsValidationError("exclusionReason", "unknown exclusion reason");
+    }
+}
+
+function isSafeIdentifier(value: string): boolean {
+    return Boolean(value.trim()) && value === value.trim() && value.length <= 256;
 }
 
 function isNormalizedHostname(host: string): boolean {
@@ -97,6 +92,9 @@ export class ValidatingAnalyticsStore implements AnalyticsStore {
     init() {
         return this.inner.init();
     }
+    finalizeVisitors(before: Date) {
+        return this.inner.finalizeVisitors(before);
+    }
     summary(from: Date, to: Date) {
         return this.inner.summary(from, to);
     }
@@ -109,8 +107,11 @@ export class ValidatingAnalyticsStore implements AnalyticsStore {
     topPages(from: Date, to: Date, limit: number) {
         return this.inner.topPages(from, to, limit);
     }
-    breakdown(dim: "status" | "device" | "browser" | "acquisition", from: Date, to: Date) {
+    breakdown(dim: "status" | "device" | "browser" | "exclusion", from: Date, to: Date) {
         return this.inner.breakdown(dim, from, to);
+    }
+    entries(from: Date, to: Date, limit: number) {
+        return this.inner.entries(from, to, limit);
     }
     topReferrers(from: Date, to: Date, limit: number) {
         return this.inner.topReferrers(from, to, limit);

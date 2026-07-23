@@ -4,26 +4,25 @@ import type { AnalyticsEvent } from "cms-analytics/interfaces/AnalyticsEvent";
 
 const FROM = new Date("2026-06-02T00:00:00.000Z");
 const TO = new Date("2026-06-03T00:00:00.000Z");
-
 const event = (over: Partial<AnalyticsEvent> = {}): AnalyticsEvent => ({
-    type: "pageview",
+    type: "delivery_request",
     ts: new Date("2026-06-02T14:00:00.000Z"),
-    path: "/about",
     status: 200,
     durationMs: 20,
-    visitorId: crypto.randomUUID(),
+    pageId: "page-about",
+    entry: true,
+    visitorHash: "a".repeat(64),
     device: "desktop",
     browser: "chrome",
     ...over,
 });
 
 describe("InMemoryAnalyticsStore reports", () => {
-    test("separates content views from request health", async () => {
+    test("reports request outcomes independently from content", async () => {
         const store = new InMemoryAnalyticsStore();
         await store.record(event());
-        await store.record(event({ status: 404, path: "/wp-login.php", durationMs: 40 }));
-        await store.record(event({ status: 500, durationMs: 60 }));
-
+        await store.record(event({ pageId: undefined, status: 404, durationMs: 40 }));
+        await store.record(event({ pageId: undefined, status: 500, durationMs: 60 }));
         expect((await store.summary(FROM, TO)).views).toBe(1);
         expect(await store.health(FROM, TO)).toEqual({
             requests: 3,
@@ -33,53 +32,27 @@ describe("InMemoryAnalyticsStore reports", () => {
             avgMs: 40,
             maxMs: 60,
         });
-        expect(await store.breakdown("status", FROM, TO)).toEqual([
-            { key: "200", count: 1 },
-            { key: "404", count: 1 },
-            { key: "500", count: 1 },
-        ]);
     });
 
-    test("reports acquisition channels and external referrers", async () => {
+    test("reports direct stable-id flows and entry pages without raw paths", async () => {
         const store = new InMemoryAnalyticsStore();
-        await store.record(event({ referrerHost: "google.com" }));
-        await store.record(event({ referrerHost: "news.example", visitorId: "v2" }));
-        await store.record(event({ fromPath: "/", visitorId: "v3" }));
-        await store.record(event({ visitorId: "v4" }));
-
-        expect(await store.breakdown("acquisition", FROM, TO)).toEqual([
-            { key: "search", count: 1 },
-            { key: "referral", count: 1 },
-            { key: "internal", count: 1 },
-            { key: "direct", count: 1 },
-        ]);
-        expect(await store.topReferrers(FROM, TO, 10)).toEqual([
-            { key: "google.com", count: 1 },
-            { key: "news.example", count: 1 },
-        ]);
+        await store.record(event({ previousPageId: "page-home", entry: false }));
+        await store.record(event({ pageId: "page-contact" }));
+        expect(await store.flows(FROM, TO, 10)).toEqual([{ from: "page-home", to: "page-about", count: 1 }]);
+        expect(await store.entries(FROM, TO, 10)).toEqual([{ key: "page-contact", count: 1 }]);
     });
 
-    test("ignores configured referrer hosts without dropping content views", async () => {
-        const store = new InMemoryAnalyticsStore({
-            policy: { ignoredReferrerHosts: ["spam.example"] },
+    test("groups content views into fixed hour and day buckets", async () => {
+        const store = new InMemoryAnalyticsStore();
+        await store.record(event({ ts: new Date("2026-06-02T14:10:00Z") }));
+        await store.record(event({ ts: new Date("2026-06-02T14:50:00Z") }));
+        await store.record(event({ ts: new Date("2026-06-02T16:00:00Z") }));
+        const hours = await store.timeseries({
+            from: new Date("2026-06-02T14:00:00Z"),
+            to: new Date("2026-06-02T17:00:00Z"),
+            interval: "hour",
         });
-        await store.record(event({ referrerHost: "sub.spam.example" }));
-
-        expect((await store.summary(FROM, TO)).views).toBe(1);
-        expect(await store.topReferrers(FROM, TO, 10)).toEqual([]);
-        expect(await store.breakdown("acquisition", FROM, TO)).toEqual([]);
-    });
-
-    test("returns structured internal flows", async () => {
-        const store = new InMemoryAnalyticsStore();
-        await store.record(event({ fromPath: "/home", path: "/about" }));
-        expect(await store.flows(FROM, TO, 10)).toEqual([{ from: "/home", to: "/about", count: 1 }]);
-    });
-
-    test("can require page ids at the store boundary", async () => {
-        const store = new InMemoryAnalyticsStore({ policy: { requirePageId: true } });
-        await store.record(event());
-        await store.record(event({ pageId: "about", visitorId: "v2" }));
-        expect((await store.summary(FROM, TO)).views).toBe(1);
+        expect(hours.map((bucket) => bucket.count)).toEqual([2, 0, 1]);
+        expect((await store.timeseries({ from: FROM, to: TO, interval: "day" }))[0]?.count).toBe(3);
     });
 });
