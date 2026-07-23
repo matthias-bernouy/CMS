@@ -97,6 +97,34 @@ describe("Control analytics routes", () => {
             },
         ]);
     });
+
+    test("rejects non-admin endpoint performance requests before reporting", async () => {
+        const runner = new CaptureRunner();
+        let reportCalls = 0;
+        const cms = new ControlCms(
+            runner,
+            new InMemoryCmsRepository(),
+            new InMemoryAuthentication<CMS_ROLES>({ role: "user" }),
+            {
+                endpointPerformanceReports: {
+                    async dashboard() {
+                        reportCalls++;
+                        return emptyEndpointDashboard();
+                    },
+                },
+            },
+        );
+        await cms.ready;
+
+        const response = await runner.handle(
+            "GET",
+            "/api/analytics/endpoints",
+            new Request("http://control/api/analytics/endpoints"),
+        );
+
+        expect(response.status).toBe(403);
+        expect(reportCalls).toBe(0);
+    });
 });
 
 function emptyEndpointDashboard(): EndpointPerformanceDashboard {

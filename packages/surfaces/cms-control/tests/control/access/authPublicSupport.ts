@@ -19,6 +19,7 @@ import type { CMS_ROLES } from "types/roles";
 export class CaptureRunner implements Runner {
     readonly endpoints = new Map<string, number>();
     readonly handlers = new Map<string, RouteHandler>();
+    readonly middlewareChains = new Map<string, Middleware[]>();
 
     /** For tests that only assert the synchronously mounted route groups. */
     static withoutFileApi(): CaptureRunner {
@@ -37,8 +38,10 @@ export class CaptureRunner implements Runner {
         handler: RouteHandler,
         middlewares: Middleware[] = [],
     ): void {
-        this.target.endpoints.set(`${method} ${joinPath(this.basePath, path)}`, middlewares.length);
-        this.target.handlers.set(`${method} ${joinPath(this.basePath, path)}`, handler);
+        const key = `${method} ${joinPath(this.basePath, path)}`;
+        this.target.endpoints.set(key, middlewares.length);
+        this.target.handlers.set(key, handler);
+        this.target.middlewareChains.set(key, middlewares);
     }
     use() {}
     get(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
@@ -74,8 +77,24 @@ export class CaptureRunner implements Runner {
         handler: RouteHandler,
         middlewares: Middleware[] = [],
     ): void {
-        this.target.endpoints.set(`${method} ${this.basePath}`, middlewares.length);
-        this.target.handlers.set(`${method} ${this.basePath}`, handler);
+        const key = `${method} ${this.basePath}`;
+        this.target.endpoints.set(key, middlewares.length);
+        this.target.handlers.set(key, handler);
+        this.target.middlewareChains.set(key, middlewares);
+    }
+
+    async handle(method: string, path: string, request: Request): Promise<Response> {
+        const key = `${method} ${path}`;
+        const handler = this.target.handlers.get(key);
+        if (!handler) {
+            throw new Error(`Route not mounted: ${key}`);
+        }
+        let next = () => Promise.resolve(handler(request));
+        for (const middleware of [...(this.target.middlewareChains.get(key) ?? [])].reverse()) {
+            const downstream = next;
+            next = () => middleware(request, downstream);
+        }
+        return next();
     }
 
     private get target(): CaptureRunner {
