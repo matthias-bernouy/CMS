@@ -1,6 +1,7 @@
 import { describe, expect, mock, test } from "bun:test";
 import { MongoAnalyticsStore } from "@bernouy/cms-analytics/mongo";
 import type { AnalyticsEvent } from "@bernouy/cms-analytics";
+import { shortenMongoAnalyticsRetention } from "cms-analytics/default-implementation/mongo/counters/retention";
 
 const event: AnalyticsEvent = {
     type: "delivery_request",
@@ -20,15 +21,23 @@ describe("MongoAnalyticsStore", () => {
         const names: string[] = [];
         const createIndex = mock(async () => "index");
         const deleteMany = mock(async () => ({ deletedCount: 0 }));
+        const updateOne = mock(async () => ({}));
+        const findOne = mock(async () => null);
         const db = {
             collection: (name: string) => {
                 names.push(name);
-                return { createIndex, deleteMany };
+                return { createIndex, deleteMany, updateOne, findOne };
             },
         };
         await new MongoAnalyticsStore(db as never).init();
         expect(new Set(names)).toEqual(
-            new Set(["analytics_rollups", "analytics_hll_sketches", "analytics_referrer_buckets", "analytics_seen"]),
+            new Set([
+                "analytics_rollups",
+                "analytics_hll_sketches",
+                "analytics_referrer_buckets",
+                "analytics_governance",
+                "analytics_seen",
+            ]),
         );
         expect(createIndex).toHaveBeenCalledWith({ expiresAt: 1 }, { expireAfterSeconds: 0 });
         expect(deleteMany).toHaveBeenCalledTimes(4);
@@ -141,5 +150,18 @@ describe("MongoAnalyticsStore", () => {
             expect.objectContaining({ metric: "excluded", dim: "reason" }),
             expect.objectContaining({ metric: "entry", dim: "page" }),
         ]);
+    });
+});
+
+describe("Mongo analytics retention", () => {
+    test("deletes expired aggregates and only shortens existing expiry dates", async () => {
+        const deleteMany = mock(async () => ({}));
+        const updateMany = mock(async () => ({}));
+        const collection = { deleteMany, updateMany };
+        const now = new Date("2026-07-23T12:00:00Z");
+        await shortenMongoAnalyticsRetention(collection as never, collection as never, 30, now);
+        expect(deleteMany).toHaveBeenCalledWith({ bucket: { $lt: new Date("2026-06-23T12:00:00Z") } });
+        expect(JSON.stringify(updateMany.mock.calls[0])).toContain("$min");
+        expect(updateMany).toHaveBeenCalledTimes(2);
     });
 });

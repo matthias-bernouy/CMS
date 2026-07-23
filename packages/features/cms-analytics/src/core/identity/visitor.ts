@@ -1,5 +1,5 @@
-import type { AnalyticsBrowser, AnalyticsDevice } from "../interfaces/AnalyticsEvent";
-import { ANALYTICS_VERSIONS } from "../interfaces/AnalyticsPrivacy";
+import type { AnalyticsBrowser, AnalyticsDevice } from "../../interfaces/AnalyticsEvent";
+import { ANALYTICS_VERSIONS } from "../../interfaces/AnalyticsPrivacy";
 
 export type VisitorHashInput = {
     secret: string;

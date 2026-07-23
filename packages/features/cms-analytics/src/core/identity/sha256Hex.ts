@@ -1,8 +1,4 @@
-/**
- * SHA-256 of the input UTF-8 string, hex-encoded. Used to derive the
- * cookieless visitor id: we keep the digest, never the raw
- * salt+IP+user-agent input.
- */
+/** SHA-256 of a UTF-8 input, hex-encoded. */
 export async function sha256HexAsync(input: string): Promise<string> {
     const data = new TextEncoder().encode(input);
     const digest = await crypto.subtle.digest("SHA-256", data);

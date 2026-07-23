@@ -1,6 +1,6 @@
 import { getRequestIP } from "@bernouy/http-runner";
 import { classifyUserAgent } from "./userAgent";
-import { deriveVisitorHash } from "../visitor";
+import { deriveVisitorHash } from "../identity/visitor";
 import { dayKey } from "../rollups/buckets";
 import type { AnalyticsEvent, AnalyticsExclusionReason } from "../../interfaces/AnalyticsEvent";
 import { normalizeExternalReferrer } from "../referrers/normalizeReferrer";
@@ -16,6 +16,8 @@ export type BuildPageViewEventOptions = {
     contentKind?: AnalyticsEvent["contentKind"];
     /** Trust the first X-Forwarded-For hop. Keep false outside a trusted proxy boundary. */
     trustProxy?: boolean;
+    /** Disable the daily HLL++ input while retaining anonymous aggregate counters. */
+    visitorEstimation?: boolean;
     /** Test or host clock injection. */
     now?: Date;
 };
@@ -37,16 +39,17 @@ export async function buildPageViewEvent(
     const exclusionReason = requestExclusion(req, url) ?? classification.exclusionReason;
     const successfulStatus = (status >= 200 && status < 300) || status === 304;
     const counted = !exclusionReason && contentKind === "html" && successfulStatus && Boolean(options.pageId);
-    const visitorHash = counted
-        ? await deriveVisitorHash({
-              secret,
-              siteScope: options.siteScope ?? "",
-              utcDay: dayKey(ts),
-              ip: clientIp(req, options.trustProxy ?? false),
-              device: classification.device,
-              browser: classification.browser,
-          })
-        : undefined;
+    const visitorHash =
+        counted && options.visitorEstimation !== false
+            ? await deriveVisitorHash({
+                  secret,
+                  siteScope: options.siteScope ?? "",
+                  utcDay: dayKey(ts),
+                  ip: clientIp(req, options.trustProxy ?? false),
+                  device: classification.device,
+                  browser: classification.browser,
+              })
+            : undefined;
     const referrerDomain = normalizeExternalReferrer(req.headers.get("referer"), url, req.headers.get("host"));
     return {
         type: "delivery_request",

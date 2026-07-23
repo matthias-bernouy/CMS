@@ -23,11 +23,14 @@ export class StrictAnalyticsReports implements AnalyticsReports {
     async summary(window: AnalyticsReportWindow, now = new Date()) {
         await this.store.finalizeVisitors(now);
         return this.report(window, now, async (range) => {
-            const [summary, health] = await Promise.all([
+            const latestDayTo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+            const latestDayFrom = new Date(latestDayTo.getTime() - 86_400_000);
+            const [summary, health, latestDay] = await Promise.all([
                 this.store.summary(range.from, range.to),
                 this.store.health(range.from, range.to),
+                this.store.summary(latestDayFrom, latestDayTo),
             ]);
-            return publishSummary(summary, health.requests);
+            return publishSummary(summary, health.requests, latestDay.estimatedVisitors, latestDayFrom);
         });
     }
 
@@ -48,7 +51,7 @@ export class StrictAnalyticsReports implements AnalyticsReports {
     }
 
     breakdown(
-        dimension: "status" | "device" | "browser" | "exclusion",
+        dimension: "status" | "device" | "browser" | "exclusion" | "latency",
         window: AnalyticsReportWindow,
         now = new Date(),
     ) {
@@ -106,9 +109,15 @@ export class StrictAnalyticsReports implements AnalyticsReports {
     }
 }
 
-function publishSummary(summary: AnalyticsSummary, healthRequests: number): Published<AnalyticsSummary> {
+function publishSummary(
+    summary: AnalyticsSummary,
+    healthRequests: number,
+    latestDayVisitors: number,
+    latestCompletedUtcDay: Date,
+) {
     const views = publishCount(summary.views);
     const visitors = publishCount(summary.estimatedVisitors);
+    const latestDay = publishCount(latestDayVisitors);
     const canPublishViews = summary.views >= STRICT_ANALYTICS_LIMITS.publicationThreshold;
     const canPublishHealth = healthRequests >= STRICT_ANALYTICS_LIMITS.publicationThreshold;
     return {
@@ -118,10 +127,17 @@ function publishSummary(summary: AnalyticsSummary, healthRequests: number): Publ
             uniqueVisitors: visitors.data,
             visitorDays: visitors.data,
             averageDailyVisitors: visitors.data ? roundCount(summary.averageDailyVisitors) : 0,
+            latestCompletedDayVisitors: latestDay.data,
+            latestCompletedUtcDay,
             avgMs: canPublishViews && summary.avgMs !== null ? roundCount(summary.avgMs) : null,
             errorRate: canPublishHealth && summary.errorRate !== null ? roundRate(summary.errorRate) : null,
         },
-        suppressed: views.suppressed + visitors.suppressed + (canPublishViews ? 0 : 1) + (canPublishHealth ? 0 : 1),
+        suppressed:
+            views.suppressed +
+            visitors.suppressed +
+            latestDay.suppressed +
+            (canPublishViews ? 0 : 1) +
+            (canPublishHealth ? 0 : 1),
     };
 }
 

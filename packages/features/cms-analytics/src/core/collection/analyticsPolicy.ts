@@ -23,10 +23,10 @@ export function resolveAnalyticsPolicy(policy: Partial<AnalyticsCollectionPolicy
     if (
         !Number.isInteger(resolved.rollupRetentionDays) ||
         resolved.rollupRetentionDays < 1 ||
-        resolved.rollupRetentionDays > STRICT_ANALYTICS_LIMITS.maximumRollupRetentionDays
+        resolved.rollupRetentionDays > STRICT_ANALYTICS_LIMITS.rollupRetentionDays
     ) {
         throw new Error(
-            `analytics rollup retention must be between 1 and ${STRICT_ANALYTICS_LIMITS.maximumRollupRetentionDays} days`,
+            `analytics rollup retention must be between 1 and ${STRICT_ANALYTICS_LIMITS.rollupRetentionDays} days`,
         );
     }
     return resolved;

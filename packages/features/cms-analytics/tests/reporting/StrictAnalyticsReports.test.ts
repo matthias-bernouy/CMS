@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { StrictAnalyticsReports } from "cms-analytics/core/reporting/StrictAnalyticsReports";
-import { sha256HexAsync } from "cms-analytics/core/sha256Hex";
+import { sha256HexAsync } from "cms-analytics/core/identity/sha256Hex";
 import { InMemoryAnalyticsStore } from "cms-analytics/default-implementation/InMemoryAnalyticsStore";
 import type { AnalyticsEvent } from "cms-analytics/interfaces/AnalyticsEvent";
 
@@ -88,6 +88,8 @@ describe("StrictAnalyticsReports", () => {
         const report = await new StrictAnalyticsReports(store).summary("7d", NOW);
         expect(report.data.estimatedVisitors).toBe(10);
         expect(report.data.uniqueVisitors).toBe(10);
+        expect(report.data.latestCompletedDayVisitors).toBe(10);
+        expect(report.data.latestCompletedUtcDay).toEqual(new Date("2026-06-03T00:00:00Z"));
         expect(report.meta.versions).toMatchObject({
             filter: "strict-filter-v1",
             publication: "strict-publication-v1",

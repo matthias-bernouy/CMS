@@ -21,6 +21,15 @@ export type {
     AnalyticsStoreConfig,
 } from "../interfaces/AnalyticsStore";
 export type { AnalyticsCollectionPolicy } from "../interfaces/AnalyticsPolicy";
+export type {
+    AnalyticsComplianceContext,
+    AnalyticsComplianceCriterion,
+    AnalyticsComplianceEvaluation,
+    AnalyticsComplianceSnapshot,
+    AnalyticsCriterionStatus,
+    AnalyticsManualAttestation,
+    AnalyticsSettings,
+} from "../interfaces/AnalyticsGovernance";
 export { DEFAULT_ANALYTICS_COLLECTION_POLICY } from "../interfaces/AnalyticsPolicy";
 export type { AnalyticsPrivacyProfile } from "../interfaces/AnalyticsPrivacy";
 export {
@@ -29,10 +38,15 @@ export {
     assertSupportedAnalyticsProfile,
 } from "../interfaces/AnalyticsPrivacy";
 export { StrictAnalyticsReports } from "../core/reporting/StrictAnalyticsReports";
+export {
+    ANALYTICS_CHECKLIST_VERSION,
+    evaluateAnalyticsCompliance,
+} from "../core/governance/evaluateCompliance";
 export { startAnalyticsFinalizer, type AnalyticsFinalizer } from "../core/hll/AnalyticsFinalizer";
 export type {
     AnalyticsReport,
     AnalyticsReportMetadata,
+    AnalyticsReportSummary,
     AnalyticsReports,
     AnalyticsReportWindow,
 } from "../core/reporting/types";
@@ -57,6 +71,13 @@ export {
     analyticsFlowsHandler,
     analyticsHealthHandler,
 } from "../http/analyticsHandlers";
+export {
+    ANALYTICS_GOVERNANCE_ROUTES,
+    analyticsComplianceHandler,
+    analyticsSettingsHandler,
+    createAnalyticsComplianceSnapshotHandler,
+    updateAnalyticsSettingsHandler,
+} from "../http/governanceHandlers";
 export {
     buildPageViewEvent,
     type BuildPageViewEventOptions,

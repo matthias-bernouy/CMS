@@ -34,6 +34,10 @@ async function collectPageView(
     durationMs: number,
 ): Promise<void> {
     try {
+        const settings = await delivery.analytics?.getSettings();
+        if (!settings?.enabled) {
+            return;
+        }
         const previousPageId = pageId ? await resolvePreviousPageId(req, delivery) : undefined;
         const event = await buildPageViewEvent(
             req,
@@ -45,6 +49,7 @@ async function collectPageView(
                 previousPageId,
                 siteScope: delivery.analyticsSiteScope,
                 trustProxy: delivery.analyticsTrustProxy,
+                visitorEstimation: settings.visitorEstimation,
                 contentKind: pageId ? "html" : "other",
             },
         );

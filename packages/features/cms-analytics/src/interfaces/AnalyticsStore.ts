@@ -6,6 +6,7 @@
 
 import type { AnalyticsEvent } from "./AnalyticsEvent";
 import type { AnalyticsCollectionPolicy } from "./AnalyticsPolicy";
+import type { AnalyticsComplianceSnapshot, AnalyticsSettings } from "./AnalyticsGovernance";
 
 /** One point of a time series: a bucket, its count, and latency for the "all" metric. */
 export type TimeBucket = {
@@ -73,7 +74,11 @@ export interface AnalyticsStore {
     /** Most-viewed stable page ids, falling back to paths for legacy producers. */
     topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
     /** Counts grouped by a dimension over [from, to); status covers all non-bot requests. */
-    breakdown(dim: "status" | "device" | "browser" | "exclusion", from: Date, to: Date): Promise<KeyCount[]>;
+    breakdown(
+        dim: "status" | "device" | "browser" | "exclusion" | "latency",
+        from: Date,
+        to: Date,
+    ): Promise<KeyCount[]>;
     /** CMS pages observed without a safe same-site predecessor. */
     entries(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
     /** External referrer hosts for content views. */
@@ -84,6 +89,11 @@ export interface AnalyticsStore {
     flows(from: Date, to: Date, limit: number): Promise<FlowCount[]>;
     /** Operational request health, separate from content-view metrics. */
     health(from: Date, to: Date): Promise<AnalyticsHealthSummary>;
+    /** Safe runtime settings owned by Settings, not analytics dashboards. */
+    getSettings(): Promise<AnalyticsSettings>;
+    updateSettings(settings: AnalyticsSettings): Promise<AnalyticsSettings>;
+    saveComplianceSnapshot(snapshot: AnalyticsComplianceSnapshot): Promise<void>;
+    latestPublishedComplianceSnapshot(): Promise<AnalyticsComplianceSnapshot | null>;
 }
 
 export type AnalyticsStoreConfig = {

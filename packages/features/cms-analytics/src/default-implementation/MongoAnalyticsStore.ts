@@ -1,4 +1,4 @@
-import type { Collection, Db, AnyBulkWriteOperation } from "mongodb";
+import type { Collection, Db } from "mongodb";
 import type {
     AnalyticsStore,
     AnalyticsSummary,
@@ -12,15 +12,18 @@ import type {
 import type { AnalyticsEvent } from "../interfaces/AnalyticsEvent";
 import type { AnalyticsCollectionPolicy } from "../interfaces/AnalyticsPolicy";
 import { resolveAnalyticsPolicy } from "../core/collection/analyticsPolicy";
-import { eventToWrites, isCountedEvent } from "../core/rollups/eventToWrites";
 import { readFlows, readTimeseries, readTop } from "./mongo/readSeries";
 import { readHealth, readSummary } from "./mongo/readSummaries";
-import { finalizeHllSketches, updateHllSketch } from "./mongo/hllSketches";
-import { hasSaturatedReferrerBucket, readReferrerBuckets, updateReferrerBucket } from "./mongo/referrerBuckets";
+import { finalizeHllSketches } from "./mongo/counters/hllSketches";
+import { hasSaturatedReferrerBucket, readReferrerBuckets } from "./mongo/counters/referrerBuckets";
+import { recordMongoAnalytics } from "./mongo/counters/recordAnalytics";
+import { shortenMongoAnalyticsRetention } from "./mongo/counters/retention";
 import type { HllSketchDoc, ReferrerBucketDoc, RollupDoc } from "./mongo/types";
 import { isIgnoredReferrer } from "../core/collection/analyticsPolicy";
 import { mergeKeyCounts } from "../core/referrers/FrequentItems";
 import { migrateLegacyAnalytics } from "./mongo/migrateLegacyAnalytics";
+import type { AnalyticsComplianceSnapshot, AnalyticsSettings } from "../interfaces/AnalyticsGovernance";
+import { MongoAnalyticsGovernance } from "./mongo/MongoAnalyticsGovernance";
 
 /** NB: only `type` imports from `mongodb` → no runtime coupling; the `Db` is injected by the caller. */
 export type MongoAnalyticsStoreConfig = AnalyticsStoreConfig & {
@@ -31,7 +34,8 @@ export type MongoAnalyticsStoreConfig = AnalyticsStoreConfig & {
 /** Counter-at-write AnalyticsStore on MongoDB. Reads are aggregation pipelines over pre-bucketed rollups. */
 export class MongoAnalyticsStore implements AnalyticsStore {
     private readonly _prefix: string;
-    private readonly policy: AnalyticsCollectionPolicy;
+    private policy: AnalyticsCollectionPolicy;
+    private readonly governance: MongoAnalyticsGovernance;
     private readonly hllStripes: number;
     private nextStripe = 0;
 
@@ -41,6 +45,13 @@ export class MongoAnalyticsStore implements AnalyticsStore {
     ) {
         this._prefix = config.collectionPrefix ?? "";
         this.policy = resolveAnalyticsPolicy(config.policy);
+        this.governance = new MongoAnalyticsGovernance(
+            this.db.collection(this._prefix + "analytics_governance"),
+            settingsFromPolicy(this.policy),
+            (settings) => {
+                this.policy = resolveAnalyticsPolicy({ ...this.policy, ...settings });
+            },
+        );
         this.hllStripes = config.hllStripes ?? 4;
     }
 
@@ -53,9 +64,9 @@ export class MongoAnalyticsStore implements AnalyticsStore {
     private get referrerBuckets(): Collection<ReferrerBucketDoc> {
         return this.db.collection<ReferrerBucketDoc>(this._prefix + "analytics_referrer_buckets");
     }
-
     async init(): Promise<void> {
         await migrateLegacyAnalytics(this.db, this._prefix);
+        await this.governance.init();
         await Promise.all([
             this.rollups.createIndex({ metric: 1, dim: 1, bucket: 1 }),
             this.rollups.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
@@ -68,49 +79,12 @@ export class MongoAnalyticsStore implements AnalyticsStore {
 
     async record(event: AnalyticsEvent): Promise<void> {
         const observation = this.applyReferrerPolicy(event);
-        const ops: AnyBulkWriteOperation<RollupDoc>[] = eventToWrites(observation, this.policy).map((w) => {
-            const inc: Record<string, number> = { count: w.count };
-            if (w.msSum !== undefined) {
-                inc.msSum = w.msSum;
-            }
-            const update: Record<string, unknown> = {
-                $inc: inc,
-                $setOnInsert: {
-                    metric: w.metric,
-                    dim: w.dim,
-                    key: w.key,
-                    bucket: w.bucket,
-                    expiresAt: w.expiresAt,
-                    rollupVersion: w.rollupVersion,
-                },
-            };
-            if (w.msMax !== undefined) {
-                update.$max = { msMax: w.msMax };
-            }
-            return { updateOne: { filter: { _id: w.id }, update, upsert: true } } as AnyBulkWriteOperation<RollupDoc>;
-        });
-        if (ops.length > 0) {
-            await this.rollups.bulkWrite(ops, { ordered: true });
-        }
-        await Promise.all([
-            isCountedEvent(observation, this.policy) && this.policy.visitorEstimation && observation.visitorHash
-                ? updateHllSketch(
-                      this.sketches,
-                      observation.ts,
-                      observation.visitorHash,
-                      this.nextStripe++ % this.hllStripes,
-                  )
-                : Promise.resolve(),
-            isCountedEvent(observation, this.policy) && observation.entry && observation.referrerDomain
-                ? updateReferrerBucket(
-                      this.referrerBuckets,
-                      observation.ts,
-                      observation.referrerDomain,
-                      this.policy.referrerCapacity,
-                      this.policy.rollupRetentionDays,
-                  )
-                : Promise.resolve(),
-        ]);
+        await recordMongoAnalytics(
+            { rollups: this.rollups, sketches: this.sketches, referrers: this.referrerBuckets },
+            observation,
+            this.policy,
+            this.nextStripe++ % this.hllStripes,
+        );
     }
 
     async finalizeVisitors(before: Date): Promise<void> {
@@ -131,11 +105,15 @@ export class MongoAnalyticsStore implements AnalyticsStore {
     topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
         return readTop(this.rollups, "pv", "page", from, to, limit);
     }
-    breakdown(dim: "status" | "device" | "browser" | "exclusion", from: Date, to: Date): Promise<KeyCount[]> {
+    breakdown(
+        dim: "status" | "device" | "browser" | "exclusion" | "latency",
+        from: Date,
+        to: Date,
+    ): Promise<KeyCount[]> {
         if (dim === "exclusion") {
             return readTop(this.rollups, "excluded", "reason", from, to, 0);
         }
-        return readTop(this.rollups, dim === "status" ? "request" : "pv", dim, from, to, 0);
+        return readTop(this.rollups, dim === "status" || dim === "latency" ? "request" : "pv", dim, from, to, 0);
     }
     entries(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
         return readTop(this.rollups, "entry", "page", from, to, limit);
@@ -157,9 +135,39 @@ export class MongoAnalyticsStore implements AnalyticsStore {
         return readHealth(this.rollups, from, to);
     }
 
+    getSettings(): Promise<AnalyticsSettings> {
+        return Promise.resolve(this.governance.getSettings());
+    }
+
+    async updateSettings(settings: AnalyticsSettings): Promise<AnalyticsSettings> {
+        const previousRetention = this.policy.rollupRetentionDays;
+        const updated = await this.governance.updateSettings(settings);
+        if (updated.rollupRetentionDays < previousRetention) {
+            await shortenMongoAnalyticsRetention(this.rollups, this.referrerBuckets, updated.rollupRetentionDays);
+        }
+        return updated;
+    }
+
+    saveComplianceSnapshot(snapshot: AnalyticsComplianceSnapshot): Promise<void> {
+        return this.governance.saveSnapshot(snapshot);
+    }
+
+    latestPublishedComplianceSnapshot(): Promise<AnalyticsComplianceSnapshot | null> {
+        return this.governance.latestPublished();
+    }
+
     private applyReferrerPolicy(event: AnalyticsEvent): AnalyticsEvent {
         return event.referrerDomain && isIgnoredReferrer(event.referrerDomain, this.policy)
             ? { ...event, referrerDomain: undefined }
             : event;
     }
+}
+
+function settingsFromPolicy(policy: AnalyticsCollectionPolicy): AnalyticsSettings {
+    return {
+        enabled: policy.enabled,
+        visitorEstimation: policy.visitorEstimation,
+        rollupRetentionDays: policy.rollupRetentionDays,
+        privacyNoticeUrl: "",
+    };
 }

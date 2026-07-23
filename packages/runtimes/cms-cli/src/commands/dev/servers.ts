@@ -41,6 +41,15 @@ export async function startLocalServers(options: ServerOptions) {
         services.auth,
         {
             deliveryUrl: `http://${flags.publicHost}:${flags.deliveryPort}`,
+            analyticsCompliance: {
+                cmsVersion: "0.1.0-dev",
+                secretReady: true,
+                siteScope: `http://${flags.publicHost}:${flags.deliveryPort}`,
+                trustProxy: false,
+                trustedProxyVerified: false,
+                secureCookie: false,
+                optOutUrl: `http://${flags.publicHost}:${flags.deliveryPort}/.cms/privacy/analytics`,
+            },
             publicAuth: { ...services.publicAuth, allowSignup: false },
             integrationCatalog: services.integrationCatalog,
             integrationInstallations: services.integrationInstallations,
@@ -99,6 +108,7 @@ export async function startLocalServers(options: ServerOptions) {
         analytics,
         analyticsVisitorSecret,
         analyticsSiteScope: `http://${flags.publicHost}:${flags.deliveryPort}`,
+        analyticsCmsVersion: "0.1.0-dev",
         sourceResolveSecret: services.resolveSecret,
         roles: services.roles,
         auth: services.publicAuth,

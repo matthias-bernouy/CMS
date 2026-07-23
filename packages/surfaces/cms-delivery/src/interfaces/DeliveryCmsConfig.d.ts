@@ -47,6 +47,10 @@ export type DeliveryCmsConfig = {
     analyticsSiteScope?: string;
     /** Trust X-Forwarded-For only behind an overwriting proxy. Defaults to false. */
     analyticsTrustProxy?: boolean;
+    /** Whether an enabled proxy boundary has been operationally verified. */
+    analyticsTrustedProxyVerified?: boolean;
+    /** Runtime version included in compliance configuration fingerprints. */
+    analyticsCmsVersion?: string;
     /** Optional defence-in-depth support for the legacy DNT request header. */
     analyticsHonorDnt?: boolean;
     /** Public privacy-policy link shown next to the audience-measurement opt-out. */

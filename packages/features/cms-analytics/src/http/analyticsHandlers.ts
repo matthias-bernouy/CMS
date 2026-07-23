@@ -38,8 +38,14 @@ export async function analyticsEntriesHandler(reports: AnalyticsReports, req: Re
 export async function analyticsBreakdownHandler(reports: AnalyticsReports, req: Request): Promise<Response> {
     const params = new URL(req.url).searchParams;
     const dimension = params.get("dim");
-    if (dimension !== "status" && dimension !== "device" && dimension !== "browser" && dimension !== "exclusion") {
-        return new Response("dim must be status|device|browser|exclusion", { status: 400 });
+    if (
+        dimension !== "status" &&
+        dimension !== "device" &&
+        dimension !== "browser" &&
+        dimension !== "exclusion" &&
+        dimension !== "latency"
+    ) {
+        return new Response("dim must be status|device|browser|exclusion|latency", { status: 400 });
     }
     const window = parseWindow(params.get("range"));
     return window ? Response.json(await reports.breakdown(dimension, window)) : invalidWindow();

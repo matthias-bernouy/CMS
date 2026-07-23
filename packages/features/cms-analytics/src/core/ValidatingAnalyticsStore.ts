@@ -102,7 +102,7 @@ export class ValidatingAnalyticsStore implements AnalyticsStore {
     topPages(from: Date, to: Date, limit: number) {
         return this.inner.topPages(from, to, limit);
     }
-    breakdown(dim: "status" | "device" | "browser" | "exclusion", from: Date, to: Date) {
+    breakdown(dim: "status" | "device" | "browser" | "exclusion" | "latency", from: Date, to: Date) {
         return this.inner.breakdown(dim, from, to);
     }
     entries(from: Date, to: Date, limit: number) {
@@ -119,5 +119,17 @@ export class ValidatingAnalyticsStore implements AnalyticsStore {
     }
     health(from: Date, to: Date) {
         return this.inner.health(from, to);
+    }
+    getSettings() {
+        return this.inner.getSettings();
+    }
+    updateSettings(settings: Parameters<AnalyticsStore["updateSettings"]>[0]) {
+        return this.inner.updateSettings(settings);
+    }
+    saveComplianceSnapshot(snapshot: Parameters<AnalyticsStore["saveComplianceSnapshot"]>[0]) {
+        return this.inner.saveComplianceSnapshot(snapshot);
+    }
+    latestPublishedComplianceSnapshot() {
+        return this.inner.latestPublishedComplianceSnapshot();
     }
 }

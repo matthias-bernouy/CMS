@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryAnalyticsStore } from "cms-analytics/default-implementation/InMemoryAnalyticsStore";
-import { sha256HexAsync } from "cms-analytics/core/sha256Hex";
+import { sha256HexAsync } from "cms-analytics/core/identity/sha256Hex";
 import type { AnalyticsEvent } from "cms-analytics/interfaces/AnalyticsEvent";
 
 const FROM = new Date("2026-06-01T00:00:00.000Z");

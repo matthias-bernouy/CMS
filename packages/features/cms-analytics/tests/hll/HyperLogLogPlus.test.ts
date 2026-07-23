@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { HyperLogLogPlus } from "cms-analytics/core/hll/HyperLogLogPlus";
-import { sha256HexAsync } from "cms-analytics/core/sha256Hex";
+import { sha256HexAsync } from "cms-analytics/core/identity/sha256Hex";
 
 describe("HyperLogLogPlus", () => {
     test("deduplicates repeated inputs without retaining their hashes", async () => {

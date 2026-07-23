@@ -24,6 +24,8 @@ import { MemoryHllStore } from "./memory/MemoryHllStore";
 import { MemoryReferrerStore } from "./memory/MemoryReferrerStore";
 import { isIgnoredReferrer } from "../core/collection/analyticsPolicy";
 import { mergeKeyCounts } from "../core/referrers/FrequentItems";
+import type { AnalyticsComplianceSnapshot, AnalyticsSettings } from "../interfaces/AnalyticsGovernance";
+import { MemoryAnalyticsGovernance } from "./memory/MemoryAnalyticsGovernance";
 
 /**
  * In-memory AnalyticsStore — the dep-free reference implementation, for dev and tests.
@@ -31,12 +33,16 @@ import { mergeKeyCounts } from "../core/referrers/FrequentItems";
  */
 export class InMemoryAnalyticsStore implements AnalyticsStore {
     private _rollups = new Map<string, RollupUpsert>(); // keyed by rollup id
-    private readonly policy: AnalyticsCollectionPolicy;
+    private policy: AnalyticsCollectionPolicy;
     private readonly hll: MemoryHllStore;
     private readonly referrers: MemoryReferrerStore;
+    private readonly governance: MemoryAnalyticsGovernance;
 
     constructor(config: AnalyticsStoreConfig = {}) {
         this.policy = resolveAnalyticsPolicy(config.policy);
+        this.governance = new MemoryAnalyticsGovernance(settingsFromPolicy(this.policy), (settings) => {
+            this.policy = resolveAnalyticsPolicy({ ...this.policy, ...settings });
+        });
         this.hll = new MemoryHllStore(config.hllStripes ?? 4);
         this.referrers = new MemoryReferrerStore(this.policy.referrerCapacity);
     }
@@ -91,8 +97,12 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
     topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
         return Promise.resolve(readMemoryTop([...this._rollups.values()], "pv", "page", from, to, limit));
     }
-    breakdown(dim: "status" | "device" | "browser" | "exclusion", from: Date, to: Date): Promise<KeyCount[]> {
-        const metric = dim === "status" ? "request" : dim === "exclusion" ? "excluded" : "pv";
+    breakdown(
+        dim: "status" | "device" | "browser" | "exclusion" | "latency",
+        from: Date,
+        to: Date,
+    ): Promise<KeyCount[]> {
+        const metric = dim === "status" || dim === "latency" ? "request" : dim === "exclusion" ? "excluded" : "pv";
         if (dim === "exclusion") {
             return Promise.resolve(readMemoryTop([...this._rollups.values()], metric, "reason", from, to, 0));
         }
@@ -117,9 +127,34 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
         return readMemoryHealth([...this._rollups.values()], from, to);
     }
 
+    getSettings(): Promise<AnalyticsSettings> {
+        return Promise.resolve(this.governance.getSettings());
+    }
+
+    updateSettings(settings: AnalyticsSettings): Promise<AnalyticsSettings> {
+        return Promise.resolve(this.governance.updateSettings(settings));
+    }
+
+    async saveComplianceSnapshot(snapshot: AnalyticsComplianceSnapshot): Promise<void> {
+        this.governance.saveSnapshot(snapshot);
+    }
+
+    async latestPublishedComplianceSnapshot(): Promise<AnalyticsComplianceSnapshot | null> {
+        return this.governance.latestPublished();
+    }
+
     private applyReferrerPolicy(event: AnalyticsEvent): AnalyticsEvent {
         return event.referrerDomain && isIgnoredReferrer(event.referrerDomain, this.policy)
             ? { ...event, referrerDomain: undefined }
             : event;
     }
+}
+
+function settingsFromPolicy(policy: AnalyticsCollectionPolicy): AnalyticsSettings {
+    return {
+        enabled: policy.enabled,
+        visitorEstimation: policy.visitorEstimation,
+        rollupRetentionDays: policy.rollupRetentionDays,
+        privacyNoticeUrl: "",
+    };
 }

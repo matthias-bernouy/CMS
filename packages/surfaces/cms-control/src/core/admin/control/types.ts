@@ -8,7 +8,7 @@ import type {
     PublicAuthRoutesConfig,
     UsersRepository,
 } from "@bernouy/cms-auth";
-import type { AnalyticsStore } from "@bernouy/cms-analytics";
+import type { AnalyticsComplianceContext, AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { DashboardRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
@@ -30,6 +30,7 @@ import type { CMS_ROLES } from "types/roles";
 
 type Configuration = {
     deliveryUrl?: string;
+    analyticsCompliance?: AnalyticsComplianceContext;
     publicAuth?: PublicAuthRoutesConfig<CMS_ROLES>;
 };
 

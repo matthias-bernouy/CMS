@@ -28,20 +28,36 @@ describe("Control analytics routes", () => {
         );
         await cms.ready;
 
-        for (const path of ["summary", "timeseries", "top-pages", "breakdown", "referrers", "flows", "health"]) {
+        for (const path of [
+            "summary",
+            "timeseries",
+            "top-pages",
+            "entries",
+            "breakdown",
+            "referrers",
+            "flows",
+            "health",
+            "settings",
+            "compliance",
+        ]) {
             expect(runner.endpoints.get(`GET /api/analytics/${path}`)).toBe(1);
         }
+        expect(runner.endpoints.get("POST /api/analytics/settings")).toBe(1);
+        expect(runner.endpoints.get("POST /api/analytics/compliance/snapshots")).toBe(1);
 
         const health = runner.handlers.get("GET /api/analytics/health");
         const response = await health!(new Request("http://control/api/analytics/health?range=24h"));
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual({
-            requests: 0,
-            notFound: 0,
-            clientErrors: 0,
-            serverErrors: 0,
-            avgMs: 0,
-            maxMs: 0,
+        expect(await response.json()).toMatchObject({
+            data: {
+                requests: 0,
+                notFound: 0,
+                clientErrors: 0,
+                serverErrors: 0,
+                avgMs: null,
+                maxMs: null,
+            },
+            meta: { profile: "privacy-strict", threshold: 10 },
         });
     });
 });

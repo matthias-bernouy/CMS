@@ -31,13 +31,19 @@ export type AnalyticsReport<T> = {
     meta: AnalyticsReportMetadata;
 };
 
+export type AnalyticsReportSummary = AnalyticsSummary & {
+    /** HLL++ estimate for the last fully completed UTC calendar day. */
+    latestCompletedDayVisitors: number;
+    latestCompletedUtcDay: Date;
+};
+
 export interface AnalyticsReports {
-    summary(window: AnalyticsReportWindow, now?: Date): Promise<AnalyticsReport<AnalyticsSummary>>;
+    summary(window: AnalyticsReportWindow, now?: Date): Promise<AnalyticsReport<AnalyticsReportSummary>>;
     timeseries(window: AnalyticsReportWindow, now?: Date): Promise<AnalyticsReport<TimeBucket[]>>;
     topPages(window: AnalyticsReportWindow, limit: number, now?: Date): Promise<AnalyticsReport<KeyCount[]>>;
     entries(window: AnalyticsReportWindow, limit: number, now?: Date): Promise<AnalyticsReport<KeyCount[]>>;
     breakdown(
-        dimension: "status" | "device" | "browser" | "exclusion",
+        dimension: "status" | "device" | "browser" | "exclusion" | "latency",
         window: AnalyticsReportWindow,
         now?: Date,
     ): Promise<AnalyticsReport<KeyCount[]>>;

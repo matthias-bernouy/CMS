@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { deriveVisitorHash, truncateIpAddress } from "cms-analytics/core/visitor";
+import { deriveVisitorHash, truncateIpAddress } from "cms-analytics/core/identity/visitor";
 
 const input = {
     secret: "shared-secret",

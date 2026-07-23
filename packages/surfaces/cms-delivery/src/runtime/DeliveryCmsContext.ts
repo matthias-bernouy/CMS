@@ -98,6 +98,14 @@ export class DeliveryCmsContext {
         return this.config.analyticsTrustProxy ?? false;
     }
 
+    get analyticsTrustedProxyVerified(): boolean {
+        return this.config.analyticsTrustedProxyVerified ?? false;
+    }
+
+    get analyticsCmsVersion(): string {
+        return this.config.analyticsCmsVersion ?? "development";
+    }
+
     get analyticsHonorDnt(): boolean {
         return this.config.analyticsHonorDnt ?? true;
     }

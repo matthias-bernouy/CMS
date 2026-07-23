@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { evaluateAnalyticsCompliance, InMemoryAnalyticsStore } from "@bernouy/cms-analytics";
 import {
     analyticsPreferencePost,
     analyticsPrivacyPage,
@@ -11,7 +12,15 @@ import {
 } from "cms-delivery/core/analytics/privacyPreference";
 
 const delivery = {
-    analytics: {},
+    analytics: {
+        getSettings: async () => ({
+            enabled: true,
+            visitorEstimation: true,
+            rollupRetentionDays: 395,
+            privacyNoticeUrl: "",
+        }),
+        latestPublishedComplianceSnapshot: async () => null,
+    },
     analyticsVisitorSecret: "shared-secret",
     analyticsSiteScope: "https://example.test",
     analyticsTrustProxy: false,
@@ -63,7 +72,10 @@ describe("public analytics privacy endpoints", () => {
     });
 
     test("GET is non-mutating, no-store HTML with an accessible form", async () => {
-        const response = analyticsPrivacyPage(new Request("https://example.test/.cms/privacy/analytics"), delivery);
+        const response = await analyticsPrivacyPage(
+            new Request("https://example.test/.cms/privacy/analytics"),
+            delivery,
+        );
         expect(response.headers.get("cache-control")).toBe("private, no-store");
         expect(response.headers.get("vary")).toBe("Cookie");
         expect(response.headers.get("referrer-policy")).toBe("no-referrer");
@@ -94,19 +106,36 @@ describe("public analytics privacy endpoints", () => {
         expect(valid.headers.get("set-cookie")).toContain("Secure");
     });
 
-    test("publishes a non-secret technical self-assessment", async () => {
-        const response = analyticsSelfAssessment(
+    test("exposes only an explicitly published, sanitized self-assessment", async () => {
+        const analytics = new InMemoryAnalyticsStore();
+        const context = {
+            cmsVersion: "development",
+            secretReady: true,
+            siteScope: "https://example.test",
+            trustProxy: false,
+            trustedProxyVerified: false,
+            secureCookie: true,
+            optOutUrl: "/.cms/privacy/analytics",
+        };
+        const evaluatedAt = new Date("2026-07-23T12:00:00Z");
+        await analytics.saveComplianceSnapshot({
+            id: "published",
+            createdAt: evaluatedAt,
+            publishedAt: evaluatedAt,
+            evaluation: await evaluateAnalyticsCompliance(await analytics.getSettings(), context, {}, evaluatedAt),
+            manualAttestations: {},
+        });
+        const response = await analyticsSelfAssessment(
             new Request("https://example.test/.cms/privacy/analytics/self-assessment"),
-            delivery,
+            { ...delivery, analytics } as never,
         );
         const body = await response.json();
         expect(body).toMatchObject({
-            status: "configured",
-            profile: "privacy-strict",
-            collection: { rawEvents: false, campaigns: false },
-            publication: { threshold: 10, completedBucketsOnly: true },
-            readiness: { secretReady: true, secureCookie: true },
+            status: "incomplete",
+            checklistVersion: "cnil-audience-measurement-2026-01",
+            releaseReady: false,
         });
         expect(JSON.stringify(body)).not.toContain("shared-secret");
+        expect(JSON.stringify(body)).not.toContain("evidence");
     });
 });

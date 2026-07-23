@@ -21,7 +21,7 @@ function cachedHtml(): CacheEntry {
     return { raw: bytes, brotli: bytes, gzip: bytes, contentType: "text/html", hash: "hash" };
 }
 
-function mount(pages: TPage[]) {
+function mount(pages: TPage[], settings = { enabled: true, visitorEstimation: true }) {
     const runner = new CaptureRunner();
     const cache = new TtlCache();
     for (const item of pages) {
@@ -38,6 +38,11 @@ function mount(pages: TPage[]) {
             getSystem: async () => ({ site: { notFound: null } }),
         } as never,
         analytics: {
+            getSettings: async () => ({
+                ...settings,
+                rollupRetentionDays: 395,
+                privacyNoticeUrl: "",
+            }),
             record: async (event: AnalyticsEvent) => {
                 events.push(event);
                 resolveRecorded?.();
@@ -113,5 +118,25 @@ describe("Delivery strict analytics collection", () => {
             }),
         );
         expect(mounted.events).toEqual([]);
+    });
+
+    test("runtime settings can disable all collection or only visitor estimation", async () => {
+        const disabled = mount([page("home", "/")], { enabled: false, visitorEstimation: true });
+        await disabled.handler(
+            new Request("https://example.test/", {
+                headers: { host: "example.test", "user-agent": "Mozilla/5.0 Chrome/120 Safari/537.36" },
+            }),
+        );
+        expect(disabled.events).toEqual([]);
+
+        const countersOnly = mount([page("home", "/")], { enabled: true, visitorEstimation: false });
+        const done = countersOnly.recorded();
+        await countersOnly.handler(
+            new Request("https://example.test/", {
+                headers: { host: "example.test", "user-agent": "Mozilla/5.0 Chrome/120 Safari/537.36" },
+            }),
+        );
+        await done;
+        expect(countersOnly.events[0]).not.toHaveProperty("visitorHash");
     });
 });
