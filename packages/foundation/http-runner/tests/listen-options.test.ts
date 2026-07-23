@@ -92,6 +92,20 @@ describe("BunRunner listen options", () => {
         expect(calls).toEqual([false, true]);
     });
 
+    test("force-closes before reporting a graceful stop failure", async () => {
+        const calls: Array<boolean | undefined> = [];
+        const failure = new Error("graceful close failed");
+        const stopping = stopServerGracefully({
+            stop(closeActiveConnections) {
+                calls.push(closeActiveConnections);
+                return closeActiveConnections ? Promise.resolve() : Promise.reject(failure);
+            },
+        });
+
+        await expect(stopping).rejects.toBe(failure);
+        expect(calls).toEqual([false, true]);
+    });
+
     test.failing("forwards port and hostname options to Bun.serve", () => {
         const listen = { port: 4123, hostname: "127.0.0.1" };
         const options = captureServeOptions((runner) => {

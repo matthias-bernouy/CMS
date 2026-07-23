@@ -16,13 +16,28 @@ export async function stopServerGracefully(
         timer = setTimeout(() => resolve("timeout"), validTimeout(timeoutMs));
         timer.unref?.();
     });
+    let gracefulFailed = false;
+    let gracefulError: unknown;
     try {
-        const outcome = await Promise.race([
-            Promise.resolve(server.stop(false)).then(() => "stopped" as const),
-            timeout,
-        ]);
-        if (outcome === "timeout") {
-            await server.stop(true);
+        let outcome: "stopped" | "timeout" | undefined;
+        try {
+            outcome = await Promise.race([Promise.resolve(server.stop(false)).then(() => "stopped" as const), timeout]);
+        } catch (error) {
+            gracefulFailed = true;
+            gracefulError = error;
+        }
+        if (outcome === "timeout" || gracefulFailed) {
+            try {
+                await server.stop(true);
+            } catch (forceError) {
+                if (gracefulFailed) {
+                    throw new AggregateError([gracefulError, forceError], "Graceful and forced server stop failed");
+                }
+                throw forceError;
+            }
+        }
+        if (gracefulFailed) {
+            throw gracefulError;
         }
     } finally {
         clearTimeout(timer);
