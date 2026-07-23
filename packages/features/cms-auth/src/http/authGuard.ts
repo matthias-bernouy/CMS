@@ -1,4 +1,5 @@
 import type { Authentication } from "cms-auth/interfaces/Authentication";
+import { resolveRequestSubject } from "cms-auth/http/requestSubject";
 import type { Middleware } from "@bernouy/http-runner";
 
 /**
@@ -52,7 +53,7 @@ export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>
         // mistaken for an expired session. Swallowing it would 302 the caller
         // to the login page, which for a `fetch()` surfaces as an opaque
         // CSP/redirect error and hides the real cause.
-        const subject = await ctx.auth.getSubject(req).catch((error) => {
+        const subject = await resolveRequestSubject(ctx.auth, req).catch((error) => {
             console.debug(error);
             return null;
         });

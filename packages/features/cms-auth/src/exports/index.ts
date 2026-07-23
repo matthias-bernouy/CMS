@@ -25,6 +25,7 @@ export {
     type OidcAuthConfig,
 } from "cms-auth/default-implementation/authentication/OidcAuthentication";
 export { SubjectResolver } from "cms-auth/core/SubjectResolver";
+export { resolveRequestSubject } from "cms-auth/http/requestSubject";
 export {
     validateProviderKind,
     validatePatName,

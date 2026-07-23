@@ -8,6 +8,7 @@ import {
 } from "cms-auth/core/public-auth/flows";
 import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
+import { resolveRequestSubject } from "cms-auth/http/requestSubject";
 
 type SystemSourceEndpoint = {
     urn: string;
@@ -22,7 +23,7 @@ export async function executeAuthSystemSourceEndpoint<Role extends string>(
     const target = parseSystemAuthTarget(endpoint);
     switch (target) {
         case "/me":
-            return privateAuthJsonResponse({ subject: await cfg.local.getSubject(req) });
+            return privateAuthJsonResponse({ subject: await resolveRequestSubject(cfg.local, req) });
         case "/login":
             return cfg.local.loginJson(req);
         case "/logout":

@@ -10,6 +10,7 @@ import {
 } from "cms-auth/core/public-auth/flows";
 import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse } from "cms-auth/http/authResponse";
+import { resolveRequestSubject } from "cms-auth/http/requestSubject";
 
 export const PUBLIC_AUTH_ROUTES = {
     base: "/.cms/auth",
@@ -43,7 +44,7 @@ export function registerPublicAuthRoutes<Role extends string>(runner: Runner, cf
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.login, (req) => cfg.local.loginJson(req));
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.logout, () => cfg.local.logoutJson());
     runner.addEndpoint("GET", PUBLIC_AUTH_ROUTES.me, async (req) =>
-        privateAuthJsonResponse({ subject: await cfg.local.getSubject(req) }),
+        privateAuthJsonResponse({ subject: await resolveRequestSubject(cfg.local, req) }),
     );
 
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.requestEmailVerification, async (req) => {
