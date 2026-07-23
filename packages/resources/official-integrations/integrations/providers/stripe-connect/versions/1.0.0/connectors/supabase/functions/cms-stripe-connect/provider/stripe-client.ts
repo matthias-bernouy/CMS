@@ -5,7 +5,7 @@ import {
     stripeV2ApiBase,
     stripeV2ApiVersion,
 } from "../shared/runtime.ts";
-import { HttpError } from "../http/errors.ts";
+import { ProviderHttpError } from "../http/errors.ts";
 import { isRecord } from "../shared/data.ts";
 import type { JsonRecord } from "../shared/types.ts";
 
@@ -51,8 +51,8 @@ export async function stripeV2<T extends JsonRecord>(
     throw stripeError(response.status, data);
 }
 
-function stripeError(status: number, data: unknown): HttpError {
+function stripeError(status: number, data: unknown): ProviderHttpError {
     const error = isRecord(data) && isRecord(data.error) ? data.error : null;
     const message = error && typeof error.message === "string" ? error.message : `Stripe request failed (${status})`;
-    return new HttpError(status >= 400 && status < 500 ? status : 502, message);
+    return new ProviderHttpError(status, message);
 }

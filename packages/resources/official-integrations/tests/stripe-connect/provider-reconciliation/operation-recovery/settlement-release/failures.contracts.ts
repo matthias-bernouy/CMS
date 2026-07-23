@@ -18,8 +18,8 @@ export function registerSettlementReleaseFailureContracts(createHarness: CreateS
 
             const response = await fixture.release();
 
-            expect(response.status).toBe(402);
-            expect(await responseJson(response)).toEqual({ error: "simulated Stripe Transfer creation failure" });
+            expect(response.status).toBe(502);
+            expect(await responseJson(response)).toEqual({ error: "provider request failed" });
             expect(fixture.rest.stripeRequests.map(({ method, pathname }) => [method, pathname])).toEqual([
                 ...providerReconciliationRequests,
                 ["POST", "/v1/transfers"],

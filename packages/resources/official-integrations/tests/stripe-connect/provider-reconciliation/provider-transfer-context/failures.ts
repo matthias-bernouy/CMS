@@ -14,7 +14,7 @@ export function registerProviderTransferContextFailureContracts(
             });
 
             expect(failed.status).toBe(502);
-            expect(await failed.json()).toEqual({ error: "simulated Stripe Transfer list outage" });
+            expect(await failed.json()).toEqual({ error: "provider request failed" });
             expect(fixture.rest.postgrestRequests.map((request) => request.table)).toEqual([
                 "payments",
                 "rpc/apply_payment_provider_projection",

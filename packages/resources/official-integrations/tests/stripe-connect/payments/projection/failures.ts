@@ -13,7 +13,7 @@ export function registerPaymentProjectionFailureContracts(createHarness: CreateP
             const failed = await fixture.read();
 
             expect(failed.status).toBe(502);
-            expect(await failed.json()).toEqual({ error: "simulated Stripe provider outage" });
+            expect(await failed.json()).toEqual({ error: "provider request failed" });
             expect(fixture.rest.rows("payments")).toEqual(paymentBefore);
             expect(fixture.rest.rows("commerce_projection_outbox")).toEqual(projectionsBefore);
             expect(fixture.rest.postgrestRequests.map((request) => [request.method, request.table])).toEqual([

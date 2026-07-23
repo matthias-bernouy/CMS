@@ -43,6 +43,7 @@ import { moveOperationToManualReview } from "./workflows/operations/manual-revie
 const createProtectedPaymentForBuyer = createProtectedPaymentWorkflow({ syncAccountForIdentity });
 const {
     checkSellerHeldPaymentEligibility,
+    listSellerHeldPaymentCapabilities,
     createProtectedPayment,
     getProtectedPayment,
     getProtectedPaymentByReference,
@@ -144,6 +145,7 @@ serveStripeConnect({
     ...stripeWebhookIngress,
     ...directStripeConnectHandlers,
     checkSellerHeldPaymentEligibility,
+    listSellerHeldPaymentCapabilities,
     createProtectedPayment,
     getProtectedPayment,
     getProtectedPaymentByReference,

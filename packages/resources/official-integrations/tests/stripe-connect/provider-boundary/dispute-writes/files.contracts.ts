@@ -104,7 +104,7 @@ export function registerDisputeFileProviderBoundaryContracts(createHarness: Crea
             const response = await harness.submit("admin-1", "admin", "uploadStripeDisputeFile", validBody);
 
             expect(response.status).toBe(502);
-            expect(await responseBody(response)).toEqual({ error: "simulated Stripe dispute file upload failure" });
+            expect(await responseBody(response)).toEqual({ error: "provider request failed" });
             expectExactProviderUpload(harness);
             expect(postgrestBudget(harness)).toEqual([{ method: "GET", table: "stripe_disputes" }]);
             expect(harness.rest.rows("payment_events")).toEqual([]);

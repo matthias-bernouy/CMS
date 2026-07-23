@@ -6,3 +6,12 @@ export class HttpError extends Error {
         super(message);
     }
 }
+
+export class ProviderHttpError extends HttpError {
+    constructor(
+        readonly providerStatus: number,
+        message: string,
+    ) {
+        super(502, message);
+    }
+}

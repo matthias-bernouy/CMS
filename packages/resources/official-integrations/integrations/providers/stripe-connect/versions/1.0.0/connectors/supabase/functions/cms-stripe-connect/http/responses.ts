@@ -1,4 +1,4 @@
-import { HttpError } from "./errors.ts";
+import { HttpError, ProviderHttpError } from "./errors.ts";
 
 const corsHeaders = {
     "access-control-allow-origin": "*",
@@ -39,6 +39,9 @@ export function json(data: unknown, status = 200): Response {
 }
 
 export function handleError(error: unknown): Response {
+    if (error instanceof ProviderHttpError) {
+        return json({ error: "provider request failed" }, 502);
+    }
     if (error instanceof HttpError) {
         return json({ error: error.message }, error.status);
     }

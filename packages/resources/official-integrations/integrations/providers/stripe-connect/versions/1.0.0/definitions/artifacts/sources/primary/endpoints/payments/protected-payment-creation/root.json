@@ -68,5 +68,68 @@
     },
     {
         "$include": "create-protected-payment/root.json"
+    },
+    {
+        "endpointId": "listSellerHeldPaymentCapabilities",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/payments/seller-capabilities",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "marketplaceTermsVersion": {
+                    "type": "string"
+                },
+                "marketplaceTermsHash": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "marketplaceTermsVersion",
+                "marketplaceTermsHash"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "readySellerCmsUserIds": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "semantic": {
+                                    "kind": "user-id",
+                                    "authority": "cms"
+                                }
+                            }
+                        },
+                        "snapshot": {
+                            "type": "string"
+                        },
+                        "snapshotAt": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "readySellerCmsUserIds",
+                        "snapshot",
+                        "snapshotAt"
+                    ]
+                }
+            }
+        ]
     }
 ]

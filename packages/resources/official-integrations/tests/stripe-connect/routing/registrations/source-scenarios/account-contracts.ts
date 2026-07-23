@@ -21,6 +21,7 @@ export function registerAccountContractSourceScenarios(createHarness: CreateHarn
             source?.endpoints.find((candidate) => candidate.urn === `urn:stripe-connect:${id}`);
         const protectedPayment = endpoint("createProtectedPayment");
         const heldPaymentEligibility = endpoint("checkSellerHeldPaymentEligibility");
+        const heldPaymentCapabilities = endpoint("listSellerHeldPaymentCapabilities");
         const sellerRisk = endpoint("getSellerProviderRisk");
         const sellerPayout = endpoint("configureSellerPayoutSchedule");
         const reconciliationPaymentOutput =
@@ -84,6 +85,15 @@ export function registerAccountContractSourceScenarios(createHarness: CreateHarn
             properties: { eligible: { type: "boolean" }, reasonCode: { type: "string" } },
             required: ["eligible", "reasonCode"],
         });
+        expect(heldPaymentCapabilities?.access).toEqual({ mode: "system" });
+        expect(heldPaymentCapabilities?.output?.[0]?.body).toMatchObject({
+            properties: {
+                readySellerCmsUserIds: { type: "array" },
+                snapshotAt: { type: "string" },
+            },
+            required: ["readySellerCmsUserIds", "snapshot", "snapshotAt"],
+        });
+        expect(sellerRisk?.output?.map((candidate) => candidate.status)).toEqual(["200", "403", "404", "502"]);
 
         const anonymousSourceLookup = await sourceRequestWithRole(harness, "", undefined, "getConnectAccount", {
             userId: "seller-1",
@@ -104,6 +114,94 @@ export function registerAccountContractSourceScenarios(createHarness: CreateHarn
         expect(anonymousSourceLookup.status).toBe(404);
         expect(anonymousEdgeLookup.status).toBe(404);
         expect(supportEdgeLookup.status).toBe(404);
+    });
+
+    test("masks Stripe provider failures without changing CMS authorization failures", async () => {
+        const harness = await createHarness();
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                    country: "FR",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const riskUrl = `${functionsBaseUrl}/cms-stripe-connect/admin/accounts/account/risk?userId=seller-1`;
+        const cmsHeaders = {
+            authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
+            "x-cms-user-id": "admin-1",
+        };
+        const providerRequestsBeforeAuthorization = harness.rest.stripeRequests.length;
+        const forbidden = await harness.edgeRequest(
+            new Request(riskUrl, {
+                headers: {
+                    ...cmsHeaders,
+                    "x-cms-user-role": "member",
+                },
+            }),
+        );
+
+        expect(forbidden.status).toBe(403);
+        expect(await forbidden.json()).toEqual({ error: "the CMS admin role is required" });
+        expect(harness.rest.stripeRequests).toHaveLength(providerRequestsBeforeAuthorization);
+
+        harness.rest.failNextAccountRead(403);
+        const edgeFailure = await harness.edgeRequest(
+            new Request(riskUrl, {
+                headers: {
+                    ...cmsHeaders,
+                    "x-cms-user-role": "admin",
+                },
+            }),
+        );
+        const edgeBody = await edgeFailure.json();
+
+        expect(edgeFailure.status).toBe(502);
+        expect(edgeBody).toEqual({ error: "provider request failed" });
+        expect(JSON.stringify(edgeBody)).not.toContain("sk_test_should_not_leak");
+        expect(JSON.stringify(edgeBody)).not.toContain("provider authorization detail");
+
+        harness.rest.failNextAccountRead(403);
+        const sourceFailure = await sourceRequestWithUser(harness, "admin-1", "getSellerProviderRisk", {
+            userId: "seller-1",
+        });
+        const sourceBody = await sourceFailure.json();
+
+        expect(sourceFailure.status).toBe(502);
+        expect(sourceBody).toEqual({ error: "provider request failed" });
+        expect(JSON.stringify(sourceBody)).not.toContain("sk_test_should_not_leak");
+        expect(JSON.stringify(sourceBody)).not.toContain("provider authorization detail");
+    });
+
+    test("timestamps the seller capability snapshot before provider reconciliation", async () => {
+        const harness = await createHarness();
+        const response = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/payments/seller-capabilities`, {
+                method: "POST",
+                headers: {
+                    authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    marketplaceTermsVersion: "terms-v1",
+                    marketplaceTermsHash: "a".repeat(64),
+                }),
+            }),
+        );
+
+        expect(response.status).toBe(200);
+        const body = (await response.json()) as Record<string, unknown>;
+        expect(body.snapshotAt).toMatch(
+            /^\d{4}-(0[1-9]|1[0-2])-([012]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\d\.\d{3}Z$/,
+        );
+        expect(body).toMatchObject({
+            readySellerCmsUserIds: expect.any(Array),
+            snapshot: "persisted_provider_projection",
+            snapshotAt: expect.any(String),
+        });
     });
 
     test("projects nullable status fields for an existing seller account", async () => {

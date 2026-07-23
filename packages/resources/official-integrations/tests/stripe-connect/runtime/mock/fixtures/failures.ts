@@ -66,6 +66,10 @@ export class FailureControls extends PayoutFixtures {
         this.failPaymentIntentRetrieve = true;
     }
 
+    failNextAccountRead(status: 403 | 503): void {
+        this.nextAccountReadFailureStatus = status;
+    }
+
     failProviderTransferContextReadAfter(successfulReads: number): void {
         this.providerTransferContextReadsBeforeFailure = successfulReads;
     }

@@ -96,6 +96,7 @@ export class StripeMockState {
     failPaymentReconciliationLedgerRead = false;
     failPaymentReconciliationLocalContextRead = false;
     failAccountReloadAfterTermsAcceptance = false;
+    nextAccountReadFailureStatus: 403 | 503 | null = null;
     omitNextAccountRead = false;
     omitNextPaymentReadResult = false;
     providerTransferContextReadsBeforeFailure: number | null = null;

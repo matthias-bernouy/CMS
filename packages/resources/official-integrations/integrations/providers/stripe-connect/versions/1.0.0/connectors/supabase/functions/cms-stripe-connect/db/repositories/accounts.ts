@@ -28,6 +28,31 @@ export async function getAccountRow(userId: string): Promise<ConnectAccountRow |
     return rows[0] ?? null;
 }
 
+export async function listAccountRows(): Promise<ConnectAccountRow[]> {
+    const rows: ConnectAccountRow[] = [];
+    const pageSize = 1000;
+    for (let offset = 0; ; offset += pageSize) {
+        const query = new URLSearchParams({
+            select: accountSelect,
+            order: "cms_user_id.asc",
+            limit: String(pageSize),
+            offset: String(offset),
+        });
+        const response = await rest(`accounts?${query.toString()}`, { method: "GET" });
+        if (!response.ok) {
+            throw await restError(response);
+        }
+        const page = (await response.json()) as ConnectAccountRow[];
+        rows.push(...page);
+        if (page.length < pageSize) {
+            return rows;
+        }
+        if (rows.length >= 10000) {
+            throw new HttpError(409, "seller capability reconciliation exceeds 10000 accounts");
+        }
+    }
+}
+
 export async function getMarketplaceTermsAcceptance(
     userId: string,
     version: string,

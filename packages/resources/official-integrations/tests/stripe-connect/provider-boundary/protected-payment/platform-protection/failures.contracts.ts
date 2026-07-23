@@ -17,7 +17,7 @@ export function registerPlatformPayoutProtectionFailureContracts(createHarness: 
 
             expect(response.status).toBe(502);
             expect(await responseBody(response)).toEqual({
-                error: "connection closed after Stripe committed the update",
+                error: "provider request failed",
             });
             expect(harness.rest.externalRequestOrder).toEqual([
                 "postgrest:POST:rpc/claim_platform_payout_protection",

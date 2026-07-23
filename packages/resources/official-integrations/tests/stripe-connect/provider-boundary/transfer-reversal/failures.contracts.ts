@@ -69,8 +69,8 @@ export function registerTransferReversalFailureContracts(createHarness: CreatePr
             const idempotencyKey = await reversalIdempotencyKey(String(operation.business_key));
             const error = "connected account balance is unavailable";
 
-            expect(response.status).toBe(402);
-            expect(await responseBody(response)).toEqual({ error });
+            expect(response.status).toBe(502);
+            expect(await responseBody(response)).toEqual({ error: "provider request failed" });
             expect(postgrestBudget(fixture.harness)).toEqual([
                 ...initialReversalBudget,
                 { method: "PATCH", table: "financial_operations" },

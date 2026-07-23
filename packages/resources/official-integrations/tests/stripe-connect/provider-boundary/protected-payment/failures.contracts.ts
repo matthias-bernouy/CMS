@@ -32,12 +32,14 @@ export function registerProtectedPaymentFailureContracts(createHarness: CreatePr
                 {
                     arrange: (harness: ProviderBoundaryHarness) => harness.rest.failNextPaymentIntentCreationOnce(),
                     error: "simulated Stripe PaymentIntent creation failure",
+                    responseError: "provider request failed",
                     projectionBudget: [] as Array<{ method: string; table: string }>,
                     createCount: 0,
                 },
                 {
                     arrange: (harness: ProviderBoundaryHarness) => harness.rest.failNextPaymentProjectionEnqueue(),
                     error: "simulated payment projection enqueue failure",
+                    responseError: "simulated payment projection enqueue failure",
                     projectionBudget: [{ method: "POST", table: "rpc/apply_payment_provider_projection" }],
                     createCount: 1,
                 },
@@ -50,7 +52,7 @@ export function registerProtectedPaymentFailureContracts(createHarness: CreatePr
                 const response = await createPayment(harness);
 
                 expect(response.status).toBe(502);
-                expect(await responseBody(response)).toEqual({ error: item.error });
+                expect(await responseBody(response)).toEqual({ error: item.responseError });
                 expect(postgrestBudget(harness)).toEqual([
                     ...processingBudget,
                     ...item.projectionBudget,
@@ -93,7 +95,7 @@ export function registerProtectedPaymentFailureContracts(createHarness: CreatePr
             const response = await createPayment(harness);
 
             expect(response.status).toBe(502);
-            expect(await responseBody(response)).toEqual({ error: "simulated Stripe PaymentIntent creation failure" });
+            expect(await responseBody(response)).toEqual({ error: "provider request failed" });
             expect(postgrestBudget(harness)).toEqual([
                 ...processingBudget,
                 { method: "PATCH", table: "financial_operations" },

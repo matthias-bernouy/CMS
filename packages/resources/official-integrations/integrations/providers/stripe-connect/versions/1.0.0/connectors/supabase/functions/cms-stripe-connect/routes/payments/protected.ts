@@ -1,4 +1,4 @@
-import { getMarketplaceTermsAcceptance } from "../../db/repositories/accounts.ts";
+import { getMarketplaceTermsAcceptance, listAccountRows } from "../../db/repositories/accounts.ts";
 import { getPaymentByClientReference, getPaymentRow } from "../../db/repositories/payments.ts";
 import type { ConnectAccountRow } from "../../db/records/accounts.ts";
 import { sellerCanAcceptHeldPayments } from "../../domain/accounts/eligibility.ts";
@@ -57,6 +57,29 @@ export function createProtectedPaymentRoutes({
                 return json({ eligible: false, reasonCode: "seller_account_not_ready" });
             }
             return json({ eligible: true, reasonCode: "eligible" });
+        },
+        listSellerHeldPaymentCapabilities: async (request: Request): Promise<Response> => {
+            requireCmsRequest(request, { requireUser: false });
+            const body = await readJsonObject(request);
+            assertAllowedKeys(body, ["marketplaceTermsVersion", "marketplaceTermsHash"]);
+            const expectedTerms = marketplaceTermsExpectationFromBody(body);
+            if (!expectedTerms) {
+                throw new HttpError(400, "marketplaceTermsVersion and marketplaceTermsHash are required");
+            }
+            const snapshotAt = new Date().toISOString();
+            const accounts = await listAccountRows();
+            return json({
+                readySellerCmsUserIds: accounts
+                    .filter(
+                        (account) =>
+                            account.marketplace_terms_version === expectedTerms.version &&
+                            account.marketplace_terms_hash === expectedTerms.hash &&
+                            sellerCanAcceptHeldPayments(account),
+                    )
+                    .map((account) => account.cms_user_id),
+                snapshot: "persisted_provider_projection",
+                snapshotAt,
+            });
         },
         getProtectedPayment: async (request: Request): Promise<Response> => {
             const { userId } = requireCmsRequest(request);

@@ -16,6 +16,7 @@ export type StripeConnectRouteHandlers = {
     connectOnboarding: RouteHandler;
     connectOnboardingSession: RouteHandler;
     checkSellerHeldPaymentEligibility: RouteHandler;
+    listSellerHeldPaymentCapabilities: RouteHandler;
     createProtectedPayment: RouteHandler;
     getProtectedPayment: RouteHandler;
     getProtectedPaymentByReference: RouteHandler;
@@ -66,6 +67,7 @@ const routes: Readonly<Record<string, RouteDefinition>> = {
     "/connect/onboarding": ["POST", "connectOnboarding"],
     "/connect/onboarding/session": ["POST", "connectOnboardingSession"],
     "/payments/seller-eligibility": ["POST", "checkSellerHeldPaymentEligibility"],
+    "/payments/seller-capabilities": ["POST", "listSellerHeldPaymentCapabilities"],
     "/payments/protected": ["POST", "createProtectedPayment"],
     "/payments/payment": ["GET", "getProtectedPayment"],
     "/payments/reference": ["GET", "getProtectedPaymentByReference"],

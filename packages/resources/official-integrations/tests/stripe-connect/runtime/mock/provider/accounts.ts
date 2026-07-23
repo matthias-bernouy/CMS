@@ -104,6 +104,18 @@ export async function handleStripeAccountRoutes(
         return jsonResponse(stripeAccountV2(accountId, "seller@example.com", true));
     }
     if (url.pathname.startsWith("/v2/core/accounts/") && method === "GET") {
+        if (mock.nextAccountReadFailureStatus !== null) {
+            const status = mock.nextAccountReadFailureStatus;
+            mock.nextAccountReadFailureStatus = null;
+            return jsonResponse(
+                {
+                    error: {
+                        message: "provider authorization detail with sk_test_should_not_leak",
+                    },
+                },
+                status,
+            );
+        }
         expect(url.searchParams.has("include[]")).toBe(false);
         expect(Array.from(url.searchParams.entries())).toEqual([
             ["include[0]", "configuration.recipient"],

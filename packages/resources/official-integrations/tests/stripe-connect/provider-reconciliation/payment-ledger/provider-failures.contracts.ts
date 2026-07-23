@@ -20,7 +20,7 @@ export function registerPaymentReconciliationProviderFailureContracts(
                 error: "simulated Stripe refund list outage",
                 stripePaths: ["/v1/payment_intents/", "/v1/disputes", "/v1/refunds"],
             },
-        ])("stops at the $name provider pass", async ({ name, fail, error, stripePaths }) => {
+        ])("stops at the $name provider pass", async ({ name, fail, stripePaths }) => {
             const fixture = await createPaymentLedgerFixture(
                 createHarness,
                 `payment-reconciliation-${name}-list-failure`,
@@ -32,7 +32,7 @@ export function registerPaymentReconciliationProviderFailureContracts(
             });
 
             expect(failed.status).toBe(502);
-            expect(await failed.json()).toEqual({ error });
+            expect(await failed.json()).toEqual({ error: "provider request failed" });
             expect(
                 fixture.rest.stripeRequests.map(({ pathname }) =>
                     pathname.startsWith("/v1/payment_intents/") ? "/v1/payment_intents/" : pathname,

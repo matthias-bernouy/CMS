@@ -81,7 +81,7 @@ export function registerPaymentReconciliationLedgerContracts(createHarness: Crea
             });
 
             expect(failed.status).toBe(502);
-            expect(await failed.json()).toEqual({ error: "simulated Stripe provider outage" });
+            expect(await failed.json()).toEqual({ error: "provider request failed" });
             expect(fixture.rest.postgrestRequests.map((request) => request.table)).toEqual(["payments"]);
         });
 

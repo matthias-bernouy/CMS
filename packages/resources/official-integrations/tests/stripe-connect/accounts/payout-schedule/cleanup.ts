@@ -21,7 +21,7 @@ export function registerPayoutScheduleCleanupContracts(createHarness: CreateAcco
 
             expect(failed.status).toBe(502);
             expect(await responseBody(failed)).toEqual({
-                error: "connection closed after Stripe committed the update",
+                error: "provider request failed",
             });
             expect(harness.rest.externalRequestOrder).toEqual(ambiguousOrder());
             expect(harness.rest.postgrestRequests.map(({ method, table }) => ({ method, table }))).toEqual(
