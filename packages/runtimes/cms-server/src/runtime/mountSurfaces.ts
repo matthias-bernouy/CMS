@@ -4,7 +4,8 @@ import { startAnalyticsFinalizer } from "@bernouy/cms-analytics";
 import { RepositoryCms } from "@bernouy/cms-repository";
 import { BunRunner } from "@bernouy/http-runner";
 import type { RuntimeEnv } from "../runtimeEnv";
-import { startProductionSystemFunctionWorkers } from "../systemFunctionWorkers";
+import { startProductionScheduledTriggers } from "../scheduledTriggers";
+import type { ScheduledTriggerRunner } from "@bernouy/cms-triggers";
 import type { ProductionAuthentication } from "./auth";
 import type { ProductionIntegrationServices } from "./integrations";
 import type { CoreStores } from "./stores/core";
@@ -24,7 +25,7 @@ export type ProductionSurfaceRuntime = {
     Control: typeof ControlCms;
     Delivery: typeof DeliveryCms;
     Repository: typeof RepositoryCms;
-    startWorkers: typeof startProductionSystemFunctionWorkers;
+    startWorkers: typeof startProductionScheduledTriggers;
     startAnalyticsFinalizer: typeof startAnalyticsFinalizer;
     log: (message: string) => void;
 };
@@ -34,7 +35,7 @@ const PRODUCTION_SURFACE_RUNTIME: ProductionSurfaceRuntime = {
     Control: ControlCms,
     Delivery: DeliveryCms,
     Repository: RepositoryCms,
-    startWorkers: startProductionSystemFunctionWorkers,
+    startWorkers: startProductionScheduledTriggers,
     startAnalyticsFinalizer,
     log: console.log,
 };
@@ -42,8 +43,17 @@ const PRODUCTION_SURFACE_RUNTIME: ProductionSurfaceRuntime = {
 export async function mountProductionSurfaces(
     options: MountOptions,
     runtime: ProductionSurfaceRuntime = PRODUCTION_SURFACE_RUNTIME,
-): Promise<void> {
+): Promise<ScheduledTriggerRunner> {
     const { env, core, features, integrations, authentication } = options;
+    const scheduledTriggers = runtime.startWorkers({
+        functions: features.functions,
+        sources: features.deliverySources,
+        deps: { resolveSecret: features.resolveSecret, identities: features.identities },
+        users: core.users,
+        installations: features.integrationInstallations,
+        triggers: features.triggers,
+    });
+    await scheduledTriggers.ready;
     const controlRunner = new runtime.Runner();
     controlRunner.group("/.cms/repository", (repositoryRunner) => {
         new runtime.Repository({
@@ -70,10 +80,12 @@ export async function mountProductionSurfaces(
             integrationInstallations: features.integrationInstallations,
             integrationConnectorProviders: features.integrationConnectorProviders,
             integrationConnectorDeployers: integrations.integrationConnectorDeployers,
+            integrationProvisioners: integrations.integrationProvisioners,
             dashboards: features.dashboards,
             relations: features.relations,
             functions: features.functions,
             triggers: features.triggers,
+            scheduledTriggers: { enabled: true, runNow: scheduledTriggers.runNow },
             identities: features.identities,
             sourceOverlays: features.sourceOverlays,
             publicAuth: {
@@ -126,11 +138,6 @@ export async function mountProductionSurfaces(
         },
     });
 
-    runtime.startWorkers({
-        functions: features.functions,
-        sources: features.deliverySources,
-        deps: { resolveSecret: features.resolveSecret, identities: features.identities },
-    });
     runtime.startAnalyticsFinalizer(features.analytics, {
         onError: (error) => console.error("Analytics visitor finalization failed:", error),
     });
@@ -142,4 +149,5 @@ export async function mountProductionSurfaces(
     runtime.log(`   sign in:      ${env.CONTROL_PUBLIC_URL}/login`);
     runtime.log(`   public site:  ${env.DELIVERY_PUBLIC_URL}/`);
     runtime.log(`   storage:      mongo=${core.db.databaseName}, files=${env.CMS_FILES_DIR}`);
+    return scheduledTriggers;
 }

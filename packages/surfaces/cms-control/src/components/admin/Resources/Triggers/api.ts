@@ -1,7 +1,10 @@
-import type { TriggerRecord } from "@bernouy/cms-triggers";
+import type { ScheduledTriggerRunResult, TriggerRecord } from "@bernouy/cms-triggers";
 import type { FunctionCatalogSource } from "../Functions/api";
 
-export type TriggerListItem = TriggerRecord;
+export type TriggerListItem = TriggerRecord & {
+    schedulerAvailable: boolean;
+    integration?: { id: string; label: string };
+};
 
 export type TriggerFunctionItem = {
     id: string;
@@ -70,4 +73,16 @@ export async function setTriggerEnabled(id: string, enabled: boolean): Promise<T
         throw new Error(await response.text());
     }
     return response.json() as Promise<TriggerListItem>;
+}
+
+export async function runScheduledTrigger(id: string): Promise<ScheduledTriggerRunResult> {
+    const response = await fetch(route("/api/triggers/run"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+    });
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+    return response.json() as Promise<ScheduledTriggerRunResult>;
 }

@@ -50,16 +50,20 @@ function parseDefinition(value: unknown): TriggerDefinition {
     if (
         !definition.event ||
         typeof definition.event !== "object" ||
+        definition.event.kind !== "endpoint" ||
         !definition.function ||
         typeof definition.function !== "object"
     ) {
-        throw new InvalidParam("definition", "event and function are required.");
+        throw new InvalidParam("definition", "an endpoint event and function are required.");
     }
     return definition;
 }
 
 async function validateDefinition(definition: TriggerDefinition, cms: ControlCms): Promise<string[]> {
     const errors = validateTrigger(definition);
+    if (definition.event.kind !== "endpoint" || !definition.function) {
+        return [...errors, "admin-created triggers must use an endpoint event and function"];
+    }
     if (!(await cms.functions!.getFunction(definition.function.id))) {
         errors.push(`trigger function "${definition.function.id}" does not exist`);
     }
@@ -86,7 +90,7 @@ async function validateDefinition(definition: TriggerDefinition, cms: ControlCms
 function references(definition: TriggerDefinition): string[] {
     return [
         ...collectReferences(definition.condition),
-        ...collectReferences(definition.function.params),
-        ...collectReferences(definition.function.body),
+        ...collectReferences(definition.function?.params),
+        ...collectReferences(definition.function?.body),
     ];
 }

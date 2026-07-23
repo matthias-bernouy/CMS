@@ -21,7 +21,7 @@ export const LOCAL_RUNTIME_PROFILES = {
 export function parseDevFlags(args: string[]): DevFlags {
     let port = 5000;
     let host = "localhost";
-    let workers = false;
+    let workers = true;
     for (const arg of args) {
         if (arg.startsWith("--port=")) {
             port = parsePortFlag(arg.slice("--port=".length));
@@ -29,6 +29,8 @@ export function parseDevFlags(args: string[]): DevFlags {
             host = arg.slice("--host=".length) || host;
         } else if (arg === "--workers") {
             workers = true;
+        } else if (arg === "--no-workers") {
+            workers = false;
         }
     }
 

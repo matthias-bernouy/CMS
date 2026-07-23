@@ -5,7 +5,7 @@ import { DeliveryCms } from "@bernouy/cms-delivery";
 import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { RepositoryCms } from "@bernouy/cms-repository";
 import { BunRunner } from "@bernouy/http-runner";
-import { startDevSystemFunctionWorkers } from "../../dev-server/runtime/systemFunctionWorkers";
+import { startDevScheduledTriggers } from "../../dev-server/runtime/scheduledTriggers";
 import { createBlocRegistry } from "../../dev-server/watch/index";
 import type { ReloadEmitter } from "../../dev-server/watch/types";
 import type { LocalBlocs } from "./blocs";
@@ -24,6 +24,17 @@ type ServerOptions = {
 
 export async function startLocalServers(options: ServerOptions) {
     const { flags, services } = options;
+    const scheduledTriggers = flags.workers
+        ? startDevScheduledTriggers({
+              functions: services.functions,
+              sources: services.deliverySources,
+              deps: { resolveSecret: services.resolveSecret, identities: services.identities },
+              users: services.users,
+              installations: services.integrationInstallations,
+              triggers: services.triggers,
+          })
+        : undefined;
+    await scheduledTriggers?.ready;
     const analytics = new ValidatingAnalyticsStore(new InMemoryAnalyticsStore());
     const analyticsVisitorSecret = crypto.randomUUID();
     const runner = new BunRunner();
@@ -55,10 +66,15 @@ export async function startLocalServers(options: ServerOptions) {
             integrationInstallations: services.integrationInstallations,
             integrationConnectorProviders: services.integrationConnectorProviders,
             integrationConnectorDeployers: services.integrationConnectorDeployers,
+            integrationProvisioners: services.integrationProvisioners,
             dashboards: services.dashboards,
             relations: services.relations,
             functions: services.functions,
             triggers: services.triggers,
+            scheduledTriggers: {
+                enabled: flags.workers,
+                ...(scheduledTriggers ? { runNow: scheduledTriggers.runNow } : {}),
+            },
             identities: services.identities,
             sourceOverlays: services.sourceOverlays,
             integrationBlocRepository: services.integrationBlocRepository,
@@ -114,13 +130,5 @@ export async function startLocalServers(options: ServerOptions) {
         auth: services.publicAuth,
     });
     deliveryRunner.start(flags.deliveryPort);
-    const systemFunctionWorkers = flags.workers
-        ? startDevSystemFunctionWorkers({
-              functions: services.functions,
-              sources: services.deliverySources,
-              deps: { resolveSecret: services.resolveSecret, identities: services.identities },
-          })
-        : undefined;
-
-    return { registry, systemFunctionWorkers };
+    return { registry, scheduledTriggers };
 }

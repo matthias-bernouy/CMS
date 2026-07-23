@@ -39,7 +39,7 @@ export async function runLocalCms(args: string[], runtime: LocalRuntimeOptions) 
     const shutdown = async (signal: string) => {
         console.log(`\n→ Stopping (${signal})...`);
         servers.registry.stop();
-        await servers.systemFunctionWorkers?.stop();
+        await servers.scheduledTriggers?.stop();
         process.exit(0);
     };
     process.on("SIGINT", () => void shutdown("SIGINT"));
@@ -79,9 +79,7 @@ function logReady(
     console.log(`  Repo     : ${siteDir} (writes go straight to disk)`);
     console.log(`  Profile  : ${adminSubject} / current password "${DEV_PASSWORD}" (Profile → Password)`);
     console.log(`  Watching : ${blocCount} authored bloc folder(s) — edit + auto-reload`);
-    console.log(
-        `  Workers  : ${flags.workers ? "enabled" : "disabled (pass --workers to run protected-commerce jobs)"}`,
-    );
+    console.log(`  Workers  : ${flags.workers ? "enabled" : "paused for this runtime (--no-workers)"}`);
     if (runtime.mode === "PROD") {
         console.log("  Warning  : local adapters and development authentication; not for public deployment");
     }

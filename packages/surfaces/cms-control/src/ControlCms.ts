@@ -114,6 +114,9 @@ export class ControlCms {
     get integrationConnectorDeployers() {
         return controlCmsAccessors.integrationConnectorDeployers(this.state);
     }
+    get integrationProvisioners() {
+        return controlCmsAccessors.integrationProvisioners(this.state);
+    }
     get integrationConnectorProviders() {
         return controlCmsAccessors.integrationConnectorProviders(this.state);
     }

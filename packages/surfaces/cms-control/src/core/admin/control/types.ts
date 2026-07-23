@@ -19,12 +19,13 @@ import type {
     IntegrationConnectorProviderRepository,
     IntegrationDefinitionRepository,
     IntegrationInstallationRepository,
+    IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { RelationRepository } from "@bernouy/cms-relations";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { SourceOverlayRepository, SourceRepository } from "@bernouy/cms-sources";
-import type { TriggerRepository } from "@bernouy/cms-triggers";
+import type { ScheduledTriggerRunResult, TriggerRepository } from "@bernouy/cms-triggers";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { CMS_ROLES } from "types/roles";
 
@@ -38,11 +39,16 @@ export type ControlCmsOptions = Configuration & {
     integrationCatalog?: IntegrationDefinitionRepository;
     integrationInstallations?: IntegrationInstallationRepository;
     integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
+    integrationProvisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
     integrationConnectorProviders?: IntegrationConnectorProviderRepository;
     dashboards?: DashboardRepository;
     relations?: RelationRepository;
     functions?: FunctionRepository;
     triggers?: TriggerRepository;
+    scheduledTriggers?: {
+        enabled: boolean;
+        runNow?: (triggerId: string) => Promise<ScheduledTriggerRunResult>;
+    };
     identities?: IdentityService;
     sourceOverlays?: SourceOverlayRepository;
     integrationBlocRepository?: CmsRepository;

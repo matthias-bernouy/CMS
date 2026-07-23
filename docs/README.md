@@ -28,6 +28,11 @@ implementation notes live in each package's `AGENTS.md`.
 
 ## Design Plans
 
+- [Commerce Notifications](../NOTIFICATIONS.md) documents the native,
+  replaceable buyer notification queue, template contract, and delivery modes.
+- [Scheduled Triggers](../SCHEDULED_TRIGGERS_PLAN.md) documents declarative
+  recurring integration work, distributed claims, runtime defaults, and
+  operational controls.
 - [Newsletter Broadcast Plan](../BROADCAST_PLAN.md) describes the durable
   campaign architecture that should replace the smoke-test newsletter emailer
   function for large sends.

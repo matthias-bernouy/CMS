@@ -28,6 +28,8 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
                 importBlocArtifact(cms, { ...artifact, force: options.force }, { repository: blocRepository }),
         },
         connectorDeployers: cms.integrationConnectorDeployers,
+        provisioners: cms.integrationProvisioners,
+        sourceExecutorDeps: cms.sourceExecutorDeps,
     };
     const result = await runIntegrationInstallation({
         mode: "create",
@@ -36,6 +38,5 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
         dto: request.dto,
         siteIntegrations: request.siteIntegrations,
     });
-
     return Response.json(result);
 }

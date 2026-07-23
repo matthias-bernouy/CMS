@@ -5,6 +5,7 @@ import { InMemorySourceRepository, makeEndpointUrn, makeSourceUrn } from "@berno
 import createTrigger from "cms-control/api/_platform/triggers/create.post";
 import listTriggers from "cms-control/api/_platform/triggers/triggers.get";
 import setTriggerEnabled from "cms-control/api/_platform/triggers/enabled.post";
+import runScheduledTrigger from "cms-control/api/_platform/triggers/run.post";
 
 describe("triggers API", () => {
     test("creates a trigger only when its endpoint and function exist", async () => {
@@ -105,5 +106,55 @@ describe("triggers API", () => {
         const response = await listTriggers(new Request("http://localhost/cms/api/triggers"), {} as any);
 
         expect(response.status).toBe(501);
+    });
+
+    test("lists schedule ownership and runs through the configured scheduler", async () => {
+        const triggers = new InMemoryTriggerRepository();
+        await triggers.createTrigger({
+            id: "scheduled-notifications",
+            label: "Dispatch notifications",
+            enabled: true,
+            event: { kind: "schedule", intervalMs: 30_000 },
+            task: { id: "cms.notifications.dispatch" },
+            scheduleState: { nextRunAt: "2026-07-23T12:00:00.000Z" },
+        });
+        const runNow = async (id: string) => ({
+            triggerId: id,
+            runId: "manual-run",
+            status: "succeeded" as const,
+            durationMs: 5,
+        });
+        const cms = {
+            triggers,
+            config: { scheduledTriggers: { enabled: true, runNow } },
+            configuredIntegrationInstallations: {
+                list: async () => [
+                    {
+                        id: "commerce",
+                        label: "Commerce",
+                        artifacts: [{ type: "trigger", id: "scheduled-notifications", action: "created" }],
+                    },
+                ],
+            },
+        } as any;
+
+        const listed = await listTriggers(new Request("http://localhost/cms/api/triggers"), cms);
+        const executed = await runScheduledTrigger(
+            new Request("http://localhost/cms/api/triggers/run", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ id: "scheduled-notifications" }),
+            }),
+            cms,
+        );
+
+        expect(await listed.json()).toEqual([
+            expect.objectContaining({
+                id: "scheduled-notifications",
+                schedulerAvailable: true,
+                integration: { id: "commerce", label: "Commerce" },
+            }),
+        ]);
+        expect(await executed.json()).toMatchObject({ status: "succeeded", runId: "manual-run" });
     });
 });

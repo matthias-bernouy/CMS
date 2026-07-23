@@ -28,6 +28,8 @@ export default async function postIntegrationInstallationRerun(req: Request, cms
                 importBlocArtifact(cms, { ...artifact, force: options.force }, { repository: blocRepository }),
         },
         connectorDeployers: cms.integrationConnectorDeployers,
+        provisioners: cms.integrationProvisioners,
+        sourceExecutorDeps: cms.sourceExecutorDeps,
     };
     const result = await runIntegrationInstallation({
         mode: "rerun",

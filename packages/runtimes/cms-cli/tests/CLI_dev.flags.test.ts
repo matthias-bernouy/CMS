@@ -8,7 +8,7 @@ describe("parseDevFlags", () => {
             deliveryPort: 5001,
             host: "localhost",
             publicHost: "localhost",
-            workers: false,
+            workers: true,
         });
     });
 
@@ -25,9 +25,10 @@ describe("parseDevFlags", () => {
         });
     });
 
-    test("enables protected-commerce workers only when explicitly requested", () => {
+    test("enables scheduled workers by default with an explicit maintenance escape", () => {
         expect(parseDevFlags(["--workers"]).workers).toBe(true);
-        expect(parseDevFlags([]).workers).toBe(false);
+        expect(parseDevFlags([]).workers).toBe(true);
+        expect(parseDevFlags(["--no-workers"]).workers).toBe(false);
     });
 });
 

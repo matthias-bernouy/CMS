@@ -25,7 +25,7 @@ export function buildTriggerDefinition(
             kind: "endpoint",
             source: select(root, "source").value,
             endpoint: select(root, "endpoint").value,
-            phase: select(root, "phase").value as TriggerDefinition["event"]["phase"],
+            phase: select(root, "phase").value as "request" | "response",
         },
         mode,
         failureMode: select(root, "failure").value as NonNullable<TriggerDefinition["failureMode"]>,

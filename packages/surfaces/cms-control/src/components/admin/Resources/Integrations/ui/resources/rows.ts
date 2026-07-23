@@ -1,4 +1,5 @@
 import type { IntegrationDefinition, SetupResourceRow } from "../../model";
+import type { TriggerDefinition } from "@bernouy/cms-triggers";
 
 export function resourceRows(definition: IntegrationDefinition): SetupResourceRow[] {
     return [
@@ -41,12 +42,13 @@ function artifactRow(artifact: NonNullable<IntegrationDefinition["artifacts"]>[n
     }
     if (artifact.type === "trigger") {
         const event = artifact.trigger.event;
-        const source = event.source ?? "*";
-        const endpoint = event.endpoint ?? "*";
         return {
             type: "Trigger",
             label: artifact.trigger.label ?? artifact.trigger.id,
-            detail: `${event.phase} ${source}.${endpoint} -> ${artifact.trigger.function.id}`,
+            detail:
+                event.kind === "schedule"
+                    ? `every ${event.intervalMs}ms -> ${triggerTarget(artifact.trigger)}`
+                    : `${event.phase} ${event.source ?? "*"}.${event.endpoint ?? "*"} -> ${triggerTarget(artifact.trigger)}`,
         };
     }
     if (artifact.type === "sourceOverlay") {
@@ -75,6 +77,10 @@ function artifactRow(artifact: NonNullable<IntegrationDefinition["artifacts"]>[n
         label: artifact.source.meta?.name ?? artifact.source.id,
         detail: `Source id: ${artifact.source.id}`,
     };
+}
+
+function triggerTarget(trigger: TriggerDefinition): string {
+    return trigger.function?.id ?? trigger.task?.id ?? "unknown";
 }
 
 function inputLabel(definition: IntegrationDefinition, inputName: string): string {

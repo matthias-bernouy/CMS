@@ -21,6 +21,7 @@
         { "path": "../../features/cms-files" },
         { "path": "../../features/cms-identities" },
         { "path": "../../features/cms-integrations" },
+        { "path": "../../features/cms-notifications" },
         { "path": "../../features/cms-secrets" },
         { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-functions" },

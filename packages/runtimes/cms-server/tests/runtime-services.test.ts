@@ -7,6 +7,7 @@ import {
     InMemoryUsersRepository,
 } from "@bernouy/cms-auth";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
+import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { createProductionAuth } from "../src/runtime/auth";
@@ -105,6 +106,7 @@ describe("production runtime services", () => {
         );
         const deployer = services.integrationConnectorDeployers[0];
         expect(deployer).toBeInstanceOf(ConfiguredSupabaseConnectorDeployer);
+        expect(services.integrationProvisioners[0]).toBeInstanceOf(StripeWebhookProvisioner);
         expect(
             (
                 deployer as unknown as {

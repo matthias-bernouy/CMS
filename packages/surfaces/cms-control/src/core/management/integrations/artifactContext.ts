@@ -9,6 +9,7 @@ export type IntegrationArtifactContext = {
     relationIds: Set<string> | null;
     dashboardRelationProjectionIds: Set<string> | null;
     blocIds: Set<string> | null;
+    triggerIds: Set<string> | null;
 };
 
 export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<IntegrationArtifactContext> {
@@ -44,6 +45,12 @@ export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<I
         .getBlocsList()
         .then((blocs) => new Set(blocs.map((bloc) => bloc.id)))
         .catch(() => null);
+    const triggerIds = await (cms.triggers
+        ? cms.triggers
+              .getAllTriggers()
+              .then((triggers) => new Set(triggers.map((trigger) => trigger.id)))
+              .catch(() => null)
+        : Promise.resolve(null));
     return {
         sourceUrns,
         sourceOverlayIds,
@@ -52,5 +59,6 @@ export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<I
         relationIds,
         dashboardRelationProjectionIds,
         blocIds,
+        triggerIds,
     };
 }

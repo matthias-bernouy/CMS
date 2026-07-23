@@ -2,10 +2,12 @@ import type {
     IntegrationConnectorDeployer,
     IntegrationConnectorProviderRepository,
     IntegrationDefinitionRepository,
+    IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
+import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
 
@@ -30,7 +32,13 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
             functionSecrets: readSupabaseFunctionSecrets(options.environment),
         }),
     ];
-    return { integrationRepositoryCatalog, integrationCatalog, integrationConnectorDeployers };
+    const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
+    return {
+        integrationRepositoryCatalog,
+        integrationCatalog,
+        integrationConnectorDeployers,
+        integrationProvisioners,
+    };
 }
 
 export type ProductionIntegrationServices = ReturnType<typeof createProductionIntegrationServices>;

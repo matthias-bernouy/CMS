@@ -64,6 +64,9 @@ function artifactExists(context: IntegrationArtifactContext, artifact: Integrati
     if (artifact.type === "bloc") {
         return context.blocIds?.has(artifact.id) ?? "unknown";
     }
+    if (artifact.type === "trigger") {
+        return context.triggerIds?.has(artifact.id) ?? "unknown";
+    }
     return context.sourceUrns?.has(artifact.id) ?? "unknown";
 }
 

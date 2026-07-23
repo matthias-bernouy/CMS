@@ -1,7 +1,12 @@
-import type { IntegrationConnectorDeployer, IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import type {
+    IntegrationConnectorDeployer,
+    IntegrationDefinitionRepository,
+    IntegrationProvisioner,
+} from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
+import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { LocalFsIntegrationConnectorProviderRepository } from "../../dev-server/stores/connectorProviders";
@@ -17,6 +22,7 @@ export function createLocalIntegrationServices(siteDir: string, repositoryUrl: s
         }),
     ];
     const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+    const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
     const remoteRepositoryUrl = process.env.P9R_INTEGRATION_REPOSITORY_URL?.trim();
     const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository(
         remoteRepositoryUrl || repositoryUrl,
@@ -24,6 +30,7 @@ export function createLocalIntegrationServices(siteDir: string, repositoryUrl: s
     return {
         integrationConnectorProviders,
         integrationConnectorDeployers,
+        integrationProvisioners,
         integrationRepositoryCatalog,
         integrationCatalog,
     };

@@ -5,7 +5,10 @@ import type { ControlCmsState } from "cms-control/core/admin/control/types";
 describe("ControlCms accessor delegation", () => {
     test("maps every directly injected dependency without substitution", () => {
         const dependency = {};
-        const configuration = { integrationConnectorDeployers: dependency };
+        const configuration = {
+            integrationConnectorDeployers: dependency,
+            integrationProvisioners: dependency,
+        };
         const state = {
             configuration,
             repository: dependency,
@@ -43,6 +46,7 @@ describe("ControlCms accessor delegation", () => {
             ["sourceOverlays", dependency],
             ["configuredIntegrationInstallations", dependency],
             ["integrationConnectorDeployers", dependency],
+            ["integrationProvisioners", dependency],
             ["integrationConnectorProviders", dependency],
             ["integrationBlocRepository", dependency],
         ] as const;

@@ -14,6 +14,7 @@ describe("production surface mounting", () => {
         let deliveryConfig: Record<string, unknown> | undefined;
         let workerOptions: Record<string, unknown> | undefined;
         let finalizerStore: unknown;
+        const runNow = async () => ({ status: "succeeded" });
         let releaseControl!: () => void;
         const controlReady = new Promise<void>((resolve) => {
             releaseControl = resolve;
@@ -69,7 +70,7 @@ describe("production surface mounting", () => {
             startWorkers(options: Record<string, unknown>) {
                 workerOptions = options;
                 events.push("workers");
-                return {};
+                return { ready: Promise.resolve(), runNow, stop: async () => undefined };
             },
             startAnalyticsFinalizer(store: unknown) {
                 finalizerStore = store;
@@ -84,7 +85,7 @@ describe("production surface mounting", () => {
         const mounting = mountProductionSurfaces(options as never, runtime);
         await Promise.resolve();
 
-        expect(events).toEqual(["runner:control", "group:/.cms/repository", "repository", "control"]);
+        expect(events).toEqual(["workers", "runner:control", "group:/.cms/repository", "repository", "control"]);
         expect(repositoryConfig).toEqual({
             runner: repositoryRunner,
             integrationCatalog: options.integrations.integrationRepositoryCatalog,
@@ -106,6 +107,7 @@ describe("production surface mounting", () => {
                 passwordResetUrl: options.env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
                 allowSignup: false,
             },
+            scheduledTriggers: { enabled: true, runNow },
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
 
@@ -130,6 +132,9 @@ describe("production surface mounting", () => {
                 resolveSecret: options.features.resolveSecret,
                 identities: options.features.identities,
             },
+            users: options.core.users,
+            installations: options.features.integrationInstallations,
+            triggers: options.features.triggers,
         });
         expect(finalizerStore).toBe(options.features.analytics);
         expect(starts).toEqual([

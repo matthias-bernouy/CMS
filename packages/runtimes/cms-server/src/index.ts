@@ -17,7 +17,7 @@ const integrations = createProductionIntegrationServices({
 });
 const authentication = await createProductionAuth(env, core);
 
-await mountProductionSurfaces({
+const scheduledTriggers = await mountProductionSurfaces({
     env,
     analyticsVisitorSecret: env.ANALYTICS_SALT_SECRET,
     core,
@@ -25,3 +25,16 @@ await mountProductionSurfaces({
     integrations,
     authentication,
 });
+
+let stopping = false;
+const shutdown = async (signal: string) => {
+    if (stopping) {
+        return;
+    }
+    stopping = true;
+    console.log(`\n→ Stopping (${signal})...`);
+    await scheduledTriggers.stop();
+    process.exit(0);
+};
+process.on("SIGINT", () => void shutdown("SIGINT"));
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
