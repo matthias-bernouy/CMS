@@ -159,6 +159,7 @@ export async function mountProductionSurfaces(
         runNow: scheduledTriggers.runNow,
         async stop() {
             endpointPerformanceFlusher.stop();
+            await Promise.all([controlRunner.stopGracefully(), deliveryRunner.stopGracefully()]);
             await endpointPerformanceFlusher.run();
             await scheduledTriggers.stop();
         },

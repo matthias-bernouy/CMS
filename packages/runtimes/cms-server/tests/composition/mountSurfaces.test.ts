@@ -6,6 +6,7 @@ describe("production surface mounting", () => {
     test("waits for Control before wiring and starting both public surfaces", async () => {
         const events: string[] = [];
         const starts: Array<[string, number]> = [];
+        const stops: string[] = [];
         const logs: string[] = [];
         const runners: FakeRunner[] = [];
         const repositoryRunner = { basePath: "/.cms/repository" };
@@ -39,6 +40,10 @@ describe("production surface mounting", () => {
             start(port: number): void {
                 events.push(`start:${this.name}`);
                 starts.push([this.name, port]);
+            }
+
+            async stopGracefully(): Promise<void> {
+                stops.push(this.name);
             }
         }
 
@@ -174,5 +179,6 @@ describe("production surface mounting", () => {
         await mounted.stop();
         expect(flusherStopped).toBe(true);
         expect(flushes).toBe(1);
+        expect(stops).toEqual(["control", "delivery"]);
     });
 });
