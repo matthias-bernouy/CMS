@@ -8,7 +8,8 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./browser": "./src/exports/browser.ts",
-        "./mongo": "./src/exports/mongo.ts"
+        "./mongo": "./src/exports/mongo.ts",
+        "./requestScope": "./src/exports/requestScope.ts"
     },
     "dependencies": {
         "@bernouy/cms-identities": "workspace:*",
