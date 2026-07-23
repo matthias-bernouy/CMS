@@ -36,6 +36,7 @@ declare
     v_payment_review_transition_safe boolean := false;
     v_payment_review_transition_applied boolean := false;
     v_recovered_ambiguous_payment boolean := false;
+    v_payment_already_fully_refunded boolean := false;
     v_transient_provider_review_reason constant text :=
         'Stripe payment provider truth mismatch: charge_balance_transaction_expansion';
 begin
@@ -292,19 +293,28 @@ begin
         or (v_cancellation.id is not null and v_cancellation.status in ('requested', 'processing', 'provider_cancelled', 'completed'))
     ) then
         v_late_refund_key := 'late-payment-success:' || v_order.id || ':' || p_provider_payment_id;
+        v_payment_already_fully_refunded :=
+            v_settlement.status = 'refunded'
+            and v_settlement.total_refunded_amount = v_terms.buyer_total_amount
+            and v_settlement.authorized_seller_amount
+                = v_settlement.total_transferred_amount - v_settlement.total_reversed_amount
+            and v_settlement.seller_reserve_liability_remaining_amount = 0
+            and v_settlement.platform_gross_remainder_amount = 0;
         select * into v_refund from commerce.refund_requests
         where business_key = v_late_refund_key for update;
-        if not found then
+        if not found and not v_payment_already_fully_refunded then
             v_refund_json := commerce.create_cancellation_refund_request(
                 v_order.id, v_late_refund_key,
                 'Automatic policy-governed refund after Stripe succeeded during or after provider cancellation',
                 'system', 'late-payment-compensation'
             );
-            update commerce.refund_requests set
-                status = 'approved', requires_finance_approval = false,
-                dual_approval_required = false, approved_by = 'late-payment-compensation',
-                decision_reason = 'Mandatory automatic compensation for a late provider success'
-            where id = (v_refund_json->>'id')::bigint returning * into v_refund;
+            if v_refund_json is not null then
+                update commerce.refund_requests set
+                    status = 'approved', requires_finance_approval = false,
+                    dual_approval_required = false, approved_by = 'late-payment-compensation',
+                    decision_reason = 'Mandatory automatic compensation for a late provider success'
+                where id = (v_refund_json->>'id')::bigint returning * into v_refund;
+            end if;
         end if;
         if v_cancellation.id is null then
             insert into commerce.payment_cancellation_requests (
@@ -313,20 +323,50 @@ begin
             ) values (
                 v_order.id, 'payment-cancellation:late-success:' || v_order.id,
                 case when v_order.status = 'expired' then 'expired' else 'cancelled' end,
-                'Late Stripe success requires a full protected refund', 'refund_pending',
+                'Late Stripe success requires a full protected refund',
+                case when v_payment_already_fully_refunded then 'completed' else 'refund_pending' end,
                 p_provider_payment_id, p_provider_payment_intent_id,
                 coalesce(p_provider_snapshot, '{}'::jsonb)
             ) returning * into v_cancellation;
         else
             update commerce.payment_cancellation_requests set
-                status = 'refund_pending', provider_payment_id = p_provider_payment_id,
+                status = case when v_payment_already_fully_refunded
+                    then 'completed' else 'refund_pending' end,
+                provider_payment_id = p_provider_payment_id,
                 provider_payment_intent_id = coalesce(provider_payment_intent_id, p_provider_payment_intent_id),
                 provider_snapshot = coalesce(p_provider_snapshot, '{}'::jsonb)
             where id = v_cancellation.id returning * into v_cancellation;
         end if;
-        update commerce.order_cancellation_requests set status = 'refund_pending'
+        update commerce.order_cancellation_requests set
+            status = case when v_payment_already_fully_refunded
+                then 'completed' else 'refund_pending' end
         where id = v_cancellation.order_cancellation_request_id
-          and status in ('provider_cancellation_pending', 'completed', 'approved');
+          and status in ('provider_cancellation_pending', 'refund_pending', 'completed', 'approved');
+        if v_payment_already_fully_refunded then
+            perform commerce.restore_order_inventory(v_order.id);
+            update commerce.orders set
+                status = v_cancellation.target_order_status,
+                version = version + 1,
+                updated_at = now()
+            where id = v_order.id
+              and status is distinct from v_cancellation.target_order_status;
+            update commerce.order_fulfillments set
+                status = 'cancelled',
+                blocking_reason = case
+                    when v_cancellation.target_order_status = 'expired'
+                        then 'payment_window_expired_after_full_refund'
+                    else 'order_cancelled_after_full_refund' end,
+                version = version + 1,
+                updated_at = now()
+            where order_id = v_order.id
+              and (
+                  status is distinct from 'cancelled'
+                  or blocking_reason is distinct from case
+                      when v_cancellation.target_order_status = 'expired'
+                          then 'payment_window_expired_after_full_refund'
+                      else 'order_cancelled_after_full_refund' end
+              );
+        end if;
         insert into commerce.financial_exceptions (
             deduplication_key, order_id, kind, severity, reason, details
         ) values (
@@ -336,13 +376,27 @@ begin
                 'providerPaymentIntentId', p_provider_payment_intent_id,
                 'refundRequestId', v_refund.id)
         ) on conflict (deduplication_key) where deduplication_key is not null do update set
-            status = 'open', details = excluded.details;
+            status = 'open', resolved_at = null, resolved_by = null,
+            details = excluded.details;
+        if v_payment_already_fully_refunded then
+            update commerce.financial_exceptions set
+                status = 'resolved',
+                resolved_at = now(),
+                resolved_by = 'late-payment-compensation'
+            where deduplication_key = v_late_refund_key;
+        end if;
         perform commerce.append_financial_event(
-            v_order.id, 'payment', v_attempt.id::text, 'late_payment_success_refund_authorized',
+            v_order.id, 'payment', v_attempt.id::text,
+            case when v_payment_already_fully_refunded
+                then 'late_payment_success_already_refunded'
+                else 'late_payment_success_refund_authorized' end,
             'system', 'late-payment-compensation',
-            'Provider success raced a Commerce cancellation; full refund authorized exactly once',
+            case when v_payment_already_fully_refunded
+                then 'Provider success was observed after the full protected refund was already terminal'
+                else 'Provider success raced a Commerce cancellation; full refund authorized exactly once' end,
             jsonb_build_object('providerPaymentId', p_provider_payment_id,
-                'refundRequestId', v_refund.id, 'businessKey', v_late_refund_key),
+                'refundRequestId', v_refund.id, 'businessKey', v_late_refund_key,
+                'alreadyFullyRefunded', v_payment_already_fully_refunded),
             'commerce.order.late_payment_success', v_late_refund_key
         );
     elsif p_status = 'succeeded' then

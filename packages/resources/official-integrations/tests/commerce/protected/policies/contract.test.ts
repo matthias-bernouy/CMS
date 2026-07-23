@@ -16,6 +16,7 @@ import {
     registerPolicySerializationTest,
     registerPolicySubsidyTest,
     registerProviderAbsentCancellationTest,
+    registerLatePaymentRefundTerminalizationTest,
     registerShipmentReservationTest,
     registerSellerLabelTest,
 } from "./contracts";
@@ -39,6 +40,7 @@ describe("protected C2C financial policy contract", () => {
     registerPolicySerializationTest();
     registerPolicySubsidyTest();
     registerProviderAbsentCancellationTest();
+    registerLatePaymentRefundTerminalizationTest();
     test("keeps claim evidence private and requires carrier proof before resolving a required return", async () => {
         const schema = await loadSupabaseSchemaSql(
             new URL("../../../../integrations/domains/commerce/versions/1.0.0/", import.meta.url),

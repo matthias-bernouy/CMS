@@ -17,10 +17,20 @@ export function registerProviderAbsentCancellationTest(): void {
 
         expect(absent).toContain("absent provider truth cannot finalize an order with a payment attempt");
         expect(absent).toContain("payment_cancellation_provider_absent");
+        expect(absent).toContain("v_idempotent_replay := v_event_id is null");
+        expect(absent).not.toContain("if v_event_id is null then\n        return");
+        expect(absent).toContain("Re-apply terminal invariants even when an older deployment already marked");
         expect(absent).toContain("perform commerce.restore_order_inventory(v_order.id)");
         expect(absent).not.toContain("insert into commerce.order_payment_attempts");
         expect(prepare).toContain("v_order.id, 'provisional', null");
         expect(absent).toContain("v_order.id, 'released', null");
+        expect(absent).toContain("set status = 'released'");
+        expect(absent).toContain("authorized_seller_amount = 0");
+        expect(absent).toContain("seller_reserve_liability_remaining_amount = 0");
+        expect(absent).toContain("platform_gross_remainder_amount = 0");
+        expect(absent).toContain("update commerce.seller_financial_exposures");
+        expect(absent).toContain("status = 'recovered'");
+        expect(absent).toContain("perform commerce.refresh_seller_risk_state(v_order.seller_id)");
         expect(absent).toContain("Provider-absent payment cancellation released prospective liability");
         expect(aggregate).toContain("terms.platform_risk_reserve_contribution_amount");
     });

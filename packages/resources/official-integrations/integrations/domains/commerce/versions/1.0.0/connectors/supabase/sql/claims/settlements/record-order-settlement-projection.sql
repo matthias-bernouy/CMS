@@ -298,8 +298,27 @@ begin
                     update commerce.order_cancellation_requests set status = 'completed'
                     where order_id = v_order.id and status = 'refund_pending';
                     perform commerce.restore_order_inventory(v_order.id);
-                    update commerce.orders set status = v_payment_cancellation.target_order_status
+                    update commerce.orders set
+                        status = v_payment_cancellation.target_order_status,
+                        version = version + 1,
+                        updated_at = now()
                     where id = v_order.id and status = 'cancellation_pending';
+                    update commerce.order_fulfillments set
+                        status = 'cancelled',
+                        blocking_reason = case
+                            when v_payment_cancellation.target_order_status = 'expired'
+                                then 'payment_window_expired_after_full_refund'
+                            else 'order_cancelled_after_full_refund' end,
+                        version = version + 1,
+                        updated_at = now()
+                    where order_id = v_order.id
+                      and (
+                          status is distinct from 'cancelled'
+                          or blocking_reason is distinct from case
+                              when v_payment_cancellation.target_order_status = 'expired'
+                                  then 'payment_window_expired_after_full_refund'
+                              else 'order_cancelled_after_full_refund' end
+                      );
                     update commerce.financial_exceptions set
                         status = 'resolved', resolved_at = now(), resolved_by = 'protected-refund'
                     where deduplication_key = v_refund.business_key and status <> 'resolved';
@@ -310,7 +329,21 @@ begin
                     update commerce.order_cancellation_requests set status = 'completed'
                     where order_id = v_order.id and status = 'refund_pending';
                     perform commerce.restore_order_inventory(v_order.id);
-                    update commerce.orders set status = 'cancelled' where id = v_order.id;
+                    update commerce.orders set
+                        status = 'cancelled',
+                        version = version + 1,
+                        updated_at = now()
+                    where id = v_order.id and status is distinct from 'cancelled';
+                    update commerce.order_fulfillments set
+                        status = 'cancelled',
+                        blocking_reason = 'order_cancelled_after_full_refund',
+                        version = version + 1,
+                        updated_at = now()
+                    where order_id = v_order.id
+                      and (
+                          status is distinct from 'cancelled'
+                          or blocking_reason is distinct from 'order_cancelled_after_full_refund'
+                      );
                 end if;
             end if;
         elsif p_status in ('failed', 'cancelled', 'manual_review') then

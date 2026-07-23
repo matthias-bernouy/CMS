@@ -18,6 +18,7 @@ export {
 } from "./refunds";
 export {
     registerCancellationReplayTest,
+    registerLatePaymentRefundTerminalizationTest,
     registerPayoutControlsTest,
     registerProviderAbsentCancellationTest,
     registerSellerLabelTest,
