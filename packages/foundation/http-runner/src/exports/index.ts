@@ -8,8 +8,24 @@
  */
 
 export type { Runner, RouteHandler, Middleware } from "http-runner/interfaces/Runner";
+export type { RequestTimingClock, RequestTimingSnapshot } from "http-runner/interfaces/RequestObservability";
 export { BunRunner } from "http-runner/default-implementation/BunRunner";
-export { getRequestIP, setRequestIP } from "http-runner/core/requestIP";
+export { getRequestIP, setRequestIP } from "http-runner/core/request/ip";
+export {
+    CMS_CORRELATION_HEADER,
+    MAX_REQUEST_TIMING_ENTRIES,
+    SERVER_TIMING_HEADER,
+    createRequestCorrelationMiddleware,
+    existingRequestCorrelationId,
+    finishRequestTiming,
+    isValidCorrelationId,
+    measureRequestTiming,
+    recordRequestTiming,
+    requestCorrelationId,
+    requestTimingSnapshot,
+    serverTimingHeader,
+    withRequestCorrelationHeader,
+} from "http-runner/core/request/observability";
 export { escapeHtml, escapeAttr, htmlResponse, redirect } from "http-runner/core/html";
 
 // HTTP response toolkit — caching contract, compression/negotiation, CSP.

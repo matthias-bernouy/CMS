@@ -19,7 +19,7 @@
  * incoming request is guaranteed to transit a proxy under the operator's
  * control.
  */
-const _requestIPs = new WeakMap<Request, string>();
+const requestIPs = new WeakMap<Request, string>();
 
 /**
  * Records the TCP-level remote address for an incoming Request. Called by
@@ -27,7 +27,7 @@ const _requestIPs = new WeakMap<Request, string>();
  * package barrel.
  */
 export function setRequestIP(req: Request, ip: string): void {
-    _requestIPs.set(req, ip);
+    requestIPs.set(req, ip);
 }
 
 /**
@@ -37,5 +37,5 @@ export function setRequestIP(req: Request, ip: string): void {
  * yet support IP capture).
  */
 export function getRequestIP(req: Request): string | undefined {
-    return _requestIPs.get(req);
+    return requestIPs.get(req);
 }

@@ -1,6 +1,6 @@
 import type { Runner, RouteHandler, Middleware } from "http-runner/interfaces/Runner";
-import { setRequestIP, getRequestIP as readRequestIP } from "http-runner/core/requestIP";
-import { dispatchRequest } from "http-runner/core/requestDispatch";
+import { setRequestIP, getRequestIP as readRequestIP } from "http-runner/core/request/ip";
+import { dispatchRequest } from "http-runner/core/request/dispatch";
 import { matchPath, normalizePath, pathUnderPrefix, urlJoin } from "./runnerPaths";
 
 export class BunRunner implements Runner {
