@@ -8,6 +8,7 @@ import {
     type SourceRequestObservation,
 } from "@bernouy/cms-sources";
 import { okFetch, seededSourceRepository, SOURCE_PREFIX } from "../handleSourceFixtures";
+import { waitFor } from "./waitFor";
 
 describe("source request telemetry", () => {
     test("reports one bounded observation for success and returns the correlation id", async () => {
@@ -94,7 +95,8 @@ describe("source request telemetry", () => {
         );
 
         expect(response.status).toBe(403);
-        expect(reportDiagnostic).toHaveBeenCalledTimes(1);
+        expect(reportDiagnostic).not.toHaveBeenCalled();
+        await waitFor(() => reportDiagnostic.mock.calls.length === 1);
         expect(diagnostics[0]!.cohorts).toEqual(["uniform", "forced"]);
         expect(diagnostics[0]).not.toHaveProperty("request");
         expect(diagnostics[0]).not.toHaveProperty("headers");

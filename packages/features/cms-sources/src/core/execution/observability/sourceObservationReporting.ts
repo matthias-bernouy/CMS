@@ -12,6 +12,7 @@ import {
     type SourceRequestOutcome,
     type SourceRequestTelemetryOptions,
 } from "cms-sources/interfaces/SourceObservability";
+import { enqueueSourceDiagnostic } from "cms-sources/core/execution/observability/sourceDiagnosticDispatch";
 
 const DEFAULT_SAMPLE_RATE = 0.01;
 const DEFAULT_SLOW_REQUEST_MS = 1_000;
@@ -84,7 +85,7 @@ function reportObservation(
             ...observation,
             cohorts: Object.freeze(cohorts),
         });
-        safelyReport(options.reportDiagnostic, diagnostic);
+        enqueueSourceDiagnostic(options.reportDiagnostic, diagnostic);
     }
 }
 

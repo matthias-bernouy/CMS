@@ -13,7 +13,7 @@ import {
 import {
     completeSourceObservation,
     isUniformSourceSample,
-} from "cms-sources/core/execution/sourceObservationReporting";
+} from "cms-sources/core/execution/observability/sourceObservationReporting";
 
 type SourceRequestContext = {
     observability: SourceExecutionObservability;

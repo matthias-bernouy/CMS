@@ -18631,7 +18631,7 @@ w13c-lateral-menu-item {
 
   // ../../features/cms-sources/src/core/overlays/sourceOverlay.ts
   var sharedSchemaCaches = new WeakMap;
-  // ../../features/cms-sources/src/core/execution/sourceObservationReporting.ts
+  // ../../features/cms-sources/src/core/execution/observability/sourceObservationReporting.ts
   var sourceStageNames = new Set(SOURCE_TIMING_STAGES);
 
   // ../../features/cms-sources/src/core/execution/sourceObservability.ts
