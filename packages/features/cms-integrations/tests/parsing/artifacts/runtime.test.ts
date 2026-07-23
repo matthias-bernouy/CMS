@@ -18,6 +18,20 @@ describe("@bernouy/cms-integrations runtime artifact parsing", () => {
                     },
                 },
                 {
+                    type: "trigger",
+                    trigger: {
+                        id: "scheduled-sync",
+                        critical: true,
+                        event: {
+                            kind: "schedule",
+                            intervalMs: 30000,
+                            initialDelayMs: 5000,
+                            timeoutMs: 10000,
+                        },
+                        task: { id: "products.sync", body: { runKey: "$schedule.runKey" } },
+                    },
+                },
+                {
                     type: "sourceOverlay",
                     overlay: {
                         id: "product-offers-fields",
@@ -25,13 +39,14 @@ describe("@bernouy/cms-integrations runtime artifact parsing", () => {
                         output: [{ endpointId: "product" }],
                         fieldSource: {
                             endpointId: "offerFields",
-                            map: { options: "choices" },
+                            map: { nullable: "allowsNull", options: "choices" },
                         },
                         fields: [
                             {
                                 id: "offerStatus",
                                 label: "Offer status",
                                 type: "string",
+                                nullable: true,
                                 options: [
                                     { value: "pending", label: "Pending" },
                                     { value: "active", label: "Active" },
@@ -68,17 +83,31 @@ describe("@bernouy/cms-integrations runtime artifact parsing", () => {
 
         expect(definition.artifacts?.map((artifact) => artifact.type)).toEqual([
             "trigger",
+            "trigger",
             "sourceOverlay",
             "relation",
             "dashboardRelation",
         ]);
+        expect(definition.artifacts?.[1]).toMatchObject({
+            type: "trigger",
+            trigger: {
+                id: "scheduled-sync",
+                critical: true,
+                event: { kind: "schedule", intervalMs: 30000, initialDelayMs: 5000, timeoutMs: 10000 },
+                task: { id: "products.sync" },
+            },
+        });
         expect(definition.artifacts?.find((artifact) => artifact.type === "sourceOverlay")).toMatchObject({
             type: "sourceOverlay",
             overlay: {
-                fieldSource: { endpointId: "offerFields", map: { options: "choices" } },
+                fieldSource: {
+                    endpointId: "offerFields",
+                    map: { nullable: "allowsNull", options: "choices" },
+                },
                 fields: [
                     {
                         id: "offerStatus",
+                        nullable: true,
                         options: [
                             { value: "pending", label: "Pending" },
                             { value: "active", label: "Active" },

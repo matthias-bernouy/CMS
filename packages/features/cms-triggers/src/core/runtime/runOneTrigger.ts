@@ -14,6 +14,9 @@ const DEFAULT_TRIGGER_TIMEOUT_MS = 5_000;
 export type TriggerRunOutcome = { ok: true } | { ok: false; error: string };
 
 export async function runOneTrigger(trigger: TriggerRecord, options: RunTriggersOptions): Promise<TriggerRunOutcome> {
+    if (!trigger.function) {
+        return { ok: false, error: "endpoint trigger function is unavailable" };
+    }
     const vars = triggerVars({
         endpoint: options.endpoint,
         request: options.request,
@@ -64,6 +67,9 @@ function functionRequest(
     vars: Parameters<typeof resolveTriggerReference>[1],
     method: string,
 ): Request {
+    if (!trigger.function) {
+        throw new Error("trigger function is unavailable");
+    }
     const url = new URL("https://cms.trigger/internal");
     for (const [key, value] of Object.entries(resolveParams(trigger.function.params, vars))) {
         if (value !== undefined && value !== null && value !== "") {

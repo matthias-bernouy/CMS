@@ -19,7 +19,7 @@ export function matchesTriggerEndpoint(
     endpoint: SourceEndpoint,
     phase: TriggerEventPhase,
 ): boolean {
-    if (trigger.event.phase !== phase) {
+    if (trigger.event.kind !== "endpoint" || trigger.event.phase !== phase) {
         return false;
     }
     const match = endpointMatch(endpoint);

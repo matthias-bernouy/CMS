@@ -46,5 +46,19 @@ function mergeTriggerArtifact(trigger: TriggerDefinition, previous: TriggerRecor
         ...trigger,
         enabled: previous?.enabled ?? true,
         ...(previous?.lastRun ? { lastRun: previous.lastRun } : {}),
+        ...(sameSchedule(trigger, previous) && previous?.scheduleState
+            ? { scheduleState: previous.scheduleState }
+            : {}),
     };
+}
+
+function sameSchedule(trigger: TriggerDefinition, previous: TriggerRecord | null): boolean {
+    if (trigger.event.kind !== "schedule" || previous?.event.kind !== "schedule") {
+        return false;
+    }
+    return (
+        trigger.event.intervalMs === previous.event.intervalMs &&
+        trigger.event.initialDelayMs === previous.event.initialDelayMs &&
+        trigger.event.timeoutMs === previous.event.timeoutMs
+    );
 }

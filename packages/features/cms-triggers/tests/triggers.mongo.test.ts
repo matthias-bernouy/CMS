@@ -5,10 +5,10 @@ import { MongoTriggerRepository } from "@bernouy/cms-triggers/mongo";
 describe("MongoTriggerRepository endpoint queries", () => {
     test("uses the endpoint index for one request and response query", async () => {
         const calls: Array<{ filter: unknown; options: unknown }> = [];
-        let createdIndex: unknown;
+        const createdIndexes: unknown[] = [];
         const collection = {
             createIndex: async (index: unknown) => {
-                createdIndex = index;
+                createdIndexes.push(index);
             },
             find: (filter: unknown, options: unknown) => {
                 calls.push({ filter, options });
@@ -31,7 +31,15 @@ describe("MongoTriggerRepository endpoint queries", () => {
         const records = await repository.findEndpointTriggers("orders", "createOrder");
 
         const index = { "event.source": 1, "event.endpoint": 1, "event.phase": 1, enabled: 1 };
-        expect(createdIndex).toEqual(index);
+        expect(createdIndexes).toEqual([
+            index,
+            {
+                "event.kind": 1,
+                enabled: 1,
+                "scheduleState.nextRunAt": 1,
+                "scheduleState.running.expiresAt": 1,
+            },
+        ]);
         expect(calls).toEqual([
             {
                 filter: {

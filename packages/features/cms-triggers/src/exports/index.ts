@@ -7,14 +7,27 @@ export type {
     TriggerDefinition,
     TriggerDto,
     TriggerEndpointEvent,
+    TriggerEvent,
     TriggerEventPhase,
     TriggerFailureMode,
     TriggerFunctionCall,
     TriggerLastRun,
     TriggerMode,
     TriggerRecord,
+    TriggerScheduleEvent,
+    TriggerScheduleRunning,
+    TriggerScheduleState,
+    TriggerTaskCall,
     TriggerValue,
 } from "../interfaces/TriggerDefinition";
+export type {
+    ScheduledTriggerClaim,
+    ScheduledTriggerClaimRequest,
+    ScheduledTriggerCompletion,
+    ScheduledTriggerTaskContext,
+    ScheduledTriggerTaskHandler,
+    ScheduledTriggerTaskRegistry,
+} from "../interfaces/ScheduledTrigger";
 export type { TriggerRepository } from "../interfaces/TriggerRepository";
 export { InMemoryTriggerRepository } from "../default-implementation/InMemoryTriggerRepository";
 export { DuplicateTriggerError } from "../core/errors";
@@ -51,3 +64,19 @@ export {
     type TriggerInterceptor,
 } from "../core/createTriggerInterceptor";
 export { validateTrigger } from "../core/validateTrigger";
+export {
+    claimTrigger,
+    initializeSchedule,
+    isDue,
+    nextRunAt,
+    type ScheduledClaimOwner,
+} from "../core/runtime/scheduled/state";
+export { startScheduledTriggers } from "../core/runtime/scheduled/runner";
+export type {
+    ScheduledTriggerLogger,
+    ScheduledTriggerRunResult,
+    ScheduledTriggerRunStatus,
+    ScheduledTriggerRunner,
+    ScheduledTriggerRunnerOptions,
+    ScheduledTriggerTimer,
+} from "../core/runtime/scheduled/types";

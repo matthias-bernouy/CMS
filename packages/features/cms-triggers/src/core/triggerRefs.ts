@@ -129,8 +129,9 @@ export function anyTriggerReadsResponseBody(triggers: readonly TriggerRecord[]):
 export function triggerReferences(trigger: TriggerRecord): string[] {
     return [
         ...collectReferences(trigger.condition),
-        ...collectReferences(trigger.function.params),
-        ...collectReferences(trigger.function.body),
+        ...collectReferences(trigger.function?.params),
+        ...collectReferences(trigger.function?.body),
+        ...collectReferences(trigger.task?.body),
     ];
 }
 
