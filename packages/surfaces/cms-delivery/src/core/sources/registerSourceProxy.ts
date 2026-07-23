@@ -4,70 +4,37 @@ import {
     createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
     sourcesPrefix,
-    type ExecutorDeps,
     type SourceEndpoint,
 } from "@bernouy/cms-sources";
 import { executeAuthSystemSourceEndpoint } from "@bernouy/cms-auth";
-import {
-    executeFunctionSystemSourceEndpoint,
-    RequestScopedFunctionRepository,
-    SYSTEM_FUNCTIONS_SOURCE_URN,
-    withFunctionsSource,
-    type FunctionRepository,
-} from "@bernouy/cms-functions";
-import { createTriggerInterceptor } from "@bernouy/cms-triggers";
+import { executeFunctionSystemSourceEndpoint, SYSTEM_FUNCTIONS_SOURCE_URN } from "@bernouy/cms-functions";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
+import { authorizeDeliverySourceEndpoint, resolveDeliverySubject } from "cms-delivery/core/sources/authorization";
 import {
-    authorizeDeliverySourceEndpoint,
-    resolveDeliverySourceContext,
-    resolveDeliverySubject,
-} from "cms-delivery/core/sources/authorization";
+    createDeliverySourceRequestScope,
+    deliverySourceOverlaySchemaCache,
+    type DeliverySourceRequestScope,
+} from "cms-delivery/core/sources/requestScope";
 
 export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
     const runner = delivery.runner;
+    const schemaCache = deliverySourceOverlaySchemaCache(delivery);
     runner.group(
         CMS_SOURCES_ROUTE,
         (proxyRunner) => {
             const prefix = sourcesPrefix(runner.basePath);
-            const sourceDeps = {
-                ...(delivery.sourceResolveSecret ? { resolveSecret: delivery.sourceResolveSecret } : {}),
-                ...(delivery.identities ? { identities: delivery.identities } : {}),
-                resolveContext: (request: Request) => resolveDeliverySourceContext(delivery, request),
-                ...(delivery.sourceTrustedConnectorTarget
-                    ? { isTrustedConnectorTarget: delivery.sourceTrustedConnectorTarget }
-                    : {}),
-            };
-            const interceptEndpoint =
-                delivery.triggers && delivery.functions && delivery.sources
-                    ? createTriggerInterceptor({
-                          triggers: delivery.triggers,
-                          functions: delivery.functions,
-                          sources: delivery.sources,
-                          deps: sourceDeps,
-                          resolveUser: async (request) => {
-                              const subject = await resolveDeliverySubject(delivery, request);
-                              return subject ? { id: subject.identifier, role: subject.role } : {};
-                          },
-                      })
-                    : undefined;
             for (const method of SOURCE_PROXY_METHODS) {
                 proxyRunner.setDefaultEndpoint(method, (request) => {
-                    const requestFunctions = delivery.functions
-                        ? new RequestScopedFunctionRepository(delivery.functions)
-                        : undefined;
-                    const proxiedSources =
-                        delivery.sources && requestFunctions
-                            ? withFunctionsSource(delivery.sources, requestFunctions)
-                            : delivery.sources;
+                    const scope = createDeliverySourceRequestScope(delivery, request, schemaCache);
                     const deps = {
-                        ...sourceDeps,
+                        ...scope.deps,
                         executeSystemEndpoint: (endpoint: SourceEndpoint, systemRequest: Request) =>
-                            executeSystemEndpoint(delivery, endpoint, systemRequest, sourceDeps, requestFunctions),
+                            executeSystemEndpoint(delivery, scope, endpoint, systemRequest),
                         authorizeEndpoint: (endpoint: SourceEndpoint, sourceRequest: Request) =>
                             authorizeDeliverySourceEndpoint(delivery, endpoint, sourceRequest),
-                        ...(interceptEndpoint ? { interceptEndpoint } : {}),
+                        ...(scope.interceptEndpoint ? { interceptEndpoint: scope.interceptEndpoint } : {}),
                     };
-                    return handleSourceRequest(proxiedSources, request, {
+                    return handleSourceRequest(scope.proxiedSources, request, {
                         prefix,
                         deps: { ...deps, telemetry: delivery.sourceTelemetry },
                     });
@@ -80,20 +47,19 @@ export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
 
 async function executeSystemEndpoint(
     delivery: DeliveryCms,
+    scope: DeliverySourceRequestScope,
     endpoint: SourceEndpoint,
     request: Request,
-    sourceDeps: ExecutorDeps,
-    functions: FunctionRepository | undefined,
 ): Promise<Response> {
     if (endpoint.urn.startsWith(`${SYSTEM_FUNCTIONS_SOURCE_URN}:`)) {
-        if (!functions || !delivery.sources) {
+        if (!scope.functions || !scope.sources) {
             return new Response("function executor not configured", { status: 501 });
         }
         const subject = await resolveDeliverySubject(delivery, request);
         return executeFunctionSystemSourceEndpoint(endpoint, request, {
-            functions,
-            sources: delivery.sources,
-            deps: sourceDeps,
+            functions: scope.functions,
+            sources: scope.sources,
+            deps: scope.deps,
             resolveUser: async () => (subject ? { id: subject.identifier, role: subject.role } : {}),
         });
     }

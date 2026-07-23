@@ -8,6 +8,7 @@ import type { IntegrationInstallationRepository } from "@bernouy/cms-integration
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type {
     ExecutorDeps,
+    SourceOverlayRepository,
     SourceRepository,
     SourceRequestTelemetryOptions,
     SourceSecretResolver,
@@ -57,6 +58,10 @@ export class DeliveryCmsContext {
 
     get sources(): SourceRepository | undefined {
         return this.config.sources;
+    }
+
+    get sourceOverlays(): SourceOverlayRepository | undefined {
+        return this.config.sourceOverlays;
     }
 
     get sourceResolveSecret(): SourceSecretResolver | undefined {

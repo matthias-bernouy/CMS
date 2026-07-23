@@ -1,6 +1,7 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { resolveRequestSubject, type Subject } from "@bernouy/cms-auth";
 import { ADMIN_ROLE, PUBLIC_ROLE, USER_ROLE, canRole } from "@bernouy/cms-permissions";
+import { resolveRequestRoleDefinitions } from "@bernouy/cms-permissions/requestScope";
 import {
     SYSTEM_AUTH_SOURCE_URN,
     sourceEndpointAccessAllows,
@@ -60,7 +61,9 @@ export async function authorizeDeliverySourceEndpoint(
         return true;
     }
 
-    const definitions = await measureActiveSourceTiming(req, "cms_roles", () => roles.list());
+    const definitions = await measureActiveSourceTiming(req, "cms_roles", () =>
+        resolveRequestRoleDefinitions(roles, req),
+    );
     if (canRole(subject?.role ?? PUBLIC_ROLE, { definitions }, endpoint.urn)) {
         return true;
     }

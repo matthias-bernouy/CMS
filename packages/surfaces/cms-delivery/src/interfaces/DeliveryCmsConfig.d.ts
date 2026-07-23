@@ -8,6 +8,7 @@ import type { IntegrationInstallationRepository } from "@bernouy/cms-integration
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type {
     ExecutorDeps,
+    SourceOverlayRepository,
     SourceRepository,
     SourceRequestTelemetryOptions,
     SourceSecretResolver,
@@ -27,6 +28,8 @@ export type DeliveryCmsConfig = {
     headInjectors?: readonly HeadInjector[];
     /** Data sources exposed by the optional same-origin source gateway. */
     sources?: SourceRepository;
+    /** Overlay definitions materialized only after source authorization. */
+    sourceOverlays?: SourceOverlayRepository;
     /** Trusted functions projected as the system-functions source. */
     functions?: FunctionRepository;
     /** Endpoint triggers. Sources and functions must also be configured. */

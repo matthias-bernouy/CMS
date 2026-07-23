@@ -175,6 +175,7 @@
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
+        "@bernouy/cms-triggers": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -381,6 +382,7 @@
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
+        "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/components": "workspace:*",
