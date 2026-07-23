@@ -48,7 +48,7 @@ describe("Delivery gateway secrets", () => {
 
     test("uses an explicitly wired resolver for dev gateway secrets", async () => {
         const handler = await mountDeliveryGateway({
-            resolveSecret: async (ref) => (ref === "${API_KEY}" ? "dev-key" : undefined),
+            resolveSecret: async (ref) => (ref === "API_KEY" ? "dev-key" : undefined),
             roles: await publicGatewayRoles(),
         });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));

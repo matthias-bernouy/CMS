@@ -39,10 +39,11 @@ export function createDeliverySourceRequestScope(
     schemaCache: SourceOverlaySchemaCache | undefined,
 ): DeliverySourceRequestScope {
     const identities = delivery.identities ? new RequestScopedIdentityService(delivery.identities) : undefined;
-    const resolveSecret = delivery.sourceResolveSecret
+    const sourceResolveSecret = delivery.sourceResolveSecret;
+    const resolveSecret = sourceResolveSecret
         ? createRequestScopedSecretResolver(
-              delivery.sourceResolveSecret,
-              (reference) => secretRefToKey(reference) ?? reference,
+              (reference) => sourceResolveSecret(normalizeSecretReference(reference)),
+              normalizeSecretReference,
           )
         : undefined;
     const deps: ExecutorDeps = {
@@ -91,4 +92,8 @@ export function createDeliverySourceRequestScope(
         deps,
         ...(interceptEndpoint ? { interceptEndpoint } : {}),
     };
+}
+
+function normalizeSecretReference(reference: string): string {
+    return secretRefToKey(reference) ?? reference;
 }
