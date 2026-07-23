@@ -5,6 +5,13 @@ import { executeEndpoint, type ExecutorDeps } from "../core/execution/executeEnd
 import { systemSourceUrnOf } from "../core/system/systemSources";
 import { sourceEndpointAccessMode } from "../core/execution/access";
 import { parseUrn } from "../core/system/urn";
+import {
+    activeSourceObservability,
+    runObservedSourceRequest,
+    setObservedSourceEndpoint,
+} from "../core/execution/sourceObservability";
+import { timedExecution } from "../core/execution/executionObservability";
+import type { SourceExecutionObservability, SourceRequestTelemetryOptions } from "../interfaces/SourceObservability";
 
 export const CMS_SOURCES_ROUTE = "/.cms/sources";
 export const SOURCE_PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
@@ -24,11 +31,13 @@ export type SourceAuthorizationResult =
 export type SourceEndpointAuthorizer = (
     endpoint: SourceEndpoint,
     request: Request,
+    observability?: SourceExecutionObservability,
 ) => SourceAuthorizationResult | Promise<SourceAuthorizationResult>;
 export type SourceHandlerDeps = ExecutorDeps & {
     executeSystemEndpoint?: SourceSystemExecutor;
     authorizeEndpoint?: SourceEndpointAuthorizer;
     interceptEndpoint?: SourceEndpointInterceptor;
+    telemetry?: SourceRequestTelemetryOptions;
 };
 
 export function sourcesPrefix(basePath: string): string {
@@ -54,6 +63,18 @@ export async function handleSourceRequest(
     request: Request,
     opts: { prefix: string; deps?: SourceHandlerDeps },
 ): Promise<Response> {
+    return runObservedSourceRequest(request, opts.deps?.telemetry ?? {}, () =>
+        handleObservedSourceRequest(source, request, opts),
+    );
+}
+
+async function handleObservedSourceRequest(
+    source: SourceRepository | null | undefined,
+    request: Request,
+    opts: { prefix: string; deps?: SourceHandlerDeps },
+): Promise<Response> {
+    const observability = activeSourceObservability(request);
+    const deps = observability ? { ...opts.deps, observability } : opts.deps;
     if (!source) {
         return new Response("data source not configured", { status: 501 });
     }
@@ -65,13 +86,18 @@ export async function handleSourceRequest(
 
     const segments = url.pathname.slice(opts.prefix.length).split("/").filter(Boolean).map(decodeURIComponent);
 
-    const authorizationResolved = await resolveEndpoint(source, segments, request.method, { forAuthorization: true });
+    const authorizationResolved = await timedExecution({ observability }, "cms_endpoint_auth_lookup", () =>
+        resolveEndpoint(source, segments, request.method, { forAuthorization: true }),
+    );
     if (!authorizationResolved.ok) {
         return unresolvedEndpointResponse(authorizationResolved.reason);
     }
+    setObservedSourceEndpoint(request, authorizationResolved.endpoint.urn);
 
-    if (opts.deps?.authorizeEndpoint) {
-        const authorization = await opts.deps.authorizeEndpoint(authorizationResolved.endpoint, request);
+    if (deps?.authorizeEndpoint) {
+        const authorization = await timedExecution({ observability }, "cms_authorize", () =>
+            deps.authorizeEndpoint!(authorizationResolved.endpoint, request, observability),
+        );
         if (!isSourceAuthorized(authorization)) {
             const status = sourceAuthorizationStatus(authorization);
             return new Response(sourceAuthorizationBody(authorization, status), { status });
@@ -79,7 +105,9 @@ export async function handleSourceRequest(
     }
 
     const resolved = source.getEndpointForAuthorization
-        ? await resolveEndpoint(source, segments, request.method)
+        ? await timedExecution({ observability }, "cms_endpoint_resolve", () =>
+              resolveEndpoint(source, segments, request.method),
+          )
         : authorizationResolved;
     if (!resolved.ok) {
         return unresolvedEndpointResponse(resolved.reason);
@@ -89,13 +117,11 @@ export async function handleSourceRequest(
     }
 
     const dispatch = async (req: Request) => {
-        const response = await dispatchEndpoint(resolved.endpoint, req, opts.deps);
+        const response = await dispatchEndpoint(resolved.endpoint, req, deps);
         invalidateSchemaAfterSuccess(source, resolved.endpoint, response);
         return response;
     };
-    return opts.deps?.interceptEndpoint
-        ? opts.deps.interceptEndpoint(resolved.endpoint, request, dispatch)
-        : dispatch(request);
+    return deps?.interceptEndpoint ? deps.interceptEndpoint(resolved.endpoint, request, dispatch) : dispatch(request);
 }
 
 function invalidateSchemaAfterSuccess(source: SourceRepository, endpoint: SourceEndpoint, response: Response): void {

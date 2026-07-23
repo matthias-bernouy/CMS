@@ -34,6 +34,42 @@ describe("executeEndpoint headers", () => {
         expect((fetchImpl.mock.calls[0]![1]!.headers as Headers).get("host")).toBeNull();
     });
 
+    test("injects correlation last only for an explicitly trusted connector target", async () => {
+        const correlationId = "11d38c6a-0e6a-4f68-9dad-2a92c17b8300";
+        const observability = {
+            correlationId,
+            measure: async <T>(_stage: string, operation: () => T | Promise<T>) => operation(),
+            record: () => true,
+        };
+        const endpoint = ep({
+            headers: [
+                {
+                    name: "x-cms-correlation-id",
+                    source: { from: "static", value: "caller-controlled" },
+                },
+            ],
+        });
+        const trustedFetch = okFetch();
+        await executeEndpoint(
+            endpoint,
+            new Request("http://local/x", { headers: { "x-cms-correlation-id": "untrusted-inbound" } }),
+            {
+                fetchImpl: trustedFetch,
+                observability,
+                isTrustedConnectorTarget: (_endpoint, target) => target.origin === "https://api.example.com",
+            },
+        );
+        expect((trustedFetch.mock.calls[0]![1]!.headers as Headers).get("x-cms-correlation-id")).toBe(correlationId);
+
+        const untrustedFetch = okFetch();
+        await executeEndpoint(endpoint, new Request("http://local/x"), {
+            fetchImpl: untrustedFetch,
+            observability,
+            isTrustedConnectorTarget: () => false,
+        });
+        expect((untrustedFetch.mock.calls[0]![1]!.headers as Headers).get("x-cms-correlation-id")).toBeNull();
+    });
+
     test("computed config header uses configured context", async () => {
         const fetchImpl = okFetch();
         const endpoint = ep({ headers: [{ name: "X-User-ID", source: { from: "computed", ref: "userID" } }] });

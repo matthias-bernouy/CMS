@@ -3,7 +3,6 @@ import {
     BunRunner,
     CMS_CORRELATION_HEADER,
     MAX_REQUEST_TIMING_ENTRIES,
-    createRequestCorrelationMiddleware,
     finishRequestTiming,
     isValidCorrelationId,
     measureRequestTiming,
@@ -32,16 +31,12 @@ describe("request correlation", () => {
     test("returns the correlation id on normal and unhandled error responses", async () => {
         const errorLog = spyOn(console, "error").mockImplementation(() => {});
         const runner = new BunRunner();
-        runner.group(
-            "/observed",
-            (group) => {
-                group.get("/ok", () => new Response("ok"));
-                group.get("/error", () => {
-                    throw new Error("private failure");
-                });
-            },
-            [createRequestCorrelationMiddleware()],
-        );
+        runner.group("/observed", (group) => {
+            group.get("/ok", () => new Response("ok"));
+            group.get("/error", () => {
+                throw new Error("private failure");
+            });
+        });
         const server = serveForTest(runner);
 
         try {

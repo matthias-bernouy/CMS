@@ -10,6 +10,7 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
-        { "path": "../cms-identities" }
+        { "path": "../cms-identities" },
+        { "path": "../../foundation/http-runner" }
     ]
 }

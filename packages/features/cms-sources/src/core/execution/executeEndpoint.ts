@@ -6,13 +6,17 @@ import {
 import type { IdentityService } from "@bernouy/cms-identities";
 import { buildUpstreamUrl, type SourceComputedContext } from "cms-sources/core/upstream/buildUpstreamUrl";
 import { buildForwardHeaders, hasComputedHeaders, hasComputedParams } from "cms-sources/core/upstream/endpointHeaders";
-import {
-    projectEndpointResponse,
-    type ResponseProjectionOptions,
-} from "cms-sources/core/response-projection/projectEndpointResponse";
+import type { ResponseProjectionOptions } from "cms-sources/core/response-projection/projectEndpointResponse";
 import { bindResponseIdentities } from "cms-sources/core/response-projection/bindResponseIdentities";
 import type { UndeclaredUpstreamStatus } from "cms-sources/core/upstream/upstreamFailure";
 import { upstreamBody } from "cms-sources/core/upstream/upstreamBody";
+import type { SourceExecutionObservability } from "cms-sources/interfaces/SourceObservability";
+import {
+    applyInternalCorrelationHeader,
+    timedExecution,
+    withTimedSecretResolver,
+} from "cms-sources/core/execution/executionObservability";
+import { projectSourceResponse } from "cms-sources/core/execution/executeEndpointResponse";
 
 /** Resolves a server-side secret reference used by source config headers. */
 export type SourceSecretResolver = (ref: string) => Promise<string | undefined>;
@@ -32,6 +36,8 @@ export type ExecutorDeps = ResponseProjectionOptions & {
     resolveContext?: (request: Request) => Promise<SourceComputedContext>;
     identities?: IdentityService;
     reportFailure?: (failure: UndeclaredUpstreamStatus) => void | Promise<void>;
+    observability?: SourceExecutionObservability;
+    isTrustedConnectorTarget?: (endpoint: SourceEndpoint, target: URL) => boolean;
 };
 
 /**
@@ -70,19 +76,26 @@ export async function executeEndpoint(
     if (identityBindings.length && isMutatingMethod(endpoint.method) && !deps?.identities) {
         return new Response("identity service not configured", { status: 500 });
     }
-    const computed = needsContext && deps?.resolveContext ? await deps.resolveContext(request) : {};
+    const computed =
+        needsContext && deps?.resolveContext
+            ? await timedExecution(deps, "cms_context", () => deps.resolveContext!(request))
+            : {};
     const built = buildUpstreamUrl(endpoint, new URL(request.url).searchParams, computed);
     if (!built.ok) {
         return new Response(built.message, { status: built.status });
     }
 
     // Request: start from an EMPTY Headers object (inbound cookie / authorization never leak).
-    const fwd = await buildForwardHeaders(endpoint, request, built.headers, computed, deps);
+    const headerDeps = withTimedSecretResolver(deps);
+    const fwd = await timedExecution(deps, "cms_headers", () =>
+        buildForwardHeaders(endpoint, request, built.headers, computed, headerDeps),
+    );
     if (!fwd.ok) {
         return fwd.response;
     }
+    applyInternalCorrelationHeader(endpoint, built.url, fwd.headers, deps);
 
-    const body = await upstreamBody(endpoint, request);
+    const body = await timedExecution(deps, "cms_body", () => upstreamBody(endpoint, request));
     if (!body.ok) {
         return body.response;
     }
@@ -105,9 +118,13 @@ export async function executeEndpoint(
                 init.duplex = "half";
             }
         }
-        const upstream = await doFetch(built.url, init);
-        const projected = await projectSourceResponse(endpoint, request, upstream, deps);
-        const bindingError = await bindResponseIdentities(endpoint, projected, computed, deps?.identities);
+        const upstream = await timedExecution(deps, "cms_upstream", () => doFetch(built.url, init));
+        const projected = await timedExecution(deps, "cms_projection", () =>
+            projectSourceResponse(endpoint, request, upstream, deps),
+        );
+        const bindingError = await timedExecution(deps, "cms_identity_binding", () =>
+            bindResponseIdentities(endpoint, projected, computed, deps?.identities),
+        );
         return bindingError ?? projected;
     } catch (err) {
         const aborted = (err as { name?: string })?.name === "AbortError";
@@ -131,46 +148,4 @@ function validEndpointTimeout(timeoutMs: number | undefined): number {
 
 function isMutatingMethod(method: SourceEndpoint["method"]): boolean {
     return method !== "GET" && method !== "HEAD" && method !== "OPTIONS";
-}
-
-async function projectSourceResponse(
-    endpoint: SourceEndpoint,
-    request: Request,
-    upstream: Response,
-    deps: ExecutorDeps | undefined,
-): Promise<Response> {
-    const declared = hasResponseContract(endpoint, upstream.status);
-    const legacyStrictFailure =
-        !declared && deps?.reportFailure !== undefined && deps.responseProjectionMode !== "compatibility";
-    const projected = await projectEndpointResponse(endpoint, request, upstream, {
-        responseProjectionMode: legacyStrictFailure ? "strict" : deps?.responseProjectionMode,
-        reportResponseProjectionEvent: deps?.reportResponseProjectionEvent,
-    });
-    if (!declared && deps?.reportFailure) {
-        reportUndeclaredStatus(endpoint, upstream.status, projected, deps.reportFailure);
-    }
-    return projected;
-}
-
-function hasResponseContract(endpoint: SourceEndpoint, status: number): boolean {
-    return endpoint.output?.some((output) => output.status === String(status) || output.status === "default") === true;
-}
-
-function reportUndeclaredStatus(
-    endpoint: SourceEndpoint,
-    upstreamStatus: number,
-    response: Response,
-    reporter: NonNullable<ExecutorDeps["reportFailure"]>,
-): void {
-    const failure: UndeclaredUpstreamStatus = {
-        correlationId: response.headers.get("x-correlation-id") ?? crypto.randomUUID(),
-        endpointUrn: endpoint.urn,
-        kind: "undeclared_upstream_status",
-        upstreamStatus,
-    };
-    try {
-        void Promise.resolve(reporter(failure)).catch(() => undefined);
-    } catch {
-        // Observability must not change source response behaviour.
-    }
 }

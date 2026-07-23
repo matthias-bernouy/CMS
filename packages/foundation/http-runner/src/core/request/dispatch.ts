@@ -1,5 +1,9 @@
 import type { Middleware, RouteHandler } from "http-runner/interfaces/Runner";
-import { existingRequestCorrelationId, withRequestCorrelationHeader } from "http-runner/core/request/observability";
+import {
+    existingRequestCorrelationId,
+    requestCorrelationId,
+    withRequestCorrelationHeader,
+} from "http-runner/core/request/observability";
 
 export type RequestTarget = {
     handler: RouteHandler;
@@ -11,6 +15,7 @@ export async function dispatchRequest(
     target: RequestTarget,
     globalMiddlewares: Middleware[],
 ): Promise<Response> {
+    requestCorrelationId(request);
     const middlewares = [...globalMiddlewares, ...target.middlewares];
     let index = 0;
     const next = async (req: Request): Promise<Response> => {

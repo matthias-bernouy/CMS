@@ -20,6 +20,7 @@ export const FORBIDDEN_REQUEST_HEADERS = new Set([
     "trailer",
     "content-length",
     "cookie",
+    "x-cms-correlation-id",
 ]);
 
 /** RFC 7230 token: the legal characters of a header field name. */

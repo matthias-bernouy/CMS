@@ -24,6 +24,19 @@ export {
     RESPONSE_KINDS,
     SOURCE_ENDPOINT_ACCESS_MODES,
 } from "./interfaces/Source";
+export {
+    SOURCE_TIMING_STAGES,
+    UNRESOLVED_SOURCE_ENDPOINT,
+    type SourceDiagnosticCohort,
+    type SourceDiagnosticReporter,
+    type SourceExecutionObservability,
+    type SourceRequestDiagnostic,
+    type SourceRequestObservation,
+    type SourceRequestObserver,
+    type SourceRequestOutcome,
+    type SourceRequestTelemetryOptions,
+    type SourceTimingStage,
+} from "./interfaces/SourceObservability";
 export type { DataShape } from "./interfaces/DataShape";
 export {
     FORBIDDEN_REQUEST_HEADERS,

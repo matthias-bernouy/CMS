@@ -11560,7 +11560,8 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     "proxy-authorization",
     "trailer",
     "content-length",
-    "cookie"
+    "cookie",
+    "x-cms-correlation-id"
   ]);
   var HEADER_NAME_RE = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
   var isForbiddenHeaderName = (n) => FORBIDDEN_REQUEST_HEADERS.has(n.toLowerCase());
@@ -17213,6 +17214,24 @@ w13c-lateral-menu-item {
       return Array.from(this.dashboards.values(), (dashboard) => structuredClone(dashboard));
     }
   }
+  // ../../features/cms-sources/src/interfaces/SourceObservability.ts
+  var SOURCE_TIMING_STAGES = [
+    "cms_auth",
+    "cms_endpoint_auth_lookup",
+    "cms_authorize",
+    "cms_roles",
+    "cms_endpoint_resolve",
+    "cms_source",
+    "cms_overlays",
+    "cms_context",
+    "cms_secret",
+    "cms_headers",
+    "cms_body",
+    "cms_upstream",
+    "cms_projection",
+    "cms_identity_binding",
+    "cms_total"
+  ];
   // ../../features/cms-sources/src/default-implementation/InMemorySourceRepository.ts
   class InMemorySourceRepository {
     _sources = new Map;
@@ -17454,14 +17473,23 @@ w13c-lateral-menu-item {
     }
   }
 
-  // ../../features/cms-sources/src/core/response-projection/projectEndpointResponse.ts
-  var MAX_PROJECTED_JSON_BYTES = 2 * 1024 * 1024;
-
   // ../../features/cms-sources/src/core/response-projection/bindResponseIdentities.ts
   var MAX_IDENTITY_BINDING_RESPONSE_BYTES = 64 * 1024;
 
+  // ../../foundation/http-runner/src/core/request/observability.ts
+  var correlations = new WeakMap;
+  var timings = new WeakMap;
+  var finishedTimings = new WeakMap;
+  // ../../features/cms-sources/src/core/response-projection/projectEndpointResponse.ts
+  var MAX_PROJECTED_JSON_BYTES = 2 * 1024 * 1024;
+
   // ../../features/cms-sources/src/core/overlays/sourceOverlay.ts
   var sharedSchemaCaches = new WeakMap;
+  // ../../features/cms-sources/src/core/execution/sourceObservationReporting.ts
+  var sourceStageNames = new Set(SOURCE_TIMING_STAGES);
+
+  // ../../features/cms-sources/src/core/execution/sourceObservability.ts
+  var contexts = new WeakMap;
   // ../../features/cms-dashboards/src/core/dashboardPaths.ts
   var PATH_SEGMENT = /^[A-Za-z_$][\w$]*$/;
   var EXPRESSION = /^\$([A-Za-z]+)(?:\.(.+))?$/;
