@@ -2,6 +2,7 @@ import { executeFunction, validateFunction, type CmsFunction } from "@bernouy/cm
 import { secretKeyToRef } from "@bernouy/cms-secrets";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../errors";
 import { resolveDependencyContext } from "../../import/dependencies";
+import { resolveIntegrationInputs } from "../../definitions/resolvedInputs";
 import { resolveTemplates, type TemplateContext } from "../../definitions/templates";
 import type { DeclarativeAfterInstallationTemplate, IntegrationDefinition } from "../../../interfaces/Integration";
 import type { IntegrationImportDeps } from "../../../interfaces/IntegrationImport";
@@ -31,7 +32,7 @@ export async function reconcileAfterInstallation(
             if ((action.requires ?? []).some((name) => !dependencies[name])) {
                 continue;
             }
-            await executeAction(deps, installation, dependencies, action);
+            await executeAction(deps, definition, installation, dependencies, action);
         }
     }
 }
@@ -54,12 +55,19 @@ function isAffected(
 
 async function executeAction(
     deps: IntegrationImportDeps,
+    definition: IntegrationDefinition,
     installation: IntegrationInstallation,
     dependencies: NonNullable<TemplateContext["dependencies"]>,
     action: DeclarativeAfterInstallationTemplate,
 ): Promise<void> {
+    const resolved = await resolveIntegrationInputs(
+        definition,
+        installation.answersSnapshot,
+        deps.resolvePublishedPage,
+    );
     const context: TemplateContext = {
         answers: installation.answersSnapshot,
+        resolved,
         dependencies,
         secrets: Object.fromEntries(
             Object.entries(installation.secretRefs).map(([name, key]) => [name, secretKeyToRef(key)]),

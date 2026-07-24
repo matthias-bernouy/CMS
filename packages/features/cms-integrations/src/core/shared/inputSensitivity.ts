@@ -1,8 +1,8 @@
 import { IntegrationInputError } from "../errors";
-import type { IntegrationDefinition, IntegrationInput } from "../../interfaces/Integration";
+import type { IntegrationDefinition, IntegrationInput, IntegrationValueInput } from "../../interfaces/Integration";
 
-export function isSensitiveInput(input: IntegrationInput): boolean {
-    return input.secret === true || input.type === "password";
+export function isSensitiveInput(input: IntegrationInput): input is IntegrationValueInput {
+    return input.type !== "object-list" && (input.secret === true || input.type === "password");
 }
 
 export function sensitiveInputNames(definition: Pick<IntegrationDefinition, "inputs">): string[] {

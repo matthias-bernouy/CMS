@@ -98,6 +98,16 @@ export type IntegrationImportRequest = {
     siteIntegrations: IntegrationDefinition[];
 };
 
+export type IntegrationResolvedPage = {
+    id: string;
+    path: string;
+    title: string;
+    description: string;
+    content: string;
+};
+
+export type IntegrationPublishedPageResolver = (path: string) => Promise<IntegrationResolvedPage | null>;
+
 export type IntegrationImportDeps = {
     sources: SourceRepository;
     functions?: FunctionRepository;
@@ -113,6 +123,7 @@ export type IntegrationImportDeps = {
     provisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
     sourceExecutorDeps?: ExecutorDeps;
     env?: Record<string, string | undefined>;
+    resolvePublishedPage?: IntegrationPublishedPageResolver;
 };
 
 export type IntegrationBlocArtifact = {

@@ -92,7 +92,8 @@ export function isInputType(value: string | undefined): value is IntegrationInpu
         value === "password" ||
         value === "select" ||
         value === "boolean" ||
-        value === "json"
+        value === "json" ||
+        value === "object-list"
     );
 }
 
