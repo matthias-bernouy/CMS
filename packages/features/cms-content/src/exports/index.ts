@@ -46,7 +46,12 @@ export {
     validateThemeSettings,
 } from "cms-content/core/theme";
 export { countValues, normalizeTags } from "cms-content/core/queries/counts";
-export { isPublishedPage } from "cms-content/core/lifecycle/publication";
+export {
+    isPublishedPage,
+    publishedPageSnapshot,
+    serializePublishedPageSnapshot,
+    type PublishedPageSnapshot,
+} from "cms-content/core/lifecycle/publication";
 export {
     ContentValidationError,
     ContentConflictError,
@@ -80,6 +85,12 @@ export { coercePageRef, pageRefToString } from "cms-content/core/validation/docu
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export { generateStyleEntry } from "cms-content/http/generateStyleEntry";
+export {
+    PUBLISHED_PAGE_SNAPSHOT_ROUTE,
+    PUBLISHED_PAGE_SNAPSHOT_SCHEMA,
+    publishedPageSnapshotUrl,
+    servePublishedPageSnapshot,
+} from "cms-content/http/publishedPageSnapshot";
 
 // ── Constants & utils ──────────────────────────────────────────────────
 export * from "cms-content/core/constants/p9r-constants";
