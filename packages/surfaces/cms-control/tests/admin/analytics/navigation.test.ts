@@ -22,23 +22,25 @@ describe("analytics navigation", () => {
 
         expect(analyticsViewPath("overview")).toBe("/cms/admin/analytics");
         expect(analyticsViewPath("content")).toBe("/cms/admin/analytics/content");
+        expect(analyticsViewPath("endpoints")).toBe("/cms/admin/analytics/endpoints");
         expect(analyticsViewFromPath("/cms/admin/analytics/origins", "/cms")).toBe("origins");
+        expect(analyticsViewFromPath("/cms/admin/analytics/endpoints", "/cms")).toBe("endpoints");
         expect(analyticsViewFromPath("/cms/admin/analytics", "/cms")).toBe("overview");
     });
 
     test("marks the current static dashboard active", () => {
         document.head.innerHTML = '<meta name="basePath" content="/cms">';
-        history.replaceState(null, "", "/cms/admin/analytics/health");
+        history.replaceState(null, "", "/cms/admin/analytics/endpoints");
         const nav = document.createElement("cms-analytics-nav");
         document.body.append(nav);
 
         const items = Array.from(nav.shadowRoot!.querySelectorAll<HTMLElement>("[data-analytics-view]"));
-        const health = items.find((item) => item.dataset.analyticsView === "health")!;
+        const endpoints = items.find((item) => item.dataset.analyticsView === "endpoints")!;
         const overview = items.find((item) => item.dataset.analyticsView === "overview")!;
 
-        expect(health.getAttribute("href")).toBe("/cms/admin/analytics/health");
-        expect(health.hasAttribute("active")).toBe(true);
+        expect(endpoints.getAttribute("href")).toBe("/cms/admin/analytics/endpoints");
+        expect(endpoints.hasAttribute("active")).toBe(true);
         expect(overview.hasAttribute("active")).toBe(false);
-        expect(items.filter((item) => item.hasAttribute("active"))).toEqual([health]);
+        expect(items.filter((item) => item.hasAttribute("active"))).toEqual([endpoints]);
     });
 });

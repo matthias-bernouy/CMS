@@ -19,6 +19,7 @@ import type { CMS_ROLES } from "types/roles";
 export class CaptureRunner implements Runner {
     readonly endpoints = new Map<string, number>();
     readonly handlers = new Map<string, RouteHandler>();
+    readonly middlewareChains = new Map<string, Middleware[]>();
 
     /** For tests that only assert the synchronously mounted route groups. */
     static withoutFileApi(): CaptureRunner {
@@ -39,6 +40,7 @@ export class CaptureRunner implements Runner {
     ): void {
         this.target.endpoints.set(`${method} ${joinPath(this.basePath, path)}`, middlewares.length);
         this.target.handlers.set(`${method} ${joinPath(this.basePath, path)}`, handler);
+        this.target.middlewareChains.set(`${method} ${joinPath(this.basePath, path)}`, middlewares);
     }
     use() {}
     get(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
@@ -76,6 +78,7 @@ export class CaptureRunner implements Runner {
     ): void {
         this.target.endpoints.set(`${method} ${this.basePath}`, middlewares.length);
         this.target.handlers.set(`${method} ${this.basePath}`, handler);
+        this.target.middlewareChains.set(`${method} ${this.basePath}`, middlewares);
     }
 
     private get target(): CaptureRunner {

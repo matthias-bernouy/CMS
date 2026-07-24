@@ -7,7 +7,8 @@
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
-        "./mongo": "./src/exports/mongo.ts"
+        "./mongo": "./src/exports/mongo.ts",
+        "./requestScope": "./src/exports/requestScope.ts"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

@@ -41,6 +41,7 @@ export type ResponseProjectionReporter = (event: ResponseProjectionEvent) => voi
 export type ResponseProjectionOptions = {
     responseProjectionMode?: ResponseProjectionMode;
     reportResponseProjectionEvent?: ResponseProjectionReporter;
+    correlationId?: string;
 };
 
 export type ResponseProjectionFailureMetadata = {
@@ -57,7 +58,7 @@ export function projectionFailure(
     options: ResponseProjectionOptions,
     metadata: ResponseProjectionFailureMetadata = {},
 ): Response {
-    const correlationId = crypto.randomUUID();
+    const correlationId = options.correlationId ?? crypto.randomUUID();
     reportResponseProjectionEvent(options, {
         kind: "response_projection_failure",
         endpointUrn,

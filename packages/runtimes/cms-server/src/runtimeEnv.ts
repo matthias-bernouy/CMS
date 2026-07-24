@@ -18,6 +18,9 @@ export type RuntimeEnv = {
     ANALYTICS_SALT_SECRET: string;
     ANALYTICS_TRUST_PROXY: boolean;
     ANALYTICS_TRUSTED_PROXY_VERIFIED: boolean;
+    ENDPOINT_PERFORMANCE_ENABLED: boolean;
+    SOURCE_TIMING_SAMPLE_RATE: number;
+    SOURCE_SLOW_REQUEST_THRESHOLD_MS: number;
 };
 
 type EnvSource = Record<string, string | undefined>;
@@ -72,6 +75,21 @@ export function readRuntimeEnv(source: EnvSource): RuntimeEnv {
         ANALYTICS_SALT_SECRET: required(source, "ANALYTICS_SALT_SECRET"),
         ANALYTICS_TRUST_PROXY: parseBoolean(source.ANALYTICS_TRUST_PROXY, false),
         ANALYTICS_TRUSTED_PROXY_VERIFIED: parseBoolean(source.ANALYTICS_TRUSTED_PROXY_VERIFIED, false),
+        ENDPOINT_PERFORMANCE_ENABLED: parseBoolean(source.ENDPOINT_PERFORMANCE_ENABLED, true),
+        SOURCE_TIMING_SAMPLE_RATE: parseBoundedNumber(
+            source.SOURCE_TIMING_SAMPLE_RATE,
+            "SOURCE_TIMING_SAMPLE_RATE",
+            0.01,
+            0,
+            1,
+        ),
+        SOURCE_SLOW_REQUEST_THRESHOLD_MS: parseBoundedNumber(
+            source.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
+            "SOURCE_SLOW_REQUEST_THRESHOLD_MS",
+            1_000,
+            0,
+            300_000,
+        ),
     };
 }
 
@@ -138,4 +156,21 @@ function parseBoolean(raw: string | undefined, fallback: boolean): boolean {
         return false;
     }
     throw new Error("boolean environment values must be true or false");
+}
+
+function parseBoundedNumber(
+    raw: string | undefined,
+    name: string,
+    fallback: number,
+    minimum: number,
+    maximum: number,
+): number {
+    if (raw === undefined) {
+        return fallback;
+    }
+    const value = Number(raw);
+    if (!raw.trim() || !Number.isFinite(value) || value < minimum || value > maximum) {
+        throw new Error(`${name} must be between ${minimum} and ${maximum}`);
+    }
+    return value;
 }

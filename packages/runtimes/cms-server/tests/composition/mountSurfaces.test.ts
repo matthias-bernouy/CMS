@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../src/runtime/mountSurfaces";
-import { surfaceMountFixtures } from "./surfaceMountFixtures";
+import { surfaceMountFixtures, waitFor } from "./surfaceMountFixtures";
 
 describe("production surface mounting", () => {
     test("waits for Control before wiring and starting both public surfaces", async () => {
@@ -14,6 +14,9 @@ describe("production surface mounting", () => {
         let deliveryConfig: Record<string, unknown> | undefined;
         let workerOptions: Record<string, unknown> | undefined;
         let finalizerStore: unknown;
+        let flusherRecorder: unknown;
+        let flushes = 0;
+        let flusherStopped = false;
         const runNow = async () => ({ status: "succeeded" });
         let releaseControl!: () => void;
         const controlReady = new Promise<void>((resolve) => {
@@ -22,20 +25,21 @@ describe("production surface mounting", () => {
 
         class FakeRunner {
             readonly name = runners.length === 0 ? "control" : "delivery";
-
             constructor() {
                 runners.push(this);
                 events.push(`runner:${this.name}`);
             }
-
             group(prefix: string, callback: (runner: unknown) => void): void {
                 events.push(`group:${prefix}`);
                 callback(repositoryRunner);
             }
-
             start(port: number): void {
                 events.push(`start:${this.name}`);
                 starts.push([this.name, port]);
+            }
+
+            async stopGracefully(): Promise<void> {
+                events.push(`stop:${this.name}`);
             }
         }
 
@@ -76,14 +80,26 @@ describe("production surface mounting", () => {
                 finalizerStore = store;
                 return {};
             },
+            startEndpointPerformanceFlusher(recorder: unknown) {
+                flusherRecorder = recorder;
+                return {
+                    async run() {
+                        flushes++;
+                    },
+                    stop() {
+                        flusherStopped = true;
+                    },
+                };
+            },
             log(message: string) {
                 logs.push(message);
             },
+            reportError() {},
         } as unknown as ProductionSurfaceRuntime;
         const options = surfaceMountFixtures();
 
         const mounting = mountProductionSurfaces(options as never, runtime);
-        await Promise.resolve();
+        await waitFor(() => events.includes("control"));
 
         expect(events).toEqual(["workers", "runner:control", "group:/.cms/repository", "repository", "control"]);
         expect(repositoryConfig).toEqual({
@@ -92,7 +108,7 @@ describe("production surface mounting", () => {
         });
 
         releaseControl();
-        await mounting;
+        const mounted = await mounting;
 
         const controlConfig = controlArguments[3] as Record<string, unknown>;
         expect(controlArguments[0]).toBe(runners[0]);
@@ -108,13 +124,19 @@ describe("production surface mounting", () => {
                 allowSignup: false,
             },
             scheduledTriggers: { enabled: true, runNow },
+            endpointPerformanceReports: options.features.endpointPerformanceReports,
+            sourceTelemetry: expect.any(Object),
+            sourceTrustedConnectorTarget: expect.any(Function),
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],
             repository: options.core.repo,
-            sources: options.features.deliverySources,
+            sources: options.features.sources,
+            sourceOverlays: options.features.sourceOverlays,
+            sourceTelemetry: expect.any(Object),
+            sourceTrustedConnectorTarget: expect.any(Function),
             analyticsVisitorSecret: options.analyticsVisitorSecret,
             analyticsSiteScope: options.env.DELIVERY_PUBLIC_URL,
             analyticsTrustProxy: false,
@@ -137,6 +159,7 @@ describe("production surface mounting", () => {
             triggers: options.features.triggers,
         });
         expect(finalizerStore).toBe(options.features.analytics);
+        expect(flusherRecorder).toBe(options.features.endpointPerformanceRecorder);
         expect(starts).toEqual([
             ["control", 3100],
             ["delivery", 3101],
@@ -148,5 +171,10 @@ describe("production surface mounting", () => {
             "   public site:  https://www.example.test/",
             "   storage:      mongo=cms-test, files=/data/files",
         ]);
+
+        await mounted.stop();
+        expect(flusherStopped).toBe(true);
+        expect(flushes).toBe(1);
+        expect(events.slice(-2)).toEqual(["stop:control", "stop:delivery"]);
     });
 });

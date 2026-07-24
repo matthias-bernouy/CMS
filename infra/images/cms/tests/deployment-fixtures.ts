@@ -44,6 +44,7 @@ export const requiredCmsEnvironment = {
     CMS_SESSION_SECRET: "c".repeat(64),
     CMS_KEK_HEX: "d".repeat(64),
     CMS_ADMIN_PASSWORD: "deployment-test-password",
+    ANALYTICS_SALT_SECRET: "e".repeat(64),
 };
 
 export function renderCompose(composeFile: string, environment: Record<string, string>): ComposeConfig {

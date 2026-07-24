@@ -1,5 +1,5 @@
-import { ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
-import { MongoAnalyticsStore } from "@bernouy/cms-analytics/mongo";
+import { BufferedEndpointPerformanceRecorder, ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
+import { MongoAnalyticsStore, MongoEndpointPerformanceStore } from "@bernouy/cms-analytics/mongo";
 import { MongoDashboardRepository } from "@bernouy/cms-dashboards/mongo";
 import { MongoFunctionRepository } from "@bernouy/cms-functions/mongo";
 import { MongoIdentityService } from "@bernouy/cms-identities/mongo";
@@ -19,7 +19,11 @@ import { MongoSourceOverlayRepository, MongoSourceRepository } from "@bernouy/cm
 import { MongoTriggerRepository } from "@bernouy/cms-triggers/mongo";
 import type { Db } from "mongodb";
 
-export async function createFeatureStores(db: Db, secrets: SecretStore) {
+type FeatureStoreOptions = {
+    endpointPerformanceEnabled?: boolean;
+};
+
+export async function createFeatureStores(db: Db, secrets: SecretStore, options: FeatureStoreOptions = {}) {
     const mongoSources = new MongoSourceRepository(db);
     await mongoSources.init();
     const sources = new CompositeSourceRepository(new ValidatingSourceRepository(mongoSources), SYSTEM_SOURCES);
@@ -40,6 +44,11 @@ export async function createFeatureStores(db: Db, secrets: SecretStore) {
     const mongoAnalytics = new MongoAnalyticsStore(db);
     await mongoAnalytics.init();
     const analytics = new ValidatingAnalyticsStore(mongoAnalytics);
+    const endpointPerformanceReports = new MongoEndpointPerformanceStore(db);
+    await endpointPerformanceReports.init();
+    const endpointPerformanceRecorder = new BufferedEndpointPerformanceRecorder(endpointPerformanceReports, {
+        enabled: options.endpointPerformanceEnabled,
+    });
     const integrationInstallations = new MongoIntegrationInstallationRepository(db);
     await integrationInstallations.init();
     const integrationConnectorProviders = new MongoIntegrationConnectorProviderRepository(db);
@@ -58,6 +67,8 @@ export async function createFeatureStores(db: Db, secrets: SecretStore) {
         dashboards,
         relations,
         analytics,
+        endpointPerformanceRecorder,
+        endpointPerformanceReports,
         integrationInstallations,
         integrationConnectorProviders,
         resolveSecret,

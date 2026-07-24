@@ -70,6 +70,21 @@ describe("validateSource request contracts", () => {
         expect(errors.some((error) => error.includes("invalid header value"))).toBe(true);
         expect(errors.some((error) => error.includes("secret header without ref"))).toBe(true);
         expect(errors.some((error) => error.includes("invalid computed ref"))).toBe(true);
+
+        const reserved = source({
+            endpoints: [
+                {
+                    ...ep("urn:shop:reserved"),
+                    headers: [
+                        {
+                            name: "x-cms-correlation-id",
+                            source: { from: "static" as const, value: "override" },
+                        },
+                    ],
+                },
+            ],
+        });
+        expect(validateSource(reserved).some((error) => error.includes("forbidden or invalid header name"))).toBe(true);
     });
 
     test("validates duplicate headers, secret prefixes, and response contracts", () => {

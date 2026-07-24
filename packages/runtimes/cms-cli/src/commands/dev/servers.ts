@@ -6,6 +6,7 @@ import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { RepositoryCms } from "@bernouy/cms-repository";
 import { BunRunner } from "@bernouy/http-runner";
 import { startDevScheduledTriggers } from "../../dev-server/runtime/scheduledTriggers";
+import { createLocalEndpointPerformance } from "../../dev-server/runtime/endpointPerformance";
 import { createBlocRegistry } from "../../dev-server/watch/index";
 import type { ReloadEmitter } from "../../dev-server/watch/types";
 import type { LocalBlocs } from "./blocs";
@@ -36,6 +37,10 @@ export async function startLocalServers(options: ServerOptions) {
         : undefined;
     await scheduledTriggers?.ready;
     const analytics = new ValidatingAnalyticsStore(new InMemoryAnalyticsStore());
+    const endpointPerformance = await createLocalEndpointPerformance(
+        options.runtime.mode,
+        services.integrationConnectorDeployers,
+    );
     const analyticsVisitorSecret = crypto.randomUUID();
     const runner = new BunRunner();
     runner.addEndpoint("GET", "/dev/reload", sseHandler(options.reload));
@@ -77,6 +82,9 @@ export async function startLocalServers(options: ServerOptions) {
             },
             identities: services.identities,
             sourceOverlays: services.sourceOverlays,
+            endpointPerformanceReports: endpointPerformance.reports,
+            sourceTelemetry: endpointPerformance.controlTelemetry,
+            sourceTrustedConnectorTarget: endpointPerformance.trustedConnectorTarget,
             integrationBlocRepository: services.integrationBlocRepository,
         },
         undefined,
@@ -116,7 +124,10 @@ export async function startLocalServers(options: ServerOptions) {
         filesMetadata: services.filesMetadata,
         filesBlob: services.files,
         variantStore,
-        sources: services.deliverySources,
+        sources: services.sources,
+        sourceOverlays: services.sourceOverlays,
+        sourceTelemetry: endpointPerformance.deliveryTelemetry,
+        sourceTrustedConnectorTarget: endpointPerformance.trustedConnectorTarget,
         functions: services.functions,
         triggers: services.triggers,
         identities: services.identities,
@@ -130,5 +141,18 @@ export async function startLocalServers(options: ServerOptions) {
         auth: services.publicAuth,
     });
     deliveryRunner.start(flags.deliveryPort);
-    return { registry, scheduledTriggers };
+    let stopping: Promise<void> | null = null;
+    return {
+        registry,
+        scheduledTriggers,
+        stop() {
+            stopping ??= (async () => {
+                endpointPerformance.stopFlusher();
+                await Promise.all([runner.stopGracefully(), deliveryRunner.stopGracefully()]);
+                await endpointPerformance.flush();
+                await scheduledTriggers?.stop();
+            })();
+            return stopping;
+        },
+    };
 }

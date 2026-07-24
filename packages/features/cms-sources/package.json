@@ -8,10 +8,12 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./browser": "./src/exports/browser.ts",
-        "./mongo": "./src/exports/mongo.ts"
+        "./mongo": "./src/exports/mongo.ts",
+        "./requestScope": "./src/exports/requestScope.ts"
     },
     "dependencies": {
-        "@bernouy/cms-identities": "workspace:*"
+        "@bernouy/cms-identities": "workspace:*",
+        "@bernouy/http-runner": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

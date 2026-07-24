@@ -36,10 +36,15 @@ export async function runLocalCms(args: string[], runtime: LocalRuntimeOptions) 
     });
 
     logReady(runtime, flags, config.siteDir, blocs.authored.length, services.devAdmin.sub);
+    let stopping = false;
     const shutdown = async (signal: string) => {
+        if (stopping) {
+            return;
+        }
+        stopping = true;
         console.log(`\n→ Stopping (${signal})...`);
         servers.registry.stop();
-        await servers.scheduledTriggers?.stop();
+        await servers.stop();
         process.exit(0);
     };
     process.on("SIGINT", () => void shutdown("SIGINT"));

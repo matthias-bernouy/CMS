@@ -1,0 +1,155 @@
+<section class="analytics-surface endpoint-performance">
+    <div class="analytics-loading" data-view-state="loading" aria-label="Loading endpoint performance">
+        <div class="skeleton skeleton--heading"></div>
+        <div class="endpoint-skeleton-grid">
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+            <div class="skeleton skeleton--metric"></div>
+        </div>
+        <div class="skeleton skeleton--panel"></div>
+    </div>
+
+    <div class="analytics-error" data-view-state="unavailable" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v6" />
+            <path d="M12 17h.01" />
+        </svg>
+        <h2>Endpoint performance is unavailable</h2>
+        <p>The aggregate report could not be loaded. Source requests are not affected.</p>
+        <button type="button" data-retry>Try again</button>
+    </div>
+
+    <div class="endpoint-ready" data-view-state="ready" hidden>
+        <header class="report-header">
+            <div>
+                <span class="eyebrow">Operations</span>
+                <h2>Endpoint performance</h2>
+                <p>Latency, volume, and errors across Control and Delivery source endpoints.</p>
+            </div>
+            <span class="privacy-pill">Aggregates only</span>
+        </header>
+
+        <form class="endpoint-filters" data-filters>
+            <label>
+                <span>Surface</span>
+                <select name="surface">
+                    <option value="">All surfaces</option>
+                    <option value="control">Control</option>
+                    <option value="delivery">Delivery</option>
+                </select>
+            </label>
+            <label class="endpoint-filter">
+                <span>Source endpoint</span>
+                <input name="endpoint" type="search" placeholder="urn:source:endpoint" autocomplete="off">
+            </label>
+            <label>
+                <span>Method</span>
+                <select name="method">
+                    <option value="">All methods</option>
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
+                    <option>HEAD</option>
+                    <option>OPTIONS</option>
+                    <option>OTHER</option>
+                </select>
+            </label>
+            <label>
+                <span>Status</span>
+                <select name="status">
+                    <option value="">All statuses</option>
+                    <option>1xx</option>
+                    <option>2xx</option>
+                    <option>3xx</option>
+                    <option>4xx</option>
+                    <option>5xx</option>
+                </select>
+            </label>
+            <div class="endpoint-filter-actions">
+                <button type="submit">Apply filters</button>
+                <button type="button" data-reset>Reset</button>
+            </div>
+        </form>
+
+        <div class="endpoint-notice endpoint-notice--warning" data-partial hidden role="status">
+            This report is partial. Some observations were dropped, invalid, or could not be flushed.
+        </div>
+        <div class="endpoint-notice endpoint-notice--danger" data-stale hidden role="status">
+            This report is stale. Recent endpoint activity may be missing.
+        </div>
+
+        <div class="endpoint-empty" data-empty hidden>
+            <strong>No endpoint activity in this range</strong>
+            <span>Try a longer range or clear one of the filters.</span>
+        </div>
+
+        <div class="endpoint-content" data-content>
+            <div class="metric-grid endpoint-metrics" data-role="metrics"></div>
+
+            <section class="analytics-panel analytics-panel--wide">
+                <header class="panel-header">
+                    <div>
+                        <span class="eyebrow">Timeline</span>
+                        <h3>Volume, p95 latency, and error rate</h3>
+                    </div>
+                    <div class="endpoint-legend" aria-hidden="true">
+                        <span data-series="volume">Requests</span>
+                        <span data-series="p95">p95</span>
+                        <span data-series="errors">Error rate</span>
+                    </div>
+                </header>
+                <div class="chart-host endpoint-timeline-host" data-role="timeline"></div>
+            </section>
+
+            <section class="analytics-panel analytics-panel--wide">
+                <header class="panel-header">
+                    <div>
+                        <span class="eyebrow">Endpoints</span>
+                        <h3>Sortable aggregate performance</h3>
+                    </div>
+                    <span class="panel-context">Select an endpoint for details</span>
+                </header>
+                <div data-role="endpoint-table"></div>
+            </section>
+
+            <section class="analytics-panel analytics-panel--wide" data-role="detail-panel">
+                <div class="endpoint-detail-empty" data-detail-empty>Select an endpoint above to inspect its aggregate distribution.</div>
+                <div data-detail hidden>
+                    <header class="panel-header endpoint-detail-header">
+                        <div>
+                            <span class="eyebrow">Selected endpoint</span>
+                            <h3 data-role="detail-title"></h3>
+                            <span class="panel-context" data-role="detail-context"></span>
+                        </div>
+                        <button type="button" data-clear-endpoint>Clear selection</button>
+                    </header>
+                    <div class="endpoint-detail-grid">
+                        <div>
+                            <h4>Status distribution</h4>
+                            <div class="bar-list" data-role="statuses"></div>
+                        </div>
+                        <div>
+                            <h4>Latency histogram</h4>
+                            <div class="bar-list" data-role="histogram"></div>
+                        </div>
+                    </div>
+                    <div class="endpoint-stages">
+                        <h4>Stage contribution</h4>
+                        <div data-role="stages"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="privacy-boundary privacy-boundary--technical">
+            <strong>Aggregate operational telemetry</strong>
+            <span>No individual request logs, URLs, headers, identities, bodies, or secrets are stored or shown here.</span>
+        </aside>
+        <aside class="endpoint-meta" data-role="report-meta"></aside>
+    </div>
+</section>

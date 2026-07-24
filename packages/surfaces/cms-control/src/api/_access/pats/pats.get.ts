@@ -1,3 +1,4 @@
+import { resolveRequestSubject } from "@bernouy/cms-auth";
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 
@@ -6,7 +7,7 @@ import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
  *  pre-formatted into display labels so the admin table stays a plain
  *  `cms-source` consumer (no client-side date formatting). */
 export default async function listPats(req: Request, cms: ControlCms) {
-    const subject = await cms.auth.getSubject(req);
+    const subject = await resolveRequestSubject(cms.auth, req);
     if (!subject) {
         throw new MissingParam("session");
     }

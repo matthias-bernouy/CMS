@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, mock, spyOn, test } from "bun:test";
 import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemorySourceOverlayRepository, SourceOverlaySourceRepository } from "@bernouy/cms-sources";
 import { authSubject, mountPage } from "./pageSourceAccessPreflight.fixture";
@@ -72,6 +72,30 @@ describe("Delivery page source access preflight", () => {
 
         expect(res.status).toBe(200);
         expect(await res.text()).toContain("Products");
+    });
+
+    test("shares one role snapshot across every page binding in a request", async () => {
+        const roles = new InMemoryRolesRepository();
+        await roles.upsert({
+            id: PUBLIC_ROLE,
+            label: "Public",
+            builtin: true,
+            grants: [{ permission: "urn:shop:listProducts" }],
+        });
+        const list = spyOn(roles, "list");
+        const { handler } = await mountPage({
+            content: [
+                `<section cms-source="/.cms/sources/shop/listProducts as featured"></section>`,
+                `<section cms-source="/.cms/sources/shop/listProducts as recent"></section>`,
+            ].join(""),
+            roles,
+            auth: authSubject(null),
+        });
+
+        for (const expectedReads of [1, 2]) {
+            expect((await handler(new Request("http://site/products"))).status).toBe(200);
+            expect(list).toHaveBeenCalledTimes(expectedReads);
+        }
     });
 
     test("does not block initial page rendering for submit sources", async () => {

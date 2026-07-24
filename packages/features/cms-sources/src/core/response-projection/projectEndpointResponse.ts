@@ -137,6 +137,6 @@ function reportLegacyContract(
         endpointUrn: endpoint.urn,
         upstreamStatus: upstream.status,
         reason,
-        correlationId: crypto.randomUUID(),
+        correlationId: options.correlationId ?? crypto.randomUUID(),
     });
 }

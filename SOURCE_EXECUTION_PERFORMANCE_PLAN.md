@@ -1,6 +1,7 @@
 # CMS Source Execution Performance Plan
 
-Status: proposed.
+Status: immediate core implemented; measured and operational follow-up remains
+deferred.
 
 Date: 2026-07-23.
 
@@ -18,8 +19,43 @@ The scope includes:
 - the Commerce Stripe Payments reconciliation worker;
 - staging benchmarks and a possible Nano-to-Micro compute comparison.
 
-Unless explicitly described as current behavior, the contents of this document
-are proposals to approve before implementation.
+The CMS portion of Phase 1, the host capabilities in Phase 1b, and Phases 2 and
+3 describe the implemented immediate core. Edge-specific entrypoint
+instrumentation, Supabase operational evidence collection, later phases, and
+separately named workstreams remain deferred proposals that require fresh
+measurement and approval.
+
+## Implementation Snapshot
+
+The immediate core now provides:
+
+- validated request correlation IDs on routed and fallback CMS responses, with
+  controlled propagation to trusted connector targets;
+- bounded request timings and `cms_upstream` coverage for source endpoints;
+- exhaustive in-memory endpoint aggregates, asynchronous batched Mongo
+  persistence, TTL retention, health counters, and a guarded aggregate API;
+- an equivalent process-local report store for `p9r dev` and `p9r preview`, so
+  local Control and Delivery traffic exercises the dashboard without requiring
+  Mongo;
+- the host-owned `Analytics > Endpoint performance` view with ranges, filters,
+  headline percentiles, timeline, endpoint table, stage detail, and explicit
+  empty, stale, partial, and unavailable states;
+- one single-flight subject resolution per ingress request and authentication
+  backend;
+- request-local source, overlay, role, secret, context, function, trigger, and
+  identity reads, without shared plaintext-secret or authorization caches;
+- runtime controls for aggregate collection, detailed-log sampling, and the
+  slow-request threshold;
+- a bounded asynchronous diagnostic dispatcher with timeout, recovery, drop
+  counters, and visible best-effort loss reporting;
+- bounded, best-effort ingress quiescing before the final endpoint-metric drain
+  in the production and local runtimes.
+
+Published Edge resources were not modified. The initial dashboard therefore
+uses CMS timings, including `cms_upstream`; trusted `edge_*` detail remains an
+optional future extension. No cross-request cache, `prepareEndpoint` contract,
+Stripe refactor, Postgres migration, region change, or compute change is part
+of this implementation.
 
 ## Executive Decision
 
@@ -88,17 +124,29 @@ the cost of the second Mongo read is isolated.
 
 ## Confirmed Facts and Open Hypotheses
 
-Confirmed by source inspection:
+Confirmed before implementation by source inspection:
 
-- one ingress request can resolve the same subject several times;
+- one ingress request could resolve the same subject several times;
 - the authorization and enriched source phases execute distinct Mongo queries;
 - rejected requests already return before overlay, field-source, secret, and
   upstream work;
 - the Runner preserves the ingress `Request` instance across middleware and the
   handler;
-- Delivery and Control already use a request-scoped function repository;
 - the Stripe worker performs recurring Data API and provider work even when
   little is repaired.
+
+Confirmed after implementation:
+
+- subject resolution is single-flight within one request and fresh on the next
+  request;
+- Delivery and Control construct an explicit dependency scope inside each
+  source-proxy request;
+- the two source-resolution phases remain distinct and retain their descriptor
+  consistency guard;
+- endpoint persistence is asynchronous and separate from the business response
+  path;
+- detailed diagnostics are sampled independently from exhaustive aggregate
+  metrics.
 
 Supported by the benchmark:
 
@@ -185,7 +233,7 @@ production server's automatic Edge invocation was already observed in
 - A compute change would not remove Mongo, CMS authorization, source
   enrichment, or proxy overhead.
 
-## Current Request Path
+## Request Path Baseline and Implemented State
 
 ### Repeated subject resolution
 
@@ -193,7 +241,8 @@ production server's automatic Edge invocation was already observed in
 then resolves the current user and role. Its contract intentionally rereads the
 role so role changes become visible without a new login.
 
-The same incoming request can currently resolve that subject repeatedly:
+Before the immediate core, the same incoming request could resolve that subject
+repeatedly:
 
 - once in the Control authentication guard;
 - again for source authorization;
@@ -201,13 +250,18 @@ The same incoming request can currently resolve that subject repeatedly:
 - again for trigger user context;
 - again for system-function execution.
 
-Control can therefore reach five subject resolutions on a rich path. Delivery
-can reach four across authorization, context, triggers, and functions.
+Control could therefore reach five subject resolutions on a rich path.
+Delivery could reach four across authorization, context, triggers, and
+functions.
 
 The Runner passes the same `Request` instance from middleware to the route
 handler. Its middleware `next()` contract cannot substitute another request.
 Trigger body clones are used only for body reads, and synthetic function
 requests receive user context explicitly.
+
+`resolveRequestSubject()` now shares one in-flight lookup for that `Request` and
+`Authentication` pair. Rejected lookups are evicted, and a new request always
+rereads the current subject and role.
 
 ### Source resolution and authorization
 
@@ -234,14 +288,15 @@ This invariant must be preserved and covered by explicit call-count tests.
 
 ### The two Mongo reads do not currently share one cache key
 
-The production composition is:
+The ingress production composition is now built inside each proxy request:
 
 ```text
-FunctionAwareSourceRepository             # added for each proxy request
-`-- SourceOverlaySourceRepository          # currently long-lived
-    `-- CompositeSourceRepository
-        `-- ValidatingSourceRepository
-            `-- MongoSourceRepository
+withFunctionsSource
+`-- SourceOverlaySourceRepository
+    |-- RequestScopedSourceRepository
+    |   `-- Composite -> Validating -> Mongo
+    `-- RequestScopedSourceOverlayRepository
+        `-- MongoSourceOverlayRepository
 ```
 
 For a user source, the two phases follow different calls:
@@ -261,14 +316,15 @@ Overlay.getEndpoint
 -> getOverlaysForSource(sourceId)
 ```
 
-A request-scoped decorator that merely memoizes `getEndpoint(urn)` and
-`getSource(sourceUrn)` still performs both Mongo reads. Removing this duplicate
-requires canonicalizing both paths to one source aggregate below the overlay,
-or introducing an explicit two-phase resolution contract.
+The request-scoped decorator memoizes identical `getEndpoint(urn)` and
+`getSource(sourceUrn)` calls independently, so these two different lookup forms
+still perform both Mongo reads. Removing that remaining duplicate requires a
+measured canonicalization decision; it is not hidden behind the new request
+scope.
 
 ### Existing reusable pattern
 
-`RequestScopedFunctionRepository` already:
+`RequestScopedFunctionRepository` provided the initial pattern:
 
 - is constructed once for each source-proxy request;
 - stores in-flight promises;
@@ -277,8 +333,9 @@ or introducing an explicit two-phase resolution contract.
 - returns defensive clones;
 - invalidates its local entry after a write.
 
-The new request-scoped work should reuse this pattern instead of introducing a
-large generic cache framework first.
+The implemented source, overlay, context, secret, trigger, identity, subject,
+and role scopes reuse those semantics without introducing a global cache
+framework.
 
 ## Design Principles
 
@@ -326,7 +383,7 @@ Before changing code:
 Every implementation PR repeats `bun run check:all` before handoff. TypeScript
 changes also run `bun run format`, followed by a diff review.
 
-## Phase 1: Request Observability
+## Phase 1: Request Observability (CMS implemented; Edge detail deferred)
 
 ### Correlation
 
@@ -348,6 +405,10 @@ Propagation to Edge is explicit rather than assumed:
   policy;
 - verify at the Edge entrypoint that the value has the expected opaque format;
 - test that source definitions and callers cannot override it.
+
+CMS ingress creation, validation, response propagation, and trusted outbound
+propagation are implemented. Edge entrypoint validation and structured
+correlation logging require a new connector release and remain deferred.
 
 Synthetic trigger and function requests must not accidentally inherit an
 unrelated authenticated subject. Their existing explicit user-context
@@ -391,6 +452,10 @@ edge_projection
 edge_total
 ```
 
+The CMS timing names are implemented. The `edge_*` names are reserved for the
+deferred trusted connector instrumentation and are not emitted by the current
+published Edge resources.
+
 `edge_db_sum` is the sum of individual database-call durations.
 `edge_db_wall` is the elapsed critical path and may be smaller when calls run in
 parallel.
@@ -401,12 +466,16 @@ helper, rather than being repeated in every Commerce route.
 ### Exposure and sampling
 
 - Aggregate counters and fixed timing histograms: collect 100% in every
-  environment. They are updated in memory and contain no raw request records.
+  environment while endpoint-performance collection is enabled. They are
+  updated in memory and contain no raw request records.
 - Detailed benchmark and staging traces: collect 100%.
 - Detailed production traces and structured timing logs: start with
   configurable uniform 1% sampling.
-- Production errors, timeouts, and requests above 1,000 ms: retain detailed
-  diagnostics at 100% in a separate forced cohort.
+- Production errors, timeouts, and requests above 1,000 ms: attempt and enqueue
+  detailed diagnostics at 100% in a separate forced cohort. Delivery is
+  bounded and best-effort: saturation, sink failures, and sink timeouts may
+  drop diagnostics, with process counters and a structured warning making
+  that loss visible.
 - Never merge the forced cohort into percentile or error-rate calculations. It
   deliberately over-represents slow and failed requests.
 - Delivery `Server-Timing`: disabled by default and available only for
@@ -416,11 +485,14 @@ helper, rather than being repeated in every Commerce route.
   in public timing headers.
 
 Instrumentation overhead must stay below 5 ms at p95 and below 2% of total
-request time.
+request time. The repository includes a deterministic synthetic hot-path
+budget test; a real staging load run remains necessary before making a
+production latency claim.
 
-### Supabase observability
+### Supabase observability (operational follow-up)
 
-For benchmark windows, collect:
+This is an operator-run benchmark procedure, not part of the implemented
+repository instrumentation. For benchmark windows, collect:
 
 - Edge logs by function and correlation ID;
 - Data API request durations and status;
@@ -440,7 +512,7 @@ Automation created after 2026-07-23 must use the current Supabase Management
 API `logs` endpoint. The legacy `logs.all` endpoint is scheduled for removal on
 2026-09-23.
 
-## Phase 1b: Endpoint Performance Analytics
+## Phase 1b: Endpoint Performance Analytics (implemented)
 
 The request-timing collector must have a durable operator-facing outcome before
 optimization work begins. Add a host-owned `Analytics > Endpoint performance`
@@ -528,6 +600,13 @@ Supabase:
 - the dashboard must still explain requests when Supabase is slow or
   unavailable;
 - writing to the measured dependency would create an observer feedback loop.
+
+Production uses this durable Mongo store. The local CLI uses the same recorder
+and report contracts with an ephemeral in-memory store; it merges periodic
+flushes, serves the same dashboard projection, and performs a final drain after
+a bounded graceful-stop attempt. Requests that exceed the five-second grace
+period may be force-closed, so shutdown delivery remains explicitly
+best-effort rather than an exactly-once guarantee.
 
 Every completed source request updates a bounded in-memory aggregate keyed by
 time bucket and the approved dimensions. Fixed mergeable histograms are
@@ -649,7 +728,7 @@ benchmark window.
 - The combined timing and aggregation overhead remains below 5 ms at p95 and
   below 2% of total request time.
 
-## Phase 2: Request-Scoped Subject Resolution
+## Phase 2: Request-Scoped Subject Resolution (implemented)
 
 Add a single-flight helper in `cms-auth` backed by:
 
@@ -682,7 +761,7 @@ The helper replaces direct repeated calls in:
 This change preserves the `Authentication` contract: repeated calls for the
 same request already must be side-effect free and yield the same result.
 
-## Phase 3: Request-Scoped Dependency Deduplication
+## Phase 3: Request-Scoped Dependency Deduplication (implemented)
 
 Create one explicit source execution scope inside each proxy handler. It reuses
 the same promise-memoization behavior as the existing request-scoped function
@@ -754,9 +833,9 @@ Treat the duplicate base read as material when removing it is expected to save
 at least 20 ms at p95 or at least 10% of measured CMS non-upstream time. If it
 is below both thresholds, keep the current simpler contract.
 
-### Preferred no-interface option
+### Implemented request-local composition
 
-If material, first evaluate a request-scoped composition below the overlay:
+The immediate core placed request-scoped repositories below the overlay:
 
 ```text
 FunctionAwareSourceRepository
@@ -767,7 +846,8 @@ FunctionAwareSourceRepository
         `-- MongoSourceOverlayRepository
 ```
 
-`RequestScopedSourceRepository.getEndpoint(urn)` canonicalizes user endpoint
+It deliberately does not yet make
+`RequestScopedSourceRepository.getEndpoint(urn)` canonicalize user endpoint
 lookups through the cached source aggregate:
 
 ```ts
@@ -775,19 +855,18 @@ const source = await getSource(sourceUrnOf(urn));
 return source?.endpoints.find((endpoint) => endpoint.urn === urn) ?? null;
 ```
 
-This produces:
+Such canonicalization would produce:
 
 1. one base source snapshot for authorization;
 2. no overlay or field-source work before authorization;
 3. reuse of the same source snapshot during enrichment;
 4. one overlay lookup after authorization.
 
-Control can construct this chain inside its request handler. Delivery currently
-receives a long-lived overlay repository from the production runtime, so it
-would need a backward-compatible request-source factory or equivalent
-composition-root hook. Trigger interception must receive the same request
-scope; the current interceptor captures long-lived repositories before the
-handler callback.
+Control and Delivery now receive base sources and overlays separately and
+construct this chain inside each request handler. Trigger interception receives
+the same request-local repositories. Scheduled workers retain the fully
+materialized long-lived Delivery repository because they do not execute inside
+an ingress `Request`.
 
 ### When `prepareEndpoint` becomes justified
 
@@ -1224,8 +1303,9 @@ against the same commit and dataset.
 
 Keep changes small and independently measurable:
 
-1. **Observability primitives:** correlation, timing collector, Edge
-   database-call instrumentation, and deterministic timing tests.
+1. **Observability primitives:** CMS correlation, timing collector, and
+   deterministic timing tests; Edge database-call instrumentation remains a
+   separately versioned, deferred connector change.
 2. **Endpoint metric backend:** bounded in-memory aggregation, Mongo rollups,
    report projection, guarded admin API, and failure-isolation tests.
 3. **Endpoint performance view:** Analytics navigation, cards, timeline,
@@ -1280,15 +1360,17 @@ Rollback immediately when a change:
 | Safe overlay authorization lookup | `packages/features/cms-sources/src/core/overlays/sourceOverlay.ts` |
 | Distinct Mongo source and endpoint queries | `packages/features/cms-sources/src/default-implementation/MongoSourceRepository.ts` |
 | Production source composition | `packages/runtimes/cms-server/src/runtime/stores/features.ts` |
+| Local source telemetry composition | `packages/runtimes/cms-cli/src/commands/dev/servers.ts` |
 | Delivery subject and role authorization | `packages/surfaces/cms-delivery/src/core/sources/authorization.ts` |
 | Delivery source-proxy composition | `packages/surfaces/cms-delivery/src/core/sources/registerSourceProxy.ts` |
-| Control repeated subject resolution | `packages/surfaces/cms-control/src/core/admin/control/sourceProxy.ts` |
-| Runner preserves the request instance | `packages/foundation/http-runner/src/core/requestDispatch.ts` |
+| Control source-proxy request scope | `packages/surfaces/cms-control/src/core/admin/control/sourceProxy/index.ts` |
+| Delivery source-proxy request scope | `packages/surfaces/cms-delivery/src/core/sources/requestScope.ts` |
+| Runner preserves and correlates the request instance | `packages/foundation/http-runner/src/default-implementation/BunRunner.ts` |
 | Local auth rereads current roles | `packages/features/cms-auth/src/default-implementation/authentication/LocalAuthentication.ts` |
 | Existing function single-flight pattern | `packages/features/cms-functions/src/default-implementation/RequestScopedFunctionRepository.ts` |
-| Existing visitor-oriented analytics contract | `packages/features/cms-analytics/src/interfaces/AnalyticsStore.ts` |
+| Endpoint performance contract | `packages/features/cms-analytics/src/interfaces/EndpointPerformance.ts` |
 | Existing Analytics request-health view | `packages/surfaces/cms-control/src/components/admin/Layout/Analytics/templates/health.html` |
-| Existing Analytics navigation | `packages/surfaces/cms-control/src/components/admin/Layout/Analytics/nav.html` |
+| Endpoint performance view | `packages/surfaces/cms-control/src/components/admin/Layout/EndpointPerformance/EndpointPerformance.ts` |
 | Stripe reconciliation loop | `packages/resources/official-integrations/integrations/providers/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/workflows/reconciliation/run.ts` |
 | Stripe payout-protection guard | `packages/resources/official-integrations/integrations/providers/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/workflows/payments/creation/platform-protection.ts` |
 | Reconciliation schedule | `packages/resources/official-integrations/integrations/extensions/commerce-stripe-payments/versions/1.0.0/definitions/artifacts/triggers/schedules/reconcile-protected-payment-systems.json` |
@@ -1306,7 +1388,6 @@ External operational references:
 The following are intentionally deferred until instrumentation exists:
 
 - whether the second Mongo source read is materially expensive;
-- whether Delivery should receive a request-source factory;
 - whether source and overlay cross-request caches improve p95 enough to justify
   coherence machinery;
 - whether trusted Edge timing reaches the CMS through bounded internal response

@@ -86,6 +86,13 @@ export {
     type CanonicalSourceDto,
 } from "../core/overlays/sourceDto";
 export { resolveEndpoint, type ResolveResult } from "../core/execution/resolveEndpoint";
+export {
+    activeSourceObservability,
+    createSourceRequestTelemetryMiddleware,
+    measureActiveSourceTiming,
+    runObservedSourceRequest,
+    setObservedSourceEndpoint,
+} from "../core/execution/sourceObservability";
 export { seedSources, type SeedResult } from "../core/system/seedSources";
 export {
     buildUpstreamUrl,

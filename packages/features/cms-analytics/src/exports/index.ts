@@ -50,9 +50,64 @@ export type {
     AnalyticsReports,
     AnalyticsReportWindow,
 } from "../core/reporting/types";
+export {
+    ENDPOINT_COUNTER_STAGES,
+    ENDPOINT_PERFORMANCE_METHODS,
+    ENDPOINT_PERFORMANCE_RANGES,
+    ENDPOINT_PERFORMANCE_SORTS,
+    ENDPOINT_PERFORMANCE_STATUS_CLASSES,
+    ENDPOINT_PERFORMANCE_SURFACES,
+    ENDPOINT_PERFORMANCE_UNRESOLVED,
+    ENDPOINT_TIMING_STAGES,
+} from "../interfaces/EndpointPerformance";
+export type {
+    EndpointCounterStage,
+    EndpointPerformanceMethod,
+    EndpointPerformanceObservation,
+    EndpointPerformanceOutcome,
+    EndpointPerformanceQuery,
+    EndpointPerformanceRange,
+    EndpointPerformanceRecorder,
+    EndpointPerformanceReports,
+    EndpointPerformanceSort,
+    EndpointPerformanceStatusClass,
+    EndpointPerformanceSurface,
+    EndpointTimingStage,
+} from "../interfaces/EndpointPerformance";
+export type {
+    EndpointLatencySummary,
+    EndpointPerformanceDashboard,
+    EndpointPerformanceCounterSummary,
+    EndpointPerformanceDetail,
+    EndpointPerformanceHistogramBucket,
+    EndpointPerformanceMetadata,
+    EndpointPerformanceRow,
+    EndpointPerformanceStageSummary,
+    EndpointPerformanceTimelinePoint,
+    EndpointRequestSummary,
+} from "../interfaces/EndpointPerformanceDashboard";
+export {
+    BufferedEndpointPerformanceRecorder,
+    type BufferedEndpointPerformanceRecorderConfig,
+    type BufferedEndpointPerformanceStats,
+} from "../core/rollups/endpoint-performance/BufferedEndpointPerformanceRecorder";
+export {
+    startEndpointPerformanceFlusher,
+    type EndpointPerformanceFlusher,
+} from "../core/rollups/endpoint-performance/flusher";
+export { ENDPOINT_PERFORMANCE_HISTOGRAM_BOUNDS_MS } from "../core/rollups/endpoint-performance/histogram";
+export {
+    ENDPOINT_PERFORMANCE_ROUTE,
+    endpointPerformanceHandler,
+    parseEndpointPerformanceQuery,
+} from "../http/endpointPerformanceHandler";
 
 // ── Default implementations (instantiated in the composition root) ──
 export { InMemoryAnalyticsStore } from "../default-implementation/InMemoryAnalyticsStore";
+export {
+    InMemoryEndpointPerformanceStore,
+    type InMemoryEndpointPerformanceStoreConfig,
+} from "../default-implementation/memory/endpoint-performance/InMemoryEndpointPerformanceStore";
 export {
     ValidatingAnalyticsStore,
     validateAnalyticsEvent,

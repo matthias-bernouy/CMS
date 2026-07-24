@@ -96,4 +96,10 @@ export interface Runner {
      * can spin a Runner up and tear it down without leaking a port.
      */
     stop(): void;
+
+    /**
+     * Optionally stop accepting new traffic while allowing active requests to
+     * finish. Implementations may force-close after a bounded grace period.
+     */
+    stopGracefully?(timeoutMs?: number): Promise<void>;
 }

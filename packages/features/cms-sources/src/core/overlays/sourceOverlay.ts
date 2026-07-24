@@ -26,7 +26,6 @@ const sharedSchemaCaches = new WeakMap<SourceOverlayRepository, SourceOverlaySch
 
 export class SourceOverlaySourceRepository implements SourceRepository {
     private readonly schemaCache: SourceOverlaySchemaCache;
-
     constructor(
         private readonly inner: SourceRepository,
         private readonly overlays: SourceOverlayRepository,
@@ -35,13 +34,11 @@ export class SourceOverlaySourceRepository implements SourceRepository {
         this.schemaCache = options.schemaCache ?? sourceOverlaySchemaCacheFor(overlays, options.schemaCacheTtlMs);
         schemaCacheRegistry(overlays).caches.add(this.schemaCache);
     }
-
     async createSource(source: Source): Promise<Source> {
         const created = await this.inner.createSource(source);
         this.invalidateOverlaySchemas({ sourceId: sourceId(source) });
         return created;
     }
-
     async updateSource(source: Source): Promise<Source | null> {
         const updated = await this.inner.updateSource(source);
         if (updated) {
@@ -49,7 +46,6 @@ export class SourceOverlaySourceRepository implements SourceRepository {
         }
         return updated;
     }
-
     async deleteSource(urn: string): Promise<boolean> {
         const deleted = await this.inner.deleteSource(urn);
         const sourceId = parseUrn(urn)?.source;
@@ -58,7 +54,6 @@ export class SourceOverlaySourceRepository implements SourceRepository {
         }
         return deleted;
     }
-
     invalidateOverlaySchemas(selector: SourceOverlaySchemaCacheSelector = {}): void {
         for (const cache of schemaCacheRegistry(this.overlays).caches) {
             cache.invalidate(selector);
@@ -70,41 +65,45 @@ export class SourceOverlaySourceRepository implements SourceRepository {
     }
 
     async getSource(urn: string): Promise<Source | null> {
-        const source = await this.inner.getSource(urn);
+        const source = await this.measure("cms_source", () => this.inner.getSource(urn));
         if (!source) {
             return null;
         }
-        const overlays = await this.overlays.getOverlaysForSource(sourceId(source));
-        return applySourceOverlays(
-            source,
-            await materializeSourceOverlays(source, overlays, this.options.deps, this.schemaCache),
-        );
+        return this.measure("cms_overlays", async () => {
+            const overlays = await this.overlays.getOverlaysForSource(sourceId(source));
+            return applySourceOverlays(
+                source,
+                await materializeSourceOverlays(source, overlays, this.options.deps, this.schemaCache),
+            );
+        });
     }
 
     async getAllSources(): Promise<Source[]> {
-        const sources = await this.inner.getAllSources();
-        const overlays = await this.overlays.getAllOverlays();
-        return Promise.all(
-            sources.map(async (source) =>
-                applySourceOverlays(
-                    source,
-                    await materializeSourceOverlays(
+        const sources = await this.measure("cms_source", () => this.inner.getAllSources());
+        return this.measure("cms_overlays", async () => {
+            const overlays = await this.overlays.getAllOverlays();
+            return Promise.all(
+                sources.map(async (source) =>
+                    applySourceOverlays(
                         source,
-                        overlaysFor(source, overlays),
-                        this.options.deps,
-                        this.schemaCache,
+                        await materializeSourceOverlays(
+                            source,
+                            overlaysFor(source, overlays),
+                            this.options.deps,
+                            this.schemaCache,
+                        ),
                     ),
                 ),
-            ),
-        );
+            );
+        });
     }
 
     async getEndpoint(urn: string): Promise<SourceEndpoint | null> {
         const sourceUrn = sourceUrnOf(urn);
         if (!sourceUrn) {
-            return this.inner.getEndpoint(urn);
+            return this.measure("cms_source", () => this.inner.getEndpoint(urn));
         }
-        const source = await this.inner.getSource(sourceUrn);
+        const source = await this.measure("cms_source", () => this.inner.getSource(sourceUrn));
         if (!source) {
             return null;
         }
@@ -114,26 +113,34 @@ export class SourceOverlaySourceRepository implements SourceRepository {
             return null;
         }
 
-        const endpointId = parseUrn(urn)?.endpoint ?? "";
-        const overlays = (await this.overlays.getOverlaysForSource(sourceId(source))).filter((overlay) =>
-            overlayTargetsEndpoint(overlay, endpointId),
-        );
-        if (!overlays.length) {
-            return structuredClone(endpoint);
-        }
+        return this.measure("cms_overlays", async () => {
+            const endpointId = parseUrn(urn)?.endpoint ?? "";
+            const overlays = (await this.overlays.getOverlaysForSource(sourceId(source))).filter((overlay) =>
+                overlayTargetsEndpoint(overlay, endpointId),
+            );
+            if (!overlays.length) {
+                return structuredClone(endpoint);
+            }
 
-        const enriched = applySourceOverlays(
-            source,
-            await materializeSourceOverlays(source, overlays, this.options.deps, this.schemaCache),
-        );
-        return enriched.endpoints.find((candidate) => candidate.urn === urn) ?? null;
+            const enriched = applySourceOverlays(
+                source,
+                await materializeSourceOverlays(source, overlays, this.options.deps, this.schemaCache),
+            );
+            return enriched.endpoints.find((candidate) => candidate.urn === urn) ?? null;
+        });
     }
 
     async getEndpointForAuthorization(urn: string): Promise<SourceEndpoint | null> {
-        if (this.inner.getEndpointForAuthorization) {
-            return this.inner.getEndpointForAuthorization(urn);
-        }
-        return this.inner.getEndpoint(urn);
+        return this.measure("cms_source", () =>
+            this.inner.getEndpointForAuthorization
+                ? this.inner.getEndpointForAuthorization(urn)
+                : this.inner.getEndpoint(urn),
+        );
+    }
+
+    private measure<T>(stage: "cms_source" | "cms_overlays", operation: () => T | Promise<T>): Promise<T> {
+        const observability = this.options.deps?.observability;
+        return observability ? observability.measure(stage, operation) : Promise.resolve(operation());
     }
 }
 

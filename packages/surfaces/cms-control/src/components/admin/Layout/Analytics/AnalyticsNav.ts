@@ -1,5 +1,5 @@
 import { Component } from "@bernouy/components/base";
-import { ANALYTICS_VIEWS, analyticsViewFromPath, analyticsViewPath, type AnalyticsView } from "./api";
+import { ANALYTICS_NAV_VIEWS, analyticsViewFromPath, analyticsViewPath, type AnalyticsNavView } from "./api";
 import css from "./styles/nav.css" with { type: "text" };
 import template from "./nav.html" with { type: "text" };
 
@@ -22,7 +22,7 @@ export class CmsAnalyticsNav extends Component {
     private configureLinks(): void {
         for (const item of this.items()) {
             const view = item.dataset.analyticsView ?? "";
-            if (isAnalyticsView(view)) {
+            if (isAnalyticsNavView(view)) {
                 item.setAttribute("href", analyticsViewPath(view));
             }
         }
@@ -44,6 +44,6 @@ if (!customElements.get("cms-analytics-nav")) {
     customElements.define("cms-analytics-nav", CmsAnalyticsNav);
 }
 
-function isAnalyticsView(value: string): value is AnalyticsView {
-    return ANALYTICS_VIEWS.includes(value as AnalyticsView);
+function isAnalyticsNavView(value: string): value is AnalyticsNavView {
+    return ANALYTICS_NAV_VIEWS.includes(value as AnalyticsNavView);
 }

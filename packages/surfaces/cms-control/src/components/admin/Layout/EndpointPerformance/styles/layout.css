@@ -1,0 +1,175 @@
+cms-endpoint-performance {
+    display: block;
+    max-width: 1280px;
+}
+
+.endpoint-ready,
+.endpoint-content {
+    display: grid;
+    gap: 24px;
+}
+
+.endpoint-skeleton-grid,
+.endpoint-metrics {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.endpoint-filters {
+    display: grid;
+    grid-template-columns: minmax(130px, .65fr) minmax(240px, 1.5fr) minmax(120px, .6fr) minmax(120px, .6fr) auto;
+    align-items: end;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-default);
+    border-radius: 11px;
+    background: var(--bg-surface);
+}
+
+.endpoint-filters label {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    color: var(--text-body);
+    font-size: .76rem;
+    font-weight: 650;
+}
+
+.endpoint-filters input,
+.endpoint-filters select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 36px;
+    padding: 7px 9px;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font: inherit;
+    font-weight: 450;
+}
+
+.endpoint-filters input:focus,
+.endpoint-filters select:focus {
+    border-color: var(--primary-base);
+    outline: 2px solid color-mix(in srgb, var(--primary-base) 18%, transparent);
+}
+
+.endpoint-filter-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.endpoint-filter-actions button,
+.endpoint-detail-header button {
+    min-height: 36px;
+    padding: 7px 11px;
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    cursor: pointer;
+    font: inherit;
+    font-size: .78rem;
+}
+
+.endpoint-filter-actions button[type="submit"] {
+    border-color: var(--primary-base);
+    background: var(--primary-base);
+    color: var(--primary-contrast, white);
+}
+
+.endpoint-notice {
+    padding: 11px 14px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    font-size: .8rem;
+}
+
+.endpoint-notice--warning {
+    border-color: color-mix(in srgb, var(--warning-base) 38%, var(--border-default));
+    background: var(--warning-muted);
+    color: var(--warning-contrasted);
+}
+
+.endpoint-notice--danger {
+    border-color: color-mix(in srgb, var(--danger-base) 34%, var(--border-default));
+    background: var(--danger-muted);
+    color: var(--danger-contrasted);
+}
+
+.endpoint-empty,
+.endpoint-detail-empty {
+    display: grid;
+    place-items: center;
+    min-height: 140px;
+    padding: 28px;
+    border: 1px dashed var(--border-default);
+    border-radius: 11px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.endpoint-empty {
+    gap: 7px;
+}
+
+.endpoint-empty strong {
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.endpoint-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+}
+
+.endpoint-detail-grid h4,
+.endpoint-stages h4 {
+    margin: 0 0 16px;
+    color: var(--text-main);
+    font-size: .86rem;
+}
+
+.endpoint-stages {
+    margin-top: 28px;
+}
+
+.endpoint-meta {
+    color: var(--text-muted);
+    font-size: .72rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 1050px) {
+    .endpoint-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .endpoint-filter-actions {
+        grid-column: 1 / -1;
+    }
+
+    .endpoint-skeleton-grid,
+    .endpoint-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .endpoint-filters,
+    .endpoint-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .endpoint-filter-actions {
+        grid-column: auto;
+    }
+
+    .endpoint-skeleton-grid,
+    .endpoint-metrics {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-async function source(): Promise<string> {
-    return Bun.file(new URL("../src/commands/dev/servers.ts", import.meta.url)).text();
+async function source(file = "servers.ts"): Promise<string> {
+    return Bun.file(new URL(`../src/commands/dev/${file}`, import.meta.url)).text();
 }
 
 describe("local CMS listener composition", () => {
@@ -18,8 +18,31 @@ describe("local CMS listener composition", () => {
         const text = await source();
 
         expect(text).toContain("new ValidatingAnalyticsStore(new InMemoryAnalyticsStore())");
+        expect(text).toContain("createLocalEndpointPerformance(");
+        expect(text).toContain("endpointPerformanceReports: endpointPerformance.reports");
+        expect(text).toContain("sourceTelemetry: endpointPerformance.controlTelemetry");
         expect(text).toMatch(/services\.sources,\s*analytics,\s*services\.roles/);
-        expect(text).toMatch(/new DeliveryCms\(\{[\s\S]*analytics,\s*analyticsVisitorSecret,/);
+        expect(text).toMatch(
+            /new DeliveryCms\(\{[\s\S]*sources: services\.sources,[\s\S]*sourceOverlays: services\.sourceOverlays,[\s\S]*sourceTelemetry: endpointPerformance\.deliveryTelemetry,[\s\S]*analytics,\s*analyticsVisitorSecret,/,
+        );
+    });
+
+    test("flushes endpoint performance before local shutdown", async () => {
+        const text = await source();
+
+        expect(text).toContain("endpointPerformance.stopFlusher()");
+        expect(text).toContain("runner.stopGracefully()");
+        expect(text).toContain("deliveryRunner.stopGracefully()");
+        expect(text).toContain("await endpointPerformance.flush()");
+        expect(text).toContain("stopping ??=");
+    });
+
+    test("coalesces repeated process shutdown signals", async () => {
+        const text = await source("index.ts");
+
+        expect(text).toContain("let stopping = false");
+        expect(text).toMatch(/if \(stopping\) \{\s*return;\s*\}/);
+        expect(text).toContain("stopping = true");
     });
 
     test.failing("binds both local listeners to the parsed host", async () => {

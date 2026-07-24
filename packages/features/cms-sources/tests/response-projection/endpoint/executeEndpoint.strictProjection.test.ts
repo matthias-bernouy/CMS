@@ -24,10 +24,16 @@ describe("executeEndpoint strict response projection", () => {
         const reportResponseProjectionEvent = mock((reported: ResponseProjectionEvent) => {
             event = reported;
         });
+        const requestCorrelationId = "11d38c6a-0e6a-4f68-9dad-2a92c17b8300";
         const response = await executeEndpoint(ep(), new Request("http://local.test/source"), {
             fetchImpl,
             responseProjectionMode: "strict",
             reportResponseProjectionEvent,
+            observability: {
+                correlationId: requestCorrelationId,
+                measure: async (_stage, operation) => operation(),
+                record: () => true,
+            },
         });
 
         expect(cancelled).toBe(true);
@@ -37,6 +43,7 @@ describe("executeEndpoint strict response projection", () => {
         expect(response.headers.get("content-type")).toBe("application/json; charset=utf-8");
         expect(response.headers.get("x-content-type-options")).toBe("nosniff");
         const correlationId = response.headers.get("x-correlation-id");
+        expect(correlationId).toBe(requestCorrelationId);
         expect(await response.json()).toEqual({ error: "Upstream request failed", correlationId });
         expect(event).toEqual({
             kind: "response_projection_failure",
