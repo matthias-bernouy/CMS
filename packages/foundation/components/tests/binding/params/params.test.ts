@@ -29,7 +29,12 @@ describe("hasParamTokens", () => {
     test("matches exactly what resolveParams substitutes (no false reactivity)", () => {
         // malformed / unclosed tokens are left literal by resolveParams, so they
         // must NOT mark the source reactive.
-        expect(hasParamTokens("/api/x?q=#{a-b}")).toBe(false);
+        expect(hasParamTokens("/api/x?q=#{a-b}")).toBe(true);
+        expect(hasParamTokens("/api/x?q=#{filter_racket-weight:gte}")).toBe(true);
+        expect(hasParamTokens("/api/x?q=#{catalog.filters}")).toBe(true);
+        expect(hasParamTokens("/api/x?q=#{filter racket:gte}")).toBe(false);
+        expect(hasParamTokens("/api/x?q=#{a/b}")).toBe(false);
+        expect(hasParamTokens("/api/x?q=#{filter_{racket}:gte}")).toBe(false);
         expect(hasParamTokens("/api/x#{notclosed")).toBe(false);
         expect(hasParamTokens("/api/x?q=#{}")).toBe(false);
     });
@@ -52,6 +57,11 @@ describe("resolveParams", () => {
 
     test("multiple tokens", () => {
         expect(resolveParams("/x?s=#{search}&t=#{tag}", p("search=a&tag=b"))).toBe("/x?s=a&t=b");
+    });
+
+    test("supports operator-qualified query-param names", () => {
+        const params = p("filter_racket-weight%3Agte=300");
+        expect(resolveParams("/x?minimum=#{filter_racket-weight:gte}", params)).toBe("/x?minimum=300");
     });
 
     test("leaves {{ data }} tokens untouched", () => {

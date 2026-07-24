@@ -16,12 +16,16 @@ export function captureSourceContent(el: Element): CapturedSourceContent {
     const template = doc.createDocumentFragment();
 
     for (const child of Array.from(el.childNodes)) {
-        template.appendChild(child.cloneNode(true));
         if (child.nodeType === Node.ELEMENT_NODE && (child as Element).tagName === "TEMPLATE") {
+            template.appendChild(child.cloneNode(true));
             body.appendChild((child as HTMLTemplateElement).content);
             (child as Element).remove();
         } else {
             body.appendChild(child);
+            // Moving a live custom-element subtree disconnects it first. Clone
+            // afterwards so editor-facing teardown hooks can restore authored
+            // content before the raw template is captured.
+            template.appendChild(child.cloneNode(true));
         }
     }
 

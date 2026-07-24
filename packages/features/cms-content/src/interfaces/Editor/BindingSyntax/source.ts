@@ -6,6 +6,7 @@ import type {
     CmsSourceParamValue,
     CmsSourceUrl,
 } from "./types";
+import { asQueryParamToken } from "./queryParams";
 
 const INTERPOLATION_PATTERN = /^\s*\{\{\s*([\s\S]*?)\s*\}\}\s*$/;
 const SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
@@ -109,7 +110,7 @@ function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string
 
 function encodeSourceParamValue(value: CmsSourceParamValue): string {
     if (value.from === "queryParam") {
-        return `#{${value.name.trim()}}`;
+        return asQueryParamToken(value.name);
     }
     if (value.from === "state") {
         return `@{${value.name.trim()}}`;
@@ -132,7 +133,11 @@ function normalizeSourceParamValue(value: unknown): CmsSourceParamValue | null {
     if (!isRecord(value) || typeof value.from !== "string") {
         return null;
     }
-    if (value.from === "queryParam" || value.from === "state") {
+    if (value.from === "queryParam") {
+        const name = typeof value.name === "string" ? value.name.trim() : "";
+        return name ? { from: value.from, name } : null;
+    }
+    if (value.from === "state") {
         return typeof value.name === "string" && value.name.trim()
             ? { from: value.from, name: value.name.trim() }
             : null;

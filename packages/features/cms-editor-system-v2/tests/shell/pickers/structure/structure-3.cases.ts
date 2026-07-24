@@ -112,10 +112,21 @@ describe("Shell", () => {
         picker.shadowRoot!.querySelector<HTMLInputElement>(".source-alias")!.value = "plans";
         picker.shadowRoot!.querySelector<HTMLSelectElement>(".source-trigger")!.selectedIndex = 1;
         const rows = picker.shadowRoot!.querySelectorAll<HTMLElement>(".param-row");
-        rows[0]!.querySelector<HTMLInputElement>(".param-value")!.value = "address";
+        const queryParam = rows[0]!.querySelector<HTMLInputElement>(".param-value")!;
+        const insert = picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!;
+        queryParam.value = "bad name";
+        insert.click();
+        expect(detail).toBeUndefined();
+        expect(picker.shadowRoot!.querySelector<HTMLElement>(".backdrop")!.hidden).toBe(false);
+        expect(queryParam.getAttribute("aria-invalid")).toBe("true");
+        queryParam.value = "filter/racket";
+        insert.click();
+        expect(detail).toBeUndefined();
+        expect(picker.shadowRoot!.querySelector<HTMLElement>(".backdrop")!.hidden).toBe(false);
+        queryParam.value = "filter_racket-weight:gte";
         rows[1]!.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex = 1;
         rows[1]!.querySelector<HTMLInputElement>(".param-value")!.value = "5";
-        picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
+        insert.click();
 
         expect(detail?.action).toBe("set-source");
         expect(detail?.editor).toBe(editor);
@@ -126,7 +137,7 @@ describe("Shell", () => {
             trigger: "submit",
             method: "GET",
             params: {
-                q: { from: "queryParam", name: "address" },
+                q: { from: "queryParam", name: "filter_racket-weight:gte" },
                 limit: { from: "raw", value: "5" },
             },
         });

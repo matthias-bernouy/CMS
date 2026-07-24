@@ -81,7 +81,8 @@ describe("Shell", () => {
         class CardEditor extends Editor {}
 
         const target = document.createElement("demo-card");
-        target.setAttribute("cms-source", "/api/plans?q=#{address}&limit=5 as plans");
+        target.setAttribute("cms-source", "/api/plans?q=#{filter_racket-weight:gte}&limit=5 as plans");
+        target.setAttribute("cms-source-body", JSON.stringify({ legacy: { from: "queryParam", name: "legacy/path" } }));
         target.setAttribute("cms-source-trigger", "submit");
         const editor = new CardEditor(target);
         const node: EditorStructureNode = {
@@ -110,6 +111,7 @@ describe("Shell", () => {
                     { name: "q", in: "query", required: true, type: "string" },
                     { name: "limit", in: "query", type: "number" },
                 ],
+                body: { fields: [{ path: "legacy", type: "string" }] },
             },
         ]);
         tree.setStructure([node], editor);
@@ -128,10 +130,13 @@ describe("Shell", () => {
         const rows = Array.from(picker.shadowRoot!.querySelectorAll<HTMLElement>(".param-row"));
         const qRow = rows.find((row) => row.dataset.paramName === "q")!;
         const limitRow = rows.find((row) => row.dataset.paramName === "limit")!;
+        const legacyRow = rows.find((row) => row.dataset.paramName === "legacy")!;
         expect(qRow.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex).toBe(0);
-        expect(qRow.querySelector<HTMLInputElement>(".param-value")!.value).toBe("address");
+        expect(qRow.querySelector<HTMLInputElement>(".param-value")!.value).toBe("filter_racket-weight:gte");
         expect(limitRow.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex).toBe(1);
         expect(limitRow.querySelector<HTMLInputElement>(".param-value")!.value).toBe("5");
+        expect(legacyRow.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex).toBe(0);
+        expect(legacyRow.querySelector<HTMLInputElement>(".param-value")!.value).toBe("legacy/path");
 
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
 
@@ -143,8 +148,11 @@ describe("Shell", () => {
             trigger: "submit",
             method: "GET",
             params: {
-                q: { from: "queryParam", name: "address" },
+                q: { from: "queryParam", name: "filter_racket-weight:gte" },
                 limit: { from: "raw", value: "5" },
+            },
+            body: {
+                legacy: { from: "queryParam", name: "legacy/path" },
             },
         });
     });

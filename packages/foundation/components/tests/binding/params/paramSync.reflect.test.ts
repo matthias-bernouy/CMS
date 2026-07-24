@@ -40,6 +40,16 @@ describe("ParamSync — seed from param on start", () => {
         expect(el.value).toBe("hello");
         ps.dispose();
     });
+
+    test("supports an operator-qualified query-param name", () => {
+        location.href = "http://localhost/?filter_racket-weight%3Agte=300";
+        const el = input({ "cms-param-sync": "filter_racket-weight:gte" });
+        const ps = new ParamSync(el);
+        ps.start();
+
+        expect(el.value).toBe("300");
+        ps.dispose();
+    });
 });
 
 describe("ParamSync — param → value (two-way)", () => {

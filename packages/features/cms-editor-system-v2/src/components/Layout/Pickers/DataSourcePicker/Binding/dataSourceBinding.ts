@@ -1,3 +1,4 @@
+import { parseQueryParamToken } from "@bernouy/cms-content/editor";
 import type { EditorDataSource } from "../../../../../runtime";
 import type { EditorDataSourceMethod } from "../../../../../runtime";
 
@@ -56,7 +57,7 @@ export function paramsForBinding(
 }
 
 function paramValue(value: string): DataSourcePickerSourceParamValue {
-    const queryParam = tokenValue(value, "#");
+    const queryParam = parseQueryParamToken(value);
     if (queryParam) {
         return { from: "queryParam", name: queryParam };
     }

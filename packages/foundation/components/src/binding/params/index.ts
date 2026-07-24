@@ -15,15 +15,16 @@
 export const PARAMS_CHANGE_EVENT = "cms-params:change";
 export const STATE_CHANGE_EVENT = "cms-state:change";
 
-const PARAM_TOKEN = /#\{\s*(\w+)\s*\}/g;
+const QUERY_PARAM_NAME_PATTERN = "[A-Za-z0-9_][A-Za-z0-9_.:-]*";
+const PARAM_TOKEN = new RegExp(`#\\{\\s*(${QUERY_PARAM_NAME_PATTERN})\\s*\\}`, "g");
+const HAS_PARAM_TOKEN = new RegExp(`#\\{\\s*${QUERY_PARAM_NAME_PATTERN}\\s*\\}`);
 const STATE_TOKEN = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
 const STATE_BY_DOCUMENT = new WeakMap<Document, Map<string, string>>();
 
 /** Whether a `cms-source` template depends on any query param. Matches exactly
- *  what `resolveParams` substitutes, so a malformed `#{a-b}` is neither resolved
- *  nor treated as reactive (it stays literal, no param listeners attached). */
+ *  what `resolveParams` substitutes, including operator-qualified names. */
 export function hasParamTokens(template: string): boolean {
-    return /#\{\s*\w+\s*\}/.test(template);
+    return HAS_PARAM_TOKEN.test(template);
 }
 
 /** Whether a `cms-source` template depends on local page state. */

@@ -139,12 +139,15 @@ describe("Shell", () => {
         applyParamSyncSetting(editor, { attribute: "__cms-param-sync-name" }, "bad name");
         expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("search");
 
-        applyParamSyncSetting(editor, { attribute: "__cms-param-sync-name" }, "q");
-        expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("q");
+        applyParamSyncSetting(editor, { attribute: "__cms-param-sync-name" }, "filter_racket-weight:gte");
+        expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("filter_racket-weight:gte");
         expect(paramSyncSettings(editor)?.settings.map((setting) => setting.attribute)).toEqual([
             "__cms-param-sync-enabled",
             "__cms-param-sync-use-name",
             "__cms-param-sync-name",
         ]);
+        expect(
+            paramSyncSettings(editor)?.settings.find((setting) => setting.attribute === "__cms-param-sync-name")?.help,
+        ).toContain("colons");
     });
 });

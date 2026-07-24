@@ -38,6 +38,36 @@ describe("Source — param-reactive reload guard (URL-changed)", () => {
         src.remove();
         history.replaceState({}, "", "/");
     });
+
+    test("resolves an operator filter param on the first fetch and reloads with its changed value", async () => {
+        const urls: string[] = [];
+        globalThis.fetch = (async (input: Parameters<typeof fetch>[0]) => {
+            urls.push(String(input));
+            return { ok: true, status: 200, text: async () => JSON.stringify({ items: [] }) } as unknown as Response;
+        }) as unknown as typeof fetch;
+        const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+        history.replaceState({}, "", "/?filter_racket-weight%3Agte=280");
+        const src = el(
+            '<div cms-source="/offers?minimumWeight=#{filter_racket-weight:gte}"><p>{{ items.length }}</p></div>',
+        );
+        document.body.appendChild(src);
+        const source = new Source(src);
+        source.start();
+        await flush();
+
+        expect(urls).toEqual(["/offers?minimumWeight=280"]);
+
+        history.replaceState({}, "", "/?filter_racket-weight%3Agte=305");
+        document.dispatchEvent(new Event("cms-params:change"));
+        await flush();
+
+        expect(urls).toEqual(["/offers?minimumWeight=280", "/offers?minimumWeight=305"]);
+
+        source.dispose();
+        src.remove();
+        history.replaceState({}, "", "/");
+    });
 });
 
 describe("Source — state-reactive reload guard (URL-changed)", () => {

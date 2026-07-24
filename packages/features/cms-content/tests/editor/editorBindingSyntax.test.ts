@@ -1,17 +1,45 @@
 import { describe, expect, test } from "bun:test";
 import {
     asInterpolation,
+    asQueryParamToken,
     asRepeat,
     asSource,
     asSourceBody,
+    isCmsQueryParamName,
     isInterpolation,
     parseInterpolation,
+    parseQueryParamToken,
     parseRepeat,
     parseSource,
     parseSourceBody,
 } from "@bernouy/cms-content/editor";
 
 describe("editor binding syntax", () => {
+    test("validates stable query-param names", () => {
+        expect(isCmsQueryParamName("search")).toBe(true);
+        expect(isCmsQueryParamName("catalog.filters")).toBe(true);
+        expect(isCmsQueryParamName("filter_racket-weight:gte")).toBe(true);
+
+        expect(isCmsQueryParamName("")).toBe(false);
+        expect(isCmsQueryParamName("-filter")).toBe(false);
+        expect(isCmsQueryParamName("filter racket:gte")).toBe(false);
+        expect(isCmsQueryParamName("filter/racket:gte")).toBe(false);
+        expect(isCmsQueryParamName("filter_{racket}:gte")).toBe(false);
+    });
+
+    test("formats and parses query-param tokens", () => {
+        const name = "filter_racket-weight:gte";
+        expect(asQueryParamToken(name)).toBe(`#{${name}}`);
+        expect(asQueryParamToken(` ${name} `)).toBe(`#{${name}}`);
+        expect(parseQueryParamToken(`#{${name}}`)).toBe(name);
+        expect(parseQueryParamToken(`  #{ ${name} }  `)).toBe(name);
+
+        expect(parseQueryParamToken("#{filter racket:gte}")).toBeNull();
+        expect(parseQueryParamToken("#{filter/racket:gte}")).toBeNull();
+        expect(parseQueryParamToken("#{filter_racket}:gte}")).toBeNull();
+        expect(() => asQueryParamToken("filter racket:gte")).toThrow();
+    });
+
     test("formats interpolation expressions", () => {
         expect(asInterpolation("plan.name")).toBe("{{ plan.name }}");
         expect(asInterpolation("  plan.price  ")).toBe("{{ plan.price }}");
@@ -39,6 +67,7 @@ describe("editor binding syntax", () => {
                 alias: "addresses",
                 params: {
                     q: { from: "queryParam", name: "address" },
+                    minimum: { from: "queryParam", name: " filter_racket-weight:gte " },
                     delivery: { from: "state", name: "deliveryAddress" },
                     limit: { from: "raw", value: 5 },
                     type: { from: "raw", value: "housenumber street" },
@@ -47,7 +76,7 @@ describe("editor binding syntax", () => {
                 },
             }),
         ).toBe(
-            "/.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}&limit=5&type=housenumber%20street as addresses",
+            "/.cms/sources/catalog/search?q=#{address}&minimum=#{filter_racket-weight:gte}&delivery=@{deliveryAddress}&limit=5&type=housenumber%20street as addresses",
         );
         expect(asSource({ url: "/api/plans?", params: { q: { from: "raw", value: "hello" } } })).toBe(
             "/api/plans?q=hello",
@@ -58,6 +87,12 @@ describe("editor binding syntax", () => {
                 params: { q: { from: "queryParam", name: "search" } },
             }),
         ).toBe("/api/plans?existing=1&q=#{search}#results");
+        expect(() =>
+            asSource({
+                url: "/api/plans",
+                params: { q: { from: "queryParam", name: "filter/racket:gte" } },
+            }),
+        ).toThrow();
     });
 
     test("parses source bindings", () => {
@@ -73,6 +108,7 @@ describe("editor binding syntax", () => {
     test("formats and parses source body bindings", () => {
         const body = {
             email: { from: "queryParam" as const, name: "email" },
+            minimum: { from: "queryParam" as const, name: " filter_racket-weight:gte " },
             token: { from: "state" as const, name: "auth.token" },
             active: { from: "raw" as const, value: true },
             count: { from: "raw" as const, value: 2 },
@@ -82,6 +118,7 @@ describe("editor binding syntax", () => {
         const formatted = asSourceBody(body);
         const expected = {
             email: { from: "queryParam", name: "email" },
+            minimum: { from: "queryParam", name: "filter_racket-weight:gte" },
             token: { from: "state", name: "auth.token" },
             active: { from: "raw", value: true },
             count: { from: "raw", value: 2 },
@@ -91,6 +128,16 @@ describe("editor binding syntax", () => {
         expect(parseSourceBody(formatted)).toEqual(expected);
         expect(parseSourceBody("")).toBeNull();
         expect(parseSourceBody("{bad")).toBeNull();
+    });
+
+    test("keeps structured body query-param names independent from URL token grammar", () => {
+        const formatted = asSourceBody({
+            external: { from: "queryParam", name: " external query/name} " },
+        });
+
+        expect(parseSourceBody(formatted)).toEqual({
+            external: { from: "queryParam", name: "external query/name}" },
+        });
     });
 
     test("formats repeat bindings", () => {

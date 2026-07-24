@@ -13,6 +13,34 @@ function commentCount(node: Node): number {
 }
 
 describe("Source — editor template restore", () => {
+    test("captures authored content restored by a disconnected custom element", () => {
+        const tag = "test-source-authored-restorer";
+        if (!customElements.get(tag)) {
+            customElements.define(
+                tag,
+                class extends HTMLElement {
+                    disconnectedCallback() {
+                        this.innerHTML = '<p data-authored-content="">Original</p>';
+                    }
+                },
+            );
+        }
+        const src = el(`
+            <div cms-source="/x">
+                <test-source-authored-restorer>
+                    <p data-runtime-content>Dynamic</p>
+                </test-source-authored-restorer>
+            </div>
+        `);
+        document.body.append(src);
+
+        const source = new Source(src);
+        source.renderTemplate();
+
+        expect(src.querySelector("[data-authored-content]")?.textContent).toBe("Original");
+        expect(src.querySelector("[data-runtime-content]")).toBeNull();
+    });
+
     test("renderTemplate() restores authored source-state conditions", async () => {
         respond(200, JSON.stringify({ name: "Ada" }));
         const src = el(`

@@ -1,11 +1,12 @@
 import {
     CMS_BINDING_ATTRIBUTES,
+    isCmsQueryParamName,
     type Setting,
     type SettingControl,
     type SettingSection,
     type Editor,
 } from "@bernouy/cms-content/editor";
-import { hasStandardValueSurface, isValidValueKey, valueSurfaceName } from "./valueSurface";
+import { hasStandardValueSurface, valueSurfaceName } from "./valueSurface";
 
 export const PARAM_SYNC_ENABLE_SETTING = "__cms-param-sync-enabled";
 export const PARAM_SYNC_USE_NAME_SETTING = "__cms-param-sync-use-name";
@@ -31,14 +32,14 @@ export function applyParamSyncSetting(
         }
 
         const next = current || fieldName;
-        if (isValidValueKey(next)) {
+        if (isCmsQueryParamName(next)) {
             target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
         }
         return true;
     }
 
     if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
-        if (value === true && isValidValueKey(fieldName)) {
+        if (value === true && isCmsQueryParamName(fieldName)) {
             target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
         } else if (current === fieldName) {
             target.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
@@ -48,7 +49,7 @@ export function applyParamSyncSetting(
 
     if (typeof value === "string") {
         const next = value.trim();
-        if (isValidValueKey(next)) {
+        if (isCmsQueryParamName(next)) {
             target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
         }
     }
@@ -69,7 +70,7 @@ export function paramSyncSettings(editor: Editor): SettingSection | null {
 
     const syncValue = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
     const fieldName = valueSurfaceName(target);
-    const hasFieldName = isValidValueKey(fieldName);
+    const hasFieldName = isCmsQueryParamName(fieldName);
     const isEnabled = syncValue !== "";
     const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
     const settings: Setting[] = [
@@ -98,7 +99,7 @@ export function paramSyncSettings(editor: Editor): SettingSection | null {
             attribute: PARAM_SYNC_NAME_SETTING,
             defaultValue: syncValue,
             placeholder: hasFieldName ? fieldName : "search",
-            help: "Letters, numbers, underscores, dashes and dots only.",
+            help: "Letters, numbers, underscores, dashes, dots and colons only.",
             required: true,
         });
     }

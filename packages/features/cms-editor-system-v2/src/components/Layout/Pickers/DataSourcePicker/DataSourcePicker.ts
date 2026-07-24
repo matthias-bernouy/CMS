@@ -134,16 +134,17 @@ export class DataSourcePicker extends HTMLElement {
         );
     }
     private _select(source: EditorDataSource): void {
-        dispatchDataSourceSelection(this, source, this._sourceBinding(source));
+        const binding = readSourceBinding(this.shadowRoot!, source);
+        if (!binding) {
+            return;
+        }
+        dispatchDataSourceSelection(this, source, binding);
         this.close();
     }
     private readonly _remove = (): void => {
         dispatchDataSourceRemoval(this);
         this.close();
     };
-    private _sourceBinding(source: EditorDataSource): DataSourcePickerSourceBinding {
-        return readSourceBinding(this.shadowRoot!, source);
-    }
     private readonly _onBackdropClick = (event: Event): void => {
         if (event.target === this.elements.backdrop) {
             this.close();

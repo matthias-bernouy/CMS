@@ -45,6 +45,13 @@ import { Button } from "@bernouy/components/blocs/button";
 customElements.define("p9r-button", Button);
 ```
 
+### Authored source content
+
+When a `cms-source` captures its body, moving a custom-element subtree disconnects
+it before the editor snapshot is cloned. Components that replace authored Light
+DOM at runtime must therefore restore that content synchronously from their
+`disconnectedCallback`.
+
 ## Components
 
 Two tag prefixes are currently in use across the library: `p9r-` (majority) and `w13c-` (subset). New components default to `p9r-` unless otherwise specified.
