@@ -20,7 +20,7 @@ security invoker
 set search_path = ''
 as $$
     with settings_state as materialized (
-        select settings.require_verified_seller
+        select settings.require_verified_seller, settings.whole_unit_prices
         from commerce.settings settings
         where settings.id = 'default'
     ), filtered as materialized (
@@ -62,6 +62,7 @@ as $$
             page_ids.updated_at desc,
             page_ids.id desc
         ) from page_ids), array[]::bigint[])),
+        'whole_unit_prices', (select settings.whole_unit_prices from settings_state settings),
         'total', (select count(*) from filtered)
     );
 $$;

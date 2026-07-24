@@ -2,6 +2,7 @@ import { Component } from "@bernouy/components/base";
 
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
+import { formatMoney, parseBooleanAttribute } from "./money";
 
 export class CommerceOfferPreview extends Component {
     static observedAttributes = [
@@ -17,6 +18,7 @@ export class CommerceOfferPreview extends Component {
         "price-color",
         "target",
         "text-color",
+        "whole-unit-prices",
     ];
 
     constructor() {
@@ -58,6 +60,7 @@ export class CommerceOfferPreview extends Component {
             this.getAttribute("amount"),
             this.getAttribute("currency"),
             this.getAttribute("locale"),
+            parseBooleanAttribute(this.getAttribute("whole-unit-prices")),
         );
         this.price.textContent = price;
         this.toggleAttribute("data-empty-price", !price);
@@ -95,22 +98,6 @@ export class CommerceOfferPreview extends Component {
 
     get price() {
         return this.shadowRoot.querySelector("[data-price]");
-    }
-}
-
-function formatMoney(rawAmount, rawCurrency, rawLocale) {
-    const amount = Number(rawAmount);
-    const currency = rawCurrency?.trim().toUpperCase();
-    if (!Number.isFinite(amount) || !currency) {
-        return "";
-    }
-    try {
-        return new Intl.NumberFormat(rawLocale?.trim() || undefined, {
-            style: "currency",
-            currency,
-        }).format(amount / 100);
-    } catch {
-        return `${(amount / 100).toFixed(2)} ${currency}`;
     }
 }
 

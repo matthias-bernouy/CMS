@@ -27,7 +27,13 @@ export async function listPublicOfferReadModel(url: URL, limit: number, offset: 
     if (!Number.isSafeInteger(total) || total < 0) {
         throw new HttpError(502, "list_public_offers_read_model returned an invalid response");
     }
-    return json({ items: camelize(readModel.items), total, limit, offset });
+    return json({
+        items: camelize(readModel.items),
+        wholeUnitPrices: readModel.whole_unit_prices,
+        total,
+        limit,
+        offset,
+    });
 }
 
 export async function getPublicOfferReadModel(id: number | null, slug: string | undefined): Promise<Response> {
@@ -69,6 +75,9 @@ function requireReadModel(value: unknown, name: string): Record<string, unknown>
     }
     if (!value.settings_available) {
         throw new HttpError(502, "commerce settings are unavailable");
+    }
+    if (typeof value.whole_unit_prices !== "boolean") {
+        throw new HttpError(502, `${name} returned an invalid response`);
     }
     return value;
 }

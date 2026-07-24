@@ -92,6 +92,7 @@ describe("commerce contextual offer read contract", () => {
                     mainImageMediaId: null,
                 },
             ],
+            wholeUnitPrices: false,
             total: 2,
             limit: 2,
             offset: 1,
@@ -113,7 +114,7 @@ describe("commerce contextual offer read contract", () => {
 function contextualResponse(url: URL): Response {
     const resource = url.pathname.split("/").at(-1);
     if (resource === "search_public_offers_read_model") {
-        return jsonResponse({ items: readModelRows(), total: 2 });
+        return jsonResponse({ items: readModelRows(), whole_unit_prices: false, total: 2 });
     }
     return jsonResponse([]);
 }

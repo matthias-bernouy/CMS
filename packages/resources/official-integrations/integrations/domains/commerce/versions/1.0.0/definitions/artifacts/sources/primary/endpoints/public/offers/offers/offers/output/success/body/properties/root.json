@@ -2,6 +2,9 @@
     "items": {
         "$include": "items/root.json"
     },
+    "wholeUnitPrices": {
+        "type": "boolean"
+    },
     "total": {
         "type": "number"
     },

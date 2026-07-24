@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { resolve } from "node:path";
 import {
     activeFilterParams,
     activeMetadataFilters,
@@ -7,6 +8,17 @@ import {
 import { syncOfferListPresentation } from "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-list/presentation";
 
 describe("Commerce public offer list filters", () => {
+    test("binds the public price precision policy on every preview", async () => {
+        const defaultContent = await Bun.file(
+            resolve(
+                import.meta.dir,
+                "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-list/default.html",
+            ),
+        ).text();
+
+        expect(defaultContent).toContain('whole-unit-prices="{{ data.wholeUnitPrices }}"');
+    });
+
     test("only serializes non-empty endpoint filters", () => {
         const filters = [
             ["category", "category"],

@@ -23,12 +23,13 @@ export async function listContextualOffers(url: URL): Promise<Response> {
         p_limit: limit,
         p_offset: offset,
     });
-    if (!isRecord(result) || !Array.isArray(result.items)) {
+    if (!isRecord(result) || !Array.isArray(result.items) || typeof result.whole_unit_prices !== "boolean") {
         throw new HttpError(502, "search_public_offers returned an invalid response");
     }
     const rows = result.items.filter(isRecord);
     return json({
         items: camelize(rows),
+        wholeUnitPrices: result.whole_unit_prices,
         total: Number(result.total) || 0,
         limit,
         offset,

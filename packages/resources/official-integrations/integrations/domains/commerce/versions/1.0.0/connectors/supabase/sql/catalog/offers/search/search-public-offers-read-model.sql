@@ -18,7 +18,11 @@ stable
 security invoker
 set search_path = ''
 as $$
-    with searched as materialized (
+    with settings_state as materialized (
+        select settings.whole_unit_prices
+        from commerce.settings settings
+        where settings.id = 'default'
+    ), searched as materialized (
         select commerce.search_public_offers(
             p_category_full_slug,
             p_brand_slug,
@@ -41,6 +45,7 @@ as $$
             with ordinality as entry(item, ordinality)
     )
     select (searched.value - 'items') || jsonb_build_object(
+        'whole_unit_prices', (select settings.whole_unit_prices from settings_state settings),
         'items', commerce.public_offer_items_read_model(offer_ids.value, true)
     )
     from searched

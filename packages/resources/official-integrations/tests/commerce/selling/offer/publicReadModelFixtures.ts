@@ -3,6 +3,7 @@ export function publicOfferListReadModel(): Record<string, unknown> {
     const speedMetadata = { brand: "Head", sport: "tennis", grip: "L3", weight: 300 };
     return {
         settings_available: true,
+        whole_unit_prices: false,
         items: [
             {
                 id: 1,

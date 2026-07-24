@@ -16,6 +16,7 @@ describe("commerce contextual offer listing", () => {
             const table = url.pathname.split("/").at(-1);
             if (table === "search_public_offers_read_model") {
                 return jsonResponse({
+                    whole_unit_prices: false,
                     items: [
                         {
                             id: 91,
@@ -79,6 +80,7 @@ describe("commerce contextual offer listing", () => {
             p_offset: 0,
         });
         expect(body).toMatchObject({
+            wholeUnitPrices: false,
             total: 1,
             items: [
                 {
@@ -96,7 +98,7 @@ describe("commerce contextual offer listing", () => {
         setRestResponder((request) => {
             const table = new URL(request.url).pathname.split("/").at(-1);
             if (table === "search_public_offers_read_model") {
-                return jsonResponse({ items: [], total: 0 });
+                return jsonResponse({ items: [], whole_unit_prices: false, total: 0 });
             }
             return jsonResponse([]);
         });
@@ -111,7 +113,7 @@ describe("commerce contextual offer listing", () => {
         setRestResponder((request) => {
             const table = new URL(request.url).pathname.split("/").at(-1);
             if (table === "search_public_offers_read_model") {
-                return jsonResponse({ items: [], total: 0 });
+                return jsonResponse({ items: [], whole_unit_prices: false, total: 0 });
             }
             return jsonResponse([]);
         });
@@ -128,5 +130,21 @@ describe("commerce contextual offer listing", () => {
         });
         expect(expectRpc("search_public_offers_read_model").body.p_category_full_slug).toBeUndefined();
         expect(expectRpc("search_public_offers_read_model").body.p_brand_slug).toBeUndefined();
+    });
+
+    test("fails closed when contextual price precision is missing", async () => {
+        setRestResponder((request) => {
+            const table = new URL(request.url).pathname.split("/").at(-1);
+            return table === "search_public_offers_read_model"
+                ? jsonResponse({ items: [], total: 0 })
+                : jsonResponse([]);
+        });
+
+        const response = await requestCommerce("/offers?category=rackets/tennis");
+
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({
+            error: "search_public_offers returned an invalid response",
+        });
     });
 });

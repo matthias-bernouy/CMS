@@ -162,6 +162,7 @@ begin
         p_offset => 0
     );
     if v_list->>'settings_available' <> 'true'
+        or v_list->>'whole_unit_prices' <> 'false'
         or (v_list->>'total')::integer <> 1
         or v_list->'items'->0->>'slug' <> 'smoke-offer'
         or v_list->'items'->0 ? 'seller_id'

@@ -60,4 +60,21 @@ describe("commerce public offer read model failures", () => {
             p_offset: 0,
         });
     });
+
+    test("fails closed when the public price precision policy is missing", async () => {
+        setRestResponder(() =>
+            jsonResponse({
+                settings_available: true,
+                items: [],
+                total: 0,
+            }),
+        );
+
+        const response = await requestCommerce("/offers");
+
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({
+            error: "list_public_offers_read_model returned an invalid response",
+        });
+    });
 });

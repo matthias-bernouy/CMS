@@ -75,6 +75,7 @@ describe("commerce public offer listing", () => {
                     mainImageMediaId: null,
                 },
             ],
+            wholeUnitPrices: false,
             total: 2,
             limit: 50,
             offset: 0,
@@ -108,7 +109,12 @@ describe("commerce public offer listing", () => {
     test("allows pending sellers in public listings when verification is optional", async () => {
         setRestResponder((request) => {
             if (new URL(request.url).pathname.endsWith("/rpc/list_public_offers_read_model")) {
-                return jsonResponse({ settings_available: true, items: [], total: 0 });
+                return jsonResponse({
+                    settings_available: true,
+                    whole_unit_prices: false,
+                    items: [],
+                    total: 0,
+                });
             }
             return jsonResponse([]);
         });
@@ -116,7 +122,13 @@ describe("commerce public offer listing", () => {
         const response = await requestCommerce("/offers");
 
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual({ items: [], total: 0, limit: 50, offset: 0 });
+        expect(await response.json()).toEqual({
+            items: [],
+            wholeUnitPrices: false,
+            total: 0,
+            limit: 50,
+            offset: 0,
+        });
         expect(expectSingleRpc("list_public_offers_read_model").body).toEqual({
             p_limit: 50,
             p_offset: 0,
@@ -126,7 +138,12 @@ describe("commerce public offer listing", () => {
     test("preserves an unrecognized padded sort as the default ordering", async () => {
         setRestResponder((request) => {
             if (new URL(request.url).pathname.endsWith("/rpc/list_public_offers_read_model")) {
-                return jsonResponse({ settings_available: true, items: [], total: 0 });
+                return jsonResponse({
+                    settings_available: true,
+                    whole_unit_prices: false,
+                    items: [],
+                    total: 0,
+                });
             }
             return jsonResponse([]);
         });

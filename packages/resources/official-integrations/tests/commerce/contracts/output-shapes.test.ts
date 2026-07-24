@@ -145,6 +145,7 @@ describe("commerce response contracts", () => {
         expect(itemFields(endpoints, "offers")).toEqual(
             expect.arrayContaining(["id", "productId", "acceptedPriceAmount"]),
         );
+        expect(rootFields(endpoints, "offers")).toContain("wholeUnitPrices");
         expect(itemFields(endpoints, "offers")).not.toContain("sellerId");
         expect(rootFields(endpoints, "offer")).toEqual(
             expect.arrayContaining(["product", "priceRule", "priceProposals"]),
@@ -350,7 +351,12 @@ describe("commerce response contracts", () => {
         setRestResponder((request) => {
             const table = new URL(request.url).pathname.split("/").at(-1)!;
             if (table === "list_public_offers_read_model") {
-                return jsonResponse({ settings_available: true, items: [], total: 0 });
+                return jsonResponse({
+                    settings_available: true,
+                    whole_unit_prices: false,
+                    items: [],
+                    total: 0,
+                });
             }
             if (table === "list_seller_offers_read_model") {
                 return jsonResponse({
