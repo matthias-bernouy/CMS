@@ -3,6 +3,13 @@ import type { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { executeFunction } from "@bernouy/cms-functions";
 import { type IntegrationContractContext, SELLER_TERMS_HASH, SELLER_TERMS_VERSION } from "../../harness";
 
+const acceptedLegalDocumentVersionId = "018f72b8-1f90-7c31-a933-592c90c8178a";
+const paymentInput = {
+    orderId: 42,
+    acceptedLegalDocumentVersionIds: [acceptedLegalDocumentVersionId],
+};
+const preparedPaymentInput = { ...paymentInput, paymentProvider: "stripe" };
+
 export async function assertPaymentCreation(
     { fn, sources }: IntegrationContractContext,
     identities: InMemoryIdentityService,
@@ -16,7 +23,7 @@ export async function assertPaymentCreation(
         new Request("https://cms.test/functions/createPaymentForOrder", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ orderId: 42 }),
+            body: JSON.stringify(paymentInput),
         }),
         {
             sources,
@@ -52,7 +59,7 @@ export async function assertPaymentCreation(
                         });
                     }
                     if (request.url.startsWith("https://commerce.test/payment/prepare")) {
-                        expect(await request.json()).toEqual({ orderId: 42 });
+                        expect(await request.json()).toEqual(preparedPaymentInput);
                         return Response.json({
                             orderId: 42,
                             orderPublicId: "order-public-42",

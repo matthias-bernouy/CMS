@@ -1,0 +1,110 @@
+{
+    "type": "function",
+    "function": {
+        "id": "getPaymentLegalRequirements",
+        "method": "GET",
+        "access": {
+            "mode": "auth"
+        },
+        "meta": {
+            "name": "Get payment legal requirements",
+            "description": "Return the current buyer legal documents that must be accepted before starting payment."
+        },
+        "input": {
+            "params": {
+                "orderId": {
+                    "type": "number"
+                }
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "documents": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string"
+                                    },
+                                    "label": {
+                                        "type": "string"
+                                    },
+                                    "consentText": {
+                                        "type": "string"
+                                    },
+                                    "pageUrl": {
+                                        "type": "string"
+                                    },
+                                    "versionId": {
+                                        "type": "string"
+                                    },
+                                    "versionDate": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "label",
+                                    "consentText",
+                                    "pageUrl",
+                                    "versionId",
+                                    "versionDate"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "enabled",
+                        "documents"
+                    ]
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            }
+        ],
+        "steps": [
+            {
+                "id": "requirements",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "getBuyerLegalRequirements",
+                    "params": {
+                        "orderId": "$input.params.orderId"
+                    },
+                    "onError": {
+                        "propagate": [
+                            {
+                                "sourceStatus": 409,
+                                "status": 409
+                            }
+                        ]
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": "$steps.requirements"
+        }
+    }
+}

@@ -53,9 +53,17 @@ The integration also installs a buyer-facing Payment Element bloc:
 ```
 
 Bind only `order-id` to the authenticated buyer's Commerce order. The bloc
-calls `createPaymentForOrder`; Commerce locks and returns the immutable
-financial snapshot, and Stripe Connect creates or strictly replays the
-protected platform PaymentIntent.
+first calls `getPaymentLegalRequirements`. When Commerce enables buyer legal
+acceptance, it renders one accessible, unchecked checkbox per current document,
+with its consent copy, version date, and safe link. Only server-issued version
+ids return through `createPaymentForOrder`; user identity, acceptance time, and
+document hashes remain server-owned. Commerce validates and records the proof
+before any Stripe call, locks and returns the immutable financial snapshot, and
+Stripe Connect then creates or strictly replays the protected platform
+PaymentIntent. A concurrent document change returns
+`LEGAL_DOCUMENT_VERSION_CHANGED`; the bloc reloads the current versions and
+leaves every checkbox unchecked. With the feature disabled or no required
+document, checkout keeps its automatic initialization behavior.
 
 Reloading checkout intentionally replays that command so the browser can
 recover the existing payable PaymentIntent client secret. It never creates a
