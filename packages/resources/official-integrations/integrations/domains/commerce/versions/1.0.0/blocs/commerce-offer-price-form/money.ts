@@ -8,17 +8,19 @@ export function majorToMinor(value) {
     return Number.isSafeInteger(amount) ? amount : NaN;
 }
 
-export function minorToMajor(value) {
-    return (Number(value) / 100).toFixed(2);
+export function minorToMajor(value, wholeUnitPrices = false) {
+    return wholeUnitPrices ? String(Number(value) / 100) : (Number(value) / 100).toFixed(2);
 }
 
-export function formatMoney(amount, currency, locale) {
+export function formatMoney(amount, currency, locale, wholeUnitPrices = false) {
     try {
         return new Intl.NumberFormat(locale, {
             style: "currency",
             currency: String(currency || "EUR").toUpperCase(),
+            minimumFractionDigits: wholeUnitPrices ? 0 : undefined,
+            maximumFractionDigits: wholeUnitPrices ? 0 : undefined,
         }).format(Number(amount) / 100);
     } catch {
-        return `${minorToMajor(amount)} ${String(currency || "EUR").toUpperCase()}`;
+        return `${minorToMajor(amount, wholeUnitPrices)} ${String(currency || "EUR").toUpperCase()}`;
     }
 }

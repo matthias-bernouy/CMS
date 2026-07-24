@@ -266,9 +266,9 @@ export class CommerceOfferPriceForm extends Composition {
             return;
         }
         this.offerTitle.textContent = this.offer.title || this.text("offer-label", "Annonce");
-        this.range.textContent = `${formatMoney(rule.minimumAmount, rule.currency, this.locale)} – ${formatMoney(rule.maximumAmount, rule.currency, this.locale)}`;
-        this.amount.setAttribute("min", minorToMajor(rule.minimumAmount));
-        this.amount.setAttribute("max", minorToMajor(rule.maximumAmount));
+        this.range.textContent = `${formatMoney(rule.minimumAmount, rule.currency, this.locale, this.offer.wholeUnitPrices)} – ${formatMoney(rule.maximumAmount, rule.currency, this.locale, this.offer.wholeUnitPrices)}`;
+        this.amount.setAttribute("min", minorToMajor(rule.minimumAmount, this.offer.wholeUnitPrices));
+        this.amount.setAttribute("max", minorToMajor(rule.maximumAmount, this.offer.wholeUnitPrices));
         this.amount.setAttribute("step", this.offer.wholeUnitPrices ? "1" : "0.01");
         if (!String(this.amount.value || "").trim()) {
             const draft = this.readPriceDraft();
@@ -490,7 +490,7 @@ export class CommerceOfferPriceForm extends Composition {
         if (rule && (amount < rule.minimumAmount || amount > rule.maximumAmount)) {
             return this.text(
                 "range-error-message",
-                `Choisis un prix entre ${formatMoney(rule.minimumAmount, rule.currency, this.locale)} et ${formatMoney(rule.maximumAmount, rule.currency, this.locale)}.`,
+                `Choisis un prix entre ${formatMoney(rule.minimumAmount, rule.currency, this.locale, this.offer?.wholeUnitPrices)} et ${formatMoney(rule.maximumAmount, rule.currency, this.locale, this.offer?.wholeUnitPrices)}.`,
             );
         }
         return "";

@@ -19,6 +19,8 @@ describe("commerce offer price helpers", () => {
         expect(majorToMinor("12.345")).toBeNaN();
         expect(minorToMajor(1234)).toBe("12.34");
         expect(formatMoney(1234, "eur", "fr-FR")).toContain("12,34");
+        expect(minorToMajor(12000, true)).toBe("120");
+        expect(formatMoney(12000, "eur", "fr-FR", true)).toBe("120 €");
     });
 
     test("validates calendar dates and ready profile fields", () => {
