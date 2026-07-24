@@ -4,6 +4,44 @@ import { expectRpc, installCommerceTestEnvironment, jsonResponse, requestCommerc
 installCommerceTestEnvironment();
 
 describe("commerce workflow configuration requests", () => {
+    test("updates bounded product and offer image policies", async () => {
+        setRestResponder(() =>
+            jsonResponse({
+                product_image_min_count: 1,
+                product_image_max_count: 8,
+                offer_image_min_count: 6,
+                offer_image_max_count: 6,
+            }),
+        );
+
+        const response = await requestCommerce("/admin/settings", {
+            body: {
+                expectedVersion: 3,
+                productImageMinCount: 1,
+                productImageMaxCount: 8,
+                offerImageMinCount: 6,
+                offerImageMaxCount: 6,
+            },
+        });
+
+        expect(response.status).toBe(200);
+        expect(expectRpc("update_settings").body).toEqual({
+            p_expected_version: 3,
+            p_payload: {
+                productImageMinCount: 1,
+                productImageMaxCount: 8,
+                offerImageMinCount: 6,
+                offerImageMaxCount: 6,
+            },
+        });
+        expect(await response.json()).toMatchObject({
+            productImageMinCount: 1,
+            productImageMaxCount: 8,
+            offerImageMinCount: 6,
+            offerImageMaxCount: 6,
+        });
+    });
+
     test("returns enabled custom-field schemas for a requested entity", async () => {
         let customFieldsUrl = "";
         setRestResponder((request) => {

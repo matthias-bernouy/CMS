@@ -27,6 +27,10 @@
                     "offerModeration": "$field.offerModeration",
                     "pricePolicy": "$field.pricePolicy",
                     "wholeUnitPrices": "$field.wholeUnitPrices",
+                    "productImageMinCount": "$field.productImageMinCount",
+                    "productImageMaxCount": "$field.productImageMaxCount",
+                    "offerImageMinCount": "$field.offerImageMinCount",
+                    "offerImageMaxCount": "$field.offerImageMaxCount",
                     "autoApprovePriceInRange": "$field.autoApprovePriceInRange",
                     "requireFinalPriceApproval": "$field.requireFinalPriceApproval",
                     "sellerCanPublish": "$field.sellerCanPublish"

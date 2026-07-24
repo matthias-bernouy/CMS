@@ -8,6 +8,10 @@ create table if not exists commerce.settings (
     offer_moderation text not null default 'always',
     price_policy text not null default 'admin_range',
     whole_unit_prices boolean not null default false,
+    product_image_min_count integer not null default 0,
+    product_image_max_count integer not null default 20,
+    offer_image_min_count integer not null default 0,
+    offer_image_max_count integer not null default 20,
     auto_approve_price_in_range boolean not null default false,
     require_final_price_approval boolean not null default true,
     seller_can_publish boolean not null default false,
@@ -22,7 +26,15 @@ create table if not exists commerce.settings (
     constraint settings_currency check (default_currency ~ '^[a-z]{3}$'),
     constraint settings_offer_moderation check (offer_moderation in ('none', 'always')),
     constraint settings_price_policy check (price_policy in ('free', 'admin_range')),
-    constraint settings_version_positive check (version > 0)
+    constraint settings_version_positive check (version > 0),
+    constraint settings_product_image_count_valid check (
+        product_image_min_count between 0 and 20
+        and product_image_max_count between product_image_min_count and 20
+    ),
+    constraint settings_offer_image_count_valid check (
+        offer_image_min_count between 0 and 20
+        and offer_image_max_count between offer_image_min_count and 20
+    )
 );
 
 alter table commerce.settings
@@ -33,3 +45,21 @@ alter table commerce.settings
     add column if not exists active_c2c_seller_risk_policy_id bigint references commerce.seller_risk_policies(id) on delete restrict;
 alter table commerce.settings
     add column if not exists whole_unit_prices boolean not null default false;
+alter table commerce.settings
+    add column if not exists product_image_min_count integer not null default 0;
+alter table commerce.settings
+    add column if not exists product_image_max_count integer not null default 20;
+alter table commerce.settings
+    add column if not exists offer_image_min_count integer not null default 0;
+alter table commerce.settings
+    add column if not exists offer_image_max_count integer not null default 20;
+alter table commerce.settings drop constraint if exists settings_product_image_count_valid;
+alter table commerce.settings add constraint settings_product_image_count_valid check (
+    product_image_min_count between 0 and 20
+    and product_image_max_count between product_image_min_count and 20
+);
+alter table commerce.settings drop constraint if exists settings_offer_image_count_valid;
+alter table commerce.settings add constraint settings_offer_image_count_valid check (
+    offer_image_min_count between 0 and 20
+    and offer_image_max_count between offer_image_min_count and 20
+);

@@ -18,6 +18,7 @@ declare
     v_media commerce.media%rowtype;
     v_previous commerce.media%rowtype;
     v_link commerce.offer_media%rowtype;
+    v_settings commerce.settings%rowtype;
     v_position integer;
     v_is_main boolean;
 begin
@@ -28,6 +29,12 @@ begin
       and (p_cms_user_id is null or seller.cms_user_id = p_cms_user_id)
     for update of offer;
     if not found then raise exception 'not_found: offer'; end if;
+    select * into v_settings from commerce.settings where id = 'default' for share;
+    if p_replace_media_id is null and (
+        select count(*) from commerce.offer_media where offer_id = p_offer_id
+    ) >= v_settings.offer_image_max_count then
+        raise exception 'validation: an offer cannot have more than % images', v_settings.offer_image_max_count;
+    end if;
 
     insert into commerce.media (
         storage_bucket, storage_path, mime_type, file_size, original_filename
@@ -79,14 +86,22 @@ as $$
 declare
     v_link commerce.offer_media%rowtype;
     v_media commerce.media%rowtype;
+    v_offer commerce.offers%rowtype;
+    v_settings commerce.settings%rowtype;
 begin
-    perform offer.id
+    select offer.* into v_offer
     from commerce.offers offer
     join commerce.sellers seller on seller.id = offer.seller_id
     where offer.id = p_offer_id
       and (p_cms_user_id is null or seller.cms_user_id = p_cms_user_id)
     for update of offer;
     if not found then raise exception 'not_found: offer'; end if;
+    select * into v_settings from commerce.settings where id = 'default' for share;
+    if v_offer.workflow_state <> 'draft' and (
+        select count(*) from commerce.offer_media where offer_id = p_offer_id
+    ) <= v_settings.offer_image_min_count then
+        raise exception 'validation: a submitted offer must keep at least % images', v_settings.offer_image_min_count;
+    end if;
     select * into v_link
     from commerce.offer_media
     where offer_id = p_offer_id and media_id = p_media_id

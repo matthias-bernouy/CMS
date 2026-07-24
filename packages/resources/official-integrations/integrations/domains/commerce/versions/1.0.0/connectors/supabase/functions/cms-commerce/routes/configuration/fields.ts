@@ -1,5 +1,5 @@
 import { HttpError } from "../../core/errors.ts";
-import { booleanValue, text } from "../../core/records.ts";
+import { booleanValue, integer, text } from "../../core/records.ts";
 import type { JsonRecord } from "../../core/types.ts";
 
 export function dynamicField(row: JsonRecord): JsonRecord {
@@ -41,6 +41,13 @@ export function setText(target: JsonRecord, key: string, value: unknown, lowerca
 
 export function setBoolean(target: JsonRecord, key: string, value: unknown): void {
     const result = booleanValue(value, key);
+    if (result !== undefined) {
+        target[key] = result;
+    }
+}
+
+export function setInteger(target: JsonRecord, key: string, value: unknown): void {
+    const result = integer(value, key);
     if (result !== undefined) {
         target[key] = result;
     }

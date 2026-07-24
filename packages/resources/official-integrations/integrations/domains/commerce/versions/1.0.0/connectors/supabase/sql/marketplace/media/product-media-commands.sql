@@ -17,11 +17,18 @@ declare
     v_media commerce.media%rowtype;
     v_previous commerce.media%rowtype;
     v_link commerce.product_media%rowtype;
+    v_settings commerce.settings%rowtype;
     v_position integer;
     v_is_main boolean;
 begin
     perform id from commerce.products where id = p_product_id for update;
     if not found then raise exception 'not_found: product'; end if;
+    select * into v_settings from commerce.settings where id = 'default' for share;
+    if p_replace_media_id is null and (
+        select count(*) from commerce.product_media where product_id = p_product_id
+    ) >= v_settings.product_image_max_count then
+        raise exception 'validation: a product cannot have more than % images', v_settings.product_image_max_count;
+    end if;
 
     insert into commerce.media (
         storage_bucket, storage_path, mime_type, file_size, original_filename
@@ -72,9 +79,17 @@ as $$
 declare
     v_link commerce.product_media%rowtype;
     v_media commerce.media%rowtype;
+    v_product commerce.products%rowtype;
+    v_settings commerce.settings%rowtype;
 begin
-    perform id from commerce.products where id = p_product_id for update;
+    select * into v_product from commerce.products where id = p_product_id for update;
     if not found then raise exception 'not_found: product'; end if;
+    select * into v_settings from commerce.settings where id = 'default' for share;
+    if v_product.status = 'active' and v_product.visibility = 'public' and (
+        select count(*) from commerce.product_media where product_id = p_product_id
+    ) <= v_settings.product_image_min_count then
+        raise exception 'validation: an active public product must keep at least % images', v_settings.product_image_min_count;
+    end if;
     select * into v_link
     from commerce.product_media
     where product_id = p_product_id and media_id = p_media_id

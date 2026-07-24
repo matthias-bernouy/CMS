@@ -3,10 +3,10 @@ import { json } from "../../core/http.ts";
 import { booleanValue, camelize, integer, readJsonObject, text } from "../../core/records.ts";
 import { one, restJson, rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
-import { dynamicField, normalizeOptions, setBoolean, setText } from "./fields.ts";
+import { dynamicField, normalizeOptions, setBoolean, setInteger, setText } from "./fields.ts";
 
 const settingsSelect =
-    "id,mode,default_currency,require_verified_seller,offer_moderation,price_policy,whole_unit_prices,auto_approve_price_in_range,require_final_price_approval,seller_can_publish,active_c2c_fee_policy_id,active_c2c_protection_policy_id,active_c2c_seller_risk_policy_id,version,created_at,updated_at";
+    "id,mode,default_currency,require_verified_seller,offer_moderation,price_policy,whole_unit_prices,product_image_min_count,product_image_max_count,offer_image_min_count,offer_image_max_count,auto_approve_price_in_range,require_final_price_approval,seller_can_publish,active_c2c_fee_policy_id,active_c2c_protection_policy_id,active_c2c_seller_risk_policy_id,version,created_at,updated_at";
 const customFieldSelect =
     "entity_type,key,label,field_type,options,unit,required,self_editable,admin_editable,public_readable,show_in_dashboard_table,position,enabled,created_at,updated_at";
 
@@ -27,6 +27,10 @@ export async function updateSettings(request: Request): Promise<Response> {
     setText(payload, "offerModeration", body.offerModeration);
     setText(payload, "pricePolicy", body.pricePolicy);
     setBoolean(payload, "wholeUnitPrices", body.wholeUnitPrices);
+    setInteger(payload, "productImageMinCount", body.productImageMinCount);
+    setInteger(payload, "productImageMaxCount", body.productImageMaxCount);
+    setInteger(payload, "offerImageMinCount", body.offerImageMinCount);
+    setInteger(payload, "offerImageMaxCount", body.offerImageMaxCount);
     setBoolean(payload, "requireVerifiedSeller", body.requireVerifiedSeller);
     setBoolean(payload, "autoApprovePriceInRange", body.autoApprovePriceInRange);
     setBoolean(payload, "requireFinalPriceApproval", body.requireFinalPriceApproval);

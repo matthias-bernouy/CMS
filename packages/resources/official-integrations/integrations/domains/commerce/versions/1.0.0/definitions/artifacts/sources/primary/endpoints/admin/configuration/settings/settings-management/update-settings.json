@@ -44,6 +44,18 @@
             "wholeUnitPrices": {
                 "type": "boolean"
             },
+            "productImageMinCount": {
+                "type": "number"
+            },
+            "productImageMaxCount": {
+                "type": "number"
+            },
+            "offerImageMinCount": {
+                "type": "number"
+            },
+            "offerImageMaxCount": {
+                "type": "number"
+            },
             "autoApprovePriceInRange": {
                 "type": "boolean"
             },
@@ -84,6 +96,18 @@
                     },
                     "wholeUnitPrices": {
                         "type": "boolean"
+                    },
+                    "productImageMinCount": {
+                        "type": "number"
+                    },
+                    "productImageMaxCount": {
+                        "type": "number"
+                    },
+                    "offerImageMinCount": {
+                        "type": "number"
+                    },
+                    "offerImageMaxCount": {
+                        "type": "number"
                     },
                     "autoApprovePriceInRange": {
                         "type": "boolean"

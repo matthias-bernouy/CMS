@@ -11,6 +11,10 @@ as $$
 declare
     v_settings commerce.settings%rowtype;
     v_enable_whole_unit_prices boolean;
+    v_product_image_min_count integer;
+    v_product_image_max_count integer;
+    v_offer_image_min_count integer;
+    v_offer_image_max_count integer;
 begin
     select * into v_settings from commerce.settings where id = 'default' for update;
     if v_settings.version is distinct from p_expected_version then
@@ -20,6 +24,30 @@ begin
         (p_payload->>'wholeUnitPrices')::boolean,
         v_settings.whole_unit_prices
     );
+    v_product_image_min_count := coalesce(
+        (p_payload->>'productImageMinCount')::integer,
+        v_settings.product_image_min_count
+    );
+    v_product_image_max_count := coalesce(
+        (p_payload->>'productImageMaxCount')::integer,
+        v_settings.product_image_max_count
+    );
+    v_offer_image_min_count := coalesce(
+        (p_payload->>'offerImageMinCount')::integer,
+        v_settings.offer_image_min_count
+    );
+    v_offer_image_max_count := coalesce(
+        (p_payload->>'offerImageMaxCount')::integer,
+        v_settings.offer_image_max_count
+    );
+    if v_product_image_min_count < 0 or v_product_image_max_count > 20
+        or v_product_image_min_count > v_product_image_max_count then
+        raise exception 'validation: product image counts must satisfy 0 <= minimum <= maximum <= 20';
+    end if;
+    if v_offer_image_min_count < 0 or v_offer_image_max_count > 20
+        or v_offer_image_min_count > v_offer_image_max_count then
+        raise exception 'validation: offer image counts must satisfy 0 <= minimum <= maximum <= 20';
+    end if;
     if v_enable_whole_unit_prices and not v_settings.whole_unit_prices and (
         exists (
             select 1 from commerce.offers
@@ -52,6 +80,10 @@ begin
         offer_moderation = coalesce(nullif(p_payload->>'offerModeration', ''), offer_moderation),
         price_policy = coalesce(nullif(p_payload->>'pricePolicy', ''), price_policy),
         whole_unit_prices = v_enable_whole_unit_prices,
+        product_image_min_count = v_product_image_min_count,
+        product_image_max_count = v_product_image_max_count,
+        offer_image_min_count = v_offer_image_min_count,
+        offer_image_max_count = v_offer_image_max_count,
         auto_approve_price_in_range = coalesce((p_payload->>'autoApprovePriceInRange')::boolean, auto_approve_price_in_range),
         require_final_price_approval = coalesce((p_payload->>'requireFinalPriceApproval')::boolean, require_final_price_approval),
         seller_can_publish = coalesce((p_payload->>'sellerCanPublish')::boolean, seller_can_publish)

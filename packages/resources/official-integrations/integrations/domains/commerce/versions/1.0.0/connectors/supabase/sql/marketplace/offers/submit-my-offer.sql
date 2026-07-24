@@ -27,6 +27,13 @@ begin
     if v_offer.version is distinct from p_expected_version then raise exception 'conflict: stale offer version'; end if;
     perform commerce.assert_custom_fields('offer', v_offer.metadata, 'system');
     if v_seller.verification_status in ('rejected', 'suspended') then raise exception 'forbidden: seller is not allowed to sell'; end if;
+    if (
+        select count(*) from commerce.offer_media where offer_id = v_offer.id
+    ) not between v_settings.offer_image_min_count and v_settings.offer_image_max_count then
+        raise exception 'validation: an offer must have between % and % images',
+            v_settings.offer_image_min_count,
+            v_settings.offer_image_max_count;
+    end if;
 
     if v_settings.price_policy = 'free' and not exists (
         select 1 from commerce.offer_price_proposals

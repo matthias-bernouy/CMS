@@ -15,13 +15,20 @@ declare
     v_metadata_patch jsonb;
     v_primary_category_id bigint;
     v_axis_field_keys jsonb;
+    v_settings commerce.settings%rowtype;
 begin
+    select * into v_settings from commerce.settings where id = 'default' for share;
     if p_payload ? 'variantAxes' then
         select coalesce(jsonb_agg(axis->>'fieldKey'), '[]'::jsonb) into v_axis_field_keys
         from jsonb_array_elements(coalesce(p_payload->'variantAxes', '[]'::jsonb)) axis
         where nullif(axis->>'fieldKey', '') is not null;
     end if;
     if p_product_id is null then
+        if coalesce(nullif(p_payload->>'status', ''), 'draft') = 'active'
+            and v_settings.product_image_min_count > 0 then
+            raise exception 'validation: create the product as a draft and add at least % images before activation',
+                v_settings.product_image_min_count;
+        end if;
         v_primary_category_id := nullif(p_payload->>'primaryCategoryId', '')::bigint;
         v_metadata := coalesce(p_payload->'metadata', '{}'::jsonb);
         perform commerce.assert_product_custom_fields_with_axes(
@@ -81,6 +88,15 @@ begin
         perform commerce.assert_product_custom_fields_with_axes(
             v_primary_category_id, v_metadata, 'system', coalesce(v_axis_field_keys, '[]'::jsonb)
         );
+        if coalesce(nullif(p_payload->>'status', ''), v_product.status) = 'active'
+            and coalesce(nullif(p_payload->>'visibility', ''), v_product.visibility) = 'public'
+            and (
+                select count(*) from commerce.product_media where product_id = v_product.id
+            ) not between v_settings.product_image_min_count and v_settings.product_image_max_count then
+            raise exception 'validation: an active public product must have between % and % images',
+                v_settings.product_image_min_count,
+                v_settings.product_image_max_count;
+        end if;
         update commerce.products
         set slug = coalesce(nullif(lower(btrim(p_payload->>'slug')), ''), slug),
             title = coalesce(nullif(btrim(p_payload->>'title'), ''), title),
