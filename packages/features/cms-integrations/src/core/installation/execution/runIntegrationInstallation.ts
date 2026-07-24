@@ -1,7 +1,7 @@
 import { runCreate } from "../create";
 import { runRerun } from "./rerun";
 import { integrationInstallationId } from "../ids";
-import { reconcileAfterInstallation } from "./afterInstallation";
+import { reconcileDependentInstallations } from "./afterInstallation";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
 import type {
     IntegrationImportDeps,
@@ -39,6 +39,6 @@ export async function runIntegrationInstallation(
     request: RunIntegrationInstallationCreateRequest | RunIntegrationInstallationRerunRequest,
 ): Promise<RunIntegrationInstallationResult> {
     const result = request.mode === "create" ? await runCreate(request) : await runRerun(request);
-    await reconcileAfterInstallation(request.deps, request.installations, result.installation.id);
+    await reconcileDependentInstallations(request.deps, request.installations, result.installation.id);
     return result;
 }

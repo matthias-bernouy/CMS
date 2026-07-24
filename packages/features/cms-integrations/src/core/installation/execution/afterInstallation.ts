@@ -9,11 +9,29 @@ import type { IntegrationImportDeps } from "../../../interfaces/IntegrationImpor
 import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
 import type { IntegrationInstallationRepository } from "../../../interfaces/IntegrationInstallationRepository";
 import { integrationInstallationId } from "../ids";
+import { markAfterInstallationFailed } from "./afterInstallationFailure";
 
-export async function reconcileAfterInstallation(
+export async function reconcileChangedInstallation(
     deps: IntegrationImportDeps,
     installations: IntegrationInstallationRepository,
     changedInstallationId: string,
+): Promise<void> {
+    await reconcileAfterInstallation(deps, installations, changedInstallationId, "changed");
+}
+
+export async function reconcileDependentInstallations(
+    deps: IntegrationImportDeps,
+    installations: IntegrationInstallationRepository,
+    changedInstallationId: string,
+): Promise<void> {
+    await reconcileAfterInstallation(deps, installations, changedInstallationId, "dependents");
+}
+
+async function reconcileAfterInstallation(
+    deps: IntegrationImportDeps,
+    installations: IntegrationInstallationRepository,
+    changedInstallationId: string,
+    scope: "changed" | "dependents",
 ): Promise<void> {
     const installed = await installations.list();
     for (const installation of installed) {
@@ -21,8 +39,12 @@ export async function reconcileAfterInstallation(
         if (installation.status !== "success" || !definition?.afterInstallation?.length) {
             continue;
         }
-        const actions = definition.afterInstallation.filter((action) =>
-            isAffected(definition, installation.id, action, changedInstallationId),
+        const isChanged = installation.id === changedInstallationId;
+        if ((scope === "changed") !== isChanged) {
+            continue;
+        }
+        const actions = definition.afterInstallation.filter(
+            (action) => isChanged || isAffected(definition, action, changedInstallationId),
         );
         if (!actions.length) {
             continue;
@@ -32,20 +54,21 @@ export async function reconcileAfterInstallation(
             if ((action.requires ?? []).some((name) => !dependencies[name])) {
                 continue;
             }
-            await executeAction(deps, definition, installation, dependencies, action);
+            try {
+                await executeAction(deps, definition, installation, dependencies, action);
+            } catch (error) {
+                await markAfterInstallationFailed(installations, installation.id, error);
+                throw error;
+            }
         }
     }
 }
 
 function isAffected(
     definition: IntegrationDefinition,
-    installationId: string,
     action: DeclarativeAfterInstallationTemplate,
     changedInstallationId: string,
 ): boolean {
-    if (installationId === changedInstallationId) {
-        return true;
-    }
     const requirements = new Set(action.requires ?? []);
     return (definition.dependencies ?? []).some(
         (dependency) =>

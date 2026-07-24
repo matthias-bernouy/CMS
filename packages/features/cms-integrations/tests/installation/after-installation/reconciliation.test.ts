@@ -6,7 +6,7 @@ import {
 } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import { producerDefinition, targetDefinition } from "./afterInstallationFixtures";
+import { producerDefinition, targetDefinition } from "./fixtures";
 
 describe("@bernouy/cms-integrations afterInstallation", () => {
     test("parses dependency-gated declarative steps", () => {
