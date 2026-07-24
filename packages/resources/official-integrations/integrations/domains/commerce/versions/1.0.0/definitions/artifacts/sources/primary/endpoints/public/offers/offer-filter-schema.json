@@ -87,6 +87,21 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "range": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "properties": {
+                                            "minimum": {
+                                                "type": "number"
+                                            },
+                                            "maximum": {
+                                                "type": "number"
+                                            },
+                                            "step": {
+                                                "type": "number"
+                                            }
+                                        }
                                     }
                                 }
                             }

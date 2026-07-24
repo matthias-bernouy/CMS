@@ -3,78 +3,68 @@
 begin;
 set local role service_role;
 
-select (commerce.upsert_category(null, jsonb_build_object(
-    'slug', 'filter-read-model-root', 'label', 'Filter read model root'
-))->>'id')::bigint root_id \gset
-select (commerce.upsert_category(null, jsonb_build_object(
-    'parentId', :root_id,
-    'slug', 'filter-read-model-child',
-    'label', 'Filter read model child'
-))->>'id')::bigint category_id \gset
-select (commerce.upsert_category(null, jsonb_build_object(
-    'slug', 'filter-read-model-outside', 'label', 'Filter read model outside'
-))->>'id')::bigint outside_category_id \gset
-update commerce.categories set status = 'inactive' where id = :root_id;
-
-insert into commerce.custom_field_definitions (
-    entity_type, key, label, field_type, options, unit, public_readable, enabled
-) values (
-    'product', 'filterReadModelWeight', 'Weight', 'number', '[]', 'g', true, true
-);
-insert into commerce.category_custom_fields (
-    category_id, field_key, required, filterable, position
-) values (:root_id, 'filterReadModelWeight', false, true, 1);
-
-update commerce.brands set status = 'inactive' where status = 'active';
-insert into commerce.brands (id, slug, name, status) values
-    (9100000000000, 'filter-alpha', 'Alpha', 'active'),
-    (9100000000002, 'filter-beta-two', 'Beta', 'active'),
-    (9100000000001, 'filter-beta-one', 'Beta', 'active'),
-    (9100000000003, 'filter-inactive', 'Aardvark inactive', 'inactive'),
-    (9100000000004, 'filter-archived', 'Aardvark archived', 'archived'),
-    (9100000000005, 'filter-outside', 'Aardvark outside', 'active');
-insert into commerce.brands (id, slug, name, status)
-select
-    9200000000000 + generated,
-    'filter-generated-' || lpad(generated::text, 3, '0'),
-    'Filter ' || lpad(generated::text, 3, '0'),
-    'active'
-from generate_series(1, 205) generated;
-
-insert into commerce.products (slug, title, brand_id, status, visibility)
-select
-    'product-' || brand.slug,
-    'Product ' || brand.name,
-    brand.id,
-    'active',
-    'public'
-from commerce.brands brand
-where brand.slug like 'filter-%';
-
-insert into commerce.product_categories (product_id, category_id, is_primary)
-select
-    product.id,
-    case when brand.slug = 'filter-outside'
-        then :outside_category_id
-        else :category_id
-    end,
-    true
-from commerce.products product
-join commerce.brands brand on brand.id = product.brand_id
-where product.slug like 'product-filter-%';
+\ir read-model.fixture.sql
 
 do $$
 declare
     v_slug text := 'filter-read-model-root/filter-read-model-child';
     v_schema jsonb;
     v_actual jsonb;
+    v_base_fields jsonb;
+    v_filtered jsonb;
+    v_range jsonb;
     v_keys text[];
 begin
     v_schema := commerce.offer_filter_schema(v_slug);
     v_actual := commerce.get_offer_filter_schema_read_model(v_slug);
 
-    if v_schema is null or v_actual - 'brands' is distinct from v_schema then
+    select jsonb_agg(field.value - 'range' order by field.ordinality)
+    into v_base_fields
+    from jsonb_array_elements(v_actual->'fields')
+        with ordinality field(value, ordinality);
+    if v_schema is null
+        or v_actual->'category' is distinct from v_schema->'category'
+        or v_base_fields is distinct from v_schema->'fields' then
         raise exception 'offer filter read model: schema projection changed';
+    end if;
+    select field->'range' into v_range
+    from jsonb_array_elements(v_actual->'fields') field
+    where field->>'key' = 'filterReadModelWeight';
+    if v_range is distinct from
+        '{"minimum":280.5,"maximum":325.25,"step":0.000001}'::jsonb then
+        raise exception
+            'offer filter read model: expected dynamic numeric range, got %',
+            v_range;
+    end if;
+    select field->'range' into v_range
+    from jsonb_array_elements(v_actual->'fields') field
+    where field->>'key' = 'filterReadModelTolerance';
+    if v_range is distinct from
+        '{"minimum":1.0000001,"maximum":1.0000013,"step":0.0000006}'::jsonb
+        or (v_range->>'minimum')::double precision
+            >= (v_range->>'maximum')::double precision then
+        raise exception
+            'offer filter read model: non-aligned range collapsed, got %',
+            v_range;
+    end if;
+    v_filtered := commerce.search_public_offers(
+        v_slug,
+        null,
+        '{"filterReadModelWeight":{"gte":280,"lte":281}}'::jsonb,
+        null, null, null, null, 'recent', 20, 0
+    );
+    if (v_filtered->>'total')::integer <> 1
+        or v_filtered->'items'->0->>'slug' <> 'filter-range-present' then
+        raise exception
+            'offer metadata filter admitted a missing or null value: %',
+            v_filtered;
+    end if;
+    v_filtered := commerce.search_public_offers(
+        v_slug, null, '{"filterReadModelWeight":{"eq":null}}'::jsonb,
+        null, null, null, null, 'recent', 20, 0
+    );
+    if (v_filtered->>'total')::integer <> 0 then
+        raise exception 'null metadata became a filter value: %', v_filtered;
     end if;
     if jsonb_array_length(v_actual->'brands') <> 200
         or v_actual->'brands'->0->>'name' is distinct from 'Alpha'
@@ -110,6 +100,43 @@ begin
     if commerce.get_offer_filter_schema_read_model(v_slug)->'brands'
         is distinct from '[]'::jsonb then
         raise exception 'offer filter read model: empty brands changed';
+    end if;
+
+    update commerce.products
+    set metadata = metadata
+        - 'filterReadModelWeight'
+        - 'filterReadModelTolerance'
+    where id in (
+        select category_link.product_id
+        from commerce.product_categories category_link
+        where category_link.category_id = (
+            select id from commerce.categories where full_slug = v_slug
+        )
+    );
+    update commerce.product_variants
+    set metadata = metadata
+        - 'filterReadModelWeight'
+        - 'filterReadModelTolerance'
+    where product_id in (
+        select category_link.product_id
+        from commerce.product_categories category_link
+        where category_link.category_id = (
+            select id from commerce.categories where full_slug = v_slug
+        )
+    );
+    if exists (
+        select 1
+        from jsonb_array_elements(
+            commerce.get_offer_filter_schema_read_model(v_slug)->'fields'
+        ) field
+        where field->>'key' in (
+            'filterReadModelWeight',
+            'filterReadModelTolerance'
+        )
+          and field->'range' is distinct from 'null'::jsonb
+    ) then
+        raise exception
+            'offer filter read model: empty numeric ranges must be null';
     end if;
     if commerce.get_offer_filter_schema_read_model('filter-read-model-missing')
         is not null then

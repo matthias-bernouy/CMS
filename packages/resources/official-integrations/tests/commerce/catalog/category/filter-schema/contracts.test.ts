@@ -9,7 +9,7 @@ import { useFilterSchemaResponder } from "./fixtures";
 installCommerceTestEnvironment();
 
 describe("commerce offer filter schema contracts", () => {
-    test("preserves category, inherited field semantics, field order, and brand order", async () => {
+    test("preserves category, numeric ranges, inherited field semantics, and facet order", async () => {
         useFilterSchemaResponder();
 
         const response = await requestCommerce("/offer-filter-schema?category=sports%2Ftennis");

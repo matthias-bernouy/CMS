@@ -1,6 +1,6 @@
 import { jsonResponse, setRestResponder } from "../../../harness";
 import type { JsonRecord } from "../../../harness";
-import { brands, filterSchema } from "./expected";
+import { brands, filterSchemaResponse } from "./expected";
 
 type FilterSchemaResponderOptions = {
     schema?: JsonRecord | null;
@@ -8,7 +8,7 @@ type FilterSchemaResponderOptions = {
 };
 
 export function useFilterSchemaResponder(options: FilterSchemaResponderOptions = {}): void {
-    const schema = options.schema === undefined ? filterSchema : options.schema;
+    const schema = options.schema === undefined ? filterSchemaResponse : options.schema;
     const brandRows = options.brandRows ?? brands;
     setRestResponder((request) => {
         const resource = new URL(request.url).pathname.split("/").at(-1);

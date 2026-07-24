@@ -99,13 +99,15 @@ begin
                   select 1
                   from jsonb_each(p_filters) filter
                   cross join lateral jsonb_each(filter.value) condition
-                  where not case condition.key
-                      when 'eq' then effective.value->filter.key = condition.value
-                      when 'in' then condition.value @> jsonb_build_array(effective.value->filter.key)
-                      when 'gte' then (effective.value->>filter.key)::numeric >= (condition.value#>>'{}')::numeric
-                      when 'lte' then (effective.value->>filter.key)::numeric <= (condition.value#>>'{}')::numeric
-                      else false
-                  end
+                  where effective.value->filter.key is null
+                     or effective.value->filter.key = 'null'::jsonb
+                     or not coalesce(case condition.key
+                         when 'eq' then effective.value->filter.key = condition.value
+                         when 'in' then condition.value @> jsonb_build_array(effective.value->filter.key)
+                         when 'gte' then (effective.value->>filter.key)::numeric >= (condition.value#>>'{}')::numeric
+                         when 'lte' then (effective.value->>filter.key)::numeric <= (condition.value#>>'{}')::numeric
+                         else false
+                     end, false)
               )
         ), page as (
             select filtered.*, row_number() over (order by
