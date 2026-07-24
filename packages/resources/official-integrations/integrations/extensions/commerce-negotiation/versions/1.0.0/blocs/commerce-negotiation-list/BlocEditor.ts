@@ -21,8 +21,21 @@ export class CommerceNegotiationListEditor extends Editor {
                 settings: [
                     { type: "text", label: "Title", attribute: "title", defaultValue: "Mes offres de prix" },
                     { type: "textarea", label: "Description", attribute: "copy" },
+                    { type: "text", label: "Combined tab", attribute: "combined-label", defaultValue: "Toutes" },
                     { type: "text", label: "Received tab", attribute: "received-label", defaultValue: "Offres reçues" },
                     { type: "text", label: "Sent tab", attribute: "sent-label", defaultValue: "Offres envoyées" },
+                    {
+                        type: "text",
+                        label: "Received direction",
+                        attribute: "received-direction-label",
+                        defaultValue: "Offre reçue",
+                    },
+                    {
+                        type: "text",
+                        label: "Sent direction",
+                        attribute: "sent-direction-label",
+                        defaultValue: "Offre envoyée",
+                    },
                     {
                         type: "text",
                         label: "Status accessible label",
@@ -125,6 +138,7 @@ export class CommerceNegotiationListEditor extends Editor {
                         attribute: "initial-role",
                         defaultValue: "seller",
                         options: [
+                            { label: "Combined", value: "all" },
                             { label: "Received", value: "seller" },
                             { label: "Sent", value: "buyer" },
                         ],
@@ -143,6 +157,16 @@ export class CommerceNegotiationListEditor extends Editor {
                         attribute: "grid-max",
                         defaultValue: "xl",
                         options: ["none", "sm", "md", "lg", "xl", "2xl"].map((value) => ({ label: value, value })),
+                    },
+                    {
+                        type: "select",
+                        label: "Grid packing",
+                        attribute: "grid-packing",
+                        defaultValue: "fit",
+                        options: [
+                            { label: "Fit available columns", value: "fit" },
+                            { label: "Keep empty columns", value: "fill" },
+                        ],
                     },
                     {
                         type: "select",
@@ -184,6 +208,16 @@ export class CommerceNegotiationListEditor extends Editor {
                     },
                     { type: "text", label: "Source prefix", attribute: "source-prefix", defaultValue: "/.cms/sources" },
                     { type: "text", label: "Locale", attribute: "locale", defaultValue: "fr-FR" },
+                    {
+                        type: "segmented",
+                        label: "Whole-unit prices",
+                        attribute: "whole-unit-prices",
+                        defaultValue: "false",
+                        options: [
+                            { label: "Yes", value: "true" },
+                            { label: "No", value: "false" },
+                        ],
+                    },
                     {
                         type: "segmented",
                         label: "Synchronize URL",

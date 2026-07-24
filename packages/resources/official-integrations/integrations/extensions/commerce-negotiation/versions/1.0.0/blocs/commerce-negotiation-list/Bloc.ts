@@ -3,6 +3,7 @@ import { Composition } from "@bernouy/components/base";
 import template from "./template.html" with { type: "text" };
 
 const statuses = ["all", "pending", "accepted", "rejected", "withdrawn", "expired", "superseded", "canceled"];
+const roles = ["all", "buyer", "seller"];
 const defaultStatusLabels = {
     all: "Toutes",
     pending: "En attente",
@@ -42,6 +43,7 @@ export class CommerceNegotiationList extends Composition {
         "card-density",
         "card-muted-text-color",
         "card-text-color",
+        "combined-label",
         "copy",
         "checkout-expiration-label",
         "checkout-label-template",
@@ -65,6 +67,7 @@ export class CommerceNegotiationList extends Composition {
         "grid-gap",
         "grid-max",
         "grid-min",
+        "grid-packing",
         "initial-role",
         "locale",
         "image-endpoint",
@@ -77,6 +80,7 @@ export class CommerceNegotiationList extends Composition {
         "page-size",
         "proposed-label",
         "received-label",
+        "received-direction-label",
         "reference-label",
         "reject-label",
         "reject-button-accent-color",
@@ -104,6 +108,7 @@ export class CommerceNegotiationList extends Composition {
         "success-reject-message",
         "success-withdraw-message",
         "sent-label",
+        "sent-direction-label",
         "status-param",
         "sync-url",
         "text-color",
@@ -114,6 +119,7 @@ export class CommerceNegotiationList extends Composition {
         "toast-error-border-color",
         "toast-error-text-color",
         "toast-text-color",
+        "whole-unit-prices",
         "withdraw-label",
         "withdraw-button-accent-color",
         "withdraw-button-background-color",
@@ -138,7 +144,7 @@ export class CommerceNegotiationList extends Composition {
 
     connectedCallback() {
         super.connectedCallback();
-        this.role = this.getAttribute("initial-role") === "buyer" ? "buyer" : "seller";
+        this.role = initialRole(this);
         this.addEventListener("change", this.onFilterChange);
         this.addEventListener("basic-pagination:change", this.onPageChange);
         this.addEventListener("click", this.onActionClick);
@@ -166,7 +172,7 @@ export class CommerceNegotiationList extends Composition {
             return;
         }
         if (name === "initial-role") {
-            this.role = this.getAttribute("initial-role") === "buyer" ? "buyer" : "seller";
+            this.role = initialRole(this);
         }
         queueMicrotask(() => {
             this.syncPresentation();
@@ -221,7 +227,7 @@ export class CommerceNegotiationList extends Composition {
     listRequest() {
         const pageSize = positiveInteger(this.getAttribute("page-size"), 12);
         const query = {
-            role: this.role,
+            ...(this.role === "all" ? {} : { role: this.role }),
             ...(this.status === "all" ? {} : { status: this.status }),
             limit: pageSize,
             offset: (this.page - 1) * pageSize,
@@ -274,7 +280,7 @@ export class CommerceNegotiationList extends Composition {
                 status: "pending",
                 version: 1,
                 expiresAt: new Date(Date.now() + 86400000).toISOString(),
-                viewerRole: this.role,
+                viewerRole: this.role === "all" ? "seller" : this.role,
                 offerSlug: "raquette-de-tennis",
                 acceptedAt: null,
                 checkoutStatus: null,
@@ -301,10 +307,13 @@ export class CommerceNegotiationList extends Composition {
         if (roleFilter.value !== this.role) {
             roleFilter.value = this.role;
         }
+        const allChip = this.querySelector("[data-all-chip]");
         const receivedChip = this.querySelector("[data-received-chip]");
         const sentChip = this.querySelector("[data-sent-chip]");
+        allChip.toggleAttribute("selected", this.role === "all");
         receivedChip.toggleAttribute("selected", this.role === "seller");
         sentChip.toggleAttribute("selected", this.role === "buyer");
+        setText(allChip, this.getAttribute("combined-label") || "Toutes");
         setText(receivedChip, this.getAttribute("received-label") || "Offres reçues");
         setText(sentChip, this.getAttribute("sent-label") || "Offres envoyées");
         copyColors(this, roleFilter, "role", [
@@ -329,7 +338,7 @@ export class CommerceNegotiationList extends Composition {
         setAttribute(grid, "min", this.getAttribute("grid-min") || "md");
         setAttribute(grid, "max", this.getAttribute("grid-max") || "xl");
         setAttribute(grid, "gap", this.getAttribute("grid-gap") || "md");
-        setAttribute(grid, "packing", "fit");
+        setAttribute(grid, "packing", this.getAttribute("grid-packing") === "fill" ? "fill" : "fit");
         setAttribute(grid, "justify-items", "stretch");
         for (const skeleton of this.querySelectorAll("basic-skeleton")) {
             copyAttribute(this, skeleton, "skeleton-base-color", "base-color");
@@ -359,6 +368,12 @@ export class CommerceNegotiationList extends Composition {
             copyColors(this, card, "card", ["text-color", "background-color", "border-color", "muted-text-color"]);
             setText(fragment.querySelector("[data-offer-title]"), proposal.offerTitle);
             setText(fragment.querySelector("[data-status]"), this.statusLabel(proposal.status));
+            setText(
+                fragment.querySelector("[data-direction]"),
+                proposal.viewerRole === "buyer"
+                    ? this.getAttribute("sent-direction-label") || "Offre envoyée"
+                    : this.getAttribute("received-direction-label") || "Offre reçue",
+            );
             this.syncOfferLink(fragment, proposal);
             this.syncOfferImage(fragment, proposal);
             setText(
@@ -408,8 +423,8 @@ export class CommerceNegotiationList extends Composition {
                 hasCheckoutExpiration ? this.formatCheckoutExpiration(proposal.checkoutExpiresAt) : "",
             );
 
-            const canDecide = proposal.status === "pending" && this.role === "seller";
-            const canWithdraw = proposal.status === "pending" && this.role === "buyer";
+            const canDecide = proposal.status === "pending" && proposal.viewerRole === "seller";
+            const canWithdraw = proposal.status === "pending" && proposal.viewerRole === "buyer";
             const accept = fragment.querySelector('[data-action="accept"]');
             const reject = fragment.querySelector('[data-action="reject"]');
             const withdraw = fragment.querySelector('[data-action="withdraw"]');
@@ -436,18 +451,22 @@ export class CommerceNegotiationList extends Composition {
             this.querySelector("[data-empty-title]"),
             unfiltered
                 ? this.getAttribute("empty-title") ||
-                      (this.role === "seller"
-                          ? "Aucune offre reçue pour le moment"
-                          : "Aucune offre envoyée pour le moment")
+                      (this.role === "all"
+                          ? "Aucune offre pour le moment"
+                          : this.role === "seller"
+                            ? "Aucune offre reçue pour le moment"
+                            : "Aucune offre envoyée pour le moment")
                 : this.getAttribute("empty-filtered-title") || "Aucune offre avec ce statut",
         );
         setText(
             this.querySelector("[data-empty-message]"),
             unfiltered
                 ? this.getAttribute("empty-message") ||
-                      (this.role === "seller"
-                          ? "Les propositions envoyées par les acheteurs apparaîtront ici."
-                          : "Les propositions que tu envoies apparaîtront ici.")
+                      (this.role === "all"
+                          ? "Les offres reçues et envoyées apparaîtront ici."
+                          : this.role === "seller"
+                            ? "Les propositions envoyées par les acheteurs apparaîtront ici."
+                            : "Les propositions que tu envoies apparaîtront ici.")
                 : this.getAttribute("empty-filtered-message") || "Essaie un autre statut pour retrouver tes offres.",
         );
         const pagination = this.querySelector("[data-pagination]");
@@ -459,7 +478,7 @@ export class CommerceNegotiationList extends Composition {
     onFilterChange = (event) => {
         if (event.target?.matches?.("[data-role-filter]")) {
             const role = event.target.value;
-            if (role !== "buyer" && role !== "seller") {
+            if (!roles.includes(role)) {
                 return;
             }
             this.role = role;
@@ -499,7 +518,7 @@ export class CommerceNegotiationList extends Composition {
         const params = new URLSearchParams(location.search);
         const role = params.get(this.getAttribute("role-param") || "role");
         const status = params.get(this.getAttribute("status-param") || "status");
-        if (role === "buyer" || role === "seller") {
+        if (roles.includes(role)) {
             this.role = role;
         }
         if (status && statuses.includes(status)) {
@@ -520,8 +539,8 @@ export class CommerceNegotiationList extends Composition {
         const roleParam = this.getAttribute("role-param") || "role";
         const statusParam = this.getAttribute("status-param") || "status";
         const pageParam = this.getAttribute("page-param") || "page";
-        const initialRole = this.getAttribute("initial-role") === "buyer" ? "buyer" : "seller";
-        if (this.role === initialRole) {
+        const defaultRole = initialRole(this);
+        if (this.role === defaultRole) {
             url.searchParams.delete(roleParam);
         } else {
             url.searchParams.set(roleParam, this.role);
@@ -699,7 +718,7 @@ export class CommerceNegotiationList extends Composition {
         const order = fragment.querySelector('[data-action-link="order"]');
         const agreementId = typeof proposal.agreementId === "string" ? proposal.agreementId.trim() : "";
         const buyerAccepted =
-            this.role === "buyer" &&
+            proposal.viewerRole === "buyer" &&
             proposal.status === "accepted" &&
             proposal.checkoutStatus === "active" &&
             Boolean(agreementId);
@@ -723,7 +742,7 @@ export class CommerceNegotiationList extends Composition {
         }
 
         const consumed =
-            this.role === "buyer" &&
+            proposal.viewerRole === "buyer" &&
             proposal.status === "accepted" &&
             proposal.checkoutStatus === "consumed" &&
             proposal.orderId !== null &&
@@ -774,9 +793,13 @@ export class CommerceNegotiationList extends Composition {
             return new Intl.NumberFormat(this.getAttribute("locale") || "fr-FR", {
                 style: "currency",
                 currency: currency.toUpperCase(),
+                minimumFractionDigits: this.getAttribute("whole-unit-prices") === "true" ? 0 : undefined,
+                maximumFractionDigits: this.getAttribute("whole-unit-prices") === "true" ? 0 : undefined,
             }).format(amount / 100);
         } catch {
-            return `${(amount / 100).toFixed(2)} ${currency.toUpperCase()}`;
+            const value =
+                this.getAttribute("whole-unit-prices") === "true" ? String(amount / 100) : (amount / 100).toFixed(2);
+            return `${value} ${currency.toUpperCase()}`;
         }
     }
 
@@ -862,6 +885,11 @@ function buildUrl(base, parameter, value) {
 function positiveInteger(value, fallback = null) {
     const parsed = Number(value);
     return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function initialRole(element) {
+    const value = element.getAttribute("initial-role");
+    return roles.includes(value) ? value : "seller";
 }
 
 function nonNegativeInteger(value, fallback) {

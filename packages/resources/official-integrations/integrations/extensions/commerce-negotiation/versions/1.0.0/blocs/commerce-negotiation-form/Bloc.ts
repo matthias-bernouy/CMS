@@ -36,6 +36,7 @@ export class CommerceNegotiationForm extends Composition {
         "own-offer-message",
         "skeleton-base-color",
         "skeleton-highlight-color",
+        "show-message",
         "source-id",
         "source-prefix",
         "success-message",
@@ -182,6 +183,7 @@ export class CommerceNegotiationForm extends Composition {
             this.getAttribute("amount-hint") || "Saisis un montant compris dans la fourchette indiquée.",
         );
         const message = this.messageInput;
+        setHidden(message, this.getAttribute("show-message") === "false");
         setAttribute(message, "label", this.getAttribute("message-label") || "Message au vendeur (facultatif)");
         setAttribute(
             message,
@@ -221,14 +223,14 @@ export class CommerceNegotiationForm extends Composition {
         const locale = this.getAttribute("locale") || "fr-FR";
         setText(
             this.querySelector("[data-current-price]"),
-            formatMoney(policy.referenceAmount, policy.currency, locale),
+            formatMoney(policy.referenceAmount, policy.currency, locale, policy.wholeUnitPrices),
         );
         setText(
             this.querySelector("[data-range]"),
-            `${formatMoney(policy.minimumAmount, policy.currency, locale)} – ${formatMoney(policy.maximumAmount, policy.currency, locale)}`,
+            `${formatMoney(policy.minimumAmount, policy.currency, locale, policy.wholeUnitPrices)} – ${formatMoney(policy.maximumAmount, policy.currency, locale, policy.wholeUnitPrices)}`,
         );
-        setAttribute(this.amountInput, "min", decimalAmount(policy.minimumAmount));
-        setAttribute(this.amountInput, "max", decimalAmount(policy.maximumAmount));
+        setAttribute(this.amountInput, "min", decimalAmount(policy.minimumAmount, policy.wholeUnitPrices));
+        setAttribute(this.amountInput, "max", decimalAmount(policy.maximumAmount, policy.wholeUnitPrices));
         setAttribute(this.amountInput, "step", policy.wholeUnitPrices ? "1" : "0.01");
     }
 
@@ -259,7 +261,9 @@ export class CommerceNegotiationForm extends Composition {
                 body: {
                     offerId: this.policy.offerId,
                     amount,
-                    message: this.messageInput?.value?.trim() || undefined,
+                    ...(this.getAttribute("show-message") === "false"
+                        ? {}
+                        : { message: this.messageInput?.value?.trim() || undefined }),
                 },
             });
             this.amountInput.value = "";
@@ -351,6 +355,7 @@ export class CommerceNegotiationForm extends Composition {
             this.existingProposal.proposedAmount,
             this.existingProposal.currency,
             this.getAttribute("locale") || "fr-FR",
+            this.policy?.wholeUnitPrices === true,
         );
         const message =
             this.getAttribute("existing-message") || "Vous avez déjà fait une offre de {amount} pour cette annonce.";
@@ -451,17 +456,20 @@ function minorUnits(value) {
     return Number.isSafeInteger(amount) ? amount : null;
 }
 
-function decimalAmount(value) {
-    return (value / 100).toFixed(2);
+function decimalAmount(value, wholeUnitPrices = false) {
+    return wholeUnitPrices ? String(value / 100) : (value / 100).toFixed(2);
 }
 
-function formatMoney(amount, currency, locale) {
+function formatMoney(amount, currency, locale, wholeUnitPrices = false) {
     try {
-        return new Intl.NumberFormat(locale, { style: "currency", currency: currency.toUpperCase() }).format(
-            amount / 100,
-        );
+        return new Intl.NumberFormat(locale, {
+            style: "currency",
+            currency: currency.toUpperCase(),
+            minimumFractionDigits: wholeUnitPrices ? 0 : undefined,
+            maximumFractionDigits: wholeUnitPrices ? 0 : undefined,
+        }).format(amount / 100);
     } catch {
-        return `${decimalAmount(amount)} ${currency.toUpperCase()}`;
+        return `${decimalAmount(amount, wholeUnitPrices)} ${currency.toUpperCase()}`;
     }
 }
 

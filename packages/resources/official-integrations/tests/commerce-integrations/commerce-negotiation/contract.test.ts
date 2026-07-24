@@ -209,6 +209,8 @@ describe("commerce negotiation 1.0.0", () => {
         expect(form?.viewJS).toContain("existing-message");
         expect(form?.viewJS).toContain("createMyProposal");
         expect(form?.viewJS).toContain("system-functions");
+        expect(formViewSource).toContain('getAttribute("show-message") === "false"');
+        expect(formViewSource).toContain("wholeUnitPrices");
         expect(formViewSource).toContain('style.setProperty("display", "none", "important")');
         expect(form?.viewJS).toContain("<basic-input");
         expect(form?.viewJS).toContain("<basic-textarea");
@@ -225,8 +227,12 @@ describe("commerce negotiation 1.0.0", () => {
         expect(list?.viewJS).toContain("history.replaceState");
         expect(listViewSource).toContain('style.setProperty("display", "none", "important")');
         expect(listViewSource).toContain('toggleAttribute("selected", this.role === "buyer")');
+        expect(listViewSource).toContain('this.role === "all"');
+        expect(listViewSource).toContain('getAttribute("grid-packing")');
+        expect(listViewSource).toContain('proposal.viewerRole === "buyer"');
         expect(list?.viewJS).not.toContain("location.reload");
         expect(listEditorSource).toContain('attribute: "initial-role"');
+        expect(listEditorSource).toContain('{ label: "Combined", value: "all" }');
 
         const available = [
             "basic-button",

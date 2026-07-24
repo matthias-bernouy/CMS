@@ -33,6 +33,16 @@ export class CommerceNegotiationFormEditor extends Editor {
                     },
                     { type: "text", label: "Message placeholder", attribute: "message-placeholder" },
                     {
+                        type: "segmented",
+                        label: "Seller message",
+                        attribute: "show-message",
+                        defaultValue: "true",
+                        options: [
+                            { label: "Visible", value: "true" },
+                            { label: "Hidden", value: "false" },
+                        ],
+                    },
+                    {
                         type: "text",
                         label: "Button label",
                         attribute: "button-label",

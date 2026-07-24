@@ -62,6 +62,7 @@
             <basic-option value="canceled">Annulées</basic-option>
         </basic-select>
         <basic-chip-group data-role-filter accessible-label="Type d’offres" value="seller">
+            <basic-chip value="all" data-all-chip>Toutes</basic-chip>
             <basic-chip value="seller" selected data-received-chip>Offres reçues</basic-chip>
             <basic-chip value="buyer" data-sent-chip>Offres envoyées</basic-chip>
         </basic-chip-group>
@@ -107,6 +108,7 @@
                         <span data-reference-amount></span>
                     </basic-stack>
                 </basic-grid>
+                <small data-direction></small>
                 <p data-message hidden></p>
                 <small data-expiration hidden></small>
                 <small data-decision hidden></small>

@@ -12,6 +12,65 @@ afterEach(() => {
 });
 
 describe("commerce negotiation list buyer checkout", () => {
+    test("shows sent and received proposals together in an intrinsic whole-unit grid", async () => {
+        await defineList();
+        const realFetch = globalThis.fetch;
+        const requests: URL[] = [];
+        globalThis.fetch = (input) => {
+            requests.push(new URL(String(input)));
+            return Promise.resolve(
+                new Response(
+                    JSON.stringify({
+                        items: [
+                            acceptedProposal,
+                            {
+                                ...acceptedProposal,
+                                id: 8,
+                                publicId: "proposal-8",
+                                viewerRole: "seller",
+                                status: "pending",
+                                agreementId: null,
+                                checkoutStatus: null,
+                                acceptedAt: null,
+                            },
+                        ],
+                        total: 2,
+                    }),
+                    { status: 200, headers: { "content-type": "application/json" } },
+                ),
+            );
+        };
+        const list = document.createElement(tag);
+        list.setAttribute("initial-role", "all");
+        list.setAttribute("show-role-tabs", "false");
+        list.setAttribute("grid-packing", "fill");
+        list.setAttribute("grid-max", "lg");
+        list.setAttribute("whole-unit-prices", "true");
+        try {
+            document.body.append(list);
+            await settleLifecycle();
+
+            expect(requests).toHaveLength(1);
+            expect(requests[0].searchParams.has("role")).toBe(false);
+            expect(list.querySelector("[data-items]")?.getAttribute("packing")).toBe("fill");
+            expect(list.querySelector("[data-items]")?.getAttribute("max")).toBe("lg");
+            expect(Array.from(list.querySelectorAll("[data-direction]"), (item) => item.textContent)).toEqual([
+                "Offre envoyée",
+                "Offre reçue",
+            ]);
+            expect(Array.from(list.querySelectorAll("[data-proposed-amount]"), (item) => item.textContent)).toEqual([
+                "120 €",
+                "120 €",
+            ]);
+            const cards = list.querySelectorAll<HTMLElement>("[data-proposal-card]");
+            expect(cards[0].querySelector<HTMLElement>('[data-action-link="checkout"]')?.hidden).toBe(false);
+            expect(cards[1].querySelector<HTMLElement>('[data-action="accept"]')?.hidden).toBe(false);
+        } finally {
+            list.remove();
+            globalThis.fetch = realFetch;
+        }
+    });
+
     test("links an active accepted agreement to checkout without exposing a client amount", async () => {
         await defineList();
         const realFetch = globalThis.fetch;
