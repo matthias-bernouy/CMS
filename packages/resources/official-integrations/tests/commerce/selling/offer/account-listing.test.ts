@@ -30,6 +30,7 @@ describe("commerce seller offer listing", () => {
                         title: "First",
                         publication_status: "draft",
                         workflow_state: "pending_review",
+                        publicly_visible: false,
                         accepted_price_amount: 11000,
                     },
                     {
@@ -38,6 +39,7 @@ describe("commerce seller offer listing", () => {
                         title: "Second",
                         publication_status: "draft",
                         workflow_state: "pending_review",
+                        publicly_visible: true,
                         accepted_price_amount: 13000,
                     },
                 ],
@@ -67,6 +69,7 @@ describe("commerce seller offer listing", () => {
                 acceptedPriceAmount: 11000,
                 sellerDisplayPriceAmount: 12000,
                 displayStatus: "under_review",
+                publiclyVisible: false,
                 mainImageMediaId: "13",
             }),
             expect.objectContaining({
@@ -74,6 +77,7 @@ describe("commerce seller offer listing", () => {
                 acceptedPriceAmount: 13000,
                 sellerDisplayPriceAmount: 13000,
                 displayStatus: "under_review",
+                publiclyVisible: true,
                 mainImageMediaId: "14",
             }),
         ]);

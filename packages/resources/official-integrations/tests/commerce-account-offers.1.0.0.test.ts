@@ -37,6 +37,31 @@ describe("commerce account offers 1.0.0", () => {
         expect(image.hidden).toBeTrue();
     });
 
+    test("only exposes the public offer action when the backend marks the offer visible", () => {
+        const host = document.createElement("section") as HTMLElement & Record<string, any>;
+        host.sourceBase = "/.cms/sources/commerce";
+        host.status = "all";
+        host.statusLabel = (status: string) => status;
+        host.offerAction = (_workflowState: string, publiclyVisible: boolean) =>
+            publiclyVisible ? { label: "Voir", url: "/annonce?slug={slug}" } : null;
+        host.innerHTML = `
+            <article data-offer-card>
+                <a data-edit-button data-offer-id="41" data-offer-slug="visible" data-workflow-state="approved" data-publicly-visible="true"></a>
+            </article>
+            <article data-offer-card>
+                <a data-edit-button data-offer-id="42" data-offer-slug="pending" data-workflow-state="pending_review" data-publicly-visible="false" href="/annonce?slug=pending"></a>
+            </article>
+        `;
+
+        syncRenderedOffers(host);
+
+        const [visible, pending] = host.querySelectorAll<HTMLElement>("[data-edit-button]");
+        expect(visible.hidden).toBeFalse();
+        expect(visible.getAttribute("href")).toBe("/annonce?slug=visible");
+        expect(pending.hidden).toBeTrue();
+        expect(pending.hasAttribute("href")).toBeFalse();
+    });
+
     test("provides transparent public offer list and editable offer preview blocs", async () => {
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
         if (!definition) {
@@ -210,6 +235,7 @@ describe("commerce account offers 1.0.0", () => {
         expect(viewSource).toContain('attributeFilter: ["data-media-id"]');
         expect(viewSource).toContain('positiveIdentifier(image?.getAttribute("data-media-id"))');
         expect(compiled.viewJS).toContain('data-offer-slug="{{ offer.slug }}"');
+        expect(compiled.viewJS).toContain('data-publicly-visible="{{ offer.publiclyVisible }}"');
         expect(compiled.viewJS).toContain('data-display-amount="{{ offer.sellerDisplayPriceAmount }}"');
         expect(compiled.viewJS).not.toContain('data-amount="{{ offer.acceptedPriceAmount }}"');
         expect(compiled.viewJS).toContain('replaceAll("{slug}"');
@@ -262,6 +288,7 @@ describe("commerce account offers 1.0.0", () => {
                         type: "object",
                         properties: {
                             displayStatus: { type: "string" },
+                            publiclyVisible: { type: "boolean" },
                             mainImageMediaId: { type: "string" },
                             sellerDisplayPriceAmount: { type: "number" },
                         },

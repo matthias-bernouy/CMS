@@ -61,6 +61,9 @@
                             "displayStatus": {
                                 "type": "string"
                             },
+                            "publiclyVisible": {
+                                "type": "boolean"
+                            },
                             "mainImageMediaId": {
                                 "type": "string",
                                 "nullable": true

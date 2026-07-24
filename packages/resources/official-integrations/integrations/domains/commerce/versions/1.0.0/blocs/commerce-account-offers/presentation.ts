@@ -82,7 +82,12 @@ export function syncRenderedOffers(host) {
         }
 
         const edit = card.querySelector("[data-edit-button]");
-        const action = host.offerAction(edit.dataset.workflowState);
+        const action = host.offerAction(edit.dataset.workflowState, edit.dataset.publiclyVisible === "true");
+        edit?.toggleAttribute("hidden", !action);
+        if (!action) {
+            edit?.removeAttribute("href");
+            continue;
+        }
         setTextIfChanged(edit, action.label);
         setAttributeIfChanged(edit, "href", offerUrl(action.url, edit.dataset.offerId, edit.dataset.offerSlug));
         copyColorAttributes(host, edit, "button");

@@ -113,7 +113,7 @@ export class CommerceAccountOffers extends Composition {
         return this.getAttribute(`label-${code.replaceAll("_", "-")}`) || statusDefaults[code];
     }
 
-    offerAction(workflowState) {
+    offerAction(workflowState, publiclyVisible) {
         if (workflowState === "awaiting_seller_price") {
             return {
                 label: this.getAttribute("price-label") || "Définir mon prix",
@@ -125,6 +125,9 @@ export class CommerceAccountOffers extends Composition {
                 label: this.getAttribute("edit-label") || "Modifier",
                 url: this.getAttribute("edit-url") || "/mon-espace/modifier-annonce",
             };
+        }
+        if (!publiclyVisible) {
+            return null;
         }
         return {
             label: this.getAttribute("view-label") || "Voir",

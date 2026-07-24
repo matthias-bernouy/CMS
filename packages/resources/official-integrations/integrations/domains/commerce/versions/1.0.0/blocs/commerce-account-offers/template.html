@@ -37,7 +37,7 @@
                         <strong data-offer-price data-display-amount="{{ offer.sellerDisplayPriceAmount }}" data-currency="{{ offer.currency }}"></strong>
                         <small data-offer-updated data-date="{{ offer.updatedAt }}"></small>
                     </basic-stack>
-                    <basic-button slot="actions" data-edit-button data-offer-id="{{ offer.id }}" data-offer-slug="{{ offer.slug }}" data-workflow-state="{{ offer.workflowState }}" action="link" appearance="outlined" size="sm">Voir</basic-button>
+                    <basic-button slot="actions" data-edit-button data-offer-id="{{ offer.id }}" data-offer-slug="{{ offer.slug }}" data-workflow-state="{{ offer.workflowState }}" data-publicly-visible="{{ offer.publiclyVisible }}" action="link" appearance="outlined" size="sm">Voir</basic-button>
                 </basic-card>
             </basic-grid>
 

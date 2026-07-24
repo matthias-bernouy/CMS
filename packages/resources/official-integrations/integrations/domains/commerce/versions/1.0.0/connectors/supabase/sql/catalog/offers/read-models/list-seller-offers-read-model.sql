@@ -162,6 +162,8 @@ begin
                 'condition_code', offer.condition_code,
                 'publication_status', offer.publication_status,
                 'workflow_state', offer.workflow_state,
+                'publicly_visible',
+                    commerce.get_offer_negotiation_context(offer.id)->>'state' = 'ok',
                 'accepted_price_amount', offer.accepted_price_amount,
                 'currency', offer.currency,
                 'availability', offer.availability,
