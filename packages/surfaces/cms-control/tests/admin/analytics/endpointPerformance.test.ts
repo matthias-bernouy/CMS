@@ -47,7 +47,11 @@ describe("endpoint performance dashboard", () => {
         expect(dashboard.querySelector(".endpoint-timeline__errors")).not.toBeNull();
         expect(dashboard.textContent).toContain("HTTP 5xx");
         expect(dashboard.textContent).toContain("Authorization");
-        expect(dashboard.textContent).toContain("Upstream execution");
+        expect(dashboard.textContent).toContain("Stage timings");
+        expect(dashboard.textContent).toContain("Timings are measured independently and may overlap");
+        expect(dashboard.textContent).toContain("Combined upstream time");
+        expect(dashboard.textContent).not.toContain("Stage contribution");
+        expect(dashboard.querySelector('[aria-label="Endpoint stage timings; durations may overlap"]')).not.toBeNull();
         expect(dashboard.textContent).toContain("Edge database calls");
         expect(dashboard.textContent).toContain("250");
         expect(dashboard.textContent).toContain("No individual request logs");

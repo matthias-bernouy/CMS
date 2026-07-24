@@ -19,7 +19,7 @@ const STAGE_LABELS: Record<string, string> = {
     cms_secret: "Secrets",
     cms_headers: "Request headers",
     cms_body: "Request body",
-    cms_upstream: "Upstream execution",
+    cms_upstream: "Combined upstream time",
     cms_projection: "Projection",
     cms_identity_binding: "Identity binding",
     cms_total: "CMS total",
@@ -80,7 +80,7 @@ function renderStages(host: HTMLElement, stages: EndpointPerformanceDetail["stag
     const body = document.createElement("tbody");
     wrapper.className = "endpoint-table-scroll";
     table.className = "endpoint-table endpoint-stage-table";
-    table.setAttribute("aria-label", "Endpoint timing stage contribution");
+    table.setAttribute("aria-label", "Endpoint stage timings; durations may overlap");
     head.append(headerRow(["Stage", "Coverage", "Samples", "Average", "p50", "p95", "p99", "Total", "Maximum"]));
 
     for (const stage of stages) {

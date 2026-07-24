@@ -15707,7 +15707,7 @@ w13c-lateral-menu-item {
     cms_secret: "Secrets",
     cms_headers: "Request headers",
     cms_body: "Request body",
-    cms_upstream: "Upstream execution",
+    cms_upstream: "Combined upstream time",
     cms_projection: "Projection",
     cms_identity_binding: "Identity binding",
     cms_total: "CMS total",
@@ -15757,7 +15757,7 @@ w13c-lateral-menu-item {
     const body = document.createElement("tbody");
     wrapper.className = "endpoint-table-scroll";
     table.className = "endpoint-table endpoint-stage-table";
-    table.setAttribute("aria-label", "Endpoint timing stage contribution");
+    table.setAttribute("aria-label", "Endpoint stage timings; durations may overlap");
     head.append(headerRow(["Stage", "Coverage", "Samples", "Average", "p50", "p95", "p99", "Total", "Maximum"]));
     for (const stage of stages) {
       const row = document.createElement("tr");
@@ -16287,6 +16287,14 @@ circle.endpoint-timeline__errors {
     margin-top: 28px;
 }
 
+.endpoint-stage-note {
+    max-width: 760px;
+    margin: -8px 0 16px;
+    color: var(--text-muted);
+    font-size: .76rem;
+    line-height: 1.5;
+}
+
 .endpoint-meta {
     color: var(--text-muted);
     font-size: .72rem;
@@ -16548,7 +16556,11 @@ circle.endpoint-timeline__errors {
                         </div>
                     </div>
                     <div class="endpoint-stages">
-                        <h4>Stage contribution</h4>
+                        <h4>Stage timings</h4>
+                        <p class="endpoint-stage-note">
+                            Timings are measured independently and may overlap. Do not add rows together; combined
+                            upstream time can include the primary upstream call and overlay field-source calls.
+                        </p>
                         <div data-role="stages"></div>
                     </div>
                 </div>
