@@ -1,0 +1,72 @@
+{
+    "type": "object",
+    "properties": {
+        "key": {
+            "type": "string"
+        },
+        "label": {
+            "type": "string"
+        },
+        "consentText": {
+            "type": "string"
+        },
+        "pageUrl": {
+            "type": "string"
+        },
+        "page": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "content": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "path",
+                "title",
+                "description",
+                "content"
+            ]
+        },
+        "versionId": {
+            "type": "string"
+        },
+        "versionDate": {
+            "type": "string"
+        },
+        "contentHash": {
+            "type": "string"
+        },
+        "acceptedAt": {
+            "type": "string"
+        },
+        "correlationId": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "key",
+        "label",
+        "consentText",
+        "pageUrl",
+        "page",
+        "versionId",
+        "versionDate",
+        "contentHash",
+        "acceptedAt",
+        "correlationId"
+    ]
+}

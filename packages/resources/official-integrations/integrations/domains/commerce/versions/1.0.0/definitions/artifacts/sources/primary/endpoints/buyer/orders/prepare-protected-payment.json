@@ -27,6 +27,15 @@
             "properties": {
                 "orderId": {
                     "type": "number"
+                },
+                "acceptedLegalDocumentVersionIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "paymentProvider": {
+                    "type": "string"
                 }
             },
             "required": [
@@ -111,6 +120,39 @@
                         "financialRevision": {
                             "type": "number"
                         },
+                        "paymentAttemptId": {
+                            "type": "number"
+                        },
+                        "buyerLegalAcceptances": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string"
+                                    },
+                                    "versionId": {
+                                        "type": "string"
+                                    },
+                                    "contentHash": {
+                                        "type": "string"
+                                    },
+                                    "acceptedAt": {
+                                        "type": "string"
+                                    },
+                                    "correlationId": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "versionId",
+                                    "contentHash",
+                                    "acceptedAt",
+                                    "correlationId"
+                                ]
+                            }
+                        },
                         "payByAt": {
                             "type": "string"
                         },
@@ -136,7 +178,37 @@
                         "dualApprovalThresholdAmount",
                         "financialTermsHash",
                         "financialRevision",
+                        "paymentAttemptId",
+                        "buyerLegalAcceptances",
                         "protectionRequired"
+                    ]
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "422",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
                     ]
                 }
             }

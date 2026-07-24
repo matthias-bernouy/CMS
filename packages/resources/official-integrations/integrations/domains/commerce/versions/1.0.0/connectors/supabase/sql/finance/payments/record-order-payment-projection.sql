@@ -211,7 +211,8 @@ begin
             case when p_status = 'cancelled' then p_occurred_at end
         ) returning * into v_attempt;
     else
-        if v_attempt.provider_payment_id is distinct from p_provider_payment_id
+        if (v_attempt.provider_payment_id is not null
+                and v_attempt.provider_payment_id is distinct from p_provider_payment_id)
             or (p_provider_payment_intent_id is not null and v_attempt.provider_payment_intent_id is not null
                 and v_attempt.provider_payment_intent_id <> p_provider_payment_intent_id)
             or (p_provider_charge_id is not null and v_attempt.provider_charge_id is not null
@@ -229,6 +230,7 @@ begin
         end if;
         update commerce.order_payment_attempts set
             status = p_status,
+            provider_payment_id = coalesce(provider_payment_id, p_provider_payment_id),
             provider_payment_intent_id = coalesce(provider_payment_intent_id, p_provider_payment_intent_id),
             provider_charge_id = coalesce(provider_charge_id, p_provider_charge_id),
             provider_snapshot = coalesce(p_provider_snapshot, '{}'::jsonb),

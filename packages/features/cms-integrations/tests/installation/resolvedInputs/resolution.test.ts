@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { resolveTemplates, runIntegrationInstallation } from "@bernouy/cms-integrations";
+import { parseIntegrationImportRequest, resolveTemplates, runIntegrationInstallation } from "@bernouy/cms-integrations";
 import { createHarness, definition, page } from "./fixtures";
 
 describe("@bernouy/cms-integrations resolved object-list inputs", () => {
@@ -53,6 +53,43 @@ describe("@bernouy/cms-integrations resolved object-list inputs", () => {
         });
 
         expect(harness.calls).toEqual([{ documents: [] }]);
+    });
+
+    test("strips a caller-supplied snapshot URL and uses only the resolver value", async () => {
+        const harness = createHarness();
+        const trustedPage = {
+            ...page("/terms", 1),
+            publishedSnapshotUrl: "https://delivery.test/.cms/content/published-page-snapshot?id=terms",
+        };
+        harness.deps.resolvePublishedPage = async () => trustedPage;
+
+        const parsed = parseIntegrationImportRequest(
+            {
+                kind: "legal-config",
+                answers: {
+                    documents: [
+                        {
+                            page: "/terms",
+                            contexts: ["checkout"],
+                            required: true,
+                            publishedSnapshotUrl: "https://attacker.test/snapshot",
+                        },
+                    ],
+                },
+            },
+            [definition()],
+        );
+        await runIntegrationInstallation({
+            mode: "create",
+            deps: harness.deps,
+            installations: harness.installations,
+            siteIntegrations: [definition()],
+            dto: parsed.dto,
+        });
+
+        expect(harness.calls[0]).toEqual({
+            documents: [{ page: trustedPage, contexts: ["checkout"], required: true }],
+        });
     });
 
     test("supports exact structured and embedded JSON interpolation", () => {

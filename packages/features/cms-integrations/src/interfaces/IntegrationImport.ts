@@ -104,6 +104,7 @@ export type IntegrationResolvedPage = {
     title: string;
     description: string;
     content: string;
+    publishedSnapshotUrl?: string;
 };
 
 export type IntegrationPublishedPageResolver = (path: string) => Promise<IntegrationResolvedPage | null>;

@@ -32,6 +32,7 @@ import {
 } from "../routes/order/payment/refunds.ts";
 import { authorizeOrderRelease } from "../routes/order/payment/settlements.ts";
 import { authorizePlatformPayoutLiabilityDecrease } from "../routes/order/payment/financials.ts";
+import { getAdminBuyerLegalAcceptanceAudit } from "../routes/order/payment/legal.ts";
 import { recoverOrderShipmentCreation } from "../routes/order/fulfillment.ts";
 import { getSeller, listSellers, reviewSeller } from "../routes/seller/index.ts";
 
@@ -83,6 +84,10 @@ export async function handleAdminMarketplaceRoute(route: string, request: Reques
     }
     if (route === "/admin/order") {
         return request.method === "GET" ? await getAdminOrder(request) : methodNotAllowed("GET");
+    }
+    if (route === "/admin/order/legal-acceptances") {
+        requireCmsAdmin(request);
+        return request.method === "GET" ? await getAdminBuyerLegalAcceptanceAudit(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/protected-payments") {
         requireCmsAdmin(request);

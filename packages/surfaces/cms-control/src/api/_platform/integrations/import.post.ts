@@ -31,7 +31,7 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
         connectorDeployers: cms.integrationConnectorDeployers,
         provisioners: cms.integrationProvisioners,
         sourceExecutorDeps: cms.sourceExecutorDeps,
-        resolvePublishedPage: publishedPageResolver(cms.repository),
+        resolvePublishedPage: publishedPageResolver(cms.repository, cms.config?.deliveryUrl),
     };
     const result = await runIntegrationInstallation({
         mode: "create",

@@ -65,9 +65,7 @@ test("requires consent to the refreshed legal version before retrying payment", 
                 "getPaymentLegalRequirements",
                 "createPaymentForOrder",
             ]);
-            expect(
-                requests.filter(({ id }) => id === "createPaymentForOrder").map(({ body }) => body),
-            ).toEqual([
+            expect(requests.filter(({ id }) => id === "createPaymentForOrder").map(({ body }) => body)).toEqual([
                 { orderId: 42, acceptedLegalDocumentVersionIds: [versionOne] },
                 { orderId: 42, acceptedLegalDocumentVersionIds: [versionTwo] },
             ]);

@@ -4,12 +4,18 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadSupabaseSchemaSql } from "./supabaseSql";
 
-type BundleName = "commerceNotifications" | "commerceNegotiatedCheckout" | "mondialRelay" | "stripeConnect";
+type BundleName =
+    | "commerceBuyerLegal"
+    | "commerceNotifications"
+    | "commerceNegotiatedCheckout"
+    | "mondialRelay"
+    | "stripeConnect";
 type ContractStep = { file: string; variables?: string[] };
 type PostgresContract = { bundle: BundleName; label: string; steps: ContractStep[] };
 
 const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
 const integrationRoots: Record<BundleName, string> = {
+    commerceBuyerLegal: resolve(packageRoot, "integrations/domains/commerce/versions/1.0.0"),
     commerceNotifications: resolve(packageRoot, "integrations/domains/commerce/versions/1.0.0"),
     commerceNegotiatedCheckout: resolve(packageRoot, "integrations/domains/commerce/versions/1.0.0"),
     mondialRelay: resolve(packageRoot, "integrations/providers/mondial-relay/versions/1.0.0"),
@@ -17,6 +23,10 @@ const integrationRoots: Record<BundleName, string> = {
 };
 
 const contracts: PostgresContract[] = [
+    contract("Commerce buyer legal acceptance", "commerceBuyerLegal", "commerce/buyer-legal", [
+        "run_buyer_legal_install_contract=true",
+        "allow_buyer_legal_schema_reset=true",
+    ]),
     contract("Commerce notification queue", "commerceNotifications", "commerce/sql/notifications", [
         "run_commerce_notification_install_contract=true",
         "allow_commerce_notification_schema_reset=true",
@@ -87,6 +97,7 @@ async function loadBundles(): Promise<Record<BundleName, string>> {
         loadSupabaseSchemaSql(integrationRoots.stripeConnect),
     ]);
     return {
+        commerceBuyerLegal: commerce,
         commerceNotifications,
         commerceNegotiatedCheckout: `${commerce}\n${negotiation}`,
         mondialRelay,
@@ -96,12 +107,14 @@ async function loadBundles(): Promise<Record<BundleName, string>> {
 
 async function writeBundles(root: string, sql: Record<BundleName, string>): Promise<Record<BundleName, string>> {
     const files = {
+        commerceBuyerLegal: join(root, "commerce-buyer-legal.sql"),
         commerceNotifications: join(root, "commerce-notification-module.sql"),
         commerceNegotiatedCheckout: join(root, "commerce-negotiated-checkout.sql"),
         mondialRelay: join(root, "mondial-relay.sql"),
         stripeConnect: join(root, "stripe-connect.sql"),
     };
     await Promise.all([
+        writeFile(files.commerceBuyerLegal, sql.commerceBuyerLegal),
         writeFile(files.commerceNotifications, sql.commerceNotifications),
         writeFile(files.commerceNegotiatedCheckout, sql.commerceNegotiatedCheckout),
         writeFile(files.mondialRelay, sql.mondialRelay),

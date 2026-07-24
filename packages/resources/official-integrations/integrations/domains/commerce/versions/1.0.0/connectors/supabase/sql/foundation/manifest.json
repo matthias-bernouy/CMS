@@ -19,6 +19,7 @@
         { "file": "orders/financial-subsidy-overrides.sql" },
         { "file": "order-financial/payments/order-financial-terms.sql" },
         { "file": "order-financial/payments/order-payment-attempts.sql" },
+        { "file": "order-financial/legal/buyer-legal-acceptance.sql" },
         { "file": "order-financial/fulfillment/order-fulfillments.sql" },
         { "file": "order-financial/fulfillment/order-settlements.sql" },
         { "file": "order-financial/claims/marketplace-claims.sql" },

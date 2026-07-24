@@ -3,6 +3,11 @@
 drop trigger if exists settings_set_updated_at on commerce.settings;
 create trigger settings_set_updated_at before update on commerce.settings
 for each row execute function commerce.set_updated_at_and_version();
+drop trigger if exists buyer_legal_documents_set_updated_at
+on commerce.buyer_legal_documents;
+create trigger buyer_legal_documents_set_updated_at
+before update on commerce.buyer_legal_documents
+for each row execute function commerce.set_updated_at_and_version();
 drop trigger if exists products_set_updated_at on commerce.products;
 create trigger products_set_updated_at before update on commerce.products
 for each row execute function commerce.set_updated_at_and_version();

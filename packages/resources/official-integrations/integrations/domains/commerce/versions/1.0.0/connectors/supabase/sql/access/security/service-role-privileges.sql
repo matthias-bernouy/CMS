@@ -1,6 +1,7 @@
 
 grant insert, update on
     commerce.settings,
+    commerce.buyer_legal_documents,
     commerce.brands,
     commerce.categories,
     commerce.products,
@@ -75,6 +76,8 @@ grant delete on
 to service_role;
 grant update on commerce.platform_payout_liability_cache_state to service_role;
 grant insert on
+    commerce.buyer_legal_document_versions,
+    commerce.order_buyer_legal_acceptances,
     commerce.fee_policies,
     commerce.fee_policy_components,
     commerce.protection_policies,

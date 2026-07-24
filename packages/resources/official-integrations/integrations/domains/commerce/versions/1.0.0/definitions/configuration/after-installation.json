@@ -23,5 +23,20 @@
                 }
             }
         ]
+    },
+    {
+        "id": "sync-buyer-legal-documents",
+        "steps": [
+            {
+                "id": "configuration",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "syncBuyerLegalDocuments",
+                    "body": {
+                        "configuration": "{\"enabled\":{{answers.buyerLegalEnabled}},\"documents\":{{json resolved.buyerLegalDocuments}}}"
+                    }
+                }
+            }
+        ]
     }
 ]

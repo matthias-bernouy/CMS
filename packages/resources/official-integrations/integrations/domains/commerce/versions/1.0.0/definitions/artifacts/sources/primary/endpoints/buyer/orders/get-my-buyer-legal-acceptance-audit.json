@@ -1,0 +1,75 @@
+[
+    {
+        "endpointId": "getMyBuyerLegalAcceptanceAudit",
+        "method": "GET",
+        "access": "auth",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/legal-acceptances",
+        "params": [
+            {
+                "name": "orderId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "orderPublicId": {
+                            "type": "string"
+                        },
+                        "checkoutGroupId": {
+                            "type": "string"
+                        },
+                        "buyerCmsUserId": {
+                            "type": "string"
+                        },
+                        "paymentAttemptIds": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        },
+                        "acceptances": {
+                            "type": "array",
+                            "items": {
+                                "$include": "../../shared/buyer-legal-acceptance-audit-item.json"
+                            }
+                        }
+                    },
+                    "required": [
+                        "orderId",
+                        "orderPublicId",
+                        "checkoutGroupId",
+                        "buyerCmsUserId",
+                        "paymentAttemptIds",
+                        "acceptances"
+                    ]
+                }
+            }
+        ]
+    }
+]
