@@ -1,34 +1,16 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { prepare_bloc } from "@bernouy/cms-bloc-compile";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
-import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import {
-    filterControls,
-    filterableFields,
-} from "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-filter/schema-helpers";
+import { padelSchema, tennisSchema } from "./offer-filter-panel.fixtures";
+import { defineFilter, filterTag, settleLifecycle } from "./offer-filter-panel.harness";
+import { exerciseNumericRange } from "./offer-filter-range.assertions";
 
-const tag = "test-commerce-schema-offer-filter";
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
 
 afterEach(() => {
     history.replaceState(history.state, "", originalUrl);
-    document.querySelectorAll(tag).forEach((element) => element.remove());
+    document.querySelectorAll(filterTag).forEach((element) => element.remove());
 });
 
 describe("Commerce schema-driven offer filters", () => {
-    test("keeps only filterable fields and declared operators", () => {
-        const fields = filterableFields(tennisSchema);
-
-        expect(fields.map((field) => field.key)).toEqual(["string_pattern", "model_year"]);
-        expect(filterControls(fields[0])).toEqual([
-            { operator: "eq", param: "filter_string_pattern", valueType: "string" },
-        ]);
-        expect(filterControls(fields[1])).toEqual([
-            { operator: "gte", param: "filter_model_year_min", valueType: "number" },
-            { operator: "lte", param: "filter_model_year_max", valueType: "number" },
-        ]);
-    });
-
     test("renders schema options, resets incompatible category filters, and deduplicates schema reads", async () => {
         await defineFilter();
         const realFetch = globalThis.fetch;
@@ -50,8 +32,9 @@ describe("Commerce schema-driven offer filters", () => {
             `${location.pathname}?category=sports%2Ftennis&filter_string_pattern=16x18&brand=wilson`,
         );
 
-        const panel = document.createElement(tag) as HTMLElement & { managedParams(): string[] };
+        const panel = document.createElement(filterTag) as HTMLElement & { managedParams(): string[] };
         panel.setAttribute("schema-driven", "");
+        panel.setAttribute("source-prefix", "/panel-options-sources");
         try {
             document.body.append(panel);
             await settleLifecycle();
@@ -63,15 +46,21 @@ describe("Commerce schema-driven offer filters", () => {
             expect(panel.querySelector('[field="model_year"][operator="gte"]')).not.toBeNull();
             expect(panel.querySelector('[field="model_year"][operator="lte"]')).not.toBeNull();
             expect(
-                [...panel.querySelectorAll('[name="filter_string_pattern"] option')].map((item) =>
+                [...panel.querySelectorAll('[name="filter_string_pattern"] basic-option')].map((item) =>
                     item.getAttribute("value"),
                 ),
             ).toEqual(["", "16x19", "16x18"]);
-            expect([...panel.querySelectorAll('[name="brand"] option')].map((item) => item.textContent)).toEqual([
+            expect([...panel.querySelectorAll('[name="brand"] basic-option')].map((item) => item.textContent)).toEqual([
                 "Toutes les marques",
                 "Wilson",
                 "Head",
             ]);
+            expect(panel.querySelectorAll("select")).toHaveLength(0);
+            expect(panel.querySelector('[name="brand"]')?.tagName).toBe("BASIC-SELECT");
+            expect(panel.querySelector('[name="brand"]')?.getAttribute("accent-color")).toBe("var(--secondary-base)");
+
+            const range = panel.querySelector("[data-numeric-range]")!;
+            await exerciseNumericRange(range, settleLifecycle);
 
             document.dispatchEvent(new Event("cms-params:change"));
             await settleLifecycle();
@@ -110,10 +99,10 @@ describe("Commerce schema-driven offer filters", () => {
         };
         history.replaceState(history.state, "", `${location.pathname}?category=sports%2Freconnect`);
 
-        const first = document.createElement(tag);
+        const first = document.createElement(filterTag);
         first.setAttribute("schema-driven", "");
         first.setAttribute("source-prefix", "/reconnect-sources");
-        const second = document.createElement(tag);
+        const second = document.createElement(filterTag);
         second.setAttribute("schema-driven", "");
         second.setAttribute("source-prefix", "/reconnect-sources");
         try {
@@ -143,95 +132,3 @@ describe("Commerce schema-driven offer filters", () => {
         }
     });
 });
-
-const tennisSchema = {
-    category: { id: 1, parentId: null, slug: "tennis", fullSlug: "sports/tennis", label: "Tennis" },
-    fields: [
-        {
-            key: "model_year",
-            label: "Année",
-            type: "number",
-            required: false,
-            filterable: true,
-            position: 20,
-            unit: null,
-            operators: ["eq", "gte", "lte"],
-            options: [],
-        },
-        {
-            key: "grip_size",
-            label: "Taille de manche",
-            type: "string",
-            required: false,
-            filterable: false,
-            position: 5,
-            unit: null,
-            operators: ["eq", "in"],
-            options: ["L1", "L2", "L3"],
-        },
-        {
-            key: "string_pattern",
-            label: "Plan de cordage",
-            type: "string",
-            required: false,
-            filterable: true,
-            position: 10,
-            unit: null,
-            operators: ["eq", "in"],
-            options: ["16x19", "16x18"],
-        },
-    ],
-    brands: [
-        { id: 1, slug: "wilson", name: "Wilson" },
-        { id: 2, slug: "head", name: "Head" },
-    ],
-};
-
-const padelSchema = {
-    category: { id: 2, parentId: null, slug: "padel", fullSlug: "sports/padel", label: "Padel" },
-    fields: [
-        {
-            key: "shape",
-            label: "Forme",
-            type: "string",
-            required: false,
-            filterable: true,
-            position: 1,
-            unit: null,
-            operators: ["eq", "in"],
-            options: ["Ronde", "Diamant", "Goutte d’eau"],
-        },
-    ],
-    brands: [{ id: 3, slug: "bullpadel", name: "Bullpadel" }],
-};
-
-async function defineFilter(): Promise<void> {
-    if (customElements.get(tag)) {
-        return;
-    }
-    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
-    const artifact = definition?.artifacts?.find(
-        (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "commerce-offer-filter",
-    );
-    if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS) {
-        throw new Error("commerce-offer-filter source not found");
-    }
-    const compiled = await prepare_bloc(
-        new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
-        null,
-        artifact.bloc.name,
-        artifact.bloc.group ?? "Commerce",
-        artifact.bloc.description ?? "",
-        tag,
-        artifact.bloc.source,
-    );
-    new Function(compiled.viewJS)();
-}
-
-async function settleLifecycle(): Promise<void> {
-    await Promise.resolve();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    await Promise.resolve();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    await Promise.resolve();
-}

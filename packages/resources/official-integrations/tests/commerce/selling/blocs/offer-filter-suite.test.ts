@@ -1,0 +1,9 @@
+import "./offer-filter-contract.cases";
+import "./offer-filter-panel.cases";
+import "./offer-filter-lifecycle.cases";
+import "./offer-filter-source-change.cases";
+import "./offer-filter-list.integration.cases";
+import "./offer-filter-brand.integration.cases";
+import "./offer-filter-range-bookmark.integration.cases";
+import "./offer-filter-pagination.integration.cases";
+import "./offer-filter-editor-runtime.integration.cases";

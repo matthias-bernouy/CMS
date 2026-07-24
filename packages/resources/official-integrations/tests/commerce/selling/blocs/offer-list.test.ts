@@ -4,6 +4,9 @@ import {
     activeFilterParams,
     activeMetadataFilters,
     readFilterParams,
+    readMetadataFilters,
+    schemaFiltersPending,
+    validIdentifier,
 } from "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-list/helpers";
 import { syncOfferListPresentation } from "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-list/presentation";
 
@@ -30,15 +33,28 @@ describe("Commerce public offer list filters", () => {
         expect(activeFilterParams(filters, params)).toEqual([["brand", "head"]]);
     });
 
+    test("only accepts aliases supported by the Source grammar", () => {
+        expect(validIdentifier("offerData")).toBe("offerData");
+        expect(validIdentifier("offer-data")).toBe("");
+    });
+
+    test("does not wait for an explicitly disabled schema panel", () => {
+        const host = document.createElement("section");
+        host.innerHTML = '<custom-filter data-commerce-offer-filter schema-driven="false"></custom-filter>';
+
+        expect(schemaFiltersPending(host, "sports/tennis", new URLSearchParams("filter_weight:gte=300"))).toBe(false);
+    });
+
     test("serializes numeric metadata as JSON numbers and omits empty values", () => {
         const filters = [
+            { field: "weight", operator: "gte", urlParam: "weightMin", valueType: "number" },
             { field: "weight", operator: "lte", urlParam: "weightMax", valueType: "number" },
             { field: "grip_size", operator: "eq", urlParam: "gripSize", valueType: "string" },
             { field: "balance", operator: "lte", urlParam: "balanceMax", valueType: "number" },
         ];
-        const params = new URLSearchParams("weightMax=315&gripSize=&balanceMax=invalid");
+        const params = new URLSearchParams("weightMin=295&weightMax=315&gripSize=&balanceMax=invalid");
 
-        expect(activeMetadataFilters(filters, params)).toEqual({ weight: { lte: 315 } });
+        expect(activeMetadataFilters(filters, params)).toEqual({ weight: { gte: 295, lte: 315 } });
     });
 
     test("serializes boolean metadata as JSON booleans and rejects ambiguous values", () => {
@@ -64,6 +80,29 @@ describe("Commerce public offer list filters", () => {
         const host = { querySelectorAll: () => [control] };
 
         expect(readFilterParams(host)).toEqual([["category", "category"]]);
+    });
+
+    test("discovers metadata controls when the filter bloc uses an installation alias", () => {
+        const host = document.createElement("section");
+        host.innerHTML = `
+            <custom-offer-filter
+                data-commerce-offer-filter
+                field="weight"
+                operator="gte"
+                value-type="number"
+            >
+                <input type="hidden" cms-param-sync="filter_weight:gte">
+            </custom-offer-filter>
+        `;
+
+        expect(readMetadataFilters(host)).toEqual([
+            {
+                field: "weight",
+                operator: "gte",
+                urlParam: "filter_weight:gte",
+                valueType: "number",
+            },
+        ]);
     });
 
     test("uses stable defaults for a sparse catalogue grid", () => {

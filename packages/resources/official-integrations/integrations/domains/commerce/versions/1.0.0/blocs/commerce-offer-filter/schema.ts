@@ -1,8 +1,7 @@
 import { filterControls, filterableFields } from "./schema-helpers";
+import { loadSchema, schemaSourceUrl } from "./schema-loader";
+import { prepareSchemaFilterParams } from "./schema-params";
 import { renderSchema, renderSchemaState } from "./render-schema";
-
-const schemaCache = new Map<string, unknown>();
-const schemaRequests = new Map<string, Promise<unknown>>();
 
 export class SchemaOfferFilters {
     constructor(host) {
@@ -22,6 +21,9 @@ export class SchemaOfferFilters {
             return;
         }
         this.connected = true;
+        if (!this.schema) {
+            this.host.setAttribute("data-schema-status", "pending");
+        }
         this.host.ownerDocument.addEventListener("cms-params:change", this.schedule);
         this.host.ownerDocument.defaultView?.addEventListener("popstate", this.schedule);
         this.schedule();
@@ -46,14 +48,22 @@ export class SchemaOfferFilters {
 
     invalidate() {
         this.controller?.abort();
+        this.inFlight = null;
         this.category = "";
         this.schema = null;
+        this.host.setAttribute("data-schema-status", "pending");
         this.schedule();
     }
 
     render() {
         if (this.schema) {
             renderSchema(this.host, this.schema);
+        }
+    }
+
+    renderCurrent() {
+        if (this.schema && this.category === this.currentCategory()) {
+            this.render();
         }
     }
 
@@ -80,6 +90,7 @@ export class SchemaOfferFilters {
             this.controller?.abort();
             this.category = "";
             this.schema = null;
+            this.host.removeAttribute("data-schema-category");
             renderSchemaState(this.host, "idle");
             return;
         }
@@ -118,12 +129,13 @@ export class SchemaOfferFilters {
 
     async load(category, controller) {
         try {
-            const url = new URL(this.sourceUrl(), this.host.ownerDocument.baseURI);
+            const url = new URL(schemaSourceUrl(this.host), this.host.ownerDocument.baseURI);
             url.searchParams.set("category", category);
             const body = await loadSchema(url);
             if (controller.signal.aborted || !this.host.isConnected || category !== this.category) {
                 return;
             }
+            prepareSchemaFilterParams(this.host, body);
             this.schema = body;
             renderSchema(this.host, body);
         } catch (error) {
@@ -165,42 +177,4 @@ export class SchemaOfferFilters {
             ""
         );
     }
-
-    sourceUrl() {
-        const prefix = (this.host.getAttribute("source-prefix") || "/.cms/sources").replace(/\/+$/, "");
-        const sourceId = encodeURIComponent(this.host.getAttribute("source-id") || "commerce");
-        const endpoint = encodeURIComponent(this.host.getAttribute("schema-endpoint") || "offerFilterSchema");
-        return `${prefix}/${sourceId}/${endpoint}`;
-    }
-}
-
-async function loadSchema(url) {
-    const key = url.href;
-    if (schemaCache.has(key)) {
-        return schemaCache.get(key);
-    }
-    const existing = schemaRequests.get(key);
-    if (existing) {
-        return existing;
-    }
-    const request = fetch(url, {
-        credentials: "include",
-        headers: { accept: "application/json" },
-    })
-        .then(async (response) => {
-            const body = await response.json().catch(() => null);
-            if (!response.ok) {
-                throw new Error(
-                    response.status === 404 ? "Catégorie indisponible." : "Impossible de charger les filtres.",
-                );
-            }
-            if (!body || typeof body !== "object" || Array.isArray(body)) {
-                throw new Error("Réponse de filtres invalide.");
-            }
-            schemaCache.set(key, body);
-            return body;
-        })
-        .finally(() => schemaRequests.delete(key));
-    schemaRequests.set(key, request);
-    return request;
 }

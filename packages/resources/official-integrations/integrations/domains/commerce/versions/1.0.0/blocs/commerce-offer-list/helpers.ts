@@ -30,7 +30,7 @@ export function positiveInteger(value, fallback) {
 
 export function validIdentifier(value) {
     const candidate = value?.trim() || "";
-    return /^[A-Za-z_$][\w$-]*$/.test(candidate) ? candidate : "";
+    return /^[A-Za-z_$][\w$]*$/.test(candidate) ? candidate : "";
 }
 
 export function setAttributeIfChanged(element, name, value) {
@@ -50,7 +50,11 @@ export function readFilterParams(host) {
         ).trim();
         const endpointParam = (control.getAttribute("data-commerce-param") || urlParam).trim();
         if (urlParam && supportedParams.has(endpointParam)) {
-            entries.push([endpointParam, urlParam]);
+            const schemaCategory = control
+                .closest?.("[data-schema-category]")
+                ?.getAttribute("data-schema-category")
+                ?.trim();
+            entries.push(schemaCategory ? [endpointParam, urlParam, schemaCategory] : [endpointParam, urlParam]);
         }
     }
     return entries.filter(
@@ -59,26 +63,33 @@ export function readFilterParams(host) {
 }
 
 export function readMetadataFilters(host) {
-    return [...host.querySelectorAll("commerce-offer-filter")].flatMap((filter) => {
+    return [...host.querySelectorAll("commerce-offer-filter, [data-commerce-offer-filter]")].flatMap((filter) => {
         const field = filter.getAttribute("field")?.trim();
         const operator = filter.getAttribute("operator")?.trim() || "eq";
         const valueType = filter.getAttribute("value-type")?.trim() || "string";
         const control = filter.querySelector("[cms-param-sync]");
         const urlParam = control?.getAttribute("cms-param-sync")?.trim() || control?.getAttribute("name")?.trim();
-        return field && urlParam ? [{ field, operator, urlParam, valueType }] : [];
+        const schemaCategory = filter.closest("[data-schema-category]")?.getAttribute("data-schema-category")?.trim();
+        return field && urlParam ? [{ field, operator, urlParam, valueType, schemaCategory }] : [];
     });
 }
 
-export function activeFilterParams(filters, params) {
-    return filters.flatMap(([endpointParam, urlParam]) => {
+export function activeFilterParams(filters, params, activeCategory = "") {
+    return filters.flatMap(([endpointParam, urlParam, schemaCategory]) => {
+        if (schemaCategory && schemaCategory !== activeCategory) {
+            return [];
+        }
         const value = params.get(urlParam)?.trim();
         return value ? [[endpointParam, value]] : [];
     });
 }
 
-export function activeMetadataFilters(metadataFilters, params) {
+export function activeMetadataFilters(metadataFilters, params, activeCategory = "") {
     const filters = {};
-    for (const { field, operator, urlParam, valueType } of metadataFilters) {
+    for (const { field, operator, urlParam, valueType, schemaCategory } of metadataFilters) {
+        if (schemaCategory && schemaCategory !== activeCategory) {
+            continue;
+        }
         const rawValue = params.get(urlParam)?.trim();
         if (!rawValue) {
             continue;
@@ -95,6 +106,33 @@ export function activeMetadataFilters(metadataFilters, params) {
         filters[field][operator] = value;
     }
     return filters;
+}
+
+export function schemaFiltersPending(host, activeCategory, params) {
+    if (!activeCategory) {
+        return false;
+    }
+    const panels = [
+        ...host.querySelectorAll(
+            'commerce-offer-filter[schema-driven]:not([schema-driven="false"]), [data-commerce-offer-filter][schema-driven]:not([schema-driven="false"])',
+        ),
+    ];
+    const hasMetadataParams = [...params].some(([name, value]) => name.startsWith("filter_") && value.trim() !== "");
+    const hasPendingBrand =
+        Boolean(params.get("brand")?.trim()) && panels.some((panel) => panel.getAttribute("show-brand") !== "false");
+    if (!hasMetadataParams && !hasPendingBrand) {
+        return false;
+    }
+    return panels.some((panel) => {
+        const status = panel.getAttribute("data-schema-status");
+        if (status === "error" || status === "idle") {
+            return false;
+        }
+        const rangesReady = [...panel.querySelectorAll("[data-numeric-range]")].every(
+            (range) => range.getAttribute("data-range-status") === "ready",
+        );
+        return status !== "ready" || panel.getAttribute("data-schema-category") !== activeCategory || !rangesReady;
+    });
 }
 
 export function filterSignature(filters, metadataFilters) {

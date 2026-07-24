@@ -235,6 +235,13 @@ tennis, padel, clothing, or other catalogue vocabulary. PostgreSQL validates
 the schema and applies category, brand, price, condition, and metadata filters
 before counting and paginating public offers.
 
+In schema-driven mode, the same bloc renders brand, enum, and boolean facets
+with the shared Basic Select. Filterable numeric fields use a two-handle range
+whose bounds and precision come from active public catalogue metadata, with
+compact minimum and maximum inputs for precise entry. Both inputs keep their
+own URL parameter and map to the existing `gte` and `lte` operators; no
+catalogue-specific field names are embedded in the presentation.
+
 `commerce-offer-preview` is a request-free presentation bloc with editable
 slots for media, badges, headings, descriptive content, price, and actions. It
 can format a minor-unit amount and currency, while still allowing authored

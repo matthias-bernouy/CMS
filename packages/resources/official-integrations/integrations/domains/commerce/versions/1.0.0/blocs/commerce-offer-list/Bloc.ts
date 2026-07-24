@@ -4,11 +4,11 @@ import {
     filterSignature,
     fixedFilters,
     positiveInteger,
-    readFilterParams,
-    readMetadataFilters,
+    schemaFiltersPending,
     setAttributeIfChanged,
     validIdentifier,
 } from "./helpers";
+import { connectOfferList, disconnectOfferList, refreshOfferListFilters } from "./lifecycle";
 import { syncOfferListPresentation } from "./presentation";
 
 export class CommerceOfferList extends HTMLElement {
@@ -45,31 +45,11 @@ export class CommerceOfferList extends HTMLElement {
     }
 
     connectedCallback() {
-        this.style.display = "contents";
-        this.filterParams = readFilterParams(this);
-        this.metadataFilters = readMetadataFilters(this);
-        this.page = this.readPage();
-        this.filterSignature = this.currentFilterSignature();
-        this.addEventListener("basic-pagination:change", this.onPageChange);
-        this.ownerDocument.addEventListener("cms-params:change", this.onParamsChange);
-        this.ownerDocument.defaultView?.addEventListener("popstate", this.onPopState);
-        const Observer = this.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
-        this.observer = new Observer(() => {
-            this.filterParams = readFilterParams(this);
-            this.metadataFilters = readMetadataFilters(this);
-            this.syncSource();
-        });
-        this.observer.observe(this, { attributes: true, childList: true, subtree: true });
-        this.syncPagination();
-        this.syncSource();
+        connectOfferList(this);
     }
 
     disconnectedCallback() {
-        this.removeEventListener("basic-pagination:change", this.onPageChange);
-        this.ownerDocument.removeEventListener("cms-params:change", this.onParamsChange);
-        this.ownerDocument.defaultView?.removeEventListener("popstate", this.onPopState);
-        this.observer?.disconnect();
-        this.observer = null;
+        disconnectOfferList(this);
     }
     attributeChangedCallback() {
         if (this.isConnected) {
@@ -92,7 +72,10 @@ export class CommerceOfferList extends HTMLElement {
             offset: String((this.page - 1) * pageSize),
         });
         const urlParams = new URLSearchParams(typeof location === "undefined" ? "" : location.search);
-        for (const [endpointParam, value] of activeFilterParams(this.filterParams, urlParams)) {
+        const categoryUrlParam = this.filterParams.find(([endpointParam]) => endpointParam === "category")?.[1];
+        const activeCategory =
+            this.getAttribute("category")?.trim() || urlParams.get(categoryUrlParam || "category")?.trim() || "";
+        for (const [endpointParam, value] of activeFilterParams(this.filterParams, urlParams, activeCategory)) {
             params.set(endpointParam, value);
         }
         for (const [attribute, endpointParam] of fixedFilters) {
@@ -101,7 +84,12 @@ export class CommerceOfferList extends HTMLElement {
                 params.set(endpointParam, value);
             }
         }
-        const filters = activeMetadataFilters(this.metadataFilters, urlParams);
+        if (schemaFiltersPending(this, params.get("category") || "", urlParams)) {
+            this.syncPagination();
+            syncOfferListPresentation(this);
+            return;
+        }
+        const filters = activeMetadataFilters(this.metadataFilters, urlParams, params.get("category") || "");
         if (params.get("category") && Object.keys(filters).length > 0) {
             params.set("filters", JSON.stringify(filters));
         }
@@ -137,7 +125,7 @@ export class CommerceOfferList extends HTMLElement {
     }
 
     onPageChange = (event) => {
-        if (event.target?.closest?.("commerce-offer-list") !== this) {
+        if (event.target?.closest?.("[data-commerce-offer-list]") !== this) {
             return;
         }
         this.page = positiveInteger(event.detail?.page, 1);
@@ -161,6 +149,11 @@ export class CommerceOfferList extends HTMLElement {
         } else {
             this.syncSource();
         }
+    };
+
+    onSchemaState = () => {
+        refreshOfferListFilters(this);
+        this.syncSource();
     };
 
     onPopState = () => {

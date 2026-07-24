@@ -9,7 +9,7 @@ export function filterableFields(schema) {
                 typeof field === "object" &&
                 field.filterable === true &&
                 typeof field.key === "string" &&
-                field.key.trim() &&
+                isMetadataKey(field.key.trim()) &&
                 typeof field.label === "string" &&
                 Array.isArray(field.operators),
         )
@@ -43,10 +43,31 @@ export function filterControls(field) {
     return [];
 }
 
+export function numericRange(field) {
+    const minimum = Number(field?.range?.minimum);
+    const maximum = Number(field?.range?.maximum);
+    const step = Number(field?.range?.step);
+    if (
+        field?.type !== "number" ||
+        !Number.isFinite(minimum) ||
+        !Number.isFinite(maximum) ||
+        !Number.isFinite(step) ||
+        minimum > maximum ||
+        step <= 0
+    ) {
+        return null;
+    }
+    return { minimum, maximum, step };
+}
+
 export function filterParam(key, operator) {
-    const safeKey = String(key)
-        .trim()
-        .replaceAll(/[^A-Za-z0-9_]+/g, "_");
+    const safeKey = String(key).trim();
+    const suffix = operator === "gte" ? ":gte" : operator === "lte" ? ":lte" : "";
+    return `filter_${safeKey}${suffix}`;
+}
+
+export function legacyFilterParam(key, operator) {
+    const safeKey = String(key).trim();
     const suffix = operator === "gte" ? "_min" : operator === "lte" ? "_max" : "";
     return `filter_${safeKey}${suffix}`;
 }
@@ -69,4 +90,8 @@ export function schemaBrands(schema) {
 function numeric(value) {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+}
+
+function isMetadataKey(value) {
+    return /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(value);
 }
