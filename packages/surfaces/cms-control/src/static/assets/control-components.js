@@ -75,6 +75,23 @@
   var CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"];
   var CMS_SOURCE_STATUS_SCOPE = "$source";
   var CMS_SOURCES_STATUS_SCOPE = "$sources";
+  // ../../features/cms-content/src/interfaces/Editor/BindingSyntax/queryParams.ts
+  var CMS_QUERY_PARAM_NAME_PATTERN = /^[A-Za-z0-9_][A-Za-z0-9_.:-]*$/;
+  var CMS_QUERY_PARAM_TOKEN_PATTERN = /^\s*#\{\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\s*\}\s*$/;
+  function isCmsQueryParamName(value) {
+    return typeof value === "string" && CMS_QUERY_PARAM_NAME_PATTERN.test(value);
+  }
+  function asQueryParamToken(name) {
+    const normalized = name.trim();
+    if (!isCmsQueryParamName(normalized)) {
+      throw new Error(`Invalid CMS query param name: "${name}"`);
+    }
+    return `#{${normalized}}`;
+  }
+  function parseQueryParamToken(value) {
+    return CMS_QUERY_PARAM_TOKEN_PATTERN.exec(value ?? "")?.[1] ?? null;
+  }
+
   // ../../features/cms-content/src/interfaces/Editor/BindingSyntax/source.ts
   var SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   var REPEAT_ALIAS_PATTERN = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
@@ -156,7 +173,7 @@
   }
   function encodeSourceParamValue(value) {
     if (value.from === "queryParam") {
-      return `#{${value.name.trim()}}`;
+      return asQueryParamToken(value.name);
     }
     if (value.from === "state") {
       return `@{${value.name.trim()}}`;
@@ -177,7 +194,11 @@
     if (!isRecord(value) || typeof value.from !== "string") {
       return null;
     }
-    if (value.from === "queryParam" || value.from === "state") {
+    if (value.from === "queryParam") {
+      const name = typeof value.name === "string" ? value.name.trim() : "";
+      return name ? { from: value.from, name } : null;
+    }
+    if (value.from === "state") {
       return typeof value.name === "string" && value.name.trim() ? { from: value.from, name: value.name.trim() } : null;
     }
     if (value.from !== "raw") {
@@ -8447,11 +8468,12 @@ p {
   }
   var z = "cms-params:change";
   var C = "cms-state:change";
-  var dp = /#\{\s*(\w+)\s*\}/g;
-  var cp = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
+  var dp = new RegExp("#\\{\\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\\s*\\}", "g");
+  var cp = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
+  var up = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
   var Os = new WeakMap;
   function qs(t) {
-    return /#\{\s*\w+\s*\}/.test(t);
+    return cp.test(t);
   }
   function Vs(t) {
     return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
@@ -8464,7 +8486,7 @@ p {
   }
   function $s(t, e = document) {
     let r = Ie(e);
-    return t.replace(cp, (i, o) => encodeURIComponent(r.get(o) ?? ""));
+    return t.replace(up, (i, o) => encodeURIComponent(r.get(o) ?? ""));
   }
   function He(t, e) {
     let r = K();
@@ -8496,7 +8518,7 @@ p {
       e = new Map, Os.set(t, e);
     return e;
   }
-  var up = 300;
+  var pp = 300;
 
   class ze {
     el;
@@ -8567,7 +8589,7 @@ p {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), up);
+      this.timer = setTimeout(() => this.write(), pp);
     }
     write() {
       if (this.reflecting)
@@ -8581,7 +8603,7 @@ p {
     }
   }
   var y = "cms-param-sync";
-  var pp = 300;
+  var hp = 300;
 
   class Re {
     el;
@@ -8650,7 +8672,7 @@ p {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), pp);
+      this.timer = setTimeout(() => this.write(), hp);
     }
     write() {
       if (this.reflecting)
@@ -8742,10 +8764,10 @@ p {
   function Qs(t) {
     let e = t.ownerDocument ?? document, r = e.createDocumentFragment(), i = e.createDocumentFragment();
     for (let o of Array.from(t.childNodes))
-      if (i.appendChild(o.cloneNode(true)), o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
-        r.appendChild(o.content), o.remove();
+      if (o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
+        i.appendChild(o.cloneNode(true)), r.appendChild(o.content), o.remove();
       else
-        r.appendChild(o);
+        r.appendChild(o), i.appendChild(o.cloneNode(true));
     return { template: i, body: r };
   }
   function Ws(t) {
@@ -8782,12 +8804,12 @@ p {
         e.removeEventListener(C, r);
     };
   }
-  var hp = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var mp = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   function Dt(t) {
     return T(t).url;
   }
   function T(t) {
-    let e = hp.exec(t);
+    let e = mp.exec(t);
     if (!e)
       return { url: t.trim() };
     return { url: e[1].trim(), alias: e[2] };
@@ -8799,12 +8821,12 @@ p {
     return Ds(e) ? e : "auto";
   }
   function ol(t, e) {
-    let r = t.ownerDocument, i = [il, ...bp(t)];
+    let r = t.ownerDocument, i = [il, ...fp(t)];
     for (let a of i)
       r.addEventListener(a, e.onReload);
     let o = Ot(t);
     if (o === "submit" || o === "change") {
-      let a = mp(t) ?? t.closest("form"), l = o === "submit" ? "submit" : "change", u = o === "submit" ? e.onSubmit : e.onChange;
+      let a = bp(t) ?? t.closest("form"), l = o === "submit" ? "submit" : "change", u = o === "submit" ? e.onSubmit : e.onChange;
       return a?.addEventListener(l, u), () => {
         for (let d of i)
           r.removeEventListener(d, e.onReload);
@@ -8818,11 +8840,11 @@ p {
       n();
     };
   }
-  function mp(t) {
+  function bp(t) {
     let e = t.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
     return typeof e === "function" && t instanceof e ? t : null;
   }
-  function bp(t) {
+  function fp(t) {
     return (t.getAttribute(rl) ?? "").split(/\s+/).filter(Boolean);
   }
 
@@ -8842,7 +8864,7 @@ p {
     unmount() {
       for (let t of this.sites)
         t.unmount?.();
-      fp(this.start, this.end);
+      vp(this.start, this.end);
     }
   }
 
@@ -8867,7 +8889,7 @@ p {
       r.parentNode?.removeChild(r), r = i;
     }
   }
-  function fp(t, e) {
+  function vp(t, e) {
     let r = t.parentNode;
     if (!r)
       return;
@@ -8877,12 +8899,12 @@ p {
       r.removeChild(i), i = o;
     }
   }
-  var vp = { found: false, value: undefined };
+  var gp = { found: false, value: undefined };
   function P(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
-      return { found: true, value: gp(t) };
+      return { found: true, value: xp(t) };
     let r = e.indexOf("."), i = r === -1 ? e : e.slice(0, r), o = r === -1 ? "" : e.slice(r + 1);
     for (let n = t;n; n = n.parent) {
       if (n.vars && i in n.vars)
@@ -8891,9 +8913,9 @@ p {
       if (al(a) && i in a)
         return { found: true, value: nl(a[i], o) };
     }
-    return vp;
+    return gp;
   }
-  function gp(t) {
+  function xp(t) {
     let e = t.value;
     if (al(e) && "value" in e)
       return e.value;
@@ -8917,7 +8939,7 @@ p {
     if (t.kind === "literal")
       return t.value;
     if (t.kind === "path")
-      return xp(t.path, e);
+      return yp(t.path, e);
     if (t.kind === "not")
       return !dt(E(t.node, e));
     if (t.kind === "and")
@@ -8925,17 +8947,17 @@ p {
     if (t.kind === "or")
       return dt(E(t.left, e)) || dt(E(t.right, e));
     if (t.kind === "compare")
-      return yp(E(t.left, e), E(t.right, e), t.operator);
+      return _p(E(t.left, e), E(t.right, e), t.operator);
     return false;
   }
-  function xp(t, e) {
+  function yp(t, e) {
     let r = P(e, t.trim());
     return r.found ? r.value : undefined;
   }
   function dt(t) {
     return Boolean(t);
   }
-  function yp(t, e, r) {
+  function _p(t, e, r) {
     if (r === "==")
       return Object.is(t, e);
     if (r === "!=")
@@ -8980,16 +9002,16 @@ p {
       if (i === "(" || i === ")")
         throw Error("parentheses are not supported yet");
       if (i === "'" || i === '"') {
-        let a = _p(t, r, i);
+        let a = wp(t, r, i);
         e.push({ kind: "literal", value: a.value }), r = a.next;
         continue;
       }
       if (i === "-" && /\d/.test(t[r + 1] ?? "") || /\d/.test(i)) {
-        let a = kp(t, r);
+        let a = Ep(t, r);
         e.push({ kind: "literal", value: a.value }), r = a.next;
         continue;
       }
-      let n = Ep(t, r);
+      let n = Ap(t, r);
       if (n.value === "true")
         e.push({ kind: "literal", value: true });
       else if (n.value === "false")
@@ -9002,7 +9024,7 @@ p {
     }
     return e.push({ kind: "end" }), e;
   }
-  function _p(t, e, r) {
+  function wp(t, e, r) {
     let i = "";
     for (let o = e + 1;o < t.length; o += 1) {
       let n = t[o];
@@ -9012,14 +9034,14 @@ p {
         let a = t[o + 1];
         if (a == null)
           throw Error("unterminated string literal");
-        i += wp(a), o += 1;
+        i += kp(a), o += 1;
         continue;
       }
       i += n;
     }
     throw Error("unterminated string literal");
   }
-  function wp(t) {
+  function kp(t) {
     if (t === "n")
       return `
 `;
@@ -9029,7 +9051,7 @@ p {
       return "\t";
     return t;
   }
-  function kp(t, e) {
+  function Ep(t, e) {
     let r = e;
     if (t[r] === "-")
       r += 1;
@@ -9045,18 +9067,18 @@ p {
       throw Error(`invalid number literal "${i}"`);
     return { value: o, next: r };
   }
-  function Ep(t, e) {
+  function Ap(t, e) {
     let r = e;
     while (r < t.length && !/\s/.test(t[r]) && !`!&|=<>"'()`.includes(t[r]))
       r += 1;
     let i = t.slice(e, r);
     if (!i)
       throw Error(`unexpected token "${t[e] ?? ""}"`);
-    if (!Ap(i))
+    if (!Sp(i))
       throw Error(`invalid path "${i}"`);
     return { value: i, next: r };
   }
-  function Ap(t) {
+  function Sp(t) {
     if (t === ".")
       return true;
     return /^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(t);
@@ -9155,7 +9177,7 @@ p {
       let i = false;
       return { expression: t, valid: false, evaluate: () => {
         if (!i)
-          i = true, console.warn(`Invalid cms-condition "${t}": ${Sp(r)}`);
+          i = true, console.warn(`Invalid cms-condition "${t}": ${Lp(r)}`);
         return false;
       } };
     }
@@ -9163,7 +9185,7 @@ p {
   function dl(t, e) {
     return { expression: t, valid: true, evaluate: (r) => Boolean(E(e, r)) };
   }
-  function Sp(t) {
+  function Lp(t) {
     return t instanceof Error ? t.message : String(t);
   }
   var cl = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
@@ -9195,16 +9217,16 @@ p {
       if (o.value.includes("{{") && !Vt(o.value, i))
         r.attributes.push({ path: e, name: o.name, template: o.value });
   }
-  var Lp = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
+  var Cp = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
   function pl(t) {
     let e = t.childNodes.length === 1 ? t.firstChild : null;
     if (!e || e.nodeType !== Node.TEXT_NODE)
       return null;
-    return (e.nodeValue ?? "").trim().match(Lp)?.[1] ?? null;
+    return (e.nodeValue ?? "").trim().match(Cp)?.[1] ?? null;
   }
-  var Cp = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var Tp = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   function hl(t) {
-    let e = t.match(Cp);
+    let e = t.match(Tp);
     if (e)
       return { path: e[1], name: e[2] };
     return { path: t.trim() };
@@ -9274,14 +9296,14 @@ p {
       gl(a, [...e, l], { skipCondition: false, skipRepeat: false, submitBoundary: n }, r, i, o);
     });
   }
-  var Tp = { urlencode: (t) => encodeURIComponent(t == null ? "" : String(t)) };
-  var Mp = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+  var Mp = { urlencode: (t) => encodeURIComponent(t == null ? "" : String(t)) };
+  var Hp = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
   function ct(t, e, r = {}) {
-    return t.replace(Mp, (i, o, n) => {
+    return t.replace(Hp, (i, o, n) => {
       let a = P(e, o);
       if (!a.found)
         return "";
-      let l = n ? r[n] ?? Tp[n] : undefined, u = l ? l(a.value) : a.value;
+      let l = n ? r[n] ?? Mp[n] : undefined, u = l ? l(a.value) : a.value;
       return u == null ? "" : String(u);
     });
   }
@@ -9525,7 +9547,7 @@ p {
   function yl(t) {
     let e = new Set, r = Array.from(t.children), i = Array.from(t.querySelectorAll(`[${L}]`));
     for (let o of [...r, ...i])
-      for (let n of Hp(o.getAttribute(L)))
+      for (let n of Ip(o.getAttribute(L)))
         e.add(n);
     return e;
   }
@@ -9536,12 +9558,12 @@ p {
     r.setSourceStatus?.(t, e);
   }
   function _l(t, e, r, i, o) {
-    let n = o.sourceStatusesFor?.(t, r) ?? Ip(t, r), a = { $source: r, $sources: n };
+    let n = o.sourceStatusesFor?.(t, r) ?? zp(t, r), a = { $source: r, $sources: n };
     if (e)
       a[e] = i;
     return { value: i, vars: a };
   }
-  function Hp(t) {
+  function Ip(t) {
     let e = [];
     for (let r of (t ?? "").matchAll(/(?:\$source|\$sources\.[A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)/g))
       e.push(r[1]);
@@ -9550,7 +9572,7 @@ p {
   function xl(t) {
     return typeof t === "object" && t !== null && (("status" in t) || ("message" in t));
   }
-  function Ip(t, e) {
+  function zp(t, e) {
     let r = t.getAttribute(nt)?.trim();
     return r ? { [r]: e } : {};
   }
@@ -9604,7 +9626,7 @@ p {
     }
   }
   function wl(t, e) {
-    let r = zp(t);
+    let r = Rp(t);
     if (!r)
       return;
     let i = {}, o = K();
@@ -9617,7 +9639,7 @@ p {
         i[n] = a.value;
     return Object.keys(i).length ? i : undefined;
   }
-  function zp(t) {
+  function Rp(t) {
     let e = t?.trim() ?? "";
     if (!e)
       return null;
@@ -9631,13 +9653,13 @@ p {
       return null;
     let i = {};
     for (let [o, n] of Object.entries(r)) {
-      let a = Rp(n);
+      let a = Pp(n);
       if (o.trim() && a)
         i[o] = a;
     }
     return Object.keys(i).length ? i : null;
   }
-  function Rp(t) {
+  function Pp(t) {
     if (!kl(t) || typeof t.from !== "string")
       return null;
     if (t.from === "queryParam" || t.from === "state")
@@ -9659,14 +9681,14 @@ p {
     let e = new FormData(t);
     if (Array.from(e.keys()).length > 0)
       return e;
-    for (let r of Pp(t))
-      Bp(e, r);
+    for (let r of Bp(t))
+      Fp(e, r);
     return e;
   }
-  function Pp(t) {
+  function Bp(t) {
     return Array.from(t.querySelectorAll("input, select, textarea, [name]"));
   }
-  function Bp(t, e) {
+  function Fp(t, e) {
     let r = e.name?.trim();
     if (!r || e.disabled)
       return;
@@ -9704,7 +9726,7 @@ p {
     }
     t.append(r, String(o));
   }
-  var Fp = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+  var Np = new Set(["POST", "PUT", "PATCH", "DELETE"]);
   function Qe(t, e) {
     let r = (t ?? "").trim().toUpperCase();
     if (r === "GET" || r === "POST" || r === "PUT" || r === "PATCH" || r === "DELETE" || r === "HEAD")
@@ -9714,9 +9736,9 @@ p {
   function We(t, e) {
     let r = e.formData ?? pt(t);
     if (e.method === "GET" || e.method === "HEAD")
-      return { kind: "query", url: Np(e.url, r), formData: r, data: Ze(r) };
-    let i = Dp(Ze(r), r, e.bodyFields);
-    if (Fp.has(e.method) && Op(r))
+      return { kind: "query", url: Dp(e.url, r), formData: r, data: Ze(r) };
+    let i = Op(Ze(r), r, e.bodyFields);
+    if (Np.has(e.method) && qp(r))
       return { kind: "formData", url: e.url, formData: r, data: i, body: r };
     return { kind: "json", url: e.url, formData: r, data: i, body: JSON.stringify(i) };
   }
@@ -9735,14 +9757,14 @@ p {
     }
     return e;
   }
-  function Np(t, e) {
+  function Dp(t, e) {
     let r = new URL(t, location.href);
     for (let [i, o] of e.entries())
       if (!Je(o))
         r.searchParams.append(i, tr(o) ? o.name : o);
     return r.toString();
   }
-  function Dp(t, e, r) {
+  function Op(t, e, r) {
     if (!r)
       return t;
     let i = t;
@@ -9756,7 +9778,7 @@ p {
     }
     return i;
   }
-  function Op(t) {
+  function qp(t) {
     return Array.from(t.values()).some((e) => !Je(e) && tr(e));
   }
   function Je(t) {
@@ -9772,15 +9794,15 @@ p {
     else if (r.kind === "formData")
       o.body = r.body;
     try {
-      let n = await fetch(r.url, o), a = await qp(n);
-      return { ok: n.ok, status: n.status, statusText: n.statusText, body: a, message: n.ok ? "" : Vp(n, a), form: t };
+      let n = await fetch(r.url, o), a = await Vp(n);
+      return { ok: n.ok, status: n.status, statusText: n.statusText, body: a, message: n.ok ? "" : jp(n, a), form: t };
     } catch (n) {
       if (n?.name === "AbortError")
         return { ok: false, status: 0, statusText: "Aborted", body: null, message: "Aborted", form: t };
       return { ok: false, status: 0, statusText: "Network Error", body: null, message: n instanceof Error ? n.message : String(n), form: t };
     }
   }
-  async function qp(t) {
+  async function Vp(t) {
     if (t.status === 204)
       return null;
     let e = await t.clone().text().catch(() => "");
@@ -9792,17 +9814,17 @@ p {
       return t.headers.get("content-type")?.includes("application/json") ? null : e;
     }
   }
-  function Vp(t, e) {
+  function jp(t, e) {
     if (e && typeof e === "object" && "error" in e && typeof e.error === "string")
       return e.error;
     if (e && typeof e === "object" && "message" in e && typeof e.message === "string")
       return e.message;
     return t.statusText || `Request failed (${t.status})`;
   }
-  var jp = "cms-source:success";
-  var $p = "cms-source:failed";
-  var Up = "form:success";
-  var Kp = "form:failed";
+  var $p = "cms-source:success";
+  var Up = "cms-source:failed";
+  var Kp = "form:success";
+  var Xp = "form:failed";
 
   class rr {
     element;
@@ -9840,7 +9862,7 @@ p {
       return e.toString();
     }
     dispatchResult(t) {
-      let e = t.ok ? jp : $p, r = t.ok ? Up : Kp, i = { bubbles: true, composed: true, detail: t };
+      let e = t.ok ? $p : Up, r = t.ok ? Kp : Xp, i = { bubbles: true, composed: true, detail: t };
       this.element.dispatchEvent(new CustomEvent(e, i)), this.element.dispatchEvent(new CustomEvent(r, i));
     }
     publish(t) {
@@ -9977,7 +9999,7 @@ p {
   }
   function El(t, e, r, i) {
     let o = {};
-    for (let n of Xp(t, r)) {
+    for (let n of Gp(t, r)) {
       if (!n.hasAttribute(h))
         continue;
       let a = n.getAttribute(nt)?.trim();
@@ -9989,7 +10011,7 @@ p {
     }
     return o;
   }
-  function Xp(t, e) {
+  function Gp(t, e) {
     let r = [];
     for (let i = e;i && i !== t.parentElement; i = i.parentElement)
       if (r.push(i), i === t)
@@ -10170,15 +10192,15 @@ p {
     }
   }
   var Al = "cms-binding-cloak";
-  var Gp = `${g}{display:contents}[${h}]:not([${f}]){visibility:hidden}`;
+  var Yp = `${g}{display:contents}[${h}]:not([${f}]){visibility:hidden}`;
   function Sl(t) {
     if (t.getElementById(Al))
       return;
     let e = t.createElement("style");
-    e.id = Al, e.textContent = Gp, (t.head ?? t.documentElement).appendChild(e);
+    e.id = Al, e.textContent = Yp, (t.head ?? t.documentElement).appendChild(e);
   }
   var Ll = {};
-  function Yp(t) {
+  function Zp(t) {
     Ll = t;
   }
 
@@ -12134,7 +12156,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     renderPath();
     urlInput.addEventListener("input", renderPath);
     urlInput.addEventListener("change", renderPath);
-    const queryParams = seedParams.filter((p) => (p.in ?? "query") === "query");
+    const queryParams2 = seedParams.filter((p) => (p.in ?? "query") === "query");
     const container = document.createElement("div");
     container.dataset.role = "query-params";
     const paramsField = jsonField(`endpoints.${endpointIdx}.params`);
@@ -12143,7 +12165,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     rows.dataset.role = "query-param-rows";
     const readRows = () => Array.from(rows.querySelectorAll('[data-role="query-param-row"]'), readQueryParamRow).filter((p) => p !== null);
     const sync = () => paramsField.sync(readRows);
-    queryParams.forEach((p) => rows.appendChild(makeQueryParamRow(p, sync)));
+    queryParams2.forEach((p) => rows.appendChild(makeQueryParamRow(p, sync)));
     const add = document.createElement("button");
     add.type = "button";
     add.className = "ep-add-param";
@@ -12153,7 +12175,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
       rows.appendChild(makeQueryParamRow({}, sync));
       sync();
     });
-    paramsField.sync(() => queryParams);
+    paramsField.sync(() => queryParams2);
     container.append(paramsField, rows, add);
     wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), passthrough(`endpoints.${endpointIdx}.meta`, "meta-passthrough", seed.meta));
     panel.appendChild(wrap);
@@ -15609,7 +15631,7 @@ w13c-lateral-menu-item {
   }
   function replaceEndpointPerformanceQuery(query) {
     const url = new URL(window.location.href);
-    url.search = queryParams(query).toString();
+    url.search = queryParams2(query).toString();
     history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
   }
   function isSafeEndpointFilter(value) {
@@ -15620,9 +15642,9 @@ w13c-lateral-menu-item {
     return value.length <= 256 && parts.length === 3 && parts[0] === "urn" && Boolean(parts[1]) && Boolean(parts[2]);
   }
   function endpointPerformanceApiUrl(query) {
-    return `${getMetaBasePath()}/api/analytics/endpoints?${queryParams(query)}`;
+    return `${getMetaBasePath()}/api/analytics/endpoints?${queryParams2(query)}`;
   }
-  function queryParams(query) {
+  function queryParams2(query) {
     const params = new URLSearchParams({
       range: query.range,
       sort: query.sort,
@@ -17721,7 +17743,7 @@ w13c-lateral-menu-item.category-item {
       return;
     }
     configured = true;
-    Yp({
+    Zp({
       json: (value2) => value2 === undefined ? undefined : JSON.stringify(value2)
     });
   }
@@ -27106,6 +27128,13 @@ details[open] > summary > .chevron {
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
   }
+  async function getPageLinks() {
+    const response = await fetch(route3("/api/page/links?visible=published"));
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    return response.json();
+  }
   async function postJson(url, body) {
     const response = await fetch(url, {
       method: "POST",
@@ -27118,8 +27147,210 @@ details[open] > summary > .chevron {
     return response.json();
   }
 
-  // src/components/admin/Resources/Integrations/fields.ts
-  function renderFields(root, template4, definition) {
+  // src/components/admin/Resources/Integrations/fields/selects.ts
+  function configureSelect(control, options2, value3, multiple) {
+    addOptions(control, options2);
+    control.multiple = multiple;
+    const selected2 = new Set(Array.isArray(value3) ? value3 : typeof value3 === "string" ? [value3] : []);
+    for (const option3 of Array.from(control.options)) {
+      option3.selected = selected2.has(option3.value);
+    }
+  }
+  function configurePageLinkSelect(control, value3, pageLinks) {
+    const current = typeof value3 === "string" ? value3 : "";
+    addOptions(control, current ? [{ label: current, value: current }] : [], "Select a page");
+    if (!pageLinks) {
+      return;
+    }
+    pageLinks.then((links) => {
+      addOptions(control, links.map((link) => ({ label: `${link.title} (${link.path})`, value: link.path })), "Select a page");
+      control.value = current;
+    }, () => {
+      control.options[0].textContent = "Pages could not be loaded";
+    });
+  }
+  function addOptions(control, options2, placeholder) {
+    control.replaceChildren();
+    if (placeholder !== undefined) {
+      control.append(option3(placeholder, ""));
+    }
+    for (const item of options2) {
+      control.append(option3(item.label, item.value));
+    }
+  }
+  function option3(label3, value3) {
+    const element = document.createElement("option");
+    element.textContent = label3;
+    element.value = value3;
+    return element;
+  }
+
+  // src/components/admin/Resources/Integrations/fields/objectList.ts
+  function objectListControl(input2, answer, loadPageLinks) {
+    const root = document.createElement("div");
+    root.className = "object-list";
+    root.dataset.objectListName = input2.name;
+    const items = document.createElement("div");
+    items.className = "object-list-items";
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "object-list-add";
+    add.textContent = input2.addLabel ?? "Add item";
+    add.addEventListener("click", () => {
+      items.append(objectListItem(input2, {}, loadPageLinks));
+      refreshList2(input2, root);
+    });
+    root.append(items, add);
+    const values = Array.isArray(answer) ? answer : [];
+    const initialCount = values.length || input2.minItems || (input2.required ? 1 : 0);
+    for (let index = 0;index < initialCount; index++) {
+      items.append(objectListItem(input2, record3(values[index]), loadPageLinks));
+    }
+    refreshList2(input2, root);
+    return root;
+  }
+  function collectObjectListAnswer(root, input2) {
+    const list = root.querySelector(`[data-object-list-name="${cssEscape3(input2.name)}"]`);
+    if (!list) {
+      return;
+    }
+    return Array.from(list.querySelectorAll("[data-object-list-item]")).map((item) => {
+      const value3 = {};
+      for (const field3 of input2.fields) {
+        const control = item.querySelector(`[data-object-field="${cssEscape3(field3.name)}"]`);
+        value3[field3.name] = field3.type === "boolean" ? control.checked : field3.type === "select" && field3.multiple ? Array.from(control.selectedOptions, (option4) => option4.value) : control.value;
+      }
+      return value3;
+    });
+  }
+  function objectListItem(input2, value3, loadPageLinks) {
+    const item = document.createElement("article");
+    item.className = "object-list-item";
+    item.dataset.objectListItem = "";
+    const header = document.createElement("div");
+    header.className = "object-list-item-header";
+    const title2 = document.createElement("strong");
+    title2.dataset.objectListItemTitle = "";
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "object-list-remove";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", () => {
+      const root = item.closest("[data-object-list-name]");
+      item.remove();
+      refreshList2(input2, root);
+    });
+    header.append(title2, remove);
+    const fields = document.createElement("div");
+    fields.className = "object-list-item-fields";
+    for (const field3 of input2.fields) {
+      fields.append(fieldControl2(field3, value3[field3.name], loadPageLinks));
+    }
+    item.append(header, fields);
+    return item;
+  }
+  function fieldControl2(field3, value3, loadPageLinks) {
+    const label3 = document.createElement("label");
+    label3.className = "object-list-item-field";
+    const caption = document.createElement("span");
+    caption.textContent = field3.label;
+    const control = field3.type === "textarea" ? document.createElement("textarea") : field3.type === "select" || field3.type === "page-link" ? document.createElement("select") : document.createElement("input");
+    control.dataset.objectField = field3.name;
+    control.required = field3.required === true;
+    if (field3.type === "boolean") {
+      control.type = "checkbox";
+      control.checked = value3 === true;
+    } else if (field3.type === "textarea") {
+      control.rows = 3;
+      control.value = typeof value3 === "string" ? value3 : "";
+    } else if (field3.type === "select") {
+      configureSelect(control, field3.options, value3, field3.multiple === true);
+    } else if (field3.type === "page-link") {
+      configurePageLinkSelect(control, value3, loadPageLinks?.());
+    } else {
+      control.type = "text";
+      control.value = typeof value3 === "string" ? value3 : "";
+    }
+    label3.append(caption, control);
+    return label3;
+  }
+  function refreshList2(input2, root) {
+    const items = Array.from(root.querySelectorAll("[data-object-list-item]"));
+    items.forEach((item, index) => {
+      item.querySelector("[data-object-list-item-title]").textContent = `Item ${index + 1}`;
+      item.querySelector(".object-list-remove").disabled = items.length <= (input2.minItems ?? 0);
+    });
+    const add = root.querySelector(".object-list-add");
+    add.disabled = input2.maxItems !== undefined && items.length >= input2.maxItems;
+  }
+  function record3(value3) {
+    return typeof value3 === "object" && value3 !== null && !Array.isArray(value3) ? value3 : {};
+  }
+  function cssEscape3(value3) {
+    return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
+  }
+
+  // src/components/admin/Resources/Integrations/fields/value.ts
+  function valueControl(input2, answer) {
+    if (input2.type === "json") {
+      return textarea3(input2, answer);
+    }
+    if (input2.type === "select") {
+      return select3(input2, answer);
+    }
+    const element = document.createElement("input");
+    element.name = input2.name;
+    element.type = input2.type === "password" ? "password" : input2.type === "boolean" ? "checkbox" : "text";
+    if (input2.type === "boolean") {
+      element.checked = typeof answer === "boolean" ? answer : input2.defaultValue === true;
+    } else {
+      const value3 = answer ?? input2.defaultValue;
+      element.value = value3 == null ? "" : String(value3);
+    }
+    element.required = input2.required === true;
+    return element;
+  }
+  function collectValueAnswer(root, input2) {
+    const element = root.querySelector(`[name="${cssEscape4(input2.name)}"]`);
+    if (!element) {
+      return;
+    }
+    if (input2.type === "boolean") {
+      return element.checked;
+    }
+    if (input2.type === "json") {
+      return JSON.parse(element.value || "null");
+    }
+    return element.value;
+  }
+  function select3(input2, answer) {
+    const element = document.createElement("select");
+    element.name = input2.name;
+    for (const option4 of input2.options ?? []) {
+      const child = document.createElement("option");
+      child.value = option4.value;
+      child.textContent = option4.label;
+      element.append(child);
+    }
+    element.value = typeof answer === "string" ? answer : String(input2.defaultValue ?? "");
+    element.required = input2.required === true;
+    return element;
+  }
+  function textarea3(input2, answer) {
+    const element = document.createElement("textarea");
+    element.name = input2.name;
+    element.rows = 6;
+    const value3 = answer ?? input2.defaultValue;
+    element.value = value3 == null ? "" : typeof value3 === "string" ? value3 : JSON.stringify(value3);
+    element.required = input2.required === true;
+    return element;
+  }
+  function cssEscape4(value3) {
+    return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
+  }
+
+  // src/components/admin/Resources/Integrations/fields/index.ts
+  function renderFields(root, template4, definition, answers = {}) {
     root.replaceChildren();
     if (!definition.inputs.length) {
       const empty = document.createElement("p");
@@ -27128,80 +27359,43 @@ details[open] > summary > .chevron {
       root.append(empty);
       return;
     }
+    let pageLinks;
+    const loadPageLinks = definition.inputs.some((input2) => input2.type === "object-list" && input2.fields.some((field3) => field3.type === "page-link")) ? () => pageLinks ??= getPageLinks() : undefined;
     for (const input2 of definition.inputs) {
-      const row = template4.content.firstElementChild.cloneNode(true);
-      row.querySelector("[data-label]").textContent = input2.label;
-      row.querySelector("[data-hint]").textContent = hint(input2);
-      row.querySelector("[data-control]").append(control(input2));
-      root.append(row);
+      root.append(inputRow(template4, input2, answers[input2.name], loadPageLinks));
     }
   }
   function collectAnswers(root, definition) {
     const answers = {};
     for (const input2 of definition.inputs) {
-      const element = root.querySelector(`[name="${input2.name}"]`);
-      if (!element) {
-        continue;
-      }
-      if (input2.type === "boolean") {
-        answers[input2.name] = element.checked;
-      } else if (input2.type === "json") {
-        answers[input2.name] = JSON.parse(element.value || "null");
-      } else {
-        answers[input2.name] = element.value;
+      const value3 = input2.type === "object-list" ? collectObjectListAnswer(root, input2) : collectValueAnswer(root, input2);
+      if (value3 !== undefined) {
+        answers[input2.name] = value3;
       }
     }
     return answers;
   }
-  function control(input2) {
-    if (input2.type === "json") {
-      return textarea3(input2, 6);
+  function inputRow(template4, input2, answer, loadPageLinks) {
+    if (input2.type === "object-list") {
+      const row2 = document.createElement("section");
+      row2.className = "field object-list-fieldset";
+      const label3 = document.createElement("strong");
+      label3.className = "object-list-label";
+      label3.textContent = input2.label;
+      row2.append(label3, objectListControl(input2, answer, loadPageLinks));
+      return row2;
     }
-    if (input2.type === "select") {
-      return select3(input2);
-    }
-    const element = document.createElement("input");
-    element.name = input2.name;
-    element.type = input2.type === "password" ? "password" : input2.type === "boolean" ? "checkbox" : "text";
-    if (input2.defaultValue !== undefined && input2.type !== "boolean") {
-      element.value = String(input2.defaultValue);
-    }
-    if (input2.defaultValue === true && input2.type === "boolean") {
-      element.checked = true;
-    }
-    if (input2.required) {
-      element.required = true;
-    }
-    return element;
-  }
-  function select3(input2) {
-    const element = document.createElement("select");
-    element.name = input2.name;
-    for (const option3 of input2.options ?? []) {
-      const child = document.createElement("option");
-      child.value = option3.value;
-      child.textContent = option3.label;
-      element.append(child);
-    }
-    return element;
-  }
-  function textarea3(input2, rows) {
-    const element = document.createElement("textarea");
-    element.name = input2.name;
-    element.rows = rows;
-    if (typeof input2.defaultValue === "string") {
-      element.value = input2.defaultValue;
-    }
-    return element;
+    const row = template4.content.firstElementChild.cloneNode(true);
+    row.querySelector("[data-label]").textContent = input2.label;
+    row.querySelector("[data-hint]").textContent = hint(input2);
+    row.querySelector("[data-control]").append(valueControl(input2, answer));
+    return row;
   }
   function hint(input2) {
-    if (input2.secret || input2.type === "password") {
+    if (input2.type !== "object-list" && (input2.secret || input2.type === "password")) {
       return "Stored as a secret.";
     }
-    if (input2.required) {
-      return "Required.";
-    }
-    return "";
+    return input2.required ? "Required." : "";
   }
 
   // src/components/admin/Resources/Integrations/domain.ts
@@ -27751,10 +27945,7 @@ details[open] > summary > .chevron {
     renderLinkedPlaceholder(shell.querySelector("[data-linked]"));
     renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
     host.query("[data-detail-view]").replaceChildren(shell);
-    renderFields(host.query("[data-fields]"), host.query("[data-field-template]"), definition);
-    if (options2.answers) {
-      applyAnswers(host.query("[data-fields]"), options2.answers);
-    }
+    renderFields(host.query("[data-fields]"), host.query("[data-field-template]"), definition, options2.answers);
   }
   function renderImporting(host, definition, answers) {
     const shell = cloneElement("importing-shell");
@@ -27772,22 +27963,6 @@ details[open] > summary > .chevron {
       { label: "Secrets", value: rows.filter((row) => row.type === "Secret").length },
       { label: "Connectors", value: rows.filter((row) => row.type === "Connector").length }
     ];
-  }
-  function applyAnswers(root, answers) {
-    for (const [name, value3] of Object.entries(answers)) {
-      const element = root.querySelector(`[name="${cssEscape3(name)}"]`);
-      if (!element) {
-        continue;
-      }
-      if (element instanceof HTMLInputElement && element.type === "checkbox") {
-        element.checked = value3 === true;
-      } else {
-        element.value = value3 == null ? "" : typeof value3 === "string" ? value3 : JSON.stringify(value3);
-      }
-    }
-  }
-  function cssEscape3(value3) {
-    return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
   }
 
   // src/components/admin/Resources/Integrations/ui/actions.ts
@@ -28414,8 +28589,78 @@ button[slot="back"] svg {
 }
 
 .setup-fields .empty,
-.setup-fields .field:has(textarea) {
+.setup-fields .field:has(textarea),
+.object-list-fieldset {
     grid-column: 1 / -1;
+}
+
+.object-list-fieldset {
+    display: grid;
+    gap: 8px;
+}
+
+.object-list {
+    display: grid;
+    gap: 10px;
+}
+
+.object-list-items {
+    display: grid;
+    gap: 10px;
+}
+
+.object-list-item {
+    display: grid;
+    gap: 10px;
+    border: 1px solid #dfe5e2;
+    border-radius: 7px;
+    padding: 12px;
+}
+
+.object-list-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.object-list-item-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.object-list-item-field {
+    display: grid;
+    gap: 5px;
+}
+
+.object-list-item-field:has(textarea),
+.object-list-item-field:has(select[multiple]) {
+    grid-column: 1 / -1;
+}
+
+.object-list-add,
+.object-list-remove {
+    width: fit-content;
+    border: 1px solid #cad4d0;
+    border-radius: 6px;
+    background: #fff;
+    padding: 7px 10px;
+    color: #24332e;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.object-list-remove {
+    color: #8f2929;
+}
+
+.object-list-add:disabled,
+.object-list-remove:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
 }
 
 .installing-state {
@@ -28515,7 +28760,8 @@ button[slot="back"]:disabled {
     }
 
     .filters,
-    .setup-fields {
+    .setup-fields,
+    .object-list-item-fields {
         grid-template-columns: 1fr;
     }
 
@@ -28996,7 +29242,7 @@ button.run:disabled {
   function checkbox2(root, name) {
     return input2(root, name);
   }
-  function option3(value3, label3) {
+  function option4(value3, label3) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label3;
@@ -29737,18 +29983,18 @@ details[open] > summary > .chevron {
   function populateSources(host, sources) {
     const sourceSelect = select4(host, "source");
     for (const source2 of sources) {
-      sourceSelect.append(option3(source2.id, source2.label));
+      sourceSelect.append(option4(source2.id, source2.label));
     }
   }
   function syncEndpointOptions(host, sources) {
     const endpointSelect = select4(host, "endpoint");
     const source2 = sources.find((item) => item.id === select4(host, "source").value);
-    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option3(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
+    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option4(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
   }
   function populateFunctions(host, functions) {
     const functionSelect = select4(host, "function");
     for (const fn of functions) {
-      functionSelect.append(option3(fn.id, `${fn.label} (${fn.method})`));
+      functionSelect.append(option4(fn.id, `${fn.label} (${fn.method})`));
     }
   }
   function syncFunctionContract(host, functions) {
@@ -30588,7 +30834,7 @@ button:hover {
     return params;
   }
   function paramValue(value3) {
-    const queryParam = tokenValue2(value3, "#");
+    const queryParam = parseQueryParamToken(value3);
     if (queryParam) {
       return { from: "queryParam", name: queryParam };
     }
@@ -30616,12 +30862,16 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceFormReader.ts
+  var QUERY_PARAM_ERROR = "Start with a letter, number, or underscore; then use letters, numbers, underscores, dots, dashes, or colons.";
   function readSourceBinding(root, source2) {
     const alias = root.querySelector(".source-alias")?.value.trim();
     const trigger = selectedTrigger(root.querySelector(".source-trigger"));
     const method = source2.method ?? "GET";
     const params = readRows(root, "param");
     const body = readRows(root, "body");
+    if (!params || !body) {
+      return null;
+    }
     return {
       url: source2.url,
       ...alias ? { alias } : {},
@@ -30633,12 +30883,20 @@ button:hover {
   }
   function readRows(root, kind) {
     const params = {};
+    let valid = true;
     for (const row of Array.from(root.querySelectorAll(`.param-row[data-binding-kind="${kind}"]`))) {
       const name = row.dataset.paramName;
       const modeElement = row.querySelector(".param-mode");
       const mode = modeElement ? selectedMode(modeElement) : "queryParam";
-      const rawValue = row.querySelector(".param-value")?.value.trim();
+      const input3 = row.querySelector(".param-value");
+      const rawValue = input3?.value.trim();
+      setQueryParamValidity(input3, true);
       if (!name || !rawValue) {
+        continue;
+      }
+      if (kind === "param" && mode === "queryParam" && !isCmsQueryParamName(rawValue)) {
+        setQueryParamValidity(input3, false);
+        valid = false;
         continue;
       }
       if (mode === "raw") {
@@ -30647,7 +30905,22 @@ button:hover {
         params[name] = { from: mode, name: rawValue };
       }
     }
-    return params;
+    return valid ? params : null;
+  }
+  function setQueryParamValidity(input3, valid) {
+    if (!input3) {
+      return;
+    }
+    if (valid) {
+      input3.removeAttribute("aria-invalid");
+    } else {
+      input3.setAttribute("aria-invalid", "true");
+    }
+    input3.setCustomValidity?.(valid ? "" : QUERY_PARAM_ERROR);
+    if (!valid) {
+      input3.focus();
+      input3.reportValidity?.();
+    }
   }
   function selectedMode(select5) {
     const value3 = select5.options[select5.selectedIndex]?.value;
@@ -30795,7 +31068,7 @@ button:hover {
     controls.className = "param-controls";
     const mode = document.createElement("select");
     mode.className = "param-mode";
-    mode.append(option4("queryParam", "Query param"), option4("raw", "Raw value"), option4("state", "Page state"));
+    mode.append(option5("queryParam", "Query param"), option5("raw", "Raw value"), option5("state", "Page state"));
     const value3 = document.createElement("input");
     value3.className = "param-value";
     value3.placeholder = name;
@@ -30806,7 +31079,7 @@ button:hover {
     controls.append(mode, value3);
     return controls;
   }
-  function option4(value3, label3) {
+  function option5(value3, label3) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label3;
@@ -30818,7 +31091,7 @@ button:hover {
     return element;
   }
   function selectOption(select5, value3) {
-    const index = Array.from(select5.options).findIndex((option5) => option5.value === value3);
+    const index = Array.from(select5.options).findIndex((option6) => option6.value === value3);
     if (index >= 0) {
       select5.selectedIndex = index;
     }
@@ -30896,7 +31169,7 @@ button:hover {
     label3.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
-    trigger.append(option5("auto", "Auto"), option5("submit", "Submit"), option5("change", "Change"));
+    trigger.append(option6("auto", "Auto"), option6("submit", "Submit"), option6("change", "Change"));
     selectOption2(trigger, value3);
     label3.append(trigger);
     return label3;
@@ -30938,14 +31211,14 @@ button:hover {
       }, initialBinding?.body?.[field3.name]));
     }
   }
-  function option5(value3, label3) {
+  function option6(value3, label3) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label3;
     return element;
   }
   function selectOption2(select5, value3) {
-    const index = Array.from(select5.options).findIndex((option6) => option6.value === value3);
+    const index = Array.from(select5.options).findIndex((option7) => option7.value === value3);
     if (index >= 0) {
       select5.selectedIndex = index;
     }
@@ -31097,17 +31370,17 @@ button:hover {
   }
   function selectMethodFilter(filter, value3) {
     const options2 = Array.from(filter.options);
-    const index = options2.findIndex((option6) => option6.value === value3);
+    const index = options2.findIndex((option7) => option7.value === value3);
     filter.selectedIndex = index >= 0 ? index : 0;
-    options2.forEach((option6, optionIndex) => {
-      option6.selected = optionIndex === filter.selectedIndex;
-      option6.toggleAttribute("selected", option6.selected);
+    options2.forEach((option7, optionIndex) => {
+      option7.selected = optionIndex === filter.selectedIndex;
+      option7.toggleAttribute("selected", option7.selected);
     });
     filter.setAttribute("value", options2[filter.selectedIndex]?.value ?? "GET");
   }
   function selectedMethodFilter(filter) {
     const options2 = Array.from(filter.options);
-    const selected2 = options2.find((option6) => option6.selected);
+    const selected2 = options2.find((option7) => option7.selected);
     if (selected2?.value) {
       return selected2.value;
     }
@@ -31115,7 +31388,7 @@ button:hover {
     if (selectedIndexValue) {
       return selectedIndexValue;
     }
-    const selectedAttribute = options2.find((option6) => option6.hasAttribute("selected"));
+    const selectedAttribute = options2.find((option7) => option7.hasAttribute("selected"));
     return selectedAttribute?.value ?? filter.getAttribute("value") ?? "GET";
   }
 
@@ -31765,16 +32038,17 @@ h2 {
       });
     }
     _select(source2) {
-      dispatchDataSourceSelection(this, source2, this._sourceBinding(source2));
+      const binding = readSourceBinding(this.shadowRoot, source2);
+      if (!binding) {
+        return;
+      }
+      dispatchDataSourceSelection(this, source2, binding);
       this.close();
     }
     _remove = () => {
       dispatchDataSourceRemoval(this);
       this.close();
     };
-    _sourceBinding(source2) {
-      return readSourceBinding(this.shadowRoot, source2);
-    }
     _onBackdropClick = (event) => {
       if (event.target === this.elements.backdrop) {
         this.close();
@@ -32032,33 +32306,33 @@ textarea { min-height: 92px; resize: vertical; }
     const select5 = document.createElement("select");
     select5.className = "field-path";
     for (const field3 of fields) {
-      const option6 = document.createElement("option");
-      option6.value = field3.path;
-      option6.textContent = `${field3.scopeLabel}: ${field3.path}`;
-      select5.append(option6);
+      const option7 = document.createElement("option");
+      option7.value = field3.path;
+      option7.textContent = `${field3.scopeLabel}: ${field3.path}`;
+      select5.append(option7);
     }
     select5.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
     select5.addEventListener("change", () => {
       draft.path = select5.options.item(select5.selectedIndex)?.value ?? "";
       onChange(false);
     });
-    return control2("Field", select5);
+    return control("Field", select5);
   }
   function operatorSelect(draft, onChange) {
     const select5 = document.createElement("select");
     select5.className = "field-operator";
     for (const operator of OPERATORS) {
-      const option6 = document.createElement("option");
-      option6.value = operator.value;
-      option6.textContent = operator.label;
-      select5.append(option6);
+      const option7 = document.createElement("option");
+      option7.value = operator.value;
+      option7.textContent = operator.label;
+      select5.append(option7);
     }
     select5.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
     select5.addEventListener("change", () => {
       draft.operator = select5.options.item(select5.selectedIndex)?.value ?? "truthy";
       onChange(true);
     });
-    return control2("Operator", select5);
+    return control("Operator", select5);
   }
   function valueInput2(draft, onChange) {
     const input3 = document.createElement("input");
@@ -32069,12 +32343,12 @@ textarea { min-height: 92px; resize: vertical; }
       draft.value = input3.value;
       onChange(false);
     });
-    return control2("Value", input3);
+    return control("Value", input3);
   }
   function operatorNeedsValue(operator) {
     return OPERATORS.find((candidate) => candidate.value === operator)?.needsValue === true;
   }
-  function control2(labelText, controlElement) {
+  function control(labelText, controlElement) {
     const wrapper = document.createElement("label");
     wrapper.className = "control";
     const text5 = document.createElement("span");
@@ -32847,33 +33121,33 @@ dd {
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
-  function normalizeBlockPickerOption(option6) {
-    if (option6.item) {
+  function normalizeBlockPickerOption(option7) {
+    if (option7.item) {
       return {
-        ...option6,
-        kind: option6.item.kind
+        ...option7,
+        kind: option7.item.kind
       };
     }
-    if (!option6.entry) {
+    if (!option7.entry) {
       throw new Error("Block picker option requires either item or entry.");
     }
     return {
-      ...option6,
+      ...option7,
       kind: "block",
       item: {
         kind: "block",
-        entry: option6.entry
+        entry: option7.entry
       }
     };
   }
-  function blockPickerOptionItem(option6) {
-    if (option6.item) {
-      return option6.item;
+  function blockPickerOptionItem(option7) {
+    if (option7.item) {
+      return option7.item;
     }
-    if (option6.entry) {
+    if (option7.entry) {
       return {
         kind: "block",
-        entry: option6.entry
+        entry: option7.entry
       };
     }
     throw new Error("Block picker option requires either item or entry.");
@@ -32917,54 +33191,54 @@ dd {
   function blockPickerIconText(item) {
     return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
   }
-  function blockPickerCategoryLabel(option6) {
-    const item = blockPickerOptionItem(option6);
+  function blockPickerCategoryLabel(option7) {
+    const item = blockPickerOptionItem(option7);
     const category = blockPickerItemCategory(item) ?? blockPickerSourceLabel(item.kind);
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option6, query7) {
+  function blockPickerOptionMatches(option7, query7) {
     if (!query7) {
       return true;
     }
-    const item = blockPickerOptionItem(option6);
+    const item = blockPickerOptionItem(option7);
     return [
       blockPickerItemLabel(item),
       blockPickerItemDescription(item),
       blockPickerItemCategory(item),
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
-      option6.slotLabel
+      option7.slotLabel
     ].some((value3) => value3?.toLowerCase().includes(query7));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
   function blockPickerVisibleOptions(group, source2, category, query7) {
-    return group?.options.filter((option6) => {
-      const item = blockPickerOptionItem(option6);
+    return group?.options.filter((option7) => {
+      const item = blockPickerOptionItem(option7);
       if (item.kind !== source2) {
         return false;
       }
-      if (category && blockPickerCategoryLabel(option6) !== category) {
+      if (category && blockPickerCategoryLabel(option7) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option6, query7);
+      return blockPickerOptionMatches(option7, query7);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
-    return group?.options.filter((option6) => blockPickerOptionItem(option6).kind === source2) ?? [];
+    return group?.options.filter((option7) => blockPickerOptionItem(option7).kind === source2) ?? [];
   }
   function blockPickerSourceCount(group, source2) {
     return blockPickerOptionsForSource(group, source2).length;
   }
   function blockPickerCategoryCount(group, source2, category) {
-    return group?.options.filter((option6) => blockPickerOptionItem(option6).kind === source2 && blockPickerCategoryLabel(option6) === category).length ?? 0;
+    return group?.options.filter((option7) => blockPickerOptionItem(option7).kind === source2 && blockPickerCategoryLabel(option7) === category).length ?? 0;
   }
   function blockPickerCategories(group, source2) {
     const categories = new Set;
-    for (const option6 of group?.options ?? []) {
-      if (blockPickerOptionItem(option6).kind === source2) {
-        categories.add(blockPickerCategoryLabel(option6));
+    for (const option7 of group?.options ?? []) {
+      if (blockPickerOptionItem(option7).kind === source2) {
+        categories.add(blockPickerCategoryLabel(option7));
       }
     }
     return [...categories].sort((left, right) => left.localeCompare(right));
@@ -32980,16 +33254,16 @@ dd {
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerView.ts
-  function renderBlockPickerDetails(container, option6, onSelect) {
+  function renderBlockPickerDetails(container, option7, onSelect) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select content to see details.";
       container.append(empty4);
       return;
     }
-    const item = blockPickerOptionItem(option6);
+    const item = blockPickerOptionItem(option7);
     const eyebrow = document.createElement("div");
     eyebrow.className = "details-eyebrow";
     eyebrow.textContent = blockPickerSourceLabel(item.kind);
@@ -33004,22 +33278,22 @@ dd {
     previewIcon.textContent = blockPickerIconText(item);
     preview.append(previewIcon);
     const meta = document.createElement("dl");
-    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option6.slotLabel), metaRow("Category", blockPickerCategoryLabel(option6)));
+    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option7.slotLabel), metaRow("Category", blockPickerCategoryLabel(option7)));
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Insert";
-    insert.addEventListener("click", () => onSelect(option6));
+    insert.addEventListener("click", () => onSelect(option7));
     container.append(preview, eyebrow, title2, description, meta, insert);
   }
-  function renderBlockPickerOption(option6, activeOption, onActivate, onSelect) {
+  function renderBlockPickerOption(option7, activeOption, onActivate, onSelect) {
     const button2 = document.createElement("button");
     button2.className = "block";
     button2.type = "button";
-    button2.ariaSelected = String(option6 === activeOption);
-    button2.addEventListener("click", () => onActivate(option6));
-    button2.addEventListener("dblclick", () => onSelect(option6));
-    const item = blockPickerOptionItem(option6);
+    button2.ariaSelected = String(option7 === activeOption);
+    button2.addEventListener("click", () => onActivate(option7));
+    button2.addEventListener("dblclick", () => onSelect(option7));
+    const item = blockPickerOptionItem(option7);
     const icon = document.createElement("span");
     icon.className = "icon";
     icon.textContent = blockPickerIconText(item);
@@ -33032,7 +33306,7 @@ dd {
     description.textContent = blockPickerItemDescription(item);
     const category = document.createElement("span");
     category.className = "category";
-    category.textContent = blockPickerCategoryLabel(option6);
+    category.textContent = blockPickerCategoryLabel(option7);
     body.append(name, description, category);
     button2.append(icon, body);
     return button2;
@@ -33082,8 +33356,8 @@ dd {
       return null;
     }
     const activeOption = input3.activeOption && options2.includes(input3.activeOption) ? input3.activeOption : options2[0];
-    for (const option6 of options2) {
-      input3.results.append(renderBlockPickerOption(option6, activeOption, input3.onActivate, input3.onSelect));
+    for (const option7 of options2) {
+      input3.results.append(renderBlockPickerOption(option7, activeOption, input3.onActivate, input3.onSelect));
     }
     renderBlockPickerDetails(input3.details, activeOption, input3.onSelect);
     return activeOption;
@@ -33176,7 +33450,7 @@ dd {
     open(groups, contextLabel) {
       this._groups = groups.map((group) => ({
         ...group,
-        options: group.options.map((option6) => normalizeBlockPickerOption(option6))
+        options: group.options.map((option7) => normalizeBlockPickerOption(option7))
       }));
       this._activeSlotKey = firstEnabledBlockPickerGroup(this._groups)?.slot ?? "";
       this._activeSource = "block";
@@ -33212,11 +33486,11 @@ dd {
         activeSource: this._activeSource,
         details: this.elements.details,
         group: this._activeGroup(),
-        onActivate: (option6) => {
-          this._activeOption = option6;
+        onActivate: (option7) => {
+          this._activeOption = option7;
           this._renderEntries();
         },
-        onSelect: (option6) => this._selectOption(option6),
+        onSelect: (option7) => this._selectOption(option7),
         query: this.elements.search.value.trim().toLowerCase(),
         results: this.elements.results
       });
@@ -33245,11 +33519,11 @@ dd {
         sources: this.elements.sources
       });
     }
-    _selectOption(option6) {
+    _selectOption(option7) {
       this.dispatchEvent(new CustomEvent(BLOCK_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { option: option6 }
+        detail: { option: option7 }
       }));
       this.close();
     }
@@ -33877,9 +34151,9 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureBlockPicker.ts
   function openPickerOrEmitSingleMedia(action, groups, contextLabel, context) {
-    const option6 = singleEnabledOption(groups);
-    if (option6?.item?.kind === "media") {
-      context.emitAction(action.action, option6.item, option6.slot);
+    const option7 = singleEnabledOption(groups);
+    if (option7?.item?.kind === "media") {
+      context.emitAction(action.action, option7.item, option7.slot);
       return;
     }
     context.setPendingPickerAction(action);
@@ -33967,9 +34241,9 @@ dd {
       }
     ] : [];
     return [
-      ...blockOptions.filter((option6) => canFitItem(context, parent, slot, option6.item, replaced)),
+      ...blockOptions.filter((option7) => canFitItem(context, parent, slot, option7.item, replaced)),
       ...externalOptions,
-      ...mediaOptions.filter((option6) => option6.item && canFitItem(context, parent, slot, option6.item, replaced))
+      ...mediaOptions.filter((option7) => option7.item && canFitItem(context, parent, slot, option7.item, replaced))
     ];
   }
   function mediaAcceptForSlot(slot) {
@@ -34115,9 +34389,9 @@ dd {
   function conditionFieldOptions(scopes) {
     const byPath = new Map;
     for (const scope of scopes) {
-      for (const option6 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
-        if (!byPath.has(option6.path)) {
-          byPath.set(option6.path, option6);
+      for (const option7 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
+        if (!byPath.has(option7.path)) {
+          byPath.set(option7.path, option7);
         }
       }
     }
@@ -35331,8 +35605,8 @@ iframe {
     const labelDisplay = host.getAttribute("label-display") ?? "visible";
     const ariaLabel = host.getAttribute("aria-label");
     if (ariaLabel || labelDisplay !== "visible") {
-      const control3 = host.shadowRoot.querySelector("input, select, textarea, button");
-      control3?.setAttribute("aria-label", ariaLabel ?? label3);
+      const control2 = host.shadowRoot.querySelector("input, select, textarea, button");
+      control2?.setAttribute("aria-label", ariaLabel ?? label3);
     }
   }
 
@@ -35617,7 +35891,7 @@ input:disabled {
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
   function matchingDynamicDataOptions(options2, query7) {
     const normalized = query7.trim().toLowerCase();
-    return normalized ? options2.filter((option6) => `${option6.label} ${option6.path}`.toLowerCase().includes(normalized)) : options2;
+    return normalized ? options2.filter((option7) => `${option7.label} ${option7.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
     list.replaceChildren();
@@ -35628,18 +35902,18 @@ input:disabled {
       list.append(empty4);
       return;
     }
-    for (const option6 of options2) {
+    for (const option7 of options2) {
       const button2 = document.createElement("button");
       button2.className = "data-option";
       button2.type = "button";
-      button2.dataset.path = option6.path;
+      button2.dataset.path = option7.path;
       const label3 = document.createElement("span");
       label3.className = "data-label";
-      label3.textContent = option6.label;
+      label3.textContent = option7.label;
       const path = document.createElement("code");
-      path.textContent = option6.path;
+      path.textContent = option7.path;
       button2.append(label3, path);
-      button2.addEventListener("click", () => onSelect(option6.path));
+      button2.addEventListener("click", () => onSelect(option7.path));
       list.append(button2);
     }
   }
@@ -35649,9 +35923,9 @@ input:disabled {
     const byPath = new Map;
     for (const scope of scopes) {
       const options2 = fieldOptions2(scope.fields, scope.name, scope.label ?? scope.name);
-      for (const option6 of options2) {
-        if (!byPath.has(option6.path)) {
-          byPath.set(option6.path, option6);
+      for (const option7 of options2) {
+        if (!byPath.has(option7.path)) {
+          byPath.set(option7.path, option7);
         }
       }
     }
@@ -35795,20 +36069,20 @@ input:disabled {
       this._picker.open();
     };
     saveSelection = () => {
-      const control3 = this._refs.control();
-      this._selectionStart = control3.selectionStart ?? control3.value.length;
-      this._selectionEnd = control3.selectionEnd ?? this._selectionStart;
+      const control2 = this._refs.control();
+      this._selectionStart = control2.selectionStart ?? control2.value.length;
+      this._selectionEnd = control2.selectionEnd ?? this._selectionStart;
     };
     restoreSelection = () => {
       this._refs.control().setSelectionRange?.(this._selectionStart, this._selectionEnd);
     };
     insertText(text5) {
-      const control3 = this._refs.control();
-      const start = control3.selectionStart ?? this._selectionStart;
-      const end = control3.selectionEnd ?? this._selectionEnd;
-      control3.value = `${control3.value.slice(0, start)}${text5}${control3.value.slice(end)}`;
+      const control2 = this._refs.control();
+      const start = control2.selectionStart ?? this._selectionStart;
+      const end = control2.selectionEnd ?? this._selectionEnd;
+      control2.value = `${control2.value.slice(0, start)}${text5}${control2.value.slice(end)}`;
       const next = start + text5.length;
-      control3.setSelectionRange?.(next, next);
+      control2.setSelectionRange?.(next, next);
       this.saveSelection();
     }
     emitInput = () => {
@@ -36804,11 +37078,11 @@ select:disabled {
       syncFieldCopy(this);
       const current = this.getAttribute("value");
       const options2 = this._parseOptions();
-      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option6) => {
+      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option7) => {
         const element = document.createElement("option");
-        element.textContent = option6.label;
-        element.value = option6.value;
-        element.selected = option6.value === current;
+        element.textContent = option7.label;
+        element.value = option7.value;
+        element.selected = option7.value === current;
         return element;
       }));
     }
@@ -38731,12 +39005,12 @@ input {
     select5.append(custom);
     const groups = new Map;
     for (const token of tokens) {
-      const option6 = document.createElement("option");
-      option6.value = `var(--${token.variable})`;
-      option6.textContent = token.label;
+      const option7 = document.createElement("option");
+      option7.value = `var(--${token.variable})`;
+      option7.textContent = token.label;
       const category = token.category?.trim();
       if (!category) {
-        select5.append(option6);
+        select5.append(option7);
         continue;
       }
       let group = groups.get(category);
@@ -38746,9 +39020,9 @@ input {
         groups.set(category, group);
         select5.append(group);
       }
-      group.append(option6);
+      group.append(option7);
     }
-    const selected2 = Array.from(select5.querySelectorAll("option")).find((option6) => option6.value === (setting.defaultValue ?? ""));
+    const selected2 = Array.from(select5.querySelectorAll("option")).find((option7) => option7.value === (setting.defaultValue ?? ""));
     if (selected2) {
       selected2.selected = true;
     }
@@ -38808,9 +39082,9 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/controlWiring.ts
-  function wireTextControl(control3, selector, setting, emitValue) {
-    whenDefined(control3, () => {
-      const input3 = control3.shadowRoot?.querySelector(selector);
+  function wireTextControl(control2, selector, setting, emitValue) {
+    whenDefined(control2, () => {
+      const input3 = control2.shadowRoot?.querySelector(selector);
       if (!input3) {
         return;
       }
@@ -38822,9 +39096,9 @@ input {
       input3.addEventListener("change", () => emitValue(input3.value));
     });
   }
-  function wireContentControl(control3, selector, emitValue) {
-    whenDefined(control3, () => {
-      const input3 = control3.shadowRoot?.querySelector(selector);
+  function wireContentControl(control2, selector, emitValue) {
+    whenDefined(control2, () => {
+      const input3 = control2.shadowRoot?.querySelector(selector);
       if (!input3) {
         return;
       }
@@ -38832,9 +39106,9 @@ input {
       input3.addEventListener("change", () => emitValue(input3.value));
     });
   }
-  function wireRichTextControl(control3, emitValue) {
-    whenDefined(control3, () => {
-      control3.addEventListener("input", (event) => {
+  function wireRichTextControl(control2, emitValue) {
+    whenDefined(control2, () => {
+      control2.addEventListener("input", (event) => {
         const value3 = event.detail?.value;
         if (typeof value3 === "string") {
           emitValue(value3);
@@ -38842,12 +39116,12 @@ input {
       });
     });
   }
-  function wirePageLinkControl(control3, setting, emitValue) {
-    whenDefined(control3, () => {
+  function wirePageLinkControl(control2, setting, emitValue) {
+    whenDefined(control2, () => {
       if (setting.disabled) {
         return;
       }
-      control3.addEventListener("input", (event) => {
+      control2.addEventListener("input", (event) => {
         const value3 = event.detail?.value;
         if (typeof value3 === "string") {
           emitValue(value3);
@@ -38855,9 +39129,9 @@ input {
       });
     });
   }
-  function wireToggleControl(control3, setting, emitValue) {
-    whenDefined(control3, () => {
-      const button2 = control3.shadowRoot?.querySelector("button");
+  function wireToggleControl(control2, setting, emitValue) {
+    whenDefined(control2, () => {
+      const button2 = control2.shadowRoot?.querySelector("button");
       if (!button2) {
         return;
       }
@@ -38868,27 +39142,27 @@ input {
       button2.addEventListener("click", () => {
         const checked = button2.ariaPressed !== "true";
         button2.ariaPressed = String(checked);
-        control3.toggleAttribute("checked", checked);
+        control2.toggleAttribute("checked", checked);
         emitValue(checked);
       });
     });
   }
-  function applyDisabled(control3, setting) {
-    control3.toggleAttribute("disabled", setting.disabled === true);
+  function applyDisabled(control2, setting) {
+    control2.toggleAttribute("disabled", setting.disabled === true);
     if (setting.disabled) {
-      control3.setAttribute("aria-disabled", "true");
+      control2.setAttribute("aria-disabled", "true");
     } else {
-      control3.removeAttribute("aria-disabled");
+      control2.removeAttribute("aria-disabled");
     }
   }
-  function setDataScopes(control3, dataScopes2) {
-    control3.setAttribute("data-scopes", JSON.stringify(dataScopes2));
+  function setDataScopes(control2, dataScopes2) {
+    control2.setAttribute("data-scopes", JSON.stringify(dataScopes2));
   }
-  function whenDefined(control3, callback) {
-    if (customElements.get(control3.localName)) {
+  function whenDefined(control2, callback) {
+    if (customElements.get(control2.localName)) {
       callback();
     } else {
-      customElements.whenDefined(control3.localName).then(callback);
+      customElements.whenDefined(control2.localName).then(callback);
     }
   }
 
@@ -38971,33 +39245,33 @@ input {
       if (setting.type === "textarea" || setting.type === "select") {
         const tag = setting.type === "textarea" ? "cms-editor-v2-textarea" : "cms-editor-v2-select";
         const selector = setting.type === "textarea" ? "textarea" : "select";
-        const control4 = createSettingControl(tag, setting);
+        const control3 = createSettingControl(tag, setting);
         if (setting.type === "textarea") {
-          setDataScopes(control4, this.dataScopes());
+          setDataScopes(control3, this.dataScopes());
         } else {
-          control4.setAttribute("options", JSON.stringify(setting.options));
+          control3.setAttribute("options", JSON.stringify(setting.options));
         }
-        wireTextControl(control4, selector, setting, emit);
-        return control4;
+        wireTextControl(control3, selector, setting, emit);
+        return control3;
       }
       if (setting.type === "segmented") {
         return this.renderSegmented(setting);
       }
       if (setting.type === "toggle") {
-        const control4 = createSettingControl("cms-editor-v2-toggle", setting);
+        const control3 = createSettingControl("cms-editor-v2-toggle", setting);
         if (setting.defaultValue) {
-          control4.setAttribute("checked", "");
+          control3.setAttribute("checked", "");
         }
-        wireToggleControl(control4, setting, emit);
-        return control4;
+        wireToggleControl(control3, setting, emit);
+        return control3;
       }
       if (setting.type === "page-link") {
-        const control4 = createSettingControl("cms-editor-v2-page-link", setting);
-        control4.setAttribute("allow-page", String(setting.allowPage !== false));
-        control4.setAttribute("allow-external", String(setting.allowExternal !== false));
-        control4.setAttribute("allow-media", String(setting.allowMedia !== false));
-        wirePageLinkControl(control4, setting, emit);
-        return control4;
+        const control3 = createSettingControl("cms-editor-v2-page-link", setting);
+        control3.setAttribute("allow-page", String(setting.allowPage !== false));
+        control3.setAttribute("allow-external", String(setting.allowExternal !== false));
+        control3.setAttribute("allow-media", String(setting.allowMedia !== false));
+        wirePageLinkControl(control3, setting, emit);
+        return control3;
       }
       if (setting.type === "endpoint-picker") {
         return this.endpointSettings.render(setting);
@@ -39005,60 +39279,60 @@ input {
       if (setting.type === "color") {
         return renderColorSetting(setting, this.themeTokens(), renderFieldLabel, emit);
       }
-      const control3 = createSettingControl("cms-editor-v2-text-input", setting);
-      setDataScopes(control3, this.dataScopes());
-      wireTextControl(control3, "input", setting, emit);
-      return control3;
+      const control2 = createSettingControl("cms-editor-v2-text-input", setting);
+      setDataScopes(control2, this.dataScopes());
+      wireTextControl(control2, "input", setting, emit);
+      return control2;
     }
     renderSegmented(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field";
       const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
-      const control3 = document.createElement("cms-editor-v2-segmented-control");
-      control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-      for (const option6 of setting.options) {
+      const control2 = document.createElement("cms-editor-v2-segmented-control");
+      control2.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
+      for (const option7 of setting.options) {
         const button2 = document.createElement("button");
         button2.type = "button";
-        button2.value = option6.value;
+        button2.value = option7.value;
         button2.disabled = setting.disabled === true;
-        button2.title = option6.ariaLabel ?? option6.label;
-        button2.ariaLabel = option6.ariaLabel ?? option6.label;
-        button2.ariaPressed = String(option6.value === setting.defaultValue);
-        button2.append(...renderOptionContent(setting.display, option6.display, option6.icon ?? setting.icon, option6.label));
+        button2.title = option7.ariaLabel ?? option7.label;
+        button2.ariaLabel = option7.ariaLabel ?? option7.label;
+        button2.ariaPressed = String(option7.value === setting.defaultValue);
+        button2.append(...renderOptionContent(setting.display, option7.display, option7.icon ?? setting.icon, option7.label));
         button2.addEventListener("click", () => {
           if (setting.disabled) {
             return;
           }
-          for (const item of Array.from(control3.querySelectorAll("button"))) {
+          for (const item of Array.from(control2.querySelectorAll("button"))) {
             item.ariaPressed = String(item === button2);
           }
-          this.emitSettingChange(setting, option6.value);
+          this.emitSettingChange(setting, option7.value);
         });
-        control3.append(button2);
+        control2.append(button2);
       }
       if (label3) {
         wrapper.append(label3);
       }
-      wrapper.append(control3);
+      wrapper.append(control2);
       return wrapper;
     }
   }
   function createSettingControl(tag, setting) {
-    const control3 = document.createElement(tag);
-    control3.setAttribute("label", setting.label);
-    control3.setAttribute("value", String(setting.defaultValue ?? ""));
-    control3.setAttribute("label-display", setting.labelDisplay ?? "visible");
+    const control2 = document.createElement(tag);
+    control2.setAttribute("label", setting.label);
+    control2.setAttribute("value", String(setting.defaultValue ?? ""));
+    control2.setAttribute("label-display", setting.labelDisplay ?? "visible");
     if (setting.ariaLabel || setting.labelDisplay && setting.labelDisplay !== "visible") {
-      control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
+      control2.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
     }
     if (setting.help) {
-      control3.setAttribute("hint", setting.help);
+      control2.setAttribute("hint", setting.help);
     }
     if (setting.placeholder) {
-      control3.setAttribute("placeholder", setting.placeholder);
+      control2.setAttribute("placeholder", setting.placeholder);
     }
-    applyDisabled(control3, setting);
-    return control3;
+    applyDisabled(control2, setting);
+    return control2;
   }
   function renderFieldLabel(label3, display) {
     if (display === "hidden") {
@@ -39192,18 +39466,18 @@ input {
       defaultValue: value3,
       help: capability.format === "richtext" ? undefined : formatTextCapability(capability)
     };
-    const control3 = createSettingControl(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
+    const control2 = createSettingControl(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
     if (capability.format === "richtext") {
-      control3.setAttribute("capability", JSON.stringify(capability));
-      control3.setAttribute("data-scopes", JSON.stringify(dataScopes2));
-      wireRichTextControl(control3, (content) => emitContentChange(content, "html"));
+      control2.setAttribute("capability", JSON.stringify(capability));
+      control2.setAttribute("data-scopes", JSON.stringify(dataScopes2));
+      wireRichTextControl(control2, (content) => emitContentChange(content, "html"));
     } else {
       if (capability.dynamic) {
-        setDataScopes(control3, dataScopes2);
+        setDataScopes(control2, dataScopes2);
       }
-      wireContentControl(control3, "input", (content) => emitContentChange(content, "text"));
+      wireContentControl(control2, "input", (content) => emitContentChange(content, "text"));
     }
-    section.append(control3);
+    section.append(control2);
     return section;
   }
   function formatTextCapability(capability) {
@@ -39213,7 +39487,7 @@ input {
       capability.link ? "link" : null,
       capability.code ? "code" : null,
       capability.dynamic ? "dynamic" : null
-    ].filter((option6) => Boolean(option6));
+    ].filter((option7) => Boolean(option7));
     return options2.length > 0 ? options2.join(", ") : "Plain text";
   }
 
@@ -39906,9 +40180,9 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
   function repeatArrayOptions(scopes) {
     const byPath = new Map;
-    for (const option6 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-      if (!byPath.has(option6.path)) {
-        byPath.set(option6.path, option6);
+    for (const option7 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
+      if (!byPath.has(option7.path)) {
+        byPath.set(option7.path, option7);
       }
     }
     return [...byPath.values()];
@@ -39935,7 +40209,7 @@ label {
     if (!normalizedQuery) {
       return options2;
     }
-    return options2.filter((option6) => [option6.path, option6.label, option6.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
+    return options2.filter((option7) => [option7.path, option7.label, option7.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
     const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
@@ -39944,9 +40218,9 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatPickerDetails.ts
-  function renderRepeatDetails(container, option6) {
+  function renderRepeatDetails(container, option7) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to inspect item fields.";
@@ -39956,11 +40230,11 @@ label {
     const heading4 = document.createElement("div");
     heading4.className = "details-eyebrow";
     heading4.textContent = "Response fields";
-    container.append(heading4, renderFields2(option6.fields));
+    container.append(heading4, renderFields2(option7.fields));
   }
-  function renderRepeatBinding(container, option6, onSelect) {
+  function renderRepeatBinding(container, option7, onSelect) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to configure repeat.";
@@ -39975,7 +40249,7 @@ label {
     const pathLabel2 = document.createElement("span");
     pathLabel2.textContent = "Array";
     const pathValue = document.createElement("strong");
-    pathValue.textContent = option6.path;
+    pathValue.textContent = option7.path;
     path.append(pathLabel2, pathValue);
     const config = document.createElement("section");
     config.className = "binding-config";
@@ -39983,14 +40257,14 @@ label {
     label3.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "alias";
-    alias.value = defaultRepeatAlias(option6.path);
+    alias.value = defaultRepeatAlias(option7.path);
     label3.append(alias);
     config.append(label3);
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Use repeat";
-    insert.addEventListener("click", () => onSelect(option6, alias.value));
+    insert.addEventListener("click", () => onSelect(option7, alias.value));
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
     scroll.append(heading4, path, config);
@@ -40074,7 +40348,7 @@ label {
     _render() {
       this._renderOptions();
       renderRepeatDetails(this.details, this._activeOption);
-      renderRepeatBinding(this.binding, this._activeOption, (option6, alias) => this._select(option6, alias));
+      renderRepeatBinding(this.binding, this._activeOption, (option7, alias) => this._select(option7, alias));
     }
     _renderOptions() {
       this.arrays.replaceChildren();
@@ -40090,27 +40364,27 @@ label {
       if (!this._activeOption || !options2.includes(this._activeOption)) {
         this._activeOption = options2[0] ?? null;
       }
-      for (const option6 of options2) {
+      for (const option7 of options2) {
         const button2 = document.createElement("button");
         button2.className = "array";
         button2.type = "button";
-        button2.ariaSelected = String(option6 === this._activeOption);
+        button2.ariaSelected = String(option7 === this._activeOption);
         const name = document.createElement("span");
         name.className = "name";
-        name.textContent = option6.path;
+        name.textContent = option7.path;
         const scope = document.createElement("span");
         scope.className = "scope";
-        scope.textContent = option6.scopeLabel;
+        scope.textContent = option7.scopeLabel;
         button2.append(name, scope);
         button2.addEventListener("click", () => {
-          this._activeOption = option6;
+          this._activeOption = option7;
           this._render();
         });
-        button2.addEventListener("dblclick", () => this._select(option6));
+        button2.addEventListener("dblclick", () => this._select(option7));
         this.arrays.append(button2);
       }
     }
-    _select(option6, alias = defaultRepeatAlias(option6.path)) {
+    _select(option7, alias = defaultRepeatAlias(option7.path)) {
       const cleanAlias = alias.trim();
       if (!cleanAlias) {
         return;
@@ -40119,7 +40393,7 @@ label {
         bubbles: true,
         composed: true,
         detail: {
-          path: option6.path,
+          path: option7.path,
           alias: cleanAlias
         }
       }));
@@ -41507,13 +41781,13 @@ label {
         return true;
       }
       const next = current || fieldName;
-      if (isValidValueKey(next)) {
+      if (isCmsQueryParamName(next)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
       }
       return true;
     }
     if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
-      if (value3 === true && isValidValueKey(fieldName)) {
+      if (value3 === true && isCmsQueryParamName(fieldName)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
       } else if (current === fieldName) {
         target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
@@ -41522,7 +41796,7 @@ label {
     }
     if (typeof value3 === "string") {
       const next = value3.trim();
-      if (isValidValueKey(next)) {
+      if (isCmsQueryParamName(next)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
       }
     }
@@ -41539,7 +41813,7 @@ label {
     }
     const syncValue = target2.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
     const fieldName = valueSurfaceName(target2);
-    const hasFieldName = isValidValueKey(fieldName);
+    const hasFieldName = isCmsQueryParamName(fieldName);
     const isEnabled = syncValue !== "";
     const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
     const settings = [
@@ -41566,7 +41840,7 @@ label {
         attribute: PARAM_SYNC_NAME_SETTING,
         defaultValue: syncValue,
         placeholder: hasFieldName ? fieldName : "search",
-        help: "Letters, numbers, underscores, dashes and dots only.",
+        help: "Letters, numbers, underscores, dashes, dots and colons only.",
         required: true
       });
     }
@@ -46904,7 +47178,7 @@ dialog::backdrop {
     }
   }
   define(CMS_BINDING_CORE_TAG, Cl);
-  Yp({
+  Zp({
     json: (value3) => value3 === undefined ? undefined : JSON.stringify(value3)
   });
   define("p9r-accordion", ur);
