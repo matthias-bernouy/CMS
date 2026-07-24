@@ -1,5 +1,5 @@
-<commerce-offer-list source-id="commerce" page-size="12" grid-min="md" grid-max="xl" grid-gap="md" grid-packing="fit" card-stretch="true">
-    <basic-grid min="md" max="xl" gap="md" packing="fit" justify-items="stretch" data-offers-grid cms-condition="$source.loading">
+<commerce-offer-list source-id="commerce" page-size="12" grid-min="md" grid-max="lg" grid-gap="md" grid-packing="fill" card-stretch="true">
+    <basic-grid min="md" max="lg" gap="md" packing="fill" justify-items="stretch" data-offers-grid cms-condition="$source.loading">
         <basic-skeleton height="20rem" animation="wave" label="Chargement des annonces"></basic-skeleton>
         <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
         <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
@@ -11,7 +11,7 @@
         <strong slot="title">Aucune annonce disponible</strong>
     </basic-card>
 
-    <basic-grid min="md" max="xl" gap="md" packing="fit" justify-items="stretch" data-offers-grid cms-condition="$source.loaded && data.total > 0">
+    <basic-grid min="md" max="lg" gap="md" packing="fill" justify-items="stretch" data-offers-grid cms-condition="$source.loaded && data.total > 0">
         <commerce-offer-preview href="/offer?slug={{ offer.slug }}" amount="{{ offer.acceptedPriceAmount }}" currency="{{ offer.currency }}" whole-unit-prices="{{ data.wholeUnitPrices }}" stretch data-offer-card cms-repeat="data.items as offer">
             <img slot="media" data-src="/.cms/sources/commerce/publicOfferImage?id={{ offer.mainImageMediaId }}" alt="{{ offer.title }}" loading="lazy" decoding="async" cms-condition="offer.mainImageMediaId">
             <span slot="title">{{ offer.title }}</span>

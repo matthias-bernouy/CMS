@@ -66,6 +66,25 @@ describe("Commerce public offer list filters", () => {
         expect(readFilterParams(host)).toEqual([["category", "category"]]);
     });
 
+    test("uses stable defaults for a sparse catalogue grid", () => {
+        const host = document.createElement("section");
+        host.innerHTML = `
+            <basic-grid data-offers-grid>
+                <commerce-offer-preview data-offer-card></commerce-offer-preview>
+            </basic-grid>
+        `;
+
+        syncOfferListPresentation(host);
+
+        const grid = host.querySelector("[data-offers-grid]");
+        expect(grid?.getAttribute("min")).toBe("md");
+        expect(grid?.getAttribute("max")).toBe("lg");
+        expect(grid?.getAttribute("gap")).toBe("md");
+        expect(grid?.getAttribute("packing")).toBe("fill");
+        expect(grid?.getAttribute("justify-items")).toBe("stretch");
+        expect(host.querySelector("[data-offer-card]")?.hasAttribute("stretch")).toBeTrue();
+    });
+
     test("synchronizes the catalogue grid and card stretch settings", () => {
         const host = document.createElement("section");
         host.setAttribute("grid-min", "sm");

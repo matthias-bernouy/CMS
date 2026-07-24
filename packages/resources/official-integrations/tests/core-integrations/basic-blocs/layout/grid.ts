@@ -4,7 +4,7 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 export function registerGridTest(): void {
-    test("grid derives its tracks from minimum and maximum item widths", async () => {
+    test("grid keeps intrinsic tracks while capping slotted item widths", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
         const artifact = definition?.artifacts?.find(
@@ -17,8 +17,11 @@ export function registerGridTest(): void {
         const bloc = artifact.bloc;
         const encodedStyles = bloc.source?.["style.css"];
         const styles = encodedStyles ? Buffer.from(encodedStyles, "base64").toString("utf8") : "";
+        expect(styles).toContain("display: grid");
         expect(styles).toContain("repeat(auto-fill, minmax(min(var(--basic-grid-min), 100%), 1fr))");
         expect(styles).toContain("repeat(auto-fit, minmax(min(var(--basic-grid-min), 100%), 1fr))");
+        expect(styles).toContain("max-width: var(--basic-grid-max)");
+        expect(styles).not.toContain("display: flex");
         expect(styles).not.toContain(':host([max]:not([max="none"])) { --basic-grid-justify: center; }');
         expect(styles).toContain(':host([packing="fit"])');
         expect(styles).toContain(':host([min="lg"])');

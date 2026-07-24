@@ -18,14 +18,14 @@ export class CommerceOfferListEditor extends Editor {
                         type: "select",
                         label: "Maximum card width",
                         attribute: "grid-max",
-                        defaultValue: "xl",
+                        defaultValue: "lg",
                         options: ["none", "sm", "md", "lg", "xl"].map((value) => ({ label: value, value })),
                     },
                     {
                         type: "segmented",
                         label: "Column packing",
                         attribute: "grid-packing",
-                        defaultValue: "fit",
+                        defaultValue: "fill",
                         options: [
                             { label: "Fill", value: "fill" },
                             { label: "Fit content", value: "fit" },
