@@ -9,7 +9,10 @@ export function commerceBuyerLegalEndpoints(): Source["endpoints"] {
             targetUrl: "https://commerce.test/buyer-legal/requirements",
             headers: [{ name: "x-cms-user-id", source: { from: "computed", ref: "userID" } }],
             input: {
-                params: [{ name: "orderId", in: "query", schema: { type: "number" }, required: true }],
+                params: [
+                    { name: "orderId", in: "query", schema: { type: "number" }, required: true },
+                    { name: "paymentProvider", in: "query", schema: { type: "string" }, required: true },
+                ],
             },
             output: [
                 {

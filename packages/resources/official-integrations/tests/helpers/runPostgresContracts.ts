@@ -23,7 +23,7 @@ const integrationRoots: Record<BundleName, string> = {
 };
 
 const contracts: PostgresContract[] = [
-    contract("Commerce buyer legal acceptance", "commerceBuyerLegal", "commerce/buyer-legal", [
+    contract("Commerce buyer legal acceptance", "commerceBuyerLegal", "commerce/protected/payment", [
         "run_buyer_legal_install_contract=true",
         "allow_buyer_legal_schema_reset=true",
     ]),

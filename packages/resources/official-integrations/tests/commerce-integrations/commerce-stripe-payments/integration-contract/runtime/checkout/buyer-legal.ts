@@ -31,7 +31,9 @@ async function assertRequirements(
                 identities,
                 fetchImpl: async (input, init) => {
                     const request = new Request(input, init);
-                    expect(request.url).toBe("https://commerce.test/buyer-legal/requirements?orderId=42");
+                    expect(request.url).toBe(
+                        "https://commerce.test/buyer-legal/requirements?orderId=42&paymentProvider=stripe",
+                    );
                     expect(request.headers.get("x-cms-user-id")).toBe("buyer-subject");
                     return Response.json({
                         enabled: true,

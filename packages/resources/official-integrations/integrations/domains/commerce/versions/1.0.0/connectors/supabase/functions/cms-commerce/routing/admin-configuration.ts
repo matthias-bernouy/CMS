@@ -21,7 +21,7 @@ import {
 } from "../routes/workflow/index.ts";
 import { createC2cPolicyRevision } from "../routes/configuration/protected-policy/index.ts";
 import { getC2cPolicies } from "../routes/configuration/read-model/policies.ts";
-import { syncBuyerLegalDocuments } from "../routes/configuration/buyer-legal.ts";
+import { syncBuyerLegalDocuments } from "../routes/configuration/buyer-legal/index.ts";
 
 export async function handleAdminConfigurationRoute(route: string, request: Request): Promise<Response | null> {
     if (route === "/admin/settings") {

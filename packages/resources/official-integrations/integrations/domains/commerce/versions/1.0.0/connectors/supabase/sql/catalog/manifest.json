@@ -15,7 +15,7 @@
         { "file": "offers/price-agreement-state.sql" },
         { "file": "offers/assert-offer-publication-ready.sql" },
         { "file": "settings/update-settings.sql" },
-        { "file": "settings/sync-buyer-legal-documents.sql" },
+        { "manifest": "settings/buyer-legal/manifest.json" },
         { "file": "sellers/register-my-seller.sql" },
         { "file": "sellers/update-my-seller.sql" },
         { "file": "sellers/verify-pending-seller-payout-eligibility.sql" },

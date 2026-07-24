@@ -4,7 +4,7 @@ import { json } from "../../../core/http.ts";
 import {
     buyerLegalVerificationContext,
     fetchVerifiedBuyerLegalDocuments,
-} from "../../../core/published-page-snapshot.ts";
+} from "../../configuration/buyer-legal/published-page-snapshot.ts";
 import { camelize, integer } from "../../../core/records.ts";
 import { rpc } from "../../../core/rest.ts";
 import type { JsonRecord } from "../../../core/types.ts";
@@ -12,10 +12,12 @@ import type { JsonRecord } from "../../../core/types.ts";
 export async function getBuyerLegalRequirements(request: Request): Promise<Response> {
     const id = orderId(request);
     const buyerId = cmsUserId(request);
-    const verified = await verifiedLegalDocuments(id, buyerId, null);
+    const provider = paymentProvider(request);
+    const verified = await verifiedLegalDocuments(id, buyerId, provider);
     const result = await rpc("get_fresh_buyer_legal_requirements", {
         p_order_id: id,
         p_buyer_cms_user_id: buyerId,
+        p_payment_provider: provider,
         p_verified_documents: verified,
     });
     return json(camelize(result));
@@ -77,4 +79,13 @@ function orderId(request: Request): number {
     return value;
 }
 
+function paymentProvider(request: Request): string {
+    const value = new URL(request.url).searchParams.get("paymentProvider")?.trim() ?? "";
+    if (!providerPattern.test(value)) {
+        throw new HttpError(400, "paymentProvider is invalid");
+    }
+    return value;
+}
+
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const providerPattern = /^[a-z][a-z0-9_.-]{1,79}$/;
