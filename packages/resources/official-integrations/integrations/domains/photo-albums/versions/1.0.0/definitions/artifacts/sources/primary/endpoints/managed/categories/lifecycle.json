@@ -1,0 +1,107 @@
+[
+    {
+        "endpointId": "deleteCategory",
+        "method": "DELETE",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/category",
+        "params": [
+            {
+                "name": "id",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "version": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "version"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "id": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "deleted",
+                        "id"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "reorderCategories",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/categories/reorder",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "categoryIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                }
+            },
+            "required": [
+                "categoryIds"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "categoryIds": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    },
+                    "required": [
+                        "categoryIds"
+                    ]
+                }
+            }
+        ]
+    }
+]

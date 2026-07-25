@@ -30,6 +30,7 @@
         "./integrations/emailer/*": "./integrations/providers/emailer/*",
         "./integrations/mondial-relay/*": "./integrations/providers/mondial-relay/*",
         "./integrations/newsletter/*": "./integrations/domains/newsletter/*",
+        "./integrations/photo-albums/*": "./integrations/domains/photo-albums/*",
         "./integrations/stripe-connect/*": "./integrations/providers/stripe-connect/*",
         "./integrations/user-account/*": "./integrations/domains/user-account/*"
     }

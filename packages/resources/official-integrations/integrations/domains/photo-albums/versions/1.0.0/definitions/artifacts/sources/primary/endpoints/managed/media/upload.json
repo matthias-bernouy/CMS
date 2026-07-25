@@ -1,0 +1,34 @@
+[
+    {
+        "endpointId": "uploadPhoto",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/photos/upload",
+        "params": [
+            {
+                "name": "albumId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../../schemas/photo.json"
+                }
+            }
+        ]
+    }
+]

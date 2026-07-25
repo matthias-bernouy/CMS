@@ -1,0 +1,16 @@
+{
+    "schema": "cms.integration.index.v1",
+    "kind": "photo-albums",
+    "label": "Photo Albums",
+    "category": "Media",
+    "description": "Publish categorized photo albums with managed originals, responsive Source images, and backoffice editing.",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
+    "versions": [
+        {
+            "version": "1.0.0",
+            "path": "versions/1.0.0",
+            "definition": "versions/1.0.0/definition.json"
+        }
+    ]
+}
