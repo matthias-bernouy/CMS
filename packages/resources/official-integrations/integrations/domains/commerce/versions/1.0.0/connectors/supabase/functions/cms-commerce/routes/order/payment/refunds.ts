@@ -52,7 +52,14 @@ export async function requestOrderRefund(request: Request): Promise<Response> {
     if (hasLegacyAmount === hasAnyAllocation) {
         throw new HttpError(400, "exactly one refund amount form is required");
     }
-    const idempotencyKey = hasAnyAllocation ? requiredText(body.idempotencyKey, "idempotencyKey") : undefined;
+    // Stable 1.0.0 callers may not send a key yet. In that case Postgres selects
+    // the seven-argument compatibility overload and keeps the historical
+    // one-shot behavior. New callers get durable replay protection through
+    // the eight-argument overload.
+    const idempotencyKey =
+        hasAnyAllocation && body.idempotencyKey !== undefined
+            ? requiredText(body.idempotencyKey, "idempotencyKey")
+            : undefined;
     const result = hasAnyAllocation
         ? await rpc("request_allocated_order_refund", {
               p_order_id: orderId,

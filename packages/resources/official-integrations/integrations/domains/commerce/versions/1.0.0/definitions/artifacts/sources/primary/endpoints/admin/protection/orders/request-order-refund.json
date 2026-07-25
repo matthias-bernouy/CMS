@@ -47,7 +47,7 @@
                 "idempotencyKey": {
                     "type": "string",
                     "maxLength": 200,
-                    "description": "Opaque client operation key required with allocated refund fields. Commerce namespaces and hashes it server-side."
+                    "description": "Opaque client operation key for durable replay protection on allocated refunds. Stable keyless callers remain supported with one-shot behavior; Commerce namespaces and hashes supplied keys server-side."
                 },
                 "merchandiseRefundAmount": {
                     "type": "number",

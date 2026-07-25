@@ -43,7 +43,7 @@ describe("commerce allocated refund HTTP idempotency", () => {
         }
     });
 
-    test("does not accept a raw business key in place of admin refund idempotency", async () => {
+    test("never trusts a raw business key when preserving the keyless stable binding", async () => {
         const response = await requestCommerce("/admin/order/refund", {
             userId: "admin-7",
             userRole: "admin",
@@ -57,8 +57,14 @@ describe("commerce allocated refund HTTP idempotency", () => {
             },
         });
 
-        expect(response.status).toBe(400);
-        expect(await response.json()).toEqual({ error: "idempotencyKey is required" });
-        expect(capturedFetches()).toHaveLength(0);
+        expect(response.status).toBe(201);
+        const [call] = capturedFetches();
+        expect(call?.body).toMatchObject({
+            p_order_id: 42,
+            p_actor_kind: "admin",
+            p_actor_id: "admin-7",
+        });
+        expect(call?.body).not.toHaveProperty("p_business_key");
+        expect(call?.body).not.toHaveProperty("p_idempotency_key");
     });
 });
