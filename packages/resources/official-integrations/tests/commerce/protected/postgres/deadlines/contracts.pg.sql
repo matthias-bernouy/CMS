@@ -43,4 +43,5 @@ grant execute on all functions in schema extensions to service_role;
 
 \ir payment-confirmation.sql
 \ir ../../../sql/order/deadlines.sql
+\ir shipment-creating-cancellation.sql
 \ir seller-response.sql

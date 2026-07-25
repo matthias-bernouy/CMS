@@ -111,9 +111,10 @@ begin
         exit when v_processed >= v_limit;
     end loop;
 
-    -- A buyer cancellation after label creation may be auto-approved only
-    -- after the scan grace period and only while both seller handoff and
-    -- trusted carrier acceptance are still absent under the same row locks.
+    -- A buyer cancellation while shipment creation is in flight or after
+    -- label creation may be auto-approved only after the scan grace period
+    -- and only while both seller handoff and trusted carrier acceptance are
+    -- still absent under the same row locks.
     if v_processed < v_limit then
         for v_candidate in
             select request.id, request.order_id
@@ -122,7 +123,9 @@ begin
             join commerce.order_fulfillments fulfillment on fulfillment.order_id = request.order_id
             where request.status = 'requested'
               and request.requested_by_kind = 'buyer'
-              and fulfillment.status in ('awaiting_shipment', 'label_created')
+              and fulfillment.status in (
+                  'awaiting_shipment', 'shipment_creating', 'label_created'
+              )
               and fulfillment.payment_confirmed_at is not null
               and fulfillment.scan_grace_deadline <= now()
               and fulfillment.seller_handoff_declared_at is null
@@ -172,7 +175,8 @@ begin
                   select 1 from commerce.order_cancellation_requests request
                   where request.order_id = order_row.id
                     and request.status in (
-                        'requested', 'approved', 'refund_pending', 'manual_review'
+                        'requested', 'approved', 'provider_cancellation_pending',
+                        'refund_pending', 'manual_review'
                     )
               )
               and not exists (
@@ -243,7 +247,10 @@ begin
               and not exists (
                   select 1 from commerce.order_cancellation_requests request
                   where request.order_id = order_row.id
-                    and request.status in ('requested', 'approved', 'refund_pending', 'manual_review')
+                    and request.status in (
+                        'requested', 'approved', 'provider_cancellation_pending',
+                        'refund_pending', 'manual_review'
+                    )
               )
             order by fulfillment.scan_grace_deadline, order_row.id
             limit v_limit - v_processed

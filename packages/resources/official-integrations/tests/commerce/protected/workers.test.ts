@@ -57,5 +57,9 @@ describe("commerce 1.0.0 protected workers", () => {
         expect(schema).toContain("manual review is required before any financial decision");
         expect(schema).toContain("review_order_cancellation_as(");
         expect(schema).toContain("v_candidate.id, 'approved', 'system', 'deadline-worker:'");
+        expect(schema).toContain("'awaiting_shipment', 'shipment_creating', 'label_created'");
+        expect(schema).toContain(
+            "'requested', 'approved', 'provider_cancellation_pending',\n                        'refund_pending', 'manual_review'",
+        );
     });
 });
