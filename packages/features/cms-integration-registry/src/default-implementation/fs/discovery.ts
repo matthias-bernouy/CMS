@@ -1,5 +1,5 @@
-import type { Dirent } from "node:fs";
-import { lstat, readdir, realpath } from "node:fs/promises";
+import { constants, type Dirent } from "node:fs";
+import { lstat, open, opendir, realpath } from "node:fs/promises";
 import { isAbsolute, join, relative, sep } from "node:path";
 import type {
     IntegrationRegistryCatalogDiagnostic,
@@ -8,11 +8,21 @@ import type {
 
 const INDEX_NAME = "integration.json";
 
+export const RESERVED_FS_INTEGRATION_REGISTRY_DIRECTORIES = Object.freeze([
+    ".registry",
+    ".staging",
+    ".quarantine",
+    ".locks",
+    ".journals",
+]);
+const reservedDirectories = new Set(RESERVED_FS_INTEGRATION_REGISTRY_DIRECTORIES);
+
 export type FsIntegrationRegistryCatalogLimits = Readonly<{
     maxDepth: number;
     maxDirectories: number;
     maxIntegrations: number;
     maxIndexBytes: number;
+    maxEntriesPerDirectory: number;
 }>;
 
 export const DEFAULT_FS_INTEGRATION_REGISTRY_CATALOG_LIMITS: FsIntegrationRegistryCatalogLimits = Object.freeze({
@@ -20,10 +30,17 @@ export const DEFAULT_FS_INTEGRATION_REGISTRY_CATALOG_LIMITS: FsIntegrationRegist
     maxDirectories: 4_096,
     maxIntegrations: 4_096,
     maxIndexBytes: 1_024 * 1_024,
+    maxEntriesPerDirectory: 8_192,
 });
 
+export type FsIntegrationRegistryCandidate = Readonly<{
+    root: string;
+    indexPath: string;
+    indexBytes: Uint8Array;
+}>;
+
 export type FsIntegrationRegistryDiscovery = {
-    candidates: string[];
+    candidates: FsIntegrationRegistryCandidate[];
     diagnostics: IntegrationRegistryCatalogDiagnostic[];
     quarantined: IntegrationRegistryQuarantinedEntry[];
 };
@@ -42,7 +59,7 @@ export async function discoverIntegrationPackages(
     const visited = new Set<string>();
     let directoryCount = 0;
     await scanDirectory(root, 0);
-    discovery.candidates.sort(compareText);
+    discovery.candidates.sort((left, right) => compareText(left.root, right.root));
     return discovery;
 
     async function scanDirectory(directory: string, depth: number): Promise<void> {
@@ -74,7 +91,7 @@ export async function discoverIntegrationPackages(
 
         let entries: Dirent<string>[];
         try {
-            entries = await readdir(canonicalDirectory, { withFileTypes: true });
+            entries = await readBoundedEntries(canonicalDirectory, limits.maxEntriesPerDirectory);
         } catch (error) {
             rejectStructure(canonicalDirectory, errorMessage(error));
             return;
@@ -119,7 +136,15 @@ export async function discoverIntegrationPackages(
             rejectStructure(directory, `Integration registry contains more than ${limits.maxIntegrations} packages`);
             return;
         }
-        discovery.candidates.push(directory);
+        try {
+            discovery.candidates.push({
+                root: directory,
+                indexPath,
+                indexBytes: await readStableIndex(indexPath, limits.maxIndexBytes),
+            });
+        } catch (error) {
+            rejectStructure(directory, errorMessage(error));
+        }
     }
 
     function rejectStructure(source: string, message: string): void {
@@ -130,6 +155,50 @@ export async function discoverIntegrationPackages(
             message,
         });
         discovery.quarantined.push({ source, diagnosticCodes: ["invalid-structure"] });
+    }
+}
+
+async function readBoundedEntries(directory: string, maxEntries: number): Promise<Dirent<string>[]> {
+    const entries: Dirent<string>[] = [];
+    const handle = await opendir(directory);
+    for await (const entry of handle) {
+        if (entry.isDirectory() && reservedDirectories.has(entry.name)) {
+            continue;
+        }
+        entries.push(entry);
+        if (entries.length > maxEntries) {
+            throw new Error(`Integration registry directory contains more than ${maxEntries} entries`);
+        }
+    }
+    return entries;
+}
+
+async function readStableIndex(path: string, maxBytes: number): Promise<Uint8Array> {
+    const pathMetadata = await lstat(path);
+    const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    try {
+        const metadata = await handle.stat();
+        assertSameFile(pathMetadata, metadata, path);
+        if (!metadata.isFile() || metadata.size > maxBytes) {
+            throw new Error(`${path} exceeds ${maxBytes} bytes`);
+        }
+        const bytes = new Uint8Array(maxBytes + 1);
+        let offset = 0;
+        while (offset < bytes.byteLength) {
+            const { bytesRead } = await handle.read(bytes, offset, bytes.byteLength - offset, null);
+            if (bytesRead === 0) {
+                break;
+            }
+            offset += bytesRead;
+        }
+        if (offset > maxBytes) {
+            throw new Error(`${path} exceeds ${maxBytes} bytes`);
+        }
+        assertSameFile(metadata, await handle.stat(), path);
+        assertSameFile(metadata, await lstat(path), path);
+        return bytes.subarray(0, offset);
+    } finally {
+        await handle.close();
     }
 }
 
@@ -154,4 +223,20 @@ function errorMessage(error: unknown): string {
 
 function compareText(left: string, right: string): number {
     return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function assertSameFile(
+    expected: Readonly<{ dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number }>,
+    actual: Readonly<{ dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number }>,
+    path: string,
+): void {
+    if (
+        expected.dev !== actual.dev ||
+        expected.ino !== actual.ino ||
+        expected.size !== actual.size ||
+        expected.mtimeMs !== actual.mtimeMs ||
+        expected.ctimeMs !== actual.ctimeMs
+    ) {
+        throw new Error(`Integration registry index changed while reading: ${path}`);
+    }
 }

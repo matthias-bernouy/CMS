@@ -39,6 +39,7 @@ describe("immutable integration registry version manifests", () => {
         const written = await writeIntegrationRegistryVersionManifest({ integrationRoot, package: input });
         const loaded = await readIntegrationRegistryVersionManifest({
             path: written.path,
+            integrationRoot,
             expectedKind: "manifest-demo",
             expectedVersion: "1.0.0",
         });
@@ -75,6 +76,7 @@ describe("immutable integration registry version manifests", () => {
         await expect(
             readIntegrationRegistryVersionManifest({
                 path: written.path,
+                integrationRoot,
                 expectedKind: "manifest-demo",
                 expectedVersion: "1.0.0",
             }),

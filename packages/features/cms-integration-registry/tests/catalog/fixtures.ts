@@ -23,8 +23,15 @@ export function catalogEntry(kind: string, version = "1.0.0"): IntegrationRegist
             {
                 kind,
                 version,
+                integrationRoot: `/registry/${kind}`,
                 packageRoot: `/registry/${kind}/versions/${version}`,
                 definition: "definition.json",
+                definitionSnapshot: {
+                    kind,
+                    label: kind,
+                    version,
+                    inputs: [],
+                },
                 releaseNotes: "README.md",
                 package: {
                     schema: "cms.integration.package.v1",

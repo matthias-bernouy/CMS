@@ -1,4 +1,3 @@
-import { isAbsolute, relative, resolve, sep } from "node:path";
 import type {
     IntegrationAsset,
     IntegrationDefinition,
@@ -7,7 +6,6 @@ import type {
     IntegrationDefinitionSummary,
     IntegrationDefinitionVersion,
 } from "@bernouy/cms-integrations";
-import { loadIntegrationDefinitionFromVersionRoot } from "@bernouy/cms-integrations/fs";
 import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import type { IntegrationRegistryCatalogSnapshotProvider } from "../../interfaces/catalog";
 import { readSnapshotIntegrationAsset } from "./asset";
@@ -55,12 +53,7 @@ export class SnapshotIntegrationDefinitionRepository implements IntegrationDefin
         if (!location) {
             throw new Error(`Catalog snapshot is missing exact location "${kind}@${entry.version}"`);
         }
-        return await loadIntegrationDefinitionFromVersionRoot({
-            definitionPath: definitionPath(location.packageRoot, location.definition),
-            expectedKind: kind,
-            expectedVersion: entry.version,
-            versionRoot: location.packageRoot,
-        });
+        return location.definitionSnapshot;
     }
 
     async getAsset(kind: string, version: string | undefined, path: string): Promise<IntegrationAsset | null> {
@@ -72,14 +65,4 @@ export class SnapshotIntegrationDefinitionRepository implements IntegrationDefin
         const entry = resolveSnapshotVersion(index, version, this.defaultChannel);
         return entry ? await readSnapshotIntegrationAsset(this.packages, kind, entry.version, path) : null;
     }
-}
-
-function definitionPath(packageRoot: string, definition: string): string {
-    const root = resolve(packageRoot);
-    const path = resolve(root, definition);
-    const rel = relative(root, path);
-    if (rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
-        throw new Error(`Definition path escapes integration version root: ${definition}`);
-    }
-    return path;
 }

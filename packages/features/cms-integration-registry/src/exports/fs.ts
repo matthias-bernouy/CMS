@@ -4,6 +4,8 @@ export {
 } from "../default-implementation/fs/builder";
 export {
     DEFAULT_FS_INTEGRATION_REGISTRY_CATALOG_LIMITS,
+    RESERVED_FS_INTEGRATION_REGISTRY_DIRECTORIES,
+    type FsIntegrationRegistryCandidate,
     type FsIntegrationRegistryCatalogLimits,
 } from "../default-implementation/fs/discovery";
 export {

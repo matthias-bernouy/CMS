@@ -16,3 +16,4 @@ export {
     type FsIntegrationPackageResolverConfig,
 } from "../default-implementation/fs-definition/package-resolver";
 export { resolveIntegrationDefinitionFile } from "../default-implementation/fs-definition/definition-bundle/resolver";
+export { parseIntegrationDefinitionIndex } from "../default-implementation/fs-definition/repositorySupport";

@@ -10,12 +10,15 @@ describe("integration registry catalog snapshot", () => {
         });
 
         alpha.index.label = "changed after construction";
+        alpha.versions[0]!.definitionSnapshot.label = "changed after construction";
 
         expect(snapshot.health).toBe("healthy");
         expect(snapshot.summaries.map((summary) => summary.kind)).toEqual(["alpha", "zulu"]);
         expect(snapshot.getIndex("alpha")?.label).toBe("alpha");
         expect(snapshot.listVersions("alpha")).toHaveLength(1);
         expect(snapshot.locateExactVersion("alpha", "1.0.0")?.package.digest).toBe("a".repeat(64));
+        expect(snapshot.locateExactVersion("alpha", "1.0.0")?.definitionSnapshot.label).toBe("alpha");
+        expect(Object.isFrozen(snapshot.locateExactVersion("alpha", "1.0.0")?.definitionSnapshot)).toBe(true);
         expect(snapshot.locateExactVersion("missing", "1.0.0")).toBeNull();
         expect(() => {
             (snapshot.summaries as unknown[]).push({});

@@ -27,7 +27,7 @@ export async function buildFsIntegrationRegistryCatalogSnapshot(
         try {
             entries.push(await validateIntegrationCandidate(candidate, config.packageLimits));
         } catch (error) {
-            quarantineCandidate(candidate, error, diagnostics, quarantined);
+            quarantineCandidate(candidate.root, error, diagnostics, quarantined);
         }
     }
     const duplicateKinds = duplicateKindSet(entries);

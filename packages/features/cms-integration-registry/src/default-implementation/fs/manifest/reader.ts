@@ -1,5 +1,6 @@
 import { constants } from "node:fs";
-import { lstat, open } from "node:fs/promises";
+import { lstat, open, realpath } from "node:fs/promises";
+import { isAbsolute, relative, sep } from "node:path";
 import type {
     IntegrationPackageEnvelopeV1,
     IntegrationPackageLimits,
@@ -23,6 +24,7 @@ const utf8 = new TextDecoder("utf-8", { fatal: true });
 
 export type ReadIntegrationRegistryVersionManifestOptions = Readonly<{
     path: string;
+    integrationRoot: string;
     expectedKind: string;
     expectedVersion: string;
     limits?: Partial<IntegrationPackageLimits>;
@@ -41,6 +43,7 @@ export async function readIntegrationRegistryVersionManifest(
     const limits = resolveIntegrationPackageLimits(options.limits);
     let bytes: Uint8Array;
     try {
+        await assertManifestWithinIntegrationRoot(options.integrationRoot, options.path);
         bytes = await readStableFile(options.path, manifestDocumentByteLimit(limits));
     } catch (error) {
         if (isNodeError(error) && error.code === "ENOENT") {
@@ -77,6 +80,19 @@ export async function readIntegrationRegistryVersionManifest(
         canonicalBytes,
         digest,
     };
+}
+
+async function assertManifestWithinIntegrationRoot(integrationRoot: string, path: string): Promise<void> {
+    const rootMetadata = await lstat(integrationRoot);
+    if (rootMetadata.isSymbolicLink() || !rootMetadata.isDirectory()) {
+        throw new Error("Integration root must be a non-symlink directory");
+    }
+    const root = await realpath(integrationRoot);
+    const target = await realpath(path);
+    const relation = relative(root, target);
+    if (relation === ".." || relation.startsWith(`..${sep}`) || isAbsolute(relation)) {
+        throw new Error("Integration registry version manifest escapes its integration root");
+    }
 }
 
 function parseManifestDocument(value: unknown): IntegrationRegistryVersionManifestV1 {

@@ -1,4 +1,5 @@
 import type {
+    IntegrationDefinition,
     IntegrationDefinitionIndex,
     IntegrationDefinitionSummary,
     IntegrationDefinitionVersion,
@@ -42,8 +43,11 @@ export type IntegrationRegistryPackageMetadata = Readonly<{
 export type IntegrationRegistryExactVersionLocation = Readonly<{
     kind: string;
     version: string;
+    integrationRoot: string;
     packageRoot: string;
     definition: string;
+    definitionSnapshot: IntegrationDefinition;
+    manifestPath?: string;
     releaseNotes?: string;
     legacy?: boolean;
     package: IntegrationRegistryPackageMetadata;

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildFsIntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry/fs";
@@ -117,6 +117,80 @@ describe("filesystem integration registry snapshot builder", () => {
                 stage: "discovery",
                 source: oversized,
                 message: expect.stringContaining("exceeds 512 bytes"),
+            }),
+        ]);
+    });
+
+    test("bounds the complete package before hydrating a large bloc", async () => {
+        const root = registryRoot();
+        const integrationRoot = writeIntegrationFixture(root, "demo");
+        const versionRoot = join(integrationRoot, "versions", "1.0.0");
+        const blocRoot = join(versionRoot, "blocs", "large");
+        mkdirSync(blocRoot, { recursive: true });
+        writeFileSync(join(blocRoot, "Bloc.ts"), "x".repeat(513));
+        writeFileSync(
+            join(versionRoot, "definition.json"),
+            JSON.stringify({
+                schema: "cms.integration.definition.v1",
+                kind: "demo",
+                label: "Demo",
+                version: "1.0.0",
+                inputs: [],
+                artifacts: [{ type: "bloc", bloc: { tag: "large-bloc", name: "Large", path: "blocs/large" } }],
+            }),
+        );
+
+        const snapshot = await buildFsIntegrationRegistryCatalogSnapshot({
+            root,
+            packageLimits: { maxFileBytes: 512 },
+        });
+
+        expect(snapshot.summaries).toEqual([]);
+        expect(snapshot.diagnostics).toEqual([
+            expect.objectContaining({
+                code: "invalid-package",
+                stage: "package",
+                message: expect.stringContaining("file exceeds 512 decoded bytes"),
+            }),
+        ]);
+    });
+
+    test("bounds file count before definition hydration", async () => {
+        const root = registryRoot();
+        const integrationRoot = writeIntegrationFixture(root, "demo");
+        const versionRoot = join(integrationRoot, "versions", "1.0.0");
+        writeFileSync(join(versionRoot, "extra-a.txt"), "a");
+        writeFileSync(join(versionRoot, "extra-b.txt"), "b");
+
+        const snapshot = await buildFsIntegrationRegistryCatalogSnapshot({ root, packageLimits: { maxFiles: 3 } });
+
+        expect(snapshot.summaries).toEqual([]);
+        expect(snapshot.diagnostics).toEqual([
+            expect.objectContaining({
+                code: "invalid-package",
+                stage: "package",
+                message: expect.stringMatching(/exceeds 3 files|remaining file and directory limits/),
+            }),
+        ]);
+    });
+
+    test("rejects a symlink used as an indexed version root", async () => {
+        const root = registryRoot();
+        const integrationRoot = writeIntegrationFixture(root, "demo");
+        const versionRoot = join(integrationRoot, "versions", "1.0.0");
+        const target = join(integrationRoot, "version-target");
+        rmSync(versionRoot, { recursive: true });
+        mkdirSync(target);
+        symlinkSync(target, versionRoot);
+
+        const snapshot = await buildFsIntegrationRegistryCatalogSnapshot({ root });
+
+        expect(snapshot.summaries).toEqual([]);
+        expect(snapshot.diagnostics).toEqual([
+            expect.objectContaining({
+                code: "invalid-version",
+                stage: "version",
+                message: expect.stringContaining("non-symlink directory"),
             }),
         ]);
     });
