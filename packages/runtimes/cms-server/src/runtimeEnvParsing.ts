@@ -52,6 +52,23 @@ export function parseNonNegativeInteger(raw: string | undefined, name: string, f
     return Number(raw);
 }
 
+export function parsePositiveInteger(raw: string | undefined, name: string, fallback?: number): number {
+    if (raw === undefined) {
+        if (fallback !== undefined) {
+            return fallback;
+        }
+        throw new Error(`${name} is required`);
+    }
+    if (!/^\d+$/.test(raw)) {
+        throw new Error(`${name} must be a positive integer`);
+    }
+    const value = Number(raw);
+    if (!Number.isSafeInteger(value) || value <= 0) {
+        throw new Error(`${name} must be a positive safe integer`);
+    }
+    return value;
+}
+
 export function parseBoolean(raw: string | undefined, name: string, fallback: boolean): boolean {
     if (raw === undefined) {
         return fallback;
