@@ -7,6 +7,7 @@
         { "file": "create-share.sql" },
         { "file": "revoke-share.sql" },
         { "file": "public-read.sql" },
-        { "file": "admin-transition.sql" }
+        { "file": "admin-transition.sql" },
+        { "file": "legacy-ownership-cleanup.sql" }
     ]
 }

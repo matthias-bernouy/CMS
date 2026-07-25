@@ -9,7 +9,7 @@
       "description": "Read one sales partner or return defaults for a new account."
     },
     "params": [
-      { "name": "id", "in": "query", "type": "number" }
+      { "name": "id", "in": "query", "type": "string" }
     ],
     "headers": {
       "$include": "../../../shared/admin-headers.json"

@@ -1,8 +1,8 @@
 {
   "type": "object",
   "properties": {
-    "id": { "type": "number" },
-    "moduleItemId": { "type": "number" },
+    "id": { "type": "number", "nullable": true },
+    "moduleItemId": { "type": "number", "nullable": true },
     "moduleName": { "type": "string" },
     "code": { "type": "string" },
     "name": { "type": "string" },

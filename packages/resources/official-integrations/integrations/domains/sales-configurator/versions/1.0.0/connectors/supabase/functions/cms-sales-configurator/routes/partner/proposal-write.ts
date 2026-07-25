@@ -22,7 +22,7 @@ export async function saveMyProposalDraft(request: Request): Promise<Response> {
     const selections = proposalSelections(body.selections);
     const customItems = customRequests(body.customRequests);
     const result = await rpc("save_partner_proposal_draft", {
-        p_actor_cms_user_id: partner.cmsUserId,
+        p_partner_account_id: partner.id,
         p_proposal_id: queryInteger(request, "id") ?? integer(body.id, "id") ?? null,
         p_client_id: integer(body.clientId, "clientId", true),
         p_proposal: {
@@ -52,7 +52,7 @@ export async function publishMyProposal(request: Request): Promise<Response> {
     const partner = await requirePartner(request, "proposals.publish");
     const body = await readJsonObject(request);
     const result = await rpc("publish_partner_proposal", {
-        p_actor_cms_user_id: partner.cmsUserId,
+        p_partner_account_id: partner.id,
         p_proposal_id: queryInteger(request, "id") ?? integer(body.proposalId, "proposalId", true),
         p_expected_version_id: integer(body.expectedVersionId, "expectedVersionId", true),
         p_expected_revision: integer(body.expectedRevision, "expectedRevision", true),
@@ -80,7 +80,7 @@ export async function createMyProposalShare(request: Request): Promise<Response>
     const expiresAt = optionalFutureTimestamp(body.expiresAt);
     const token = createShareToken();
     const result = await rpc("create_partner_proposal_share", {
-        p_actor_cms_user_id: partner.cmsUserId,
+        p_partner_account_id: partner.id,
         p_proposal_id: queryInteger(request, "id") ?? integer(body.proposalId, "proposalId", true),
         p_expires_at: expiresAt,
         p_token_hash: await shareTokenHash(token),
@@ -100,7 +100,7 @@ export async function revokeMyProposalShare(request: Request): Promise<Response>
     const partner = await requirePartner(request, "proposals.share");
     const body = await readJsonObject(request);
     const result = await rpc("revoke_partner_proposal_share", {
-        p_actor_cms_user_id: partner.cmsUserId,
+        p_partner_account_id: partner.id,
         p_proposal_id: queryInteger(request, "id") ?? integer(body.proposalId, "proposalId", true),
         p_share_id: queryInteger(request, "shareId") ?? integer(body.shareId, "shareId", true),
     });

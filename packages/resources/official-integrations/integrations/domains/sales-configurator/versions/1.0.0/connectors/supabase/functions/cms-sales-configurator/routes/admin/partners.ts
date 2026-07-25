@@ -1,7 +1,16 @@
 import { HttpError } from "../../core/errors.ts";
 import { json } from "../../core/http.ts";
 import { addSearch, listQuery } from "../../services/query.ts";
-import { camelize, enumValue, integer, queryInteger, readJsonObject, requiredText, text } from "../../core/records.ts";
+import {
+    camelize,
+    enumValue,
+    integer,
+    opaqueText,
+    queryInteger,
+    readJsonObject,
+    requiredText,
+    text,
+} from "../../core/records.ts";
 import { listRows, one, restJson, rpc } from "../../core/rest.ts";
 import { rpcEntity, rpcRecord } from "../../core/rpc-result.ts";
 import type { JsonRecord } from "../../core/types.ts";
@@ -31,8 +40,23 @@ export async function listPartners(request: Request): Promise<Response> {
 }
 
 export async function getPartner(request: Request): Promise<Response> {
-    const id = integer(new URL(request.url).searchParams.get("id"), "id", true)!;
+    const idValue = new URL(request.url).searchParams.get("id");
+    if (idValue === "__new__") {
+        return json(newPartner());
+    }
+    const id = integer(idValue, "id", true)!;
     return json(await partnerById(id));
+}
+
+function newPartner(): JsonRecord {
+    return {
+        id: null,
+        cmsUserId: "",
+        status: "active",
+        displayName: "",
+        contactEmail: null,
+        capabilities: [],
+    };
 }
 
 async function partnerById(id: number): Promise<JsonRecord> {
@@ -53,7 +77,7 @@ export async function upsertPartner(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
     const result = await rpc("upsert_partner_account", {
         p_partner_account_id: queryInteger(request, "id") ?? integer(body.id, "id") ?? null,
-        p_cms_user_id: requiredText(body.cmsUserId, "cmsUserId"),
+        p_cms_user_id: opaqueText(body.cmsUserId, "cmsUserId"),
         p_payload: {
             display_name: requiredText(body.displayName, "displayName"),
             contact_email: text(body.contactEmail) ?? null,
@@ -84,18 +108,26 @@ async function capabilitiesFor(ids: number[]): Promise<Map<number, string[]>> {
 export async function setPartnerCapability(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
     const capability = enumValue(body.capability, "capability", capabilities, true)!;
-    if (typeof body.enabled !== "boolean") {
-        throw new HttpError(400, "enabled must be a boolean");
-    }
+    const enabled = canonicalBoolean(body.enabled, "enabled");
     rpcRecord(
         await rpc("set_partner_capability", {
             p_partner_account_id:
                 queryInteger(request, "partnerId") ?? integer(body.partnerAccountId, "partnerAccountId", true),
             p_capability: capability,
-            p_enabled: body.enabled,
+            p_enabled: enabled,
         }),
         "partner capability",
     );
     const id = queryInteger(request, "partnerId") ?? integer(body.partnerAccountId, "partnerAccountId", true)!;
     return json(await partnerById(id));
+}
+
+function canonicalBoolean(value: unknown, name: string): boolean {
+    if (value === true || value === "true") {
+        return true;
+    }
+    if (value === false || value === "false") {
+        return false;
+    }
+    throw new HttpError(400, `${name} must be a boolean`);
 }

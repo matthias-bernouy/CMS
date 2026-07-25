@@ -10,7 +10,7 @@ set search_path = ''
 as $$
 declare
     v_payload jsonb := sales_configurator.require_json_object(p_payload, 'payload');
-    v_cms_user_id text := sales_configurator.require_bounded_text(
+    v_cms_user_id text := sales_configurator.require_opaque_identifier(
         p_cms_user_id,
         'cmsUserId',
         512

@@ -1,18 +1,46 @@
 {
   "type": "object",
   "properties": {
-    "variantItemId": { "type": "number" },
-    "variantName": { "type": "string" },
-    "featureItemId": { "type": "number" },
-    "featureName": { "type": "string" },
+    "id": { "type": "string" },
+    "variantItemId": { "type": "number", "nullable": true },
+    "variantName": { "type": "string", "nullable": true },
+    "variant": {
+      "type": "object",
+      "nullable": true,
+      "properties": {
+        "id": { "type": "number" },
+        "kind": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "lookupSubtitle": { "type": "string" }
+      },
+      "required": ["id", "kind", "code", "name", "lookupSubtitle"]
+    },
+    "featureItemId": { "type": "number", "nullable": true },
+    "featureName": { "type": "string", "nullable": true },
+    "feature": {
+      "type": "object",
+      "nullable": true,
+      "properties": {
+        "id": { "type": "number" },
+        "kind": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "lookupSubtitle": { "type": "string" }
+      },
+      "required": ["id", "kind", "code", "name", "lookupSubtitle"]
+    },
     "availability": { "type": "string" },
     "pricingMode": { "type": "string" },
     "unitAmountCents": { "type": "number", "nullable": true },
     "sortOrder": { "type": "number" }
   },
   "required": [
+    "id",
     "variantItemId",
+    "variant",
     "featureItemId",
+    "feature",
     "availability",
     "pricingMode",
     "sortOrder"

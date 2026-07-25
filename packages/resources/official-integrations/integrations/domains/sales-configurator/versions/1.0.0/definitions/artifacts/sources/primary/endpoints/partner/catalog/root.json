@@ -21,11 +21,17 @@
             "modules": {
               "type": "array",
               "items": {
-                "$include": "../../../shapes/catalog/partner-catalog.json"
+                "$include": "../../../shapes/catalog/partner/catalog.json"
+              }
+            },
+            "selectionRows": {
+              "type": "array",
+              "items": {
+                "$include": "../../../shapes/catalog/partner/selection-row.json"
               }
             }
           },
-          "required": ["modules"]
+          "required": ["modules", "selectionRows"]
         }
       },
       {

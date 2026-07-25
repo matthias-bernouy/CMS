@@ -15,9 +15,16 @@
       "type": "object",
       "properties": {
         "companyName": { "type": "string" },
+        "companyRegistrationNumber": { "type": "string", "nullable": true },
         "contactName": { "type": "string" },
+        "contactJobTitle": { "type": "string", "nullable": true },
         "contactEmail": { "type": "string" },
-        "contactPhone": { "type": "string", "nullable": true }
+        "contactPhone": { "type": "string", "nullable": true },
+        "addressLine1": { "type": "string", "nullable": true },
+        "addressLine2": { "type": "string", "nullable": true },
+        "postalCode": { "type": "string", "nullable": true },
+        "city": { "type": "string", "nullable": true },
+        "country": { "type": "string", "nullable": true }
       },
       "required": [
         "companyName",

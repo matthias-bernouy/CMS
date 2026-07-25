@@ -9,7 +9,7 @@
       "description": "Read one variant or return defaults for a new variant."
     },
     "params": [
-      { "name": "id", "in": "query", "type": "number" }
+      { "name": "id", "in": "query", "type": "string" }
     ],
     "headers": {
       "$include": "../../../../shared/admin-headers.json"

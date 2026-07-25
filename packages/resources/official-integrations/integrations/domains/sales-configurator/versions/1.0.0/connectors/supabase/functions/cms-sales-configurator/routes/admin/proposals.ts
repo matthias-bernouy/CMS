@@ -10,7 +10,7 @@ import { hydrateProposalSummaries } from "../../services/proposals.ts";
 import { adminProposalById, proposalIdFromRequest } from "./proposal-detail.ts";
 
 const statuses = ["draft", "shared", "viewed", "accepted", "rejected", "expired", "archived"] as const;
-const proposalSelect = "id,owner_cms_user_id,client_id,reference,status,title,created_at,updated_at";
+const proposalSelect = "id,partner_account_id,client_id,reference,status,title,created_at,updated_at";
 
 export async function listAdminProposals(request: Request): Promise<Response> {
     const query = listQuery(request);
@@ -24,15 +24,15 @@ export async function listAdminProposals(request: Request): Promise<Response> {
     if (query.status) {
         params.set("status", `eq.${query.status}`);
     }
-    const [ownerIds, clientIds] = await Promise.all([
-        matchingOwnerIds(url.searchParams.get("owner")),
+    const [partnerAccountIds, clientIds] = await Promise.all([
+        matchingPartnerAccountIds(url.searchParams.get("owner")),
         matchingClientIds(url.searchParams.get("client")),
     ]);
-    if ((ownerIds && !ownerIds.length) || (clientIds && !clientIds.length)) {
+    if ((partnerAccountIds && !partnerAccountIds.length) || (clientIds && !clientIds.length)) {
         return json({ items: [], total: 0, limit: query.limit, offset: query.offset });
     }
-    if (ownerIds) {
-        params.set("owner_cms_user_id", `in.(${ownerIds.map(quoted).join(",")})`);
+    if (partnerAccountIds) {
+        params.set("partner_account_id", `in.(${partnerAccountIds.join(",")})`);
     }
     if (clientIds) {
         params.set("client_id", `in.(${clientIds.join(",")})`);
@@ -44,18 +44,18 @@ export async function listAdminProposals(request: Request): Promise<Response> {
     return json({ items: camelize(items), total, limit: query.limit, offset: query.offset });
 }
 
-async function matchingOwnerIds(value: string | null): Promise<string[] | undefined> {
+async function matchingPartnerAccountIds(value: string | null): Promise<number[] | undefined> {
     const query = safeFilterText(value);
     if (!query) {
         return undefined;
     }
     const params = new URLSearchParams({
-        select: "cms_user_id",
+        select: "id",
         or: `(cms_user_id.ilike.*${query}*,display_name.ilike.*${query}*)`,
         limit: "1000",
     });
     const rows = await restJson<JsonRecord[]>(`partner_accounts?${params}`);
-    return rows.map((row) => String(row.cms_user_id));
+    return rows.map((row) => Number(row.id)).filter(Number.isSafeInteger);
 }
 
 async function matchingClientIds(value: string | null): Promise<number[] | undefined> {
@@ -65,7 +65,7 @@ async function matchingClientIds(value: string | null): Promise<number[] | undef
     }
     const params = new URLSearchParams({
         select: "id",
-        or: `(company_name.ilike.*${query}*,contact_name.ilike.*${query}*,contact_email.ilike.*${query}*)`,
+        or: `(company_name.ilike.*${query}*,company_registration_number.ilike.*${query}*,contact_name.ilike.*${query}*,contact_email.ilike.*${query}*,city.ilike.*${query}*)`,
         limit: "1000",
     });
     const rows = await restJson<JsonRecord[]>(`clients?${params}`);
@@ -102,10 +102,6 @@ function safeFilterText(value: string | null): string | undefined {
             .replace(/[,*()[\]{}]/g, " ")
             .slice(0, 120) || undefined
     );
-}
-
-function quoted(value: string): string {
-    return `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
 }
 
 export async function getAdminProposal(request: Request): Promise<Response> {

@@ -8,10 +8,17 @@ export class SalesProposalStarter extends HTMLElement {
 
     observer = null;
     syncQueued = false;
+    catalogQuery = "";
+    dialogOpeners = new WeakMap();
+    expandedModuleIds = new Set();
 
     connectedCallback() {
         this.addEventListener("change", this.onChange);
         this.addEventListener("click", this.onClick);
+        this.addEventListener("input", this.onInput);
+        this.addEventListener("keydown", this.onKeyDown);
+        this.addEventListener("cancel", this.onCancel, true);
+        this.addEventListener("cms-source:success", this.onSourceSuccess);
         this.addEventListener("submit", this.onSubmit, true);
         this.observer = new MutationObserver(() => this.queueSync());
         this.observer.observe(this, { childList: true, subtree: true });
@@ -21,6 +28,10 @@ export class SalesProposalStarter extends HTMLElement {
     disconnectedCallback() {
         this.removeEventListener("change", this.onChange);
         this.removeEventListener("click", this.onClick);
+        this.removeEventListener("input", this.onInput);
+        this.removeEventListener("keydown", this.onKeyDown);
+        this.removeEventListener("cancel", this.onCancel, true);
+        this.removeEventListener("cms-source:success", this.onSourceSuccess);
         this.removeEventListener("submit", this.onSubmit, true);
         this.observer?.disconnect();
         this.observer = null;
@@ -55,9 +66,62 @@ export class SalesProposalStarter extends HTMLElement {
             }
         }
         this.syncFeatureAvailability();
+        this.syncCatalogVisibility();
+    };
+
+    onInput = (event) => {
+        const search = closestWithin(this, event.target, "[data-sales-catalog-search]");
+        if (!search) {
+            return;
+        }
+        this.catalogQuery = controlValue(search);
+        this.syncCatalogVisibility();
+    };
+
+    onKeyDown = (event) => {
+        const search = closestWithin(this, event.target, "[data-sales-catalog-search]");
+        if (!search || event.key !== "Escape" || !controlValue(search)) {
+            return;
+        }
+        event.preventDefault();
+        setControlValue(search, "");
+        this.catalogQuery = "";
+        this.syncCatalogVisibility();
     };
 
     onClick = (event) => {
+        const close = closestWithin(this, event.target, "[data-sales-client-dialog-close]");
+        if (close) {
+            event.preventDefault();
+            const dialog = close.closest("dialog");
+            if (dialog) {
+                this.dismissDialog(dialog);
+            }
+            return;
+        }
+        const createClient = closestWithin(this, event.target, "[data-sales-client-create-open]");
+        if (createClient) {
+            event.preventDefault();
+            const dialog = this.querySelector("[data-sales-client-create-dialog]");
+            if (dialog) {
+                this.showDialog(dialog, createClient, '[name="companyName"]');
+            }
+            return;
+        }
+        const toggle = closestWithin(this, event.target, "[data-sales-module-toggle]");
+        if (toggle) {
+            event.preventDefault();
+            const moduleId = toggle.getAttribute("data-module-id") || "";
+            if (moduleId) {
+                if (this.expandedModuleIds.has(moduleId)) {
+                    this.expandedModuleIds.delete(moduleId);
+                } else {
+                    this.expandedModuleIds.add(moduleId);
+                }
+                this.syncCatalogVisibility();
+            }
+            return;
+        }
         const add = closestWithin(this, event.target, "[data-sales-add-request]");
         if (add) {
             event.preventDefault();
@@ -72,6 +136,22 @@ export class SalesProposalStarter extends HTMLElement {
         if (remove) {
             event.preventDefault();
             remove.closest("[data-sales-custom-request-row]")?.remove();
+        }
+    };
+
+    onCancel = (event) => {
+        const dialog = event.target instanceof Element ? event.target.closest("dialog") : null;
+        if (!dialog || !this.contains(dialog)) {
+            return;
+        }
+        queueMicrotask(() => this.restoreDialogFocus(dialog));
+    };
+
+    onSourceSuccess = (event) => {
+        const form = closestWithin(this, event.target, "[data-sales-client-form]");
+        const dialog = form?.closest("[data-sales-client-create-dialog]");
+        if (dialog) {
+            this.dismissDialog(dialog);
         }
     };
 
@@ -105,6 +185,7 @@ export class SalesProposalStarter extends HTMLElement {
             this.querySelector("[data-sales-client-form]"),
             `${base}/saveMyClient as clientResult`,
             "sales-clients:changed",
+            true,
         );
         configureForm(
             this.querySelector("[data-sales-create-form]"),
@@ -112,6 +193,7 @@ export class SalesProposalStarter extends HTMLElement {
             REFRESH_EVENT,
         );
         this.syncFeatureAvailability();
+        this.syncCatalogVisibility();
         this.syncCreatedLinks();
         formatMoney(this, this.getAttribute("locale") || this.ownerDocument.documentElement.lang || "en");
     }
@@ -128,6 +210,99 @@ export class SalesProposalStarter extends HTMLElement {
             if (!available) {
                 setChecked(feature, false);
             }
+        }
+    }
+
+    syncCatalogVisibility() {
+        const rows = Array.from(this.querySelectorAll("[data-sales-catalog-row]"));
+        const moduleRows = rows.filter((row) => row.getAttribute("data-sales-row-kind") === "module");
+        if (moduleRows.length === 0) {
+            return;
+        }
+        const selectedModuleIds = new Set(
+            Array.from(this.querySelectorAll("[data-sales-variant]"))
+                .filter((variant) => checked(variant))
+                .map((variant) => variant.getAttribute("data-module-id"))
+                .filter(Boolean),
+        );
+        const query = normalizeSearch(this.catalogQuery);
+        const visibleModuleIds = new Set();
+
+        for (const row of moduleRows) {
+            const moduleId = row.getAttribute("data-sales-module-id") || "";
+            const selected = selectedModuleIds.has(moduleId);
+            const matches = !query || normalizeSearch(row.getAttribute("data-sales-search-text") || "").includes(query);
+            const visible = matches || selected;
+            row.hidden = !visible;
+            row.toggleAttribute("data-sales-module-selected", selected);
+            if (visible) {
+                visibleModuleIds.add(moduleId);
+            }
+            const toggle = row.querySelector("[data-sales-module-toggle]");
+            toggle?.setAttribute("aria-expanded", String(this.expandedModuleIds.has(moduleId)));
+            const selectedLabel = row.querySelector("[data-sales-module-selected-label]");
+            if (selectedLabel) {
+                selectedLabel.hidden = !selected;
+            }
+        }
+
+        for (const row of rows) {
+            if (row.getAttribute("data-sales-row-kind") === "module") {
+                continue;
+            }
+            const moduleId = row.getAttribute("data-sales-module-id") || "";
+            row.hidden = !(visibleModuleIds.has(moduleId) && this.expandedModuleIds.has(moduleId));
+        }
+
+        const noMatch = this.querySelector("[data-sales-catalog-no-match]");
+        if (noMatch) {
+            noMatch.hidden = visibleModuleIds.size > 0;
+        }
+    }
+
+    showDialog(dialog, opener, focusSelector) {
+        this.dialogOpeners.set(dialog, opener);
+        if (!(dialog.open || dialog.hasAttribute("open"))) {
+            dialog.removeAttribute("data-sales-client-dialog-focused");
+            try {
+                if (typeof dialog.showModal === "function") {
+                    dialog.showModal();
+                } else {
+                    dialog.setAttribute("open", "");
+                }
+            } catch {
+                dialog.setAttribute("open", "");
+            }
+        }
+        if (dialog.hasAttribute("data-sales-client-dialog-focused")) {
+            return;
+        }
+        queueMicrotask(() => {
+            const target = dialog.querySelector(focusSelector);
+            if ((dialog.open || dialog.hasAttribute("open")) && target) {
+                target.focus();
+                dialog.setAttribute("data-sales-client-dialog-focused", "");
+            }
+        });
+    }
+
+    dismissDialog(dialog) {
+        try {
+            if (typeof dialog.close === "function" && (dialog.open || dialog.hasAttribute("open"))) {
+                dialog.close();
+            } else {
+                dialog.removeAttribute("open");
+            }
+        } catch {
+            dialog.removeAttribute("open");
+        }
+        this.restoreDialogFocus(dialog);
+    }
+
+    restoreDialogFocus(dialog) {
+        const opener = this.dialogOpeners.get(dialog);
+        if (opener?.isConnected) {
+            opener.focus();
         }
     }
 
@@ -151,14 +326,14 @@ function configureSource(element, source) {
     }
 }
 
-function configureForm(element, source, publishEvent) {
+function configureForm(element, source, publishEvent, resetAfterSuccess = false) {
     if (!element) {
         return;
     }
     setAttributeIfChanged(element, "cms-source", source);
     setAttributeIfChanged(element, "cms-source-trigger", "submit");
     setAttributeIfChanged(element, "cms-source-method", "POST");
-    setAttributeIfChanged(element, "cms-source-success-reset", "false");
+    setAttributeIfChanged(element, "cms-source-success-reset", String(resetAfterSuccess));
     setAttributeIfChanged(element, "cms-source-publish", publishEvent);
 }
 
@@ -202,6 +377,23 @@ function closestWithin(host, target, selector) {
 
 function checked(control) {
     return Boolean(control.checked);
+}
+
+function controlValue(control) {
+    return typeof control.value === "string" ? control.value : control.getAttribute("value") || "";
+}
+
+function setControlValue(control, value) {
+    control.value = value;
+    setAttributeIfChanged(control, "value", value);
+}
+
+function normalizeSearch(value) {
+    return String(value)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase()
+        .trim();
 }
 
 function setChecked(control, value) {

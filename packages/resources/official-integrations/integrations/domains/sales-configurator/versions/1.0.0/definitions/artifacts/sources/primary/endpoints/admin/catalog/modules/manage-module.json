@@ -9,7 +9,7 @@
       "description": "Read one module or return defaults for a new module."
     },
     "params": [
-      { "name": "id", "in": "query", "type": "number" }
+      { "name": "id", "in": "query", "type": "string" }
     ],
     "headers": {
       "$include": "../../../../shared/admin-headers.json"

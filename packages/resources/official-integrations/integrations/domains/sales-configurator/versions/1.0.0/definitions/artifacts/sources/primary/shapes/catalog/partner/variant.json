@@ -12,13 +12,13 @@
     "features": {
       "type": "array",
       "items": {
-        "$include": "partner-catalog-feature.json"
+        "$include": "feature.json"
       }
     },
     "requirements": {
       "type": "array",
       "items": {
-        "$include": "requirement.json"
+        "$include": "../requirement.json"
       }
     }
   },

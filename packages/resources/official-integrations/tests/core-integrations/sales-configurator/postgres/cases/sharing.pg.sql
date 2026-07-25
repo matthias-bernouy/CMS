@@ -4,7 +4,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'share_primary',
     sales_configurator.create_partner_proposal_share(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         sales_configurator_test.id('publish_initial', array['proposal', 'id']),
         pg_catalog.clock_timestamp() + interval '1 day',
         pg_catalog.repeat('a', 64)
@@ -91,7 +91,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'revoke_primary',
     sales_configurator.revoke_partner_proposal_share(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         sales_configurator_test.id('publish_initial', array['proposal', 'id']),
         sales_configurator_test.id('share_primary', array['share', 'id'])
     )
@@ -120,7 +120,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'share_for_supersession',
     sales_configurator.create_partner_proposal_share(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         sales_configurator_test.id('publish_initial', array['proposal', 'id']),
         null,
         pg_catalog.repeat('c', 64)
@@ -131,7 +131,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'draft_replacement',
     sales_configurator.save_partner_proposal_draft(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         sales_configurator_test.id('publish_initial', array['proposal', 'id']),
         sales_configurator_test.id('client_a', array['client', 'id']),
         '{"title":"Restaurant proposal v2","privateNotes":"private-v2"}',
@@ -168,7 +168,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'publish_replacement',
     sales_configurator.publish_partner_proposal(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         sales_configurator_test.id('draft_replacement', array['proposal', 'id']),
         sales_configurator_test.id(
             'draft_replacement',

@@ -10,7 +10,7 @@ as $$
         (
             select pg_catalog.jsonb_build_object(
                 'id', proposal.id,
-                'ownerCmsUserId', proposal.owner_cms_user_id,
+                'partnerAccountId', proposal.partner_account_id,
                 'reference', proposal.reference,
                 'status', proposal.status,
                 'title', proposal.title,
@@ -19,9 +19,16 @@ as $$
                 'client', pg_catalog.jsonb_build_object(
                     'id', client.id,
                     'companyName', client.company_name,
+                    'companyRegistrationNumber', client.company_registration_number,
                     'contactName', client.contact_name,
+                    'contactJobTitle', client.contact_job_title,
                     'contactEmail', client.contact_email,
                     'contactPhone', client.contact_phone,
+                    'addressLine1', client.address_line1,
+                    'addressLine2', client.address_line2,
+                    'postalCode', client.postal_code,
+                    'city', client.city,
+                    'country', client.country,
                     'notes', client.notes,
                     'createdAt', client.created_at,
                     'updatedAt', client.updated_at
@@ -69,7 +76,7 @@ as $$
             join sales_configurator.clients client
               on client.id = proposal.client_id
             join sales_configurator.partner_accounts partner
-              on partner.cms_user_id = proposal.owner_cms_user_id
+              on partner.id = proposal.partner_account_id
             where proposal.id = p_proposal_id
         ),
         pg_catalog.jsonb_build_object('state', 'not_found')

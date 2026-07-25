@@ -38,12 +38,12 @@ drop schema if exists sales_configurator cascade;
 do $install$
 begin
     if pg_catalog.to_regprocedure(
-        'sales_configurator.publish_partner_proposal(text,bigint,bigint,bigint)'
+        'sales_configurator.publish_partner_proposal(bigint,bigint,bigint,bigint)'
     ) is null then
         raise exception 'sales configurator: revision-aware publish RPC is missing';
     end if;
     if pg_catalog.to_regprocedure(
-        'sales_configurator.publish_partner_proposal(text,bigint,bigint)'
+        'sales_configurator.publish_partner_proposal(text,bigint,bigint,bigint)'
     ) is not null then
         raise exception 'sales configurator: stale publish RPC signature remains installed';
     end if;

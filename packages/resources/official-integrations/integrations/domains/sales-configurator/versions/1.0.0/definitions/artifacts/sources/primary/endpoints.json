@@ -1,5 +1,6 @@
 {
   "$files": [
+    "endpoints/admin/catalog/items/root.json",
     "endpoints/admin/catalog/modules/root.json",
     "endpoints/admin/catalog/variants/root.json",
     "endpoints/admin/catalog/features/root.json",

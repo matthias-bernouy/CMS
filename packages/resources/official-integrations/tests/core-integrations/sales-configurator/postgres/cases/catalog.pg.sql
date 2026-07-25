@@ -55,7 +55,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'invalid_missing_requirement',
     sales_configurator.save_partner_proposal_draft(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         null,
         sales_configurator_test.id('client_a', array['client', 'id']),
         '{"title":"Invalid draft"}',
@@ -105,7 +105,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'draft_initial',
     sales_configurator.save_partner_proposal_draft(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         null,
         sales_configurator_test.id('client_a', array['client', 'id']),
         '{"title":"Restaurant proposal","private_notes":"private-a"}',

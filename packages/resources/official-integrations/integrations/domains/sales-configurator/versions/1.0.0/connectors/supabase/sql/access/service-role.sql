@@ -60,6 +60,7 @@ grant execute on function
     sales_configurator.require_json_object(jsonb, text),
     sales_configurator.require_bounded_text(text, text, integer),
     sales_configurator.optional_bounded_text(text, text, integer),
+    sales_configurator.require_opaque_identifier(text, text, integer),
     sales_configurator.json_alias_text(jsonb, text, text),
     sales_configurator.json_has_alias(jsonb, text, text),
     sales_configurator.catalog_item_json(bigint),
@@ -73,30 +74,31 @@ grant execute on function
     sales_configurator.require_partner(text, text),
     sales_configurator.upsert_partner_account(bigint, text, jsonb),
     sales_configurator.set_partner_capability(bigint, text, boolean),
-    sales_configurator.save_partner_client(text, bigint, jsonb),
+    sales_configurator.save_partner_client(bigint, bigint, jsonb),
     sales_configurator.proposal_item_json(bigint),
     sales_configurator.proposal_version_items_json(bigint),
     sales_configurator.partner_proposal_version_json(bigint),
     sales_configurator.proposal_shares_json(bigint),
     sales_configurator.proposal_events_json(bigint),
+    sales_configurator.partner_proposal_events_json(bigint),
     sales_configurator.public_proposal_items_json(bigint),
-    sales_configurator.partner_proposal_json(bigint, text),
-    sales_configurator.read_partner_proposal(text, bigint),
+    sales_configurator.partner_proposal_json(bigint, bigint),
+    sales_configurator.read_partner_proposal(bigint, bigint),
     sales_configurator.admin_proposal_json(bigint),
     sales_configurator.lock_draft_catalog(),
     sales_configurator.assert_draft_selection_shape(jsonb, jsonb),
     sales_configurator.validate_draft_selection(jsonb, jsonb),
     sales_configurator.insert_draft_catalog_snapshot(bigint, jsonb),
     sales_configurator.rebuild_draft_snapshot(bigint, jsonb, jsonb),
-    sales_configurator.prepare_partner_proposal_draft(text, bigint, bigint, jsonb),
+    sales_configurator.prepare_partner_proposal_draft(bigint, bigint, bigint, jsonb),
     sales_configurator.save_partner_proposal_draft(
-        text, bigint, bigint, jsonb, jsonb, jsonb
+        bigint, bigint, bigint, jsonb, jsonb, jsonb
     ),
-    sales_configurator.publish_partner_proposal(text, bigint, bigint, bigint),
+    sales_configurator.publish_partner_proposal(bigint, bigint, bigint, bigint),
     sales_configurator.create_partner_proposal_share(
-        text, bigint, timestamptz, text
+        bigint, bigint, timestamptz, text
     ),
-    sales_configurator.revoke_partner_proposal_share(text, bigint, bigint),
+    sales_configurator.revoke_partner_proposal_share(bigint, bigint, bigint),
     sales_configurator.read_shared_proposal(text),
     sales_configurator.transition_admin_proposal(text, bigint, text)
 to service_role;

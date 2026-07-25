@@ -101,10 +101,35 @@ begin
         'EXECUTE'
     ) or pg_catalog.has_function_privilege(
         'service_role',
-        'sales_configurator.protect_owner_cms_user_id()',
+        'sales_configurator.protect_partner_account_id()',
         'EXECUTE'
     ) then
         raise exception 'invariant: service_role can invoke internal protection triggers';
+    end if;
+
+    if exists (
+        select 1
+        from pg_catalog.pg_attribute attribute
+        join pg_catalog.pg_class table_state on table_state.oid = attribute.attrelid
+        join pg_catalog.pg_namespace namespace on namespace.oid = table_state.relnamespace
+        where namespace.nspname = 'sales_configurator'
+          and table_state.relname in ('clients', 'proposals')
+          and attribute.attname = 'owner_cms_user_id'
+          and attribute.attnum > 0
+          and not attribute.attisdropped
+    ) or (
+        select pg_catalog.count(*) <> 2
+        from pg_catalog.pg_attribute attribute
+        join pg_catalog.pg_class table_state on table_state.oid = attribute.attrelid
+        join pg_catalog.pg_namespace namespace on namespace.oid = table_state.relnamespace
+        where namespace.nspname = 'sales_configurator'
+          and table_state.relname in ('clients', 'proposals')
+          and attribute.attname = 'partner_account_id'
+          and attribute.attnum > 0
+          and not attribute.attisdropped
+          and attribute.attnotnull
+    ) then
+        raise exception 'invariant: sales ownership must use non-null partner account ids only';
     end if;
 
     if not exists (
@@ -123,11 +148,23 @@ begin
     end if;
 
     if pg_catalog.to_regprocedure(
-        'sales_configurator.publish_partner_proposal(text,bigint,bigint,bigint)'
+        'sales_configurator.publish_partner_proposal(bigint,bigint,bigint,bigint)'
     ) is null or pg_catalog.to_regprocedure(
+        'sales_configurator.publish_partner_proposal(text,bigint,bigint,bigint)'
+    ) is not null or pg_catalog.to_regprocedure(
         'sales_configurator.publish_partner_proposal(text,bigint,bigint)'
+    ) is not null or pg_catalog.to_regprocedure(
+        'sales_configurator.save_partner_client(text,bigint,jsonb)'
+    ) is not null or pg_catalog.to_regprocedure(
+        'sales_configurator.read_partner_proposal(text,bigint)'
+    ) is not null or pg_catalog.to_regprocedure(
+        'sales_configurator.save_partner_proposal_draft(text,bigint,bigint,jsonb,jsonb,jsonb)'
+    ) is not null or pg_catalog.to_regprocedure(
+        'sales_configurator.create_partner_proposal_share(text,bigint,timestamptz,text)'
+    ) is not null or pg_catalog.to_regprocedure(
+        'sales_configurator.revoke_partner_proposal_share(text,bigint,bigint)'
     ) is not null then
-        raise exception 'invariant: optimistic publish signature is not exact';
+        raise exception 'invariant: partner commands must use partner account ids only';
     end if;
 end;
 $$;

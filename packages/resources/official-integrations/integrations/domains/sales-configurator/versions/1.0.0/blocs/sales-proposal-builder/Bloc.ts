@@ -16,9 +16,14 @@ export class SalesProposalBuilder extends HTMLElement {
 
     observer = null;
     syncQueued = false;
+    catalogQuery = "";
+    expandedModuleIds = new Set();
 
     connectedCallback() {
         this.addEventListener("change", this.onChange);
+        this.addEventListener("click", this.onClick);
+        this.addEventListener("input", this.onInput);
+        this.addEventListener("keydown", this.onKeyDown);
         this.addEventListener("submit", this.onSubmit, true);
         this.observer = new MutationObserver(() => this.queueSync());
         this.observer.observe(this, { childList: true, subtree: true });
@@ -27,6 +32,9 @@ export class SalesProposalBuilder extends HTMLElement {
 
     disconnectedCallback() {
         this.removeEventListener("change", this.onChange);
+        this.removeEventListener("click", this.onClick);
+        this.removeEventListener("input", this.onInput);
+        this.removeEventListener("keydown", this.onKeyDown);
         this.removeEventListener("submit", this.onSubmit, true);
         this.observer?.disconnect();
         this.observer = null;
@@ -64,6 +72,45 @@ export class SalesProposalBuilder extends HTMLElement {
             }
         }
         this.syncFeatureAvailability();
+        this.syncCatalogVisibility();
+    };
+
+    onClick = (event) => {
+        const toggle = event.target instanceof Element ? event.target.closest("[data-sales-module-toggle]") : null;
+        if (!toggle || !this.contains(toggle)) {
+            return;
+        }
+        event.preventDefault();
+        const moduleId = toggle.getAttribute("data-module-id") || "";
+        if (!moduleId) {
+            return;
+        }
+        if (this.expandedModuleIds.has(moduleId)) {
+            this.expandedModuleIds.delete(moduleId);
+        } else {
+            this.expandedModuleIds.add(moduleId);
+        }
+        this.syncCatalogVisibility();
+    };
+
+    onInput = (event) => {
+        const search = event.target instanceof Element ? event.target.closest("[data-sales-catalog-search]") : null;
+        if (!search || !this.contains(search)) {
+            return;
+        }
+        this.catalogQuery = controlValue(search);
+        this.syncCatalogVisibility();
+    };
+
+    onKeyDown = (event) => {
+        const search = event.target instanceof Element ? event.target.closest("[data-sales-catalog-search]") : null;
+        if (!search || !this.contains(search) || event.key !== "Escape" || !controlValue(search)) {
+            return;
+        }
+        event.preventDefault();
+        setControlValue(search, "");
+        this.catalogQuery = "";
+        this.syncCatalogVisibility();
     };
 
     onSubmit = (event) => {
@@ -103,6 +150,7 @@ export class SalesProposalBuilder extends HTMLElement {
             configureForm(form, `${base}/revokeMyProposalShare as revokeResult`);
         }
         this.syncSelections();
+        this.syncCatalogVisibility();
         this.syncTerminalState();
         this.syncShareLinks();
         formatMoney(this, this.getAttribute("locale") || this.ownerDocument.documentElement.lang || "en");
@@ -153,6 +201,53 @@ export class SalesProposalBuilder extends HTMLElement {
                 setChecked(feature, false);
             }
             setDisabled(feature, !enabled);
+        }
+    }
+
+    syncCatalogVisibility() {
+        const rows = Array.from(this.querySelectorAll("[data-sales-catalog-row]"));
+        const moduleRows = rows.filter((row) => row.getAttribute("data-sales-row-kind") === "module");
+        if (moduleRows.length === 0) {
+            return;
+        }
+        const selectedModuleIds = new Set(
+            Array.from(this.querySelectorAll("[data-sales-variant]"))
+                .filter((variant) => checked(variant))
+                .map((variant) => variant.getAttribute("data-module-id"))
+                .filter(Boolean),
+        );
+        const query = normalizeSearch(this.catalogQuery);
+        const visibleModuleIds = new Set();
+
+        for (const row of moduleRows) {
+            const moduleId = row.getAttribute("data-sales-module-id") || "";
+            const selected = selectedModuleIds.has(moduleId);
+            const matches = !query || normalizeSearch(row.getAttribute("data-sales-search-text") || "").includes(query);
+            const visible = matches || selected;
+            row.hidden = !visible;
+            row.toggleAttribute("data-sales-module-selected", selected);
+            if (visible) {
+                visibleModuleIds.add(moduleId);
+            }
+            const toggle = row.querySelector("[data-sales-module-toggle]");
+            toggle?.setAttribute("aria-expanded", String(this.expandedModuleIds.has(moduleId)));
+            const selectedLabel = row.querySelector("[data-sales-module-selected-label]");
+            if (selectedLabel) {
+                selectedLabel.hidden = !selected;
+            }
+        }
+
+        for (const row of rows) {
+            if (row.getAttribute("data-sales-row-kind") === "module") {
+                continue;
+            }
+            const moduleId = row.getAttribute("data-sales-module-id") || "";
+            row.hidden = !(visibleModuleIds.has(moduleId) && this.expandedModuleIds.has(moduleId));
+        }
+
+        const noMatch = this.querySelector("[data-sales-catalog-no-match]");
+        if (noMatch) {
+            noMatch.hidden = visibleModuleIds.size > 0;
         }
     }
 
@@ -232,6 +327,23 @@ function validBindingValue(value) {
 
 function checked(control) {
     return Boolean(control.checked);
+}
+
+function controlValue(control) {
+    return typeof control.value === "string" ? control.value : control.getAttribute("value") || "";
+}
+
+function setControlValue(control, value) {
+    control.value = value;
+    setAttributeIfChanged(control, "value", value);
+}
+
+function normalizeSearch(value) {
+    return String(value)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase()
+        .trim();
 }
 
 function setChecked(control, value) {

@@ -5,9 +5,9 @@ import type { JsonRecord } from "../../core/types.ts";
 import { currentVersion } from "../../services/proposals.ts";
 
 const proposalSelect =
-    "id,owner_cms_user_id,client_id,reference,status,title,introduction,private_notes,created_at,updated_at";
+    "id,partner_account_id,client_id,reference,status,title,introduction,private_notes,created_at,updated_at";
 const versionSelect =
-    "id,proposal_id,version_number,revision,state,currency,fixed_total_cents,quote_item_count,public_title,public_introduction,client_company_name,client_contact_name,client_contact_email,client_contact_phone,sales_contact_name,sales_contact_email,created_at,published_at";
+    "id,proposal_id,version_number,revision,state,currency,fixed_total_cents,quote_item_count,public_title,public_introduction,client_company_name,client_company_registration_number,client_contact_name,client_contact_job_title,client_contact_email,client_contact_phone,client_address_line1,client_address_line2,client_postal_code,client_city,client_country,sales_contact_name,sales_contact_email,created_at,published_at";
 const itemSelect =
     "id,proposal_version_id,parent_item_id,catalog_item_id,kind,origin,code,label,description,quantity,pricing_mode,unit_amount_cents,currency,sort_order";
 const shareSelect = "id,proposal_version_id,expires_at,revoked_at,first_viewed_at,last_viewed_at,view_count,created_at";
@@ -25,7 +25,7 @@ export async function adminProposalById(id: number): Promise<JsonRecord> {
         restJson<JsonRecord[]>(`proposal_events?select=*&proposal_id=eq.${id}&order=occurred_at.desc,id.desc`),
         one(
             "partner_accounts",
-            { cms_user_id: String(proposal.owner_cms_user_id) },
+            { id: Number(proposal.partner_account_id) },
             "id,cms_user_id,status,display_name,contact_email,created_at,updated_at",
         ),
     ]);
@@ -67,9 +67,16 @@ function hydrateVersion(version: JsonRecord, items: JsonRecord[]): JsonRecord {
         public_title,
         public_introduction,
         client_company_name,
+        client_company_registration_number,
         client_contact_name,
+        client_contact_job_title,
         client_contact_email,
         client_contact_phone,
+        client_address_line1,
+        client_address_line2,
+        client_postal_code,
+        client_city,
+        client_country,
         sales_contact_name,
         sales_contact_email,
         ...identity
@@ -80,9 +87,16 @@ function hydrateVersion(version: JsonRecord, items: JsonRecord[]): JsonRecord {
         introduction: public_introduction,
         client_snapshot: {
             company_name: client_company_name,
+            company_registration_number: client_company_registration_number,
             contact_name: client_contact_name,
+            contact_job_title: client_contact_job_title,
             contact_email: client_contact_email,
             contact_phone: client_contact_phone,
+            address_line1: client_address_line1,
+            address_line2: client_address_line2,
+            postal_code: client_postal_code,
+            city: client_city,
+            country: client_country,
         },
         sales_contact: {
             display_name: sales_contact_name,

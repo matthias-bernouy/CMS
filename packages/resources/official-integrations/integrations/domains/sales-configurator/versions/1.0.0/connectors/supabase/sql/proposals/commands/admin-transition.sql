@@ -10,7 +10,7 @@ security invoker
 set search_path = ''
 as $$
 declare
-    v_actor text := sales_configurator.require_bounded_text(
+    v_actor text := sales_configurator.require_opaque_identifier(
         p_actor_cms_user_id,
         'actorCmsUserId',
         512

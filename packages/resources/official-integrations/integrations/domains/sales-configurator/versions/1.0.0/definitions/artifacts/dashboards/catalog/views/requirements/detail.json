@@ -5,8 +5,7 @@
     "source": {
       "endpoint": "manageRequirements",
       "params": {
-        "subjectItemId": "$selection.subjectItemId",
-        "requiredItemId": "$selection.requiredItemId"
+        "id": "$selection.id"
       },
       "itemPath": "item"
     },
@@ -48,26 +47,40 @@
       {
         "id": "requirementDefinition",
         "title": "All-of prerequisite",
-        "description": "Use catalogue item ids. The server rejects self-dependencies and cycles.",
+        "description": "Choose the item to configure and the item it requires. The server rejects self-dependencies and cycles.",
         "fields": [
           {
             "id": "subjectItemId",
-            "label": "Subject catalogue item id",
+            "label": "Subject catalogue item",
             "path": "subjectItemId",
-            "type": "number",
+            "type": "combobox",
             "required": true,
-            "min": 1
+            "lookup": {
+              "endpoint": "manageCatalogItems",
+              "params": { "q": "$search", "limit": "100" },
+              "itemsPath": "items",
+              "valuePath": "id",
+              "labelPath": "name",
+              "subtitlePath": "lookupSubtitle",
+              "selected": "$resource.subject"
+            }
           },
           {
             "id": "requiredItemId",
-            "label": "Required catalogue item id",
+            "label": "Required catalogue item",
             "path": "requiredItemId",
-            "type": "number",
+            "type": "combobox",
             "required": true,
-            "min": 1
-          },
-          { "id": "subjectKind", "label": "Subject type", "path": "subjectKind", "type": "readonly" },
-          { "id": "requiredKind", "label": "Required type", "path": "requiredKind", "type": "readonly" }
+            "lookup": {
+              "endpoint": "manageCatalogItems",
+              "params": { "q": "$search", "limit": "100" },
+              "itemsPath": "items",
+              "valuePath": "id",
+              "labelPath": "name",
+              "subtitlePath": "lookupSubtitle",
+              "selected": "$resource.required"
+            }
+          }
         ]
       }
     ]

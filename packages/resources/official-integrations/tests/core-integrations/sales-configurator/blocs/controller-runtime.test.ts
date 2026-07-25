@@ -3,6 +3,8 @@ import { BindingCore, BINDING_CORE_TAG } from "@bernouy/components/binding";
 import { defineBloc, readBlocFile, settle } from "./harness";
 
 const listTag = "test-sales-proposal-list-controller";
+const directoryTag = "test-sales-client-directory-controller";
+const catalogTag = "test-sales-catalog-browser-controller";
 const builderTag = "test-sales-proposal-builder-controller";
 const viewTag = "test-sales-proposal-view-controller";
 const realFetch = globalThis.fetch;
@@ -11,6 +13,8 @@ beforeAll(async () => {
     if (!customElements.get(BINDING_CORE_TAG)) {
         customElements.define(BINDING_CORE_TAG, BindingCore);
     }
+    await defineBloc("sales-client-directory", directoryTag);
+    await defineBloc("sales-catalog-browser", catalogTag);
     await defineBloc("sales-proposal-list", listTag);
     await defineBloc("sales-proposal-builder", builderTag);
     await defineBloc("sales-proposal-view", viewTag);
@@ -133,6 +137,8 @@ describe("sales-configurator bloc controllers", () => {
         }) as typeof fetch;
 
         for (const [bloc, tag, state] of [
+            ["sales-client-directory", directoryTag, "loading"],
+            ["sales-catalog-browser", catalogTag, "loaded"],
             ["sales-proposal-list", listTag, "loading"],
             ["sales-proposal-builder", builderTag, "empty"],
             ["sales-proposal-view", viewTag, "error"],

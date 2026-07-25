@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 
 export const tags = [
+    "sales-client-directory",
+    "sales-catalog-browser",
     "sales-proposal-list",
     "sales-proposal-starter",
     "sales-proposal-builder",

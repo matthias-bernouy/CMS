@@ -20,18 +20,110 @@ export function partnerCatalogProjection(rows: CatalogRows): JsonRecord {
                 Number(items.get(Number(left.item_id))?.sort_order ?? 0) -
                 Number(items.get(Number(right.item_id))?.sort_order ?? 0),
         );
+    const modules = rows.items
+        .filter((item) => item.kind === "module" && item.status === "published" && moduleIds.has(Number(item.id)))
+        .map((module) => ({
+            ...itemSummary(module),
+            requirements: requirementsFor(module.id, rows, items),
+            variants: variants
+                .filter((variant) => Number(variant.module_item_id) === Number(module.id))
+                .map((variant) => variantProjection(variant, rows, items, featureIds)),
+        }));
 
     return {
-        modules: rows.items
-            .filter((item) => item.kind === "module" && item.status === "published" && moduleIds.has(Number(item.id)))
-            .map((module) => ({
-                ...itemSummary(module),
-                requirements: requirementsFor(module.id, rows, items),
-                variants: variants
-                    .filter((variant) => Number(variant.module_item_id) === Number(module.id))
-                    .map((variant) => variantProjection(variant, rows, items, featureIds)),
-            })),
+        modules,
+        selection_rows: selectionRowsFor(modules),
     };
+}
+
+function selectionRowsFor(modules: JsonRecord[]): JsonRecord[] {
+    return modules.flatMap((module) => [
+        selectionRow({
+            item: module,
+            kind: "module",
+            typeLabel: "Module",
+            depth: 0,
+            moduleId: module.id,
+            variantId: null,
+            providerName: null,
+            availability: "base",
+            availabilityLabel: "Base",
+            pricingMode: null,
+            unitAmountCents: null,
+            currency: null,
+        }),
+        ...recordList(module.variants).flatMap((variant) => [
+            selectionRow({
+                item: variant,
+                kind: "variant",
+                typeLabel: "Variant",
+                depth: 1,
+                moduleId: module.id,
+                variantId: variant.id,
+                providerName: variant.provider_name ?? null,
+                availability: "selectable",
+                availabilityLabel: "Selectable",
+                pricingMode: variant.pricing_mode ?? null,
+                unitAmountCents: variant.unit_amount_cents ?? null,
+                currency: variant.currency ?? null,
+            }),
+            ...recordList(variant.features).map((feature) => {
+                const availability = feature.availability === "included" ? "included" : "optional";
+                return selectionRow({
+                    item: feature,
+                    kind: "feature",
+                    typeLabel: "Feature",
+                    depth: 2,
+                    moduleId: module.id,
+                    variantId: variant.id,
+                    providerName: variant.provider_name ?? null,
+                    availability,
+                    availabilityLabel: availability === "included" ? "Included" : "Optional",
+                    pricingMode: feature.pricing_mode ?? null,
+                    unitAmountCents: feature.unit_amount_cents ?? null,
+                    currency: feature.currency ?? variant.currency ?? null,
+                });
+            }),
+        ]),
+    ]);
+}
+
+function selectionRow(input: {
+    item: JsonRecord;
+    kind: "module" | "variant" | "feature";
+    typeLabel: string;
+    depth: number;
+    moduleId: unknown;
+    variantId: unknown;
+    providerName: unknown;
+    availability: string;
+    availabilityLabel: string;
+    pricingMode: unknown;
+    unitAmountCents: unknown;
+    currency: unknown;
+}): JsonRecord {
+    return {
+        kind: input.kind,
+        type_label: input.typeLabel,
+        depth: input.depth,
+        id: input.item.id,
+        code: input.item.code,
+        name: input.item.name,
+        description: input.item.description ?? null,
+        module_id: input.moduleId,
+        variant_id: input.variantId,
+        provider_name: input.providerName,
+        availability: input.availability,
+        availability_label: input.availabilityLabel,
+        pricing_mode: input.pricingMode,
+        unit_amount_cents: input.unitAmountCents,
+        currency: input.currency,
+        requirements: recordList(input.item.requirements),
+    };
+}
+
+function recordList(value: unknown): JsonRecord[] {
+    return Array.isArray(value) ? (value as JsonRecord[]) : [];
 }
 
 function variantProjection(

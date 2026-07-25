@@ -29,6 +29,19 @@ export function requiredText(value: unknown, name: string): string {
     return result;
 }
 
+export function opaqueText(value: unknown, name: string, maxLength = 512, errorStatus = 400): string {
+    if (typeof value !== "string" || !value.trim()) {
+        throw new HttpError(errorStatus, `${name} is required`);
+    }
+    if (value !== value.trim() || /[\u0000-\u001f\u007f-\u009f]/u.test(value)) {
+        throw new HttpError(errorStatus, `${name} is invalid`);
+    }
+    if (value.length > maxLength) {
+        throw new HttpError(errorStatus, `${name} is too long`);
+    }
+    return value;
+}
+
 export function integer(value: unknown, name: string, required = false): number | undefined {
     if (value === undefined || value === null || value === "") {
         if (required) {

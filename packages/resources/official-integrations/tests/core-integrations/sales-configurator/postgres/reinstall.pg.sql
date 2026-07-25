@@ -1,10 +1,10 @@
 select sales_configurator_test.assert_true(
     pg_catalog.to_regprocedure(
         'sales_configurator.publish_partner_proposal(text,bigint,bigint,bigint)'
-    ) is not null
+    ) is null
     and pg_catalog.to_regprocedure(
-        'sales_configurator.publish_partner_proposal(text,bigint,bigint)'
-    ) is null,
+        'sales_configurator.publish_partner_proposal(bigint,bigint,bigint,bigint)'
+    ) is not null,
     'reinstallation must preserve only the revision-aware publication RPC'
 );
 

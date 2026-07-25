@@ -69,6 +69,32 @@ begin
 end;
 $$;
 
+create or replace function sales_configurator.require_opaque_identifier(
+    p_value text,
+    p_name text,
+    p_max_length integer
+)
+returns text
+language plpgsql
+immutable
+set search_path = ''
+as $$
+begin
+    if p_value is null or nullif(pg_catalog.btrim(p_value), '') is null then
+        raise exception 'validation: % is required', p_name;
+    end if;
+    if p_value <> pg_catalog.btrim(p_value)
+        or p_value ~ '[[:cntrl:]]'
+    then
+        raise exception 'validation: % is invalid', p_name;
+    end if;
+    if pg_catalog.length(p_value) > p_max_length then
+        raise exception 'validation: % is too long', p_name;
+    end if;
+    return p_value;
+end;
+$$;
+
 create or replace function sales_configurator.json_alias_text(
     p_payload jsonb,
     p_camel_key text,

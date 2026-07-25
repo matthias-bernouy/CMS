@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "sales-client-directory",
+        "name": "Client directory",
+        "group": "Sales configurator",
+        "description": "Binding-aware client creation and editing for the current sales partner.",
+        "path": "blocs/sales-client-directory"
+    }
+}

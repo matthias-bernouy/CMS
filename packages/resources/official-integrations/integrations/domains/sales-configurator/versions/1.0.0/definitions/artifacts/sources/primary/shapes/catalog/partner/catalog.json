@@ -8,13 +8,13 @@
     "requirements": {
       "type": "array",
       "items": {
-        "$include": "requirement.json"
+        "$include": "../requirement.json"
       }
     },
     "variants": {
       "type": "array",
       "items": {
-        "$include": "partner-catalog-variant.json"
+        "$include": "variant.json"
       }
     }
   },

@@ -9,6 +9,7 @@
       "description": "List contextual feature availability and pricing, or read one selected association."
     },
     "params": [
+      { "name": "id", "in": "query", "type": "string" },
       { "name": "variantItemId", "in": "query", "type": "number" },
       { "name": "featureItemId", "in": "query", "type": "number" },
       { "name": "q", "in": "query", "type": "string" },

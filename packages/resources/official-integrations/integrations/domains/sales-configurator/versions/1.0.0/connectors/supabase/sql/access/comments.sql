@@ -26,11 +26,11 @@ comment on table sales_configurator.proposal_events is
     'Append-only proposal lifecycle audit trail.';
 
 comment on function sales_configurator.save_partner_proposal_draft(
-    text, bigint, bigint, jsonb, jsonb, jsonb
+    bigint, bigint, bigint, jsonb, jsonb, jsonb
 ) is
     'Validates ownership and prerequisites, snapshots server prices, and saves one draft atomically.';
 comment on function sales_configurator.publish_partner_proposal(
-    text, bigint, bigint, bigint
+    bigint, bigint, bigint, bigint
 ) is
     'Publishes exactly the expected draft revision and atomically supersedes the previous version.';
 comment on function sales_configurator.read_shared_proposal(text) is

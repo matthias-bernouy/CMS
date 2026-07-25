@@ -9,6 +9,7 @@
       "description": "List prerequisite edges, or read one selected edge."
     },
     "params": [
+      { "name": "id", "in": "query", "type": "string" },
       { "name": "subjectItemId", "in": "query", "type": "number" },
       { "name": "requiredItemId", "in": "query", "type": "number" },
       { "name": "q", "in": "query", "type": "string" },

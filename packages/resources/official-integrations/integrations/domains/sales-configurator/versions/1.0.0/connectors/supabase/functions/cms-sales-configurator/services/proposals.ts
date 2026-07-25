@@ -21,7 +21,7 @@ export async function hydrateProposalSummaries(
         includePartners ? partnerRows(proposals) : Promise.resolve([]),
     ]);
     const clientsById = new Map(clients.map((client) => [Number(client.id), client]));
-    const partnersByUser = new Map(partners.map((partner) => [String(partner.cms_user_id), partner]));
+    const partnersById = new Map(partners.map((partner) => [Number(partner.id), partner]));
     const versionsByProposal = groupByNumber(versions, "proposal_id");
 
     return proposals.map((proposal) => {
@@ -35,8 +35,7 @@ export async function hydrateProposalSummaries(
             client,
             ...(includePartners
                 ? {
-                      partner_display_name:
-                          partnersByUser.get(String(proposal.owner_cms_user_id))?.display_name ?? null,
+                      partner_display_name: partnersById.get(Number(proposal.partner_account_id))?.display_name ?? null,
                   }
                 : {}),
             fixed_total_cents: version?.fixed_total_cents ?? 0,
@@ -64,17 +63,11 @@ async function rowsByNumericIds(table: string, field: string, ids: number[], sel
 }
 
 async function partnerRows(proposals: JsonRecord[]): Promise<JsonRecord[]> {
-    const ids = [...new Set(proposals.map((proposal) => String(proposal.owner_cms_user_id)).filter(Boolean))];
+    const ids = numericValues(proposals, "partner_account_id");
     if (!ids.length) {
         return [];
     }
-    return await restJson<JsonRecord[]>(
-        `partner_accounts?select=cms_user_id,display_name&cms_user_id=in.(${ids.map(quoted).join(",")})`,
-    );
-}
-
-function quoted(value: string): string {
-    return `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
+    return await restJson<JsonRecord[]>(`partner_accounts?select=id,display_name&id=in.(${ids.join(",")})`);
 }
 
 function numericValues(rows: JsonRecord[], field: string): number[] {

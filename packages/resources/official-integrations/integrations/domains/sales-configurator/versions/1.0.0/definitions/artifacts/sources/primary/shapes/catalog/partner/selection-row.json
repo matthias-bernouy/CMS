@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "properties": {
+    "kind": { "type": "string" },
+    "typeLabel": { "type": "string" },
+    "depth": { "type": "number" },
+    "id": { "type": "number" },
+    "code": { "type": "string" },
+    "name": { "type": "string" },
+    "description": { "type": "string", "nullable": true },
+    "moduleId": { "type": "number" },
+    "variantId": { "type": "number", "nullable": true },
+    "providerName": { "type": "string", "nullable": true },
+    "availability": { "type": "string" },
+    "availabilityLabel": { "type": "string" },
+    "pricingMode": { "type": "string", "nullable": true },
+    "unitAmountCents": { "type": "number", "nullable": true },
+    "currency": { "type": "string", "nullable": true },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "$include": "../requirement.json"
+      }
+    }
+  },
+  "required": [
+    "kind",
+    "typeLabel",
+    "depth",
+    "id",
+    "code",
+    "name",
+    "moduleId",
+    "availability",
+    "availabilityLabel",
+    "requirements"
+  ]
+}

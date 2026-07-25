@@ -101,22 +101,22 @@ select sales_configurator_test.assert_true(
                 ('sales_configurator.upsert_catalog_variant(bigint,jsonb)'),
                 ('sales_configurator.upsert_partner_account(bigint,text,jsonb)'),
                 ('sales_configurator.set_partner_capability(bigint,text,boolean)'),
-                ('sales_configurator.save_partner_client(text,bigint,jsonb)'),
+                ('sales_configurator.save_partner_client(bigint,bigint,jsonb)'),
                 (
                     'sales_configurator.save_partner_proposal_draft('
-                    'text,bigint,bigint,jsonb,jsonb,jsonb)'
+                    'bigint,bigint,bigint,jsonb,jsonb,jsonb)'
                 ),
                 (
                     'sales_configurator.publish_partner_proposal('
-                    'text,bigint,bigint,bigint)'
+                    'bigint,bigint,bigint,bigint)'
                 ),
                 (
                     'sales_configurator.create_partner_proposal_share('
-                    'text,bigint,timestamp with time zone,text)'
+                    'bigint,bigint,timestamp with time zone,text)'
                 ),
                 (
                     'sales_configurator.revoke_partner_proposal_share('
-                    'text,bigint,bigint)'
+                    'bigint,bigint,bigint)'
                 ),
                 ('sales_configurator.read_shared_proposal(text)')
         ) required_rpc(procedure_name)
@@ -137,7 +137,7 @@ select sales_configurator_test.assert_true(
             values
                 ('sales_configurator.set_updated_at()'),
                 ('sales_configurator.protect_partner_cms_user_id()'),
-                ('sales_configurator.protect_owner_cms_user_id()'),
+                ('sales_configurator.protect_partner_account_id()'),
                 ('sales_configurator.protect_proposal_version()'),
                 ('sales_configurator.protect_proposal_item()'),
                 ('sales_configurator.reject_proposal_item_cycle()'),
@@ -146,6 +146,43 @@ select sales_configurator_test.assert_true(
         ) protection_function(procedure_name)
     ),
     'service_role must not directly execute trigger protection functions'
+);
+
+select sales_configurator_test.assert_true(
+    not exists (
+        select 1
+        from pg_catalog.pg_constraint constraint_state
+        join pg_catalog.pg_class child_table
+          on child_table.oid = constraint_state.conrelid
+        join pg_catalog.pg_namespace child_namespace
+          on child_namespace.oid = child_table.relnamespace
+        cross join lateral pg_catalog.unnest(constraint_state.confkey)
+          as referenced_column(attnum)
+        join pg_catalog.pg_attribute parent_attribute
+          on parent_attribute.attrelid = constraint_state.confrelid
+         and parent_attribute.attnum = referenced_column.attnum
+        where constraint_state.contype = 'f'
+          and child_namespace.nspname = 'sales_configurator'
+          and child_table.relname in ('clients', 'proposals')
+          and parent_attribute.attname = 'cms_user_id'
+    ),
+    'business ownership must never reference a CMS user id'
+);
+
+select sales_configurator_test.assert_true(
+    not exists (
+        select 1
+        from pg_catalog.pg_attribute attribute
+        join pg_catalog.pg_class table_state on table_state.oid = attribute.attrelid
+        where table_state.oid in (
+            'sales_configurator.clients'::regclass,
+            'sales_configurator.proposals'::regclass
+        )
+          and attribute.attname = 'owner_cms_user_id'
+          and attribute.attnum > 0
+          and not attribute.attisdropped
+    ),
+    'legacy CMS user ownership columns must be removed after migration'
 );
 
 select sales_configurator_test.assert_true(

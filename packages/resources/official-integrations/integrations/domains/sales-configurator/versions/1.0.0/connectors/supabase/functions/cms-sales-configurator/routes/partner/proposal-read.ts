@@ -18,14 +18,14 @@ export async function listMyProposals(request: Request): Promise<Response> {
     const cursor = integer(url.searchParams.get("cursor"), "cursor");
     const params = new URLSearchParams({
         select: proposalListSelect,
-        owner_cms_user_id: exactFilter(partner.cmsUserId),
+        partner_account_id: exactFilter(partner.id),
         order: "id.desc",
         limit: String(limit + 1),
     });
     if (query.status) {
         params.set("status", `eq.${query.status}`);
     }
-    const clientIds = await matchingClientIds(partner.cmsUserId, query.query);
+    const clientIds = await matchingClientIds(partner.id, query.query);
     addProposalSearch(params, query.query, clientIds);
     if (cursor) {
         params.set("id", `lt.${cursor}`);
@@ -39,14 +39,14 @@ export async function listMyProposals(request: Request): Promise<Response> {
     });
 }
 
-async function matchingClientIds(ownerCmsUserId: string, query: string | undefined): Promise<number[]> {
+async function matchingClientIds(partnerAccountId: number, query: string | undefined): Promise<number[]> {
     if (!query) {
         return [];
     }
     const params = new URLSearchParams({
         select: "id",
-        owner_cms_user_id: exactFilter(ownerCmsUserId),
-        or: `(company_name.ilike.*${query}*,contact_name.ilike.*${query}*,contact_email.ilike.*${query}*)`,
+        partner_account_id: exactFilter(partnerAccountId),
+        or: `(company_name.ilike.*${query}*,company_registration_number.ilike.*${query}*,contact_name.ilike.*${query}*,contact_email.ilike.*${query}*,city.ilike.*${query}*)`,
         limit: "1000",
     });
     const rows = await restJson<JsonRecord[]>(`clients?${params}`);
@@ -70,7 +70,7 @@ export async function getMyProposal(request: Request): Promise<Response> {
     const partner = await requirePartner(request, "proposals.manage");
     const id = integer(new URL(request.url).searchParams.get("id"), "id", true)!;
     const result = await rpc("read_partner_proposal", {
-        p_actor_cms_user_id: partner.cmsUserId,
+        p_partner_account_id: partner.id,
         p_proposal_id: id,
     });
     const payload = camelize(result);

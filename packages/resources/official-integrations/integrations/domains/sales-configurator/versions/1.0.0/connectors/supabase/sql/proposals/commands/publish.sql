@@ -5,7 +5,7 @@ drop function if exists sales_configurator.publish_partner_proposal(
 );
 
 create or replace function sales_configurator.publish_partner_proposal(
-    p_actor_cms_user_id text,
+    p_partner_account_id bigint,
     p_proposal_id bigint,
     p_expected_version_id bigint,
     p_expected_revision bigint
@@ -17,23 +17,20 @@ security invoker
 set search_path = ''
 as $$
 declare
-    v_actor text := sales_configurator.require_bounded_text(
-        p_actor_cms_user_id,
-        'actorCmsUserId',
-        512
-    );
     v_proposal sales_configurator.proposals%rowtype;
     v_draft sales_configurator.proposal_versions%rowtype;
     v_previous_version_id bigint;
     v_revoked_share record;
 begin
-    perform sales_configurator.require_partner(v_actor, 'proposals.publish');
+    if p_partner_account_id is null then
+        raise exception 'validation: partnerAccountId is required';
+    end if;
 
     select proposal.*
     into v_proposal
     from sales_configurator.proposals proposal
     where proposal.id = p_proposal_id
-      and proposal.owner_cms_user_id = v_actor
+      and proposal.partner_account_id = p_partner_account_id
     for update;
     if not found then
         return pg_catalog.jsonb_build_object('state', 'not_found');
@@ -103,7 +100,7 @@ begin
                 v_revoked_share.id,
                 'share_revoked',
                 'partner',
-                v_actor,
+                p_partner_account_id::text,
                 pg_catalog.jsonb_build_object('reason', 'version_superseded')
             );
         end loop;
@@ -136,7 +133,7 @@ begin
         v_draft.id,
         'published',
         'partner',
-        v_actor,
+        p_partner_account_id::text,
         pg_catalog.jsonb_build_object(
             'versionNumber', v_draft.version_number,
             'revision', v_draft.revision,
@@ -144,6 +141,9 @@ begin
         )
     );
 
-    return sales_configurator.partner_proposal_json(v_proposal.id, v_actor);
+    return sales_configurator.partner_proposal_json(
+        v_proposal.id,
+        p_partner_account_id
+    );
 end;
 $$;

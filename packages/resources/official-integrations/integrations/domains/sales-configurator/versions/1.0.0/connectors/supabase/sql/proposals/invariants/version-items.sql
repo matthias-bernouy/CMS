@@ -45,9 +45,17 @@ begin
         and new.public_title is not distinct from old.public_title
         and new.public_introduction is not distinct from old.public_introduction
         and new.client_company_name = old.client_company_name
+        and new.client_company_registration_number
+            is not distinct from old.client_company_registration_number
         and new.client_contact_name = old.client_contact_name
+        and new.client_contact_job_title is not distinct from old.client_contact_job_title
         and new.client_contact_email = old.client_contact_email
         and new.client_contact_phone is not distinct from old.client_contact_phone
+        and new.client_address_line1 is not distinct from old.client_address_line1
+        and new.client_address_line2 is not distinct from old.client_address_line2
+        and new.client_postal_code is not distinct from old.client_postal_code
+        and new.client_city is not distinct from old.client_city
+        and new.client_country is not distinct from old.client_country
         and new.sales_contact_name = old.sales_contact_name
         and new.sales_contact_email is not distinct from old.sales_contact_email
         and new.created_at = old.created_at

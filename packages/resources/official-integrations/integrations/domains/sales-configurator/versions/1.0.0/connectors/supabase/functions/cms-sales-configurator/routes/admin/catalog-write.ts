@@ -11,7 +11,7 @@ import {
 } from "../../core/records.ts";
 import { rpc } from "../../core/rest.ts";
 import { rpcEntity, rpcRecord } from "../../core/rpc-result.ts";
-import { requirementByIds } from "./catalog-relationships.ts";
+import { requirementByIds, variantFeatureWithSelections } from "./catalog-relationships.ts";
 
 const itemStatuses = ["draft", "published", "archived"] as const;
 
@@ -50,7 +50,10 @@ export async function upsertVariantFeature(request: Request): Promise<Response> 
             sort_order: nonNegativeInteger(body.sortOrder, "sortOrder") ?? 0,
         },
     });
-    return json(rpcEntity(result, "variantFeature", "variant feature"));
+    const entity = rpcEntity(result, "variantFeature", "variant feature");
+    const variantItemId = integer(entity.variantItemId, "variantItemId", true)!;
+    const featureItemId = integer(entity.featureItemId, "featureItemId", true)!;
+    return json(await variantFeatureWithSelections(variantItemId, featureItemId, entity));
 }
 
 export async function deleteVariantFeature(request: Request): Promise<Response> {

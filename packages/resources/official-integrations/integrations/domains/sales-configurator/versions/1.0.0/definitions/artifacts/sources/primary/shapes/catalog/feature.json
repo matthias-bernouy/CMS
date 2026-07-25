@@ -1,7 +1,7 @@
 {
   "type": "object",
   "properties": {
-    "id": { "type": "number" },
+    "id": { "type": "number", "nullable": true },
     "code": { "type": "string" },
     "name": { "type": "string" },
     "description": { "type": "string", "nullable": true },

@@ -19,6 +19,27 @@
             <span hidden data-sales-proposal-status="{{ proposalData.proposal.status }}"></span>
         </header>
 
+        <basic-card appearance="outlined">
+            <strong slot="title">Client profile</strong>
+            <span slot="description">
+                {{ proposalData.proposal.client.companyName }}
+                <span cms-condition="proposalData.proposal.client.companyRegistrationNumber"> · {{ proposalData.proposal.client.companyRegistrationNumber }}</span>
+            </span>
+            <span>
+                {{ proposalData.proposal.client.contactName }}
+                <span cms-condition="proposalData.proposal.client.contactJobTitle"> · {{ proposalData.proposal.client.contactJobTitle }}</span>
+            </span>
+            <span>{{ proposalData.proposal.client.contactEmail }}</span>
+            <span cms-condition="proposalData.proposal.client.contactPhone">{{ proposalData.proposal.client.contactPhone }}</span>
+            <span cms-condition="proposalData.proposal.client.addressLine1">{{ proposalData.proposal.client.addressLine1 }}</span>
+            <span cms-condition="proposalData.proposal.client.addressLine2">{{ proposalData.proposal.client.addressLine2 }}</span>
+            <span cms-condition="proposalData.proposal.client.postalCode || proposalData.proposal.client.city">
+                {{ proposalData.proposal.client.postalCode }} {{ proposalData.proposal.client.city }}
+            </span>
+            <span cms-condition="proposalData.proposal.client.country">{{ proposalData.proposal.client.country }}</span>
+            <small cms-condition="proposalData.proposal.client.notes">Private notes · {{ proposalData.proposal.client.notes }}</small>
+        </basic-card>
+
         <span hidden data-sales-version-state="draft" data-sales-selected-id="{{ item.catalogItemId }}" cms-repeat="proposalData.proposal.draftVersion.items as item"></span>
         <span hidden data-sales-version-state="published" data-sales-selected-id="{{ item.catalogItemId }}" cms-repeat="proposalData.proposal.publishedVersion.items as item"></span>
 
@@ -53,49 +74,64 @@
                     <span slot="description">Ask an administrator to publish the catalogue before configuring proposals.</span>
                 </basic-card>
 
-                <basic-stack gap="lg" cms-condition="$source.loaded && catalogData.modules.length > 0">
-                    <basic-card appearance="outlined" cms-repeat="catalogData.modules as module">
-                        <strong slot="title">{{ module.name }}</strong>
-                        <span slot="description">{{ module.description }}</span>
-                        <basic-stack gap="xs" cms-condition="module.requirements.length > 0">
-                            <small>Module prerequisites</small>
-                            <span cms-repeat="module.requirements as requirement">{{ requirement.requiredName }}</span>
-                        </basic-stack>
-
-                        <basic-stack gap="md">
-                            <basic-card appearance="outlined" cms-repeat="module.variants as variant">
-                                <basic-checkbox value="{{ variant.id }}" data-sales-variant data-module-id="{{ module.id }}" data-catalog-id="{{ variant.id }}">
-                                    <strong>{{ variant.name }}</strong>
-                                    <span cms-condition="variant.providerName"> · {{ variant.providerName }}</span>
-                                </basic-checkbox>
-                                <p cms-condition="variant.pricingMode == 'fixed'">
-                                    Variant price: <strong data-sales-money data-amount-cents="{{ variant.unitAmountCents }}" data-currency="{{ variant.currency }}">—</strong>
-                                </p>
-                                <p cms-condition="variant.pricingMode == 'quote'">Variant price: on request</p>
-                                <basic-stack gap="xs" cms-condition="variant.requirements.length > 0">
-                                    <small>Prerequisites</small>
-                                    <span cms-repeat="variant.requirements as requirement">{{ requirement.requiredName }}</span>
-                                </basic-stack>
-
-                                <basic-stack gap="sm">
-                                    <div cms-repeat="variant.features as feature">
-                                        <span cms-condition="feature.availability == 'included'">Included · {{ feature.name }}</span>
-                                        <basic-checkbox value="{{ feature.id }}" data-sales-feature data-module-id="{{ module.id }}" data-variant-id="{{ variant.id }}" data-catalog-id="{{ feature.id }}" cms-condition="feature.availability == 'optional'">
-                                            {{ feature.name }}
-                                            <span cms-condition="feature.pricingMode == 'fixed'">
-                                                · <span data-sales-money data-amount-cents="{{ feature.unitAmountCents }}" data-currency="{{ variant.currency }}">—</span>
-                                            </span>
-                                            <span cms-condition="feature.pricingMode == 'quote'"> · on request</span>
-                                        </basic-checkbox>
-                                        <small cms-condition="feature.requirements.length > 0">
-                                            Requires:
-                                            <span cms-repeat="feature.requirements as requirement">{{ requirement.requiredName }}</span>
-                                        </small>
-                                    </div>
-                                </basic-stack>
-                            </basic-card>
-                        </basic-stack>
-                    </basic-card>
+                <basic-stack data-sales-catalog-picker gap="sm" cms-condition="$source.loaded && catalogData.modules.length > 0">
+                    <basic-input data-sales-catalog-search type="search" label="Search modules" placeholder="Name, code, or description" autocomplete="off"></basic-input>
+                    <small data-sales-catalog-search-status>Selected modules stay visible while you search.</small>
+                    <p data-sales-catalog-no-match role="status" hidden>No module matches this search.</p>
+                    <div data-sales-catalog-table-scroll role="region" aria-label="Published service catalogue" tabindex="0" style="max-width: 100%; overflow-x: auto;">
+                        <table data-sales-catalog-table style="width: 100%; min-width: 64rem; border-collapse: collapse;">
+                        <caption style="padding-block-end: 0.75rem; text-align: left;">Choose one variant per module, then add any optional features.</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col" style="padding: 0.5rem; text-align: left;">Type</th>
+                                <th scope="col" style="padding: 0.5rem; text-align: left;">Service</th>
+                                <th scope="col" style="padding: 0.5rem; text-align: left;">Provider</th>
+                                <th scope="col" style="padding: 0.5rem; text-align: left;">Availability</th>
+                                <th scope="col" style="padding: 0.5rem; text-align: left;">Price</th>
+                                <th scope="col" style="padding: 0.5rem; text-align: left;">Prerequisites</th>
+                                <th scope="col" style="padding: 0.5rem; text-align: left;">Selection</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-sales-catalog-row data-sales-row-kind="{{ row.kind }}" data-sales-depth="{{ row.depth }}" data-sales-module-id="{{ row.moduleId }}" data-sales-search-text="{{ row.name }} {{ row.code }} {{ row.description }}" cms-repeat="catalogData.selectionRows as row">
+                                <td style="padding: 0.5rem; vertical-align: top;">{{ row.typeLabel }}</td>
+                                <th scope="row" style="padding: 0.5rem; text-align: left; vertical-align: top;">
+                                    <span aria-hidden="true" cms-condition="row.kind == 'variant'">↳ </span>
+                                    <span aria-hidden="true" cms-condition="row.kind == 'feature'">↳ ↳ </span>
+                                    <strong>{{ row.name }}</strong>
+                                    <small style="display: block;">{{ row.code }}</small>
+                                    <small style="display: block;" cms-condition="row.description">{{ row.description }}</small>
+                                </th>
+                                <td style="padding: 0.5rem; vertical-align: top;">
+                                    <span cms-condition="row.providerName">{{ row.providerName }}</span>
+                                    <span cms-condition="!row.providerName">—</span>
+                                </td>
+                                <td style="padding: 0.5rem; vertical-align: top;">{{ row.availabilityLabel }}</td>
+                                <td style="padding: 0.5rem; vertical-align: top;">
+                                    <span cms-condition="row.kind == 'module'">—</span>
+                                    <span cms-condition="row.pricingMode == 'included'">Included</span>
+                                    <strong data-sales-money data-amount-cents="{{ row.unitAmountCents }}" data-currency="{{ row.currency }}" cms-condition="row.pricingMode == 'fixed'">—</strong>
+                                    <span cms-condition="row.pricingMode == 'quote'">On request</span>
+                                </td>
+                                <td style="padding: 0.5rem; vertical-align: top;">
+                                    <span cms-condition="row.requirements.length == 0">—</span>
+                                    <ul style="margin: 0; padding-inline-start: 1rem;" cms-condition="row.requirements.length > 0">
+                                        <li cms-repeat="row.requirements as requirement">{{ requirement.requiredName }}</li>
+                                    </ul>
+                                </td>
+                                <td style="padding: 0.5rem; vertical-align: top;">
+                                    <basic-stack gap="xs" cms-condition="row.kind == 'module'">
+                                        <basic-button data-sales-module-toggle data-module-id="{{ row.moduleId }}" type="button" appearance="outlined" aria-expanded="false">Configure</basic-button>
+                                        <small data-sales-module-selected-label hidden>Selected</small>
+                                    </basic-stack>
+                                    <basic-checkbox value="{{ row.id }}" data-sales-variant data-module-id="{{ row.moduleId }}" data-catalog-id="{{ row.id }}" cms-condition="row.kind == 'variant'">Select</basic-checkbox>
+                                    <span cms-condition="row.kind == 'feature' && row.availability == 'included'">Automatic</span>
+                                    <basic-checkbox disabled value="{{ row.id }}" data-sales-feature data-module-id="{{ row.moduleId }}" data-variant-id="{{ row.variantId }}" data-catalog-id="{{ row.id }}" cms-condition="row.kind == 'feature' && row.availability == 'optional'">Add</basic-checkbox>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </basic-stack>
             </section>
 

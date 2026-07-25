@@ -9,13 +9,19 @@ security invoker
 set search_path = ''
 as $$
 declare
-    v_actor text := nullif(pg_catalog.btrim(p_actor_cms_user_id), '');
+    v_actor text;
     v_partner_account_id bigint;
 begin
-    if v_actor is null then
+    begin
+        v_actor := sales_configurator.require_opaque_identifier(
+            p_actor_cms_user_id,
+            'actorCmsUserId',
+            512
+        );
+    exception when others then
         raise exception 'forbidden: active partner capability required'
             using errcode = '42501';
-    end if;
+    end;
     if p_capability not in (
         'clients.manage',
         'proposals.manage',
@@ -61,14 +67,14 @@ create trigger protect_partner_cms_user_id
 before update of cms_user_id on sales_configurator.partner_accounts
 for each row execute function sales_configurator.protect_partner_cms_user_id();
 
-create or replace function sales_configurator.protect_owner_cms_user_id()
+create or replace function sales_configurator.protect_partner_account_id()
 returns trigger
 language plpgsql
 set search_path = ''
 as $$
 begin
-    if new.owner_cms_user_id <> old.owner_cms_user_id then
-        raise exception 'immutable: owner cmsUserId cannot change';
+    if new.partner_account_id <> old.partner_account_id then
+        raise exception 'immutable: partnerAccountId cannot change';
     end if;
     return new;
 end;
@@ -76,6 +82,8 @@ $$;
 
 drop trigger if exists protect_client_owner_cms_user_id
     on sales_configurator.clients;
-create trigger protect_client_owner_cms_user_id
-before update of owner_cms_user_id on sales_configurator.clients
-for each row execute function sales_configurator.protect_owner_cms_user_id();
+drop trigger if exists protect_client_partner_account_id
+    on sales_configurator.clients;
+create trigger protect_client_partner_account_id
+before update of partner_account_id on sales_configurator.clients
+for each row execute function sales_configurator.protect_partner_account_id();

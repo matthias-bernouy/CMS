@@ -74,13 +74,19 @@ export function postgresContractConfiguration(packageRoot: string): {
                 "mondial-relay/tracking-summary",
                 ["run_tracking_summary_install_contract=true", "allow_tracking_summary_schema_reset=true"],
             ),
-            contract(
-                "sales-configurator",
-                "Sales Configurator domain and authorization",
-                "salesConfigurator",
-                "core-integrations/sales-configurator",
-                ["allow_sales_configurator_schema_reset=true"],
-            ),
+            {
+                bundle: "salesConfigurator",
+                id: "sales-configurator",
+                label: "Sales Configurator domain and authorization",
+                steps: [
+                    step("core-integrations/sales-configurator", "contracts.pg.sql", [
+                        "allow_sales_configurator_schema_reset=true",
+                    ]),
+                    step("core-integrations/sales-configurator", "legacy-ownership-migration.pg.sql", [
+                        "allow_sales_configurator_schema_reset=true",
+                    ]),
+                ],
+            },
             contract(
                 "stripe-connect-payout-schedule",
                 "Stripe Connect payout schedule",

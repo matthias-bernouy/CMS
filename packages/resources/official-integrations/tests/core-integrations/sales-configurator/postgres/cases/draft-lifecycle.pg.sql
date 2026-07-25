@@ -4,7 +4,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'draft_second',
     sales_configurator.save_partner_proposal_draft(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         sales_configurator_test.id('draft_initial', array['proposal', 'id']),
         sales_configurator_test.id('client_a', array['client', 'id']),
         '{"title":"Restaurant proposal","private_notes":"private-a"}',
@@ -57,7 +57,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'publish_stale',
     sales_configurator.publish_partner_proposal(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         sales_configurator_test.id('draft_second', array['proposal', 'id']),
         sales_configurator_test.id(
             'draft_second',
@@ -89,7 +89,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'publish_initial',
     sales_configurator.publish_partner_proposal(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         sales_configurator_test.id('draft_second', array['proposal', 'id']),
         sales_configurator_test.id(
             'draft_second',
@@ -112,9 +112,16 @@ select sales_configurator_test.assert_true(
 );
 
 select sales_configurator.save_partner_client(
-    'partner-a',
+    sales_configurator_test.id('partner_a', array['partner', 'id']),
     sales_configurator_test.id('client_a', array['client', 'id']),
-    '{"company_name":"Bistro A renamed","contact_name":"Alice New","contact_email":"alice-new@example.test"}'
+    '{
+        "company_name":"Bistro A renamed",
+        "company_registration_number":"FR-A-999",
+        "contact_name":"Alice New",
+        "contact_job_title":"Managing director",
+        "contact_email":"alice-new@example.test",
+        "city":"Lyon"
+    }'
 );
 select sales_configurator.upsert_partner_account(
     sales_configurator_test.id('partner_a', array['partner', 'id']),
@@ -126,7 +133,7 @@ insert into sales_configurator_test.results (name, body)
 values (
     'history_after_live_update',
     sales_configurator.read_partner_proposal(
-        'partner-a',
+        sales_configurator_test.id('partner_a', array['partner', 'id']),
         sales_configurator_test.id('publish_initial', array['proposal', 'id'])
     )
 );
@@ -134,8 +141,19 @@ values (
 select sales_configurator_test.assert_true(
     (
         select result.body #>> '{proposal,client,companyName}' = 'Bistro A renamed'
+          and result.body #>> '{proposal,client,companyRegistrationNumber}' = 'FR-A-999'
+          and result.body #>> '{proposal,client,contactJobTitle}' = 'Managing director'
+          and result.body #>> '{proposal,client,city}' = 'Lyon'
           and result.body #>> '{proposal,publishedVersion,title}' = 'Restaurant proposal'
           and result.body #>> '{proposal,publishedVersion,clientSnapshot,companyName}' = 'Bistro A'
+          and result.body #>> array[
+              'proposal',
+              'publishedVersion',
+              'clientSnapshot',
+              'companyRegistrationNumber'
+          ] = 'FR-A-123'
+          and result.body #>> '{proposal,publishedVersion,clientSnapshot,contactJobTitle}' = 'Owner'
+          and result.body #>> '{proposal,publishedVersion,clientSnapshot,city}' = 'Paris'
           and result.body #>> '{proposal,publishedVersion,salesContact,displayName}' = 'Partner A'
         from sales_configurator_test.results result
         where result.name = 'history_after_live_update'

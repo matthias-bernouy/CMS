@@ -60,7 +60,14 @@ const expectedBlocs = new Map([
     ["commerce-negotiation", ["commerce-negotiation-form", "commerce-negotiation-list"]],
     [
         "sales-configurator",
-        ["sales-proposal-builder", "sales-proposal-list", "sales-proposal-starter", "sales-proposal-view"],
+        [
+            "sales-catalog-browser",
+            "sales-client-directory",
+            "sales-proposal-builder",
+            "sales-proposal-list",
+            "sales-proposal-starter",
+            "sales-proposal-view",
+        ],
     ],
     ["user-account", ["user-account-avatar", "user-account-form"]],
 ]);

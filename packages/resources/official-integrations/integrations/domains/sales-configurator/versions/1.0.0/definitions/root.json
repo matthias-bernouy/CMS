@@ -25,6 +25,8 @@
   },
   "artifacts": {
     "$files": [
+      "artifacts/blocs/sales-client-directory.json",
+      "artifacts/blocs/sales-catalog-browser.json",
       "artifacts/blocs/sales-proposal-list.json",
       "artifacts/blocs/sales-proposal-starter.json",
       "artifacts/blocs/sales-proposal-builder.json",

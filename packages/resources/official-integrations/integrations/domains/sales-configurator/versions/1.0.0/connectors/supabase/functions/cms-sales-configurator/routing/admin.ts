@@ -1,6 +1,6 @@
 import { requireCmsAdmin } from "../core/auth.ts";
 import { methodNotAllowed } from "../core/http.ts";
-import { getCatalogKind, listCatalogKind } from "../routes/admin/catalog-read.ts";
+import { getCatalogKind, listCatalogItems, listCatalogKind } from "../routes/admin/catalog-read.ts";
 import { listRequirements, listVariantFeatures } from "../routes/admin/catalog-relationships.ts";
 import {
     deleteRequirement,
@@ -18,6 +18,9 @@ export async function handleAdminRoute(route: string, request: Request): Promise
     }
     requireCmsAdmin(request);
 
+    if (route === "/admin/catalog-items") {
+        return request.method === "GET" ? await listCatalogItems(request) : methodNotAllowed("GET");
+    }
     for (const [plural, singular, kind] of catalogRoutes) {
         if (route === plural) {
             return request.method === "GET" ? await listCatalogKind(request, kind) : methodNotAllowed("GET");

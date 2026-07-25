@@ -1,5 +1,5 @@
 create or replace function sales_configurator.revoke_partner_proposal_share(
-    p_actor_cms_user_id text,
+    p_partner_account_id bigint,
     p_proposal_id bigint,
     p_share_id bigint
 )
@@ -10,22 +10,19 @@ security invoker
 set search_path = ''
 as $$
 declare
-    v_actor text := sales_configurator.require_bounded_text(
-        p_actor_cms_user_id,
-        'actorCmsUserId',
-        512
-    );
     v_proposal sales_configurator.proposals%rowtype;
     v_share sales_configurator.proposal_shares%rowtype;
     v_revoked boolean := false;
 begin
-    perform sales_configurator.require_partner(v_actor, 'proposals.share');
+    if p_partner_account_id is null then
+        raise exception 'validation: partnerAccountId is required';
+    end if;
 
     select proposal.*
     into v_proposal
     from sales_configurator.proposals proposal
     where proposal.id = p_proposal_id
-      and proposal.owner_cms_user_id = v_actor
+      and proposal.partner_account_id = p_partner_account_id
     for update;
     if not found then
         return pg_catalog.jsonb_build_object('state', 'not_found');
@@ -64,7 +61,7 @@ begin
             v_share.id,
             'share_revoked',
             'partner',
-            v_actor
+            p_partner_account_id::text
         );
 
         if v_proposal.status in ('shared', 'viewed')
@@ -88,7 +85,10 @@ begin
         end if;
     end if;
 
-    return sales_configurator.partner_proposal_json(v_proposal.id, v_actor)
+    return sales_configurator.partner_proposal_json(
+        v_proposal.id,
+        p_partner_account_id
+    )
         || pg_catalog.jsonb_build_object(
             'revoked', v_revoked,
             'share', pg_catalog.jsonb_build_object(

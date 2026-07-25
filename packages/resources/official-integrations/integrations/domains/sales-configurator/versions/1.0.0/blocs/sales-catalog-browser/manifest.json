@@ -1,0 +1,10 @@
+{
+    "default-tag": "sales-catalog-browser",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Catalog browser",
+        "description": "Read-only partner catalog browser with local search and availability filters."
+    }
+}

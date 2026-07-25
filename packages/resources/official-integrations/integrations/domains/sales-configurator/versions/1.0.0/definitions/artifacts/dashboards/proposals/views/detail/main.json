@@ -6,10 +6,36 @@
       { "id": "reference", "label": "Reference", "path": "reference", "type": "readonly" },
       { "id": "title", "label": "Public title", "path": "title", "type": "readonly" },
       { "id": "introduction", "label": "Public introduction", "path": "introduction", "type": "readonly" },
-      { "id": "clientCompany", "label": "Client", "path": "client.companyName", "type": "readonly" },
-      { "id": "clientContact", "label": "Client contact", "path": "client.contactName", "type": "readonly" },
       { "id": "partner", "label": "Sales partner", "path": "partner.displayName", "type": "readonly" },
       { "id": "privateNotes", "label": "Private notes", "path": "privateNotes", "type": "readonly" }
+    ]
+  },
+  {
+    "id": "clientProfile",
+    "title": "Client profile",
+    "fields": [
+      { "id": "clientCompany", "label": "Client", "path": "client.companyName", "type": "readonly" },
+      {
+        "id": "clientRegistrationNumber",
+        "label": "Company registration",
+        "path": "client.companyRegistrationNumber",
+        "type": "readonly"
+      },
+      { "id": "clientContact", "label": "Client contact", "path": "client.contactName", "type": "readonly" },
+      {
+        "id": "clientContactJobTitle",
+        "label": "Contact job title",
+        "path": "client.contactJobTitle",
+        "type": "readonly"
+      },
+      { "id": "clientContactEmail", "label": "Contact email", "path": "client.contactEmail", "type": "readonly" },
+      { "id": "clientContactPhone", "label": "Contact phone", "path": "client.contactPhone", "type": "readonly" },
+      { "id": "clientAddressLine1", "label": "Address", "path": "client.addressLine1", "type": "readonly" },
+      { "id": "clientAddressLine2", "label": "Address line 2", "path": "client.addressLine2", "type": "readonly" },
+      { "id": "clientPostalCode", "label": "Postal code", "path": "client.postalCode", "type": "readonly" },
+      { "id": "clientCity", "label": "City", "path": "client.city", "type": "readonly" },
+      { "id": "clientCountry", "label": "Country", "path": "client.country", "type": "readonly" },
+      { "id": "clientNotes", "label": "Private client notes", "path": "client.notes", "type": "readonly" }
     ]
   },
   {

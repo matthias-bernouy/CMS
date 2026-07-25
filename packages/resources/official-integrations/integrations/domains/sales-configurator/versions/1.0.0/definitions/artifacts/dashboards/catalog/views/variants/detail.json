@@ -46,7 +46,7 @@
             "required": true,
             "lookup": {
               "endpoint": "manageModules",
-              "params": { "q": "$search", "status": "published", "limit": "30" },
+              "params": { "q": "$search", "status": "published", "limit": "100" },
               "itemsPath": "items",
               "valuePath": "id",
               "labelPath": "name",

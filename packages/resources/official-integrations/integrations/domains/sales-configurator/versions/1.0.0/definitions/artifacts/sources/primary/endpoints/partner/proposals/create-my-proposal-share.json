@@ -31,7 +31,7 @@
             },
             "token": { "type": "string" },
             "proposal": {
-              "$include": "../../../shapes/proposals/partner-detail.json"
+              "$include": "../../../shapes/proposals/partner/detail.json"
             }
           },
           "required": ["share", "token", "proposal"]

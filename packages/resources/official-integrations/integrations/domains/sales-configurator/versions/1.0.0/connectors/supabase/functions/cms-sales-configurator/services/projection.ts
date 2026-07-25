@@ -23,9 +23,23 @@ export function partnerProposalProjection(value: unknown): JsonRecord | null {
         ...stripped,
         proposal: {
             ...proposal,
+            events: redactPartnerEventActors(proposal.events),
             missingRequirements: proposal.missingRequirements ?? draft?.missingRequirements ?? [],
         },
     };
+}
+
+function redactPartnerEventActors(value: unknown): unknown {
+    if (!Array.isArray(value)) {
+        return value;
+    }
+    return value.map((entry) => {
+        if (!isRecord(entry)) {
+            return entry;
+        }
+        const { actorId: _, actor_id: __, ...event } = entry;
+        return event;
+    });
 }
 
 export function publicProposalProjection(value: unknown): JsonRecord | null {

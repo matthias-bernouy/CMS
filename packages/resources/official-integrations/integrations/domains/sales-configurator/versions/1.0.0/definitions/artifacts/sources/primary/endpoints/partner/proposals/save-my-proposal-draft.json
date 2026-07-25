@@ -42,7 +42,7 @@
           "type": "object",
           "properties": {
             "proposal": {
-              "$include": "../../../shapes/proposals/partner-detail.json"
+              "$include": "../../../shapes/proposals/partner/detail.json"
             }
           },
           "required": ["proposal"]

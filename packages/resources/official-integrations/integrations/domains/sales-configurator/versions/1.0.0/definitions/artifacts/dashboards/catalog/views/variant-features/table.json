@@ -12,7 +12,7 @@
       "itemsPath": "items",
       "totalPath": "total"
     },
-    "rowKey": "featureItemId",
+    "rowKey": "id",
     "filters": [
       {
         "id": "q",

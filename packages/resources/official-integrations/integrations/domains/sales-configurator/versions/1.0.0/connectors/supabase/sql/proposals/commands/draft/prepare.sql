@@ -1,27 +1,25 @@
 create or replace function sales_configurator.prepare_partner_proposal_draft(
-    p_actor_cms_user_id text, p_proposal_id bigint, p_client_id bigint, p_payload jsonb
+    p_partner_account_id bigint, p_proposal_id bigint, p_client_id bigint, p_payload jsonb
 )
 returns jsonb language plpgsql volatile security invoker
 set search_path = ''
 as $$
 declare
-    v_actor text := sales_configurator.require_bounded_text(
-        p_actor_cms_user_id,
-        'actorCmsUserId',
-        512
-    );
     v_payload jsonb := sales_configurator.require_json_object(p_payload, 'proposal');
     v_client sales_configurator.clients%rowtype;
     v_partner sales_configurator.partner_accounts%rowtype;
     v_proposal sales_configurator.proposals%rowtype;
     v_version sales_configurator.proposal_versions%rowtype;
 begin
-    perform sales_configurator.require_partner(v_actor, 'proposals.manage');
+    if p_partner_account_id is null then
+        raise exception 'validation: partnerAccountId is required';
+    end if;
+
     select client.*
     into v_client
     from sales_configurator.clients client
     where client.id = p_client_id
-      and client.owner_cms_user_id = v_actor
+      and client.partner_account_id = p_partner_account_id
     for key share;
     if not found then
         return pg_catalog.jsonb_build_object('state', 'not_found');
@@ -30,18 +28,18 @@ begin
     select partner.*
     into strict v_partner
     from sales_configurator.partner_accounts partner
-    where partner.cms_user_id = v_actor;
+    where partner.id = p_partner_account_id;
 
     if p_proposal_id is null then
         insert into sales_configurator.proposals (
-            owner_cms_user_id,
+            partner_account_id,
             client_id,
             title,
             introduction,
             private_notes
         )
         values (
-            v_actor,
+            p_partner_account_id,
             p_client_id,
             sales_configurator.optional_bounded_text(v_payload ->> 'title', 'title', 300),
             sales_configurator.optional_bounded_text(
@@ -67,13 +65,18 @@ begin
             actor_type,
             actor_id
         )
-        values (v_proposal.id, 'created', 'partner', v_actor);
+        values (
+            v_proposal.id,
+            'created',
+            'partner',
+            p_partner_account_id::text
+        );
     else
         select proposal.*
         into v_proposal
         from sales_configurator.proposals proposal
         where proposal.id = p_proposal_id
-          and proposal.owner_cms_user_id = v_actor
+          and proposal.partner_account_id = p_partner_account_id
         for update;
         if not found then
             return pg_catalog.jsonb_build_object('state', 'not_found');
@@ -137,9 +140,16 @@ begin
             proposal_id,
             version_number,
             client_company_name,
+            client_company_registration_number,
             client_contact_name,
+            client_contact_job_title,
             client_contact_email,
             client_contact_phone,
+            client_address_line1,
+            client_address_line2,
+            client_postal_code,
+            client_city,
+            client_country,
             sales_contact_name,
             sales_contact_email
         )
@@ -147,9 +157,16 @@ begin
             v_proposal.id,
             coalesce(pg_catalog.max(version.version_number), 0) + 1,
             v_client.company_name,
+            v_client.company_registration_number,
             v_client.contact_name,
+            v_client.contact_job_title,
             v_client.contact_email,
             v_client.contact_phone,
+            v_client.address_line1,
+            v_client.address_line2,
+            v_client.postal_code,
+            v_client.city,
+            v_client.country,
             v_partner.display_name,
             v_partner.contact_email
         from sales_configurator.proposal_versions version
@@ -162,9 +179,16 @@ begin
         public_title = v_proposal.title,
         public_introduction = v_proposal.introduction,
         client_company_name = v_client.company_name,
+        client_company_registration_number = v_client.company_registration_number,
         client_contact_name = v_client.contact_name,
+        client_contact_job_title = v_client.contact_job_title,
         client_contact_email = v_client.contact_email,
         client_contact_phone = v_client.contact_phone,
+        client_address_line1 = v_client.address_line1,
+        client_address_line2 = v_client.address_line2,
+        client_postal_code = v_client.postal_code,
+        client_city = v_client.city,
+        client_country = v_client.country,
         sales_contact_name = v_partner.display_name,
         sales_contact_email = v_partner.contact_email
     where version.id = v_version.id

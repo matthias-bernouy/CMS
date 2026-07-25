@@ -53,7 +53,21 @@ describe("sales proposal starter", () => {
         expect(content).not.toContain("<cms-binding-core");
         expect(view).toContain("/listMyClients?limit=");
         expect(content).toContain("/saveMyClient as clientResult");
+        expect(content).toContain('name="companyRegistrationNumber"');
+        expect(content).toContain('name="contactJobTitle"');
+        expect(content).toContain('name="addressLine1"');
+        expect(content).toContain('name="postalCode"');
+        expect(content).toContain('name="city"');
+        expect(content).toContain('name="country"');
+        expect(content).toContain("Add another client");
+        expect(content).toContain("<dialog data-sales-client-create-dialog");
+        expect(content).toContain("data-sales-client-create-open");
+        expect(content).toContain("data-sales-client-dialog-close");
         expect(content).toContain("/getPartnerCatalog as catalogData");
+        expect(content).toContain('cms-repeat="catalogData.selectionRows as row"');
+        expect(content).toContain("<table data-sales-catalog-table");
+        expect(content).toContain("data-sales-catalog-search");
+        expect(content).toContain("data-sales-module-toggle");
         expect(content).toContain("/saveMyProposalDraft as saveResult");
         expect(content).not.toMatch(/name="id"/);
         expect(compiled.viewJS).toContain('customElements.define("contract-sales-proposal-starter"');
@@ -99,6 +113,7 @@ describe("sales proposal starter", () => {
         const clientForm = starter.querySelector<HTMLFormElement>("[data-sales-client-form]")!;
         expect(clientForm.getAttribute("cms-source")).toBe("/.cms/sources/partner-sales/saveMyClient as clientResult");
         expect(clientForm.getAttribute("cms-source-publish")).toBe("sales-clients:changed");
+        expect(clientForm.getAttribute("cms-source-success-reset")).toBe("true");
         expect(form.getAttribute("cms-source")).toBe("/.cms/sources/partner-sales/saveMyProposalDraft as saveResult");
         expect(form.getAttribute("cms-source-trigger")).toBe("submit");
         expect(form.getAttribute("cms-source-method")).toBe("POST");
@@ -151,6 +166,302 @@ describe("sales proposal starter", () => {
         await settle();
 
         expect(calls).toBe(0);
+    });
+
+    test("keeps client creation available after the first client exists", async () => {
+        globalThis.fetch = (async (input: RequestInfo | URL) => {
+            const path = new URL(String(input), location.href).pathname;
+            if (path.endsWith("/listMyClients")) {
+                return Response.json({
+                    items: [
+                        {
+                            id: 7,
+                            companyName: "Bistro",
+                            contactName: "Camille",
+                            contactEmail: "camille@example.test",
+                        },
+                    ],
+                    total: 1,
+                });
+            }
+            if (path.endsWith("/getPartnerCatalog")) {
+                return Response.json({ modules: [] });
+            }
+            throw new Error(`unexpected request ${String(input)}`);
+        }) as typeof fetch;
+
+        const core = document.createElement(BINDING_CORE_TAG);
+        core.innerHTML = (await read("default.html")).replaceAll("sales-proposal-starter", tag);
+        document.body.append(core);
+
+        await waitFor(() => core.querySelector("[data-sales-another-client-title]") !== null);
+
+        expect(core.querySelector("[data-sales-first-client-title]")).toBeNull();
+        expect(core.querySelector("[data-sales-client-create-card]")).not.toBeNull();
+        expect(core.querySelector("[data-sales-client-form]")).not.toBeNull();
+        expect(core.textContent).toContain("Bistro");
+
+        const opener = core.querySelector<HTMLElement>("[data-sales-client-create-open]")!;
+        const dialog = core.querySelector<HTMLDialogElement>("[data-sales-client-create-dialog]")!;
+        opener.click();
+        await settle();
+        expect(dialog.open || dialog.hasAttribute("open")).toBe(true);
+        core.querySelector<HTMLElement>("[data-sales-client-dialog-close]")!.click();
+        expect(dialog.open || dialog.hasAttribute("open")).toBe(false);
+    });
+
+    test("renders the flat catalogue as one accessible hierarchical table", async () => {
+        globalThis.fetch = (async (input: RequestInfo | URL) => {
+            const path = new URL(String(input), location.href).pathname;
+            if (path.endsWith("/listMyClients")) {
+                return Response.json({
+                    items: [
+                        {
+                            id: 7,
+                            companyName: "Bistro",
+                            contactName: "Camille",
+                            contactEmail: "camille@example.test",
+                        },
+                    ],
+                    total: 1,
+                });
+            }
+            if (path.endsWith("/getPartnerCatalog")) {
+                return Response.json({
+                    modules: [{ id: 10 }],
+                    selectionRows: [
+                        {
+                            kind: "module",
+                            typeLabel: "Module",
+                            depth: 0,
+                            id: 10,
+                            code: "booking",
+                            name: "Booking",
+                            description: "Reservation services",
+                            moduleId: 10,
+                            variantId: null,
+                            providerName: null,
+                            availability: "base",
+                            availabilityLabel: "Base",
+                            pricingMode: null,
+                            unitAmountCents: null,
+                            currency: null,
+                            requirements: [],
+                        },
+                        {
+                            kind: "variant",
+                            typeLabel: "Variant",
+                            depth: 1,
+                            id: 11,
+                            code: "restaurant",
+                            name: "Restaurant",
+                            description: null,
+                            moduleId: 10,
+                            variantId: 11,
+                            providerName: "Internal",
+                            availability: "selectable",
+                            availabilityLabel: "Selectable",
+                            pricingMode: "fixed",
+                            unitAmountCents: 50000,
+                            currency: "EUR",
+                            requirements: [],
+                        },
+                        {
+                            kind: "feature",
+                            typeLabel: "Feature",
+                            depth: 2,
+                            id: 12,
+                            code: "tables",
+                            name: "Table tracking",
+                            description: null,
+                            moduleId: 10,
+                            variantId: 11,
+                            providerName: "Internal",
+                            availability: "included",
+                            availabilityLabel: "Included",
+                            pricingMode: "included",
+                            unitAmountCents: null,
+                            currency: "EUR",
+                            requirements: [],
+                        },
+                        {
+                            kind: "feature",
+                            typeLabel: "Feature",
+                            depth: 2,
+                            id: 13,
+                            code: "payment",
+                            name: "Online payment",
+                            description: null,
+                            moduleId: 10,
+                            variantId: 11,
+                            providerName: "Internal",
+                            availability: "optional",
+                            availabilityLabel: "Optional",
+                            pricingMode: "fixed",
+                            unitAmountCents: 15000,
+                            currency: "EUR",
+                            requirements: [{ requiredName: "Payment module" }],
+                        },
+                    ],
+                });
+            }
+            throw new Error(`unexpected request ${String(input)}`);
+        }) as typeof fetch;
+
+        const core = document.createElement(BINDING_CORE_TAG);
+        core.innerHTML = (await read("default.html")).replaceAll("sales-proposal-starter", tag);
+        document.body.append(core);
+
+        await waitFor(() => core.querySelectorAll("[data-sales-catalog-row]").length === 4);
+        await settle();
+
+        const table = core.querySelector<HTMLTableElement>("[data-sales-catalog-table]")!;
+        const region = core.querySelector<HTMLElement>("[data-sales-catalog-table-scroll]")!;
+        const rows = Array.from(core.querySelectorAll<HTMLElement>("[data-sales-catalog-row]"));
+        const feature = core.querySelector<HTMLElement>("[data-sales-feature]")!;
+
+        expect(table.caption?.textContent).toContain("Choose one variant per module");
+        expect(region.getAttribute("role")).toBe("region");
+        expect(region.getAttribute("tabindex")).toBe("0");
+        expect(table.querySelectorAll('th[scope="col"]')).toHaveLength(7);
+        expect(table.querySelectorAll('th[scope="row"]')).toHaveLength(4);
+        expect(rows.map((row) => row.getAttribute("data-sales-row-kind"))).toEqual([
+            "module",
+            "variant",
+            "feature",
+            "feature",
+        ]);
+        expect(rows.map((row) => row.getAttribute("data-sales-depth"))).toEqual(["0", "1", "2", "2"]);
+        expect(table.querySelectorAll("[data-sales-variant]")).toHaveLength(1);
+        expect(table.querySelectorAll("[data-sales-feature]")).toHaveLength(1);
+        expect(rows[0]?.hidden).toBe(false);
+        expect(rows.slice(1).every((row) => row.hidden)).toBe(true);
+        core.querySelector<HTMLElement>("[data-sales-module-toggle]")!.click();
+        expect(rows.slice(1).every((row) => !row.hidden)).toBe(true);
+        expect(core.querySelector("[data-sales-module-toggle]")?.getAttribute("aria-expanded")).toBe("true");
+        expect(feature.getAttribute("data-module-id")).toBe("10");
+        expect(feature.getAttribute("data-variant-id")).toBe("11");
+        expect(feature.getAttribute("data-catalog-id")).toBe("13");
+        expect(rows[2]?.textContent).toContain("Automatic");
+        expect(rows[3]?.textContent).toContain("Payment module");
+        expect(table.textContent).not.toContain("{{");
+    });
+
+    test("filters module rows from keyboard input without accents or case and keeps selections reachable", async () => {
+        const starter = document.createElement(tag);
+        starter.innerHTML = `
+            <input data-sales-catalog-search>
+            <p data-sales-catalog-no-match hidden>No match</p>
+            <table>
+                <tbody>
+                    <tr data-sales-catalog-row data-sales-row-kind="module" data-sales-module-id="1" data-sales-search-text="Réservation Café booking">
+                        <td><button data-sales-module-toggle data-module-id="1" type="button" aria-expanded="false">Configure</button><span data-sales-module-selected-label hidden>Selected</span></td>
+                    </tr>
+                    <tr data-sales-catalog-row data-sales-row-kind="variant" data-sales-module-id="1">
+                        <td><input type="checkbox" data-sales-variant data-module-id="1" data-catalog-id="11"></td>
+                    </tr>
+                    <tr data-sales-catalog-row data-sales-row-kind="module" data-sales-module-id="2" data-sales-search-text="Paiement en ligne payment">
+                        <td><button data-sales-module-toggle data-module-id="2" type="button" aria-expanded="false">Configure</button><span data-sales-module-selected-label hidden>Selected</span></td>
+                    </tr>
+                    <tr data-sales-catalog-row data-sales-row-kind="variant" data-sales-module-id="2">
+                        <td><input type="checkbox" checked data-sales-variant data-module-id="2" data-catalog-id="21"></td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        document.body.append(starter);
+        await settle();
+
+        const search = starter.querySelector<HTMLInputElement>("[data-sales-catalog-search]")!;
+        const moduleOne = starter.querySelector<HTMLElement>(
+            '[data-sales-row-kind="module"][data-sales-module-id="1"]',
+        )!;
+        const moduleOneDetails = starter.querySelector<HTMLElement>(
+            '[data-sales-row-kind="variant"][data-sales-module-id="1"]',
+        )!;
+        const moduleTwo = starter.querySelector<HTMLElement>(
+            '[data-sales-row-kind="module"][data-sales-module-id="2"]',
+        )!;
+        const moduleTwoDetails = starter.querySelector<HTMLElement>(
+            '[data-sales-row-kind="variant"][data-sales-module-id="2"]',
+        )!;
+        const noMatch = starter.querySelector<HTMLElement>("[data-sales-catalog-no-match]")!;
+
+        expect(moduleOne.hidden).toBe(false);
+        expect(moduleTwo.hidden).toBe(false);
+        expect(moduleOneDetails.hidden).toBe(true);
+        expect(moduleTwoDetails.hidden).toBe(true);
+        expect(moduleTwo.hasAttribute("data-sales-module-selected")).toBe(true);
+        expect(moduleTwo.querySelector<HTMLElement>("[data-sales-module-selected-label]")?.hidden).toBe(false);
+
+        search.value = "CAFE";
+        search.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: "E" }));
+        expect(moduleOne.hidden).toBe(false);
+        expect(moduleTwo.hidden).toBe(false);
+        expect(noMatch.hidden).toBe(true);
+
+        moduleOne.querySelector<HTMLButtonElement>("[data-sales-module-toggle]")!.click();
+        expect(moduleOneDetails.hidden).toBe(false);
+        expect(moduleOne.querySelector("[data-sales-module-toggle]")?.getAttribute("aria-expanded")).toBe("true");
+
+        search.value = "introuvable";
+        search.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: "e" }));
+        expect(moduleOne.hidden).toBe(true);
+        expect(moduleOneDetails.hidden).toBe(true);
+        expect(moduleTwo.hidden).toBe(false);
+        expect(noMatch.hidden).toBe(true);
+
+        const selectedVariant = moduleTwoDetails.querySelector<HTMLInputElement>("[data-sales-variant]")!;
+        selectedVariant.checked = false;
+        selectedVariant.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(moduleTwo.hidden).toBe(true);
+        expect(noMatch.hidden).toBe(false);
+
+        search.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Escape" }));
+        expect(search.value).toBe("");
+        expect(moduleOne.hidden).toBe(false);
+        expect(moduleTwo.hidden).toBe(false);
+        expect(moduleOneDetails.hidden).toBe(false);
+        expect(noMatch.hidden).toBe(true);
+    });
+
+    test("creates a client through the dialog binding form", async () => {
+        let created: Request | null = null;
+        globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+            const request = input instanceof Request ? input : new Request(new URL(String(input), location.href), init);
+            if (request.method === "POST") {
+                created = request;
+                return Response.json({ client: { id: 8, companyName: "Bistro" } });
+            }
+            return Response.json({ items: [], total: 0 });
+        }) as typeof fetch;
+
+        const core = document.createElement(BINDING_CORE_TAG);
+        core.innerHTML = (await read("default.html")).replaceAll("sales-proposal-starter", tag);
+        document.body.append(core);
+        await waitFor(() => core.querySelector("[data-sales-client-form]") !== null);
+
+        const opener = core.querySelector<HTMLElement>("[data-sales-client-create-open]")!;
+        const dialog = core.querySelector<HTMLDialogElement>("[data-sales-client-create-dialog]")!;
+        opener.click();
+        const form = core.querySelector<HTMLFormElement>("[data-sales-client-form]")!;
+        form.innerHTML = `
+            <input name="companyName" value="Bistro">
+            <input name="contactName" value="Camille">
+            <input name="contactEmail" value="camille@example.test">
+            <button type="submit">Create</button>
+        `;
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        await waitFor(() => created !== null);
+        await waitFor(() => !(dialog.open || dialog.hasAttribute("open")));
+
+        const request = created as unknown as Request;
+        expect(request.method).toBe("POST");
+        expect(await request.json()).toEqual({
+            companyName: "Bistro",
+            contactName: "Camille",
+            contactEmail: "camille@example.test",
+        });
     });
 
     test("creates the first draft through the binding-owned form", async () => {

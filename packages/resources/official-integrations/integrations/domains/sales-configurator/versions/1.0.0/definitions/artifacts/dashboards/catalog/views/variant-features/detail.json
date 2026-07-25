@@ -5,8 +5,7 @@
     "source": {
       "endpoint": "manageVariantFeatures",
       "params": {
-        "variantItemId": "$selection.variantItemId",
-        "featureItemId": "$selection.featureItemId"
+        "id": "$selection.id"
       },
       "itemPath": "item"
     },
@@ -61,11 +60,12 @@
             "required": true,
             "lookup": {
               "endpoint": "manageVariants",
-              "params": { "q": "$search", "limit": "30" },
+              "params": { "q": "$search", "limit": "100" },
               "itemsPath": "items",
               "valuePath": "id",
               "labelPath": "name",
-              "subtitlePath": "moduleName"
+              "subtitlePath": "code",
+              "selected": "$resource.variant"
             }
           },
           {
@@ -76,11 +76,12 @@
             "required": true,
             "lookup": {
               "endpoint": "manageFeatures",
-              "params": { "q": "$search", "limit": "30" },
+              "params": { "q": "$search", "limit": "100" },
               "itemsPath": "items",
               "valuePath": "id",
               "labelPath": "name",
-              "subtitlePath": "code"
+              "subtitlePath": "code",
+              "selected": "$resource.feature"
             }
           },
           {

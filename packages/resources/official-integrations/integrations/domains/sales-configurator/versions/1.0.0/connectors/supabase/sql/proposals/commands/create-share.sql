@@ -1,5 +1,5 @@
 create or replace function sales_configurator.create_partner_proposal_share(
-    p_actor_cms_user_id text,
+    p_partner_account_id bigint,
     p_proposal_id bigint,
     p_expires_at timestamptz,
     p_token_hash text
@@ -11,17 +11,14 @@ security invoker
 set search_path = ''
 as $$
 declare
-    v_actor text := sales_configurator.require_bounded_text(
-        p_actor_cms_user_id,
-        'actorCmsUserId',
-        512
-    );
     v_token_hash text := pg_catalog.lower(pg_catalog.btrim(p_token_hash));
     v_proposal sales_configurator.proposals%rowtype;
     v_version_id bigint;
     v_share sales_configurator.proposal_shares%rowtype;
 begin
-    perform sales_configurator.require_partner(v_actor, 'proposals.share');
+    if p_partner_account_id is null then
+        raise exception 'validation: partnerAccountId is required';
+    end if;
 
     if v_token_hash !~ '^[0-9a-f]{64}$' then
         raise exception 'validation: tokenHash must be a SHA-256 hex digest';
@@ -36,7 +33,7 @@ begin
     into v_proposal
     from sales_configurator.proposals proposal
     where proposal.id = p_proposal_id
-      and proposal.owner_cms_user_id = v_actor
+      and proposal.partner_account_id = p_partner_account_id
     for update;
     if not found then
         return pg_catalog.jsonb_build_object('state', 'not_found');
@@ -99,11 +96,14 @@ begin
         v_share.id,
         'share_created',
         'partner',
-        v_actor,
+        p_partner_account_id::text,
         pg_catalog.jsonb_build_object('expiresAt', v_share.expires_at)
     );
 
-    return sales_configurator.partner_proposal_json(v_proposal.id, v_actor)
+    return sales_configurator.partner_proposal_json(
+        v_proposal.id,
+        p_partner_account_id
+    )
         || pg_catalog.jsonb_build_object(
             'share', pg_catalog.jsonb_build_object(
                 'id', v_share.id,

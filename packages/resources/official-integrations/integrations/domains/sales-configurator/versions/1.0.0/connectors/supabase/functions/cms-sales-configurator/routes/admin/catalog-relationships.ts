@@ -10,8 +10,27 @@ export async function listVariantFeatures(request: Request): Promise<Response> {
     const query = listQuery(request);
     const params = listParams(query, "sort_order.asc,variant_item_id.asc,feature_item_id.asc");
     const url = new URL(request.url);
-    const variantId = integer(url.searchParams.get("variantItemId"), "variantItemId");
-    const featureId = integer(url.searchParams.get("featureItemId"), "featureItemId");
+    const selection = relationshipSelection(url.searchParams.get("id"), "variant feature");
+    if (selection === "new") {
+        return relationshipDraft(
+            {
+                id: "__new__",
+                variantItemId: null,
+                variantName: null,
+                variant: null,
+                featureItemId: null,
+                featureName: null,
+                feature: null,
+                availability: "included",
+                pricingMode: "included",
+                unitAmountCents: null,
+                sortOrder: 0,
+            },
+            query,
+        );
+    }
+    const variantId = selection?.left ?? integer(url.searchParams.get("variantItemId"), "variantItemId");
+    const featureId = selection?.right ?? integer(url.searchParams.get("featureItemId"), "featureItemId");
     addExactFilter(params, "variant_item_id", variantId);
     addExactFilter(params, "feature_item_id", featureId);
     if (!(await addSearchFilter(params, query.query, "variant_item_id", "feature_item_id"))) {
@@ -19,11 +38,20 @@ export async function listVariantFeatures(request: Request): Promise<Response> {
     }
     const { rows, total } = await listRows(`variant_features?${params}`);
     const items = await catalogItemsFor(rows, "variant_item_id", "feature_item_id");
-    const hydrated = rows.map((row) => ({
-        ...row,
-        variant_name: items.get(Number(row.variant_item_id))?.name,
-        feature_name: items.get(Number(row.feature_item_id))?.name,
-    }));
+    const hydrated = rows.map((row) => {
+        const variantItemId = Number(row.variant_item_id);
+        const featureItemId = Number(row.feature_item_id);
+        const variant = items.get(variantItemId);
+        const feature = items.get(featureItemId);
+        return {
+            ...row,
+            id: relationshipId(variantItemId, featureItemId),
+            variant_name: variant?.name,
+            variant: catalogItemSelection(variant),
+            feature_name: feature?.name,
+            feature: catalogItemSelection(feature),
+        };
+    });
     return relationshipList(hydrated, total, query, Boolean(variantId && featureId));
 }
 
@@ -31,8 +59,28 @@ export async function listRequirements(request: Request): Promise<Response> {
     const query = listQuery(request);
     const params = listParams(query, "created_at.desc,subject_item_id.asc");
     const url = new URL(request.url);
-    const subjectId = integer(url.searchParams.get("subjectItemId"), "subjectItemId");
-    const requiredId = integer(url.searchParams.get("requiredItemId"), "requiredItemId");
+    const selection = relationshipSelection(url.searchParams.get("id"), "prerequisite");
+    if (selection === "new") {
+        return relationshipDraft(
+            {
+                id: "__new__",
+                subjectItemId: null,
+                subjectKind: null,
+                subjectCode: null,
+                subjectName: null,
+                subject: null,
+                requiredItemId: null,
+                requiredKind: null,
+                requiredCode: null,
+                requiredName: null,
+                required: null,
+                createdAt: null,
+            },
+            query,
+        );
+    }
+    const subjectId = selection?.left ?? integer(url.searchParams.get("subjectItemId"), "subjectItemId");
+    const requiredId = selection?.right ?? integer(url.searchParams.get("requiredItemId"), "requiredItemId");
     addExactFilter(params, "subject_item_id", subjectId);
     addExactFilter(params, "required_item_id", requiredId);
     if (!(await addSearchFilter(params, query.query, "subject_item_id", "required_item_id"))) {
@@ -40,7 +88,7 @@ export async function listRequirements(request: Request): Promise<Response> {
     }
     const { rows, total } = await listRows(`catalog_requirements?${params}`);
     const items = await catalogItemsFor(rows, "subject_item_id", "required_item_id");
-    const hydrated = rows.map((row) => catalogRequirementProjection(row, items));
+    const hydrated = rows.map((row) => requirementProjection(row, items));
     return relationshipList(hydrated, total, query, Boolean(subjectId && requiredId));
 }
 
@@ -54,8 +102,33 @@ export async function requirementByIds(subjectItemId: number, requiredItemId: nu
         throw new HttpError(502, "catalog requirement items are incomplete");
     }
     return camelize(
-        catalogRequirementProjection({ subject_item_id: subjectItemId, required_item_id: requiredItemId }, items),
+        requirementProjection({ subject_item_id: subjectItemId, required_item_id: requiredItemId }, items),
     ) as JsonRecord;
+}
+
+export async function variantFeatureWithSelections(
+    variantItemId: number,
+    featureItemId: number,
+    variantFeature: JsonRecord,
+): Promise<JsonRecord> {
+    const items = await catalogItemsFor(
+        [{ variant_item_id: variantItemId, feature_item_id: featureItemId }],
+        "variant_item_id",
+        "feature_item_id",
+    );
+    const variant = items.get(variantItemId);
+    const feature = items.get(featureItemId);
+    if (!variant || !feature) {
+        throw new HttpError(502, "variant feature items are incomplete");
+    }
+    return camelize({
+        ...variantFeature,
+        id: relationshipId(variantItemId, featureItemId),
+        variantName: variant.name,
+        variant: catalogItemSelection(variant),
+        featureName: feature.name,
+        feature: catalogItemSelection(feature),
+    }) as JsonRecord;
 }
 
 async function addSearchFilter(
@@ -132,4 +205,58 @@ function relationshipList(
 
 function emptyList(query: ReturnType<typeof listQuery>): Response {
     return json({ items: [], total: 0, limit: query.limit, offset: query.offset });
+}
+
+function relationshipDraft(item: JsonRecord, query: ReturnType<typeof listQuery>): Response {
+    return json({ items: [], item, total: 0, limit: query.limit, offset: query.offset });
+}
+
+function requirementProjection(requirement: JsonRecord, items: Map<number, JsonRecord>): JsonRecord {
+    const subjectItemId = Number(requirement.subject_item_id);
+    const requiredItemId = Number(requirement.required_item_id);
+    return {
+        ...catalogRequirementProjection(requirement, items),
+        id: relationshipId(subjectItemId, requiredItemId),
+        subject: catalogItemSelection(items.get(subjectItemId)),
+        required: catalogItemSelection(items.get(requiredItemId)),
+    };
+}
+
+function catalogItemSelection(item: JsonRecord | undefined): JsonRecord | null {
+    if (!item) {
+        return null;
+    }
+    return {
+        id: item.id,
+        kind: item.kind,
+        code: item.code,
+        name: item.name,
+        lookup_subtitle: `${String(item.kind)} · ${String(item.code)}`,
+    };
+}
+
+function relationshipId(left: number, right: number): string {
+    return `${left}:${right}`;
+}
+
+function relationshipSelection(
+    value: string | null,
+    label: string,
+): { left: number; right: number } | "new" | undefined {
+    if (!value) {
+        return undefined;
+    }
+    if (value === "__new__") {
+        return "new";
+    }
+    const match = /^([1-9]\d*):([1-9]\d*)$/.exec(value);
+    if (!match) {
+        throw new HttpError(400, `${label} id must contain two positive integers`);
+    }
+    const left = Number(match[1]);
+    const right = Number(match[2]);
+    if (!Number.isSafeInteger(left) || !Number.isSafeInteger(right)) {
+        throw new HttpError(400, `${label} id must contain two positive integers`);
+    }
+    return { left, right };
 }

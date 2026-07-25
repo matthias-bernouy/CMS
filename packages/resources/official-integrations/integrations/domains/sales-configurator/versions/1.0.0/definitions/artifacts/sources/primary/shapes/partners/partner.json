@@ -1,7 +1,7 @@
 {
   "type": "object",
   "properties": {
-    "id": { "type": "number" },
+    "id": { "type": "number", "nullable": true },
     "cmsUserId": {
       "type": "string",
       "semantic": {

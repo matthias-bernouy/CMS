@@ -47,6 +47,22 @@ describe("sales-configurator dashboard presentation", () => {
             type: "readonly",
             format: "date",
         });
+        expect(detailFields.find((field) => field.id === "clientRegistrationNumber")).toMatchObject({
+            path: "client.companyRegistrationNumber",
+            type: "readonly",
+        });
+        expect(detailFields.find((field) => field.id === "clientContactJobTitle")).toMatchObject({
+            path: "client.contactJobTitle",
+            type: "readonly",
+        });
+        expect(detailFields.find((field) => field.id === "clientCity")).toMatchObject({
+            path: "client.city",
+            type: "readonly",
+        });
+        expect(detailFields.find((field) => field.id === "clientNotes")).toMatchObject({
+            path: "client.notes",
+            type: "readonly",
+        });
         const snapshot = detailFields.find((field) => field.id === "snapshotItems");
         expect(snapshot?.type).toBe("table");
         if (snapshot?.type === "table") {
@@ -60,6 +76,26 @@ describe("sales-configurator dashboard presentation", () => {
         const partnerTable = table(partners.views, "partnersTable");
         expect(column(partnerTable, "contactEmail").width).toContain("16rem");
         expect(column(partnerTable, "updatedAt")).toMatchObject({ format: "date", width: "12rem" });
+
+        const partnerDetail = detail(partners.views, "partnerDetail");
+        const partnerFields = [...partnerDetail.main, ...(partnerDetail.aside ?? [])].flatMap(
+            (section) => section.fields,
+        );
+        expect(partnerFields.find((field) => field.id === "cmsUserId")).toMatchObject({
+            type: "cms-user",
+            path: "cmsUserId",
+            required: true,
+            visibleWhen: { value: "$resource.id", equals: null },
+        });
+        expect(partnerFields.find((field) => field.id === "linkedCmsUserId")).toMatchObject({
+            type: "readonly",
+            path: "cmsUserId",
+            visibleWhen: { value: "$resource.id", notEquals: null },
+        });
+        const createPartner = partnerDetail.actions?.find((action) => action.id === "createPartner");
+        const savePartner = partnerDetail.actions?.find((action) => action.id === "savePartner");
+        expect(createPartner?.endpoint?.body?.cmsUserId).toBe("$field.cmsUserId");
+        expect(savePartner?.endpoint?.body?.cmsUserId).toBe("$resource.cmsUserId");
     });
 });
 

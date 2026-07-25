@@ -1,5 +1,6 @@
 import { requiredEnv } from "./env.ts";
 import { HttpError } from "./errors.ts";
+import { opaqueText } from "./records.ts";
 
 export function requireCmsRequest(request: Request): void {
     const authorization = request.headers.get("authorization") ?? "";
@@ -10,11 +11,7 @@ export function requireCmsRequest(request: Request): void {
 }
 
 export function cmsUserId(request: Request): string {
-    const value = (request.headers.get("x-cms-user-id") ?? "").trim();
-    if (!value) {
-        throw new HttpError(401, "missing CMS user id");
-    }
-    return value;
+    return opaqueText(request.headers.get("x-cms-user-id"), "CMS user id", 512, 401);
 }
 
 export function requireCmsAdmin(request: Request): string {

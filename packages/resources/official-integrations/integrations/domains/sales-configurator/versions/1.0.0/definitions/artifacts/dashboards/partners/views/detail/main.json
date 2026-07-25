@@ -2,14 +2,23 @@
   {
     "id": "partnerAccount",
     "title": "Sales-partner account",
-    "description": "The CMS user id is the immutable business-ownership identity.",
+    "description": "The CMS user link is immutable. Sales ownership uses this partner account’s own id.",
     "fields": [
       {
         "id": "cmsUserId",
+        "label": "CMS user",
+        "path": "cmsUserId",
+        "type": "cms-user",
+          "placeholder": "Search by email or CMS user id",
+        "visibleWhen": { "value": "$resource.id", "equals": null },
+        "required": true
+      },
+      {
+        "id": "linkedCmsUserId",
         "label": "CMS user id",
         "path": "cmsUserId",
-        "type": "text",
-        "required": true
+        "type": "readonly",
+        "visibleWhen": { "value": "$resource.id", "notEquals": null }
       },
       {
         "id": "displayName",

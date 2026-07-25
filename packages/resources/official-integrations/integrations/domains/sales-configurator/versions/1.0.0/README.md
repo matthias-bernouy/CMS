@@ -16,7 +16,8 @@ V1 includes:
 
 - modules, variants, reusable features, contextual pricing, and simple
   all-of prerequisites;
-- partner-owned clients and proposals;
+- partner-owned client profiles and proposals, with optional company identity,
+  contact role, and postal details;
 - immutable published proposal versions with structured snapshot lines;
 - fixed, included, and quote-only prices;
 - custom quote-only requests;
@@ -24,8 +25,8 @@ V1 includes:
 - first/last view tracking and an append-only event timeline;
 - integration-owned partner accounts and composable partner capabilities;
 - CMS catalogue and proposal dashboards;
-- four light-DOM delivery blocs: proposal list, first-draft starter, builder,
-  and client view.
+- six light-DOM delivery blocs: client directory, catalog browser, proposal
+  list, first-draft starter, builder, and client view.
 
 V1 intentionally excludes:
 

@@ -127,15 +127,26 @@ values
     (
         'client_a',
         sales_configurator.save_partner_client(
-            'partner-a',
+            sales_configurator_test.id('partner_a', array['partner', 'id']),
             null,
-            '{"company_name":"Bistro A","contact_name":"Alice","contact_email":"alice@example.test"}'
+            '{
+                "company_name":"Bistro A",
+                "company_registration_number":"FR-A-123",
+                "contact_name":"Alice",
+                "contact_job_title":"Owner",
+                "contact_email":"alice@example.test",
+                "contact_phone":"+33 1 23 45 67 89",
+                "address_line1":"12 rue du Test",
+                "postal_code":"75001",
+                "city":"Paris",
+                "country":"France"
+            }'
         )
     ),
     (
         'client_b',
         sales_configurator.save_partner_client(
-            'partner-b',
+            sales_configurator_test.id('partner_b', array['partner', 'id']),
             null,
             '{"company_name":"Bistro B","contact_name":"Bob","contact_email":"bob@example.test"}'
         )

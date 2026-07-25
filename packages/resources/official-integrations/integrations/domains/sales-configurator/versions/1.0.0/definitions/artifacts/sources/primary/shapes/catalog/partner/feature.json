@@ -12,7 +12,7 @@
     "requirements": {
       "type": "array",
       "items": {
-        "$include": "requirement.json"
+        "$include": "../requirement.json"
       }
     }
   },

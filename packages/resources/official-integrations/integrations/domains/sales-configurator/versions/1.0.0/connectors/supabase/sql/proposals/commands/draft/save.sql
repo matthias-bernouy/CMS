@@ -1,5 +1,5 @@
 create or replace function sales_configurator.save_partner_proposal_draft(
-    p_actor_cms_user_id text,
+    p_partner_account_id bigint,
     p_proposal_id bigint,
     p_client_id bigint,
     p_proposal jsonb,
@@ -13,11 +13,6 @@ security invoker
 set search_path = ''
 as $$
 declare
-    v_actor text := sales_configurator.require_bounded_text(
-        p_actor_cms_user_id,
-        'actorCmsUserId',
-        512
-    );
     v_payload jsonb := sales_configurator.require_json_object(p_proposal, 'proposal');
     v_validation jsonb;
     v_prepared jsonb;
@@ -26,13 +21,15 @@ declare
     v_version_id bigint;
     v_revision bigint;
 begin
-    perform sales_configurator.require_partner(v_actor, 'proposals.manage');
+    if p_partner_account_id is null then
+        raise exception 'validation: partnerAccountId is required';
+    end if;
 
     if not exists (
         select 1
         from sales_configurator.clients client
         where client.id = p_client_id
-          and client.owner_cms_user_id = v_actor
+          and client.partner_account_id = p_partner_account_id
     ) then
         return pg_catalog.jsonb_build_object('state', 'not_found');
     end if;
@@ -40,7 +37,7 @@ begin
         select 1
         from sales_configurator.proposals proposal
         where proposal.id = p_proposal_id
-          and proposal.owner_cms_user_id = v_actor
+          and proposal.partner_account_id = p_partner_account_id
     ) then
         return pg_catalog.jsonb_build_object('state', 'not_found');
     end if;
@@ -54,7 +51,7 @@ begin
     end if;
 
     v_prepared := sales_configurator.prepare_partner_proposal_draft(
-        v_actor,
+        p_partner_account_id,
         p_proposal_id,
         p_client_id,
         v_payload
@@ -93,7 +90,7 @@ begin
         v_version_id,
         'draft_saved',
         'partner',
-        v_actor,
+        p_partner_account_id::text,
         pg_catalog.jsonb_build_object(
             'versionNumber', (v_prepared ->> 'versionNumber')::integer,
             'revision', v_revision,
@@ -102,6 +99,9 @@ begin
         )
     );
 
-    return sales_configurator.partner_proposal_json(v_proposal_id, v_actor);
+    return sales_configurator.partner_proposal_json(
+        v_proposal_id,
+        p_partner_account_id
+    );
 end;
 $$;

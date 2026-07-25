@@ -87,6 +87,8 @@ describe("public integrations 1.0.0", () => {
             sourceId: "sales-configurator",
             dashboardId: "sales-configurator-catalog",
             blocTags: [
+                "sales-client-directory",
+                "sales-catalog-browser",
                 "sales-proposal-list",
                 "sales-proposal-starter",
                 "sales-proposal-builder",

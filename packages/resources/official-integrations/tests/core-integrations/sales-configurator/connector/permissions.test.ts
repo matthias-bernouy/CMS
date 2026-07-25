@@ -55,7 +55,7 @@ describe("sales-configurator connector authorization", () => {
         });
     });
 
-    test("projects the published catalogue into modules, variants, and contextual features", async () => {
+    test("projects the published catalogue into nested data and ordered selection rows", async () => {
         setResponder((request) => {
             const path = new URL(request.url).pathname;
             if (path.endsWith("/partner_accounts")) {
@@ -119,7 +119,12 @@ describe("sales-configurator connector authorization", () => {
                 ]);
             }
             if (path.endsWith("/catalog_requirements")) {
-                return response([]);
+                return response([
+                    {
+                        subject_item_id: 12,
+                        required_item_id: 10,
+                    },
+                ]);
             }
             throw new Error(`unexpected request ${request.url}`);
         });
@@ -153,10 +158,88 @@ describe("sales-configurator connector authorization", () => {
                                     pricingMode: "fixed",
                                     unitAmountCents: 15000,
                                     currency: "EUR",
-                                    requirements: [],
+                                    requirements: [
+                                        {
+                                            subjectItemId: 12,
+                                            subjectKind: "feature",
+                                            subjectCode: "payment",
+                                            subjectName: "Online payment",
+                                            requiredItemId: 10,
+                                            requiredKind: "module",
+                                            requiredCode: "booking",
+                                            requiredName: "Booking",
+                                        },
+                                    ],
                                 },
                             ],
                             requirements: [],
+                        },
+                    ],
+                },
+            ],
+            selectionRows: [
+                {
+                    kind: "module",
+                    typeLabel: "Module",
+                    depth: 0,
+                    id: 10,
+                    code: "booking",
+                    name: "Booking",
+                    description: null,
+                    moduleId: 10,
+                    variantId: null,
+                    providerName: null,
+                    availability: "base",
+                    availabilityLabel: "Base",
+                    pricingMode: null,
+                    unitAmountCents: null,
+                    currency: null,
+                    requirements: [],
+                },
+                {
+                    kind: "variant",
+                    typeLabel: "Variant",
+                    depth: 1,
+                    id: 11,
+                    code: "restaurant",
+                    name: "Restaurant",
+                    description: null,
+                    moduleId: 10,
+                    variantId: 11,
+                    providerName: "Internal",
+                    availability: "selectable",
+                    availabilityLabel: "Selectable",
+                    pricingMode: "fixed",
+                    unitAmountCents: 50000,
+                    currency: "EUR",
+                    requirements: [],
+                },
+                {
+                    kind: "feature",
+                    typeLabel: "Feature",
+                    depth: 2,
+                    id: 12,
+                    code: "payment",
+                    name: "Online payment",
+                    description: null,
+                    moduleId: 10,
+                    variantId: 11,
+                    providerName: "Internal",
+                    availability: "optional",
+                    availabilityLabel: "Optional",
+                    pricingMode: "fixed",
+                    unitAmountCents: 15000,
+                    currency: "EUR",
+                    requirements: [
+                        {
+                            subjectItemId: 12,
+                            subjectKind: "feature",
+                            subjectCode: "payment",
+                            subjectName: "Online payment",
+                            requiredItemId: 10,
+                            requiredKind: "module",
+                            requiredCode: "booking",
+                            requiredName: "Booking",
                         },
                     ],
                 },
@@ -202,7 +285,7 @@ describe("sales-configurator connector authorization", () => {
         expect(result.status).toBe(200);
         const rpc = requests().find((request) => request.url.pathname.endsWith("/rpc/save_partner_proposal_draft"));
         expect(rpc?.body).toMatchObject({
-            p_actor_cms_user_id: "partner-a",
+            p_partner_account_id: 7,
             p_client_id: 8,
             p_selections: [
                 {
@@ -219,6 +302,7 @@ describe("sales-configurator connector authorization", () => {
             ],
         });
         expect(JSON.stringify(rpc?.body)).not.toContain("partner-b");
+        expect(JSON.stringify(rpc?.body)).not.toContain("partner-a");
     });
 
     test("normalizes cross-partner proposal reads as not found", async () => {
@@ -316,7 +400,7 @@ describe("sales-configurator connector authorization", () => {
         });
         const rpc = requests().find((request) => request.url.pathname.endsWith("/rpc/publish_partner_proposal"));
         expect(rpc?.body).toMatchObject({
-            p_actor_cms_user_id: "partner-a",
+            p_partner_account_id: 7,
             p_proposal_id: 42,
             p_expected_version_id: 9,
             p_expected_revision: 3,
@@ -402,8 +486,12 @@ describe("sales-configurator connector authorization", () => {
                         publishedAt: "2026-07-25T12:00:00.000Z",
                         client: {
                             companyName: "Bistro",
+                            companyRegistrationNumber: "private-registration",
                             contactName: "Camille",
+                            contactJobTitle: "private-job-title",
                             contactEmail: "must-not-leak@example.test",
+                            addressLine1: "private-address",
+                            city: "private-city",
                         },
                         salesContact: {
                             displayName: "Partner A",
@@ -446,7 +534,17 @@ describe("sales-configurator connector authorization", () => {
                 items: [{ depth: 0 }],
             },
         });
-        for (const privateValue of ["must-not-leak", "catalogItemId", "metadata", "events", "tokenHash"]) {
+        for (const privateValue of [
+            "must-not-leak",
+            "private-registration",
+            "private-job-title",
+            "private-address",
+            "private-city",
+            "catalogItemId",
+            "metadata",
+            "events",
+            "tokenHash",
+        ]) {
             expect(serialized).not.toContain(privateValue);
         }
         expect(result.headers.get("cache-control")).toBe("private, no-store");

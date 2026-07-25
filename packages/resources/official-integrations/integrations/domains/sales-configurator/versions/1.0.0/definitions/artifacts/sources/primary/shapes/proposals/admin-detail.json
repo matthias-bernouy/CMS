@@ -2,7 +2,7 @@
   "type": "object",
   "properties": {
     "id": { "type": "number" },
-    "ownerCmsUserId": { "type": "string" },
+    "partnerAccountId": { "type": "number" },
     "reference": { "type": "string" },
     "status": { "type": "string" },
     "title": { "type": "string", "nullable": true },
@@ -40,7 +40,7 @@
   },
   "required": [
     "id",
-    "ownerCmsUserId",
+    "partnerAccountId",
     "reference",
     "status",
     "client",

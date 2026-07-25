@@ -3,6 +3,7 @@
     "transaction": "atomic",
     "entries": [
         { "file": "proposal-model.sql" },
+        { "file": "ownership-migration.sql" },
         { "file": "item-model.sql" },
         { "file": "sharing-model.sql" },
         { "manifest": "invariants/manifest.json" },

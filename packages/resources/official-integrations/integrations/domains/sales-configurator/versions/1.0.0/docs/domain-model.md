@@ -89,7 +89,11 @@ commercial line silently.
 - `created_at`, `updated_at`
 
 This is a business entitlement, not a replacement for CMS authentication. The
-CMS user id always comes from the source proxy's computed request context.
+opaque CMS user id (for example `local:<uuid>`) always comes from the source
+proxy's computed request context. It is used only to resolve the integration
+account at the connector boundary. Valid identifiers are compared
+case-sensitively and stored byte-for-byte; surrounding whitespace and control
+characters are rejected instead of normalized.
 
 ### `partner_capabilities`
 
@@ -114,21 +118,26 @@ operation without changing the CMS identity.
 ### `clients`
 
 - `id`
-- `owner_cms_user_id`
+- `partner_account_id`
 - `company_name`
+- optional `company_registration_number`
 - `contact_name`
+- optional `contact_job_title`
 - `contact_email`
 - optional `contact_phone`
+- optional `address_line1`, `address_line2`, `postal_code`, `city`, and `country`
 - optional private `notes`
 - `created_at`, `updated_at`
 
-`(id, owner_cms_user_id)` is unique so proposals can use a composite foreign
-key that proves client ownership.
+`(id, partner_account_id)` is unique so proposals can use a composite foreign
+key that proves client ownership. Only company, primary contact, and email are
+required in V1; the legal and postal profile remains optional so a lead can be
+captured before every detail is known.
 
 ### `proposals`
 
 - `id`
-- `owner_cms_user_id`
+- `partner_account_id`
 - `client_id`
 - stable unique `reference`
 - `status`: `draft | shared | viewed | accepted | rejected | expired | archived`
@@ -136,7 +145,7 @@ key that proves client ownership.
 - optional private notes
 - `created_at`, `updated_at`
 
-The `(client_id, owner_cms_user_id)` foreign key prevents a proposal from being
+The `(client_id, partner_account_id)` foreign key prevents a proposal from being
 attached to another partner's client.
 
 ### `proposal_versions`
@@ -150,7 +159,8 @@ attached to another partner's client.
 - server-computed `fixed_total_cents`
 - server-computed `quote_item_count`
 - frozen public title and introduction
-- frozen client company, contact name, email, and phone
+- frozen client company, registration number, postal profile, and primary
+  contact details
 - frozen sales contact name and email
 - `created_at`, optional `published_at`
 

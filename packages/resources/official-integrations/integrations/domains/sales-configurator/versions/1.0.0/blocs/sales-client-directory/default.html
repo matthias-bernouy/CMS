@@ -1,0 +1,147 @@
+<sales-client-directory source-id="sales-configurator" client-limit="100" cms-source="/.cms/sources/sales-configurator/listMyClients?limit=100 as clientsData" cms-reload-on="sales-clients:changed">
+    <header>
+        <small>Client directory</small>
+        <h2>Manage your clients</h2>
+        <p>Create complete customer profiles, then select one to update it without leaving the page.</p>
+    </header>
+
+    <basic-stack gap="md" cms-condition="$source.loading">
+        <basic-skeleton height="8rem" animation="wave" label="Loading clients"></basic-skeleton>
+        <basic-skeleton height="8rem" animation="wave" aria-hidden="true"></basic-skeleton>
+    </basic-stack>
+
+    <basic-toast role="alert" cms-condition="$source.error">Your clients could not be loaded. Try again in a moment.</basic-toast>
+
+    <basic-card data-sales-client-empty cms-condition="$source.empty || $source.loaded && clientsData.items.length == 0">
+        <strong slot="title">No clients yet</strong>
+        <span slot="description">Create the first customer profile with the New client button.</span>
+    </basic-card>
+
+    <div data-sales-client-list data-sales-client-table-scroll role="region" aria-label="Clients enregistrés" tabindex="0" style="max-width: 100%; overflow-x: auto;" cms-condition="$source.loaded && clientsData.items.length > 0">
+        <table data-sales-client-table style="width: 100%; border-collapse: collapse;">
+            <caption>Clients enregistrés</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Entreprise / SIRET</th>
+                    <th scope="col">Contact / fonction</th>
+                    <th scope="col">Coordonnées</th>
+                    <th scope="col">Ville / Pays</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-sales-client-row cms-repeat="clientsData.items as client">
+                    <td data-sales-client-cell data-label="Entreprise / SIRET">
+                        <strong>{{ client.companyName }}</strong>
+                        <small cms-condition="client.companyRegistrationNumber">{{ client.companyRegistrationNumber }}</small>
+                    </td>
+                    <td data-sales-client-cell data-label="Contact / fonction">
+                        <span>{{ client.contactName }}</span>
+                        <small cms-condition="client.contactJobTitle">{{ client.contactJobTitle }}</small>
+                    </td>
+                    <td data-sales-client-cell data-label="Coordonnées">
+                        <a href="mailto:{{ client.contactEmail }}">{{ client.contactEmail }}</a>
+                        <a href="tel:{{ client.contactPhone }}" cms-condition="client.contactPhone">{{ client.contactPhone }}</a>
+                    </td>
+                    <td data-sales-client-cell data-label="Ville / Pays">
+                        <span cms-condition="client.postalCode || client.city">{{ client.postalCode }} {{ client.city }}</span>
+                        <small cms-condition="client.country">{{ client.country }}</small>
+                    </td>
+                    <td data-sales-client-cell data-label="Action">
+                        <basic-button data-sales-client-open data-client-id="{{ client.id }}" type="button" appearance="outlined" aria-pressed="false">Modifier</basic-button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div data-sales-client-create-region cms-condition="$source.empty || $source.loaded">
+        <basic-button data-sales-client-create-open type="button" appearance="filled">Nouveau client</basic-button>
+        <dialog data-sales-client-create-dialog aria-label="Nouveau client" style="width: min(42rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto;">
+            <header>
+                <h3>Nouveau client</h3>
+                <p>Company, contact, and email are required. The other details remain optional.</p>
+            </header>
+            <form data-sales-client-create-form cms-source="/.cms/sources/sales-configurator/saveMyClient as clientResult" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="true" cms-source-publish="sales-clients:changed">
+                <div data-sales-client-dialog-fields style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem;">
+                    <basic-stack gap="md">
+                        <strong>Company</strong>
+                        <basic-input name="companyName" label="Company name" autocomplete="organization" required></basic-input>
+                        <basic-input name="companyRegistrationNumber" label="Company registration number"></basic-input>
+                        <basic-input name="addressLine1" label="Address line 1" autocomplete="address-line1"></basic-input>
+                        <basic-input name="addressLine2" label="Address line 2" autocomplete="address-line2"></basic-input>
+                        <basic-input name="postalCode" label="Postal code" autocomplete="postal-code"></basic-input>
+                        <basic-input name="city" label="City" autocomplete="address-level2"></basic-input>
+                        <basic-input name="country" label="Country" autocomplete="country-name"></basic-input>
+                    </basic-stack>
+                    <basic-stack gap="md">
+                        <strong>Primary contact</strong>
+                        <basic-input name="contactName" label="Contact name" autocomplete="name" required></basic-input>
+                        <basic-input name="contactJobTitle" label="Job title" autocomplete="organization-title"></basic-input>
+                        <basic-input name="contactEmail" type="email" label="Contact email" autocomplete="email" required></basic-input>
+                        <basic-input name="contactPhone" type="tel" label="Contact phone" autocomplete="tel"></basic-input>
+                        <basic-textarea name="notes" label="Private client notes" rows="3"></basic-textarea>
+                    </basic-stack>
+                </div>
+                <basic-toast role="status" cms-condition="$source.loading">Saving the client…</basic-toast>
+                <basic-toast role="alert" cms-condition="$source.error">The client could not be created.</basic-toast>
+                <basic-toast role="status" cms-condition="$source.loaded">Client created.</basic-toast>
+                <basic-stack direction="row" gap="sm" justify-content="end" wrap="true">
+                    <basic-button data-sales-client-dialog-close type="button" appearance="text">Annuler</basic-button>
+                    <basic-button type="submit" appearance="filled">Create client</basic-button>
+                </basic-stack>
+            </form>
+        </dialog>
+    </div>
+
+    <div data-sales-client-detail-region cms-condition="$source.loaded && clientsData.items.length > 0">
+        <div data-sales-client-detail-mount></div>
+        <template data-sales-client-detail-template>
+            <dialog data-sales-client-detail-source data-sales-client-edit-dialog aria-label="Modifier le client" style="width: min(42rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto;">
+                <basic-skeleton height="18rem" animation="wave" label="Loading client" cms-condition="$source.loading"></basic-skeleton>
+                <basic-toast role="alert" cms-condition="$source.error">This client could not be loaded.</basic-toast>
+                <basic-stack gap="sm" cms-condition="$source.empty">
+                    <strong>Client unavailable</strong>
+                    <span>Choose another client and try again.</span>
+                </basic-stack>
+                <basic-stack gap="md" cms-condition="$source.loaded">
+                    <header>
+                        <h3>Modifier {{ clientData.companyName }}</h3>
+                        <p>The client id and ownership are kept by the integration.</p>
+                    </header>
+                    <form data-sales-client-edit-form>
+                        <input type="hidden" name="id" value="{{ clientData.id }}">
+                        <div data-sales-client-dialog-fields style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem;">
+                            <basic-stack gap="md">
+                                <strong>Company</strong>
+                                <basic-input name="companyName" label="Company name" autocomplete="organization" value="{{ clientData.companyName }}" required></basic-input>
+                                <basic-input name="companyRegistrationNumber" label="Company registration number" value="{{ clientData.companyRegistrationNumber }}"></basic-input>
+                                <basic-input name="addressLine1" label="Address line 1" autocomplete="address-line1" value="{{ clientData.addressLine1 }}"></basic-input>
+                                <basic-input name="addressLine2" label="Address line 2" autocomplete="address-line2" value="{{ clientData.addressLine2 }}"></basic-input>
+                                <basic-input name="postalCode" label="Postal code" autocomplete="postal-code" value="{{ clientData.postalCode }}"></basic-input>
+                                <basic-input name="city" label="City" autocomplete="address-level2" value="{{ clientData.city }}"></basic-input>
+                                <basic-input name="country" label="Country" autocomplete="country-name" value="{{ clientData.country }}"></basic-input>
+                            </basic-stack>
+                            <basic-stack gap="md">
+                                <strong>Primary contact</strong>
+                                <basic-input name="contactName" label="Contact name" autocomplete="name" value="{{ clientData.contactName }}" required></basic-input>
+                                <basic-input name="contactJobTitle" label="Job title" autocomplete="organization-title" value="{{ clientData.contactJobTitle }}"></basic-input>
+                                <basic-input name="contactEmail" type="email" label="Contact email" autocomplete="email" value="{{ clientData.contactEmail }}" required></basic-input>
+                                <basic-input name="contactPhone" type="tel" label="Contact phone" autocomplete="tel" value="{{ clientData.contactPhone }}"></basic-input>
+                                <basic-textarea name="notes" label="Private client notes" rows="3" value="{{ clientData.notes }}"></basic-textarea>
+                            </basic-stack>
+                        </div>
+                        <basic-toast role="status" cms-condition="$source.loading">Saving changes…</basic-toast>
+                        <basic-toast role="alert" cms-condition="$source.error">The client could not be updated.</basic-toast>
+                        <basic-toast role="status" cms-condition="$source.loaded">Client updated.</basic-toast>
+                        <basic-stack direction="row" gap="sm" justify-content="end" wrap="true">
+                            <basic-button data-sales-client-dialog-close type="button" appearance="text">Annuler</basic-button>
+                            <basic-button type="submit" appearance="filled">Save client</basic-button>
+                        </basic-stack>
+                    </form>
+                </basic-stack>
+                <basic-button data-sales-client-dialog-close type="button" appearance="text" cms-condition="$source.loading || $source.error || $source.empty">Annuler</basic-button>
+            </dialog>
+        </template>
+    </div>
+</sales-client-directory>

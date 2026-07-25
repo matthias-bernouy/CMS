@@ -7,6 +7,27 @@ import type { JsonRecord } from "../../core/types.ts";
 
 const itemSelect = "id,kind,code,name,description,status,sort_order,created_at,updated_at";
 
+export async function listCatalogItems(request: Request): Promise<Response> {
+    const query = listQuery(request);
+    const params = new URLSearchParams({
+        select: itemSelect,
+        order: "kind.asc,sort_order.asc,id.asc",
+        limit: String(query.limit),
+        offset: String(query.offset),
+    });
+    if (query.status) {
+        params.set("status", `eq.${query.status}`);
+    }
+    addSearch(params, query.query, "name", "code", "description");
+    const { rows, total } = await listRows(`catalog_items?${params}`);
+    return json({
+        items: camelize(rows.map(catalogLookupItem)),
+        total,
+        limit: query.limit,
+        offset: query.offset,
+    });
+}
+
 export async function listCatalogKind(request: Request, kind: string): Promise<Response> {
     const query = listQuery(request);
     const params = new URLSearchParams({
@@ -38,7 +59,11 @@ export async function listCatalogKind(request: Request, kind: string): Promise<R
 }
 
 export async function getCatalogKind(request: Request, kind: string): Promise<Response> {
-    const id = integer(new URL(request.url).searchParams.get("id"), "id", true)!;
+    const idValue = new URL(request.url).searchParams.get("id");
+    if (idValue === "__new__") {
+        return json(newCatalogKind(kind));
+    }
+    const id = integer(idValue, "id", true)!;
     const item = await one("catalog_items", { id, kind }, itemSelect);
     if (!item) {
         throw new HttpError(404, `${kind} not found`);
@@ -52,6 +77,39 @@ export async function getCatalogKind(request: Request, kind: string): Promise<Re
     }
     const module = await one("catalog_items", { id: Number(details.module_item_id), kind: "module" }, "id,name");
     return json(camelize({ ...item, ...details, module_name: module?.name }));
+}
+
+function catalogLookupItem(item: JsonRecord): JsonRecord {
+    return {
+        ...item,
+        lookup_subtitle: `${String(item.kind)} · ${String(item.code)}`,
+    };
+}
+
+function newCatalogKind(kind: string): JsonRecord {
+    const item = {
+        id: null,
+        code: "",
+        name: "",
+        description: null,
+        status: "draft",
+        sortOrder: 0,
+    };
+    if (kind === "module" || kind === "feature") {
+        return item;
+    }
+    if (kind === "variant") {
+        return {
+            ...item,
+            moduleItemId: null,
+            moduleName: "",
+            providerName: null,
+            pricingMode: "fixed",
+            unitAmountCents: null,
+            currency: "EUR",
+        };
+    }
+    throw new HttpError(500, "unsupported catalogue kind");
 }
 
 async function hydrateVariants(rows: JsonRecord[]): Promise<JsonRecord[]> {

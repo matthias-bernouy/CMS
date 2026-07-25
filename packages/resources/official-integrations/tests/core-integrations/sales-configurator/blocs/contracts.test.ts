@@ -3,7 +3,7 @@ import { collectCmsSourceBindings } from "@bernouy/cms-content";
 import { artifactPath, compileBloc, readBlocFile, tags } from "./harness";
 
 describe("sales-configurator bloc contracts", () => {
-    test("declares four compilable light-DOM bloc artifacts", async () => {
+    test("declares six compilable light-DOM bloc artifacts", async () => {
         for (const tag of tags) {
             const manifest = JSON.parse(await readBlocFile(tag, "manifest.json")) as Record<string, unknown>;
             const artifact = JSON.parse(await Bun.file(artifactPath(tag)).text()) as {
@@ -69,6 +69,82 @@ describe("sales-configurator bloc contracts", () => {
         expect(content).toContain('cms-reload-on="sales-proposals:changed"');
     });
 
+    test("keeps the catalog browser read-only on the flat partner projection", async () => {
+        const content = await readBlocFile("sales-catalog-browser", "default.html");
+        const view = await readBlocFile("sales-catalog-browser", "Bloc.ts");
+
+        expect(collectCmsSourceBindings(content)).toEqual([
+            {
+                url: "/.cms/sources/sales-configurator/getPartnerCatalog",
+                alias: "catalogData",
+                method: "GET",
+                trigger: "auto",
+            },
+        ]);
+        expect(content).toContain('cms-repeat="catalogData.selectionRows as row"');
+        expect(content).toContain('cms-repeat="row.requirements as requirement"');
+        expect(content).toContain("data-sales-catalog-query");
+        expect(content).toContain("data-sales-catalog-status");
+        expect(content).toContain("data-sales-catalog-filter-empty");
+        expect(content).toContain("data-sales-catalog-table-scroll");
+        expect(content).toContain("<table data-sales-catalog-table");
+        expect(content).toContain('<th scope="col" style="padding: 0.5rem; text-align: start;">Type</th>');
+        expect(content).toContain('data-sales-catalog-cell data-label="Service"');
+        expect(content).toContain('data-sales-catalog-cell data-label="Provider"');
+        expect(content).toContain('data-sales-catalog-cell data-label="Disponibilité"');
+        expect(content).toContain('data-sales-catalog-cell data-label="Prix"');
+        expect(content).toContain('data-sales-catalog-cell data-label="Prérequis"');
+        expect(content).not.toContain("<form");
+        expect(content).not.toContain("cms-source-method");
+        expect(content).not.toContain("cms-source-trigger");
+        expect(view).toContain("/getPartnerCatalog as catalogData");
+        expect(view).not.toContain("cms-param-sync");
+        expect(view).not.toMatch(/\bfetch\s*\(/);
+        expect(view).not.toContain("location.");
+    });
+
+    test("keeps the client directory on binding-owned reads and writes", async () => {
+        const content = await readBlocFile("sales-client-directory", "default.html");
+        const view = await readBlocFile("sales-client-directory", "Bloc.ts");
+
+        expect(collectCmsSourceBindings(content)).toContainEqual({
+            url: "/.cms/sources/sales-configurator/listMyClients?limit=100",
+            alias: "clientsData",
+            method: "GET",
+            trigger: "auto",
+        });
+        expect(content).toContain("/saveMyClient as clientResult");
+        expect(content).toContain("data-sales-client-edit-form");
+        expect(content).toContain("data-sales-client-detail-template");
+        expect(content).toContain("data-sales-client-detail-mount");
+        expect(content).toContain("<dialog data-sales-client-create-dialog");
+        expect(content).toContain("<dialog data-sales-client-detail-source data-sales-client-edit-dialog");
+        expect(content).toContain("data-sales-client-create-open");
+        expect(content).toContain(">Nouveau client</basic-button>");
+        expect(content).toContain(">Modifier</basic-button>");
+        expect(content).toContain("data-sales-client-dialog-close");
+        expect(content.match(/>Annuler<\/basic-button>/g)).toHaveLength(3);
+        expect(content).not.toContain("data-sales-client-detail-placeholder");
+        expect(content).toContain("data-sales-client-table-scroll");
+        expect(content).toContain("<table data-sales-client-table");
+        expect(content).toContain('<th scope="col">Entreprise / SIRET</th>');
+        expect(content).toContain('<th scope="col">Contact / fonction</th>');
+        expect(content).toContain('<th scope="col">Coordonnées</th>');
+        expect(content).toContain('<th scope="col">Ville / Pays</th>');
+        expect(content).toContain('<tr data-sales-client-row cms-repeat="clientsData.items as client">');
+        expect(content).toContain('data-sales-client-open data-client-id="{{ client.id }}"');
+        expect(content).not.toContain('cms-repeat="clientsData.items as client">\n            <span slot="eyebrow"');
+        expect(content).toContain('name="id" value="{{ clientData.id }}"');
+        expect(content).toContain('cms-reload-on="sales-clients:changed"');
+        expect(content.match(/cms-source-publish="sales-clients:changed"/g)).toHaveLength(1);
+        expect(view).toContain("/getMyClient?id=${encodeURIComponent(selectedId)} as clientData");
+        expect(view).toContain('typeof dialog.showModal === "function"');
+        expect(view).toContain('this.addEventListener("cancel", this.onCancel, true)');
+        expect(view).toContain('this.addEventListener("cms-source:success", this.onSourceSuccess)');
+        expect(view).not.toMatch(/\bfetch\s*\(/);
+        expect(view).not.toContain("location.");
+    });
+
     test("locks builder writes to binding-owned forms and publishes refresh events", async () => {
         const content = await readBlocFile("sales-proposal-builder", "default.html");
         const view = await readBlocFile("sales-proposal-builder", "Bloc.ts");
@@ -105,6 +181,7 @@ describe("sales-configurator bloc contracts", () => {
         for (const privateField of [
             "privateNotes",
             "ownerCmsUserId",
+            "partnerAccountId",
             "partnerCapabilities",
             "catalogData",
             "missingRequirements",
