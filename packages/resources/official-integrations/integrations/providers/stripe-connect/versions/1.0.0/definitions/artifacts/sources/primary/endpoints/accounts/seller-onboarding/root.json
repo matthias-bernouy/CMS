@@ -69,6 +69,15 @@
                 },
                 "contactEmail": {
                     "type": "string"
+                },
+                "marketplaceTermsAccepted": {
+                    "type": "boolean"
+                },
+                "expectedMarketplaceTermsVersion": {
+                    "type": "string"
+                },
+                "expectedMarketplaceTermsHash": {
+                    "type": "string"
                 }
             }
         },

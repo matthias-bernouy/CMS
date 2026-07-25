@@ -10,6 +10,7 @@ export type RepositoryBoundaryHarness = {
         clearStripeRequests(): void;
         rows(table: string): JsonRecord[];
         setAccountState(userId: string, patch: JsonRecord): void;
+        setCurrentMarketplaceTermsConfiguration(configuration: JsonRecord | null): void;
         setPaymentIntentSucceeded(paymentIntentId: string): void;
     };
     submit(userId: string, role: string | undefined, endpoint: string, body: unknown): Promise<Response>;

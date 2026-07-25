@@ -23,6 +23,22 @@ export function expectWalletBlocContract(bloc: ImportedBloc | undefined): void {
     expect(bloc?.viewJS).toContain('["requirements_due", "rejected"].includes');
     expect(bloc?.viewJS).toContain("this.showPendingVerification();");
     expect(bloc?.viewJS).not.toContain("await this.refresh();");
+    expect(bloc?.viewJS).toContain('requestStripeSource("getConnectStatus")');
+    expect(bloc?.viewJS).toContain(
+        "this.marketplaceTermsRequirement = marketplaceTermsRequirement(status?.marketplaceTermsRequirement)",
+    );
+    expect(bloc?.viewJS).toContain("publishedMarketplaceTermsRequirement(this.marketplaceTermsRequirement)");
+    expect(bloc?.viewJS).toContain("requirement?.consentText");
+    expect(bloc?.viewJS).toContain("requirement?.label");
+    expect(bloc?.viewJS).toContain("requirement?.page.path");
+    expect(bloc?.viewJS).toContain('name="termsAccepted" required');
+    expect(bloc?.viewJS).toContain("marketplaceTermsAccepted: true");
+    expect(bloc?.viewJS).toMatch(/expectedMarketplaceTermsVersion:\s*marketplaceTerms\.version/);
+    expect(bloc?.viewJS).toMatch(/expectedMarketplaceTermsHash:\s*marketplaceTerms\.hash/);
+    expect(bloc?.viewJS).toContain('error.message === "MARKETPLACE_TERMS_VERSION_CHANGED"');
+    expect(bloc?.viewJS).toContain(`this.form.querySelector("[name='termsAccepted']").checked = false`);
+    expect(bloc?.viewJS).toContain("await this.refresh()");
+    expect(bloc?.viewJS).toContain("Les conditions vendeur ont changé. Relis la nouvelle version avant de continuer.");
     expect(bloc?.viewJS).toContain('requestAccountSource("getAccount")');
     expect(bloc?.viewJS).toContain('requestAuthSource("me")');
     expect(bloc?.viewJS).toContain("currentAccount?.subject?.email");

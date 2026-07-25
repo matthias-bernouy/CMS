@@ -4,6 +4,7 @@ import type { ProtectedPaymentProjectionScenario } from "../../provider-boundary
 import type { JsonRecord, StripeRequestRecord } from "../types";
 
 export class StripeMockState {
+    currentMarketplaceTermsConfiguration: JsonRecord | null = null;
     readonly tables: Record<string, JsonRecord[]> = {
         accounts: [],
         marketplace_terms_acceptances: [],
@@ -169,4 +170,8 @@ export class StripeMockState {
             settlement_timing: { delay_days: 2, delay_days_override: null },
         },
     };
+
+    setCurrentMarketplaceTermsConfiguration(configuration: JsonRecord | null): void {
+        this.currentMarketplaceTermsConfiguration = configuration ? structuredClone(configuration) : null;
+    }
 }

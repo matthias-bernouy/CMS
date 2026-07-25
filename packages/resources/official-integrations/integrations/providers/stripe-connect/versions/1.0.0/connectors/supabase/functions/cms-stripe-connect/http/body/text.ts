@@ -25,17 +25,31 @@ export function requiredHash(body: JsonRecord, name: string): string {
 }
 
 export function marketplaceTermsExpectationFromBody(body: JsonRecord): { version: string; hash: string } | null {
-    const hasVersion = body.marketplaceTermsVersion !== undefined && body.marketplaceTermsVersion !== null;
-    const hasHash = body.marketplaceTermsHash !== undefined && body.marketplaceTermsHash !== null;
+    return termsExpectationFromBody(body, "marketplaceTermsVersion", "marketplaceTermsHash");
+}
+
+export function marketplaceTermsAcceptanceExpectationFromBody(
+    body: JsonRecord,
+): { version: string; hash: string } | null {
+    return termsExpectationFromBody(body, "expectedMarketplaceTermsVersion", "expectedMarketplaceTermsHash");
+}
+
+function termsExpectationFromBody(
+    body: JsonRecord,
+    versionName: string,
+    hashName: string,
+): { version: string; hash: string } | null {
+    const hasVersion = body[versionName] !== undefined && body[versionName] !== null;
+    const hasHash = body[hashName] !== undefined && body[hashName] !== null;
     if (!hasVersion && !hasHash) {
         return null;
     }
     if (!hasVersion || !hasHash) {
-        throw new HttpError(400, "marketplaceTermsVersion and marketplaceTermsHash must be provided together");
+        throw new HttpError(400, `${versionName} and ${hashName} must be provided together`);
     }
     return {
-        version: requiredString(body, "marketplaceTermsVersion", 200),
-        hash: requiredHash(body, "marketplaceTermsHash"),
+        version: requiredString(body, versionName, 200),
+        hash: requiredHash(body, hashName),
     };
 }
 

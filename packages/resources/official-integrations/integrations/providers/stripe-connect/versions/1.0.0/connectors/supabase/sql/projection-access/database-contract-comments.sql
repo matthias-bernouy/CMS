@@ -5,7 +5,11 @@ comment on schema stripe_connect is
 comment on table stripe_connect.payments is
     'Immutable payment allocation and independent payment, settlement, and dispute projections.';
 comment on table stripe_connect.marketplace_terms_acceptances is
-    'Immutable, server-timestamped proof that a CMS seller accepted one exact marketplace agreement version and SHA-256 document hash.';
+    'Immutable, server-timestamped proof that a CMS seller accepted one exact marketplace agreement; published revisions are referenced without duplicating their archived snapshot per seller.';
+comment on table stripe_connect.marketplace_terms_versions is
+    'Immutable server-materialized versions of published CMS seller-terms pages, including canonical snapshot, SHA-256 evidence, and configured consent statement.';
+comment on table stripe_connect.marketplace_terms_configuration is
+    'Mutable singleton selecting the current seller-terms revision; legacy version/hash mode remains available only for compatible upgrades.';
 comment on table stripe_connect.payment_lifecycle_guards is
     'Serialized create-versus-cancel guard; an absent-payment cancellation is a durable tombstone that permanently rejects later provider creation.';
 comment on table stripe_connect.financial_operations is

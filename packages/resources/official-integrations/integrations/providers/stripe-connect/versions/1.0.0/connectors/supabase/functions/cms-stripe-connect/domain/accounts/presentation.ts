@@ -11,7 +11,7 @@ import {
 export function publicAccountStatus(
     row: ConnectAccountRow | null,
     userId: string,
-    options: { currentTermsAccepted?: boolean } = {},
+    options: { currentTermsAccepted?: boolean; marketplaceTermsRequirement?: JsonRecord | null } = {},
 ): JsonRecord {
     if (!row) {
         return {
@@ -23,6 +23,9 @@ export function publicAccountStatus(
             stripeTermsStatus: "required",
             marketplaceTermsStatus: "required",
             marketplaceTermsCurrentVersionAccepted: false,
+            ...(options.marketplaceTermsRequirement !== undefined
+                ? { marketplaceTermsRequirement: options.marketplaceTermsRequirement }
+                : {}),
             enrollmentStatus: "not_started",
             onboardingStatus: "not_started",
             chargesEnabled: false,
@@ -44,7 +47,10 @@ export function publicAccountStatus(
     return publicAccount(row, options);
 }
 
-export function publicAccount(row: ConnectAccountRow, options: { currentTermsAccepted?: boolean } = {}): JsonRecord {
+export function publicAccount(
+    row: ConnectAccountRow,
+    options: { currentTermsAccepted?: boolean; marketplaceTermsRequirement?: JsonRecord | null } = {},
+): JsonRecord {
     const transferStatus = stripeTransfersStatus(row);
     const payoutStatus = bankPayoutsStatus(row);
     const marketplaceTermsAccepted = Boolean(row.marketplace_terms_accepted_at);
@@ -59,6 +65,9 @@ export function publicAccount(row: ConnectAccountRow, options: { currentTermsAcc
         stripeTermsStatus: row.terms_accepted ? "accepted" : "required",
         marketplaceTermsStatus: marketplaceTermsAccepted ? "accepted" : "required",
         marketplaceTermsCurrentVersionAccepted: options.currentTermsAccepted === true,
+        ...(options.marketplaceTermsRequirement !== undefined
+            ? { marketplaceTermsRequirement: options.marketplaceTermsRequirement }
+            : {}),
         marketplaceTermsAcceptedAt: row.marketplace_terms_accepted_at,
         enrollmentStatus: sellerEnrollmentStatus(row),
         country: row.country,

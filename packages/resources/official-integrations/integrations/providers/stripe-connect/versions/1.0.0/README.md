@@ -62,6 +62,9 @@ The `stripe_connect` schema is revoked from `public`, `anon`, and
 `service_role`. It stores independent facts in:
 
 - `accounts`;
+- immutable `marketplace_terms_versions` and
+  `marketplace_terms_acceptances`, plus the current
+  `marketplace_terms_configuration` pointer;
 - `payments` and append-only `payment_events`;
 - `financial_operations`;
 - `transfers` and `transfer_reversals`;
@@ -81,6 +84,21 @@ No database lock is held across an HTTP request.
 An ambiguous result creates a critical provider exception and moves the
 payment to `manual_review`. There is no immediate-settlement or unprotected
 fallback.
+
+Seller marketplace terms can be synchronized from one published CMS page by
+the system-only installation endpoint. The CMS page resolver supplies the
+published snapshot; this provider does not fetch a caller-selected remote URL.
+The provider hashes and archives the exact page, label, and consent statement
+as an immutable revision. Status and enrollment expose a minimal public
+requirement without the archived content. Both seller UIs must submit the exact
+displayed version and content hash, and the recording RPC compares them with
+the locked current configuration before accepting. A stale display fails with
+`MARKETPLACE_TERMS_VERSION_CHANGED`.
+
+The older explicit version/hash pair remains supported when no synchronized
+configuration exists and as the linking integration's no-page fallback. A
+page-backed configuration is server-authoritative and requires compare-and-set
+evidence, so an old client fails closed instead of accepting unseen terms.
 
 Succeeded Charges and Refunds also persist their Stripe Balance Transaction
 ids, currency, fee details, signed fee, and net amounts. The original Charge

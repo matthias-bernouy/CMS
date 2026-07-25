@@ -155,6 +155,13 @@ export function postgresContractConfiguration(packageRoot: string): {
                 ["run_payout_schedule_install_contract=true", "allow_payout_schedule_schema_reset=true"],
             ),
             contract(
+                "stripe-connect-marketplace-terms",
+                "Stripe Connect marketplace terms evidence",
+                "stripeConnect",
+                "stripe-connect/contracts/marketplace-terms",
+                ["run_marketplace_terms_install_contract=true", "allow_marketplace_terms_schema_reset=true"],
+            ),
+            contract(
                 "stripe-connect-payment-projection",
                 "Stripe Connect payment projection",
                 "stripeConnect",

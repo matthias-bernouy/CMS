@@ -61,15 +61,16 @@ export function registerAccountTermsRepositoryContracts(createHarness: CreateRep
             expect(response.status).toBe(200);
             expect(await responseBody(response)).toEqual({ eligible: true, reasonCode: "eligible" });
             expect(postgrestBudget(harness)).toEqual([
+                { method: "POST", table: "rpc/get_current_marketplace_terms_configuration" },
                 { method: "GET", table: "accounts" },
                 { method: "GET", table: "accounts" },
                 { method: "PATCH", table: "accounts" },
                 { method: "GET", table: "marketplace_terms_acceptances" },
             ]);
-            expect(postgrestQuery(harness, 0)).toMatchObject({ stripe_account_id: "eq.seller-1", limit: "1" });
-            expect(postgrestQuery(harness, 1)).toMatchObject({ cms_user_id: "eq.seller-1", limit: "1" });
-            expect(postgrestQuery(harness, 2)).toHaveProperty("cms_user_id", "eq.seller-1");
-            expect(postgrestBody(harness, 2)).toEqual({
+            expect(postgrestQuery(harness, 1)).toMatchObject({ stripe_account_id: "eq.seller-1", limit: "1" });
+            expect(postgrestQuery(harness, 2)).toMatchObject({ cms_user_id: "eq.seller-1", limit: "1" });
+            expect(postgrestQuery(harness, 3)).toHaveProperty("cms_user_id", "eq.seller-1");
+            expect(postgrestBody(harness, 3)).toEqual({
                 stripe_account_id: "acct_custom_identity_123",
                 application_controlled_recipient: true,
                 terms_accepted: true,
@@ -94,7 +95,7 @@ export function registerAccountTermsRepositoryContracts(createHarness: CreateRep
                 requirements_errors: [],
                 future_requirements: { entries: [], summary: null },
             });
-            expect(postgrestQuery(harness, 3)).toEqual({
+            expect(postgrestQuery(harness, 4)).toEqual({
                 cms_user_id: "eq.seller-1",
                 terms_version: `eq.${marketplaceTermsVersion}`,
                 terms_hash: `eq.${marketplaceTermsHash}`,

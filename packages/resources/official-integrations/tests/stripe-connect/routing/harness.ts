@@ -21,6 +21,7 @@ export type RoutingHarness = {
         failNextPostgrestWrite(table: string, method: "POST" | "PATCH"): void;
         patchProviderTransfer(stripeTransferId: string, patch: JsonRecord): void;
         rows(table: string): JsonRecord[];
+        setCurrentMarketplaceTermsConfiguration(configuration: JsonRecord | null): void;
         setPaymentIntentSucceeded(paymentIntentId: string): void;
         setStripeAccountState(userId: string, patch: JsonRecord): void;
     };

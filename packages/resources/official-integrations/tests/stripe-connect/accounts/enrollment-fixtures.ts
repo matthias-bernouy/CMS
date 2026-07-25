@@ -6,6 +6,12 @@ export const nextTermsHash = "d".repeat(64);
 
 export function expectedReloadRequests() {
     return [
+        {
+            method: "POST",
+            table: "rpc/get_current_marketplace_terms_configuration",
+            searchParams: [],
+            body: {},
+        },
         { method: "GET", table: "accounts", searchParams: accountQuery("user-123"), body: null },
         {
             method: "PATCH",

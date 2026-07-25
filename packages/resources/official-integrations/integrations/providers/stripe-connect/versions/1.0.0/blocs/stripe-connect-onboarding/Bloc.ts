@@ -34,6 +34,7 @@ class StripeConnectOnboarding extends HTMLElement {
         super();
         this.root = this.attachShadow({ mode: "open" });
         this.profile = null;
+        this.marketplaceTermsRequirement = null;
         this.clientConfigPromise = null;
     }
 
@@ -257,7 +258,7 @@ class StripeConnectOnboarding extends HTMLElement {
                     </div>
                     <label class="check">
                         <input type="checkbox" name="termsAccepted" required>
-                        <span>J’accepte les <a data-marketplace-terms href="${escapeHtml(this.getAttribute("terms-url") || "/legal/terms")}" target="_blank" rel="noopener"></a> et les <a data-payment-terms href="https://stripe.com/fr/legal/connect-account" target="_blank" rel="noopener"></a>.</span>
+                        <span><span data-marketplace-consent-text>J’accepte les</span> <a data-marketplace-terms href="${escapeHtml(this.getAttribute("terms-url") || "/legal/terms")}" target="_blank" rel="noopener"></a> et les <a data-payment-terms href="https://stripe.com/fr/legal/connect-account" target="_blank" rel="noopener"></a>.</span>
                     </label>
                     <div class="security">
                         <span aria-hidden="true">🔒</span>
@@ -318,11 +319,23 @@ class StripeConnectOnboarding extends HTMLElement {
         this.setText("[data-security-copy]", "security-copy", "Tes informations sont vérifiées de manière sécurisée.");
         const profileLink = this.root.querySelector("[data-profile-link]");
         const termsLink = this.root.querySelector("[data-marketplace-terms]");
+        const consentText = this.root.querySelector("[data-marketplace-consent-text]");
         if (profileLink) {
             profileLink.setAttribute("href", this.getAttribute("profile-url")?.trim() || "/account/profile");
         }
         if (termsLink) {
-            termsLink.setAttribute("href", this.getAttribute("terms-url")?.trim() || "/legal/terms");
+            const requirement = publishedMarketplaceTermsRequirement(this.marketplaceTermsRequirement);
+            termsLink.setAttribute(
+                "href",
+                requirement?.page.path || this.getAttribute("terms-url")?.trim() || "/legal/terms",
+            );
+            termsLink.textContent =
+                requirement?.label ||
+                this.getAttribute("marketplace-terms-label")?.trim() ||
+                "conditions générales de la plateforme";
+            if (consentText) {
+                consentText.textContent = requirement?.consentText || "J’accepte les";
+            }
         }
     }
 
@@ -338,6 +351,8 @@ class StripeConnectOnboarding extends HTMLElement {
         this.setBusy(true);
         try {
             const status = await this.requestStripeSource("getConnectStatus");
+            this.marketplaceTermsRequirement = marketplaceTermsRequirement(status?.marketplaceTermsRequirement);
+            this.syncPresentation();
             this.dispatchEvent(
                 new CustomEvent("stripe-connect-onboarding:status", {
                     bubbles: true,
@@ -453,10 +468,34 @@ class StripeConnectOnboarding extends HTMLElement {
                 currency: "eur",
                 account_number: this.ibanInput.value.replace(/\s/g, "").toUpperCase(),
             });
-            const status = await this.requestStripeSource("submitConnectVerification", {
-                method: "POST",
-                body: JSON.stringify({ accountToken, bankAccountToken, contactEmail: this.profile.email }),
-            });
+            const marketplaceTerms = this.marketplaceTermsRequirement;
+            let status;
+            try {
+                status = await this.requestStripeSource("submitConnectVerification", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        accountToken,
+                        bankAccountToken,
+                        contactEmail: this.profile.email,
+                        ...(marketplaceTerms
+                            ? {
+                                  marketplaceTermsAccepted: true,
+                                  expectedMarketplaceTermsVersion: marketplaceTerms.version,
+                                  expectedMarketplaceTermsHash: marketplaceTerms.hash,
+                              }
+                            : {}),
+                    }),
+                });
+            } catch (error) {
+                if (error instanceof Error && error.message === "MARKETPLACE_TERMS_VERSION_CHANGED") {
+                    this.form.querySelector("[name='termsAccepted']").checked = false;
+                    await this.refresh();
+                    throw new PublicError(
+                        "Les conditions vendeur ont changé. Relis la nouvelle version avant de continuer.",
+                    );
+                }
+                throw error;
+            }
             this.ibanInput.value = "";
             if (status.onboardingStatus === "enabled" && status.payoutsEnabled === true) {
                 await this.showWallet();
@@ -781,6 +820,32 @@ function verificationPending(status) {
     }
     const actionRequired = ["requirements_due", "rejected"].includes(status?.onboardingStatus);
     return status?.bankAccountStatus === "attached" && status?.payoutsEnabled !== true && !actionRequired;
+}
+
+function marketplaceTermsRequirement(value) {
+    const version = text(value?.version);
+    const hash = text(value?.hash).toLowerCase();
+    if (!version || version.length > 200 || !/^[a-f0-9]{64}$/.test(hash)) {
+        return null;
+    }
+    const requirement = { version, hash };
+    const published = publishedMarketplaceTermsRequirement(value);
+    return published ? { ...requirement, ...published } : requirement;
+}
+
+function publishedMarketplaceTermsRequirement(value) {
+    const pagePath = text(value?.page?.path);
+    const label = text(value?.label);
+    const consentText = text(value?.consentText);
+    if (value?.mode !== "published_page" || !pagePath.startsWith("/") || !label || !consentText) {
+        return null;
+    }
+    return {
+        mode: "published_page",
+        label,
+        consentText,
+        page: { path: pagePath },
+    };
 }
 
 function publicErrorMessage(error) {

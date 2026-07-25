@@ -15,13 +15,18 @@ import {
 
 export function registerProtectedPaymentValidationContracts(createHarness: CreateRoutingHarness): void {
     describe("stripe-connect protected payment validation contracts", () => {
-        test("rejects absent or incomplete seller terms before state and provider access", async () => {
+        test("requires either configured terms or a complete legacy identity before seller state access", async () => {
             const harness = await createHarness();
+            const absent = await postJson(harness, "/payments/seller-eligibility", "buyer-1", {
+                sellerUserId: "seller-1",
+            });
+            expect(absent.status).toBe(409);
+            expect(await responseBody(absent)).toEqual({ error: "current marketplace terms are not configured" });
+            expect(postgrestBudget(harness)).toEqual([
+                { method: "POST", table: "rpc/get_current_marketplace_terms_configuration" },
+            ]);
+
             const cases = [
-                {
-                    body: { sellerUserId: "seller-1" },
-                    error: "marketplaceTermsVersion and marketplaceTermsHash are required",
-                },
                 {
                     body: { sellerUserId: "seller-1", marketplaceTermsVersion },
                     error: "marketplaceTermsVersion and marketplaceTermsHash must be provided together",

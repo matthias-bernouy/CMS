@@ -1,4 +1,5 @@
 import { connectEnrollment, connectVerification } from "../routes/accounts/enrollment.ts";
+import { configureMarketplaceTerms } from "../routes/accounts/marketplace-terms/configuration.ts";
 import {
     adminCreateOnboarding,
     adminCreateOnboardingSession,
@@ -27,6 +28,7 @@ export const directStripeConnectHandlers = {
     connectWallet,
     connectEnrollment,
     connectVerification,
+    configureMarketplaceTerms,
     connectOnboarding,
     connectOnboardingSession,
     requestPaymentIntentCancellation,

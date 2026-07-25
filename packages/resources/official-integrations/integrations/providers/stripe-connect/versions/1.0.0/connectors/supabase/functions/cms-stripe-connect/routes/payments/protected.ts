@@ -1,4 +1,12 @@
-import { getMarketplaceTermsAcceptance, listAccountRows } from "../../db/repositories/accounts.ts";
+import {
+    getMarketplaceTermsAcceptance,
+    listAccountRows,
+    listMarketplaceTermsAcceptedUserIds,
+} from "../../db/repositories/accounts.ts";
+import {
+    effectiveMarketplaceTermsExpectation,
+    getCurrentMarketplaceTermsConfiguration,
+} from "../accounts/marketplace-terms/repository.ts";
 import { getPaymentByClientReference, getPaymentRow } from "../../db/repositories/payments.ts";
 import type { ConnectAccountRow } from "../../db/records/accounts.ts";
 import { sellerCanAcceptHeldPayments } from "../../domain/accounts/eligibility.ts";
@@ -36,9 +44,13 @@ export function createProtectedPaymentRoutes({
             const body = await readJsonObject(request);
             assertAllowedKeys(body, ["sellerUserId", "marketplaceTermsVersion", "marketplaceTermsHash"]);
             const sellerIdentity = requiredString(body, "sellerUserId", 200);
-            const expectedTerms = marketplaceTermsExpectationFromBody(body);
+            const explicitTerms = marketplaceTermsExpectationFromBody(body);
+            const expectedTerms = effectiveMarketplaceTermsExpectation(
+                explicitTerms,
+                await getCurrentMarketplaceTermsConfiguration(),
+            );
             if (!expectedTerms) {
-                throw new HttpError(400, "marketplaceTermsVersion and marketplaceTermsHash are required");
+                throw new HttpError(409, "current marketplace terms are not configured");
             }
             const seller = await syncAccountForIdentity(sellerIdentity);
             if (!seller?.stripe_account_id) {
@@ -62,19 +74,23 @@ export function createProtectedPaymentRoutes({
             requireCmsRequest(request, { requireUser: false });
             const body = await readJsonObject(request);
             assertAllowedKeys(body, ["marketplaceTermsVersion", "marketplaceTermsHash"]);
-            const expectedTerms = marketplaceTermsExpectationFromBody(body);
+            const explicitTerms = marketplaceTermsExpectationFromBody(body);
+            const expectedTerms = effectiveMarketplaceTermsExpectation(
+                explicitTerms,
+                await getCurrentMarketplaceTermsConfiguration(),
+            );
             if (!expectedTerms) {
-                throw new HttpError(400, "marketplaceTermsVersion and marketplaceTermsHash are required");
+                throw new HttpError(409, "current marketplace terms are not configured");
             }
             const snapshotAt = new Date().toISOString();
-            const accounts = await listAccountRows();
+            const [accounts, acceptedUserIds] = await Promise.all([
+                listAccountRows(),
+                listMarketplaceTermsAcceptedUserIds(expectedTerms.version, expectedTerms.hash),
+            ]);
             return json({
                 readySellerCmsUserIds: accounts
                     .filter(
-                        (account) =>
-                            account.marketplace_terms_version === expectedTerms.version &&
-                            account.marketplace_terms_hash === expectedTerms.hash &&
-                            sellerCanAcceptHeldPayments(account),
+                        (account) => acceptedUserIds.has(account.cms_user_id) && sellerCanAcceptHeldPayments(account),
                     )
                     .map((account) => account.cms_user_id),
                 snapshot: "persisted_provider_projection",

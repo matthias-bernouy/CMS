@@ -40,9 +40,7 @@
                 }
             },
             "required": [
-                "sellerUserId",
-                "marketplaceTermsVersion",
-                "marketplaceTermsHash"
+                "sellerUserId"
             ]
         },
         "output": [
@@ -94,11 +92,7 @@
                 "marketplaceTermsHash": {
                     "type": "string"
                 }
-            },
-            "required": [
-                "marketplaceTermsVersion",
-                "marketplaceTermsHash"
-            ]
+            }
         },
         "output": [
             {
