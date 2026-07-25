@@ -40,4 +40,4 @@ $roles$;
 grant usage on schema extensions to service_role;
 grant execute on all functions in schema extensions to service_role;
 
-\ir ../../postgres/settlement-smoke.sql
+\ir ../settlement-smoke.sql

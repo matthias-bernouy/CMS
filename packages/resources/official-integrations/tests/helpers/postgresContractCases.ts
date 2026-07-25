@@ -43,13 +43,20 @@ export function postgresContractConfiguration(packageRoot: string): {
                 "commerce/protected/payment",
                 ["run_buyer_legal_install_contract=true", "allow_buyer_legal_schema_reset=true"],
             ),
-            contract(
-                "commerce-protected-settlement",
-                "Commerce protected settlement",
-                "commerce",
-                "commerce/protected/settlement",
-                ["run_protected_settlement_contract=true", "allow_protected_settlement_schema_reset=true"],
-            ),
+            {
+                bundle: "commerce",
+                id: "commerce-protected-settlement",
+                label: "Commerce protected settlement",
+                steps: [
+                    {
+                        file: "tests/commerce/protected/postgres/settlement/contracts.pg.sql",
+                        variables: [
+                            "run_protected_settlement_contract=true",
+                            "allow_protected_settlement_schema_reset=true",
+                        ],
+                    },
+                ],
+            },
             {
                 bundle: "commerce",
                 id: "commerce-protected-deadlines",
