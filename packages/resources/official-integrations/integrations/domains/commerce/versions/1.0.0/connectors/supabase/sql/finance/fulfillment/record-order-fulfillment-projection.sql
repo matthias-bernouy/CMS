@@ -27,7 +27,12 @@ declare
     v_projection_observed_at timestamptz;
     v_handoff_timestamp_anomalous boolean;
     v_terminal_occurred_at timestamptz;
+    v_effective_carrier_accepted_at timestamptz;
+    v_carrier_acceptance_after_grace boolean := false;
+    v_scan_grace_recovery boolean := false;
     v_refund jsonb;
+    v_existing_lost_refund commerce.refund_requests%rowtype;
+    v_incompatible_refunds jsonb;
 begin
     if p_normalized_status not in (
         'label_created', 'seller_handoff_declared', 'carrier_accepted', 'in_transit',
@@ -156,6 +161,30 @@ begin
         when 'carrier_accepted' then 30 when 'in_transit' then 40
         when 'arrived_at_pickup_point' then 50 when 'available_for_pickup' then 60
         when 'collected_by_recipient' then 70 else v_current_rank end;
+    -- The locked first authoritative acceptance instant, not webhook arrival
+    -- order, decides scan-grace eligibility. An instant exactly on the
+    -- deadline is timely; only a strictly later instant enters manual review.
+    -- Terminal carrier truths such as `lost` remain terminal and are handled
+    -- by their own financial reconciliation below.
+    if p_normalized_status in (
+        'carrier_accepted', 'in_transit', 'arrived_at_pickup_point',
+        'available_for_pickup', 'collected_by_recipient'
+    ) then
+        v_effective_carrier_accepted_at := coalesce(
+            v_fulfillment.carrier_accepted_at,
+            p_carrier_accepted_at,
+            p_occurred_at
+        );
+        v_carrier_acceptance_after_grace :=
+            v_effective_carrier_accepted_at > v_fulfillment.scan_grace_deadline;
+        v_scan_grace_recovery := not v_carrier_acceptance_after_grace
+            and v_fulfillment.status = 'manual_review'
+            and v_fulfillment.blocking_reason =
+                'scan_grace_elapsed_without_carrier_acceptance'
+            and v_settlement.status = 'manual_review'
+            and v_settlement.manual_review_reason =
+                'fulfillment_reconciliation_required';
+    end if;
     v_blocking := p_normalized_status in (
         'incident', 'lost', 'pickup_expired', 'returning_to_sender', 'returned_to_sender', 'cancelled'
     );
@@ -177,13 +206,16 @@ begin
             or v_fulfillment.blocking_reason = 'recipient_handoff_timestamp_anomaly'
         );
     update commerce.order_fulfillments set
-        status = case when v_handoff_timestamp_anomalous
-            then 'manual_review' else p_normalized_status end,
+        status = case
+            when v_carrier_acceptance_after_grace then 'manual_review'
+            when v_handoff_timestamp_anomalous then 'manual_review'
+            else p_normalized_status
+        end,
         provider_reference = coalesce(nullif(p_provider_reference, ''), provider_reference),
         seller_handoff_declared_at = case when p_normalized_status = 'seller_handoff_declared'
             then coalesce(p_seller_handoff_declared_at, p_occurred_at) else seller_handoff_declared_at end,
         carrier_accepted_at = case when v_next_rank >= 30
-            then coalesce(carrier_accepted_at, p_carrier_accepted_at, p_occurred_at) else carrier_accepted_at end,
+            then v_effective_carrier_accepted_at else carrier_accepted_at end,
         arrived_at_pickup_point_at = case when v_next_rank >= 50
             then coalesce(arrived_at_pickup_point_at, p_occurred_at) else arrived_at_pickup_point_at end,
         available_for_pickup_at = case when v_next_rank >= 60
@@ -210,6 +242,8 @@ begin
                     + make_interval(hours => v_protection.claim_window_hours))
             else release_eligible_at end,
         blocking_reason = case
+            when v_carrier_acceptance_after_grace
+                then 'carrier_acceptance_after_scan_grace'
             when v_handoff_timestamp_anomalous then 'recipient_handoff_timestamp_anomaly'
             when v_blocking then p_normalized_status
             when blocking_reason = 'seller_handoff_deadline_elapsed_without_declaration'
@@ -219,6 +253,59 @@ begin
         version = version + 1,
         updated_at = now()
     where order_id = v_order.id returning * into v_fulfillment;
+    if v_carrier_acceptance_after_grace then
+        update commerce.order_settlements set
+            status = 'manual_review',
+            manual_review_reason = 'carrier_acceptance_after_scan_grace',
+            version = version + 1,
+            updated_at = now()
+        where order_id = v_order.id
+          and status not in ('refunded', 'reversed')
+        returning * into v_settlement;
+        insert into commerce.financial_exceptions (
+            deduplication_key, order_id, kind, severity, reason, details
+        ) values (
+            'deadline:fulfillment:' || v_order.id,
+            v_order.id,
+            'fulfillment_ambiguity',
+            'high',
+            'Carrier acceptance occurred after the immutable scan grace deadline',
+            jsonb_build_object(
+                'providerEventId', p_provider_event_id,
+                'normalizedStatus', p_normalized_status,
+                'providerOccurredAt', p_occurred_at,
+                'carrierAcceptedAt', v_effective_carrier_accepted_at,
+                'scanGraceDeadline', v_fulfillment.scan_grace_deadline
+            )
+        ) on conflict (deduplication_key) where deduplication_key is not null do update set
+            status = 'open',
+            reason = excluded.reason,
+            details = excluded.details,
+            detected_at = now(),
+            resolved_at = null,
+            resolved_by = null;
+    elsif v_scan_grace_recovery then
+        update commerce.order_settlements set
+            status = 'held',
+            manual_review_reason = null,
+            version = version + 1,
+            updated_at = now()
+        where order_id = v_order.id
+          and status = 'manual_review'
+          and manual_review_reason = 'fulfillment_reconciliation_required'
+        returning * into v_settlement;
+        update commerce.financial_exceptions set
+            status = 'resolved',
+            resolved_at = now(),
+            resolved_by = 'trusted-carrier-acceptance',
+            details = details || jsonb_build_object(
+                'resolvedByProviderEventId', p_provider_event_id,
+                'carrierAcceptedAt', v_effective_carrier_accepted_at,
+                'scanGraceDeadline', v_fulfillment.scan_grace_deadline
+            )
+        where deduplication_key = 'deadline:fulfillment:' || v_order.id
+          and status <> 'resolved';
+    end if;
     if v_blocking then
         update commerce.order_settlements set
             status = case when p_normalized_status = 'returned_to_sender'
@@ -227,13 +314,109 @@ begin
         where order_id = v_order.id and status not in ('released', 'refunded', 'reversed');
     end if;
     if p_normalized_status = 'lost' then
-        v_refund := commerce.create_cancellation_refund_request(
-            v_order.id,
-            'fulfillment:lost:' || p_provider_event_id,
-            'carrier_confirmed_lost',
-            'system',
-            'delivery'
-        );
+        select * into v_existing_lost_refund
+        from commerce.refund_requests request
+        where request.order_id = v_order.id
+          and request.reason = 'carrier_confirmed_lost'
+          and request.business_key like 'fulfillment:lost:%'
+          and request.status not in ('rejected', 'cancelled', 'failed')
+        order by request.id
+        limit 1
+        for update;
+        if found then
+            v_refund := to_jsonb(v_existing_lost_refund);
+            if v_existing_lost_refund.status in (
+                'requested', 'approved', 'provider_operation_reserved',
+                'processing'
+            ) then
+                update commerce.order_settlements set
+                    status = case
+                        when total_transferred_amount > total_reversed_amount
+                          and v_existing_lost_refund.seller_recovery_amount
+                            > v_existing_lost_refund.seller_reserve_offset_amount
+                            then 'reversal_pending'
+                        else 'refund_pending'
+                    end,
+                    manual_review_reason = null,
+                    version = version + 1,
+                    updated_at = now()
+                where order_id = v_order.id
+                  and status not in (
+                      'refunded', 'reversed', 'manual_review'
+                  )
+                returning * into v_settlement;
+            end if;
+        else
+            -- Known allocation conflicts are detected while the order lock is
+            -- held. No exception handler is used here, so unknown database or
+            -- refund failures remain transactional and visible to the caller.
+            select coalesce(
+                jsonb_agg(
+                    jsonb_build_object(
+                        'id', request.id,
+                        'businessKey', request.business_key,
+                        'status', request.status,
+                        'allocationVersion', request.allocation_version,
+                        'requestedAmount', request.requested_amount
+                    )
+                    order by request.id
+                ),
+                '[]'::jsonb
+            )
+            into v_incompatible_refunds
+            from commerce.refund_requests request
+            where request.order_id = v_order.id
+              and (
+                  (
+                      request.allocation_version = 0
+                      and request.status not in ('rejected', 'cancelled', 'failed')
+                  )
+                  or request.status in (
+                      'requested', 'approved', 'provider_operation_reserved',
+                      'processing', 'manual_review'
+                  )
+              );
+            if jsonb_array_length(v_incompatible_refunds) > 0 then
+                update commerce.order_settlements set
+                    status = 'manual_review',
+                    manual_review_reason =
+                        'carrier_lost_refund_reconciliation_required',
+                    version = version + 1,
+                    updated_at = now()
+                where order_id = v_order.id
+                  and status not in ('refunded', 'reversed')
+                returning * into v_settlement;
+                insert into commerce.financial_exceptions (
+                    deduplication_key, order_id, kind, severity, reason, details
+                ) values (
+                    'fulfillment:lost-refund:' || v_order.id,
+                    v_order.id,
+                    'refund_failure',
+                    'critical',
+                    'Carrier loss requires manual reconciliation with an incompatible existing refund',
+                    jsonb_build_object(
+                        'providerEventId', p_provider_event_id,
+                        'providerReference', p_provider_reference,
+                        'occurredAt', p_occurred_at,
+                        'refunds', v_incompatible_refunds
+                    )
+                ) on conflict (deduplication_key) where deduplication_key is not null do update set
+                    status = 'open',
+                    reason = excluded.reason,
+                    details = excluded.details,
+                    detected_at = now(),
+                    resolved_at = null,
+                    resolved_by = null;
+            else
+                v_refund := commerce.create_cancellation_refund_request(
+                    v_order.id,
+                    'fulfillment:lost:' || p_provider_event_id,
+                    'carrier_confirmed_lost',
+                    'system',
+                    'delivery'
+                );
+            end if;
+        end if;
     elsif p_normalized_status = 'returned_to_sender' then
         insert into commerce.financial_exceptions (
             deduplication_key, order_id, kind, severity, reason, details
@@ -297,6 +480,8 @@ begin
     return to_jsonb(v_fulfillment) || jsonb_build_object(
         'order_public_id', v_order.public_id,
         'refundRequest', v_refund,
+        'carrierAcceptanceAfterScanGrace', v_carrier_acceptance_after_grace,
+        'scanGraceRecovered', v_scan_grace_recovery,
         'idempotentReplay', false
     );
 end;
