@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+    ClientAddressUnavailableError,
     InvalidForwardedChainError,
     normalizeIpAddress,
     resolveClientAddress,
@@ -17,6 +18,17 @@ describe("HTTP client address resolution", () => {
     test("direct mode ignores forwarding headers", () => {
         const request = stampedRequest("198.51.100.4", "203.0.113.8");
         expect(resolveClientAddress(request, { mode: "direct" })).toBe("198.51.100.4");
+    });
+
+    test("active modes fail closed when the runner did not record a peer", () => {
+        expect(() => resolveClientAddress(new Request("https://example.test"), { mode: "direct" })).toThrow(
+            ClientAddressUnavailableError,
+        );
+        try {
+            resolveClientAddress(new Request("https://example.test"), { mode: "direct" });
+        } catch (error) {
+            expect(error).toMatchObject({ status: 503, publicCode: "client_address_unavailable" });
+        }
     });
 
     test("selects the address immediately before one or two trusted hops", () => {

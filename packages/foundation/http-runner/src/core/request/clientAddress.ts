@@ -16,6 +16,16 @@ export class InvalidForwardedChainError extends Error {
     }
 }
 
+export class ClientAddressUnavailableError extends Error {
+    readonly status = 503;
+    readonly publicCode = "client_address_unavailable";
+
+    constructor() {
+        super("Client address is unavailable");
+        this.name = "ClientAddressUnavailableError";
+    }
+}
+
 export function resolveClientAddress(request: Request, policy: ClientAddressPolicy): string | undefined {
     if (policy.mode === "disabled") {
         return undefined;
@@ -25,7 +35,7 @@ export function resolveClientAddress(request: Request, policy: ClientAddressPoli
         if (policy.mode === "trusted-proxy") {
             throw new InvalidForwardedChainError();
         }
-        return undefined;
+        throw new ClientAddressUnavailableError();
     }
     if (isLoopbackAddress(peer)) {
         return "loopback";
