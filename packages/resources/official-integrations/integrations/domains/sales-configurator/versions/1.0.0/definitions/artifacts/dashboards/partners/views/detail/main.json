@@ -1,0 +1,29 @@
+[
+  {
+    "id": "partnerAccount",
+    "title": "Sales-partner account",
+    "description": "The CMS user id is the immutable business-ownership identity.",
+    "fields": [
+      {
+        "id": "cmsUserId",
+        "label": "CMS user id",
+        "path": "cmsUserId",
+        "type": "text",
+        "required": true
+      },
+      {
+        "id": "displayName",
+        "label": "Display name",
+        "path": "displayName",
+        "type": "text",
+        "required": true
+      },
+      {
+        "id": "contactEmail",
+        "label": "Sales contact email",
+        "path": "contactEmail",
+        "type": "text"
+      }
+    ]
+  }
+]

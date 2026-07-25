@@ -1,0 +1,121 @@
+[
+  {
+    "widget": "w-detail",
+    "id": "variantFeatureDetail",
+    "source": {
+      "endpoint": "manageVariantFeatures",
+      "params": {
+        "variantItemId": "$selection.variantItemId",
+        "featureItemId": "$selection.featureItemId"
+      },
+      "itemPath": "item"
+    },
+    "title": { "path": "featureName", "fallback": "New variant feature" },
+    "status": { "path": "pricingMode" },
+    "actions": [
+      {
+        "id": "saveVariantFeature",
+        "label": "Save variant feature",
+        "tone": "primary",
+        "placement": "primary",
+        "endpoint": {
+          "endpoint": "upsertVariantFeature",
+          "body": {
+            "variantItemId": "$field.variantItemId",
+            "featureItemId": "$field.featureItemId",
+            "availability": "$field.availability",
+            "pricingMode": "$field.pricingMode",
+            "unitAmountCents": "$field.unitAmountCents",
+            "sortOrder": "$field.sortOrder"
+          }
+        },
+        "after": { "resource": "$result" }
+      },
+      {
+        "id": "deleteVariantFeature",
+        "label": "Delete association",
+        "icon": "trash",
+        "tone": "danger",
+        "placement": "more",
+        "confirm": "Delete this variant-feature association?",
+        "visibleWhen": { "value": "$resource.featureItemId", "notEquals": null },
+        "endpoint": {
+          "endpoint": "deleteVariantFeature",
+          "params": {
+            "variantItemId": "$resource.variantItemId",
+            "featureItemId": "$resource.featureItemId"
+          }
+        }
+      }
+    ],
+    "main": [
+      {
+        "id": "variantFeatureDefinition",
+        "title": "Association",
+        "fields": [
+          {
+            "id": "variantItemId",
+            "label": "Variant",
+            "path": "variantItemId",
+            "type": "combobox",
+            "required": true,
+            "lookup": {
+              "endpoint": "manageVariants",
+              "params": { "q": "$search", "limit": "30" },
+              "itemsPath": "items",
+              "valuePath": "id",
+              "labelPath": "name",
+              "subtitlePath": "moduleName"
+            }
+          },
+          {
+            "id": "featureItemId",
+            "label": "Feature",
+            "path": "featureItemId",
+            "type": "combobox",
+            "required": true,
+            "lookup": {
+              "endpoint": "manageFeatures",
+              "params": { "q": "$search", "limit": "30" },
+              "itemsPath": "items",
+              "valuePath": "id",
+              "labelPath": "name",
+              "subtitlePath": "code"
+            }
+          },
+          {
+            "id": "availability",
+            "label": "Availability",
+            "path": "availability",
+            "type": "select",
+            "required": true,
+            "options": [
+              { "value": "included", "label": "Included" },
+              { "value": "optional", "label": "Optional" }
+            ]
+          },
+          {
+            "id": "pricingMode",
+            "label": "Pricing mode",
+            "path": "pricingMode",
+            "type": "select",
+            "required": true,
+            "options": [
+              { "value": "included", "label": "Included" },
+              { "value": "fixed", "label": "Fixed" },
+              { "value": "quote", "label": "On request" }
+            ]
+          },
+          {
+            "id": "unitAmountCents",
+            "label": "Amount (EUR)",
+            "path": "unitAmountCents",
+            "type": "money",
+            "visibleWhen": { "value": "$field.pricingMode", "equals": "fixed" }
+          },
+          { "id": "sortOrder", "label": "Position", "path": "sortOrder", "type": "number", "min": 0 }
+        ]
+      }
+    ]
+  }
+]

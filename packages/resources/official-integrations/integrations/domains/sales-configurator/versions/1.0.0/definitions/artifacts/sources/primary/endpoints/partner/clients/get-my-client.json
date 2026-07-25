@@ -1,0 +1,32 @@
+[
+  {
+    "endpointId": "getMyClient",
+    "method": "GET",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/partner/client",
+    "meta": {
+      "name": "Get my client",
+      "description": "Read one client owned by the authenticated sales partner."
+    },
+    "params": [
+      { "name": "id", "in": "query", "type": "number" }
+    ],
+    "headers": {
+      "$include": "../../../shared/actor-headers.json"
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../shapes/clients/client.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

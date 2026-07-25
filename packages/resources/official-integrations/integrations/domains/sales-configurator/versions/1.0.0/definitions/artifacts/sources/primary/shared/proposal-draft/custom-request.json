@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "label": { "type": "string" },
+    "description": { "type": "string", "nullable": true },
+    "quantity": { "type": "number" }
+  },
+  "required": [
+    "label"
+  ]
+}

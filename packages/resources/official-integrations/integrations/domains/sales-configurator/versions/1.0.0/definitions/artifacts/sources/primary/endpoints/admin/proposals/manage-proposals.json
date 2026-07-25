@@ -1,0 +1,51 @@
+[
+  {
+    "endpointId": "manageProposals",
+    "method": "GET",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/proposals",
+    "meta": {
+      "name": "Manage proposals",
+      "description": "Search all sales proposals for the administration dashboard."
+    },
+    "params": [
+      { "name": "owner", "in": "query", "type": "string" },
+      { "name": "status", "in": "query", "type": "string" },
+      { "name": "client", "in": "query", "type": "string" },
+      { "name": "q", "in": "query", "type": "string" },
+      { "name": "from", "in": "query", "type": "string" },
+      { "name": "to", "in": "query", "type": "string" },
+      { "name": "limit", "in": "query", "type": "number" },
+      { "name": "offset", "in": "query", "type": "number" }
+    ],
+    "headers": {
+      "$include": "../../../shared/admin-headers.json"
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$include": "../../../shapes/proposals/summary.json"
+              }
+            },
+            "total": { "type": "number" },
+            "limit": { "type": "number" },
+            "offset": { "type": "number" }
+          },
+          "required": ["items", "total"]
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

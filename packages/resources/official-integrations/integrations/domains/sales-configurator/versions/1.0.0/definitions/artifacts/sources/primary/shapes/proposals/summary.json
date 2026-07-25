@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "number" },
+    "reference": { "type": "string" },
+    "status": { "type": "string" },
+    "title": { "type": "string", "nullable": true },
+    "client": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "number" },
+        "companyName": { "type": "string" },
+        "contactName": { "type": "string" }
+      },
+      "required": [
+        "id",
+        "companyName"
+      ]
+    },
+    "partnerDisplayName": { "type": "string", "nullable": true },
+    "fixedTotalCents": { "type": "number" },
+    "quoteItemCount": { "type": "number" },
+    "currency": { "type": "string" },
+    "createdAt": { "type": "string" },
+    "updatedAt": { "type": "string" }
+  },
+  "required": [
+    "id",
+    "reference",
+    "status",
+    "client",
+    "fixedTotalCents",
+    "quoteItemCount",
+    "currency"
+  ]
+}

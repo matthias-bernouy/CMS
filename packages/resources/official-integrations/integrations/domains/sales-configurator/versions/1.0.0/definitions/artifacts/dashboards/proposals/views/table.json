@@ -1,0 +1,84 @@
+[
+  {
+    "widget": "w-table",
+    "id": "proposalsTable",
+    "title": "Proposals",
+    "source": {
+      "endpoint": "manageProposals",
+      "params": {
+        "owner": "$filter.owner",
+        "status": "$filter.status",
+        "client": "$filter.client",
+        "q": "$filter.q",
+        "from": "$filter.from",
+        "to": "$filter.to",
+        "limit": "100"
+      },
+      "itemsPath": "items",
+      "totalPath": "total"
+    },
+    "rowKey": "id",
+    "filters": [
+      {
+        "id": "q",
+        "label": "Reference or title",
+        "param": "q",
+        "type": "text",
+        "placeholder": "Search proposals"
+      },
+      {
+        "id": "owner",
+        "label": "Owner",
+        "param": "owner",
+        "type": "text",
+        "placeholder": "Partner name or CMS user id"
+      },
+      {
+        "id": "client",
+        "label": "Client",
+        "param": "client",
+        "type": "text",
+        "placeholder": "Client company or contact"
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "param": "status",
+        "type": "select",
+        "options": [
+          { "value": "draft", "label": "Draft" },
+          { "value": "shared", "label": "Shared" },
+          { "value": "viewed", "label": "Viewed" },
+          { "value": "accepted", "label": "Accepted" },
+          { "value": "rejected", "label": "Rejected" },
+          { "value": "expired", "label": "Expired" },
+          { "value": "archived", "label": "Archived" }
+        ]
+      },
+      {
+        "id": "from",
+        "label": "Updated after",
+        "param": "from",
+        "type": "text",
+        "placeholder": "YYYY-MM-DD"
+      },
+      {
+        "id": "to",
+        "label": "Updated before",
+        "param": "to",
+        "type": "text",
+        "placeholder": "YYYY-MM-DD"
+      }
+    ],
+    "columns": [
+      { "id": "reference", "label": "Reference", "path": "reference", "primary": true },
+      { "id": "client", "label": "Client", "path": "client.companyName" },
+      { "id": "partner", "label": "Owner", "path": "partnerDisplayName" },
+      { "id": "status", "label": "Status", "path": "status", "format": "badge" },
+      { "id": "fixedTotalCents", "label": "Fixed total", "path": "fixedTotalCents", "format": "money" },
+      { "id": "quoteItemCount", "label": "Quote items", "path": "quoteItemCount" },
+      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date" }
+    ],
+    "selection": { "opens": "proposalDetail" }
+  }
+]

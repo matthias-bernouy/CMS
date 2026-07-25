@@ -1,0 +1,40 @@
+[
+  {
+    "endpointId": "setPartnerCapability",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/partner/capability",
+    "meta": {
+      "name": "Set sales-partner capability",
+      "description": "Grant or revoke one integration-owned sales-partner capability."
+    },
+    "params": [
+      { "name": "partnerId", "in": "query", "type": "number", "required": true }
+    ],
+    "headers": {
+      "$include": "../../../shared/admin-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "capability": { "type": "string" },
+        "enabled": { "type": "boolean" }
+      },
+      "required": ["capability", "enabled"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../shapes/partners/partner.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

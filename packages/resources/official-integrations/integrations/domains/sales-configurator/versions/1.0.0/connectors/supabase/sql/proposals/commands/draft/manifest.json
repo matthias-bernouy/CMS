@@ -1,0 +1,13 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "file": "catalog-lock.sql" },
+        { "file": "shape.sql" },
+        { "file": "validation.sql" },
+        { "file": "catalog-snapshot.sql" },
+        { "file": "snapshot.sql" },
+        { "file": "prepare.sql" },
+        { "file": "save.sql" }
+    ]
+}

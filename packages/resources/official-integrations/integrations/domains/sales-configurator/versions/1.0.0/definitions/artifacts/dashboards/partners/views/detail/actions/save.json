@@ -1,0 +1,19 @@
+[
+  {
+    "id": "savePartner",
+    "label": "Save sales partner",
+    "tone": "primary",
+    "placement": "primary",
+    "endpoint": {
+      "endpoint": "upsertPartner",
+      "params": { "id": "$resource.id" },
+      "body": {
+        "cmsUserId": "$field.cmsUserId",
+        "status": "$field.status",
+        "displayName": "$field.displayName",
+        "contactEmail": "$field.contactEmail"
+      }
+    },
+    "after": { "resource": "$result" }
+  }
+]

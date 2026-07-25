@@ -1,0 +1,7 @@
+{
+  "id": "variantFeatures",
+  "label": "Variant features",
+  "children": {
+    "$include": "../../variant-features/root.json"
+  }
+}

@@ -1,0 +1,65 @@
+[
+  {
+    "endpointId": "saveMyProposalDraft",
+    "method": "POST",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/partner/proposal/draft",
+    "meta": {
+      "name": "Save my proposal draft",
+      "description": "Calculate and save the canonical proposal draft snapshot from catalogue selections."
+    },
+    "params": [],
+    "headers": {
+      "$include": "../../../shared/actor-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "number", "nullable": true },
+        "clientId": { "type": "number" },
+        "title": { "type": "string", "nullable": true },
+        "introduction": { "type": "string", "nullable": true },
+        "privateNotes": { "type": "string", "nullable": true },
+        "selections": {
+          "type": "array",
+          "items": {
+            "$include": "../../../shared/proposal-draft/selection.json"
+          }
+        },
+        "customRequests": {
+          "type": "array",
+          "items": {
+            "$include": "../../../shared/proposal-draft/custom-request.json"
+          }
+        }
+      },
+      "required": ["clientId", "selections", "customRequests"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "type": "object",
+          "properties": {
+            "proposal": {
+              "$include": "../../../shapes/proposals/partner-detail.json"
+            }
+          },
+          "required": ["proposal"]
+        }
+      },
+      {
+        "status": "422",
+        "body": {
+          "$include": "../../../shared/proposal-draft/missing-requirements-error.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

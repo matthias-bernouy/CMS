@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "error": {
+      "type": "string"
+    },
+    "code": {
+      "type": "string",
+      "nullable": true
+    },
+    "details": {
+      "type": "object",
+      "nullable": true
+    }
+  },
+  "required": [
+    "error"
+  ]
+}

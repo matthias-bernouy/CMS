@@ -1,0 +1,111 @@
+[
+  {
+    "widget": "w-detail",
+    "id": "variantDetail",
+    "source": {
+      "endpoint": "manageVariant",
+      "params": { "id": "$selection.id" }
+    },
+    "title": { "path": "name", "fallback": "New variant" },
+    "status": { "path": "status" },
+    "actions": [
+      {
+        "id": "saveVariant",
+        "label": "Save variant",
+        "tone": "primary",
+        "placement": "primary",
+        "endpoint": {
+          "endpoint": "upsertVariant",
+          "params": { "id": "$resource.id" },
+          "body": {
+            "moduleItemId": "$field.moduleItemId",
+            "code": "$field.code",
+            "name": "$field.name",
+            "description": "$field.description",
+            "providerName": "$field.providerName",
+            "pricingMode": "$field.pricingMode",
+            "unitAmountCents": "$field.unitAmountCents",
+            "currency": "$field.currency",
+            "status": "$field.status",
+            "sortOrder": "$field.sortOrder"
+          }
+        },
+        "after": { "resource": "$result" }
+      }
+    ],
+    "main": [
+      {
+        "id": "variantDefinition",
+        "title": "Variant",
+        "fields": [
+          {
+            "id": "moduleItemId",
+            "label": "Module",
+            "path": "moduleItemId",
+            "type": "combobox",
+            "required": true,
+            "lookup": {
+              "endpoint": "manageModules",
+              "params": { "q": "$search", "status": "published", "limit": "30" },
+              "itemsPath": "items",
+              "valuePath": "id",
+              "labelPath": "name",
+              "subtitlePath": "code"
+            }
+          },
+          { "id": "code", "label": "Code", "path": "code", "type": "text", "required": true },
+          { "id": "name", "label": "Name", "path": "name", "type": "text", "required": true },
+          { "id": "description", "label": "Description", "path": "description", "type": "textarea", "rows": 5 },
+          { "id": "providerName", "label": "Provider", "path": "providerName", "type": "text" },
+          { "id": "sortOrder", "label": "Position", "path": "sortOrder", "type": "number", "min": 0 }
+        ]
+      },
+      {
+        "id": "variantPricing",
+        "title": "Pricing",
+        "fields": [
+          {
+            "id": "pricingMode",
+            "label": "Pricing mode",
+            "path": "pricingMode",
+            "type": "select",
+            "required": true,
+            "options": [
+              { "value": "fixed", "label": "Fixed" },
+              { "value": "quote", "label": "On request" }
+            ]
+          },
+          {
+            "id": "unitAmountCents",
+            "label": "Amount",
+            "path": "unitAmountCents",
+            "type": "money",
+            "currencyPath": "currency",
+            "visibleWhen": { "value": "$field.pricingMode", "equals": "fixed" }
+          },
+          { "id": "currency", "label": "Currency", "path": "currency", "type": "readonly" }
+        ]
+      }
+    ],
+    "aside": [
+      {
+        "id": "variantPublication",
+        "title": "Publication",
+        "fields": [
+          {
+            "id": "status",
+            "label": "Status",
+            "path": "status",
+            "type": "select",
+            "required": true,
+            "options": [
+              { "value": "draft", "label": "Draft" },
+              { "value": "published", "label": "Published" },
+              { "value": "archived", "label": "Archived" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

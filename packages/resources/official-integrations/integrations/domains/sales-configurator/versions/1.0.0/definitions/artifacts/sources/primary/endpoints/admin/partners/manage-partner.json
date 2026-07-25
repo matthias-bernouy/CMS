@@ -1,0 +1,32 @@
+[
+  {
+    "endpointId": "managePartner",
+    "method": "GET",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/partner",
+    "meta": {
+      "name": "Manage sales partner",
+      "description": "Read one sales partner or return defaults for a new account."
+    },
+    "params": [
+      { "name": "id", "in": "query", "type": "number" }
+    ],
+    "headers": {
+      "$include": "../../../shared/admin-headers.json"
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../shapes/partners/partner.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

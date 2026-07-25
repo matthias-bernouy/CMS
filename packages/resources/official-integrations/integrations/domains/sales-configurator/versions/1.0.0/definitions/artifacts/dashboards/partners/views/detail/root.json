@@ -1,0 +1,25 @@
+[
+  {
+    "widget": "w-detail",
+    "id": "partnerDetail",
+    "source": {
+      "endpoint": "managePartner",
+      "params": { "id": "$selection.id" }
+    },
+    "title": { "path": "displayName", "fallback": "New sales partner" },
+    "status": { "path": "status" },
+    "actions": {
+      "$files": [
+        "actions/save.json",
+        "actions/client-capabilities.json",
+        "actions/proposal-capabilities.json"
+      ]
+    },
+    "main": {
+      "$include": "main.json"
+    },
+    "aside": {
+      "$include": "aside.json"
+    }
+  }
+]

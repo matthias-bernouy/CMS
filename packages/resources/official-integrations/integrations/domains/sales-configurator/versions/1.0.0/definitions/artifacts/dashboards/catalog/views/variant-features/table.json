@@ -1,0 +1,43 @@
+[
+  {
+    "widget": "w-table",
+    "id": "variantFeaturesTable",
+    "title": "Variant features",
+    "source": {
+      "endpoint": "manageVariantFeatures",
+      "params": {
+        "q": "$filter.q",
+        "limit": "100"
+      },
+      "itemsPath": "items",
+      "totalPath": "total"
+    },
+    "rowKey": "featureItemId",
+    "filters": [
+      {
+        "id": "q",
+        "label": "Search",
+        "param": "q",
+        "type": "text",
+        "placeholder": "Search variants or features"
+      }
+    ],
+    "columns": [
+      { "id": "variantName", "label": "Variant", "path": "variantName", "primary": true },
+      { "id": "featureName", "label": "Feature", "path": "featureName" },
+      { "id": "availability", "label": "Availability", "path": "availability", "format": "badge" },
+      { "id": "pricingMode", "label": "Pricing", "path": "pricingMode", "format": "badge" },
+      { "id": "unitAmountCents", "label": "Amount", "path": "unitAmountCents", "format": "money" }
+    ],
+    "actions": [
+      {
+        "id": "createVariantFeature",
+        "label": "Add variant feature",
+        "tone": "primary",
+        "placement": "primary",
+        "selection": { "opens": "variantFeatureDetail" }
+      }
+    ],
+    "selection": { "opens": "variantFeatureDetail" }
+  }
+]

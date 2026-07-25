@@ -1,0 +1,10 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "file": "model.sql" },
+        { "file": "authorization.sql" },
+        { "file": "admin-commands.sql" },
+        { "file": "client-command.sql" }
+    ]
+}

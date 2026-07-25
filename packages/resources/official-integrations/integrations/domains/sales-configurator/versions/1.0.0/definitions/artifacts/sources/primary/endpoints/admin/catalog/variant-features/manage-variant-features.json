@@ -1,0 +1,51 @@
+[
+  {
+    "endpointId": "manageVariantFeatures",
+    "method": "GET",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/variant-features",
+    "meta": {
+      "name": "Manage variant features",
+      "description": "List contextual feature availability and pricing, or read one selected association."
+    },
+    "params": [
+      { "name": "variantItemId", "in": "query", "type": "number" },
+      { "name": "featureItemId", "in": "query", "type": "number" },
+      { "name": "q", "in": "query", "type": "string" },
+      { "name": "limit", "in": "query", "type": "number" },
+      { "name": "offset", "in": "query", "type": "number" }
+    ],
+    "headers": {
+      "$include": "../../../../shared/admin-headers.json"
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$include": "../../../../shapes/catalog/variant-feature.json"
+              }
+            },
+            "item": {
+              "$include": "../../../../shapes/catalog/variant-feature.json"
+            },
+            "total": { "type": "number" },
+            "limit": { "type": "number" },
+            "offset": { "type": "number" }
+          },
+          "required": ["items", "total"]
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

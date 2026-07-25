@@ -1,0 +1,42 @@
+[
+  {
+    "endpointId": "upsertVariantFeature",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/variant-feature",
+    "meta": {
+      "name": "Save variant feature",
+      "description": "Create or update contextual feature availability and pricing."
+    },
+    "params": [],
+    "headers": {
+      "$include": "../../../../shared/admin-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "variantItemId": { "type": "number" },
+        "featureItemId": { "type": "number" },
+        "availability": { "type": "string" },
+        "pricingMode": { "type": "string" },
+        "unitAmountCents": { "type": "number", "nullable": true },
+        "sortOrder": { "type": "number" }
+      },
+      "required": ["variantItemId", "featureItemId", "availability", "pricingMode"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../../shapes/catalog/variant-feature.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

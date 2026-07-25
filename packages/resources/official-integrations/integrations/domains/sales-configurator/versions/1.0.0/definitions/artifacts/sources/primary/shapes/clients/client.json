@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "number" },
+    "companyName": { "type": "string" },
+    "contactName": { "type": "string" },
+    "contactEmail": { "type": "string" },
+    "contactPhone": { "type": "string", "nullable": true },
+    "notes": { "type": "string", "nullable": true },
+    "createdAt": { "type": "string" },
+    "updatedAt": { "type": "string" }
+  },
+  "required": [
+    "id",
+    "companyName",
+    "contactName",
+    "contactEmail"
+  ]
+}

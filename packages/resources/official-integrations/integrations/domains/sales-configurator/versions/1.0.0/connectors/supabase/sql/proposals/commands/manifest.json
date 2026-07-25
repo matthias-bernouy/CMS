@@ -1,0 +1,12 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "manifest": "draft/manifest.json" },
+        { "file": "publish.sql" },
+        { "file": "create-share.sql" },
+        { "file": "revoke-share.sql" },
+        { "file": "public-read.sql" },
+        { "file": "admin-transition.sql" }
+    ]
+}

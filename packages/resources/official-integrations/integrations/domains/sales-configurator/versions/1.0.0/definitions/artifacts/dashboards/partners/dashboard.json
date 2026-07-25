@@ -1,0 +1,13 @@
+{
+  "id": "{{answers.id}}-partners",
+  "source": "{{answers.id}}",
+  "meta": {
+    "name": "Sales partners",
+    "icon": {
+      "path": "assets/icon.svg"
+    }
+  },
+  "views": {
+    "$include": "views.json"
+  }
+}

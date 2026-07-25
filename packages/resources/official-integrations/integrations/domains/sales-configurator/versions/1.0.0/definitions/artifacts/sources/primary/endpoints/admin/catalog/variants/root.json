@@ -1,0 +1,7 @@
+{
+  "$files": [
+    "manage-variants.json",
+    "manage-variant.json",
+    "upsert-variant.json"
+  ]
+}

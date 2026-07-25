@@ -1,0 +1,6 @@
+{
+  "$files": [
+    "views/table.json",
+    "views/detail/root.json"
+  ]
+}

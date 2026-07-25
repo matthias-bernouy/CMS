@@ -1,0 +1,40 @@
+[
+  {
+    "endpointId": "transitionProposal",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/proposal/transition",
+    "meta": {
+      "name": "Transition proposal",
+      "description": "Apply one allowed V1 proposal status transition and append its event."
+    },
+    "params": [
+      { "name": "id", "in": "query", "type": "number", "required": true }
+    ],
+    "headers": {
+      "$include": "../../../shared/admin-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "reason": { "type": "string", "nullable": true }
+      },
+      "required": ["status"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../shapes/proposals/admin-detail.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

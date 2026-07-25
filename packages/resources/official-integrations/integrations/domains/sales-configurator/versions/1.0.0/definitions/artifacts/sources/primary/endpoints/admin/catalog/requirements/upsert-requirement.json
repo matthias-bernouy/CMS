@@ -1,0 +1,38 @@
+[
+  {
+    "endpointId": "upsertRequirement",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/requirement",
+    "meta": {
+      "name": "Save prerequisite",
+      "description": "Create one all-of prerequisite edge after cycle validation."
+    },
+    "params": [],
+    "headers": {
+      "$include": "../../../../shared/admin-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "subjectItemId": { "type": "number" },
+        "requiredItemId": { "type": "number" }
+      },
+      "required": ["subjectItemId", "requiredItemId"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../../shapes/catalog/requirement.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

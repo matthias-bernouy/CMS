@@ -1,0 +1,53 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "number" },
+    "ownerCmsUserId": { "type": "string" },
+    "reference": { "type": "string" },
+    "status": { "type": "string" },
+    "title": { "type": "string", "nullable": true },
+    "introduction": { "type": "string", "nullable": true },
+    "privateNotes": { "type": "string", "nullable": true },
+    "client": {
+      "$include": "../clients/client.json"
+    },
+    "partner": {
+      "$include": "../partners/partner.json"
+    },
+    "currentVersion": {
+      "$include": "version.json"
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "$include": "version.json"
+      }
+    },
+    "shares": {
+      "type": "array",
+      "items": {
+        "$include": "share.json"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$include": "event.json"
+      }
+    },
+    "createdAt": { "type": "string" },
+    "updatedAt": { "type": "string" }
+  },
+  "required": [
+    "id",
+    "ownerCmsUserId",
+    "reference",
+    "status",
+    "client",
+    "partner",
+    "currentVersion",
+    "versions",
+    "shares",
+    "events"
+  ]
+}

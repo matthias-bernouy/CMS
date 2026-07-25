@@ -1,0 +1,91 @@
+[
+  {
+    "id": "proposalSummary",
+    "title": "Proposal",
+    "fields": [
+      { "id": "reference", "label": "Reference", "path": "reference", "type": "readonly" },
+      { "id": "title", "label": "Public title", "path": "title", "type": "readonly" },
+      { "id": "introduction", "label": "Public introduction", "path": "introduction", "type": "readonly" },
+      { "id": "clientCompany", "label": "Client", "path": "client.companyName", "type": "readonly" },
+      { "id": "clientContact", "label": "Client contact", "path": "client.contactName", "type": "readonly" },
+      { "id": "partner", "label": "Sales partner", "path": "partner.displayName", "type": "readonly" },
+      { "id": "privateNotes", "label": "Private notes", "path": "privateNotes", "type": "readonly" }
+    ]
+  },
+  {
+    "id": "currentVersion",
+    "title": "Current version",
+    "fields": [
+      {
+        "id": "fixedTotalCents",
+        "label": "Fixed total",
+        "path": "currentVersion.fixedTotalCents",
+        "type": "readonly",
+        "format": "money"
+      },
+      {
+        "id": "quoteItemCount",
+        "label": "Quote-only items",
+        "path": "currentVersion.quoteItemCount",
+        "type": "readonly"
+      },
+      {
+        "id": "publishedAt",
+        "label": "Published",
+        "path": "currentVersion.publishedAt",
+        "type": "readonly",
+        "format": "date"
+      },
+      {
+        "id": "snapshotItems",
+        "label": "Snapshot lines",
+        "path": "currentVersion.items",
+        "type": "table",
+        "columns": [
+          { "id": "label", "label": "Line", "path": "label", "primary": true },
+          { "id": "kind", "label": "Kind", "path": "kind", "format": "badge" },
+          { "id": "origin", "label": "Origin", "path": "origin", "format": "badge" },
+          { "id": "pricingMode", "label": "Pricing", "path": "pricingMode", "format": "badge" },
+          { "id": "unitAmountCents", "label": "Amount", "path": "unitAmountCents", "format": "money" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "proposalShares",
+    "title": "Shares",
+    "fields": [
+      {
+        "id": "shares",
+        "label": "Share history",
+        "path": "shares",
+        "type": "table",
+        "columns": [
+          { "id": "createdAt", "label": "Created", "path": "createdAt", "format": "date" },
+          { "id": "expiresAt", "label": "Expires", "path": "expiresAt", "format": "date" },
+          { "id": "revokedAt", "label": "Revoked", "path": "revokedAt", "format": "date" },
+          { "id": "viewCount", "label": "Views", "path": "viewCount" },
+          { "id": "lastViewedAt", "label": "Last view", "path": "lastViewedAt", "format": "date" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "proposalEvents",
+    "title": "Event timeline",
+    "fields": [
+      {
+        "id": "events",
+        "label": "Events",
+        "path": "events",
+        "type": "table",
+        "columns": [
+          { "id": "eventType", "label": "Event", "path": "eventType", "primary": true },
+          { "id": "actorType", "label": "Actor", "path": "actorType", "format": "badge" },
+          { "id": "actorId", "label": "Actor id", "path": "actorId" },
+          { "id": "occurredAt", "label": "Date", "path": "occurredAt", "format": "date" }
+        ]
+      }
+    ]
+  }
+]

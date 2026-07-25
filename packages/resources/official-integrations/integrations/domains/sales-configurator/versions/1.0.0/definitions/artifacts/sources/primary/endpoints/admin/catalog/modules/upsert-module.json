@@ -1,0 +1,43 @@
+[
+  {
+    "endpointId": "upsertModule",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/module",
+    "meta": {
+      "name": "Save module",
+      "description": "Create or update a catalogue module."
+    },
+    "params": [
+      { "name": "id", "in": "query", "type": "number" }
+    ],
+    "headers": {
+      "$include": "../../../../shared/admin-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string", "nullable": true },
+        "status": { "type": "string" },
+        "sortOrder": { "type": "number" }
+      },
+      "required": ["code", "name", "status"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../../shapes/catalog/module.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

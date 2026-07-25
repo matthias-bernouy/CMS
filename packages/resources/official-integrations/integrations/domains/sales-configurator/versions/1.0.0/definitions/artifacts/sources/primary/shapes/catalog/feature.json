@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "number" },
+    "code": { "type": "string" },
+    "name": { "type": "string" },
+    "description": { "type": "string", "nullable": true },
+    "status": { "type": "string" },
+    "sortOrder": { "type": "number" },
+    "createdAt": { "type": "string" },
+    "updatedAt": { "type": "string" }
+  },
+  "required": [
+    "id",
+    "code",
+    "name",
+    "status",
+    "sortOrder"
+  ]
+}

@@ -1,0 +1,77 @@
+[
+  {
+    "id": "acceptProposal",
+    "label": "Mark accepted",
+    "tone": "primary",
+    "placement": "primary",
+    "visibleWhen": {
+      "any": [
+        { "value": "$resource.status", "equals": "shared" },
+        { "value": "$resource.status", "equals": "viewed" }
+      ]
+    },
+    "endpoint": {
+      "endpoint": "transitionProposal",
+      "params": { "id": "$resource.id" },
+      "body": { "status": "accepted" }
+    },
+    "after": { "resource": "$result" }
+  },
+  {
+    "id": "rejectProposal",
+    "label": "Mark rejected",
+    "tone": "secondary",
+    "placement": "secondary",
+    "visibleWhen": {
+      "any": [
+        { "value": "$resource.status", "equals": "shared" },
+        { "value": "$resource.status", "equals": "viewed" }
+      ]
+    },
+    "endpoint": {
+      "endpoint": "transitionProposal",
+      "params": { "id": "$resource.id" },
+      "body": { "status": "rejected" }
+    },
+    "after": { "resource": "$result" }
+  },
+  {
+    "id": "expireProposal",
+    "label": "Mark expired",
+    "tone": "secondary",
+    "placement": "more",
+    "visibleWhen": {
+      "any": [
+        { "value": "$resource.status", "equals": "shared" },
+        { "value": "$resource.status", "equals": "viewed" }
+      ]
+    },
+    "endpoint": {
+      "endpoint": "transitionProposal",
+      "params": { "id": "$resource.id" },
+      "body": { "status": "expired" }
+    },
+    "after": { "resource": "$result" }
+  },
+  {
+    "id": "archiveProposal",
+    "label": "Archive",
+    "icon": "archive",
+    "tone": "secondary",
+    "placement": "more",
+    "visibleWhen": {
+      "any": [
+        { "value": "$resource.status", "equals": "draft" },
+        { "value": "$resource.status", "equals": "accepted" },
+        { "value": "$resource.status", "equals": "rejected" },
+        { "value": "$resource.status", "equals": "expired" }
+      ]
+    },
+    "endpoint": {
+      "endpoint": "transitionProposal",
+      "params": { "id": "$resource.id" },
+      "body": { "status": "archived" }
+    },
+    "after": { "resource": "$result" }
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "endpointId": "saveMyClient",
+    "method": "POST",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/partner/client",
+    "meta": {
+      "name": "Save my client",
+      "description": "Create or update a client owned by the authenticated sales partner."
+    },
+    "params": [],
+    "headers": {
+      "$include": "../../../shared/actor-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "number", "nullable": true },
+        "companyName": { "type": "string" },
+        "contactName": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string", "nullable": true },
+        "notes": { "type": "string", "nullable": true }
+      },
+      "required": ["companyName", "contactName", "contactEmail"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../shapes/clients/client.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

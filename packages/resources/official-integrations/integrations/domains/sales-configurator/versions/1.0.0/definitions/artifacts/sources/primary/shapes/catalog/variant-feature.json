@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "variantItemId": { "type": "number" },
+    "variantName": { "type": "string" },
+    "featureItemId": { "type": "number" },
+    "featureName": { "type": "string" },
+    "availability": { "type": "string" },
+    "pricingMode": { "type": "string" },
+    "unitAmountCents": { "type": "number", "nullable": true },
+    "sortOrder": { "type": "number" }
+  },
+  "required": [
+    "variantItemId",
+    "featureItemId",
+    "availability",
+    "pricingMode",
+    "sortOrder"
+  ]
+}

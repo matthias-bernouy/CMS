@@ -1,0 +1,7 @@
+{
+  "$files": [
+    "manage-requirements.json",
+    "upsert-requirement.json",
+    "delete-requirement.json"
+  ]
+}

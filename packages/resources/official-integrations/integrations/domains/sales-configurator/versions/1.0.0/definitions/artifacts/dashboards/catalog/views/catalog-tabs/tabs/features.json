@@ -1,0 +1,7 @@
+{
+  "id": "features",
+  "label": "Features",
+  "children": {
+    "$include": "../../features/root.json"
+  }
+}

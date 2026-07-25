@@ -1,0 +1,54 @@
+[
+  {
+    "widget": "w-table",
+    "id": "modulesTable",
+    "title": "Modules",
+    "source": {
+      "endpoint": "manageModules",
+      "params": {
+        "q": "$filter.q",
+        "status": "$filter.status",
+        "limit": "100"
+      },
+      "itemsPath": "items",
+      "totalPath": "total"
+    },
+    "rowKey": "id",
+    "filters": [
+      {
+        "id": "q",
+        "label": "Search",
+        "param": "q",
+        "type": "text",
+        "placeholder": "Search modules"
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "param": "status",
+        "type": "select",
+        "options": [
+          { "value": "draft", "label": "Draft" },
+          { "value": "published", "label": "Published" },
+          { "value": "archived", "label": "Archived" }
+        ]
+      }
+    ],
+    "columns": [
+      { "id": "name", "label": "Module", "path": "name", "primary": true },
+      { "id": "code", "label": "Code", "path": "code" },
+      { "id": "status", "label": "Status", "path": "status", "format": "badge" },
+      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date" }
+    ],
+    "actions": [
+      {
+        "id": "createModule",
+        "label": "Create module",
+        "tone": "primary",
+        "placement": "primary",
+        "selection": { "opens": "moduleDetail" }
+      }
+    ],
+    "selection": { "opens": "moduleDetail" }
+  }
+]

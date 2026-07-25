@@ -1,0 +1,6 @@
+{
+  "type": "dashboard",
+  "dashboard": {
+    "$include": "dashboard.json"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "type": "object",
+  "nullable": true,
+  "properties": {
+    "id": { "type": "number" },
+    "versionNumber": { "type": "number" },
+    "revision": { "type": "number" },
+    "state": { "type": "string" },
+    "currency": { "type": "string" },
+    "fixedTotalCents": { "type": "number" },
+    "quoteItemCount": { "type": "number" },
+    "title": { "type": "string", "nullable": true },
+    "introduction": { "type": "string", "nullable": true },
+    "clientSnapshot": {
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "contactName": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string", "nullable": true }
+      },
+      "required": [
+        "companyName",
+        "contactName",
+        "contactEmail"
+      ]
+    },
+    "salesContact": {
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "nullable": true }
+      },
+      "required": [
+        "displayName"
+      ]
+    },
+    "createdAt": { "type": "string" },
+    "publishedAt": { "type": "string", "nullable": true },
+    "items": {
+      "type": "array",
+      "items": {
+        "$include": "item.json"
+      }
+    }
+  },
+  "required": [
+    "id",
+    "versionNumber",
+    "revision",
+    "state",
+    "currency",
+    "fixedTotalCents",
+    "quoteItemCount",
+    "clientSnapshot",
+    "salesContact",
+    "items"
+  ]
+}

@@ -1,0 +1,51 @@
+[
+  {
+    "endpointId": "manageRequirements",
+    "method": "GET",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/requirements",
+    "meta": {
+      "name": "Manage prerequisites",
+      "description": "List prerequisite edges, or read one selected edge."
+    },
+    "params": [
+      { "name": "subjectItemId", "in": "query", "type": "number" },
+      { "name": "requiredItemId", "in": "query", "type": "number" },
+      { "name": "q", "in": "query", "type": "string" },
+      { "name": "limit", "in": "query", "type": "number" },
+      { "name": "offset", "in": "query", "type": "number" }
+    ],
+    "headers": {
+      "$include": "../../../../shared/admin-headers.json"
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$include": "../../../../shapes/catalog/requirement.json"
+              }
+            },
+            "item": {
+              "$include": "../../../../shapes/catalog/requirement.json"
+            },
+            "total": { "type": "number" },
+            "limit": { "type": "number" },
+            "offset": { "type": "number" }
+          },
+          "required": ["items", "total"]
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

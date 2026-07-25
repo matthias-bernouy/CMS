@@ -1,0 +1,38 @@
+[
+  {
+    "endpointId": "getMyProposal",
+    "method": "GET",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/partner/proposal",
+    "meta": {
+      "name": "Get my proposal",
+      "description": "Read one canonical proposal draft owned by the authenticated sales partner."
+    },
+    "params": [
+      { "name": "id", "in": "query", "type": "number" }
+    ],
+    "headers": {
+      "$include": "../../../shared/actor-headers.json"
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "type": "object",
+          "properties": {
+            "proposal": {
+              "$include": "../../../shapes/proposals/partner-detail.json"
+            }
+          },
+          "required": ["proposal"]
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

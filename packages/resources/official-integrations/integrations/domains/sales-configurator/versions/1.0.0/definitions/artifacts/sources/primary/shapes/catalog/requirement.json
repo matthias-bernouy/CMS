@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "properties": {
+    "subjectItemId": { "type": "number" },
+    "subjectKind": { "type": "string" },
+    "subjectCode": { "type": "string" },
+    "subjectName": { "type": "string" },
+    "requiredItemId": { "type": "number" },
+    "requiredKind": { "type": "string" },
+    "requiredCode": { "type": "string" },
+    "requiredName": { "type": "string" },
+    "createdAt": { "type": "string" }
+  },
+  "required": [
+    "subjectItemId",
+    "subjectKind",
+    "subjectCode",
+    "subjectName",
+    "requiredItemId",
+    "requiredKind",
+    "requiredCode",
+    "requiredName"
+  ]
+}
