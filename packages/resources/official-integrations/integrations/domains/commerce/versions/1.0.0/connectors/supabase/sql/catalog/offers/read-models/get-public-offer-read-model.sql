@@ -55,6 +55,8 @@ as $$
                        'storage_path', media.storage_path,
                        'mime_type', media.mime_type,
                        'file_size', media.file_size,
+                       'width', media.width,
+                       'height', media.height,
                        'original_filename', media.original_filename,
                        'alt', media.alt,
                        'created_at', media.created_at,
@@ -66,7 +68,9 @@ as $$
                    main_image_media_id
         from eligible_offer offer
         join commerce.offer_media link on link.offer_id = offer.id
-        join commerce.media media on media.id = link.media_id
+        join commerce.media media
+          on media.id = link.media_id
+         and media.detached_at is null
         group by link.offer_id
     ), item as (
         select (to_jsonb(offer) - 'seller_id' - 'inventory_revision')

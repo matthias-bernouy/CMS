@@ -34,13 +34,21 @@
                         "offerSlug": {
                             "type": "string"
                         },
-            "offerTitle": {
-              "type": "string"
-            },
-            "offerMainImageMediaId": {
-              "type": "number",
-              "nullable": true
-            },
+                        "offerTitle": {
+                            "type": "string"
+                        },
+                        "offerMainImageMediaId": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "offerMainImageWidth": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "offerMainImageHeight": {
+                            "type": "number",
+                            "nullable": true
+                        },
                         "sellerCmsUserId": {
                             "type": "string",
                             "nullable": true,
@@ -72,8 +80,10 @@
                     "required": [
                         "offerId",
                         "offerSlug",
-            "offerTitle",
-            "offerMainImageMediaId",
+                        "offerTitle",
+                        "offerMainImageMediaId",
+                        "offerMainImageWidth",
+                        "offerMainImageHeight",
                         "sellerCmsUserId",
                         "sellerDisplayName",
                         "referenceAmount",

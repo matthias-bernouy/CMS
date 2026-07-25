@@ -88,6 +88,8 @@ describe("commerce response contracts", () => {
             "offerSlug",
             "offerTitle",
             "offerMainImageMediaId",
+            "offerMainImageWidth",
+            "offerMainImageHeight",
             "sellerCmsUserId",
             "sellerDisplayName",
             "referenceAmount",
@@ -117,7 +119,13 @@ describe("commerce response contracts", () => {
             Object.entries(body?.properties ?? {})
                 .filter(([, shape]) => shape.nullable)
                 .map(([name]) => name),
-        ).toEqual(["offerMainImageMediaId", "sellerCmsUserId", "referenceAmount"]);
+        ).toEqual([
+            "offerMainImageMediaId",
+            "offerMainImageWidth",
+            "offerMainImageHeight",
+            "sellerCmsUserId",
+            "referenceAmount",
+        ]);
         expect(body?.properties?.sellerCmsUserId?.semantic?.authority).toBe("cms");
     });
 

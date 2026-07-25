@@ -83,6 +83,8 @@ as $$
                     'storage_path', stored.storage_path,
                     'mime_type', stored.mime_type,
                     'file_size', stored.file_size,
+                    'width', stored.width,
+                    'height', stored.height,
                     'original_filename', stored.original_filename,
                     'alt', stored.alt,
                     'created_at', stored.created_at,
@@ -90,7 +92,9 @@ as $$
                 ) end
             ) order by link.sort_order, link.id)
             from commerce.product_media link
-            left join commerce.media stored on stored.id = link.media_id
+            join commerce.media stored
+              on stored.id = link.media_id
+             and stored.detached_at is null
             where link.product_id = product.id
         ), '[]'::jsonb),
         'brand', case when product.brand_id is null or product.brand_id = 0 then null else (

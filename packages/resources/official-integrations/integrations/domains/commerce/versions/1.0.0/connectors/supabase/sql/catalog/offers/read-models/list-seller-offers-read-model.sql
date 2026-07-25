@@ -183,10 +183,15 @@ begin
                 'offer_id', media.offer_id,
                 'media_id', media.media_id,
                 'sort_order', media.sort_order,
-                'is_main', media.is_main
+                'is_main', media.is_main,
+                'width', stored.width,
+                'height', stored.height
             ) order by media.sort_order, media.id)
             from page_ids page
             join commerce.offer_media media on media.offer_id = page.id
+            join commerce.media stored
+              on stored.id = media.media_id
+             and stored.detached_at is null
         ), '[]'::jsonb),
         'active_price_proposals', coalesce((
             select jsonb_agg(jsonb_build_object(

@@ -40,6 +40,8 @@ describe("commerce seller offer read contract", () => {
                     createdAt: "2026-07-02T10:00:00Z",
                     updatedAt: "2026-07-04T10:00:00Z",
                     mainImageMediaId: "14",
+                    mainImageWidth: 640,
+                    mainImageHeight: 360,
                     displayStatus: "under_review",
                     sellerDisplayPriceAmount: 13000,
                     workflowStateInfo: {
@@ -69,6 +71,8 @@ describe("commerce seller offer read contract", () => {
                     createdAt: "2026-07-01T10:00:00Z",
                     updatedAt: "2026-07-03T10:00:00Z",
                     mainImageMediaId: "13",
+                    mainImageWidth: 1200,
+                    mainImageHeight: 800,
                     displayStatus: "under_review",
                     sellerDisplayPriceAmount: 12000,
                     workflowStateInfo: {
@@ -147,10 +151,10 @@ function sellerBundle(): Record<string, unknown> {
             { code: "archived", label: "Archived", phase: "terminal", terminal: true },
         ],
         media: [
-            { offer_id: 92, media_id: 14, sort_order: 1, is_main: false },
-            { offer_id: 92, media_id: 15, sort_order: 1, is_main: false },
-            { offer_id: 91, media_id: 12, sort_order: 1, is_main: false },
-            { offer_id: 91, media_id: 13, sort_order: 2, is_main: true },
+            { offer_id: 92, media_id: 14, sort_order: 1, is_main: false, width: 640, height: 360 },
+            { offer_id: 92, media_id: 15, sort_order: 1, is_main: false, width: 800, height: 600 },
+            { offer_id: 91, media_id: 12, sort_order: 1, is_main: false, width: 900, height: 600 },
+            { offer_id: 91, media_id: 13, sort_order: 2, is_main: true, width: 1200, height: 800 },
         ],
         active_price_proposals: [
             { id: 3, offer_id: 91, amount: 12000, status: "pending", created_at: "2026-07-05T10:00:00Z" },

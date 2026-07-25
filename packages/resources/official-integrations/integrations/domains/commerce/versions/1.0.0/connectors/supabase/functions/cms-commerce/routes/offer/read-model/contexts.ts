@@ -13,6 +13,8 @@ const negotiationContextFields = [
     "offer_slug",
     "offer_title",
     "offer_main_image_media_id",
+    "offer_main_image_width",
+    "offer_main_image_height",
     "seller_cms_user_id",
     "seller_display_name",
     "reference_amount",
@@ -72,6 +74,13 @@ function cmsUserIdOrNull(request: Request): string | null {
 }
 
 function projectNegotiationContext(value: unknown): JsonRecord {
+    const dimensionsAreInvalid =
+        isInvalidDimension(value, "offer_main_image_width") ||
+        isInvalidDimension(value, "offer_main_image_height") ||
+        (isRecord(value) &&
+            ((value.offer_main_image_width === null) !== (value.offer_main_image_height === null) ||
+                (value.offer_main_image_media_id === null &&
+                    (value.offer_main_image_width !== null || value.offer_main_image_height !== null))));
     if (
         !isRecord(value) ||
         negotiationContextFields.some((field) => !Object.hasOwn(value, field)) ||
@@ -79,6 +88,7 @@ function projectNegotiationContext(value: unknown): JsonRecord {
         typeof value.offer_slug !== "string" ||
         typeof value.offer_title !== "string" ||
         (value.offer_main_image_media_id !== null && !Number.isSafeInteger(value.offer_main_image_media_id)) ||
+        dimensionsAreInvalid ||
         (value.seller_cms_user_id !== null && typeof value.seller_cms_user_id !== "string") ||
         typeof value.seller_display_name !== "string" ||
         (value.reference_amount !== null && !Number.isSafeInteger(value.reference_amount)) ||
@@ -94,6 +104,8 @@ function projectNegotiationContext(value: unknown): JsonRecord {
         offerSlug: value.offer_slug,
         offerTitle: value.offer_title,
         offerMainImageMediaId: value.offer_main_image_media_id,
+        offerMainImageWidth: value.offer_main_image_width,
+        offerMainImageHeight: value.offer_main_image_height,
         sellerCmsUserId: value.seller_cms_user_id,
         sellerDisplayName: value.seller_display_name,
         referenceAmount: value.reference_amount,
@@ -102,6 +114,14 @@ function projectNegotiationContext(value: unknown): JsonRecord {
         publicationStatus: value.publication_status,
         availability: value.availability,
     };
+}
+
+function isInvalidDimension(value: unknown, field: "offer_main_image_width" | "offer_main_image_height"): boolean {
+    if (!isRecord(value)) {
+        return false;
+    }
+    const dimension = value[field];
+    return dimension !== null && (!Number.isSafeInteger(dimension) || Number(dimension) <= 0);
 }
 
 function invalidResponse(functionName: string): HttpError {

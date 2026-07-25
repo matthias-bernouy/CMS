@@ -63,6 +63,14 @@
         "type": "string",
         "nullable": true
     },
+    "mainImageWidth": {
+        "type": "number",
+        "nullable": true
+    },
+    "mainImageHeight": {
+        "type": "number",
+        "nullable": true
+    },
     "product": {
         "type": "object",
         "properties": {

@@ -54,7 +54,7 @@ describe("commerce offer image file responses", () => {
         }
     });
 
-    test("uses database MIME fallback and private caching for self and administrator files", async () => {
+    test("uses database MIME fallback and disables browser caching for self and administrator files", async () => {
         const routes = [
             { path: "/me/offer/image", userId: "seller-user-123" },
             { path: "/admin/offer/image", userId: undefined },
@@ -73,7 +73,7 @@ describe("commerce offer image file responses", () => {
 
             expect(response.status).toBe(200);
             expect(response.headers.get("content-type")).toBe("image/avif");
-            expect(response.headers.get("cache-control")).toBe("private, max-age=3600");
+            expect(response.headers.get("cache-control")).toBe("private, no-store");
             expect(response.headers.get("etag")).toBe('"fallback-mime"');
             expect(response.headers.get("last-modified")).toBeNull();
             expect(calls.filter((call) => call.url.includes("/storage/v1/object/"))).toHaveLength(1);

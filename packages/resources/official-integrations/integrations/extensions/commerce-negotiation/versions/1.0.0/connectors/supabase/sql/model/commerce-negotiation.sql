@@ -39,6 +39,8 @@ create table if not exists commerce_negotiation.proposals (
     commerce_offer_slug text not null,
     commerce_offer_title text not null,
     offer_main_image_media_id bigint,
+    offer_main_image_width integer,
+    offer_main_image_height integer,
     seller_cms_user_id text not null,
     seller_display_name text not null,
     buyer_cms_user_id text not null,
@@ -64,6 +66,18 @@ create table if not exists commerce_negotiation.proposals (
     constraint negotiation_proposals_offer_title_not_blank check (length(btrim(commerce_offer_title)) > 0),
     constraint negotiation_proposals_offer_media_positive check (
         offer_main_image_media_id is null or offer_main_image_media_id > 0
+    ),
+    constraint negotiation_proposals_offer_media_dimensions check (
+        (offer_main_image_width is null) = (offer_main_image_height is null)
+        and (
+            offer_main_image_width is null
+            or (
+                offer_main_image_media_id is not null
+                and offer_main_image_width > 0
+                and offer_main_image_height > 0
+                and offer_main_image_width::bigint * offer_main_image_height::bigint <= 40000000
+            )
+        )
     ),
     constraint negotiation_proposals_seller_not_blank check (length(btrim(seller_cms_user_id)) > 0),
     constraint negotiation_proposals_buyer_not_blank check (length(btrim(buyer_cms_user_id)) > 0),
@@ -103,6 +117,10 @@ alter table commerce_negotiation.proposals
     add column if not exists offer_main_image_media_id bigint;
 
 alter table commerce_negotiation.proposals
+    add column if not exists offer_main_image_width integer,
+    add column if not exists offer_main_image_height integer;
+
+alter table commerce_negotiation.proposals
     add column if not exists commerce_agreement_id uuid;
 
 alter table commerce_negotiation.proposals
@@ -127,6 +145,26 @@ begin
         alter table commerce_negotiation.proposals
             add constraint negotiation_proposals_offer_media_positive
             check (offer_main_image_media_id is null or offer_main_image_media_id > 0);
+    end if;
+    if not exists (
+        select 1 from pg_constraint
+        where conname = 'negotiation_proposals_offer_media_dimensions'
+          and conrelid = 'commerce_negotiation.proposals'::regclass
+    ) then
+        alter table commerce_negotiation.proposals
+            add constraint negotiation_proposals_offer_media_dimensions
+            check (
+                (offer_main_image_width is null) = (offer_main_image_height is null)
+                and (
+                    offer_main_image_width is null
+                    or (
+                        offer_main_image_media_id is not null
+                        and offer_main_image_width > 0
+                        and offer_main_image_height > 0
+                        and offer_main_image_width::bigint * offer_main_image_height::bigint <= 40000000
+                    )
+                )
+            );
     end if;
     if not exists (
         select 1 from pg_constraint

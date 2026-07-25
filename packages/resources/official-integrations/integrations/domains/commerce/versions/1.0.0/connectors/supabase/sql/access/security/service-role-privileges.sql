@@ -66,13 +66,13 @@ grant delete on
     commerce.product_variant_selections,
     commerce.product_categories,
     commerce.category_custom_fields,
-    commerce.media,
     commerce.product_media,
     commerce.offer_media,
     commerce.cart_items,
     commerce.checkout_groups,
     commerce.platform_payout_liability_pending_orders
 to service_role;
+revoke delete on commerce.media from service_role;
 grant update on commerce.platform_payout_liability_cache_state to service_role;
 grant insert on
     commerce.fee_policies,

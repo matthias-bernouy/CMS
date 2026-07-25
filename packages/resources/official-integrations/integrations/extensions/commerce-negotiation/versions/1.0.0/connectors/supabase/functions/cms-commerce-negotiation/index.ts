@@ -7,6 +7,8 @@ type ProposalRow = {
     commerce_offer_slug: string;
     commerce_offer_title: string;
     offer_main_image_media_id: number | null;
+    offer_main_image_width: number | null;
+    offer_main_image_height: number | null;
     seller_cms_user_id: string;
     seller_display_name: string;
     buyer_cms_user_id: string;
@@ -416,6 +418,8 @@ function publicProposal(row: ProposalRow, viewerId?: string): JsonRecord {
         offerSlug: row.commerce_offer_slug,
         offerTitle: row.commerce_offer_title,
         offerMainImageMediaId: row.offer_main_image_media_id ?? null,
+        offerMainImageWidth: row.offer_main_image_width ?? null,
+        offerMainImageHeight: row.offer_main_image_height ?? null,
         sellerUserId: row.seller_cms_user_id,
         sellerDisplayName: row.seller_display_name,
         buyerUserId: row.buyer_cms_user_id,

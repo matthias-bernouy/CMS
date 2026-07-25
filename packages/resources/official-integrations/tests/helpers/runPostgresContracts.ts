@@ -2,68 +2,25 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+    postgresContractConfiguration,
+    type BundleName,
+    type ContractStep,
+    type PostgresContract,
+} from "./postgresContractCases";
+import { requireDisposablePostgresContractTarget } from "./postgresContractTarget";
 import { loadSupabaseSchemaSql } from "./supabaseSql";
 
-type BundleName = "commerceNotifications" | "commerceNegotiatedCheckout" | "mondialRelay" | "stripeConnect";
-type ContractStep = { file: string; variables?: string[] };
-type PostgresContract = { bundle: BundleName; label: string; steps: ContractStep[] };
-
 const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
-const integrationRoots: Record<BundleName, string> = {
-    commerceNotifications: resolve(packageRoot, "integrations/domains/commerce/versions/1.0.0"),
-    commerceNegotiatedCheckout: resolve(packageRoot, "integrations/domains/commerce/versions/1.0.0"),
-    mondialRelay: resolve(packageRoot, "integrations/providers/mondial-relay/versions/1.0.0"),
-    stripeConnect: resolve(packageRoot, "integrations/providers/stripe-connect/versions/1.0.0"),
-};
-
-const contracts: PostgresContract[] = [
-    contract("Commerce notification queue", "commerceNotifications", "commerce/sql/notifications", [
-        "run_commerce_notification_install_contract=true",
-        "allow_commerce_notification_schema_reset=true",
-    ]),
-    contract("Commerce negotiated checkout", "commerceNegotiatedCheckout", "commerce/order/price-agreement", [
-        "run_price_agreement_install_contract=true",
-        "allow_price_agreement_schema_reset=true",
-    ]),
-    contract("Mondial Relay label access", "mondialRelay", "mondial-relay/label-access", [
-        "run_label_access_install_contract=true",
-    ]),
-    {
-        bundle: "mondialRelay",
-        label: "Mondial Relay selection",
-        steps: [
-            step("mondial-relay/relay-selection", "install.pg.sql", ["allow_relay_selection_schema_reset=true"]),
-            step("mondial-relay/relay-selection"),
-        ],
-    },
-    contract("Mondial Relay tracking summary", "mondialRelay", "mondial-relay/tracking-summary", [
-        "run_tracking_summary_install_contract=true",
-        "allow_tracking_summary_schema_reset=true",
-    ]),
-    contract("Stripe Connect payout schedule", "stripeConnect", "stripe-connect/accounts/payout-schedule", [
-        "run_payout_schedule_install_contract=true",
-        "allow_payout_schedule_schema_reset=true",
-    ]),
-    contract("Stripe Connect payment projection", "stripeConnect", "stripe-connect/payments/projection", [
-        "run_payment_projection_install_contract=true",
-        "allow_payment_projection_schema_reset=true",
-    ]),
-    contract("Stripe Connect dispute approval", "stripeConnect", "stripe-connect/provider-boundary/dispute-approval", [
-        "run_dispute_approval_install_contract=true",
-        "allow_dispute_approval_schema_reset=true",
-    ]),
-    contract("Stripe Connect provider reconciliation", "stripeConnect", "stripe-connect/provider-reconciliation", [
-        "run_provider_reconciliation_install_contract=true",
-        "allow_provider_reconciliation_schema_reset=true",
-    ]),
-];
+const configuration = postgresContractConfiguration(packageRoot);
 
 async function main(): Promise<void> {
-    const databaseUrl = requiredDatabaseUrl();
+    const databaseUrl = requireDisposablePostgresContractTarget(process.env);
     const psql = Bun.which("psql");
     if (!psql) {
         throw new Error('The "psql" executable is required to run PostgreSQL contracts.');
     }
+    const contracts = selectedContracts(configuration.contracts);
     const sql = await loadBundles();
     const tempRoot = await mkdtemp(join(tmpdir(), "cmscore-postgres-contracts-"));
     try {
@@ -72,21 +29,44 @@ async function main(): Promise<void> {
             for (const contractStep of contractCase.steps) {
                 await runStep(psql, databaseUrl, bundleFiles[contractCase.bundle], contractCase, contractStep);
             }
+            if (contractCase.id === "commerce-media") {
+                await runCommerceMediaRolloutProofs(databaseUrl);
+            }
         }
     } finally {
         await rm(tempRoot, { force: true, recursive: true });
     }
 }
 
+function selectedContracts(contracts: PostgresContract[]): PostgresContract[] {
+    const filterIndex = Bun.argv.indexOf("--filter");
+    if (filterIndex < 0) {
+        return contracts;
+    }
+    const filter = Bun.argv[filterIndex + 1]?.trim();
+    if (!filter) {
+        throw new Error("--filter requires an exact PostgreSQL contract id.");
+    }
+    const selected = contracts.filter((contract) => contract.id === filter);
+    if (!selected.length) {
+        throw new Error(`Unknown PostgreSQL contract filter "${filter}".`);
+    }
+    return selected;
+}
+
 async function loadBundles(): Promise<Record<BundleName, string>> {
     const [commerceNotifications, commerce, negotiation, mondialRelay, stripeConnect] = await Promise.all([
-        loadSupabaseSchemaSql(integrationRoots.commerceNotifications, "sql/foundation/notifications/manifest.json"),
-        loadSupabaseSchemaSql(integrationRoots.commerceNegotiatedCheckout),
+        loadSupabaseSchemaSql(
+            configuration.integrationRoots.commerceNotifications,
+            "sql/foundation/notifications/manifest.json",
+        ),
+        loadSupabaseSchemaSql(configuration.integrationRoots.commerce),
         loadSupabaseSchemaSql(resolve(packageRoot, "integrations/extensions/commerce-negotiation/versions/1.0.0")),
-        loadSupabaseSchemaSql(integrationRoots.mondialRelay),
-        loadSupabaseSchemaSql(integrationRoots.stripeConnect),
+        loadSupabaseSchemaSql(configuration.integrationRoots.mondialRelay),
+        loadSupabaseSchemaSql(configuration.integrationRoots.stripeConnect),
     ]);
     return {
+        commerce,
         commerceNotifications,
         commerceNegotiatedCheckout: `${commerce}\n${negotiation}`,
         mondialRelay,
@@ -95,18 +75,16 @@ async function loadBundles(): Promise<Record<BundleName, string>> {
 }
 
 async function writeBundles(root: string, sql: Record<BundleName, string>): Promise<Record<BundleName, string>> {
-    const files = {
+    const files: Record<BundleName, string> = {
+        commerce: join(root, "commerce.sql"),
         commerceNotifications: join(root, "commerce-notification-module.sql"),
         commerceNegotiatedCheckout: join(root, "commerce-negotiated-checkout.sql"),
         mondialRelay: join(root, "mondial-relay.sql"),
         stripeConnect: join(root, "stripe-connect.sql"),
     };
-    await Promise.all([
-        writeFile(files.commerceNotifications, sql.commerceNotifications),
-        writeFile(files.commerceNegotiatedCheckout, sql.commerceNegotiatedCheckout),
-        writeFile(files.mondialRelay, sql.mondialRelay),
-        writeFile(files.stripeConnect, sql.stripeConnect),
-    ]);
+    await Promise.all(
+        (Object.entries(files) as [BundleName, string][]).map(([name, file]) => writeFile(file, sql[name])),
+    );
     return files;
 }
 
@@ -138,29 +116,26 @@ async function runStep(
     }
 }
 
-function requiredDatabaseUrl(): string {
-    const value = process.env.DATABASE_URL?.trim();
-    if (!value) {
-        throw new Error("DATABASE_URL is required and must target a disposable PostgreSQL database.");
+async function runCommerceMediaRolloutProofs(databaseUrl: string): Promise<void> {
+    const tests = [
+        resolve(packageRoot, "tests/commerce/selling/media/postgres/rollout/legacyEdge.test.ts"),
+        resolve(packageRoot, "tests/commerce/selling/media/postgres/rollout/rerun.test.ts"),
+    ];
+    console.info("[postgres-contracts] Commerce media rollout compatibility and rerun");
+    const child = Bun.spawn([process.execPath, "test", ...tests], {
+        env: {
+            ...process.env,
+            ALLOW_COMMERCE_MEDIA_SCHEMA_RESET: "true",
+            DATABASE_URL: databaseUrl,
+        },
+        stderr: "inherit",
+        stdin: "inherit",
+        stdout: "inherit",
+    });
+    const exitCode = await child.exited;
+    if (exitCode !== 0) {
+        throw new Error(`Commerce media rollout proofs failed with Bun exit code ${exitCode}.`);
     }
-    let parsed: URL;
-    try {
-        parsed = new URL(value);
-    } catch {
-        throw new Error("DATABASE_URL must be a valid PostgreSQL connection URL.");
-    }
-    if (parsed.protocol !== "postgres:" && parsed.protocol !== "postgresql:") {
-        throw new Error("DATABASE_URL must use the postgres:// or postgresql:// protocol.");
-    }
-    return value;
-}
-
-function contract(label: string, bundle: BundleName, path: string, variables: string[]): PostgresContract {
-    return { bundle, label, steps: [step(path, "contracts.pg.sql", variables)] };
-}
-
-function step(path: string, file = "contracts.pg.sql", variables?: string[]): ContractStep {
-    return { file: `tests/${path}/postgres/${file}`, ...(variables ? { variables } : {}) };
 }
 
 await main().catch((error: unknown) => {

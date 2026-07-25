@@ -79,6 +79,8 @@ function decorateSellerOffers(
         return {
             ...row,
             main_image_media_id: main ? String(main.media_id) : null,
+            main_image_width: main?.width ?? null,
+            main_image_height: main?.height ?? null,
             display_status: sellerDisplayStatus(row, workflowState),
             seller_display_price_amount: displayPriceByOffer.get(String(row.id)) ?? row.accepted_price_amount ?? null,
             workflow_state_info: workflowState,

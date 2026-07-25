@@ -77,6 +77,7 @@ begin
         'order_lines_offer_price_agreement_fk',
         'negotiation_settings_checkout_ttl',
         'negotiation_proposals_offer_media_positive',
+        'negotiation_proposals_offer_media_dimensions',
         'negotiation_proposals_checkout_link',
         'negotiation_proposals_commerce_agreement_fk'
     ]
@@ -93,9 +94,11 @@ begin
             ('commerce', 'order_lines', 'price_agreement_id'),
             ('commerce_negotiation', 'settings', 'accepted_checkout_ttl_hours'),
             ('commerce_negotiation', 'proposals', 'commerce_agreement_id'),
-            ('commerce_negotiation', 'proposals', 'checkout_expires_at')
+            ('commerce_negotiation', 'proposals', 'checkout_expires_at'),
+            ('commerce_negotiation', 'proposals', 'offer_main_image_width'),
+            ('commerce_negotiation', 'proposals', 'offer_main_image_height')
         )
-    ) <> 5 then
+    ) <> 7 then
         raise exception 'price agreement migration columns are incomplete';
     end if;
 
@@ -281,6 +284,7 @@ $capability_invariant$;
 do $accepted_terms$
 declare
     v_offer commerce.offers%rowtype;
+    v_media jsonb;
     v_created jsonb;
     v_accepted jsonb;
     v_proposal commerce_negotiation.proposals%rowtype;
@@ -291,10 +295,23 @@ declare
     v_line commerce.order_lines%rowtype;
 begin
     select * into strict v_offer from commerce.offers where slug = 'agreement-main';
+    v_media := commerce.attach_offer_media_v2(
+        v_offer.id,
+        'commerce-media',
+        'offers/price-agreement/main.jpg',
+        'image/jpeg',
+        128,
+        'main.jpg',
+        1200,
+        800,
+        null,
+        'agreement-ready-seller'
+    );
     v_created := commerce_negotiation.create_proposal(
         v_offer.id, v_offer.slug, v_offer.title,
         'agreement-ready-seller', 'Ready Seller', 'agreement-main-buyer',
-        v_offer.accepted_price_amount, 12000, v_offer.currency, '120?', null
+        v_offer.accepted_price_amount, 12000, v_offer.currency, '120?',
+        (v_media->>'media_id')::bigint
     );
     v_accepted := commerce_negotiation.decide_proposal(
         (v_created->>'id')::bigint,
@@ -317,6 +334,12 @@ begin
        or v_agreement.quantity <> 1
        or v_agreement.status <> 'active'
        or v_offer.accepted_price_amount <> 11000
+       or v_proposal.offer_main_image_media_id
+            <> (v_media->>'media_id')::bigint
+       or v_proposal.offer_main_image_width <> 1200
+       or v_proposal.offer_main_image_height <> 800
+       or (v_created->>'offer_main_image_width')::integer <> 1200
+       or (v_created->>'offer_main_image_height')::integer <> 800
        or v_accepted->>'checkout_status' <> 'active'
        or (v_accepted->>'agreement_version')::integer <> v_proposal.version
        or commerce.get_public_offer_read_model(v_offer.id, null)->'offer'
@@ -1308,6 +1331,105 @@ drop trigger price_agreement_concurrency_barrier on commerce.order_lines;
 drop schema commerce_price_agreement_test cascade;
 
 drop function commerce_order_creation_test_wait(text, integer);
+
+drop schema commerce_negotiation cascade;
+\ir existing-negotiation-media-schema.pg.sql
+
+insert into commerce_negotiation.proposals (
+    public_id,
+    commerce_offer_id,
+    commerce_offer_slug,
+    commerce_offer_title,
+    offer_main_image_media_id,
+    seller_cms_user_id,
+    seller_display_name,
+    buyer_cms_user_id,
+    reference_amount,
+    minimum_amount,
+    maximum_amount,
+    proposed_amount,
+    currency,
+    expires_at
+) values (
+    '019c0000-0000-7000-8000-000000000001',
+    42,
+    'historical-negotiation-offer',
+    'Historical negotiation offer',
+    77,
+    'historical-negotiation-seller',
+    'Historical seller',
+    'historical-negotiation-buyer',
+    10000,
+    8000,
+    12000,
+    9500,
+    'eur',
+    now() + interval '24 hours'
+);
+
+\ir :cms_integration_schema_bundle
+
+do $existing_negotiation_first_application$
+declare
+    v_proposal commerce_negotiation.proposals%rowtype;
+begin
+    select * into strict v_proposal
+    from commerce_negotiation.proposals
+    where public_id = '019c0000-0000-7000-8000-000000000001';
+
+    if v_proposal.offer_main_image_media_id <> 77
+       or v_proposal.offer_main_image_width is not null
+       or v_proposal.offer_main_image_height is not null
+       or v_proposal.commerce_offer_slug <> 'historical-negotiation-offer'
+       or not exists (
+           select 1
+           from pg_constraint
+           where conname = 'negotiation_proposals_offer_media_dimensions'
+             and conrelid = 'commerce_negotiation.proposals'::regclass
+       ) then
+        raise exception 'existing negotiation proposal migration changed historical data: %',
+            to_jsonb(v_proposal);
+    end if;
+end;
+$existing_negotiation_first_application$;
+
+update commerce_negotiation.proposals
+set offer_main_image_width = 1200,
+    offer_main_image_height = 800
+where public_id = '019c0000-0000-7000-8000-000000000001';
+
+\ir :cms_integration_schema_bundle
+
+do $existing_negotiation_reapplication$
+declare
+    v_proposal commerce_negotiation.proposals%rowtype;
+    v_projected jsonb;
+begin
+    select * into strict v_proposal
+    from commerce_negotiation.proposals
+    where public_id = '019c0000-0000-7000-8000-000000000001';
+    v_projected := commerce_negotiation.project_proposal(v_proposal);
+
+    if v_proposal.offer_main_image_media_id <> 77
+       or v_proposal.offer_main_image_width <> 1200
+       or v_proposal.offer_main_image_height <> 800
+       or v_proposal.commerce_offer_slug <> 'historical-negotiation-offer'
+       or (v_projected->>'offer_main_image_width')::integer <> 1200
+       or (v_projected->>'offer_main_image_height')::integer <> 800 then
+        raise exception 'existing negotiation proposal replay changed migrated data: %, %',
+            to_jsonb(v_proposal), v_projected;
+    end if;
+
+    begin
+        update commerce_negotiation.proposals
+        set offer_main_image_height = null
+        where id = v_proposal.id;
+        raise exception 'test: incomplete negotiation media dimensions were accepted';
+    exception when check_violation then
+        null;
+    end;
+end;
+$existing_negotiation_reapplication$;
 
 drop schema commerce_negotiation cascade;
 drop schema commerce cascade;

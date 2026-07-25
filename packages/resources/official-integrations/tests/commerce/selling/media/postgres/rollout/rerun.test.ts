@@ -1,0 +1,139 @@
+import { describe, expect, test } from "bun:test";
+import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import {
+    InMemoryIntegrationConnectorProviderRepository,
+    runIntegrationInstallation,
+    SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
+    type IntegrationImportOptions,
+} from "@bernouy/cms-integrations";
+import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
+import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
+import { InMemorySecretStore } from "@bernouy/cms-secrets";
+import { InMemorySourceOverlayRepository, InMemorySourceRepository } from "@bernouy/cms-sources";
+import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
+import { installedBasicBlocs } from "../../../../contracts/integration-import/setup";
+
+type ManagementRequest = { body: BodyInit | null | undefined; method: string; url: string };
+
+describe("Commerce media connector rerun", () => {
+    test("reruns an existing installation and applies current SQL before deploying current Edge", async () => {
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
+        if (!definition) {
+            throw new Error("Commerce definition not found.");
+        }
+        const requests: ManagementRequest[] = [];
+        const forceOptions: boolean[] = [];
+        const secrets = new InMemorySecretStore();
+        const installations = await installedBasicBlocs();
+        const providerRepository = new InMemoryIntegrationConnectorProviderRepository({
+            provider: "supabase",
+            enabled: true,
+            projectRef: "commerce-rollout",
+        });
+        await secrets.set(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY, "sbp_rollout");
+        const deployer = new ConfiguredSupabaseConnectorDeployer({
+            integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
+            providerRepository,
+            secrets,
+            apiBaseUrl: "https://api.supabase.test",
+            fetch: managementApi(requests),
+        });
+        const deps = {
+            sources: new InMemorySourceRepository(),
+            sourceOverlays: new InMemorySourceOverlayRepository(),
+            dashboards: new InMemoryDashboardRepository(),
+            triggers: new InMemoryTriggerRepository(),
+            roles: new InMemoryRolesRepository(),
+            secrets,
+            installations,
+            connectorDeployers: [deployer],
+            blocs: {
+                async importBloc(artifact: { tag: string }, options: IntegrationImportOptions) {
+                    forceOptions.push(options.force === true);
+                    return { id: artifact.tag, action: options.force ? ("updated" as const) : ("created" as const) };
+                },
+            },
+        };
+
+        await runIntegrationInstallation({
+            mode: "create",
+            deps,
+            installations,
+            siteIntegrations: [definition],
+            dto: { kind: "commerce", answers: { id: "commerce" }, options: {} },
+        });
+        requests.length = 0;
+        forceOptions.length = 0;
+
+        const rerun = await runIntegrationInstallation({
+            mode: "rerun",
+            deps,
+            installations,
+            integrationId: "commerce",
+            body: {},
+        });
+        const schemaIndex = requests.findIndex((request) => schemaQuery(request)?.includes("attach_offer_media_v2"));
+        const functionIndex = requests.findIndex((request) =>
+            request.url.includes("/functions/deploy?slug=cms-commerce"),
+        );
+        const schema = schemaQuery(requests[schemaIndex]);
+        const functionFiles = await deployedFiles(requests[functionIndex]);
+        const offerMedia = functionFiles.get("routes/offer/media.ts");
+        const productMedia = functionFiles.get("routes/catalog/media/product.ts");
+
+        expect(schemaIndex).toBeGreaterThanOrEqual(0);
+        expect(functionIndex).toBeGreaterThan(schemaIndex);
+        expect(schema).toContain("create or replace function commerce.attach_offer_media_v2");
+        expect(schema).toContain("create or replace function commerce.remove_product_media");
+        expect(schema).not.toContain("'replaced_storage_path'");
+        expect(offerMedia).toContain('rpcRecord("attach_offer_media_v2"');
+        expect(productMedia).toContain('rpcRecord("attach_product_media_v2"');
+        expect(offerMedia).not.toContain("removeReturnedObject");
+        expect(productMedia).not.toContain("removeReturnedObject");
+        expect(forceOptions.length).toBeGreaterThan(0);
+        expect(forceOptions.every(Boolean)).toBeTrue();
+        expect(rerun.installation.runCount).toBe(2);
+        expect(rerun.installation.runs.map((run) => run.status)).toEqual(["success", "success"]);
+        expect(rerun.connectors?.[0]?.resources?.map((resource) => resource.type)).toEqual([
+            "schema",
+            "config",
+            "config",
+            "config",
+            "secret",
+            "config",
+            "function",
+        ]);
+    }, 60_000);
+});
+
+function managementApi(requests: ManagementRequest[]): typeof fetch {
+    return async (input, init) => {
+        const request = { body: init?.body, method: init?.method ?? "GET", url: String(input) };
+        requests.push(request);
+        if (request.url.endsWith("/postgrest") && request.method === "GET") {
+            return Response.json({ db_schema: "public,storage" });
+        }
+        if (request.url.includes("/functions/deploy")) {
+            return Response.json({ id: "fn-commerce", status: "ACTIVE" }, { status: 201 });
+        }
+        return new Response(null, { status: request.method === "PATCH" ? 200 : 201 });
+    };
+}
+
+function schemaQuery(request: ManagementRequest | undefined): string | null {
+    if (!request?.url.endsWith("/database/query") || typeof request.body !== "string") {
+        return null;
+    }
+    const body = JSON.parse(request.body) as { query?: unknown };
+    return typeof body.query === "string" ? body.query : null;
+}
+
+async function deployedFiles(request: ManagementRequest | undefined): Promise<Map<string, string>> {
+    if (!(request?.body instanceof FormData)) {
+        throw new Error("Commerce Edge deployment did not use multipart FormData.");
+    }
+    const entries = request.body.getAll("file") as Array<Blob & { name?: string }>;
+    return new Map(await Promise.all(entries.map(async (file) => [file.name ?? "", await file.text()] as const)));
+}

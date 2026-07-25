@@ -65,6 +65,14 @@
                         "fileSize": {
                             "type": "number"
                         },
+                        "width": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "height": {
+                            "type": "number",
+                            "nullable": true
+                        },
                         "originalFilename": {
                             "type": "string"
                         },

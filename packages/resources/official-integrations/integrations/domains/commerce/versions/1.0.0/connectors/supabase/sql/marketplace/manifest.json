@@ -2,8 +2,12 @@
     "schema": "cms.integration.sql-bundle.v1",
     "transaction": "atomic",
     "entries": [
+        { "file": "media/product-media-authorization.sql" },
+        { "file": "media/product-media-attach.sql" },
         { "file": "media/product-media-commands.sql" },
         { "file": "media/get-offer-media-download-context.sql" },
+        { "file": "media/offer-media-authorization.sql" },
+        { "file": "media/offer-media-attach.sql" },
         { "file": "media/offer-media-commands.sql" },
         { "file": "media/reorder-offer-media.sql" },
         { "file": "offers/upsert-offer.sql" },

@@ -12,61 +12,83 @@ security invoker
 set search_path = ''
 as $$
 declare
-    v_publication_status text;
-    v_seller_id bigint;
+    v_has_link boolean;
+    v_has_active_link boolean;
+    v_is_authorized boolean;
     v_require_verified_seller boolean;
-    v_seller_status text;
-    v_seller_cms_user_id text;
     v_media jsonb;
 begin
     if p_scope is null or p_scope not in ('public', 'self', 'admin') then
         return jsonb_build_object('state', 'invalid_scope');
     end if;
 
-    if p_scope <> 'admin' then
-        select offer.publication_status, offer.seller_id
-        into v_publication_status, v_seller_id
+    select exists (
+        select 1
         from commerce.offer_media link
-        join commerce.offers offer on offer.id = link.offer_id
+        join commerce.media stored
+          on stored.id = link.media_id
+         and stored.detached_at is null
         where link.media_id = p_media_id
-        limit 1;
-        if not found or (p_scope = 'public' and v_publication_status <> 'active') then
+    )
+    into v_has_link;
+    if not v_has_link then
+        return jsonb_build_object('state', 'not_found');
+    end if;
+
+    if p_scope = 'public' then
+        select exists (
+            select 1
+            from commerce.offer_media link
+            join commerce.offers offer on offer.id = link.offer_id
+            where link.media_id = p_media_id
+              and offer.publication_status = 'active'
+        )
+        into v_has_active_link;
+        if not v_has_active_link then
             return jsonb_build_object('state', 'not_found');
         end if;
 
-        if p_scope = 'public' then
-            select settings.require_verified_seller
-            into v_require_verified_seller
-            from commerce.settings settings
-            where settings.id = 'default';
-            if not found then
-                return jsonb_build_object('state', 'settings_unavailable');
-            end if;
+        select settings.require_verified_seller
+        into v_require_verified_seller
+        from commerce.settings settings
+        where settings.id = 'default';
+        if not found then
+            return jsonb_build_object('state', 'settings_unavailable');
+        end if;
 
-            select seller.verification_status
-            into v_seller_status
-            from commerce.sellers seller
-            where seller.id = v_seller_id;
-            if not found
-                or v_seller_status in ('rejected', 'suspended')
-                or (v_require_verified_seller and v_seller_status <> 'verified')
-            then
-                return jsonb_build_object('state', 'seller_unavailable');
-            end if;
-        else
-            select seller.cms_user_id
-            into v_seller_cms_user_id
-            from commerce.sellers seller
-            where seller.id = v_seller_id;
-            if not found then
-                return jsonb_build_object('state', 'not_found');
-            end if;
-            if p_cms_user_id is null then
-                return jsonb_build_object('state', 'identity_required');
-            end if;
-            if v_seller_cms_user_id is distinct from p_cms_user_id then
-                return jsonb_build_object('state', 'not_found');
-            end if;
+        select exists (
+            select 1
+            from commerce.offer_media link
+            join commerce.offers offer on offer.id = link.offer_id
+            join commerce.sellers seller on seller.id = offer.seller_id
+            where link.media_id = p_media_id
+              and offer.publication_status = 'active'
+              and seller.verification_status not in ('rejected', 'suspended')
+              and (
+                  not v_require_verified_seller
+                  or seller.verification_status = 'verified'
+              )
+        )
+        into v_is_authorized;
+        if not v_is_authorized then
+            return jsonb_build_object('state', 'seller_unavailable');
+        end if;
+    elsif p_scope = 'self' then
+        if p_cms_user_id is null then
+            return jsonb_build_object('state', 'identity_required');
+        end if;
+
+        select exists (
+            select 1
+            from commerce.offer_media link
+            join commerce.offers offer on offer.id = link.offer_id
+            join commerce.sellers seller on seller.id = offer.seller_id
+            where link.media_id = p_media_id
+              and seller.cms_user_id = p_cms_user_id
+        )
+        into v_is_authorized;
+        if not v_is_authorized then
+            return jsonb_build_object('state', 'not_found');
         end if;
     end if;
 
@@ -74,11 +96,19 @@ begin
         'id', media.id,
         'storage_bucket', media.storage_bucket,
         'storage_path', media.storage_path,
-        'mime_type', media.mime_type
+        'mime_type', media.mime_type,
+        'width', media.width,
+        'height', media.height
     )
     into v_media
     from commerce.media media
-    where media.id = p_media_id;
+    where media.id = p_media_id
+      and media.detached_at is null
+      and exists (
+          select 1
+          from commerce.offer_media link
+          where link.media_id = media.id
+      );
     if not found then
         return jsonb_build_object('state', 'not_found');
     end if;

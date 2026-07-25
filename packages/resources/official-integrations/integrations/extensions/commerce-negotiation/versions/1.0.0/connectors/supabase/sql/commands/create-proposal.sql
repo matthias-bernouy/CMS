@@ -29,6 +29,8 @@ declare
     v_whole_unit_prices boolean;
     v_authoritative jsonb;
     v_context jsonb;
+    v_offer_main_image_width integer;
+    v_offer_main_image_height integer;
 begin
     perform commerce_negotiation.expire_pending_proposals();
     perform pg_advisory_xact_lock(hashtextextended(
@@ -39,6 +41,8 @@ begin
         raise exception 'conflict: offer is not available for negotiation';
     end if;
     v_context := v_authoritative -> 'context';
+    v_offer_main_image_width := nullif(v_context ->> 'offer_main_image_width', '')::integer;
+    v_offer_main_image_height := nullif(v_context ->> 'offer_main_image_height', '')::integer;
     if (v_context ->> 'offer_slug') is distinct from btrim(p_offer_slug)
         or (v_context ->> 'offer_title') is distinct from btrim(p_offer_title)
         or (v_context ->> 'seller_cms_user_id') is distinct from p_seller_cms_user_id
@@ -84,12 +88,14 @@ begin
 
     begin
         insert into commerce_negotiation.proposals (
-            commerce_offer_id, commerce_offer_slug, commerce_offer_title, offer_main_image_media_id,
+            commerce_offer_id, commerce_offer_slug, commerce_offer_title,
+            offer_main_image_media_id, offer_main_image_width, offer_main_image_height,
             seller_cms_user_id, seller_display_name, buyer_cms_user_id,
             reference_amount, minimum_amount, maximum_amount, proposed_amount,
             currency, buyer_message, expires_at
         ) values (
-            p_offer_id, btrim(p_offer_slug), btrim(p_offer_title), p_offer_main_image_media_id,
+            p_offer_id, btrim(p_offer_slug), btrim(p_offer_title),
+            p_offer_main_image_media_id, v_offer_main_image_width, v_offer_main_image_height,
             p_seller_cms_user_id, coalesce(nullif(btrim(p_seller_display_name), ''), 'Seller'), p_buyer_cms_user_id,
             p_reference_amount, v_minimum, v_maximum, p_proposed_amount,
             lower(p_currency), nullif(btrim(p_buyer_message), ''),

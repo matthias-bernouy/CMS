@@ -66,6 +66,8 @@ as $$
                        'storage_path', media.storage_path,
                        'mime_type', media.mime_type,
                        'file_size', media.file_size,
+                       'width', media.width,
+                       'height', media.height,
                        'original_filename', media.original_filename,
                        'alt', media.alt,
                        'created_at', media.created_at,
@@ -74,10 +76,16 @@ as $$
                    )
                ) order by link.sort_order, link.id) media,
                (array_agg(link.media_id order by link.is_main desc, link.sort_order, link.id))[1]::text
-                   main_image_media_id
+                   main_image_media_id,
+               (array_agg(media.width order by link.is_main desc, link.sort_order, link.id))[1]
+                   main_image_width,
+               (array_agg(media.height order by link.is_main desc, link.sort_order, link.id))[1]
+                   main_image_height
         from page
         join commerce.offer_media link on link.offer_id = page.id
-        join commerce.media media on media.id = link.media_id
+        join commerce.media media
+          on media.id = link.media_id
+         and media.detached_at is null
         group by link.offer_id
     ), items as (
         select page.read_ordinal,
@@ -122,7 +130,9 @@ as $$
                        'effective_metadata', effective_metadata.value
                    ) end,
                    'media', coalesce(media_rollup.media, '[]'::jsonb),
-                   'main_image_media_id', media_rollup.main_image_media_id
+                   'main_image_media_id', media_rollup.main_image_media_id,
+                   'main_image_width', media_rollup.main_image_width,
+                   'main_image_height', media_rollup.main_image_height
                ) value
         from page
         cross join offer_keys

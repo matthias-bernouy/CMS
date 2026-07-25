@@ -47,11 +47,9 @@
                         "mediaId": {
                             "type": "number"
                         },
-                        "storageBucket": {
-                            "type": "string"
-                        },
-                        "storagePath": {
-                            "type": "string"
+                        "detachedAt": {
+                            "type": "string",
+                            "nullable": true
                         }
                     }
                 }

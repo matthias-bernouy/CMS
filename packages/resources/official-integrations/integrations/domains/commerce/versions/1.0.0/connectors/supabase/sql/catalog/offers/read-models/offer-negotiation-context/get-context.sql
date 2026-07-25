@@ -16,13 +16,9 @@ as $$
                 'offer_id', offer.id,
                 'offer_slug', offer.slug,
                 'offer_title', offer.title,
-                'offer_main_image_media_id', (
-                    select link.media_id
-                    from commerce.offer_media link
-                    where link.offer_id = offer.id
-                    order by link.is_main desc, link.sort_order, link.id
-                    limit 1
-                ),
+                'offer_main_image_media_id', main_image.media_id,
+                'offer_main_image_width', main_image.width,
+                'offer_main_image_height', main_image.height,
                 'seller_cms_user_id', seller.cms_user_id,
                 'seller_display_name', seller.display_name,
                 'reference_amount', offer.accepted_price_amount,
@@ -37,6 +33,16 @@ as $$
         join commerce.sellers seller on seller.id = offer.seller_id
         join commerce.products product on product.id = offer.product_id
         join commerce.offer_workflow_states workflow on workflow.code = offer.workflow_state
+        left join lateral (
+            select link.media_id, media.width, media.height
+            from commerce.offer_media link
+            join commerce.media media
+              on media.id = link.media_id
+             and media.detached_at is null
+            where link.offer_id = offer.id
+            order by link.is_main desc, link.sort_order, link.id
+            limit 1
+        ) main_image on true
         where offer.id = p_offer_id
           and offer.publication_status = 'active'
           and offer.availability = 'available'

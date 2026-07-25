@@ -67,6 +67,12 @@
                     "fileSize": {
                         "type": "number"
                     },
+                    "width": {
+                        "type": "number"
+                    },
+                    "height": {
+                        "type": "number"
+                    },
                     "originalFilename": {
                         "type": "string"
                     },

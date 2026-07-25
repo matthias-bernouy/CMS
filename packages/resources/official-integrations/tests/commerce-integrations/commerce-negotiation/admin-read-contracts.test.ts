@@ -41,6 +41,8 @@ const publicProposal = {
     offerSlug: "admin-racket",
     offerTitle: "Admin racket",
     offerMainImageMediaId: null,
+    offerMainImageWidth: null,
+    offerMainImageHeight: null,
     sellerUserId: "seller-9",
     sellerDisplayName: "Seller Nine",
     buyerUserId: "buyer-9",
