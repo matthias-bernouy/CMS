@@ -9,7 +9,8 @@ export class BlocEditor extends Editor {
                 "label": "Code tabs",
                 "accepts": [
                     {
-                        "kind": "any-component",
+                        "kind": "component",
+                        "tag": "doc-code-block",
                     },
                 ],
                 "min": 1,

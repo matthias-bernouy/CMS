@@ -48,7 +48,8 @@ export class BlocEditor extends Editor {
                 "label": "Title",
                 "accepts": [
                     {
-                        "kind": "any-component",
+                        "kind": "component",
+                        "tag": "doc-api-property",
                     },
                 ],
                 "slot": "title",

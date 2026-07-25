@@ -37,7 +37,7 @@
 .title ::slotted(*) { margin: 0; font: inherit; color: inherit; }
 .body { margin: 0; padding: 1rem 1.1rem; overflow-x: auto; font-size: .88rem; line-height: 1.6; }
 .body ::slotted(*) { display: block; }
-.body ::slotted(*)::before {
+.prompt::before {
     content: var(--prompt-char, "$ ");
     color: var(--term-prompt);
     user-select: none;

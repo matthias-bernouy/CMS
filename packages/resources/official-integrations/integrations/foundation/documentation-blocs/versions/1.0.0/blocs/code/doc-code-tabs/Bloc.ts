@@ -13,11 +13,13 @@ export class Bloc extends Component {
         this._tabs = this.shadowRoot?.querySelector(".tabs") ?? null;
         this._slot?.addEventListener("slotchange", this._onChange);
         this._tabs?.addEventListener("click", this._onTabClick);
+        this._tabs?.addEventListener("keydown", this._onTabKeydown);
         this._onChange();
     }
     disconnectedCallback() {
         this._slot?.removeEventListener("slotchange", this._onChange);
         this._tabs?.removeEventListener("click", this._onTabClick);
+        this._tabs?.removeEventListener("keydown", this._onTabKeydown);
     }
     _onChange = () => {
         if (!this._tabs) {
@@ -26,10 +28,17 @@ export class Bloc extends Component {
         const children = this._slot?.assignedElements() ?? [];
         this._tabs.innerHTML = "";
         children.forEach((el, i) => {
-            const label = el.getAttribute("filename") || el.getAttribute("language") || `Tab ${i + 1}`;
+            const label =
+                el.getAttribute("filename") ||
+                el.querySelector('[slot="filename"]')?.textContent?.trim() ||
+                el.getAttribute("language") ||
+                `Tab ${i + 1}`;
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "tab";
+            btn.setAttribute("role", "tab");
+            btn.setAttribute("aria-selected", String(i === 0));
+            btn.tabIndex = i === 0 ? 0 : -1;
             btn.dataset.index = String(i);
             btn.textContent = label;
             if (i === 0) {
@@ -44,12 +53,49 @@ export class Bloc extends Component {
         if (!btn) {
             return;
         }
-        const idx = Number(btn.dataset.index);
-        this._tabs?.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
+        this._activate(Number(btn.dataset.index));
+    };
+    _onTabKeydown = (e) => {
+        const tabs = Array.from(this._tabs?.querySelectorAll(".tab") ?? []);
+        const current = tabs.indexOf(e.target);
+        if (current < 0) {
+            return;
+        }
+        const last = tabs.length - 1;
+        const next =
+            e.key === "ArrowRight"
+                ? current === last
+                    ? 0
+                    : current + 1
+                : e.key === "ArrowLeft"
+                  ? current === 0
+                      ? last
+                      : current - 1
+                  : e.key === "Home"
+                    ? 0
+                    : e.key === "End"
+                      ? last
+                      : -1;
+        if (next < 0) {
+            return;
+        }
+        e.preventDefault();
+        this._activate(next, true);
+    };
+    _activate = (index, focus = false) => {
+        const tabs = Array.from(this._tabs?.querySelectorAll(".tab") ?? []);
+        tabs.forEach((tab, i) => {
+            const active = i === index;
+            tab.classList.toggle("active", active);
+            tab.setAttribute("aria-selected", String(active));
+            tab.tabIndex = active ? 0 : -1;
+            if (active && focus) {
+                tab.focus();
+            }
+        });
         const children = this._slot?.assignedElements() ?? [];
         children.forEach((el, i) => {
-            el.style.display = i === idx ? "" : "none";
+            el.style.display = i === index ? "" : "none";
         });
     };
 }

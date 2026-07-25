@@ -9,7 +9,8 @@ export class BlocEditor extends Editor {
                 "label": "Title",
                 "accepts": [
                     {
-                        "kind": "any-component",
+                        "kind": "component",
+                        "tag": "doc-sidebar-link",
                     },
                 ],
                 "slot": "title",

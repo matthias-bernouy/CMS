@@ -60,7 +60,8 @@ export class BlocEditor extends Editor {
                 "label": "Steps",
                 "accepts": [
                     {
-                        "kind": "any-component",
+                        "kind": "component",
+                        "tag": "doc-step",
                     },
                 ],
                 "min": 1,

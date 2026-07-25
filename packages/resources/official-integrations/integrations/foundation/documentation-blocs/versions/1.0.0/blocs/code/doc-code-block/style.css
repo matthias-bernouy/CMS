@@ -69,6 +69,21 @@
 .copy-done { display: none; color: #4ade80; }
 :host([copied]) .copy-label { display: none; }
 :host([copied]) .copy-done { display: inline; }
+.code-frame {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+}
+.line-numbers {
+    display: none;
+    padding: 1rem .75rem 1rem 1.1rem;
+    color: var(--code-muted);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .88rem;
+    line-height: 1.6;
+    text-align: right;
+    white-space: pre;
+    user-select: none;
+}
 .code {
     margin: 0;
     padding: 1rem 1.1rem;
@@ -81,8 +96,8 @@
 .code code { color: inherit; font: inherit; }
 .code ::slotted(*) { display: block; font: inherit; color: inherit; margin: 0; white-space: pre-wrap; }
 :host([wrap="true"]) .code { white-space: pre-wrap; word-break: break-word; }
-:host([line-numbers="true"]) .code { counter-reset: ln; }
-:host([line-numbers="true"]) .code ::slotted(*) { counter-increment: ln; }
+:host([line-numbers="true"]) .code-frame { grid-template-columns: auto minmax(0, 1fr); }
+:host([line-numbers="true"]) .line-numbers { display: block; }
 :host([theme="light"]) {
     --code-bg: #f8fafc;
     --code-fg: #0f172a;
