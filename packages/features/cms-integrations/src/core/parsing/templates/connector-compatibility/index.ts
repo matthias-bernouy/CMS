@@ -3,6 +3,7 @@ import { assertOnlyKeys, record } from "./values";
 import { parseConnectorSchemaContract } from "./schema";
 
 export { parseConnectorSchemaContract } from "./schema";
+export { parseConnectorFunctionHttpDataShape } from "./http-shape";
 
 export function parseConnectorCompatibility(
     value: unknown,

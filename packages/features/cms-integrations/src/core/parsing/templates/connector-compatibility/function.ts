@@ -1,17 +1,15 @@
-import {
-    HTTP_METHODS,
-    isValidResponseStatus,
-    parseDataShape,
-    type DataShape,
-    type HTTPMethod,
-} from "@bernouy/cms-sources";
+import { HTTP_METHODS, isValidResponseStatus, type HTTPMethod } from "@bernouy/cms-sources";
 import { IntegrationInputError } from "../../../errors";
 import type {
     DeclarativeConnectorFunctionCompatibility,
     DeclarativeConnectorFunctionHttpEndpointContract,
     DeclarativeConnectorFunctionHttpResponseContract,
 } from "../../../../interfaces/Integration";
+import { parseConnectorFunctionHttpDataShape } from "./http-shape";
 import { array, assertOnlyKeys, assertUnique, record, requiredText } from "./values";
+
+const HTTP_FIELD_NAME = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+const MAX_HTTP_FIELD_NAME_LENGTH = 256;
 
 export function parseConnectorFunctionCompatibility(
     value: unknown,
@@ -59,7 +57,7 @@ function parseEndpoint(value: unknown, name: string): DeclarativeConnectorFuncti
         route,
         method,
         requiredInputs: parseSortedUniqueText(input.requiredInputs ?? [], `${name}.requiredInputs`, "input"),
-        requiredHeaders: parseSortedUniqueText(input.requiredHeaders ?? [], `${name}.requiredHeaders`, "header"),
+        requiredHeaders: parseRequiredHeaders(input.requiredHeaders ?? [], `${name}.requiredHeaders`),
         responses,
     };
 }
@@ -73,7 +71,7 @@ function parseResponse(value: unknown, name: string): DeclarativeConnectorFuncti
     }
     return {
         status,
-        ...(input.body !== undefined ? { body: normalizeShape(parseDataShape(input.body, `${name}.body`)) } : {}),
+        ...(input.body !== undefined ? { body: parseConnectorFunctionHttpDataShape(input.body, `${name}.body`) } : {}),
     };
 }
 
@@ -99,23 +97,20 @@ function parseSortedUniqueText(value: unknown, name: string, label: string): str
     return values;
 }
 
-function normalizeShape(shape: DataShape): DataShape {
-    const properties = shape.properties
-        ? Object.fromEntries(
-              Object.entries(shape.properties)
-                  .sort(([left], [right]) => left.localeCompare(right))
-                  .map(([key, value]) => [key, normalizeShape(value)]),
-          )
-        : undefined;
-    return {
-        type: shape.type,
-        ...(shape.nullable !== undefined ? { nullable: shape.nullable } : {}),
-        ...(shape.title ? { title: shape.title } : {}),
-        ...(shape.semantic ? { semantic: shape.semantic } : {}),
-        ...(properties && Object.keys(properties).length > 0 ? { properties } : {}),
-        ...(shape.required?.length ? { required: [...shape.required].sort() } : {}),
-        ...(shape.items ? { items: normalizeShape(shape.items) } : {}),
-    };
+function parseRequiredHeaders(value: unknown, name: string): string[] {
+    const headers = array(value, name, parseHeaderName).sort();
+    assertUnique(headers, name, "header");
+    return headers;
+}
+
+function parseHeaderName(value: unknown, name: string): string {
+    if (typeof value !== "string" || value.length === 0) {
+        throw new IntegrationInputError(name, "must be a non-empty HTTP field name");
+    }
+    if (value.length > MAX_HTTP_FIELD_NAME_LENGTH || !HTTP_FIELD_NAME.test(value)) {
+        throw new IntegrationInputError(name, "must be a valid HTTP field name");
+    }
+    return value.toLowerCase();
 }
 
 function compareEndpoints(

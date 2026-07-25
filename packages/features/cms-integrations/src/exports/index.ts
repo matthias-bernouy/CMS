@@ -14,8 +14,10 @@ export type {
     DeclarativeConnectorCompatibility,
     DeclarativeConnectorFunctionCompatibility,
     DeclarativeConnectorFunctionHttpContract,
+    DeclarativeConnectorFunctionHttpDataShape,
     DeclarativeConnectorFunctionHttpEndpointContract,
     DeclarativeConnectorFunctionHttpResponseContract,
+    DeclarativeConnectorFunctionHttpStringFormat,
     DeclarativeConnectorFunctionTemplate,
     DeclarativeConnectorSchemaColumnContract,
     DeclarativeConnectorSchemaConstraintContract,
@@ -131,7 +133,10 @@ export {
     parseIntegrationImportDto,
 } from "../core/parsing/parseIntegrationImportDto";
 export { parseIntegrationDefinition } from "../core/parsing/definition/definition";
-export { parseConnectorSchemaContract } from "../core/parsing/templates/connector-compatibility";
+export {
+    parseConnectorFunctionHttpDataShape,
+    parseConnectorSchemaContract,
+} from "../core/parsing/templates/connector-compatibility";
 export { assertSqlConnectorSchemaCompatibilityDeclared } from "../core/definitions/connectorCompatibility";
 export { importIntegration } from "../core/importIntegration";
 export {
