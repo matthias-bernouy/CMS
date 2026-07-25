@@ -1,0 +1,21 @@
+# Attach only the designated management CMS to the repository network.
+# Apply this file together with that CMS instance's regular compose.yml.
+services:
+    cms:
+        networks:
+            cms_repository: {}
+        secrets:
+            - source: cms_repository_management_token
+              target: cms-repository-management-token
+              uid: "1000"
+              gid: "1000"
+              mode: 0400
+
+secrets:
+    cms_repository_management_token:
+        file: ${CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE must reference the repository service secret file}
+
+networks:
+    cms_repository:
+        external: true
+        name: ${CMS_REPOSITORY_NETWORK_NAME:-cms_repository}

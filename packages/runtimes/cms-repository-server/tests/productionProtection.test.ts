@@ -1,13 +1,17 @@
 import { describe, expect, test } from "bun:test";
+import { resolveClientAddress, setRequestIP } from "@bernouy/http-runner";
 import { productionPackageDownloadProtection } from "../src/production";
 import { readRepositoryRuntimeEnv } from "../src/runtimeEnv";
 
 describe("production package download protection", () => {
-    test("keeps an explicit disabled fallback without a misleading global limiter", () => {
+    test("does not reject an internal CMS request without X-Forwarded-For", () => {
         const protection = productionPackageDownloadProtection(readRepositoryRuntimeEnv({}));
+        const request = new Request("http://cms-repository/.cms/repository/api/integrations/package");
+        setRequestIP(request, "10.0.0.12");
 
         expect(protection).toEqual({ clientAddressPolicy: { mode: "disabled" } });
         expect(protection.rateLimiter).toBeUndefined();
+        expect(resolveClientAddress(request, protection.clientAddressPolicy)).toBeUndefined();
     });
 
     test("uses the shared trusted-proxy policy and configured in-memory budget", async () => {

@@ -1,0 +1,69 @@
+services:
+    cms-repository:
+        image: ${CMS_REPOSITORY_IMAGE:?CMS_REPOSITORY_IMAGE must be an immutable version tag or digest}
+        restart: unless-stopped
+        init: true
+        environment:
+            NODE_ENV: production
+            CMS_REPOSITORY_PUBLIC_PORT: "3001"
+            CMS_REPOSITORY_MANAGEMENT_PORT: "3000"
+            CMS_REPOSITORY_REGISTRY_ROOT: /var/lib/cms-repository/registry
+            CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE: /run/secrets/cms-repository-management-token
+            CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT: "${CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT:-30}"
+            CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT_WINDOW_SECONDS: "${CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT_WINDOW_SECONDS:-60}"
+
+            # Standard CMS-to-repository calls do not carry X-Forwarded-For.
+            # End-user limiting belongs to the public CMS Delivery gateway.
+            CMS_HTTP_CLIENT_ADDRESS_MODE: ${CMS_HTTP_CLIENT_ADDRESS_MODE:-disabled}
+            CMS_HTTP_TRUSTED_PROXY_HOPS: "${CMS_HTTP_TRUSTED_PROXY_HOPS:-0}"
+            CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: "${CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT:-60}"
+            CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: "${CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS:-60}"
+        secrets:
+            - source: cms_repository_management_token
+              target: cms-repository-management-token
+              uid: "1000"
+              gid: "1000"
+              mode: 0400
+        volumes:
+            - type: bind
+              source: ./registry
+              target: /var/lib/cms-repository/registry
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=64m,mode=1770
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        expose:
+            - "3000"
+            - "3001"
+        networks:
+            cms_repository:
+                aliases:
+                    - cms-repository
+        healthcheck:
+            test:
+                - CMD
+                - bun
+                - -e
+                - >-
+                    const response = await fetch("http://127.0.0.1:3000/ready", {
+                      signal: AbortSignal.timeout(4000)
+                    });
+                    if (!response.ok) process.exit(1);
+                    await response.body?.cancel();
+            interval: 30s
+            timeout: 5s
+            retries: 5
+            start_period: 15s
+        stop_grace_period: 30s
+
+secrets:
+    cms_repository_management_token:
+        file: ${CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE must reference a mode-0600 secret file}
+
+networks:
+    cms_repository:
+        name: ${CMS_REPOSITORY_NETWORK_NAME:-cms_repository}
+        internal: true
