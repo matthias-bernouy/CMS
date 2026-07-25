@@ -265,7 +265,9 @@ begin
                 status = case
                     when total_refunded_amount + p_amount = v_terms.buyer_total_amount then 'refunded'
                     else 'held' end,
-                manual_review_reason = null
+                manual_review_reason = null,
+                version = version + 1,
+                updated_at = now()
             where order_id = v_order.id returning * into v_settlement;
             if v_refund.seller_reserve_offset_amount > 0 then
                 update commerce.seller_financial_exposures set
@@ -279,7 +281,9 @@ begin
             end if;
             update commerce.marketplace_claims set
                 status = case resolution_outcome when 'buyer' then 'resolved_buyer' else 'resolved_split' end,
-                resolved_at = now()
+                resolved_at = now(),
+                version = version + 1,
+                updated_at = now()
             where id = v_refund.claim_id and status = 'resolution_pending';
             if v_refund.claim_id is not null then
                 update commerce.orders set status = 'completed'

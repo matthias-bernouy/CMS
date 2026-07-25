@@ -160,7 +160,8 @@ begin
         when total_transferred_amount > total_reversed_amount
           and v_request.seller_recovery_amount > v_request.seller_reserve_offset_amount
             then 'reversal_pending'
-        else 'refund_pending' end
+        else 'refund_pending' end,
+        manual_review_reason = null
     where order_id = v_order.id and status not in ('refunded', 'reversed', 'manual_review');
     perform commerce.append_financial_event(
         v_order.id, 'refund_request', v_request.id::text, 'refund_requested',

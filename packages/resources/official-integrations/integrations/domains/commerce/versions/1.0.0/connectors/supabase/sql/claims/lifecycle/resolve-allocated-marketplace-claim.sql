@@ -24,6 +24,9 @@ declare
     v_expected_seller_recovery bigint;
     v_platform_contribution bigint;
     v_refund jsonb;
+    v_existing_refund commerce.refund_requests%rowtype;
+    v_has_existing_refund boolean := false;
+    v_expected_settlement_status text;
 begin
     if p_actor_kind is distinct from 'admin' then
         raise exception 'forbidden: admin claim resolution actor is required';
@@ -57,6 +60,53 @@ begin
     from commerce.marketplace_claims
     where id = p_claim_id
     for update;
+    select request.* into v_existing_refund
+    from commerce.refund_requests request
+    where request.claim_id = v_claim.id
+      and request.allocation_version = 1
+      and request.business_key like 'claim:' || v_claim.id || ':resolution:%'
+    order by request.id desc
+    limit 1
+    for update;
+    v_has_existing_refund := found;
+    if v_claim.resolution_outcome is not distinct from p_outcome
+        and v_claim.resolution_buyer_refund_amount is not distinct from v_buyer_refund_amount
+        and v_claim.resolution_seller_transfer_amount is not distinct from p_seller_transfer_amount
+        and v_claim.resolution_protection_fee_refund_amount
+            is not distinct from p_protection_fee_refund_amount
+        and v_claim.decision_reason is not distinct from p_decision_reason
+        and v_claim.resolved_by is not distinct from p_actor_id
+        and (
+            (
+                v_buyer_refund_amount = 0
+                and not v_has_existing_refund
+                and p_merchandise_refund_amount = 0
+                and p_shipping_refund_amount = 0
+            )
+            or (
+                v_buyer_refund_amount > 0
+                and v_has_existing_refund
+                and v_existing_refund.requested_amount = v_buyer_refund_amount
+                and v_existing_refund.merchandise_refund_amount = p_merchandise_refund_amount
+                and v_existing_refund.shipping_refund_amount = p_shipping_refund_amount
+                and v_existing_refund.protection_fee_refund_amount
+                    = p_protection_fee_refund_amount
+                and v_existing_refund.requested_by_kind = p_actor_kind
+                and v_existing_refund.requested_by = p_actor_id
+            )
+        ) then
+        v_refund := case
+            when v_has_existing_refund then to_jsonb(v_existing_refund)
+            else null
+        end;
+        return to_jsonb(v_claim) || jsonb_build_object(
+            'refundRequest', v_refund,
+            'refundAuthorization', case
+                when v_refund is null then null
+                else commerce.refund_authorization_payload(v_existing_refund.id)
+            end
+        );
+    end if;
     if v_claim.version is distinct from p_expected_version then
         raise exception 'conflict: stale claim version';
     end if;
@@ -90,11 +140,29 @@ begin
             status = 'return_required',
             resolution_outcome = 'return_required',
             decision_reason = p_decision_reason,
+            resolution_buyer_refund_amount = 0,
+            resolution_seller_transfer_amount = 0,
+            resolution_protection_fee_refund_amount = 0,
             return_ship_by_at = now() + make_interval(hours => v_protection.return_ship_hours),
             return_delivery_status = 'awaiting_carrier',
-            resolved_by = p_actor_id
-        where id = v_claim.id
+            resolved_by = p_actor_id,
+            version = version + 1,
+            updated_at = now()
+        where id = v_claim.id and version = p_expected_version
         returning * into v_claim;
+        if not found then
+            raise exception 'conflict: stale claim version';
+        end if;
+        update commerce.order_settlements set
+            status = 'blocked',
+            manual_review_reason = 'marketplace_claim_return_required',
+            version = version + 1,
+            updated_at = now()
+        where order_id = v_claim.order_id and version = v_settlement.version
+        returning * into v_settlement;
+        if not found then
+            raise exception 'conflict: stale settlement version';
+        end if;
     else
         if p_merchandise_refund_amount > v_terms.merchandise_subtotal_amount
             or p_shipping_refund_amount > v_terms.shipping_amount
@@ -150,9 +218,14 @@ begin
             resolution_protection_fee_refund_amount = p_protection_fee_refund_amount,
             decision_reason = p_decision_reason,
             resolved_at = case when p_outcome = 'seller' then now() else null end,
-            resolved_by = p_actor_id
-        where id = v_claim.id
+            resolved_by = p_actor_id,
+            version = version + 1,
+            updated_at = now()
+        where id = v_claim.id and version = p_expected_version
         returning * into v_claim;
+        if not found then
+            raise exception 'conflict: stale claim version';
+        end if;
         if v_buyer_refund_amount > 0 then
             v_refund := commerce.create_allocated_refund_request(
                 v_claim.order_id,
@@ -173,13 +246,40 @@ begin
             v_platform_contribution := (v_refund->>'requested_amount')::bigint
                 - (v_refund->>'protection_fee_refund_amount')::bigint
                 - (v_refund->>'seller_recovery_amount')::bigint;
-            update commerce.order_settlements
-            set manual_review_reason = null
-            where order_id = v_claim.order_id;
+            select * into v_settlement
+            from commerce.order_settlements
+            where order_id = v_claim.order_id
+            for update;
+            v_expected_settlement_status := case
+                when v_settlement.total_transferred_amount > v_settlement.total_reversed_amount
+                  and (v_refund->>'seller_recovery_amount')::bigint
+                    > (v_refund->>'seller_reserve_offset_amount')::bigint
+                    then 'reversal_pending'
+                else 'refund_pending'
+            end;
+            if v_settlement.status = 'manual_review' then
+                update commerce.order_settlements set
+                    status = v_expected_settlement_status,
+                    manual_review_reason = null,
+                    version = version + 1,
+                    updated_at = now()
+                where order_id = v_claim.order_id and version = v_settlement.version
+                returning * into v_settlement;
+            elsif v_settlement.status is distinct from v_expected_settlement_status
+                or v_settlement.manual_review_reason is not null then
+                raise exception 'conflict: claim refund did not transition the settlement';
+            end if;
         else
             update commerce.order_settlements
-            set status = 'held', manual_review_reason = null
-            where order_id = v_claim.order_id;
+            set status = 'held',
+                manual_review_reason = null,
+                version = version + 1,
+                updated_at = now()
+            where order_id = v_claim.order_id and version = v_settlement.version
+            returning * into v_settlement;
+        end if;
+        if v_buyer_refund_amount = 0 and not found then
+            raise exception 'conflict: stale settlement version';
         end if;
     end if;
     insert into commerce.marketplace_claim_events (

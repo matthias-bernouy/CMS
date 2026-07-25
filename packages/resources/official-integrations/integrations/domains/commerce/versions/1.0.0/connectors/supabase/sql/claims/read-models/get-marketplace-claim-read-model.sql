@@ -39,6 +39,124 @@ as $$
                 'created_at', claim.created_at,
                 'updated_at', claim.updated_at
             ),
+            'financial_terms', (
+                select jsonb_build_object(
+                    'merchandise_subtotal_amount', terms.merchandise_subtotal_amount,
+                    'shipping_amount', terms.shipping_amount,
+                    'buyer_protection_fee_amount', terms.buyer_protection_fee_amount,
+                    'buyer_total_amount', terms.buyer_total_amount,
+                    'seller_proceeds_amount', terms.seller_proceeds_amount,
+                    'seller_transfer_release_amount', terms.seller_transfer_release_amount,
+                    'seller_reserve_liability_amount', terms.seller_reserve_liability_amount,
+                    'seller_shipping_share_amount', terms.seller_shipping_share_amount,
+                    'platform_retained_amount', terms.platform_retained_amount,
+                    'buyer_protection_refund_policy', (
+                        select component->>'refund_policy'
+                        from jsonb_array_elements(
+                            coalesce(terms.fee_policy_snapshot->'components', '[]'::jsonb)
+                        ) component
+                        where component->>'component_key' = 'buyer_protection'
+                        limit 1
+                    ),
+                    'currency', terms.currency,
+                    'financial_terms_hash', terms.financial_terms_hash,
+                    'financial_revision', terms.financial_revision
+                )
+                from commerce.order_financial_terms terms
+                where terms.order_id = claim.order_id
+            ),
+            'settlement', (
+                select jsonb_build_object(
+                    'status', settlement.status,
+                    'authorized_seller_amount', settlement.authorized_seller_amount,
+                    'total_transferred_amount', settlement.total_transferred_amount,
+                    'total_reversed_amount', settlement.total_reversed_amount,
+                    'total_refunded_amount', settlement.total_refunded_amount,
+                    'seller_reserve_liability_remaining_amount',
+                        settlement.seller_reserve_liability_remaining_amount,
+                    'platform_gross_remainder_amount', settlement.platform_gross_remainder_amount,
+                    'manual_review_reason', settlement.manual_review_reason,
+                    'version', settlement.version,
+                    'updated_at', settlement.updated_at
+                )
+                from commerce.order_settlements settlement
+                where settlement.order_id = claim.order_id
+            ),
+            'resolution_limits', (
+                select jsonb_build_object(
+                    'remaining_buyer_refund_amount',
+                        greatest(0, terms.buyer_total_amount - totals.requested_amount),
+                    'remaining_merchandise_refund_amount',
+                        greatest(0, terms.merchandise_subtotal_amount
+                            - totals.merchandise_refund_amount),
+                    'remaining_shipping_refund_amount',
+                        greatest(0, terms.shipping_amount - totals.shipping_refund_amount),
+                    'remaining_protection_fee_refund_amount',
+                        greatest(0, terms.buyer_protection_fee_amount
+                            - totals.protection_fee_refund_amount),
+                    'maximum_seller_transfer_amount', settlement.authorized_seller_amount,
+                    'remaining_platform_contribution_amount',
+                        greatest(
+                            0,
+                            terms.platform_retained_amount
+                                - terms.buyer_protection_fee_amount
+                                - totals.platform_contribution_amount
+                        )
+                )
+                from commerce.order_financial_terms terms
+                join commerce.order_settlements settlement
+                    on settlement.order_id = terms.order_id
+                cross join lateral (
+                    select
+                        coalesce(sum(request.requested_amount), 0) as requested_amount,
+                        coalesce(sum(request.merchandise_refund_amount), 0)
+                            as merchandise_refund_amount,
+                        coalesce(sum(request.shipping_refund_amount), 0)
+                            as shipping_refund_amount,
+                        coalesce(sum(request.protection_fee_refund_amount), 0)
+                            as protection_fee_refund_amount,
+                        coalesce(sum(
+                            request.requested_amount
+                                - request.protection_fee_refund_amount
+                                - request.seller_recovery_amount
+                        ), 0) as platform_contribution_amount
+                    from commerce.refund_requests request
+                    where request.order_id = terms.order_id
+                      and request.status not in ('rejected', 'cancelled', 'failed')
+                ) totals
+                where terms.order_id = claim.order_id
+            ),
+            'resolution_refund', (
+                select jsonb_build_object(
+                    'id', request.id,
+                    'status', request.status,
+                    'requested_amount', request.requested_amount,
+                    'merchandise_refund_amount', request.merchandise_refund_amount,
+                    'shipping_refund_amount', request.shipping_refund_amount,
+                    'protection_fee_refund_amount', request.protection_fee_refund_amount,
+                    'allocation_version', request.allocation_version,
+                    'seller_recovery_amount', request.seller_recovery_amount,
+                    'seller_reserve_offset_amount', request.seller_reserve_offset_amount,
+                    'platform_contribution_amount',
+                        request.requested_amount
+                            - request.protection_fee_refund_amount
+                            - request.seller_recovery_amount,
+                    'requires_finance_approval', request.requires_finance_approval,
+                    'dual_approval_required', request.dual_approval_required,
+                    'first_approved_by', request.first_approved_by,
+                    'first_approved_at', request.first_approved_at,
+                    'second_approved_by', request.second_approved_by,
+                    'second_approved_at', request.second_approved_at,
+                    'decision_reason', request.decision_reason,
+                    'version', request.version,
+                    'created_at', request.created_at,
+                    'updated_at', request.updated_at
+                )
+                from commerce.refund_requests request
+                where request.claim_id = claim.id
+                order by request.id desc
+                limit 1
+            ),
             'events', coalesce((
                 select jsonb_agg(jsonb_build_object(
                     'id', event.id,

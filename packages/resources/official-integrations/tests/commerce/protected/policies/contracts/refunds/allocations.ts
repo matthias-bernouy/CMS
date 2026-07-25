@@ -34,6 +34,15 @@ export function registerRefundAllocationsTest(): void {
         expect(resolveClaim).toContain("p_merchandise_refund_amount");
         expect(resolveClaim).toContain("p_shipping_refund_amount");
         expect(resolveClaim).toContain("claim allocation does not match the seller transfer decision");
+        expect(resolveClaim).toContain("v_claim.resolution_outcome is not distinct from p_outcome");
+        expect(resolveClaim).toContain("v_claim.version is distinct from p_expected_version");
+        expect(resolveClaim).toContain("where id = v_claim.id and version = p_expected_version");
+        expect(resolveClaim).toContain("version = version + 1");
+        expect(resolveClaim).toContain("claim refund did not transition the settlement");
+        expect(schema).toContain("where id = v_refund.claim_id and status = 'resolution_pending'");
+        expect(schema).toContain(
+            "status = case resolution_outcome when 'buyer' then 'resolved_buyer' else 'resolved_split' end",
+        );
         expect(schema).toContain("refund_requests_one_nonterminal_order_idx");
         expect(schema).toContain("v_cumulative_amount >= v_protection.finance_review_threshold_amount");
         expect(schema).toContain("v_cumulative_amount >= v_protection.dual_approval_threshold_amount");
