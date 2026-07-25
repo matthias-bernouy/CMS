@@ -11,7 +11,7 @@ export function registerRefundAllocationsTest(): void {
         const reviewCancellationAs = functionSql(schema, "review_order_cancellation_as", "review_order_cancellation");
         const reviewCancellation = functionSql(schema, "review_order_cancellation", "process_due_order_deadlines");
         const deadlineWorker = functionSql(schema, "process_due_order_deadlines", "authorize_due_order_releases");
-        const resolveClaim = functionSql(schema, "resolve_marketplace_claim", "request_order_refund");
+        const resolveClaim = functionSql(schema, "resolve_allocated_marketplace_claim", "resolve_marketplace_claim");
         const recoverShipment = functionSql(schema, "recover_order_shipment_creation", "fail_order_shipment_creation");
 
         expect(requestRefund).toContain("request_allocated_order_refund");
@@ -30,6 +30,10 @@ export function registerRefundAllocationsTest(): void {
         expect(schema).toContain("merchandise_refund_amount + shipping_refund_amount");
         expect(schema).toContain("'merchandiseRefundAmount', p_merchandise_refund_amount");
         expect(schema).toContain("'shippingRefundAmount', p_shipping_refund_amount");
+        expect(resolveClaim).toContain("commerce.create_allocated_refund_request");
+        expect(resolveClaim).toContain("p_merchandise_refund_amount");
+        expect(resolveClaim).toContain("p_shipping_refund_amount");
+        expect(resolveClaim).toContain("claim allocation does not match the seller transfer decision");
         expect(schema).toContain("refund_requests_one_nonterminal_order_idx");
         expect(schema).toContain("v_cumulative_amount >= v_protection.finance_review_threshold_amount");
         expect(schema).toContain("v_cumulative_amount >= v_protection.dual_approval_threshold_amount");

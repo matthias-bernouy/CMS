@@ -15,6 +15,7 @@
         { "file": "refunds/create-allocated-refund-request.sql" },
         { "file": "refunds/refund-authorization-payload.sql" },
         { "file": "returns/record-claim-return-delivery.sql" },
+        { "file": "lifecycle/resolve-allocated-marketplace-claim.sql" },
         { "file": "lifecycle/resolve-marketplace-claim.sql" },
         { "file": "refunds/request-order-refund.sql" },
         { "file": "refunds/create-cancellation-refund-request.sql" },

@@ -54,7 +54,8 @@
                 "body": {
                     "claimId": "$resource.id",
                     "outcome": "$field.outcome",
-                    "buyerRefundAmount": "$field.buyerRefundAmount",
+                    "merchandiseRefundAmount": "$field.merchandiseRefundAmount",
+                    "shippingRefundAmount": "$field.shippingRefundAmount",
                     "sellerTransferAmount": "$field.sellerTransferAmount",
                     "protectionFeeRefundAmount": "$field.protectionFeeRefundAmount",
                     "decisionReason": "$field.decisionReason",

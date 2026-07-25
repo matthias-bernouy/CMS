@@ -4,7 +4,7 @@ import { functionSql, loadCommerceSchemaSql } from "../paths";
 export function registerClaimEntitlementTest(): void {
     test("resolves later claims from the current locked seller entitlement", async () => {
         const schema = await loadCommerceSchemaSql();
-        const resolver = functionSql(schema, "resolve_marketplace_claim", "request_order_refund");
+        const resolver = functionSql(schema, "resolve_allocated_marketplace_claim", "resolve_marketplace_claim");
 
         expect(resolver).toContain("p_seller_transfer_amount > v_settlement.authorized_seller_amount");
         expect(resolver).toContain("v_settlement.authorized_seller_amount - p_seller_transfer_amount");

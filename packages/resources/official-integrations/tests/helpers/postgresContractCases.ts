@@ -43,6 +43,13 @@ export function postgresContractConfiguration(packageRoot: string): {
                 "commerce/protected/payment",
                 ["run_buyer_legal_install_contract=true", "allow_buyer_legal_schema_reset=true"],
             ),
+            contract(
+                "commerce-protected-settlement",
+                "Commerce protected settlement",
+                "commerce",
+                "commerce/protected/settlement",
+                ["run_protected_settlement_contract=true", "allow_protected_settlement_schema_reset=true"],
+            ),
             contract("commerce-media", "Commerce media lifecycle", "commerce", "commerce/selling/media", [
                 "allow_commerce_media_schema_reset=true",
             ]),

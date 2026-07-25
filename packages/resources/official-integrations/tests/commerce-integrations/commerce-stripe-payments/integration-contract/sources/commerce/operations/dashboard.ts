@@ -29,7 +29,8 @@ export function commerceDashboardEndpoints(): Source["endpoints"] {
         command("resolveOrderClaim", {
             claimId: { type: "number" },
             outcome: { type: "string" },
-            buyerRefundAmount: { type: "number" },
+            merchandiseRefundAmount: { type: "number" },
+            shippingRefundAmount: { type: "number" },
             sellerTransferAmount: { type: "number" },
             protectionFeeRefundAmount: { type: "number" },
             decisionReason: { type: "string" },

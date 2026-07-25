@@ -80,7 +80,8 @@ describe("commerce protected C2C claims and refunds", () => {
             body: {
                 claimId: 7,
                 outcome: "split",
-                buyerRefundAmount: 4_000,
+                merchandiseRefundAmount: 3_750,
+                shippingRefundAmount: 0,
                 sellerTransferAmount: 5_500,
                 protectionFeeRefundAmount: 250,
                 decisionReason: "partial mismatch",
@@ -89,10 +90,11 @@ describe("commerce protected C2C claims and refunds", () => {
         });
 
         expect(response.status).toBe(200);
-        expect(expectSingleRpc("resolve_marketplace_claim").body).toEqual({
+        expect(expectSingleRpc("resolve_allocated_marketplace_claim").body).toEqual({
             p_claim_id: 7,
             p_outcome: "split",
-            p_buyer_refund_amount: 4_000,
+            p_merchandise_refund_amount: 3_750,
+            p_shipping_refund_amount: 0,
             p_seller_transfer_amount: 5_500,
             p_protection_fee_refund_amount: 250,
             p_decision_reason: "partial mismatch",

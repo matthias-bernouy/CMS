@@ -149,10 +149,11 @@ export async function recordClaimReturnDelivery(request: Request): Promise<Respo
 
 export async function resolveOrderClaim(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
-    const result = await rpc("resolve_marketplace_claim", {
+    const result = await rpc("resolve_allocated_marketplace_claim", {
         p_claim_id: integer(body.claimId, "claimId", true),
         p_outcome: requiredText(body.outcome, "outcome"),
-        p_buyer_refund_amount: integer(body.buyerRefundAmount, "buyerRefundAmount", true),
+        p_merchandise_refund_amount: integer(body.merchandiseRefundAmount, "merchandiseRefundAmount", true),
+        p_shipping_refund_amount: integer(body.shippingRefundAmount, "shippingRefundAmount", true),
         p_seller_transfer_amount: integer(body.sellerTransferAmount, "sellerTransferAmount", true),
         p_protection_fee_refund_amount: integer(body.protectionFeeRefundAmount, "protectionFeeRefundAmount", true),
         p_decision_reason: requiredText(body.decisionReason, "decisionReason"),

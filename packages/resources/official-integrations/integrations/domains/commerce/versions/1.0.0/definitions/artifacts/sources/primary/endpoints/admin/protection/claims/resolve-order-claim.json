@@ -40,11 +40,16 @@
                 "outcome": {
                     "type": "string"
                 },
-                "buyerRefundAmount": {
-                    "type": "number"
-                },
                 "sellerTransferAmount": {
                     "type": "number"
+                },
+                "merchandiseRefundAmount": {
+                    "type": "number",
+                    "description": "Minor-unit amount allocated to refunded merchandise."
+                },
+                "shippingRefundAmount": {
+                    "type": "number",
+                    "description": "Minor-unit amount allocated to refunded shipping."
                 },
                 "protectionFeeRefundAmount": {
                     "type": "number"
@@ -59,8 +64,9 @@
             "required": [
                 "claimId",
                 "outcome",
-                "buyerRefundAmount",
                 "sellerTransferAmount",
+                "merchandiseRefundAmount",
+                "shippingRefundAmount",
                 "protectionFeeRefundAmount",
                 "decisionReason",
                 "expectedVersion"

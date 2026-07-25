@@ -892,24 +892,25 @@ begin
     select * into v_terms from commerce.order_financial_terms
     where order_id = v_claim.order_id;
     begin
-        perform commerce.resolve_marketplace_claim(
-            v_claim.id, 'split', v_terms.buyer_total_amount, 1,
-            v_terms.buyer_protection_fee_amount, 'Invalid preserved seller cent',
+        perform commerce.resolve_allocated_marketplace_claim(
+            v_claim.id, 'split', v_terms.merchandise_subtotal_amount,
+            v_terms.shipping_amount, 1, v_terms.buyer_protection_fee_amount,
+            'Invalid preserved seller cent',
             'admin', 'admin-full-claim-smoke', v_claim.version
         );
-        raise exception 'smoke: platform contribution cap preserved seller money during a full refund';
+        raise exception 'smoke: mismatched seller transfer accepted a full allocated refund';
     exception when others then
-        if sqlerrm = 'smoke: platform contribution cap preserved seller money during a full refund'
-            or sqlerrm <> 'validation: claim refund exceeds immutable platform contribution' then
+        if sqlerrm = 'smoke: mismatched seller transfer accepted a full allocated refund'
+            or sqlerrm <> 'validation: claim allocation does not match the seller transfer decision' then
             raise;
         end if;
     end;
 end;
 $$;
 
-select commerce.resolve_marketplace_claim(
-    :full_claim_id, 'buyer', :full_claim_buyer_total, 0,
-    :full_claim_protection_fee, 'Empty package evidence accepted',
+select commerce.resolve_allocated_marketplace_claim(
+    :full_claim_id, 'buyer', 13500, 450, 0, :full_claim_protection_fee,
+    'Empty package evidence accepted',
     'admin', 'admin-full-claim-smoke', :full_claim_version
 );
 
@@ -930,7 +931,10 @@ begin
     if v_refund.status <> 'requested'
         or v_refund.requires_finance_approval is not true
         or v_refund.requested_amount <> 14695
+        or v_refund.merchandise_refund_amount <> 13500
+        or v_refund.shipping_refund_amount <> 450
         or v_refund.protection_fee_refund_amount <> 745
+        or v_refund.allocation_version <> 1
         or v_refund.seller_recovery_amount <> 13230
         or v_platform_contribution <> 720
         or v_platform_contribution
