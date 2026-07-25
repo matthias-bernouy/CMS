@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { RouteHandler, Runner } from "@bernouy/http-runner";
-import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import { IntegrationRepositoryUnavailableError, type IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 import { RepositoryCms } from "cms-repository/RepositoryCms";
 
 describe("@bernouy/cms-repository integration routes", () => {
@@ -11,7 +11,8 @@ describe("@bernouy/cms-repository integration routes", () => {
             integrationCatalog: testCatalog(),
         });
 
-        const list = await json(await runner.handle("/api/integrations"));
+        const listResponse = await runner.handle("/api/integrations");
+        const list = await json(listResponse);
         expect(list).toEqual([
             {
                 kind: "demo",
@@ -25,6 +26,9 @@ describe("@bernouy/cms-repository integration routes", () => {
         const definition = await json(await runner.handle("/api/integrations/definition?kind=demo"));
         expect(definition.kind).toBe("demo");
         expect(definition.version).toBe("1.0.0");
+        expect(listResponse.headers.get("access-control-allow-origin")).toBe("*");
+        expect(listResponse.headers.get("cache-control")).toBe("public, max-age=60");
+        expect(listResponse.headers.get("etag")).toMatch(/^"[a-f0-9]{64}"$/);
     });
 
     test("returns 404 for unknown definitions", async () => {
@@ -37,6 +41,8 @@ describe("@bernouy/cms-repository integration routes", () => {
         const response = await runner.handle("/api/integrations/definition?kind=missing");
 
         expect(response.status).toBe(404);
+        expect(response.headers.get("access-control-allow-origin")).toBe("*");
+        expect(response.headers.get("cache-control")).toBe("no-store");
         expect(await json(response)).toEqual({ error: "integration definition not found" });
     });
 
@@ -51,7 +57,70 @@ describe("@bernouy/cms-repository integration routes", () => {
 
         expect(response.status).toBe(200);
         expect(response.headers.get("content-type")).toBe("image/svg+xml; charset=utf-8");
+        expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+        expect(response.headers.get("access-control-allow-origin")).toBe("*");
         expect(await response.text()).toBe("<svg></svg>");
+    });
+
+    test("serves exact definitions with immutable HEAD and ETag revalidation", async () => {
+        const runner = new TestRunner();
+        new RepositoryCms({ runner, integrationCatalog: testCatalog() });
+        const path = "/api/integrations/definition?kind=demo&version=1.0.0";
+
+        const get = await runner.handle(path);
+        const etag = get.headers.get("etag");
+        const head = await runner.handle(path, { method: "HEAD" });
+        const notModified = await runner.handle(path, {
+            headers: { "if-none-match": `W/${etag}` },
+        });
+
+        expect(get.status).toBe(200);
+        expect(get.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+        expect(head.status).toBe(200);
+        expect(head.headers.get("etag")).toBe(etag);
+        expect(await head.text()).toBe("");
+        expect(notModified.status).toBe(304);
+        expect(notModified.headers.get("etag")).toBe(etag);
+        expect(await notModified.text()).toBe("");
+    });
+
+    test("publishes a cacheable CORS preflight contract", async () => {
+        const runner = new TestRunner();
+        new RepositoryCms({ runner, integrationCatalog: testCatalog() });
+
+        const response = await runner.handle("/api/integrations/definition", { method: "OPTIONS" });
+
+        expect(response.status).toBe(204);
+        expect(response.headers.get("access-control-allow-origin")).toBe("*");
+        expect(response.headers.get("access-control-allow-methods")).toBe("GET, HEAD, OPTIONS");
+        expect(response.headers.get("access-control-allow-headers")).toBe("If-None-Match");
+    });
+
+    test("keeps structured input and repository errors readable across origins", async () => {
+        const runner = new TestRunner();
+        const catalog = testCatalog();
+        new RepositoryCms({
+            runner,
+            integrationCatalog: {
+                ...catalog,
+                list: async () => {
+                    throw new IntegrationRepositoryUnavailableError();
+                },
+            },
+        });
+
+        const invalid = await runner.handle("/api/integrations/definition");
+        const unavailable = await runner.handle("/api/integrations");
+
+        expect(invalid.status).toBe(400);
+        expect(invalid.headers.get("access-control-allow-origin")).toBe("*");
+        expect(await invalid.json()).toEqual({ error: "Missing param kind" });
+        expect(unavailable.status).toBe(503);
+        expect(unavailable.headers.get("access-control-allow-origin")).toBe("*");
+        expect(await unavailable.json()).toEqual({
+            error: "Integration repository is unavailable",
+            code: "integration_repository_unavailable",
+        });
     });
 });
 
@@ -60,16 +129,21 @@ class TestRunner implements Partial<Runner> {
     private readonly routes = new Map<string, RouteHandler>();
 
     get(path: string, handler: RouteHandler): void {
-        this.routes.set(`GET ${path}`, handler);
+        this.addEndpoint("GET", path, handler);
     }
 
-    async handle(path: string): Promise<Response> {
+    addEndpoint(method: string, path: string, handler: RouteHandler): void {
+        this.routes.set(`${method} ${path}`, handler);
+    }
+
+    async handle(path: string, init: RequestInit = {}): Promise<Response> {
         const pathname = new URL(path, "http://localhost").pathname;
-        const handler = this.routes.get(`GET ${pathname}`);
+        const method = init.method ?? "GET";
+        const handler = this.routes.get(`${method} ${pathname}`);
         if (!handler) {
-            throw new Error(`missing handler for ${pathname}`);
+            throw new Error(`missing handler for ${method} ${pathname}`);
         }
-        return handler(new Request(`http://localhost${path}`)) as Promise<Response>;
+        return handler(new Request(`http://localhost${path}`, init)) as Promise<Response>;
     }
 }
 

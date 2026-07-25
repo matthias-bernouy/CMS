@@ -1,5 +1,13 @@
 import type { Runner } from "@bernouy/http-runner";
 import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import {
+    publicBytesResponse,
+    publicErrorResponse,
+    publicHeadResponse,
+    publicJsonResponse,
+    publicNotFound,
+    publicOptionsResponse,
+} from "cms-repository/publicReadResponse";
 
 export type RepositoryCmsConfig = {
     runner: Runner;
@@ -22,61 +30,60 @@ export class RepositoryCms {
     }
 
     private registerRoutes(): void {
-        this.runner.get("/api/integrations", async () => json(await this.integrationCatalog.list()));
+        this.registerPublicRead("/api/integrations", async (req) =>
+            publicJsonResponse(req, await this.integrationCatalog.list(), "catalog"),
+        );
 
-        this.runner.get("/api/integrations/index", async (req) => {
+        this.registerPublicRead("/api/integrations/index", async (req) => {
             const kind = requiredSearchParam(req, "kind");
             const index = await this.integrationCatalog.getIndex(kind);
-            return index ? json(index) : notFound("integration not found");
+            return index ? publicJsonResponse(req, index, "catalog") : publicNotFound("integration not found");
         });
 
-        this.runner.get("/api/integrations/versions", async (req) => {
+        this.registerPublicRead("/api/integrations/versions", async (req) => {
             const kind = requiredSearchParam(req, "kind");
             const index = await this.integrationCatalog.getIndex(kind);
             if (!index) {
-                return notFound("integration not found");
+                return publicNotFound("integration not found");
             }
-            return json(index.versions);
+            return publicJsonResponse(req, index.versions, "catalog");
         });
 
-        this.runner.get("/api/integrations/definition", async (req) => {
+        this.registerPublicRead("/api/integrations/definition", async (req) => {
             const url = new URL(req.url);
             const kind = requiredSearchParam(req, "kind");
-            const definition = await this.integrationCatalog.get(kind, optionalText(url.searchParams.get("version")));
-            return definition ? json(definition) : notFound("integration definition not found");
+            const version = optionalText(url.searchParams.get("version"));
+            const definition = await this.integrationCatalog.get(kind, version);
+            return definition
+                ? publicJsonResponse(req, definition, version ? "immutable" : "catalog")
+                : publicNotFound("integration definition not found");
         });
 
-        this.runner.get("/api/integrations/asset", async (req) => {
+        this.registerPublicRead("/api/integrations/asset", async (req) => {
             const url = new URL(req.url);
             const kind = requiredSearchParam(req, "kind");
             const path = requiredSearchParam(req, "path");
             const version = optionalText(url.searchParams.get("version"));
             const asset = await this.integrationCatalog.getAsset?.(kind, version, path);
             if (!asset) {
-                return notFound("integration asset not found");
+                return publicNotFound("integration asset not found");
             }
-            return new Response(arrayBuffer(asset.bytes), {
-                headers: {
-                    "cache-control": "public, max-age=3600",
-                    "content-type": asset.contentType,
-                },
-            });
+            return publicBytesResponse(req, asset.bytes, version ? "immutable" : "catalog", asset.contentType);
         });
     }
-}
 
-function json(body: unknown, status = 200): Response {
-    return Response.json(body, { status });
-}
-
-function notFound(message: string): Response {
-    return json({ error: message }, 404);
-}
-
-function arrayBuffer(bytes: Uint8Array): ArrayBuffer {
-    const buffer = new ArrayBuffer(bytes.byteLength);
-    new Uint8Array(buffer).set(bytes);
-    return buffer;
+    private registerPublicRead(path: string, handler: (request: Request) => Promise<Response>): void {
+        const publicHandler = async (request: Request) => {
+            try {
+                return await handler(request);
+            } catch (error) {
+                return publicErrorResponse(error);
+            }
+        };
+        this.runner.get(path, publicHandler);
+        this.runner.addEndpoint("HEAD", path, async (request) => publicHeadResponse(await publicHandler(request)));
+        this.runner.addEndpoint("OPTIONS", path, () => publicOptionsResponse());
+    }
 }
 
 function requiredSearchParam(req: Request, name: string): string {
