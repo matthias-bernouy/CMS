@@ -5,7 +5,12 @@ import {
 } from "cms-sources/interfaces/Source";
 import type { IdentityService } from "@bernouy/cms-identities";
 import { buildUpstreamUrl, type SourceComputedContext } from "cms-sources/core/upstream/buildUpstreamUrl";
-import { buildForwardHeaders, hasComputedHeaders, hasComputedParams } from "cms-sources/core/upstream/endpointHeaders";
+import {
+    allowsPublicCacheWithUpstreamCookie,
+    buildForwardHeaders,
+    hasComputedHeaders,
+    hasComputedParams,
+} from "cms-sources/core/upstream/endpointHeaders";
 import type { ResponseProjectionOptions } from "cms-sources/core/response-projection/projectEndpointResponse";
 import { bindResponseIdentities } from "cms-sources/core/response-projection/bindResponseIdentities";
 import type { UndeclaredUpstreamStatus } from "cms-sources/core/upstream/upstreamFailure";
@@ -125,7 +130,7 @@ export async function executeEndpoint(
                 request,
                 upstream,
                 deps,
-                allowsPublicCacheWithUpstreamCookie(endpoint, new URL(built.url), deps),
+                allowsPublicCacheWithUpstreamCookie(endpoint, new URL(built.url), deps?.isTrustedConnectorTarget),
             ),
         );
         const bindingError = await timedExecution(deps, "cms_identity_binding", () =>
@@ -137,29 +142,6 @@ export async function executeEndpoint(
         return new Response(aborted ? "Source Timeout" : "Bad Source", { status: aborted ? 504 : 502 });
     } finally {
         clearTimeout(timer);
-    }
-}
-
-function allowsPublicCacheWithUpstreamCookie(
-    endpoint: SourceEndpoint,
-    target: URL,
-    deps: ExecutorDeps | undefined,
-): boolean {
-    if (
-        endpoint.method !== "GET" ||
-        endpoint.responseKind !== "file" ||
-        endpoint.access?.mode !== "public" ||
-        hasComputedParams(endpoint) ||
-        hasComputedHeaders(endpoint) ||
-        (endpoint.effects?.identityBindings?.length ?? 0) > 0 ||
-        !deps?.isTrustedConnectorTarget
-    ) {
-        return false;
-    }
-    try {
-        return deps.isTrustedConnectorTarget(endpoint, target);
-    } catch {
-        return false;
     }
 }
 
