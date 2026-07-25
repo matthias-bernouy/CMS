@@ -5,7 +5,7 @@ import { join } from "node:path";
 import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import type { FsIntegrationPackageCache } from "@bernouy/cms-integration-packages/fs";
 import type { IntegrationDefinitionRepository, IntegrationPackageResolver } from "@bernouy/cms-integrations";
-import { createProductionIntegrationServices } from "../../src/runtime/integrations";
+import { createProductionIntegrationServices } from "../../../src/runtime/integrations";
 
 const cleanup: string[] = [];
 
