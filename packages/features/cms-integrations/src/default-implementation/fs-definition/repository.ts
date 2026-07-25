@@ -1,7 +1,6 @@
 import { lstat } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
-import { parseIntegrationDefinition } from "../../core/parsing/definition/definition";
-import { assertExactIntegrationVersion, isExactIntegrationVersion } from "../../core/definitions/versioning";
+import { assertExactIntegrationVersion } from "../../core/definitions/versioning";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import type {
     IntegrationAsset,
@@ -11,11 +10,9 @@ import type {
     IntegrationDefinitionVersion,
 } from "../../interfaces/IntegrationDefinitionRepository";
 import { readIntegrationAsset } from "./assets";
-import { enrichDefinitionError } from "./definition-bundle/provenance";
-import { resolveIntegrationDefinitionFileDetails } from "./definition-bundle/resolver";
+import { loadIntegrationDefinitionFromVersionRoot } from "./definitionLoader";
 import { IntegrationPackageLocator } from "./packageLocator";
 import { assertPathWithin, isNodeError, resolveExistingPathWithin, resolveVersion } from "./repositorySupport";
-import { hydrateVersionAssets } from "./versionAssets";
 
 export type FsIntegrationDefinitionRepositoryConfig = {
     root: string;
@@ -77,25 +74,12 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
         const versionRoot = await resolveExistingPathWithin(locatedPackage.root, "version", entry.path);
         const definitionPath = await resolveExistingPathWithin(locatedPackage.root, "definition", entry.definition);
         assertPathWithin(versionRoot, definitionPath, "version", entry.definition);
-        const resolved = await resolveIntegrationDefinitionFileDetails(definitionPath, versionRoot);
-        let definition: IntegrationDefinition;
-        try {
-            assertRawDefinitionVersion(resolved.value, entry.version);
-            definition = parseIntegrationDefinition(resolved.value);
-            if (definition.kind !== index.kind) {
-                throw new Error(
-                    `definition.kind: definition kind "${definition.kind}" does not match index kind "${index.kind}"`,
-                );
-            }
-            if (definition.version !== entry.version) {
-                throw new Error(
-                    `definition.version: definition version "${definition.version ?? ""}" does not match index version "${entry.version}"`,
-                );
-            }
-        } catch (error) {
-            throw enrichDefinitionError(error, resolved.provenance, resolved.versionRoot);
-        }
-        return await hydrateVersionAssets(definition, versionRoot);
+        return await loadIntegrationDefinitionFromVersionRoot({
+            definitionPath,
+            expectedKind: index.kind,
+            expectedVersion: entry.version,
+            versionRoot,
+        });
     }
 
     async getAsset(kind: string, version: string | undefined, path: string): Promise<IntegrationAsset | null> {
@@ -154,21 +138,5 @@ async function releaseNotesLocation(
             return { legacy: true };
         }
         throw error;
-    }
-}
-
-function assertRawDefinitionVersion(value: unknown, expectedVersion: string): void {
-    const version =
-        value &&
-        typeof value === "object" &&
-        !Array.isArray(value) &&
-        "version" in value &&
-        typeof value.version === "string"
-            ? value.version
-            : "";
-    if (!isExactIntegrationVersion(version) || version !== expectedVersion) {
-        throw new Error(
-            `definition.version: definition version "${version}" does not match index version "${expectedVersion}"`,
-        );
     }
 }

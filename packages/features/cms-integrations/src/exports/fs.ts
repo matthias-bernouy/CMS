@@ -7,4 +7,8 @@ export {
     type FsIntegrationDefinitionRepositoryConfig,
     type FsIntegrationVersionLocation,
 } from "../default-implementation/fs-definition/repository";
+export {
+    loadIntegrationDefinitionFromVersionRoot,
+    type LoadIntegrationDefinitionFromVersionRootOptions,
+} from "../default-implementation/fs-definition/definitionLoader";
 export { resolveIntegrationDefinitionFile } from "../default-implementation/fs-definition/definition-bundle/resolver";
