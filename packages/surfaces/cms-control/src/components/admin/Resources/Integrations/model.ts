@@ -7,6 +7,7 @@ import type {
 export type IntegrationInstallationRow = {
     id: string;
     label: string;
+    packageDigest?: string;
     status: IntegrationInstallationStatus;
     runCount: number;
     artifactCount: number;

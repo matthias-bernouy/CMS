@@ -4,7 +4,11 @@ import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import type { IntegrationDefinition, IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import type {
+    IntegrationDefinition,
+    IntegrationDefinitionRepository,
+    IntegrationInstallationRepository,
+} from "@bernouy/cms-integrations";
 export {
     TEST_SECRET_SOURCE_DEFINITION,
     manualSourceDefinition,
@@ -62,6 +66,22 @@ export function integrationDefinitionRepository(definitions: IntegrationDefiniti
                 (definition) => definition.kind === kind && (!version || definition.version === version),
             ) ?? null,
     };
+}
+
+export async function createInstallation(
+    repository: IntegrationInstallationRepository,
+    id: string,
+    packageDigest?: string,
+): Promise<void> {
+    await repository.create({
+        id,
+        label: id,
+        definitionVersion: "1.0.0",
+        ...(packageDigest ? { packageDigest } : {}),
+        answersSnapshot: {},
+        secretRefs: {},
+        secretInputs: [],
+    });
 }
 
 export function postImport(body: Record<string, unknown>) {

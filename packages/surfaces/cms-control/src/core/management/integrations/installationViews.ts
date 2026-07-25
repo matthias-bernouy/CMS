@@ -13,6 +13,7 @@ export function buildIntegrationInstallationView(
         id: installation.id,
         label: installation.label,
         definitionVersion: installation.definitionVersion,
+        ...(installation.packageDigest ? { packageDigest: installation.packageDigest } : {}),
         status: installation.status,
         statusLabel: statusLabel(installation.status),
         createdAt: installation.createdAt,
