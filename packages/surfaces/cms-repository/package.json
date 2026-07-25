@@ -16,6 +16,7 @@
     ],
     "dependencies": {
         "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*"
     },

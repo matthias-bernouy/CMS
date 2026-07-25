@@ -22,3 +22,7 @@ later.
 
 Every route also exposes `HEAD` and CORS preflight behavior. Package and release
 note routes require an exact version and use immutable public caching.
+Package `GET` requests require an injected client-address policy and limiter
+unless protection is explicitly disabled. The guard executes before reading the
+package source; `HEAD`, release notes, and catalog metadata do not consume the
+download budget.

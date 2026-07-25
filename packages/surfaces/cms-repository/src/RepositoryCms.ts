@@ -3,6 +3,10 @@ import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages
 import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 import { integrationPackageRouteHandlers } from "cms-repository/integrationPackageRoutes";
 import {
+    assertPackageDownloadProtection,
+    type PublicPackageDownloadProtection,
+} from "cms-repository/packageDownloadGuard";
+import {
     publicBytesResponse,
     publicErrorResponse,
     publicHeadResponse,
@@ -11,21 +15,34 @@ import {
     publicOptionsResponse,
 } from "cms-repository/publicReadResponse";
 
-export type RepositoryCmsConfig = {
+type RepositoryCmsBaseConfig = {
     runner: Runner;
     integrationCatalog: IntegrationDefinitionRepository;
-    integrationPackages?: IntegrationPackageSource;
 };
+
+export type RepositoryCmsConfig = RepositoryCmsBaseConfig &
+    (
+        | { integrationPackages?: undefined; packageDownloadProtection?: undefined }
+        | {
+              integrationPackages: IntegrationPackageSource;
+              packageDownloadProtection: PublicPackageDownloadProtection;
+          }
+    );
 
 export class RepositoryCms {
     private readonly runner: Runner;
     private readonly integrationCatalog: IntegrationDefinitionRepository;
     private readonly integrationPackages?: IntegrationPackageSource;
+    private readonly packageDownloadProtection?: PublicPackageDownloadProtection;
 
     constructor(config: RepositoryCmsConfig) {
         this.runner = config.runner;
         this.integrationCatalog = config.integrationCatalog;
         this.integrationPackages = config.integrationPackages;
+        this.packageDownloadProtection = config.packageDownloadProtection;
+        if (this.packageDownloadProtection) {
+            assertPackageDownloadProtection(this.packageDownloadProtection);
+        }
         this.registerRoutes();
     }
 
@@ -76,8 +93,8 @@ export class RepositoryCms {
             return publicBytesResponse(req, asset.bytes, version ? "immutable" : "catalog", asset.contentType);
         });
 
-        if (this.integrationPackages) {
-            const handlers = integrationPackageRouteHandlers(this.integrationPackages);
+        if (this.integrationPackages && this.packageDownloadProtection) {
+            const handlers = integrationPackageRouteHandlers(this.integrationPackages, this.packageDownloadProtection);
             this.registerPublicRead("/api/integrations/package", handlers.package);
             this.registerPublicRead("/api/integrations/release-notes", handlers.releaseNotes);
         }

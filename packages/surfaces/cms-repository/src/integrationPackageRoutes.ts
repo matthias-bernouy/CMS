@@ -7,16 +7,27 @@ import {
     type ResolvedIntegrationPackage,
 } from "@bernouy/cms-integration-packages";
 import { publicBytesResponse, publicNotFound } from "cms-repository/publicReadResponse";
+import { guardPackageDownload, type PublicPackageDownloadProtection } from "cms-repository/packageDownloadGuard";
 
 export type IntegrationPackageRouteHandlers = {
     package(request: Request): Promise<Response>;
     releaseNotes(request: Request): Promise<Response>;
 };
 
-export function integrationPackageRouteHandlers(source: IntegrationPackageSource): IntegrationPackageRouteHandlers {
+export function integrationPackageRouteHandlers(
+    source: IntegrationPackageSource,
+    protection: PublicPackageDownloadProtection,
+): IntegrationPackageRouteHandlers {
     return {
         package: async (request) => {
-            const resolved = await resolveExactPackage(request, source);
+            const identity = exactIdentity(request);
+            if (request.method === "GET") {
+                const limited = await guardPackageDownload(request, protection);
+                if (limited) {
+                    return limited;
+                }
+            }
+            const resolved = await resolveExactPackage(identity, source);
             if (resolved instanceof Response) {
                 return resolved;
             }
@@ -32,7 +43,7 @@ export function integrationPackageRouteHandlers(source: IntegrationPackageSource
             );
         },
         releaseNotes: async (request) => {
-            const resolved = await resolveExactPackage(request, source);
+            const resolved = await resolveExactPackage(exactIdentity(request), source);
             if (resolved instanceof Response) {
                 return resolved;
             }
@@ -55,12 +66,10 @@ export function integrationPackageRouteHandlers(source: IntegrationPackageSource
 }
 
 async function resolveExactPackage(
-    request: Request,
+    identity: ExactPackageIdentity,
     source: IntegrationPackageSource,
 ): Promise<ResolvedIntegrationPackage | Response> {
-    const url = new URL(request.url);
-    const kind = requiredIdentity(url, "kind", assertIntegrationPackageKind);
-    const version = requiredIdentity(url, "version", assertIntegrationPackageVersion);
+    const { kind, version } = identity;
     const resolved = await source.getPackage(kind, version);
     if (!resolved) {
         return publicNotFound("integration package not found");
@@ -72,6 +81,16 @@ async function resolveExactPackage(
         throw sourceContractError("Integration package digest is invalid");
     }
     return resolved;
+}
+
+type ExactPackageIdentity = { kind: string; version: string };
+
+function exactIdentity(request: Request): ExactPackageIdentity {
+    const url = new URL(request.url);
+    return {
+        kind: requiredIdentity(url, "kind", assertIntegrationPackageKind),
+        version: requiredIdentity(url, "version", assertIntegrationPackageVersion),
+    };
 }
 
 function requiredIdentity(url: URL, name: "kind" | "version", validate: (value: unknown) => string): string {

@@ -86,7 +86,12 @@ describe("@bernouy/cms-repository exact package routes", () => {
 
 function mounted(integrationPackages: IntegrationPackageSource): TestRunner {
     const runner = new TestRunner();
-    new RepositoryCms({ runner, integrationCatalog: emptyCatalog(), integrationPackages });
+    new RepositoryCms({
+        runner,
+        integrationCatalog: emptyCatalog(),
+        integrationPackages,
+        packageDownloadProtection: { clientAddressPolicy: { mode: "disabled" } },
+    });
     return runner;
 }
 

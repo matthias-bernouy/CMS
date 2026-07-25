@@ -44,6 +44,22 @@ export function publicNotFound(message: string): Response {
     });
 }
 
+export function publicRateLimited(retryAfterSeconds: number): Response {
+    const retryAfter = Number.isFinite(retryAfterSeconds) ? Math.max(1, Math.ceil(retryAfterSeconds)) : 1;
+    return new Response(
+        JSON.stringify({ error: "Integration package download rate limit exceeded", code: "rate_limited" }),
+        {
+            status: 429,
+            headers: {
+                ...CORS_HEADERS,
+                "cache-control": "no-store",
+                "content-type": "application/json; charset=utf-8",
+                "retry-after": String(retryAfter),
+            },
+        },
+    );
+}
+
 export function publicErrorResponse(error: unknown): Response {
     const status = (error as { status?: unknown })?.status;
     if (typeof status !== "number" || status < 400 || status > 599) {

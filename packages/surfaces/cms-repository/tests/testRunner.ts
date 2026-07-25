@@ -1,4 +1,4 @@
-import type { RouteHandler, Runner } from "@bernouy/http-runner";
+import { setRequestIP, type RouteHandler, type Runner } from "@bernouy/http-runner";
 
 export class TestRunner implements Partial<Runner> {
     readonly basePath = "/";
@@ -12,14 +12,18 @@ export class TestRunner implements Partial<Runner> {
         this.routes.set(`${method} ${path}`, handler);
     }
 
-    async handle(path: string, init: RequestInit = {}): Promise<Response> {
+    async handle(path: string, init: RequestInit = {}, peer?: string): Promise<Response> {
         const pathname = new URL(path, "http://localhost").pathname;
         const method = init.method ?? "GET";
         const handler = this.routes.get(`${method} ${pathname}`);
         if (!handler) {
             throw new Error(`missing handler for ${method} ${pathname}`);
         }
-        return handler(new Request(`http://localhost${path}`, init)) as Promise<Response>;
+        const request = new Request(`http://localhost${path}`, init);
+        if (peer) {
+            setRequestIP(request, peer);
+        }
+        return handler(request) as Promise<Response>;
     }
 }
 
