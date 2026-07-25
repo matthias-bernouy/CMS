@@ -1,8 +1,10 @@
-import { isDeepStrictEqual } from "node:util";
 import type { DeclarativeConnectorFunctionHttpResponseContract } from "@bernouy/cms-integrations";
 import type { CompatibilityChangeSink } from "../changes";
+import { compareResponseShapeConstraints } from "./shapeConstraints";
 
 type DataShape = NonNullable<DeclarativeConnectorFunctionHttpResponseContract["body"]>;
+type ObjectShape = Extract<DataShape, { type: "object" }>;
+type ArrayShape = Extract<DataShape, { type: "array" }>;
 
 export function compareResponseShape(
     baseline: DataShape | undefined,
@@ -40,20 +42,18 @@ function compareShapeNode(baseline: DataShape, candidate: DataShape, path: strin
     } else if (!baseline.nullable && candidate.nullable) {
         add("breaking", "function", "response-nullability-weakened", path, "Response value may now be null");
     }
-    if (!isDeepStrictEqual(baseline.semantic, candidate.semantic)) {
-        add("breaking", "function", "response-semantic-changed", path, "Response field semantic changed");
-    }
-    if (baseline.type === "object") {
+    compareResponseShapeConstraints(baseline, candidate, path, add);
+    if (baseline.type === "object" && candidate.type === "object") {
         compareProperties(baseline, candidate, path, add);
     }
-    if (baseline.type === "array") {
+    if (baseline.type === "array" && candidate.type === "array") {
         compareArrayItems(baseline, candidate, path, add);
     }
 }
 
 function compareProperties(
-    baseline: DataShape,
-    candidate: DataShape,
+    baseline: ObjectShape,
+    candidate: ObjectShape,
     path: string,
     add: CompatibilityChangeSink,
 ): void {
@@ -108,8 +108,8 @@ function compareProperties(
 }
 
 function compareArrayItems(
-    baseline: DataShape,
-    candidate: DataShape,
+    baseline: ArrayShape,
+    candidate: ArrayShape,
     path: string,
     add: CompatibilityChangeSink,
 ): void {
