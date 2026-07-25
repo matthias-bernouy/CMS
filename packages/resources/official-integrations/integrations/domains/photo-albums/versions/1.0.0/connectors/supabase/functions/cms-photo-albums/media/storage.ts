@@ -20,7 +20,7 @@ export async function ensurePhotoBucket(): Promise<void> {
         }
         return;
     }
-    if (existing.status !== 404) {
+    if (!(await isMissingBucket(existing))) {
         throw await storageError(existing);
     }
     const created = await storage("/bucket", {
@@ -31,6 +31,26 @@ export async function ensurePhotoBucket(): Promise<void> {
     if (!created.ok && created.status !== 409) {
         throw await storageError(created);
     }
+}
+
+async function isMissingBucket(response: Response): Promise<boolean> {
+    if (response.status === 404) {
+        return true;
+    }
+    if (response.status !== 400) {
+        return false;
+    }
+    const body = await response
+        .clone()
+        .json()
+        .catch(() => null);
+    return (
+        isRecord(body) &&
+        (body.error === "Bucket not found" ||
+            body.message === "Bucket not found" ||
+            body.statusCode === "404" ||
+            body.statusCode === 404)
+    );
 }
 
 function bucketConfiguration(): Record<string, unknown> {

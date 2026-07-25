@@ -143,6 +143,36 @@ describe("photo albums Edge Function", () => {
         expect(calls.map(callKind)).toEqual(["authorize", "bucket", "storage", "attach"]);
     });
 
+    test("creates the private bucket when Supabase reports its missing bucket as HTTP 400", async () => {
+        const calls: string[] = [];
+        globalThis.fetch = async (input, init) => {
+            const upstream = new Request(input, init);
+            const path = new URL(upstream.url).pathname;
+            calls.push(`${upstream.method} ${path}`);
+            if (upstream.method === "GET") {
+                return Response.json(
+                    { statusCode: "404", error: "Bucket not found", message: "Bucket not found" },
+                    { status: 400 },
+                );
+            }
+            if (upstream.method === "POST") {
+                return Response.json({ name: "photo-albums-originals" });
+            }
+            throw new Error(`Unexpected upstream call: ${upstream.method} ${path}`);
+        };
+
+        const response = await handlePhotoAlbumsRequest(
+            new Request("https://edge.test/cms-photo-albums/setup", {
+                method: "POST",
+                headers: { authorization: "Bearer cms-photo-test" },
+            }),
+        );
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ ok: true });
+        expect(calls).toEqual(["GET /storage/v1/bucket/photo-albums-originals", "POST /storage/v1/bucket"]);
+    });
+
     test("does not read Storage for an unpublished photo", async () => {
         const calls: string[] = [];
         globalThis.fetch = async (input, init) => {
