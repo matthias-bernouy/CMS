@@ -122,6 +122,7 @@ describe("commerce account offers 1.0.0", () => {
         expect(listViewSource).toContain('card.toggleAttribute("stretch", stretch)');
         expect(listDefault).toContain('cms-repeat="data.items as offer"');
         expect(listDefault).toContain('<img slot="media"');
+        expect(listDefault).toContain('data-source-image-access="public"');
         expect(listDefault).toContain('grid-min="md" grid-max="lg"');
         expect(listDefault).toContain('grid-packing="fill"');
         expect(listDefault.match(/data-offers-grid/g)).toHaveLength(2);
@@ -232,7 +233,7 @@ describe("commerce account offers 1.0.0", () => {
         expect(viewSource).toContain('host.getAttribute("image-height") || "12rem"');
         expect(viewSource).toContain('card.toggleAttribute("stretch"');
         expect(compiled.viewJS).toContain("history.replaceState");
-        expect(viewSource).toContain('attributeFilter: ["data-media-id"]');
+        expect(viewSource).toContain('attributeFilter: ["data-media-id", "data-source-height", "data-source-width"]');
         expect(viewSource).toContain('positiveIdentifier(image?.getAttribute("data-media-id"))');
         expect(compiled.viewJS).toContain('data-offer-slug="{{ offer.slug }}"');
         expect(compiled.viewJS).toContain('data-publicly-visible="{{ offer.publiclyVisible }}"');

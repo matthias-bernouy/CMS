@@ -1,4 +1,5 @@
 import { Composition } from "@bernouy/components/base";
+import { syncResponsiveSourceImageElement } from "@bernouy/cms-source-images/browser";
 
 import template from "./template.html" with { type: "text" };
 
@@ -690,17 +691,29 @@ export class CommerceNegotiationList extends Composition {
         const image = fragment.querySelector("[data-offer-image]");
         const placeholder = fragment.querySelector("[data-offer-placeholder]");
         const mediaId = positiveInteger(proposal.offerMainImageMediaId ?? proposal.mainImageMediaId);
+        const sourceWidth = positiveInteger(proposal.offerMainImageWidth ?? proposal.mainImageWidth);
+        const sourceHeight = positiveInteger(proposal.offerMainImageHeight ?? proposal.mainImageHeight);
         setHidden(image, !mediaId);
         setHidden(placeholder, Boolean(mediaId));
         if (!mediaId) {
-            image?.removeAttribute("src");
+            image?.removeAttribute("data-src");
+            image?.removeAttribute("data-source-width");
+            image?.removeAttribute("data-source-height");
+            if (image) {
+                syncResponsiveSourceImageElement(image);
+            }
             return;
         }
         const prefix = (this.getAttribute("source-prefix") || "/.cms/sources").replace(/\/+$/, "");
         const sourceId = encodeURIComponent(this.getAttribute("commerce-source-id") || "commerce");
         const endpoint = encodeURIComponent(this.getAttribute("image-endpoint") || "publicOfferImage");
-        setAttribute(image, "src", `${prefix}/${sourceId}/${endpoint}?id=${encodeURIComponent(String(mediaId))}`);
+        setAttribute(image, "data-src", `${prefix}/${sourceId}/${endpoint}?id=${encodeURIComponent(String(mediaId))}`);
+        setOptionalPositiveInteger(image, "data-source-width", sourceWidth);
+        setOptionalPositiveInteger(image, "data-source-height", sourceHeight);
         setAttribute(image, "alt", proposal.offerTitle);
+        if (image) {
+            syncResponsiveSourceImageElement(image);
+        }
     }
 
     syncActionTheme(button, action) {
@@ -907,6 +920,17 @@ function setAttribute(element, name, value) {
     if (element && element.getAttribute(name) !== value) {
         element.setAttribute(name, value);
     }
+}
+
+function setOptionalPositiveInteger(element, name, value) {
+    if (!element) {
+        return;
+    }
+    if (value === null) {
+        element.removeAttribute(name);
+        return;
+    }
+    setAttribute(element, name, String(value));
 }
 
 function copyAttribute(source, target, sourceName, targetName = sourceName) {

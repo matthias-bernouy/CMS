@@ -68,7 +68,7 @@ export class CommerceAccountOffers extends Composition {
             subtree: true,
             characterData: true,
             attributes: true,
-            attributeFilter: ["data-media-id"],
+            attributeFilter: ["data-media-id", "data-source-height", "data-source-width"],
         });
         this.readUrlState();
         this.sync();

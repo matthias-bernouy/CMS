@@ -1,3 +1,4 @@
+import { syncResponsiveSourceImageElement } from "@bernouy/cms-source-images/browser";
 import {
     copyColorAttributes,
     copyOptionalAttribute,
@@ -58,9 +59,16 @@ export function syncRenderedOffers(host) {
             image.style.objectFit = host.getAttribute("image-fit") || "cover";
         }
         if (image && mediaId) {
-            setAttributeIfChanged(image, "src", `${host.sourceBase}/myOfferImage?id=${encodeURIComponent(mediaId)}`);
+            setAttributeIfChanged(
+                image,
+                "data-src",
+                `${host.sourceBase}/myOfferImage?id=${encodeURIComponent(mediaId)}`,
+            );
         } else {
-            image?.removeAttribute("src");
+            image?.removeAttribute("data-src");
+        }
+        if (image) {
+            syncResponsiveSourceImageElement(image);
         }
 
         const price = card.querySelector("[data-offer-price]");

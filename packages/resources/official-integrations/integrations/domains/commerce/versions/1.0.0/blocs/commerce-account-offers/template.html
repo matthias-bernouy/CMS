@@ -30,7 +30,7 @@
 
             <basic-grid min="md" max="xl" gap="md" data-offers-grid cms-condition="total > 0">
                 <basic-card appearance="outlined" density="compact" data-offer-card cms-repeat="items as offer">
-                    <img slot="media" data-offer-image data-media-id="{{ offer.mainImageMediaId }}" alt="{{ offer.title }}" loading="lazy" decoding="async">
+                    <img slot="media" data-offer-image data-media-id="{{ offer.mainImageMediaId }}" data-source-width="{{ offer.mainImageWidth }}" data-source-height="{{ offer.mainImageHeight }}" alt="{{ offer.title }}" loading="lazy" decoding="async">
                     <strong slot="title">{{ offer.title }}</strong>
                     <span slot="description" data-offer-status="{{ offer.displayStatus }}"></span>
                     <basic-stack gap="xs">

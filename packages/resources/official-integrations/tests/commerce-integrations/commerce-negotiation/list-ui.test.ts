@@ -3,6 +3,7 @@ import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { Composition } from "@bernouy/components/base";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
+import { syncResponsiveSourceImageElement } from "@bernouy/cms-source-images/browser";
 
 const tag = "test-commerce-negotiation-list-checkout";
 const agreementId = "018f72b8-1f90-7c31-a933-592c90c8178a";
@@ -111,6 +112,14 @@ describe("commerce negotiation list buyer checkout", () => {
             expect(list.querySelector("[data-offer-title-link]")?.getAttribute("href")).toBe(
                 "/annonce?slug=wilson-blade",
             );
+            const image = list.querySelector<HTMLImageElement>("[data-offer-image]");
+            expect(image?.getAttribute("data-src")).toBe("/.cms/sources/commerce/publicOfferImage?id=17");
+            expect(image?.getAttribute("width")).toBe("1200");
+            expect(image?.getAttribute("height")).toBe("800");
+            expect(image?.getAttribute("sizes")).toBe("auto, 100vw");
+            expect(image?.getAttribute("srcset")).toContain("cms-width=1024 1024w");
+            expect(image?.getAttribute("srcset")).not.toContain("1280w");
+            expect(image?.getAttribute("src")).toBe("/.cms/sources/commerce/publicOfferImage?id=17");
         } finally {
             list.remove();
             globalThis.fetch = realFetch;
@@ -136,6 +145,48 @@ describe("commerce negotiation list buyer checkout", () => {
             document.body.append(list);
             await settleLifecycle();
             expect(list.querySelector<HTMLElement>('[data-action-link="checkout"]')?.hasAttribute("hidden")).toBe(true);
+        } finally {
+            list.remove();
+            globalThis.fetch = realFetch;
+        }
+    });
+
+    test("falls back only for historical dimensions and keeps absent media network-dark", async () => {
+        await defineList();
+        const realFetch = globalThis.fetch;
+        globalThis.fetch = () =>
+            Promise.resolve(
+                Response.json({
+                    items: [
+                        {
+                            ...acceptedProposal,
+                            offerMainImageWidth: null,
+                            offerMainImageHeight: null,
+                        },
+                        {
+                            ...acceptedProposal,
+                            id: 8,
+                            publicId: "proposal-8",
+                            offerMainImageMediaId: null,
+                            offerMainImageWidth: null,
+                            offerMainImageHeight: null,
+                        },
+                    ],
+                    total: 2,
+                }),
+            );
+        const list = document.createElement(tag);
+        try {
+            document.body.append(list);
+            await settleLifecycle();
+
+            const images = list.querySelectorAll<HTMLImageElement>("[data-offer-image]");
+            expect(images[0].getAttribute("src")).toBe("/.cms/sources/commerce/publicOfferImage?id=17");
+            expect(images[0].hasAttribute("srcset")).toBe(false);
+            expect(images[0].hasAttribute("data-source-width")).toBe(false);
+            expect(images[1].hasAttribute("data-src")).toBe(false);
+            expect(images[1].hasAttribute("src")).toBe(false);
+            expect(images[1].hasAttribute("srcset")).toBe(false);
         } finally {
             list.remove();
             globalThis.fetch = realFetch;
@@ -241,6 +292,9 @@ const acceptedProposal = {
     offerId: 42,
     offerSlug: "wilson-blade",
     offerTitle: "Wilson Blade",
+    offerMainImageMediaId: 17,
+    offerMainImageWidth: 1200,
+    offerMainImageHeight: 800,
     sellerUserId: "seller",
     sellerDisplayName: "Seller",
     buyerUserId: "buyer",
@@ -289,7 +343,10 @@ async function defineList(): Promise<void> {
         artifact.bloc.source,
     );
     const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
-    (window as typeof window & { p9r?: unknown }).p9r = { Composition };
+    (window as typeof window & { p9r?: unknown }).p9r = {
+        Composition,
+        syncResponsiveSourceImageElement,
+    };
     try {
         new Function(compiled.viewJS)();
     } finally {
