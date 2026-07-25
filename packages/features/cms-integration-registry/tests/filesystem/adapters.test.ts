@@ -51,7 +51,7 @@ describe("snapshot-backed repository adapters", () => {
         );
     });
 
-    test("caches immutable package bytes by digest after the first exact-location read", async () => {
+    test("shares only concurrent package reads and never retains a permanent package cache", async () => {
         const root = registryRoot();
         const integrationRoot = writeIntegrationFixture(root, "demo");
         const snapshot = await buildFsIntegrationRegistryCatalogSnapshot({ root });
@@ -59,11 +59,14 @@ describe("snapshot-backed repository adapters", () => {
             snapshots: new IntegrationRegistryCatalogSnapshotReference(snapshot),
         });
 
-        const first = await source.getPackage("demo", "1.0.0");
+        const [first, concurrent] = await Promise.all([
+            source.getPackage("demo", "1.0.0"),
+            source.getPackage("demo", "1.0.0"),
+        ]);
+        expect(concurrent).toBe(first);
         rmSync(join(integrationRoot, "versions"), { recursive: true });
-        const second = await source.getPackage("demo", "1.0.0");
 
-        expect(second).toBe(first);
+        await expect(source.getPackage("demo", "1.0.0")).rejects.toThrow(/no such file or directory/i);
     });
 
     test("fails closed when exact package bytes diverge from snapshot metadata", async () => {
@@ -76,6 +79,28 @@ describe("snapshot-backed repository adapters", () => {
         writeFileSync(join(integrationRoot, "versions", "1.0.0", "README.md"), "mutated\n");
 
         await expect(source.getPackage("demo", "1.0.0")).rejects.toThrow(/digest changed/);
+    });
+
+    test("serves the exact deep-frozen definition captured by the snapshot", async () => {
+        const root = registryRoot();
+        const integrationRoot = writeIntegrationFixture(root, "demo");
+        const snapshot = await buildFsIntegrationRegistryCatalogSnapshot({ root });
+        const repository = new SnapshotIntegrationDefinitionRepository({
+            snapshots: new IntegrationRegistryCatalogSnapshotReference(snapshot),
+        });
+        const original = await repository.get("demo", "1.0.0");
+        writeFileSync(
+            join(integrationRoot, "versions", "1.0.0", "definition.json"),
+            JSON.stringify({ kind: "demo", label: "Mutated", version: "1.0.0", inputs: [] }),
+        );
+
+        const retained = await repository.get("demo", "1.0.0");
+
+        expect(retained).toBe(original);
+        expect(retained?.label).toBe("Integration demo");
+        expect(Object.isFrozen(retained)).toBe(true);
+        expect(Object.isFrozen(retained?.inputs)).toBe(true);
+        expect(() => Object.assign(retained!, { label: "Mutation attempt" })).toThrow(TypeError);
     });
 });
 

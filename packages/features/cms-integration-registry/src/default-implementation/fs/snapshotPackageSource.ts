@@ -4,7 +4,11 @@ import type {
     ResolvedIntegrationPackage,
 } from "@bernouy/cms-integration-packages";
 import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
-import type { IntegrationRegistryCatalogSnapshotProvider } from "../../interfaces/catalog";
+import type {
+    IntegrationRegistryCatalogSnapshotProvider,
+    IntegrationRegistryExactVersionLocation,
+} from "../../interfaces/catalog";
+import { readIntegrationRegistryVersionManifest } from "./manifest/reader";
 
 export type SnapshotIntegrationPackageSourceConfig = Readonly<{
     snapshots: IntegrationRegistryCatalogSnapshotProvider;
@@ -12,7 +16,7 @@ export type SnapshotIntegrationPackageSourceConfig = Readonly<{
 }>;
 
 export class SnapshotIntegrationPackageSource implements IntegrationPackageSource {
-    private readonly packages = new Map<string, Promise<ResolvedIntegrationPackage>>();
+    private readonly inFlight = new Map<string, Promise<ResolvedIntegrationPackage>>();
 
     constructor(private readonly config: SnapshotIntegrationPackageSourceConfig) {}
 
@@ -21,34 +25,60 @@ export class SnapshotIntegrationPackageSource implements IntegrationPackageSourc
         if (!location) {
             return null;
         }
-        const existing = this.packages.get(location.package.digest);
+        const existing = this.inFlight.get(location.package.digest);
         if (existing) {
             return await existing;
         }
-        const pending = readIntegrationPackageDirectory({
-            root: location.packageRoot,
-            definition: location.definition,
-            ...(location.releaseNotes ? { releaseNotes: location.releaseNotes } : {}),
-            ...(location.legacy ? { legacy: true } : {}),
-            kind,
-            version,
-            limits: this.config.limits,
-        }).then((result) => {
-            if (result.digest !== location.package.digest) {
-                throw new Error(
-                    `Integration package "${kind}@${version}" digest changed after catalog snapshot construction`,
-                );
-            }
-            return result;
-        });
-        this.packages.set(location.package.digest, pending);
+        const pending = this.readPackage(location);
+        this.inFlight.set(location.package.digest, pending);
         try {
             return await pending;
-        } catch (error) {
-            if (this.packages.get(location.package.digest) === pending) {
-                this.packages.delete(location.package.digest);
+        } finally {
+            if (this.inFlight.get(location.package.digest) === pending) {
+                this.inFlight.delete(location.package.digest);
             }
-            throw error;
         }
+    }
+
+    private async readPackage(location: IntegrationRegistryExactVersionLocation): Promise<ResolvedIntegrationPackage> {
+        const manifest = location.manifestPath
+            ? await readIntegrationRegistryVersionManifest({
+                  path: location.manifestPath,
+                  integrationRoot: location.integrationRoot,
+                  expectedKind: location.kind,
+                  expectedVersion: location.version,
+                  limits: this.config.limits,
+              })
+            : null;
+        if (location.manifestPath && !manifest) {
+            throw new Error(
+                `Integration package "${location.kind}@${location.version}" manifest disappeared after snapshot construction`,
+            );
+        }
+        if (manifest && manifest.digest !== location.package.digest) {
+            throw new Error(
+                `Integration package "${location.kind}@${location.version}" manifest digest changed after snapshot construction`,
+            );
+        }
+        const result = await readIntegrationPackageDirectory({
+            root: location.packageRoot,
+            definition: location.definition,
+            ...(manifest?.envelope.releaseNotes
+                ? { releaseNotes: manifest.envelope.releaseNotes }
+                : location.releaseNotes
+                  ? { releaseNotes: location.releaseNotes }
+                  : {}),
+            ...(!manifest && location.legacy ? { legacy: true as const } : {}),
+            ...(manifest ? { expectedEnvelope: manifest.envelope } : {}),
+            kind: location.kind,
+            version: location.version,
+            limits: this.config.limits,
+        });
+        if (result.digest !== location.package.digest) {
+            throw new Error(
+                `Integration package "${location.kind}@${location.version}" digest changed after catalog snapshot construction`,
+            );
+        }
+        return result;
     }
 }
