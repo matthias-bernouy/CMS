@@ -1,11 +1,14 @@
 import type { ResolvedIntegrationPackage } from "../../../interfaces/source";
 import { cleanupAbandonedStaging, removeCacheTree } from "./cleanup";
-import { initializeCacheLayout, type IntegrationPackageCacheLayout } from "./paths";
+import { assertPackageDigest, initializeCacheLayout, type IntegrationPackageCacheLayout } from "./paths";
 import { publishStagedPackage, validOrMissing } from "./publication";
+import { validateReferenceCoordinate } from "./publication/referenceDocument";
+import { getPackageReference, recordPackageReference } from "./publication/references";
 import type {
     ExpectedIntegrationPackageIdentity,
     FsIntegrationPackageCacheConfig,
     IntegrationPackageCacheEvent,
+    IntegrationPackageCacheReference,
     MaterializedIntegrationPackage,
 } from "./types";
 import { IntegrationPackageCacheCorruptionError } from "./types";
@@ -42,6 +45,17 @@ export class FsIntegrationPackageCache {
             }
             throw error;
         }
+    }
+
+    async getReference(kind: string, version: string): Promise<IntegrationPackageCacheReference | null> {
+        const coordinate = validateReferenceCoordinate(kind, version);
+        return await getPackageReference(await this.layout(), coordinate.kind, coordinate.version);
+    }
+
+    async recordReference(kind: string, version: string, digest: string): Promise<IntegrationPackageCacheReference> {
+        const coordinate = validateReferenceCoordinate(kind, version);
+        const expectedDigest = assertPackageDigest(digest);
+        return await recordPackageReference(await this.layout(), coordinate.kind, coordinate.version, expectedDigest);
     }
 
     async materialize(
