@@ -51,6 +51,25 @@ describe("integration package encodings and limits", () => {
             () => validateIntegrationPackageEnvelope(validPackageEnvelope(), { limits: { maxFileBytes: 10 } }),
             "decoded_bytes_limit_exceeded",
         );
+        expectCode(
+            () => validateIntegrationPackageEnvelope(validPackageEnvelope(), { limits: { maxDirectories: 1 } }),
+            "directory_limit_exceeded",
+        );
+    });
+
+    test.each([
+        ["file before child", ["definition.json", "definition.json/child"]],
+        ["child before file", ["assets/icon.png", "assets"]],
+    ])("rejects a file and directory collision: %s", (_label, paths) => {
+        const envelope = validPackageEnvelope();
+        const files = Object.fromEntries(
+            paths.map((path) => [path, { encoding: "utf8" as const, content: "content" }]),
+        );
+        envelope.definition = paths[0]!;
+        delete envelope.releaseNotes;
+        envelope.files = files;
+
+        expectCode(() => validateIntegrationPackageEnvelope(envelope), "invalid_path");
     });
 
     test("enforces the actual UTF-8 JSON document byte limit", () => {

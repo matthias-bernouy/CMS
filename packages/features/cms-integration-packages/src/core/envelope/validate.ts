@@ -80,6 +80,7 @@ export function validateIntegrationPackageEnvelope(
     let decodedBytes = 0;
     const files: Array<[string, IntegrationPackageFileV1]> = [];
     const canonicalPaths = new Set<string>();
+    const directoryPaths = new Set<string>();
     for (const [path, value] of entries) {
         const canonicalPath = assertIntegrationPackagePath(path, limits);
         if (canonicalPaths.has(canonicalPath)) {
@@ -89,6 +90,7 @@ export function validateIntegrationPackageEnvelope(
                 canonicalPath,
             );
         }
+        assertFileDirectorySeparation(canonicalPath, canonicalPaths, directoryPaths, limits.maxDirectories);
         canonicalPaths.add(canonicalPath);
         const file = parseIntegrationPackageFile(value, `files.${path}`);
         const fileBytes = decodedIntegrationPackageFileByteLength(file);
@@ -130,4 +132,38 @@ export function validateIntegrationPackageEnvelope(
         );
     }
     return result;
+}
+
+function assertFileDirectorySeparation(
+    filePath: string,
+    filePaths: ReadonlySet<string>,
+    directoryPaths: Set<string>,
+    maxDirectories: number,
+): void {
+    if (directoryPaths.has(filePath)) {
+        throw new IntegrationPackageValidationError(
+            "invalid_path",
+            `file path collides with a directory ${JSON.stringify(filePath)}`,
+            filePath,
+        );
+    }
+    const segments = filePath.split("/");
+    for (let length = 1; length < segments.length; length += 1) {
+        const directory = segments.slice(0, length).join("/");
+        if (filePaths.has(directory)) {
+            throw new IntegrationPackageValidationError(
+                "invalid_path",
+                `directory path collides with a file ${JSON.stringify(directory)}`,
+                filePath,
+            );
+        }
+        directoryPaths.add(directory);
+        if (directoryPaths.size + 1 > maxDirectories) {
+            throw new IntegrationPackageValidationError(
+                "directory_limit_exceeded",
+                `files require more than ${maxDirectories} directories`,
+                "files",
+            );
+        }
+    }
 }

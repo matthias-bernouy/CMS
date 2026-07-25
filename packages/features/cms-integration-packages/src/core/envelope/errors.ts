@@ -1,6 +1,7 @@
 export type IntegrationPackageValidationErrorCode =
     | "body_limit_exceeded"
     | "decoded_bytes_limit_exceeded"
+    | "directory_limit_exceeded"
     | "duplicate_json_property"
     | "file_limit_exceeded"
     | "invalid_base64"
