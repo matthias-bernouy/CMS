@@ -23,6 +23,19 @@ describe("InMemoryLocalCredentialStore.create", () => {
         await s.create({ email: "a@x.com", password: "pw", emailVerified: false });
         expect((await s.getByEmail("a@x.com"))?.emailVerifiedAt).toBeNull();
     });
+
+    test("uses a stable subject only for explicitly seeded accounts", async () => {
+        const s = new InMemoryLocalCredentialStore({
+            seededSubjects: { "dev@example.com": "dev-admin" },
+        });
+
+        const seeded = await s.create({ email: "DEV@example.com", password: "pw" });
+        const regular = await s.create({ email: "user@example.com", password: "pw" });
+
+        expect(seeded.sub).toBe("dev-admin");
+        expect(regular.sub).not.toBe("dev-admin");
+        expect(regular.sub).toBeTruthy();
+    });
 });
 
 describe("InMemoryLocalCredentialStore.verify", () => {

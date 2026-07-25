@@ -9,10 +9,13 @@ import {
 import type { CMS_ROLES } from "@bernouy/cms-permissions";
 
 export const DEV_PASSWORD = "password";
+export const DEV_ADMIN_SUBJECT = "local:dev-admin";
 
 export async function createDevAuth() {
     const users = new InMemoryUsersRepository<CMS_ROLES>();
-    const credentials = new InMemoryLocalCredentialStore();
+    const credentials = new InMemoryLocalCredentialStore({
+        seededSubjects: { "dev@example.com": "dev-admin" },
+    });
     const devAdmin = await createLocalUser(
         { credentials, users },
         {

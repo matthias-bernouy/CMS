@@ -3,7 +3,15 @@ import type { Identity } from "cms-auth/interfaces/UsersRepository";
 import type { LocalCredentialStore, LocalCredential, NewCredential } from "cms-auth/interfaces/LocalCredentialStore";
 import { dummyPasswordVerify } from "cms-auth/core/accounts/passwordTiming";
 
-type Record = LocalCredential & { hash: string };
+type StoredCredential = LocalCredential & { hash: string };
+
+export type InMemoryLocalCredentialStoreOptions = {
+    /**
+     * Optional deterministic subjects for explicitly seeded local accounts.
+     * Other accounts keep their random UUIDv7 subject.
+     */
+    seededSubjects?: Readonly<Record<string, string>>;
+};
 
 /**
  * In-memory `LocalCredentialStore` for dev and tests. Passwords are hashed with
@@ -11,17 +19,28 @@ type Record = LocalCredential & { hash: string };
  * Mirrors `MongoLocalCredentialStore` semantics (email unique, sub-keyed).
  */
 export class InMemoryLocalCredentialStore implements LocalCredentialStore {
-    private _bySub = new Map<string, Record>();
+    private _bySub = new Map<string, StoredCredential>();
     private _emailToSub = new Map<string, string>();
+    private readonly _seededSubjects: ReadonlyMap<string, string>;
+
+    constructor(options: InMemoryLocalCredentialStoreOptions = {}) {
+        this._seededSubjects = new Map(
+            Object.entries(options.seededSubjects ?? {}).map(([email, sub]) => [email.trim().toLowerCase(), sub]),
+        );
+    }
 
     async create(input: NewCredential): Promise<Identity> {
         const email = input.email.trim().toLowerCase();
         if (this._emailToSub.has(email)) {
             throw new Error("email already registered");
         }
+        const sub = this._seededSubjects.get(email) ?? randomUUIDv7();
+        if (!sub || this._bySub.has(sub)) {
+            throw new Error("credential subject already registered");
+        }
         const now = new Date();
-        const rec: Record = {
-            sub: randomUUIDv7(),
+        const rec: StoredCredential = {
+            sub,
             email,
             createdAt: now,
             updatedAt: now,
@@ -92,7 +111,7 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
     }
 }
 
-const strip = (r: Record): LocalCredential => ({
+const strip = (r: StoredCredential): LocalCredential => ({
     sub: r.sub,
     email: r.email,
     emailVerifiedAt: r.emailVerifiedAt,
