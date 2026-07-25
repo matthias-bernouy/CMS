@@ -10,6 +10,7 @@ import type {
 } from "../../../interfaces/IntegrationImport";
 import type { IntegrationInstallation, IntegrationRun } from "../../../interfaces/IntegrationInstallation";
 import type { IntegrationInstallationRepository } from "../../../interfaces/IntegrationInstallationRepository";
+import type { IntegrationPackageResolver } from "../../../interfaces/IntegrationConnectorDeployer";
 
 export type RunIntegrationInstallationCreateRequest = {
     mode: "create";
@@ -17,6 +18,7 @@ export type RunIntegrationInstallationCreateRequest = {
     installations: IntegrationInstallationRepository;
     dto: IntegrationImportDto;
     siteIntegrations?: IntegrationDefinition[];
+    packageResolver?: IntegrationPackageResolver;
 };
 
 export type RunIntegrationInstallationRerunRequest = {
@@ -26,6 +28,7 @@ export type RunIntegrationInstallationRerunRequest = {
     integrationId: string;
     body?: Record<string, unknown>;
     siteIntegrations?: IntegrationDefinition[];
+    packageResolver?: IntegrationPackageResolver;
 };
 
 export type RunIntegrationInstallationUpgradeRequest = {
@@ -36,6 +39,7 @@ export type RunIntegrationInstallationUpgradeRequest = {
     targetDefinition: IntegrationDefinition;
     body?: Record<string, unknown>;
     siteIntegrations?: IntegrationDefinition[];
+    packageResolver?: IntegrationPackageResolver;
 };
 
 export type RunIntegrationInstallationResult = IntegrationImportResult & {

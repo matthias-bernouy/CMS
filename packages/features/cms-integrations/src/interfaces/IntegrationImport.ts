@@ -112,6 +112,7 @@ export type IntegrationImportDeps = {
     connectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
     provisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
     sourceExecutorDeps?: ExecutorDeps;
+    packageRoot?: string;
     env?: Record<string, string | undefined>;
 };
 

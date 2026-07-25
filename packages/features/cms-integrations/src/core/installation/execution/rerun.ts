@@ -10,10 +10,12 @@ import { withObsoleteArtifactCleanup } from "../artifactCleanup";
 import { reconcileAfterInstallation } from "./afterInstallation";
 import { appendRun, failedRun, successRun } from "./runs";
 import { assertSecretKeysAvailable, deleteObsoleteSecretRefs } from "../secretRefs";
+import { depsWithPackageRoot, resolveRerunPackage, resolveUpgradePackage } from "../packages";
 import { sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "../snapshots";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
 import type { IntegrationImportDto, IntegrationImportResult } from "../../../interfaces/IntegrationImport";
 import type { IntegrationInstallation, IntegrationRun } from "../../../interfaces/IntegrationInstallation";
+import type { ResolvedIntegrationPackageRoot } from "../../../interfaces/IntegrationConnectorDeployer";
 import type {
     RunIntegrationInstallationRerunRequest,
     RunIntegrationInstallationResult,
@@ -32,18 +34,17 @@ export async function runRerun(
         throw new MissingIntegrationInstallationError(request.integrationId);
     }
     assertRerunVersion(installation, request.body?.version);
+    const resolvedPackage = await resolveRerunPackage(request.packageResolver, installation);
 
-    const siteIntegrations = [
-        ...(installation.definitionSnapshot ? [installation.definitionSnapshot] : []),
-        ...(request.siteIntegrations ?? []),
-    ];
+    const pinnedDefinition = installation.definitionSnapshot ?? resolvedPackage?.definition;
+    const siteIntegrations = [...(pinnedDefinition ? [pinnedDefinition] : []), ...(request.siteIntegrations ?? [])];
     const definition = findIntegration(installation.id, siteIntegrations);
     if (!definition) {
         throw new IntegrationInputError("kind", `unknown integration "${installation.id}"`);
     }
     assertResolvedRerunDefinition(installation, definition);
 
-    return runExistingInstallation(request, installation, definition, siteIntegrations);
+    return runExistingInstallation(request, installation, definition, siteIntegrations, resolvedPackage);
 }
 
 export async function runUpgrade(
@@ -64,12 +65,14 @@ export async function runUpgrade(
         throw new IntegrationInputError("version", `version "${definition.version}" is already installed`);
     }
     await assertUpgradePreservesDependentRanges(request.installations, installation.id, definition.version);
+    const resolvedPackage = await resolveUpgradePackage(request.packageResolver, installation, definition);
+    const importDefinition = resolvedPackage?.definition ?? definition;
     const siteIntegrations = [
-        definition,
-        ...(request.siteIntegrations ?? []).filter((candidate) => candidate.kind !== definition.kind),
+        importDefinition,
+        ...(request.siteIntegrations ?? []).filter((candidate) => candidate.kind !== importDefinition.kind),
     ];
 
-    return runExistingInstallation(request, installation, definition, siteIntegrations);
+    return runExistingInstallation(request, installation, importDefinition, siteIntegrations, resolvedPackage);
 }
 
 async function runExistingInstallation(
@@ -77,13 +80,14 @@ async function runExistingInstallation(
     installation: IntegrationInstallation,
     definition: IntegrationDefinition,
     siteIntegrations: IntegrationDefinition[],
+    resolvedPackage?: ResolvedIntegrationPackageRoot,
 ): Promise<RunIntegrationInstallationResult> {
     const pending = { ...installation, status: "pending" as const, updatedAt: new Date() };
     await request.installations.replace(pending);
     const startedAt = new Date();
 
     try {
-        return await runRerunImport(request, pending, definition, startedAt, siteIntegrations);
+        return await runRerunImport(request, pending, definition, startedAt, siteIntegrations, resolvedPackage);
     } catch (error) {
         const run = failedRun(installation.runCount + 1, startedAt, error);
         await request.installations.replace(appendRun(pending, run, { status: "failed" }));
@@ -97,20 +101,33 @@ async function runRerunImport(
     definition: IntegrationDefinition,
     startedAt: Date,
     siteIntegrations: IntegrationDefinition[],
+    resolvedPackage?: ResolvedIntegrationPackageRoot,
 ): Promise<RunIntegrationInstallationResult> {
     const dto = await buildRerunDto(request.deps, installation, definition, request.body ?? {}, siteIntegrations);
     const secretInputs = declarativeSecretBindingNames(definition);
     const plannedSecretRefs = resolveDeclarativeSecretRefs(definition, dto.answers);
     await assertSecretKeysAvailable(request.installations, installation.id, plannedSecretRefs);
 
-    const deps = { ...request.deps, installations: request.deps.installations ?? request.installations };
+    const deps = {
+        ...depsWithPackageRoot(request.deps, resolvedPackage),
+        installations: request.deps.installations ?? request.installations,
+    };
     const { importResult, committed } = await importDeclarativeIntegrationWithCommit(
         deps,
         definition,
         dto.answers,
         dto.options,
         async (result) =>
-            commitSuccessfulRerun(request, installation, definition, dto, secretInputs, startedAt, result),
+            commitSuccessfulRerun(
+                request,
+                installation,
+                definition,
+                dto,
+                secretInputs,
+                startedAt,
+                result,
+                resolvedPackage,
+            ),
     );
     return { ...importResult, ...committed };
 }
@@ -123,6 +140,7 @@ async function commitSuccessfulRerun(
     secretInputs: string[],
     startedAt: Date,
     result: IntegrationImportResult,
+    resolvedPackage?: ResolvedIntegrationPackageRoot,
 ): Promise<{ installation: IntegrationInstallation; run: IntegrationRun }> {
     const run = successRun(installation.runCount + 1, startedAt, result);
     const nextSecretRefs = updateSecretRefs(installation.secretRefs, result, secretInputs);
@@ -132,10 +150,12 @@ async function commitSuccessfulRerun(
         answersSnapshot: sanitizeAnswers(definition, dto.answers),
         secretRefs: nextSecretRefs,
         secretInputs,
+        ...(!installation.packageDigest && resolvedPackage ? { packageDigest: resolvedPackage.digest } : {}),
         ...(request.mode === "upgrade"
             ? {
                   definitionVersion: definition.version as string,
                   definitionSnapshot: sanitizeDefinitionSnapshot(definition),
+                  ...(resolvedPackage ? { packageDigest: resolvedPackage.digest } : {}),
               }
             : {}),
     });

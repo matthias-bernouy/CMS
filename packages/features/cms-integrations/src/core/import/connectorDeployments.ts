@@ -54,6 +54,7 @@ export async function deployConnectorDeployments(
             answers: context.answers,
             generated: context.generated ?? {},
             secrets: context.secrets,
+            ...(deps.packageRoot ? { packageRoot: deps.packageRoot } : {}),
             env: deps.env ?? {},
         });
         results.push(result);

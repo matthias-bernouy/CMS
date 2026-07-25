@@ -17,6 +17,7 @@ export function appendRun(
             | "label"
             | "definitionVersion"
             | "definitionSnapshot"
+            | "packageDigest"
         >
     >,
 ): IntegrationInstallation {
