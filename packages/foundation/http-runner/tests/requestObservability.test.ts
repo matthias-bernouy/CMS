@@ -95,6 +95,27 @@ describe("request correlation", () => {
             errorLog.mockRestore();
         }
     });
+
+    test("dispatches explicit HEAD routes inside groups", async () => {
+        const runner = new BunRunner();
+        runner.group("/public", (group) => {
+            group.addEndpoint(
+                "HEAD",
+                "/resource",
+                () => new Response(null, { headers: { etag: '"resource-digest"' } }),
+            );
+        });
+        const server = serveForTest(runner);
+
+        try {
+            const response = await server.request("HEAD", "/public/resource");
+            expect(response.status).toBe(200);
+            expect(response.headers.get("etag")).toBe('"resource-digest"');
+            expect(await response.text()).toBe("");
+        } finally {
+            server.stop();
+        }
+    });
 });
 
 describe("request timing", () => {

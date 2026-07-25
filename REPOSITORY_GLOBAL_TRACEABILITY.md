@@ -47,7 +47,7 @@ new findings relative to this baseline.
 | L0.3a | Package v1 envelope supports UTF-8/base64 files and release notes. | New `@bernouy/cms-integration-packages` contracts and parser. | Round-trip, malformed encoding, legacy notes, and identity tests. | Pending |
 | L0.3b | RFC 8785 canonical bytes produce the package SHA-256 identity. | Shared canonicalizer and digest service. | JCS ordering, escaping, Unicode, surrogate, and key-order fixtures. | Pending |
 | L0.3c | Generic filesystem reader is deterministic, bounded, and symlink-safe. | Filesystem subpath of the package feature. | Traversal, symlink, special-file, depth, count, size, and binary tests. | Pending |
-| L0.4a | Exact package and release-notes GET/HEAD endpoints are public. | Repository surface with required exact version. | 404 legacy notes, immutable cache, ETag, HEAD, and CORS tests. | Pending |
+| L0.4a | Exact package and release-notes GET/HEAD endpoints are public. | Repository surface with required exact version. | 404 legacy notes, immutable cache, ETag, HEAD, and CORS tests. | Partial |
 | L0.4b | Public package downloads are limited before origin work. | Delivery-injected limiter and generic HTTP client-address resolver. | 429/Retry-After and proof no upstream/walk occurs first. | Pending |
 | L0.4c | Client-address modes handle direct, proxy, loopback, disabled, and CDN hops safely. | `@bernouy/http-runner` resolver plus runtime configuration. | Spoofing, malformed-chain 400, IPv4/IPv6, loopback, one-hop and two-hop tests. | Pending |
 | L0.5a | CMS package cache has a dedicated durable mount and validated non-overlap. | Runtime env, image, Compose, host docs, canonical path validation. | Deployment and alias/symlink/device-inode overlap tests. | Pending |
@@ -112,3 +112,6 @@ evidence.
 - `7e5ad252` — bounded repository requests with typed `502`/`503` failures,
   stable public codes, nullable `404`, and safe Control propagation. Verified by
   73 focused tests and the `cms-integrations`/`http-runner` typechecks.
+- `f8070cd9` — moved embedded repository reads from Control to Delivery and
+  changed production and CLI loopback URLs to the Delivery listener. Verified
+  by 17 runtime/composition tests and both runtime typechecks.

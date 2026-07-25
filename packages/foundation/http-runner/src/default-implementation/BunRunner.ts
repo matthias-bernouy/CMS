@@ -98,7 +98,7 @@ export class BunRunner implements Runner {
     }
 
     setDefaultEndpoint(
-        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS",
         handler: RouteHandler,
         middlewares: Middleware[] = [],
     ): void {

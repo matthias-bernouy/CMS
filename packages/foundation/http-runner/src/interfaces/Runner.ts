@@ -18,7 +18,7 @@ export interface Runner {
      * @param handler The function to execute when the route is matched
      */
     addEndpoint(
-        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS",
         path: string,
         handler: RouteHandler,
         middleware?: Middleware[],
@@ -58,7 +58,7 @@ export interface Runner {
      * Subsequent calls replace the previous default.
      */
     setDefaultEndpoint(
-        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS",
         handler: RouteHandler,
         middlewares?: Middleware[],
     ): void;
