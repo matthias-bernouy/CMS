@@ -1,11 +1,16 @@
 import { importIntegration, pushIntegrationRoute, rerunIntegrationInstallation } from "../api";
 import { collectAnswers } from "../fields";
 import type { BrowserTab, IntegrationBrowserHost, IntegrationDefinition } from "../model";
+import { retryBoundSources } from "./data";
 import { renderImporting, renderSetup } from "./setup";
 
 export async function handleClick(host: IntegrationBrowserHost, event: Event): Promise<void> {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) {
+        return;
+    }
+    if (target.closest("[data-repository-retry]")) {
+        retryBoundSources(host);
         return;
     }
     const tab = target.closest("[data-tab]") as HTMLElement | null;

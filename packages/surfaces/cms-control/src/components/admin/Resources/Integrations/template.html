@@ -1,10 +1,5 @@
 <div class="integrations-root">
     <div class="binding-feeds" aria-hidden="true">
-        <div data-definitions-source cms-reload-on="integration:updated">
-            <template>
-                <span cms-condition="$source.loaded || $source.empty" data-definitions-json="{{ definitions | json }}"></span>
-            </template>
-        </div>
         <div data-installations-source cms-reload-on="integration:updated">
             <template>
                 <span cms-condition="$source.loaded || $source.empty" data-installations-json="{{ installations | json }}"></span>
@@ -23,6 +18,19 @@
         </nav>
 
         <section class="installed-view" data-installed-view>
+            <section class="definitions-source" data-definitions-source cms-reload-on="integration:updated">
+                <template>
+                    <span hidden cms-condition="$source.loaded || $source.empty" data-definitions-json="{{ definitions | json }}"></span>
+                    <div class="repository-error" data-repository-error="definitions" cms-condition="$source.error" role="alert" aria-atomic="true">
+                        <span class="repository-error-copy">
+                            <strong>Integration repository unavailable</strong>
+                            <span>Installed integrations remain available, but repository definitions could not be loaded.</span>
+                            <small>{{ $source.message }}</small>
+                        </span>
+                        <button type="button" data-repository-retry>Retry</button>
+                    </div>
+                </template>
+            </section>
             <div class="installed-table" data-installations></div>
             <p class="empty" data-installations-empty hidden>No installed integrations yet.</p>
         </section>
@@ -30,28 +38,38 @@
         <section class="catalogue-view" data-catalogue-view hidden>
             <section data-catalogue-source cms-reload-on="integration:updated">
                 <template>
-                    <div class="filters">
-                        <p9r-input type="search" label="Search" placeholder="Search integrations" data-search cms-param-sync="integrationSearch"></p9r-input>
-                        <p9r-select label="Category" data-category cms-param-sync="integrationCategory">
-                            <option value="">All categories</option>
-                            <option cms-repeat="catalogue.categories as category" value="{{ category }}">{{ category }}</option>
-                        </p9r-select>
+                    <div class="repository-error" data-repository-error="catalogue" cms-condition="$source.error" role="alert" aria-atomic="true">
+                        <span class="repository-error-copy">
+                            <strong>Integration repository unavailable</strong>
+                            <span>The integration catalogue could not be loaded. Installed integrations remain available.</span>
+                            <small>{{ $source.message }}</small>
+                        </span>
+                        <button type="button" data-repository-retry>Retry</button>
                     </div>
-                    <p9r-grid class="catalogue-grid" data-catalogue min="lg" max="lg" gap="sm">
-                        <a class="catalogue-card" href="{{ integration.setupUrl }}" data-definition-kind="{{ integration.kind }}" cms-repeat="catalogue.items as integration">
-                            <span class="card-head">
-                                <span data-icon-host>{{ integration.iconHtml | innerHTML }}</span>
-                                <span>
-                                    <strong>{{ integration.label }}</strong>
-                                    <small>{{ integration.description }}</small>
+                    <div class="catalogue-content" cms-condition="$source.loaded || $source.empty">
+                        <div class="filters">
+                            <p9r-input type="search" label="Search" placeholder="Search integrations" data-search cms-param-sync="integrationSearch"></p9r-input>
+                            <p9r-select label="Category" data-category cms-param-sync="integrationCategory">
+                                <option value="">All categories</option>
+                                <option cms-repeat="catalogue.categories as category" value="{{ category }}">{{ category }}</option>
+                            </p9r-select>
+                        </div>
+                        <p9r-grid class="catalogue-grid" data-catalogue min="lg" max="lg" gap="sm">
+                            <a class="catalogue-card" href="{{ integration.setupUrl }}" data-definition-kind="{{ integration.kind }}" cms-repeat="catalogue.items as integration">
+                                <span class="card-head">
+                                    <span data-icon-host>{{ integration.iconHtml | innerHTML }}</span>
+                                    <span>
+                                        <strong>{{ integration.label }}</strong>
+                                        <small>{{ integration.description }}</small>
+                                    </span>
                                 </span>
-                            </span>
-                            <span class="badge-row">
-                                <span class="{{ badge.className }}" cms-repeat="integration.badges as badge">{{ badge.label }}</span>
-                            </span>
-                        </a>
-                    </p9r-grid>
-                    <p class="empty" data-catalogue-empty cms-condition="$source.loaded && !catalogue.hasItems">No matching integrations.</p>
+                                <span class="badge-row">
+                                    <span class="{{ badge.className }}" cms-repeat="integration.badges as badge">{{ badge.label }}</span>
+                                </span>
+                            </a>
+                        </p9r-grid>
+                        <p class="empty" data-catalogue-empty cms-condition="$source.loaded && !catalogue.hasItems">No matching integrations.</p>
+                    </div>
                 </template>
             </section>
         </section>

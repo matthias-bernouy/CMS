@@ -27947,11 +27947,6 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Integrations/template.html
   var template_default15 = `<div class="integrations-root">
     <div class="binding-feeds" aria-hidden="true">
-        <div data-definitions-source cms-reload-on="integration:updated">
-            <template>
-                <span cms-condition="$source.loaded || $source.empty" data-definitions-json="{{ definitions | json }}"></span>
-            </template>
-        </div>
         <div data-installations-source cms-reload-on="integration:updated">
             <template>
                 <span cms-condition="$source.loaded || $source.empty" data-installations-json="{{ installations | json }}"></span>
@@ -27970,6 +27965,19 @@ details[open] > summary > .chevron {
         </nav>
 
         <section class="installed-view" data-installed-view>
+            <section class="definitions-source" data-definitions-source cms-reload-on="integration:updated">
+                <template>
+                    <span hidden cms-condition="$source.loaded || $source.empty" data-definitions-json="{{ definitions | json }}"></span>
+                    <div class="repository-error" data-repository-error="definitions" cms-condition="$source.error" role="alert" aria-atomic="true">
+                        <span class="repository-error-copy">
+                            <strong>Integration repository unavailable</strong>
+                            <span>Installed integrations remain available, but repository definitions could not be loaded.</span>
+                            <small>{{ $source.message }}</small>
+                        </span>
+                        <button type="button" data-repository-retry>Retry</button>
+                    </div>
+                </template>
+            </section>
             <div class="installed-table" data-installations></div>
             <p class="empty" data-installations-empty hidden>No installed integrations yet.</p>
         </section>
@@ -27977,28 +27985,38 @@ details[open] > summary > .chevron {
         <section class="catalogue-view" data-catalogue-view hidden>
             <section data-catalogue-source cms-reload-on="integration:updated">
                 <template>
-                    <div class="filters">
-                        <p9r-input type="search" label="Search" placeholder="Search integrations" data-search cms-param-sync="integrationSearch"></p9r-input>
-                        <p9r-select label="Category" data-category cms-param-sync="integrationCategory">
-                            <option value="">All categories</option>
-                            <option cms-repeat="catalogue.categories as category" value="{{ category }}">{{ category }}</option>
-                        </p9r-select>
+                    <div class="repository-error" data-repository-error="catalogue" cms-condition="$source.error" role="alert" aria-atomic="true">
+                        <span class="repository-error-copy">
+                            <strong>Integration repository unavailable</strong>
+                            <span>The integration catalogue could not be loaded. Installed integrations remain available.</span>
+                            <small>{{ $source.message }}</small>
+                        </span>
+                        <button type="button" data-repository-retry>Retry</button>
                     </div>
-                    <p9r-grid class="catalogue-grid" data-catalogue min="lg" max="lg" gap="sm">
-                        <a class="catalogue-card" href="{{ integration.setupUrl }}" data-definition-kind="{{ integration.kind }}" cms-repeat="catalogue.items as integration">
-                            <span class="card-head">
-                                <span data-icon-host>{{ integration.iconHtml | innerHTML }}</span>
-                                <span>
-                                    <strong>{{ integration.label }}</strong>
-                                    <small>{{ integration.description }}</small>
+                    <div class="catalogue-content" cms-condition="$source.loaded || $source.empty">
+                        <div class="filters">
+                            <p9r-input type="search" label="Search" placeholder="Search integrations" data-search cms-param-sync="integrationSearch"></p9r-input>
+                            <p9r-select label="Category" data-category cms-param-sync="integrationCategory">
+                                <option value="">All categories</option>
+                                <option cms-repeat="catalogue.categories as category" value="{{ category }}">{{ category }}</option>
+                            </p9r-select>
+                        </div>
+                        <p9r-grid class="catalogue-grid" data-catalogue min="lg" max="lg" gap="sm">
+                            <a class="catalogue-card" href="{{ integration.setupUrl }}" data-definition-kind="{{ integration.kind }}" cms-repeat="catalogue.items as integration">
+                                <span class="card-head">
+                                    <span data-icon-host>{{ integration.iconHtml | innerHTML }}</span>
+                                    <span>
+                                        <strong>{{ integration.label }}</strong>
+                                        <small>{{ integration.description }}</small>
+                                    </span>
                                 </span>
-                            </span>
-                            <span class="badge-row">
-                                <span class="{{ badge.className }}" cms-repeat="integration.badges as badge">{{ badge.label }}</span>
-                            </span>
-                        </a>
-                    </p9r-grid>
-                    <p class="empty" data-catalogue-empty cms-condition="$source.loaded && !catalogue.hasItems">No matching integrations.</p>
+                                <span class="badge-row">
+                                    <span class="{{ badge.className }}" cms-repeat="integration.badges as badge">{{ badge.label }}</span>
+                                </span>
+                            </a>
+                        </p9r-grid>
+                        <p class="empty" data-catalogue-empty cms-condition="$source.loaded && !catalogue.hasItems">No matching integrations.</p>
+                    </div>
                 </template>
             </section>
         </section>
@@ -28160,6 +28178,92 @@ details[open] > summary > .chevron {
       return "Required.";
     }
     return "";
+  }
+
+  // src/components/admin/Resources/Integrations/ui/data.ts
+  function startBoundSources(host) {
+    const definitions = host.query("[data-definitions-source]");
+    const installations = host.query("[data-installations-source]");
+    const catalogue = host.query("[data-catalogue-source]");
+    definitions.setAttribute("cms-source", `${route3("/api/integrations/list")} as definitions`);
+    installations.setAttribute("cms-source", `${route3("/api/integrations/installations")} as installations`);
+    catalogue.setAttribute("cms-source", `${route3("/api/integrations/catalogue")}?q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
+    host.observer = new MutationObserver(() => readBoundData(host));
+    host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
+    host.observer.observe(installations, { attributes: true, childList: true, subtree: true });
+    readBoundData(host);
+  }
+  function disconnectBoundSources(host) {
+    host.observer?.disconnect();
+    host.observer = null;
+    for (const waiter of host.waiters) {
+      clearTimeout(waiter.timeout);
+      waiter.reject(new Error("Integration data source disconnected."));
+    }
+    host.waiters = [];
+  }
+  function readBoundData(host) {
+    let changed = false;
+    const definitions = parseArray(host.querySelector("[data-definitions-json]")?.dataset.definitionsJson ?? "");
+    if (definitions) {
+      host.definitions = definitions;
+      host.definitionsLoaded = true;
+      changed = true;
+    }
+    const installations = parseArray(host.querySelector("[data-installations-json]")?.dataset.installationsJson ?? "");
+    if (installations) {
+      host.installations = installations;
+      host.installationsLoaded = true;
+      changed = true;
+    }
+    if (!changed) {
+      return;
+    }
+    if (host.installationsLoaded) {
+      host.renderAll();
+    }
+    resolveWaiters(host);
+  }
+  function retryBoundSources(host) {
+    host.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
+  }
+  function waitForBoundData(host, predicate, timeoutMs = 5000) {
+    if (predicate()) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const waiter = {
+        predicate,
+        resolve,
+        reject,
+        timeout: setTimeout(() => {
+          host.waiters = host.waiters.filter((item) => item !== waiter);
+          reject(new Error("Timed out waiting for integration data reload."));
+        }, timeoutMs)
+      };
+      host.waiters.push(waiter);
+    });
+  }
+  function resolveWaiters(host) {
+    for (const waiter of [...host.waiters]) {
+      if (!waiter.predicate()) {
+        continue;
+      }
+      clearTimeout(waiter.timeout);
+      host.waiters = host.waiters.filter((item) => item !== waiter);
+      waiter.resolve();
+    }
+  }
+  function parseArray(value3) {
+    if (!value3) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(value3);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   }
 
   // src/components/admin/Resources/Integrations/domain.ts
@@ -28754,6 +28858,10 @@ details[open] > summary > .chevron {
     if (!target2) {
       return;
     }
+    if (target2.closest("[data-repository-retry]")) {
+      retryBoundSources(host);
+      return;
+    }
     const tab = target2.closest("[data-tab]");
     if (tab) {
       return closeAndSetTab(host, tab.dataset.tab ?? "installed");
@@ -28852,87 +28960,6 @@ details[open] > summary > .chevron {
       return true;
     }
     return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-  }
-
-  // src/components/admin/Resources/Integrations/ui/data.ts
-  function startBoundSources(host) {
-    const definitions = host.query("[data-definitions-source]");
-    const installations = host.query("[data-installations-source]");
-    const catalogue = host.query("[data-catalogue-source]");
-    definitions.setAttribute("cms-source", `${route3("/api/integrations/list")} as definitions`);
-    installations.setAttribute("cms-source", `${route3("/api/integrations/installations")} as installations`);
-    catalogue.setAttribute("cms-source", `${route3("/api/integrations/catalogue")}?q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
-    host.observer = new MutationObserver(() => readBoundData(host));
-    host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
-    host.observer.observe(installations, { attributes: true, childList: true, subtree: true });
-    readBoundData(host);
-  }
-  function disconnectBoundSources(host) {
-    host.observer?.disconnect();
-    host.observer = null;
-    for (const waiter of host.waiters) {
-      clearTimeout(waiter.timeout);
-      waiter.reject(new Error("Integration data source disconnected."));
-    }
-    host.waiters = [];
-  }
-  function readBoundData(host) {
-    let changed = false;
-    const definitions = parseArray(host.querySelector("[data-definitions-json]")?.dataset.definitionsJson ?? "");
-    if (definitions) {
-      host.definitions = definitions;
-      host.definitionsLoaded = true;
-      changed = true;
-    }
-    const installations = parseArray(host.querySelector("[data-installations-json]")?.dataset.installationsJson ?? "");
-    if (installations) {
-      host.installations = installations;
-      host.installationsLoaded = true;
-      changed = true;
-    }
-    if (!changed || !host.definitionsLoaded || !host.installationsLoaded) {
-      return;
-    }
-    host.renderAll();
-    resolveWaiters(host);
-  }
-  function waitForBoundData(host, predicate, timeoutMs = 5000) {
-    if (predicate()) {
-      return Promise.resolve();
-    }
-    return new Promise((resolve, reject) => {
-      const waiter = {
-        predicate,
-        resolve,
-        reject,
-        timeout: setTimeout(() => {
-          host.waiters = host.waiters.filter((item) => item !== waiter);
-          reject(new Error("Timed out waiting for integration data reload."));
-        }, timeoutMs)
-      };
-      host.waiters.push(waiter);
-    });
-  }
-  function resolveWaiters(host) {
-    for (const waiter of [...host.waiters]) {
-      if (!waiter.predicate()) {
-        continue;
-      }
-      clearTimeout(waiter.timeout);
-      host.waiters = host.waiters.filter((item) => item !== waiter);
-      waiter.resolve();
-    }
-  }
-  function parseArray(value3) {
-    if (!value3) {
-      return null;
-    }
-    try {
-      const parsed = JSON.parse(value3);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
   }
 
   // src/components/admin/Resources/Integrations/ui/styles/base.css
@@ -29080,7 +29107,16 @@ button[slot="back"] svg {
     gap: 14px;
 }
 
+.definitions-source {
+    display: contents;
+}
+
 .catalogue-view > [data-catalogue-source] {
+    display: grid;
+    gap: 14px;
+}
+
+.catalogue-content {
     display: grid;
     gap: 14px;
 }
@@ -29388,6 +29424,52 @@ button[slot="back"] svg {
 }
 `;
 
+  // src/components/admin/Resources/Integrations/ui/styles/states.css
+  var states_default2 = `.repository-error {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #e4b8ad;
+    border-radius: 8px;
+    background: #fff5f2;
+    color: #742719;
+    padding: 14px 16px;
+}
+
+.repository-error-copy {
+    display: grid;
+    gap: 3px;
+}
+
+.repository-error-copy small {
+    color: #8d4b3d;
+}
+
+.repository-error button {
+    min-height: 34px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+    padding: 5px 12px;
+}
+
+.repository-error button:hover {
+    background: #f9e3de;
+}
+
+@media (max-width: 600px) {
+    .repository-error {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+`;
+
   // src/components/admin/Resources/Integrations/ui/styles/responsive.css
   var responsive_default = `.spinner {
     display: inline-block;
@@ -29485,7 +29567,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Integrations/ui/styles/index.ts
-  var styles_default3 = [base_default4, browser_default2, detail_default2, setup_default2, responsive_default].join(`
+  var styles_default3 = [base_default4, browser_default2, detail_default2, setup_default2, states_default2, responsive_default].join(`
 `);
 
   // src/components/admin/Resources/Integrations/IntegrationBrowser.ts

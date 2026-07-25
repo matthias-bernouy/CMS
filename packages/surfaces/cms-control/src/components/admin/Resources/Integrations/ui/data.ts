@@ -45,11 +45,17 @@ export function readBoundData(host: IntegrationBrowserHost): void {
         host.installationsLoaded = true;
         changed = true;
     }
-    if (!changed || !host.definitionsLoaded || !host.installationsLoaded) {
+    if (!changed) {
         return;
     }
-    host.renderAll();
+    if (host.installationsLoaded) {
+        host.renderAll();
+    }
     resolveWaiters(host);
+}
+
+export function retryBoundSources(host: IntegrationBrowserHost): void {
+    host.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
 }
 
 export function waitForBoundData(
