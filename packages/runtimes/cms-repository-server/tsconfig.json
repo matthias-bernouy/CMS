@@ -1,0 +1,15 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src"
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../../foundation/http-runner" },
+        { "path": "../../foundation/rate-limiter" },
+        { "path": "../../features/cms-integration-registry" },
+        { "path": "../../surfaces/cms-repository" },
+        { "path": "../../surfaces/cms-repository-management" }
+    ]
+}

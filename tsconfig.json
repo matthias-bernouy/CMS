@@ -29,6 +29,7 @@
         { "path": "packages/surfaces/cms-delivery" },
         { "path": "packages/surfaces/cms-control" },
         { "path": "packages/runtimes/cms-cli" },
+        { "path": "packages/runtimes/cms-repository-server" },
         { "path": "packages/runtimes/cms-server" }
     ]
 }
