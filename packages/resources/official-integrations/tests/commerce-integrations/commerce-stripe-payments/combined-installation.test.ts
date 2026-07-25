@@ -363,6 +363,13 @@ describe("Commerce protected Stripe combined installation", () => {
 });
 
 function afterInstallationResponse(request: Request): Response {
+    if (request.url.includes("/cms-stripe-connect/configuration/marketplace-terms")) {
+        return Response.json({
+            mode: "legacy",
+            version: SELLER_TERMS_VERSION,
+            hash: SELLER_TERMS_HASH,
+        });
+    }
     if (request.url.includes("/cms-stripe-connect/payments/seller-capabilities")) {
         return Response.json({
             readySellerCmsUserIds: [],

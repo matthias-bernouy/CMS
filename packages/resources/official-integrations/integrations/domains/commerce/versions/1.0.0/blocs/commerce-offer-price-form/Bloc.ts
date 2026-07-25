@@ -57,6 +57,7 @@ export class CommerceOfferPriceForm extends Composition {
         "range-message",
         "required-message",
         "seller-terms-label",
+        "seller-terms-changed-message",
         "seller-terms-consent-required-message",
         "seller-terms-url",
         "source-id",
@@ -91,6 +92,7 @@ export class CommerceOfferPriceForm extends Composition {
         super({ template });
         this.offer = null;
         this.enrollment = null;
+        this.sellerTermsRequirement = null;
         this.profile = null;
         this.enrollmentRequired = false;
         this.termsConsentRequired = false;
@@ -175,6 +177,7 @@ export class CommerceOfferPriceForm extends Composition {
 
             this.enrollment = await this.requestFunction(this.enrollmentFunctionId);
             const connect = this.enrollment?.connect || this.enrollment;
+            this.sellerTermsRequirement = marketplaceTermsRequirement(connect?.marketplaceTermsRequirement);
             this.enrollmentRequired = !stripeEnrollmentComplete(connect);
             this.termsConsentRequired =
                 this.enrollmentRequired || connect?.marketplaceTermsCurrentVersionAccepted !== true;
@@ -184,6 +187,7 @@ export class CommerceOfferPriceForm extends Composition {
             } else {
                 this.profile = null;
             }
+            this.syncPresentation();
             this.renderActivationState();
 
             this.renderOffer();
@@ -347,6 +351,10 @@ export class CommerceOfferPriceForm extends Composition {
             }
             if (this.termsConsentRequired) {
                 payload.sellerTermsAccepted = true;
+                if (this.sellerTermsRequirement) {
+                    payload.sellerTermsVersion = this.sellerTermsRequirement.version;
+                    payload.sellerTermsHash = this.sellerTermsRequirement.hash;
+                }
             }
             await this.requestFunction(this.submitFunctionId, {
                 method: "POST",
@@ -362,6 +370,16 @@ export class CommerceOfferPriceForm extends Composition {
                 }),
             );
         } catch (error) {
+            if (error instanceof Error && error.message === "MARKETPLACE_TERMS_VERSION_CHANGED") {
+                await this.load();
+                this.showInlineError(
+                    this.text(
+                        "seller-terms-changed-message",
+                        "Les conditions vendeur ont changé. Relis la nouvelle version avant de continuer.",
+                    ),
+                );
+                return;
+            }
             this.showInlineError(
                 error instanceof PublicError
                     ? error.message
@@ -569,9 +587,14 @@ export class CommerceOfferPriceForm extends Composition {
         this.setProfileLabel("postalCode", "postal-code-label", "Code postal");
         this.setProfileLabel("city", "city-label", "Ville");
         this.setProfileLabel("countryCode", "country-label", "Pays");
-        this.consentPrefix.textContent = this.text("consent-prefix", "J’accepte les");
-        this.sellerTermsLink.textContent = this.text("seller-terms-label", "conditions vendeur Courtside");
-        this.sellerTermsLink.setAttribute("href", this.getAttribute("seller-terms-url") || "/cgu-cgv");
+        const publishedTerms = publishedMarketplaceTermsRequirement(this.sellerTermsRequirement);
+        this.consentPrefix.textContent = publishedTerms?.consentText || this.text("consent-prefix", "J’accepte les");
+        this.sellerTermsLink.textContent =
+            publishedTerms?.label || this.text("seller-terms-label", "conditions vendeur Courtside");
+        this.sellerTermsLink.setAttribute(
+            "href",
+            publishedTerms?.page.path || this.getAttribute("seller-terms-url") || "/cgu-cgv",
+        );
         this.stripeConsentPrefix.textContent = this.text("stripe-consent-prefix", "et l’");
         this.stripeTermsLink.textContent = this.text("stripe-terms-label", "accord de compte connecté Stripe");
         this.stripeTermsLink.setAttribute(
@@ -900,6 +923,31 @@ export class CommerceOfferPriceForm extends Composition {
 
 function headersObject(headers) {
     return headers ? Object.fromEntries(new Headers(headers).entries()) : {};
+}
+
+function marketplaceTermsRequirement(value) {
+    const version = textValue(value?.version);
+    const hash = textValue(value?.hash).toLowerCase();
+    if (!version || version.length > 200 || !/^[a-f0-9]{64}$/.test(hash)) {
+        return null;
+    }
+    const published = publishedMarketplaceTermsRequirement(value);
+    return published ? { version, hash, ...published } : { version, hash };
+}
+
+function publishedMarketplaceTermsRequirement(value) {
+    const pagePath = textValue(value?.page?.path);
+    const label = textValue(value?.label);
+    const consentText = textValue(value?.consentText);
+    if (value?.mode !== "published_page" || !pagePath.startsWith("/") || !label || !consentText) {
+        return null;
+    }
+    return {
+        mode: "published_page",
+        label,
+        consentText,
+        page: { path: pagePath },
+    };
 }
 
 function copyColors(source, target, prefix) {

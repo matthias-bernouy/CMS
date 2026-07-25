@@ -183,6 +183,13 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
 });
 
 function afterInstallationResponse(request: Request): Response {
+    if (request.url.includes("/cms-stripe-connect/configuration/marketplace-terms")) {
+        return Response.json({
+            mode: "legacy",
+            version: "seller-terms-2026-07-13",
+            hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        });
+    }
     if (request.url.includes("/cms-stripe-connect/payments/seller-capabilities")) {
         return Response.json({
             readySellerCmsUserIds: [],

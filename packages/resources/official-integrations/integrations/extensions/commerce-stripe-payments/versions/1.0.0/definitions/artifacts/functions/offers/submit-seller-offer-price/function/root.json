@@ -26,6 +26,12 @@
                 },
                 "sellerTermsAccepted": {
                     "type": "boolean"
+                },
+                "sellerTermsVersion": {
+                    "type": "string"
+                },
+                "sellerTermsHash": {
+                    "type": "string"
                 }
             },
             "required": [

@@ -18,22 +18,36 @@ currency, refund, or release decision.
 
 ## Seller sale enrollment
 
-The integration configures one current seller-agreement version and its
-SHA-256 hash through the required `sellerTermsVersion` and `sellerTermsHash`
-installation inputs. The browser can never choose either value. The
-authenticated `getSellerSaleEnrollment` function asks Stripe whether the exact
-configured pair already has an immutable acceptance proof and exposes only the
-`marketplaceTermsCurrentVersionAccepted` decision needed by the seller form.
+The integration can bind the current seller agreement to one published CMS
+page through the optional `sellerTermsDocuments` input. Each entry supplies a
+stable document key, public link label, exact consent statement, and `page-link`;
+stable `1.0.0` accepts at most one. During installation, the trusted CMS
+resolver supplies the exact published page snapshot to Stripe Connect, which
+archives an immutable revision and makes it authoritative. Republishing the
+page requires rerunning this integration to archive and activate the new
+revision.
+
+The required `sellerTermsVersion` and `sellerTermsHash` inputs remain as a
+backward-compatible rollout fallback when no page is selected. Once a
+page-backed configuration is active, provider state overrides that legacy
+pair. The browser never chooses the current requirement.
+
+The authenticated `getSellerSaleEnrollment` function returns the provider's
+minimal `marketplaceTermsRequirement`: exact version and hash, consent copy,
+and published page identity. The generic seller forms render those values and
+submit the exact displayed version/hash with an unchecked explicit consent.
 
 `submitSellerOfferPrice` accepts an optional Stripe Account Token and the
 explicit `sellerTermsAccepted: true` confirmation from a checkbox that must not
 be preselected. On first enrollment it combines those browser-produced
-credentials with the server-configured version and hash, asks Stripe Connect to
-persist the user, timestamp, version, and hash proof, verifies the returned
-minimal enrollment, and only then submits the price to Commerce. Replays send
-the configured version and hash without manufacturing a new acceptance. A new
-configured version therefore requires a new explicit acceptance but does not
-require a new Stripe identity token for an existing minimal account.
+credentials with the server requirement, asks Stripe Connect to compare the
+displayed version/hash with its locked current revision, persists the user,
+timestamp, and immutable evidence reference, verifies the returned minimal
+enrollment, and only then submits the price to Commerce. A concurrent revision
+change returns `MARKETPLACE_TERMS_VERSION_CHANGED`; the form reloads the
+requirement and clears consent. Replays do not manufacture a new acceptance. A
+new configured version therefore requires a new explicit acceptance but does
+not require a new Stripe identity token for an existing minimal account.
 
 No contact email is trusted from this function input. Stripe obtains it from
 the Account Token that also carries the identity and Stripe Terms attestation.

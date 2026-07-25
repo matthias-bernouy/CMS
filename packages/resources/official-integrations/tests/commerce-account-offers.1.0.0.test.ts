@@ -361,6 +361,21 @@ describe("commerce account offers 1.0.0", () => {
         expect(viewSource).toContain('workflowState !== "awaiting_seller_price"');
         expect(viewSource).toContain("majorToMinor");
         expect(viewSource).toContain("marketplaceTermsCurrentVersionAccepted");
+        expect(viewSource).toContain(
+            "this.sellerTermsRequirement = marketplaceTermsRequirement(connect?.marketplaceTermsRequirement)",
+        );
+        expect(viewSource).toContain("publishedMarketplaceTermsRequirement(this.sellerTermsRequirement)");
+        expect(viewSource).toContain("publishedTerms?.consentText");
+        expect(viewSource).toContain("publishedTerms?.label");
+        expect(viewSource).toContain("publishedTerms?.page.path");
+        expect(viewSource).toContain("if (!this.consent.checked)");
+        expect(viewSource).toContain("payload.sellerTermsVersion = this.sellerTermsRequirement.version");
+        expect(viewSource).toContain("payload.sellerTermsHash = this.sellerTermsRequirement.hash");
+        expect(viewSource).toContain('error.message === "MARKETPLACE_TERMS_VERSION_CHANGED"');
+        expect(viewSource).toContain("await this.load()");
+        expect(viewSource).toContain(
+            "Les conditions vendeur ont changé. Relis la nouvelle version avant de continuer.",
+        );
         expect(viewSource).toContain('accountStatus === "active"');
         expect(viewSource).toContain('stripeAccountApiVersion === "v2"');
         expect(viewSource).toContain("applicationControlledRecipient === true");

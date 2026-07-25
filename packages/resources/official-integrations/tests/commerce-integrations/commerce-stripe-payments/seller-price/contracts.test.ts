@@ -96,4 +96,30 @@ describe("Commerce Stripe seller price contracts", () => {
             marketplaceTermsHash: sellerTermsHash,
         });
     });
+
+    test("forwards the exact seller-visible terms identity for provider compare-and-set acceptance", async () => {
+        const publishedVersion = `cms-page:${"b".repeat(64)}`;
+        const publishedHash = "c".repeat(64);
+        const result = await executeSellerPrice(sellerPriceResponder(), {
+            request: sellerPriceRequest({
+                offerId: "42",
+                amount: 12_000,
+                expectedVersion: 3,
+                accountToken: "accttok_first",
+                sellerTermsAccepted: true,
+                sellerTermsVersion: publishedVersion,
+                sellerTermsHash: publishedHash,
+            }),
+        });
+
+        expect(result.response.status).toBe(200);
+        expect(result.calls[2]?.body).toEqual({
+            accountToken: "accttok_first",
+            marketplaceTermsAccepted: true,
+            marketplaceTermsVersion: sellerTermsVersion,
+            marketplaceTermsHash: sellerTermsHash,
+            expectedMarketplaceTermsVersion: publishedVersion,
+            expectedMarketplaceTermsHash: publishedHash,
+        });
+    });
 });

@@ -101,7 +101,9 @@
                 "accountToken": "$input.body.accountToken",
                 "marketplaceTermsAccepted": "$input.body.sellerTermsAccepted",
                 "marketplaceTermsVersion": "{{answers.sellerTermsVersion}}",
-                "marketplaceTermsHash": "{{answers.sellerTermsHash}}"
+                "marketplaceTermsHash": "{{answers.sellerTermsHash}}",
+                "expectedMarketplaceTermsVersion": "$input.body.sellerTermsVersion",
+                "expectedMarketplaceTermsHash": "$input.body.sellerTermsHash"
             }
         }
     },

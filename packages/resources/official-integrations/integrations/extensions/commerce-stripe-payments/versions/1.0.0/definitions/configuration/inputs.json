@@ -1,15 +1,48 @@
 [
     {
         "name": "sellerTermsVersion",
-        "label": "Current seller terms version",
+        "label": "Seller terms version (legacy and safe rollout fallback)",
         "type": "text",
         "required": true
     },
     {
         "name": "sellerTermsHash",
-        "label": "Current seller terms SHA-256",
+        "label": "Seller terms SHA-256 (legacy and safe rollout fallback)",
         "type": "text",
         "required": true
+    },
+    {
+        "name": "sellerTermsDocuments",
+        "label": "Published seller terms evidence",
+        "type": "object-list",
+        "addLabel": "Select seller terms page",
+        "maxItems": 1,
+        "fields": [
+            {
+                "name": "key",
+                "label": "Document key",
+                "type": "text",
+                "required": true
+            },
+            {
+                "name": "label",
+                "label": "Public link label",
+                "type": "text",
+                "required": true
+            },
+            {
+                "name": "consentText",
+                "label": "Exact consent statement displayed to the seller",
+                "type": "textarea",
+                "required": true
+            },
+            {
+                "name": "page",
+                "label": "Published CMS page",
+                "type": "page-link",
+                "required": true
+            }
+        ]
     },
     {
         "name": "sellerPayoutSchedule",
