@@ -1,14 +1,27 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { Composition } from "@bernouy/components/base";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { syncResponsiveSourceImageElement } from "@bernouy/cms-source-images/browser";
+import {
+    createResponsiveSourceImageBrowserApi,
+    installBoundImageRuntime,
+    type BoundImageRuntime,
+} from "@bernouy/cms-source-images/browser-host";
 
 const tag = "test-commerce-negotiation-list-checkout";
 const agreementId = "018f72b8-1f90-7c31-a933-592c90c8178a";
+let imageRuntime: BoundImageRuntime;
+
+beforeEach(() => {
+    imageRuntime = installBoundImageRuntime(
+        document,
+        createResponsiveSourceImageBrowserApi({ public: true, private: true }),
+    );
+});
 
 afterEach(() => {
+    imageRuntime.disconnect();
     document.querySelectorAll(tag).forEach((element) => element.remove());
 });
 
@@ -113,7 +126,7 @@ describe("commerce negotiation list buyer checkout", () => {
                 "/annonce?slug=wilson-blade",
             );
             const image = list.querySelector<HTMLImageElement>("[data-offer-image]");
-            expect(image?.getAttribute("data-src")).toBe("/.cms/sources/commerce/publicOfferImage?id=17");
+            expect(image?.getAttribute("data-cms-src")).toBe("/.cms/sources/commerce/publicOfferImage?id=17");
             expect(image?.getAttribute("width")).toBe("1200");
             expect(image?.getAttribute("height")).toBe("800");
             expect(image?.getAttribute("sizes")).toBe("auto, 100vw");
@@ -184,7 +197,7 @@ describe("commerce negotiation list buyer checkout", () => {
             expect(images[0].getAttribute("src")).toBe("/.cms/sources/commerce/publicOfferImage?id=17");
             expect(images[0].hasAttribute("srcset")).toBe(false);
             expect(images[0].hasAttribute("data-source-width")).toBe(false);
-            expect(images[1].hasAttribute("data-src")).toBe(false);
+            expect(images[1].hasAttribute("data-cms-src")).toBe(false);
             expect(images[1].hasAttribute("src")).toBe(false);
             expect(images[1].hasAttribute("srcset")).toBe(false);
         } finally {
@@ -345,7 +358,6 @@ async function defineList(): Promise<void> {
     const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
     (window as typeof window & { p9r?: unknown }).p9r = {
         Composition,
-        syncResponsiveSourceImageElement,
     };
     try {
         new Function(compiled.viewJS)();

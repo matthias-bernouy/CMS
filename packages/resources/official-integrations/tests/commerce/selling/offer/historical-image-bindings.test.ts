@@ -60,8 +60,8 @@ describe("historical Commerce image bindings", () => {
         expect(image.getAttribute("data-source-height")).toBe("");
 
         syncRenderedOffers(host);
-        expect(image.getAttribute("data-src")).toBe("/.cms/sources/commerce/myOfferImage?id=42");
-        expect(image.getAttribute("src")).toBe("/.cms/sources/commerce/myOfferImage?id=42");
+        expect(image.getAttribute("data-cms-src")).toBe("/.cms/sources/commerce/myOfferImage?id=42");
+        expect(image.hasAttribute("src")).toBe(false);
         expect(image.hasAttribute("srcset")).toBe(false);
 
         expect(syncResponsiveSourceImageElement(image, false)).toBe(false);

@@ -1,5 +1,4 @@
 import { Composition } from "@bernouy/components/base";
-import { syncResponsiveSourceImageElement } from "@bernouy/cms-source-images/browser";
 
 import template from "./template.html" with { type: "text" };
 
@@ -696,24 +695,22 @@ export class CommerceNegotiationList extends Composition {
         setHidden(image, !mediaId);
         setHidden(placeholder, Boolean(mediaId));
         if (!mediaId) {
-            image?.removeAttribute("data-src");
+            image?.removeAttribute("data-cms-src");
             image?.removeAttribute("data-source-width");
             image?.removeAttribute("data-source-height");
-            if (image) {
-                syncResponsiveSourceImageElement(image);
-            }
             return;
         }
         const prefix = (this.getAttribute("source-prefix") || "/.cms/sources").replace(/\/+$/, "");
         const sourceId = encodeURIComponent(this.getAttribute("commerce-source-id") || "commerce");
         const endpoint = encodeURIComponent(this.getAttribute("image-endpoint") || "publicOfferImage");
-        setAttribute(image, "data-src", `${prefix}/${sourceId}/${endpoint}?id=${encodeURIComponent(String(mediaId))}`);
+        setAttribute(
+            image,
+            "data-cms-src",
+            `${prefix}/${sourceId}/${endpoint}?id=${encodeURIComponent(String(mediaId))}`,
+        );
         setOptionalPositiveInteger(image, "data-source-width", sourceWidth);
         setOptionalPositiveInteger(image, "data-source-height", sourceHeight);
         setAttribute(image, "alt", proposal.offerTitle);
-        if (image) {
-            syncResponsiveSourceImageElement(image);
-        }
     }
 
     syncActionTheme(button, action) {

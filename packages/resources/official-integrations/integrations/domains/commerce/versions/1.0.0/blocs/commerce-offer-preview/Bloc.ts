@@ -1,5 +1,4 @@
 import { Component } from "@bernouy/components/base";
-import { syncResponsiveSourceImageElement } from "@bernouy/cms-source-images/browser";
 
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
@@ -24,24 +23,10 @@ export class CommerceOfferPreview extends Component {
 
     constructor() {
         super({ css, template });
-        this.mediaObserver = null;
     }
 
     connectedCallback() {
-        const Observer = this.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
-        this.mediaObserver = new Observer(() => queueMicrotask(() => this.syncMedia()));
-        this.mediaObserver.observe(this, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ["data-src", "data-source-height", "data-source-width", "loading"],
-        });
         this.sync();
-    }
-
-    disconnectedCallback() {
-        this.mediaObserver?.disconnect();
-        this.mediaObserver = null;
     }
 
     attributeChangedCallback() {
@@ -79,7 +64,6 @@ export class CommerceOfferPreview extends Component {
         );
         this.price.textContent = price;
         this.toggleAttribute("data-empty-price", !price);
-        this.syncMedia();
 
         for (const [attribute, property] of [
             ["accent-color", "--commerce-offer-accent"],
@@ -95,12 +79,6 @@ export class CommerceOfferPreview extends Component {
             } else {
                 this.style.removeProperty(property);
             }
-        }
-    }
-
-    syncMedia() {
-        for (const image of this.querySelectorAll('img[slot="media"]')) {
-            syncResponsiveSourceImageElement(image);
         }
     }
 

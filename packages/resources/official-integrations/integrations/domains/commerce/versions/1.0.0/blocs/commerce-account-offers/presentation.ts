@@ -1,4 +1,3 @@
-import { syncResponsiveSourceImageElement } from "@bernouy/cms-source-images/browser";
 import {
     copyColorAttributes,
     copyOptionalAttribute,
@@ -61,14 +60,11 @@ export function syncRenderedOffers(host) {
         if (image && mediaId) {
             setAttributeIfChanged(
                 image,
-                "data-src",
+                "data-cms-src",
                 `${host.sourceBase}/myOfferImage?id=${encodeURIComponent(mediaId)}`,
             );
         } else {
-            image?.removeAttribute("data-src");
-        }
-        if (image) {
-            syncResponsiveSourceImageElement(image);
+            image?.removeAttribute("data-cms-src");
         }
 
         const price = card.querySelector("[data-offer-price]");

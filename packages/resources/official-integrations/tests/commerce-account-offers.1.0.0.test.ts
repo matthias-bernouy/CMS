@@ -8,7 +8,7 @@ import { syncRenderedOffers } from "../integrations/domains/commerce/versions/1.
 import { declaredBlocViewSources } from "./helpers/blocArtifactSource";
 
 describe("commerce account offers 1.0.0", () => {
-    test("waits for a resolved positive media id before loading a seller image", () => {
+    test("waits for a resolved positive media id before publishing a seller image binding", () => {
         const host = document.createElement("section") as HTMLElement & Record<string, any>;
         host.sourceBase = "/.cms/sources/commerce";
         host.status = "all";
@@ -28,11 +28,13 @@ describe("commerce account offers 1.0.0", () => {
 
         image.setAttribute("data-media-id", "42");
         syncRenderedOffers(host);
-        expect(image.getAttribute("src")).toBe("/.cms/sources/commerce/myOfferImage?id=42");
+        expect(image.getAttribute("data-cms-src")).toBe("/.cms/sources/commerce/myOfferImage?id=42");
+        expect(image.hasAttribute("src")).toBeFalse();
         expect(image.hidden).toBeFalse();
 
         image.setAttribute("data-media-id", "42&unexpected=true");
         syncRenderedOffers(host);
+        expect(image.hasAttribute("data-cms-src")).toBeFalse();
         expect(image.hasAttribute("src")).toBeFalse();
         expect(image.hidden).toBeTrue();
     });
