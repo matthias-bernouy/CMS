@@ -67,7 +67,8 @@ describe("local CMS listener composition", () => {
         expect(controlSection).toContain("integrationPackageResolver: services.integrationPackageResolver");
         expect(deliverySection).toContain("new InMemoryRateLimiter({ limit: 60, windowSeconds: 60 })");
         expect(deliverySection).toContain('clientAddressPolicy: { mode: "direct" }');
-        expect(deliverySection).toContain("integrationPackages: services.integrationRepositoryPackages");
+        expect(deliverySection).toContain("integrationCatalog: services.publicRepositoryCatalog");
+        expect(deliverySection).toContain("integrationPackages: services.publicRepositoryPackages");
     });
 
     test("coalesces repeated process shutdown signals", async () => {

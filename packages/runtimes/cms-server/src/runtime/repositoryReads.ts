@@ -1,4 +1,5 @@
 import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
+import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 import type { ClientAddressPolicy } from "@bernouy/http-runner";
 import type { PublicPackageDownloadProtection } from "@bernouy/cms-repository";
 import type { RuntimeEnv } from "../runtimeEnv";
@@ -9,10 +10,11 @@ type RepositoryReadEnv = Pick<RuntimeEnv, "CMS_HTTP_CLIENT_ADDRESS_MODE" | "CMS_
 
 export function productionRepositoryReadConfig(
     env: RepositoryReadEnv,
-    integrations: Pick<ProductionIntegrationServices, "integrationRepositoryPackages">,
+    integrations: Pick<ProductionIntegrationServices, "publicRepositoryCatalog" | "publicRepositoryPackages">,
     core: Pick<CoreStores, "repositoryPackageDownloadRateLimit">,
     report: (message: string) => void,
 ): {
+    integrationCatalog: IntegrationDefinitionRepository;
     integrationPackages: IntegrationPackageSource;
     packageDownloadProtection: PublicPackageDownloadProtection;
 } {
@@ -20,12 +22,14 @@ export function productionRepositoryReadConfig(
     if (clientAddressPolicy.mode === "disabled") {
         report(JSON.stringify({ level: "warn", event: "repository.package_download_limiter_disabled" }));
         return {
-            integrationPackages: integrations.integrationRepositoryPackages,
+            integrationCatalog: integrations.publicRepositoryCatalog,
+            integrationPackages: integrations.publicRepositoryPackages,
             packageDownloadProtection: { clientAddressPolicy },
         };
     }
     return {
-        integrationPackages: integrations.integrationRepositoryPackages,
+        integrationCatalog: integrations.publicRepositoryCatalog,
+        integrationPackages: integrations.publicRepositoryPackages,
         packageDownloadProtection: { clientAddressPolicy, rateLimiter: core.repositoryPackageDownloadRateLimit },
     };
 }

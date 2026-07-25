@@ -62,6 +62,8 @@ export function surfaceMountFixtures() {
         integrations: {
             integrationRepositoryCatalog: token("repository-catalog"),
             integrationRepositoryPackages: token("repository-packages"),
+            publicRepositoryCatalog: token("public-repository-catalog"),
+            publicRepositoryPackages: token("public-repository-packages"),
             integrationCatalog: token("integration-catalog"),
             integrationPackageResolver: token("package-resolver"),
             integrationConnectorDeployers: [token("deployer")],

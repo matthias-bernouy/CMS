@@ -12,7 +12,8 @@ describe("production repository read composition", () => {
         );
 
         expect(config).toEqual({
-            integrationPackages: fixture.integrations.integrationRepositoryPackages,
+            integrationCatalog: fixture.integrations.publicRepositoryCatalog,
+            integrationPackages: fixture.integrations.publicRepositoryPackages,
             packageDownloadProtection: {
                 clientAddressPolicy: { mode: "trusted-proxy", trustedProxyHops: 2 },
                 rateLimiter: fixture.core.repositoryPackageDownloadRateLimit,
@@ -39,7 +40,10 @@ describe("production repository read composition", () => {
 
 function dependencies() {
     return {
-        integrations: { integrationRepositoryPackages: { getPackage: async () => null } },
+        integrations: {
+            publicRepositoryCatalog: { list: async () => [] },
+            publicRepositoryPackages: { getPackage: async () => null },
+        },
         core: { repositoryPackageDownloadRateLimit: { hit: async () => ({ allowed: true }), reset: async () => {} } },
         logs: [] as string[],
     };

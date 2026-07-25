@@ -381,10 +381,20 @@ not required for the origin limiter to be active.
 
 | Variable | Purpose |
 | --- | --- |
-| `P9R_INTEGRATION_REPOSITORY_URL` | Optional public, anonymous remote integration catalog; the embedded official catalog is used when unset. |
+| `P9R_INTEGRATION_REPOSITORY_URL` | Optional public, anonymous global integration catalog; the embedded official catalog is used when unset. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Optional SMTP connection settings forwarded when deploying Supabase connector functions. |
 | `SMTP_USER`, `SMTP_PASSWORD` | Optional SMTP credentials forwarded to those functions. |
 | `SMTP_FROM`, `SMTP_REPLY_TO` | Optional sender settings forwarded to those functions. |
+
+When `P9R_INTEGRATION_REPOSITORY_URL` is set, the CMS enters global repository
+read mode. Its Delivery `/.cms/repository` routes re-serve only the remote
+catalog, definitions, assets, release notes, and exact packages; they do not
+merge in official packages embedded in the image. Delivery applies its public
+package-download limit before fetching the upstream package. The embedded
+catalog remains an internal legacy fallback for already installed packages.
+When the variable is unset, Delivery serves that embedded catalog directly and
+the CMS consumer uses its Delivery loopback without recursively calling itself.
+Neither mode uses a repository read token.
 
 Configure Supabase connector deployments after the CMS is running: open
 **Settings → Connector providers → Supabase**, then enter the project reference

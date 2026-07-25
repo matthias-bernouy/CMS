@@ -127,8 +127,8 @@ describe("production surface mounting", () => {
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
         expect(repositoryConfig?.runner).toEqual({ basePath: "/.cms/repository", owner: "delivery" });
-        expect(repositoryConfig?.integrationCatalog).toBe(options.integrations.integrationRepositoryCatalog);
-        expect(repositoryConfig?.integrationPackages).toBe(options.integrations.integrationRepositoryPackages);
+        expect(repositoryConfig?.integrationCatalog).toBe(options.integrations.publicRepositoryCatalog);
+        expect(repositoryConfig?.integrationPackages).toBe(options.integrations.publicRepositoryPackages);
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],

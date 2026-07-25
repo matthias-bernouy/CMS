@@ -116,7 +116,6 @@ export async function mountProductionSurfaces(
     deliveryRunner.group("/.cms/repository", (repositoryRunner) => {
         new runtime.Repository({
             runner: repositoryRunner,
-            integrationCatalog: integrations.integrationRepositoryCatalog,
             ...repositoryReads,
         });
     });

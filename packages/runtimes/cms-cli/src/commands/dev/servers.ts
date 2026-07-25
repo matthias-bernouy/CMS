@@ -126,8 +126,8 @@ export async function startLocalServers(options: ServerOptions) {
     deliveryRunner.group("/.cms/repository", (repositoryRunner) => {
         new RepositoryCms({
             runner: repositoryRunner,
-            integrationCatalog: services.integrationRepositoryCatalog,
-            integrationPackages: services.integrationRepositoryPackages,
+            integrationCatalog: services.publicRepositoryCatalog,
+            integrationPackages: services.publicRepositoryPackages,
             packageDownloadProtection: {
                 clientAddressPolicy: { mode: "direct" },
                 rateLimiter: repositoryPackageDownloadRateLimit,
