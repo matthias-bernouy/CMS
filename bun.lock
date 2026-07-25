@@ -23,6 +23,7 @@
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
+        "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
@@ -465,6 +466,17 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/surfaces/cms-repository-management": {
+      "name": "@bernouy/cms-repository-management",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/rate-limiter": "workspace:*",
+      },
+      "peerDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
   },
   "packages": {
     "@bernouy/cms-analytics": ["@bernouy/cms-analytics@workspace:packages/features/cms-analytics"],
@@ -506,6 +518,8 @@
     "@bernouy/cms-relations": ["@bernouy/cms-relations@workspace:packages/features/cms-relations"],
 
     "@bernouy/cms-repository": ["@bernouy/cms-repository@workspace:packages/surfaces/cms-repository"],
+
+    "@bernouy/cms-repository-management": ["@bernouy/cms-repository-management@workspace:packages/surfaces/cms-repository-management"],
 
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
 

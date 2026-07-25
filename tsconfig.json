@@ -25,6 +25,7 @@
         { "path": "packages/features/cms-analytics" },
         { "path": "packages/foundation/components" },
         { "path": "packages/surfaces/cms-repository" },
+        { "path": "packages/surfaces/cms-repository-management" },
         { "path": "packages/surfaces/cms-delivery" },
         { "path": "packages/surfaces/cms-control" },
         { "path": "packages/runtimes/cms-cli" },

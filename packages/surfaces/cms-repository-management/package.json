@@ -1,0 +1,24 @@
+{
+    "name": "@bernouy/cms-repository-management",
+    "version": "0.1.0",
+    "description": "Authenticated HTTP management surface for the CMS integration repository.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/index.ts",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "files": [
+        "src/",
+        "dist/",
+        "tsconfig.json",
+        "README.md"
+    ],
+    "dependencies": {
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/rate-limiter": "workspace:*"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    }
+}
