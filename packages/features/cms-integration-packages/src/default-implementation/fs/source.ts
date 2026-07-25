@@ -29,12 +29,14 @@ export class FsIntegrationPackageSource implements IntegrationPackageSource {
         this.cache.set(key, pending);
         void pending.then(
             (result) => {
-                if (!result) {
+                if (!result && this.cache.get(key) === pending) {
                     this.cache.delete(key);
                 }
             },
             () => {
-                this.cache.delete(key);
+                if (this.cache.get(key) === pending) {
+                    this.cache.delete(key);
+                }
             },
         );
         return pending;

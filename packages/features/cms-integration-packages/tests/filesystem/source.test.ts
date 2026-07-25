@@ -65,4 +65,29 @@ describe("filesystem integration package source", () => {
 
         expect(locateCalls).toBe(3);
     });
+
+    test("does not let an invalidated pending read evict its replacement", async () => {
+        const root = createVersionRoot();
+        const firstLocation = Promise.withResolvers<ReturnType<typeof readerOptions> | null>();
+        const secondLocation = Promise.withResolvers<ReturnType<typeof readerOptions> | null>();
+        let locateCalls = 0;
+        const source = new FsIntegrationPackageSource({
+            locate: () => {
+                locateCalls += 1;
+                return locateCalls === 1 ? firstLocation.promise : secondLocation.promise;
+            },
+        });
+
+        const first = source.getPackage("demo", "1.0.0");
+        source.invalidate("demo", "1.0.0");
+        const replacement = source.getPackage("demo", "1.0.0");
+        firstLocation.resolve(null);
+        expect(await first).toBeNull();
+
+        const sharedReplacement = source.getPackage("demo", "1.0.0");
+        expect(sharedReplacement).toBe(replacement);
+        secondLocation.resolve(readerOptions(root));
+        expect(await replacement).not.toBeNull();
+        expect(locateCalls).toBe(2);
+    });
 });
