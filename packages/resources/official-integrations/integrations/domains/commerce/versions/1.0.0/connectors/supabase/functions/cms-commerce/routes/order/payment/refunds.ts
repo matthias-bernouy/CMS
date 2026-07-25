@@ -52,6 +52,7 @@ export async function requestOrderRefund(request: Request): Promise<Response> {
     if (hasLegacyAmount === hasAnyAllocation) {
         throw new HttpError(400, "exactly one refund amount form is required");
     }
+    const idempotencyKey = hasAnyAllocation ? requiredText(body.idempotencyKey, "idempotencyKey") : undefined;
     const result = hasAnyAllocation
         ? await rpc("request_allocated_order_refund", {
               p_order_id: orderId,
@@ -65,6 +66,7 @@ export async function requestOrderRefund(request: Request): Promise<Response> {
               ),
               p_actor_kind: "admin",
               p_actor_id: actorId,
+              p_idempotency_key: idempotencyKey,
           })
         : await rpc("request_order_refund", {
               p_order_id: orderId,

@@ -9,6 +9,7 @@ import {
     type PostgresContract,
 } from "./postgresContractCases";
 import { requireDisposablePostgresContractTarget } from "./postgresContractTarget";
+import { runRefundIdempotencyConcurrencyProof } from "../commerce/protected/postgres/settlement/refundIdempotencyConcurrency";
 import { loadSupabaseSchemaSql } from "./supabaseSql";
 
 const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -31,6 +32,9 @@ async function main(): Promise<void> {
             }
             if (contractCase.id === "commerce-media") {
                 await runCommerceMediaRolloutProofs(databaseUrl);
+            }
+            if (contractCase.id === "commerce-protected-settlement") {
+                await runRefundIdempotencyConcurrencyProof(psql, databaseUrl);
             }
         }
     } finally {

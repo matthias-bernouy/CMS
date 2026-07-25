@@ -5,6 +5,11 @@ export function registerRefundAllocationsTest(): void {
     test("derives generic refund allocations and enforces distinct dual approvers", async () => {
         const schema = await loadCommerceSchemaSql();
         const createRefund = functionSql(schema, "create_refund_request", "refund_authorization_payload");
+        const createAllocatedRefund = functionSql(
+            schema,
+            "create_allocated_refund_request",
+            "refund_authorization_payload",
+        );
         const requestRefund = functionSql(schema, "request_order_refund", "review_refund_request");
         const reviewRefund = functionSql(schema, "review_refund_request", "authorize_order_release");
         const authorizeRelease = functionSql(schema, "authorize_order_release", "authorize_order_reserve_release");
@@ -18,6 +23,9 @@ export function registerRefundAllocationsTest(): void {
         expect(requestRefund).toContain("p_merchandise_refund_amount");
         expect(requestRefund).toContain("p_shipping_refund_amount");
         expect(requestRefund).toContain("p_protection_fee_refund_amount");
+        expect(requestRefund).toContain("p_idempotency_key text");
+        expect(requestRefund).toContain("'admin-order-refund:v1:' || p_order_id");
+        expect(requestRefund).toContain("extensions.digest(");
         expect(requestRefund).toContain("commerce.create_allocated_refund_request");
         expect(requestRefund).toContain("commerce.calculate_protection_fee_refund");
         expect(requestRefund).toContain("v_terms.seller_proceeds_amount - v_existing_seller_recovery");
@@ -46,6 +54,15 @@ export function registerRefundAllocationsTest(): void {
         expect(schema).toContain("refund_requests_one_nonterminal_order_idx");
         expect(schema).toContain("v_cumulative_amount >= v_protection.finance_review_threshold_amount");
         expect(schema).toContain("v_cumulative_amount >= v_protection.dual_approval_threshold_amount");
+        expect(createAllocatedRefund).toContain("where business_key = v_business_key");
+        expect(createAllocatedRefund).toContain("for update;");
+        expect(createAllocatedRefund).toContain(
+            "allocated refund idempotency key was already used with another immutable payload",
+        );
+        expect(createAllocatedRefund).toContain("jsonb_build_object('idempotentReplay', true)");
+        expect(createAllocatedRefund.indexOf("where business_key = v_business_key")).toBeLessThan(
+            createAllocatedRefund.indexOf("coalesce(sum(requested_amount), 0)"),
+        );
         expect(createRefund).toContain("p_requested_by_kind is null");
         expect(createRefund).toContain("p_requested_by_kind not in ('buyer', 'seller', 'admin', 'system')");
         expect(createRefund).toContain("p_requested_by_kind = 'admin'");

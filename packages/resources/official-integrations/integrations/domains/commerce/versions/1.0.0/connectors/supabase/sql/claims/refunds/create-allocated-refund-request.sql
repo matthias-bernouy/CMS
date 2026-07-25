@@ -52,8 +52,43 @@ begin
     if v_requested_amount <= 0 or v_requested_amount > 9007199254740991 then
         raise exception 'validation: allocated refund requires a positive safe-integer total';
     end if;
+    v_business_key := coalesce(
+        nullif(btrim(p_business_key), ''),
+        'refund:' || p_order_id || ':' || gen_random_uuid()::text
+    );
     select * into v_order from commerce.orders where id = p_order_id for update;
     if not found then raise exception 'not_found: order'; end if;
+
+    -- Serialize the business identity independently from the order lock so
+    -- retries resolve before cumulative financial state is evaluated. An
+    -- exact replay returns the current immutable request without touching the
+    -- settlement or emitting a second audit/outbox event.
+    perform pg_advisory_xact_lock(hashtextextended(
+        'commerce:allocated-refund:' || v_business_key, 0
+    ));
+    select * into v_request
+    from commerce.refund_requests
+    where business_key = v_business_key
+    for update;
+    if found then
+        if v_request.order_id is distinct from v_order.id
+            or v_request.claim_id is distinct from p_claim_id
+            or v_request.reason is distinct from p_reason
+            or v_request.requested_amount is distinct from v_requested_amount
+            or v_request.merchandise_refund_amount
+                is distinct from p_merchandise_refund_amount
+            or v_request.shipping_refund_amount
+                is distinct from p_shipping_refund_amount
+            or v_request.protection_fee_refund_amount
+                is distinct from p_protection_fee_refund_amount
+            or v_request.allocation_version is distinct from 1
+            or v_request.requested_by_kind is distinct from p_requested_by_kind
+            or v_request.requested_by is distinct from p_requested_by then
+            raise exception 'conflict: allocated refund idempotency key was already used with another immutable payload';
+        end if;
+        return to_jsonb(v_request) || jsonb_build_object('idempotentReplay', true);
+    end if;
+
     select * into v_terms from commerce.order_financial_terms where order_id = v_order.id;
     if not found then raise exception 'conflict: refund requires immutable financial terms'; end if;
     if not exists (
@@ -133,10 +168,6 @@ begin
     v_requires_finance := v_cumulative_amount >= v_protection.finance_review_threshold_amount
         or p_requested_by_kind = 'admin';
     v_requires_dual := v_cumulative_amount >= v_protection.dual_approval_threshold_amount;
-    v_business_key := coalesce(
-        nullif(btrim(p_business_key), ''),
-        'refund:' || v_order.id || ':' || gen_random_uuid()::text
-    );
     insert into commerce.refund_requests (
         order_id, claim_id, business_key, reason, status, requested_amount,
         merchandise_refund_amount, shipping_refund_amount,
@@ -154,8 +185,7 @@ begin
         v_requires_finance, v_requires_dual, p_requested_by_kind, p_requested_by,
         case when p_auto_approve and not v_requires_finance then p_requested_by end,
         case when p_auto_approve and not v_requires_finance then 'Policy-authorized business resolution' end
-    ) on conflict (business_key) do update set business_key = excluded.business_key
-    returning * into v_request;
+    ) returning * into v_request;
     update commerce.order_settlements set status = case
         when total_transferred_amount > total_reversed_amount
           and v_request.seller_recovery_amount > v_request.seller_reserve_offset_amount
@@ -175,6 +205,6 @@ begin
         ),
         'commerce.refund.requested', 'refund:' || v_request.id || ':requested'
     );
-    return to_jsonb(v_request);
+    return to_jsonb(v_request) || jsonb_build_object('idempotentReplay', false);
 end;
 $$;

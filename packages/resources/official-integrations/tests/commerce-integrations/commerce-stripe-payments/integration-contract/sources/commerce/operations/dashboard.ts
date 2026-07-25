@@ -8,6 +8,7 @@ export function commerceDashboardEndpoints(): Source["endpoints"] {
         command("requestOrderRefund", {
             orderId: { type: "number" },
             reason: { type: "string" },
+            idempotencyKey: { type: "string" },
             merchandiseRefundAmount: { type: "number" },
             shippingRefundAmount: { type: "number" },
             protectionFeeRefundAmount: { type: "number" },

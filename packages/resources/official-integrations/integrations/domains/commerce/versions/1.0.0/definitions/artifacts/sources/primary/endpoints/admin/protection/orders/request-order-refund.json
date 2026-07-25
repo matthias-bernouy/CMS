@@ -44,6 +44,11 @@
                     "type": "number",
                     "description": "Legacy aggregate amount in minor units. Submit this field alone, or submit all three allocated fields."
                 },
+                "idempotencyKey": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "description": "Opaque client operation key required with allocated refund fields. Commerce namespaces and hashes it server-side."
+                },
                 "merchandiseRefundAmount": {
                     "type": "number",
                     "description": "Minor-unit amount allocated to refunded merchandise."

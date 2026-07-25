@@ -41,3 +41,4 @@ grant usage on schema extensions to service_role;
 grant execute on all functions in schema extensions to service_role;
 
 \ir ../settlement-smoke.sql
+\ir refund-idempotency.sql

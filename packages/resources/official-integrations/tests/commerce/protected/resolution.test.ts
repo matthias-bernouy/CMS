@@ -39,6 +39,7 @@ describe("commerce protected C2C claims and refunds", () => {
             body: {
                 orderId: 42,
                 reason: "admin_resolution",
+                idempotencyKey: "refund-operation-42",
                 merchandiseRefundAmount: 7_600,
                 shippingRefundAmount: 0,
                 protectionFeeRefundAmount: 400,
@@ -56,6 +57,7 @@ describe("commerce protected C2C claims and refunds", () => {
             p_protection_fee_refund_amount: 400,
             p_actor_kind: "admin",
             p_actor_id: "admin-7",
+            p_idempotency_key: "refund-operation-42",
         });
     });
 
