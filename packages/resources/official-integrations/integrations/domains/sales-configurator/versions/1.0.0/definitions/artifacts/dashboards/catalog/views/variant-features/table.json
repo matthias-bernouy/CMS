@@ -23,11 +23,11 @@
       }
     ],
     "columns": [
-      { "id": "variantName", "label": "Variant", "path": "variantName", "primary": true },
-      { "id": "featureName", "label": "Feature", "path": "featureName" },
-      { "id": "availability", "label": "Availability", "path": "availability", "format": "badge" },
-      { "id": "pricingMode", "label": "Pricing", "path": "pricingMode", "format": "badge" },
-      { "id": "unitAmountCents", "label": "Amount", "path": "unitAmountCents", "format": "money" }
+      { "id": "variantName", "label": "Variant", "path": "variantName", "primary": true, "width": "minmax(15rem, 1.5fr)" },
+      { "id": "featureName", "label": "Feature", "path": "featureName", "width": "minmax(15rem, 1.5fr)" },
+      { "id": "availability", "label": "Availability", "path": "availability", "format": "badge", "width": "9rem" },
+      { "id": "pricingMode", "label": "Pricing", "path": "pricingMode", "format": "badge", "width": "8rem" },
+      { "id": "unitAmountCents", "label": "Amount (EUR)", "path": "unitAmountCents", "format": "money", "width": "10rem" }
     ],
     "actions": [
       {

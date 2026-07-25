@@ -1,5 +1,6 @@
 import type { DashboardField } from "@bernouy/cms-dashboards";
 import type { WDetailField } from "../../widgets/w-detail/types";
+import { formatDashboardValue } from "../../domain/formatting";
 import { matchesDashboardVisibility, valueAt } from "../expressions";
 import { mediaValue } from "../media";
 import {
@@ -135,7 +136,27 @@ export function detailField(
         if (field.format === "image") {
             return { ...base, input: "image", value: textValue(value) };
         }
+        if (field.format === "date" || field.format === "money") {
+            return {
+                ...base,
+                input: "readonly",
+                value: formatDashboardValue(value, field.format, {
+                    currency: field.format === "money" ? detailCurrency(resource, fields, field.path) : undefined,
+                }),
+            };
+        }
         return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
     }
     return { ...base, input: "text", value: textValue(value) };
+}
+
+function detailCurrency(resource: unknown, fields: Record<string, unknown>, valuePath: string): string | undefined {
+    const separator = valuePath.lastIndexOf(".");
+    const siblingPath = separator === -1 ? "currency" : `${valuePath.slice(0, separator)}.currency`;
+    const value =
+        valueAt(fields, "currency") ??
+        valueAt(resource, siblingPath) ??
+        (siblingPath === "currency" ? undefined : valueAt(resource, "currency"));
+    const currency = textValue(value).trim();
+    return currency || undefined;
 }

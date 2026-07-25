@@ -35,10 +35,10 @@
       }
     ],
     "columns": [
-      { "id": "name", "label": "Module", "path": "name", "primary": true },
-      { "id": "code", "label": "Code", "path": "code" },
-      { "id": "status", "label": "Status", "path": "status", "format": "badge" },
-      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date" }
+      { "id": "name", "label": "Module", "path": "name", "primary": true, "width": "minmax(16rem, 2fr)" },
+      { "id": "code", "label": "Code", "path": "code", "width": "minmax(10rem, 1fr)" },
+      { "id": "status", "label": "Status", "path": "status", "format": "badge", "width": "8rem" },
+      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date", "width": "12rem" }
     ],
     "actions": [
       {

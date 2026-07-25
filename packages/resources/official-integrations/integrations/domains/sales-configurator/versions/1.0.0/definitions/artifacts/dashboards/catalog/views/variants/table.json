@@ -35,11 +35,11 @@
       }
     ],
     "columns": [
-      { "id": "name", "label": "Variant", "path": "name", "primary": true },
-      { "id": "moduleName", "label": "Module", "path": "moduleName" },
-      { "id": "pricingMode", "label": "Pricing", "path": "pricingMode", "format": "badge" },
-      { "id": "unitAmountCents", "label": "Amount", "path": "unitAmountCents", "format": "money" },
-      { "id": "status", "label": "Status", "path": "status", "format": "badge" }
+      { "id": "name", "label": "Variant", "path": "name", "primary": true, "width": "minmax(15rem, 1.5fr)" },
+      { "id": "moduleName", "label": "Module", "path": "moduleName", "width": "minmax(15rem, 1.5fr)" },
+      { "id": "pricingMode", "label": "Pricing", "path": "pricingMode", "format": "badge", "width": "8rem" },
+      { "id": "unitAmountCents", "label": "Amount", "path": "unitAmountCents", "format": "money", "width": "10rem" },
+      { "id": "status", "label": "Status", "path": "status", "format": "badge", "width": "8rem" }
     ],
     "actions": [
       {

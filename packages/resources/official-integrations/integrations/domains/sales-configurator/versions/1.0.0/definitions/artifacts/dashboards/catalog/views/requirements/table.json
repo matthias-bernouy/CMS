@@ -23,10 +23,10 @@
       }
     ],
     "columns": [
-      { "id": "subjectName", "label": "Subject", "path": "subjectName", "primary": true },
-      { "id": "subjectKind", "label": "Subject type", "path": "subjectKind", "format": "badge" },
-      { "id": "requiredName", "label": "Requires", "path": "requiredName" },
-      { "id": "requiredKind", "label": "Required type", "path": "requiredKind", "format": "badge" }
+      { "id": "subjectName", "label": "Subject", "path": "subjectName", "primary": true, "width": "minmax(16rem, 1.5fr)" },
+      { "id": "subjectKind", "label": "Subject type", "path": "subjectKind", "format": "badge", "width": "9rem" },
+      { "id": "requiredName", "label": "Requires", "path": "requiredName", "width": "minmax(16rem, 1.5fr)" },
+      { "id": "requiredKind", "label": "Required type", "path": "requiredKind", "format": "badge", "width": "9rem" }
     ],
     "actions": [
       {

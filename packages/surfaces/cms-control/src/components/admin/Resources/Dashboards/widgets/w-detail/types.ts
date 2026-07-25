@@ -8,6 +8,7 @@ type WDetailNestedFieldBase = {
     label: string;
     path: string;
     width?: string;
+    format?: "text" | "badge" | "date" | "money";
 };
 
 export type WDetailTableColumn = WDetailNestedFieldBase &

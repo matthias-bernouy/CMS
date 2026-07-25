@@ -14,6 +14,7 @@ export function tableColumn(
         label: column.label,
         path: column.path,
         ...(column.width ? { width: column.width } : {}),
+        ...(column.format ? { format: column.format } : {}),
     };
     if (column.editable !== true) {
         return base;

@@ -1,3 +1,5 @@
+import { formatDashboardValue } from "../../domain/formatting";
+
 const template = document.createElement("template");
 template.innerHTML = `
     <style>
@@ -13,11 +15,17 @@ template.innerHTML = `
             min-width: 0;
         }
 
-        .title {
+        .title,
+        [data-formatted] {
             min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+
+        [data-formatted][hidden],
+        :host([data-display-format]) slot {
+            display: none;
         }
 
         :host([primary]) .title {
@@ -51,14 +59,14 @@ template.innerHTML = `
         }
     </style>
     <span class="cell">
-        <span class="title"><slot></slot></span>
+        <span class="title"><slot></slot><span data-formatted hidden></span></span>
         <small data-meta></small>
     </span>
 `;
 
 export class DashboardWCell extends HTMLElement {
     static get observedAttributes(): string[] {
-        return ["meta"];
+        return ["data-display-currency", "data-display-format", "data-display-value", "meta"];
     }
 
     constructor() {
@@ -78,6 +86,22 @@ export class DashboardWCell extends HTMLElement {
         const meta = this.shadowRoot?.querySelector<HTMLElement>("[data-meta]");
         if (meta) {
             meta.textContent = this.getAttribute("meta") ?? "";
+        }
+        const formatted = this.shadowRoot?.querySelector<HTMLElement>("[data-formatted]");
+        const format = this.dataset.displayFormat;
+        if (formatted) {
+            const active = format === "date" || format === "money";
+            formatted.hidden = !active;
+            formatted.textContent = active
+                ? formatDashboardValue(this.dataset.displayValue, format, {
+                      currency: this.dataset.displayCurrency,
+                  })
+                : "";
+            if (active) {
+                formatted.title = formatted.textContent;
+            } else {
+                formatted.removeAttribute("title");
+            }
         }
     }
 }

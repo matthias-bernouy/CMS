@@ -1,3 +1,4 @@
+import { formatDashboardValue } from "../../../domain/formatting";
 import { setValueAt, valueAt } from "../../../runtime/expressions";
 import { DashboardWReorderableList, type ReorderableListData } from "../../w-reorderable-list/WReorderableList";
 import type { WDetailField, WDetailFieldValue } from "../types";
@@ -66,7 +67,7 @@ export function tableRow(field: WDetailField, row: Record<string, unknown>): HTM
         if (field.editable && column.editable === true) {
             cell.append(createTableEditor(column, valueAt(row, column.path)));
         } else {
-            cell.textContent = tableCellDisplayValue(valueAt(row, column.path));
+            cell.textContent = tableCellDisplayValue(valueAt(row, column.path), row, column);
         }
         element.append(cell);
     }
@@ -129,11 +130,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function tableCellDisplayValue(value: unknown): string {
-    if (Array.isArray(value)) {
-        return value.map((item) => String(item)).join(", ");
+function tableCellDisplayValue(
+    value: unknown,
+    row: Record<string, unknown>,
+    column: NonNullable<WDetailField["columns"]>[number],
+): string {
+    if (column.format === "date" || column.format === "money") {
+        return formatDashboardValue(value, column.format, {
+            currency: column.format === "money" ? tableCurrency(row, column.path) : undefined,
+        });
     }
-    return value === null || value === undefined ? "" : String(value);
+    return formatDashboardValue(value, column.format);
+}
+
+function tableCurrency(row: Record<string, unknown>, valuePath: string): string | undefined {
+    const separator = valuePath.lastIndexOf(".");
+    const siblingPath = separator === -1 ? "currency" : `${valuePath.slice(0, separator)}.currency`;
+    const value = valueAt(row, siblingPath) ?? (siblingPath === "currency" ? undefined : valueAt(row, "currency"));
+    const currency = value === null || value === undefined ? "" : String(value).trim();
+    return currency || undefined;
 }
 
 function tableColumns(columns: WDetailField["columns"], editable: boolean): string {

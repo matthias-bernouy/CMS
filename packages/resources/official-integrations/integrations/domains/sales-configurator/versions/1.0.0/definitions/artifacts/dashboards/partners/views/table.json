@@ -34,11 +34,11 @@
       }
     ],
     "columns": [
-      { "id": "displayName", "label": "Partner", "path": "displayName", "primary": true },
-      { "id": "cmsUserId", "label": "CMS user id", "path": "cmsUserId" },
-      { "id": "status", "label": "Status", "path": "status", "format": "badge" },
-      { "id": "contactEmail", "label": "Contact", "path": "contactEmail" },
-      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date" }
+      { "id": "displayName", "label": "Partner", "path": "displayName", "primary": true, "width": "minmax(14rem, 1.5fr)" },
+      { "id": "cmsUserId", "label": "CMS user id", "path": "cmsUserId", "width": "minmax(16rem, 1.5fr)" },
+      { "id": "status", "label": "Status", "path": "status", "format": "badge", "width": "8rem" },
+      { "id": "contactEmail", "label": "Contact", "path": "contactEmail", "width": "minmax(16rem, 1.5fr)" },
+      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date", "width": "12rem" }
     ],
     "actions": [
       {

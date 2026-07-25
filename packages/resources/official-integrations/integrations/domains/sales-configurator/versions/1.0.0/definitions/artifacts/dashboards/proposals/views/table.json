@@ -71,13 +71,13 @@
       }
     ],
     "columns": [
-      { "id": "reference", "label": "Reference", "path": "reference", "primary": true },
-      { "id": "client", "label": "Client", "path": "client.companyName" },
-      { "id": "partner", "label": "Owner", "path": "partnerDisplayName" },
-      { "id": "status", "label": "Status", "path": "status", "format": "badge" },
-      { "id": "fixedTotalCents", "label": "Fixed total", "path": "fixedTotalCents", "format": "money" },
-      { "id": "quoteItemCount", "label": "Quote items", "path": "quoteItemCount" },
-      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date" }
+      { "id": "reference", "label": "Reference", "path": "reference", "primary": true, "width": "10rem" },
+      { "id": "client", "label": "Client", "path": "client.companyName", "width": "minmax(14rem, 1.5fr)" },
+      { "id": "partner", "label": "Owner", "path": "partnerDisplayName", "width": "minmax(12rem, 1.25fr)" },
+      { "id": "status", "label": "Status", "path": "status", "format": "badge", "width": "8rem" },
+      { "id": "fixedTotalCents", "label": "Fixed total", "path": "fixedTotalCents", "format": "money", "width": "10rem" },
+      { "id": "quoteItemCount", "label": "Quote items", "path": "quoteItemCount", "width": "7rem" },
+      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date", "width": "12rem" }
     ],
     "selection": { "opens": "proposalDetail" }
   }

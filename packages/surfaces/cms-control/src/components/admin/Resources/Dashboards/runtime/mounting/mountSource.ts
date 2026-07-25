@@ -76,6 +76,13 @@ export function tableRowsTemplate(widget: Extract<DashboardWidget, { widget: "w-
         if (column.format === "badge") {
             cell.setAttribute("tone", "badge");
         }
+        if (column.format === "date" || column.format === "money") {
+            cell.dataset.displayFormat = column.format;
+            cell.dataset.displayValue = bindingPath("row", column.path);
+            if (column.format === "money") {
+                cell.dataset.displayCurrency = bindingPath("row", "currency");
+            }
+        }
         cell.textContent = bindingPath("row", column.path);
         row.append(cell);
     }

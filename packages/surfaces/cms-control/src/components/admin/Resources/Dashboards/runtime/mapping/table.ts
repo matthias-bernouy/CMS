@@ -1,6 +1,7 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { WTableCell, WTableData, WTableRow } from "../../widgets/w-table/types";
-import { pathLabel, textAt } from "../expressions";
+import { formatDashboardValue } from "../../domain/formatting";
+import { pathLabel, textAt, valueAt } from "../expressions";
 
 type TableWidget = Extract<DashboardWidget, { widget: "w-table" }>;
 
@@ -33,7 +34,9 @@ function tableRow(widget: TableWidget, item: unknown): WTableRow {
 }
 
 function tableCell(item: unknown, column: TableWidget["columns"][number]): WTableCell {
-    const value = textAt(item, column.path);
+    const value = formatDashboardValue(valueAt(item, column.path), column.format, {
+        currency: column.format === "money" ? textAt(item, "currency") || undefined : undefined,
+    });
     if (column.format === "badge") {
         return { title: value, tone: "badge" };
     }
