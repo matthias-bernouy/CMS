@@ -1,6 +1,7 @@
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import type { DeclarativeConnectorTemplate } from "../../../interfaces/Integration";
 import { isRecord, text } from "../definition/values";
+import { parseConnectorFunctionCompatibility } from "./connector-compatibility/function";
 import { parseConnectorCompatibility } from "./connector-compatibility";
 import { parseConnectorSchemas } from "./connectorSchemaTemplates";
 
@@ -115,6 +116,9 @@ function parseConnectorFunction(
         directory,
         ...(text(value.configPath) ? { configPath: text(value.configPath)! } : {}),
         ...(value.secrets !== undefined ? { secrets: parseConnectorSecretMap(value.secrets, `${name}.secrets`) } : {}),
+        ...(value.compatibility !== undefined
+            ? { compatibility: parseConnectorFunctionCompatibility(value.compatibility, `${name}.compatibility`) }
+            : {}),
     };
 }
 
