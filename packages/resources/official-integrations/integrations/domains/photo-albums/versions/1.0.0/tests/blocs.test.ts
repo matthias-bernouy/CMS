@@ -64,17 +64,41 @@ describe("Photo Albums public Blocs", () => {
 
         expect(`${controller}\n${editor}`).not.toMatch(/\bfetch\s*\(/);
         expect(controller).toContain('"cms-source"');
+        expect(controller).toContain('"source-id"');
+        expect(controller).toContain("[data-photo-source-url]");
         expect(html).toContain(`src="/.cms/sources/photo-albums/publicPhoto?id={{`);
         expect(html).not.toContain("data-src=");
+        expect(html).toContain('data-photo-source-url="publicPhoto"');
         expect(html).toContain('data-source-image-access="public"');
         expect(html).toContain("data-source-width=");
         expect(html).toContain("data-source-height=");
+        expect(editor).toContain('attribute: "grid-min"');
+        expect(editor).toContain('slot: "loading"');
+        expect(editor).toContain('slot: "error"');
         expect(manifest).toMatchObject({
             "default-tag": name,
             bloc: "./Bloc.ts",
             editor: "./BlocEditor.ts",
             defaultContent: "./default.html",
         });
+    });
+
+    test("catalogue and gallery expose focused editable content regions", async () => {
+        const [listEditor, galleryEditor, listHtml, galleryHtml] = await Promise.all([
+            blocFile("photo-album-list", "BlocEditor.ts"),
+            blocFile("photo-album-gallery", "BlocEditor.ts"),
+            blocFile("photo-album-list", "default.html"),
+            blocFile("photo-album-gallery", "default.html"),
+        ]);
+
+        for (const slot of ["heading", "loading", "error", "empty", "catalogue", "pagination"]) {
+            expect(listEditor).toContain(`slot: "${slot}"`);
+            expect(listHtml).toContain(`slot="${slot}"`);
+        }
+        for (const slot of ["loading", "error", "album"]) {
+            expect(galleryEditor).toContain(`slot: "${slot}"`);
+            expect(galleryHtml).toContain(`slot="${slot}"`);
+        }
     });
 
     test("dynamic Source images stay inert until binding and then receive bounded candidates", async () => {

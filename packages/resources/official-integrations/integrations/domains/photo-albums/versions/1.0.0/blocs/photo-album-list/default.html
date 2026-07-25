@@ -1,22 +1,22 @@
 <photo-album-list source-id="photo-albums" page-size="12" page-param="page" sync-url="true" grid-min="sm" grid-max="lg" grid-gap="md">
-    <h2>{{ data.display.galleryTitle }}</h2>
+    <h2 slot="heading">{{ data.display.galleryTitle }}</h2>
 
-    <basic-grid min="sm" max="lg" gap="md" data-album-grid cms-condition="$source.loading">
+    <basic-grid slot="loading" min="sm" max="lg" gap="md" data-album-grid cms-condition="$source.loading">
         <basic-skeleton height="18rem" animation="wave" label="Loading photo albums"></basic-skeleton>
         <basic-skeleton height="18rem" animation="wave" aria-hidden="true"></basic-skeleton>
         <basic-skeleton height="18rem" animation="wave" aria-hidden="true"></basic-skeleton>
     </basic-grid>
 
-    <basic-toast role="alert" cms-condition="$source.error">Photo albums could not be loaded.</basic-toast>
+    <basic-toast slot="error" role="alert" cms-condition="$source.error">Photo albums could not be loaded.</basic-toast>
 
-    <basic-card appearance="outlined" cms-condition="$source.loaded && data.total == 0">
+    <basic-card slot="empty" appearance="outlined" cms-condition="$source.loaded && data.total == 0">
         <strong slot="title">No photo album is available yet.</strong>
     </basic-card>
 
-    <basic-grid min="sm" max="lg" gap="md" data-album-grid cms-condition="$source.loaded && data.total > 0">
+    <basic-grid slot="catalogue" min="sm" max="lg" gap="md" data-album-grid cms-condition="$source.loaded && data.total > 0">
         <a href="/photo-album?slug={{ album.slug }}" cms-repeat="data.items as album">
             <basic-card appearance="outlined" stretch>
-                <img slot="media" src="/.cms/sources/photo-albums/publicPhoto?id={{ album.coverPhoto.id }}" data-source-image-access="public" data-source-width="{{ album.coverPhoto.width }}" data-source-height="{{ album.coverPhoto.height }}" alt="{{ album.coverPhoto.alt }}" loading="lazy" decoding="async" style="display:block;width:100%;height:auto" cms-condition="album.coverPhoto.id">
+                <img slot="media" src="/.cms/sources/photo-albums/publicPhoto?id={{ album.coverPhoto.id }}" data-photo-source-url="publicPhoto" data-source-image-access="public" data-source-width="{{ album.coverPhoto.width }}" data-source-height="{{ album.coverPhoto.height }}" alt="{{ album.coverPhoto.alt }}" loading="lazy" decoding="async" style="display:block;width:100%;height:auto" cms-condition="album.coverPhoto.id">
                 <strong slot="title">{{ album.title }}</strong>
                 <span slot="description">{{ album.description }}</span>
                 <span>{{ album.photoCount }} photos</span>
@@ -24,5 +24,5 @@
         </a>
     </basic-grid>
 
-    <basic-pagination page="1" page-size="12" total="{{ data.total }}" cms-condition="$source.loaded && data.total > data.limit"></basic-pagination>
+    <basic-pagination slot="pagination" page="1" page-size="12" total="{{ data.total }}" cms-condition="$source.loaded && data.total > data.limit"></basic-pagination>
 </photo-album-list>

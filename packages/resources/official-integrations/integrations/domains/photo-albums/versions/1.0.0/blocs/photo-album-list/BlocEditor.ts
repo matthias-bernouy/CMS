@@ -71,7 +71,15 @@ export class PhotoAlbumListEditor extends Editor {
     }
 
     protected override contentSlots(): ContentSlot[] {
-        return [{ label: "Album catalogue", accepts: [{ kind: "any-component" }] }];
+        const accepts = [{ kind: "any-component" as const }];
+        return [
+            { label: "Heading", slot: "heading", max: 1, accepts },
+            { label: "Loading state", slot: "loading", max: 1, accepts },
+            { label: "Error state", slot: "error", max: 1, accepts },
+            { label: "Empty state", slot: "empty", max: 1, accepts },
+            { label: "Album catalogue", slot: "catalogue", max: 1, accepts },
+            { label: "Pagination", slot: "pagination", max: 1, accepts },
+        ];
     }
 }
 

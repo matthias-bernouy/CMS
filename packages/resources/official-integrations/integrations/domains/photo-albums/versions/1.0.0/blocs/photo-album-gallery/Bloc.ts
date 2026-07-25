@@ -4,6 +4,29 @@ function setAttributeIfChanged(element, name, value) {
     }
 }
 
+function sourceBase(element) {
+    const prefix = (element.getAttribute("source-prefix") || "/.cms/sources").replace(/\/+$/, "");
+    const sourceId = encodeURIComponent(element.getAttribute("source-id") || "photo-albums");
+    return `${prefix}/${sourceId}`;
+}
+
+function syncBoundSourceUrl(element, base) {
+    const endpoint = element.getAttribute("data-photo-source-url");
+    if (!endpoint) {
+        return;
+    }
+    const attribute =
+        element.localName === "img" && element.hasAttribute("data-cms-src")
+            ? "data-cms-src"
+            : element.localName === "img"
+              ? "src"
+              : "href";
+    const current = element.getAttribute(attribute) || "";
+    const queryIndex = current.indexOf("?");
+    const suffix = queryIndex >= 0 ? current.slice(queryIndex) : "";
+    setAttributeIfChanged(element, attribute, `${base}/${endpoint}${suffix}`);
+}
+
 export class PhotoAlbumGallery extends HTMLElement {
     static observedAttributes = [
         "grid-gap",
@@ -33,11 +56,13 @@ export class PhotoAlbumGallery extends HTMLElement {
 
     sync = () => {
         const slug = this.albumSlug();
-        const prefix = (this.getAttribute("source-prefix") || "/.cms/sources").replace(/\/+$/, "");
-        const sourceId = encodeURIComponent(this.getAttribute("source-id") || "photo-albums");
+        const base = sourceBase(this);
+        for (const element of this.querySelectorAll("[data-photo-source-url]")) {
+            syncBoundSourceUrl(element, base);
+        }
         if (slug) {
             const params = new URLSearchParams({ slug });
-            this.setAttribute("cms-source", `${prefix}/${sourceId}/album?${params.toString()} as data`);
+            this.setAttribute("cms-source", `${base}/album?${params.toString()} as data`);
         } else {
             this.removeAttribute("cms-source");
         }

@@ -60,7 +60,12 @@ export class PhotoAlbumGalleryEditor extends Editor {
     }
 
     protected override contentSlots(): ContentSlot[] {
-        return [{ label: "Album gallery", accepts: [{ kind: "any-component" }] }];
+        const accepts = [{ kind: "any-component" as const }];
+        return [
+            { label: "Loading state", slot: "loading", max: 1, accepts },
+            { label: "Error state", slot: "error", max: 1, accepts },
+            { label: "Album content", slot: "album", max: 1, accepts },
+        ];
     }
 }
 
