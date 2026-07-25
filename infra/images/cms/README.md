@@ -239,6 +239,10 @@ CMS_ADMIN_PASSWORD="$(openssl rand -hex 24)"
     printf 'CMS_ADMIN_EMAIL=%s\n' "admin@${DOMAIN}"
     printf 'CMS_ADMIN_PASSWORD=%s\n' "${CMS_ADMIN_PASSWORD}"
     printf 'ANALYTICS_SALT_SECRET=%s\n' "$(openssl rand -hex 32)"
+    printf 'CMS_HTTP_CLIENT_ADDRESS_MODE=%s\n' 'trusted-proxy'
+    printf 'CMS_HTTP_TRUSTED_PROXY_HOPS=%s\n' '1'
+    printf 'CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT=%s\n' '60'
+    printf 'CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS=%s\n' '60'
 } > .env
 
 chmod 600 .env
@@ -339,11 +343,42 @@ when omitted. A markup-only configuration fails closed: the runtime keeps both
 responsive cohorts disabled, and a residual `cms-width` request receives a
 non-cacheable `503` instead of an original under a false width descriptor.
 
+### Public repository download protection
+
+Integration catalog reads are public and anonymous. Exact packages include the
+complete integration sources, so Delivery applies a fixed-window download limit
+before reading a package from disk or fetching it from a remote repository. No
+repository read token exists or needs to be configured.
+
+The standard deployment sets `CMS_HTTP_CLIENT_ADDRESS_MODE=trusted-proxy` and
+`CMS_HTTP_TRUSTED_PROXY_HOPS=1` because `nginx-proxy` is its only trusted public
+ingress hop. The hop count is the complete trusted suffix of the forwarding
+chain. If a CDN is added in front of `nginx-proxy`, set
+`CMS_HTTP_TRUSTED_PROXY_HOPS=2` and verify that the CDN overwrites or appends
+`X-Forwarded-For` as expected. Add one for every further trusted ingress hop;
+an incorrect count can group unrelated clients or reject valid downloads.
+
+`CMS_HTTP_CLIENT_ADDRESS_MODE` is intentionally independent of
+`ANALYTICS_TRUST_PROXY`. Do not enable trusted-proxy mode for a directly exposed
+listener, and do not rely on client-supplied forwarding headers. The
+configuration-safe runtime default is `disabled`, but this Compose file
+explicitly enables the limiter even when no CDN is installed. Manual
+deployments that retain `disabled` accept the documented residual bandwidth and
+abuse risk and emit an operational warning.
+
+`CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT` defaults to 60 accepted package GETs
+per client within the 60-second
+`CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS` window. A rejected download
+returns `429 Too Many Requests` with `Retry-After`; catalog metadata and `HEAD`
+requests do not consume this budget. Tune both values together using observed
+traffic. An ingress cache or CDN is recommended for immutable packages, but is
+not required for the origin limiter to be active.
+
 ### Integrations and SMTP
 
 | Variable | Purpose |
 | --- | --- |
-| `P9R_INTEGRATION_REPOSITORY_URL` | Optional remote integration catalog; the embedded official catalog is used when unset. |
+| `P9R_INTEGRATION_REPOSITORY_URL` | Optional public, anonymous remote integration catalog; the embedded official catalog is used when unset. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Optional SMTP connection settings forwarded when deploying Supabase connector functions. |
 | `SMTP_USER`, `SMTP_PASSWORD` | Optional SMTP credentials forwarded to those functions. |
 | `SMTP_FROM`, `SMTP_REPLY_TO` | Optional sender settings forwarded to those functions. |

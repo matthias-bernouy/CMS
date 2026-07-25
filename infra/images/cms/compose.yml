@@ -47,6 +47,14 @@ services:
             ANALYTICS_SALT_SECRET: ${ANALYTICS_SALT_SECRET:?ANALYTICS_SALT_SECRET must be set and shared by all replicas}
             ANALYTICS_TRUST_PROXY: ${ANALYTICS_TRUST_PROXY:-false}
 
+            # Public integration-package downloads are limited by client IP.
+            # nginx-proxy is the standard deployment's one trusted ingress
+            # hop; include every additional CDN or proxy in this count.
+            CMS_HTTP_CLIENT_ADDRESS_MODE:                    ${CMS_HTTP_CLIENT_ADDRESS_MODE:-trusted-proxy}
+            CMS_HTTP_TRUSTED_PROXY_HOPS:                     "${CMS_HTTP_TRUSTED_PROXY_HOPS:-1}"
+            CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT:          "${CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT:-60}"
+            CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: "${CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS:-60}"
+
             # Source-endpoint observability. The aggregate collector is enabled
             # by default; detailed diagnostics remain sampled separately.
             ENDPOINT_PERFORMANCE_ENABLED:          "${ENDPOINT_PERFORMANCE_ENABLED:-true}"
