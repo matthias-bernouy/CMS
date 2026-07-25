@@ -145,5 +145,5 @@ bun test
 - [import-rules.md](./import-rules.md)
 - [api-folder.md](./api-folder.md)
 - [static-folder.md](./static-folder.md)
-- [cms-bloc-development.md](./cms-bloc-development.md)
+- [blocs/README.md](./blocs/README.md)
 - [images/README.md](./images/README.md)

@@ -21,8 +21,8 @@ implementation notes live in each package's `AGENTS.md`.
 
 ## Authoring And Sources
 
-- [cms-bloc-development.md](./cms-bloc-development.md) documents the contracts
-  for authored blocs and editor-facing bloc code.
+- [Bloc Authoring](./blocs/README.md) documents how to create blocs, expose
+  editor capabilities, bind Sources, design themeable CSS, test, and publish.
 - [auth-system-source.md](./auth-system-source.md) documents the readonly
   system auth source exposed through `/.cms/sources/system-auth/*`.
 
