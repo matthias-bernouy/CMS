@@ -80,6 +80,12 @@ snapshot; a later version set creates another event. Evidence that contradicts
 an existing deterministic id is rejected. Email verification and password
 reset ignore credentials that do not yet have an activated membership.
 
+The optional `LocalCredentialStore.verifyPassword` capability verifies a
+password without treating an unverified credential as login-ready. Built-in
+stores implement it. Existing custom stores remain source-compatible; if one
+cannot verify a pending credential, the retry fails closed and that credential
+must be reconciled administratively before signup can resume.
+
 Pending credentials are retained intentionally so an interrupted signup can be
 reconciled by retry. Automatic expiry is not implemented: an operational
 cleanup job may report credentials without a matching `local:<sub>` membership

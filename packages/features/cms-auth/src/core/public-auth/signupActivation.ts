@@ -44,16 +44,30 @@ async function resumeOrHandleActiveSignup<Role extends string>(
     context: SignupActivationContext,
     credential: LocalCredential,
 ): Promise<SignupLocalUserResult> {
+    const identity = await verifyPendingPassword(cfg, context);
     const cmsUserId = internalUserId("local", credential.sub);
     if (await cfg.users.getBySub(cmsUserId)) {
         return finishSignup(cfg, credential, context.emailDeliveryEnabled, false);
     }
 
-    const identity = await cfg.credentials.verifyPassword(context.email, context.password);
     if (!identity || identity.sub !== credential.sub) {
         return { created: false, sent: false };
     }
     return activateMembership(cfg, context, identity, credential, false);
+}
+
+async function verifyPendingPassword<Role extends string>(
+    cfg: PublicAuthFlowConfig<Role>,
+    context: Pick<SignupActivationContext, "email" | "password">,
+): Promise<Identity | null> {
+    if (cfg.credentials.verifyPassword) {
+        return cfg.credentials.verifyPassword(context.email, context.password);
+    }
+    // Older custom stores do not expose unverified-password verification.
+    // Preserve password-work parity for active accounts, but fail closed when
+    // a pending signup would otherwise need to be resumed.
+    await cfg.credentials.verify(context.email, context.password);
+    return null;
 }
 
 async function activateMembership<Role extends string>(
