@@ -141,6 +141,7 @@ function installationFromDetail(detail: RemoteIntegrationDetail): IntegrationIns
         id: detail.id,
         label: detail.label,
         definitionVersion: detail.definitionVersion,
+        ...(detail.packageDigest ? { packageDigest: detail.packageDigest } : {}),
         ...(detail.definition ? { definitionSnapshot: detail.definition } : {}),
         status: detail.status,
         createdAt: new Date(detail.createdAt),
