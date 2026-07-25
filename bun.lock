@@ -22,6 +22,7 @@
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/components": "workspace:*",
@@ -35,6 +36,7 @@
         "jose": "^6.2.1",
         "mongodb": "^7.1.0",
         "playwright": "^1.61.1",
+        "sharp": "^0.34.5",
         "typescript": "^5.9.3",
       },
     },
@@ -211,6 +213,17 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/features/cms-source-images": {
+      "name": "@bernouy/cms-source-images",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cms-sources": "workspace:*",
+        "sharp": "^0.34.5",
+      },
+      "peerDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/features/cms-sources": {
       "name": "@bernouy/cms-sources",
       "version": "0.1.0",
@@ -325,6 +338,7 @@
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
@@ -353,6 +367,7 @@
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/components": "workspace:*",
@@ -383,6 +398,7 @@
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/components": "workspace:*",
@@ -448,6 +464,8 @@
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
 
     "@bernouy/cms-server": ["@bernouy/cms-server@workspace:packages/runtimes/cms-server"],
+
+    "@bernouy/cms-source-images": ["@bernouy/cms-source-images@workspace:packages/features/cms-source-images"],
 
     "@bernouy/cms-sources": ["@bernouy/cms-sources@workspace:packages/features/cms-sources"],
 

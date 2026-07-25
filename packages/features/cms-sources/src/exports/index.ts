@@ -134,3 +134,4 @@ export {
     type SourceAuthorizationResult,
     type SourceEndpointAuthorizer,
 } from "../http/handleSourceRequest";
+export { composeSourceEndpointInterceptors } from "../http/sourceEndpointInterceptors";

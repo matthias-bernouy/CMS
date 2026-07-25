@@ -14,6 +14,9 @@ export function validateParams(endpoint: SourceEndpoint, errors: string[]): void
             errors.push(`param without name for "${endpoint.urn}"`);
             continue;
         }
+        if (isReservedSourceParamName(param.name)) {
+            errors.push(`reserved CMS param for "${endpoint.urn}": "${param.name}"`);
+        }
         if (seen.has(param.name)) {
             errors.push(`duplicate param for "${endpoint.urn}": "${param.name}"`);
         }
@@ -28,6 +31,12 @@ export function validateParams(endpoint: SourceEndpoint, errors: string[]): void
             errors.push(`forbidden or invalid header param for "${endpoint.urn}": "${param.name}"`);
         }
     }
+}
+
+/** Query names in this namespace are consumed by the CMS and can never be part
+ * of an integration's upstream request contract. */
+export function isReservedSourceParamName(name: string): boolean {
+    return name.trim().toLowerCase().startsWith("cms-");
 }
 
 export function validateHeaders(endpoint: SourceEndpoint, errors: string[]): void {

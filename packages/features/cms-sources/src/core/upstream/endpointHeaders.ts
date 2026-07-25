@@ -5,7 +5,7 @@ import { isForbiddenHeaderName } from "./headerPolicy";
 const REQUEST_ALLOWLIST = ["accept", "accept-language", "content-type", "range"] as const;
 // `fetch` transparently decompresses upstream bodies, so never forward
 // content-encoding/content-length from the upstream response.
-const RESPONSE_ALLOWLIST = ["content-type", "cache-control", "etag", "last-modified"] as const;
+const RESPONSE_ALLOWLIST = ["content-type", "cache-control", "etag", "last-modified", "age", "date", "vary"] as const;
 
 type HeaderDeps = {
     resolveSecret?: (ref: string) => Promise<string | undefined>;
@@ -49,6 +49,12 @@ export function responseHeaders(upstream: Response): Headers {
         if (value !== null) {
             out.set(name, value);
         }
+    }
+    if (upstream.headers.has("set-cookie")) {
+        // The credential itself is never forwarded. Mark the projected response
+        // unshareable so an inner cache cannot mistake explicit upstream
+        // `public` metadata for permission to reuse a personalized body.
+        out.set("cache-control", "private, no-store");
     }
     return out;
 }

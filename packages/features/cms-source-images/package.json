@@ -1,0 +1,22 @@
+{
+    "name": "@bernouy/cms-source-images",
+    "version": "0.1.0",
+    "description": "Bounded on-demand image derivatives for CMS Source endpoints.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./browser": "./src/exports/browser.ts",
+        "./browser-host": "./src/exports/browser-host.ts",
+        "./local-fs": "./src/exports/local-fs.ts",
+        "./sharp": "./src/exports/sharp.ts"
+    },
+    "dependencies": {
+        "@bernouy/cms-sources": "workspace:*",
+        "sharp": "^0.34.5"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    }
+}

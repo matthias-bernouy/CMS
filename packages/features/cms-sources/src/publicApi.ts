@@ -47,6 +47,7 @@ export {
     MAX_ENDPOINT_HEADERS,
     MAX_HEADER_VALUE_LENGTH,
 } from "./core/upstream/headerPolicy";
+export { isReservedSourceParamName } from "./core/validation/sourceRequestValidation";
 export type { SourceRepository, SourceSchemaInvalidationScope } from "./interfaces/SourceRepository";
 export type {
     SourceOverlay,

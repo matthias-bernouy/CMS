@@ -20,7 +20,11 @@
         "check:file-size": "bun run quality/ci/repository-shape/file-size/check.ts",
         "check:repository-shape": "bun run quality/ci/repository-shape/check.ts",
         "check:style": "biome check --reporter=concise --max-diagnostics=none .",
+        "benchmark:image-performance": "bun run quality/image-performance/benchmark/run.ts",
+        "compare:image-performance": "bun run quality/image-performance/compare/run.ts",
         "format": "biome check --write --unsafe --reporter=concise --max-diagnostics=none .",
+        "test:image-performance": "bun test quality/image-performance/tests",
+        "test:image-performance:browser": "bun run quality/image-performance/browser/run.ts",
         "typecheck": "tsc --build",
         "clean": "tsc --build --clean",
         "test": "bun test"
@@ -43,6 +47,7 @@
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/components": "workspace:*",
@@ -56,6 +61,7 @@
         "jose": "^6.2.1",
         "mongodb": "^7.1.0",
         "playwright": "^1.61.1",
+        "sharp": "^0.34.5",
         "typescript": "^5.9.3"
     }
 }
