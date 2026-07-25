@@ -113,6 +113,7 @@ describe("production surface mounting", () => {
         expect(controlConfig).toMatchObject({
             deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
             integrationCatalog: options.integrations.integrationCatalog,
+            integrationPackageResolver: options.integrations.integrationPackageResolver,
             publicAuth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,

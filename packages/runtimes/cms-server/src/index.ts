@@ -17,8 +17,10 @@ const integrations = createProductionIntegrationServices({
     providerRepository: features.integrationConnectorProviders,
     secrets: core.secrets,
     localRepositoryUrl: `http://127.0.0.1:${env.DELIVERY_PORT}/.cms/repository`,
+    packageCacheDir: env.CMS_INTEGRATION_PACKAGE_CACHE_DIR,
     environment: process.env,
 });
+await integrations.integrationPackageCache.init();
 const authentication = await createProductionAuth(env, core);
 
 const scheduledTriggers = await mountProductionSurfaces({

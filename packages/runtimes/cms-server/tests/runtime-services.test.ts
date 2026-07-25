@@ -7,7 +7,9 @@ import {
     InMemoryUsersRepository,
 } from "@bernouy/cms-auth";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
-import { FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
+import { FsIntegrationPackageCache, FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
+import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
+import { FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
@@ -94,6 +96,7 @@ describe("production runtime services", () => {
             providerRepository: {} as never,
             secrets: {} as never,
             localRepositoryUrl: "http://127.0.0.1:3000/.cms/repository",
+            packageCacheDir: "/data/integration-packages",
             environment: {
                 P9R_INTEGRATION_REPOSITORY_URL: "  https://integrations.example.test/catalog  ",
                 SMTP_HOST: " smtp.example.test ",
@@ -103,6 +106,9 @@ describe("production runtime services", () => {
         });
 
         expect(services.integrationCatalog).toBeInstanceOf(HttpIntegrationDefinitionRepository);
+        expect(services.integrationPackageSource).toBeInstanceOf(HttpIntegrationPackageSource);
+        expect(services.integrationPackageCache).toBeInstanceOf(FsIntegrationPackageCache);
+        expect(services.integrationPackageResolver).toBeInstanceOf(FsIntegrationPackageResolver);
         expect(services.integrationRepositoryPackages).toBeInstanceOf(FsIntegrationPackageSource);
         const embeddedPackage = await services.integrationRepositoryPackages.getPackage("commerce", "1.0.0");
         expect(embeddedPackage?.envelope).toMatchObject({

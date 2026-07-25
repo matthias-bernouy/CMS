@@ -71,6 +71,7 @@ export async function mountProductionSurfaces(
                 optOutUrl: `${env.DELIVERY_PUBLIC_URL}/.cms/privacy/analytics`,
             },
             integrationCatalog: integrations.integrationCatalog,
+            integrationPackageResolver: integrations.integrationPackageResolver,
             integrationInstallations: features.integrationInstallations,
             integrationConnectorProviders: features.integrationConnectorProviders,
             integrationConnectorDeployers: integrations.integrationConnectorDeployers,

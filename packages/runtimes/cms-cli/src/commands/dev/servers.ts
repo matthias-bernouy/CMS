@@ -69,6 +69,7 @@ export async function startLocalServers(options: ServerOptions) {
             },
             publicAuth: { ...services.publicAuth, allowSignup: false },
             integrationCatalog: services.integrationCatalog,
+            integrationPackageResolver: services.integrationPackageResolver,
             integrationInstallations: services.integrationInstallations,
             integrationConnectorProviders: services.integrationConnectorProviders,
             integrationConnectorDeployers: services.integrationConnectorDeployers,

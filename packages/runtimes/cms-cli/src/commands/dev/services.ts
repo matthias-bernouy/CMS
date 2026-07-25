@@ -48,7 +48,7 @@ export async function createLocalServices(options: ServiceOptions) {
     const sources = await createDevSources(options.siteDir);
     const sourceOverlays = new LocalFsSourceOverlayRepository(options.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(options.siteDir));
-    const integrations = createLocalIntegrationServices(
+    const integrations = await createLocalIntegrationServices(
         options.siteDir,
         `http://${options.publicHost}:${options.deliveryPort}/.cms/repository`,
         secrets,

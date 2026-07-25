@@ -3,16 +3,31 @@ import type {
     IntegrationDefinitionRepository,
     IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
-import { FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { FsIntegrationPackageCache, FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
+import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
+import { FsIntegrationDefinitionRepository, FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
+import { join } from "node:path";
 import { LocalFsIntegrationConnectorProviderRepository } from "../../dev-server/stores/connectorProviders";
 
-export function createLocalIntegrationServices(siteDir: string, repositoryUrl: string, secrets: SecretStore) {
+type LocalIntegrationServiceOptions = {
+    environment?: Record<string, string | undefined>;
+    packageFetch?: typeof fetch;
+};
+
+export const LOCAL_INTEGRATION_PACKAGE_CACHE_PATH = ".p9r/integration-packages";
+
+export async function createLocalIntegrationServices(
+    siteDir: string,
+    localRepositoryUrl: string,
+    secrets: SecretStore,
+    options: LocalIntegrationServiceOptions = {},
+) {
+    const environment = options.environment ?? process.env;
     const integrationConnectorProviders = new LocalFsIntegrationConnectorProviderRepository(siteDir);
     const integrationConnectorDeployers: IntegrationConnectorDeployer[] = [
         new ConfiguredSupabaseConnectorDeployer({
@@ -26,10 +41,21 @@ export function createLocalIntegrationServices(siteDir: string, repositoryUrl: s
         locate: (kind, version) => integrationRepositoryCatalog.locateExactVersion(kind, version),
     });
     const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
-    const remoteRepositoryUrl = process.env.P9R_INTEGRATION_REPOSITORY_URL?.trim();
-    const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository(
-        remoteRepositoryUrl || repositoryUrl,
-    );
+    const repositoryUrl = environment.P9R_INTEGRATION_REPOSITORY_URL?.trim() || localRepositoryUrl;
+    const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository(repositoryUrl);
+    const integrationPackageSource = new HttpIntegrationPackageSource({
+        baseUrl: repositoryUrl,
+        ...(options.packageFetch ? { fetch: options.packageFetch } : {}),
+    });
+    const integrationPackageCache = new FsIntegrationPackageCache({
+        root: join(siteDir, LOCAL_INTEGRATION_PACKAGE_CACHE_PATH),
+    });
+    const integrationPackageResolver = new FsIntegrationPackageResolver({
+        cache: integrationPackageCache,
+        source: integrationPackageSource,
+        embeddedSource: integrationRepositoryPackages,
+    });
+    await integrationPackageCache.init();
     return {
         integrationConnectorProviders,
         integrationConnectorDeployers,
@@ -37,6 +63,9 @@ export function createLocalIntegrationServices(siteDir: string, repositoryUrl: s
         integrationRepositoryCatalog,
         integrationRepositoryPackages,
         integrationCatalog,
+        integrationPackageSource,
+        integrationPackageCache,
+        integrationPackageResolver,
     };
 }
 

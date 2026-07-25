@@ -44,6 +44,15 @@ describe("production CMS composition", () => {
         expect(entrypoint).not.toContain("127.0.0.1:${env.CONTROL_PORT}/.cms/repository");
     });
 
+    test("initializes the durable package cache before mounting listeners", async () => {
+        const entrypoint = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const cacheReady = entrypoint.search(/await\s+integrations\.integrationPackageCache\.init\s*\(\s*\)/);
+        const surfaces = entrypoint.search(/await\s+mountProductionSurfaces\s*\(\s*\{/);
+
+        expect(cacheReady).toBeGreaterThan(-1);
+        expect(surfaces).toBeGreaterThan(cacheReady);
+    });
+
     test("wires durable functions and triggers into Control and Delivery", async () => {
         const stores = await Bun.file(new URL("../src/runtime/stores/features.ts", import.meta.url)).text();
         const surfaces = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();

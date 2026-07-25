@@ -4,8 +4,9 @@ import type {
     IntegrationDefinitionRepository,
     IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
-import { FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { FsIntegrationPackageCache, FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
+import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
+import { FsIntegrationDefinitionRepository, FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
@@ -16,6 +17,8 @@ type IntegrationServiceOptions = {
     providerRepository: IntegrationConnectorProviderRepository;
     secrets: SecretStore;
     localRepositoryUrl: string;
+    packageCacheDir: string;
+    packageFetch?: typeof fetch;
     environment: Record<string, string | undefined>;
 };
 
@@ -24,10 +27,18 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
     const integrationRepositoryPackages = new FsIntegrationPackageSource({
         locate: (kind, version) => integrationRepositoryCatalog.locateExactVersion(kind, version),
     });
-    const repositoryUrl = options.environment.P9R_INTEGRATION_REPOSITORY_URL?.trim();
-    const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository(
-        repositoryUrl || options.localRepositoryUrl,
-    );
+    const repositoryUrl = options.environment.P9R_INTEGRATION_REPOSITORY_URL?.trim() || options.localRepositoryUrl;
+    const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository(repositoryUrl);
+    const integrationPackageSource = new HttpIntegrationPackageSource({
+        baseUrl: repositoryUrl,
+        ...(options.packageFetch ? { fetch: options.packageFetch } : {}),
+    });
+    const integrationPackageCache = new FsIntegrationPackageCache({ root: options.packageCacheDir });
+    const integrationPackageResolver = new FsIntegrationPackageResolver({
+        cache: integrationPackageCache,
+        source: integrationPackageSource,
+        embeddedSource: integrationRepositoryPackages,
+    });
     const integrationConnectorDeployers: IntegrationConnectorDeployer[] = [
         new ConfiguredSupabaseConnectorDeployer({
             providerRepository: options.providerRepository,
@@ -40,6 +51,9 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
         integrationRepositoryCatalog,
         integrationRepositoryPackages,
         integrationCatalog,
+        integrationPackageSource,
+        integrationPackageCache,
+        integrationPackageResolver,
         integrationConnectorDeployers,
         integrationProvisioners,
     };

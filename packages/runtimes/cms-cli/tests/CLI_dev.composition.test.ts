@@ -59,7 +59,12 @@ describe("local CMS listener composition", () => {
         expect(services).toContain("options.deliveryPort}/.cms/repository");
         expect(services).not.toContain("options.port}/.cms/repository");
         expect(integrations).toContain("new FsIntegrationPackageSource");
+        expect(integrations).toContain("new HttpIntegrationPackageSource");
+        expect(integrations).toContain("new FsIntegrationPackageCache");
+        expect(integrations).toContain("new FsIntegrationPackageResolver");
         expect(integrations).toContain("integrationRepositoryCatalog.locateExactVersion");
+        expect(services).toContain("await createLocalIntegrationServices");
+        expect(controlSection).toContain("integrationPackageResolver: services.integrationPackageResolver");
         expect(deliverySection).toContain("new InMemoryRateLimiter({ limit: 60, windowSeconds: 60 })");
         expect(deliverySection).toContain('clientAddressPolicy: { mode: "direct" }');
         expect(deliverySection).toContain("integrationPackages: services.integrationRepositoryPackages");
