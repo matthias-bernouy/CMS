@@ -49,7 +49,7 @@ new findings relative to this baseline.
 | L0.3c | Generic filesystem reader is deterministic, bounded, and symlink-safe. | Filesystem subpath of the package feature. | Traversal, symlink, special-file, depth, count, size, and binary tests. | Pending |
 | L0.4a | Exact package and release-notes GET/HEAD endpoints are public. | Repository surface with required exact version. | 404 legacy notes, immutable cache, ETag, HEAD, and CORS tests. | Partial |
 | L0.4b | Public package downloads are limited before origin work. | Delivery-injected limiter and generic HTTP client-address resolver. | 429/Retry-After and proof no upstream/walk occurs first. | Pending |
-| L0.4c | Client-address modes handle direct, proxy, loopback, disabled, and CDN hops safely. | `@bernouy/http-runner` resolver plus runtime configuration. | Spoofing, malformed-chain 400, IPv4/IPv6, loopback, one-hop and two-hop tests. | Pending |
+| L0.4c | Client-address modes handle direct, proxy, loopback, disabled, and CDN hops safely. | `@bernouy/http-runner` resolver plus runtime configuration. | Spoofing, malformed-chain 400, IPv4/IPv6, loopback, one-hop and two-hop tests. | Partial |
 | L0.5a | CMS package cache has a dedicated durable mount and validated non-overlap. | Runtime env, image, Compose, host docs, canonical path validation. | Deployment and alias/symlink/device-inode overlap tests. | Pending |
 | L0.6a | Packages materialize atomically into content-addressed durable objects. | Package filesystem cache with same-filesystem staging. | Restart, concurrent rename, existing-valid, corrupt-target, and cleanup tests. | Pending |
 | L0.6b | Installations persist `packageDigest` only after success and support legacy fallback. | Installation contract, resolver, cache, and embedded exact root. | Failure rollback, legacy reconstruction, and no-false-provenance tests. | Pending |
@@ -129,3 +129,6 @@ evidence.
   HTTP, validated channel membership, and prevented implicit prerelease
   selection. Verified by 26 focused tests, feature typecheck, and seven
   official-catalog installation scenarios.
+- `d99fdd13` — added an inverse-dependency preflight that blocks incompatible
+  upgrades before state changes, plus exact/tilde/bounded/optional/legacy range
+  coverage. Verified by all 225 integration feature tests and its typecheck.
