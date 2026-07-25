@@ -26,6 +26,7 @@ export type IntegrationInstallation = {
     label: string;
     definitionVersion: string;
     definitionSnapshot?: IntegrationDefinition;
+    packageDigest?: string;
     status: IntegrationInstallationStatus;
     createdAt: Date;
     updatedAt: Date;
