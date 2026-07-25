@@ -12742,6 +12742,498 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
   }
   var esc = (s2) => s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   customElements.define("cms-login-methods", CmsLoginMethods);
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/configuration.ts
+  var SIGNUP_LEGAL_CONSENT_ATTRIBUTES = [
+    "disabled",
+    "heading",
+    "load-error-label",
+    "loading-label",
+    "new-tab-label",
+    "required-message",
+    "retry-label",
+    "source-id",
+    "source-prefix"
+  ];
+  function signupLegalConsentCopy(element) {
+    return {
+      heading: attribute(element, "heading", "Agreements"),
+      loadingLabel: attribute(element, "loading-label", "Loading agreements…"),
+      loadErrorLabel: attribute(element, "load-error-label", "Unable to load the agreements."),
+      retryLabel: attribute(element, "retry-label", "Try again"),
+      requiredMessage: attribute(element, "required-message", "Accept every agreement to continue."),
+      newTabLabel: attribute(element, "new-tab-label", "opens in a new tab")
+    };
+  }
+  function signupLegalRequirementsUrl(element) {
+    const prefix = (element.getAttribute("source-prefix")?.trim() || "/.cms/sources").replace(/\/+$/, "");
+    if (!prefix.startsWith("/") || prefix.startsWith("//")) {
+      throw new Error("Signup legal source prefix must be a same-origin path.");
+    }
+    const sourceId = element.getAttribute("source-id")?.trim() || "system-auth";
+    const url = new URL(`${prefix}/${encodeURIComponent(sourceId)}/signupLegalRequirements`, location.origin);
+    if (url.origin !== location.origin || url.search || url.hash) {
+      throw new Error("Signup legal source prefix must be a same-origin path.");
+    }
+    return url.pathname;
+  }
+  function attribute(element, name, fallback) {
+    return element.getAttribute(name)?.trim() || fallback;
+  }
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/form.ts
+  var ACCEPTED_VERSION_IDS_FIELD = "acceptedLegalDocumentVersionIds";
+  function syncSignupLegalFormValue(input) {
+    const selected = selectedVersionIds(input.checkboxes);
+    if (input.disabled) {
+      input.internals.setFormValue(null, serializeIds(selected));
+      input.internals.setValidity({});
+      return;
+    }
+    if (input.state.kind === "empty") {
+      input.internals.setFormValue(null, "[]");
+      input.internals.setValidity({});
+      return;
+    }
+    if (input.state.kind !== "ready") {
+      input.internals.setFormValue(null, "[]");
+      const message = input.state.kind === "loading" ? input.loadingMessage : input.errorMessage;
+      input.internals.setValidity({ customError: true }, message);
+      return;
+    }
+    if (selected.size === input.state.documents.length) {
+      const value = new FormData;
+      for (const document2 of input.state.documents) {
+        value.append(ACCEPTED_VERSION_IDS_FIELD, document2.versionId);
+      }
+      input.internals.setFormValue(value, serializeIds(selected));
+      input.internals.setValidity({});
+      return;
+    }
+    input.internals.setFormValue(null, serializeIds(selected));
+    const firstUnchecked = input.checkboxes.find((checkbox) => !checkbox.checked);
+    input.internals.setValidity({ valueMissing: true }, input.requiredMessage, firstUnchecked);
+  }
+  function selectedVersionIds(checkboxes) {
+    return new Set(checkboxes.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.dataset.versionId).filter((value) => Boolean(value)));
+  }
+  function applySelectedVersionIds(checkboxes, ids) {
+    const selected = new Set(ids);
+    for (const checkbox of checkboxes) {
+      checkbox.checked = selected.has(checkbox.dataset.versionId ?? "");
+    }
+  }
+  function restoredVersionIds(state) {
+    if (typeof state !== "string") {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(state);
+      return Array.isArray(parsed) && parsed.every((value) => typeof value === "string") ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  function serializeIds(ids) {
+    return JSON.stringify([...ids]);
+  }
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/requirements.ts
+  var MAX_DOCUMENTS = 16;
+  async function fetchSignupLegalRequirements(element, signal) {
+    const response = await fetch(signupLegalRequirementsUrl(element), {
+      credentials: "same-origin",
+      headers: { accept: "application/json" },
+      signal
+    });
+    if (!response.ok) {
+      throw new Error("Unable to load signup legal requirements.");
+    }
+    return parseSignupLegalRequirements(await response.json(), location.origin);
+  }
+  function parseSignupLegalRequirements(value, origin) {
+    if (!isRecord2(value) || !Array.isArray(value.documents) || value.documents.length > MAX_DOCUMENTS) {
+      throw new Error("Invalid signup legal requirements.");
+    }
+    const documentKeys = new Set;
+    const versionIds = new Set;
+    return value.documents.map((document2, index) => {
+      if (!isRecord2(document2) || !isRecord2(document2.page)) {
+        throw new Error(`Invalid signup legal requirement at index ${index}.`);
+      }
+      const documentKey = requiredString(document2.documentKey);
+      const versionId = requiredString(document2.versionId);
+      if (documentKeys.has(documentKey) || versionIds.has(versionId)) {
+        throw new Error("Duplicate signup legal requirement.");
+      }
+      documentKeys.add(documentKey);
+      versionIds.add(versionId);
+      requiredString(document2.contentHash);
+      requiredString(document2.page.id);
+      requiredString(document2.page.title);
+      return {
+        documentKey,
+        versionId,
+        label: requiredString(document2.label),
+        consentText: requiredString(document2.consentText),
+        href: safePageHref(requiredString(document2.page.path), origin)
+      };
+    });
+  }
+  function safePageHref(path, origin) {
+    if (!path.startsWith("/") || path.startsWith("//")) {
+      throw new Error("Signup legal page must use a same-origin path.");
+    }
+    const url = new URL(path, origin);
+    if (url.origin !== origin || !["http:", "https:"].includes(url.protocol)) {
+      throw new Error("Signup legal page must use a same-origin path.");
+    }
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+  function requiredString(value) {
+    if (typeof value !== "string" || !value.trim()) {
+      throw new Error("Invalid signup legal requirement string.");
+    }
+    return value.trim();
+  }
+  function isRecord2(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/styles.ts
+  var SIGNUP_LEGAL_CONSENT_STYLES = `
+    :host {
+        display: block;
+        color: var(--cms-auth-legal-text, inherit);
+        font: inherit;
+    }
+
+    :host([data-state="empty"]) {
+        display: none;
+    }
+
+    fieldset {
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    legend {
+        margin: 0 0 .75rem;
+        padding: 0;
+        color: var(--cms-auth-legal-heading, currentColor);
+        font: inherit;
+        font-weight: 700;
+    }
+
+    .documents {
+        display: grid;
+        gap: .75rem;
+    }
+
+    .requirement {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+        gap: .65rem;
+    }
+
+    input {
+        width: 1.125rem;
+        height: 1.125rem;
+        margin: .15rem 0 0;
+        accent-color: var(--cms-auth-legal-accent, currentColor);
+    }
+
+    input:focus-visible,
+    a:focus-visible,
+    button:focus-visible {
+        outline: 2px solid var(--cms-auth-legal-accent, currentColor);
+        outline-offset: 2px;
+    }
+
+    .copy {
+        display: grid;
+        gap: .25rem;
+    }
+
+    label {
+        cursor: pointer;
+    }
+
+    a {
+        width: fit-content;
+        color: var(--cms-auth-legal-link, currentColor);
+        text-decoration: underline;
+        text-underline-offset: .16em;
+    }
+
+    .status {
+        margin: 0;
+        color: var(--cms-auth-legal-muted, currentColor);
+    }
+
+    .status[data-kind="error"] {
+        color: var(--cms-auth-legal-error, #b42318);
+    }
+
+    button {
+        width: fit-content;
+        margin-top: .65rem;
+        border: 1px solid var(--cms-auth-legal-button-border, currentColor);
+        border-radius: var(--cms-auth-legal-button-radius, .4rem);
+        background: var(--cms-auth-legal-button-background, transparent);
+        color: var(--cms-auth-legal-button-text, currentColor);
+        cursor: pointer;
+        font: inherit;
+        padding: .45rem .7rem;
+    }
+
+    input:disabled,
+    button:disabled {
+        cursor: not-allowed;
+        opacity: .6;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+`;
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/view.ts
+  function renderSignupLegalConsent(root, state, copy, callbacks) {
+    const document2 = root.ownerDocument;
+    const style = document2.createElement("style");
+    style.textContent = SIGNUP_LEGAL_CONSENT_STYLES;
+    const fieldset = document2.createElement("fieldset");
+    fieldset.setAttribute("part", "fieldset");
+    const legend = document2.createElement("legend");
+    legend.setAttribute("part", "legend");
+    legend.textContent = copy.heading;
+    fieldset.append(legend);
+    const checkboxes = state.kind === "ready" ? renderDocuments(fieldset, state.documents, state.selectedIds, callbacks.change) : [];
+    if (state.kind === "loading") {
+      fieldset.append(status(document2, copy.loadingLabel, "status"));
+    } else if (state.kind === "error") {
+      fieldset.append(status(document2, copy.loadErrorLabel, "alert"));
+      const retry = document2.createElement("button");
+      retry.type = "button";
+      retry.setAttribute("part", "retry");
+      retry.textContent = copy.retryLabel;
+      retry.addEventListener("click", callbacks.retry);
+      fieldset.append(retry);
+    }
+    root.replaceChildren(style, fieldset);
+    return checkboxes;
+  }
+  function renderDocuments(fieldset, documents, selectedIds, onChange) {
+    const owner = fieldset.ownerDocument;
+    const list = owner.createElement("div");
+    list.className = "documents";
+    list.setAttribute("part", "documents");
+    const checkboxes = documents.map((requirement, index) => {
+      const row = owner.createElement("div");
+      row.className = "requirement";
+      row.setAttribute("part", "requirement");
+      const checkbox = owner.createElement("input");
+      const checkboxId = `signup-legal-document-${index}`;
+      const linkId = `${checkboxId}-link`;
+      checkbox.id = checkboxId;
+      checkbox.type = "checkbox";
+      checkbox.required = true;
+      checkbox.checked = selectedIds.has(requirement.versionId);
+      checkbox.dataset.versionId = requirement.versionId;
+      checkbox.setAttribute("part", "checkbox");
+      checkbox.setAttribute("aria-describedby", linkId);
+      checkbox.addEventListener("change", onChange);
+      const copy = owner.createElement("div");
+      copy.className = "copy";
+      const label = owner.createElement("label");
+      label.htmlFor = checkboxId;
+      label.setAttribute("part", "consent");
+      label.textContent = requirement.consentText;
+      const link = owner.createElement("a");
+      link.id = linkId;
+      link.href = requirement.href;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.setAttribute("part", "link");
+      link.append(owner.createTextNode(requirement.label), newTabNotice(owner));
+      copy.append(label, link);
+      row.append(checkbox, copy);
+      list.append(row);
+      return checkbox;
+    });
+    fieldset.append(list);
+    return checkboxes;
+  }
+  function newTabNotice(document2) {
+    const notice = document2.createElement("span");
+    notice.className = "sr-only";
+    notice.dataset.newTabNotice = "";
+    return notice;
+  }
+  function status(document2, message, role) {
+    const element = document2.createElement("p");
+    element.className = "status";
+    element.setAttribute("part", "status");
+    element.setAttribute("role", role);
+    element.setAttribute("aria-live", role === "alert" ? "assertive" : "polite");
+    element.dataset.kind = role === "alert" ? "error" : "loading";
+    element.textContent = message;
+    return element;
+  }
+  function setNewTabNotices(root, label) {
+    for (const notice of Array.from(root.querySelectorAll("[data-new-tab-notice]"))) {
+      notice.textContent = ` (${label})`;
+    }
+  }
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/SignupLegalConsent.ts
+  var CMS_SIGNUP_LEGAL_CONSENT_TAG = "cms-signup-legal-consent";
+
+  class CmsSignupLegalConsent extends HTMLElement {
+    static formAssociated = true;
+    static observedAttributes = SIGNUP_LEGAL_CONSENT_ATTRIBUTES;
+    internals;
+    root;
+    state = { kind: "loading" };
+    checkboxes = [];
+    request = null;
+    requestSequence = 0;
+    disabledByForm = false;
+    restoredIds = null;
+    constructor() {
+      super();
+      this.root = this.attachShadow({ mode: "open" });
+      this.internals = this.attachInternals();
+    }
+    connectedCallback() {
+      this.render();
+      this.load();
+    }
+    disconnectedCallback() {
+      this.request?.abort();
+      this.request = null;
+    }
+    attributeChangedCallback(name, previous, current) {
+      if (!this.isConnected || previous === current) {
+        return;
+      }
+      if (name === "source-id" || name === "source-prefix") {
+        this.load();
+        return;
+      }
+      this.render(this.selectedIds());
+    }
+    formDisabledCallback(disabled) {
+      this.disabledByForm = disabled;
+      this.syncDisabled();
+      this.syncFormValue();
+    }
+    formResetCallback() {
+      for (const checkbox of this.checkboxes) {
+        checkbox.checked = false;
+      }
+      this.syncFormValue();
+    }
+    formStateRestoreCallback(state) {
+      const ids = restoredVersionIds(state);
+      if (this.state.kind !== "ready") {
+        this.restoredIds = ids;
+        return;
+      }
+      this.applySelection(ids);
+    }
+    async load() {
+      const sequence = ++this.requestSequence;
+      this.request?.abort();
+      const request = new AbortController;
+      this.request = request;
+      this.state = { kind: "loading" };
+      this.render();
+      try {
+        const documents = await fetchSignupLegalRequirements(this, request.signal);
+        if (request.signal.aborted || sequence !== this.requestSequence) {
+          return;
+        }
+        this.state = documents.length ? { kind: "ready", documents, selectedIds: new Set } : { kind: "empty" };
+        this.render();
+        const restoredIds = this.restoredIds;
+        this.restoredIds = null;
+        if (restoredIds && this.state.kind === "ready") {
+          this.applySelection(restoredIds);
+        }
+      } catch {
+        if (request.signal.aborted || sequence !== this.requestSequence) {
+          return;
+        }
+        this.state = { kind: "error" };
+        this.render();
+      } finally {
+        if (sequence === this.requestSequence) {
+          this.request = null;
+        }
+      }
+    }
+    render(selectedIds = new Set) {
+      if (this.state.kind === "ready") {
+        this.state = { ...this.state, selectedIds };
+      }
+      this.dataset.state = this.state.kind;
+      const copy = signupLegalConsentCopy(this);
+      this.checkboxes = renderSignupLegalConsent(this.root, this.state, copy, {
+        change: () => this.syncFormValue(),
+        retry: () => void this.load()
+      });
+      setNewTabNotices(this.root, copy.newTabLabel);
+      this.syncDisabled();
+      this.syncFormValue();
+    }
+    syncFormValue() {
+      const copy = signupLegalConsentCopy(this);
+      syncSignupLegalFormValue({
+        internals: this.internals,
+        state: this.state,
+        checkboxes: this.checkboxes,
+        disabled: this.isDisabled(),
+        loadingMessage: copy.loadingLabel,
+        errorMessage: copy.loadErrorLabel,
+        requiredMessage: copy.requiredMessage
+      });
+    }
+    applySelection(ids) {
+      applySelectedVersionIds(this.checkboxes, ids);
+      this.syncFormValue();
+    }
+    selectedIds() {
+      return selectedVersionIds(this.checkboxes);
+    }
+    syncDisabled() {
+      const disabled = this.isDisabled();
+      for (const checkbox of this.checkboxes) {
+        checkbox.disabled = disabled;
+      }
+      this.root.querySelector("button")?.toggleAttribute("disabled", disabled);
+    }
+    isDisabled() {
+      return this.disabledByForm || this.hasAttribute("disabled");
+    }
+  }
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/register.ts
+  if (!customElements.get(CMS_SIGNUP_LEGAL_CONSENT_TAG)) {
+    customElements.define(CMS_SIGNUP_LEGAL_CONSENT_TAG, CmsSignupLegalConsent);
+  }
   // src/components/admin/Actions/ProviderActions/ProviderActions.ts
   class CmsProviderActions extends HTMLElement {
     static get observedAttributes() {
@@ -13977,10 +14469,10 @@ button {
       const attestations = {};
       for (const row of Array.from(form.querySelectorAll("[data-manual-id]"))) {
         const id = row.dataset.manualId;
-        const status = row.querySelector("select").value;
+        const status2 = row.querySelector("select").value;
         const evidence = row.querySelector("input").value;
         if (evidence.trim()) {
-          attestations[id] = { status, evidence };
+          attestations[id] = { status: status2, evidence };
         }
       }
       const message = this.query("[data-snapshot-message]");
@@ -14856,8 +15348,8 @@ w13c-lateral-menu-item {
   function titleCase(value) {
     return value ? `${value[0].toUpperCase()}${value.slice(1)}` : value;
   }
-  function statusTone(status) {
-    return status.startsWith("5") ? "is-danger" : status.startsWith("4") ? "is-warning" : "";
+  function statusTone(status2) {
+    return status2.startsWith("5") ? "is-danger" : status2.startsWith("4") ? "is-warning" : "";
   }
   function referrerLabel(key) {
     if (key === "__none__") {
@@ -15632,9 +16124,9 @@ w13c-lateral-menu-item {
 
   class EndpointPerformanceUnavailableError extends Error {
     status;
-    constructor(status) {
-      super(`Endpoint performance request failed with status ${status}`);
-      this.status = status;
+    constructor(status2) {
+      super(`Endpoint performance request failed with status ${status2}`);
+      this.status = status2;
     }
   }
   function readEndpointPerformanceQuery(search = window.location.search) {
@@ -15788,8 +16280,8 @@ w13c-lateral-menu-item {
     ].join(" · ");
     renderBars(query(root, '[data-role="statuses"]'), detail.statuses.map((row) => ({ key: row.statusClass, count: row.count })), {
       empty: "No status distribution is available.",
-      label: (status) => `HTTP ${status}`,
-      tone: (status) => status === "5xx" ? "is-danger" : status === "4xx" ? "is-warning" : ""
+      label: (status2) => `HTTP ${status2}`,
+      tone: (status2) => status2 === "5xx" ? "is-danger" : status2 === "4xx" ? "is-warning" : ""
     });
     renderBars(query(root, '[data-role="histogram"]'), detail.latencyHistogram.map((row) => ({
       key: row.upperBoundMs === null ? "overflow" : String(row.upperBoundMs),
@@ -17278,9 +17770,9 @@ cms-shell-detail {
     select.replaceChildren(...state.settings.themes.map(themeOption));
     select.value = theme.id;
     const active = theme.id === state.settings.activeThemeId;
-    const status = query4(root, "[data-theme-status]");
-    status.textContent = active ? "Active" : "Draft";
-    status.setAttribute("color", active ? "success" : "warning");
+    const status2 = query4(root, "[data-theme-status]");
+    status2.textContent = active ? "Active" : "Draft";
+    status2.setAttribute("color", active ? "success" : "warning");
     query4(root, "[data-save-theme]").toggleAttribute("disabled", !state.canPersist);
     query4(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
     const mode = source2.supportsModes ? state.mode : "light";
@@ -18741,7 +19233,7 @@ w13c-lateral-menu-item {
     if (depth >= DASHBOARD_VISIBILITY_MAX_DEPTH || ++budget.nodes > DASHBOARD_VISIBILITY_MAX_NODES) {
       return invalid();
     }
-    if (!isRecord2(value2)) {
+    if (!isRecord3(value2)) {
       return invalid();
     }
     const hasAll = Object.hasOwn(value2, "all");
@@ -18786,7 +19278,7 @@ w13c-lateral-menu-item {
   function isVisibilityValue(value2) {
     return value2 === null || typeof value2 === "string" || typeof value2 === "boolean" || typeof value2 === "number" && Number.isFinite(value2);
   }
-  function isRecord2(value2) {
+  function isRecord3(value2) {
     return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
   // src/components/admin/Resources/Dashboards/runtime/expressions.ts
@@ -19995,10 +20487,10 @@ button {
     input.setAttribute("label", field2.label);
     input.setAttribute("type", "number");
     input.setAttribute("value", String(field2.value));
-    for (const attribute of ["min", "max", "step"]) {
-      const value2 = field2[attribute];
+    for (const attribute2 of ["min", "max", "step"]) {
+      const value2 = field2[attribute2];
       if (value2 !== undefined) {
-        input.setAttribute(attribute, String(value2));
+        input.setAttribute(attribute2, String(value2));
       }
     }
     applyInputMetadata(input, field2);
@@ -20304,10 +20796,10 @@ button {
       control.dataset.schemaDirty = "true";
     }
   }
-  function statusMessage(status) {
+  function statusMessage(status2) {
     const message = document.createElement("span");
-    message.className = `detail-schema-status detail-schema-status-${status ?? "loading"}`;
-    message.textContent = status === "error" ? "Dynamic fields are temporarily unavailable. Existing values are preserved." : status === "empty" ? "No dynamic fields are configured." : "Loading dynamic fields…";
+    message.className = `detail-schema-status detail-schema-status-${status2 ?? "loading"}`;
+    message.textContent = status2 === "error" ? "Dynamic fields are temporarily unavailable. Existing values are preserved." : status2 === "empty" ? "No dynamic fields are configured." : "Loading dynamic fields…";
     return message;
   }
   function recordValue2(value2) {
@@ -20377,7 +20869,7 @@ button {
     const clone = structuredClone(value2);
     return {
       ...clone,
-      items: Array.isArray(clone.items) ? clone.items.filter(isRecord4) : [],
+      items: Array.isArray(clone.items) ? clone.items.filter(isRecord5) : [],
       fields: Array.isArray(clone.fields) ? clone.fields : []
     };
   }
@@ -20427,7 +20919,7 @@ button {
     const positionPath = value2.positionPath ?? "position";
     value2.items.forEach((item, index) => setValueAt(item, positionPath, index));
   }
-  function isRecord4(value2) {
+  function isRecord5(value2) {
     return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
 
@@ -20849,12 +21341,12 @@ button {
     if (Array.isArray(value2)) {
       return value2.some(hasTableValue);
     }
-    if (isRecord5(value2)) {
+    if (isRecord6(value2)) {
       return Object.values(value2).some(hasTableValue);
     }
     return String(value2 ?? "").trim().length > 0;
   }
-  function isRecord5(value2) {
+  function isRecord6(value2) {
     return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
   function tableCellDisplayValue(value2) {
@@ -23105,11 +23597,11 @@ slot {
       }
     };
   }
-  function product(id, title, status, vendor, category, visibility2, updated) {
+  function product(id, title, status2, vendor, category, visibility2, updated) {
     return {
       id,
       title,
-      status,
+      status: status2,
       vendor,
       category,
       visibility: visibility2,
@@ -25010,7 +25502,7 @@ p {
       return;
     }
     if (path.startsWith("body.")) {
-      if (!isRecord6(draft.body)) {
+      if (!isRecord7(draft.body)) {
         draft.body = {};
       }
       setPathValue(draft.body, path.slice("body.".length), value2);
@@ -25021,7 +25513,7 @@ p {
     }
   }
   function setPathValue(target2, path, value2) {
-    if (!isRecord6(target2)) {
+    if (!isRecord7(target2)) {
       return;
     }
     const parts = path.split(".").filter(Boolean);
@@ -25031,7 +25523,7 @@ p {
         current[part] = value2;
         return;
       }
-      if (!isRecord6(current[part])) {
+      if (!isRecord7(current[part])) {
         current[part] = {};
       }
       current = current[part];
@@ -25048,7 +25540,7 @@ p {
       if (Array.isArray(current) && /^\d+$/.test(part)) {
         return current[Number(part)];
       }
-      if (!isRecord6(current)) {
+      if (!isRecord7(current)) {
         return;
       }
       return current[part];
@@ -25063,7 +25555,7 @@ p {
   }
   function parseObject(value2, label2) {
     const parsed = parseJson3(value2 || "{}", label2);
-    if (!isRecord6(parsed)) {
+    if (!isRecord7(parsed)) {
       throw new Error(`${label2} must be a JSON object.`);
     }
     return parsed;
@@ -25091,7 +25583,7 @@ p {
     }
     return value2;
   }
-  function isRecord6(value2) {
+  function isRecord7(value2) {
     return typeof value2 === "object" && value2 !== null && !Array.isArray(value2);
   }
 
@@ -25480,15 +25972,15 @@ pre {
   }
   function resultSection() {
     const section = detailSection("main", "Result");
-    const status = div("status", "Not executed");
+    const status2 = div("status", "Not executed");
     const message = div("result-message empty", "Run the function to see its result.");
     const raw = document.createElement("details");
-    status.dataset.role = "result-status";
+    status2.dataset.role = "result-status";
     message.dataset.role = "result-message";
     raw.className = "raw-result";
     raw.append(summary("Raw response"), pre(""));
     raw.querySelector("pre").dataset.role = "result-body";
-    section.append(div("result-header", status), message, raw);
+    section.append(div("result-header", status2), message, raw);
     return section;
   }
   function functionSummarySection(detail) {
@@ -25628,10 +26120,10 @@ pre {
     showResult(result) {
       this.setResult(`status ${result.ok ? "ok" : "error"}`, result.status ? String(result.status) : "Invalid input", readableResult(result), stringify(result.body));
     }
-    setResult(statusClass, status, message, body) {
+    setResult(statusClass, status2, message, body) {
       if (this.resultStatus) {
         this.resultStatus.className = statusClass;
-        this.resultStatus.textContent = status;
+        this.resultStatus.textContent = status2;
       }
       if (this.resultMessage) {
         this.resultMessage.textContent = message;
@@ -27693,11 +28185,11 @@ details[open] > summary > .chevron {
     }
     return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
-  function statusLabel(status) {
-    if (status === "success") {
+  function statusLabel(status2) {
+    if (status2 === "success") {
       return "Active";
     }
-    if (status === "failed") {
+    if (status2 === "failed") {
       return "Failed";
     }
     return "Pending";
@@ -27932,10 +28424,10 @@ details[open] > summary > .chevron {
     row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
     text4(row, "[data-label]", installation.label);
     text4(row, "[data-kind]", installation.id);
-    const status = row.querySelector("[data-status]");
-    if (status) {
-      status.textContent = statusLabel(installation.status);
-      status.classList.add(`status-${installation.status}`);
+    const status2 = row.querySelector("[data-status]");
+    if (status2) {
+      status2.textContent = statusLabel(installation.status);
+      status2.classList.add(`status-${installation.status}`);
     }
     appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
     text4(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
@@ -27970,9 +28462,9 @@ details[open] > summary > .chevron {
     const shell = cloneElement("setup-shell");
     text4(shell, "[data-title]", `Install ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
-    const status = shell.querySelector("[data-setup-status]");
-    status.textContent = options2.error ?? "";
-    status.classList.toggle("is-error", Boolean(options2.error));
+    const status2 = shell.querySelector("[data-setup-status]");
+    status2.textContent = options2.error ?? "";
+    status2.classList.toggle("is-error", Boolean(options2.error));
     renderResourceRows(shell.querySelector("[data-resources]"), resourceRows(definition));
     renderLinkedPlaceholder(shell.querySelector("[data-linked]"));
     renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
@@ -28070,25 +28562,25 @@ details[open] > summary > .chevron {
     if (!id) {
       return;
     }
-    const status = host.querySelector("[data-action-status]");
+    const status2 = host.querySelector("[data-action-status]");
     button2.setAttribute("aria-busy", "true");
     button2.textContent = "Syncing";
-    if (status) {
-      status.textContent = "";
+    if (status2) {
+      status2.textContent = "";
     }
     try {
       await rerunIntegrationInstallation(id);
       await host.waitForBoundData(() => true);
       button2.removeAttribute("aria-busy");
       button2.textContent = "Run sync";
-      if (status) {
-        status.textContent = "Synced";
+      if (status2) {
+        status2.textContent = "Synced";
       }
     } catch (error) {
       button2.removeAttribute("aria-busy");
       button2.textContent = "Run sync";
-      if (status) {
-        status.textContent = error instanceof Error ? error.message : "Sync failed";
+      if (status2) {
+        status2.textContent = error instanceof Error ? error.message : "Sync failed";
       }
     }
   }
@@ -41380,15 +41872,15 @@ label {
         scope.aliases.add(repeatAlias);
       }
     }
-    for (const attribute of Array.from(element.attributes)) {
-      if (attribute.name === CMS_BINDING_ATTRIBUTES.source) {
+    for (const attribute2 of Array.from(element.attributes)) {
+      if (attribute2.name === CMS_BINDING_ATTRIBUTES.source) {
         continue;
       }
-      if (attribute.name === CMS_BINDING_ATTRIBUTES.repeat) {
+      if (attribute2.name === CMS_BINDING_ATTRIBUTES.repeat) {
         continue;
       }
-      if (bindingTextDependsOn(attribute.value, scope)) {
-        usages.push({ target: element, attribute: attribute.name });
+      if (bindingTextDependsOn(attribute2.value, scope)) {
+        usages.push({ target: element, attribute: attribute2.name });
       }
     }
     return scope;
@@ -42151,26 +42643,26 @@ label {
         this.context.highlight().show(editor);
         return;
       }
-      const attribute = setting.attribute;
+      const attribute2 = setting.attribute;
       if (typeof value3 === "boolean") {
-        editor.target.toggleAttribute(attribute, value3);
+        editor.target.toggleAttribute(attribute2, value3);
       } else if (value3 === "") {
-        editor.target.removeAttribute(attribute);
+        editor.target.removeAttribute(attribute2);
       } else if (typeof value3 === "string") {
-        editor.target.setAttribute(attribute, value3);
+        editor.target.setAttribute(attribute2, value3);
       }
       if (setting.type === "select" || setting.type === "segmented" || setting.type === "toggle") {
         this.renderSettings();
       }
     }
     applyAttributes(editor, attributes) {
-      for (const [attribute, value3] of Object.entries(attributes)) {
+      for (const [attribute2, value3] of Object.entries(attributes)) {
         if (value3 === null || value3 === "") {
-          editor.target.removeAttribute(attribute);
+          editor.target.removeAttribute(attribute2);
         } else if (typeof value3 === "boolean") {
-          editor.target.toggleAttribute(attribute, value3);
+          editor.target.toggleAttribute(attribute2, value3);
         } else {
-          editor.target.setAttribute(attribute, value3);
+          editor.target.setAttribute(attribute2, value3);
         }
       }
       this.renderSettings();
@@ -44133,6 +44625,46 @@ label {
   // src/core/editorSystemV2/builtInEditors/BindingCoreEditor.ts
   class BindingCoreEditor extends Editor {
   }
+  // src/core/editorSystemV2/builtInEditors/SignupLegalConsentEditor.ts
+  class SignupLegalConsentEditor extends Editor {
+    settings() {
+      return [
+        {
+          kind: "self",
+          label: "Content",
+          settings: [
+            { type: "text", label: "Heading", attribute: "heading" },
+            { type: "text", label: "Loading message", attribute: "loading-label" },
+            { type: "text", label: "Load error message", attribute: "load-error-label" },
+            { type: "text", label: "Retry button", attribute: "retry-label" },
+            { type: "text", label: "Required message", attribute: "required-message" },
+            { type: "text", label: "New tab notice", attribute: "new-tab-label" }
+          ]
+        },
+        {
+          kind: "self",
+          label: "Source",
+          settings: [
+            {
+              type: "text",
+              label: "Source prefix",
+              attribute: "source-prefix",
+              defaultValue: "/.cms/sources"
+            },
+            {
+              type: "text",
+              label: "Authentication source",
+              attribute: "source-id",
+              defaultValue: "system-auth"
+            }
+          ]
+        }
+      ];
+    }
+    structureMode() {
+      return "opaque";
+    }
+  }
   // src/core/editorSystemV2/editorCatalog.ts
   function createControlEditorCatalog() {
     return [
@@ -44144,6 +44676,15 @@ label {
         category: "Runtime",
         bloc: Cl,
         editor: BindingCoreEditor
+      },
+      {
+        tag: CMS_SIGNUP_LEGAL_CONSENT_TAG,
+        label: "Signup legal consent",
+        description: "Requires explicit acceptance of the current signup legal documents.",
+        icon: "check-square",
+        category: "Authentication",
+        bloc: CmsSignupLegalConsent,
+        editor: SignupLegalConsentEditor
       }
     ];
   }

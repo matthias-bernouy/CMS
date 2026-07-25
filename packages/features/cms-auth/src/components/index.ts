@@ -10,3 +10,8 @@
  * Side-effect imports — each module calls `customElements.define()`.
  */
 import "./LoginMethods/LoginMethods";
+import "./SignupLegalConsent/register";
+export {
+    CMS_SIGNUP_LEGAL_CONSENT_TAG,
+    CmsSignupLegalConsent,
+} from "./SignupLegalConsent/SignupLegalConsent";
