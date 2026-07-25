@@ -65,7 +65,7 @@ test("official definition and SQL bundles remain complete and maintainable", asy
     );
     const lineViolations = await oversizedBundleFiles(definitionTrees, sqlTrees);
     const legacyReferences = await findLegacyReferences((await audit.walkResourceTree(PACKAGE_ROOT)).files);
-    expect(bundles).toHaveLength(14);
+    expect(bundles).toHaveLength(15);
     expect(rootManifests).toHaveLength(10);
     expect(declaredManifests.map(show).sort()).toEqual(rootManifests.map(show).sort());
     const findings = [orphanDefinitions, orphanManifests, fragmentCoverage, legacySchemas, wideDirectories];

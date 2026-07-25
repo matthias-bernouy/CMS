@@ -22,6 +22,7 @@
         },
         "./integrations/ban/*": "./integrations/providers/ban/*",
         "./integrations/basic-blocs/*": "./integrations/foundation/basic-blocs/*",
+        "./integrations/documentation-blocs/*": "./integrations/foundation/documentation-blocs/*",
         "./integrations/commerce/*": "./integrations/domains/commerce/*",
         "./integrations/commerce-mondial-relay-delivery/*": "./integrations/extensions/commerce-mondial-relay-delivery/*",
         "./integrations/commerce-mondial-relay-fulfillment/*": "./integrations/extensions/commerce-mondial-relay-fulfillment/*",

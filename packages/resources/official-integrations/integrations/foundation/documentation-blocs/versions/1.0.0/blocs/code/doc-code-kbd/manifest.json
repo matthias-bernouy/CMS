@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-code-kbd",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Keyboard shortcut",
+        "description": "Keyboard shortcut display (e.g. Ctrl + C).",
+        "categories": [
+            "content"
+        ]
+    }
+}
