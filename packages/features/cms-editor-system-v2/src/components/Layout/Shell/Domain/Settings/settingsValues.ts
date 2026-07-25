@@ -5,6 +5,12 @@ import {
     type SettingControl,
     type SettingSection,
 } from "@bernouy/cms-content/editor";
+import {
+    NETWORK_BINDING_ATTRIBUTES,
+    prepareNetworkInertBindings,
+    readNetworkBindingAttribute,
+    type NetworkBindingAttribute,
+} from "@bernouy/components/binding-dom";
 
 import { isParamSyncSetting } from "./paramSync";
 import { isPageStateSetting } from "./pageState";
@@ -36,6 +42,7 @@ export function setTextValue(editor: Editor, format: "text" | "richtext", value:
     if (format === "richtext") {
         const template = editor.target.ownerDocument.createElement("template");
         template.innerHTML = value;
+        prepareNetworkInertBindings(template.content);
         fragment.append(template.content.cloneNode(true));
     } else if (value !== "") {
         fragment.append(editor.target.ownerDocument.createTextNode(value));
@@ -75,7 +82,7 @@ function resolveSettingValue(editor: Editor, setting: SettingControl): SettingCo
 
     const resolved = {
         ...setting,
-        defaultValue: editor.target.getAttribute(setting.attribute) ?? setting.defaultValue,
+        defaultValue: readSettingAttribute(editor.target, setting.attribute) ?? setting.defaultValue,
     } as SettingControl;
 
     if (resolved.type === "color" && resolved.customAttribute) {
@@ -86,6 +93,16 @@ function resolveSettingValue(editor: Editor, setting: SettingControl): SettingCo
     }
 
     return resolved;
+}
+
+function readSettingAttribute(element: Element, name: string): string | null {
+    return isNetworkBindingAttribute(name)
+        ? readNetworkBindingAttribute(element, name)
+        : element.getAttribute(name);
+}
+
+function isNetworkBindingAttribute(name: string): name is NetworkBindingAttribute {
+    return (NETWORK_BINDING_ATTRIBUTES as readonly string[]).includes(name);
 }
 
 function assertTextSlotCompatibility(editor: Editor): void {

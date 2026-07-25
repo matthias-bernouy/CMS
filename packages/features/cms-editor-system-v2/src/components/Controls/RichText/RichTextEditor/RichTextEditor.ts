@@ -1,4 +1,5 @@
 import type { TextCapability } from "@bernouy/cms-content/editor";
+import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
 import { DynamicDataPickerController } from "../../DynamicData/DynamicDataPickerController";
 import { parseTextCapability } from "./richTextAttributes";
 import type { RichTextAction } from "./richTextActions";
@@ -40,7 +41,10 @@ export class RichTextEditor extends HTMLElement {
     connectedCallback(): void {
         this.label.textContent = this.getAttribute("label") ?? "";
         this.hint.textContent = this.getAttribute("hint") ?? "";
-        this.editor.innerHTML = this.getAttribute("value") ?? "";
+        const content = this.ownerDocument.createElement("template");
+        content.innerHTML = this.getAttribute("value") ?? "";
+        prepareNetworkInertBindings(content.content);
+        this.editor.replaceChildren(content.content);
         this.renderToolbar();
         this.editor.addEventListener("input", this.emitInput);
         this.editor.addEventListener("keyup", this._range.saveSelection);

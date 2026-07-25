@@ -2,6 +2,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import { hardenStoredHtml, wrapBindingCore } from "@bernouy/cms-content";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
+import { networkInertHtml } from "cms-control/core/editorSystemV2/networkInertHtml";
 
 type EditorFrameType = "page" | "template";
 
@@ -85,7 +86,7 @@ function renderFrameDocument(input: {
     description: string;
     composed: string;
 }): string {
-    const composed = withEditorBindingCore(input.composed);
+    const composed = withEditorBindingCore(networkInertHtml(input.composed));
     return `<!DOCTYPE html>
 <html lang="en">
 <head>

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { parseHTML } from "linkedom";
 import getEditorFrame from "cms-control/api/editor/frame.get";
 import { cmsWithPage, pricingPage } from "./frameTestUtils";
 
@@ -113,5 +114,26 @@ describe("editor frame endpoint - pages", () => {
         );
         expect(html).toContain(`<div data-cms-content="" style="display:contents"><p>Hello</p></div>`);
         expect(html).toContain("/cms/api/editor/binding-core.js");
+    });
+
+    test("makes dynamic image sources inert without changing static images", async () => {
+        const { cms } = cmsWithPage(
+            pricingPage(`
+                <img data-kind="dynamic" src="/media/{{ product.image }}.jpg">
+                <img data-kind="static" src="/media/static.jpg">
+            `),
+        );
+        const response = await getEditorFrame(
+            new Request("http://localhost/cms/api/editor/frame?id=page-1"),
+            cms as any,
+        );
+        const { document } = parseHTML(await response.text());
+        const dynamicImage = document.querySelector('[data-kind="dynamic"]');
+        const staticImage = document.querySelector('[data-kind="static"]');
+
+        expect(dynamicImage?.getAttribute("src")).toBeNull();
+        expect(dynamicImage?.getAttribute("data-cms-src")).toBe("/media/{{ product.image }}.jpg");
+        expect(staticImage?.getAttribute("src")).toBe("/media/static.jpg");
+        expect(staticImage?.getAttribute("data-cms-src")).toBeNull();
     });
 });

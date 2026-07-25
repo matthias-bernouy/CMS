@@ -7,6 +7,7 @@ import { sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content";
 import { injectMediaVersions } from "@bernouy/cms-files";
 import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
+import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
 import {
@@ -47,6 +48,10 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     // scripts / on* handlers / dangerous URL schemes from the parsed tree
     // before this HTML reaches a public visitor, whatever path stored it.
     sanitizeDomTree(document.body);
+    // A browser may fetch an interpolated img src before the deferred binding
+    // runtime executes. Keep only dynamic network attributes inert; static
+    // media stays native and remains eligible for server-side optimization.
+    prepareNetworkInertBindings(document.body);
 
     const blocList = await ctx.repository.getBlocsList();
     const usedTags = await createBlocUsageResolver(blocList, ctx.repository)(composed);

@@ -1,4 +1,5 @@
 import { describe, test, expect } from "bun:test";
+import { parseHTML } from "linkedom";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import type { RenderContext } from "cms-delivery/core/html/RenderContext";
 import type { ContentReader } from "@bernouy/cms-content";
@@ -125,5 +126,26 @@ describe("renderPage — binding core wrapper", () => {
         await renderPage({ ...page, content: "<site-header></site-header>" }, ctx);
 
         expect(resolvedTags).toEqual(["base-link", "base-nav", "site-header"]);
+    });
+
+    test("makes dynamic image sources inert without changing static images", async () => {
+        const entry = await renderPage(
+            {
+                ...page,
+                content: `
+                    <img data-kind="dynamic" src="/media/{{ product.image }}.jpg">
+                    <img data-kind="static" src="/media/static.jpg">
+                `,
+            },
+            makeCtx(),
+        );
+        const { document } = parseHTML(new TextDecoder().decode(entry.raw));
+        const dynamicImage = document.querySelector('[data-kind="dynamic"]');
+        const staticImage = document.querySelector('[data-kind="static"]');
+
+        expect(dynamicImage?.getAttribute("src")).toBeNull();
+        expect(dynamicImage?.getAttribute("data-cms-src")).toBe("/media/{{ product.image }}.jpg");
+        expect(staticImage?.getAttribute("src")).toBe("/media/static.jpg");
+        expect(staticImage?.getAttribute("data-cms-src")).toBeNull();
     });
 });

@@ -46,6 +46,29 @@ describe("Shell", () => {
         expect(shellParts(shell).commands.getContentHtml()).toBe(`<demo-bloc><p>Content</p></demo-bloc>`);
     });
 
+    test("makes image bindings inert before inserting template content", async () => {
+        installDom();
+
+        const { createInsertion } = await import("../../../../src/components/Layout/Shell/Domain/Mutations/insertion");
+        const insertion = createInsertion(document, {
+            kind: "template",
+            id: "image-card",
+            label: "Image card",
+            content: `
+                <img data-kind="dynamic" src="/media/{{ product.image }}.jpg">
+                <img data-kind="static" src="/media/static.jpg">
+            `,
+        });
+        document.body.append(insertion.fragment);
+
+        const dynamicImage = document.querySelector('[data-kind="dynamic"]');
+        const staticImage = document.querySelector('[data-kind="static"]');
+        expect(dynamicImage?.getAttribute("src")).toBeNull();
+        expect(dynamicImage?.getAttribute("data-cms-src")).toBe("/media/{{ product.image }}.jpg");
+        expect(staticImage?.getAttribute("src")).toBe("/media/static.jpg");
+        expect(staticImage?.getAttribute("data-cms-src")).toBeNull();
+    });
+
     test("inserts template fragments into selected content slots", async () => {
         installDom();
 

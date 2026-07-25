@@ -49,4 +49,37 @@ describe("composition serialization", () => {
         expect(content).not.toContain(COMPOSITION_INPUT_ATTRIBUTE);
         expect(content).not.toContain("data-generated");
     });
+
+    test("keeps dynamic image sources inert while syncing the preview", () => {
+        const source = parseHTML(`
+            <main data-cms-content>
+                <img data-kind="dynamic" src="/media/{{ product.image }}.jpg">
+                <img data-kind="static" src="/media/static.jpg">
+            </main>
+        `).document;
+        const target = parseHTML(`<main data-cms-content></main>`).document;
+
+        syncViewFrameContent(source, target, "loading");
+
+        const dynamicImage = target.querySelector('[data-kind="dynamic"]');
+        const staticImage = target.querySelector('[data-kind="static"]');
+        expect(dynamicImage?.getAttribute("src")).toBeNull();
+        expect(dynamicImage?.getAttribute("data-cms-src")).toBe("/media/{{ product.image }}.jpg");
+        expect(staticImage?.getAttribute("src")).toBe("/media/static.jpg");
+        expect(staticImage?.getAttribute("data-cms-src")).toBeNull();
+    });
+
+    test("restores authored image sources when serializing editor content", () => {
+        const document = parseHTML(`
+            <main data-cms-content>
+                <img data-kind="dynamic" data-cms-src="/media/{{ product.image }}.jpg">
+            </main>
+        `).document;
+
+        const content = serializableContentHtml(document.querySelector<HTMLElement>("[data-cms-content]"));
+        const serialized = parseHTML(`<main>${content}</main>`).document.querySelector('[data-kind="dynamic"]');
+
+        expect(serialized?.getAttribute("src")).toBe("/media/{{ product.image }}.jpg");
+        expect(serialized?.getAttribute("data-cms-src")).toBeNull();
+    });
 });

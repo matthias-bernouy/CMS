@@ -3,6 +3,7 @@ import {
     type CmsSourceStatusCondition,
     type EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
+import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
 
 import type { BlockPickerItem } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
 
@@ -27,6 +28,7 @@ export function createInsertion(
 
     if (item.kind === "block") {
         const fragment = createBlockFragment(document, item.entry);
+        prepareNetworkInertBindings(fragment);
         const slotElements = slotElementChildren(fragment);
         for (const child of slotElements) {
             applySlot(child, slotName);
@@ -47,6 +49,7 @@ export function createInsertion(
     const template = document.createElement("template");
     template.innerHTML = item.content;
     const fragment = template.content.cloneNode(true) as DocumentFragment;
+    prepareNetworkInertBindings(fragment);
     const slotElements = slotElementChildren(fragment);
     for (const child of slotElements) {
         applySlot(child, slotName);

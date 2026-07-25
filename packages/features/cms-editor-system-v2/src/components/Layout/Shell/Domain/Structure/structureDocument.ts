@@ -1,5 +1,9 @@
 import { clearBindingRuntimeState } from "@bernouy/cms-content/editor";
 import { clearCompositionRuntimeState } from "@bernouy/components/base";
+import {
+    prepareNetworkInertBindings,
+    restoreNetworkBindingMarkup,
+} from "@bernouy/components/binding-dom";
 
 export function isEmptyDocumentContent(contentRoot: HTMLElement | null | undefined): boolean {
     if (!contentRoot) {
@@ -42,14 +46,34 @@ export function contentHtml(frameDocument: Document | null): string {
 }
 
 export function serializableContentHtml(contentRoot: HTMLElement | null | undefined): string {
-    const content = contentRoot?.cloneNode(true) as HTMLElement | undefined;
-
+    const content = cleanContentClone(contentRoot);
     if (!content) {
         return "";
     }
+    restoreNetworkBindingMarkup(content);
+    return content.innerHTML;
+}
 
+export function runtimeContentFragment(
+    contentRoot: HTMLElement | null | undefined,
+    targetDocument: Document,
+): DocumentFragment {
+    const content = cleanContentClone(contentRoot);
+    const template = targetDocument.createElement("template");
+    if (!content) {
+        return template.content;
+    }
+    prepareNetworkInertBindings(content);
+    template.innerHTML = content.innerHTML;
+    return template.content;
+}
+
+function cleanContentClone(contentRoot: HTMLElement | null | undefined): HTMLElement | null {
+    const content = contentRoot?.cloneNode(true) as HTMLElement | undefined;
+    if (!content) {
+        return null;
+    }
     clearCompositionRuntimeState(content);
     clearBindingRuntimeState(content);
-
-    return content.innerHTML;
+    return content;
 }

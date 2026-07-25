@@ -1,5 +1,5 @@
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
-import { serializableContentHtml } from "../Structure/structureDocument";
+import { runtimeContentFragment } from "../Structure/structureDocument";
 
 export const BINDING_PREVIEW_STYLE_ID = "cms-editor-binding-preview-style";
 
@@ -45,7 +45,7 @@ export function syncViewFrameContent(
         return;
     }
 
-    viewContent.innerHTML = serializableContentHtml(editorContent);
+    viewContent.replaceChildren(runtimeContentFragment(editorContent, viewContent.ownerDocument));
     syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce);
     restartViewBindingRuntime(viewDocument);
 }

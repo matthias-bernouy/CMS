@@ -4,6 +4,11 @@ import {
     type Editor,
     type SettingControl,
 } from "@bernouy/cms-content/editor";
+import {
+    NETWORK_BINDING_ATTRIBUTES,
+    type NetworkBindingAttribute,
+    writeNetworkBindingAttribute,
+} from "@bernouy/components/binding-dom";
 
 import type { EditorRuntime } from "../../../../runtime";
 import type { SettingsViewMode } from "../../../Settings/SettingsView/SettingsView";
@@ -103,10 +108,8 @@ export class ShellSelection {
         const attribute = setting.attribute;
         if (typeof value === "boolean") {
             editor.target.toggleAttribute(attribute, value);
-        } else if (value === "") {
-            editor.target.removeAttribute(attribute);
-        } else if (typeof value === "string") {
-            editor.target.setAttribute(attribute, value);
+        } else {
+            writeSettingAttribute(editor.target, attribute, value || null);
         }
         if (setting.type === "select" || setting.type === "segmented" || setting.type === "toggle") {
             this.renderSettings();
@@ -115,12 +118,10 @@ export class ShellSelection {
 
     private applyAttributes(editor: Editor, attributes: SettingsViewAttributeChanges): void {
         for (const [attribute, value] of Object.entries(attributes)) {
-            if (value === null || value === "") {
-                editor.target.removeAttribute(attribute);
-            } else if (typeof value === "boolean") {
+            if (typeof value === "boolean") {
                 editor.target.toggleAttribute(attribute, value);
             } else {
-                editor.target.setAttribute(attribute, value);
+                writeSettingAttribute(editor.target, attribute, value || null);
             }
         }
         this.renderSettings();
@@ -137,4 +138,20 @@ export class ShellSelection {
         }
         exitAllStateSessions(this.context.stateSessions(), runtime.getStructure());
     }
+}
+
+function writeSettingAttribute(element: Element, name: string, value: string | null): void {
+    if (isNetworkBindingAttribute(name)) {
+        writeNetworkBindingAttribute(element, name, value);
+        return;
+    }
+    if (value === null) {
+        element.removeAttribute(name);
+    } else {
+        element.setAttribute(name, value);
+    }
+}
+
+function isNetworkBindingAttribute(name: string): name is NetworkBindingAttribute {
+    return (NETWORK_BINDING_ATTRIBUTES as readonly string[]).includes(name);
 }

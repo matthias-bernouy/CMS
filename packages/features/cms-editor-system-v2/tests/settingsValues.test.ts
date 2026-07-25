@@ -6,6 +6,7 @@ import {
     resolveSettingsValues,
     setTextValue,
 } from "../src/components/Layout/Shell/Domain/Settings/settingsValues";
+import { ShellSelection } from "../src/components/Layout/Shell/Controller/shellSelection";
 
 function target(markup: string): HTMLElement {
     const { document } = parseHTML(`
@@ -117,5 +118,40 @@ describe("settings control values", () => {
             defaultValue: "base",
             customDefaultValue: "#ffffff",
         });
+    });
+
+    test("reads and writes inert image source settings", () => {
+        const image = target(`<img data-cms-src="/media/{{ product.image }}.jpg">`);
+        const editor = new Editor(image);
+        const setting = {
+            type: "text",
+            label: "Source",
+            attribute: "src",
+            defaultValue: "",
+        } as const;
+        const sections: SettingSection[] = [
+            {
+                kind: "self",
+                label: "Image",
+                settings: [setting],
+            },
+        ];
+
+        expect(resolveSettingsValues(editor, sections)[0]?.settings[0]).toMatchObject({
+            defaultValue: "/media/{{ product.image }}.jpg",
+        });
+
+        const selection = new ShellSelection({} as never);
+        selection.applySetting(editor, setting, "/media/{{ alternate.image }}.jpg");
+        expect(image.getAttribute("src")).toBeNull();
+        expect(image.getAttribute("data-cms-src")).toBe("/media/{{ alternate.image }}.jpg");
+
+        selection.applySetting(editor, setting, "/media/static.jpg");
+        expect(image.getAttribute("src")).toBeNull();
+        expect(image.getAttribute("data-cms-src")).toBe("/media/static.jpg");
+
+        selection.applySetting(editor, setting, "");
+        expect(image.getAttribute("src")).toBeNull();
+        expect(image.getAttribute("data-cms-src")).toBeNull();
     });
 });
