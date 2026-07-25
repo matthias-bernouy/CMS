@@ -22,6 +22,7 @@ export type RuntimeEnv = {
     CMS_ADMIN_EMAIL: string;
     CMS_ADMIN_PASSWORD: string;
     CMS_FILES_DIR: string;
+    CMS_INTEGRATION_PACKAGE_CACHE_DIR: string;
     MONGO_URL: string;
     CMS_AUTH_SITE_NAME: string;
     CMS_AUTH_EMAIL_COOLDOWN_SECONDS: number;
@@ -65,6 +66,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         CMS_ADMIN_EMAIL: requiredEnv(source, "CMS_ADMIN_EMAIL"),
         CMS_ADMIN_PASSWORD: requiredEnv(source, "CMS_ADMIN_PASSWORD"),
         CMS_FILES_DIR: requiredEnv(source, "CMS_FILES_DIR"),
+        CMS_INTEGRATION_PACKAGE_CACHE_DIR: requiredEnv(source, "CMS_INTEGRATION_PACKAGE_CACHE_DIR"),
         MONGO_URL: requiredEnv(source, "MONGO_URL"),
         CMS_AUTH_SITE_NAME: source.CMS_AUTH_SITE_NAME?.trim() || "CMS",
         CMS_AUTH_EMAIL_COOLDOWN_SECONDS: parseNonNegativeInteger(

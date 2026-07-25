@@ -77,6 +77,7 @@ function validEnv() {
         CMS_ADMIN_EMAIL: "admin@example.com",
         CMS_ADMIN_PASSWORD: "password",
         CMS_FILES_DIR: "/data/files",
+        CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
         MONGO_URL: "mongodb://mongo:27017/cms",
         ANALYTICS_SALT_SECRET: "shared-analytics-secret",
     };

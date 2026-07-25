@@ -37,6 +37,7 @@ services:
             CONTROL_PUBLIC_URL:   "https://admin.${DOMAIN:?DOMAIN must be set}"
             DELIVERY_PUBLIC_URL:  "https://${DOMAIN}"
             CMS_FILES_DIR:        /var/lib/cms/files
+            CMS_INTEGRATION_PACKAGE_CACHE_DIR: ${CMS_INTEGRATION_PACKAGE_CACHE_DIR:-/var/lib/cms/integration-packages}
 
             # Application secrets are injected from `.env`; no secret value is
             # stored in this file or included in the image.
@@ -104,6 +105,7 @@ services:
             LETSENCRYPT_HOST: "${DOMAIN},admin.${DOMAIN}"
         volumes:
             - ./files:/var/lib/cms/files
+            - ./integration-packages:${CMS_INTEGRATION_PACKAGE_CACHE_DIR:-/var/lib/cms/integration-packages}
         read_only: true
         tmpfs:
             - /tmp:rw,nosuid,nodev,noexec,size=256m

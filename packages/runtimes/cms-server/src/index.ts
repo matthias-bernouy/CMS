@@ -3,9 +3,11 @@ import { createProductionIntegrationServices } from "./runtime/integrations";
 import { mountProductionSurfaces } from "./runtime/mountSurfaces";
 import { createCoreStores } from "./runtime/stores/core";
 import { createFeatureStores } from "./runtime/stores/features";
+import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
 import { readRuntimeEnv } from "./runtimeEnv";
 
 const env = readRuntimeEnv(process.env);
+await validateCmsStorageRoots(env.CMS_FILES_DIR, env.CMS_INTEGRATION_PACKAGE_CACHE_DIR);
 
 const core = await createCoreStores(env);
 const features = await createFeatureStores(core.db, core.secrets, {

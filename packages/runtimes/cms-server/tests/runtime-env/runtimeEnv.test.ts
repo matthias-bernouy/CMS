@@ -9,6 +9,7 @@ const validEnv = () => ({
     CMS_ADMIN_EMAIL: "admin@example.com",
     CMS_ADMIN_PASSWORD: "password",
     CMS_FILES_DIR: "/data/files",
+    CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
     MONGO_URL: "mongodb://mongo:27017/cms",
     ANALYTICS_SALT_SECRET: "shared-analytics-secret",
 });
@@ -74,6 +75,9 @@ describe("runtime env validation", () => {
 
     test("rejects missing required values and invalid email cooldowns", () => {
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_FILES_DIR: " " })).toThrow(/env CMS_FILES_DIR missing/);
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_INTEGRATION_PACKAGE_CACHE_DIR: " " })).toThrow(
+            /env CMS_INTEGRATION_PACKAGE_CACHE_DIR missing/,
+        );
         expect(() => readRuntimeEnv({ ...validEnv(), ANALYTICS_SALT_SECRET: " " })).toThrow(
             /env ANALYTICS_SALT_SECRET missing/,
         );

@@ -11,6 +11,7 @@ export function surfaceMountFixtures() {
             CMS_AUTH_EMAIL_VERIFICATION_URL: "https://www.example.test/auth/confirm-email",
             CMS_AUTH_PASSWORD_RESET_URL: "https://www.example.test/auth/reset-password",
             CMS_FILES_DIR: "/data/files",
+            CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
             ANALYTICS_TRUST_PROXY: false,
             ANALYTICS_TRUSTED_PROXY_VERIFIED: false,
             ENDPOINT_PERFORMANCE_ENABLED: true,

@@ -14,6 +14,7 @@ type ComposeService = {
     cap_drop?: string[];
     security_opt?: string[];
     tmpfs?: string[];
+    volumes?: Array<{ type: string; source: string; target: string }>;
     ports?: unknown[];
 };
 

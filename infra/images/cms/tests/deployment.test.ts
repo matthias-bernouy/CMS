@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     composeTest,
+    dockerfileSource,
     externalDockerfileBaseImages,
     extractMatches,
     infrastructureComposeFile,
@@ -39,6 +40,8 @@ describe("per-instance Compose rendering", () => {
         expect(cms.tmpfs).toContain("/tmp:rw,nosuid,nodev,noexec,size=256m");
         expect(cms.ports).toBeUndefined();
         expect(cms.environment).toMatchObject({
+            CMS_FILES_DIR: "/var/lib/cms/files",
+            CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/var/lib/cms/integration-packages",
             ENDPOINT_PERFORMANCE_ENABLED: "true",
             SOURCE_TIMING_SAMPLE_RATE: "0.01",
             SOURCE_SLOW_REQUEST_THRESHOLD_MS: "1000",
@@ -46,6 +49,11 @@ describe("per-instance Compose rendering", () => {
             CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: "false",
             CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: "false",
         });
+        expect(cms.volumes?.map(({ target }) => target).sort()).toEqual([
+            "/var/lib/cms/files",
+            "/var/lib/cms/integration-packages",
+        ]);
+        expect(new Set(cms.volumes?.map(({ source }) => source)).size).toBe(2);
     });
 
     composeTest("preserves an external cluster URL without requiring INSTANCE_ID", () => {
@@ -140,5 +148,10 @@ describe("deployment definition safeguards", () => {
         for (const baseImage of baseImages) {
             expect(baseImage).toMatch(/:\d+(?:\.\d+)+-[a-z0-9.-]+@sha256:[a-f0-9]{64}$/i);
         }
+    });
+
+    test("prepares both writable mount points for the runtime identity", () => {
+        expect(dockerfileSource).toContain("/var/lib/cms/files /var/lib/cms/integration-packages");
+        expect(instanceComposeSource).toContain("./integration-packages:");
     });
 });

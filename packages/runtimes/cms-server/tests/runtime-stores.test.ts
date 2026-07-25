@@ -72,6 +72,7 @@ describe("production runtime stores", () => {
             CMS_ADMIN_EMAIL: "admin@example.test",
             CMS_ADMIN_PASSWORD: "Correct-Horse-Battery-Staple-42!",
             CMS_FILES_DIR: "/data/files",
+            CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
             MONGO_URL: "not-a-mongodb-url",
             ANALYTICS_SALT_SECRET: "shared-analytics-secret",
         });

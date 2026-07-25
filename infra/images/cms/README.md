@@ -54,8 +54,8 @@ The public routes are:
   gateway while `cms_mongo` remains internal.
 - Ports 80 and 443 reachable from the internet.
 - `openssl`, `rsync`, `gzip`, and `sha256sum` on the deployment machines.
-- Enough disk space for the MongoDB volume, per-instance `files` directories,
-  image tarballs, and backups.
+- Enough disk space for the MongoDB volume, per-instance `files` and
+  `integration-packages` directories, image tarballs, staging, and backups.
 - A clean CmsCore checkout and its complete workspace when building the image.
 
 Before starting an instance, create DNS records for both its public domain and
@@ -243,23 +243,26 @@ CMS_ADMIN_PASSWORD="$(openssl rand -hex 24)"
     printf 'CMS_HTTP_TRUSTED_PROXY_HOPS=%s\n' '1'
     printf 'CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT=%s\n' '60'
     printf 'CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS=%s\n' '60'
+    printf 'CMS_INTEGRATION_PACKAGE_CACHE_DIR=%s\n' '/var/lib/cms/integration-packages'
 } > .env
 
 chmod 600 .env
 unset MONGO_APP_PASSWORD CMS_ADMIN_PASSWORD
 
-sudo install -d -o 1000 -g 1000 -m 0750 files
+sudo install -d -o 1000 -g 1000 -m 0750 files integration-packages
 
 docker compose config --quiet
 docker compose up -d --wait
 docker compose ps
 ```
 
-The image runs with UID/GID 1000. The bind-mounted `files` directory must be
-writable by that identity. Keep the generated initial admin password in a
-password manager before removing it from any operator workflow; it remains in
-the protected `.env` because Compose requires the variable on every start, but
-the runtime uses it only when bootstrapping a missing local credential.
+The image runs with UID/GID 1000. The bind-mounted `files` and
+`integration-packages` directories must be writable by that identity and stay
+separate. The runtime resolves both roots and rejects aliases or parent/child
+overlap before connecting to MongoDB. Keep the generated initial admin password
+in a password manager before removing it from any operator workflow; it remains
+in the protected `.env` because Compose requires the variable on every start,
+but the runtime uses it only when bootstrapping a missing local credential.
 
 Check both public URLs and an authenticated file upload after deployment. TLS
 issuance may take a short time after a domain is first attached.
@@ -397,9 +400,21 @@ secrets. Never expose them to browser code or commit them to the repository.
 ## Backups
 
 Back up MongoDB, every instance's `files` directory, and the protected `.env`
-files. Keep backups encrypted and test restoration regularly. To obtain a
-cross-store consistent backup, pause the affected CMS containers while dumping
-their databases and archiving their files; this causes a planned interruption.
+files. The `integration-packages` cache has a separate recovery policy: it is
+reconstructible while every pinned repository package remains available, but a
+backup is required to guarantee connector reruns during an outage or after a
+historical package disappears. Keep cache backups separate from authoritative
+media backups, encrypted, and restore them with UID/GID 1000 and mode `0750`.
+
+Lot 0 performs no automatic object garbage collection. Monitor the capacity of
+each `integration-packages` bind mount and retain headroom for one complete
+staging object in addition to committed packages. A full cache must fail before
+an installation pin changes; it must never spill into `/tmp`, the image root,
+or the media directory.
+
+Test restoration regularly. To obtain a cross-store consistent backup, pause
+the affected CMS containers while dumping their databases and archiving their
+files; this causes a planned interruption.
 
 For an all-sites backup, stop every local instance before starting the dump.
 The following loop deliberately ignores template directories without a `.env`:
@@ -459,8 +474,8 @@ cd /opt/cms-sites/client
 umask 077
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 docker compose stop cms
-tar --numeric-owner -czf "client-instance-${STAMP}.tar.gz" \
-    files .env compose.yml
+tar --numeric-owner -czf "client-media-${STAMP}.tar.gz" files .env compose.yml
+tar --numeric-owner -czf "client-integration-packages-${STAMP}.tar.gz" integration-packages
 docker compose up -d --wait
 ```
 

@@ -25,6 +25,7 @@ const runtimeEnv = () =>
         CMS_ADMIN_EMAIL: "admin@example.test",
         CMS_ADMIN_PASSWORD: "Correct-Horse-Battery-Staple-42!",
         CMS_FILES_DIR: "/data/files",
+        CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
         MONGO_URL: "mongodb://mongo:27017/cms",
         ANALYTICS_SALT_SECRET: "shared-analytics-secret",
     });
