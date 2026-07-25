@@ -3,6 +3,8 @@ export {
     type ReadIntegrationPackageDirectoryOptions,
     type ReadIntegrationPackageDirectoryResult,
 } from "./reader";
+export { readBoundedRegularFile } from "./boundedFile";
+export { readIntegrationPackageFiles } from "./directoryWalker";
 export {
     FsIntegrationPackageSource,
     type FsIntegrationPackageLocation,

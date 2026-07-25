@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { DEFAULT_INTEGRATION_PACKAGE_LIMITS } from "@bernouy/cms-integration-packages";
-import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
+import { readBoundedRegularFile, readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import { readBoundedFileHandle } from "../../src/default-implementation/fs/boundedFile";
 import { createVersionRoot, readerOptions, writeText } from "./fixtures";
 
@@ -31,6 +31,17 @@ describe("filesystem integration package limits", () => {
                 limits: { maxFileBytes: 1_024, maxDecodedBytes: 70 },
             }),
         ).rejects.toThrow(/contents exceed 70 decoded bytes/);
+    });
+
+    test("exposes the bounded regular-file reader through the filesystem adapter", async () => {
+        const root = createVersionRoot();
+        const bytes = await readBoundedRegularFile(join(root, "definition.json"), 0, {
+            ...DEFAULT_INTEGRATION_PACKAGE_LIMITS,
+            maxFileBytes: 1_024,
+            maxDecodedBytes: 1_024,
+        });
+
+        expect(new TextDecoder().decode(bytes)).toContain('"kind":"demo"');
     });
 
     test("bounds empty directories, depth, path bytes, and segment bytes", async () => {
