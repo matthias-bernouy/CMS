@@ -5,7 +5,14 @@ import {
     sourceImageOriginalUrl,
     type ResponsiveSourceImageAttributes,
     type ResponsiveSourceImageInput,
-} from "./responsive";
+} from "./attributes";
+import {
+    boundSourceUrl,
+    dimensionBinding,
+    hasUnresolvedBinding,
+    isEmptyBinding,
+    isResolved,
+} from "./bindings";
 
 type ResponsiveElementState = {
     authoredSizes?: string;
@@ -13,7 +20,6 @@ type ResponsiveElementState = {
     fallbackSrc?: string;
 };
 
-type DimensionBinding = { kind: "absent" | "blocked" } | { kind: "resolved"; value: number };
 export type ResponsiveSourceImageRollout = Readonly<{
     public: boolean;
     private: boolean;
@@ -32,9 +38,9 @@ export function syncResponsiveSourceImageElement(image: HTMLImageElement, enable
     const state = states.get(image) ?? {};
     captureAuthoredSizes(image, state);
 
-    const baseUrl = image.getAttribute("data-src")?.trim() ?? "";
-    const sourceWidthValue = image.getAttribute("data-source-width");
-    const sourceHeightValue = image.getAttribute("data-source-height");
+    const baseUrl = boundSourceUrl(image);
+    const sourceWidthValue = image.getAttribute("data-source-width") ?? image.getAttribute("data-cms-width");
+    const sourceHeightValue = image.getAttribute("data-source-height") ?? image.getAttribute("data-cms-height");
     const emptyHistoricalPair = isEmptyBinding(sourceWidthValue) && isEmptyBinding(sourceHeightValue);
     const sourceWidth = emptyHistoricalPair ? { kind: "absent" as const } : dimensionBinding(sourceWidthValue);
     const sourceHeight = emptyHistoricalPair ? { kind: "absent" as const } : dimensionBinding(sourceHeightValue);
@@ -162,33 +168,6 @@ function scrubUnresolvedNetworkAttributes(image: HTMLImageElement): void {
     }
 }
 
-function dimensionBinding(value: string | null): DimensionBinding {
-    if (value === null) {
-        return { kind: "absent" };
-    }
-    const normalized = value.trim();
-    if (normalized.toLowerCase() === "null") {
-        return { kind: "absent" };
-    }
-    if (!normalized || hasUnresolvedBinding(normalized)) {
-        return { kind: "blocked" };
-    }
-    const parsed = Number(normalized);
-    return Number.isSafeInteger(parsed) && parsed > 0 ? { kind: "resolved", value: parsed } : { kind: "blocked" };
-}
-
-function isEmptyBinding(value: string | null): boolean {
-    return value !== null && value.trim().length === 0;
-}
-
 function rolloutEnabled(rollout: ResponsiveSourceImageRollout, access: string | null | undefined): boolean {
     return access?.trim().toLowerCase() === "public" ? rollout.public : rollout.private;
-}
-
-function isResolved(value: string): boolean {
-    return value.length > 0 && !value.includes("{{");
-}
-
-function hasUnresolvedBinding(value: string | undefined): boolean {
-    return value?.includes("{{") ?? false;
 }

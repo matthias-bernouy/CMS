@@ -4,4 +4,8 @@ export {
     createResponsiveSourceImageBrowserApi,
     type ResponsiveSourceImageBrowserApi,
     type ResponsiveSourceImageRollout,
-} from "../core/responsiveElement";
+} from "../core/responsive/element";
+export {
+    installBoundImageRuntime,
+    type BoundImageRuntime,
+} from "../core/responsive/coordinator";

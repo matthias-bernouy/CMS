@@ -6,6 +6,19 @@ import {
 import { image } from "./fixture";
 
 describe("responsive Source image element lifecycle", () => {
+    test("prefers the canonical data-cms-src binding", () => {
+        const element = image({
+            "data-cms-src": "/.cms/sources/catalog/image?id=canonical",
+            "data-src": "/.cms/sources/catalog/image?id=legacy",
+            "data-source-width": "900",
+            "data-source-height": "600",
+        });
+
+        expect(syncResponsiveSourceImageElement(element)).toBe(true);
+        expect(element.getAttribute("src")).toContain("id=canonical");
+        expect(element.getAttribute("srcset")).not.toContain("id=legacy");
+    });
+
     test("serves an original-only historical row and upgrades it once dimensions resolve", () => {
         const element = image({
             "data-src": "/.cms/sources/catalog/image?id=7",

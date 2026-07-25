@@ -1,4 +1,4 @@
-import { SOURCE_IMAGE_WIDTHS } from "../interfaces/recipe";
+import { SOURCE_IMAGE_WIDTHS } from "../../interfaces/recipe";
 
 export type ResponsiveSourceImageInput = Readonly<{
     baseUrl: string;
