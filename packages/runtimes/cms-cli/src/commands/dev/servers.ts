@@ -50,12 +50,6 @@ export async function startLocalServers(options: ServerOptions) {
     const analyticsVisitorSecret = crypto.randomUUID();
     const runner = new BunRunner();
     runner.addEndpoint("GET", "/dev/reload", sseHandler(options.reload));
-    runner.group("/.cms/repository", (repositoryRunner) => {
-        new RepositoryCms({
-            runner: repositoryRunner,
-            integrationCatalog: services.integrationRepositoryCatalog,
-        });
-    });
 
     const cms = new ControlCms(
         runner,
@@ -126,6 +120,12 @@ export async function startLocalServers(options: ServerOptions) {
     runner.start(flags.port);
 
     const deliveryRunner = new BunRunner();
+    deliveryRunner.group("/.cms/repository", (repositoryRunner) => {
+        new RepositoryCms({
+            runner: repositoryRunner,
+            integrationCatalog: services.integrationRepositoryCatalog,
+        });
+    });
     const variantStore = new LocalFsCmsFilesBlob(`${options.siteDir}/.cms-variants`);
     new DeliveryCms({
         runner: deliveryRunner,

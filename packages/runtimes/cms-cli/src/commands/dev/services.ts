@@ -50,7 +50,7 @@ export async function createLocalServices(options: ServiceOptions) {
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(options.siteDir));
     const integrations = createLocalIntegrationServices(
         options.siteDir,
-        `http://${options.publicHost}:${options.port}/.cms/repository`,
+        `http://${options.publicHost}:${options.deliveryPort}/.cms/repository`,
         secrets,
     );
     const integrationInstallations = new LocalFsIntegrationInstallationRepository(options.siteDir);

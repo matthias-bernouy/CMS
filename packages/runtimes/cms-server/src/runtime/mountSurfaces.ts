@@ -54,12 +54,6 @@ export async function mountProductionSurfaces(
             report: runtime.log,
         });
     const controlRunner = new runtime.Runner();
-    controlRunner.group("/.cms/repository", (repositoryRunner) => {
-        new runtime.Repository({
-            runner: repositoryRunner,
-            integrationCatalog: integrations.integrationRepositoryCatalog,
-        });
-    });
     const controlCms = new runtime.Control(
         controlRunner,
         core.repo,
@@ -116,6 +110,12 @@ export async function mountProductionSurfaces(
     await controlCms.ready;
 
     const deliveryRunner = new runtime.Runner();
+    deliveryRunner.group("/.cms/repository", (repositoryRunner) => {
+        new runtime.Repository({
+            runner: repositoryRunner,
+            integrationCatalog: integrations.integrationRepositoryCatalog,
+        });
+    });
     new runtime.Delivery({
         runner: deliveryRunner,
         repository: core.repo,

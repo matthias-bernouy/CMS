@@ -26,9 +26,11 @@ export type HttpIntegrationDefinitionRepositoryConfig = {
 export { DEFAULT_INTEGRATION_REPOSITORY_TIMEOUT_MS };
 
 export class HttpIntegrationDefinitionRepository implements IntegrationDefinitionRepository {
+    private readonly baseUrl: string;
     private readonly transport: HttpDefinitionTransport;
 
     constructor(config: string | HttpIntegrationDefinitionRepositoryConfig) {
+        this.baseUrl = typeof config === "string" ? config : config.baseUrl;
         this.transport = new HttpDefinitionTransport(
             typeof config === "string"
                 ? { baseUrl: config, timeoutMs: DEFAULT_INTEGRATION_REPOSITORY_TIMEOUT_MS }
