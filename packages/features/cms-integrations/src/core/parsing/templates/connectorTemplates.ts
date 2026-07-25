@@ -1,6 +1,7 @@
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import type { DeclarativeConnectorTemplate } from "../../../interfaces/Integration";
 import { isRecord, text } from "../definition/values";
+import { parseConnectorCompatibility } from "./connector-compatibility";
 import { parseConnectorSchemas } from "./connectorSchemaTemplates";
 
 export function parseConnectorTemplates(value: unknown): DeclarativeConnectorTemplate[] {
@@ -67,6 +68,9 @@ function parseConnectorTemplate(value: unknown, name: string): DeclarativeConnec
         ...(value.schemas !== undefined ? { schemas: parseConnectorSchemas(value.schemas, `${name}.schemas`) } : {}),
         ...(value.functions !== undefined
             ? { functions: parseConnectorFunctions(value.functions, `${name}.functions`) }
+            : {}),
+        ...(value.compatibility !== undefined
+            ? { compatibility: parseConnectorCompatibility(value.compatibility, provider, `${name}.compatibility`) }
             : {}),
     };
 }

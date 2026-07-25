@@ -11,7 +11,14 @@ export type {
     DeclarativeDashboardArtifactTemplate,
     IntegrationAnswerValue,
     DeclarativeDashboardRelationProjectionArtifactTemplate,
+    DeclarativeConnectorCompatibility,
     DeclarativeConnectorFunctionTemplate,
+    DeclarativeConnectorSchemaColumnContract,
+    DeclarativeConnectorSchemaConstraintContract,
+    DeclarativeConnectorSchemaContract,
+    DeclarativeConnectorSchemaForeignKeyAction,
+    DeclarativeConnectorSchemaNamespaceContract,
+    DeclarativeConnectorSchemaRelationContract,
     DeclarativeConnectorSchemaTemplate,
     DeclarativeConnectorTemplate,
     DeclarativeProvisionOutputTemplate,
@@ -116,6 +123,8 @@ export {
     parseIntegrationImportDto,
 } from "../core/parsing/parseIntegrationImportDto";
 export { parseIntegrationDefinition } from "../core/parsing/definition/definition";
+export { parseConnectorSchemaContract } from "../core/parsing/templates/connector-compatibility";
+export { assertSqlConnectorSchemaCompatibilityDeclared } from "../core/definitions/connectorCompatibility";
 export { importIntegration } from "../core/importIntegration";
 export {
     integrationInstallationId,
