@@ -4,6 +4,7 @@ import {
     type IntegrationPackageFileV1,
     type IntegrationPackageValidationOptions,
 } from "../../interfaces/envelope";
+import { canonicalJsonBytes } from "../canonical/canonicalizeJson";
 import { resolveIntegrationPackageLimits } from "./constants";
 import { decodedIntegrationPackageFileByteLength } from "./encoding";
 import { IntegrationPackageValidationError } from "./errors";
@@ -114,7 +115,7 @@ export function validateIntegrationPackageEnvelope(
     if (releaseNotes) {
         assertReferencedUtf8File(parsedFiles, releaseNotes, "releaseNotes");
     }
-    return {
+    const result: IntegrationPackageEnvelopeV1 = {
         schema: INTEGRATION_PACKAGE_SCHEMA,
         kind,
         version,
@@ -122,4 +123,11 @@ export function validateIntegrationPackageEnvelope(
         ...(releaseNotes ? { releaseNotes } : {}),
         files: parsedFiles,
     };
+    if (canonicalJsonBytes(result).byteLength > limits.maxDocumentBytes) {
+        throw new IntegrationPackageValidationError(
+            "body_limit_exceeded",
+            `canonical JSON document exceeds ${limits.maxDocumentBytes} bytes`,
+        );
+    }
+    return result;
 }

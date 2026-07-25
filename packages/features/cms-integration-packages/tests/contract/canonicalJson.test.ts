@@ -61,4 +61,13 @@ describe("RFC 8785 canonical JSON", () => {
     test("allows a valid surrogate pair", () => {
         expect(canonicalizeJson({ emoji: "\ud83d\ude00" })).toBe('{"emoji":"😀"}');
     });
+
+    test("rejects excessive nesting without overflowing the call stack", () => {
+        let nested: unknown = null;
+        for (let depth = 0; depth < 65; depth += 1) {
+            nested = [nested];
+        }
+
+        expect(() => canonicalizeJson(nested)).toThrow(/maximum nesting depth 64/);
+    });
 });

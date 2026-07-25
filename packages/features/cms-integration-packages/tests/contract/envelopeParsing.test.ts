@@ -63,4 +63,10 @@ describe("integration package JSON parsing", () => {
 
         expectCode(() => parseIntegrationPackageEnvelope(source), "invalid_unicode");
     });
+
+    test("rejects excessive nesting before building a recursive JSON tree", () => {
+        const source = `${"[".repeat(65)}null${"]".repeat(65)}`;
+
+        expectCode(() => parseIntegrationPackageEnvelope(source), "json_depth_limit_exceeded");
+    });
 });

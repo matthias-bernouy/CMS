@@ -12,7 +12,13 @@ export function assertEnvelopeIJson(input: unknown): void {
         assertIJsonValue(input);
     } catch (error) {
         if (error instanceof InvalidIJsonValueError) {
-            throw new IntegrationPackageValidationError("invalid_unicode", error.message);
+            const code =
+                error.reason === "invalid_unicode"
+                    ? "invalid_unicode"
+                    : error.reason === "depth_limit_exceeded"
+                      ? "json_depth_limit_exceeded"
+                      : "invalid_envelope";
+            throw new IntegrationPackageValidationError(code, error.message);
         }
         throw error;
     }

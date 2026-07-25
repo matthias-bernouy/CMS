@@ -12,6 +12,7 @@ export type IntegrationPackageValidationErrorCode =
     | "invalid_unicode"
     | "invalid_utf8"
     | "invalid_version"
+    | "json_depth_limit_exceeded"
     | "missing_file";
 
 export class IntegrationPackageValidationError extends Error {

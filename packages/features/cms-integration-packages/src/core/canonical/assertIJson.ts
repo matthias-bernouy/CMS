@@ -1,7 +1,14 @@
+export type InvalidIJsonReason = "depth_limit_exceeded" | "invalid_unicode" | "invalid_value";
+
+export const MAX_I_JSON_NESTING_DEPTH = 64;
+
 export class InvalidIJsonValueError extends TypeError {
-    constructor(message: string) {
+    readonly reason: InvalidIJsonReason;
+
+    constructor(message: string, reason: InvalidIJsonReason = "invalid_value") {
         super(`Invalid I-JSON value: ${message}`);
         this.name = "InvalidIJsonValueError";
+        this.reason = reason;
     }
 }
 
@@ -11,22 +18,37 @@ function assertValidUnicode(value: string, path: string): void {
         if (codeUnit >= 0xd800 && codeUnit <= 0xdbff) {
             const trailingCodeUnit = value.charCodeAt(index + 1);
             if (!(trailingCodeUnit >= 0xdc00 && trailingCodeUnit <= 0xdfff)) {
-                throw new InvalidIJsonValueError(`${path} contains an isolated high surrogate`);
+                throw new InvalidIJsonValueError(`${path} contains an isolated high surrogate`, "invalid_unicode");
             }
             index += 1;
             continue;
         }
         if (codeUnit >= 0xdc00 && codeUnit <= 0xdfff) {
-            throw new InvalidIJsonValueError(`${path} contains an isolated low surrogate`);
+            throw new InvalidIJsonValueError(`${path} contains an isolated low surrogate`, "invalid_unicode");
         }
     }
 }
 
-function assertArray(value: unknown[], path: string, ancestors: Set<object>): void {
+type ValueFrame = {
+    kind: "value";
+    value: unknown;
+    path: string;
+    depth: number;
+};
+
+type LeaveFrame = {
+    kind: "leave";
+    value: object;
+};
+
+type ValidationFrame = LeaveFrame | ValueFrame;
+
+function arrayChildren(value: unknown[], path: string, depth: number): ValueFrame[] {
     const enumerableKeys = Object.keys(value);
     if (enumerableKeys.length !== value.length) {
         throw new InvalidIJsonValueError(`${path} must not contain sparse entries or extra properties`);
     }
+    const children: ValueFrame[] = [];
     for (let index = 0; index < value.length; index += 1) {
         const key = String(index);
         if (enumerableKeys[index] !== key) {
@@ -36,7 +58,7 @@ function assertArray(value: unknown[], path: string, ancestors: Set<object>): vo
         if (descriptor === undefined || !("value" in descriptor)) {
             throw new InvalidIJsonValueError(`${path}[${key}] must be a data property`);
         }
-        assertIJsonValueInternal(descriptor.value, `${path}[${key}]`, ancestors);
+        children.push({ kind: "value", value: descriptor.value, path: `${path}[${key}]`, depth });
     }
     const allowedKeys = new Set<string>(["length", ...enumerableKeys]);
     for (const key of Reflect.ownKeys(value)) {
@@ -44,13 +66,15 @@ function assertArray(value: unknown[], path: string, ancestors: Set<object>): vo
             throw new InvalidIJsonValueError(`${path} contains a non-JSON property`);
         }
     }
+    return children;
 }
 
-function assertObject(value: object, path: string, ancestors: Set<object>): void {
+function objectChildren(value: object, path: string, depth: number): ValueFrame[] {
     const prototype = Object.getPrototypeOf(value);
     if (prototype !== Object.prototype && prototype !== null) {
         throw new InvalidIJsonValueError(`${path} must be a plain object or array`);
     }
+    const children: ValueFrame[] = [];
     for (const key of Reflect.ownKeys(value)) {
         if (typeof key !== "string") {
             throw new InvalidIJsonValueError(`${path} contains a symbol property`);
@@ -60,42 +84,62 @@ function assertObject(value: object, path: string, ancestors: Set<object>): void
         if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
             throw new InvalidIJsonValueError(`${path}.${key} must be an enumerable data property`);
         }
-        assertIJsonValueInternal(descriptor.value, `${path}.${key}`, ancestors);
+        children.push({ kind: "value", value: descriptor.value, path: `${path}.${key}`, depth });
     }
+    return children;
 }
 
-function assertIJsonValueInternal(value: unknown, path: string, ancestors: Set<object>): void {
-    if (value === null || typeof value === "boolean") {
-        return;
+export function assertIJsonValue(value: unknown, maxDepth = MAX_I_JSON_NESTING_DEPTH): void {
+    if (!Number.isSafeInteger(maxDepth) || maxDepth <= 0) {
+        throw new TypeError("I-JSON maximum depth must be a positive safe integer");
     }
-    if (typeof value === "string") {
-        assertValidUnicode(value, path);
-        return;
-    }
-    if (typeof value === "number") {
-        if (!Number.isFinite(value)) {
-            throw new InvalidIJsonValueError(`${path} must be a finite number`);
+    const ancestors = new Set<object>();
+    const stack: ValidationFrame[] = [{ kind: "value", value, path: "$", depth: 0 }];
+    while (stack.length > 0) {
+        const frame = stack.pop();
+        if (!frame) {
+            break;
         }
-        return;
-    }
-    if (typeof value !== "object") {
-        throw new InvalidIJsonValueError(`${path} has unsupported type ${typeof value}`);
-    }
-    if (ancestors.has(value)) {
-        throw new InvalidIJsonValueError(`${path} contains a circular reference`);
-    }
-    ancestors.add(value);
-    try {
-        if (Array.isArray(value)) {
-            assertArray(value, path, ancestors);
-        } else {
-            assertObject(value, path, ancestors);
+        if (frame.kind === "leave") {
+            ancestors.delete(frame.value);
+            continue;
         }
-    } finally {
-        ancestors.delete(value);
+        if (frame.value === null || typeof frame.value === "boolean") {
+            continue;
+        }
+        if (typeof frame.value === "string") {
+            assertValidUnicode(frame.value, frame.path);
+            continue;
+        }
+        if (typeof frame.value === "number") {
+            if (!Number.isFinite(frame.value)) {
+                throw new InvalidIJsonValueError(`${frame.path} must be a finite number`);
+            }
+            continue;
+        }
+        if (typeof frame.value !== "object") {
+            throw new InvalidIJsonValueError(`${frame.path} has unsupported type ${typeof frame.value}`);
+        }
+        const containerDepth = frame.depth + 1;
+        if (containerDepth > maxDepth) {
+            throw new InvalidIJsonValueError(
+                `${frame.path} exceeds maximum nesting depth ${maxDepth}`,
+                "depth_limit_exceeded",
+            );
+        }
+        if (ancestors.has(frame.value)) {
+            throw new InvalidIJsonValueError(`${frame.path} contains a circular reference`);
+        }
+        ancestors.add(frame.value);
+        stack.push({ kind: "leave", value: frame.value });
+        const children = Array.isArray(frame.value)
+            ? arrayChildren(frame.value, frame.path, containerDepth)
+            : objectChildren(frame.value, frame.path, containerDepth);
+        for (let index = children.length - 1; index >= 0; index -= 1) {
+            const child = children[index];
+            if (child) {
+                stack.push(child);
+            }
+        }
     }
-}
-
-export function assertIJsonValue(value: unknown): void {
-    assertIJsonValueInternal(value, "$", new Set());
 }

@@ -76,4 +76,14 @@ describe("integration package envelope validation", () => {
         expect(envelope.files.__proto__).toEqual({ encoding: "utf8", content: "safe" });
         expect(Object.getPrototypeOf(envelope.files)).toBe(Object.prototype);
     });
+
+    test("rejects programmatic hostile values with precise error classes", () => {
+        expectCode({ ...validPackageEnvelope(), unexpected: undefined }, "invalid_envelope");
+
+        let nested: unknown = null;
+        for (let depth = 0; depth < 65; depth += 1) {
+            nested = [nested];
+        }
+        expectCode({ ...validPackageEnvelope(), unexpected: nested }, "json_depth_limit_exceeded");
+    });
 });

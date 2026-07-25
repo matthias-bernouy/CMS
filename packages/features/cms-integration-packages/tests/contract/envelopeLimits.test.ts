@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     IntegrationPackageValidationError,
+    canonicalJsonBytes,
     decodeIntegrationPackageFile,
     parseIntegrationPackageEnvelope,
     validateIntegrationPackageEnvelope,
@@ -53,10 +54,26 @@ describe("integration package encodings and limits", () => {
     });
 
     test("enforces the actual UTF-8 JSON document byte limit", () => {
-        const source = JSON.stringify(validPackageEnvelope());
+        const envelope = validPackageEnvelope();
+        envelope.files[envelope.releaseNotes!].content = "é".repeat(20);
+        const source = JSON.stringify(envelope);
+        expect(new TextEncoder().encode(source).byteLength).toBeGreaterThan(source.length);
 
         expectCode(
-            () => parseIntegrationPackageEnvelope(source, { limits: { maxDocumentBytes: source.length - 1 } }),
+            () => parseIntegrationPackageEnvelope(source, { limits: { maxDocumentBytes: source.length } }),
+            "body_limit_exceeded",
+        );
+    });
+
+    test("enforces the canonical document limit for programmatic envelopes", () => {
+        const envelope = validPackageEnvelope();
+        const canonicalBytes = canonicalJsonBytes(envelope);
+
+        expectCode(
+            () =>
+                validateIntegrationPackageEnvelope(envelope, {
+                    limits: { maxDocumentBytes: canonicalBytes.byteLength - 1 },
+                }),
             "body_limit_exceeded",
         );
     });
