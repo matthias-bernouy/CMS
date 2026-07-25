@@ -15,3 +15,10 @@ later.
 - `GET /api/integrations/definition?kind=<kind>&version=<semver>` returns one
   installable definition. `version` is optional and resolves through the
   repository default channel.
+- `GET /api/integrations/package?kind=<kind>&version=<semver>` returns one exact
+  canonical version package and its digest metadata.
+- `GET /api/integrations/release-notes?kind=<kind>&version=<semver>` returns the
+  exact immutable Markdown notes, or `404` for a bootstrapped legacy package.
+
+Every route also exposes `HEAD` and CORS preflight behavior. Package and release
+note routes require an exact version and use immutable public caching.

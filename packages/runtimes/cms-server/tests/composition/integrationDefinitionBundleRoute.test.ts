@@ -77,15 +77,20 @@ class TestRunner implements Partial<Runner> {
     private readonly routes = new Map<string, RouteHandler>();
 
     get(path: string, handler: RouteHandler): void {
-        this.routes.set(`GET ${path}`, handler);
+        this.addEndpoint("GET", path, handler);
     }
 
-    async handle(path: string): Promise<Response> {
+    addEndpoint(method: string, path: string, handler: RouteHandler): void {
+        this.routes.set(`${method} ${path}`, handler);
+    }
+
+    async handle(path: string, init: RequestInit = {}): Promise<Response> {
         const pathname = new URL(path, "http://localhost").pathname;
-        const handler = this.routes.get(`GET ${pathname}`);
+        const method = init.method ?? "GET";
+        const handler = this.routes.get(`${method} ${pathname}`);
         if (!handler) {
-            throw new Error(`missing handler for ${pathname}`);
+            throw new Error(`missing handler for ${method} ${pathname}`);
         }
-        return handler(new Request(`http://localhost${path}`)) as Promise<Response>;
+        return handler(new Request(`http://localhost${path}`, init)) as Promise<Response>;
     }
 }

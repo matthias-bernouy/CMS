@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import type { RouteHandler, Runner } from "@bernouy/http-runner";
 import { IntegrationRepositoryUnavailableError, type IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 import { RepositoryCms } from "cms-repository/RepositoryCms";
+import { json, TestRunner } from "./testRunner";
 
 describe("@bernouy/cms-repository integration routes", () => {
     test("publishes integration catalogue definitions", async () => {
@@ -124,29 +124,6 @@ describe("@bernouy/cms-repository integration routes", () => {
     });
 });
 
-class TestRunner implements Partial<Runner> {
-    readonly basePath = "/";
-    private readonly routes = new Map<string, RouteHandler>();
-
-    get(path: string, handler: RouteHandler): void {
-        this.addEndpoint("GET", path, handler);
-    }
-
-    addEndpoint(method: string, path: string, handler: RouteHandler): void {
-        this.routes.set(`${method} ${path}`, handler);
-    }
-
-    async handle(path: string, init: RequestInit = {}): Promise<Response> {
-        const pathname = new URL(path, "http://localhost").pathname;
-        const method = init.method ?? "GET";
-        const handler = this.routes.get(`${method} ${pathname}`);
-        if (!handler) {
-            throw new Error(`missing handler for ${method} ${pathname}`);
-        }
-        return handler(new Request(`http://localhost${path}`, init)) as Promise<Response>;
-    }
-}
-
 function testCatalog(): IntegrationDefinitionRepository {
     return {
         list: async () => [
@@ -188,8 +165,4 @@ function testCatalog(): IntegrationDefinitionRepository {
                 ? { bytes: new TextEncoder().encode("<svg></svg>"), contentType: "image/svg+xml; charset=utf-8" }
                 : null,
     };
-}
-
-async function json(response: Response): Promise<any> {
-    return response.json();
 }

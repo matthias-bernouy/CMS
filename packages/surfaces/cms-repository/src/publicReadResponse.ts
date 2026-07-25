@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { INTEGRATION_PACKAGE_DIGEST_HEADER } from "@bernouy/cms-integration-packages";
 
 export type PublicRepositoryCache = "catalog" | "immutable";
 
@@ -9,7 +10,12 @@ const CACHE_CONTROL: Record<PublicRepositoryCache, string> = {
 
 const CORS_HEADERS = {
     "access-control-allow-origin": "*",
-    "access-control-expose-headers": "ETag, Cache-Control",
+    "access-control-expose-headers": `ETag, Cache-Control, Content-Length, ${INTEGRATION_PACKAGE_DIGEST_HEADER}`,
+};
+
+export type PublicBytesResponseOptions = {
+    representationDigest?: string;
+    headers?: Readonly<Record<string, string>>;
 };
 
 export function publicJsonResponse(request: Request, body: unknown, cache: PublicRepositoryCache): Response {
@@ -22,8 +28,9 @@ export function publicBytesResponse(
     bytes: Uint8Array,
     cache: PublicRepositoryCache,
     contentType: string,
+    options: PublicBytesResponseOptions = {},
 ): Response {
-    return publicContentResponse(request, bytes, cache, contentType);
+    return publicContentResponse(request, bytes, cache, contentType, options);
 }
 
 export function publicNotFound(message: string): Response {
@@ -85,18 +92,28 @@ function publicContentResponse(
     bytes: Uint8Array,
     cache: PublicRepositoryCache,
     contentType: string,
+    options: PublicBytesResponseOptions = {},
 ): Response {
-    const etag = `"${createHash("sha256").update(bytes).digest("hex")}"`;
-    const headers = {
+    const digest = options.representationDigest ?? createHash("sha256").update(bytes).digest("hex");
+    if (!/^[a-f0-9]{64}$/.test(digest)) {
+        throw new TypeError("Public repository representation digest must be lowercase hexadecimal SHA-256");
+    }
+    const etag = `"${digest}"`;
+    const headers = new Headers({
         ...CORS_HEADERS,
         "cache-control": CACHE_CONTROL[cache],
+        "content-length": String(bytes.byteLength),
         "content-type": contentType,
         etag,
-    };
+        ...options.headers,
+    });
     if (matchesEtag(request.headers.get("if-none-match"), etag)) {
         return new Response(null, { status: 304, headers });
     }
-    return new Response(arrayBuffer(bytes), { headers });
+    if (request.method === "HEAD") {
+        return new Response(null, { headers });
+    }
+    return new Response(responseBuffer(bytes), { headers });
 }
 
 function matchesEtag(header: string | null, etag: string): boolean {
@@ -110,8 +127,9 @@ function matchesEtag(header: string | null, etag: string): boolean {
     });
 }
 
-function arrayBuffer(bytes: Uint8Array): ArrayBuffer {
-    const buffer = new ArrayBuffer(bytes.byteLength);
-    new Uint8Array(buffer).set(bytes);
-    return buffer;
+function responseBuffer(bytes: Uint8Array): ArrayBuffer {
+    if (bytes.buffer instanceof ArrayBuffer && bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength) {
+        return bytes.buffer;
+    }
+    return bytes.slice().buffer as ArrayBuffer;
 }

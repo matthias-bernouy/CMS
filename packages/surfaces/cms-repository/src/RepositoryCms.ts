@@ -1,5 +1,7 @@
 import type { Runner } from "@bernouy/http-runner";
+import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import { integrationPackageRouteHandlers } from "cms-repository/integrationPackageRoutes";
 import {
     publicBytesResponse,
     publicErrorResponse,
@@ -12,15 +14,18 @@ import {
 export type RepositoryCmsConfig = {
     runner: Runner;
     integrationCatalog: IntegrationDefinitionRepository;
+    integrationPackages?: IntegrationPackageSource;
 };
 
 export class RepositoryCms {
     private readonly runner: Runner;
     private readonly integrationCatalog: IntegrationDefinitionRepository;
+    private readonly integrationPackages?: IntegrationPackageSource;
 
     constructor(config: RepositoryCmsConfig) {
         this.runner = config.runner;
         this.integrationCatalog = config.integrationCatalog;
+        this.integrationPackages = config.integrationPackages;
         this.registerRoutes();
     }
 
@@ -70,6 +75,12 @@ export class RepositoryCms {
             }
             return publicBytesResponse(req, asset.bytes, version ? "immutable" : "catalog", asset.contentType);
         });
+
+        if (this.integrationPackages) {
+            const handlers = integrationPackageRouteHandlers(this.integrationPackages);
+            this.registerPublicRead("/api/integrations/package", handlers.package);
+            this.registerPublicRead("/api/integrations/release-notes", handlers.releaseNotes);
+        }
     }
 
     private registerPublicRead(path: string, handler: (request: Request) => Promise<Response>): void {

@@ -15,6 +15,7 @@
         "README.md"
     ],
     "dependencies": {
+        "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*"
     },

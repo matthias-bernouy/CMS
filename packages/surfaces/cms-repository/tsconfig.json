@@ -11,6 +11,7 @@
     "include": ["src/**/*.ts"],
     "references": [
         { "path": "../../foundation/http-runner" },
+        { "path": "../../features/cms-integration-packages" },
         { "path": "../../features/cms-integrations" }
     ]
 }

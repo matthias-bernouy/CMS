@@ -20,6 +20,7 @@ export {
     IntegrationPackageValidationError,
     type IntegrationPackageValidationErrorCode,
 } from "../core/envelope/errors";
+export { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "../core/envelope/identity";
 export { assertIntegrationPackagePath } from "../core/envelope/path";
 export {
     parseIntegrationPackageEnvelope,
@@ -28,3 +29,4 @@ export {
 export { assertIJsonValue, InvalidIJsonValueError } from "../core/canonical/assertIJson";
 export { canonicalJsonBytes, canonicalizeJson } from "../core/canonical/canonicalizeJson";
 export { computeIntegrationPackageDigest, sha256Hex } from "../core/digest";
+export { INTEGRATION_PACKAGE_DIGEST_HEADER } from "../core/httpContract";
