@@ -72,7 +72,7 @@ describe("Shell", () => {
 
         expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
         expect(core.getAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe("loading");
-        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
 
         shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(
@@ -85,7 +85,7 @@ describe("Shell", () => {
         expect(core.getAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe("empty");
         expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
-        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
 
         shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(
             new CustomEvent("editor-v2:editor-mode-change", {
@@ -99,6 +99,15 @@ describe("Shell", () => {
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
         expect(shell.shadowRoot!.querySelector("cms-editor-v2-canvas")?.getAttribute("mode")).toBe("view");
+
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(
+            new CustomEvent("editor-v2:editor-mode-change", {
+                bubbles: true,
+                composed: true,
+                detail: { mode: "edit" },
+            }),
+        );
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
     });
 
     test("shell restarts the view binding runtime after syncing frame content", async () => {
@@ -141,6 +150,7 @@ describe("Shell", () => {
         document.body.append(shell);
         setShellFrameDocument(shell, frameDocument);
         setShellViewFrameDocument(shell, viewFrameDocument);
+        shellState(shell).editorMode = "view";
 
         shellParts(shell).commands.syncViewFrameContent();
 

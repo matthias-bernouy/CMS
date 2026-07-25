@@ -41098,7 +41098,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Bindings/shellBindingPreview.ts
   var BINDING_PREVIEW_STYLE_ID = "cms-editor-binding-preview-style";
-  function syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce) {
+  function syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce, viewActive) {
     const editorCore = bindingPreviewCore(editorDocument);
     if (editorCore) {
       editorCore.setAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce, sourceStateForce);
@@ -41107,7 +41107,7 @@ label {
     const viewCore = bindingPreviewCore(viewDocument);
     if (viewCore) {
       viewCore.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce);
-      viewCore.removeAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled);
+      viewCore.toggleAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled, !viewActive);
     }
   }
   function bindingPreviewCore(document2) {
@@ -41117,15 +41117,19 @@ label {
     }
     return root?.querySelector(CMS_BINDING_CORE_TAG) ?? document2?.querySelector(CMS_BINDING_CORE_TAG) ?? null;
   }
-  function syncViewFrameContent(editorDocument, viewDocument, sourceStateForce) {
+  function syncViewFrameContent(editorDocument, viewDocument, sourceStateForce, viewActive) {
     const editorContent = editorDocument?.querySelector("[data-cms-content]");
     const viewContent = viewDocument?.querySelector("[data-cms-content]");
     if (!editorContent || !viewContent) {
       return;
     }
+    const viewCore = bindingPreviewCore(viewDocument);
+    const wasViewActive = Boolean(viewCore && !viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled));
     viewContent.replaceChildren(runtimeContentFragment(editorContent, viewContent.ownerDocument));
-    syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce);
-    restartViewBindingRuntime(viewDocument);
+    syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce, viewActive);
+    if (viewActive && wasViewActive) {
+      restartViewBindingRuntime(viewDocument);
+    }
   }
   function restartViewBindingRuntime(viewDocument) {
     const core = bindingPreviewCore(viewDocument);
@@ -41203,11 +41207,11 @@ label {
     unbindViewFrameDocument() {
       this.viewFrameDocument = null;
     }
-    syncBindingPreviewCore(sourceStateForce) {
-      syncBindingPreviewCore(this.frameDocument, this.viewFrameDocument, sourceStateForce);
+    syncBindingPreviewCore(sourceStateForce, viewActive) {
+      syncBindingPreviewCore(this.frameDocument, this.viewFrameDocument, sourceStateForce, viewActive);
     }
-    syncViewFrameContent(sourceStateForce) {
-      syncViewFrameContent(this.frameDocument, this.viewFrameDocument, sourceStateForce);
+    syncViewFrameContent(sourceStateForce, viewActive) {
+      syncViewFrameContent(this.frameDocument, this.viewFrameDocument, sourceStateForce, viewActive);
     }
     contentHtml() {
       return contentHtml(this.frameDocument);
@@ -43785,10 +43789,10 @@ label {
       this.syncBindingPreviewCore();
     }
     syncBindingPreviewCore() {
-      this.context.frames.syncBindingPreviewCore(this.context.state.sourceStateForce);
+      this.context.frames.syncBindingPreviewCore(this.context.state.sourceStateForce, this.context.state.editorMode === "view");
     }
     syncViewFrameContent() {
-      this.context.frames.syncViewFrameContent(this.context.state.sourceStateForce);
+      this.context.frames.syncViewFrameContent(this.context.state.sourceStateForce, this.context.state.editorMode === "view");
     }
     syncChromeLabels() {
       this.context.sync.syncChromeLabels();

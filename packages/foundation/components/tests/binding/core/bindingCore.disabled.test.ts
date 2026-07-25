@@ -42,6 +42,43 @@ describe("<cms-binding-core> — disabled scope", () => {
         expect(text(document.querySelector("p"))).toBe("Ada");
     });
 
+    test("adding cms-binding-disabled aborts an in-flight source request", async () => {
+        let signal: AbortSignal | undefined;
+        let requestStarted!: () => void;
+        const started = new Promise<void>((resolve) => {
+            requestStarted = resolve;
+        });
+        globalThis.fetch = ((_url: RequestInfo | URL, init?: RequestInit) => {
+            signal = init?.signal ?? undefined;
+            requestStarted();
+            return new Promise<Response>((_resolve, reject) => {
+                signal?.addEventListener(
+                    "abort",
+                    () => {
+                        const error = new Error("Aborted");
+                        error.name = "AbortError";
+                        reject(error);
+                    },
+                    { once: true },
+                );
+            });
+        }) as typeof fetch;
+
+        document.body.innerHTML = `
+            <${BINDING_CORE_TAG}>
+                <div cms-source="/x"><p>{{ name }}</p></div>
+            </${BINDING_CORE_TAG}>`;
+        const core = document.querySelector<BindingCore>(BINDING_CORE_TAG)!;
+        await started;
+
+        core.setAttribute(BINDING_DISABLED_ATTR, "");
+        await settle();
+
+        expect(signal?.aborted).toBe(true);
+        expect(core.runtime).toBeNull();
+        expect(text(document.querySelector("p"))).toBe("{{ name }}");
+    });
+
     test("cms-binding-disabled keeps nested cores inert", async () => {
         let calls = 0;
         globalThis.fetch = (async () => {

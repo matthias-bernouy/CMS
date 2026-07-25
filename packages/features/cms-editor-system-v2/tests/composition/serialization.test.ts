@@ -40,8 +40,8 @@ describe("composition serialization", () => {
         const source = editorDocument();
         const target = parseHTML(`<main data-cms-content></main>`).document;
 
-        syncViewFrameContent(source, target, "loading");
-        syncViewFrameContent(source, target, "loading");
+        syncViewFrameContent(source, target, "loading", false);
+        syncViewFrameContent(source, target, "loading", false);
 
         const content = target.querySelector("[data-cms-content]")!.innerHTML;
         expect(content).toContain("data-authored");
@@ -59,7 +59,7 @@ describe("composition serialization", () => {
         `).document;
         const target = parseHTML(`<main data-cms-content></main>`).document;
 
-        syncViewFrameContent(source, target, "loading");
+        syncViewFrameContent(source, target, "loading", false);
 
         const dynamicImage = target.querySelector('[data-kind="dynamic"]');
         const staticImage = target.querySelector('[data-kind="static"]');

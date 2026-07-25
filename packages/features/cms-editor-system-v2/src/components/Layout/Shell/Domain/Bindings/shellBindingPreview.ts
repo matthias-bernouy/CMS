@@ -7,6 +7,7 @@ export function syncBindingPreviewCore(
     editorDocument: Document | null,
     viewDocument: Document | null,
     sourceStateForce: string,
+    viewActive: boolean,
 ): void {
     const editorCore = bindingPreviewCore(editorDocument);
     if (editorCore) {
@@ -17,7 +18,7 @@ export function syncBindingPreviewCore(
     const viewCore = bindingPreviewCore(viewDocument);
     if (viewCore) {
         viewCore.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce);
-        viewCore.removeAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled);
+        viewCore.toggleAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled, !viewActive);
     }
 }
 
@@ -38,6 +39,7 @@ export function syncViewFrameContent(
     editorDocument: Document | null,
     viewDocument: Document | null,
     sourceStateForce: string,
+    viewActive: boolean,
 ): void {
     const editorContent = editorDocument?.querySelector<HTMLElement>("[data-cms-content]");
     const viewContent = viewDocument?.querySelector<HTMLElement>("[data-cms-content]");
@@ -45,9 +47,13 @@ export function syncViewFrameContent(
         return;
     }
 
+    const viewCore = bindingPreviewCore(viewDocument);
+    const wasViewActive = Boolean(viewCore && !viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled));
     viewContent.replaceChildren(runtimeContentFragment(editorContent, viewContent.ownerDocument));
-    syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce);
-    restartViewBindingRuntime(viewDocument);
+    syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce, viewActive);
+    if (viewActive && wasViewActive) {
+        restartViewBindingRuntime(viewDocument);
+    }
 }
 
 export function restartViewBindingRuntime(viewDocument: Document | null): void {

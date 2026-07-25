@@ -46,12 +46,12 @@ export class ShellFrames {
         this.viewFrameDocument = null;
     }
 
-    syncBindingPreviewCore(sourceStateForce: CmsSourceStateForce): void {
-        syncBindingPreviewCore(this.frameDocument, this.viewFrameDocument, sourceStateForce);
+    syncBindingPreviewCore(sourceStateForce: CmsSourceStateForce, viewActive: boolean): void {
+        syncBindingPreviewCore(this.frameDocument, this.viewFrameDocument, sourceStateForce, viewActive);
     }
 
-    syncViewFrameContent(sourceStateForce: CmsSourceStateForce): void {
-        syncViewFrameContent(this.frameDocument, this.viewFrameDocument, sourceStateForce);
+    syncViewFrameContent(sourceStateForce: CmsSourceStateForce, viewActive: boolean): void {
+        syncViewFrameContent(this.frameDocument, this.viewFrameDocument, sourceStateForce, viewActive);
     }
 
     contentHtml(): string {

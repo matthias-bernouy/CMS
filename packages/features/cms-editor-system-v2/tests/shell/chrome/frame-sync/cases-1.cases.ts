@@ -13,7 +13,7 @@ import {
 } from "./support";
 
 describe("Shell frame binding sync", () => {
-    test("syncs the view frame when the editor frame becomes ready after it", async () => {
+    test("syncs the view frame while keeping it inert until view mode", async () => {
         installDom();
 
         const { Shell } = await import("../../../../src/exports");
@@ -49,9 +49,15 @@ describe("Shell frame binding sync", () => {
         expect(viewDocument.querySelector("[data-cms-content]")?.innerHTML).toBe(
             `<section cms-source="/api/plans"><p>{{ plan.name }}</p></section>`,
         );
-        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
-        expect(calls).toEqual(["stop", "start"]);
+        expect(calls).toEqual([]);
+
+        shellParts(shell).state.editorMode = "view";
+        shellParts(shell).commands.syncEditorMode();
+
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
+        expect(calls).toEqual([]);
     });
 
     test("does not serialize binding runtime stamps", async () => {
@@ -118,8 +124,8 @@ describe("Shell frame binding sync", () => {
         `);
         const { document: viewDocument } = parseHTML(`<main data-cms-content></main>`);
 
-        syncViewFrameContent(editorDocument, viewDocument, "loading");
-        syncViewFrameContent(editorDocument, viewDocument, "loading");
+        syncViewFrameContent(editorDocument, viewDocument, "loading", false);
+        syncViewFrameContent(editorDocument, viewDocument, "loading", false);
 
         const content = viewDocument.querySelector("[data-cms-content]")!.innerHTML;
         expect(content).toContain("data-authored");

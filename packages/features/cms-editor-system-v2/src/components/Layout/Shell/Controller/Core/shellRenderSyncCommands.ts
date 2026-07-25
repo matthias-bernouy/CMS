@@ -57,11 +57,17 @@ export class ShellRenderSyncCommands {
     }
 
     syncBindingPreviewCore(): void {
-        this.context.frames.syncBindingPreviewCore(this.context.state.sourceStateForce);
+        this.context.frames.syncBindingPreviewCore(
+            this.context.state.sourceStateForce,
+            this.context.state.editorMode === "view",
+        );
     }
 
     syncViewFrameContent(): void {
-        this.context.frames.syncViewFrameContent(this.context.state.sourceStateForce);
+        this.context.frames.syncViewFrameContent(
+            this.context.state.sourceStateForce,
+            this.context.state.editorMode === "view",
+        );
     }
 
     syncChromeLabels(): void {
