@@ -1,4 +1,5 @@
 import { parseIntegrationDefinition } from "../../core/parsing/definition/definition";
+import { isExactIntegrationVersion, isIntegrationPrerelease } from "../../core/definitions/versioning";
 import { hydrateDefinitionIconAssets, SVG_ICON_MAX_BYTES } from "../definition-assets/icons";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import { parseIndex, parseSummaries, parseVersions } from "./httpDefinitionParsing";
@@ -66,6 +67,7 @@ export class HttpIntegrationDefinitionRepository implements IntegrationDefinitio
             return null;
         }
         const definition = parseRepositoryContract(() => {
+            assertRawDefinitionVersion(value, version);
             const parsed = parseIntegrationDefinition(value);
             assertDefinitionIdentity(parsed, kind, version);
             return parsed;
@@ -100,7 +102,26 @@ function assertDefinitionIdentity(
     expectedKind: string,
     expectedVersion: string | undefined,
 ): void {
-    if (definition.kind !== expectedKind || (expectedVersion && definition.version !== expectedVersion)) {
+    if (
+        definition.kind !== expectedKind ||
+        !definition.version ||
+        !isExactIntegrationVersion(definition.version) ||
+        (expectedVersion ? definition.version !== expectedVersion : isIntegrationPrerelease(definition.version))
+    ) {
+        throw new Error("integration definition identity does not match the request");
+    }
+}
+
+function assertRawDefinitionVersion(value: unknown, expectedVersion: string | undefined): void {
+    if (
+        !value ||
+        typeof value !== "object" ||
+        Array.isArray(value) ||
+        !("version" in value) ||
+        typeof value.version !== "string" ||
+        !isExactIntegrationVersion(value.version) ||
+        (expectedVersion ? value.version !== expectedVersion : isIntegrationPrerelease(value.version))
+    ) {
         throw new Error("integration definition identity does not match the request");
     }
 }

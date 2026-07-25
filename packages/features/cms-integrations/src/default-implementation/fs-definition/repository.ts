@@ -1,4 +1,5 @@
 import { parseIntegrationDefinition } from "../../core/parsing/definition/definition";
+import { isExactIntegrationVersion } from "../../core/definitions/versioning";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import type {
     IntegrationAsset,
@@ -70,6 +71,7 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
         const resolved = await resolveIntegrationDefinitionFileDetails(definitionPath, versionRoot);
         let definition: IntegrationDefinition;
         try {
+            assertRawDefinitionVersion(resolved.value, entry.version);
             definition = parseIntegrationDefinition(resolved.value);
             if (definition.kind !== index.kind) {
                 throw new Error(
@@ -103,5 +105,19 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
 
     private async readIndexes(): Promise<IntegrationDefinitionIndex[]> {
         return (await this.locator.list()).map((locatedPackage) => locatedPackage.index);
+    }
+}
+
+function assertRawDefinitionVersion(value: unknown, expectedVersion: string): void {
+    if (
+        !value ||
+        typeof value !== "object" ||
+        Array.isArray(value) ||
+        !("version" in value) ||
+        typeof value.version !== "string" ||
+        !isExactIntegrationVersion(value.version) ||
+        value.version !== expectedVersion
+    ) {
+        throw new Error(`definition.version: definition version must exactly match index version "${expectedVersion}"`);
     }
 }
