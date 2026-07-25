@@ -32,6 +32,18 @@ Pre-existing baseline failures:
 Style, architecture-tooling, and CI-tooling passed. Task validation must not add
 new findings relative to this baseline.
 
+Current implementation checkpoint at `e90beaa6`:
+
+- all 116 `@bernouy/cms-integration-packages` tests pass, including HTTP
+  retrieval and adversarial, concurrency, restart, repair, and cleanup cache
+  coverage;
+- 15 focused deployment, download-policy, and storage-root tests pass;
+- direct TypeScript checks pass for `@bernouy/cms-integration-packages` and
+  `@bernouy/cms-server`; the earlier repository-surface and CLI runtime checks
+  remain recorded in their commit evidence;
+- the post-cache comparative `bun run check:all` remains exactly 3 passed and 3
+  failed, matching the initial baseline with no task-introduced error.
+
 ## Lot 0 — Complete Remote Consumption
 
 | ID | Requirement | Intended implementation evidence | Required verification | Status |
@@ -44,14 +56,14 @@ new findings relative to this baseline.
 | L0.1f | Public reads expose explicit cache and CORS behavior. | `@bernouy/cms-repository` read response helpers. | Anonymous GET/HEAD, cache, ETag, and CORS contract tests. | Complete |
 | L0.2a | Repository versions are exact SemVer 2.0 values. | Definition repository parsing using a maintained SemVer package. | Exact, invalid, and prerelease fixtures. | Complete |
 | L0.2b | Dependencies accept optional supported `versionRange` values and enforce them. | Integration dependency types, parser, and resolution. | Exact, caret, tilde, bounded-comparator, and legacy fixtures. | Complete |
-| L0.3a | Package v1 envelope supports UTF-8/base64 files and release notes. | New `@bernouy/cms-integration-packages` contracts and parser. | Round-trip, malformed encoding, legacy notes, and identity tests. | Partial |
+| L0.3a | Package v1 envelope supports UTF-8/base64 files and release notes. | `@bernouy/cms-integration-packages` contracts, parser, and exact filesystem package source. | Round-trip, malformed encoding, legacy notes, exact identity, cache, invalidation, and replacement-singleflight tests. | Complete |
 | L0.3b | RFC 8785 canonical bytes produce the package SHA-256 identity. | Shared canonicalizer and digest service. | JCS ordering, escaping, Unicode, surrogate, and key-order fixtures. | Complete |
 | L0.3c | Generic filesystem reader is deterministic, bounded, and symlink-safe. | `@bernouy/cms-integration-packages/fs` reads immutable roots with bounded entry collection, realpath confinement, and actual-byte accounting. | 14 focused filesystem tests plus deterministic reads of all 14 official versions. | Complete |
-| L0.4a | Exact package and release-notes GET/HEAD endpoints are public. | Repository surface with required exact version. | 404 legacy notes, immutable cache, ETag, HEAD, and CORS tests. | Partial |
-| L0.4b | Public package downloads are limited before origin work. | Delivery-injected limiter and generic HTTP client-address resolver. | 429/Retry-After and proof no upstream/walk occurs first. | Pending |
-| L0.4c | Client-address modes handle direct, proxy, loopback, disabled, and CDN hops safely. | `@bernouy/http-runner` resolver plus runtime configuration. | Spoofing, malformed-chain 400, IPv4/IPv6, loopback, one-hop and two-hop tests. | Partial |
-| L0.5a | CMS package cache has a dedicated durable mount and validated non-overlap. | Runtime env, image, Compose, host docs, canonical path validation. | Deployment and alias/symlink/device-inode overlap tests. | Pending |
-| L0.6a | Packages materialize atomically into content-addressed durable objects. | Package filesystem cache with same-filesystem staging. | Restart, concurrent rename, existing-valid, corrupt-target, and cleanup tests. | Pending |
+| L0.4a | Exact package and release-notes GET/HEAD endpoints are public. | Repository routes backed by an injected exact package source and mounted on Delivery in production and CLI dev. | Required-version, source-identity, 404 legacy notes, immutable cache, digest, ETag/304, HEAD, CORS, and Delivery-only composition tests pass. | Complete |
+| L0.4b | Public package downloads are limited before origin work. | The repository guard runs before package resolution; production composes a dedicated Mongo limiter, CLI dev uses an in-memory limiter, and standard Compose activates the policy. | 429/Retry-After and no-source-work tests pass; deployment tests prove the one-hop quota is active without a read token. | Complete |
+| L0.4c | Client-address modes handle direct, proxy, loopback, disabled, and CDN hops safely. | `@bernouy/http-runner` resolution, strict runtime parsing, production/CLI composition, Compose defaults, and operator documentation. | Resolver, runtime, and deployment tests cover spoofing, malformed-chain 400, IPv4/IPv6, loopback, disabled, one-hop, and CDN two-hop configurations. | Complete |
+| L0.5a | CMS package cache has a dedicated durable mount and validated non-overlap. | Runtime environment, image mount-point preparation, dedicated Compose bind mount, host documentation, and canonical root validation. | Deployment tests prove distinct mounts and runtime ownership preparation; storage-root tests reject exact, symlink, nested, and missing roots after realpath/device/inode checks. | Complete |
+| L0.6a | Packages materialize atomically into content-addressed durable objects. | Bounded anonymous HTTP package source plus `FsIntegrationPackageCache` with same-filesystem staging, read-only committed objects, repair locks, and quarantine. | The 116-test package suite covers response limits, restart, independent concurrent writers, valid reuse, interrupted modes, corruption, symlink substitution, stale locks, safety-aged cleanup, and source identity disagreement. | Complete |
 | L0.6b | Installations persist `packageDigest` only after success and support legacy fallback. | Installation contract, resolver, cache, and embedded exact root. | Failure rollback, legacy reconstruction, and no-false-provenance tests. | Pending |
 | L0.7a | Connector SQL and Edge Functions deploy only from the resolved package root. | Injected package-root resolver replaces hard-coded official root. | Remote-only version absent from image installs and reruns. | Pending |
 | L0.8a | The 13-step degraded acceptance scenario passes across a process restart. | CMS runtime, remote fixture, persistent bind mount, cache and deployer. | End-to-end process/repository outage acceptance test. | Pending |
@@ -91,9 +103,9 @@ new findings relative to this baseline.
 
 | ID | Requirement | Proof required before completion | Status |
 | --- | --- | --- | --- |
-| D1 | Public metadata, definitions, assets, notes, and exact packages need no credential. | Public API and deployment evidence. | Pending |
+| D1 | Public metadata, definitions, assets, notes, and exact packages need no credential. | Anonymous surface/API evidence exists; canonical public-origin deployment evidence remains. | Partial |
 | D2 | Management is reachable only through authenticated Control with a server-only token. | Route/network tests and secret inspection. | Pending |
-| D3 | Install, rerun, and remote connector deployment are pinned to immutable content. | Lot 0 acceptance evidence. | Pending |
+| D3 | Install, rerun, and remote connector deployment are pinned to immutable content. | Rerun/version pinning is proven; package-digest persistence, cache-backed deployment, and the Lot 0 acceptance scenario remain. | Partial |
 | D4 | Minor/patch incompatibility or contract uncertainty fails closed. | Compatibility publication evidence. | Pending |
 | D5 | Publication is immutable, atomic, snapshot-based, recoverable, and fault-isolated. | Registry concurrency/recovery evidence. | Pending |
 | D6 | Dedicated internal repository image persists data and follows empty-volume seed policy. | Image and deployment evidence. | Pending |
@@ -106,6 +118,8 @@ new findings relative to this baseline.
 This section is updated after every task commit with its hash, scope, and test
 evidence.
 
+- `bf174fa8` — added the source global-repository plan and its initial
+  requirement-to-evidence matrix, including the isolated-worktree baseline.
 - `e1c48a32` — pinned reruns, exact legacy resolution, explicit upgrade action,
   and transactional pin rollback. Verified by 26 feature installation tests, 33
   Control integration tests, feature typecheck, and style checks.
@@ -145,8 +159,77 @@ evidence.
   fanout, realpath and symlink checks, actual-byte limits, mutation detection,
   and an official-catalog smoke test. Verified by 80 package tests, 14 official
   version reads, both package typechecks, and frozen install.
+- `8cedce2f` — refreshed package-protocol traceability and recorded the
+  comparative post-Lot-0.3 validation; this commit changes no runtime behavior.
+- `fa1df1e5` — added the exact immutable filesystem package source with
+  successful-read caching, request singleflight, explicit invalidation, and no
+  negative or failed-read caching. Verified by the focused package-source tests
+  and the package typecheck.
+- `8fe78e14` — kept an invalidated pending source read from evicting its newer
+  replacement, closing the source-cache concurrency race. Verified by the
+  replacement-singleflight regression test and the package typecheck.
+- `056a8ba4` — served canonical exact packages and UTF-8 release notes through
+  public GET/HEAD routes with required identities, digest metadata, immutable
+  caching, ETag revalidation, and CORS. Verified by the four exact-package route
+  tests and the repository surface typecheck.
+- `aa490d8e` — exposed a confined exact-version locator which validates the
+  catalog index and definition identity before returning the version root,
+  definition path, and release-notes metadata. Verified by the filesystem
+  definition repository tests and the integration feature typecheck.
+- `90644e8f` — made active client-address policies fail closed with a stable
+  `503 client_address_unavailable` response when no TCP peer was recorded.
+  Verified by the client-address and package-download guard regression tests.
+- `44716a5b` — applied public package-download limiting after exact identity
+  parsing but before package-source or filesystem work, with `429`,
+  `Retry-After`, CORS, loopback, malformed-forwarding, and exempt HEAD behavior.
+  Verified by six focused guard tests and the repository surface typecheck.
+- `656e646c` — added strict runtime parsing for disabled, direct, one-hop, and
+  CDN two-hop client-address policies plus positive package-download quotas.
+  Verified by four focused environment tests and the runtime typecheck.
+- `98e11aa6` — moved the HTTP client-address tests under a responsibility-named
+  support directory so the foundation package remains within the directory
+  fanout policy; this commit changes no runtime behavior.
+- `7d088e5e` — composed the exact embedded package source on CMS Delivery,
+  injected a dedicated Mongo rate-limit namespace in production and a direct
+  in-memory limiter in CLI dev, and emitted the explicit disabled-policy
+  warning. Verified by runtime service, store, environment, Delivery-mount,
+  repository-read, and CLI composition tests plus both runtime typechecks.
+- `8ab10f94` — activated the one-hop trusted-proxy package-download policy and
+  quota in standard Compose, documented two-hop CDN operation and the accepted
+  disabled-mode risk, and kept read credentials absent. Verified by three
+  focused rendered-Compose and source-contract tests.
+- `a3774f6d` — provisioned the dedicated durable package-cache bind mount and
+  runtime environment, prepared both writable image mount points, documented
+  host ownership and lifecycle, and rejected canonical storage-root overlap.
+  Verified by deployment tests, four realpath/device/inode storage-root tests,
+  and the CMS server typecheck.
+- `08694530` — added anonymous exact HTTP package retrieval with HEAD
+  preflight, bounded streaming, canonical-byte, identity, and digest
+  verification, request timeouts, and stable `502`/`503` errors. Verified by 14
+  HTTP source, failure, and limit tests plus the package typecheck.
+- `0df240b6` — rejected file/directory path collisions before filesystem
+  materialization, preventing one package entry from becoming another entry's
+  parent. Verified by adversarial envelope-limit tests and the package
+  typecheck.
+- `e93413ee` — grouped shared package path-layout validation without changing
+  its protocol behavior. Verified by the full package suite and package
+  typecheck.
+- `e90beaa6` — materialized canonical packages into durable read-only
+  content-addressed objects through same-filesystem staging, collision-safe
+  publication, repair leases, verification, quarantine, and safety-aged
+  cleanup. Verified by 16 cache tests covering restart, two independent
+  writers, reuse, corruption, symlinks, interrupted modes, stale/heartbeating
+  locks, and cleanup, within the 116-test package suite.
 
-The post-Lot-0.3 `bun run check:all` remained at 3 passed and 3 failed. Its
-failures match the recorded baseline exactly. The reader introduces one
-non-blocking 163-line file-size `INFO`; it remains cohesive because traversal,
-confinement, and shared counter invariants are one responsibility.
+The post-cache `bun run check:all` at `e90beaa6` remained exactly 3 passed and 3
+failed. The failures match the recorded baseline: the same three official
+integration cross-package `src/` imports, the same 18-entry and 19-entry fanout
+errors, and the same unresolved built `@bernouy/components` typecheck cascade.
+There is no new file-size warning; the cache layout adds one non-blocking
+8-entry directory-fanout `INFO`.
+
+Lots 0.4, 0.5, and the standalone materializer in 0.6 are directly proven.
+Lot 0.6 is not complete end to end: installation `packageDigest` persistence,
+cache-first exact resolution, embedded legacy fallback, and runtime wiring
+remain pending under L0.6b, followed by deployer inversion and the degraded
+acceptance scenario.
