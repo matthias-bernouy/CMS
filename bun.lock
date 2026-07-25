@@ -310,6 +310,7 @@
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/http-runner": "workspace:*",

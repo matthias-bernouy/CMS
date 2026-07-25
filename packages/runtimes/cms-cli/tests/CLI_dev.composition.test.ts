@@ -27,6 +27,16 @@ describe("local CMS listener composition", () => {
         );
     });
 
+    test("shares the production Source image pipeline with Control and Delivery", async () => {
+        const text = await source();
+
+        expect(text).toContain("createLocalSourceImageComposition");
+        expect(text.match(/sourceImageInterceptor: sourceImages\.sourceImageInterceptor/g)).toHaveLength(2);
+        expect(text.match(/responsivePublicSourceImagesEnabled: sourceImages\./g)).toHaveLength(2);
+        expect(text.match(/responsivePrivateSourceImagesEnabled: sourceImages\./g)).toHaveLength(2);
+        expect(text).toContain("await sourceImages.dispose()");
+    });
+
     test("flushes endpoint performance before local shutdown", async () => {
         const text = await source();
 

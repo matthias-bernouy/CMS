@@ -9,6 +9,7 @@ describe("parseDevFlags", () => {
             host: "localhost",
             publicHost: "localhost",
             workers: true,
+            sourceImages: true,
         });
     });
 
@@ -29,6 +30,12 @@ describe("parseDevFlags", () => {
         expect(parseDevFlags(["--workers"]).workers).toBe(true);
         expect(parseDevFlags([]).workers).toBe(true);
         expect(parseDevFlags(["--no-workers"]).workers).toBe(false);
+    });
+
+    test("enables Source image optimization by default with an explicit escape", () => {
+        expect(parseDevFlags([]).sourceImages).toBe(true);
+        expect(parseDevFlags(["--no-source-images"]).sourceImages).toBe(false);
+        expect(parseDevFlags(["--no-source-images", "--source-images"]).sourceImages).toBe(true);
     });
 });
 
