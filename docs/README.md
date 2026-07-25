@@ -26,6 +26,12 @@ implementation notes live in each package's `AGENTS.md`.
 - [auth-system-source.md](./auth-system-source.md) documents the readonly
   system auth source exposed through `/.cms/sources/system-auth/*`.
 
+## Images
+
+- [Responsive images](./images/README.md) explains ownership, authoring,
+  Delivery optimization, browser selection, caching, and rollout for responsive
+  images.
+
 ## Design Plans
 
 - [Commerce Notifications](../NOTIFICATIONS.md) documents the native,

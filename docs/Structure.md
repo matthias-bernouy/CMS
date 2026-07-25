@@ -55,6 +55,8 @@ Feature packages:
   flows, user/provider repositories, and auth route registrars.
 - `@bernouy/cms-sources`: data-source contracts, endpoint execution, system
   sources, and source proxy helpers.
+- `@bernouy/cms-source-images`: bounded responsive Source image recipes,
+  browser activation, derivative caches, and image transformers.
 - `@bernouy/cms-integrations`: declarative integration definitions, install
   artifacts, instance state, and repository contracts.
 - `@bernouy/cms-analytics`: privacy-first server-side analytics events,
@@ -144,3 +146,4 @@ bun test
 - [api-folder.md](./api-folder.md)
 - [static-folder.md](./static-folder.md)
 - [cms-bloc-development.md](./cms-bloc-development.md)
+- [images/README.md](./images/README.md)
