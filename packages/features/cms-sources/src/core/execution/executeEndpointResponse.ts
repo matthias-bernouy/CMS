@@ -8,6 +8,7 @@ export async function projectSourceResponse(
     request: Request,
     upstream: Response,
     deps: ExecutorDeps | undefined,
+    allowPublicCacheWithUpstreamCookie: boolean,
 ): Promise<Response> {
     const declared = hasResponseContract(endpoint, upstream.status);
     const legacyStrictFailure =
@@ -16,6 +17,7 @@ export async function projectSourceResponse(
         responseProjectionMode: legacyStrictFailure ? "strict" : deps?.responseProjectionMode,
         reportResponseProjectionEvent: deps?.reportResponseProjectionEvent,
         correlationId: deps?.observability?.correlationId,
+        allowPublicCacheWithUpstreamCookie,
     });
     if (!declared && deps?.reportFailure) {
         reportUndeclaredStatus(

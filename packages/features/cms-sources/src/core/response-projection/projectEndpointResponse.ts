@@ -41,9 +41,9 @@ export async function projectEndpointResponse(
         if ((options.responseProjectionMode ?? "compatibility") === "compatibility") {
             reportLegacyContract(endpoint, upstream, output === undefined ? "missing_output" : "empty_output", options);
             if (request.method === "HEAD") {
-                return discardResponseBody(upstream);
+                return discardResponseBody(upstream, options);
             }
-            return passthroughResponse(upstream);
+            return passthroughResponse(upstream, options);
         }
 
         await cancelResponseBody(upstream.body);
@@ -63,25 +63,25 @@ export async function projectEndpointResponse(
         if ((options.responseProjectionMode ?? "compatibility") === "compatibility") {
             reportLegacyContract(endpoint, upstream, "unmatched_status", options);
             if (request.method === "HEAD") {
-                return discardResponseBody(upstream);
+                return discardResponseBody(upstream, options);
             }
-            return passthroughResponse(upstream);
+            return passthroughResponse(upstream, options);
         }
         await cancelResponseBody(upstream.body);
         return projectionFailure(endpoint.urn, upstream.status, request.method === "HEAD", "unmatched_status", options);
     }
 
     if (request.method === "HEAD") {
-        return discardResponseBody(upstream);
+        return discardResponseBody(upstream, options);
     }
 
     // File contracts stay streaming and media-type permissive during C14.
     if (endpoint.responseKind === "file") {
-        return passthroughResponse(upstream);
+        return passthroughResponse(upstream, options);
     }
 
     if (!declared.body) {
-        return discardResponseBody(upstream);
+        return discardResponseBody(upstream, options);
     }
 
     if (!isJsonMediaType(upstream.headers.get("content-type"))) {
@@ -109,7 +109,7 @@ export async function projectEndpointResponse(
         });
     }
 
-    const response = projectedJsonResponse(upstream, projected.value);
+    const response = projectedJsonResponse(upstream, projected.value, options);
     if (declared.triggerBody) {
         try {
             attachProjectedTriggerResponseBody(response, parsed.value, projected.value, declared.triggerBody);

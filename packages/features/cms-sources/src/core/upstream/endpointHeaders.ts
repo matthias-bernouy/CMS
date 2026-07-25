@@ -13,6 +13,10 @@ type HeaderDeps = {
 
 type HeaderResult = { ok: true; headers: Headers } | { ok: false; response: Response };
 
+export type ResponseHeaderProjectionPolicy = Readonly<{
+    allowPublicCacheWithUpstreamCookie?: boolean;
+}>;
+
 export function hasComputedParams(endpoint: SourceEndpoint): boolean {
     return (endpoint.input?.params ?? []).some((param) => param.source?.from === "computed");
 }
@@ -42,7 +46,7 @@ export async function buildForwardHeaders(
     return applyConfiguredHeaders(headers, endpoint, computed, deps);
 }
 
-export function responseHeaders(upstream: Response): Headers {
+export function responseHeaders(upstream: Response, policy: ResponseHeaderProjectionPolicy = {}): Headers {
     const out = new Headers();
     for (const name of RESPONSE_ALLOWLIST) {
         const value = upstream.headers.get(name);
@@ -50,13 +54,30 @@ export function responseHeaders(upstream: Response): Headers {
             out.set(name, value);
         }
     }
-    if (upstream.headers.has("set-cookie")) {
+    projectVaryHeader(out);
+    if (upstream.headers.has("set-cookie") && !policy.allowPublicCacheWithUpstreamCookie) {
         // The credential itself is never forwarded. Mark the projected response
         // unshareable so an inner cache cannot mistake explicit upstream
         // `public` metadata for permission to reuse a personalized body.
         out.set("cache-control", "private, no-store");
     }
     return out;
+}
+
+function projectVaryHeader(headers: Headers): void {
+    const value = headers.get("vary");
+    if (value === null) {
+        return;
+    }
+    const projected = value
+        .split(",")
+        .map((name) => name.trim())
+        .filter((name) => name.toLowerCase() !== "accept-encoding");
+    if (projected.length === 0) {
+        headers.delete("vary");
+        return;
+    }
+    headers.set("vary", projected.join(", "));
 }
 
 function applyHeaderParams(headers: Headers, builtHeaders: Record<string, string>): HeaderResult {

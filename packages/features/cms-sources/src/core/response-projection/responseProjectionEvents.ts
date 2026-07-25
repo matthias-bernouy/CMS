@@ -42,6 +42,7 @@ export type ResponseProjectionOptions = {
     responseProjectionMode?: ResponseProjectionMode;
     reportResponseProjectionEvent?: ResponseProjectionReporter;
     correlationId?: string;
+    allowPublicCacheWithUpstreamCookie?: boolean;
 };
 
 export type ResponseProjectionFailureMetadata = {
