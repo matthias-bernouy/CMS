@@ -32,21 +32,25 @@ Pre-existing baseline failures:
 Style, architecture-tooling, and CI-tooling passed. Task validation must not add
 new findings relative to this baseline.
 
-Current implementation checkpoint at `094750cd`:
+Current implementation checkpoint at `fc6c4d42`:
 
 - all 134 `@bernouy/cms-integration-packages` tests pass, including HTTP
   retrieval, immutable coordinate references, and adversarial concurrency,
   restart, repair, and cleanup cache coverage;
-- all 276 `@bernouy/cms-integrations` tests pass, including cache-first exact
+- all 291 `@bernouy/cms-integrations` tests pass, including cache-first exact
   resolution, transactional digest pins, offline legacy fallback,
-  package-definition validation, and Supabase deployment from resolved roots;
-- all 140 `@bernouy/cms-cli` tests and all 486 `@bernouy/cms-control` tests
+  package-definition validation, connector schema contracts, and Supabase
+  deployment from resolved roots;
+- all 140 `@bernouy/cms-cli` tests and all 487 `@bernouy/cms-control` tests
   pass, including package-provenance preservation and public Control views;
-- direct TypeScript checks pass for all four packages above and
-  `@bernouy/cms-server`; the earlier repository-surface runtime check remains
-  recorded in its commit evidence;
-- the post-cache comparative `bun run check:all` remains exactly 3 passed and 3
-  failed, matching the initial baseline with no task-introduced error.
+- the 60 `@bernouy/cms-server` tests pass, including the seven-test real-process
+  remote-only, restart, outage, corruption-repair, and concurrency acceptance
+  suite;
+- immutable registry snapshot and management-boundary suites pass with 14 and
+  17 tests respectively;
+- the post-Lot-0 comparative `bun run check:all` reports 4 passed and 2 failed:
+  TypeScript is now green, while architecture and repository shape contain only
+  the exact pre-existing violations recorded above.
 
 ## Lot 0 — Complete Remote Consumption
 
@@ -68,19 +72,19 @@ Current implementation checkpoint at `094750cd`:
 | L0.4c | Client-address modes handle direct, proxy, loopback, disabled, and CDN hops safely. | `@bernouy/http-runner` resolution, strict runtime parsing, production/CLI composition, Compose defaults, and operator documentation. | Resolver, runtime, and deployment tests cover spoofing, malformed-chain 400, IPv4/IPv6, loopback, disabled, one-hop, and CDN two-hop configurations. | Complete |
 | L0.5a | CMS package cache has a dedicated durable mount and validated non-overlap. | Runtime environment, image mount-point preparation, dedicated Compose bind mount, host documentation, and canonical root validation. | Deployment tests prove distinct mounts and runtime ownership preparation; storage-root tests reject exact, symlink, nested, and missing roots after realpath/device/inode checks. | Complete |
 | L0.6a | Packages materialize atomically into content-addressed durable objects. | Bounded anonymous HTTP package source plus `FsIntegrationPackageCache` with same-filesystem staging, read-only committed objects, repair locks, and quarantine. | The 116-test package suite covers response limits, restart, independent concurrent writers, valid reuse, interrupted modes, corruption, symlink substitution, stale locks, safety-aged cleanup, and source identity disagreement. | Complete |
-| L0.6b | Installations persist `packageDigest` only after success and support legacy fallback. | Installation contract, resolver, cache, and embedded exact root. | Failure rollback, legacy reconstruction, and no-false-provenance tests. | Partial |
-| L0.7a | Connector SQL and Edge Functions deploy only from the resolved package root. | Injected package-root resolver replaces hard-coded official root. | Remote-only version absent from image installs and reruns. | Partial |
-| L0.8a | The 13-step degraded acceptance scenario passes across a process restart. | CMS runtime, remote fixture, persistent bind mount, cache and deployer. | End-to-end process/repository outage acceptance test. | Pending |
+| L0.6b | Installations persist `packageDigest` only after success and support legacy fallback. | Installation contract, resolver, cache, and embedded exact root. | Failure rollback, legacy reconstruction, no-false-provenance, process restart, and corruption rollback tests. | Complete |
+| L0.7a | Connector SQL and Edge Functions deploy only from the resolved package root. | Injected package-root resolver replaces hard-coded official root. | A remote-only version absent from the image installs and reruns its unique SQL and Function sources. | Complete |
+| L0.8a | The 13-step degraded acceptance scenario passes across a process restart. | CMS runtime, remote fixture, persistent bind mount, cache and deployer. | Real Control, Delivery, repository, persistent state, two CMS PIDs, offline rerun, repair, and concurrent-cache acceptance tests. | Complete |
 
 ## Lot 1 — Mutable Filesystem Registry
 
 | ID | Requirement | Intended implementation evidence | Required verification | Status |
 | --- | --- | --- | --- | --- |
-| L1.1 | Management publication is token-authenticated, rate-limited, bounded, immutable, and returns 201/409/422. | New registry feature and management surface packages. | Auth, limiter-before-body, duplicate, validation, and size tests. | Pending |
+| L1.1 | Management publication is token-authenticated, rate-limited, bounded, immutable, and returns 201/409/422. | New registry feature and management surface packages. | Authentication and limiter-before-body are proven; upload, publication, duplicate, validation, and size handling remain. | Partial |
 | L1.2 | Publication writes the version first and atomically replaces `integration.json` last under a per-kind lock. | Filesystem registry adapter and lock. | Concurrent publication and every crash-boundary test. | Pending |
-| L1.3 | Readers use an immutable memory snapshot; corrupt integrations are quarantined independently. | Snapshot builder, diagnostics, and quarantine. | Old-reader continuity and one-corrupt-entry isolation tests. | Pending |
+| L1.3 | Readers use an immutable memory snapshot; corrupt integrations are quarantined independently. | Snapshot builder, diagnostics, quarantine, atomic reference, and snapshot-backed read adapters. | Old-reader continuity, one-corrupt-entry isolation, duplicate quarantine, and zero-rescan tests. | Complete |
 | L1.4 | Recovery deterministically handles staging, orphans, interrupted indexes, corruption, and duplicates. | Registry recovery service. | Restart fixtures for each recovery state. | Pending |
-| L1.5 | Declarative schema and HTTP contracts classify compatible, breaking, and unknown changes. | Integration connector contracts and registry comparator. | Patch/minor/major, legacy baseline, and contradiction tests. | Pending |
+| L1.5 | Declarative schema and HTTP contracts classify compatible, breaking, and unknown changes. | Normalized connector schema contracts exist; HTTP contracts and registry comparator remain. | Schema parsing/normalization is proven; patch/minor/major, legacy baseline, HTTP, and contradiction evaluation remain. | Partial |
 | L1.6 | Admission reports are immutable; reevaluations append provenance-bearing revisions. | Report store keyed by package/baseline digests. | History immutability and changing collection ETag tests. | Pending |
 | L1.7 | Stable promotion records the newest completed report revision and never auto-demotes. | Management operation and channel index mutation. | Promotion, adverse reassessment warning, and channel tests. | Pending |
 
@@ -109,9 +113,9 @@ Current implementation checkpoint at `094750cd`:
 | --- | --- | --- | --- |
 | D1 | Public metadata, definitions, assets, notes, and exact packages need no credential. | Anonymous surface/API evidence exists; canonical public-origin deployment evidence remains. | Partial |
 | D2 | Management is reachable only through authenticated Control with a server-only token. | Route/network tests and secret inspection. | Pending |
-| D3 | Install, rerun, and remote connector deployment are pinned to immutable content. | Rerun/version pinning is proven; package-digest persistence, cache-backed deployment, and the Lot 0 acceptance scenario remain. | Partial |
+| D3 | Install, rerun, and remote connector deployment are pinned to immutable content. | Exact version/snapshot/digest persistence, remote SQL and Function deployment, outage rerun, and corruption rollback are proven across process restart. | Complete |
 | D4 | Minor/patch incompatibility or contract uncertainty fails closed. | Compatibility publication evidence. | Pending |
-| D5 | Publication is immutable, atomic, snapshot-based, recoverable, and fault-isolated. | Registry concurrency/recovery evidence. | Pending |
+| D5 | Publication is immutable, atomic, snapshot-based, recoverable, and fault-isolated. | Snapshot and invalid-entry fault isolation are proven; mutable publication and recovery remain. | Partial |
 | D6 | Dedicated internal repository image persists data and follows empty-volume seed policy. | Image and deployment evidence. | Pending |
 | D7 | Official updates use the publication API after bootstrap. | CI/bootstrap workflow evidence. | Pending |
 | D8 | Delivery catalog and Control administration provide the complete public/private UX. | Browser and authorization evidence. | Pending |
@@ -263,18 +267,47 @@ evidence.
   package root, with symlink, special-file, depth, count, and byte defenses.
   Verified by 602 tests across features, runtimes, and the official rollout,
   five package typechecks, and comparative architecture/shape checks.
+- `01f48b07` — recorded the package-root deployment checkpoints and the
+  remaining process-level Lot 0 acceptance obligations.
+- `0591b6ea` — put metadata HEAD and release-note discovery behind a separate
+  pre-traversal quota so anonymous metadata cannot force unbounded package
+  walks. Verified by 17 repository tests and the surface typecheck.
+- `dbbabd21` — composed the HTTP package source, durable cache, resolver, and
+  embedded fallback in production and CLI dev without startup fetching.
+  Verified by all 198 runtime tests and 589 assertions.
+- `340e75f8` — exposed accessible structured repository-outage states in
+  Control while retaining already installed integrations and retry behavior.
+  Verified by all 487 Control tests and 1,451 assertions.
+- `5a33711e` — introduced immutable catalog snapshots, structured diagnostics,
+  quarantine entries, and atomic snapshot references.
+- `11b5dfa6` — added normalized declarative connector schema compatibility
+  contracts while preserving optional legacy snapshots.
+- `49dc3c92` — covered schema normalization, constraints, duplicate rejection,
+  legacy parsing, and SQL admission requirements. Together with `11b5dfa6`, all
+  291 integration tests and 884 assertions pass.
+- `069fc3ac` — built bounded filesystem snapshots and snapshot-backed
+  definition/package readers that avoid request-path rescans. Together with
+  `5a33711e`, 14 tests and 46 assertions pass.
+- `33f3a3a5` — created the management surface package and enforced constant-time
+  Bearer authentication followed by principal-keyed rate limiting before body
+  work, with sanitized 401, 429, and 503 contracts. Verified by 17 tests and 73
+  assertions.
+- `fc6c4d42` — proved remote-only install and upgrade through real Control,
+  durable rerun across a new CMS PID while the repository is offline, public
+  Delivery availability, byte-for-byte rollback on corruption, repair and
+  quarantine after recovery, and independent cache-writer convergence.
+  Verified by seven focused tests with 76 assertions and all 60 CMS-server
+  tests with 301 assertions.
 
-The post-cache `bun run check:all` at `e90beaa6` remained exactly 3 passed and 3
-failed. The failures match the recorded baseline: the same three official
-integration cross-package `src/` imports, the same 18-entry and 19-entry fanout
-errors, and the same unresolved built `@bernouy/components` typecheck cascade.
-There is no new file-size warning; the cache layout adds one non-blocking
-8-entry directory-fanout `INFO`.
+The post-Lot-0 `bun run check:all` at `fc6c4d42` reports 4 passed and 2 failed.
+TypeScript, style, architecture tooling, and CI tooling pass. Architecture still
+contains exactly the three recorded official-integration cross-package `src/`
+imports, and repository shape still contains exactly the recorded 18-entry and
+19-entry fanout errors. The new 198-line `Integration.ts` warning was reviewed:
+the file remains a cohesive declarative contract, while extracting a ninth
+immediate `interfaces/` entry would create a blocking fanout error.
 
-Lots 0.4, 0.5, and the standalone materializer in 0.6 are directly proven.
-Lot 0.6 now has standalone persistence, cache-first exact resolution, embedded
-legacy fallback, transactional installation execution, and CLI/Control
-serialization evidence. Lot 0.7 has a root-injected, bounded Supabase deployer.
-Neither is complete end to end until production and CLI runtimes compose and
-inject the HTTP source, durable cache, and resolver. The degraded process
-restart scenario then remains under L0.8.
+Lot 0 is now proven end to end, including its remote-only and degraded process
+scenario. Lot 1 has its immutable snapshot/read path, declarative SQL contract,
+and authenticated management boundary; publication, compatibility admission,
+recovery, and promotion remain in progress.
