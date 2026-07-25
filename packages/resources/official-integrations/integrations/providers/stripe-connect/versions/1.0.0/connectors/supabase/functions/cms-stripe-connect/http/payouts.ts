@@ -18,7 +18,7 @@ export function optionalWeeklyPayoutDays(body: JsonRecord, name: string): string
     if (!Array.isArray(value)) {
         throw new HttpError(400, `${name} must be an array`);
     }
-    const allowed = new Set(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]);
+    const allowed = new Set(["monday", "tuesday", "wednesday", "thursday", "friday"]);
     const days = value.map((entry) => {
         if (typeof entry !== "string" || !allowed.has(entry)) {
             throw new HttpError(400, `${name} contains an invalid day`);

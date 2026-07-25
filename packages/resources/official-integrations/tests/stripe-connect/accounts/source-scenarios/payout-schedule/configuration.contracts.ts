@@ -4,6 +4,42 @@ import { sourceJson, sourceRequest } from "../../../runtime/source-requests";
 import type { CreateSellerPayoutScenarioHarness } from "./harness";
 
 export function registerSellerPayoutConfigurationScenarios(createHarness: CreateSellerPayoutScenarioHarness): void {
+    test("accepts the compact configurable payout schedule used by linking integrations", async () => {
+        const harness = await createHarness();
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                    country: "FR",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+
+        const configured = await okJson(
+            await sourceJson(harness, "configureSellerPayoutSchedule", {
+                userId: "seller-1",
+                payoutScheduleChangeId: "compact-monthly-policy",
+                payoutSchedule: "monthly:1,15,31",
+                minimumBalanceEur: 0,
+                delayDaysOverride: 0,
+            }),
+        );
+
+        expect(configured).toMatchObject({
+            payoutScheduleChangeId: "compact-monthly-policy",
+            payoutControl: {
+                interval: "monthly",
+                monthlyPayoutDays: [1, 15, 31],
+                minimumBalanceByCurrency: {},
+                delayDaysOverride: 0,
+            },
+        });
+        expect(harness.rest.balanceSettingsUpdateCount).toBe(1);
+    });
+
     test("reads and idempotently applies Commerce seller payout controls", async () => {
         const harness = await createHarness();
         await okJson(
