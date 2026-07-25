@@ -1,5 +1,7 @@
+import { lstat } from "node:fs/promises";
+import { join, relative, sep } from "node:path";
 import { parseIntegrationDefinition } from "../../core/parsing/definition/definition";
-import { isExactIntegrationVersion } from "../../core/definitions/versioning";
+import { assertExactIntegrationVersion, isExactIntegrationVersion } from "../../core/definitions/versioning";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import type {
     IntegrationAsset,
@@ -12,12 +14,19 @@ import { readIntegrationAsset } from "./assets";
 import { enrichDefinitionError } from "./definition-bundle/provenance";
 import { resolveIntegrationDefinitionFileDetails } from "./definition-bundle/resolver";
 import { IntegrationPackageLocator } from "./packageLocator";
-import { assertPathWithin, resolveExistingPathWithin, resolveVersion } from "./repositorySupport";
+import { assertPathWithin, isNodeError, resolveExistingPathWithin, resolveVersion } from "./repositorySupport";
 import { hydrateVersionAssets } from "./versionAssets";
 
 export type FsIntegrationDefinitionRepositoryConfig = {
     root: string;
     defaultChannel?: "stable" | "latest";
+};
+
+export type FsIntegrationVersionLocation = {
+    root: string;
+    definition: string;
+    releaseNotes?: string;
+    legacy?: boolean;
 };
 
 export class FsIntegrationDefinitionRepository implements IntegrationDefinitionRepository {
@@ -103,8 +112,48 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
         return await readIntegrationAsset(versionRoot, path);
     }
 
+    async locateExactVersion(kind: string, version: string): Promise<FsIntegrationVersionLocation | null> {
+        assertExactIntegrationVersion(version, "version");
+        if (!(await this.get(kind, version))) {
+            return null;
+        }
+        const located = await this.locator.getVersion(kind, version);
+        if (!located) {
+            throw new Error(`Integration "${kind}" version "${version}" changed while locating its package`);
+        }
+        const definitionPath = await resolveExistingPathWithin(
+            located.package.root,
+            "definition",
+            located.entry.definition,
+        );
+        assertPathWithin(located.root, definitionPath, "version", located.entry.definition);
+        return {
+            root: located.root,
+            definition: relative(located.root, definitionPath).split(sep).join("/"),
+            ...(await releaseNotesLocation(located.root)),
+        };
+    }
+
     private async readIndexes(): Promise<IntegrationDefinitionIndex[]> {
         return (await this.locator.list()).map((locatedPackage) => locatedPackage.index);
+    }
+}
+
+async function releaseNotesLocation(
+    versionRoot: string,
+): Promise<Pick<FsIntegrationVersionLocation, "legacy" | "releaseNotes">> {
+    const releaseNotes = "README.md";
+    try {
+        const stats = await lstat(join(versionRoot, releaseNotes));
+        if (stats.isSymbolicLink() || !stats.isFile()) {
+            throw new Error(`Integration release notes must be a regular file: ${join(versionRoot, releaseNotes)}`);
+        }
+        return { releaseNotes };
+    } catch (error) {
+        if (isNodeError(error) && error.code === "ENOENT") {
+            return { legacy: true };
+        }
+        throw error;
     }
 }
 
