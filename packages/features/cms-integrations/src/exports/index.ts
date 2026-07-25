@@ -87,6 +87,9 @@ export type {
 export {
     DuplicateIntegrationInstallationError,
     IntegrationInputError,
+    IntegrationRepositoryContractError,
+    IntegrationRepositoryError,
+    IntegrationRepositoryUnavailableError,
     IntegrationRuntimeError,
     MissingIntegrationInstallationError,
     MissingIntegrationParam,

@@ -1,6 +1,7 @@
 import {
     assertRerunVersion,
     IntegrationInputError,
+    IntegrationRepositoryError,
     integrationRegistry,
     MissingIntegrationParam,
     type IntegrationDefinition,
@@ -16,7 +17,10 @@ export async function listIntegrationDefinitions(
         summaries.map(async (summary) => {
             try {
                 return await repository.get(summary.kind);
-            } catch {
+            } catch (error) {
+                if (error instanceof IntegrationRepositoryError) {
+                    throw error;
+                }
                 return null;
             }
         }),

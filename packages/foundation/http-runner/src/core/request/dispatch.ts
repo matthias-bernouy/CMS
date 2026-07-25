@@ -33,12 +33,19 @@ export async function dispatchRequest(
         const status = (error as { status?: unknown })?.status;
         if (typeof status === "number") {
             const message = error instanceof Error ? error.message : "Error";
+            const publicCode = (error as { publicCode?: unknown })?.publicCode;
             return withRequestCorrelationHeader(
                 request,
-                new Response(JSON.stringify({ error: message }), {
-                    status,
-                    headers: { "Content-Type": "application/json" },
-                }),
+                new Response(
+                    JSON.stringify({
+                        error: message,
+                        ...(typeof publicCode === "string" ? { code: publicCode } : {}),
+                    }),
+                    {
+                        status,
+                        headers: { "Content-Type": "application/json" },
+                    },
+                ),
             );
         }
         return withRequestCorrelationHeader(request, new Response("Internal Server Error", { status: 500 }));

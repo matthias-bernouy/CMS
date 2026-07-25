@@ -24,6 +24,31 @@ export class IntegrationRuntimeError extends Error {
     }
 }
 
+export class IntegrationRepositoryError extends IntegrationRuntimeError {
+    constructor(
+        message: string,
+        status: number,
+        readonly publicCode: string,
+    ) {
+        super(message, status);
+        this.name = "IntegrationRepositoryError";
+    }
+}
+
+export class IntegrationRepositoryUnavailableError extends IntegrationRepositoryError {
+    constructor() {
+        super("Integration repository is unavailable", 503, "integration_repository_unavailable");
+        this.name = "IntegrationRepositoryUnavailableError";
+    }
+}
+
+export class IntegrationRepositoryContractError extends IntegrationRepositoryError {
+    constructor() {
+        super("Integration repository returned an invalid response", 502, "integration_repository_invalid_response");
+        this.name = "IntegrationRepositoryContractError";
+    }
+}
+
 export class DuplicateIntegrationInstallationError extends Error {
     status = 409;
     constructor(id: string) {
