@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { collectCmsSourceBindings } from "@bernouy/cms-content";
 import { artifactPath, compileBloc, readBlocFile, tags } from "./harness";
 
 describe("sales-configurator bloc contracts", () => {
@@ -56,6 +57,18 @@ describe("sales-configurator bloc contracts", () => {
         expect(list).not.toContain('href="/proposals/edit?proposalId={{ proposal.id }}"');
     });
 
+    test("materializes the proposal list source for delivery access preflight", async () => {
+        const content = await readBlocFile("sales-proposal-list", "default.html");
+
+        expect(collectCmsSourceBindings(content)).toContainEqual({
+            url: "/.cms/sources/sales-configurator/listMyProposals?q=#{salesProposalQuery}&status=#{salesProposalStatus}&cursor=@{salesProposalCursor}&limit=20",
+            alias: "proposals",
+            method: "GET",
+            trigger: "auto",
+        });
+        expect(content).toContain('cms-reload-on="sales-proposals:changed"');
+    });
+
     test("locks builder writes to binding-owned forms and publishes refresh events", async () => {
         const content = await readBlocFile("sales-proposal-builder", "default.html");
         const view = await readBlocFile("sales-proposal-builder", "Bloc.ts");
@@ -69,10 +82,11 @@ describe("sales-configurator bloc contracts", () => {
         expect(content.match(/cms-source-publish="sales-proposals:changed"/g)).toHaveLength(3);
         expect(content).toContain("proposalData.proposal.draftVersion.items");
         expect(content).toContain("proposalData.proposal.publishedVersion.items");
+        expect(content).toContain("shareResult.body.token");
+        expect(content).not.toContain("shareResult.token");
         expect(content).not.toContain("proposalData.proposal.version");
         expect(content).toContain('name="expectedVersionId"');
         expect(content).toContain('name="expectedRevision"');
-        expect(content).toContain("shareResult.token");
         expect(content).toContain("data-sales-terminal");
         expect(content).not.toContain('name="selectedVariantIds"');
         expect(content).not.toContain('name="selectedFeatureIds"');

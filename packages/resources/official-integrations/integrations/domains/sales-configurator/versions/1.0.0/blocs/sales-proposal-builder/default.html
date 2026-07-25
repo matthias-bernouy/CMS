@@ -162,11 +162,11 @@
                     <basic-toast role="alert" cms-condition="$source.error">The client link could not be created.</basic-toast>
                     <basic-button type="submit" appearance="filled">Create client link</basic-button>
 
-                    <basic-card appearance="outlined" cms-condition="$source.loaded && shareResult.token">
+                    <basic-card appearance="outlined" cms-condition="$source.loaded && shareResult.body.token">
                         <strong slot="title">Copy this link now</strong>
                         <span slot="description">For security, the token cannot be recovered after this response.</span>
-                        <a data-sales-share-link data-sales-share-token="{{ shareResult.token }}" href="/proposal?proposalToken={{ shareResult.token }}">Open shared proposal</a>
-                        <code>{{ shareResult.token }}</code>
+                        <a data-sales-share-link data-sales-share-token="{{ shareResult.body.token }}" href="/proposal?proposalToken={{ shareResult.body.token }}">Open shared proposal</a>
+                        <code>{{ shareResult.body.token }}</code>
                     </basic-card>
                 </form>
             </basic-card>

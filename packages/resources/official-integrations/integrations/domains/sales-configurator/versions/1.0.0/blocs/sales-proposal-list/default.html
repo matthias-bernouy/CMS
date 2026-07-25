@@ -1,4 +1,4 @@
-<sales-proposal-list source-id="sales-configurator" page-size="20" query-param="salesProposalQuery" status-param="salesProposalStatus" cursor-state="salesProposalCursor" new-path="/proposals/new" edit-path="/proposals/edit" proposal-param="proposalId">
+<sales-proposal-list source-id="sales-configurator" page-size="20" query-param="salesProposalQuery" status-param="salesProposalStatus" cursor-state="salesProposalCursor" new-path="/proposals/new" edit-path="/proposals/edit" proposal-param="proposalId" cms-source="/.cms/sources/sales-configurator/listMyProposals?q=#{salesProposalQuery}&amp;status=#{salesProposalStatus}&amp;cursor=@{salesProposalCursor}&amp;limit=20 as proposals" cms-reload-on="sales-proposals:changed">
     <basic-stack direction="row" gap="md" wrap="true">
         <basic-input label="Search proposals" placeholder="Reference, client, or title" cms-param-sync="salesProposalQuery"></basic-input>
         <basic-select label="Status" cms-param-sync="salesProposalStatus">
