@@ -41,6 +41,29 @@
                 "format": "money"
             },
             {
+                "id": "merchandiseRefundAmount",
+                "label": "Merchandise",
+                "path": "merchandiseRefundAmount",
+                "format": "money"
+            },
+            {
+                "id": "shippingRefundAmount",
+                "label": "Shipping",
+                "path": "shippingRefundAmount",
+                "format": "money"
+            },
+            {
+                "id": "protectionFeeRefundAmount",
+                "label": "Protection fee",
+                "path": "protectionFeeRefundAmount",
+                "format": "money"
+            },
+            {
+                "id": "allocationVersion",
+                "label": "Allocation",
+                "path": "allocationVersion"
+            },
+            {
                 "id": "status",
                 "label": "Status",
                 "path": "status",

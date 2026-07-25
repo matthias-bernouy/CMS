@@ -103,6 +103,9 @@ describe("commerce administrator claim detail boundaries", () => {
         const { id: _eventId, ...eventWithoutId } = claimEvents[0]!;
         const { description: _description, ...evidenceWithoutDescription } = claimEvidenceRows[0]!;
         const { provider_reference: _reference, ...returnEventWithoutReference } = claimReturnEvents[0]!;
+        const { financial_terms: _financialTerms, ...withoutFinancialTerms } = complete;
+        const { settlement: _settlement, ...withoutSettlement } = complete;
+        const { resolution_limits: _resolutionLimits, ...withoutResolutionLimits } = complete;
         const cases: unknown[] = [
             null,
             [],
@@ -115,6 +118,9 @@ describe("commerce administrator claim detail boundaries", () => {
             { ...complete, events: [eventWithoutId] },
             { ...complete, evidence: [evidenceWithoutDescription] },
             { ...complete, return_events: [returnEventWithoutReference] },
+            withoutFinancialTerms,
+            withoutSettlement,
+            withoutResolutionLimits,
         ];
 
         for (const value of cases) {

@@ -99,6 +99,9 @@
                                 "sellerRecoveryAmount": {
                                     "type": "number"
                                 },
+                                "sellerReserveOffsetAmount": {
+                                    "type": "number"
+                                },
                                 "requiresFinanceApproval": {
                                     "type": "boolean"
                                 },
@@ -109,10 +112,25 @@
                                     "type": "string",
                                     "nullable": true
                                 },
+                                "firstApprovedAt": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "secondApprovedBy": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "secondApprovedAt": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
                                 "version": {
                                     "type": "number"
                                 },
                                 "createdAt": {
+                                    "type": "string"
+                                },
+                                "updatedAt": {
                                     "type": "string"
                                 }
                             }

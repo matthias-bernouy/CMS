@@ -78,6 +78,162 @@
         ]
     },
     {
+        "id": "claimFinancialTerms",
+        "title": "Immutable financial terms and remaining limits",
+        "fields": [
+            {
+                "id": "claimMerchandiseSubtotal",
+                "label": "Merchandise subtotal",
+                "path": "financialTerms.merchandiseSubtotalAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "claimShippingAmount",
+                "label": "Shipping",
+                "path": "financialTerms.shippingAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "claimProtectionFeeAmount",
+                "label": "Buyer protection fee",
+                "path": "financialTerms.buyerProtectionFeeAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "claimBuyerTotal",
+                "label": "Buyer total",
+                "path": "financialTerms.buyerTotalAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "claimSellerProceeds",
+                "label": "Seller proceeds",
+                "path": "financialTerms.sellerProceedsAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "claimPlatformRetained",
+                "label": "Platform retained",
+                "path": "financialTerms.platformRetainedAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "claimProtectionRefundPolicy",
+                "label": "Protection fee refund policy",
+                "path": "financialTerms.buyerProtectionRefundPolicy",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "remainingBuyerRefundAmount",
+                "label": "Remaining buyer refund ceiling",
+                "path": "resolutionLimits.remainingBuyerRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "remainingMerchandiseRefundAmount",
+                "label": "Remaining merchandise ceiling",
+                "path": "resolutionLimits.remainingMerchandiseRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "remainingShippingRefundAmount",
+                "label": "Remaining shipping ceiling",
+                "path": "resolutionLimits.remainingShippingRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "remainingProtectionFeeRefundAmount",
+                "label": "Remaining protection fee ceiling",
+                "path": "resolutionLimits.remainingProtectionFeeRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "maximumSellerTransferAmount",
+                "label": "Current seller transfer ceiling",
+                "path": "resolutionLimits.maximumSellerTransferAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "remainingPlatformContributionAmount",
+                "label": "Remaining platform contribution ceiling",
+                "path": "resolutionLimits.remainingPlatformContributionAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "claimSettlementSnapshot",
+                "label": "Current settlement ledger",
+                "path": "settlement",
+                "type": "readonly"
+            }
+        ]
+    },
+    {
+        "id": "claimMaterializedResolution",
+        "title": "Materialized resolution allocation",
+        "fields": [
+            {
+                "id": "resolutionMerchandiseRefund",
+                "label": "Merchandise refund",
+                "path": "resolutionRefund.merchandiseRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "resolutionShippingRefund",
+                "label": "Shipping refund",
+                "path": "resolutionRefund.shippingRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "resolutionProtectionFeeRefund",
+                "label": "Protection fee refund",
+                "path": "resolutionRefund.protectionFeeRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "resolutionSellerRecovery",
+                "label": "Seller entitlement reduction",
+                "path": "resolutionRefund.sellerRecoveryAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "resolutionPlatformContribution",
+                "label": "Platform contribution",
+                "path": "resolutionRefund.platformContributionAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "resolutionAllocationVersion",
+                "label": "Allocation version",
+                "path": "resolutionRefund.allocationVersion",
+                "type": "readonly"
+            },
+            {
+                "id": "resolutionRefundApproval",
+                "label": "Refund authorization",
+                "path": "resolutionRefund",
+                "type": "readonly"
+            }
+        ]
+    },
+    {
         "id": "claimDecision",
         "title": "Decision",
         "fields": [
