@@ -53,12 +53,13 @@ package caches.
 
 Run the designated CMS instance with its normal Compose file plus
 `management-cms.override.yml`. The override joins the internal network and
-mounts the same Docker secret server-side. The Delivery gateway forwards
-anonymous reads to `http://cms-repository:3001/.cms/repository`; its proxy must
-overwrite the forwarded-address chain. Control sends approved management
+mounts the same Docker secret server-side. It also points the CMS runtime at
+`http://cms-repository:3001/.cms/repository`, so definition and package
+consumption use the global catalog immediately. The Delivery read gateway and
+Control management client are the next composition seams to activate: Delivery
+will provide the canonical anonymous origin, while Control will send approved
 operations to port 3000. The credential must never enter Delivery responses or
-browser code. Background CMS consumers use the canonical public read origin,
-not an unforwarded direct request to the trusted-proxy listener.
+browser code.
 
 The standard deployment applies end-user package-download limiting at the CMS
 Delivery gateway. Server-to-server repository calls do not carry

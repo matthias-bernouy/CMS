@@ -72,8 +72,8 @@ describe("repository Compose isolation", () => {
     test("provides an explicit internal-network attachment for the management CMS", () => {
         expect(overrideSource).toContain("cms_repository_management_token");
         expect(overrideSource).toContain("CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE");
+        expect(overrideSource).toContain("P9R_INTEGRATION_REPOSITORY_URL: http://cms-repository:3001/.cms/repository");
         expect(overrideSource).toMatch(/cms_repository:\n\s+external: true/);
-        expect(overrideSource).not.toContain("P9R_INTEGRATION_REPOSITORY_URL");
         expect(overrideSource).not.toContain("3000:");
     });
 });
