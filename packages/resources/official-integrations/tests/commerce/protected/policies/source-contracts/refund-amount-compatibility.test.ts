@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { resolve } from "node:path";
-import { loadIntegrationDefinition } from "../../../helpers/integrationDefinition";
-import { capturedFetches, expectSingleRpc, installCommerceTestEnvironment, requestCommerce } from "../../harness";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
+import { capturedFetches, expectSingleRpc, installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 
 installCommerceTestEnvironment();
 
@@ -196,7 +196,7 @@ describe("commerce stable refund amount forms", () => {
 
 async function sourceEndpoints(): Promise<any[]> {
     const definition = await loadIntegrationDefinition<any>(
-        resolve(import.meta.dir, "../../../../integrations/domains/commerce/versions/1.0.0/definition.json"),
+        resolve(import.meta.dir, "../../../../../integrations/domains/commerce/versions/1.0.0/definition.json"),
     );
     return definition.artifacts.find((artifact: any) => artifact.source)?.source?.endpoints ?? [];
 }

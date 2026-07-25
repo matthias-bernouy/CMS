@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
 import { resolve } from "node:path";
-import { loadIntegrationDefinition } from "../../../helpers/integrationDefinition";
+import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
 
 type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: DataShape }> };
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] }; dashboard?: unknown }> };
@@ -69,7 +69,7 @@ describe("commerce financial operations read contracts", () => {
 
     test("publishes every refund allocation and approval fact consumed by the detail dashboard", async () => {
         const shape = await outputShape("refundRequest");
-        const properties = shape.type === "object" ? shape.properties ?? {} : {};
+        const properties = shape.type === "object" ? (shape.properties ?? {}) : {};
 
         expect(Object.keys(properties)).toEqual(
             expect.arrayContaining([
@@ -91,7 +91,7 @@ describe("commerce financial operations read contracts", () => {
         const definition = await loadIntegrationDefinition<Definition>(
             resolve(
                 import.meta.dir,
-                "../../../../integrations/extensions/commerce-stripe-payments/versions/1.0.0/definition.json",
+                "../../../../../integrations/extensions/commerce-stripe-payments/versions/1.0.0/definition.json",
             ),
         );
         const serialized = JSON.stringify(definition.artifacts.find((artifact) => artifact.dashboard)?.dashboard);
@@ -117,7 +117,7 @@ describe("commerce financial operations read contracts", () => {
 
 async function outputShape(endpointId: string): Promise<DataShape> {
     const definition = await loadIntegrationDefinition<Definition>(
-        resolve(import.meta.dir, "../../../../integrations/domains/commerce/versions/1.0.0/definition.json"),
+        resolve(import.meta.dir, "../../../../../integrations/domains/commerce/versions/1.0.0/definition.json"),
     );
     const endpoint = definition.artifacts
         .find((artifact) => artifact.source)
