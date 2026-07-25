@@ -20,6 +20,7 @@ as $$
 declare
     v_order commerce.orders%rowtype;
     v_terms commerce.order_financial_terms%rowtype;
+    v_protection commerce.protection_policies%rowtype;
     v_attempt commerce.order_payment_attempts%rowtype;
     v_fulfillment commerce.order_fulfillments%rowtype;
     v_settlement commerce.order_settlements%rowtype;
@@ -37,6 +38,7 @@ declare
     v_payment_review_transition_applied boolean := false;
     v_recovered_ambiguous_payment boolean := false;
     v_payment_already_fully_refunded boolean := false;
+    v_payment_confirmed_at timestamptz;
     v_transient_provider_review_reason constant text :=
         'Stripe payment provider truth mismatch: charge_balance_transaction_expansion';
 begin
@@ -47,6 +49,9 @@ begin
     if not found then raise exception 'not_found: order'; end if;
     select * into v_terms from commerce.order_financial_terms where order_id = v_order.id;
     if not found then raise exception 'conflict: immutable financial terms are missing'; end if;
+    select * into v_protection from commerce.protection_policies
+    where id = v_terms.protection_policy_id;
+    if not found then raise exception 'conflict: immutable protection policy is missing'; end if;
     select * into v_fulfillment from commerce.order_fulfillments
     where order_id = v_order.id for update;
     if not found then raise exception 'conflict: order fulfillment is not initialized'; end if;
@@ -641,8 +646,39 @@ begin
             and v_fulfillment.claim_by_at is null
             and v_fulfillment.release_eligible_at is null
         then
-            update commerce.orders set status = 'active'
-            where id = v_order.id and status = 'awaiting_payment';
+            if v_order.status = 'awaiting_payment' then
+                -- The seller clock starts only when Commerce atomically accepts
+                -- provider success and activates the protected order. Using the
+                -- post-lock database clock avoids consuming seller time while a
+                -- delayed projection was waiting on another transaction.
+                v_payment_confirmed_at := coalesce(
+                    v_fulfillment.payment_confirmed_at,
+                    clock_timestamp()
+                );
+                update commerce.order_fulfillments set
+                    payment_confirmed_at = v_payment_confirmed_at,
+                    seller_handoff_deadline = case
+                        when payment_confirmed_at is null then
+                            v_payment_confirmed_at
+                                + make_interval(hours => v_protection.seller_handoff_hours)
+                        else seller_handoff_deadline
+                    end,
+                    scan_grace_deadline = case
+                        when payment_confirmed_at is null then
+                            v_payment_confirmed_at
+                                + make_interval(hours =>
+                                    v_protection.seller_handoff_hours
+                                    + v_protection.scan_grace_hours)
+                        else scan_grace_deadline
+                    end,
+                    version = case when payment_confirmed_at is null
+                        then version + 1 else version end,
+                    updated_at = case when payment_confirmed_at is null
+                        then now() else updated_at end
+                where order_id = v_order.id;
+                update commerce.orders set status = 'active'
+                where id = v_order.id and status = 'awaiting_payment';
+            end if;
         end if;
     elsif p_status = 'manual_review' then
         if v_payment_review_transition_safe then

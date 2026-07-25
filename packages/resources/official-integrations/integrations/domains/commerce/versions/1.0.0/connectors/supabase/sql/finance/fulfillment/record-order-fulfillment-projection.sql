@@ -212,6 +212,9 @@ begin
         blocking_reason = case
             when v_handoff_timestamp_anomalous then 'recipient_handoff_timestamp_anomaly'
             when v_blocking then p_normalized_status
+            when blocking_reason = 'seller_handoff_deadline_elapsed_without_declaration'
+                and v_next_rank < 30
+            then blocking_reason
             else null end,
         version = version + 1,
         updated_at = now()
@@ -272,6 +275,18 @@ begin
             )
         ) on conflict (deduplication_key) where deduplication_key is not null do update set
             status = 'open', details = excluded.details;
+    end if;
+    if v_next_rank >= 30 and not v_handoff_timestamp_anomalous then
+        update commerce.financial_exceptions set
+            status = 'resolved',
+            resolved_at = now(),
+            resolved_by = 'trusted-carrier-acceptance',
+            details = details || jsonb_build_object(
+                'resolvedByProviderEventId', p_provider_event_id,
+                'carrierAcceptedAt', v_fulfillment.carrier_accepted_at
+            )
+        where deduplication_key = 'deadline:seller-handoff:' || v_order.id
+          and status <> 'resolved';
     end if;
     perform commerce.append_financial_event(
         v_order.id, 'fulfillment', v_order.id::text, 'fulfillment_' || p_normalized_status,
