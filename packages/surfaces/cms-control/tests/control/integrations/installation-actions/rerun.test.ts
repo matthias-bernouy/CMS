@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
 import postIntegrationInstallationRerun from "cms-control/api/_platform/integrations/installations/rerun.post";
 import postIntegrationInstallationUpgrade from "cms-control/api/_platform/integrations/installations/upgrade.post";
-import { makeCms, postImport, postRerun, postUpgrade, TEST_SECRET_SOURCE_DEFINITION } from "./support/helpers";
+import { makeCms, postImport, postRerun, postUpgrade, TEST_SECRET_SOURCE_DEFINITION } from "../support/helpers";
 
 describe("POST /api/integrations/installations/rerun", () => {
     test("reruns a tracked integration installation with stored secrets", async () => {

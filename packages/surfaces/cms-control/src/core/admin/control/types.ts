@@ -19,6 +19,7 @@ import type {
     IntegrationConnectorProviderRepository,
     IntegrationDefinitionRepository,
     IntegrationInstallationRepository,
+    IntegrationPackageResolver,
     IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
 import type { RolesRepository } from "@bernouy/cms-permissions";
@@ -43,6 +44,7 @@ type Configuration = {
 
 export type ControlCmsOptions = Configuration & {
     integrationCatalog?: IntegrationDefinitionRepository;
+    integrationPackageResolver?: IntegrationPackageResolver;
     integrationInstallations?: IntegrationInstallationRepository;
     integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
     integrationProvisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
@@ -91,6 +93,7 @@ export type ControlCmsState = {
     analytics: AnalyticsStore | null;
     roles: RolesRepository;
     integrationCatalog: IntegrationDefinitionRepository;
+    integrationPackageResolver: IntegrationPackageResolver | undefined;
     integrationInstallations: IntegrationInstallationRepository | null;
     integrationConnectorProviders: IntegrationConnectorProviderRepository;
     dashboards: DashboardRepository;

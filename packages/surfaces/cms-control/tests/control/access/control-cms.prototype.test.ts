@@ -9,6 +9,9 @@ describe("ControlCms public prototype contract", () => {
     test("keeps public accessors directly on ControlCms.prototype", () => {
         expect(typeof Object.getOwnPropertyDescriptor(ControlCms.prototype, "sources")?.get).toBe("function");
         expect(typeof Object.getOwnPropertyDescriptor(ControlCms.prototype, "filesMetadata")?.get).toBe("function");
+        expect(typeof Object.getOwnPropertyDescriptor(ControlCms.prototype, "integrationPackageResolver")?.get).toBe(
+            "function",
+        );
         expect(Object.getPrototypeOf(ControlCms.prototype)).toBe(Object.prototype);
     });
 
@@ -25,5 +28,23 @@ describe("ControlCms public prototype contract", () => {
         await cms.ready;
 
         expect(() => cms.filesMetadata).toThrow("files metadata backend not configured");
+    });
+
+    test("exposes the configured integration package resolver unchanged", async () => {
+        const resolver = {
+            resolve: async () => {
+                throw new Error("not called");
+            },
+        };
+        const cms = new ControlCms(
+            CaptureRunner.withoutFileApi(),
+            new InMemoryCmsRepository(),
+            new InMemoryAuthentication<CMS_ROLES>({ role: "admin" }),
+            { integrationPackageResolver: resolver },
+        );
+        await cms.ready;
+
+        expect(cms.config.integrationPackageResolver).toBe(resolver);
+        expect(cms.integrationPackageResolver).toBe(resolver);
     });
 });

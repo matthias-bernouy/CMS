@@ -58,6 +58,7 @@ export function createControlCmsState(input: ControlCmsConstructorInput): Contro
         analytics: input.analytics ?? null,
         roles: input.roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository()),
         integrationCatalog: configuration.integrationCatalog ?? EMPTY_INTEGRATION_CATALOG,
+        integrationPackageResolver: configuration.integrationPackageResolver,
         integrationInstallations: configuration.integrationInstallations ?? null,
         integrationConnectorProviders:
             configuration.integrationConnectorProviders ?? new InMemoryIntegrationConnectorProviderRepository(),

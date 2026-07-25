@@ -13,7 +13,13 @@ export default async function postIntegrationInstallationRerun(req: Request, cms
         throw new MissingParam("id");
     }
     const body = await readInstallationActionBody(req);
-    const definitions = await definitionsForRerun(cms.integrationCatalog, cms.integrationInstallations, id, body);
+    const definitions = await definitionsForRerun(
+        cms.integrationCatalog,
+        cms.integrationInstallations,
+        id,
+        body,
+        cms.integrationPackageResolver,
+    );
     const result = await runIntegrationInstallation({
         mode: "rerun",
         deps: integrationInstallationDeps(cms),
@@ -21,6 +27,7 @@ export default async function postIntegrationInstallationRerun(req: Request, cms
         integrationId: id,
         body,
         siteIntegrations: definitions,
+        packageResolver: cms.integrationPackageResolver,
     });
     return Response.json(result);
 }

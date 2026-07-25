@@ -21,6 +21,7 @@ export default async function postIntegrationInstallationUpgrade(req: Request, c
         integrationId: id,
         targetDefinition,
         body,
+        packageResolver: cms.integrationPackageResolver,
     });
     return Response.json(result);
 }

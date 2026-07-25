@@ -90,6 +90,9 @@ export class ControlCms {
     get integrationCatalog() {
         return controlCmsAccessors.integrationCatalog(this.state);
     }
+    get integrationPackageResolver() {
+        return controlCmsAccessors.integrationPackageResolver(this.state);
+    }
     get dashboards() {
         return controlCmsAccessors.dashboards(this.state);
     }

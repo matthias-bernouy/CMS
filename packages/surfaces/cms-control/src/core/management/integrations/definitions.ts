@@ -7,6 +7,7 @@ import {
     type IntegrationDefinition,
     type IntegrationDefinitionRepository,
     type IntegrationInstallationRepository,
+    type IntegrationPackageResolver,
 } from "@bernouy/cms-integrations";
 
 export async function listIntegrationDefinitions(
@@ -61,6 +62,7 @@ export async function definitionsForRerun(
     installations: IntegrationInstallationRepository,
     integrationId: string,
     body: Record<string, unknown>,
+    packageResolver?: IntegrationPackageResolver,
 ): Promise<IntegrationDefinition[]> {
     const installation = await installations.get(integrationId);
     if (!installation) {
@@ -71,6 +73,9 @@ export async function definitionsForRerun(
         return [installation.definitionSnapshot];
     }
     if (installation.definitionVersion === "unversioned") {
+        return [];
+    }
+    if (packageResolver) {
         return [];
     }
     const definition = await repository.get(installation.id, installation.definitionVersion);

@@ -8,6 +8,8 @@ import type {
     IntegrationDefinition,
     IntegrationDefinitionRepository,
     IntegrationInstallationRepository,
+    IntegrationPackageResolver,
+    ResolveIntegrationPackageRequest,
 } from "@bernouy/cms-integrations";
 export {
     TEST_SECRET_SOURCE_DEFINITION,
@@ -66,6 +68,26 @@ export function integrationDefinitionRepository(definitions: IntegrationDefiniti
                 (definition) => definition.kind === kind && (!version || definition.version === version),
             ) ?? null,
     };
+}
+
+export function recordingPackageResolver(
+    definitionForRequest: (request: ResolveIntegrationPackageRequest) => IntegrationDefinition = () =>
+        TEST_SECRET_SOURCE_DEFINITION,
+) {
+    const requests: ResolveIntegrationPackageRequest[] = [];
+    const resolver: IntegrationPackageResolver = {
+        resolve: async (request) => {
+            requests.push(request);
+            return {
+                root: `/integration-packages/${request.kind}/${request.version}`,
+                kind: request.kind,
+                version: request.version,
+                digest: "a".repeat(64),
+                definition: definitionForRequest(request),
+            };
+        },
+    };
+    return { resolver, requests };
 }
 
 export async function createInstallation(

@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
-import { makeCms, manualSourceDefinition, postImport, sourceWithFunctionDefinition } from "./support/helpers";
+import {
+    makeCms,
+    manualSourceDefinition,
+    postImport,
+    recordingPackageResolver,
+    sourceWithFunctionDefinition,
+} from "./support/helpers";
 
 describe("POST /api/integrations/import", () => {
     test("creates a tracked Test secret source installation without exposing the secret value", async () => {
@@ -94,6 +100,29 @@ describe("POST /api/integrations/import", () => {
 
         expect(body.installation.id).toBe("no-id");
         expect(await integrationInstallations.get("no-id")).not.toBeNull();
+    });
+
+    test("injects the package resolver and persists its digest on create", async () => {
+        const { cms, integrationInstallations } = makeCms();
+        const { resolver, requests } = recordingPackageResolver();
+        cms.integrationPackageResolver = resolver;
+
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
+
+        expect(requests).toHaveLength(1);
+        expect(requests[0]).toMatchObject({
+            kind: "test-secret-source",
+            version: "1.0.0",
+            reason: "create",
+            allowEmbeddedFallback: false,
+        });
+        expect((await integrationInstallations.get("test-secret-source"))?.packageDigest).toBe("a".repeat(64));
     });
 
     test("fails before writing when no integration installation repository is configured", async () => {

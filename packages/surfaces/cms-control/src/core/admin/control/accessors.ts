@@ -14,6 +14,7 @@ export const controlCmsAccessors = {
     secrets: (state: ControlCmsState) => state.secrets,
     roles: (state: ControlCmsState) => state.roles,
     integrationCatalog: (state: ControlCmsState) => state.integrationCatalog,
+    integrationPackageResolver: (state: ControlCmsState) => state.integrationPackageResolver,
     dashboards: (state: ControlCmsState) => state.dashboards,
     relations: (state: ControlCmsState) => state.relations,
     functions: (state: ControlCmsState) => state.functions,
