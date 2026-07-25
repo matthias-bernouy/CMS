@@ -7,7 +7,8 @@
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
-        "./fs": "./src/default-implementation/fs/index.ts"
+        "./fs": "./src/default-implementation/fs/index.ts",
+        "./http": "./src/default-implementation/http/index.ts"
     },
     "files": [
         "src/",
