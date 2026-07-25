@@ -1,4 +1,14 @@
-import { minVersion, parse, prerelease, satisfies as semverSatisfies, validRange } from "semver";
+import {
+    diff,
+    gt,
+    major,
+    minVersion,
+    parse,
+    prerelease,
+    satisfies as semverSatisfies,
+    subset,
+    validRange,
+} from "semver";
 
 const CARET_OR_TILDE_RANGE = /^(\^|~)(\S+)$/;
 const BOUNDED_RANGE = /^>=(\S+)\s+<(\S+)$/;
@@ -50,5 +60,40 @@ export function integrationVersionSatisfies(version: string, range: string): boo
         isExactIntegrationVersion(version) &&
         isSupportedIntegrationVersionRange(range) &&
         semverSatisfies(version, range)
+    );
+}
+
+export type IntegrationVersionReleaseLevel = "patch" | "minor" | "major";
+
+export function integrationVersionReleaseLevel(
+    previousVersion: string,
+    nextVersion: string,
+): IntegrationVersionReleaseLevel | null {
+    if (
+        !isExactIntegrationVersion(previousVersion) ||
+        !isExactIntegrationVersion(nextVersion) ||
+        !gt(nextVersion, previousVersion)
+    ) {
+        return null;
+    }
+    const difference = diff(previousVersion, nextVersion);
+    if (difference === "major" || difference === "premajor") {
+        return "major";
+    }
+    if (difference === "minor" || difference === "preminor") {
+        return "minor";
+    }
+    return "patch";
+}
+
+export function integrationVersionsShareMajor(left: string, right: string): boolean {
+    return isExactIntegrationVersion(left) && isExactIntegrationVersion(right) && major(left) === major(right);
+}
+
+export function integrationVersionRangeContainsRange(container: string, candidate: string): boolean {
+    return (
+        isSupportedIntegrationVersionRange(container) &&
+        isSupportedIntegrationVersionRange(candidate) &&
+        subset(candidate, container)
     );
 }

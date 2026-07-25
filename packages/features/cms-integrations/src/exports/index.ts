@@ -117,10 +117,14 @@ export {
 export {
     assertExactIntegrationVersion,
     assertSupportedIntegrationVersionRange,
+    integrationVersionRangeContainsRange,
+    integrationVersionReleaseLevel,
     integrationVersionSatisfies,
+    integrationVersionsShareMajor,
     isExactIntegrationVersion,
     isIntegrationPrerelease,
     isSupportedIntegrationVersionRange,
+    type IntegrationVersionReleaseLevel,
 } from "../core/definitions/versioning";
 export {
     parseIntegrationImportRequest,
