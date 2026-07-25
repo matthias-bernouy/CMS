@@ -21,6 +21,7 @@ The integration owns:
 - protected C2C financial policy revisions and immutable per-order terms;
 - provider payment, fulfillment, settlement, refund, and dispute projections;
 - marketplace claims, cancellation review, financial exceptions, audit, and durable operation dispatch;
+- auditable buyer marketplace-service withdrawal requests with a separate administrator CAS review queue;
 - typed commerce settings;
 - Commerce-scoped metadata definitions for products, variants, sellers, offers, and orders;
 - category-scoped Product fields that define required values and public filters.
@@ -32,6 +33,10 @@ Provider integrations may only record idempotent projections through the
 system commands; they cannot calculate fees, authorize a release or refund,
 or mark an order complete themselves. Checkout group ids correlate an internal
 checkout and never replace public order ids.
+
+Marketplace-service withdrawal requests are evidence-only and never trigger an
+order or financial mutation. Their source and operator contract is documented
+in [Marketplace service withdrawal requests](docs/service-withdrawal-requests.md).
 
 ## Native notifications
 

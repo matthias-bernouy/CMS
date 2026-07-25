@@ -68,6 +68,16 @@ export function postgresContractConfiguration(packageRoot: string): {
                     ]),
                 ],
             },
+            {
+                bundle: "commerce",
+                id: "commerce-service-withdrawal-requests",
+                label: "Commerce service withdrawal requests",
+                steps: [
+                    step("commerce/sql/order", "service-withdrawal/contracts.pg.sql", [
+                        "allow_service_withdrawal_schema_reset=true",
+                    ]),
+                ],
+            },
             contract("commerce-media", "Commerce media lifecycle", "commerce", "commerce/selling/media", [
                 "allow_commerce_media_schema_reset=true",
             ]),
