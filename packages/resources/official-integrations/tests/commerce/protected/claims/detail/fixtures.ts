@@ -103,11 +103,76 @@ export const claimReturnEvents = [
     },
 ];
 
+export const claimFinancialTerms = {
+    merchandise_subtotal_amount: 10_000,
+    shipping_amount: 500,
+    buyer_protection_fee_amount: 500,
+    buyer_total_amount: 11_000,
+    seller_proceeds_amount: 10_000,
+    seller_transfer_release_amount: 9_000,
+    seller_reserve_liability_amount: 1_000,
+    seller_shipping_share_amount: 0,
+    platform_retained_amount: 1_000,
+    buyer_protection_refund_policy: "proportional",
+    currency: "eur",
+    financial_terms_hash: "f".repeat(64),
+    financial_revision: 1,
+};
+
+export const claimSettlement = {
+    status: "blocked",
+    authorized_seller_amount: 10_000,
+    total_transferred_amount: 0,
+    total_reversed_amount: 0,
+    total_refunded_amount: 0,
+    seller_reserve_liability_remaining_amount: 1_000,
+    platform_gross_remainder_amount: 11_000,
+    manual_review_reason: "marketplace_claim_return_required",
+    version: 4,
+    updated_at: "2026-07-20T08:00:00.000Z",
+};
+
+export const claimResolutionLimits = {
+    remaining_buyer_refund_amount: 11_000,
+    remaining_merchandise_refund_amount: 10_000,
+    remaining_shipping_refund_amount: 500,
+    remaining_protection_fee_refund_amount: 500,
+    maximum_seller_transfer_amount: 10_000,
+    remaining_platform_contribution_amount: 500,
+};
+
+export const claimResolutionRefund = {
+    id: 19,
+    status: "requested",
+    requested_amount: 5_500,
+    merchandise_refund_amount: 5_000,
+    shipping_refund_amount: 250,
+    protection_fee_refund_amount: 250,
+    allocation_version: 1,
+    seller_recovery_amount: 5_000,
+    seller_reserve_offset_amount: 1_000,
+    platform_contribution_amount: 250,
+    requires_finance_approval: true,
+    dual_approval_required: false,
+    first_approved_by: null,
+    first_approved_at: null,
+    second_approved_by: null,
+    second_approved_at: null,
+    decision_reason: null,
+    version: 1,
+    created_at: "2026-07-20T09:00:00.000Z",
+    updated_at: "2026-07-20T09:00:00.000Z",
+};
+
 type Options = {
     claim?: Record<string, unknown> | null;
     events?: Array<Record<string, unknown>>;
     evidence?: Array<Record<string, unknown>>;
     returnEvents?: Array<Record<string, unknown>>;
+    financialTerms?: Record<string, unknown>;
+    settlement?: Record<string, unknown>;
+    resolutionLimits?: Record<string, unknown>;
+    resolutionRefund?: Record<string, unknown> | null;
 };
 
 export function useClaimDetailResponder(options: Options = {}): void {
@@ -147,6 +212,24 @@ export function claimReadModelEnvelope(options: Options = {}): Record<string, un
     return {
         state: "ok",
         claim: { ...claim, future_private_claim_field: "must-not-leak" },
+        financial_terms: {
+            ...(options.financialTerms ?? claimFinancialTerms),
+            future_private_financial_field: true,
+        },
+        settlement: {
+            ...(options.settlement ?? claimSettlement),
+            future_private_settlement_field: true,
+        },
+        resolution_limits: {
+            ...(options.resolutionLimits ?? claimResolutionLimits),
+            future_private_limit_field: true,
+        },
+        resolution_refund:
+            options.resolutionRefund === undefined
+                ? null
+                : options.resolutionRefund === null
+                  ? null
+                  : { ...options.resolutionRefund, future_private_refund_field: true },
         events: events.map((event) => ({ ...event, future_private_event_field: true })),
         evidence: evidence.map((item) => ({
             ...publicEvidenceRow(item),

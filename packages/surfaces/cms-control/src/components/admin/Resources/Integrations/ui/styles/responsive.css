@@ -82,7 +82,8 @@ button[slot="back"]:disabled {
     }
 
     .filters,
-    .setup-fields {
+    .setup-fields,
+    .object-list-item-fields {
         grid-template-columns: 1fr;
     }
 

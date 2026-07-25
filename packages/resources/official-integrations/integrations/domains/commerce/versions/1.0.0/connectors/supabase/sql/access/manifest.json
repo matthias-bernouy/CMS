@@ -3,6 +3,8 @@
     "transaction": "atomic",
     "entries": [
         { "file": "policies/published-policy-immutability.sql" },
+        { "file": "policies/buyer-legal-immutability.sql" },
+        { "file": "policies/marketplace-service-withdrawal-immutability.sql" },
         { "file": "payout/platform-payout-liability-functions.sql" },
         { "file": "payout/platform-payout-liability-triggers.sql" },
         { "file": "payout/drop-legacy-sync-order-platform-payout-liability.sql" },

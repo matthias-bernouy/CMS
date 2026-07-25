@@ -3,8 +3,8 @@ import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 
 /**
- * Source of the `cms-binding-core` system-bloc bundle — the data-binding
- * activation root registered on every delivered page whose Shell uses it.
+ * Source of the runtime-owned system-bloc bundle — the data-binding activation
+ * root and browser-safe CMS controls registered on delivered pages.
  * Built like `component.js`: compiled once, cached, and served with a
  * content-hash URL so browsers can cache it immutably.
  */

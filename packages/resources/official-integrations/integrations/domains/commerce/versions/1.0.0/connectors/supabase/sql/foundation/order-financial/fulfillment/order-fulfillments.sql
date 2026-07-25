@@ -4,6 +4,7 @@ create table if not exists commerce.order_fulfillments (
     order_id bigint primary key references commerce.orders(id) on delete restrict,
     status text not null default 'awaiting_shipment',
     provider_reference text,
+    payment_confirmed_at timestamptz,
     seller_handoff_deadline timestamptz not null,
     scan_grace_deadline timestamptz not null,
     seller_handoff_declared_at timestamptz,
@@ -29,6 +30,9 @@ create table if not exists commerce.order_fulfillments (
         provider_reference is null or length(btrim(provider_reference)) > 0
     ),
     constraint order_fulfillments_deadlines check (scan_grace_deadline >= seller_handoff_deadline),
+    constraint order_fulfillments_payment_confirmation_deadlines check (
+        payment_confirmed_at is null or seller_handoff_deadline >= payment_confirmed_at
+    ),
     constraint order_fulfillments_claim_window check (
         (recipient_handoff_at is null and recipient_handoff_first_observed_at is null
             and claim_window_started_at is null and claim_by_at is null
@@ -43,9 +47,55 @@ create table if not exists commerce.order_fulfillments (
 );
 
 alter table commerce.order_fulfillments
+    add column if not exists payment_confirmed_at timestamptz;
+alter table commerce.order_fulfillments
     add column if not exists recipient_handoff_first_observed_at timestamptz;
 alter table commerce.order_fulfillments
     add column if not exists claim_window_started_at timestamptz;
+
+-- Older installations created seller deadlines when the delivery quote was
+-- locked. Arm existing active orders from the first durable successful payment
+-- and only extend their deadlines, so an upgrade can never remove seller time.
+with first_payment_confirmation as (
+    select distinct on (attempt.order_id)
+        attempt.order_id,
+        attempt.succeeded_at payment_confirmed_at,
+        protection.seller_handoff_hours,
+        protection.scan_grace_hours
+    from commerce.order_payment_attempts attempt
+    join commerce.orders order_row on order_row.id = attempt.order_id
+    join commerce.order_financial_terms terms on terms.order_id = attempt.order_id
+    join commerce.protection_policies protection on protection.id = terms.protection_policy_id
+    where attempt.succeeded_at is not null
+      and order_row.status = 'active'
+    order by attempt.order_id, attempt.succeeded_at, attempt.id
+)
+update commerce.order_fulfillments fulfillment set
+    payment_confirmed_at = confirmation.payment_confirmed_at,
+    seller_handoff_deadline = greatest(
+        fulfillment.seller_handoff_deadline,
+        confirmation.payment_confirmed_at
+            + make_interval(hours => confirmation.seller_handoff_hours)
+    ),
+    scan_grace_deadline = greatest(
+        fulfillment.scan_grace_deadline,
+        greatest(
+            fulfillment.seller_handoff_deadline,
+            confirmation.payment_confirmed_at
+                + make_interval(hours => confirmation.seller_handoff_hours)
+        ) + make_interval(hours => confirmation.scan_grace_hours)
+    ),
+    updated_at = now()
+from first_payment_confirmation confirmation
+where confirmation.order_id = fulfillment.order_id
+  and fulfillment.payment_confirmed_at is null;
+
+alter table commerce.order_fulfillments
+    drop constraint if exists order_fulfillments_payment_confirmation_deadlines;
+alter table commerce.order_fulfillments
+    add constraint order_fulfillments_payment_confirmation_deadlines check (
+        payment_confirmed_at is null or seller_handoff_deadline >= payment_confirmed_at
+    );
 
 alter table commerce.order_fulfillments
     drop constraint if exists order_fulfillments_status;
@@ -137,7 +187,20 @@ alter table commerce.order_fulfillments
 create index if not exists order_fulfillments_status_deadline_idx
     on commerce.order_fulfillments(status, release_eligible_at)
     where status not in ('cancelled', 'returned_to_sender');
-create index if not exists order_fulfillments_scan_grace_due_idx
+
+create index if not exists order_fulfillments_seller_handoff_due_idx
+    on commerce.order_fulfillments(seller_handoff_deadline, order_id)
+    where payment_confirmed_at is not null
+      and seller_handoff_declared_at is null
+      and carrier_accepted_at is null
+      and status in ('awaiting_shipment', 'shipment_creating', 'label_created');
+
+drop index if exists commerce.order_fulfillments_scan_grace_due_idx;
+create index order_fulfillments_scan_grace_due_idx
     on commerce.order_fulfillments(scan_grace_deadline, order_id)
-    where carrier_accepted_at is null
-      and status in ('awaiting_shipment', 'label_created', 'seller_handoff_declared');
+    where payment_confirmed_at is not null
+      and carrier_accepted_at is null
+      and status in (
+          'awaiting_shipment', 'shipment_creating', 'label_created',
+          'seller_handoff_declared'
+      );

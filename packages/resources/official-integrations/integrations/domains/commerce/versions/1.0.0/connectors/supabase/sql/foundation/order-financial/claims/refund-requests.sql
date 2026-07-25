@@ -9,7 +9,10 @@ create table if not exists commerce.refund_requests (
     reason text not null,
     status text not null default 'requested',
     requested_amount bigint not null,
+    merchandise_refund_amount bigint not null default 0,
+    shipping_refund_amount bigint not null default 0,
     protection_fee_refund_amount bigint not null default 0,
+    allocation_version smallint not null default 0,
     seller_recovery_amount bigint not null default 0,
     seller_reserve_offset_amount bigint not null default 0,
     requires_finance_approval boolean not null default false,
@@ -37,7 +40,12 @@ create table if not exists commerce.refund_requests (
     )),
     constraint refund_requests_amounts check (
         requested_amount between 1 and 9007199254740991
+        and merchandise_refund_amount between 0 and requested_amount
+        and shipping_refund_amount between 0 and requested_amount
         and protection_fee_refund_amount between 0 and requested_amount
+        and merchandise_refund_amount + shipping_refund_amount
+            + protection_fee_refund_amount <= requested_amount
+        and allocation_version between 0 and 1
         and seller_recovery_amount between 0 and requested_amount
         and seller_reserve_offset_amount between 0 and seller_recovery_amount
         and protection_fee_refund_amount + seller_recovery_amount <= requested_amount
@@ -53,14 +61,22 @@ create table if not exists commerce.refund_requests (
 );
 
 alter table commerce.refund_requests
-    add column if not exists seller_reserve_offset_amount bigint not null default 0;
+    add column if not exists seller_reserve_offset_amount bigint not null default 0,
+    add column if not exists merchandise_refund_amount bigint not null default 0,
+    add column if not exists shipping_refund_amount bigint not null default 0,
+    add column if not exists allocation_version smallint not null default 0;
 alter table commerce.refund_requests
     drop constraint if exists refund_requests_amounts,
     drop constraint if exists refund_requests_actor;
 alter table commerce.refund_requests
     add constraint refund_requests_amounts check (
         requested_amount between 1 and 9007199254740991
+        and merchandise_refund_amount between 0 and requested_amount
+        and shipping_refund_amount between 0 and requested_amount
         and protection_fee_refund_amount between 0 and requested_amount
+        and merchandise_refund_amount + shipping_refund_amount
+            + protection_fee_refund_amount <= requested_amount
+        and allocation_version between 0 and 1
         and seller_recovery_amount between 0 and requested_amount
         and seller_reserve_offset_amount between 0 and seller_recovery_amount
         and protection_fee_refund_amount + seller_recovery_amount <= requested_amount

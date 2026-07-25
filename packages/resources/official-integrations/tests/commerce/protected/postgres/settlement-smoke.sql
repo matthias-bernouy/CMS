@@ -883,6 +883,34 @@ from (select commerce.open_marketplace_claim(
 do $$
 declare
     v_claim commerce.marketplace_claims%rowtype;
+    v_model jsonb;
+begin
+    select claim.* into v_claim
+    from commerce.marketplace_claims claim
+    join commerce.orders order_row on order_row.id = claim.order_id
+    where order_row.order_number = 'PROTECTED-FULL-CLAIM-SMOKE-1';
+    v_model := commerce.get_marketplace_claim_read_model(v_claim.id);
+    if v_model->>'state' <> 'ok'
+        or (v_model->'financial_terms'->>'merchandise_subtotal_amount')::bigint <> 13500
+        or (v_model->'financial_terms'->>'shipping_amount')::bigint <> 450
+        or (v_model->'financial_terms'->>'buyer_protection_fee_amount')::bigint <> 745
+        or (v_model->'financial_terms'->>'buyer_total_amount')::bigint <> 14695
+        or (v_model->'settlement'->>'authorized_seller_amount')::bigint <> 13230
+        or (v_model->'resolution_limits'->>'remaining_buyer_refund_amount')::bigint <> 14695
+        or (v_model->'resolution_limits'->>'remaining_merchandise_refund_amount')::bigint <> 13500
+        or (v_model->'resolution_limits'->>'remaining_shipping_refund_amount')::bigint <> 450
+        or (v_model->'resolution_limits'->>'remaining_protection_fee_refund_amount')::bigint <> 745
+        or (v_model->'resolution_limits'->>'maximum_seller_transfer_amount')::bigint <> 13230
+        or (v_model->'resolution_limits'->>'remaining_platform_contribution_amount')::bigint <> 720
+        or v_model->'resolution_refund' is distinct from 'null'::jsonb then
+        raise exception 'smoke: claim read model omitted persisted terms or resolution ceilings';
+    end if;
+end;
+$$;
+
+do $$
+declare
+    v_claim commerce.marketplace_claims%rowtype;
     v_terms commerce.order_financial_terms%rowtype;
 begin
     select claim.* into v_claim
@@ -892,26 +920,95 @@ begin
     select * into v_terms from commerce.order_financial_terms
     where order_id = v_claim.order_id;
     begin
-        perform commerce.resolve_marketplace_claim(
-            v_claim.id, 'split', v_terms.buyer_total_amount, 1,
-            v_terms.buyer_protection_fee_amount, 'Invalid preserved seller cent',
+        perform commerce.resolve_allocated_marketplace_claim(
+            v_claim.id, 'split', v_terms.merchandise_subtotal_amount,
+            v_terms.shipping_amount, 1, v_terms.buyer_protection_fee_amount,
+            'Invalid preserved seller cent',
             'admin', 'admin-full-claim-smoke', v_claim.version
         );
-        raise exception 'smoke: platform contribution cap preserved seller money during a full refund';
+        raise exception 'smoke: mismatched seller transfer accepted a full allocated refund';
     exception when others then
-        if sqlerrm = 'smoke: platform contribution cap preserved seller money during a full refund'
-            or sqlerrm <> 'validation: claim refund exceeds immutable platform contribution' then
+        if sqlerrm = 'smoke: mismatched seller transfer accepted a full allocated refund'
+            or sqlerrm <> 'validation: claim allocation does not match the seller transfer decision' then
             raise;
         end if;
     end;
 end;
 $$;
 
-select commerce.resolve_marketplace_claim(
-    :full_claim_id, 'buyer', :full_claim_buyer_total, 0,
-    :full_claim_protection_fee, 'Empty package evidence accepted',
+select commerce.resolve_allocated_marketplace_claim(
+    :full_claim_id, 'buyer', 13500, 450, 0, :full_claim_protection_fee,
+    'Empty package evidence accepted',
     'admin', 'admin-full-claim-smoke', :full_claim_version
 );
+
+do $$
+declare
+    v_claim commerce.marketplace_claims%rowtype;
+    v_terms commerce.order_financial_terms%rowtype;
+    v_replay jsonb;
+    v_resolution_event_count bigint;
+    v_refund_count bigint;
+begin
+    select claim.* into v_claim
+    from commerce.marketplace_claims claim
+    join commerce.orders order_row on order_row.id = claim.order_id
+    where order_row.order_number = 'PROTECTED-FULL-CLAIM-SMOKE-1';
+    select * into v_terms from commerce.order_financial_terms
+    where order_id = v_claim.order_id;
+    select count(*) into v_resolution_event_count
+    from commerce.marketplace_claim_events
+    where claim_id = v_claim.id and event_type = 'resolution_decided';
+    select count(*) into v_refund_count
+    from commerce.refund_requests where claim_id = v_claim.id;
+    if v_claim.version <> 2
+        or v_resolution_event_count <> 1
+        or v_refund_count <> 1 then
+        raise exception 'smoke: allocated claim decision did not advance exactly one version';
+    end if;
+
+    v_replay := commerce.resolve_allocated_marketplace_claim(
+        v_claim.id, 'buyer', v_terms.merchandise_subtotal_amount,
+        v_terms.shipping_amount, 0, v_terms.buyer_protection_fee_amount,
+        'Empty package evidence accepted',
+        'admin', 'admin-full-claim-smoke', 1
+    );
+    if (v_replay->>'version')::integer <> 2
+        or (v_replay->'refundRequest'->>'id')::bigint is null then
+        raise exception 'smoke: exact allocated claim replay did not return its materialized decision';
+    end if;
+
+    begin
+        perform commerce.resolve_allocated_marketplace_claim(
+            v_claim.id, 'buyer', v_terms.merchandise_subtotal_amount,
+            v_terms.shipping_amount, 0, v_terms.buyer_protection_fee_amount,
+            'Changed decision with a stale version',
+            'admin', 'admin-full-claim-smoke', 1
+        );
+        raise exception 'smoke: stale changed claim decision was accepted';
+    exception when others then
+        if sqlerrm = 'smoke: stale changed claim decision was accepted'
+            or sqlerrm <> 'conflict: stale claim version' then
+            raise;
+        end if;
+    end;
+
+    select claim.* into v_claim
+    from commerce.marketplace_claims claim
+    where claim.id = v_claim.id;
+    select count(*) into v_resolution_event_count
+    from commerce.marketplace_claim_events
+    where claim_id = v_claim.id and event_type = 'resolution_decided';
+    select count(*) into v_refund_count
+    from commerce.refund_requests where claim_id = v_claim.id;
+    if v_claim.version <> 2
+        or v_claim.decision_reason <> 'Empty package evidence accepted'
+        or v_resolution_event_count <> 1
+        or v_refund_count <> 1 then
+        raise exception 'smoke: claim replay or stale decision mutated durable state';
+    end if;
+end;
+$$;
 
 do $$
 declare
@@ -930,7 +1027,10 @@ begin
     if v_refund.status <> 'requested'
         or v_refund.requires_finance_approval is not true
         or v_refund.requested_amount <> 14695
+        or v_refund.merchandise_refund_amount <> 13500
+        or v_refund.shipping_refund_amount <> 450
         or v_refund.protection_fee_refund_amount <> 745
+        or v_refund.allocation_version <> 1
         or v_refund.seller_recovery_amount <> 13230
         or v_platform_contribution <> 720
         or v_platform_contribution
@@ -943,6 +1043,18 @@ begin
               and (claim_event.data->>'platformContributionAmount')::bigint = 720
         ) then
         raise exception 'smoke: full buyer refund allocation does not conserve immutable terms';
+    end if;
+    if (commerce.get_marketplace_claim_read_model(v_refund.claim_id)
+            ->'resolution_refund'->>'merchandise_refund_amount')::bigint <> 13500
+        or (commerce.get_marketplace_claim_read_model(v_refund.claim_id)
+            ->'resolution_refund'->>'shipping_refund_amount')::bigint <> 450
+        or (commerce.get_marketplace_claim_read_model(v_refund.claim_id)
+            ->'resolution_refund'->>'protection_fee_refund_amount')::bigint <> 745
+        or (commerce.get_marketplace_claim_read_model(v_refund.claim_id)
+            ->'resolution_refund'->>'allocation_version')::integer <> 1
+        or (commerce.get_marketplace_claim_read_model(v_refund.claim_id)
+            ->'resolution_refund'->>'platform_contribution_amount')::bigint <> 720 then
+        raise exception 'smoke: claim read model omitted its materialized refund allocation';
     end if;
 end;
 $$;
@@ -966,14 +1078,20 @@ do $$
 declare
     v_order commerce.orders%rowtype;
     v_settlement commerce.order_settlements%rowtype;
+    v_claim commerce.marketplace_claims%rowtype;
 begin
     select * into v_order from commerce.orders
     where order_number = 'PROTECTED-FULL-CLAIM-SMOKE-1';
     select * into v_settlement from commerce.order_settlements
     where order_id = v_order.id;
+    select * into v_claim from commerce.marketplace_claims
+    where order_id = v_order.id;
     if v_order.status <> 'completed'
         or v_settlement.status <> 'refunded'
         or v_settlement.total_refunded_amount <> 14695
+        or v_claim.status <> 'resolved_buyer'
+        or v_claim.version <> 3
+        or v_claim.updated_at < v_claim.resolved_at
         or v_settlement.authorized_seller_amount <> 0
         or v_settlement.seller_reserve_liability_remaining_amount <> 0
         or v_settlement.platform_gross_remainder_amount <> 0

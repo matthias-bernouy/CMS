@@ -1,4 +1,12 @@
-import { claimEvidenceRows, claimEvents, claimReturnEvents, claimRow } from "./fixtures";
+import {
+    claimEvidenceRows,
+    claimEvents,
+    claimFinancialTerms,
+    claimResolutionLimits,
+    claimReturnEvents,
+    claimRow,
+    claimSettlement,
+} from "./fixtures";
 
 export function expectedClaimDetail(): Record<string, unknown> {
     return {
@@ -27,6 +35,10 @@ export function expectedClaimDetail(): Record<string, unknown> {
         version: 3,
         createdAt: "2026-07-17T08:00:00.000Z",
         updatedAt: "2026-07-20T08:00:00.000Z",
+        financialTerms: camel(claimFinancialTerms),
+        settlement: camel(claimSettlement),
+        resolutionLimits: camel(claimResolutionLimits),
+        resolutionRefund: null,
         events: claimEvents.map((event) => ({
             id: event.id,
             claimId: event.claim_id,
@@ -58,4 +70,13 @@ export function expectedClaimDetail(): Record<string, unknown> {
             createdAt: event.created_at,
         })),
     };
+}
+
+function camel(value: Record<string, unknown>): Record<string, unknown> {
+    return Object.fromEntries(
+        Object.entries(value).map(([key, entry]) => [
+            key.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase()),
+            entry,
+        ]),
+    );
 }

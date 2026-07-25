@@ -9,6 +9,7 @@ import {
     type PostgresContract,
 } from "./postgresContractCases";
 import { requireDisposablePostgresContractTarget } from "./postgresContractTarget";
+import { runRefundIdempotencyConcurrencyProof } from "../commerce/protected/postgres/settlement/refundIdempotencyConcurrency";
 import { loadSupabaseSchemaSql } from "./supabaseSql";
 
 const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -31,6 +32,9 @@ async function main(): Promise<void> {
             }
             if (contractCase.id === "commerce-media") {
                 await runCommerceMediaRolloutProofs(databaseUrl);
+            }
+            if (contractCase.id === "commerce-protected-settlement") {
+                await runRefundIdempotencyConcurrencyProof(psql, databaseUrl);
             }
         }
     } finally {
@@ -76,7 +80,6 @@ async function loadBundles(): Promise<Record<BundleName, string>> {
         stripeConnect,
     };
 }
-
 async function writeBundles(root: string, sql: Record<BundleName, string>): Promise<Record<BundleName, string>> {
     const files: Record<BundleName, string> = {
         commerce: join(root, "commerce.sql"),
@@ -91,7 +94,6 @@ async function writeBundles(root: string, sql: Record<BundleName, string>): Prom
     );
     return files;
 }
-
 async function runStep(
     psql: string,
     databaseUrl: string,

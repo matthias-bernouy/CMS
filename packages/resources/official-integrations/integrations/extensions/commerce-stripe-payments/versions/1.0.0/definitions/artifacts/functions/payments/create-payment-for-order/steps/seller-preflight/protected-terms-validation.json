@@ -5,7 +5,21 @@
             "source": "{{dependencies.commerce.sourceId}}",
             "endpoint": "prepareProtectedPayment",
             "body": {
-                "orderId": "$input.body.orderId"
+                "orderId": "$input.body.orderId",
+                "paymentProvider": "stripe",
+                "acceptedLegalDocumentVersionIds": "$input.body.acceptedLegalDocumentVersionIds"
+            },
+            "onError": {
+                "propagate": [
+                    {
+                        "sourceStatus": 409,
+                        "status": 409
+                    },
+                    {
+                        "sourceStatus": 422,
+                        "status": 422
+                    }
+                ]
             }
         }
     },

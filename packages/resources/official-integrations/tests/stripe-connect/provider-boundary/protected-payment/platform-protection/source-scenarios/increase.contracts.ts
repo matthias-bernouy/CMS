@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import type { StripeConnectHarness } from "../../../../runtime/harness";
 import { okJson } from "../../../../runtime/http";
 import { sourceJson } from "../../../../runtime/source-requests";
+import { waitForPlatformPayoutClaimAttempts } from "./concurrency";
 
 type CreateHarness = () => Promise<StripeConnectHarness>;
 
@@ -17,17 +18,24 @@ export function registerPlatformReserveIncreaseSourceScenarios(createHarness: Cr
         });
 
         await pause.entered;
-        const higherUpdate = await sourceJson(harness, "configurePlatformPayoutControls", {
+        const higherUpdate = sourceJson(harness, "configurePlatformPayoutControls", {
             platformPayoutControlChangeId: "platform-race-higher",
             minimumBalanceEur: 200,
             liabilityRevision: 2,
             debitNegativeBalances: true,
         });
+        await waitForPlatformPayoutClaimAttempts(harness, 2);
         pause.resume();
-        const completed = await okJson(await lowerUpdate);
+        const [lowerCompleted, higherCompleted] = await Promise.all([
+            lowerUpdate.then(okJson),
+            higherUpdate.then(okJson),
+        ]);
 
-        expect(higherUpdate.status).toBe(409);
-        expect(completed).toMatchObject({
+        expect(lowerCompleted).toMatchObject({
+            liabilityRevision: 2,
+            payoutControl: { interval: "daily", minimumBalanceByCurrency: { eur: 200 } },
+        });
+        expect(higherCompleted).toMatchObject({
             liabilityRevision: 2,
             payoutControl: { interval: "daily", minimumBalanceByCurrency: { eur: 200 } },
         });

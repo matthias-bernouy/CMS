@@ -33,13 +33,12 @@ describe("public auth mutation failure boundaries", () => {
             }
             return markEmailVerified(sub);
         };
+        const cfg = await flowConfig(credentials, tokens, identity);
 
-        await expect(confirmEmailVerification(flowConfig(credentials, tokens), { token })).rejects.toThrow(
-            "credential write unavailable",
-        );
+        await expect(confirmEmailVerification(cfg, { token })).rejects.toThrow("credential write unavailable");
         failWrite = false;
 
-        await expect(confirmEmailVerification(flowConfig(credentials, tokens), { token })).resolves.toBeUndefined();
+        await expect(confirmEmailVerification(cfg, { token })).resolves.toBeUndefined();
         expect((await credentials.getByEmail("verify@example.com"))?.emailVerifiedAt).toBeInstanceOf(Date);
     });
 
@@ -63,9 +62,10 @@ describe("public auth mutation failure boundaries", () => {
             }
             return setPassword(sub, password);
         };
+        const cfg = await flowConfig(credentials, tokens, identity);
 
         await expect(
-            confirmPasswordReset(flowConfig(credentials, tokens), {
+            confirmPasswordReset(cfg, {
                 token,
                 password: "new-password",
             }),
@@ -73,7 +73,7 @@ describe("public auth mutation failure boundaries", () => {
         failWrite = false;
 
         await expect(
-            confirmPasswordReset(flowConfig(credentials, tokens), {
+            confirmPasswordReset(cfg, {
                 token,
                 password: "new-password",
             }),
@@ -85,14 +85,24 @@ describe("public auth mutation failure boundaries", () => {
     });
 });
 
-function flowConfig(
+async function flowConfig(
     credentials: InMemoryLocalCredentialStore,
     tokens: InMemoryAuthTokenStore,
-): PublicAuthFlowConfig<Role> {
+    identity: { sub: string; email?: string },
+): Promise<PublicAuthFlowConfig<Role>> {
+    const users = new InMemoryUsersRepository<Role>();
+    await users.upsert(
+        {
+            ...identity,
+            sub: `local:${identity.sub}`,
+            provider: "local",
+        },
+        "user",
+    );
     return {
         credentials,
         tokens,
-        users: new InMemoryUsersRepository<Role>(),
+        users,
         emailer: new InMemoryEmailer(),
         defaultRole: "user",
         emailVerificationUrl: "https://example.test/verify-email",

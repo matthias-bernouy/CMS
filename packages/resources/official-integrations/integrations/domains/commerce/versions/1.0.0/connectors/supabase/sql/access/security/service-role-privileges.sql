@@ -1,6 +1,7 @@
 
 grant insert, update on
     commerce.settings,
+    commerce.buyer_legal_documents,
     commerce.brands,
     commerce.categories,
     commerce.products,
@@ -25,6 +26,7 @@ grant insert, update on
     commerce.orders,
     commerce.order_lines,
     commerce.order_payment_attempts,
+    commerce.marketplace_service_withdrawal_requests,
     commerce.order_fulfillments,
     commerce.order_settlements,
     commerce.marketplace_claims,
@@ -75,6 +77,9 @@ to service_role;
 revoke delete on commerce.media from service_role;
 grant update on commerce.platform_payout_liability_cache_state to service_role;
 grant insert on
+    commerce.buyer_legal_document_versions,
+    commerce.order_buyer_legal_acceptances,
+    commerce.marketplace_service_withdrawal_events,
     commerce.fee_policies,
     commerce.fee_policy_components,
     commerce.protection_policies,

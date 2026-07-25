@@ -2,17 +2,36 @@ import { executeFunction, validateFunction, type CmsFunction } from "@bernouy/cm
 import { secretKeyToRef } from "@bernouy/cms-secrets";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../errors";
 import { resolveDependencyContext } from "../../import/dependencies";
+import { resolveIntegrationInputs } from "../../definitions/resolvedInputs";
 import { resolveTemplates, type TemplateContext } from "../../definitions/templates";
 import type { DeclarativeAfterInstallationTemplate, IntegrationDefinition } from "../../../interfaces/Integration";
 import type { IntegrationImportDeps } from "../../../interfaces/IntegrationImport";
 import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
 import type { IntegrationInstallationRepository } from "../../../interfaces/IntegrationInstallationRepository";
 import { integrationInstallationId } from "../ids";
+import { markAfterInstallationFailed } from "./afterInstallationFailure";
 
-export async function reconcileAfterInstallation(
+export async function reconcileChangedInstallation(
     deps: IntegrationImportDeps,
     installations: IntegrationInstallationRepository,
     changedInstallationId: string,
+): Promise<void> {
+    await reconcileAfterInstallation(deps, installations, changedInstallationId, "changed");
+}
+
+export async function reconcileDependentInstallations(
+    deps: IntegrationImportDeps,
+    installations: IntegrationInstallationRepository,
+    changedInstallationId: string,
+): Promise<void> {
+    await reconcileAfterInstallation(deps, installations, changedInstallationId, "dependents");
+}
+
+async function reconcileAfterInstallation(
+    deps: IntegrationImportDeps,
+    installations: IntegrationInstallationRepository,
+    changedInstallationId: string,
+    scope: "changed" | "dependents",
 ): Promise<void> {
     const installed = await installations.list();
     for (const installation of installed) {
@@ -20,8 +39,12 @@ export async function reconcileAfterInstallation(
         if (installation.status !== "success" || !definition?.afterInstallation?.length) {
             continue;
         }
-        const actions = definition.afterInstallation.filter((action) =>
-            isAffected(definition, installation.id, action, changedInstallationId),
+        const isChanged = installation.id === changedInstallationId;
+        if ((scope === "changed") !== isChanged) {
+            continue;
+        }
+        const actions = definition.afterInstallation.filter(
+            (action) => isChanged || isAffected(definition, action, changedInstallationId),
         );
         if (!actions.length) {
             continue;
@@ -31,20 +54,21 @@ export async function reconcileAfterInstallation(
             if ((action.requires ?? []).some((name) => !dependencies[name])) {
                 continue;
             }
-            await executeAction(deps, installation, dependencies, action);
+            try {
+                await executeAction(deps, definition, installation, dependencies, action);
+            } catch (error) {
+                await markAfterInstallationFailed(installations, installation.id, error);
+                throw error;
+            }
         }
     }
 }
 
 function isAffected(
     definition: IntegrationDefinition,
-    installationId: string,
     action: DeclarativeAfterInstallationTemplate,
     changedInstallationId: string,
 ): boolean {
-    if (installationId === changedInstallationId) {
-        return true;
-    }
     const requirements = new Set(action.requires ?? []);
     return (definition.dependencies ?? []).some(
         (dependency) =>
@@ -54,12 +78,19 @@ function isAffected(
 
 async function executeAction(
     deps: IntegrationImportDeps,
+    definition: IntegrationDefinition,
     installation: IntegrationInstallation,
     dependencies: NonNullable<TemplateContext["dependencies"]>,
     action: DeclarativeAfterInstallationTemplate,
 ): Promise<void> {
+    const resolved = await resolveIntegrationInputs(
+        definition,
+        installation.answersSnapshot,
+        deps.resolvePublishedPage,
+    );
     const context: TemplateContext = {
         answers: installation.answersSnapshot,
+        resolved,
         dependencies,
         secrets: Object.fromEntries(
             Object.entries(installation.secretRefs).map(([name, key]) => [name, secretKeyToRef(key)]),

@@ -29,8 +29,12 @@ export type {
     IntegrationDependency,
     IntegrationIcon,
     IntegrationInput,
+    IntegrationInputOption,
+    IntegrationObjectListField,
+    IntegrationObjectListInput,
     IntegrationSecurityDefinition,
     IntegrationUiDefinition,
+    IntegrationValueInput,
 } from "../interfaces/Integration";
 export type {
     IntegrationConnectorDeployer,
@@ -64,6 +68,8 @@ export type {
     IntegrationProvisionOutput,
     IntegrationProvisionResourceResult,
     IntegrationProvisionResult,
+    IntegrationPublishedPageResolver,
+    IntegrationResolvedPage,
     IntegrationSecretResult,
 } from "../interfaces/IntegrationImport";
 export type {

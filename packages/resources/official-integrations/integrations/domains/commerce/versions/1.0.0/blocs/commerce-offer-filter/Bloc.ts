@@ -1,5 +1,5 @@
-import { SchemaOfferFilters } from "./schema";
-import { NumericRangeFilters } from "./range-controller";
+import { NumericRangeFilters } from "./range/controller";
+import { SchemaOfferFilters } from "./schema/schema";
 
 export class CommerceOfferFilter extends HTMLElement {
     static observedAttributes = [

@@ -32,6 +32,66 @@ export function postgresContractConfiguration(packageRoot: string): {
             stripeConnect: resolve(packageRoot, "integrations/providers/stripe-connect/versions/1.0.0"),
         },
         contracts: [
+            contract(
+                "commerce-pre-provider-cancellation",
+                "Commerce pre-provider cancellation",
+                "commerce",
+                "commerce/protected/payment/pre-provider-cancellation",
+                ["run_pre_provider_cancellation_contract=true", "allow_pre_provider_cancellation_schema_reset=true"],
+            ),
+            contract(
+                "commerce-buyer-legal-acceptance",
+                "Commerce buyer legal acceptance",
+                "commerce",
+                "commerce/protected/payment",
+                ["run_buyer_legal_install_contract=true", "allow_buyer_legal_schema_reset=true"],
+            ),
+            {
+                bundle: "commerce",
+                id: "commerce-protected-settlement",
+                label: "Commerce protected settlement",
+                steps: [
+                    {
+                        file: "tests/commerce/protected/postgres/settlement/contracts.pg.sql",
+                        variables: [
+                            "run_protected_settlement_contract=true",
+                            "allow_protected_settlement_schema_reset=true",
+                        ],
+                    },
+                ],
+            },
+            {
+                bundle: "commerce",
+                id: "commerce-protected-deadlines",
+                label: "Commerce protected order deadlines",
+                steps: [
+                    step("commerce/protected", "deadlines/contracts.pg.sql", [
+                        "run_protected_deadline_contract=true",
+                        "allow_protected_deadline_schema_reset=true",
+                    ]),
+                ],
+            },
+            {
+                bundle: "commerce",
+                id: "commerce-fulfillment-truth",
+                label: "Commerce fulfillment carrier truth",
+                steps: [
+                    step("commerce/protected", "fulfillment-truth/contracts.pg.sql", [
+                        "run_fulfillment_truth_contract=true",
+                        "allow_fulfillment_truth_schema_reset=true",
+                    ]),
+                ],
+            },
+            {
+                bundle: "commerce",
+                id: "commerce-service-withdrawal-requests",
+                label: "Commerce service withdrawal requests",
+                steps: [
+                    step("commerce/sql/order", "service-withdrawal/contracts.pg.sql", [
+                        "allow_service_withdrawal_schema_reset=true",
+                    ]),
+                ],
+            },
             contract("commerce-media", "Commerce media lifecycle", "commerce", "commerce/selling/media", [
                 "allow_commerce_media_schema_reset=true",
             ]),

@@ -1,0 +1,48 @@
+{
+    "endpointId": "submitMyMarketplaceServiceWithdrawalRequest",
+    "method": "POST",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/service-withdrawal-requests",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "orderId": { "type": "number" },
+            "serviceScope": { "type": "string" },
+            "reason": { "type": "string" },
+            "confirmed": { "type": "boolean" },
+            "idempotencyKey": { "type": "string" }
+        },
+        "required": [
+            "orderId",
+            "serviceScope",
+            "confirmed",
+            "idempotencyKey"
+        ]
+    },
+    "output": [
+        {
+            "status": "201",
+            "body": {
+                "$include": "../../../../shared/marketplace-service-withdrawal-request.json"
+            }
+        }
+    ]
+}

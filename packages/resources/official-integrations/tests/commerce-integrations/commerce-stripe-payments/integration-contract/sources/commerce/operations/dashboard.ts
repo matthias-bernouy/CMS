@@ -8,7 +8,10 @@ export function commerceDashboardEndpoints(): Source["endpoints"] {
         command("requestOrderRefund", {
             orderId: { type: "number" },
             reason: { type: "string" },
-            amount: { type: "number" },
+            idempotencyKey: { type: "string" },
+            merchandiseRefundAmount: { type: "number" },
+            shippingRefundAmount: { type: "number" },
+            protectionFeeRefundAmount: { type: "number" },
         }),
         query("claims", ["status", "reason", "limit", "offset"]),
         query("claim", ["id"]),
@@ -27,7 +30,8 @@ export function commerceDashboardEndpoints(): Source["endpoints"] {
         command("resolveOrderClaim", {
             claimId: { type: "number" },
             outcome: { type: "string" },
-            buyerRefundAmount: { type: "number" },
+            merchandiseRefundAmount: { type: "number" },
+            shippingRefundAmount: { type: "number" },
             sellerTransferAmount: { type: "number" },
             protectionFeeRefundAmount: { type: "number" },
             decisionReason: { type: "string" },

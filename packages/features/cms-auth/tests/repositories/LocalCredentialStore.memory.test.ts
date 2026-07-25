@@ -56,6 +56,14 @@ describe("InMemoryLocalCredentialStore.verify", () => {
     test("unknown email → null", async () => {
         expect(await store().verify("ghost@x.com", "pw")).toBeNull();
     });
+
+    test("verifyPassword authenticates a pending unverified credential", async () => {
+        const s = store();
+        await s.create({ email: "pending@x.com", password: "pw", emailVerified: false });
+        expect(await s.verifyPassword("pending@x.com", "pw")).toMatchObject({ email: "pending@x.com" });
+        expect(await s.verifyPassword("pending@x.com", "wrong")).toBeNull();
+        expect(await s.verify("pending@x.com", "pw")).toBeNull();
+    });
 });
 
 describe("InMemoryLocalCredentialStore lifecycle", () => {

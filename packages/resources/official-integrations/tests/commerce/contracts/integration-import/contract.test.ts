@@ -114,7 +114,7 @@ describe("commerce 1.0.0 contract", () => {
             "commerce-offer-price-form",
             "commerce-notification-preferences",
         ]);
-        expect(endpointUrns).toHaveLength(167);
+        expect(endpointUrns).toHaveLength(175);
         expect(endpointUrns).not.toEqual(
             expect.arrayContaining(["urn:commerce:variants", "urn:commerce:variant", "urn:commerce:upsertVariant"]),
         );
@@ -148,6 +148,10 @@ describe("commerce 1.0.0 contract", () => {
             "urn:commerce:getMyNotificationPreferences": `${supabaseUrl}/functions/v1/cms-commerce/notifications/preferences`,
             "urn:commerce:claimNotifications": `${supabaseUrl}/functions/v1/cms-commerce/notifications/system/claim`,
             "urn:commerce:listDefaultNotificationTemplates": `${supabaseUrl}/functions/v1/cms-commerce/notifications/templates`,
+            "urn:commerce:submitMyMarketplaceServiceWithdrawalRequest": `${supabaseUrl}/functions/v1/cms-commerce/me/order/service-withdrawal-requests`,
+            "urn:commerce:myMarketplaceServiceWithdrawalRequests": `${supabaseUrl}/functions/v1/cms-commerce/me/order/service-withdrawal-requests`,
+            "urn:commerce:marketplaceServiceWithdrawalRequests": `${supabaseUrl}/functions/v1/cms-commerce/admin/service-withdrawal-requests`,
+            "urn:commerce:reviewMarketplaceServiceWithdrawalRequest": `${supabaseUrl}/functions/v1/cms-commerce/admin/service-withdrawal-request/review`,
         });
         expect(
             source?.endpoints.find((endpoint) => endpoint.urn === "urn:commerce:upsertCustomField")?.effects,

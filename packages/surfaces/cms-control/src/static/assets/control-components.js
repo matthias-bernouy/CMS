@@ -12407,6 +12407,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     properties,
     ...required.length ? { required } : {}
   });
+  var arrayShape = (items) => ({ type: "array", items });
   var subjectShape = objectShape({
     identifier: stringShape(),
     email: stringShape(),
@@ -12415,6 +12416,18 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
   var okShape = objectShape({ ok: booleanShape() });
   var emailBody = objectShape({ email: stringShape() }, ["email"]);
   var tokenBody = objectShape({ token: stringShape() }, ["token"]);
+  var legalRequirementShape = objectShape({
+    documentKey: stringShape(),
+    versionId: stringShape(),
+    label: stringShape(),
+    consentText: stringShape(),
+    page: objectShape({
+      id: stringShape(),
+      path: stringShape(),
+      title: stringShape()
+    }, ["id", "path", "title"]),
+    contentHash: stringShape()
+  }, ["documentKey", "versionId", "label", "consentText", "page", "contentHash"]);
   var SYSTEM_AUTH_SOURCE = {
     urn: SYSTEM_AUTH_SOURCE_URN,
     meta: {
@@ -12453,12 +12466,31 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
         output: [{ status: "200", body: okShape }]
       },
       {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signupLegalRequirements"),
+        method: "GET",
+        access: { mode: "public" },
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup/legal-requirements`,
+        meta: { name: "Get signup legal requirements" },
+        output: [
+          {
+            status: "200",
+            body: objectShape({ documents: arrayShape(legalRequirementShape) }, ["documents"])
+          }
+        ]
+      },
+      {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signup"),
         method: "POST",
         access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup`,
         meta: { name: "Sign up" },
-        input: { body: objectShape({ email: stringShape(), password: stringShape() }, ["email", "password"]) },
+        input: {
+          body: objectShape({
+            email: stringShape(),
+            password: stringShape(),
+            acceptedLegalDocumentVersionIds: arrayShape(stringShape())
+          }, ["email", "password"])
+        },
         output: [{ status: "200", body: okShape }]
       },
       {
@@ -13496,6 +13528,522 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
   }
   var esc = (s2) => s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   customElements.define("cms-login-methods", CmsLoginMethods);
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/configuration.ts
+  var SIGNUP_LEGAL_CONSENT_ATTRIBUTES = [
+    "appearance",
+    "disabled",
+    "heading",
+    "load-error-label",
+    "loading-label",
+    "new-tab-label",
+    "required-message",
+    "retry-label",
+    "source-id",
+    "source-prefix"
+  ];
+  function signupLegalConsentAppearance(element) {
+    return element.getAttribute("appearance") === "compact" ? "compact" : "detailed";
+  }
+  function signupLegalConsentCopy(element) {
+    return {
+      heading: attribute(element, "heading", "Agreements"),
+      loadingLabel: attribute(element, "loading-label", "Loading agreements…"),
+      loadErrorLabel: attribute(element, "load-error-label", "Unable to load the agreements."),
+      retryLabel: attribute(element, "retry-label", "Try again"),
+      requiredMessage: attribute(element, "required-message", "Accept every agreement to continue."),
+      newTabLabel: attribute(element, "new-tab-label", "opens in a new tab")
+    };
+  }
+  function signupLegalRequirementsUrl(element) {
+    const prefix = (element.getAttribute("source-prefix")?.trim() || "/.cms/sources").replace(/\/+$/, "");
+    if (!prefix.startsWith("/") || prefix.startsWith("//")) {
+      throw new Error("Signup legal source prefix must be a same-origin path.");
+    }
+    const sourceId = element.getAttribute("source-id")?.trim() || "system-auth";
+    const url = new URL(`${prefix}/${encodeURIComponent(sourceId)}/signupLegalRequirements`, location.origin);
+    if (url.origin !== location.origin || url.search || url.hash) {
+      throw new Error("Signup legal source prefix must be a same-origin path.");
+    }
+    return url.pathname;
+  }
+  function attribute(element, name, fallback) {
+    return element.getAttribute(name)?.trim() || fallback;
+  }
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/form.ts
+  var ACCEPTED_VERSION_IDS_FIELD = "acceptedLegalDocumentVersionIds";
+  function syncSignupLegalFormValue(input) {
+    const selected = selectedVersionIds(input.checkboxes);
+    if (input.disabled) {
+      input.internals.setFormValue(null, serializeIds(selected));
+      input.internals.setValidity({});
+      return;
+    }
+    if (input.state.kind === "empty") {
+      input.internals.setFormValue(null, "[]");
+      input.internals.setValidity({});
+      return;
+    }
+    if (input.state.kind !== "ready") {
+      input.internals.setFormValue(null, "[]");
+      const message = input.state.kind === "loading" ? input.loadingMessage : input.errorMessage;
+      input.internals.setValidity({ customError: true }, message);
+      return;
+    }
+    if (selected.size === input.state.documents.length) {
+      const value = new FormData;
+      for (const document2 of input.state.documents) {
+        value.append(ACCEPTED_VERSION_IDS_FIELD, document2.versionId);
+      }
+      input.internals.setFormValue(value, serializeIds(selected));
+      input.internals.setValidity({});
+      return;
+    }
+    input.internals.setFormValue(null, serializeIds(selected));
+    const firstUnchecked = input.checkboxes.find((checkbox) => !checkbox.checked);
+    input.internals.setValidity({ valueMissing: true }, input.requiredMessage, firstUnchecked);
+  }
+  function selectedVersionIds(checkboxes) {
+    return new Set(checkboxes.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.dataset.versionId).filter((value) => Boolean(value)));
+  }
+  function applySelectedVersionIds(checkboxes, ids) {
+    const selected = new Set(ids);
+    for (const checkbox of checkboxes) {
+      checkbox.checked = selected.has(checkbox.dataset.versionId ?? "");
+    }
+  }
+  function restoredVersionIds(state) {
+    if (typeof state !== "string") {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(state);
+      return Array.isArray(parsed) && parsed.every((value) => typeof value === "string") ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  function serializeIds(ids) {
+    return JSON.stringify([...ids]);
+  }
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/requirements.ts
+  var MAX_DOCUMENTS = 16;
+  async function fetchSignupLegalRequirements(element, signal) {
+    const response = await fetch(signupLegalRequirementsUrl(element), {
+      credentials: "same-origin",
+      headers: { accept: "application/json" },
+      signal
+    });
+    if (!response.ok) {
+      throw new Error("Unable to load signup legal requirements.");
+    }
+    return parseSignupLegalRequirements(await response.json(), location.origin);
+  }
+  function parseSignupLegalRequirements(value, origin) {
+    if (!isRecord2(value) || !Array.isArray(value.documents) || value.documents.length > MAX_DOCUMENTS) {
+      throw new Error("Invalid signup legal requirements.");
+    }
+    const documentKeys = new Set;
+    const versionIds = new Set;
+    return value.documents.map((document2, index) => {
+      if (!isRecord2(document2) || !isRecord2(document2.page)) {
+        throw new Error(`Invalid signup legal requirement at index ${index}.`);
+      }
+      const documentKey = requiredString(document2.documentKey);
+      const versionId = requiredString(document2.versionId);
+      if (documentKeys.has(documentKey) || versionIds.has(versionId)) {
+        throw new Error("Duplicate signup legal requirement.");
+      }
+      documentKeys.add(documentKey);
+      versionIds.add(versionId);
+      requiredString(document2.contentHash);
+      requiredString(document2.page.id);
+      requiredString(document2.page.title);
+      return {
+        documentKey,
+        versionId,
+        label: requiredString(document2.label),
+        consentText: requiredString(document2.consentText),
+        href: safePageHref(requiredString(document2.page.path), origin)
+      };
+    });
+  }
+  function safePageHref(path, origin) {
+    if (!path.startsWith("/") || path.startsWith("//")) {
+      throw new Error("Signup legal page must use a same-origin path.");
+    }
+    const url = new URL(path, origin);
+    if (url.origin !== origin || !["http:", "https:"].includes(url.protocol)) {
+      throw new Error("Signup legal page must use a same-origin path.");
+    }
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+  function requiredString(value) {
+    if (typeof value !== "string" || !value.trim()) {
+      throw new Error("Invalid signup legal requirement string.");
+    }
+    return value.trim();
+  }
+  function isRecord2(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/styles.ts
+  var SIGNUP_LEGAL_CONSENT_STYLES = `
+    :host {
+        display: block;
+        color: var(--cms-auth-legal-text, inherit);
+        font: inherit;
+    }
+
+    :host([data-state="empty"]) {
+        display: none;
+    }
+
+    fieldset {
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    legend {
+        margin: 0 0 .75rem;
+        padding: 0;
+        color: var(--cms-auth-legal-heading, currentColor);
+        font: inherit;
+        font-weight: 700;
+    }
+
+    .documents {
+        display: grid;
+        gap: .75rem;
+    }
+
+    .requirement {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+        gap: .65rem;
+    }
+
+    input {
+        width: 1.125rem;
+        height: 1.125rem;
+        margin: .15rem 0 0;
+        accent-color: var(--cms-auth-legal-accent, currentColor);
+    }
+
+    input:focus-visible,
+    a:focus-visible,
+    button:focus-visible {
+        outline: 2px solid var(--cms-auth-legal-accent, currentColor);
+        outline-offset: 2px;
+    }
+
+    .copy {
+        display: grid;
+        gap: .25rem;
+    }
+
+    :host([appearance="compact"]) .copy {
+        display: block;
+    }
+
+    label {
+        cursor: pointer;
+    }
+
+    a {
+        width: fit-content;
+        color: var(--cms-auth-legal-link, currentColor);
+        text-decoration: underline;
+        text-underline-offset: .16em;
+    }
+
+    .status {
+        margin: 0;
+        color: var(--cms-auth-legal-muted, currentColor);
+    }
+
+    .status[data-kind="error"] {
+        color: var(--cms-auth-legal-error, #b42318);
+    }
+
+    button {
+        width: fit-content;
+        margin-top: .65rem;
+        border: 1px solid var(--cms-auth-legal-button-border, currentColor);
+        border-radius: var(--cms-auth-legal-button-radius, .4rem);
+        background: var(--cms-auth-legal-button-background, transparent);
+        color: var(--cms-auth-legal-button-text, currentColor);
+        cursor: pointer;
+        font: inherit;
+        padding: .45rem .7rem;
+    }
+
+    input:disabled,
+    button:disabled {
+        cursor: not-allowed;
+        opacity: .6;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+`;
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/view.ts
+  function renderSignupLegalConsent(root, state, copy, callbacks, appearance = "detailed") {
+    const document2 = root.ownerDocument;
+    const style = document2.createElement("style");
+    style.textContent = SIGNUP_LEGAL_CONSENT_STYLES;
+    const fieldset = document2.createElement("fieldset");
+    fieldset.setAttribute("part", "fieldset");
+    const legend = document2.createElement("legend");
+    legend.setAttribute("part", "legend");
+    legend.textContent = copy.heading;
+    if (appearance === "compact") {
+      legend.className = "sr-only";
+    }
+    fieldset.append(legend);
+    const checkboxes = state.kind === "ready" ? renderDocuments(fieldset, state.documents, state.selectedIds, callbacks.change, appearance) : [];
+    if (state.kind === "loading") {
+      fieldset.append(status(document2, copy.loadingLabel, "status"));
+    } else if (state.kind === "error") {
+      fieldset.append(status(document2, copy.loadErrorLabel, "alert"));
+      const retry = document2.createElement("button");
+      retry.type = "button";
+      retry.setAttribute("part", "retry");
+      retry.textContent = copy.retryLabel;
+      retry.addEventListener("click", callbacks.retry);
+      fieldset.append(retry);
+    }
+    root.replaceChildren(style, fieldset);
+    return checkboxes;
+  }
+  function renderDocuments(fieldset, documents, selectedIds, onChange, appearance) {
+    const owner = fieldset.ownerDocument;
+    const list = owner.createElement("div");
+    list.className = "documents";
+    list.setAttribute("part", "documents");
+    const checkboxes = documents.map((requirement, index) => {
+      const row = owner.createElement("div");
+      row.className = "requirement";
+      row.setAttribute("part", "requirement");
+      const checkbox = owner.createElement("input");
+      const checkboxId = `signup-legal-document-${index}`;
+      const linkId = `${checkboxId}-link`;
+      checkbox.id = checkboxId;
+      checkbox.type = "checkbox";
+      checkbox.required = true;
+      checkbox.checked = selectedIds.has(requirement.versionId);
+      checkbox.dataset.versionId = requirement.versionId;
+      checkbox.setAttribute("part", "checkbox");
+      checkbox.addEventListener("change", onChange);
+      const copy = owner.createElement("div");
+      copy.className = "copy";
+      const label = owner.createElement("label");
+      label.htmlFor = checkboxId;
+      label.setAttribute("part", "consent");
+      const link = owner.createElement("a");
+      link.id = linkId;
+      link.href = requirement.href;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.setAttribute("part", "link");
+      link.append(owner.createTextNode(requirement.label), newTabNotice(owner));
+      if (appearance === "compact") {
+        appendLinkedConsent(label, requirement.consentText, requirement.label, link);
+        copy.append(label);
+      } else {
+        checkbox.setAttribute("aria-describedby", linkId);
+        label.textContent = requirement.consentText;
+        copy.append(label, link);
+      }
+      row.append(checkbox, copy);
+      list.append(row);
+      return checkbox;
+    });
+    fieldset.append(list);
+    return checkboxes;
+  }
+  function appendLinkedConsent(label, consentText, documentLabel, link) {
+    const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
+    if (start < 0) {
+      label.append(consentText, " ", link);
+      return;
+    }
+    label.append(consentText.slice(0, start), link, consentText.slice(start + documentLabel.length));
+  }
+  function newTabNotice(document2) {
+    const notice = document2.createElement("span");
+    notice.className = "sr-only";
+    notice.dataset.newTabNotice = "";
+    return notice;
+  }
+  function status(document2, message, role) {
+    const element = document2.createElement("p");
+    element.className = "status";
+    element.setAttribute("part", "status");
+    element.setAttribute("role", role);
+    element.setAttribute("aria-live", role === "alert" ? "assertive" : "polite");
+    element.dataset.kind = role === "alert" ? "error" : "loading";
+    element.textContent = message;
+    return element;
+  }
+  function setNewTabNotices(root, label) {
+    for (const notice of Array.from(root.querySelectorAll("[data-new-tab-notice]"))) {
+      notice.textContent = ` (${label})`;
+    }
+  }
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/SignupLegalConsent.ts
+  var CMS_SIGNUP_LEGAL_CONSENT_TAG = "cms-signup-legal-consent";
+
+  class CmsSignupLegalConsent extends HTMLElement {
+    static formAssociated = true;
+    static observedAttributes = SIGNUP_LEGAL_CONSENT_ATTRIBUTES;
+    internals;
+    root;
+    state = { kind: "loading" };
+    checkboxes = [];
+    request = null;
+    requestSequence = 0;
+    disabledByForm = false;
+    restoredIds = null;
+    constructor() {
+      super();
+      this.root = this.attachShadow({ mode: "open" });
+      this.internals = this.attachInternals();
+    }
+    connectedCallback() {
+      this.render();
+      this.load();
+    }
+    disconnectedCallback() {
+      this.request?.abort();
+      this.request = null;
+    }
+    attributeChangedCallback(name, previous, current) {
+      if (!this.isConnected || previous === current) {
+        return;
+      }
+      if (name === "source-id" || name === "source-prefix") {
+        this.load();
+        return;
+      }
+      this.render(this.selectedIds());
+    }
+    formDisabledCallback(disabled) {
+      this.disabledByForm = disabled;
+      this.syncDisabled();
+      this.syncFormValue();
+    }
+    formResetCallback() {
+      for (const checkbox of this.checkboxes) {
+        checkbox.checked = false;
+      }
+      this.syncFormValue();
+    }
+    formStateRestoreCallback(state) {
+      const ids = restoredVersionIds(state);
+      if (this.state.kind !== "ready") {
+        this.restoredIds = ids;
+        return;
+      }
+      this.applySelection(ids);
+    }
+    async load() {
+      const sequence = ++this.requestSequence;
+      this.request?.abort();
+      const request = new AbortController;
+      this.request = request;
+      this.state = { kind: "loading" };
+      this.render();
+      try {
+        const documents = await fetchSignupLegalRequirements(this, request.signal);
+        if (request.signal.aborted || sequence !== this.requestSequence) {
+          return;
+        }
+        this.state = documents.length ? { kind: "ready", documents, selectedIds: new Set } : { kind: "empty" };
+        this.render();
+        const restoredIds = this.restoredIds;
+        this.restoredIds = null;
+        if (restoredIds && this.state.kind === "ready") {
+          this.applySelection(restoredIds);
+        }
+      } catch {
+        if (request.signal.aborted || sequence !== this.requestSequence) {
+          return;
+        }
+        this.state = { kind: "error" };
+        this.render();
+      } finally {
+        if (sequence === this.requestSequence) {
+          this.request = null;
+        }
+      }
+    }
+    render(selectedIds = new Set) {
+      if (this.state.kind === "ready") {
+        this.state = { ...this.state, selectedIds };
+      }
+      this.dataset.state = this.state.kind;
+      const copy = signupLegalConsentCopy(this);
+      this.checkboxes = renderSignupLegalConsent(this.root, this.state, copy, {
+        change: () => this.syncFormValue(),
+        retry: () => void this.load()
+      }, signupLegalConsentAppearance(this));
+      setNewTabNotices(this.root, copy.newTabLabel);
+      this.syncDisabled();
+      this.syncFormValue();
+    }
+    syncFormValue() {
+      const copy = signupLegalConsentCopy(this);
+      syncSignupLegalFormValue({
+        internals: this.internals,
+        state: this.state,
+        checkboxes: this.checkboxes,
+        disabled: this.isDisabled(),
+        loadingMessage: copy.loadingLabel,
+        errorMessage: copy.loadErrorLabel,
+        requiredMessage: copy.requiredMessage
+      });
+    }
+    applySelection(ids) {
+      applySelectedVersionIds(this.checkboxes, ids);
+      this.syncFormValue();
+    }
+    selectedIds() {
+      return selectedVersionIds(this.checkboxes);
+    }
+    syncDisabled() {
+      const disabled = this.isDisabled();
+      for (const checkbox of this.checkboxes) {
+        checkbox.disabled = disabled;
+      }
+      this.root.querySelector("button")?.toggleAttribute("disabled", disabled);
+    }
+    isDisabled() {
+      return this.disabledByForm || this.hasAttribute("disabled");
+    }
+  }
+
+  // ../../features/cms-auth/src/components/SignupLegalConsent/register.ts
+  if (!customElements.get(CMS_SIGNUP_LEGAL_CONSENT_TAG)) {
+    customElements.define(CMS_SIGNUP_LEGAL_CONSENT_TAG, CmsSignupLegalConsent);
+  }
   // src/components/admin/Actions/ProviderActions/ProviderActions.ts
   class CmsProviderActions extends HTMLElement {
     static get observedAttributes() {
@@ -14731,10 +15279,10 @@ button {
       const attestations = {};
       for (const row of Array.from(form.querySelectorAll("[data-manual-id]"))) {
         const id = row.dataset.manualId;
-        const status = row.querySelector("select").value;
+        const status2 = row.querySelector("select").value;
         const evidence = row.querySelector("input").value;
         if (evidence.trim()) {
-          attestations[id] = { status, evidence };
+          attestations[id] = { status: status2, evidence };
         }
       }
       const message = this.query("[data-snapshot-message]");
@@ -15610,8 +16158,8 @@ w13c-lateral-menu-item {
   function titleCase(value) {
     return value ? `${value[0].toUpperCase()}${value.slice(1)}` : value;
   }
-  function statusTone(status) {
-    return status.startsWith("5") ? "is-danger" : status.startsWith("4") ? "is-warning" : "";
+  function statusTone(status2) {
+    return status2.startsWith("5") ? "is-danger" : status2.startsWith("4") ? "is-warning" : "";
   }
   function referrerLabel(key) {
     if (key === "__none__") {
@@ -16386,9 +16934,9 @@ w13c-lateral-menu-item {
 
   class EndpointPerformanceUnavailableError extends Error {
     status;
-    constructor(status) {
-      super(`Endpoint performance request failed with status ${status}`);
-      this.status = status;
+    constructor(status2) {
+      super(`Endpoint performance request failed with status ${status2}`);
+      this.status = status2;
     }
   }
   function readEndpointPerformanceQuery(search = window.location.search) {
@@ -16548,8 +17096,8 @@ w13c-lateral-menu-item {
     ].join(" · ");
     renderBars(query(root, '[data-role="statuses"]'), detail.statuses.map((row) => ({ key: row.statusClass, count: row.count })), {
       empty: "No status distribution is available.",
-      label: (status) => `HTTP ${status}`,
-      tone: (status) => status === "5xx" ? "is-danger" : status === "4xx" ? "is-warning" : ""
+      label: (status2) => `HTTP ${status2}`,
+      tone: (status2) => status2 === "5xx" ? "is-danger" : status2 === "4xx" ? "is-warning" : ""
     });
     renderBars(query(root, '[data-role="histogram"]'), detail.latencyHistogram.map((row) => ({
       key: row.upperBoundMs === null ? "overflow" : String(row.upperBoundMs),
@@ -18038,9 +18586,9 @@ cms-shell-detail {
     select.replaceChildren(...state.settings.themes.map(themeOption));
     select.value = theme.id;
     const active = theme.id === state.settings.activeThemeId;
-    const status = query4(root, "[data-theme-status]");
-    status.textContent = active ? "Active" : "Draft";
-    status.setAttribute("color", active ? "success" : "warning");
+    const status2 = query4(root, "[data-theme-status]");
+    status2.textContent = active ? "Active" : "Draft";
+    status2.setAttribute("color", active ? "success" : "warning");
     query4(root, "[data-save-theme]").toggleAttribute("disabled", !state.canPersist);
     query4(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
     const mode = source2.supportsModes ? state.mode : "light";
@@ -19507,7 +20055,7 @@ w13c-lateral-menu-item {
     if (depth >= DASHBOARD_VISIBILITY_MAX_DEPTH || ++budget.nodes > DASHBOARD_VISIBILITY_MAX_NODES) {
       return invalid();
     }
-    if (!isRecord2(value2)) {
+    if (!isRecord3(value2)) {
       return invalid();
     }
     const hasAll = Object.hasOwn(value2, "all");
@@ -19552,7 +20100,7 @@ w13c-lateral-menu-item {
   function isVisibilityValue(value2) {
     return value2 === null || typeof value2 === "string" || typeof value2 === "boolean" || typeof value2 === "number" && Number.isFinite(value2);
   }
-  function isRecord2(value2) {
+  function isRecord3(value2) {
     return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
   // src/components/admin/Resources/Dashboards/runtime/expressions.ts
@@ -20863,10 +21411,10 @@ button {
     input.setAttribute("label", field2.label);
     input.setAttribute("type", "number");
     input.setAttribute("value", String(field2.value));
-    for (const attribute of ["min", "max", "step"]) {
-      const value2 = field2[attribute];
+    for (const attribute2 of ["min", "max", "step"]) {
+      const value2 = field2[attribute2];
       if (value2 !== undefined) {
-        input.setAttribute(attribute, String(value2));
+        input.setAttribute(attribute2, String(value2));
       }
     }
     applyInputMetadata(input, field2);
@@ -21172,10 +21720,10 @@ button {
       control.dataset.schemaDirty = "true";
     }
   }
-  function statusMessage(status) {
+  function statusMessage(status2) {
     const message = document.createElement("span");
-    message.className = `detail-schema-status detail-schema-status-${status ?? "loading"}`;
-    message.textContent = status === "error" ? "Dynamic fields are temporarily unavailable. Existing values are preserved." : status === "empty" ? "No dynamic fields are configured." : "Loading dynamic fields…";
+    message.className = `detail-schema-status detail-schema-status-${status2 ?? "loading"}`;
+    message.textContent = status2 === "error" ? "Dynamic fields are temporarily unavailable. Existing values are preserved." : status2 === "empty" ? "No dynamic fields are configured." : "Loading dynamic fields…";
     return message;
   }
   function recordValue2(value2) {
@@ -21245,7 +21793,7 @@ button {
     const clone = structuredClone(value2);
     return {
       ...clone,
-      items: Array.isArray(clone.items) ? clone.items.filter(isRecord4) : [],
+      items: Array.isArray(clone.items) ? clone.items.filter(isRecord5) : [],
       fields: Array.isArray(clone.fields) ? clone.fields : []
     };
   }
@@ -21295,7 +21843,7 @@ button {
     const positionPath = value2.positionPath ?? "position";
     value2.items.forEach((item, index) => setValueAt(item, positionPath, index));
   }
-  function isRecord4(value2) {
+  function isRecord5(value2) {
     return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
 
@@ -21717,12 +22265,12 @@ button {
     if (Array.isArray(value2)) {
       return value2.some(hasTableValue);
     }
-    if (isRecord5(value2)) {
+    if (isRecord6(value2)) {
       return Object.values(value2).some(hasTableValue);
     }
     return String(value2 ?? "").trim().length > 0;
   }
-  function isRecord5(value2) {
+  function isRecord6(value2) {
     return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
   function tableCellDisplayValue(value2, row, column) {
@@ -24002,11 +24550,11 @@ slot {
       }
     };
   }
-  function product(id, title, status, vendor, category, visibility2, updated) {
+  function product(id, title, status2, vendor, category, visibility2, updated) {
     return {
       id,
       title,
-      status,
+      status: status2,
       vendor,
       category,
       visibility: visibility2,
@@ -25914,7 +26462,7 @@ p {
       return;
     }
     if (path.startsWith("body.")) {
-      if (!isRecord6(draft.body)) {
+      if (!isRecord7(draft.body)) {
         draft.body = {};
       }
       setPathValue(draft.body, path.slice("body.".length), value2);
@@ -25925,7 +26473,7 @@ p {
     }
   }
   function setPathValue(target2, path, value2) {
-    if (!isRecord6(target2)) {
+    if (!isRecord7(target2)) {
       return;
     }
     const parts = path.split(".").filter(Boolean);
@@ -25935,7 +26483,7 @@ p {
         current[part] = value2;
         return;
       }
-      if (!isRecord6(current[part])) {
+      if (!isRecord7(current[part])) {
         current[part] = {};
       }
       current = current[part];
@@ -25952,7 +26500,7 @@ p {
       if (Array.isArray(current) && /^\d+$/.test(part)) {
         return current[Number(part)];
       }
-      if (!isRecord6(current)) {
+      if (!isRecord7(current)) {
         return;
       }
       return current[part];
@@ -25967,7 +26515,7 @@ p {
   }
   function parseObject(value2, label2) {
     const parsed = parseJson3(value2 || "{}", label2);
-    if (!isRecord6(parsed)) {
+    if (!isRecord7(parsed)) {
       throw new Error(`${label2} must be a JSON object.`);
     }
     return parsed;
@@ -25995,7 +26543,7 @@ p {
     }
     return value2;
   }
-  function isRecord6(value2) {
+  function isRecord7(value2) {
     return typeof value2 === "object" && value2 !== null && !Array.isArray(value2);
   }
 
@@ -26384,15 +26932,15 @@ pre {
   }
   function resultSection() {
     const section = detailSection("main", "Result");
-    const status = div("status", "Not executed");
+    const status2 = div("status", "Not executed");
     const message = div("result-message empty", "Run the function to see its result.");
     const raw = document.createElement("details");
-    status.dataset.role = "result-status";
+    status2.dataset.role = "result-status";
     message.dataset.role = "result-message";
     raw.className = "raw-result";
     raw.append(summary("Raw response"), pre(""));
     raw.querySelector("pre").dataset.role = "result-body";
-    section.append(div("result-header", status), message, raw);
+    section.append(div("result-header", status2), message, raw);
     return section;
   }
   function functionSummarySection(detail) {
@@ -26532,10 +27080,10 @@ pre {
     showResult(result) {
       this.setResult(`status ${result.ok ? "ok" : "error"}`, result.status ? String(result.status) : "Invalid input", readableResult(result), stringify(result.body));
     }
-    setResult(statusClass, status, message, body) {
+    setResult(statusClass, status2, message, body) {
       if (this.resultStatus) {
         this.resultStatus.className = statusClass;
-        this.resultStatus.textContent = status;
+        this.resultStatus.textContent = status2;
       }
       if (this.resultMessage) {
         this.resultMessage.textContent = message;
@@ -28064,6 +28612,13 @@ details[open] > summary > .chevron {
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
   }
+  async function getPageLinks() {
+    const response = await fetch(route3("/api/page/links?visible=published"));
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    return response.json();
+  }
   async function postJson(url, body) {
     const response = await fetch(url, {
       method: "POST",
@@ -28076,8 +28631,210 @@ details[open] > summary > .chevron {
     return response.json();
   }
 
-  // src/components/admin/Resources/Integrations/fields.ts
-  function renderFields(root, template4, definition) {
+  // src/components/admin/Resources/Integrations/fields/selects.ts
+  function configureSelect(control, options2, value3, multiple) {
+    addOptions(control, options2);
+    control.multiple = multiple;
+    const selected2 = new Set(Array.isArray(value3) ? value3 : typeof value3 === "string" ? [value3] : []);
+    for (const option3 of Array.from(control.options)) {
+      option3.selected = selected2.has(option3.value);
+    }
+  }
+  function configurePageLinkSelect(control, value3, pageLinks) {
+    const current = typeof value3 === "string" ? value3 : "";
+    addOptions(control, current ? [{ label: current, value: current }] : [], "Select a page");
+    if (!pageLinks) {
+      return;
+    }
+    pageLinks.then((links) => {
+      addOptions(control, links.map((link) => ({ label: `${link.title} (${link.path})`, value: link.path })), "Select a page");
+      control.value = current;
+    }, () => {
+      control.options[0].textContent = "Pages could not be loaded";
+    });
+  }
+  function addOptions(control, options2, placeholder) {
+    control.replaceChildren();
+    if (placeholder !== undefined) {
+      control.append(option3(placeholder, ""));
+    }
+    for (const item of options2) {
+      control.append(option3(item.label, item.value));
+    }
+  }
+  function option3(label3, value3) {
+    const element = document.createElement("option");
+    element.textContent = label3;
+    element.value = value3;
+    return element;
+  }
+
+  // src/components/admin/Resources/Integrations/fields/objectList.ts
+  function objectListControl(input2, answer, loadPageLinks) {
+    const root = document.createElement("div");
+    root.className = "object-list";
+    root.dataset.objectListName = input2.name;
+    const items = document.createElement("div");
+    items.className = "object-list-items";
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "object-list-add";
+    add.textContent = input2.addLabel ?? "Add item";
+    add.addEventListener("click", () => {
+      items.append(objectListItem(input2, {}, loadPageLinks));
+      refreshList2(input2, root);
+    });
+    root.append(items, add);
+    const values = Array.isArray(answer) ? answer : [];
+    const initialCount = values.length || input2.minItems || (input2.required ? 1 : 0);
+    for (let index = 0;index < initialCount; index++) {
+      items.append(objectListItem(input2, record3(values[index]), loadPageLinks));
+    }
+    refreshList2(input2, root);
+    return root;
+  }
+  function collectObjectListAnswer(root, input2) {
+    const list = root.querySelector(`[data-object-list-name="${cssEscape3(input2.name)}"]`);
+    if (!list) {
+      return;
+    }
+    return Array.from(list.querySelectorAll("[data-object-list-item]")).map((item) => {
+      const value3 = {};
+      for (const field3 of input2.fields) {
+        const control = item.querySelector(`[data-object-field="${cssEscape3(field3.name)}"]`);
+        value3[field3.name] = field3.type === "boolean" ? control.checked : field3.type === "select" && field3.multiple ? Array.from(control.selectedOptions, (option4) => option4.value) : control.value;
+      }
+      return value3;
+    });
+  }
+  function objectListItem(input2, value3, loadPageLinks) {
+    const item = document.createElement("article");
+    item.className = "object-list-item";
+    item.dataset.objectListItem = "";
+    const header = document.createElement("div");
+    header.className = "object-list-item-header";
+    const title2 = document.createElement("strong");
+    title2.dataset.objectListItemTitle = "";
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "object-list-remove";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", () => {
+      const root = item.closest("[data-object-list-name]");
+      item.remove();
+      refreshList2(input2, root);
+    });
+    header.append(title2, remove);
+    const fields = document.createElement("div");
+    fields.className = "object-list-item-fields";
+    for (const field3 of input2.fields) {
+      fields.append(fieldControl2(field3, value3[field3.name], loadPageLinks));
+    }
+    item.append(header, fields);
+    return item;
+  }
+  function fieldControl2(field3, value3, loadPageLinks) {
+    const label3 = document.createElement("label");
+    label3.className = "object-list-item-field";
+    const caption = document.createElement("span");
+    caption.textContent = field3.label;
+    const control = field3.type === "textarea" ? document.createElement("textarea") : field3.type === "select" || field3.type === "page-link" ? document.createElement("select") : document.createElement("input");
+    control.dataset.objectField = field3.name;
+    control.required = field3.required === true;
+    if (field3.type === "boolean") {
+      control.type = "checkbox";
+      control.checked = value3 === true;
+    } else if (field3.type === "textarea") {
+      control.rows = 3;
+      control.value = typeof value3 === "string" ? value3 : "";
+    } else if (field3.type === "select") {
+      configureSelect(control, field3.options, value3, field3.multiple === true);
+    } else if (field3.type === "page-link") {
+      configurePageLinkSelect(control, value3, loadPageLinks?.());
+    } else {
+      control.type = "text";
+      control.value = typeof value3 === "string" ? value3 : "";
+    }
+    label3.append(caption, control);
+    return label3;
+  }
+  function refreshList2(input2, root) {
+    const items = Array.from(root.querySelectorAll("[data-object-list-item]"));
+    items.forEach((item, index) => {
+      item.querySelector("[data-object-list-item-title]").textContent = `Item ${index + 1}`;
+      item.querySelector(".object-list-remove").disabled = items.length <= (input2.minItems ?? 0);
+    });
+    const add = root.querySelector(".object-list-add");
+    add.disabled = input2.maxItems !== undefined && items.length >= input2.maxItems;
+  }
+  function record3(value3) {
+    return typeof value3 === "object" && value3 !== null && !Array.isArray(value3) ? value3 : {};
+  }
+  function cssEscape3(value3) {
+    return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
+  }
+
+  // src/components/admin/Resources/Integrations/fields/value.ts
+  function valueControl(input2, answer) {
+    if (input2.type === "json") {
+      return textarea3(input2, answer);
+    }
+    if (input2.type === "select") {
+      return select3(input2, answer);
+    }
+    const element = document.createElement("input");
+    element.name = input2.name;
+    element.type = input2.type === "password" ? "password" : input2.type === "boolean" ? "checkbox" : "text";
+    if (input2.type === "boolean") {
+      element.checked = typeof answer === "boolean" ? answer : input2.defaultValue === true;
+    } else {
+      const value3 = answer ?? input2.defaultValue;
+      element.value = value3 == null ? "" : String(value3);
+    }
+    element.required = input2.required === true;
+    return element;
+  }
+  function collectValueAnswer(root, input2) {
+    const element = root.querySelector(`[name="${cssEscape4(input2.name)}"]`);
+    if (!element) {
+      return;
+    }
+    if (input2.type === "boolean") {
+      return element.checked;
+    }
+    if (input2.type === "json") {
+      return JSON.parse(element.value || "null");
+    }
+    return element.value;
+  }
+  function select3(input2, answer) {
+    const element = document.createElement("select");
+    element.name = input2.name;
+    for (const option4 of input2.options ?? []) {
+      const child = document.createElement("option");
+      child.value = option4.value;
+      child.textContent = option4.label;
+      element.append(child);
+    }
+    element.value = typeof answer === "string" ? answer : String(input2.defaultValue ?? "");
+    element.required = input2.required === true;
+    return element;
+  }
+  function textarea3(input2, answer) {
+    const element = document.createElement("textarea");
+    element.name = input2.name;
+    element.rows = 6;
+    const value3 = answer ?? input2.defaultValue;
+    element.value = value3 == null ? "" : typeof value3 === "string" ? value3 : JSON.stringify(value3);
+    element.required = input2.required === true;
+    return element;
+  }
+  function cssEscape4(value3) {
+    return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
+  }
+
+  // src/components/admin/Resources/Integrations/fields/index.ts
+  function renderFields(root, template4, definition, answers = {}) {
     root.replaceChildren();
     if (!definition.inputs.length) {
       const empty = document.createElement("p");
@@ -28086,80 +28843,43 @@ details[open] > summary > .chevron {
       root.append(empty);
       return;
     }
+    let pageLinks;
+    const loadPageLinks = definition.inputs.some((input2) => input2.type === "object-list" && input2.fields.some((field3) => field3.type === "page-link")) ? () => pageLinks ??= getPageLinks() : undefined;
     for (const input2 of definition.inputs) {
-      const row = template4.content.firstElementChild.cloneNode(true);
-      row.querySelector("[data-label]").textContent = input2.label;
-      row.querySelector("[data-hint]").textContent = hint(input2);
-      row.querySelector("[data-control]").append(control(input2));
-      root.append(row);
+      root.append(inputRow(template4, input2, answers[input2.name], loadPageLinks));
     }
   }
   function collectAnswers(root, definition) {
     const answers = {};
     for (const input2 of definition.inputs) {
-      const element = root.querySelector(`[name="${input2.name}"]`);
-      if (!element) {
-        continue;
-      }
-      if (input2.type === "boolean") {
-        answers[input2.name] = element.checked;
-      } else if (input2.type === "json") {
-        answers[input2.name] = JSON.parse(element.value || "null");
-      } else {
-        answers[input2.name] = element.value;
+      const value3 = input2.type === "object-list" ? collectObjectListAnswer(root, input2) : collectValueAnswer(root, input2);
+      if (value3 !== undefined) {
+        answers[input2.name] = value3;
       }
     }
     return answers;
   }
-  function control(input2) {
-    if (input2.type === "json") {
-      return textarea3(input2, 6);
+  function inputRow(template4, input2, answer, loadPageLinks) {
+    if (input2.type === "object-list") {
+      const row2 = document.createElement("section");
+      row2.className = "field object-list-fieldset";
+      const label3 = document.createElement("strong");
+      label3.className = "object-list-label";
+      label3.textContent = input2.label;
+      row2.append(label3, objectListControl(input2, answer, loadPageLinks));
+      return row2;
     }
-    if (input2.type === "select") {
-      return select3(input2);
-    }
-    const element = document.createElement("input");
-    element.name = input2.name;
-    element.type = input2.type === "password" ? "password" : input2.type === "boolean" ? "checkbox" : "text";
-    if (input2.defaultValue !== undefined && input2.type !== "boolean") {
-      element.value = String(input2.defaultValue);
-    }
-    if (input2.defaultValue === true && input2.type === "boolean") {
-      element.checked = true;
-    }
-    if (input2.required) {
-      element.required = true;
-    }
-    return element;
-  }
-  function select3(input2) {
-    const element = document.createElement("select");
-    element.name = input2.name;
-    for (const option3 of input2.options ?? []) {
-      const child = document.createElement("option");
-      child.value = option3.value;
-      child.textContent = option3.label;
-      element.append(child);
-    }
-    return element;
-  }
-  function textarea3(input2, rows) {
-    const element = document.createElement("textarea");
-    element.name = input2.name;
-    element.rows = rows;
-    if (typeof input2.defaultValue === "string") {
-      element.value = input2.defaultValue;
-    }
-    return element;
+    const row = template4.content.firstElementChild.cloneNode(true);
+    row.querySelector("[data-label]").textContent = input2.label;
+    row.querySelector("[data-hint]").textContent = hint(input2);
+    row.querySelector("[data-control]").append(valueControl(input2, answer));
+    return row;
   }
   function hint(input2) {
-    if (input2.secret || input2.type === "password") {
+    if (input2.type !== "object-list" && (input2.secret || input2.type === "password")) {
       return "Stored as a secret.";
     }
-    if (input2.required) {
-      return "Required.";
-    }
-    return "";
+    return input2.required ? "Required." : "";
   }
 
   // src/components/admin/Resources/Integrations/domain.ts
@@ -28425,11 +29145,11 @@ details[open] > summary > .chevron {
     }
     return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
-  function statusLabel(status) {
-    if (status === "success") {
+  function statusLabel(status2) {
+    if (status2 === "success") {
       return "Active";
     }
-    if (status === "failed") {
+    if (status2 === "failed") {
       return "Failed";
     }
     return "Pending";
@@ -28664,10 +29384,10 @@ details[open] > summary > .chevron {
     row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
     text4(row, "[data-label]", installation.label);
     text4(row, "[data-kind]", installation.id);
-    const status = row.querySelector("[data-status]");
-    if (status) {
-      status.textContent = statusLabel(installation.status);
-      status.classList.add(`status-${installation.status}`);
+    const status2 = row.querySelector("[data-status]");
+    if (status2) {
+      status2.textContent = statusLabel(installation.status);
+      status2.classList.add(`status-${installation.status}`);
     }
     appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
     text4(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
@@ -28702,17 +29422,14 @@ details[open] > summary > .chevron {
     const shell = cloneElement("setup-shell");
     text4(shell, "[data-title]", `Install ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
-    const status = shell.querySelector("[data-setup-status]");
-    status.textContent = options2.error ?? "";
-    status.classList.toggle("is-error", Boolean(options2.error));
+    const status2 = shell.querySelector("[data-setup-status]");
+    status2.textContent = options2.error ?? "";
+    status2.classList.toggle("is-error", Boolean(options2.error));
     renderResourceRows(shell.querySelector("[data-resources]"), resourceRows(definition));
     renderLinkedPlaceholder(shell.querySelector("[data-linked]"));
     renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
     host.query("[data-detail-view]").replaceChildren(shell);
-    renderFields(host.query("[data-fields]"), host.query("[data-field-template]"), definition);
-    if (options2.answers) {
-      applyAnswers(host.query("[data-fields]"), options2.answers);
-    }
+    renderFields(host.query("[data-fields]"), host.query("[data-field-template]"), definition, options2.answers);
   }
   function renderImporting(host, definition, answers) {
     const shell = cloneElement("importing-shell");
@@ -28730,22 +29447,6 @@ details[open] > summary > .chevron {
       { label: "Secrets", value: rows.filter((row) => row.type === "Secret").length },
       { label: "Connectors", value: rows.filter((row) => row.type === "Connector").length }
     ];
-  }
-  function applyAnswers(root, answers) {
-    for (const [name, value3] of Object.entries(answers)) {
-      const element = root.querySelector(`[name="${cssEscape3(name)}"]`);
-      if (!element) {
-        continue;
-      }
-      if (element instanceof HTMLInputElement && element.type === "checkbox") {
-        element.checked = value3 === true;
-      } else {
-        element.value = value3 == null ? "" : typeof value3 === "string" ? value3 : JSON.stringify(value3);
-      }
-    }
-  }
-  function cssEscape3(value3) {
-    return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
   }
 
   // src/components/admin/Resources/Integrations/ui/actions.ts
@@ -28821,25 +29522,25 @@ details[open] > summary > .chevron {
     if (!id) {
       return;
     }
-    const status = host.querySelector("[data-action-status]");
+    const status2 = host.querySelector("[data-action-status]");
     button2.setAttribute("aria-busy", "true");
     button2.textContent = "Syncing";
-    if (status) {
-      status.textContent = "";
+    if (status2) {
+      status2.textContent = "";
     }
     try {
       await rerunIntegrationInstallation(id);
       await host.waitForBoundData(() => true);
       button2.removeAttribute("aria-busy");
       button2.textContent = "Run sync";
-      if (status) {
-        status.textContent = "Synced";
+      if (status2) {
+        status2.textContent = "Synced";
       }
     } catch (error) {
       button2.removeAttribute("aria-busy");
       button2.textContent = "Run sync";
-      if (status) {
-        status.textContent = error instanceof Error ? error.message : "Sync failed";
+      if (status2) {
+        status2.textContent = error instanceof Error ? error.message : "Sync failed";
       }
     }
   }
@@ -29372,8 +30073,78 @@ button[slot="back"] svg {
 }
 
 .setup-fields .empty,
-.setup-fields .field:has(textarea) {
+.setup-fields .field:has(textarea),
+.object-list-fieldset {
     grid-column: 1 / -1;
+}
+
+.object-list-fieldset {
+    display: grid;
+    gap: 8px;
+}
+
+.object-list {
+    display: grid;
+    gap: 10px;
+}
+
+.object-list-items {
+    display: grid;
+    gap: 10px;
+}
+
+.object-list-item {
+    display: grid;
+    gap: 10px;
+    border: 1px solid #dfe5e2;
+    border-radius: 7px;
+    padding: 12px;
+}
+
+.object-list-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.object-list-item-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.object-list-item-field {
+    display: grid;
+    gap: 5px;
+}
+
+.object-list-item-field:has(textarea),
+.object-list-item-field:has(select[multiple]) {
+    grid-column: 1 / -1;
+}
+
+.object-list-add,
+.object-list-remove {
+    width: fit-content;
+    border: 1px solid #cad4d0;
+    border-radius: 6px;
+    background: #fff;
+    padding: 7px 10px;
+    color: #24332e;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.object-list-remove {
+    color: #8f2929;
+}
+
+.object-list-add:disabled,
+.object-list-remove:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
 }
 
 .installing-state {
@@ -29473,7 +30244,8 @@ button[slot="back"]:disabled {
     }
 
     .filters,
-    .setup-fields {
+    .setup-fields,
+    .object-list-item-fields {
         grid-template-columns: 1fr;
     }
 
@@ -29954,7 +30726,7 @@ button.run:disabled {
   function checkbox2(root, name) {
     return input2(root, name);
   }
-  function option3(value3, label3) {
+  function option4(value3, label3) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label3;
@@ -30695,18 +31467,18 @@ details[open] > summary > .chevron {
   function populateSources(host, sources) {
     const sourceSelect = select4(host, "source");
     for (const source2 of sources) {
-      sourceSelect.append(option3(source2.id, source2.label));
+      sourceSelect.append(option4(source2.id, source2.label));
     }
   }
   function syncEndpointOptions(host, sources) {
     const endpointSelect = select4(host, "endpoint");
     const source2 = sources.find((item) => item.id === select4(host, "source").value);
-    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option3(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
+    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option4(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
   }
   function populateFunctions(host, functions) {
     const functionSelect = select4(host, "function");
     for (const fn2 of functions) {
-      functionSelect.append(option3(fn2.id, `${fn2.label} (${fn2.method})`));
+      functionSelect.append(option4(fn2.id, `${fn2.label} (${fn2.method})`));
     }
   }
   function syncFunctionContract(host, functions) {
@@ -31780,7 +32552,7 @@ button:hover {
     controls.className = "param-controls";
     const mode = document.createElement("select");
     mode.className = "param-mode";
-    mode.append(option4("queryParam", "Query param"), option4("raw", "Raw value"), option4("state", "Page state"));
+    mode.append(option5("queryParam", "Query param"), option5("raw", "Raw value"), option5("state", "Page state"));
     const value3 = document.createElement("input");
     value3.className = "param-value";
     value3.placeholder = name;
@@ -31791,7 +32563,7 @@ button:hover {
     controls.append(mode, value3);
     return controls;
   }
-  function option4(value3, label3) {
+  function option5(value3, label3) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label3;
@@ -31803,7 +32575,7 @@ button:hover {
     return element;
   }
   function selectOption(select5, value3) {
-    const index = Array.from(select5.options).findIndex((option5) => option5.value === value3);
+    const index = Array.from(select5.options).findIndex((option6) => option6.value === value3);
     if (index >= 0) {
       select5.selectedIndex = index;
     }
@@ -31881,7 +32653,7 @@ button:hover {
     label3.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
-    trigger.append(option5("auto", "Auto"), option5("submit", "Submit"), option5("change", "Change"));
+    trigger.append(option6("auto", "Auto"), option6("submit", "Submit"), option6("change", "Change"));
     selectOption2(trigger, value3);
     label3.append(trigger);
     return label3;
@@ -31923,14 +32695,14 @@ button:hover {
       }, initialBinding?.body?.[field3.name]));
     }
   }
-  function option5(value3, label3) {
+  function option6(value3, label3) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label3;
     return element;
   }
   function selectOption2(select5, value3) {
-    const index = Array.from(select5.options).findIndex((option6) => option6.value === value3);
+    const index = Array.from(select5.options).findIndex((option7) => option7.value === value3);
     if (index >= 0) {
       select5.selectedIndex = index;
     }
@@ -32082,17 +32854,17 @@ button:hover {
   }
   function selectMethodFilter(filter, value3) {
     const options2 = Array.from(filter.options);
-    const index = options2.findIndex((option6) => option6.value === value3);
+    const index = options2.findIndex((option7) => option7.value === value3);
     filter.selectedIndex = index >= 0 ? index : 0;
-    options2.forEach((option6, optionIndex) => {
-      option6.selected = optionIndex === filter.selectedIndex;
-      option6.toggleAttribute("selected", option6.selected);
+    options2.forEach((option7, optionIndex) => {
+      option7.selected = optionIndex === filter.selectedIndex;
+      option7.toggleAttribute("selected", option7.selected);
     });
     filter.setAttribute("value", options2[filter.selectedIndex]?.value ?? "GET");
   }
   function selectedMethodFilter(filter) {
     const options2 = Array.from(filter.options);
-    const selected2 = options2.find((option6) => option6.selected);
+    const selected2 = options2.find((option7) => option7.selected);
     if (selected2?.value) {
       return selected2.value;
     }
@@ -32100,7 +32872,7 @@ button:hover {
     if (selectedIndexValue) {
       return selectedIndexValue;
     }
-    const selectedAttribute = options2.find((option6) => option6.hasAttribute("selected"));
+    const selectedAttribute = options2.find((option7) => option7.hasAttribute("selected"));
     return selectedAttribute?.value ?? filter.getAttribute("value") ?? "GET";
   }
 
@@ -33018,33 +33790,33 @@ textarea { min-height: 92px; resize: vertical; }
     const select5 = document.createElement("select");
     select5.className = "field-path";
     for (const field3 of fields) {
-      const option6 = document.createElement("option");
-      option6.value = field3.path;
-      option6.textContent = `${field3.scopeLabel}: ${field3.path}`;
-      select5.append(option6);
+      const option7 = document.createElement("option");
+      option7.value = field3.path;
+      option7.textContent = `${field3.scopeLabel}: ${field3.path}`;
+      select5.append(option7);
     }
     select5.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
     select5.addEventListener("change", () => {
       draft.path = select5.options.item(select5.selectedIndex)?.value ?? "";
       onChange(false);
     });
-    return control2("Field", select5);
+    return control("Field", select5);
   }
   function operatorSelect(draft, onChange) {
     const select5 = document.createElement("select");
     select5.className = "field-operator";
     for (const operator of OPERATORS) {
-      const option6 = document.createElement("option");
-      option6.value = operator.value;
-      option6.textContent = operator.label;
-      select5.append(option6);
+      const option7 = document.createElement("option");
+      option7.value = operator.value;
+      option7.textContent = operator.label;
+      select5.append(option7);
     }
     select5.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
     select5.addEventListener("change", () => {
       draft.operator = select5.options.item(select5.selectedIndex)?.value ?? "truthy";
       onChange(true);
     });
-    return control2("Operator", select5);
+    return control("Operator", select5);
   }
   function valueInput2(draft, onChange) {
     const input3 = document.createElement("input");
@@ -33055,12 +33827,12 @@ textarea { min-height: 92px; resize: vertical; }
       draft.value = input3.value;
       onChange(false);
     });
-    return control2("Value", input3);
+    return control("Value", input3);
   }
   function operatorNeedsValue(operator) {
     return OPERATORS.find((candidate) => candidate.value === operator)?.needsValue === true;
   }
-  function control2(labelText, controlElement) {
+  function control(labelText, controlElement) {
     const wrapper = document.createElement("label");
     wrapper.className = "control";
     const text5 = document.createElement("span");
@@ -33833,33 +34605,33 @@ dd {
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
-  function normalizeBlockPickerOption(option6) {
-    if (option6.item) {
+  function normalizeBlockPickerOption(option7) {
+    if (option7.item) {
       return {
-        ...option6,
-        kind: option6.item.kind
+        ...option7,
+        kind: option7.item.kind
       };
     }
-    if (!option6.entry) {
+    if (!option7.entry) {
       throw new Error("Block picker option requires either item or entry.");
     }
     return {
-      ...option6,
+      ...option7,
       kind: "block",
       item: {
         kind: "block",
-        entry: option6.entry
+        entry: option7.entry
       }
     };
   }
-  function blockPickerOptionItem(option6) {
-    if (option6.item) {
-      return option6.item;
+  function blockPickerOptionItem(option7) {
+    if (option7.item) {
+      return option7.item;
     }
-    if (option6.entry) {
+    if (option7.entry) {
       return {
         kind: "block",
-        entry: option6.entry
+        entry: option7.entry
       };
     }
     throw new Error("Block picker option requires either item or entry.");
@@ -33903,54 +34675,54 @@ dd {
   function blockPickerIconText(item) {
     return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
   }
-  function blockPickerCategoryLabel(option6) {
-    const item = blockPickerOptionItem(option6);
+  function blockPickerCategoryLabel(option7) {
+    const item = blockPickerOptionItem(option7);
     const category = blockPickerItemCategory(item) ?? blockPickerSourceLabel(item.kind);
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option6, query7) {
+  function blockPickerOptionMatches(option7, query7) {
     if (!query7) {
       return true;
     }
-    const item = blockPickerOptionItem(option6);
+    const item = blockPickerOptionItem(option7);
     return [
       blockPickerItemLabel(item),
       blockPickerItemDescription(item),
       blockPickerItemCategory(item),
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
-      option6.slotLabel
+      option7.slotLabel
     ].some((value3) => value3?.toLowerCase().includes(query7));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
   function blockPickerVisibleOptions(group, source2, category, query7) {
-    return group?.options.filter((option6) => {
-      const item = blockPickerOptionItem(option6);
+    return group?.options.filter((option7) => {
+      const item = blockPickerOptionItem(option7);
       if (item.kind !== source2) {
         return false;
       }
-      if (category && blockPickerCategoryLabel(option6) !== category) {
+      if (category && blockPickerCategoryLabel(option7) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option6, query7);
+      return blockPickerOptionMatches(option7, query7);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
-    return group?.options.filter((option6) => blockPickerOptionItem(option6).kind === source2) ?? [];
+    return group?.options.filter((option7) => blockPickerOptionItem(option7).kind === source2) ?? [];
   }
   function blockPickerSourceCount(group, source2) {
     return blockPickerOptionsForSource(group, source2).length;
   }
   function blockPickerCategoryCount(group, source2, category) {
-    return group?.options.filter((option6) => blockPickerOptionItem(option6).kind === source2 && blockPickerCategoryLabel(option6) === category).length ?? 0;
+    return group?.options.filter((option7) => blockPickerOptionItem(option7).kind === source2 && blockPickerCategoryLabel(option7) === category).length ?? 0;
   }
   function blockPickerCategories(group, source2) {
     const categories = new Set;
-    for (const option6 of group?.options ?? []) {
-      if (blockPickerOptionItem(option6).kind === source2) {
-        categories.add(blockPickerCategoryLabel(option6));
+    for (const option7 of group?.options ?? []) {
+      if (blockPickerOptionItem(option7).kind === source2) {
+        categories.add(blockPickerCategoryLabel(option7));
       }
     }
     return [...categories].sort((left, right) => left.localeCompare(right));
@@ -33966,16 +34738,16 @@ dd {
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerView.ts
-  function renderBlockPickerDetails(container, option6, onSelect) {
+  function renderBlockPickerDetails(container, option7, onSelect) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select content to see details.";
       container.append(empty4);
       return;
     }
-    const item = blockPickerOptionItem(option6);
+    const item = blockPickerOptionItem(option7);
     const eyebrow = document.createElement("div");
     eyebrow.className = "details-eyebrow";
     eyebrow.textContent = blockPickerSourceLabel(item.kind);
@@ -33990,22 +34762,22 @@ dd {
     previewIcon.textContent = blockPickerIconText(item);
     preview.append(previewIcon);
     const meta = document.createElement("dl");
-    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option6.slotLabel), metaRow("Category", blockPickerCategoryLabel(option6)));
+    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option7.slotLabel), metaRow("Category", blockPickerCategoryLabel(option7)));
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Insert";
-    insert.addEventListener("click", () => onSelect(option6));
+    insert.addEventListener("click", () => onSelect(option7));
     container.append(preview, eyebrow, title2, description, meta, insert);
   }
-  function renderBlockPickerOption(option6, activeOption, onActivate, onSelect) {
+  function renderBlockPickerOption(option7, activeOption, onActivate, onSelect) {
     const button2 = document.createElement("button");
     button2.className = "block";
     button2.type = "button";
-    button2.ariaSelected = String(option6 === activeOption);
-    button2.addEventListener("click", () => onActivate(option6));
-    button2.addEventListener("dblclick", () => onSelect(option6));
-    const item = blockPickerOptionItem(option6);
+    button2.ariaSelected = String(option7 === activeOption);
+    button2.addEventListener("click", () => onActivate(option7));
+    button2.addEventListener("dblclick", () => onSelect(option7));
+    const item = blockPickerOptionItem(option7);
     const icon = document.createElement("span");
     icon.className = "icon";
     icon.textContent = blockPickerIconText(item);
@@ -34018,7 +34790,7 @@ dd {
     description.textContent = blockPickerItemDescription(item);
     const category = document.createElement("span");
     category.className = "category";
-    category.textContent = blockPickerCategoryLabel(option6);
+    category.textContent = blockPickerCategoryLabel(option7);
     body.append(name, description, category);
     button2.append(icon, body);
     return button2;
@@ -34068,8 +34840,8 @@ dd {
       return null;
     }
     const activeOption = input3.activeOption && options2.includes(input3.activeOption) ? input3.activeOption : options2[0];
-    for (const option6 of options2) {
-      input3.results.append(renderBlockPickerOption(option6, activeOption, input3.onActivate, input3.onSelect));
+    for (const option7 of options2) {
+      input3.results.append(renderBlockPickerOption(option7, activeOption, input3.onActivate, input3.onSelect));
     }
     renderBlockPickerDetails(input3.details, activeOption, input3.onSelect);
     return activeOption;
@@ -34162,7 +34934,7 @@ dd {
     open(groups, contextLabel) {
       this._groups = groups.map((group) => ({
         ...group,
-        options: group.options.map((option6) => normalizeBlockPickerOption(option6))
+        options: group.options.map((option7) => normalizeBlockPickerOption(option7))
       }));
       this._activeSlotKey = firstEnabledBlockPickerGroup(this._groups)?.slot ?? "";
       this._activeSource = "block";
@@ -34198,11 +34970,11 @@ dd {
         activeSource: this._activeSource,
         details: this.elements.details,
         group: this._activeGroup(),
-        onActivate: (option6) => {
-          this._activeOption = option6;
+        onActivate: (option7) => {
+          this._activeOption = option7;
           this._renderEntries();
         },
-        onSelect: (option6) => this._selectOption(option6),
+        onSelect: (option7) => this._selectOption(option7),
         query: this.elements.search.value.trim().toLowerCase(),
         results: this.elements.results
       });
@@ -34231,11 +35003,11 @@ dd {
         sources: this.elements.sources
       });
     }
-    _selectOption(option6) {
+    _selectOption(option7) {
       this.dispatchEvent(new CustomEvent(BLOCK_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { option: option6 }
+        detail: { option: option7 }
       }));
       this.close();
     }
@@ -34863,9 +35635,9 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureBlockPicker.ts
   function openPickerOrEmitSingleMedia(action, groups, contextLabel, context) {
-    const option6 = singleEnabledOption(groups);
-    if (option6?.item?.kind === "media") {
-      context.emitAction(action.action, option6.item, option6.slot);
+    const option7 = singleEnabledOption(groups);
+    if (option7?.item?.kind === "media") {
+      context.emitAction(action.action, option7.item, option7.slot);
       return;
     }
     context.setPendingPickerAction(action);
@@ -34953,9 +35725,9 @@ dd {
       }
     ] : [];
     return [
-      ...blockOptions.filter((option6) => canFitItem(context, parent, slot, option6.item, replaced)),
+      ...blockOptions.filter((option7) => canFitItem(context, parent, slot, option7.item, replaced)),
       ...externalOptions,
-      ...mediaOptions.filter((option6) => option6.item && canFitItem(context, parent, slot, option6.item, replaced))
+      ...mediaOptions.filter((option7) => option7.item && canFitItem(context, parent, slot, option7.item, replaced))
     ];
   }
   function mediaAcceptForSlot(slot) {
@@ -35101,9 +35873,9 @@ dd {
   function conditionFieldOptions(scopes) {
     const byPath = new Map;
     for (const scope of scopes) {
-      for (const option6 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
-        if (!byPath.has(option6.path)) {
-          byPath.set(option6.path, option6);
+      for (const option7 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
+        if (!byPath.has(option7.path)) {
+          byPath.set(option7.path, option7);
         }
       }
     }
@@ -36317,8 +37089,8 @@ iframe {
     const labelDisplay = host.getAttribute("label-display") ?? "visible";
     const ariaLabel = host.getAttribute("aria-label");
     if (ariaLabel || labelDisplay !== "visible") {
-      const control3 = host.shadowRoot.querySelector("input, select, textarea, button");
-      control3?.setAttribute("aria-label", ariaLabel ?? label3);
+      const control2 = host.shadowRoot.querySelector("input, select, textarea, button");
+      control2?.setAttribute("aria-label", ariaLabel ?? label3);
     }
   }
 
@@ -36603,7 +37375,7 @@ input:disabled {
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
   function matchingDynamicDataOptions(options2, query7) {
     const normalized = query7.trim().toLowerCase();
-    return normalized ? options2.filter((option6) => `${option6.label} ${option6.path}`.toLowerCase().includes(normalized)) : options2;
+    return normalized ? options2.filter((option7) => `${option7.label} ${option7.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
     list.replaceChildren();
@@ -36614,18 +37386,18 @@ input:disabled {
       list.append(empty4);
       return;
     }
-    for (const option6 of options2) {
+    for (const option7 of options2) {
       const button2 = document.createElement("button");
       button2.className = "data-option";
       button2.type = "button";
-      button2.dataset.path = option6.path;
+      button2.dataset.path = option7.path;
       const label3 = document.createElement("span");
       label3.className = "data-label";
-      label3.textContent = option6.label;
+      label3.textContent = option7.label;
       const path = document.createElement("code");
-      path.textContent = option6.path;
+      path.textContent = option7.path;
       button2.append(label3, path);
-      button2.addEventListener("click", () => onSelect(option6.path));
+      button2.addEventListener("click", () => onSelect(option7.path));
       list.append(button2);
     }
   }
@@ -36635,9 +37407,9 @@ input:disabled {
     const byPath = new Map;
     for (const scope of scopes) {
       const options2 = fieldOptions2(scope.fields, scope.name, scope.label ?? scope.name);
-      for (const option6 of options2) {
-        if (!byPath.has(option6.path)) {
-          byPath.set(option6.path, option6);
+      for (const option7 of options2) {
+        if (!byPath.has(option7.path)) {
+          byPath.set(option7.path, option7);
         }
       }
     }
@@ -36781,20 +37553,20 @@ input:disabled {
       this._picker.open();
     };
     saveSelection = () => {
-      const control3 = this._refs.control();
-      this._selectionStart = control3.selectionStart ?? control3.value.length;
-      this._selectionEnd = control3.selectionEnd ?? this._selectionStart;
+      const control2 = this._refs.control();
+      this._selectionStart = control2.selectionStart ?? control2.value.length;
+      this._selectionEnd = control2.selectionEnd ?? this._selectionStart;
     };
     restoreSelection = () => {
       this._refs.control().setSelectionRange?.(this._selectionStart, this._selectionEnd);
     };
     insertText(text5) {
-      const control3 = this._refs.control();
-      const start = control3.selectionStart ?? this._selectionStart;
-      const end = control3.selectionEnd ?? this._selectionEnd;
-      control3.value = `${control3.value.slice(0, start)}${text5}${control3.value.slice(end)}`;
+      const control2 = this._refs.control();
+      const start = control2.selectionStart ?? this._selectionStart;
+      const end = control2.selectionEnd ?? this._selectionEnd;
+      control2.value = `${control2.value.slice(0, start)}${text5}${control2.value.slice(end)}`;
       const next = start + text5.length;
-      control3.setSelectionRange?.(next, next);
+      control2.setSelectionRange?.(next, next);
       this.saveSelection();
     }
     emitInput = () => {
@@ -37899,11 +38671,11 @@ select:disabled {
       syncFieldCopy(this);
       const current = this.getAttribute("value");
       const options2 = this._parseOptions();
-      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option6) => {
+      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option7) => {
         const element = document.createElement("option");
-        element.textContent = option6.label;
-        element.value = option6.value;
-        element.selected = option6.value === current;
+        element.textContent = option7.label;
+        element.value = option7.value;
+        element.selected = option7.value === current;
         return element;
       }));
     }
@@ -39826,12 +40598,12 @@ input {
     select5.append(custom);
     const groups = new Map;
     for (const token of tokens) {
-      const option6 = document.createElement("option");
-      option6.value = `var(--${token.variable})`;
-      option6.textContent = token.label;
+      const option7 = document.createElement("option");
+      option7.value = `var(--${token.variable})`;
+      option7.textContent = token.label;
       const category = token.category?.trim();
       if (!category) {
-        select5.append(option6);
+        select5.append(option7);
         continue;
       }
       let group = groups.get(category);
@@ -39841,9 +40613,9 @@ input {
         groups.set(category, group);
         select5.append(group);
       }
-      group.append(option6);
+      group.append(option7);
     }
-    const selected2 = Array.from(select5.querySelectorAll("option")).find((option6) => option6.value === (setting.defaultValue ?? ""));
+    const selected2 = Array.from(select5.querySelectorAll("option")).find((option7) => option7.value === (setting.defaultValue ?? ""));
     if (selected2) {
       selected2.selected = true;
     }
@@ -39903,9 +40675,9 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/controlWiring.ts
-  function wireTextControl(control3, selector, setting, emitValue) {
-    whenDefined(control3, () => {
-      const input3 = control3.shadowRoot?.querySelector(selector);
+  function wireTextControl(control2, selector, setting, emitValue) {
+    whenDefined(control2, () => {
+      const input3 = control2.shadowRoot?.querySelector(selector);
       if (!input3) {
         return;
       }
@@ -39917,9 +40689,9 @@ input {
       input3.addEventListener("change", () => emitValue(input3.value));
     });
   }
-  function wireContentControl(control3, selector, emitValue) {
-    whenDefined(control3, () => {
-      const input3 = control3.shadowRoot?.querySelector(selector);
+  function wireContentControl(control2, selector, emitValue) {
+    whenDefined(control2, () => {
+      const input3 = control2.shadowRoot?.querySelector(selector);
       if (!input3) {
         return;
       }
@@ -39927,9 +40699,9 @@ input {
       input3.addEventListener("change", () => emitValue(input3.value));
     });
   }
-  function wireRichTextControl(control3, emitValue) {
-    whenDefined(control3, () => {
-      control3.addEventListener("input", (event) => {
+  function wireRichTextControl(control2, emitValue) {
+    whenDefined(control2, () => {
+      control2.addEventListener("input", (event) => {
         const value3 = event.detail?.value;
         if (typeof value3 === "string") {
           emitValue(value3);
@@ -39937,12 +40709,12 @@ input {
       });
     });
   }
-  function wirePageLinkControl(control3, setting, emitValue) {
-    whenDefined(control3, () => {
+  function wirePageLinkControl(control2, setting, emitValue) {
+    whenDefined(control2, () => {
       if (setting.disabled) {
         return;
       }
-      control3.addEventListener("input", (event) => {
+      control2.addEventListener("input", (event) => {
         const value3 = event.detail?.value;
         if (typeof value3 === "string") {
           emitValue(value3);
@@ -39950,9 +40722,9 @@ input {
       });
     });
   }
-  function wireToggleControl(control3, setting, emitValue) {
-    whenDefined(control3, () => {
-      const button2 = control3.shadowRoot?.querySelector("button");
+  function wireToggleControl(control2, setting, emitValue) {
+    whenDefined(control2, () => {
+      const button2 = control2.shadowRoot?.querySelector("button");
       if (!button2) {
         return;
       }
@@ -39963,27 +40735,27 @@ input {
       button2.addEventListener("click", () => {
         const checked = button2.ariaPressed !== "true";
         button2.ariaPressed = String(checked);
-        control3.toggleAttribute("checked", checked);
+        control2.toggleAttribute("checked", checked);
         emitValue(checked);
       });
     });
   }
-  function applyDisabled(control3, setting) {
-    control3.toggleAttribute("disabled", setting.disabled === true);
+  function applyDisabled(control2, setting) {
+    control2.toggleAttribute("disabled", setting.disabled === true);
     if (setting.disabled) {
-      control3.setAttribute("aria-disabled", "true");
+      control2.setAttribute("aria-disabled", "true");
     } else {
-      control3.removeAttribute("aria-disabled");
+      control2.removeAttribute("aria-disabled");
     }
   }
-  function setDataScopes(control3, dataScopes2) {
-    control3.setAttribute("data-scopes", JSON.stringify(dataScopes2));
+  function setDataScopes(control2, dataScopes2) {
+    control2.setAttribute("data-scopes", JSON.stringify(dataScopes2));
   }
-  function whenDefined(control3, callback) {
-    if (customElements.get(control3.localName)) {
+  function whenDefined(control2, callback) {
+    if (customElements.get(control2.localName)) {
       callback();
     } else {
-      customElements.whenDefined(control3.localName).then(callback);
+      customElements.whenDefined(control2.localName).then(callback);
     }
   }
 
@@ -40066,33 +40838,33 @@ input {
       if (setting.type === "textarea" || setting.type === "select") {
         const tag = setting.type === "textarea" ? "cms-editor-v2-textarea" : "cms-editor-v2-select";
         const selector = setting.type === "textarea" ? "textarea" : "select";
-        const control4 = createSettingControl(tag, setting);
+        const control3 = createSettingControl(tag, setting);
         if (setting.type === "textarea") {
-          setDataScopes(control4, this.dataScopes());
+          setDataScopes(control3, this.dataScopes());
         } else {
-          control4.setAttribute("options", JSON.stringify(setting.options));
+          control3.setAttribute("options", JSON.stringify(setting.options));
         }
-        wireTextControl(control4, selector, setting, emit);
-        return control4;
+        wireTextControl(control3, selector, setting, emit);
+        return control3;
       }
       if (setting.type === "segmented") {
         return this.renderSegmented(setting);
       }
       if (setting.type === "toggle") {
-        const control4 = createSettingControl("cms-editor-v2-toggle", setting);
+        const control3 = createSettingControl("cms-editor-v2-toggle", setting);
         if (setting.defaultValue) {
-          control4.setAttribute("checked", "");
+          control3.setAttribute("checked", "");
         }
-        wireToggleControl(control4, setting, emit);
-        return control4;
+        wireToggleControl(control3, setting, emit);
+        return control3;
       }
       if (setting.type === "page-link") {
-        const control4 = createSettingControl("cms-editor-v2-page-link", setting);
-        control4.setAttribute("allow-page", String(setting.allowPage !== false));
-        control4.setAttribute("allow-external", String(setting.allowExternal !== false));
-        control4.setAttribute("allow-media", String(setting.allowMedia !== false));
-        wirePageLinkControl(control4, setting, emit);
-        return control4;
+        const control3 = createSettingControl("cms-editor-v2-page-link", setting);
+        control3.setAttribute("allow-page", String(setting.allowPage !== false));
+        control3.setAttribute("allow-external", String(setting.allowExternal !== false));
+        control3.setAttribute("allow-media", String(setting.allowMedia !== false));
+        wirePageLinkControl(control3, setting, emit);
+        return control3;
       }
       if (setting.type === "endpoint-picker") {
         return this.endpointSettings.render(setting);
@@ -40100,60 +40872,60 @@ input {
       if (setting.type === "color") {
         return renderColorSetting(setting, this.themeTokens(), renderFieldLabel, emit);
       }
-      const control3 = createSettingControl("cms-editor-v2-text-input", setting);
-      setDataScopes(control3, this.dataScopes());
-      wireTextControl(control3, "input", setting, emit);
-      return control3;
+      const control2 = createSettingControl("cms-editor-v2-text-input", setting);
+      setDataScopes(control2, this.dataScopes());
+      wireTextControl(control2, "input", setting, emit);
+      return control2;
     }
     renderSegmented(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field";
       const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
-      const control3 = document.createElement("cms-editor-v2-segmented-control");
-      control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-      for (const option6 of setting.options) {
+      const control2 = document.createElement("cms-editor-v2-segmented-control");
+      control2.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
+      for (const option7 of setting.options) {
         const button2 = document.createElement("button");
         button2.type = "button";
-        button2.value = option6.value;
+        button2.value = option7.value;
         button2.disabled = setting.disabled === true;
-        button2.title = option6.ariaLabel ?? option6.label;
-        button2.ariaLabel = option6.ariaLabel ?? option6.label;
-        button2.ariaPressed = String(option6.value === setting.defaultValue);
-        button2.append(...renderOptionContent(setting.display, option6.display, option6.icon ?? setting.icon, option6.label));
+        button2.title = option7.ariaLabel ?? option7.label;
+        button2.ariaLabel = option7.ariaLabel ?? option7.label;
+        button2.ariaPressed = String(option7.value === setting.defaultValue);
+        button2.append(...renderOptionContent(setting.display, option7.display, option7.icon ?? setting.icon, option7.label));
         button2.addEventListener("click", () => {
           if (setting.disabled) {
             return;
           }
-          for (const item of Array.from(control3.querySelectorAll("button"))) {
+          for (const item of Array.from(control2.querySelectorAll("button"))) {
             item.ariaPressed = String(item === button2);
           }
-          this.emitSettingChange(setting, option6.value);
+          this.emitSettingChange(setting, option7.value);
         });
-        control3.append(button2);
+        control2.append(button2);
       }
       if (label3) {
         wrapper.append(label3);
       }
-      wrapper.append(control3);
+      wrapper.append(control2);
       return wrapper;
     }
   }
   function createSettingControl(tag, setting) {
-    const control3 = document.createElement(tag);
-    control3.setAttribute("label", setting.label);
-    control3.setAttribute("value", String(setting.defaultValue ?? ""));
-    control3.setAttribute("label-display", setting.labelDisplay ?? "visible");
+    const control2 = document.createElement(tag);
+    control2.setAttribute("label", setting.label);
+    control2.setAttribute("value", String(setting.defaultValue ?? ""));
+    control2.setAttribute("label-display", setting.labelDisplay ?? "visible");
     if (setting.ariaLabel || setting.labelDisplay && setting.labelDisplay !== "visible") {
-      control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
+      control2.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
     }
     if (setting.help) {
-      control3.setAttribute("hint", setting.help);
+      control2.setAttribute("hint", setting.help);
     }
     if (setting.placeholder) {
-      control3.setAttribute("placeholder", setting.placeholder);
+      control2.setAttribute("placeholder", setting.placeholder);
     }
-    applyDisabled(control3, setting);
-    return control3;
+    applyDisabled(control2, setting);
+    return control2;
   }
   function renderFieldLabel(label3, display) {
     if (display === "hidden") {
@@ -40287,18 +41059,18 @@ input {
       defaultValue: value3,
       help: capability.format === "richtext" ? undefined : formatTextCapability(capability)
     };
-    const control3 = createSettingControl(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
+    const control2 = createSettingControl(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
     if (capability.format === "richtext") {
-      control3.setAttribute("capability", JSON.stringify(capability));
-      control3.setAttribute("data-scopes", JSON.stringify(dataScopes2));
-      wireRichTextControl(control3, (content) => emitContentChange(content, "html"));
+      control2.setAttribute("capability", JSON.stringify(capability));
+      control2.setAttribute("data-scopes", JSON.stringify(dataScopes2));
+      wireRichTextControl(control2, (content) => emitContentChange(content, "html"));
     } else {
       if (capability.dynamic) {
-        setDataScopes(control3, dataScopes2);
+        setDataScopes(control2, dataScopes2);
       }
-      wireContentControl(control3, "input", (content) => emitContentChange(content, "text"));
+      wireContentControl(control2, "input", (content) => emitContentChange(content, "text"));
     }
-    section.append(control3);
+    section.append(control2);
     return section;
   }
   function formatTextCapability(capability) {
@@ -40308,7 +41080,7 @@ input {
       capability.link ? "link" : null,
       capability.code ? "code" : null,
       capability.dynamic ? "dynamic" : null
-    ].filter((option6) => Boolean(option6));
+    ].filter((option7) => Boolean(option7));
     return options2.length > 0 ? options2.join(", ") : "Plain text";
   }
 
@@ -41001,9 +41773,9 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
   function repeatArrayOptions(scopes) {
     const byPath = new Map;
-    for (const option6 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-      if (!byPath.has(option6.path)) {
-        byPath.set(option6.path, option6);
+    for (const option7 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
+      if (!byPath.has(option7.path)) {
+        byPath.set(option7.path, option7);
       }
     }
     return [...byPath.values()];
@@ -41030,7 +41802,7 @@ label {
     if (!normalizedQuery) {
       return options2;
     }
-    return options2.filter((option6) => [option6.path, option6.label, option6.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
+    return options2.filter((option7) => [option7.path, option7.label, option7.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
     const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
@@ -41039,9 +41811,9 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatPickerDetails.ts
-  function renderRepeatDetails(container, option6) {
+  function renderRepeatDetails(container, option7) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to inspect item fields.";
@@ -41051,11 +41823,11 @@ label {
     const heading4 = document.createElement("div");
     heading4.className = "details-eyebrow";
     heading4.textContent = "Response fields";
-    container.append(heading4, renderFields2(option6.fields));
+    container.append(heading4, renderFields2(option7.fields));
   }
-  function renderRepeatBinding(container, option6, onSelect) {
+  function renderRepeatBinding(container, option7, onSelect) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to configure repeat.";
@@ -41070,7 +41842,7 @@ label {
     const pathLabel2 = document.createElement("span");
     pathLabel2.textContent = "Array";
     const pathValue = document.createElement("strong");
-    pathValue.textContent = option6.path;
+    pathValue.textContent = option7.path;
     path.append(pathLabel2, pathValue);
     const config = document.createElement("section");
     config.className = "binding-config";
@@ -41078,14 +41850,14 @@ label {
     label3.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "alias";
-    alias.value = defaultRepeatAlias(option6.path);
+    alias.value = defaultRepeatAlias(option7.path);
     label3.append(alias);
     config.append(label3);
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Use repeat";
-    insert.addEventListener("click", () => onSelect(option6, alias.value));
+    insert.addEventListener("click", () => onSelect(option7, alias.value));
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
     scroll.append(heading4, path, config);
@@ -41169,7 +41941,7 @@ label {
     _render() {
       this._renderOptions();
       renderRepeatDetails(this.details, this._activeOption);
-      renderRepeatBinding(this.binding, this._activeOption, (option6, alias) => this._select(option6, alias));
+      renderRepeatBinding(this.binding, this._activeOption, (option7, alias) => this._select(option7, alias));
     }
     _renderOptions() {
       this.arrays.replaceChildren();
@@ -41185,27 +41957,27 @@ label {
       if (!this._activeOption || !options2.includes(this._activeOption)) {
         this._activeOption = options2[0] ?? null;
       }
-      for (const option6 of options2) {
+      for (const option7 of options2) {
         const button2 = document.createElement("button");
         button2.className = "array";
         button2.type = "button";
-        button2.ariaSelected = String(option6 === this._activeOption);
+        button2.ariaSelected = String(option7 === this._activeOption);
         const name = document.createElement("span");
         name.className = "name";
-        name.textContent = option6.path;
+        name.textContent = option7.path;
         const scope = document.createElement("span");
         scope.className = "scope";
-        scope.textContent = option6.scopeLabel;
+        scope.textContent = option7.scopeLabel;
         button2.append(name, scope);
         button2.addEventListener("click", () => {
-          this._activeOption = option6;
+          this._activeOption = option7;
           this._render();
         });
-        button2.addEventListener("dblclick", () => this._select(option6));
+        button2.addEventListener("dblclick", () => this._select(option7));
         this.arrays.append(button2);
       }
     }
-    _select(option6, alias = defaultRepeatAlias(option6.path)) {
+    _select(option7, alias = defaultRepeatAlias(option7.path)) {
       const cleanAlias = alias.trim();
       if (!cleanAlias) {
         return;
@@ -41214,7 +41986,7 @@ label {
         bubbles: true,
         composed: true,
         detail: {
-          path: option6.path,
+          path: option7.path,
           alias: cleanAlias
         }
       }));
@@ -42193,15 +42965,15 @@ label {
         scope.aliases.add(repeatAlias);
       }
     }
-    for (const attribute of Array.from(element.attributes)) {
-      if (attribute.name === CMS_BINDING_ATTRIBUTES.source) {
+    for (const attribute2 of Array.from(element.attributes)) {
+      if (attribute2.name === CMS_BINDING_ATTRIBUTES.source) {
         continue;
       }
-      if (attribute.name === CMS_BINDING_ATTRIBUTES.repeat) {
+      if (attribute2.name === CMS_BINDING_ATTRIBUTES.repeat) {
         continue;
       }
-      if (bindingTextDependsOn(attribute.value, scope)) {
-        usages.push({ target: element, attribute: attribute.name });
+      if (bindingTextDependsOn(attribute2.value, scope)) {
+        usages.push({ target: element, attribute: attribute2.name });
       }
     }
     return scope;
@@ -42971,22 +43743,22 @@ label {
         this.context.highlight().show(editor);
         return;
       }
-      const attribute = setting.attribute;
+      const attribute2 = setting.attribute;
       if (typeof value3 === "boolean") {
-        editor.target.toggleAttribute(attribute, value3);
+        editor.target.toggleAttribute(attribute2, value3);
       } else {
-        writeSettingAttribute(editor.target, attribute, value3 || null);
+        writeSettingAttribute(editor.target, attribute2, value3 || null);
       }
       if (setting.type === "select" || setting.type === "segmented" || setting.type === "toggle") {
         this.renderSettings();
       }
     }
     applyAttributes(editor, attributes) {
-      for (const [attribute, value3] of Object.entries(attributes)) {
+      for (const [attribute2, value3] of Object.entries(attributes)) {
         if (typeof value3 === "boolean") {
-          editor.target.toggleAttribute(attribute, value3);
+          editor.target.toggleAttribute(attribute2, value3);
         } else {
-          writeSettingAttribute(editor.target, attribute, value3 || null);
+          writeSettingAttribute(editor.target, attribute2, value3 || null);
         }
       }
       this.renderSettings();
@@ -44963,6 +45735,46 @@ label {
   // src/core/editorSystemV2/builtInEditors/BindingCoreEditor.ts
   class BindingCoreEditor extends Editor {
   }
+  // src/core/editorSystemV2/builtInEditors/SignupLegalConsentEditor.ts
+  class SignupLegalConsentEditor extends Editor {
+    settings() {
+      return [
+        {
+          kind: "self",
+          label: "Content",
+          settings: [
+            { type: "text", label: "Heading", attribute: "heading" },
+            { type: "text", label: "Loading message", attribute: "loading-label" },
+            { type: "text", label: "Load error message", attribute: "load-error-label" },
+            { type: "text", label: "Retry button", attribute: "retry-label" },
+            { type: "text", label: "Required message", attribute: "required-message" },
+            { type: "text", label: "New tab notice", attribute: "new-tab-label" }
+          ]
+        },
+        {
+          kind: "self",
+          label: "Source",
+          settings: [
+            {
+              type: "text",
+              label: "Source prefix",
+              attribute: "source-prefix",
+              defaultValue: "/.cms/sources"
+            },
+            {
+              type: "text",
+              label: "Authentication source",
+              attribute: "source-id",
+              defaultValue: "system-auth"
+            }
+          ]
+        }
+      ];
+    }
+    structureMode() {
+      return "opaque";
+    }
+  }
   // src/core/editorSystemV2/editorCatalog.ts
   function createControlEditorCatalog() {
     return [
@@ -44974,6 +45786,15 @@ label {
         category: "Runtime",
         bloc: Ol,
         editor: BindingCoreEditor
+      },
+      {
+        tag: CMS_SIGNUP_LEGAL_CONSENT_TAG,
+        label: "Signup legal consent",
+        description: "Requires explicit acceptance of the current signup legal documents.",
+        icon: "check-square",
+        category: "Authentication",
+        bloc: CmsSignupLegalConsent,
+        editor: SignupLegalConsentEditor
       }
     ];
   }

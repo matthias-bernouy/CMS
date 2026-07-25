@@ -2,6 +2,16 @@
 
 alter table commerce.settings enable row level security;
 alter table commerce.settings force row level security;
+alter table commerce.buyer_legal_documents enable row level security;
+alter table commerce.buyer_legal_documents force row level security;
+alter table commerce.buyer_legal_document_versions enable row level security;
+alter table commerce.buyer_legal_document_versions force row level security;
+alter table commerce.order_buyer_legal_acceptances enable row level security;
+alter table commerce.order_buyer_legal_acceptances force row level security;
+alter table commerce.marketplace_service_withdrawal_requests enable row level security;
+alter table commerce.marketplace_service_withdrawal_requests force row level security;
+alter table commerce.marketplace_service_withdrawal_events enable row level security;
+alter table commerce.marketplace_service_withdrawal_events force row level security;
 alter table commerce.brands enable row level security;
 alter table commerce.brands force row level security;
 alter table commerce.categories enable row level security;

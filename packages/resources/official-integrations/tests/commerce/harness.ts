@@ -5,6 +5,7 @@ export type JsonRecord = Record<string, unknown>;
 export type CapturedFetch = {
     url: string;
     method: string;
+    redirect: RequestRedirect;
     headers: Headers;
     body: JsonRecord;
 };
@@ -59,6 +60,7 @@ export async function requestCommerce(
         authorization?: string;
         userId?: string;
         userRole?: string | null;
+        correlationId?: string;
         body?: JsonRecord;
         formData?: FormData;
     } = {},
@@ -97,6 +99,7 @@ const captureFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     fetches.push({
         url: request.url,
         method: request.method,
+        redirect: request.redirect,
         headers: new Headers(request.headers),
         body:
             text && request.headers.get("content-type")?.includes("application/json")
@@ -114,6 +117,7 @@ function commerceRequest(
         authorization?: string;
         userId?: string;
         userRole?: string | null;
+        correlationId?: string;
         body?: JsonRecord;
         formData?: FormData;
     },
@@ -124,6 +128,9 @@ function commerceRequest(
     }
     if (options.userId) {
         headers.set("x-cms-user-id", options.userId);
+    }
+    if (options.correlationId) {
+        headers.set("x-correlation-id", options.correlationId);
     }
     const userRole = options.userRole === undefined && path.startsWith("/admin/") ? "admin" : options.userRole;
     if (userRole) {

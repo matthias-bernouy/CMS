@@ -94,6 +94,8 @@ export function registerAccountContractSourceScenarios(createHarness: CreateHarn
             required: ["readySellerCmsUserIds", "snapshot", "snapshotAt"],
         });
         expect(sellerRisk?.output?.map((candidate) => candidate.status)).toEqual(["200", "403", "404", "502"]);
+        expect(sellerPayout?.input?.body?.properties?.payoutSchedule).toEqual({ type: "string" });
+        expect(sellerPayout?.input?.body?.required).toEqual(["userId", "payoutScheduleChangeId"]);
 
         const anonymousSourceLookup = await sourceRequestWithRole(harness, "", undefined, "getConnectAccount", {
             userId: "seller-1",

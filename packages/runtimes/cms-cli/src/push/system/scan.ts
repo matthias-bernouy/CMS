@@ -8,6 +8,7 @@ import type { TPageRef, TSystem } from "@bernouy/cms-content";
 export type SystemPayload = {
     site: Partial<TSystem["site"]>;
     editor: Partial<TSystem["editor"]>;
+    auth?: NonNullable<TSystem["auth"]>;
     theme?: TSystem["theme"];
 };
 
@@ -40,6 +41,7 @@ export async function scanSystem(siteDir: string): Promise<LocalSystem | null> {
     const payload: SystemPayload = {
         site: raw.site ?? {},
         editor: raw.editor ?? {},
+        ...(raw.auth !== undefined ? { auth: raw.auth } : {}),
         theme: raw.theme,
     };
 

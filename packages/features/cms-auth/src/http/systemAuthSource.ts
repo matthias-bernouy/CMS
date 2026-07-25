@@ -8,7 +8,9 @@ import {
 } from "cms-auth/core/public-auth/flows";
 import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
+import { optionalRepeatedStrings, readJsonObject, requiredString } from "cms-auth/http/requestInput";
 import { resolveRequestSubject } from "cms-auth/http/requestSubject";
+import type { SignupLegalRequirements } from "cms-auth/signup-legal/contracts";
 
 type SystemSourceEndpoint = {
     urn: string;
@@ -22,6 +24,11 @@ export async function executeAuthSystemSourceEndpoint<Role extends string>(
 ): Promise<Response> {
     const target = parseSystemAuthTarget(endpoint);
     switch (target) {
+        case "/signup/legal-requirements":
+            if (cfg.allowSignup === false) {
+                return privateAuthResponse("not_found", { status: 404 });
+            }
+            return privateAuthJsonResponse(await signupLegalRequirements(cfg));
         case "/me":
             return privateAuthJsonResponse({ subject: await resolveRequestSubject(cfg.local, req) });
         case "/login":
@@ -36,6 +43,7 @@ export async function executeAuthSystemSourceEndpoint<Role extends string>(
             await signupLocalUser(cfg, {
                 email: requiredString(body, "email"),
                 password: requiredString(body, "password"),
+                acceptedLegalDocumentVersionIds: optionalRepeatedStrings(body, "acceptedLegalDocumentVersionIds"),
             });
             return ok();
         }
@@ -87,6 +95,7 @@ function isKnownTarget(
     target: string,
 ): target is
     | "/me"
+    | "/signup/legal-requirements"
     | "/login"
     | "/logout"
     | "/signup"
@@ -96,6 +105,7 @@ function isKnownTarget(
     | "/password/reset/confirm" {
     return [
         "/me",
+        "/signup/legal-requirements",
         "/login",
         "/logout",
         "/signup",
@@ -106,25 +116,10 @@ function isKnownTarget(
     ].includes(target);
 }
 
-async function readJsonObject(req: Request): Promise<Record<string, unknown>> {
-    const body = await req.json().catch(() => null);
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-        throw new AuthValidationError("body", "object expected");
-    }
-    return body as Record<string, unknown>;
-}
-
-function requiredString(body: Record<string, unknown>, field: string): string {
-    const value = body[field];
-    if (typeof value !== "string" || !value) {
-        throw new AuthValidationError(field, "required");
-    }
-    return value;
-}
-
-function optionalString(body: Record<string, unknown>, field: string): string | undefined {
-    const value = body[field];
-    return typeof value === "string" && value ? value : undefined;
+async function signupLegalRequirements<Role extends string>(
+    cfg: PublicAuthRoutesConfig<Role>,
+): Promise<SignupLegalRequirements> {
+    return cfg.signupLegalAcceptance?.requirements() ?? { documents: [] };
 }
 
 const ok = (): Response => privateAuthJsonResponse({ ok: true });

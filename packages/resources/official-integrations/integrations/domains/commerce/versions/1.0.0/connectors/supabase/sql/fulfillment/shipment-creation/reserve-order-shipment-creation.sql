@@ -34,6 +34,7 @@ begin
     where order_id = v_order.id and status = 'succeeded' order by created_at desc limit 1;
     if v_order.status <> 'active' or v_payment.id is null
         or v_fulfillment.status not in ('awaiting_shipment', 'shipment_creating', 'label_created')
+        or v_fulfillment.blocking_reason is not null
         or exists (select 1 from commerce.refund_requests request
             where request.order_id = v_order.id and request.status not in ('rejected', 'cancelled', 'failed'))
         or exists (select 1 from commerce.order_cancellation_requests request

@@ -61,8 +61,78 @@
 }
 
 .setup-fields .empty,
-.setup-fields .field:has(textarea) {
+.setup-fields .field:has(textarea),
+.object-list-fieldset {
     grid-column: 1 / -1;
+}
+
+.object-list-fieldset {
+    display: grid;
+    gap: 8px;
+}
+
+.object-list {
+    display: grid;
+    gap: 10px;
+}
+
+.object-list-items {
+    display: grid;
+    gap: 10px;
+}
+
+.object-list-item {
+    display: grid;
+    gap: 10px;
+    border: 1px solid #dfe5e2;
+    border-radius: 7px;
+    padding: 12px;
+}
+
+.object-list-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.object-list-item-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.object-list-item-field {
+    display: grid;
+    gap: 5px;
+}
+
+.object-list-item-field:has(textarea),
+.object-list-item-field:has(select[multiple]) {
+    grid-column: 1 / -1;
+}
+
+.object-list-add,
+.object-list-remove {
+    width: fit-content;
+    border: 1px solid #cad4d0;
+    border-radius: 6px;
+    background: #fff;
+    padding: 7px 10px;
+    color: #24332e;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.object-list-remove {
+    color: #8f2929;
+}
+
+.object-list-add:disabled,
+.object-list-remove:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
 }
 
 .installing-state {

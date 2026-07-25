@@ -1,10 +1,11 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import type { PageLink } from "@bernouy/cms-content";
-import type { TSystem } from "@bernouy/cms-content";
+import { defaultSystem, type AuthSettings, type TSystem } from "@bernouy/cms-content";
 
 export type SettingsResponse = {
     site: TSystem["site"];
     editor: TSystem["editor"];
+    auth: AuthSettings;
     theme: TSystem["theme"];
     security: TSystem["security"];
     email: TSystem["email"];
@@ -29,6 +30,7 @@ export async function getSettings(cms: ControlCms): Promise<SettingsResponse> {
     return {
         site: system.site,
         editor: system.editor,
+        auth: system.auth ?? defaultSystem().auth!,
         theme: system.theme,
         security: system.security,
         email: system.email,
