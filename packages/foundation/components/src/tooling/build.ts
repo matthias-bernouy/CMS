@@ -119,6 +119,7 @@ export async function buildComponents(): Promise<void> {
 
     await buildBundle("./src/base/index.ts", dist, "base.js", "esm");
     await buildBundle("./src/base/compositionRuntime.ts", dist, "composition-runtime.js", "esm");
+    await buildBundle("./src/binding/core/networkBindings.ts", dist, "binding-dom.js", "esm");
     await buildBundle("./src/index.ts", dist, "index.js", "esm");
 
     await Promise.all(

@@ -1,4 +1,5 @@
 import { type FilterMap } from "../core/interpolate";
+import { prepareNetworkInertBindings } from "../core/networkBindings";
 import { type Scope } from "../core/scope";
 import { MountedInPlaceRegion, MountedRegion } from "./MountedRegion";
 import { compileTemplatePlan } from "./compiler/templateCompiler";
@@ -7,14 +8,14 @@ import type { CompileOptions, CompilePlan } from "./templatePlan";
 
 export class CompiledTemplate {
     private constructor(
-        private readonly template: DocumentFragment,
+        private readonly authoredTemplate: DocumentFragment,
+        private readonly executableTemplate: DocumentFragment,
         private readonly plan: CompilePlan,
         private readonly filters: FilterMap,
     ) {}
 
     static fromFragment(fragment: DocumentFragment, filters: FilterMap = {}): CompiledTemplate {
-        const template = fragment.cloneNode(true) as DocumentFragment;
-        return CompiledTemplate.fromTemplate(template, filters);
+        return CompiledTemplate.fromTemplate(fragment, filters);
     }
 
     static fromTemplate(
@@ -22,11 +23,15 @@ export class CompiledTemplate {
         filters: FilterMap,
         options: CompileOptions = {},
     ): CompiledTemplate {
-        const plan = compileTemplatePlan(template, filters, options, CompiledTemplate.fromTemplate);
-        return new CompiledTemplate(template, plan, filters);
+        const authoredTemplate = template.cloneNode(true) as DocumentFragment;
+        const executableTemplate = template.cloneNode(true) as DocumentFragment;
+        prepareNetworkInertBindings(executableTemplate);
+        const plan = compileTemplatePlan(executableTemplate, filters, options, CompiledTemplate.fromTemplate);
+        return new CompiledTemplate(authoredTemplate, executableTemplate, plan, filters);
     }
 
     static bindChildrenInPlace(parent: Element, scope: Scope, filters: FilterMap = {}): MountedInPlaceRegion {
+        prepareNetworkInertBindings(parent);
         const doc = parent.ownerDocument ?? document;
         const template = doc.createDocumentFragment();
         for (const child of Array.from(parent.childNodes)) {
@@ -42,7 +47,7 @@ export class CompiledTemplate {
         const doc = parent.ownerDocument ?? document;
         const start = doc.createComment("cms-region start");
         const end = doc.createComment("cms-region end");
-        const instance = this.template.cloneNode(true) as DocumentFragment;
+        const instance = this.executableTemplate.cloneNode(true) as DocumentFragment;
         const region = new MountedRegion(start, end, instantiateSites(instance, this.plan, this.filters));
 
         // Resolve attributes before observers can discover the inserted nodes.
@@ -54,6 +59,6 @@ export class CompiledTemplate {
     }
 
     cloneRaw(): DocumentFragment {
-        return this.template.cloneNode(true) as DocumentFragment;
+        return this.authoredTemplate.cloneNode(true) as DocumentFragment;
     }
 }

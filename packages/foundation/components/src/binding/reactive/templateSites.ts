@@ -1,4 +1,5 @@
 import { interpolateString, type FilterMap } from "../core/interpolate";
+import { prepareNetworkInertBindings } from "../core/networkBindings";
 import { lookup, type Scope } from "../core/scope";
 import type { CompiledCondition } from "../render/condition";
 import type { RepeatSpec } from "../render/repeat";
@@ -112,6 +113,7 @@ export class RawHtmlSite implements LiveBindingSite {
         const result = lookup(scope, this.expression);
         const template = (this.end.ownerDocument ?? document).createElement("template");
         template.innerHTML = result.found && result.value != null ? String(result.value) : "";
+        prepareNetworkInertBindings(template.content);
         parent.insertBefore(template.content, this.end);
     }
     unmount(): void {

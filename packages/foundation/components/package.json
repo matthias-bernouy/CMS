@@ -47,6 +47,12 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./binding-dom": {
+      "types": "./dist/binding/core/networkBindings.d.ts",
+      "bun": "./src/binding/core/networkBindings.ts",
+      "import": "./dist/binding-dom.js",
+      "default": "./dist/binding-dom.js"
+    },
     "./composition-runtime": {
       "types": "./dist/base/compositionRuntime.d.ts",
       "bun": "./src/base/compositionRuntime.ts",
