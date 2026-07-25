@@ -3,6 +3,7 @@ export type {
     IntegrationRegistryCatalogDiagnostic,
     IntegrationRegistryCatalogHealth,
     IntegrationRegistryCatalogSnapshot,
+    IntegrationRegistryCatalogSnapshotProvider,
     IntegrationRegistryDiagnosticCode,
     IntegrationRegistryDiagnosticStage,
     IntegrationRegistryExactVersionLocation,

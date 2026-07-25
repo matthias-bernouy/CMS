@@ -70,3 +70,7 @@ export type IntegrationRegistryCatalogSnapshot = Readonly<{
     listVersions(kind: string): readonly IntegrationDefinitionVersion[];
     locateExactVersion(kind: string, version: string): IntegrationRegistryExactVersionLocation | null;
 }>;
+
+export type IntegrationRegistryCatalogSnapshotProvider = Readonly<{
+    current(): IntegrationRegistryCatalogSnapshot;
+}>;
