@@ -55,21 +55,24 @@ function selectedContracts(contracts: PostgresContract[]): PostgresContract[] {
 }
 
 async function loadBundles(): Promise<Record<BundleName, string>> {
-    const [commerceNotifications, commerce, negotiation, mondialRelay, stripeConnect] = await Promise.all([
-        loadSupabaseSchemaSql(
-            configuration.integrationRoots.commerceNotifications,
-            "sql/foundation/notifications/manifest.json",
-        ),
-        loadSupabaseSchemaSql(configuration.integrationRoots.commerce),
-        loadSupabaseSchemaSql(resolve(packageRoot, "integrations/extensions/commerce-negotiation/versions/1.0.0")),
-        loadSupabaseSchemaSql(configuration.integrationRoots.mondialRelay),
-        loadSupabaseSchemaSql(configuration.integrationRoots.stripeConnect),
-    ]);
+    const [commerceNotifications, commerce, negotiation, mondialRelay, salesConfigurator, stripeConnect] =
+        await Promise.all([
+            loadSupabaseSchemaSql(
+                configuration.integrationRoots.commerceNotifications,
+                "sql/foundation/notifications/manifest.json",
+            ),
+            loadSupabaseSchemaSql(configuration.integrationRoots.commerce),
+            loadSupabaseSchemaSql(resolve(packageRoot, "integrations/extensions/commerce-negotiation/versions/1.0.0")),
+            loadSupabaseSchemaSql(configuration.integrationRoots.mondialRelay),
+            loadSupabaseSchemaSql(configuration.integrationRoots.salesConfigurator),
+            loadSupabaseSchemaSql(configuration.integrationRoots.stripeConnect),
+        ]);
     return {
         commerce,
         commerceNotifications,
         commerceNegotiatedCheckout: `${commerce}\n${negotiation}`,
         mondialRelay,
+        salesConfigurator,
         stripeConnect,
     };
 }
@@ -80,6 +83,7 @@ async function writeBundles(root: string, sql: Record<BundleName, string>): Prom
         commerceNotifications: join(root, "commerce-notification-module.sql"),
         commerceNegotiatedCheckout: join(root, "commerce-negotiated-checkout.sql"),
         mondialRelay: join(root, "mondial-relay.sql"),
+        salesConfigurator: join(root, "sales-configurator.sql"),
         stripeConnect: join(root, "stripe-connect.sql"),
     };
     await Promise.all(

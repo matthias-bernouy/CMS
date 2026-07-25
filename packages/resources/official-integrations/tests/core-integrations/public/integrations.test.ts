@@ -82,6 +82,29 @@ describe("public integrations 1.0.0", () => {
             schemas: ["user_account"],
             expectedEndpoints: ["getAccount", "updateAccount", "listAccounts", "createUserPersonalInformation"],
         },
+        {
+            kind: "sales-configurator",
+            sourceId: "sales-configurator",
+            dashboardId: "sales-configurator-catalog",
+            blocTags: [
+                "sales-proposal-list",
+                "sales-proposal-starter",
+                "sales-proposal-builder",
+                "sales-proposal-view",
+            ],
+            answers: { id: "sales-configurator" },
+            functionName: "cms-sales-configurator",
+            schemas: ["sales_configurator"],
+            expectedEndpoints: [
+                "manageModules",
+                "managePartners",
+                "manageProposals",
+                "getPartnerCatalog",
+                "saveMyProposalDraft",
+                "publishMyProposal",
+                "getSharedProposal",
+            ],
+        },
     ])("installs $kind source, dashboard, connector, and blocs", async (scenario) => {
         const harness = await importScenario(scenario.kind, scenario.answers);
         const source = await harness.sources.getSource(`urn:${scenario.sourceId}`);

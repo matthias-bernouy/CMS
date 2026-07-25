@@ -5,6 +5,7 @@ export type BundleName =
     | "commerceNotifications"
     | "commerceNegotiatedCheckout"
     | "mondialRelay"
+    | "salesConfigurator"
     | "stripeConnect";
 
 export type ContractStep = { file: string; variables?: string[] };
@@ -20,12 +21,14 @@ export function postgresContractConfiguration(packageRoot: string): {
     integrationRoots: Record<BundleName, string>;
 } {
     const commerce = resolve(packageRoot, "integrations/domains/commerce/versions/1.0.0");
+    const salesConfigurator = resolve(packageRoot, "integrations/domains/sales-configurator/versions/1.0.0");
     return {
         integrationRoots: {
             commerce,
             commerceNotifications: commerce,
             commerceNegotiatedCheckout: commerce,
             mondialRelay: resolve(packageRoot, "integrations/providers/mondial-relay/versions/1.0.0"),
+            salesConfigurator,
             stripeConnect: resolve(packageRoot, "integrations/providers/stripe-connect/versions/1.0.0"),
         },
         contracts: [
@@ -70,6 +73,13 @@ export function postgresContractConfiguration(packageRoot: string): {
                 "mondialRelay",
                 "mondial-relay/tracking-summary",
                 ["run_tracking_summary_install_contract=true", "allow_tracking_summary_schema_reset=true"],
+            ),
+            contract(
+                "sales-configurator",
+                "Sales Configurator domain and authorization",
+                "salesConfigurator",
+                "core-integrations/sales-configurator",
+                ["allow_sales_configurator_schema_reset=true"],
             ),
             contract(
                 "stripe-connect-payout-schedule",

@@ -23,11 +23,15 @@ const expectedBlocs = new Map([
         ],
     ],
     ["commerce-negotiation", ["commerce-negotiation-form", "commerce-negotiation-list"]],
+    [
+        "sales-configurator",
+        ["sales-proposal-builder", "sales-proposal-list", "sales-proposal-starter", "sales-proposal-view"],
+    ],
     ["user-account", ["user-account-avatar", "user-account-form"]],
 ]);
 
 describe("public integration blocs 1.0.0", () => {
-    test("hydrate and build public blocs for commerce/account integrations", async () => {
+    test("hydrates and builds public integration blocs", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
 
         for (const [kind, tags] of expectedBlocs) {
