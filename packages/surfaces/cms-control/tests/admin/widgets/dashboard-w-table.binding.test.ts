@@ -86,6 +86,8 @@ describe("dashboard table widget binding", () => {
         button.click();
 
         expect(button.shadowRoot?.querySelector("button")?.getAttribute("aria-label")).toBe("Export CSV");
+        expect(button.getAttribute("color")).toBe("primary");
+        expect(button.hasAttribute("tone")).toBeFalse();
         expect(actions).toEqual([{ action: "exportSubscriptions", widget: "subscriptionsTable", target: undefined }]);
     });
 

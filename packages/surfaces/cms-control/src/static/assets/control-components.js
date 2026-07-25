@@ -20312,6 +20312,21 @@ w13c-lateral-menu-item {
       customElements.whenDefined(button.localName).then(syncNativeButton);
     }
   }
+  function setP9rButtonTone(button, tone) {
+    button.removeAttribute("color");
+    button.removeAttribute("variant");
+    if (tone === "primary") {
+      button.setAttribute("color", "primary");
+      button.setAttribute("variant", "filled");
+      return;
+    }
+    if (tone === "danger") {
+      button.setAttribute("color", "danger");
+      button.setAttribute("variant", "ghost");
+      return;
+    }
+    button.setAttribute("variant", "outlined");
+  }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/icons.ts
   var SVG_NS3 = "http://www.w3.org/2000/svg";
@@ -20354,14 +20369,7 @@ w13c-lateral-menu-item {
   function renderButton(action) {
     const button = document.createElement("p9r-button");
     button.setAttribute("type", "button");
-    if (action.tone === "primary") {
-      button.setAttribute("color", "primary");
-    } else if (action.tone === "danger") {
-      button.setAttribute("color", "danger");
-      button.setAttribute("variant", "ghost");
-    } else {
-      button.setAttribute("variant", "outlined");
-    }
+    setP9rButtonTone(button, action.tone);
     button.dataset.action = action.action ?? action.label;
     if (action.confirm) {
       button.dataset.confirm = action.confirm;
@@ -23848,7 +23856,7 @@ p9r-token-input {
       if (action.confirm) {
         button.dataset.confirm = action.confirm;
       }
-      button.setAttribute("tone", action.tone ?? "primary");
+      setP9rButtonTone(button, action.tone ?? "primary");
       setP9rButtonLabel(button, action.label);
       return button;
     });
@@ -25139,7 +25147,7 @@ slot { display: contents; }
         if (action.confirm) {
           button.dataset.confirm = action.confirm;
         }
-        button.setAttribute("tone", action.tone ?? "primary");
+        setP9rButtonTone(button, action.tone ?? "primary");
         setP9rButtonLabel(button, action.label);
         return button;
       }));

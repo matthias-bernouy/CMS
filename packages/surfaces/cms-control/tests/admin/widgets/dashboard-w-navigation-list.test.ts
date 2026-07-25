@@ -61,6 +61,10 @@ describe("dashboard navigation list widget", () => {
         document.body.append(list);
         await Promise.resolve();
 
+        const action = list.shadowRoot!.querySelector("p9r-button") as HTMLElement;
+        expect(action.getAttribute("color")).toBe("primary");
+        expect(action.hasAttribute("tone")).toBeFalse();
+
         agency
             .shadowRoot!.querySelector<HTMLElement>("[data-handle]")!
             .dispatchEvent(new Event("dragstart", { bubbles: true, composed: true }));

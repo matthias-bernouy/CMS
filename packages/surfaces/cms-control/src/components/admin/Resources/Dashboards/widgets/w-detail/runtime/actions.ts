@@ -1,5 +1,5 @@
 import type { WDetailData } from "../types";
-import { setP9rButtonLabel } from "../../shared";
+import { setP9rButtonLabel, setP9rButtonTone } from "../../shared";
 import { actionIcon } from "../icons";
 
 type DetailAction = WDetailData["actions"][number];
@@ -17,14 +17,7 @@ export function renderDetailActions(actions: WDetailData["actions"]): HTMLElemen
 function renderButton(action: DetailAction): HTMLElement {
     const button = document.createElement("p9r-button");
     button.setAttribute("type", "button");
-    if (action.tone === "primary") {
-        button.setAttribute("color", "primary");
-    } else if (action.tone === "danger") {
-        button.setAttribute("color", "danger");
-        button.setAttribute("variant", "ghost");
-    } else {
-        button.setAttribute("variant", "outlined");
-    }
+    setP9rButtonTone(button, action.tone);
     button.dataset.action = action.action ?? action.label;
     if (action.confirm) {
         button.dataset.confirm = action.confirm;

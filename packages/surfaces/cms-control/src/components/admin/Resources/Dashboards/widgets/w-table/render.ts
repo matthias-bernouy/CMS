@@ -1,7 +1,7 @@
 import "./WCell";
 import { type DashboardWRow } from "./WRow";
 import "./WRow";
-import { setP9rButtonLabel } from "../shared";
+import { setP9rButtonLabel, setP9rButtonTone } from "../shared";
 import type { WTableColumn, WTableData, WTableRow } from "./types";
 
 export function tableActionButtons(actions: NonNullable<WTableData["actions"]>): HTMLElement[] {
@@ -17,7 +17,7 @@ export function tableActionButtons(actions: NonNullable<WTableData["actions"]>):
         if (action.confirm) {
             button.dataset.confirm = action.confirm;
         }
-        button.setAttribute("tone", action.tone ?? "primary");
+        setP9rButtonTone(button, action.tone ?? "primary");
         setP9rButtonLabel(button, action.label);
         return button;
     });

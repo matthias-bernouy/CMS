@@ -111,6 +111,8 @@ describe("dashboard detail widget actions", () => {
 
         const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement & { shadowRoot: ShadowRoot };
         expect(save.shadowRoot.querySelector("button")?.getAttribute("aria-label")).toBe("Save product");
+        expect(save.getAttribute("color")).toBe("primary");
+        expect(save.hasAttribute("tone")).toBeFalse();
         save.shadowRoot.querySelector("button")!.click();
 
         expect(actions).toHaveLength(1);

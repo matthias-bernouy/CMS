@@ -74,3 +74,20 @@ export function setP9rButtonLabel(button: HTMLElement, label: string): void {
         void customElements.whenDefined(button.localName).then(syncNativeButton);
     }
 }
+
+export function setP9rButtonTone(button: HTMLElement, tone: WidgetAction["tone"]): void {
+    button.removeAttribute("color");
+    button.removeAttribute("variant");
+
+    if (tone === "primary") {
+        button.setAttribute("color", "primary");
+        button.setAttribute("variant", "filled");
+        return;
+    }
+    if (tone === "danger") {
+        button.setAttribute("color", "danger");
+        button.setAttribute("variant", "ghost");
+        return;
+    }
+    button.setAttribute("variant", "outlined");
+}
