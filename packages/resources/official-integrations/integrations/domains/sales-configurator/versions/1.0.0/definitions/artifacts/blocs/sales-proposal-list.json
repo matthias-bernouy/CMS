@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "sales-proposal-list",
+        "name": "Proposal list",
+        "group": "Sales configurator",
+        "description": "Binding-aware list of proposals owned by the current sales partner.",
+        "path": "blocs/sales-proposal-list"
+    }
+}

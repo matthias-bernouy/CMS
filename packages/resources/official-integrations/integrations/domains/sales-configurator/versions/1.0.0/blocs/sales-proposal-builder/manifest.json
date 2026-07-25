@@ -1,0 +1,10 @@
+{
+    "default-tag": "sales-proposal-builder",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Proposal builder",
+        "description": "Binding-aware proposal configurator for the current sales partner."
+    }
+}

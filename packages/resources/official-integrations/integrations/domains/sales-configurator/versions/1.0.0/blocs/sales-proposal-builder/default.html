@@ -1,0 +1,191 @@
+<sales-proposal-builder source-id="sales-configurator" proposal-param="proposalId" share-path="/proposal" share-token-param="proposalToken">
+    <basic-stack gap="md" cms-condition="$source.loading">
+        <basic-skeleton height="10rem" animation="wave" label="Loading proposal"></basic-skeleton>
+        <basic-skeleton height="18rem" animation="wave" aria-hidden="true"></basic-skeleton>
+    </basic-stack>
+
+    <basic-toast role="alert" cms-condition="$source.error">This proposal could not be loaded. Check that it is still available to your account.</basic-toast>
+
+    <basic-card cms-condition="$source.empty">
+        <strong slot="title">Proposal unavailable</strong>
+        <span slot="description">Select one of your proposals before opening the configurator.</span>
+    </basic-card>
+
+    <basic-stack gap="lg" cms-condition="$source.loaded">
+        <header>
+            <small>{{ proposalData.proposal.reference }} · {{ proposalData.proposal.status }}</small>
+            <h2>{{ proposalData.proposal.title }}</h2>
+            <p>{{ proposalData.proposal.client.companyName }} · {{ proposalData.proposal.client.contactName }}</p>
+            <span hidden data-sales-proposal-status="{{ proposalData.proposal.status }}"></span>
+        </header>
+
+        <span hidden data-sales-version-state="draft" data-sales-selected-id="{{ item.catalogItemId }}" cms-repeat="proposalData.proposal.draftVersion.items as item"></span>
+        <span hidden data-sales-version-state="published" data-sales-selected-id="{{ item.catalogItemId }}" cms-repeat="proposalData.proposal.publishedVersion.items as item"></span>
+
+        <basic-card hidden data-sales-terminal appearance="outlined">
+            <strong slot="title">This proposal is read-only</strong>
+            <span slot="description">Its final status prevents further edits, publication, or sharing.</span>
+        </basic-card>
+
+        <basic-toast role="alert" cms-condition="proposalData.proposal.missingRequirements.length > 0">
+            The current selection has {{ proposalData.proposal.missingRequirements.length }} missing prerequisite(s). Resolve them before publishing.
+        </basic-toast>
+
+        <form data-sales-editable data-sales-draft-form cms-source="/.cms/sources/sales-configurator/saveMyProposalDraft as saveResult" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-source-publish="sales-proposals:changed">
+            <input type="hidden" name="id" value="{{ proposalData.proposal.id }}">
+            <input type="hidden" name="clientId" value="{{ proposalData.proposal.client.id }}">
+
+            <basic-stack gap="md">
+                <basic-input name="title" label="Proposal title" value="{{ proposalData.proposal.title }}" required></basic-input>
+                <basic-textarea name="introduction" label="Client introduction" rows="4" value="{{ proposalData.proposal.introduction }}"></basic-textarea>
+                <basic-textarea name="privateNotes" label="Private partner notes" rows="3" value="{{ proposalData.proposal.privateNotes }}"></basic-textarea>
+            </basic-stack>
+
+            <section data-sales-catalog-source cms-source="/.cms/sources/sales-configurator/getPartnerCatalog as catalogData">
+                <basic-stack gap="md" cms-condition="$source.loading">
+                    <basic-skeleton height="12rem" animation="wave" label="Loading catalogue"></basic-skeleton>
+                </basic-stack>
+
+                <basic-toast role="alert" cms-condition="$source.error">The published catalogue could not be loaded.</basic-toast>
+
+                <basic-card cms-condition="$source.empty || $source.loaded && catalogData.modules.length == 0">
+                    <strong slot="title">No published modules</strong>
+                    <span slot="description">Ask an administrator to publish the catalogue before configuring proposals.</span>
+                </basic-card>
+
+                <basic-stack gap="lg" cms-condition="$source.loaded && catalogData.modules.length > 0">
+                    <basic-card appearance="outlined" cms-repeat="catalogData.modules as module">
+                        <strong slot="title">{{ module.name }}</strong>
+                        <span slot="description">{{ module.description }}</span>
+                        <basic-stack gap="xs" cms-condition="module.requirements.length > 0">
+                            <small>Module prerequisites</small>
+                            <span cms-repeat="module.requirements as requirement">{{ requirement.requiredName }}</span>
+                        </basic-stack>
+
+                        <basic-stack gap="md">
+                            <basic-card appearance="outlined" cms-repeat="module.variants as variant">
+                                <basic-checkbox value="{{ variant.id }}" data-sales-variant data-module-id="{{ module.id }}" data-catalog-id="{{ variant.id }}">
+                                    <strong>{{ variant.name }}</strong>
+                                    <span cms-condition="variant.providerName"> · {{ variant.providerName }}</span>
+                                </basic-checkbox>
+                                <p cms-condition="variant.pricingMode == 'fixed'">
+                                    Variant price: <strong data-sales-money data-amount-cents="{{ variant.unitAmountCents }}" data-currency="{{ variant.currency }}">—</strong>
+                                </p>
+                                <p cms-condition="variant.pricingMode == 'quote'">Variant price: on request</p>
+                                <basic-stack gap="xs" cms-condition="variant.requirements.length > 0">
+                                    <small>Prerequisites</small>
+                                    <span cms-repeat="variant.requirements as requirement">{{ requirement.requiredName }}</span>
+                                </basic-stack>
+
+                                <basic-stack gap="sm">
+                                    <div cms-repeat="variant.features as feature">
+                                        <span cms-condition="feature.availability == 'included'">Included · {{ feature.name }}</span>
+                                        <basic-checkbox value="{{ feature.id }}" data-sales-feature data-module-id="{{ module.id }}" data-variant-id="{{ variant.id }}" data-catalog-id="{{ feature.id }}" cms-condition="feature.availability == 'optional'">
+                                            {{ feature.name }}
+                                            <span cms-condition="feature.pricingMode == 'fixed'">
+                                                · <span data-sales-money data-amount-cents="{{ feature.unitAmountCents }}" data-currency="{{ variant.currency }}">—</span>
+                                            </span>
+                                            <span cms-condition="feature.pricingMode == 'quote'"> · on request</span>
+                                        </basic-checkbox>
+                                        <small cms-condition="feature.requirements.length > 0">
+                                            Requires:
+                                            <span cms-repeat="feature.requirements as requirement">{{ requirement.requiredName }}</span>
+                                        </small>
+                                    </div>
+                                </basic-stack>
+                            </basic-card>
+                        </basic-stack>
+                    </basic-card>
+                </basic-stack>
+            </section>
+
+            <basic-stack gap="sm">
+                <basic-card data-sales-custom-request appearance="outlined" cms-repeat="proposalData.proposal.draftVersion.items as item" cms-condition="item.kind == 'custom'">
+                    <strong slot="title">Specific request</strong>
+                    <basic-input data-sales-request-label label="Request label" value="{{ item.label }}" required></basic-input>
+                    <basic-textarea data-sales-request-description label="Description" rows="3" value="{{ item.description }}"></basic-textarea>
+                    <basic-input data-sales-request-quantity type="number" min="1" step="1" label="Quantity" value="{{ item.quantity }}"></basic-input>
+                </basic-card>
+                <basic-card data-sales-custom-request appearance="outlined">
+                    <strong slot="title">Add a specific request</strong>
+                    <basic-input data-sales-request-label label="Request label"></basic-input>
+                    <basic-textarea data-sales-request-description label="Description" rows="3" placeholder="This request will be marked as requiring a quote."></basic-textarea>
+                    <basic-input data-sales-request-quantity type="number" min="1" step="1" label="Quantity" value="1"></basic-input>
+                </basic-card>
+            </basic-stack>
+
+            <basic-toast role="status" cms-condition="$source.loading">Saving the draft…</basic-toast>
+            <basic-toast role="alert" cms-condition="$source.error">The draft could not be saved. Review the selection and try again.</basic-toast>
+            <basic-stack gap="xs" cms-condition="$source.error && saveResult.body.missingRequirements.length > 0">
+                <strong>Missing prerequisites</strong>
+                <span cms-repeat="saveResult.body.missingRequirements as requirement">{{ requirement.subjectName }} requires {{ requirement.requiredName }}</span>
+            </basic-stack>
+            <basic-toast role="status" cms-condition="$source.loaded">Draft saved.</basic-toast>
+            <basic-button type="submit" appearance="filled">Save draft</basic-button>
+        </form>
+
+        <basic-card appearance="outlined" cms-condition="proposalData.proposal.draftVersion">
+            <strong slot="title">Current calculated total</strong>
+            <span>
+                <strong data-sales-money data-amount-cents="{{ proposalData.proposal.draftVersion.fixedTotalCents }}" data-currency="{{ proposalData.proposal.draftVersion.currency }}">—</strong>
+                <span cms-condition="proposalData.proposal.draftVersion.quoteItemCount > 0"> + {{ proposalData.proposal.draftVersion.quoteItemCount }} item(s) requiring a quote</span>
+            </span>
+        </basic-card>
+
+        <basic-card appearance="outlined" cms-condition="proposalData.proposal.publishedVersion && proposalData.proposal.draftVersion == null">
+            <strong slot="title">Published total</strong>
+            <span>
+                <strong data-sales-money data-amount-cents="{{ proposalData.proposal.publishedVersion.fixedTotalCents }}" data-currency="{{ proposalData.proposal.publishedVersion.currency }}">—</strong>
+                <span cms-condition="proposalData.proposal.publishedVersion.quoteItemCount > 0"> + {{ proposalData.proposal.publishedVersion.quoteItemCount }} item(s) requiring a quote</span>
+            </span>
+        </basic-card>
+
+        <form data-sales-editable data-sales-publish-form cms-source="/.cms/sources/sales-configurator/publishMyProposal as publishResult" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-source-publish="sales-proposals:changed" cms-condition="proposalData.proposal.draftVersion">
+            <input type="hidden" name="proposalId" value="{{ proposalData.proposal.id }}">
+            <input type="hidden" name="expectedVersionId" value="{{ proposalData.proposal.draftVersion.id }}">
+            <input type="hidden" name="expectedRevision" value="{{ proposalData.proposal.draftVersion.revision }}">
+            <basic-toast role="status" cms-condition="$source.loading">Publishing the proposal…</basic-toast>
+            <basic-toast role="alert" cms-condition="$source.error">The proposal could not be published. Resolve every prerequisite and try again.</basic-toast>
+            <basic-toast role="status" cms-condition="$source.loaded">Proposal published.</basic-toast>
+            <basic-button type="submit" appearance="filled">Publish proposal</basic-button>
+        </form>
+
+        <section data-sales-editable cms-condition="proposalData.proposal.publishedVersion">
+            <basic-card appearance="outlined">
+                <strong slot="title">Client access</strong>
+                <span slot="description">Create a revocable bearer link for the currently published version. The raw token is shown only once.</span>
+
+                <form data-sales-share-form cms-source="/.cms/sources/sales-configurator/createMyProposalShare as shareResult" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false">
+                    <input type="hidden" name="proposalId" value="{{ proposalData.proposal.id }}">
+                    <basic-input type="datetime-local" name="expiresAt" label="Optional expiry"></basic-input>
+                    <basic-toast role="status" cms-condition="$source.loading">Creating the client link…</basic-toast>
+                    <basic-toast role="alert" cms-condition="$source.error">The client link could not be created.</basic-toast>
+                    <basic-button type="submit" appearance="filled">Create client link</basic-button>
+
+                    <basic-card appearance="outlined" cms-condition="$source.loaded && shareResult.token">
+                        <strong slot="title">Copy this link now</strong>
+                        <span slot="description">For security, the token cannot be recovered after this response.</span>
+                        <a data-sales-share-link data-sales-share-token="{{ shareResult.token }}" href="/proposal?proposalToken={{ shareResult.token }}">Open shared proposal</a>
+                        <code>{{ shareResult.token }}</code>
+                    </basic-card>
+                </form>
+            </basic-card>
+
+            <basic-stack gap="sm" cms-condition="proposalData.proposal.shares.length > 0">
+                <basic-card appearance="outlined" cms-repeat="proposalData.proposal.shares as share">
+                    <strong slot="title">Client link #{{ share.id }}</strong>
+                    <span slot="description">Views: {{ share.viewCount }} · Created {{ share.createdAt }}</span>
+                    <span cms-condition="share.expiresAt">Expires {{ share.expiresAt }}</span>
+                    <span cms-condition="share.revokedAt">Revoked {{ share.revokedAt }}</span>
+                    <form data-sales-revoke-form cms-source="/.cms/sources/sales-configurator/revokeMyProposalShare as revokeResult" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-source-publish="sales-proposals:changed" cms-condition="share.revokedAt == null">
+                        <input type="hidden" name="proposalId" value="{{ proposalData.proposal.id }}">
+                        <input type="hidden" name="shareId" value="{{ share.id }}">
+                        <basic-toast role="status" cms-condition="$source.loading">Revoking link…</basic-toast>
+                        <basic-toast role="alert" cms-condition="$source.error">The link could not be revoked.</basic-toast>
+                        <basic-button type="submit" appearance="outlined">Revoke link</basic-button>
+                    </form>
+                </basic-card>
+            </basic-stack>
+        </section>
+    </basic-stack>
+</sales-proposal-builder>

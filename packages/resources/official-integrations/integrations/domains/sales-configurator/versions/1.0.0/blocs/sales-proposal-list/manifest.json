@@ -1,0 +1,10 @@
+{
+    "default-tag": "sales-proposal-list",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Proposal list",
+        "description": "Binding-aware list of proposals owned by the current sales partner."
+    }
+}

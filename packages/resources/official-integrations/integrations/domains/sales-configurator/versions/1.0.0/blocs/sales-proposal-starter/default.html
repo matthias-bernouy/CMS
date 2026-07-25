@@ -1,0 +1,138 @@
+<sales-proposal-starter source-id="sales-configurator" client-limit="100" edit-path="/proposals/edit" proposal-param="proposalId">
+    <basic-stack gap="md" cms-condition="$source.loading">
+        <basic-skeleton height="8rem" animation="wave" label="Loading clients"></basic-skeleton>
+        <basic-skeleton height="18rem" animation="wave" aria-hidden="true"></basic-skeleton>
+    </basic-stack>
+
+    <basic-toast role="alert" cms-condition="$source.error">Your clients could not be loaded. Try again in a moment.</basic-toast>
+
+    <basic-card cms-condition="$source.empty || $source.loaded && clientsData.items.length == 0">
+        <strong slot="title">Add a client first</strong>
+        <span slot="description">A proposal must belong to one of your clients. Create the first client here.</span>
+        <form data-sales-client-form cms-source="/.cms/sources/sales-configurator/saveMyClient as clientResult" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-source-publish="sales-clients:changed">
+            <basic-input name="companyName" label="Company name" required></basic-input>
+            <basic-input name="contactName" label="Contact name" required></basic-input>
+            <basic-input name="contactEmail" type="email" label="Contact email" required></basic-input>
+            <basic-input name="contactPhone" type="tel" label="Contact phone"></basic-input>
+            <basic-textarea name="notes" label="Private client notes" rows="3"></basic-textarea>
+            <basic-toast role="status" cms-condition="$source.loading">Saving the client…</basic-toast>
+            <basic-toast role="alert" cms-condition="$source.error">The client could not be saved.</basic-toast>
+            <basic-button type="submit" appearance="filled">Create client</basic-button>
+        </form>
+    </basic-card>
+
+    <basic-stack gap="lg" cms-condition="$source.loaded && clientsData.items.length > 0">
+        <header>
+            <small>New commercial proposal</small>
+            <h2>Prepare the first draft</h2>
+            <p>Choose the client and the services to include. You can refine and publish the proposal afterwards.</p>
+        </header>
+
+        <form data-sales-create-form cms-source="/.cms/sources/sales-configurator/saveMyProposalDraft as saveResult" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-source-publish="sales-proposals:changed">
+            <basic-stack gap="lg" cms-condition="!$source.loaded && !$source.loading">
+                <basic-stack gap="md">
+                    <basic-select name="clientId" label="Client" required>
+                        <basic-option value="">Choose a client…</basic-option>
+                        <basic-option value="{{ client.id }}" cms-repeat="clientsData.items as client">{{ client.companyName }} · {{ client.contactName }}</basic-option>
+                    </basic-select>
+                    <basic-input name="title" label="Proposal title" placeholder="Restaurant booking" required></basic-input>
+                    <basic-textarea name="introduction" label="Client introduction" rows="4" placeholder="Present the proposed solution and its objectives."></basic-textarea>
+                    <basic-textarea name="privateNotes" label="Private partner notes" rows="3" placeholder="Only you and administrators can read these notes."></basic-textarea>
+                </basic-stack>
+
+                <section data-sales-catalog-source cms-source="/.cms/sources/sales-configurator/getPartnerCatalog as catalogData">
+                    <basic-skeleton cms-condition="$source.loading" height="14rem" animation="wave" label="Loading catalogue"></basic-skeleton>
+                    <basic-toast role="alert" cms-condition="$source.error">The published catalogue could not be loaded.</basic-toast>
+                    <basic-card cms-condition="$source.empty || $source.loaded && catalogData.modules.length == 0">
+                        <strong slot="title">No published modules</strong>
+                        <span slot="description">Ask an administrator to publish the catalogue before creating proposals.</span>
+                    </basic-card>
+
+                    <basic-stack gap="lg" cms-condition="$source.loaded && catalogData.modules.length > 0">
+                        <basic-card appearance="outlined" cms-repeat="catalogData.modules as module">
+                            <strong slot="title">{{ module.name }}</strong>
+                            <span slot="description">{{ module.description }}</span>
+                            <basic-stack gap="xs" cms-condition="module.requirements.length > 0">
+                                <small>Module prerequisites</small>
+                                <span cms-repeat="module.requirements as requirement">{{ requirement.requiredName }}</span>
+                            </basic-stack>
+
+                            <basic-stack gap="md">
+                                <basic-card appearance="outlined" cms-repeat="module.variants as variant">
+                                    <basic-checkbox value="{{ variant.id }}" data-sales-variant data-module-id="{{ module.id }}" data-catalog-id="{{ variant.id }}">
+                                        <strong>{{ variant.name }}</strong>
+                                        <span cms-condition="variant.providerName"> · {{ variant.providerName }}</span>
+                                    </basic-checkbox>
+                                    <p cms-condition="variant.pricingMode == 'fixed'">
+                                        Variant price:
+                                        <strong data-sales-money data-amount-cents="{{ variant.unitAmountCents }}" data-currency="{{ variant.currency }}">—</strong>
+                                    </p>
+                                    <p cms-condition="variant.pricingMode == 'quote'">Variant price: on request</p>
+                                    <small cms-condition="variant.requirements.length > 0">
+                                        Requires:
+                                        <span cms-repeat="variant.requirements as requirement">{{ requirement.requiredName }}</span>
+                                    </small>
+
+                                    <basic-stack gap="sm">
+                                        <div cms-repeat="variant.features as feature">
+                                            <span cms-condition="feature.availability == 'included'">Included · {{ feature.name }}</span>
+                                            <basic-checkbox disabled value="{{ feature.id }}" data-sales-feature data-module-id="{{ module.id }}" data-variant-id="{{ variant.id }}" data-catalog-id="{{ feature.id }}" cms-condition="feature.availability == 'optional'">
+                                                {{ feature.name }}
+                                                <span cms-condition="feature.pricingMode == 'fixed'">
+                                                    · <span data-sales-money data-amount-cents="{{ feature.unitAmountCents }}" data-currency="{{ variant.currency }}">—</span>
+                                                </span>
+                                                <span cms-condition="feature.pricingMode == 'quote'"> · on request</span>
+                                            </basic-checkbox>
+                                            <small cms-condition="feature.requirements.length > 0">
+                                                Requires:
+                                                <span cms-repeat="feature.requirements as requirement">{{ requirement.requiredName }}</span>
+                                            </small>
+                                        </div>
+                                    </basic-stack>
+                                </basic-card>
+                            </basic-stack>
+                        </basic-card>
+                    </basic-stack>
+                </section>
+
+                <basic-stack gap="sm">
+                    <div>
+                        <strong>Specific requests</strong>
+                        <p>Add anything that is not covered by the catalogue. These items will require a custom quote.</p>
+                    </div>
+                    <basic-stack data-sales-custom-requests gap="sm">
+                        <basic-card data-sales-custom-request data-sales-custom-request-row appearance="outlined">
+                            <basic-input data-sales-request-label label="Request label"></basic-input>
+                            <basic-textarea data-sales-request-description label="Description" rows="3" placeholder="Describe the expected result."></basic-textarea>
+                            <basic-input data-sales-request-quantity type="number" min="1" step="1" label="Quantity" value="1"></basic-input>
+                            <basic-button data-sales-remove-request type="button" appearance="text">Remove</basic-button>
+                        </basic-card>
+                    </basic-stack>
+                    <basic-button data-sales-add-request type="button" appearance="outlined">Add another request</basic-button>
+                    <template data-sales-request-template>
+                        <basic-card data-sales-custom-request data-sales-custom-request-row appearance="outlined">
+                            <basic-input data-sales-request-label label="Request label"></basic-input>
+                            <basic-textarea data-sales-request-description label="Description" rows="3" placeholder="Describe the expected result."></basic-textarea>
+                            <basic-input data-sales-request-quantity type="number" min="1" step="1" label="Quantity" value="1"></basic-input>
+                            <basic-button data-sales-remove-request type="button" appearance="text">Remove</basic-button>
+                        </basic-card>
+                    </template>
+                </basic-stack>
+
+                <basic-toast role="alert" cms-condition="$source.error">The proposal could not be created. Review the selection and try again.</basic-toast>
+                <basic-stack gap="xs" cms-condition="$source.error && saveResult.body.missingRequirements.length > 0">
+                    <strong>Missing prerequisites</strong>
+                    <span cms-repeat="saveResult.body.missingRequirements as requirement">{{ requirement.subjectName }} requires {{ requirement.requiredName }}</span>
+                </basic-stack>
+                <basic-button type="submit" appearance="filled">Create draft proposal</basic-button>
+            </basic-stack>
+
+            <basic-toast role="status" cms-condition="$source.loading">Creating the proposal…</basic-toast>
+            <basic-card appearance="outlined" cms-condition="$source.loaded">
+                <strong slot="title">Proposal created</strong>
+                <span slot="description">{{ saveResult.body.proposal.reference }} is saved as a draft.</span>
+                <basic-button data-sales-created-link data-proposal-id="{{ saveResult.body.proposal.id }}" slot="actions" action="link" appearance="filled">Open and finish proposal</basic-button>
+            </basic-card>
+        </form>
+    </basic-stack>
+</sales-proposal-starter>

@@ -1,0 +1,24 @@
+[
+  {
+    "provider": "supabase",
+    "root": "connectors/supabase",
+    "dataApiSchemas": [
+      "sales_configurator"
+    ],
+    "schemas": [
+      {
+        "manifest": "sql/schema.manifest.json"
+      }
+    ],
+    "functions": [
+      {
+        "name": "cms-sales-configurator",
+        "directory": "functions/cms-sales-configurator",
+        "configPath": "supabase.config.toml",
+        "secrets": {
+          "CMS_SALES_CONFIGURATOR_API_KEY": "{{generated.cmsApiKey}}"
+        }
+      }
+    ]
+  }
+]
