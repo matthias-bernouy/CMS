@@ -312,12 +312,32 @@ environment file.
 | `ENDPOINT_PERFORMANCE_ENABLED` | Defaults to `true`; set to `false` to stop new endpoint observations and flushes without deleting retained rollups. |
 | `SOURCE_TIMING_SAMPLE_RATE` | Uniform detailed source-diagnostic sampling rate from `0` to `1`; defaults to `0.01`. Aggregate endpoint metrics remain exhaustive. |
 | `SOURCE_SLOW_REQUEST_THRESHOLD_MS` | Duration threshold for the separate forced diagnostic cohort; defaults to `1000`. Errors are forced independently. |
+| `CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED` | Defaults to `false`; enables bounded Source image derivatives after authorization. |
+| `CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED` | Defaults to `false`; requests browser `srcset` markup only for images explicitly marked `data-source-image-access="public"`. It is effective only while Source image transforms are enabled. |
+| `CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED` | Defaults to `false`; requests browser `srcset` markup for private and unclassified images. It is effective only while Source image transforms are enabled. |
 | `CMS_AUTH_SITE_NAME` | Public authentication site name; defaults to `CMS`. |
 | `CMS_AUTH_EMAIL_COOLDOWN_SECONDS` | Email throttle interval; defaults to 300 seconds. |
 | `CMS_AUTH_EMAIL_VERIFICATION_URL` | Delivery email-verification URL. |
 | `CMS_AUTH_PASSWORD_RESET_URL` | Delivery password-reset URL. |
 | `CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL` | Control email-verification URL. |
 | `CMS_CONTROL_AUTH_PASSWORD_RESET_URL` | Control password-reset URL. |
+
+Source image optimization uses a three-step dark rollout. First set
+`CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED=true`, recreate the CMS container, and
+observe image and foreground latency. Then enable
+`CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED`, observe the public cohort, and
+finally enable `CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED` after confirming
+that authenticated requests are reauthorized upstream. Public classification is
+opt-in through `data-source-image-access="public"`; missing or unknown
+classifications stay in the private cohort.
+
+Roll back in reverse order: disable private markup, then public markup so newly
+loaded pages use only original Source URLs, keep transforms enabled while
+previously loaded pages and cached responsive bundles drain, then disable
+transforms. All three switches are strict `true`/`false` values and remain off
+when omitted. A markup-only configuration fails closed: the runtime keeps both
+responsive cohorts disabled, and a residual `cms-width` request receives a
+non-cacheable `503` instead of an original under a false width descriptor.
 
 ### Integrations and SMTP
 

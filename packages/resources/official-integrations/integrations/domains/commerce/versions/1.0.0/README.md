@@ -143,9 +143,34 @@ and category field configuration reuses Product metadata definitions instead of
 creating a second value model.
 
 Product images live in a private `commerce-media` bucket and are served through
-the authenticated CMS source proxy. Upload, replacement, removal, and reorder
-commands keep the database attachment and Storage object in sync with
-best-effort compensation when Storage and PostgreSQL cannot commit together.
+the CMS Source proxy. Upload and replacement authorize the target before reading
+the bounded multipart body or writing Storage, detect the actual raster format
+and intrinsic dimensions, then recheck the attachment in PostgreSQL.
+
+Every uploaded Storage object is an immutable retained original. Replacement
+creates a new media identity and detaches the previous one; removal detaches the
+selected identity. Detached rows and bytes are retained but every public,
+seller, and administrator download context returns them as not found. Commerce
+does not create responsive variants, cleanup jobs, or automatic retention
+expiry.
+
+Private seller and administrator responses are `private, no-store`, so detach
+revocation is immediate on their next request. A public response may remain in
+a browser or shared cache for its existing maximum one-hour freshness window;
+after that window, the Source context revalidates and returns detached media as
+not found.
+
+CMS runtimes may derive a bounded WebP response on demand when an eligible image
+Source URL contains a canonical `cms-width`. Those derivatives are disposable
+CMS cache entries; Supabase remains the only source of truth for originals.
+
+This contract updates the existing Commerce `1.0.0` resources in place.
+Existing installations therefore require an explicit installation rerun after
+deployment. SQL is applied before the Edge Function. During that short
+transition, legacy attach signatures remain callable and remove/replace results
+no longer expose a retained Storage path that old code could delete. Complete
+the rerun promptly: the previous function does not implement pre-upload
+authorization or detached-product reads and is not a routine rollback target.
 
 The Commerce source and its eight dashboards use SVG icons from the versioned
 `assets/` directory. Their metadata declares `{ "path": "assets/...svg" }`;
@@ -247,7 +272,11 @@ slots for media, badges, headings, descriptive content, price, and actions. It
 can format a minor-unit amount and currency, while still allowing authored
 price content to override the fallback. Source-fed native images use
 `data-src` inside the media slot so the browser waits for binding interpolation
-before requesting the private source proxy.
+before requesting the Source proxy. When intrinsic dimensions are available,
+the shared CMS browser primitive adds canonical `srcset` candidates, preserves
+authored `sizes`, defaults lazy images to `auto, 100vw`, and reserves the
+original aspect ratio. Historical rows without dimensions keep their original
+Source URL.
 
 Public offer lists batch related products, sellers, variants, and media. Their
 declared output includes these projections, the primary image id, and public

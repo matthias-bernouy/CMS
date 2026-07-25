@@ -1,8 +1,8 @@
 # Source Image Optimization
 
-Status: implementation contract
+Status: implemented and validated against the acceptance criteria
 
-Date: 2026-07-24
+Date: 2026-07-25
 
 Scope: generic CMS Source image responses, with Commerce 1.0.0 as the first
 complete consumer.
@@ -138,12 +138,14 @@ Source authorization and Commerce object authorization are separate boundaries.
 For a private seller, admin, or authenticated endpoint, every request still
 calls the upstream before cached bytes can be served. This re-executes Commerce
 object authorization. Private derivative bytes may be internally deduplicated,
-but the response stays private and the cache never grants access.
+but the response stays `private, no-store` so browser reuse cannot outlive a
+detach or ownership change, and the cache never grants access.
 
 For a public image, a local lookup may bypass the upstream only while:
 
 - the previous upstream response explicitly allowed shared caching;
-- its remaining lifetime, including `Age`, is positive;
+- its remaining lifetime, including `Age` and apparent age from `Date`, is
+  positive;
 - the CMS cap is no longer than the upstream lifetime;
 - all upstream `Vary` dimensions are represented in the lookup identity;
 - the source identity is not computed per caller.
@@ -215,9 +217,14 @@ Product and offer uploads:
 - allocate a new immutable media identity and Storage path;
 - upload with the detected MIME;
 - call an authoritative attach-v2 RPC after upload;
-- delete only the just-uploaded object if that attach recheck fails.
+- delete only the just-uploaded object after a definitive pre-commit rejection;
+- retain it after a transport, 5xx, or malformed-success ambiguity because the
+  attach transaction may already have committed.
 
 An authorization refusal performs zero file-byte reads and zero Storage calls.
+An ambiguous attach can therefore leave an unattached retained original. That
+bounded failure mode is safer than deleting an object which may already be
+authoritative; automatic orphan cleanup remains explicitly deferred.
 
 ### Persistence and lifecycle
 
@@ -281,7 +288,7 @@ A real Chromium test covers:
 - the same image in 30% and 100% containers;
 - DPR 1 and DPR 2;
 - auto-sizes and conservative fallback;
-- `currentSrc` and actual network requests;
+- `currentSrc`, actual network requests, and decoded response dimensions/type;
 - no original-plus-variant double request;
 - no material CLS.
 
@@ -290,7 +297,7 @@ image interceptor with identical configuration:
 
 - representative read-only Commerce corpus outside the repository;
 - 12-card grid;
-- cold and warm phases;
+- cache-cold and cache-warm phases;
 - narrow and wide layouts;
 - DPR 1 and 2;
 - one and four concurrent users;
@@ -304,14 +311,37 @@ Activation requires:
 - zero warm encode and zero warm original read;
 - correct single-flight and descriptors;
 - no authorization bypass;
-- no significant aggregate foreground p95 regression;
+- no significant regression of the p95 of per-scenario foreground p95 values;
 - an explicit absolute cold foreground budget;
 - no image errors or material CLS regression;
 - tested rollback to original Source URLs.
 
-The benchmark records p50, p95, and p99. The foreground release gate compares
-aggregate p95 with a small absolute noise allowance; it does not hide cold CPU or
-memory cost, which remains reported separately.
+The benchmark records p50, p95, and p99 per scenario. Its foreground release
+gate compares the p95 of those per-scenario p95 values with a small absolute
+noise allowance. This is deliberately a conservative scenario gate, not a claim
+that raw request latencies from differently sized phases were pooled. CPU and
+memory remain reported separately. A cache-cold phase recreates the derivative
+cache; it is not a fresh-process or cold-libvips measurement.
+
+### Measured acceptance evidence
+
+Release suite `source-images-release-20260725-02` passed every comparison and
+browser gate on the approved 12-image read-only corpus:
+
+- listing image bytes fell from 32,210,271 to 1,775,658 at the median, a 94.5%
+  reduction;
+- listing image bytes fell from 128,841,084 to 10,391,936 at p95, a 91.9%
+  reduction;
+- the candidate had zero warm encodes, zero warm upstream reads, zero failed
+  images, zero descriptor mismatches, and zero single-flight mismatches;
+- the foreground p95 fell from 53.655 ms to 17.109 ms, while the absolute cold
+  foreground p95 was 2.657 ms;
+- peak RSS was 574,603,264 bytes against a 805,306,368-byte budget, and the
+  maximum scenario CPU time was 2,514.666 ms against a 5,000 ms budget;
+- normalized thumbnail MAE was 0.04037 against a 0.15 limit;
+- real Chromium 149 reported zero request, `currentSrc`, response,
+  representation, activation-order, recycling, rollback, double-fetch, or CLS
+  mismatch across narrow/wide containers and DPR 1/2.
 
 ## Rollout and rollback
 
@@ -319,15 +349,29 @@ Activation order:
 
 1. deploy additive Commerce SQL;
 2. deploy compatible Commerce Edge code;
-3. deploy the CMS interceptor and cache dark-capable;
-4. enable responsive markup on the public 12-card listing;
+3. deploy the CMS interceptor and cache dark-capable with
+   `CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED=false`;
+4. enable `CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED`, then
+   `CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED` for the public 12-card listing;
 5. observe cache, failure, CPU, memory, and foreground latency;
-6. enable private responsive consumers after upstream reauthorization is proven.
+6. enable `CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED` only after upstream
+   reauthorization is proven.
 
-Rollback is immediate and non-destructive: remove `cms-width` candidates or
-disable the interceptor so existing original Source URLs pass through unchanged.
+CMS image rollback starts immediately and remains non-destructive: disable the
+private responsive flag, then the public responsive flag so newly loaded pages
+use original Source URLs. Keep the interceptor enabled while previously loaded
+pages and immutable responsive bundles drain, then disable the transform flag.
+Once transforms are disabled, residual `cms-width` requests fail closed without
+caching; they never receive an original under a false width descriptor.
 Supabase originals were never migrated or deleted. The CMS derivative directory
 can be cleared at any time.
+
+Do not routinely roll back the Commerce Edge Function to the pre-hardening
+artifact. That artifact parses and writes uploads before target authorization,
+cannot reject a detached product through its old direct table read, and may
+delete an attached object after an ambiguous RPC response. Keep the hardened
+Edge Function while rolling back the three CMS flags in the order above; repair
+an Edge regression with a forward-compatible hotfix.
 
 ## Explicitly deferred
 
