@@ -13,7 +13,6 @@ import {
 import { SupabaseConnectorDeployer, type SupabaseConnectorFunctionSecrets } from "./supabase/SupabaseConnectorDeployer";
 
 export type ConfiguredSupabaseConnectorDeployerConfig = {
-    integrationsRoot: string;
     providerRepository: IntegrationConnectorProviderRepository;
     secrets: SecretReader;
     apiBaseUrl?: string;
@@ -47,7 +46,6 @@ export class ConfiguredSupabaseConnectorDeployer implements IntegrationConnector
         const projectRef = await this.readProjectRef();
         const accessToken = await this.readAccessToken();
         const deployer = new SupabaseConnectorDeployer({
-            integrationsRoot: this.config.integrationsRoot,
             projectRef,
             accessToken,
             ...(this.config.apiBaseUrl !== undefined ? { apiBaseUrl: this.config.apiBaseUrl } : {}),

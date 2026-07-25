@@ -16,7 +16,7 @@ describe("Supabase SQL bundle deployment", () => {
         const requests: Array<{ url: string; init: RequestInit }> = [];
         const deployment = schemaOnlyDeployment("sql/manifest.json");
 
-        const result = await deployer(root, requests).deploy(deployment, emptyContext());
+        const result = await deployer(requests).deploy(deployment, emptyContext(root));
 
         expect(result.resources).toEqual([
             { type: "schema", id: "sql/manifest.json", action: "applied" },
@@ -39,7 +39,7 @@ describe("Supabase SQL bundle deployment", () => {
         const deployment = schemaOnlyDeployment("sql/first/manifest.json");
         deployment.schemas.push({ manifest: "sql/second/manifest.json" });
 
-        const result = await deployer(root, requests).deploy(deployment, emptyContext());
+        const result = await deployer(requests).deploy(deployment, emptyContext(root));
 
         expect(result.resources?.slice(0, 2)).toEqual([
             { type: "schema", id: "sql/first/manifest.json", action: "applied" },
@@ -56,7 +56,7 @@ describe("Supabase SQL bundle deployment", () => {
         const deployment = schemaOnlyDeployment("sql/missing.json");
         deployment.schemas.unshift({ path: "schema.sql" });
 
-        await expect(deployer(root, requests).deploy(deployment, emptyContext())).rejects.toThrow(/was not found/);
+        await expect(deployer(requests).deploy(deployment, emptyContext(root))).rejects.toThrow(/was not found/);
 
         expect(requests).toEqual([]);
     });
@@ -68,7 +68,6 @@ describe("Supabase SQL bundle deployment", () => {
         const deployment = userAccountDeployment();
         deployment.schemas = [{ manifest: "sql/manifest.json" }];
         const failing = new SupabaseConnectorDeployer({
-            integrationsRoot: root,
             projectRef: "abcdefghijklmnopqrst",
             accessToken: "sbp_test",
             apiBaseUrl: "https://api.supabase.test",
@@ -78,7 +77,7 @@ describe("Supabase SQL bundle deployment", () => {
             },
         });
 
-        await expect(failing.deploy(deployment, emptyContext())).rejects.toThrow(/query failed/);
+        await expect(failing.deploy(deployment, emptyContext(root))).rejects.toThrow(/query failed/);
 
         expect(calls).toEqual(["https://api.supabase.test/v1/projects/abcdefghijklmnopqrst/database/query"]);
     });
@@ -92,9 +91,8 @@ function schemaOnlyDeployment(manifest: string) {
     return deployment;
 }
 
-function deployer(root: string, requests: Array<{ url: string; init: RequestInit }>) {
+function deployer(requests: Array<{ url: string; init: RequestInit }>) {
     return new SupabaseConnectorDeployer({
-        integrationsRoot: root,
         projectRef: "abcdefghijklmnopqrst",
         accessToken: "sbp_test",
         apiBaseUrl: "https://api.supabase.test",

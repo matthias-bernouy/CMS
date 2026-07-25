@@ -21,6 +21,7 @@ describe("production connector provider composition", () => {
         expect(entrypoint).toMatch(/providerRepository\s*:\s*features\.integrationConnectorProviders\s*,/);
         expect(entrypoint).toMatch(/secrets\s*:\s*core\.secrets\s*,/);
         expect(integrations).not.toContain("source.SUPABASE_");
+        expect(integrations).not.toMatch(/integrationsRoot\s*:/);
         expect(integrations).not.toMatch(/new\s+SupabaseConnectorDeployer\s*\(/);
     });
 });

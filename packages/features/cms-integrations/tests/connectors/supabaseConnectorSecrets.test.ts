@@ -7,7 +7,6 @@ describe("SupabaseConnectorDeployer secrets", () => {
         const root = await createSupabaseConnectorFixture();
         const requests: Array<{ url: string; init: RequestInit }> = [];
         const deployer = new SupabaseConnectorDeployer({
-            integrationsRoot: root,
             projectRef: "abcdefghijklmnopqrst",
             accessToken: "sbp_test",
             apiBaseUrl: "https://api.supabase.test",
@@ -31,6 +30,7 @@ describe("SupabaseConnectorDeployer secrets", () => {
                 answers: {},
                 generated: { cmsApiKey: "integration-value" },
                 secrets: { cmsApiKey: "${USER_ACCOUNT_API_KEY}" },
+                packageRoot: root,
                 env: {},
             },
         );
@@ -57,7 +57,6 @@ describe("SupabaseConnectorDeployer secrets", () => {
     test("redacts secret values from Supabase API errors", async () => {
         const root = await createSupabaseConnectorFixture();
         const deployer = new SupabaseConnectorDeployer({
-            integrationsRoot: root,
             projectRef: "abcdefghijklmnopqrst",
             accessToken: "sbp_test",
             apiBaseUrl: "https://api.supabase.test",
@@ -77,6 +76,7 @@ describe("SupabaseConnectorDeployer secrets", () => {
                 answers: {},
                 generated: { cmsApiKey: "cms_supersecret" },
                 secrets: { cmsApiKey: "${USER_ACCOUNT_API_KEY}" },
+                packageRoot: root,
                 env: {},
             });
             throw new Error("expected deploy to fail");

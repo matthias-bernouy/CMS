@@ -11,6 +11,7 @@ export {
     ConfiguredSupabaseConnectorDeployer,
     type ConfiguredSupabaseConnectorDeployerConfig,
 } from "../default-implementation/ConfiguredSupabaseConnectorDeployer";
+export { SUPABASE_FUNCTION_BUNDLE_LIMITS } from "../default-implementation/supabase/functionBundle";
 export { SUPABASE_SQL_BUNDLE_LIMITS } from "../default-implementation/supabase/sql/constants";
 export {
     loadSupabaseSqlBundle,

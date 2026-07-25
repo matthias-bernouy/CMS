@@ -1,10 +1,17 @@
 import { describe, expect, test } from "bun:test";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { SupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
-import { createSupabaseConnectorFixture, userAccountDeployment } from "./supabaseFixtures";
+import { createSupabaseConnectorFixture, supabaseConnectorRoot, userAccountDeployment } from "./supabaseFixtures";
 
 describe("SupabaseConnectorDeployer", () => {
     test("applies schemas, sets function secrets, and deploys functions through the Management API", async () => {
         const root = await createSupabaseConnectorFixture();
+        const functionRoot = join(supabaseConnectorRoot(root), "functions", "cms-user-account");
+        await mkdir(join(functionRoot, "nested"));
+        await writeFile(join(functionRoot, "z.ts"), "export const z = true;\n");
+        await writeFile(join(functionRoot, "a.ts"), "export const a = true;\n");
+        await writeFile(join(functionRoot, "nested", "b.ts"), "export const b = true;\n");
         const requests: Array<{ url: string; init: RequestInit }> = [];
         const fetchImpl: typeof fetch = async (input, init) => {
             requests.push({ url: String(input), init: init ?? {} });
@@ -26,7 +33,6 @@ describe("SupabaseConnectorDeployer", () => {
             return new Response(null, { status: init?.method === "PATCH" ? 200 : 201 });
         };
         const deployer = new SupabaseConnectorDeployer({
-            integrationsRoot: root,
             projectRef: "abcdefghijklmnopqrst",
             accessToken: "sbp_test",
             apiBaseUrl: "https://api.supabase.test",
@@ -37,6 +43,7 @@ describe("SupabaseConnectorDeployer", () => {
             answers: {},
             generated: { cmsApiKey: "cms_abc" },
             secrets: { cmsApiKey: "${USER_ACCOUNT_API_KEY}" },
+            packageRoot: root,
             env: {},
         });
 
@@ -87,8 +94,8 @@ describe("SupabaseConnectorDeployer", () => {
             verify_jwt: false,
         });
         const files = (deployBody as FormData).getAll("file") as Array<Blob & { name?: string }>;
-        expect(files.map((file) => file.name)).toEqual(["index.ts"]);
-        expect(await files[0]?.text()).toBe('Deno.serve(() => new Response("ok"));\n');
+        expect(files.map((file) => file.name)).toEqual(["a.ts", "index.ts", "nested/b.ts", "z.ts"]);
+        expect(await files[1]?.text()).toBe('Deno.serve(() => new Response("ok"));\n');
         expect(
             requests.every((request) => new Headers(request.init.headers).get("authorization") === "Bearer sbp_test"),
         ).toBe(true);
@@ -98,7 +105,6 @@ describe("SupabaseConnectorDeployer", () => {
         const root = await createSupabaseConnectorFixture();
         const requests: Array<{ url: string; init: RequestInit }> = [];
         const deployer = new SupabaseConnectorDeployer({
-            integrationsRoot: root,
             projectRef: "abcdefghijklmnopqrst",
             accessToken: "sbp_test",
             apiBaseUrl: "https://api.supabase.test",
@@ -117,6 +123,7 @@ describe("SupabaseConnectorDeployer", () => {
                 answers: {},
                 generated: {},
                 secrets: {},
+                packageRoot: root,
                 env: {},
             },
         );

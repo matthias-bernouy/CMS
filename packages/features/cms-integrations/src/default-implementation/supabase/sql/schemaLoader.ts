@@ -1,7 +1,9 @@
-import { readFile, realpath } from "node:fs/promises";
+import { resolveIntegrationPackageLimits } from "@bernouy/cms-integration-packages";
+import { readBoundedRegularFile } from "@bernouy/cms-integration-packages/fs";
 import { join, relative, sep } from "node:path";
 import { IntegrationRuntimeError } from "../../../core/errors";
 import type { IntegrationConnectorSchemaDeployment } from "../../../interfaces/IntegrationConnectorDeployer";
+import { resolveExistingSupabaseDirectory } from "../paths";
 import { assembleSupabaseSqlBundle } from "./bundleLoader";
 import { resolveSqlReference } from "./pathSecurity";
 
@@ -12,11 +14,14 @@ export type LoadedSupabaseSqlSchema = {
     sourceFiles: string[];
 };
 
+const SUPABASE_LEGACY_SQL_LIMITS = resolveIntegrationPackageLimits();
+const strictUtf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+
 export async function loadSupabaseSqlSchemas(
     connectorRoot: string,
     schemas: IntegrationConnectorSchemaDeployment[],
 ): Promise<LoadedSupabaseSqlSchema[]> {
-    const root = await realpath(connectorRoot);
+    const root = await resolveExistingSupabaseDirectory(connectorRoot);
     const anchor = join(root, "connector.json");
     const loaded: LoadedSupabaseSqlSchema[] = [];
     for (const schema of schemas) {
@@ -44,7 +49,7 @@ export async function loadSupabaseSqlSchemas(
 }
 
 export async function loadSupabaseSqlBundle(connectorRoot: string, manifest: string): Promise<LoadedSupabaseSqlSchema> {
-    const root = await realpath(connectorRoot);
+    const root = await resolveExistingSupabaseDirectory(connectorRoot);
     const path = await resolveSqlReference({
         connectorRoot: root,
         bundleRoot: root,
@@ -72,5 +77,10 @@ function schemaReference(schema: IntegrationConnectorSchemaDeployment): { kind: 
 }
 
 async function readLegacySql(path: string): Promise<string> {
-    return await readFile(path, "utf-8");
+    const bytes = await readBoundedRegularFile(path, 0, SUPABASE_LEGACY_SQL_LIMITS);
+    try {
+        return strictUtf8.decode(bytes);
+    } catch {
+        throw new IntegrationRuntimeError(`Supabase legacy SQL must be valid UTF-8: ${path}`);
+    }
 }

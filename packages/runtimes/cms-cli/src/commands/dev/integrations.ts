@@ -16,7 +16,6 @@ export function createLocalIntegrationServices(siteDir: string, repositoryUrl: s
     const integrationConnectorProviders = new LocalFsIntegrationConnectorProviderRepository(siteDir);
     const integrationConnectorDeployers: IntegrationConnectorDeployer[] = [
         new ConfiguredSupabaseConnectorDeployer({
-            integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
             providerRepository: integrationConnectorProviders,
             secrets,
             functionSecrets: readSupabaseFunctionSecrets(process.env),

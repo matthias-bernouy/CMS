@@ -30,7 +30,6 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
     );
     const integrationConnectorDeployers: IntegrationConnectorDeployer[] = [
         new ConfiguredSupabaseConnectorDeployer({
-            integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
             providerRepository: options.providerRepository,
             secrets: options.secrets,
             functionSecrets: readSupabaseFunctionSecrets(options.environment),

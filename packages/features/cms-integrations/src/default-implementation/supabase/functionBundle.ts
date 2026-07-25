@@ -1,8 +1,8 @@
-import { readdir, readFile } from "node:fs/promises";
-import { relative, sep } from "node:path";
+import { decodeIntegrationPackageFile, resolveIntegrationPackageLimits } from "@bernouy/cms-integration-packages";
+import { readBoundedRegularFile, readIntegrationPackageFiles } from "@bernouy/cms-integration-packages/fs";
 import { IntegrationRuntimeError } from "../../core/errors";
 import type { IntegrationConnectorFunctionDeployment } from "../../interfaces/IntegrationConnectorDeployer";
-import { resolveExistingSupabasePath, safeJoin } from "./paths";
+import { resolveExistingSupabaseDirectory, resolveExistingSupabaseFile } from "./paths";
 
 type SupabaseFunctionConfig = {
     entrypoint_path?: string;
@@ -12,26 +12,34 @@ type SupabaseFunctionConfig = {
     verify_jwt?: boolean;
 };
 
-type FileEntry = {
-    absolutePath: string;
-    relativePath: string;
-};
+export const SUPABASE_FUNCTION_BUNDLE_LIMITS = resolveIntegrationPackageLimits({
+    maxDepth: 24,
+    maxDirectories: 1_024,
+    maxFiles: 1_024,
+    maxFileBytes: 8 * 1_024 * 1_024,
+    maxDecodedBytes: 16 * 1_024 * 1_024,
+});
+
+const SUPABASE_FUNCTION_CONFIG_LIMITS = resolveIntegrationPackageLimits({
+    maxFileBytes: 1 * 1_024 * 1_024,
+    maxDecodedBytes: 1 * 1_024 * 1_024,
+});
+
+const strictUtf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
 export async function buildFunctionBody(
     connectorRoot: string,
     fn: IntegrationConnectorFunctionDeployment,
 ): Promise<FormData> {
-    const functionRoot = await resolveExistingSupabasePath(connectorRoot, fn.directory);
-    const files = await listFiles(functionRoot);
-    if (!files.length) {
+    const functionRoot = await resolveExistingSupabaseDirectory(connectorRoot, fn.directory);
+    const files = await readIntegrationPackageFiles(functionRoot, SUPABASE_FUNCTION_BUNDLE_LIMITS);
+    const paths = Object.keys(files).sort();
+    if (!paths.length) {
         throw new IntegrationRuntimeError(`Supabase function "${fn.name}" has no files`);
     }
 
     const config = fn.configPath
-        ? parseFunctionConfig(
-              await readFile(await resolveExistingSupabasePath(connectorRoot, fn.configPath), "utf-8"),
-              fn.name,
-          )
+        ? parseFunctionConfig(await readFunctionConfig(connectorRoot, fn.configPath), fn.name)
         : {};
     const metadata = {
         entrypoint_path: config.entrypoint_path ?? "index.ts",
@@ -42,11 +50,21 @@ export async function buildFunctionBody(
     };
     const body = new FormData();
     body.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }), "metadata.json");
-    for (const file of files) {
-        const bytes = await readFile(file.absolutePath);
-        body.append("file", new Blob([bytes]), file.relativePath);
+    for (const path of paths) {
+        const bytes = Uint8Array.from(decodeIntegrationPackageFile(files[path]!)).buffer;
+        body.append("file", new Blob([bytes]), path);
     }
     return body;
+}
+
+async function readFunctionConfig(connectorRoot: string, configPath: string): Promise<string> {
+    const path = await resolveExistingSupabaseFile(connectorRoot, configPath);
+    const bytes = await readBoundedRegularFile(path, 0, SUPABASE_FUNCTION_CONFIG_LIMITS);
+    try {
+        return strictUtf8.decode(bytes);
+    } catch {
+        throw new IntegrationRuntimeError(`Supabase function config must be valid UTF-8: ${configPath}`);
+    }
 }
 
 function parseFunctionConfig(source: string, functionName: string): SupabaseFunctionConfig {
@@ -120,27 +138,6 @@ function stripTomlComment(line: string): string {
         }
     }
     return line;
-}
-
-async function listFiles(root: string): Promise<FileEntry[]> {
-    return walkFiles(root, root);
-}
-
-async function walkFiles(base: string, current: string): Promise<FileEntry[]> {
-    const entries = await readdir(current, { withFileTypes: true });
-    const files = await Promise.all(
-        entries.map(async (entry) => {
-            const absolutePath = safeJoin(current, entry.name);
-            if (entry.isDirectory()) {
-                return walkFiles(base, absolutePath);
-            }
-            if (!entry.isFile()) {
-                return [];
-            }
-            return [{ absolutePath, relativePath: relative(base, absolutePath).replaceAll(sep, "/") }];
-        }),
-    );
-    return files.flat().sort((left, right) => left.relativePath.localeCompare(right.relativePath));
 }
 
 function isStringArray(value: unknown): value is string[] {

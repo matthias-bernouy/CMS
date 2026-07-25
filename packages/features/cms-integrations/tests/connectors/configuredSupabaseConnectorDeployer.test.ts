@@ -15,7 +15,6 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
             projectRef: "project-one",
         });
         const deployer = new ConfiguredSupabaseConnectorDeployer({
-            integrationsRoot: ".",
             providerRepository,
             secrets: new InMemorySecretStore(),
         });
@@ -26,12 +25,11 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
     });
 
     test("reloads provider settings and the access token before every deployment", async () => {
-        const integrationsRoot = await createSchemaFixture();
+        const packageRoot = await createSchemaFixture();
         const providerRepository = new InMemoryIntegrationConnectorProviderRepository();
         const secrets = new InMemorySecretStore();
         const requests: Array<{ url: string; authorization: string | null }> = [];
         const deployer = new ConfiguredSupabaseConnectorDeployer({
-            integrationsRoot,
             providerRepository,
             secrets,
             apiBaseUrl: "https://api.supabase.test",
@@ -46,11 +44,11 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
 
         await providerRepository.upsert({ provider: "supabase", enabled: true, projectRef: "project-one" });
         await secrets.set(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY, "sbp_first");
-        const first = await deployer.deploy(schemaDeployment(), emptyContext());
+        const first = await deployer.deploy(schemaDeployment(), emptyContext(packageRoot));
 
         await providerRepository.upsert({ provider: "supabase", enabled: true, projectRef: "project-two" });
         await secrets.set(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY, "sbp_second");
-        const second = await deployer.deploy(schemaDeployment(), emptyContext());
+        const second = await deployer.deploy(schemaDeployment(), emptyContext(packageRoot));
 
         expect(first.outputs).toEqual({ functionsBaseUrl: "https://project-one.supabase.co/functions/v1" });
         expect(second.outputs).toEqual({ functionsBaseUrl: "https://project-two.supabase.co/functions/v1" });
@@ -78,7 +76,6 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
         const providerRepository = new InMemoryIntegrationConnectorProviderRepository();
         const secrets = new InMemorySecretStore();
         const deployer = new ConfiguredSupabaseConnectorDeployer({
-            integrationsRoot: ".",
             providerRepository,
             secrets,
         });
@@ -105,7 +102,6 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
             projectRef: "project-one",
         });
         const deployer = new ConfiguredSupabaseConnectorDeployer({
-            integrationsRoot: ".",
             providerRepository,
             secrets: new InMemorySecretStore(),
         });
@@ -123,7 +119,6 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
             projectRef: "project-one",
         });
         const unreadable = new ConfiguredSupabaseConnectorDeployer({
-            integrationsRoot: ".",
             providerRepository,
             secrets: {
                 get: async () => {
@@ -136,18 +131,19 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
         expect(readError.message).toBe("Supabase connector provider access token could not be read");
         expect(readError.message).not.toContain(sensitiveToken);
 
-        const integrationsRoot = await createSchemaFixture();
+        const packageRoot = await createSchemaFixture();
         const secrets = new InMemorySecretStore();
         await secrets.set(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY, sensitiveToken);
         const failingRequest = new ConfiguredSupabaseConnectorDeployer({
-            integrationsRoot,
             providerRepository,
             secrets,
             apiBaseUrl: "https://api.supabase.test",
             fetch: async () => new Response(`request rejected bearer ${sensitiveToken}`, { status: 500 }),
         });
 
-        const deploymentError = await capturedError(failingRequest.deploy(schemaDeployment(), emptyContext()));
+        const deploymentError = await capturedError(
+            failingRequest.deploy(schemaDeployment(), emptyContext(packageRoot)),
+        );
         expect(deploymentError.message).toContain("Supabase API request failed (500)");
         expect(deploymentError.message).toContain("[redacted]");
         expect(deploymentError.message).not.toContain(sensitiveToken);
