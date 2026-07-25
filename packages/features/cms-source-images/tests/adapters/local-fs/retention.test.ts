@@ -122,7 +122,7 @@ describe("LocalSourceImageCache retention", () => {
             cache.putLookup("overlong", {
                 derivativeKey,
                 createdAt: 100,
-                freshUntil: 3_600_101,
+                freshUntil: 31_536_000_101,
             }),
         ).rejects.toThrow("current and bounded");
         expect(await readdir(join(root, "lookups"))).toEqual([]);

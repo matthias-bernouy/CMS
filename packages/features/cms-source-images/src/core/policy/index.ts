@@ -1,7 +1,7 @@
 import { nonNegativeInteger, parseCacheDirectives } from "./cacheControl";
 
 const COVERED_VARY_HEADERS = new Set(["accept", "accept-language"]);
-export const MAX_PUBLIC_SOURCE_FRESHNESS_MS = 60 * 60 * 1_000;
+export const MAX_PUBLIC_SOURCE_FRESHNESS_MS = 31_536_000 * 1_000;
 
 export type PublicSourceFreshness = Readonly<{ freshUntil: number }>;
 
@@ -41,7 +41,7 @@ export function publicSourceFreshness(response: Response, now: number): PublicSo
 
 export function freshPublicCacheControl(freshUntil: number, now: number): string {
     const remaining = Math.max(0, Math.floor((freshUntil - now) / 1000));
-    return `public, max-age=${remaining}, must-revalidate`;
+    return `public, max-age=${remaining}, immutable, must-revalidate`;
 }
 
 function numericDirective(directives: Map<string, string | true>, name: string): number | undefined {

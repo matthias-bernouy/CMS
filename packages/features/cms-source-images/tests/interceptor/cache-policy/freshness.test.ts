@@ -1,4 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
+import { InMemorySourceImageCache } from "@bernouy/cms-source-images";
 import { interceptorHarness, invoke, sourceRequest, upstreamImage } from "../../helpers/interceptorHarness";
 
 describe("Source image public cache freshness", () => {
@@ -38,10 +39,10 @@ describe("Source image public cache freshness", () => {
         const next = mock(async () => upstreamImage({ cacheControl: "public, max-age=60", headers: { Age: "10" } }));
 
         const first = await invoke(harness.interceptor, harness.endpoint, sourceRequest(), next);
-        expect(first.headers.get("cache-control")).toBe("public, max-age=50, must-revalidate");
+        expect(first.headers.get("cache-control")).toBe("public, max-age=50, immutable, must-revalidate");
         now.value = 50_000;
         const warm = await invoke(harness.interceptor, harness.endpoint, sourceRequest(), next);
-        expect(warm.headers.get("cache-control")).toBe("public, max-age=1, must-revalidate");
+        expect(warm.headers.get("cache-control")).toBe("public, max-age=1, immutable, must-revalidate");
         expect(next).toHaveBeenCalledTimes(1);
 
         now.value = 51_000;
@@ -62,18 +63,23 @@ describe("Source image public cache freshness", () => {
 
         const response = await invoke(harness.interceptor, harness.endpoint, sourceRequest(), next);
 
-        expect(response.headers.get("cache-control")).toBe("public, max-age=20, must-revalidate");
+        expect(response.headers.get("cache-control")).toBe("public, max-age=20, immutable, must-revalidate");
     });
 
-    test("never extends the public revocation window beyond one hour", async () => {
+    test("never extends public freshness beyond one year", async () => {
         const now = { value: 1_000 };
-        const harness = interceptorHarness({ now });
-        const next = mock(async () => upstreamImage({ cacheControl: "public, max-age=31536000" }));
+        const cache = new InMemorySourceImageCache({
+            now: () => now.value,
+            maxDerivativeAgeMs: 31_536_000_000,
+            maxLookupAgeMs: 31_536_000_000,
+        });
+        const harness = interceptorHarness({ now, cache });
+        const next = mock(async () => upstreamImage({ cacheControl: "public, max-age=63072000, immutable" }));
 
         const generated = await invoke(harness.interceptor, harness.endpoint, sourceRequest(), next);
-        expect(generated.headers.get("cache-control")).toBe("public, max-age=3600, must-revalidate");
+        expect(generated.headers.get("cache-control")).toBe("public, max-age=31536000, immutable, must-revalidate");
 
-        now.value += 3_599_000;
+        now.value += 31_535_999_000;
         await invoke(harness.interceptor, harness.endpoint, sourceRequest(), next);
         expect(next).toHaveBeenCalledTimes(1);
 
@@ -120,8 +126,8 @@ describe("Source image public cache freshness", () => {
         const first = await invoke(harness.interceptor, harness.endpoint, sourceRequest(), next);
         const second = await invoke(harness.interceptor, harness.endpoint, sourceRequest(), next);
 
-        expect(first.headers.get("cache-control")).toBe("public, max-age=60, must-revalidate");
-        expect(second.headers.get("cache-control")).toBe("public, max-age=60, must-revalidate");
+        expect(first.headers.get("cache-control")).toBe("public, max-age=60, immutable, must-revalidate");
+        expect(second.headers.get("cache-control")).toBe("public, max-age=60, immutable, must-revalidate");
         expect(next).toHaveBeenCalledTimes(1);
     });
 });

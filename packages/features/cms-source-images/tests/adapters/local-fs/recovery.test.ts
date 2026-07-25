@@ -72,7 +72,7 @@ describe("LocalSourceImageCache recovery", () => {
 
     test.each([
         ["future creation", { createdAt: 101, freshUntil: 200 }],
-        ["overlong freshness", { createdAt: 100, freshUntil: 3_600_101 }],
+        ["overlong freshness", { createdAt: 100, freshUntil: 31_536_000_101 }],
     ])("fails closed when persisted lookup has %s", async (_label, timestamps) => {
         const root = await fixture.cacheRoot();
         const first = new LocalSourceImageCache({ directory: root, now: () => 100 });

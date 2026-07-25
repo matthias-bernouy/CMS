@@ -24,7 +24,7 @@ describe("commerce offer image file responses", () => {
             "access-control-allow-headers": "authorization, content-type, x-cms-user-id",
             "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
             "access-control-allow-origin": "*",
-            "cache-control": "public, max-age=3600",
+            "cache-control": "public, max-age=31536000, immutable",
             "content-type": "image/webp",
             etag: 'W/"offer-image-12"',
             "last-modified": "Tue, 21 Jul 2026 10:30:00 GMT",

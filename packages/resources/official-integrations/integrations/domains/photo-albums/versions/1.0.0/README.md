@@ -8,6 +8,9 @@ The public Blocs use `publicPhoto` file URLs with intrinsic dimensions. CmsCore
 adds only its finite responsive width candidates and keeps generated
 derivatives in disposable runtime cache infrastructure. `@bernouy/cms-files`
 continues to own site-editor media and is not a second store for album photos.
+Public photo identities use `public, max-age=31536000, immutable`. Replacement
+creates a different identity; cached URLs may therefore remain readable for up
+to one year after an album is unpublished or a photo is detached.
 
 Version 1.0.0 provides flat categories, ordered albums and photos, publication
 status, gallery settings, three backoffice dashboards, an album list Bloc, and

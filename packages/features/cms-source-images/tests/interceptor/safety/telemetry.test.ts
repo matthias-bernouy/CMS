@@ -17,7 +17,7 @@ describe("Source image failure telemetry", () => {
         const first = await invoke(harness.interceptor, harness.endpoint, sourceRequest(), harness.next);
         const second = await invoke(harness.interceptor, harness.endpoint, sourceRequest(), harness.next);
         expect(first.headers.get("content-type")).toBe("image/webp");
-        expect(first.headers.get("cache-control")).toBe("public, max-age=3600, must-revalidate");
+        expect(first.headers.get("cache-control")).toBe("public, max-age=3600, immutable, must-revalidate");
         expect(second.headers.get("content-type")).toBe("image/webp");
         expect(harness.next).toHaveBeenCalledTimes(2);
         expect(harness.transformer.transformCalls).toBe(2);
