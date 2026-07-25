@@ -32,15 +32,19 @@ Pre-existing baseline failures:
 Style, architecture-tooling, and CI-tooling passed. Task validation must not add
 new findings relative to this baseline.
 
-Current implementation checkpoint at `e90beaa6`:
+Current implementation checkpoint at `0b966aa7`:
 
-- all 116 `@bernouy/cms-integration-packages` tests pass, including HTTP
-  retrieval and adversarial, concurrency, restart, repair, and cleanup cache
-  coverage;
-- 15 focused deployment, download-policy, and storage-root tests pass;
-- direct TypeScript checks pass for `@bernouy/cms-integration-packages` and
-  `@bernouy/cms-server`; the earlier repository-surface and CLI runtime checks
-  remain recorded in their commit evidence;
+- all 133 `@bernouy/cms-integration-packages` tests pass, including HTTP
+  retrieval, immutable coordinate references, and adversarial concurrency,
+  restart, repair, and cleanup cache coverage;
+- all 247 `@bernouy/cms-integrations` tests pass, including cache-first exact
+  resolution, digest pins, offline legacy fallback, and package-definition
+  validation;
+- all 140 `@bernouy/cms-cli` tests and all 480 `@bernouy/cms-control` tests
+  pass, including package-provenance preservation and public Control views;
+- direct TypeScript checks pass for all four packages above and
+  `@bernouy/cms-server`; the earlier repository-surface runtime check remains
+  recorded in its commit evidence;
 - the post-cache comparative `bun run check:all` remains exactly 3 passed and 3
   failed, matching the initial baseline with no task-introduced error.
 
@@ -220,6 +224,28 @@ evidence.
   cleanup. Verified by 16 cache tests covering restart, two independent
   writers, reuse, corruption, symlinks, interrupted modes, stale/heartbeating
   locks, and cleanup, within the 116-test package suite.
+- `94e8bfcd` — extracted the exact version-root definition loader so embedded,
+  HTTP, and materialized packages share one identity and confinement contract.
+  Verified by 47 focused definition tests, the full 228-test integration suite,
+  and feature typecheck.
+- `5b242259` — added canonical immutable
+  `refs/<kind>/<exact-version>.json` cache references with atomic hard-link
+  publication, idempotence, conflict detection, and hostile-file rejection.
+  Verified by all 133 integration-package tests and package typecheck.
+- `2cd446a2` — persisted optional installation `packageDigest` provenance in
+  memory and Mongo while preserving true property absence for legacy records.
+  Verified by four focused persistence tests, all 232 integration tests, and
+  feature typecheck.
+- `e4d4323f` — resolved exact package roots cache-first by digest or immutable
+  coordinate, validated package definitions, repaired corrupt cache objects,
+  and limited embedded fallback to exact legacy reruns. Verified by all 247
+  integration tests and feature typecheck.
+- `6e7a0a42` — preserved pulled package provenance in generated CLI state
+  without adding it to authoring integration documents. Verified by all 140
+  CLI tests and runtime typecheck.
+- `0b966aa7` — exposed persisted package provenance through Control list and
+  detail views while omitting the field for legacy installations. Verified by
+  all 480 Control tests and surface typecheck.
 
 The post-cache `bun run check:all` at `e90beaa6` remained exactly 3 passed and 3
 failed. The failures match the recorded baseline: the same three official
@@ -229,7 +255,9 @@ There is no new file-size warning; the cache layout adds one non-blocking
 8-entry directory-fanout `INFO`.
 
 Lots 0.4, 0.5, and the standalone materializer in 0.6 are directly proven.
-Lot 0.6 is not complete end to end: installation `packageDigest` persistence,
-cache-first exact resolution, embedded legacy fallback, and runtime wiring
-remain pending under L0.6b, followed by deployer inversion and the degraded
-acceptance scenario.
+Lot 0.6 now has standalone persistence, cache-first exact resolution, embedded
+legacy fallback, and CLI/Control serialization evidence. It is not complete
+end to end until installation execution commits the resolved root and digest
+transactionally and runtime composition injects that resolver. Deployer
+inversion and the degraded acceptance scenario then remain under L0.7 and
+L0.8.
