@@ -1,6 +1,7 @@
 import { parseUrn } from "@bernouy/cms-sources";
 import { IntegrationInputError, IntegrationRuntimeError } from "../errors";
 import { integrationInstallationId } from "../installation/ids";
+import { integrationVersionSatisfies } from "../definitions/versioning";
 import { sensitiveInputNames } from "../shared/inputSensitivity";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import type { IntegrationInstallationRepository } from "../../interfaces/IntegrationInstallationRepository";
@@ -29,6 +30,15 @@ export async function resolveDependencyContext(
             throw new IntegrationInputError(
                 `dependencies.${dependency.name}`,
                 `requires integration "${dependency.kind}" to be installed`,
+            );
+        }
+        if (
+            dependency.versionRange &&
+            !integrationVersionSatisfies(installation.definitionVersion, dependency.versionRange)
+        ) {
+            throw new IntegrationInputError(
+                `dependencies.${dependency.name}`,
+                `requires integration "${dependency.kind}" version "${dependency.versionRange}", but "${installation.definitionVersion}" is installed`,
             );
         }
         const sourceIds = installation.artifacts

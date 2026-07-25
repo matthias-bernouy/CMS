@@ -16,14 +16,18 @@
     "dependencies": {
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-functions": "workspace:*",
-        "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
+        "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*"
+        "@bernouy/cms-triggers": "workspace:*",
+        "semver": "^7.8.2"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",
         "typescript": "^5.9.3"
+    },
+    "devDependencies": {
+        "@types/semver": "^7.7.1"
     }
 }

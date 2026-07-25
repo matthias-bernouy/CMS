@@ -42,8 +42,8 @@ new findings relative to this baseline.
 | L0.1d | Repository transport and contract failures have stable typed statuses. | HTTP definition client errors with bounded timeout. | Transport/429/5xx to 503; invalid upstream data to 502. | Complete |
 | L0.1e | Embedded reads are anonymous on Delivery, absent from Control, in production and CLI dev. | `cms-server` and `cms-cli` composition roots use Delivery ports. | Composition tests inspect both runners and loopback URLs. | Complete |
 | L0.1f | Public reads expose explicit cache and CORS behavior. | `@bernouy/cms-repository` read response helpers. | Anonymous GET/HEAD, cache, ETag, and CORS contract tests. | Complete |
-| L0.2a | Repository versions are exact SemVer 2.0 values. | Definition repository parsing using a maintained SemVer package. | Exact, invalid, and prerelease fixtures. | Pending |
-| L0.2b | Dependencies accept optional supported `versionRange` values and enforce them. | Integration dependency types, parser, and resolution. | Exact, caret, tilde, bounded-comparator, and legacy fixtures. | Pending |
+| L0.2a | Repository versions are exact SemVer 2.0 values. | Definition repository parsing using a maintained SemVer package. | Exact, invalid, and prerelease fixtures. | Partial |
+| L0.2b | Dependencies accept optional supported `versionRange` values and enforce them. | Integration dependency types, parser, and resolution. | Exact, caret, tilde, bounded-comparator, and legacy fixtures. | Complete |
 | L0.3a | Package v1 envelope supports UTF-8/base64 files and release notes. | New `@bernouy/cms-integration-packages` contracts and parser. | Round-trip, malformed encoding, legacy notes, and identity tests. | Pending |
 | L0.3b | RFC 8785 canonical bytes produce the package SHA-256 identity. | Shared canonicalizer and digest service. | JCS ordering, escaping, Unicode, surrogate, and key-order fixtures. | Pending |
 | L0.3c | Generic filesystem reader is deterministic, bounded, and symlink-safe. | Filesystem subpath of the package feature. | Traversal, symlink, special-file, depth, count, size, and binary tests. | Pending |
@@ -118,3 +118,6 @@ evidence.
 - `f7caa6e3` — added explicit `HEAD` route support to the HTTP runner contract
   and grouped runner implementation. Verified by all 48 foundation HTTP tests
   and the package typecheck.
+- `dea44424` — added anonymous GET/HEAD/OPTIONS caching, strong ETags, immutable
+  exact-version responses, and CORS to the public repository surface. Verified
+  by six repository contract tests and the surface typecheck.

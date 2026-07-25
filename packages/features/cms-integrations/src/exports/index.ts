@@ -99,6 +99,14 @@ export {
     integrationRegistry,
 } from "../core/definitions/catalog";
 export {
+    assertExactIntegrationVersion,
+    assertSupportedIntegrationVersionRange,
+    integrationVersionSatisfies,
+    isExactIntegrationVersion,
+    isIntegrationPrerelease,
+    isSupportedIntegrationVersionRange,
+} from "../core/definitions/versioning";
+export {
     parseIntegrationImportRequest,
     parseIntegrationImportDto,
 } from "../core/parsing/parseIntegrationImportDto";

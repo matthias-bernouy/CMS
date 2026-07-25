@@ -61,6 +61,7 @@ export type IntegrationSecurityDefinition = {
 export type IntegrationDependency = {
     name: string;
     kind: string;
+    versionRange?: string;
     optional?: boolean;
 };
 
