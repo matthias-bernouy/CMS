@@ -96,9 +96,7 @@ function resolveSettingValue(editor: Editor, setting: SettingControl): SettingCo
 }
 
 function readSettingAttribute(element: Element, name: string): string | null {
-    return isNetworkBindingAttribute(name)
-        ? readNetworkBindingAttribute(element, name)
-        : element.getAttribute(name);
+    return isNetworkBindingAttribute(name) ? readNetworkBindingAttribute(element, name) : element.getAttribute(name);
 }
 
 function isNetworkBindingAttribute(name: string): name is NetworkBindingAttribute {

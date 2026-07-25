@@ -6,13 +6,7 @@ import {
     type ResponsiveSourceImageAttributes,
     type ResponsiveSourceImageInput,
 } from "./attributes";
-import {
-    boundSourceUrl,
-    dimensionBinding,
-    hasUnresolvedBinding,
-    isEmptyBinding,
-    isResolved,
-} from "./bindings";
+import { boundSourceUrl, dimensionBinding, hasUnresolvedBinding, isEmptyBinding, isResolved } from "./bindings";
 
 type ResponsiveElementState = {
     authoredSizes?: string;

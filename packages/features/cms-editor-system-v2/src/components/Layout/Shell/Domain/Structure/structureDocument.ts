@@ -1,9 +1,6 @@
 import { clearBindingRuntimeState } from "@bernouy/cms-content/editor";
 import { clearCompositionRuntimeState } from "@bernouy/components/base";
-import {
-    prepareNetworkInertBindings,
-    restoreNetworkBindingMarkup,
-} from "@bernouy/components/binding-dom";
+import { prepareNetworkInertBindings, restoreNetworkBindingMarkup } from "@bernouy/components/binding-dom";
 
 export function isEmptyDocumentContent(contentRoot: HTMLElement | null | undefined): boolean {
     if (!contentRoot) {
