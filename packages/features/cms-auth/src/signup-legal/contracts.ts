@@ -54,7 +54,10 @@ export type SignupLegalAcceptance = PreparedSignupLegalAcceptance & {
 };
 
 export interface SignupLegalAcceptanceStore {
-    /** Append one immutable signup proof. Implementations must not upsert. */
+    /**
+     * Append one immutable proof event. An exact deterministic-id retry is a
+     * success; contradictory evidence under that id must fail.
+     */
     append(acceptance: SignupLegalAcceptance): Promise<void>;
     listForUser(cmsUserId: string): Promise<SignupLegalAcceptance[]>;
 }

@@ -59,6 +59,33 @@ closed. Empty settings leave signup unchanged and do not create proof records.
 Changing the page, label, or consent text creates a new version id; existing
 proofs remain untouched.
 
+Legal requirements are materialized and validated before the credential lookup,
+so an existing email and an unknown email have the same public response for a
+missing, stale, or unavailable policy version.
+
+Signup activation is a forward-only, retryable saga:
+
+1. create an unverified credential, or authenticate the password of an existing
+   credential that has no CMS membership;
+2. append the immutable proof with a deterministic id derived from the CMS user
+   id and exact accepted version set;
+3. create the CMS membership as the final activation step;
+4. only then send verification, or mark the credential verified when email
+   delivery is disabled.
+
+An ambiguous proof acknowledgement therefore leaves an unverified credential
+without membership. Submitting the same email, password, and current versions
+again resumes the saga. Exact proof retries preserve the first `acceptedAt` and
+snapshot; a later version set creates another event. Evidence that contradicts
+an existing deterministic id is rejected. Email verification and password
+reset ignore credentials that do not yet have an activated membership.
+
+Pending credentials are retained intentionally so an interrupted signup can be
+reconciled by retry. Automatic expiry is not implemented: an operational
+cleanup job may report credentials without a matching `local:<sub>` membership
+after a chosen retention period, but deletion must follow the site's legal and
+support retention policy rather than an implicit runtime timeout.
+
 ## Authoring Contract
 
 Use `GET /.cms/sources/system-auth/me` as a normal `cms-source` to render

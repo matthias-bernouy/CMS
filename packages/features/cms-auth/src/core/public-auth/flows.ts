@@ -6,7 +6,7 @@ import {
     sendVerificationForCredential,
 } from "cms-auth/core/public-auth/emailDelivery";
 import { normalizeEmail, requireToken, validateEmail } from "cms-auth/core/public-auth/input";
-import { compensateFailedSignup } from "cms-auth/core/public-auth/signupCompensation";
+import { activateOrResumeLocalSignup } from "cms-auth/core/public-auth/signupActivation";
 import type {
     PublicAuthFlowConfig,
     PublicAuthSendResult,
@@ -29,44 +29,17 @@ export async function signupLocalUser<Role extends string>(
     validateEmail(email);
     validatePassword(input.password);
 
-    const emailDeliveryEnabled = await isEmailDeliveryEnabled(cfg);
-    const existing = await cfg.credentials.getByEmail(email);
-    if (existing) {
-        if (!emailDeliveryEnabled) {
-            await cfg.credentials.markEmailVerified(existing.sub);
-            return { created: false, sent: false };
-        }
-        return { created: false, sent: await sendVerificationForCredential(cfg, existing) };
-    }
-
     const legalAcceptance = cfg.signupLegalAcceptance;
     const preparedLegalAcceptance = legalAcceptance
         ? await legalAcceptance.prepare(input.acceptedLegalDocumentVersionIds ?? [])
         : null;
-    const identity = await cfg.credentials.create({
+    return activateOrResumeLocalSignup(cfg, {
         email,
         password: input.password,
-        emailVerified: !emailDeliveryEnabled,
+        emailDeliveryEnabled: await isEmailDeliveryEnabled(cfg),
+        legalAcceptance,
+        preparedLegalAcceptance,
     });
-    const cmsUserId = internalUserId("local", identity.sub);
-    let membershipPersisted = false;
-    try {
-        await cfg.users.upsert({ ...identity, sub: cmsUserId, provider: "local" }, cfg.defaultRole);
-        membershipPersisted = true;
-        if (preparedLegalAcceptance && legalAcceptance) {
-            await legalAcceptance.record(preparedLegalAcceptance, cmsUserId);
-        }
-    } catch (error) {
-        await compensateFailedSignup(cfg, identity.sub, cmsUserId, membershipPersisted, error);
-    }
-    if (!emailDeliveryEnabled) {
-        return { created: true, sent: false };
-    }
-
-    return {
-        created: true,
-        sent: await sendVerificationForCredential(cfg, { sub: identity.sub, email, emailVerifiedAt: null }),
-    };
 }
 
 export async function requestEmailVerification<Role extends string>(
@@ -76,7 +49,7 @@ export async function requestEmailVerification<Role extends string>(
     const email = normalizeEmail(input.email);
     validateEmail(email);
     const credential = await cfg.credentials.getByEmail(email);
-    if (!credential) {
+    if (!credential || !(await hasActivatedMembership(cfg, credential.sub))) {
         return { sent: false };
     }
     if (!(await isEmailDeliveryEnabled(cfg))) {
@@ -94,6 +67,9 @@ export async function confirmEmailVerification<Role extends string>(
     if (!authToken) {
         throw new AuthValidationError("token", "invalid or expired");
     }
+    if (!(await hasActivatedMembership(cfg, authToken.sub))) {
+        throw new AuthValidationError("token", "invalid or expired");
+    }
 
     const marked = await cfg.credentials.markEmailVerified(authToken.sub);
     if (!marked) {
@@ -109,7 +85,7 @@ export async function requestPasswordReset<Role extends string>(
     const email = normalizeEmail(input.email);
     validateEmail(email);
     const credential = await cfg.credentials.getByEmail(email);
-    if (!credential || !(await isEmailDeliveryEnabled(cfg))) {
+    if (!credential || !(await hasActivatedMembership(cfg, credential.sub)) || !(await isEmailDeliveryEnabled(cfg))) {
         return { sent: false };
     }
     return { sent: await sendPasswordResetForCredential(cfg, credential) };
@@ -125,6 +101,9 @@ export async function confirmPasswordReset<Role extends string>(
     if (!authToken) {
         throw new AuthValidationError("token", "invalid or expired");
     }
+    if (!(await hasActivatedMembership(cfg, authToken.sub))) {
+        throw new AuthValidationError("token", "invalid or expired");
+    }
 
     const changed = await cfg.credentials.setPassword(authToken.sub, input.password);
     if (!changed) {
@@ -132,4 +111,11 @@ export async function confirmPasswordReset<Role extends string>(
     }
     await cfg.credentials.markEmailVerified(authToken.sub);
     await cfg.tokens.deleteForSub(authToken.sub, "password_reset");
+}
+
+async function hasActivatedMembership<Role extends string>(
+    cfg: PublicAuthFlowConfig<Role>,
+    credentialSub: string,
+): Promise<boolean> {
+    return Boolean(await cfg.users.getBySub(internalUserId("local", credentialSub)));
 }

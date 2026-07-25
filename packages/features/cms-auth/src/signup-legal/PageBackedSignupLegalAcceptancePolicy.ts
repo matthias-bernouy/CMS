@@ -1,4 +1,5 @@
 import { AuthValidationError } from "cms-auth/core/validation";
+import { signupLegalAcceptanceId } from "cms-auth/signup-legal/acceptanceIdentity";
 import type {
     PreparedSignupLegalAcceptance,
     ResolvedSignupLegalPage,
@@ -14,13 +15,9 @@ export type PageBackedSignupLegalAcceptanceConfig = {
     resolvePublishedPage(pageId: string): Promise<ResolvedSignupLegalPage | null>;
     store: SignupLegalAcceptanceStore;
     now?: () => Date;
-    createId?: () => string;
 };
 
-/**
- * Materializes current signup requirements exclusively from trusted CMS
- * configuration and published pages. Browser input contains version ids only.
- */
+/** Materializes requirements from trusted CMS configuration and published pages. */
 export class PageBackedSignupLegalAcceptancePolicy implements SignupLegalAcceptancePolicy {
     constructor(private readonly config: PageBackedSignupLegalAcceptanceConfig) {}
 
@@ -59,7 +56,7 @@ export class PageBackedSignupLegalAcceptancePolicy implements SignupLegalAccepta
             return;
         }
         await this.config.store.append({
-            id: this.config.createId?.() ?? crypto.randomUUID(),
+            id: await signupLegalAcceptanceId(cmsUserId, prepared.documents),
             cmsUserId,
             acceptedAt: this.config.now?.() ?? new Date(),
             documents: prepared.documents,

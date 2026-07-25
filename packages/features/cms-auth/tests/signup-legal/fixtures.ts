@@ -19,6 +19,7 @@ export function createLegalPolicy() {
         definitions: SignupLegalDocumentDefinition[];
         page: SignupLegalPageSnapshot | null;
         canonicalSnapshot?: string;
+        now: Date;
     } = {
         definitions: [
             {
@@ -30,6 +31,7 @@ export function createLegalPolicy() {
             },
         ],
         page: structuredClone(LEGAL_PAGE),
+        now: new Date("2026-07-25T10:00:00.000Z"),
     };
     const policy = new PageBackedSignupLegalAcceptancePolicy({
         documents: async () => state.definitions,
@@ -43,8 +45,7 @@ export function createLegalPolicy() {
             };
         },
         store,
-        now: () => new Date("2026-07-25T10:00:00.000Z"),
-        createId: () => "acceptance-1",
+        now: () => state.now,
     });
     return { policy, state, store };
 }

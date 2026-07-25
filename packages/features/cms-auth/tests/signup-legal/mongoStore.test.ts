@@ -4,45 +4,43 @@ import type { SignupLegalAcceptance } from "@bernouy/cms-auth";
 import { MongoSignupLegalAcceptanceStore } from "@bernouy/cms-auth/mongo";
 
 describe("MongoSignupLegalAcceptanceStore", () => {
-    test("creates immutable-proof indexes and appends without upserting", async () => {
-        const inserted: unknown[] = [];
-        const indexes: unknown[] = [];
+    test("keeps duplicate acknowledgements idempotent without overwriting evidence", async () => {
+        const documents = new Map<string, Record<string, unknown>>();
         const collection = {
-            createIndex: async (keys: unknown, options?: unknown) => {
-                indexes.push({ keys, options });
+            insertOne: async (document: Record<string, unknown>) => {
+                const id = document._id as string;
+                if (documents.has(id)) {
+                    throw Object.assign(new Error("duplicate"), { code: 11000 });
+                }
+                documents.set(id, structuredClone(document));
             },
-            insertOne: async (document: unknown) => {
-                inserted.push(structuredClone(document));
-            },
-            find: () => ({
+            findOne: async ({ _id }: { _id: string }) => structuredClone(documents.get(_id) ?? null),
+            find: ({ cmsUserId }: { cmsUserId: string }) => ({
                 sort: () => ({
-                    toArray: async () => structuredClone(inserted),
+                    toArray: async () =>
+                        structuredClone([...documents.values()].filter((entry) => entry.cmsUserId === cmsUserId)),
                 }),
             }),
         };
-        const names: string[] = [];
-        const db = {
-            collection: (name: string) => {
-                names.push(name);
-                return collection;
-            },
-        } as unknown as Db;
-        const store = new MongoSignupLegalAcceptanceStore(db, { collectionPrefix: "tenant_" });
-        const proof = acceptance();
+        const db = { collection: () => collection } as unknown as Db;
+        const store = new MongoSignupLegalAcceptanceStore(db);
+        const first = acceptance();
 
-        await store.init();
-        await store.append(proof);
-        expect(await store.listForUser("local:user-1")).toEqual([proof]);
-        expect(names.every((name) => name === "tenant_signup_legal_acceptances")).toBe(true);
-        expect(indexes).toEqual([
-            { keys: { cmsUserId: 1 }, options: { unique: true } },
-            { keys: { "documents.versionId": 1 }, options: undefined },
-        ]);
-        expect(inserted).toHaveLength(1);
+        await store.append(first);
+        await store.append({ ...first, acceptedAt: new Date("2026-07-26T10:00:00.000Z") });
+        await store.append({ ...first, id: "proof-2" });
+
+        expect(await store.listForUser(first.cmsUserId)).toEqual([first, { ...first, id: "proof-2" }]);
+        await expect(
+            store.append({
+                ...first,
+                documents: [{ ...first.documents[0]!, consentText: "Contradictory consent" }],
+            }),
+        ).rejects.toThrow("conflicts with different immutable evidence");
     });
 });
 
-function acceptance(): SignupLegalAcceptance {
+export function acceptance(): SignupLegalAcceptance {
     return {
         id: "proof-1",
         cmsUserId: "local:user-1",

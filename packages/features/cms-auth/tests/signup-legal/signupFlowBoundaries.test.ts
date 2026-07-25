@@ -6,7 +6,6 @@ import {
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
     type PublicAuthRoutesConfig,
-    signupLocalUser,
 } from "@bernouy/cms-auth";
 import { createLegalPolicy } from "./fixtures";
 
@@ -45,47 +44,6 @@ describe("signup legal acceptance flow boundaries", () => {
         const users = (await cfg.users.list()).users;
         expect(users).toHaveLength(1);
         expect(await legal.store.listForUser(users[0]!.sub)).toHaveLength(1);
-    });
-
-    test("does not backfill or require new acceptance when an existing unverified signup is retried", async () => {
-        const cfg = flowConfig(undefined);
-        const first = await signupLocalUser(cfg, {
-            email: "existing@x.com",
-            password: "password-1",
-        });
-        expect(first.created).toBe(true);
-
-        const legal = createLegalPolicy();
-        legal.state.page = null;
-        cfg.signupLegalAcceptance = legal.policy;
-        const retried = await signupLocalUser(cfg, {
-            email: "existing@x.com",
-            password: "password-1",
-        });
-
-        expect(retried.created).toBe(false);
-        const users = (await cfg.users.list()).users;
-        expect(users).toHaveLength(1);
-        expect(await legal.store.listForUser(users[0]!.sub)).toEqual([]);
-    });
-
-    test("rolls back both credential and CMS membership when proof storage fails", async () => {
-        const legal = createLegalPolicy();
-        legal.store.append = async () => {
-            throw new Error("proof store unavailable");
-        };
-        const cfg = flowConfig(legal.policy);
-        const versionId = (await legal.policy.requirements()).documents[0]!.versionId;
-
-        await expect(
-            signupLocalUser(cfg, {
-                email: "rollback@x.com",
-                password: "password-1",
-                acceptedLegalDocumentVersionIds: [versionId],
-            }),
-        ).rejects.toThrow("proof store unavailable");
-        expect(await cfg.credentials.getByEmail("rollback@x.com")).toBeNull();
-        expect((await cfg.users.list()).users).toEqual([]);
     });
 });
 
