@@ -16,6 +16,7 @@ import { LocalFsIntegrationConnectorProviderRepository } from "../../dev-server/
 
 type LocalIntegrationServiceOptions = {
     environment?: Record<string, string | undefined>;
+    definitionFetch?: typeof fetch;
     packageFetch?: typeof fetch;
 };
 
@@ -41,8 +42,13 @@ export async function createLocalIntegrationServices(
         locate: (kind, version) => integrationRepositoryCatalog.locateExactVersion(kind, version),
     });
     const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
-    const repositoryUrl = environment.P9R_INTEGRATION_REPOSITORY_URL?.trim() || localRepositoryUrl;
-    const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository(repositoryUrl);
+    const globalRepositoryUrl = environment.P9R_INTEGRATION_REPOSITORY_URL?.trim();
+    const repositoryReadMode = globalRepositoryUrl ? "global" : "embedded";
+    const repositoryUrl = globalRepositoryUrl || localRepositoryUrl;
+    const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository({
+        baseUrl: repositoryUrl,
+        ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
+    });
     const integrationPackageSource = new HttpIntegrationPackageSource({
         baseUrl: repositoryUrl,
         ...(options.packageFetch ? { fetch: options.packageFetch } : {}),
@@ -56,12 +62,18 @@ export async function createLocalIntegrationServices(
         embeddedSource: integrationRepositoryPackages,
     });
     await integrationPackageCache.init();
+    const publicRepositoryCatalog = repositoryReadMode === "global" ? integrationCatalog : integrationRepositoryCatalog;
+    const publicRepositoryPackages =
+        repositoryReadMode === "global" ? integrationPackageSource : integrationRepositoryPackages;
     return {
+        repositoryReadMode,
         integrationConnectorProviders,
         integrationConnectorDeployers,
         integrationProvisioners,
         integrationRepositoryCatalog,
         integrationRepositoryPackages,
+        publicRepositoryCatalog,
+        publicRepositoryPackages,
         integrationCatalog,
         integrationPackageSource,
         integrationPackageCache,

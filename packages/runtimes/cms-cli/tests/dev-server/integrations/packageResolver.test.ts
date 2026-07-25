@@ -18,12 +18,20 @@ afterEach(async () => {
 
 describe("local integration package resolver composition", () => {
     test.each([
-        ["remote", "  https://integrations.example.test/catalog  ", "https://integrations.example.test/catalog"],
-        ["Delivery loopback", " ", "http://localhost:5001/.cms/repository"],
+        [
+            "remote",
+            "  https://integrations.example.test/catalog  ",
+            "https://integrations.example.test/catalog",
+            "global",
+        ],
+        ["Delivery loopback", " ", "http://localhost:5001/.cms/repository", "embedded"],
     ])(
         "uses the %s URL for definitions and packages without network I/O at startup",
-        async (_, configured, expected) => {
+        async (_, configured, expected, readMode) => {
             const siteDir = await temporarySite();
+            const definitionFetch = mock(async () => {
+                throw new Error("local service startup must not fetch definitions");
+            });
             const packageFetch = mock(async () => {
                 throw new Error("local service startup must not fetch packages");
             });
@@ -33,12 +41,14 @@ describe("local integration package resolver composition", () => {
                 {} as never,
                 {
                     environment: { P9R_INTEGRATION_REPOSITORY_URL: configured },
+                    definitionFetch: definitionFetch as unknown as typeof fetch,
                     packageFetch: packageFetch as unknown as typeof fetch,
                 },
             );
             const expectedCacheRoot = join(siteDir, ".p9r", "integration-packages");
 
             expect(LOCAL_INTEGRATION_PACKAGE_CACHE_PATH).toBe(".p9r/integration-packages");
+            expect(services.repositoryReadMode).toBe(readMode);
             expect(definitionBaseUrl(services.integrationCatalog)).toBe(expected);
             expect(packageEndpoint(services.integrationPackageSource)).toBe(`${expected}/api/integrations/package`);
             expect(cacheConfigRoot(services.integrationPackageCache)).toBe(expectedCacheRoot);
@@ -50,6 +60,14 @@ describe("local integration package resolver composition", () => {
                 embeddedSource: services.integrationRepositoryPackages,
             });
             expect(packageFetch).toHaveBeenCalledTimes(0);
+            expect(definitionFetch).toHaveBeenCalledTimes(0);
+            if (readMode === "global") {
+                expect(services.publicRepositoryCatalog).toBe(services.integrationCatalog);
+                expect(services.publicRepositoryPackages).toBe(services.integrationPackageSource);
+            } else {
+                expect(services.publicRepositoryCatalog).toBe(services.integrationRepositoryCatalog);
+                expect(services.publicRepositoryPackages).toBe(services.integrationRepositoryPackages);
+            }
         },
     );
 });

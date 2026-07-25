@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import {
     InMemoryAuthTokenStore,
     InMemoryIdentityProviderRepository,
@@ -107,6 +107,9 @@ describe("production runtime services", () => {
 
         expect(services.integrationCatalog).toBeInstanceOf(HttpIntegrationDefinitionRepository);
         expect(services.integrationPackageSource).toBeInstanceOf(HttpIntegrationPackageSource);
+        expect(services.repositoryReadMode).toBe("global");
+        expect(services.publicRepositoryCatalog).toBe(services.integrationCatalog);
+        expect(services.publicRepositoryPackages).toBe(services.integrationPackageSource);
         expect(services.integrationPackageCache).toBeInstanceOf(FsIntegrationPackageCache);
         expect(services.integrationPackageResolver).toBeInstanceOf(FsIntegrationPackageResolver);
         expect(services.integrationRepositoryPackages).toBeInstanceOf(FsIntegrationPackageSource);
@@ -133,5 +136,31 @@ describe("production runtime services", () => {
             SMTP_HOST: "smtp.example.test",
             SMTP_PASSWORD: "secret",
         });
+    });
+
+    test("keeps embedded public reads on filesystem without recursing through loopback", async () => {
+        const definitionFetch = mock(async () => {
+            throw new Error("embedded public reads must not use loopback HTTP");
+        });
+        const packageFetch = mock(async () => {
+            throw new Error("embedded public reads must not use loopback HTTP");
+        });
+        const services = createProductionIntegrationServices({
+            providerRepository: {} as never,
+            secrets: {} as never,
+            localRepositoryUrl: "http://127.0.0.1:3001/.cms/repository",
+            packageCacheDir: "/data/integration-packages",
+            environment: {},
+            definitionFetch: definitionFetch as unknown as typeof fetch,
+            packageFetch: packageFetch as unknown as typeof fetch,
+        });
+
+        expect(services.repositoryReadMode).toBe("embedded");
+        expect(services.publicRepositoryCatalog).toBe(services.integrationRepositoryCatalog);
+        expect(services.publicRepositoryPackages).toBe(services.integrationRepositoryPackages);
+        expect((await services.publicRepositoryCatalog.list()).some(({ kind }) => kind === "commerce")).toBeTrue();
+        expect(await services.publicRepositoryPackages.getPackage("commerce", "1.0.0")).not.toBeNull();
+        expect(definitionFetch).not.toHaveBeenCalled();
+        expect(packageFetch).not.toHaveBeenCalled();
     });
 });
