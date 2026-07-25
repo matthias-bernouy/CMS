@@ -696,18 +696,25 @@ export class CommerceNegotiationList extends Composition {
         setHidden(placeholder, Boolean(mediaId));
         if (!mediaId) {
             image?.removeAttribute("data-cms-src");
+            image?.removeAttribute("data-source-image-access");
             image?.removeAttribute("data-source-width");
             image?.removeAttribute("data-source-height");
             return;
         }
         const prefix = (this.getAttribute("source-prefix") || "/.cms/sources").replace(/\/+$/, "");
         const sourceId = encodeURIComponent(this.getAttribute("commerce-source-id") || "commerce");
-        const endpoint = encodeURIComponent(this.getAttribute("image-endpoint") || "publicOfferImage");
+        const endpointId = this.getAttribute("image-endpoint") || "publicOfferImage";
+        const endpoint = encodeURIComponent(endpointId);
         setAttribute(
             image,
             "data-cms-src",
             `${prefix}/${sourceId}/${endpoint}?id=${encodeURIComponent(String(mediaId))}`,
         );
+        if (endpointId === "publicOfferImage") {
+            setAttribute(image, "data-source-image-access", "public");
+        } else {
+            image?.removeAttribute("data-source-image-access");
+        }
         setOptionalPositiveInteger(image, "data-source-width", sourceWidth);
         setOptionalPositiveInteger(image, "data-source-height", sourceHeight);
         setAttribute(image, "alt", proposal.offerTitle);
