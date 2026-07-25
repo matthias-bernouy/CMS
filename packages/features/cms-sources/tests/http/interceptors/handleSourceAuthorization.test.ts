@@ -1,7 +1,7 @@
 import { describe, expect, mock, test } from "bun:test";
 import { handleSourceRequest } from "cms-sources/http/handleSourceRequest";
 import type { SourceEndpoint } from "cms-sources/interfaces/Source";
-import { dynamicOverlayHarness, okFetch, seededSourceRepository, SOURCE_PREFIX } from "./handleSourceFixtures";
+import { dynamicOverlayHarness, okFetch, seededSourceRepository, SOURCE_PREFIX } from "../handleSourceFixtures";
 
 describe("handleSourceRequest authorization", () => {
     test.each([

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import { executeEndpoint } from "cms-sources/core/execution/executeEndpoint";
 import { ep, okFetch } from "../../helpers/executeEndpointFixtures";
 
@@ -109,5 +109,30 @@ describe("executeEndpoint headers", () => {
         expect(missingResponse.status).toBe(401);
         expect(await missingResponse.text()).toBe('computed header unavailable: "X-User-ID"');
         expect(missing).not.toHaveBeenCalled();
+    });
+
+    test("preserves cache freshness and Vary metadata but strips unsafe response headers", async () => {
+        const fetchImpl = mock(async () =>
+            Response.json(
+                { ok: true },
+                {
+                    headers: {
+                        Age: "12",
+                        Date: "Wed, 01 Jul 2026 12:00:00 GMT",
+                        Vary: "Accept-Language",
+                        "Cache-Control": "public, max-age=3600",
+                        "Set-Cookie": "private=value",
+                        "Content-Encoding": "gzip",
+                    },
+                },
+            ),
+        );
+        const response = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl });
+        expect(response.headers.get("age")).toBe("12");
+        expect(response.headers.get("date")).toBe("Wed, 01 Jul 2026 12:00:00 GMT");
+        expect(response.headers.get("vary")).toBe("Accept-Language");
+        expect(response.headers.get("set-cookie")).toBeNull();
+        expect(response.headers.get("content-encoding")).toBeNull();
+        expect(response.headers.get("cache-control")).toBe("private, no-store");
     });
 });
