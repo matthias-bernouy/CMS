@@ -62,7 +62,7 @@ export class LocalLookupStore {
         const keyDigest = await sha256Hex(key);
         const disk = lookupRecord(value, keyDigest);
         if (this.hasInvalidFreshnessWindow(disk)) {
-            throw new RangeError("Source image lookup freshness must be current and bounded to one hour");
+            throw new RangeError("Source image lookup freshness must be current and bounded to one year");
         }
         await atomicWriteJson(join(this.directory, `${keyDigest}.json`), disk);
         this.records.delete(keyDigest);

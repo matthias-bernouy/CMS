@@ -5,7 +5,12 @@ import {
 } from "cms-sources/interfaces/Source";
 import type { IdentityService } from "@bernouy/cms-identities";
 import { buildUpstreamUrl, type SourceComputedContext } from "cms-sources/core/upstream/buildUpstreamUrl";
-import { buildForwardHeaders, hasComputedHeaders, hasComputedParams } from "cms-sources/core/upstream/endpointHeaders";
+import {
+    allowsPublicCacheWithUpstreamCookie,
+    buildForwardHeaders,
+    hasComputedHeaders,
+    hasComputedParams,
+} from "cms-sources/core/upstream/endpointHeaders";
 import type { ResponseProjectionOptions } from "cms-sources/core/response-projection/projectEndpointResponse";
 import { bindResponseIdentities } from "cms-sources/core/response-projection/bindResponseIdentities";
 import type { UndeclaredUpstreamStatus } from "cms-sources/core/upstream/upstreamFailure";
@@ -30,7 +35,7 @@ export type SourceSecretResolver = (ref: string) => Promise<string | undefined>;
  *  - response projection options: choose the global compatibility/strict policy
  *    and receive sanitized legacy-contract observability events.
  */
-export type ExecutorDeps = ResponseProjectionOptions & {
+export type ExecutorDeps = Omit<ResponseProjectionOptions, "allowPublicCacheWithUpstreamCookie"> & {
     fetchImpl?: typeof fetch;
     resolveSecret?: SourceSecretResolver;
     resolveContext?: (request: Request) => Promise<SourceComputedContext>;
@@ -120,7 +125,13 @@ export async function executeEndpoint(
         }
         const upstream = await timedExecution(deps, "cms_upstream", () => doFetch(built.url, init));
         const projected = await timedExecution(deps, "cms_projection", () =>
-            projectSourceResponse(endpoint, request, upstream, deps),
+            projectSourceResponse(
+                endpoint,
+                request,
+                upstream,
+                deps,
+                allowsPublicCacheWithUpstreamCookie(endpoint, new URL(built.url), deps?.isTrustedConnectorTarget),
+            ),
         );
         const bindingError = await timedExecution(deps, "cms_identity_binding", () =>
             bindResponseIdentities(endpoint, projected, computed, deps?.identities),

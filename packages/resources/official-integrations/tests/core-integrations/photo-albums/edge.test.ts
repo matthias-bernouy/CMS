@@ -190,6 +190,46 @@ describe("photo albums Edge Function", () => {
         expect(response.status).toBe(404);
         expect(calls).toEqual(["/rest/v1/rpc/get_public_photo_context"]);
     });
+
+    test.each([
+        {
+            route: "/public/photo?id=41",
+            context: "get_public_photo_context",
+            cacheControl: "public, max-age=31536000, immutable",
+        },
+        {
+            route: "/photo?id=41",
+            context: "get_managed_photo_context",
+            cacheControl: "private, no-store",
+        },
+    ])("serves $context with its declared cache policy", async ({ route, context, cacheControl }) => {
+        globalThis.fetch = async (input, init) => {
+            const upstream = new Request(input, init);
+            const path = new URL(upstream.url).pathname;
+            if (path.endsWith(`/rpc/${context}`)) {
+                return Response.json({
+                    state: "ok",
+                    photo: {
+                        storage_bucket: "photo-albums-originals",
+                        storage_path: "albums/7/photo.png",
+                        mime_type: "image/png",
+                    },
+                });
+            }
+            if (path.includes("/storage/v1/object/photo-albums-originals/")) {
+                return new Response(pngBytes(1, 1), {
+                    headers: { "content-type": "image/png", etag: '"photo-etag"' },
+                });
+            }
+            throw new Error(`Unexpected upstream call: ${path}`);
+        };
+
+        const response = await handlePhotoAlbumsRequest(request(route));
+
+        expect(response.status).toBe(200);
+        expect(response.headers.get("cache-control")).toBe(cacheControl);
+        expect(response.headers.get("etag")).toBe('"photo-etag"');
+    });
 });
 
 function request(path: string, headers: HeadersInit = { authorization: "Bearer cms-photo-test" }): Request {

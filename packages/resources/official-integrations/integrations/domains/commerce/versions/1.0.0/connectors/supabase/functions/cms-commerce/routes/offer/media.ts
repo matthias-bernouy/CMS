@@ -64,7 +64,7 @@ export async function getOfferImageFile(request: Request, scope: OfferMediaScope
     copyHeader(stored, headers, "content-type", String(media.mime_type ?? "application/octet-stream"));
     copyHeader(stored, headers, "etag");
     copyHeader(stored, headers, "last-modified");
-    headers.set("cache-control", scope === "public" ? "public, max-age=3600" : "private, no-store");
+    headers.set("cache-control", scope === "public" ? "public, max-age=31536000, immutable" : "private, no-store");
     return new Response(stored.body, { status: 200, headers });
 }
 

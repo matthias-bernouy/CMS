@@ -150,7 +150,7 @@ class CorruptingLookupCache extends InMemorySourceImageCache {
             case "future":
                 return { ...lookup, createdAt: this.clock.value + 1, freshUntil: this.clock.value + 10_000 };
             case "overlong":
-                return { ...lookup, freshUntil: lookup.createdAt + 3_600_001 };
+                return { ...lookup, freshUntil: lookup.createdAt + 31_536_000_001 };
             case "nan":
                 return { ...lookup, createdAt: Number.NaN };
             case "infinite":

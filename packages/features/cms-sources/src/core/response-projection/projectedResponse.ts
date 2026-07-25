@@ -1,16 +1,17 @@
 import { responseHeaders } from "cms-sources/core/upstream/endpointHeaders";
+import type { ResponseProjectionOptions } from "./responseProjectionEvents";
 
-export function passthroughResponse(upstream: Response): Response {
+export function passthroughResponse(upstream: Response, options: ResponseProjectionOptions): Response {
     return new Response(upstream.body, {
         status: upstream.status,
         statusText: upstream.statusText,
-        headers: responseHeaders(upstream),
+        headers: responseHeaders(upstream, options),
     });
 }
 
-export async function discardResponseBody(upstream: Response): Promise<Response> {
+export async function discardResponseBody(upstream: Response, options: ResponseProjectionOptions): Promise<Response> {
     await cancelResponseBody(upstream.body);
-    const headers = responseHeaders(upstream);
+    const headers = responseHeaders(upstream, options);
     headers.delete("content-type");
     headers.delete("etag");
     headers.delete("last-modified");
@@ -21,8 +22,12 @@ export async function discardResponseBody(upstream: Response): Promise<Response>
     });
 }
 
-export function projectedJsonResponse(upstream: Response, value: unknown): Response {
-    const headers = responseHeaders(upstream);
+export function projectedJsonResponse(
+    upstream: Response,
+    value: unknown,
+    options: ResponseProjectionOptions,
+): Response {
+    const headers = responseHeaders(upstream, options);
     headers.delete("etag");
     headers.delete("last-modified");
     headers.delete("content-length");
