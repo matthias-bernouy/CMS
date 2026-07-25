@@ -8,3 +8,11 @@ export {
     type FsIntegrationPackageLocation,
     type FsIntegrationPackageSourceConfig,
 } from "./source";
+export {
+    FsIntegrationPackageCache,
+    IntegrationPackageCacheCorruptionError,
+    type ExpectedIntegrationPackageIdentity,
+    type FsIntegrationPackageCacheConfig,
+    type IntegrationPackageCacheEvent,
+    type MaterializedIntegrationPackage,
+} from "./cache";
