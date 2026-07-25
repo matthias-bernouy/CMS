@@ -17,7 +17,7 @@ export const SELLER_TERMS_VERSION = "seller-terms-2026-07-13";
 export const SELLER_TERMS_HASH = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 export const resolveCmsApiKey = async () => "commerce-cms-api-key";
 
-export async function loadIntegrationContract() {
+export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
     const sources = new InMemorySourceRepository();
     const functions = new InMemoryFunctionRepository();
     const installations = new InMemoryIntegrationInstallationRepository();
@@ -58,6 +58,7 @@ export async function loadIntegrationContract() {
             answers: {
                 sellerTermsVersion: SELLER_TERMS_VERSION,
                 sellerTermsHash: SELLER_TERMS_HASH,
+                sellerPayoutSchedule,
             },
             options: {},
         },
@@ -136,6 +137,7 @@ export async function loadIntegrationContract() {
         platformDecreaseFn,
         submitPriceFn,
         protectedOrderFn,
+        sellerPayoutSchedule,
     };
 }
 

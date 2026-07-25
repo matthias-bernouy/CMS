@@ -10,5 +10,12 @@
         "label": "Current seller terms SHA-256",
         "type": "text",
         "required": true
+    },
+    {
+        "name": "sellerPayoutSchedule",
+        "label": "Seller bank payout schedule",
+        "type": "text",
+        "required": true,
+        "defaultValue": "daily"
     }
 ]

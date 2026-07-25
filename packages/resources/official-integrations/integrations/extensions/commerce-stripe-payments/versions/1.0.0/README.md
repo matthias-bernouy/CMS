@@ -105,6 +105,26 @@ functions execute the idempotent Stripe operation and report the provider
 result back to Commerce. A failed trigger cannot authorize money by itself;
 the durable Commerce/Stripe operation remains pending for reconciliation.
 
+The installation input `sellerPayoutSchedule` controls only the connected
+seller's automatic bank payout after Commerce has released money and Stripe has
+made the Transfer available. It defaults to `daily` and accepts the provider's
+validated compact forms:
+
+```text
+daily
+manual
+weekly:monday,thursday
+monthly:1,15,31
+```
+
+There is no weekly/Monday fallback hidden in the workflow. The Commerce
+`payoutDelayDays` value remains a separately locked risk-policy input for each
+release and can be zero; the seller minimum balance remains separately
+configurable as a reserve/risk control. Changing the installation schedule
+also changes the payout-control idempotency key used for subsequent retries.
+`manual` is not the normal payout mode: use it only as a monitored temporary
+finance/risk hold and account for Stripe's jurisdiction-specific holding limit.
+
 Each release authorization also carries the authoritative seller identity,
 current required seller minimum balance, and the payout delay from the locked
 Commerce policy. Immediately before every Transfer attempt, including worker
@@ -117,6 +137,12 @@ retryable.
 Refunds after a seller Transfer use the Commerce-authorized seller recovery
 amount. Stripe Connect confirms the required Transfer Reversal before creating
 the Refund. Ambiguous provider results remain `manual_review`.
+
+The protected flow is neither a seller wallet nor an escrow/sequestration
+service. The Charge is captured on the Stripe platform; Commerce defers the
+separate seller Transfer until release. The platform remains responsible for
+provider fees, refunds, disputes, and reversals under the separate Charges and
+Transfers model.
 
 Marketplace claims and Stripe card disputes remain separate. Commerce resolves
 marketplace claims. Stripe Connect owns provider dispute evidence, submission,

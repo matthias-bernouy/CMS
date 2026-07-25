@@ -109,6 +109,7 @@ describe("Commerce protected Stripe combined installation", () => {
             {
                 sellerTermsVersion: SELLER_TERMS_VERSION,
                 sellerTermsHash: SELLER_TERMS_HASH,
+                sellerPayoutSchedule: "daily",
             },
             definitions,
             deps,
