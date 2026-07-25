@@ -17,6 +17,15 @@ export async function uploadStorageImage(bucket: string, path: string, file: Fil
     }
 }
 
+export async function uploadStorageImageWithFailureCleanup(bucket: string, path: string, file: File): Promise<void> {
+    try {
+        await uploadStorageImage(bucket, path, file);
+    } catch (error) {
+        await deleteStorageImageBestEffort(bucket, path);
+        throw error;
+    }
+}
+
 export async function downloadStorageImage(bucket: string, path: string): Promise<Response> {
     const response = await storageObject(bucket, path, { method: "GET" });
     if (response.status === 404) {

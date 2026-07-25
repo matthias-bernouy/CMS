@@ -5,8 +5,18 @@ import { camelize, isRecord } from "../../core/records.ts";
 import { rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
 import { productMediaBucket } from "../catalog/media/constants.ts";
-import { offerImagePath, readCommerceImage, readMediaIds, requiredQueryId } from "../catalog/media/request.ts";
-import { deleteStorageImageBestEffort, downloadStorageImage, uploadStorageImage } from "../catalog/media/storage.ts";
+import {
+    offerImagePath,
+    readCommerceImage,
+    readMediaIds,
+    requiredQueryId,
+    requireMediaUploadAuthorization,
+} from "../catalog/media/request.ts";
+import {
+    deleteStorageImageBestEffort,
+    downloadStorageImage,
+    uploadStorageImageWithFailureCleanup,
+} from "../catalog/media/storage.ts";
 
 type OfferMediaScope = "public" | "admin" | "self";
 
@@ -26,7 +36,6 @@ export async function removeOfferImage(request: Request, scope: OfferMediaScope)
         p_media_id: requiredQueryId(request, "mediaId"),
         p_cms_user_id: scope === "self" ? cmsUserId(request) : null,
     });
-    await removeReturnedObject(result, "storage_bucket", "storage_path");
     return resultResponse(result);
 }
 
@@ -55,7 +64,7 @@ export async function getOfferImageFile(request: Request, scope: OfferMediaScope
     copyHeader(stored, headers, "content-type", String(media.mime_type ?? "application/octet-stream"));
     copyHeader(stored, headers, "etag");
     copyHeader(stored, headers, "last-modified");
-    headers.set("cache-control", scope === "public" ? "public, max-age=3600" : "private, max-age=3600");
+    headers.set("cache-control", scope === "public" ? "public, max-age=3600" : "private, no-store");
     return new Response(stored.body, { status: 200, headers });
 }
 
@@ -84,27 +93,47 @@ async function attachUploadedImage(
     replacedMediaId: number | null,
 ): Promise<Response> {
     const offerId = requiredQueryId(request, "offerId");
-    const file = await readCommerceImage(request);
-    const storagePath = offerImagePath(offerId, file);
-    await uploadStorageImage(productMediaBucket, storagePath, file);
+    const cmsUser = scope === "self" ? cmsUserId(request) : null;
+    const authorization = await rpcRecord("authorize_offer_media_upload", {
+        p_offer_id: offerId,
+        p_replace_media_id: replacedMediaId,
+        p_cms_user_id: cmsUser,
+    });
+    requireMediaUploadAuthorization(
+        authorization,
+        "offer_id",
+        offerId,
+        replacedMediaId,
+        "authorize_offer_media_upload",
+    );
+    const image = await readCommerceImage(request);
+    const storagePath = offerImagePath(offerId, image);
+    await uploadStorageImageWithFailureCleanup(productMediaBucket, storagePath, image.file);
     let result: JsonRecord;
     try {
-        result = await rpcRecord("attach_offer_media", {
+        result = await rpcRecord("attach_offer_media_v2", {
             p_offer_id: offerId,
             p_storage_bucket: productMediaBucket,
             p_storage_path: storagePath,
-            p_mime_type: file.type.toLowerCase(),
-            p_file_size: file.size,
-            p_original_filename: file.name || null,
+            p_mime_type: image.mimeType,
+            p_file_size: image.file.size,
+            p_original_filename: image.file.name || null,
+            p_width: image.width,
+            p_height: image.height,
             p_replace_media_id: replacedMediaId,
-            p_cms_user_id: scope === "self" ? cmsUserId(request) : null,
+            p_cms_user_id: cmsUser,
         });
     } catch (error) {
-        await deleteStorageImageBestEffort(productMediaBucket, storagePath);
+        if (isDefinitiveAttachRejection(error)) {
+            await deleteStorageImageBestEffort(productMediaBucket, storagePath);
+        }
         throw error;
     }
-    await removeReturnedObject(result, "replaced_storage_bucket", "replaced_storage_path");
     return resultResponse(result);
+}
+
+function isDefinitiveAttachRejection(error: unknown): error is HttpError {
+    return error instanceof HttpError && error.status >= 400 && error.status < 500;
 }
 
 function cmsUserIdOrNull(request: Request): string | null {
@@ -119,14 +148,6 @@ async function rpcRecord(name: string, body: JsonRecord): Promise<JsonRecord> {
     return result;
 }
 
-async function removeReturnedObject(result: JsonRecord, bucketKey: string, pathKey: string): Promise<void> {
-    const bucket = result[bucketKey] ?? result[camelKey(bucketKey)];
-    const path = result[pathKey] ?? result[camelKey(pathKey)];
-    if (bucket === productMediaBucket && typeof path === "string" && path) {
-        await deleteStorageImageBestEffort(bucket, path);
-    }
-}
-
 function resultResponse(result: JsonRecord): Response {
     return json({ ok: true, ...(camelize(result) as JsonRecord) });
 }
@@ -135,7 +156,4 @@ function copyHeader(source: Response, target: Headers, name: string, fallback?: 
     if (value) {
         target.set(name, value);
     }
-}
-function camelKey(value: string): string {
-    return value.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
 }

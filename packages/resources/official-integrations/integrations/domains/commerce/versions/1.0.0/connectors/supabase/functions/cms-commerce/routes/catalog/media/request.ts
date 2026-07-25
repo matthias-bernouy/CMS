@@ -1,6 +1,14 @@
 import { HttpError } from "../../../core/errors.ts";
 import { integer, readJsonObject } from "../../../core/records.ts";
-import { maxProductImageBytes, productImageTypes } from "./constants.ts";
+import type { JsonRecord } from "../../../core/types.ts";
+import { maxProductImageBytes } from "./constants.ts";
+import { readSingleMultipartFile } from "./multipart.ts";
+import { probeCommerceImage } from "./probe/index.ts";
+import type { ProbedImage } from "./probe/index.ts";
+
+export type CommerceImage = ProbedImage & {
+    file: File;
+};
 
 export function requiredQueryId(request: Request, name: string, fallback?: string): number {
     const params = new URL(request.url).searchParams;
@@ -12,33 +20,27 @@ export function requiredQueryId(request: Request, name: string, fallback?: strin
     return id;
 }
 
-export async function readCommerceImage(request: Request): Promise<File> {
-    const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
-    if (!contentType.includes("multipart/form-data")) {
-        throw new HttpError(400, "image upload must use multipart/form-data");
-    }
+export async function readCommerceImage(request: Request): Promise<CommerceImage> {
+    const multipart = await readSingleMultipartFile(request, maxProductImageBytes);
+    const detected = probeCommerceImage(multipart.bytes);
+    return {
+        ...detected,
+        file: new File([multipart.bytes], multipart.filename, {
+            type: detected.mimeType,
+        }),
+    };
+}
 
-    let formData: FormData;
-    try {
-        formData = await request.formData();
-    } catch {
-        throw new HttpError(400, "invalid multipart body");
+export function requireMediaUploadAuthorization(
+    result: JsonRecord,
+    ownerKey: "offer_id" | "product_id",
+    ownerId: number,
+    replaceMediaId: number | null,
+    rpcName: string,
+): void {
+    if (result.state !== "authorized" || result[ownerKey] !== ownerId || result.replace_media_id !== replaceMediaId) {
+        throw new HttpError(502, `${rpcName} returned an invalid authorization response`);
     }
-
-    const file = formData.get("file");
-    if (!(file instanceof File)) {
-        throw new HttpError(400, "file is required");
-    }
-    if (file.size <= 0) {
-        throw new HttpError(400, "file is empty");
-    }
-    if (file.size > maxProductImageBytes) {
-        throw new HttpError(413, "file is too large");
-    }
-    if (!productImageTypes.has(file.type.toLowerCase())) {
-        throw new HttpError(400, "file must be a JPEG, PNG, WebP, GIF, or AVIF image");
-    }
-    return file;
 }
 
 export async function readMediaIds(request: Request): Promise<number[]> {
@@ -59,19 +61,15 @@ export async function readMediaIds(request: Request): Promise<number[]> {
     return ids;
 }
 
-export function productImagePath(productId: number, file: File): string {
-    return commerceImagePath("products", productId, file);
+export function productImagePath(productId: number, image: CommerceImage): string {
+    return commerceImagePath("products", productId, image);
 }
 
-export function offerImagePath(offerId: number, file: File): string {
-    return commerceImagePath("offers", offerId, file);
+export function offerImagePath(offerId: number, image: CommerceImage): string {
+    return commerceImagePath("offers", offerId, image);
 }
 
-function commerceImagePath(owner: "products" | "offers", ownerId: number, file: File): string {
-    const extension = productImageTypes.get(file.type.toLowerCase());
-    if (!extension) {
-        throw new HttpError(400, "unsupported image content type");
-    }
+function commerceImagePath(owner: "products" | "offers", ownerId: number, image: CommerceImage): string {
     const date = new Date().toISOString().slice(0, 10);
-    return `${owner}/${ownerId}/${date}/${crypto.randomUUID()}${extension}`;
+    return `${owner}/${ownerId}/${date}/${crypto.randomUUID()}${image.extension}`;
 }
