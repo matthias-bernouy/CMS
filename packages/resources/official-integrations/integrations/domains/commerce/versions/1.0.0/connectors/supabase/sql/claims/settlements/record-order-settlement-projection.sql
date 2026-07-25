@@ -40,7 +40,10 @@ begin
     if p_provider_operation_id is null or p_provider_operation_id <= 0 then
         raise exception 'validation: provider operation id is required';
     end if;
-    select * into v_order from commerce.orders where public_id = p_order_public_id;
+    select * into v_order
+    from commerce.orders
+    where public_id = p_order_public_id
+    for update;
     if not found then raise exception 'not_found: order'; end if;
     select * into v_settlement from commerce.order_settlements
     where order_id = v_order.id for update;
