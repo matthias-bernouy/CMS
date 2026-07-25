@@ -38,4 +38,13 @@ describe("public bloc hydration regressions 1.0.0", () => {
         expect(css).toContain(":host([hidden])");
         expect(css).toContain("display: none !important;");
     });
+
+    test("keeps a hidden card out of layout even when its host styles set display", async () => {
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("basic-blocs");
+        const artifact = definition?.artifacts?.find((item) => item.type === "bloc" && item.bloc.tag === "basic-card");
+        const viewJS = artifact?.type === "bloc" ? (artifact.bloc.viewJS ?? "") : "";
+
+        expect(viewJS).toContain(":host([hidden])");
+        expect(viewJS).toContain("display: none !important;");
+    });
 });

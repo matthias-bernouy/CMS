@@ -25,6 +25,8 @@ export class BasicCard extends HTMLElement {
                     font: inherit;
                 }
 
+                :host([hidden]) { display: none !important; }
+
                 :host([stretch]:not([stretch="false"])) { height: 100%; }
                 :host([stretch]:not([stretch="false"])) [part="card"] {
                     min-height: 100%;
