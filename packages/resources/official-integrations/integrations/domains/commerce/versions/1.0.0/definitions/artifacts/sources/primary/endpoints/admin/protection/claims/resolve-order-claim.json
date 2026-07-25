@@ -43,6 +43,10 @@
                 "sellerTransferAmount": {
                     "type": "number"
                 },
+                "buyerRefundAmount": {
+                    "type": "number",
+                    "description": "Legacy aggregate buyer refund in minor units. Submit this field alone, or submit both allocated refund fields."
+                },
                 "merchandiseRefundAmount": {
                     "type": "number",
                     "description": "Minor-unit amount allocated to refunded merchandise."
@@ -65,8 +69,6 @@
                 "claimId",
                 "outcome",
                 "sellerTransferAmount",
-                "merchandiseRefundAmount",
-                "shippingRefundAmount",
                 "protectionFeeRefundAmount",
                 "decisionReason",
                 "expectedVersion"

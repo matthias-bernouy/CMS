@@ -44,11 +44,15 @@ export async function requestOrderRefund(request: Request): Promise<Response> {
     const orderId = integer(body.orderId, "orderId", true);
     const reason = requiredText(body.reason, "reason");
     const actorId = cmsUserId(request);
-    const hasAllocation =
+    const hasLegacyAmount = body.amount !== undefined;
+    const hasAnyAllocation =
         body.merchandiseRefundAmount !== undefined ||
         body.shippingRefundAmount !== undefined ||
         body.protectionFeeRefundAmount !== undefined;
-    const result = hasAllocation
+    if (hasLegacyAmount === hasAnyAllocation) {
+        throw new HttpError(400, "exactly one refund amount form is required");
+    }
+    const result = hasAnyAllocation
         ? await rpc("request_allocated_order_refund", {
               p_order_id: orderId,
               p_reason: reason,
