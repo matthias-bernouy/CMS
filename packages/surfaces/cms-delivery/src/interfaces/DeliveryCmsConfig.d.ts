@@ -8,6 +8,7 @@ import type { IntegrationInstallationRepository } from "@bernouy/cms-integration
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type {
     ExecutorDeps,
+    SourceEndpointInterceptor,
     SourceOverlayRepository,
     SourceRepository,
     SourceRequestTelemetryOptions,
@@ -43,6 +44,12 @@ export type DeliveryCmsConfig = {
     sourceResolveSecret?: SourceSecretResolver;
     /** Request timings and non-blocking endpoint metrics supplied by the runtime. */
     sourceTelemetry?: SourceRequestTelemetryOptions;
+    /** Shared post-authorization interceptor for bounded Source image variants. */
+    sourceImageInterceptor?: SourceEndpointInterceptor;
+    /** Enables explicitly public responsive consumers when the interceptor is configured. Defaults to false. */
+    responsivePublicSourceImagesEnabled?: boolean;
+    /** Enables private and unclassified responsive consumers when the interceptor is configured. Defaults to false. */
+    responsivePrivateSourceImagesEnabled?: boolean;
     /** Runtime-owned allowlist for forwarding the opaque correlation header. */
     sourceTrustedConnectorTarget?: NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>;
     /** Optional first-party public authentication routes and system source. */

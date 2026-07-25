@@ -2,7 +2,7 @@ import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { getOrGenerateEntryAsync } from "@bernouy/http-runner";
 import { getBlocGroupManifest } from "cms-delivery/core/blocs/blocGroupManifest";
 import { generateBlocSetEntry, generateStyleEntry } from "@bernouy/cms-content";
-import { generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
+import { componentJsCacheKey, generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { generateBindingCoreJsEntry } from "cms-delivery/core/assets/buildBindingCore";
 import { P9R_CACHE } from "@bernouy/cms-content";
 
@@ -49,7 +49,7 @@ export type AssetsManifest = {
 export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: string[]): Promise<AssetsManifest> {
     const prefix = delivery.cmsPathPrefix;
     const componentJsUrl = `${prefix}/assets/component.js`;
-    const componentJsCacheKey = P9R_CACHE.js(componentJsUrl);
+    const componentCacheKey = componentJsCacheKey(componentJsUrl, delivery.responsiveSourceImageRollout);
     const bindingCoreJsUrl = `${prefix}/assets/cms-binding-core.js`;
     const bindingCoreJsCacheKey = P9R_CACHE.js(bindingCoreJsUrl);
 
@@ -76,7 +76,9 @@ export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: stri
     ];
 
     const [componentEntry, bindingCoreEntry, styleEntry, ...bundleEntries] = await Promise.all([
-        getOrGenerateEntryAsync(componentJsCacheKey, delivery.cache, generateComponentJsEntry),
+        getOrGenerateEntryAsync(componentCacheKey, delivery.cache, () =>
+            generateComponentJsEntry(delivery.responsiveSourceImageRollout),
+        ),
         getOrGenerateEntryAsync(bindingCoreJsCacheKey, delivery.cache, generateBindingCoreJsEntry),
         getOrGenerateEntryAsync(P9R_CACHE.STYLE, delivery.cache, () => generateStyleEntry(delivery.repository)),
         ...bundles.map((tags) =>

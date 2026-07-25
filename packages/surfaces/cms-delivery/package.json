@@ -22,6 +22,7 @@
         "linkedom": "^0.18.12",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
+        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-content": "workspace:*"
     },
     "devDependencies": {

@@ -7,6 +7,33 @@ import { CaptureRunner } from "../support/CaptureRunner";
 import { requestScopeHarness } from "./requestScope.fixture";
 
 describe("Delivery source dependency scope", () => {
+    test("composes the configured image interceptor into each request scope", async () => {
+        const harness = await requestScopeHarness();
+        const events: string[] = [];
+        Object.assign(harness.delivery, {
+            sourceImageInterceptor: async (
+                _endpoint: unknown,
+                candidate: Request,
+                next: (req: Request) => Promise<Response>,
+            ) => {
+                events.push("image:before");
+                const response = await next(candidate);
+                events.push("image:after");
+                return response;
+            },
+        });
+        const request = new Request("https://cms.test/.cms/sources/catalog/read");
+        const scope = harness.scope(request);
+
+        const response = await scope.interceptEndpoint!(harness.endpoint, request, async () => {
+            events.push("dispatch");
+            return new Response("ok");
+        });
+
+        expect(await response.text()).toBe("ok");
+        expect(events).toEqual(["image:before", "dispatch", "image:after"]);
+    });
+
     test("single-flights dependencies within one request and isolates the next request", async () => {
         const harness = await requestScopeHarness();
         const observations: SourceRequestObservation[] = [];
@@ -103,6 +130,17 @@ describe("Delivery source dependency scope", () => {
         const harness = await requestScopeHarness();
         const request = new Request("https://cms.test/.cms/sources/catalog/read");
         const upstream = spyOn(globalThis, "fetch").mockResolvedValue(new Response("unexpected"));
+        let imageCalls = 0;
+        Object.assign(harness.delivery, {
+            sourceImageInterceptor: async (
+                _endpoint: unknown,
+                candidate: Request,
+                next: (req: Request) => Promise<Response>,
+            ) => {
+                imageCalls++;
+                return next(candidate);
+            },
+        });
 
         try {
             const response = await runObservedSourceRequest(request, {}, async () => {
@@ -128,6 +166,7 @@ describe("Delivery source dependency scope", () => {
                 triggerReads: 0,
             });
             expect(upstream).not.toHaveBeenCalled();
+            expect(imageCalls).toBe(0);
         } finally {
             upstream.mockRestore();
         }

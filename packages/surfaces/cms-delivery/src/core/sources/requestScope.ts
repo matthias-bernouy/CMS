@@ -4,6 +4,7 @@ import { secretRefToKey } from "@bernouy/cms-secrets";
 import {
     SourceOverlaySourceRepository,
     activeSourceObservability,
+    composeSourceEndpointInterceptors,
     sourceOverlaySchemaCacheFor,
     type ExecutorDeps,
     type SourceEndpointInterceptor,
@@ -71,7 +72,7 @@ export function createDeliverySourceRequestScope(
     const functions = delivery.functions ? new RequestScopedFunctionRepository(delivery.functions) : undefined;
     const proxiedSources = sources && functions ? withFunctionsSource(sources, functions) : sources;
     const triggers = delivery.triggers ? new RequestScopedTriggerRepository(delivery.triggers) : undefined;
-    const interceptEndpoint =
+    const triggerInterceptor =
         triggers && functions && sources
             ? createTriggerInterceptor({
                   triggers,
@@ -84,6 +85,7 @@ export function createDeliverySourceRequestScope(
                   },
               })
             : undefined;
+    const interceptEndpoint = composeSourceEndpointInterceptors(triggerInterceptor, delivery.sourceImageInterceptor);
 
     return {
         sources,

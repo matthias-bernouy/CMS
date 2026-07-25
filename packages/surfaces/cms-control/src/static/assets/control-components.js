@@ -75,6 +75,23 @@
   var CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"];
   var CMS_SOURCE_STATUS_SCOPE = "$source";
   var CMS_SOURCES_STATUS_SCOPE = "$sources";
+  // ../../features/cms-content/src/interfaces/Editor/BindingSyntax/queryParams.ts
+  var CMS_QUERY_PARAM_NAME_PATTERN = /^[A-Za-z0-9_][A-Za-z0-9_.:-]*$/;
+  var CMS_QUERY_PARAM_TOKEN_PATTERN = /^\s*#\{\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\s*\}\s*$/;
+  function isCmsQueryParamName(value) {
+    return typeof value === "string" && CMS_QUERY_PARAM_NAME_PATTERN.test(value);
+  }
+  function asQueryParamToken(name) {
+    const normalized = name.trim();
+    if (!isCmsQueryParamName(normalized)) {
+      throw new Error(`Invalid CMS query param name: "${name}"`);
+    }
+    return `#{${normalized}}`;
+  }
+  function parseQueryParamToken(value) {
+    return CMS_QUERY_PARAM_TOKEN_PATTERN.exec(value ?? "")?.[1] ?? null;
+  }
+
   // ../../features/cms-content/src/interfaces/Editor/BindingSyntax/source.ts
   var SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   var REPEAT_ALIAS_PATTERN = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
@@ -156,7 +173,7 @@
   }
   function encodeSourceParamValue(value) {
     if (value.from === "queryParam") {
-      return `#{${value.name.trim()}}`;
+      return asQueryParamToken(value.name);
     }
     if (value.from === "state") {
       return `@{${value.name.trim()}}`;
@@ -177,7 +194,11 @@
     if (!isRecord(value) || typeof value.from !== "string") {
       return null;
     }
-    if (value.from === "queryParam" || value.from === "state") {
+    if (value.from === "queryParam") {
+      const name = typeof value.name === "string" ? value.name.trim() : "";
+      return name ? { from: value.from, name } : null;
+    }
+    if (value.from === "state") {
       return typeof value.name === "string" && value.name.trim() ? { from: value.from, name: value.name.trim() } : null;
     }
     if (value.from !== "raw") {
@@ -8447,11 +8468,12 @@ p {
   }
   var z = "cms-params:change";
   var C = "cms-state:change";
-  var dp = /#\{\s*(\w+)\s*\}/g;
-  var cp = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
+  var dp = new RegExp("#\\{\\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\\s*\\}", "g");
+  var cp = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
+  var up = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
   var Os = new WeakMap;
   function qs(t) {
-    return /#\{\s*\w+\s*\}/.test(t);
+    return cp.test(t);
   }
   function Vs(t) {
     return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
@@ -8464,7 +8486,7 @@ p {
   }
   function $s(t, e = document) {
     let r = Ie(e);
-    return t.replace(cp, (i, o) => encodeURIComponent(r.get(o) ?? ""));
+    return t.replace(up, (i, o) => encodeURIComponent(r.get(o) ?? ""));
   }
   function He(t, e) {
     let r = K();
@@ -8496,7 +8518,7 @@ p {
       e = new Map, Os.set(t, e);
     return e;
   }
-  var up = 300;
+  var pp = 300;
 
   class ze {
     el;
@@ -8567,7 +8589,7 @@ p {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), up);
+      this.timer = setTimeout(() => this.write(), pp);
     }
     write() {
       if (this.reflecting)
@@ -8581,7 +8603,7 @@ p {
     }
   }
   var y = "cms-param-sync";
-  var pp = 300;
+  var hp = 300;
 
   class Re {
     el;
@@ -8650,7 +8672,7 @@ p {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), pp);
+      this.timer = setTimeout(() => this.write(), hp);
     }
     write() {
       if (this.reflecting)
@@ -8742,10 +8764,10 @@ p {
   function Qs(t) {
     let e = t.ownerDocument ?? document, r = e.createDocumentFragment(), i = e.createDocumentFragment();
     for (let o of Array.from(t.childNodes))
-      if (i.appendChild(o.cloneNode(true)), o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
-        r.appendChild(o.content), o.remove();
+      if (o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
+        i.appendChild(o.cloneNode(true)), r.appendChild(o.content), o.remove();
       else
-        r.appendChild(o);
+        r.appendChild(o), i.appendChild(o.cloneNode(true));
     return { template: i, body: r };
   }
   function Ws(t) {
@@ -8782,12 +8804,12 @@ p {
         e.removeEventListener(C, r);
     };
   }
-  var hp = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var mp = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   function Dt(t) {
     return T(t).url;
   }
   function T(t) {
-    let e = hp.exec(t);
+    let e = mp.exec(t);
     if (!e)
       return { url: t.trim() };
     return { url: e[1].trim(), alias: e[2] };
@@ -8799,12 +8821,12 @@ p {
     return Ds(e) ? e : "auto";
   }
   function ol(t, e) {
-    let r = t.ownerDocument, i = [il, ...bp(t)];
+    let r = t.ownerDocument, i = [il, ...fp(t)];
     for (let a of i)
       r.addEventListener(a, e.onReload);
     let o = Ot(t);
     if (o === "submit" || o === "change") {
-      let a = mp(t) ?? t.closest("form"), l = o === "submit" ? "submit" : "change", u = o === "submit" ? e.onSubmit : e.onChange;
+      let a = bp(t) ?? t.closest("form"), l = o === "submit" ? "submit" : "change", u = o === "submit" ? e.onSubmit : e.onChange;
       return a?.addEventListener(l, u), () => {
         for (let d of i)
           r.removeEventListener(d, e.onReload);
@@ -8818,11 +8840,11 @@ p {
       n();
     };
   }
-  function mp(t) {
+  function bp(t) {
     let e = t.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
     return typeof e === "function" && t instanceof e ? t : null;
   }
-  function bp(t) {
+  function fp(t) {
     return (t.getAttribute(rl) ?? "").split(/\s+/).filter(Boolean);
   }
 
@@ -8842,7 +8864,7 @@ p {
     unmount() {
       for (let t of this.sites)
         t.unmount?.();
-      fp(this.start, this.end);
+      vp(this.start, this.end);
     }
   }
 
@@ -8867,7 +8889,7 @@ p {
       r.parentNode?.removeChild(r), r = i;
     }
   }
-  function fp(t, e) {
+  function vp(t, e) {
     let r = t.parentNode;
     if (!r)
       return;
@@ -8877,12 +8899,12 @@ p {
       r.removeChild(i), i = o;
     }
   }
-  var vp = { found: false, value: undefined };
+  var gp = { found: false, value: undefined };
   function P(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
-      return { found: true, value: gp(t) };
+      return { found: true, value: xp(t) };
     let r = e.indexOf("."), i = r === -1 ? e : e.slice(0, r), o = r === -1 ? "" : e.slice(r + 1);
     for (let n = t;n; n = n.parent) {
       if (n.vars && i in n.vars)
@@ -8891,9 +8913,9 @@ p {
       if (al(a) && i in a)
         return { found: true, value: nl(a[i], o) };
     }
-    return vp;
+    return gp;
   }
-  function gp(t) {
+  function xp(t) {
     let e = t.value;
     if (al(e) && "value" in e)
       return e.value;
@@ -8917,7 +8939,7 @@ p {
     if (t.kind === "literal")
       return t.value;
     if (t.kind === "path")
-      return xp(t.path, e);
+      return yp(t.path, e);
     if (t.kind === "not")
       return !dt(E(t.node, e));
     if (t.kind === "and")
@@ -8925,17 +8947,17 @@ p {
     if (t.kind === "or")
       return dt(E(t.left, e)) || dt(E(t.right, e));
     if (t.kind === "compare")
-      return yp(E(t.left, e), E(t.right, e), t.operator);
+      return _p(E(t.left, e), E(t.right, e), t.operator);
     return false;
   }
-  function xp(t, e) {
+  function yp(t, e) {
     let r = P(e, t.trim());
     return r.found ? r.value : undefined;
   }
   function dt(t) {
     return Boolean(t);
   }
-  function yp(t, e, r) {
+  function _p(t, e, r) {
     if (r === "==")
       return Object.is(t, e);
     if (r === "!=")
@@ -8980,16 +9002,16 @@ p {
       if (i === "(" || i === ")")
         throw Error("parentheses are not supported yet");
       if (i === "'" || i === '"') {
-        let a = _p(t, r, i);
+        let a = wp(t, r, i);
         e.push({ kind: "literal", value: a.value }), r = a.next;
         continue;
       }
       if (i === "-" && /\d/.test(t[r + 1] ?? "") || /\d/.test(i)) {
-        let a = kp(t, r);
+        let a = Ep(t, r);
         e.push({ kind: "literal", value: a.value }), r = a.next;
         continue;
       }
-      let n = Ep(t, r);
+      let n = Ap(t, r);
       if (n.value === "true")
         e.push({ kind: "literal", value: true });
       else if (n.value === "false")
@@ -9002,7 +9024,7 @@ p {
     }
     return e.push({ kind: "end" }), e;
   }
-  function _p(t, e, r) {
+  function wp(t, e, r) {
     let i = "";
     for (let o = e + 1;o < t.length; o += 1) {
       let n = t[o];
@@ -9012,14 +9034,14 @@ p {
         let a = t[o + 1];
         if (a == null)
           throw Error("unterminated string literal");
-        i += wp(a), o += 1;
+        i += kp(a), o += 1;
         continue;
       }
       i += n;
     }
     throw Error("unterminated string literal");
   }
-  function wp(t) {
+  function kp(t) {
     if (t === "n")
       return `
 `;
@@ -9029,7 +9051,7 @@ p {
       return "\t";
     return t;
   }
-  function kp(t, e) {
+  function Ep(t, e) {
     let r = e;
     if (t[r] === "-")
       r += 1;
@@ -9045,18 +9067,18 @@ p {
       throw Error(`invalid number literal "${i}"`);
     return { value: o, next: r };
   }
-  function Ep(t, e) {
+  function Ap(t, e) {
     let r = e;
     while (r < t.length && !/\s/.test(t[r]) && !`!&|=<>"'()`.includes(t[r]))
       r += 1;
     let i = t.slice(e, r);
     if (!i)
       throw Error(`unexpected token "${t[e] ?? ""}"`);
-    if (!Ap(i))
+    if (!Sp(i))
       throw Error(`invalid path "${i}"`);
     return { value: i, next: r };
   }
-  function Ap(t) {
+  function Sp(t) {
     if (t === ".")
       return true;
     return /^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(t);
@@ -9155,7 +9177,7 @@ p {
       let i = false;
       return { expression: t, valid: false, evaluate: () => {
         if (!i)
-          i = true, console.warn(`Invalid cms-condition "${t}": ${Sp(r)}`);
+          i = true, console.warn(`Invalid cms-condition "${t}": ${Lp(r)}`);
         return false;
       } };
     }
@@ -9163,7 +9185,7 @@ p {
   function dl(t, e) {
     return { expression: t, valid: true, evaluate: (r) => Boolean(E(e, r)) };
   }
-  function Sp(t) {
+  function Lp(t) {
     return t instanceof Error ? t.message : String(t);
   }
   var cl = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
@@ -9195,16 +9217,16 @@ p {
       if (o.value.includes("{{") && !Vt(o.value, i))
         r.attributes.push({ path: e, name: o.name, template: o.value });
   }
-  var Lp = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
+  var Cp = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
   function pl(t) {
     let e = t.childNodes.length === 1 ? t.firstChild : null;
     if (!e || e.nodeType !== Node.TEXT_NODE)
       return null;
-    return (e.nodeValue ?? "").trim().match(Lp)?.[1] ?? null;
+    return (e.nodeValue ?? "").trim().match(Cp)?.[1] ?? null;
   }
-  var Cp = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var Tp = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   function hl(t) {
-    let e = t.match(Cp);
+    let e = t.match(Tp);
     if (e)
       return { path: e[1], name: e[2] };
     return { path: t.trim() };
@@ -9274,14 +9296,14 @@ p {
       gl(a, [...e, l], { skipCondition: false, skipRepeat: false, submitBoundary: n }, r, i, o);
     });
   }
-  var Tp = { urlencode: (t) => encodeURIComponent(t == null ? "" : String(t)) };
-  var Mp = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+  var Mp = { urlencode: (t) => encodeURIComponent(t == null ? "" : String(t)) };
+  var Hp = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
   function ct(t, e, r = {}) {
-    return t.replace(Mp, (i, o, n) => {
+    return t.replace(Hp, (i, o, n) => {
       let a = P(e, o);
       if (!a.found)
         return "";
-      let l = n ? r[n] ?? Tp[n] : undefined, u = l ? l(a.value) : a.value;
+      let l = n ? r[n] ?? Mp[n] : undefined, u = l ? l(a.value) : a.value;
       return u == null ? "" : String(u);
     });
   }
@@ -9525,7 +9547,7 @@ p {
   function yl(t) {
     let e = new Set, r = Array.from(t.children), i = Array.from(t.querySelectorAll(`[${L}]`));
     for (let o of [...r, ...i])
-      for (let n of Hp(o.getAttribute(L)))
+      for (let n of Ip(o.getAttribute(L)))
         e.add(n);
     return e;
   }
@@ -9536,12 +9558,12 @@ p {
     r.setSourceStatus?.(t, e);
   }
   function _l(t, e, r, i, o) {
-    let n = o.sourceStatusesFor?.(t, r) ?? Ip(t, r), a = { $source: r, $sources: n };
+    let n = o.sourceStatusesFor?.(t, r) ?? zp(t, r), a = { $source: r, $sources: n };
     if (e)
       a[e] = i;
     return { value: i, vars: a };
   }
-  function Hp(t) {
+  function Ip(t) {
     let e = [];
     for (let r of (t ?? "").matchAll(/(?:\$source|\$sources\.[A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)/g))
       e.push(r[1]);
@@ -9550,7 +9572,7 @@ p {
   function xl(t) {
     return typeof t === "object" && t !== null && (("status" in t) || ("message" in t));
   }
-  function Ip(t, e) {
+  function zp(t, e) {
     let r = t.getAttribute(nt)?.trim();
     return r ? { [r]: e } : {};
   }
@@ -9604,7 +9626,7 @@ p {
     }
   }
   function wl(t, e) {
-    let r = zp(t);
+    let r = Rp(t);
     if (!r)
       return;
     let i = {}, o = K();
@@ -9617,7 +9639,7 @@ p {
         i[n] = a.value;
     return Object.keys(i).length ? i : undefined;
   }
-  function zp(t) {
+  function Rp(t) {
     let e = t?.trim() ?? "";
     if (!e)
       return null;
@@ -9631,13 +9653,13 @@ p {
       return null;
     let i = {};
     for (let [o, n] of Object.entries(r)) {
-      let a = Rp(n);
+      let a = Pp(n);
       if (o.trim() && a)
         i[o] = a;
     }
     return Object.keys(i).length ? i : null;
   }
-  function Rp(t) {
+  function Pp(t) {
     if (!kl(t) || typeof t.from !== "string")
       return null;
     if (t.from === "queryParam" || t.from === "state")
@@ -9659,14 +9681,14 @@ p {
     let e = new FormData(t);
     if (Array.from(e.keys()).length > 0)
       return e;
-    for (let r of Pp(t))
-      Bp(e, r);
+    for (let r of Bp(t))
+      Fp(e, r);
     return e;
   }
-  function Pp(t) {
+  function Bp(t) {
     return Array.from(t.querySelectorAll("input, select, textarea, [name]"));
   }
-  function Bp(t, e) {
+  function Fp(t, e) {
     let r = e.name?.trim();
     if (!r || e.disabled)
       return;
@@ -9704,7 +9726,7 @@ p {
     }
     t.append(r, String(o));
   }
-  var Fp = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+  var Np = new Set(["POST", "PUT", "PATCH", "DELETE"]);
   function Qe(t, e) {
     let r = (t ?? "").trim().toUpperCase();
     if (r === "GET" || r === "POST" || r === "PUT" || r === "PATCH" || r === "DELETE" || r === "HEAD")
@@ -9714,9 +9736,9 @@ p {
   function We(t, e) {
     let r = e.formData ?? pt(t);
     if (e.method === "GET" || e.method === "HEAD")
-      return { kind: "query", url: Np(e.url, r), formData: r, data: Ze(r) };
-    let i = Dp(Ze(r), r, e.bodyFields);
-    if (Fp.has(e.method) && Op(r))
+      return { kind: "query", url: Dp(e.url, r), formData: r, data: Ze(r) };
+    let i = Op(Ze(r), r, e.bodyFields);
+    if (Np.has(e.method) && qp(r))
       return { kind: "formData", url: e.url, formData: r, data: i, body: r };
     return { kind: "json", url: e.url, formData: r, data: i, body: JSON.stringify(i) };
   }
@@ -9735,14 +9757,14 @@ p {
     }
     return e;
   }
-  function Np(t, e) {
+  function Dp(t, e) {
     let r = new URL(t, location.href);
     for (let [i, o] of e.entries())
       if (!Je(o))
         r.searchParams.append(i, tr(o) ? o.name : o);
     return r.toString();
   }
-  function Dp(t, e, r) {
+  function Op(t, e, r) {
     if (!r)
       return t;
     let i = t;
@@ -9756,7 +9778,7 @@ p {
     }
     return i;
   }
-  function Op(t) {
+  function qp(t) {
     return Array.from(t.values()).some((e) => !Je(e) && tr(e));
   }
   function Je(t) {
@@ -9772,15 +9794,15 @@ p {
     else if (r.kind === "formData")
       o.body = r.body;
     try {
-      let n = await fetch(r.url, o), a = await qp(n);
-      return { ok: n.ok, status: n.status, statusText: n.statusText, body: a, message: n.ok ? "" : Vp(n, a), form: t };
+      let n = await fetch(r.url, o), a = await Vp(n);
+      return { ok: n.ok, status: n.status, statusText: n.statusText, body: a, message: n.ok ? "" : jp(n, a), form: t };
     } catch (n) {
       if (n?.name === "AbortError")
         return { ok: false, status: 0, statusText: "Aborted", body: null, message: "Aborted", form: t };
       return { ok: false, status: 0, statusText: "Network Error", body: null, message: n instanceof Error ? n.message : String(n), form: t };
     }
   }
-  async function qp(t) {
+  async function Vp(t) {
     if (t.status === 204)
       return null;
     let e = await t.clone().text().catch(() => "");
@@ -9792,17 +9814,17 @@ p {
       return t.headers.get("content-type")?.includes("application/json") ? null : e;
     }
   }
-  function Vp(t, e) {
+  function jp(t, e) {
     if (e && typeof e === "object" && "error" in e && typeof e.error === "string")
       return e.error;
     if (e && typeof e === "object" && "message" in e && typeof e.message === "string")
       return e.message;
     return t.statusText || `Request failed (${t.status})`;
   }
-  var jp = "cms-source:success";
-  var $p = "cms-source:failed";
-  var Up = "form:success";
-  var Kp = "form:failed";
+  var $p = "cms-source:success";
+  var Up = "cms-source:failed";
+  var Kp = "form:success";
+  var Xp = "form:failed";
 
   class rr {
     element;
@@ -9840,7 +9862,7 @@ p {
       return e.toString();
     }
     dispatchResult(t) {
-      let e = t.ok ? jp : $p, r = t.ok ? Up : Kp, i = { bubbles: true, composed: true, detail: t };
+      let e = t.ok ? $p : Up, r = t.ok ? Kp : Xp, i = { bubbles: true, composed: true, detail: t };
       this.element.dispatchEvent(new CustomEvent(e, i)), this.element.dispatchEvent(new CustomEvent(r, i));
     }
     publish(t) {
@@ -9977,7 +9999,7 @@ p {
   }
   function El(t, e, r, i) {
     let o = {};
-    for (let n of Xp(t, r)) {
+    for (let n of Gp(t, r)) {
       if (!n.hasAttribute(h))
         continue;
       let a = n.getAttribute(nt)?.trim();
@@ -9989,7 +10011,7 @@ p {
     }
     return o;
   }
-  function Xp(t, e) {
+  function Gp(t, e) {
     let r = [];
     for (let i = e;i && i !== t.parentElement; i = i.parentElement)
       if (r.push(i), i === t)
@@ -10170,15 +10192,15 @@ p {
     }
   }
   var Al = "cms-binding-cloak";
-  var Gp = `${g}{display:contents}[${h}]:not([${f}]){visibility:hidden}`;
+  var Yp = `${g}{display:contents}[${h}]:not([${f}]){visibility:hidden}`;
   function Sl(t) {
     if (t.getElementById(Al))
       return;
     let e = t.createElement("style");
-    e.id = Al, e.textContent = Gp, (t.head ?? t.documentElement).appendChild(e);
+    e.id = Al, e.textContent = Yp, (t.head ?? t.documentElement).appendChild(e);
   }
   var Ll = {};
-  function Yp(t) {
+  function Zp(t) {
     Ll = t;
   }
 
@@ -10336,10 +10358,265 @@ p {
     }
   }
 
+  // ../../features/cms-source-images/src/interfaces/recipe.ts
+  var SOURCE_IMAGE_WIDTHS = Object.freeze([64, 128, 256, 384, 512, 768, 1024, 1280, 1600, 1920, 2560]);
+
+  // ../../features/cms-source-images/src/core/responsive.ts
+  var generatedByImage = new WeakMap;
+  function buildResponsiveSourceImageAttributes(input) {
+    if (!isResolvedUrl(input.baseUrl) || !isDimension(input.sourceWidth) || !isDimension(input.sourceHeight) || hasUnresolvedBinding(input.authoredSizes)) {
+      return null;
+    }
+    const src = sourceImageOriginalUrl(input.baseUrl);
+    const candidates = SOURCE_IMAGE_WIDTHS.filter((width) => width <= input.sourceWidth);
+    const srcset = candidates.map((width) => `${withCmsWidth(src, width)} ${width}w`).join(", ");
+    return {
+      src,
+      ...srcset ? { srcset } : {},
+      sizes: resolvedSizes(input),
+      width: input.sourceWidth,
+      height: input.sourceHeight
+    };
+  }
+  function applyResponsiveSourceImageAttributes(image, input) {
+    clearResponsiveSourceImageAttributes(image);
+    const attributes = buildResponsiveSourceImageAttributes(input);
+    if (!attributes) {
+      scrubUnresolvedNetworkAttributes(image);
+      return false;
+    }
+    const owned = new Map;
+    setOwned(image, owned, "width", String(attributes.width));
+    setOwned(image, owned, "height", String(attributes.height));
+    setOwned(image, owned, "sizes", attributes.sizes);
+    if (attributes.srcset) {
+      setOwned(image, owned, "srcset", attributes.srcset);
+    }
+    setOwned(image, owned, "src", attributes.src);
+    if (owned.size > 0) {
+      generatedByImage.set(image, owned);
+    }
+    return true;
+  }
+  function clearResponsiveSourceImageAttributes(image) {
+    const owned = generatedByImage.get(image);
+    if (!owned) {
+      return;
+    }
+    for (const [name, state] of owned) {
+      if (image.getAttribute(name) !== state.generated) {
+        continue;
+      }
+      if (safeToRestore(name, state.previous)) {
+        image.setAttribute(name, state.previous);
+      } else {
+        image.removeAttribute(name);
+      }
+    }
+    generatedByImage.delete(image);
+  }
+  function setOwned(image, owned, name, value) {
+    const previous = image.getAttribute(name);
+    if (previous === value) {
+      return;
+    }
+    image.setAttribute(name, value);
+    owned.set(name, { generated: value, previous });
+  }
+  function resolvedSizes(input) {
+    if (input.authoredSizes?.trim()) {
+      return input.authoredSizes;
+    }
+    return input.loading === "lazy" ? "auto, 100vw" : "100vw";
+  }
+  function isResolvedUrl(value) {
+    return value.trim().length > 0 && !value.includes("{{");
+  }
+  function isDimension(value) {
+    return Number.isSafeInteger(value) && value > 0;
+  }
+  function withCmsWidth(baseUrl, width) {
+    const { path, query, hash } = splitUrl(baseUrl);
+    removeCmsWidth(query);
+    query.append("cms-width", String(width));
+    return `${path}?${query.toString()}${hash}`;
+  }
+  function sourceImageOriginalUrl(baseUrl) {
+    const { path, query, hash, hadQuery } = splitUrl(baseUrl);
+    removeCmsWidth(query);
+    const serialized = query.toString();
+    return `${path}${serialized ? `?${serialized}` : hadQuery ? "?" : ""}${hash}`;
+  }
+  function splitUrl(value) {
+    const hashIndex = value.indexOf("#");
+    const beforeHash = hashIndex >= 0 ? value.slice(0, hashIndex) : value;
+    const hash = hashIndex >= 0 ? value.slice(hashIndex) : "";
+    const queryIndex = beforeHash.indexOf("?");
+    return {
+      path: queryIndex >= 0 ? beforeHash.slice(0, queryIndex) : beforeHash,
+      query: new URLSearchParams(queryIndex >= 0 ? beforeHash.slice(queryIndex + 1) : ""),
+      hash,
+      hadQuery: queryIndex >= 0
+    };
+  }
+  function removeCmsWidth(query) {
+    for (const name of [...query.keys()]) {
+      if (name.trim().toLowerCase() === "cms-width") {
+        query.delete(name);
+      }
+    }
+  }
+  function hasUnresolvedBinding(value) {
+    return value?.includes("{{") ?? false;
+  }
+  function scrubUnresolvedNetworkAttributes(image) {
+    for (const name of ["src", "srcset"]) {
+      const value = image.getAttribute(name);
+      if (value !== null && (!value.trim() || value.includes("{{"))) {
+        image.removeAttribute(name);
+      }
+    }
+  }
+  function safeToRestore(name, value) {
+    if (value === null) {
+      return false;
+    }
+    return name !== "src" && name !== "srcset" ? true : isResolvedUrl(value);
+  }
+  // ../../features/cms-source-images/src/core/responsiveElement.ts
+  var states = new WeakMap;
+  function syncResponsiveSourceImageElement(image, enabled = true) {
+    const state = states.get(image) ?? {};
+    captureAuthoredSizes(image, state);
+    const baseUrl = image.getAttribute("data-src")?.trim() ?? "";
+    const sourceWidthValue = image.getAttribute("data-source-width");
+    const sourceHeightValue = image.getAttribute("data-source-height");
+    const emptyHistoricalPair = isEmptyBinding(sourceWidthValue) && isEmptyBinding(sourceHeightValue);
+    const sourceWidth = emptyHistoricalPair ? { kind: "absent" } : dimensionBinding(sourceWidthValue);
+    const sourceHeight = emptyHistoricalPair ? { kind: "absent" } : dimensionBinding(sourceHeightValue);
+    if (!isResolved(baseUrl) || hasUnresolvedBinding2(state.authoredSizes) || sourceWidth.kind === "blocked" || sourceHeight.kind === "blocked" || sourceWidth.kind !== sourceHeight.kind) {
+      removeOwnedFallback(image, state);
+      clearResponsiveSourceImageAttributes(image);
+      scrubUnresolvedNetworkAttributes2(image);
+      state.generatedSizes = undefined;
+      states.set(image, state);
+      return false;
+    }
+    if (!enabled || sourceWidth.kind === "absent") {
+      clearResponsiveSourceImageAttributes(image);
+      const originalUrl = sourceImageOriginalUrl(baseUrl);
+      const currentSrc = image.getAttribute("src");
+      const ownsCurrentFallback = state.fallbackSrc !== undefined && currentSrc === state.fallbackSrc;
+      if (currentSrc === null || ownsCurrentFallback) {
+        if (currentSrc !== originalUrl) {
+          image.setAttribute("src", originalUrl);
+        }
+        state.fallbackSrc = originalUrl;
+      } else {
+        state.fallbackSrc = undefined;
+      }
+      state.generatedSizes = undefined;
+      states.set(image, state);
+      return false;
+    }
+    if (sourceWidth.kind !== "resolved" || sourceHeight.kind !== "resolved") {
+      return false;
+    }
+    removeOwnedFallback(image, state);
+    const loading = image.getAttribute("loading") === "lazy" ? "lazy" : "eager";
+    const applied = applyResponsiveSourceImageAttributes(image, {
+      baseUrl,
+      sourceWidth: sourceWidth.value,
+      sourceHeight: sourceHeight.value,
+      loading,
+      ...state.authoredSizes ? { authoredSizes: state.authoredSizes } : {}
+    });
+    state.generatedSizes = state.authoredSizes ?? (loading === "lazy" ? "auto, 100vw" : "100vw");
+    state.fallbackSrc = undefined;
+    states.set(image, state);
+    return applied;
+  }
+  function clearResponsiveSourceImageElement(image) {
+    const state = states.get(image);
+    clearResponsiveSourceImageAttributes(image);
+    if (state) {
+      removeOwnedFallback(image, state);
+    }
+    states.delete(image);
+  }
+  function createResponsiveSourceImageBrowserApi(rollout) {
+    return {
+      applyResponsiveSourceImageAttributes: (image, input) => rolloutEnabled(rollout, input.access ?? image.getAttribute("data-source-image-access")) ? applyResponsiveSourceImageAttributes(image, input) : applyOriginalSourceImageAttributes(image, input),
+      buildResponsiveSourceImageAttributes: (input) => rolloutEnabled(rollout, input.access) ? buildResponsiveSourceImageAttributes(input) : null,
+      clearResponsiveSourceImageAttributes,
+      clearResponsiveSourceImageElement,
+      syncResponsiveSourceImageElement: (image) => syncResponsiveSourceImageElement(image, rolloutEnabled(rollout, image.getAttribute("data-source-image-access")))
+    };
+  }
+  function applyOriginalSourceImageAttributes(image, input) {
+    clearResponsiveSourceImageAttributes(image);
+    if (!isResolved(input.baseUrl) || hasUnresolvedBinding2(input.authoredSizes)) {
+      scrubUnresolvedNetworkAttributes2(image);
+      return false;
+    }
+    if (!image.hasAttribute("src")) {
+      image.setAttribute("src", sourceImageOriginalUrl(input.baseUrl));
+    }
+    return false;
+  }
+  function captureAuthoredSizes(image, state) {
+    const raw = image.getAttribute("sizes");
+    const current = raw?.trim() ? raw : undefined;
+    if (current !== state.generatedSizes) {
+      state.authoredSizes = current;
+    }
+  }
+  function removeOwnedFallback(image, state) {
+    if (state.fallbackSrc && image.getAttribute("src") === state.fallbackSrc) {
+      image.removeAttribute("src");
+    }
+    state.fallbackSrc = undefined;
+  }
+  function scrubUnresolvedNetworkAttributes2(image) {
+    for (const name of ["src", "srcset"]) {
+      const value = image.getAttribute(name);
+      if (value !== null && (!value.trim() || value.includes("{{"))) {
+        image.removeAttribute(name);
+      }
+    }
+  }
+  function dimensionBinding(value) {
+    if (value === null) {
+      return { kind: "absent" };
+    }
+    const normalized = value.trim();
+    if (normalized.toLowerCase() === "null") {
+      return { kind: "absent" };
+    }
+    if (!normalized || hasUnresolvedBinding2(normalized)) {
+      return { kind: "blocked" };
+    }
+    const parsed = Number(normalized);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? { kind: "resolved", value: parsed } : { kind: "blocked" };
+  }
+  function isEmptyBinding(value) {
+    return value !== null && value.trim().length === 0;
+  }
+  function rolloutEnabled(rollout, access) {
+    return access?.trim().toLowerCase() === "public" ? rollout.public : rollout.private;
+  }
+  function isResolved(value) {
+    return value.length > 0 && !value.includes("{{");
+  }
+  function hasUnresolvedBinding2(value) {
+    return value?.includes("{{") ?? false;
+  }
   // src/components/globals.ts
   window.p9r = {
     Component: U2,
-    Composition: C2
+    Composition: C2,
+    SOURCE_IMAGE_WIDTHS,
+    ...createResponsiveSourceImageBrowserApi({ public: false, private: false })
   };
 
   // src/components/admin/Layout/AdminLayout/template.html
@@ -12134,7 +12411,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     renderPath();
     urlInput.addEventListener("input", renderPath);
     urlInput.addEventListener("change", renderPath);
-    const queryParams = seedParams.filter((p) => (p.in ?? "query") === "query");
+    const queryParams2 = seedParams.filter((p) => (p.in ?? "query") === "query");
     const container = document.createElement("div");
     container.dataset.role = "query-params";
     const paramsField = jsonField(`endpoints.${endpointIdx}.params`);
@@ -12143,7 +12420,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     rows.dataset.role = "query-param-rows";
     const readRows = () => Array.from(rows.querySelectorAll('[data-role="query-param-row"]'), readQueryParamRow).filter((p) => p !== null);
     const sync = () => paramsField.sync(readRows);
-    queryParams.forEach((p) => rows.appendChild(makeQueryParamRow(p, sync)));
+    queryParams2.forEach((p) => rows.appendChild(makeQueryParamRow(p, sync)));
     const add = document.createElement("button");
     add.type = "button";
     add.className = "ep-add-param";
@@ -12153,7 +12430,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
       rows.appendChild(makeQueryParamRow({}, sync));
       sync();
     });
-    paramsField.sync(() => queryParams);
+    paramsField.sync(() => queryParams2);
     container.append(paramsField, rows, add);
     wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), passthrough(`endpoints.${endpointIdx}.meta`, "meta-passthrough", seed.meta));
     panel.appendChild(wrap);
@@ -15609,7 +15886,7 @@ w13c-lateral-menu-item {
   }
   function replaceEndpointPerformanceQuery(query) {
     const url = new URL(window.location.href);
-    url.search = queryParams(query).toString();
+    url.search = queryParams2(query).toString();
     history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
   }
   function isSafeEndpointFilter(value) {
@@ -15620,9 +15897,9 @@ w13c-lateral-menu-item {
     return value.length <= 256 && parts.length === 3 && parts[0] === "urn" && Boolean(parts[1]) && Boolean(parts[2]);
   }
   function endpointPerformanceApiUrl(query) {
-    return `${getMetaBasePath()}/api/analytics/endpoints?${queryParams(query)}`;
+    return `${getMetaBasePath()}/api/analytics/endpoints?${queryParams2(query)}`;
   }
-  function queryParams(query) {
+  function queryParams2(query) {
     const params = new URLSearchParams({
       range: query.range,
       sort: query.sort,
@@ -15708,6 +15985,12 @@ w13c-lateral-menu-item {
     cms_headers: "Request headers",
     cms_body: "Request body",
     cms_upstream: "Combined upstream time",
+    cms_image_upstream: "Image upstream",
+    cms_image_read: "Image read",
+    cms_image_decode: "Image inspection",
+    cms_image_semaphore_wait: "Image encoder wait",
+    cms_image_encode: "Image encode",
+    cms_image_store: "Image cache store",
     cms_projection: "Projection",
     cms_identity_binding: "Identity binding",
     cms_total: "CMS total",
@@ -17721,7 +18004,7 @@ w13c-lateral-menu-item.category-item {
       return;
     }
     configured = true;
-    Yp({
+    Zp({
       json: (value2) => value2 === undefined ? undefined : JSON.stringify(value2)
     });
   }
@@ -18386,6 +18669,12 @@ w13c-lateral-menu-item {
     "cms_headers",
     "cms_body",
     "cms_upstream",
+    "cms_image_upstream",
+    "cms_image_read",
+    "cms_image_decode",
+    "cms_image_semaphore_wait",
+    "cms_image_encode",
+    "cms_image_store",
     "cms_projection",
     "cms_identity_binding",
     "cms_total"
@@ -30588,7 +30877,7 @@ button:hover {
     return params;
   }
   function paramValue(value3) {
-    const queryParam = tokenValue2(value3, "#");
+    const queryParam = parseQueryParamToken(value3);
     if (queryParam) {
       return { from: "queryParam", name: queryParam };
     }
@@ -30616,12 +30905,16 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceFormReader.ts
+  var QUERY_PARAM_ERROR = "Start with a letter, number, or underscore; then use letters, numbers, underscores, dots, dashes, or colons.";
   function readSourceBinding(root, source2) {
     const alias = root.querySelector(".source-alias")?.value.trim();
     const trigger = selectedTrigger(root.querySelector(".source-trigger"));
     const method = source2.method ?? "GET";
     const params = readRows(root, "param");
     const body = readRows(root, "body");
+    if (!params || !body) {
+      return null;
+    }
     return {
       url: source2.url,
       ...alias ? { alias } : {},
@@ -30633,12 +30926,20 @@ button:hover {
   }
   function readRows(root, kind) {
     const params = {};
+    let valid = true;
     for (const row of Array.from(root.querySelectorAll(`.param-row[data-binding-kind="${kind}"]`))) {
       const name = row.dataset.paramName;
       const modeElement = row.querySelector(".param-mode");
       const mode = modeElement ? selectedMode(modeElement) : "queryParam";
-      const rawValue = row.querySelector(".param-value")?.value.trim();
+      const input3 = row.querySelector(".param-value");
+      const rawValue = input3?.value.trim();
+      setQueryParamValidity(input3, true);
       if (!name || !rawValue) {
+        continue;
+      }
+      if (kind === "param" && mode === "queryParam" && !isCmsQueryParamName(rawValue)) {
+        setQueryParamValidity(input3, false);
+        valid = false;
         continue;
       }
       if (mode === "raw") {
@@ -30647,7 +30948,22 @@ button:hover {
         params[name] = { from: mode, name: rawValue };
       }
     }
-    return params;
+    return valid ? params : null;
+  }
+  function setQueryParamValidity(input3, valid) {
+    if (!input3) {
+      return;
+    }
+    if (valid) {
+      input3.removeAttribute("aria-invalid");
+    } else {
+      input3.setAttribute("aria-invalid", "true");
+    }
+    input3.setCustomValidity?.(valid ? "" : QUERY_PARAM_ERROR);
+    if (!valid) {
+      input3.focus();
+      input3.reportValidity?.();
+    }
   }
   function selectedMode(select5) {
     const value3 = select5.options[select5.selectedIndex]?.value;
@@ -31765,16 +32081,17 @@ h2 {
       });
     }
     _select(source2) {
-      dispatchDataSourceSelection(this, source2, this._sourceBinding(source2));
+      const binding = readSourceBinding(this.shadowRoot, source2);
+      if (!binding) {
+        return;
+      }
+      dispatchDataSourceSelection(this, source2, binding);
       this.close();
     }
     _remove = () => {
       dispatchDataSourceRemoval(this);
       this.close();
     };
-    _sourceBinding(source2) {
-      return readSourceBinding(this.shadowRoot, source2);
-    }
     _onBackdropClick = (event) => {
       if (event.target === this.elements.backdrop) {
         this.close();
@@ -32143,12 +32460,12 @@ textarea { min-height: 92px; resize: vertical; }
     if (source2.sourceName) {
       section.append(textBlock2("source-name", `Source: ${source2.sourceName}`));
     }
-    const states = document.createElement("div");
-    states.className = "states";
+    const states2 = document.createElement("div");
+    states2.className = "states";
     for (const state2 of STATES) {
-      states.append(renderState2(source2, state2, options2));
+      states2.append(renderState2(source2, state2, options2));
     }
-    section.append(states);
+    section.append(states2);
     return section;
   }
   function renderState2(source2, state2, options2) {
@@ -39144,10 +39461,10 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts
-  function renderSettingsStates(states, onToggle) {
+  function renderSettingsStates(states2, onToggle) {
     const section = document.createElement("cms-editor-v2-section");
     section.setAttribute("label", "States");
-    for (const state2 of states) {
+    for (const state2 of states2) {
       const button2 = document.createElement("button");
       button2.className = "state-button";
       button2.type = "button";
@@ -39520,14 +39837,14 @@ cms-editor-v2-segmented-control button svg:only-child {
     setThemeTokens(tokens) {
       this._themeTokens = tokens.filter((token) => token.label && /^[a-z][a-z0-9-]*$/.test(token.variable));
     }
-    setSettings(sections2, textCapability = null, textValue6 = "", mode = "settings", states = [], dataScopes2 = [], dataSources = []) {
+    setSettings(sections2, textCapability = null, textValue6 = "", mode = "settings", states2 = [], dataScopes2 = [], dataSources = []) {
       this._endpointSettings.setDataSources(dataSources);
       this._dataScopes = dataScopes2;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
       const visibleSections = sections2.filter((section) => mode === "settings" ? section.kind === "self" : section.kind === "surcharge");
       const shouldRenderText = mode === "settings" && textCapability;
-      const shouldRenderStates = mode === "settings" && states.length > 0;
+      const shouldRenderStates = mode === "settings" && states2.length > 0;
       if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
         const empty4 = document.createElement("div");
         empty4.className = "empty";
@@ -39539,7 +39856,7 @@ cms-editor-v2-segmented-control button svg:only-child {
         view.append(renderTextCapability(textCapability, textValue6, dataScopes2, (value3, format) => this._emitContentChange(value3, format)));
       }
       if (shouldRenderStates) {
-        view.append(renderSettingsStates(states, (state2) => this._emitStateToggle(state2)));
+        view.append(renderSettingsStates(states2, (state2) => this._emitStateToggle(state2)));
       }
       for (const section of visibleSections) {
         view.append(renderSettingSection(section, this._settingControls));
@@ -41507,13 +41824,13 @@ label {
         return true;
       }
       const next = current || fieldName;
-      if (isValidValueKey(next)) {
+      if (isCmsQueryParamName(next)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
       }
       return true;
     }
     if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
-      if (value3 === true && isValidValueKey(fieldName)) {
+      if (value3 === true && isCmsQueryParamName(fieldName)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
       } else if (current === fieldName) {
         target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
@@ -41522,7 +41839,7 @@ label {
     }
     if (typeof value3 === "string") {
       const next = value3.trim();
-      if (isValidValueKey(next)) {
+      if (isCmsQueryParamName(next)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
       }
     }
@@ -41539,7 +41856,7 @@ label {
     }
     const syncValue = target2.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
     const fieldName = valueSurfaceName(target2);
-    const hasFieldName = isValidValueKey(fieldName);
+    const hasFieldName = isCmsQueryParamName(fieldName);
     const isEnabled = syncValue !== "";
     const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
     const settings = [
@@ -41566,7 +41883,7 @@ label {
         attribute: PARAM_SYNC_NAME_SETTING,
         defaultValue: syncValue,
         placeholder: hasFieldName ? fieldName : "search",
-        help: "Letters, numbers, underscores, dashes and dots only.",
+        help: "Letters, numbers, underscores, dashes, dots and colons only.",
         required: true
       });
     }
@@ -42458,8 +42775,8 @@ label {
       getStates() {
         return [...super.getStates(), ...this._addedStates];
       }
-      addStates(states) {
-        this._addedStates.push(...toList(states));
+      addStates(states2) {
+        this._addedStates.push(...toList(states2));
         this._emit(CMS_EDITOR_STATES_CHANGE_EVENT, {
           editor: this,
           states: this.getStates()
@@ -46904,7 +47221,7 @@ dialog::backdrop {
     }
   }
   define(CMS_BINDING_CORE_TAG, Cl);
-  Yp({
+  Zp({
     json: (value3) => value3 === undefined ? undefined : JSON.stringify(value3)
   });
   define("p9r-accordion", ur);

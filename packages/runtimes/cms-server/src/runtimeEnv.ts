@@ -1,3 +1,16 @@
+import {
+    parseBoolean,
+    parseBoundedNumber,
+    parseHttpUrl,
+    parseNonNegativeInteger,
+    parseOptionalHttpUrl,
+    parsePort,
+    requiredEnv,
+    type RuntimeEnvSource,
+} from "./runtimeEnvParsing";
+
+export { parsePort } from "./runtimeEnvParsing";
+
 export type RuntimeEnv = {
     CONTROL_PORT: number;
     DELIVERY_PORT: number;
@@ -21,31 +34,32 @@ export type RuntimeEnv = {
     ENDPOINT_PERFORMANCE_ENABLED: boolean;
     SOURCE_TIMING_SAMPLE_RATE: number;
     SOURCE_SLOW_REQUEST_THRESHOLD_MS: number;
+    CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: boolean;
+    CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: boolean;
+    CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: boolean;
 };
 
-type EnvSource = Record<string, string | undefined>;
-
-export function readRuntimeEnv(source: EnvSource): RuntimeEnv {
+export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const CONTROL_PORT = parsePort(source.CONTROL_PORT, "CONTROL_PORT", 3000);
     const DELIVERY_PORT = parsePort(source.DELIVERY_PORT, "DELIVERY_PORT", 3001);
     if (CONTROL_PORT === DELIVERY_PORT) {
         throw new Error("CONTROL_PORT and DELIVERY_PORT must be distinct");
     }
 
-    const CONTROL_PUBLIC_URL = parseHttpUrl(required(source, "CONTROL_PUBLIC_URL"), "CONTROL_PUBLIC_URL");
-    const DELIVERY_PUBLIC_URL = parseHttpUrl(required(source, "DELIVERY_PUBLIC_URL"), "DELIVERY_PUBLIC_URL");
+    const CONTROL_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "CONTROL_PUBLIC_URL"), "CONTROL_PUBLIC_URL");
+    const DELIVERY_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "DELIVERY_PUBLIC_URL"), "DELIVERY_PUBLIC_URL");
 
     return {
         CONTROL_PORT,
         DELIVERY_PORT,
         CONTROL_PUBLIC_URL,
         DELIVERY_PUBLIC_URL,
-        CMS_SESSION_SECRET: required(source, "CMS_SESSION_SECRET"),
-        CMS_KEK_HEX: required(source, "CMS_KEK_HEX"),
-        CMS_ADMIN_EMAIL: required(source, "CMS_ADMIN_EMAIL"),
-        CMS_ADMIN_PASSWORD: required(source, "CMS_ADMIN_PASSWORD"),
-        CMS_FILES_DIR: required(source, "CMS_FILES_DIR"),
-        MONGO_URL: required(source, "MONGO_URL"),
+        CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),
+        CMS_KEK_HEX: requiredEnv(source, "CMS_KEK_HEX"),
+        CMS_ADMIN_EMAIL: requiredEnv(source, "CMS_ADMIN_EMAIL"),
+        CMS_ADMIN_PASSWORD: requiredEnv(source, "CMS_ADMIN_PASSWORD"),
+        CMS_FILES_DIR: requiredEnv(source, "CMS_FILES_DIR"),
+        MONGO_URL: requiredEnv(source, "MONGO_URL"),
         CMS_AUTH_SITE_NAME: source.CMS_AUTH_SITE_NAME?.trim() || "CMS",
         CMS_AUTH_EMAIL_COOLDOWN_SECONDS: parseNonNegativeInteger(
             source.CMS_AUTH_EMAIL_COOLDOWN_SECONDS,
@@ -72,10 +86,18 @@ export function readRuntimeEnv(source: EnvSource): RuntimeEnv {
             "CMS_CONTROL_AUTH_PASSWORD_RESET_URL",
             `${CONTROL_PUBLIC_URL}/auth/reset-password`,
         ),
-        ANALYTICS_SALT_SECRET: required(source, "ANALYTICS_SALT_SECRET"),
-        ANALYTICS_TRUST_PROXY: parseBoolean(source.ANALYTICS_TRUST_PROXY, false),
-        ANALYTICS_TRUSTED_PROXY_VERIFIED: parseBoolean(source.ANALYTICS_TRUSTED_PROXY_VERIFIED, false),
-        ENDPOINT_PERFORMANCE_ENABLED: parseBoolean(source.ENDPOINT_PERFORMANCE_ENABLED, true),
+        ANALYTICS_SALT_SECRET: requiredEnv(source, "ANALYTICS_SALT_SECRET"),
+        ANALYTICS_TRUST_PROXY: parseBoolean(source.ANALYTICS_TRUST_PROXY, "ANALYTICS_TRUST_PROXY", false),
+        ANALYTICS_TRUSTED_PROXY_VERIFIED: parseBoolean(
+            source.ANALYTICS_TRUSTED_PROXY_VERIFIED,
+            "ANALYTICS_TRUSTED_PROXY_VERIFIED",
+            false,
+        ),
+        ENDPOINT_PERFORMANCE_ENABLED: parseBoolean(
+            source.ENDPOINT_PERFORMANCE_ENABLED,
+            "ENDPOINT_PERFORMANCE_ENABLED",
+            true,
+        ),
         SOURCE_TIMING_SAMPLE_RATE: parseBoundedNumber(
             source.SOURCE_TIMING_SAMPLE_RATE,
             "SOURCE_TIMING_SAMPLE_RATE",
@@ -90,87 +112,20 @@ export function readRuntimeEnv(source: EnvSource): RuntimeEnv {
             0,
             300_000,
         ),
+        CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: parseBoolean(
+            source.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED,
+            "CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED",
+            false,
+        ),
+        CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: parseBoolean(
+            source.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED,
+            "CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED",
+            false,
+        ),
+        CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: parseBoolean(
+            source.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED,
+            "CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED",
+            false,
+        ),
     };
-}
-
-export function parsePort(raw: string | undefined, name: string, fallback: number): number {
-    if (raw === undefined) {
-        return fallback;
-    }
-    if (!/^\d+$/.test(raw)) {
-        throw new Error(`${name} must be an integer port`);
-    }
-    const port = Number(raw);
-    if (!Number.isInteger(port) || port < 1 || port > 65535) {
-        throw new Error(`${name} must be between 1 and 65535`);
-    }
-    return port;
-}
-
-function required(source: EnvSource, name: string): string {
-    const value = source[name]?.trim();
-    if (!value) {
-        throw new Error(`env ${name} missing`);
-    }
-    return value;
-}
-
-function parseOptionalHttpUrl(raw: string | undefined, name: string, fallback: string): string {
-    if (raw === undefined) {
-        return fallback;
-    }
-    return parseHttpUrl(raw, name);
-}
-
-function parseHttpUrl(raw: string, name: string): string {
-    let url: URL;
-    try {
-        url = new URL(raw.trim());
-    } catch {
-        throw new Error(`${name} must be a valid URL`);
-    }
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-        throw new Error(`${name} must use http:// or https://`);
-    }
-    return url.href.replace(/\/$/, "");
-}
-
-function parseNonNegativeInteger(raw: string | undefined, name: string, fallback: number): number {
-    if (raw === undefined) {
-        return fallback;
-    }
-    if (!/^\d+$/.test(raw)) {
-        throw new Error(`${name} must be a non-negative integer`);
-    }
-    return Number(raw);
-}
-
-function parseBoolean(raw: string | undefined, fallback: boolean): boolean {
-    if (raw === undefined) {
-        return fallback;
-    }
-    if (raw === "true") {
-        return true;
-    }
-    if (raw === "false") {
-        return false;
-    }
-    throw new Error("boolean environment values must be true or false");
-}
-
-function parseBoundedNumber(
-    raw: string | undefined,
-    name: string,
-    fallback: number,
-    minimum: number,
-    maximum: number,
-): number {
-    if (raw === undefined) {
-        return fallback;
-    }
-    const value = Number(raw);
-    if (!raw.trim() || !Number.isFinite(value) || value < minimum || value > maximum) {
-        throw new Error(`${name} must be between ${minimum} and ${maximum}`);
-    }
-    return value;
 }

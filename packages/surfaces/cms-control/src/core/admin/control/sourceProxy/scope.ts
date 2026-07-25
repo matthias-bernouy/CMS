@@ -5,7 +5,9 @@ import { createSecretResolver, secretRefToKey } from "@bernouy/cms-secrets";
 import {
     SourceOverlaySourceRepository,
     activeSourceObservability,
+    composeSourceEndpointInterceptors,
     type ExecutorDeps,
+    type SourceEndpointInterceptor,
     type SourceOverlaySchemaCache,
     type SourceRepository,
 } from "@bernouy/cms-sources";
@@ -15,7 +17,7 @@ import {
     RequestScopedSourceOverlayRepository,
     RequestScopedSourceRepository,
 } from "@bernouy/cms-sources/requestScope";
-import { createTriggerInterceptor, type TriggerInterceptor } from "@bernouy/cms-triggers";
+import { createTriggerInterceptor } from "@bernouy/cms-triggers";
 import { RequestScopedTriggerRepository } from "@bernouy/cms-triggers/requestScope";
 import type { ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
 import type { CMS_ROLES } from "types/roles";
@@ -27,7 +29,7 @@ export type ControlSourceRequestScope = {
     functions: FunctionRepository | undefined;
     overlaySources: SourceRepository | null;
     proxiedSources: SourceRepository | null;
-    interceptEndpoint: TriggerInterceptor | undefined;
+    interceptEndpoint: SourceEndpointInterceptor | undefined;
 };
 
 export function createControlSourceRequestScope(
@@ -69,7 +71,7 @@ export function createControlSourceRequestScope(
             : sources;
     const proxiedSources =
         overlaySources && functions ? withFunctionsSource(overlaySources, functions) : overlaySources;
-    const interceptEndpoint =
+    const triggerInterceptor =
         triggers && functions && overlaySources
             ? createTriggerInterceptor({
                   triggers,
@@ -82,6 +84,10 @@ export function createControlSourceRequestScope(
                   },
               })
             : undefined;
+    const interceptEndpoint = composeSourceEndpointInterceptors(
+        triggerInterceptor,
+        configuration.sourceImageInterceptor,
+    );
 
     return { deps, functions, overlaySources, proxiedSources, interceptEndpoint };
 }

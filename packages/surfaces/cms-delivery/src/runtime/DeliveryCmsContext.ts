@@ -8,11 +8,13 @@ import type { IntegrationInstallationRepository } from "@bernouy/cms-integration
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type {
     ExecutorDeps,
+    SourceEndpointInterceptor,
     SourceOverlayRepository,
     SourceRepository,
     SourceRequestTelemetryOptions,
     SourceSecretResolver,
 } from "@bernouy/cms-sources";
+import type { ResponsiveSourceImageRollout } from "@bernouy/cms-source-images/browser-host";
 import type { TriggerRepository } from "@bernouy/cms-triggers";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
 import { PageOptimizer } from "cms-delivery/core/pages/PageOptimizer";
@@ -70,6 +72,18 @@ export class DeliveryCmsContext {
 
     get sourceTelemetry(): SourceRequestTelemetryOptions | undefined {
         return this.config.sourceTelemetry;
+    }
+
+    get sourceImageInterceptor(): SourceEndpointInterceptor | undefined {
+        return this.config.sourceImageInterceptor;
+    }
+
+    get responsiveSourceImageRollout(): ResponsiveSourceImageRollout {
+        const interceptorReady = Boolean(this.config.sourceImageInterceptor);
+        return {
+            public: interceptorReady && Boolean(this.config.responsivePublicSourceImagesEnabled),
+            private: interceptorReady && Boolean(this.config.responsivePrivateSourceImagesEnabled),
+        };
     }
 
     get sourceTrustedConnectorTarget(): NonNullable<ExecutorDeps["isTrustedConnectorTarget"]> | undefined {

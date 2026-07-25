@@ -4,7 +4,8 @@ import type { ProductionAuthentication } from "./auth";
 import type { ProductionIntegrationServices } from "./integrations";
 import type { CoreStores } from "./stores/core";
 import type { FeatureStores } from "./stores/features";
-import { createSourceTelemetryOptions, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
+import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
+import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
@@ -35,21 +36,23 @@ export async function mountProductionSurfaces(
     const trustedConnectorTarget = await createTrustedConnectorTargetMatcher(
         integrations.integrationConnectorDeployers,
     );
-    const telemetryConfig = {
+    const sourceTelemetry = createSurfaceSourceTelemetry(features.endpointPerformanceRecorder, {
         uniformSampleRate: env.SOURCE_TIMING_SAMPLE_RATE,
         slowRequestThresholdMs: env.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
         reportDiagnostic: runtime.log,
-    };
-    const controlTelemetry = createSourceTelemetryOptions(
-        "control",
-        features.endpointPerformanceRecorder,
-        telemetryConfig,
-    );
-    const deliveryTelemetry = createSourceTelemetryOptions(
-        "delivery",
-        features.endpointPerformanceRecorder,
-        telemetryConfig,
-    );
+    });
+    const { sourceImageInterceptor, responsivePublicSourceImagesEnabled, responsivePrivateSourceImagesEnabled } =
+        await createRuntimeSourceImageComposition({
+            cache: core.sourceImageCache,
+            transformsEnabled: env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED,
+            responsivePublicMarkupEnabled:
+                env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && env.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED,
+            responsivePrivateMarkupEnabled:
+                env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && env.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED,
+            scope: env.DELIVERY_PUBLIC_URL,
+            sampleRate: env.SOURCE_TIMING_SAMPLE_RATE,
+            report: runtime.log,
+        });
     const controlRunner = new runtime.Runner();
     controlRunner.group("/.cms/repository", (repositoryRunner) => {
         new runtime.Repository({
@@ -85,7 +88,10 @@ export async function mountProductionSurfaces(
             identities: features.identities,
             sourceOverlays: features.sourceOverlays,
             endpointPerformanceReports: features.endpointPerformanceReports,
-            sourceTelemetry: controlTelemetry,
+            sourceTelemetry: sourceTelemetry.control,
+            sourceImageInterceptor,
+            responsivePublicSourceImagesEnabled,
+            responsivePrivateSourceImagesEnabled,
             sourceTrustedConnectorTarget: trustedConnectorTarget,
             publicAuth: {
                 ...authentication.publicAuthBase,
@@ -116,7 +122,10 @@ export async function mountProductionSurfaces(
         cache: core.cache,
         sources: features.sources,
         sourceOverlays: features.sourceOverlays,
-        sourceTelemetry: deliveryTelemetry,
+        sourceTelemetry: sourceTelemetry.delivery,
+        sourceImageInterceptor,
+        responsivePublicSourceImagesEnabled,
+        responsivePrivateSourceImagesEnabled,
         sourceTrustedConnectorTarget: trustedConnectorTarget,
         analytics: features.analytics,
         functions: features.functions,
@@ -162,6 +171,7 @@ export async function mountProductionSurfaces(
             await Promise.all([controlRunner.stopGracefully(), deliveryRunner.stopGracefully()]);
             await endpointPerformanceFlusher.run();
             await scheduledTriggers.stop();
+            await core.sourceImageCache?.dispose();
         },
     };
 }

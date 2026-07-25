@@ -32,6 +32,16 @@ export function createSourceTelemetryOptions(
     };
 }
 
+export function createSurfaceSourceTelemetry(
+    recorder: EndpointPerformanceRecorder,
+    config: SourceTelemetryConfig,
+): Record<EndpointPerformanceSurface, SourceRequestTelemetryOptions> {
+    return {
+        control: createSourceTelemetryOptions("control", recorder, config),
+        delivery: createSourceTelemetryOptions("delivery", recorder, config),
+    };
+}
+
 export async function createTrustedConnectorTargetMatcher(
     deployers: readonly IntegrationConnectorDeployer[],
 ): Promise<NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>> {

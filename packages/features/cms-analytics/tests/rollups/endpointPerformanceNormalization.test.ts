@@ -69,6 +69,33 @@ describe("endpoint performance normalization", () => {
         ).toEqual({});
     });
 
+    test("accepts the closed Source image timing stages", () => {
+        expect(
+            normalizeEndpointPerformanceObservation(
+                observation({
+                    stagesMs: {
+                        cms_total: 42,
+                        cms_image_upstream: 10,
+                        cms_image_read: 2,
+                        cms_image_decode: 4,
+                        cms_image_semaphore_wait: 1,
+                        cms_image_encode: 20,
+                        cms_image_store: 5,
+                    },
+                }),
+                now,
+            )?.stagesMs,
+        ).toEqual({
+            cms_image_upstream: 10,
+            cms_image_read: 2,
+            cms_image_decode: 4,
+            cms_image_semaphore_wait: 1,
+            cms_image_encode: 20,
+            cms_image_store: 5,
+            cms_total: 42,
+        });
+    });
+
     test("ignores unknown or invalid stages but requires a complete total", () => {
         const withUnsafeStages = observation({
             stagesMs: {

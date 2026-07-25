@@ -3,7 +3,11 @@ import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
-import { InMemorySourceOverlayRepository, InMemorySourceRepository } from "@bernouy/cms-sources";
+import {
+    InMemorySourceOverlayRepository,
+    InMemorySourceRepository,
+    type SourceEndpointInterceptor,
+} from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
@@ -17,6 +21,11 @@ describe("Control source dependency scope", () => {
         const functions = new CountingFunctions();
         const triggers = new CountingTriggers();
         const secrets = new CountingSecrets();
+        let imageCalls = 0;
+        const sourceImageInterceptor: SourceEndpointInterceptor = async (_endpoint, candidate, next) => {
+            imageCalls++;
+            return next(candidate);
+        };
         await sources.createSource({
             urn: "urn:orders",
             endpoints: [
@@ -44,7 +53,9 @@ describe("Control source dependency scope", () => {
         const mounted = captureGetHandler();
         mountControlSourceProxy(
             {
-                configuration: {},
+                configuration: {
+                    sourceImageInterceptor,
+                },
                 runner: mounted.runner,
                 sources,
                 sourceOverlays: overlays,
@@ -76,6 +87,7 @@ describe("Control source dependency scope", () => {
         }
 
         expect(receivedTokens).toEqual(["first", "second"]);
+        expect(imageCalls).toBe(2);
         expect({
             endpointReads: sources.endpointReads,
             sourceReads: sources.sourceReads,

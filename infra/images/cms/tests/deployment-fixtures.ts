@@ -28,6 +28,7 @@ export const infrastructureComposeFile = resolve(cmsDirectory, "infra/compose.ym
 
 export const instanceComposeSource = readFileSync(instanceComposeFile, "utf8");
 export const infrastructureComposeSource = readFileSync(infrastructureComposeFile, "utf8");
+export const instanceEnvExampleSource = readFileSync(resolve(cmsDirectory, ".env.example"), "utf8");
 export const dockerfileSource = readFileSync(resolve(cmsDirectory, "Dockerfile"), "utf8");
 export const mongoBootstrapSource = readFileSync(
     resolve(cmsDirectory, "infra/mongo/01-bootstrap-shared-users.js"),

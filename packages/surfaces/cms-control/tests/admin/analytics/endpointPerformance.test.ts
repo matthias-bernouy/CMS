@@ -50,6 +50,7 @@ describe("endpoint performance dashboard", () => {
         expect(dashboard.textContent).toContain("Stage timings");
         expect(dashboard.textContent).toContain("Timings are measured independently and may overlap");
         expect(dashboard.textContent).toContain("Combined upstream time");
+        expect(dashboard.textContent).toContain("Image encode");
         expect(dashboard.textContent).not.toContain("Stage contribution");
         expect(dashboard.querySelector('[aria-label="Endpoint stage timings; durations may overlap"]')).not.toBeNull();
         expect(dashboard.textContent).toContain("Edge database calls");

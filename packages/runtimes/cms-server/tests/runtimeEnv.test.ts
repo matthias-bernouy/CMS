@@ -26,6 +26,9 @@ describe("runtime env validation", () => {
         expect(env.ENDPOINT_PERFORMANCE_ENABLED).toBe(true);
         expect(env.SOURCE_TIMING_SAMPLE_RATE).toBe(0.01);
         expect(env.SOURCE_SLOW_REQUEST_THRESHOLD_MS).toBe(1_000);
+        expect(env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED).toBe(false);
+        expect(env.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED).toBe(false);
+        expect(env.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED).toBe(false);
         expect(
             readRuntimeEnv({
                 ...validEnv(),
@@ -101,5 +104,38 @@ describe("runtime env validation", () => {
         expect(() => readRuntimeEnv({ ...validEnv(), SOURCE_SLOW_REQUEST_THRESHOLD_MS: "NaN" })).toThrow(
             /SOURCE_SLOW_REQUEST_THRESHOLD_MS must be between/,
         );
+    });
+
+    test("parses image rollout switches strictly and keeps them dark by default", () => {
+        expect(
+            readRuntimeEnv({
+                ...validEnv(),
+                CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: "true",
+                CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: "true",
+                CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: "true",
+            }),
+        ).toMatchObject({
+            CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: true,
+            CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: true,
+            CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: true,
+        });
+        expect(() =>
+            readRuntimeEnv({
+                ...validEnv(),
+                CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: "TRUE",
+            }),
+        ).toThrow(/CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED must be true or false/);
+        expect(() =>
+            readRuntimeEnv({
+                ...validEnv(),
+                CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: "1",
+            }),
+        ).toThrow(/CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED must be true or false/);
+        expect(() =>
+            readRuntimeEnv({
+                ...validEnv(),
+                CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: "1",
+            }),
+        ).toThrow(/CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED must be true or false/);
     });
 });

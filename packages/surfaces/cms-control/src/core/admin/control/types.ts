@@ -26,6 +26,7 @@ import type { RelationRepository } from "@bernouy/cms-relations";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type {
     ExecutorDeps,
+    SourceEndpointInterceptor,
     SourceOverlayRepository,
     SourceRepository,
     SourceRequestTelemetryOptions,
@@ -58,6 +59,12 @@ export type ControlCmsOptions = Configuration & {
     sourceOverlays?: SourceOverlayRepository;
     endpointPerformanceReports?: EndpointPerformanceReports;
     sourceTelemetry?: SourceRequestTelemetryOptions;
+    /** Shared post-authorization interceptor for bounded Source image variants. */
+    sourceImageInterceptor?: SourceEndpointInterceptor;
+    /** Enables explicitly public responsive consumers when the interceptor is configured. Defaults to false. */
+    responsivePublicSourceImagesEnabled?: boolean;
+    /** Enables private and unclassified responsive consumers when the interceptor is configured. Defaults to false. */
+    responsivePrivateSourceImagesEnabled?: boolean;
     sourceTrustedConnectorTarget?: NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>;
     integrationBlocRepository?: CmsRepository;
 };

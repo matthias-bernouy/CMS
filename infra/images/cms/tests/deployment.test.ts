@@ -42,6 +42,9 @@ describe("per-instance Compose rendering", () => {
             ENDPOINT_PERFORMANCE_ENABLED: "true",
             SOURCE_TIMING_SAMPLE_RATE: "0.01",
             SOURCE_SLOW_REQUEST_THRESHOLD_MS: "1000",
+            CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: "false",
+            CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: "false",
+            CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: "false",
         });
     });
 

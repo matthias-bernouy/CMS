@@ -10,12 +10,25 @@ export const p9rExternalsPlugin: BunPlugin = {
     setup(build) {
         build.onResolve(
             {
-                filter: /^@bernouy\/(?:components\/base|cms(?:-control)?\/component|cms-content\/editor|cms(?:-control)?\/editor)$/,
+                filter: /^@bernouy\/(?:components\/base|cms(?:-control)?\/component|cms-content\/editor|cms(?:-control)?\/editor|cms-source-images\/browser)$/,
             },
             (args) => ({ path: args.path, namespace: "p9r-extern" }),
         );
 
         build.onLoad({ filter: /.*/, namespace: "p9r-extern" }, (args) => {
+            if (args.path === "@bernouy/cms-source-images/browser") {
+                return {
+                    contents: [
+                        "export const SOURCE_IMAGE_WIDTHS = window.p9r.SOURCE_IMAGE_WIDTHS;",
+                        "export const applyResponsiveSourceImageAttributes = window.p9r.applyResponsiveSourceImageAttributes;",
+                        "export const buildResponsiveSourceImageAttributes = window.p9r.buildResponsiveSourceImageAttributes;",
+                        "export const clearResponsiveSourceImageAttributes = window.p9r.clearResponsiveSourceImageAttributes;",
+                        "export const clearResponsiveSourceImageElement = window.p9r.clearResponsiveSourceImageElement;",
+                        "export const syncResponsiveSourceImageElement = window.p9r.syncResponsiveSourceImageElement;",
+                    ].join("\n"),
+                    loader: "js",
+                };
+            }
             if (
                 args.path === "@bernouy/components/base" ||
                 args.path === "@bernouy/cms/component" ||

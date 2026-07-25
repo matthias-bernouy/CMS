@@ -81,6 +81,18 @@ export function endpointPerformanceDashboard(overrides: DashboardOverrides = {})
                               maxMs: 800,
                           },
                           {
+                              kind: "duration",
+                              unit: "ms",
+                              stage: "cms_image_encode",
+                              observations: 30,
+                              coverage: 0.25,
+                              avgMs: 24,
+                              p50Ms: 20,
+                              p95Ms: 40,
+                              p99Ms: 55,
+                              maxMs: 60,
+                          },
+                          {
                               kind: "counter",
                               unit: "count",
                               stage: "edge_db_calls",

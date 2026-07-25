@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { SourceOverlaySourceRepository } from "@bernouy/cms-sources";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { Db } from "mongodb";
-import { createCoreStores } from "../src/runtime/stores/core";
+import { createCoreStores, createRuntimeSourceImageCache } from "../src/runtime/stores/core";
 import { createFeatureStores } from "../src/runtime/stores/features";
 import { readRuntimeEnv } from "../src/runtimeEnv";
 
@@ -73,5 +73,14 @@ describe("production runtime stores", () => {
         });
 
         await expect(createCoreStores(env)).rejects.toThrow(/Invalid scheme/);
+    });
+
+    test("does not touch the derivative cache directory while transforms are disabled", async () => {
+        const cache = await createRuntimeSourceImageCache({
+            CMS_FILES_DIR: "/proc/cms-must-not-be-created",
+            CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: false,
+        });
+
+        expect(cache).toBeNull();
     });
 });

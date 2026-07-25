@@ -11,6 +11,7 @@ import { ValidatingCmsRepository } from "@bernouy/cms-content";
 import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
 import { LocalFsCmsFilesBlob, ValidatingCmsFilesMetadata } from "@bernouy/cms-files";
 import { MongoCmsFilesMetadata } from "@bernouy/cms-files/mongo";
+import { LocalSourceImageCache } from "@bernouy/cms-source-images/local-fs";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
 import { createFieldCrypto, MongoDekRepository } from "@bernouy/envelope-crypto/mongo";
 import { InMemoryCache } from "@bernouy/http-runner";
@@ -18,6 +19,7 @@ import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
 import { ValidatingSecretStore } from "@bernouy/cms-secrets";
 import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
 import { MongoClient } from "mongodb";
+import { join } from "node:path";
 import { migrateLegacyOperatorRoles } from "../../migrateLegacyOperatorRoles";
 import type { RuntimeEnv } from "../../runtimeEnv";
 
@@ -42,6 +44,7 @@ export async function createCoreStores(env: RuntimeEnv) {
     const filesMetadata = new ValidatingCmsFilesMetadata(mongoFilesMetadata);
     const filesBlob = new LocalFsCmsFilesBlob(env.CMS_FILES_DIR);
     const variantStore = new LocalFsCmsFilesBlob(`${env.CMS_FILES_DIR}/.variants`);
+    const sourceImageCache = await createRuntimeSourceImageCache(env);
 
     const users = new MongoUsersRepository<CMS_ROLES>(db, fieldCrypto);
     const identityProviders = new MongoIdentityProviderRepository(db);
@@ -78,6 +81,7 @@ export async function createCoreStores(env: RuntimeEnv) {
         filesMetadata,
         filesBlob,
         variantStore,
+        sourceImageCache,
         users,
         identityProviders,
         credentials,
@@ -88,6 +92,19 @@ export async function createCoreStores(env: RuntimeEnv) {
         secrets,
         cache: new InMemoryCache(),
     };
+}
+
+export async function createRuntimeSourceImageCache(
+    env: Pick<RuntimeEnv, "CMS_FILES_DIR" | "CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED">,
+): Promise<LocalSourceImageCache | null> {
+    if (!env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED) {
+        return null;
+    }
+    const cache = new LocalSourceImageCache({
+        directory: join(env.CMS_FILES_DIR, ".source-images"),
+    });
+    await cache.initialize();
+    return cache;
 }
 
 export type CoreStores = Awaited<ReturnType<typeof createCoreStores>>;

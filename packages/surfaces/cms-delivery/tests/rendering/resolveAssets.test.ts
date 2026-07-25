@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
-import { generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
+import { componentJsCacheKey, generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { resolveRuntimeAssets } from "cms-delivery/core/assets/resolveAssets";
+import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
+import type { ResponsiveSourceImageRollout } from "@bernouy/cms-source-images/browser-host";
 
 const system: TSystem = {
     initializationStep: 1,
@@ -23,9 +25,15 @@ const system: TSystem = {
     security: { connectExtras: [], mediaExtras: [] },
 };
 
-function deliveryWith(repository: ContentReader): DeliveryCms {
+function deliveryWith(
+    repository: ContentReader,
+    responsiveSourceImageRollout: ResponsiveSourceImageRollout = { public: false, private: false },
+): DeliveryCms {
     const cache = new InMemoryCache();
-    cache.set(P9R_CACHE.js("/.cms/assets/component.js"), compress("component", "text/javascript"));
+    cache.set(
+        componentJsCacheKey("/.cms/assets/component.js", responsiveSourceImageRollout),
+        compress("component", "text/javascript"),
+    );
     cache.set(P9R_CACHE.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(P9R_CACHE.STYLE, compress("body{}", "text/css"));
 
@@ -33,6 +41,7 @@ function deliveryWith(repository: ContentReader): DeliveryCms {
         cmsPathPrefix: "/.cms",
         cache,
         repository,
+        responsiveSourceImageRollout,
     } as unknown as DeliveryCms;
 }
 
@@ -62,14 +71,53 @@ function repositoryWith(options: {
 }
 
 describe("resolveRuntimeAssets", () => {
-    test("exposes Component and Composition through the public runtime bundle", async () => {
-        const entry = await generateComponentJsEntry();
+    test("exposes components and enabled responsive Source images through the public runtime bundle", async () => {
+        const entry = await generateComponentJsEntry({ public: true, private: true });
         const js = new TextDecoder().decode(entry.raw);
 
         expect(entry.contentType).toBe("text/javascript");
         expect(js).toMatch(/window\.p9r\s*=\s*\{[\s\S]*Component\s*:/);
         expect(js).toMatch(/window\.p9r\s*=\s*\{[\s\S]*Composition\s*:/);
+        expect(js).toContain("syncResponsiveSourceImageElement");
+        expect(js).toContain("cms-width");
+
+        (window as any).p9r = {};
+        window.eval(js);
+        expect((window as any).p9r.SOURCE_IMAGE_WIDTHS).toEqual([
+            64, 128, 256, 384, 512, 768, 1_024, 1_280, 1_600, 1_920, 2_560,
+        ]);
+        expect((window as any).p9r.createResponsiveSourceImageBrowserApi).toBeUndefined();
     });
+
+    test.each([
+        ["dark", { public: false, private: false }, false, false],
+        ["public only", { public: true, private: false }, true, false],
+        ["private only", { public: false, private: true }, false, true],
+        ["fully enabled", { public: true, private: true }, true, true],
+    ] as const)(
+        "executes the public component runtime with responsive markup %s",
+        async (_label, rollout, publicEnabled, privateEnabled) => {
+            const response = await ComponentServer(new Request("http://localhost/.cms/assets/component.js"), {
+                cache: new InMemoryCache(),
+                responsiveSourceImageRollout: rollout,
+            } as unknown as DeliveryCms);
+            (window as any).p9r = {};
+            window.eval(await response.text());
+            const publicImage = sourceImage("public");
+            const privateImage = sourceImage();
+
+            expect((window as any).p9r.syncResponsiveSourceImageElement(publicImage)).toBe(publicEnabled);
+            expect((window as any).p9r.syncResponsiveSourceImageElement(privateImage)).toBe(privateEnabled);
+            for (const [image, enabled] of [
+                [publicImage, publicEnabled],
+                [privateImage, privateEnabled],
+            ] as const) {
+                expect(image.getAttribute("src")).toBe("/.cms/sources/catalog/image?id=7");
+                expect(image.hasAttribute("srcset")).toBe(enabled);
+                expect(image.getAttribute("srcset")?.includes("cms-width") ?? false).toBe(enabled);
+            }
+        },
+    );
 
     test("does not emit a blocset script for native-only blocs without viewJS", async () => {
         const assets = await resolveRuntimeAssets(
@@ -103,3 +151,15 @@ describe("resolveRuntimeAssets", () => {
         expect(assets.scriptUrls).toHaveLength(2);
     });
 });
+
+function sourceImage(access?: "public"): HTMLImageElement {
+    const image = document.createElement("img");
+    image.setAttribute("data-src", "/.cms/sources/catalog/image?id=7");
+    image.setAttribute("data-source-width", "800");
+    image.setAttribute("data-source-height", "600");
+    image.setAttribute("loading", "lazy");
+    if (access) {
+        image.setAttribute("data-source-image-access", access);
+    }
+    return image;
+}
