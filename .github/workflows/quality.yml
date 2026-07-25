@@ -80,6 +80,9 @@ jobs:
           TEST_PATH: ${{ matrix.path }}
         run: bun test "$TEST_PATH" --pass-with-no-tests
 
+  integration-contracts:
+    uses: ./.github/workflows/quality-integration-contracts.yml
+
   dependency-security:
     name: Dependency and secret security
     runs-on: ubuntu-24.04
@@ -150,6 +153,7 @@ jobs:
     needs:
       - static-quality
       - tests
+      - integration-contracts
       - dependency-security
       - coverage
     runs-on: ubuntu-24.04
@@ -158,10 +162,12 @@ jobs:
         env:
           STATIC_RESULT: ${{ needs.static-quality.result }}
           TEST_RESULT: ${{ needs.tests.result }}
+          INTEGRATION_RESULT: ${{ needs.integration-contracts.result }}
           SECURITY_RESULT: ${{ needs.dependency-security.result }}
           COVERAGE_RESULT: ${{ needs.coverage.result }}
         run: |
           test "$STATIC_RESULT" = success
           test "$TEST_RESULT" = success
+          test "$INTEGRATION_RESULT" = success
           test "$SECURITY_RESULT" = success
           test "$COVERAGE_RESULT" = success

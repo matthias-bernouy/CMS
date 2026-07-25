@@ -75,6 +75,7 @@ export async function measurePackage(packageInfo: CoveragePackage, temporaryRoot
     const testProcess = Bun.spawn(
         [
             process.execPath,
+            "--smol",
             "test",
             `${packageInfo.path}/tests`,
             "--coverage",

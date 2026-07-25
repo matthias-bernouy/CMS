@@ -1838,6 +1838,64 @@
                 "total": 459
             }
         },
+        "@bernouy/cms-source-images": {
+            "path": "packages/features/cms-source-images",
+            "coveredSourceFiles": [
+                "packages/features/cms-source-images/src/core/concurrency.ts",
+                "packages/features/cms-source-images/src/core/identity.ts",
+                "packages/features/cms-source-images/src/core/interceptor/generation.ts",
+                "packages/features/cms-source-images/src/core/interceptor/index.ts",
+                "packages/features/cms-source-images/src/core/interceptor/processor/SourceImageProcessor.ts",
+                "packages/features/cms-source-images/src/core/interceptor/processor/publicCache.ts",
+                "packages/features/cms-source-images/src/core/interceptor/responses.ts",
+                "packages/features/cms-source-images/src/core/interceptor/sourceValidation.ts",
+                "packages/features/cms-source-images/src/core/interceptor/telemetry.ts",
+                "packages/features/cms-source-images/src/core/interceptor/upstream/derivative.ts",
+                "packages/features/cms-source-images/src/core/interceptor/upstream/index.ts",
+                "packages/features/cms-source-images/src/core/interceptor/upstream/process.ts",
+                "packages/features/cms-source-images/src/core/pipeline/index.ts",
+                "packages/features/cms-source-images/src/core/pipeline/read.ts",
+                "packages/features/cms-source-images/src/core/pipeline/request.ts",
+                "packages/features/cms-source-images/src/core/pipeline/validation.ts",
+                "packages/features/cms-source-images/src/core/policy/cacheControl.ts",
+                "packages/features/cms-source-images/src/core/policy/index.ts",
+                "packages/features/cms-source-images/src/core/recipe.ts",
+                "packages/features/cms-source-images/src/core/responsive.ts",
+                "packages/features/cms-source-images/src/core/responsiveElement.ts",
+                "packages/features/cms-source-images/src/default-implementation/local-fs/LocalSourceImageCache.ts",
+                "packages/features/cms-source-images/src/default-implementation/local-fs/atomic.ts",
+                "packages/features/cms-source-images/src/default-implementation/local-fs/derivatives.ts",
+                "packages/features/cms-source-images/src/default-implementation/local-fs/lookups.ts",
+                "packages/features/cms-source-images/src/default-implementation/local-fs/maintenance.ts",
+                "packages/features/cms-source-images/src/default-implementation/local-fs/records.ts",
+                "packages/features/cms-source-images/src/default-implementation/memoryCache.ts",
+                "packages/features/cms-source-images/src/default-implementation/sharp/SharpSourceImageTransformer.ts",
+                "packages/features/cms-source-images/src/exports/browser-host.ts",
+                "packages/features/cms-source-images/src/exports/browser.ts",
+                "packages/features/cms-source-images/src/exports/index.ts",
+                "packages/features/cms-source-images/src/exports/local-fs.ts",
+                "packages/features/cms-source-images/src/exports/sharp.ts",
+                "packages/features/cms-source-images/src/interfaces/observability.ts",
+                "packages/features/cms-source-images/src/interfaces/recipe.ts",
+                "packages/features/cms-source-images/src/interfaces/transformer.ts"
+            ],
+            "uncoveredSourceFiles": [
+                "packages/features/cms-source-images/src/core/interceptor/types.ts",
+                "packages/features/cms-source-images/src/interfaces/cache.ts"
+            ],
+            "files": {
+                "covered": 37,
+                "total": 39
+            },
+            "functions": {
+                "covered": 248,
+                "total": 270
+            },
+            "lines": {
+                "covered": 1729,
+                "total": 1815
+            }
+        },
         "@bernouy/cms-sources": {
             "path": "packages/features/cms-sources",
             "coveredSourceFiles": [
