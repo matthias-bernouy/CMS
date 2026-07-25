@@ -2,7 +2,7 @@ import type { AdapterStats, ListingLayout, ListingPhase, ListingSample } from ".
 import type { ImagePerformanceAdapter } from "../core/adapter";
 import type { LoadedCorpus } from "../core/corpus";
 import { delta, percentile, rounded } from "../core/math";
-import { requestForeground, runListingUser } from "./listingRequests";
+import { requestForeground, runListingUser, runSustainedForeground } from "./listingRequests";
 import { startListingServer } from "./listingServer";
 
 export type ListingBenchmarkConfig = {
@@ -12,6 +12,7 @@ export type ListingBenchmarkConfig = {
     repetitions: number;
     users: readonly number[];
     foregroundRequests: number;
+    imageUpstreamDelayMs: number;
 };
 
 export async function benchmarkListing(
@@ -28,10 +29,30 @@ export async function benchmarkListing(
                     for (let repetition = 1; repetition <= config.repetitions; repetition++) {
                         await adapter.reset();
                         samples.push(
-                            await runPhase(server.origin, corpus, adapter, config, layout, dpr, users, repetition, "cold"),
+                            await runPhase(
+                                server.origin,
+                                corpus,
+                                adapter,
+                                config,
+                                layout,
+                                dpr,
+                                users,
+                                repetition,
+                                "cold",
+                            ),
                         );
                         samples.push(
-                            await runPhase(server.origin, corpus, adapter, config, layout, dpr, users, repetition, "warm"),
+                            await runPhase(
+                                server.origin,
+                                corpus,
+                                adapter,
+                                config,
+                                layout,
+                                dpr,
+                                users,
+                                repetition,
+                                "warm",
+                            ),
                         );
                     }
                 }
@@ -66,12 +87,27 @@ async function runPhase(
     const imageBytes = { value: 0 };
     const failures = { value: 0 };
     try {
-        await Promise.all([
-            ...Array.from({ length: users }, () =>
-                runListingUser(origin, corpus, config, layout, dpr, imageDurations, imageBytes, failures),
+        const imageWork = Promise.all(
+            Array.from({ length: users }, () =>
+                runListingUser(
+                    origin,
+                    corpus,
+                    config,
+                    layout,
+                    dpr,
+                    imageDurations,
+                    imageBytes,
+                    failures,
+                    adapter.implementation,
+                ),
             ),
-            ...Array.from({ length: config.foregroundRequests }, () => requestForeground(origin, foregroundDurations)),
-        ]);
+        ).then(() => undefined);
+        await runSustainedForeground({
+            work: imageWork,
+            minimumRequests: config.foregroundRequests,
+            concurrency: Math.min(users, 4),
+            request: (sequence) => requestForeground(origin, sequence, foregroundDurations),
+        });
     } finally {
         clearInterval(memoryTimer);
     }
@@ -89,6 +125,7 @@ async function runPhase(
         foregroundP50Ms: rounded(percentile(foregroundDurations, 0.5)),
         foregroundP95Ms: rounded(percentile(foregroundDurations, 0.95)),
         foregroundP99Ms: rounded(percentile(foregroundDurations, 0.99)),
+        foregroundSamples: foregroundDurations.length,
         elapsedMs: rounded(performance.now() - startedAt),
         cpuMs: rounded((cpu.user + cpu.system) / 1_000),
         peakRssBytes,

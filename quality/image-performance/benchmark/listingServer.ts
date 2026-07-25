@@ -13,18 +13,14 @@ export function startListingServer(corpus: LoadedCorpus, adapter: ImagePerforman
         async fetch(request) {
             const url = new URL(request.url);
             if (url.pathname === "/foreground") {
-                return Response.json({ ok: true }, { headers: { "cache-control": "no-store" } });
+                return adapter.foreground(request);
             }
             const match = /^\/image\/(asset-\d+)$/.exec(url.pathname);
             const asset = match ? assets.get(match[1]!) : undefined;
             if (!asset) {
                 return new Response("Not found", { status: 404 });
             }
-            if (adapter.respond) {
-                return adapter.respond(asset, request);
-            }
-            const width = Number(url.searchParams.get("cms-width"));
-            return adapter.variant(asset, Number.isSafeInteger(width) && width > 0 ? width : asset.width);
+            return adapter.respond(asset, request);
         },
     });
     return {

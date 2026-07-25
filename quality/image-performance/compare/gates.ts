@@ -1,19 +1,40 @@
-import type { GateResult, ImagePerformanceArtifact, ImagePerformanceComparison, ListingSample } from "../contracts";
+import type {
+    BrowserPerformanceArtifact,
+    GateResult,
+    ImagePerformanceArtifact,
+    ImagePerformanceComparison,
+    ImagePerformanceGateThresholds,
+    ListingSample,
+} from "../contracts";
 import { percentile, rounded } from "../core/math";
+import { browserEvidenceFingerprint, performanceEvidenceFingerprint } from "../provenance";
+import { artifactIntegrityGates } from "./artifactGates";
+import { browserPerformanceGates, type BrowserComparisonThresholds } from "./browserGates";
+import { assertPerformanceArtifact } from "./performanceValidation";
+import { assertComparisonProvenance, type ProvenanceExpectations } from "./provenanceValidation";
 
-export type ComparisonThresholds = {
-    minimumSavingsRatio: number;
-    foregroundRegressionRatio: number;
-    foregroundAllowanceMs: number;
-    coldForegroundMaximumMs?: number;
-};
+export type ComparisonThresholds = BrowserComparisonThresholds &
+    ProvenanceExpectations & {
+        minimumSavingsRatio: number;
+        foregroundRegressionRatio: number;
+        foregroundAllowanceMs: number;
+        coldForegroundMaximumMs: number;
+        maximumThumbnailMae: number;
+        maximumPeakRssBytes: number;
+        maximumScenarioCpuMs: number;
+        approvedCorpusFingerprint: string;
+    };
 
 export function compareArtifacts(
     baseline: ImagePerformanceArtifact,
     candidate: ImagePerformanceArtifact,
+    browser: BrowserPerformanceArtifact,
     thresholds: ComparisonThresholds,
 ): ImagePerformanceComparison {
+    assertPerformanceArtifact(baseline, "baseline", thresholds.approvedCorpusFingerprint);
+    assertPerformanceArtifact(candidate, "candidate", thresholds.approvedCorpusFingerprint);
     assertComparable(baseline, candidate);
+    assertComparisonProvenance(baseline, candidate, browser, thresholds);
     const gates = [
         savingsGate(
             "listing_bytes_median",
@@ -30,80 +51,53 @@ export function compareArtifacts(
         exactGate("warm_encodes", candidate.summary.warmEncodes, 0),
         exactGate("warm_upstream_reads", candidate.summary.warmUpstreamReads, 0),
         exactGate("failed_images", candidate.summary.failedImages, 0),
-        exactGate("corpus_transform_errors", corpusTransformErrors(candidate), 0),
-        exactGate("descriptor_mismatches", descriptorMismatches(candidate), 0),
-        exactGate("single_flight_excess_encodes", singleFlightExcessEncodes(candidate), 0),
-        exactGate("original_rollback_mismatches", originalRollbackMismatches(baseline), 0),
+        ...artifactIntegrityGates(baseline, candidate, thresholds.maximumThumbnailMae),
+        ...browserPerformanceGates(browser, candidate, thresholds),
         foregroundGate(baseline, candidate, thresholds),
-        coldForegroundGate(candidate, thresholds.coldForegroundMaximumMs ?? 75),
+        coldForegroundGate(candidate, thresholds.coldForegroundMaximumMs),
+        maximumObservedGate(
+            "peak_rss_bytes",
+            candidate.listing.map(({ peakRssBytes }) => peakRssBytes),
+            thresholds.maximumPeakRssBytes,
+        ),
+        maximumObservedGate(
+            "scenario_cpu_ms",
+            candidate.listing.map(({ cpuMs }) => cpuMs),
+            thresholds.maximumScenarioCpuMs,
+        ),
     ];
     return {
-        schema: "cms.image-performance.comparison.v1",
+        schema: "cms.image-performance.comparison.v5",
         baselineLabel: baseline.label,
         candidateLabel: candidate.label,
+        generatedAtMs: thresholds.nowMs,
+        evidence: {
+            suiteId: candidate.provenance.suiteId,
+            codeFingerprint: candidate.provenance.codeFingerprint,
+            corpusFingerprint: candidate.corpus.fingerprint,
+            baselineArtifactFingerprint: performanceEvidenceFingerprint(baseline),
+            candidateArtifactFingerprint: performanceEvidenceFingerprint(candidate),
+            browserArtifactFingerprint: browserEvidenceFingerprint(browser),
+        },
+        thresholds: comparisonGateThresholds(thresholds),
         passed: gates.every(({ passed }) => passed),
         gates,
     };
 }
 
-function corpusTransformErrors(artifact: ImagePerformanceArtifact): number {
-    return artifact.corpus.assets.reduce(
-        (count, asset) =>
-            count + asset.variants.filter((variant) => variant.error || variant.outputBytes === null).length,
-        0,
-    );
-}
-
-function descriptorMismatches(artifact: ImagePerformanceArtifact): number {
-    return artifact.corpus.assets.reduce(
-        (count, asset) =>
-            count +
-            asset.variants.filter(
-                (variant) => variant.actualWidth !== Math.min(variant.targetWidth, asset.sourceWidth),
-            ).length,
-        0,
-    );
-}
-
-function singleFlightExcessEncodes(artifact: ImagePerformanceArtifact): number {
-    return artifact.listing
-        .filter(({ phase }) => phase === "cold")
-        .reduce(
-            (excess, sample) => excess + Math.max(0, sample.stats.encodes - expectedColdEncodes(artifact, sample)),
-            0,
-        );
-}
-
-function expectedColdEncodes(artifact: ImagePerformanceArtifact, sample: ListingSample): number {
-    const keys = new Set<string>();
-    for (let index = 0; index < artifact.configuration.cardCount; index++) {
-        const asset = artifact.corpus.assets[index % artifact.corpus.assets.length]!;
-        const displayWidth = artifact.configuration.viewportWidth * (sample.layout === "narrow" ? 0.3 : 1);
-        const required = Math.ceil(displayWidth * sample.dpr);
-        const producible = artifact.configuration.ladder.filter((width) => width <= asset.sourceWidth);
-        const selected = producible.find((width) => width >= required) ?? producible.at(-1);
-        if (selected) {
-            keys.add(`${asset.assetId}:${selected}`);
-        }
-    }
-    return keys.size;
-}
-
-function originalRollbackMismatches(artifact: ImagePerformanceArtifact): number {
-    if (artifact.adapter !== "original") {
-        return 1;
-    }
-    return artifact.corpus.assets.reduce(
-        (count, asset) =>
-            count +
-            asset.variants.filter(
-                (variant) =>
-                    variant.actualWidth !== asset.sourceWidth ||
-                    variant.actualHeight !== asset.sourceHeight ||
-                    variant.outputBytes !== asset.sourceBytes,
-            ).length,
-        0,
-    );
+function comparisonGateThresholds(thresholds: ComparisonThresholds): ImagePerformanceGateThresholds {
+    return {
+        minimumSavingsRatio: thresholds.minimumSavingsRatio,
+        foregroundRegressionRatio: thresholds.foregroundRegressionRatio,
+        foregroundAllowanceMs: thresholds.foregroundAllowanceMs,
+        coldForegroundMaximumMs: thresholds.coldForegroundMaximumMs,
+        browserClsMaximum: thresholds.browserClsMaximum,
+        browserClsRegressionAllowance: thresholds.browserClsRegressionAllowance,
+        maximumThumbnailMae: thresholds.maximumThumbnailMae,
+        maximumPeakRssBytes: thresholds.maximumPeakRssBytes,
+        maximumScenarioCpuMs: thresholds.maximumScenarioCpuMs,
+        maxArtifactAgeMs: thresholds.maxArtifactAgeMs,
+    };
 }
 
 function savingsGate(id: string, baseline: number, candidate: number, minimum: number): GateResult {
@@ -149,12 +143,38 @@ function coldForegroundGate(candidate: ImagePerformanceArtifact, maximum: number
     };
 }
 
+function maximumObservedGate(id: string, values: number[], maximum: number): GateResult {
+    const actual = Math.max(0, ...values);
+    return {
+        id,
+        passed: actual <= maximum,
+        actual: rounded(actual),
+        expected: `<=${rounded(maximum)}`,
+    };
+}
+
 function assertComparable(baseline: ImagePerformanceArtifact, candidate: ImagePerformanceArtifact): void {
     if (baseline.corpus.fingerprint !== candidate.corpus.fingerprint) {
         throw new Error("Baseline and candidate corpus fingerprints differ");
     }
     if (JSON.stringify(baseline.configuration) !== JSON.stringify(candidate.configuration)) {
         throw new Error("Baseline and candidate benchmark configurations differ");
+    }
+    const corpusIdentity = (artifact: ImagePerformanceArtifact) => ({
+        kind: artifact.corpus.kind,
+        accepted: artifact.corpus.accepted,
+        rejected: artifact.corpus.rejected,
+        rejections: artifact.corpus.rejections,
+        assets: artifact.corpus.assets.map(({ assetId, mediaType, sourceBytes, sourceWidth, sourceHeight }) => ({
+            assetId,
+            mediaType,
+            sourceBytes,
+            sourceWidth,
+            sourceHeight,
+        })),
+    });
+    if (JSON.stringify(corpusIdentity(baseline)) !== JSON.stringify(corpusIdentity(candidate))) {
+        throw new Error("Baseline and candidate corpus metadata differ");
     }
     const baselineKeys = baseline.listing.map(sampleKey).sort();
     const candidateKeys = candidate.listing.map(sampleKey).sort();

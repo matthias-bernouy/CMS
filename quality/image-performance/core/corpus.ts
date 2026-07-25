@@ -1,17 +1,18 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { imageSize } from "image-size";
+import { SOURCE_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-source-images";
+import { SharpSourceImageTransformer } from "@bernouy/cms-source-images/sharp";
+import type { CorpusRejections } from "../contracts";
 import { syntheticPng } from "./png";
 
-const MEDIA_TYPES = new Map([
-    ["jpg", "image/jpeg"],
-    ["jpeg", "image/jpeg"],
-    ["png", "image/png"],
-    ["webp", "image/webp"],
-    ["gif", "image/gif"],
-    ["avif", "image/avif"],
-]);
+const MEDIA_TYPES = {
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    gif: "image/gif",
+    avif: "image/avif",
+} as const;
 
 export type LoadedAsset = {
     assetId: string;
@@ -24,25 +25,24 @@ export type LoadedAsset = {
 export type LoadedCorpus = {
     assets: LoadedAsset[];
     rejected: number;
+    rejections: CorpusRejections;
     fingerprint: string;
 };
 
-export async function loadCorpus(options: {
-    directory?: string;
-    syntheticCount?: number;
-}): Promise<LoadedCorpus> {
+export async function loadCorpus(options: { directory?: string; syntheticCount?: number }): Promise<LoadedCorpus> {
     const candidates = options.syntheticCount
         ? Array.from({ length: options.syntheticCount }, (_, index) => syntheticPng(1_600, 1_200, index + 1))
         : await readCorpusFiles(options.directory!);
     const accepted: Array<Omit<LoadedAsset, "assetId"> & { digest: string }> = [];
-    let rejected = 0;
+    const rejections: CorpusRejections = { animated: 0, invalidOrUnsafe: 0, oversizedBytes: 0 };
+    const transformer = new SharpSourceImageTransformer();
     for (const bytes of candidates) {
-        const asset = inspect(bytes);
-        if (!asset) {
-            rejected++;
+        const inspected = await inspect(bytes, transformer);
+        if ("rejection" in inspected) {
+            rejections[inspected.rejection]++;
             continue;
         }
-        accepted.push({ ...asset, digest: hash(bytes) });
+        accepted.push({ ...inspected.asset, digest: hash(bytes) });
     }
     accepted.sort((left, right) => left.digest.localeCompare(right.digest));
     if (accepted.length === 0) {
@@ -54,7 +54,8 @@ export async function loadCorpus(options: {
     }));
     return {
         assets,
-        rejected,
+        rejected: Object.values(rejections).reduce((sum, value) => sum + value, 0),
+        rejections,
         fingerprint: hash(new TextEncoder().encode(accepted.map(({ digest }) => digest).join("\n"))),
     };
 }
@@ -76,28 +77,27 @@ async function walk(directory: string, files: string[]): Promise<void> {
     }
 }
 
-function inspect(bytes: Uint8Array): Omit<LoadedAsset, "assetId"> | null {
+async function inspect(
+    bytes: Uint8Array,
+    transformer: SharpSourceImageTransformer,
+): Promise<{ asset: Omit<LoadedAsset, "assetId"> } | { rejection: keyof CorpusRejections }> {
+    if (bytes.byteLength > SOURCE_RESPONSIVE_WEBP_V1.maxSourceBytes) {
+        return { rejection: "oversizedBytes" };
+    }
     try {
-        const dimensions = imageSize(bytes);
-        const mediaType = MEDIA_TYPES.get(dimensions.type ?? "");
-        const width = dimensions.width;
-        const height = dimensions.height;
-        if (
-            !mediaType ||
-            typeof width !== "number" ||
-            typeof height !== "number" ||
-            !Number.isSafeInteger(width) ||
-            !Number.isSafeInteger(height) ||
-            width <= 0 ||
-            height <= 0 ||
-            width * height > 40_000_000 ||
-            bytes.byteLength > 10 * 1024 * 1024
-        ) {
-            return null;
+        const metadata = await transformer.inspect(bytes, SOURCE_RESPONSIVE_WEBP_V1);
+        if (metadata.pages !== 1) {
+            return { rejection: "animated" };
         }
-        return { bytes, mediaType, width, height };
+        const mediaType = MEDIA_TYPES[metadata.format];
+        const width = metadata.width;
+        const height = metadata.height;
+        if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width <= 0 || height <= 0) {
+            return { rejection: "invalidOrUnsafe" };
+        }
+        return { asset: { bytes, mediaType, width, height } };
     } catch {
-        return null;
+        return { rejection: "invalidOrUnsafe" };
     }
 }
 
