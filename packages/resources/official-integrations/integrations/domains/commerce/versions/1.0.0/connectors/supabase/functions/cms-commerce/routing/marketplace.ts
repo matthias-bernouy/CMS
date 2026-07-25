@@ -25,6 +25,7 @@ import { getBuyerLegalRequirements, getMyBuyerLegalAcceptanceAudit } from "../ro
 import { getMyOrder, getMySale } from "../routes/order/read-model/details.ts";
 import { listMyOrders, listMySales } from "../routes/order/read-model/lists.ts";
 import { getMySeller, registerMySeller, updateMySeller } from "../routes/seller/index.ts";
+import { handleMarketplaceServiceWithdrawalRoute } from "./service-withdrawals.ts";
 
 export async function handleMarketplaceRoute(route: string, request: Request): Promise<Response | null> {
     if (route === "/offers") {
@@ -171,5 +172,5 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
     if (route === "/me/sale/cancel") {
         return request.method === "POST" ? await cancelMySale(request) : methodNotAllowed("POST");
     }
-    return null;
+    return await handleMarketplaceServiceWithdrawalRoute(route, request);
 }

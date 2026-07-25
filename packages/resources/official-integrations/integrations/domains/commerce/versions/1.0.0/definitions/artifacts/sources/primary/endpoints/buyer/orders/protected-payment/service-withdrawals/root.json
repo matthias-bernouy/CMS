@@ -1,0 +1,8 @@
+[
+    {
+        "$include": "submit.json"
+    },
+    {
+        "$include": "list.json"
+    }
+]
