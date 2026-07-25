@@ -21,11 +21,13 @@ export function integrationPackageRouteHandlers(
     return {
         package: async (request) => {
             const identity = exactIdentity(request);
-            if (request.method === "GET") {
-                const limited = await guardPackageDownload(request, protection);
-                if (limited) {
-                    return limited;
-                }
+            const limited = await guardPackageDownload(
+                request,
+                protection,
+                request.method === "GET" ? "download" : "metadata",
+            );
+            if (limited) {
+                return limited;
             }
             const resolved = await resolveExactPackage(identity, source);
             if (resolved instanceof Response) {
@@ -43,7 +45,12 @@ export function integrationPackageRouteHandlers(
             );
         },
         releaseNotes: async (request) => {
-            const resolved = await resolveExactPackage(exactIdentity(request), source);
+            const identity = exactIdentity(request);
+            const limited = await guardPackageDownload(request, protection, "metadata");
+            if (limited) {
+                return limited;
+            }
+            const resolved = await resolveExactPackage(identity, source);
             if (resolved instanceof Response) {
                 return resolved;
             }

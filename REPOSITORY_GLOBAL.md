@@ -472,7 +472,10 @@ Public package downloads also have an origin-protection policy:
   single-process development may use `InMemoryRateLimiter`;
 - rejected downloads return `429 Too Many Requests` and `Retry-After`;
 - catalog metadata, `HEAD`, and small exact-definition requests remain
-  anonymous without consuming the package-download budget.
+  anonymous without consuming the package-download budget;
+- package-backed `HEAD` and release-note reads use a separate metadata quota
+  before package-source traversal, so their exemption cannot be used to force
+  unbounded filesystem walks.
 
 Client-address resolution has an explicit runtime mode:
 

@@ -2,12 +2,18 @@ import { resolveClientAddress, type ClientAddressPolicy } from "@bernouy/http-ru
 import type { RateLimiter } from "@bernouy/rate-limiter";
 import { publicRateLimited } from "cms-repository/publicReadResponse";
 
-const DEFAULT_KEY_PREFIX = "repository-package-download:";
+const DEFAULT_KEY_PREFIXES = {
+    download: "repository-package-download:",
+    metadata: "repository-package-metadata:",
+} as const;
+
+export type PublicPackageReadBudget = keyof typeof DEFAULT_KEY_PREFIXES;
 
 export type PublicPackageDownloadProtection = {
     clientAddressPolicy: ClientAddressPolicy;
     rateLimiter?: RateLimiter;
     keyPrefix?: string;
+    metadataKeyPrefix?: string;
 };
 
 export function assertPackageDownloadProtection(config: PublicPackageDownloadProtection): void {
@@ -24,11 +30,15 @@ export function assertPackageDownloadProtection(config: PublicPackageDownloadPro
     if (config.keyPrefix !== undefined && !config.keyPrefix) {
         throw new TypeError("Package download rate-limit key prefix must not be empty");
     }
+    if (config.metadataKeyPrefix !== undefined && !config.metadataKeyPrefix) {
+        throw new TypeError("Package metadata rate-limit key prefix must not be empty");
+    }
 }
 
 export async function guardPackageDownload(
     request: Request,
     config: PublicPackageDownloadProtection,
+    budget: PublicPackageReadBudget = "download",
 ): Promise<Response | null> {
     const address = resolveClientAddress(request, config.clientAddressPolicy);
     if (!address) {
@@ -36,7 +46,11 @@ export async function guardPackageDownload(
     }
     let result: Awaited<ReturnType<RateLimiter["hit"]>>;
     try {
-        result = await config.rateLimiter!.hit(`${config.keyPrefix ?? DEFAULT_KEY_PREFIX}${address}`);
+        const prefix =
+            budget === "download"
+                ? (config.keyPrefix ?? DEFAULT_KEY_PREFIXES.download)
+                : (config.metadataKeyPrefix ?? DEFAULT_KEY_PREFIXES.metadata);
+        result = await config.rateLimiter!.hit(`${prefix}${address}`);
     } catch {
         throw Object.assign(new Error("Integration package download protection is unavailable"), {
             status: 503,

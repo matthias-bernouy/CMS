@@ -6,6 +6,7 @@ import { RepositoryCms, type PublicPackageDownloadProtection } from "@bernouy/cm
 import { json, TestRunner } from "./testRunner";
 
 const PACKAGE_PATH = "/api/integrations/package?kind=demo&version=1.0.0";
+const RELEASE_NOTES_PATH = "/api/integrations/release-notes?kind=demo&version=1.0.0";
 
 describe("public integration package download protection", () => {
     test("rejects active protection without a limiter at composition time", () => {
@@ -66,19 +67,41 @@ describe("public integration package download protection", () => {
         expect(fixture.sourceCalls).toEqual(["demo@1.0.0"]);
     });
 
-    test("keeps HEAD outside the budget while still validating exact identity", async () => {
+    test("uses a separate traversal budget for HEAD without consuming the download budget", async () => {
         const fixture = setup({
             clientAddressPolicy: { mode: "direct" },
-            rateLimiter: limiter({ allowed: false }),
+            rateLimiter: limiter({ allowed: true }),
         });
 
-        const head = await fixture.runner.handle(PACKAGE_PATH, { method: "HEAD" });
+        const head = await fixture.runner.handle(PACKAGE_PATH, { method: "HEAD" }, "198.51.100.4");
         const invalid = await fixture.runner.handle("/api/integrations/package?kind=demo", { method: "HEAD" });
 
         expect(head.status).toBe(404);
         expect(invalid.status).toBe(400);
-        expect(fixture.keys).toHaveLength(0);
+        expect(fixture.keys).toEqual(["repository-package-metadata:198.51.100.4"]);
         expect(fixture.sourceCalls).toEqual(["demo@1.0.0"]);
+    });
+
+    test("rejects HEAD and release notes before package-source traversal", async () => {
+        const fixture = setup({
+            clientAddressPolicy: { mode: "direct" },
+            rateLimiter: limiter({ allowed: false, retryAfterSeconds: 9 }),
+        });
+
+        const head = await fixture.runner.handle(PACKAGE_PATH, { method: "HEAD" }, "198.51.100.4");
+        const notes = await fixture.runner.handle(RELEASE_NOTES_PATH, {}, "198.51.100.4");
+        const notesHead = await fixture.runner.handle(RELEASE_NOTES_PATH, { method: "HEAD" }, "198.51.100.4");
+
+        expect(head.status).toBe(429);
+        expect(notes.status).toBe(429);
+        expect(notesHead.status).toBe(429);
+        expect(head.headers.get("retry-after")).toBe("9");
+        expect(fixture.keys).toEqual([
+            "repository-package-metadata:198.51.100.4",
+            "repository-package-metadata:198.51.100.4",
+            "repository-package-metadata:198.51.100.4",
+        ]);
+        expect(fixture.sourceCalls).toHaveLength(0);
     });
 
     test("fails closed when an active runner did not record the TCP peer", async () => {
