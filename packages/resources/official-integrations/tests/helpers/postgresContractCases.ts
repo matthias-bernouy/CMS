@@ -73,7 +73,7 @@ export function postgresContractConfiguration(packageRoot: string): {
                 id: "commerce-fulfillment-truth",
                 label: "Commerce fulfillment carrier truth",
                 steps: [
-                    step("commerce/protected/postgres/fulfillment-truth", "contracts.pg.sql", [
+                    step("commerce/protected", "fulfillment-truth/contracts.pg.sql", [
                         "run_fulfillment_truth_contract=true",
                         "allow_fulfillment_truth_schema_reset=true",
                     ]),
