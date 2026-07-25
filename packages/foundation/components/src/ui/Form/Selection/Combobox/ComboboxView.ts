@@ -15,6 +15,7 @@ export class ComboboxView {
     readonly optionSlot: HTMLSlotElement | null;
     private readonly label: HTMLElement | null;
     private readonly listbox: HTMLElement | null;
+    private readonly hint: HTMLElement | null;
     private readonly clearButton: HTMLButtonElement | null;
     private readonly chevron: SVGElement | null;
 
@@ -25,6 +26,7 @@ export class ComboboxView {
         this.input = root?.querySelector("input") ?? null;
         this.label = root?.querySelector(".label") ?? null;
         this.listbox = root?.querySelector("[role='listbox']") ?? null;
+        this.hint = root?.querySelector(".hint") ?? null;
         this.clearButton = root?.querySelector("[data-clear]") ?? null;
         this.chevron = root?.querySelector(".chevron") ?? null;
         this.optionSlot = root?.querySelector("slot") ?? null;
@@ -57,6 +59,22 @@ export class ComboboxView {
         if (this.input) {
             this.input.placeholder = host.getAttribute("placeholder") ?? "";
             this.input.disabled = disabled;
+            this.input.required = host.hasAttribute("required");
+            syncBooleanAria(this.input, "aria-required", host.hasAttribute("required"));
+            syncBooleanAria(this.input, "aria-invalid", host.hasAttribute("invalid"));
+        }
+        if (this.hint) {
+            const hint = host.getAttribute("hint") ?? "";
+            this.hint.textContent = hint;
+            this.hint.dataset.level = host.getAttribute("hint-level") ?? "info";
+            this.hint.hidden = hint === "";
+            if (this.input) {
+                if (hint) {
+                    this.input.setAttribute("aria-describedby", this.hint.id);
+                } else {
+                    this.input.removeAttribute("aria-describedby");
+                }
+            }
         }
     }
 
@@ -108,5 +126,13 @@ export class ComboboxView {
 
     get listHidden(): boolean {
         return this.listbox?.hidden ?? true;
+    }
+}
+
+function syncBooleanAria(input: HTMLInputElement, name: "aria-invalid" | "aria-required", value: boolean): void {
+    if (value) {
+        input.setAttribute(name, "true");
+    } else {
+        input.removeAttribute(name);
     }
 }

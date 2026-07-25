@@ -1,5 +1,5 @@
 import { Component } from "@bernouy/components/base";
-import { emitWidgetEvent, setText, WIDGET_ACTION_EVENT } from "../shared";
+import { emitWidgetEvent, setP9rButtonLabel, setText, WIDGET_ACTION_EVENT } from "../shared";
 import "./WNavigationItem";
 import type { DashboardWNavigationItem } from "./WNavigationItem";
 import { navigationDragItem } from "./drag";
@@ -71,7 +71,7 @@ export class DashboardWNavigationList extends Component {
                     button.dataset.confirm = action.confirm;
                 }
                 button.setAttribute("tone", action.tone ?? "primary");
-                button.textContent = action.label;
+                setP9rButtonLabel(button, action.label);
                 return button;
             }),
         );

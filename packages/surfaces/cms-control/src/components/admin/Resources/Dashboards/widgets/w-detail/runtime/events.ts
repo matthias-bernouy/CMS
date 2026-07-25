@@ -32,6 +32,7 @@ export class DetailEvents {
             return;
         }
         this.root.addEventListener("click", this.onClick);
+        this.root.addEventListener("focusin", this.onFocusIn);
         this.root.addEventListener("input", this.onInput);
         this.root.addEventListener("change", this.onChange);
         this.root.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction as EventListener);
@@ -40,6 +41,7 @@ export class DetailEvents {
 
     unbind(): void {
         this.root.removeEventListener("click", this.onClick);
+        this.root.removeEventListener("focusin", this.onFocusIn);
         this.root.removeEventListener("input", this.onInput);
         this.root.removeEventListener("change", this.onChange);
         this.root.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction as EventListener);
@@ -48,6 +50,7 @@ export class DetailEvents {
 
     private onClick = (event: Event): void => {
         const target = event.target as Element | null;
+        this.retryCmsUser(target);
         if (target?.closest("[data-back]")) {
             emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
         }
@@ -88,6 +91,10 @@ export class DetailEvents {
         }
     };
 
+    private onFocusIn = (event: Event): void => {
+        this.retryCmsUser(event.target as Element | null);
+    };
+
     private onInput = (event: Event): void => {
         const control = (event.target as Element | null)?.closest<HTMLElement>("[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
@@ -96,6 +103,9 @@ export class DetailEvents {
         }
         if (control && field?.input === "money") {
             readFieldControlValue(field, control);
+        }
+        if (control) {
+            this.fields.refreshRequiredValidity(control);
         }
         if (field && this.isBound()) {
             this.lookups.schedule(field.id);
@@ -108,6 +118,7 @@ export class DetailEvents {
         if (!control) {
             return;
         }
+        this.fields.refreshRequiredValidity(control);
         this.emitFieldChange(control, Boolean((event as CustomEvent<{ created?: boolean }>).detail?.created));
         updateDerivedTables(control.dataset.fieldControl ?? "", this.fields);
         this.afterFieldChange(control.dataset.fieldControl ?? "");
@@ -148,6 +159,14 @@ export class DetailEvents {
             this.schemas.schedule(fieldId);
         }
         this.refreshConditionalFields();
+    }
+
+    private retryCmsUser(target: Element | null): void {
+        const control = target?.closest<HTMLElement>("[data-field-control]");
+        const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
+        if (field?.input === "cms-user") {
+            this.lookups.retryCmsUser(field.id);
+        }
     }
 }
 

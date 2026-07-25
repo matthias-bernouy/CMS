@@ -74,6 +74,14 @@ export function detailField(
             ...(field.rows !== undefined ? { rows: field.rows } : {}),
         };
     }
+    if (field.type === "cms-user") {
+        return {
+            ...base,
+            input: "cms-user",
+            value: textValue(value),
+            options: optionList(undefined, options[field.id] ?? []),
+        };
+    }
     if (field.type === "select") {
         return { ...base, input: "select", value: textValue(value), options: field.options.map(optionData) };
     }

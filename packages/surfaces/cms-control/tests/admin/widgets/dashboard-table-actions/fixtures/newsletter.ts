@@ -18,7 +18,10 @@ export function group(): DashboardSourceGroup {
                 targetUrl: "https://project.supabase.co/functions/v1/cms-newsletter/subscriptions/export",
                 responseKind: "file",
                 mediaType: "text/csv",
-                params: [],
+                params: [
+                    { name: "q", in: "query", type: "string" },
+                    { name: "subscribed", in: "query", type: "boolean" },
+                ],
             },
         ],
         dashboards: [],
@@ -40,7 +43,10 @@ export function dashboard(): DashboardDto {
                     {
                         id: "exportSubscriptions",
                         label: "Export CSV",
-                        endpoint: { endpoint: "exportSubscriptions" },
+                        endpoint: {
+                            endpoint: "exportSubscriptions",
+                            params: { q: "$filter.q", subscribed: "$filter.subscribed" },
+                        },
                         download: { filename: "newsletter-subscriptions.csv" },
                     },
                 ],

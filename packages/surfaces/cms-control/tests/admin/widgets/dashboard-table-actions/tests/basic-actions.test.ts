@@ -36,6 +36,31 @@ describe("dashboard table actions", () => {
         }
     });
 
+    test("passes the active table filters to endpoint actions", async () => {
+        const requests: Request[] = [];
+        globalThis.fetch = (async (input, init) => {
+            requests.push(new Request(input, init));
+            return new Response("email,subscribed\n", {
+                status: 200,
+                headers: { "content-type": "text/csv; charset=utf-8" },
+            });
+        }) as typeof fetch;
+        const sourceGroup = group();
+
+        await executeDashboardTableAction(
+            sourceGroup,
+            dashboard(),
+            "exportSubscriptions",
+            "subscriptionsTable",
+            undefined,
+            [sourceGroup],
+            { q: "ada", subscribed: "true" },
+        );
+
+        expect(requests).toHaveLength(1);
+        expect(new URL(requests[0]!.url).searchParams.toString()).toBe("q=ada&subscribed=true");
+    });
+
     test("opens the declared target after a detail action succeeds", async () => {
         const requests: Request[] = [];
         globalThis.fetch = (async (input, init) => {

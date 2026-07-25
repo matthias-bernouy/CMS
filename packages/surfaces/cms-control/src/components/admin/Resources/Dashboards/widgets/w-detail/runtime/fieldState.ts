@@ -69,10 +69,29 @@ export class DetailFieldState {
     }
 
     validate(): boolean {
-        this.currentFields();
-        const invalid = this.root.querySelector<HTMLElement>("[data-field-control][invalid]");
+        const values = this.currentFields();
+        let invalid: HTMLElement | null = null;
+        for (const field of this.fields()) {
+            const control = this.control(field.id);
+            if (!control) {
+                continue;
+            }
+            this.syncRequiredValidity(field, control, values[field.id]);
+            if (!invalid && control.hasAttribute("invalid")) {
+                invalid = control;
+            }
+        }
+        invalid ??= this.root.querySelector<HTMLElement>("[data-field-control][invalid]");
         invalid?.focus();
         return invalid === null;
+    }
+
+    refreshRequiredValidity(control: HTMLElement): void {
+        const field = this.find(control.dataset.fieldControl ?? "");
+        if (!field) {
+            return;
+        }
+        this.syncRequiredValidity(field, control, readFieldControlValue(field, control));
     }
 
     control(fieldId: string): HTMLElement | null {
@@ -82,6 +101,49 @@ export class DetailFieldState {
             ) ?? null
         );
     }
+
+    private syncRequiredValidity(field: WDetailField, control: HTMLElement, value: unknown): void {
+        if (!field.required) {
+            clearRequiredError(control);
+            return;
+        }
+        if (missingRequiredValue(value, field.input)) {
+            control.dataset.dashboardRequiredInvalid = "true";
+            control.setAttribute("invalid", "");
+            control.setAttribute("aria-invalid", "true");
+            control.setAttribute("hint", "This field is required.");
+            control.setAttribute("hint-level", "error");
+            return;
+        }
+        clearRequiredError(control);
+    }
+}
+
+function missingRequiredValue(value: unknown, input: WDetailField["input"]): boolean {
+    if (input === "checkbox") {
+        return value !== true;
+    }
+    if (value === null || value === undefined) {
+        return true;
+    }
+    if (typeof value === "string") {
+        return value.trim() === "";
+    }
+    if (Array.isArray(value)) {
+        return value.length === 0;
+    }
+    return typeof value === "object" && Object.keys(value as Record<string, unknown>).length === 0;
+}
+
+function clearRequiredError(control: HTMLElement): void {
+    if (control.dataset.dashboardRequiredInvalid !== "true") {
+        return;
+    }
+    delete control.dataset.dashboardRequiredInvalid;
+    control.removeAttribute("invalid");
+    control.removeAttribute("aria-invalid");
+    control.removeAttribute("hint");
+    control.removeAttribute("hint-level");
 }
 
 export function readDetailBinding(dataset: DOMStringMap): DetailBinding | null {

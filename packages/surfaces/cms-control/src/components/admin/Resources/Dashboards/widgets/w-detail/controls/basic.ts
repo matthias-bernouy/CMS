@@ -20,7 +20,7 @@ export function createBasicControl(field: WDetailField): HTMLElement {
     if (field.input === "select") {
         return select(field);
     }
-    if (field.input === "combobox") {
+    if (field.input === "combobox" || field.input === "cms-user") {
         return combobox(field);
     }
     if (field.input === "tokens") {
@@ -42,7 +42,7 @@ export function createBasicControl(field: WDetailField): HTMLElement {
 }
 
 export function fieldUsesBasicInternalLabel(field: WDetailField): boolean {
-    return ["text", "number", "money", "textarea", "select", "combobox", "tokens"].includes(field.input);
+    return ["text", "number", "money", "textarea", "select", "cms-user", "combobox", "tokens"].includes(field.input);
 }
 
 export function readBasicControlValue(field: WDetailField, control: HTMLElement): WDetailFieldValue {

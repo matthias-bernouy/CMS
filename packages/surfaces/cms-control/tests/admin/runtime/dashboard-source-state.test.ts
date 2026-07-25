@@ -127,6 +127,83 @@ describe("dashboard source states", () => {
         expect(requests).toHaveLength(0);
     });
 
+    test("mounts table sources with the current widget filters", () => {
+        const dashboard: DashboardDto = {
+            id: "products",
+            source: "commerce",
+            views: [],
+        };
+        const widget = {
+            widget: "w-table",
+            id: "productsTable",
+            source: {
+                endpoint: "products",
+                params: { q: "$filter.q", status: "$filter.status", limit: "100" },
+                itemsPath: "items",
+            },
+            rowKey: "id",
+            columns: [{ id: "title", label: "Product", path: "title", primary: true }],
+            filters: [
+                { id: "q", label: "Search", type: "text" },
+                {
+                    id: "status",
+                    label: "Status",
+                    type: "select",
+                    options: [{ value: "published", label: "Published" }],
+                },
+            ],
+        } satisfies Extract<DashboardWidget, { widget: "w-table" }>;
+        const group: DashboardSourceGroup = {
+            source: {
+                urn: "urn:commerce",
+                id: "commerce",
+                name: "Commerce",
+                endpointCount: 1,
+                dashboardCount: 1,
+                readonly: false,
+            },
+            endpoints: [
+                {
+                    endpointId: "products",
+                    method: "GET",
+                    targetUrl: "https://example.test/products",
+                    params: [
+                        { name: "q", in: "query", type: "string" },
+                        { name: "status", in: "query", type: "string" },
+                    ],
+                },
+            ],
+            dashboards: [dashboard],
+        };
+        const root = document.createElement("div");
+
+        mountDashboardWidgets(
+            root,
+            [widget],
+            {
+                group,
+                dashboard,
+                selectedRows: new Map(),
+                drafts: new Map(),
+                filters: new Map([["productsTable", { q: "racket", status: "published" }]]),
+            },
+            "root",
+            new Map(),
+            null,
+        );
+
+        const wrapper = root.querySelector<HTMLElement>("[cms-source]")!;
+        const source = new URL(wrapper.getAttribute("cms-source")!.split(" as ")[0]!, window.location.origin);
+        expect(Object.fromEntries(source.searchParams)).toEqual({
+            q: "racket",
+            status: "published",
+            limit: "100",
+        });
+        expect(root.querySelector("cms-dashboard-w-table")?.getAttribute("data-filters-json")).toBe(
+            '{"q":"racket","status":"published"}',
+        );
+    });
+
     test("loads selection-scoped evidence for the owning claim and not for an evidence detail", async () => {
         const requests: string[] = [];
         globalThis.fetch = (async (input: RequestInfo | URL) => {

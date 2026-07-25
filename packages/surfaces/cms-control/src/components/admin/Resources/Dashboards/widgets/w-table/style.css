@@ -54,6 +54,74 @@ small,
     --_btn-radius: 6px;
 }
 
+.w-table-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e8ecea;
+    background: #fbfcfb;
+}
+
+.w-table-filters[hidden] {
+    display: none;
+}
+
+.w-table-filter-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 10px;
+    min-width: 0;
+}
+
+.w-table-filter-field {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    color: #3d4a46;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.w-table-filter-field input,
+.w-table-filter-field select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 36px;
+    border: 1px solid #d7dfdb;
+    border-radius: 6px;
+    background: #fff;
+    color: #14201c;
+    font: inherit;
+    font-weight: 500;
+    padding: 7px 9px;
+}
+
+.w-table-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.w-table-filter-actions button {
+    min-height: 36px;
+    border: 1px solid #cfd9d4;
+    border-radius: 6px;
+    background: #fff;
+    color: #29443b;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    padding: 7px 11px;
+}
+
+.w-table-filter-actions button[type="submit"] {
+    border-color: #165f4b;
+    background: #165f4b;
+    color: #fff;
+}
+
 .w-table-frame {
     min-width: 0;
     overflow: auto;
@@ -104,4 +172,14 @@ slot {
 
 :host([embedded]) .w-table-empty {
     padding-inline: 0;
+}
+
+@media (max-width: 760px) {
+    .w-table-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .w-table-filter-actions {
+        justify-content: flex-end;
+    }
 }

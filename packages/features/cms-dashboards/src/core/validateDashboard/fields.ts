@@ -59,6 +59,7 @@ export function validateField(
 
     switch (field.type) {
         case "text":
+        case "cms-user":
         case "checkbox":
         case "readonly":
             break;

@@ -3,6 +3,7 @@ import type { DashboardMediaActionDetail, DashboardMediaItem } from "./w-media-f
 export const WIDGET_ROW_SELECT_EVENT = "cms-dashboard-widget:row-select";
 export const WIDGET_BACK_EVENT = "cms-dashboard-widget:back";
 export const WIDGET_ACTION_EVENT = "cms-dashboard-widget:action";
+export const WIDGET_FILTER_CHANGE_EVENT = "cms-dashboard-widget:filter-change";
 export const WIDGET_FIELD_CHANGE_EVENT = "cms-dashboard-widget:field-change";
 export const WIDGET_MEDIA_ACTION_EVENT = "cms-dashboard-widget:media-action";
 
@@ -34,6 +35,11 @@ export type WidgetActionDetail = {
     value?: unknown;
 };
 
+export type WidgetFilterChangeDetail = {
+    widget: string;
+    filters: Record<string, string>;
+};
+
 export type WidgetFieldChangeDetail = {
     rowKey: string;
     field: string;
@@ -54,5 +60,17 @@ export function setText(root: ParentNode, selector: string, value: string): void
     const element = root.querySelector<HTMLElement>(selector);
     if (element) {
         element.textContent = value;
+    }
+}
+
+export function setP9rButtonLabel(button: HTMLElement, label: string): void {
+    button.textContent = label;
+    button.setAttribute("aria-label", label);
+    const syncNativeButton = (): void => {
+        button.shadowRoot?.querySelector("button")?.setAttribute("aria-label", label);
+    };
+    syncNativeButton();
+    if (!button.shadowRoot) {
+        void customElements.whenDefined(button.localName).then(syncNativeButton);
     }
 }

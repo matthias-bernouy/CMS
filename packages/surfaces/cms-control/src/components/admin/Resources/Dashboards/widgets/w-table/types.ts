@@ -13,6 +13,14 @@ export type WTableColumn = {
     primary?: boolean;
 };
 
+export type WTableFilter = {
+    id: string;
+    label: string;
+    type: "text" | "select";
+    placeholder?: string;
+    options?: Array<{ value: string; label: string }>;
+};
+
 export type WTableRow = {
     id: string;
     collection: string;
@@ -31,5 +39,7 @@ export type WTableData = {
         confirm?: string;
     }>;
     columns: WTableColumn[];
+    filters?: WTableFilter[];
+    filterValues?: Record<string, string>;
     rows: WTableRow[];
 };

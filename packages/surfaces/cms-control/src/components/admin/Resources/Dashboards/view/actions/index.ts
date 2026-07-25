@@ -49,6 +49,7 @@ export async function runDashboardWidgetAction(
                   action.widget,
                   action.value,
                   context.groups ?? [group],
+                  context.filters?.get(action.widget ?? "") ?? {},
               );
         if (actionDetail) {
             context.drafts.delete(key);

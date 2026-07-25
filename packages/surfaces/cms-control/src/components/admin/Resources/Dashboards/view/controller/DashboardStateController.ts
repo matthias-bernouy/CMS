@@ -13,6 +13,7 @@ export abstract class DashboardStateController extends Component {
     protected readonly tabState = new Map<string, number>();
     protected readonly drafts = new Map<string, Record<string, unknown>>();
     protected readonly detailResource = new DetailResourceState();
+    private readonly dashboardFilterState = new Map<string, Map<string, Record<string, string>>>();
     private definitionsReloadGeneration = 0;
 
     constructor(css: string, template: string) {
@@ -24,6 +25,7 @@ export abstract class DashboardStateController extends Component {
     protected disconnectState(): void {
         this.definitionsReloadGeneration += 1;
         this.detailResource.clear();
+        this.dashboardFilterState.clear();
     }
 
     protected ensureDashboardSelection(invalidateActions = true): void {
@@ -89,6 +91,27 @@ export abstract class DashboardStateController extends Component {
         this.detailResource.clear();
     }
 
+    protected dashboardFilters(): ReadonlyMap<string, Readonly<Record<string, string>>> {
+        return this.dashboardFilterState.get(this.dashboardFilterKey()) ?? new Map();
+    }
+
+    protected setDashboardFilters(widget: string, filters: Record<string, string>): void {
+        if (!widget) {
+            return;
+        }
+        const key = this.dashboardFilterKey();
+        const current = this.dashboardFilterState.get(key) ?? new Map<string, Record<string, string>>();
+        if (Object.keys(filters).length) {
+            current.set(widget, { ...filters });
+            this.dashboardFilterState.set(key, current);
+            return;
+        }
+        current.delete(widget);
+        if (!current.size) {
+            this.dashboardFilterState.delete(key);
+        }
+    }
+
     protected openDetail(collection: string, row: string): void {
         const dashboard = this.activeDashboard();
         const detail = { collection, row };
@@ -137,5 +160,9 @@ export abstract class DashboardStateController extends Component {
         if (dashboard) {
             this.detailResource.set(dashboard.source, dashboard.id, collection, row, resource);
         }
+    }
+
+    private dashboardFilterKey(): string {
+        return `${this.selectedSource}\u0000${this.selectedDashboard}`;
     }
 }

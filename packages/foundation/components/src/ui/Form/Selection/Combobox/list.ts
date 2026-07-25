@@ -27,7 +27,7 @@ export function renderComboItem(
     row.dataset.active = String(index === activeIndex);
     row.dataset.selected = String(item.kind === "option" && item.value === selectedValue);
     row.setAttribute("role", "option");
-    row.setAttribute("aria-selected", row.dataset.active);
+    row.setAttribute("aria-selected", row.dataset.selected);
     row.addEventListener("mousedown", (event) => {
         event.preventDefault();
         if (!item.disabled) {

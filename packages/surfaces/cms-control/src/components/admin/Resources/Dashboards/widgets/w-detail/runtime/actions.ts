@@ -1,4 +1,5 @@
 import type { WDetailData } from "../types";
+import { setP9rButtonLabel } from "../../shared";
 import { actionIcon } from "../icons";
 
 type DetailAction = WDetailData["actions"][number];
@@ -28,7 +29,7 @@ function renderButton(action: DetailAction): HTMLElement {
     if (action.confirm) {
         button.dataset.confirm = action.confirm;
     }
-    button.textContent = action.label;
+    setP9rButtonLabel(button, action.label);
     return button;
 }
 

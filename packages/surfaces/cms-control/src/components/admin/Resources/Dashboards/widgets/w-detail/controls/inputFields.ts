@@ -77,6 +77,7 @@ export function combobox(field: WDetailField): HTMLElement {
     if (field.creatable) {
         input.setAttribute("creatable", "");
     }
+    applyFeedbackMetadata(input, field);
     input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
     input.value = String(field.value);
     bindFieldControl(input, field);
@@ -115,5 +116,18 @@ function applyInputMetadata(input: HTMLElement, field: WDetailField): void {
     }
     if (field.required) {
         input.setAttribute("required", "");
+    }
+    applyFeedbackMetadata(input, field);
+}
+
+function applyFeedbackMetadata(input: HTMLElement, field: WDetailField): void {
+    if (field.invalid) {
+        input.setAttribute("invalid", "");
+    }
+    if (field.hint) {
+        input.setAttribute("hint", field.hint);
+    }
+    if (field.hintLevel) {
+        input.setAttribute("hint-level", field.hintLevel);
     }
 }

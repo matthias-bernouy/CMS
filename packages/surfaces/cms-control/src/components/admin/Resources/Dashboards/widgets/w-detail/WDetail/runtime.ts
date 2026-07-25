@@ -72,7 +72,7 @@ export function createDetailRuntime(
         schemas: () => schemas.values,
     });
     schemas = new DetailSchemasState(host.dataset, fields, requests, {
-        setData: callbacks.setData,
+        setData: (value) => callbacks.setData(lookups.decorate(value)),
         render: callbacks.render,
         isConnected: callbacks.isConnected,
         options: () => lookups.options,
@@ -98,5 +98,7 @@ export function mapDetailData(
     fields: Record<string, unknown>,
     sourceId: string,
 ): WDetailData {
-    return detailData(widget, resource, rowKey, fields, runtime.lookups.options, sourceId, runtime.schemas.values);
+    return runtime.lookups.decorate(
+        detailData(widget, resource, rowKey, fields, runtime.lookups.options, sourceId, runtime.schemas.values),
+    );
 }

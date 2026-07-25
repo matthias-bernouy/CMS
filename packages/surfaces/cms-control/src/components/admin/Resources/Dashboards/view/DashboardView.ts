@@ -7,10 +7,12 @@ import {
     WIDGET_ACTION_EVENT,
     WIDGET_BACK_EVENT,
     WIDGET_FIELD_CHANGE_EVENT,
+    WIDGET_FILTER_CHANGE_EVENT,
     WIDGET_MEDIA_ACTION_EVENT,
     WIDGET_ROW_SELECT_EVENT,
     type WidgetActionDetail,
     type WidgetFieldChangeDetail,
+    type WidgetFilterChangeDetail,
     type WidgetMediaActionDetail,
     type WidgetRowSelectDetail,
 } from "../widgets/shared";
@@ -36,6 +38,7 @@ export class DashboardView extends DashboardViewController {
         this.shadowRoot!.addEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect as EventListener);
         this.shadowRoot!.addEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
         this.shadowRoot!.addEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction as EventListener);
+        this.shadowRoot!.addEventListener(WIDGET_FILTER_CHANGE_EVENT, this.onWidgetFilterChange as EventListener);
         this.shadowRoot!.addEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange as EventListener);
         this.shadowRoot!.addEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction as EventListener);
         window.addEventListener("popstate", this.onPopState);
@@ -48,6 +51,7 @@ export class DashboardView extends DashboardViewController {
         this.shadowRoot?.removeEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect as EventListener);
         this.shadowRoot?.removeEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
         this.shadowRoot?.removeEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction as EventListener);
+        this.shadowRoot?.removeEventListener(WIDGET_FILTER_CHANGE_EVENT, this.onWidgetFilterChange as EventListener);
         this.shadowRoot?.removeEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange as EventListener);
         this.shadowRoot?.removeEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction as EventListener);
         window.removeEventListener("popstate", this.onPopState);
@@ -102,6 +106,15 @@ export class DashboardView extends DashboardViewController {
             return;
         }
         void runDashboardMediaAction(this.actionContext(), event.detail);
+    };
+
+    private onWidgetFilterChange = (event: CustomEvent<WidgetFilterChangeDetail>): void => {
+        if (this.isExampleMode()) {
+            showToast("Filters applied", { type: "success" });
+            return;
+        }
+        this.setDashboardFilters(event.detail.widget, event.detail.filters);
+        this.renderDashboard();
     };
 
     private onWidgetFieldChange = (event: CustomEvent<WidgetFieldChangeDetail>): void => {

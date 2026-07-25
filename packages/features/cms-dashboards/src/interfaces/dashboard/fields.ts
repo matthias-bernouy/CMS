@@ -67,6 +67,7 @@ export type DashboardSchemaExclusion = {
 
 export type DashboardField =
     | (DashboardFieldBase & { type: "text"; placeholder?: string })
+    | (DashboardFieldBase & { type: "cms-user"; placeholder?: string })
     | (DashboardFieldBase & {
           type: "number";
           placeholder?: string;

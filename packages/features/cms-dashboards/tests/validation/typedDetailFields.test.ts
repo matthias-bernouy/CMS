@@ -3,6 +3,23 @@ import { validateDashboard, type DashboardField } from "@bernouy/cms-dashboards"
 import { detail, embeddedLookup, moneyField } from "./typedDetailFixtures";
 
 describe("typed dashboard detail fields", () => {
+    test("accepts a CMS user directory picker as a first-class field", () => {
+        expect(
+            validateDashboard(
+                detail([
+                    {
+                        id: "cmsUserId",
+                        label: "CMS user",
+                        path: "cmsUserId",
+                        type: "cms-user",
+                        placeholder: "Search users",
+                        required: true,
+                    },
+                ]),
+            ),
+        ).toEqual([]);
+    });
+
     test("rejects unsafe or legacy schema exclusions", () => {
         const valid = {
             id: "schema",

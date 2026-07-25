@@ -44,6 +44,7 @@ export class DashboardViewController extends DashboardStateController {
             this.drafts,
             dashboard ? this.detailResource.current(dashboard.source, dashboard.id, this.detailSelection) : null,
             this.groups,
+            this.dashboardFilters(),
         );
     }
 
@@ -60,6 +61,7 @@ export class DashboardViewController extends DashboardStateController {
             dashboard: this.activeDashboard(),
             detail: this.detailSelection,
             drafts: this.drafts,
+            filters: this.dashboardFilters(),
             render: () => this.renderDashboard(),
             reloadDefinitions: () => this.reloadDefinitions(),
             reload: (collection, row) => this.reloadDetail(collection, row),

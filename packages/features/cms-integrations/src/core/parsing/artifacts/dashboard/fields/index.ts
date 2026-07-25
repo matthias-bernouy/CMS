@@ -62,7 +62,7 @@ function parseField(value: unknown, name: string): DashboardField {
         ...(required ? { required } : {}),
     };
     const type = requiredText(value.type, `${name}.type`);
-    if (type === "text") {
+    if (type === "text" || type === "cms-user") {
         return { ...base, type, ...placeholder(value, name) };
     }
     if (type === "number") {

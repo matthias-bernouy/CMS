@@ -2,6 +2,7 @@ import type { DashboardEmbeddedLookupRef, DashboardField, DashboardWidget } from
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 type LookupField = Extract<DashboardField, { type: "combobox" | "tokens" }>;
+type CmsUserField = Extract<DashboardField, { type: "cms-user" }>;
 
 export type DetailLookupTarget = {
     key: string;
@@ -37,7 +38,16 @@ export function detailLookupTargets(widget: DetailWidget): DetailLookupTarget[] 
 }
 
 export function allLookupTargetKeys(widget: DetailWidget): Set<string> {
-    return new Set(detailLookupTargets(widget).map((target) => target.key));
+    return new Set([
+        ...detailLookupTargets(widget).map((target) => target.key),
+        ...detailFields(widget)
+            .filter((field): field is CmsUserField => field.type === "cms-user")
+            .map((field) => field.id),
+    ]);
+}
+
+export function cmsUserTarget(widget: DetailWidget, key: string): CmsUserField | undefined {
+    return detailFields(widget).find((field): field is CmsUserField => field.id === key && field.type === "cms-user");
 }
 
 export function lookupTargetKeysDependingOn(widget: DetailWidget, changedFieldId: string): Set<string> {

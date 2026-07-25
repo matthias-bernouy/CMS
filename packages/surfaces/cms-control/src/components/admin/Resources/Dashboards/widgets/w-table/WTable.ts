@@ -1,6 +1,6 @@
 import { Component } from "@bernouy/components/base";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import { emitWidgetEvent, setText, WIDGET_ACTION_EVENT } from "../shared";
+import { emitWidgetEvent, setText, WIDGET_ACTION_EVENT, WIDGET_FILTER_CHANGE_EVENT } from "../shared";
 import { type DashboardWRow } from "./WRow";
 import { createTableRow, renderTableColumns, tableActionButtons } from "./render";
 import type { WTableColumn, WTableData, WTableRow } from "./types";
@@ -8,7 +8,7 @@ import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
 export class DashboardWTable extends Component {
-    private value: WTableData = { title: "", actions: [], columns: [], rows: [] };
+    private value: WTableData = { title: "", actions: [], columns: [], filters: [], filterValues: {}, rows: [] };
     private selectedRow = "";
 
     constructor() {
@@ -30,7 +30,7 @@ export class DashboardWTable extends Component {
     }
 
     static get observedAttributes(): string[] {
-        return ["data-config-json", "data-selected"];
+        return ["data-config-json", "data-filters-json", "data-selected"];
     }
 
     attributeChangedCallback(): void {
@@ -44,6 +44,8 @@ export class DashboardWTable extends Component {
         this.shadowRoot!.querySelector<HTMLSlotElement>("slot")?.addEventListener("slotchange", this.onSlotChange);
         this.shadowRoot!.querySelector("[data-select-all]")?.addEventListener("change", this.onSelectAll);
         this.shadowRoot!.querySelector("[data-actions]")?.addEventListener("click", this.onActionClick);
+        this.shadowRoot!.querySelector("[data-filters]")?.addEventListener("submit", this.onFilterSubmit);
+        this.shadowRoot!.querySelector("[data-filter-clear]")?.addEventListener("click", this.onFilterClear);
         this.syncConfig();
         this.render();
     }
@@ -52,6 +54,8 @@ export class DashboardWTable extends Component {
         this.shadowRoot?.querySelector<HTMLSlotElement>("slot")?.removeEventListener("slotchange", this.onSlotChange);
         this.shadowRoot?.querySelector("[data-select-all]")?.removeEventListener("change", this.onSelectAll);
         this.shadowRoot?.querySelector("[data-actions]")?.removeEventListener("click", this.onActionClick);
+        this.shadowRoot?.querySelector("[data-filters]")?.removeEventListener("submit", this.onFilterSubmit);
+        this.shadowRoot?.querySelector("[data-filter-clear]")?.removeEventListener("click", this.onFilterClear);
     }
 
     private render(): void {
@@ -60,6 +64,7 @@ export class DashboardWTable extends Component {
         this.query<HTMLElement>("[data-header]").hidden =
             !this.value.title && !this.value.subtitle && !this.value.actions?.length;
         this.renderActions();
+        this.renderFilters();
         this.renderColumns();
         this.syncRows();
     }
@@ -71,6 +76,48 @@ export class DashboardWTable extends Component {
 
     private renderColumns(): void {
         renderTableColumns(this, this.query<HTMLElement>("[data-head-row]"), this.value.columns);
+    }
+
+    private renderFilters(): void {
+        const form = this.query<HTMLFormElement>("[data-filters]");
+        const filters = this.value.filters ?? [];
+        form.hidden = filters.length === 0;
+        const values = this.value.filterValues ?? {};
+        this.query<HTMLElement>("[data-filter-fields]").replaceChildren(
+            ...filters.map((filter) => {
+                const label = document.createElement("label");
+                label.className = "w-table-filter-field";
+                const copy = document.createElement("span");
+                copy.textContent = filter.label;
+                let control: HTMLInputElement | HTMLSelectElement;
+                if (filter.type === "select") {
+                    const select = document.createElement("select");
+                    const empty = document.createElement("option");
+                    empty.value = "";
+                    empty.textContent = "All";
+                    select.append(
+                        empty,
+                        ...(filter.options ?? []).map((option) => {
+                            const element = document.createElement("option");
+                            element.value = option.value;
+                            element.textContent = option.label;
+                            return element;
+                        }),
+                    );
+                    control = select;
+                } else {
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.placeholder = filter.placeholder ?? "";
+                    control = input;
+                }
+                control.name = filter.id;
+                control.dataset.filterId = filter.id;
+                control.value = values[filter.id] ?? "";
+                label.append(copy, control);
+                return label;
+            }),
+        );
     }
 
     private syncConfig(): void {
@@ -95,6 +142,14 @@ export class DashboardWTable extends Component {
                 ...(column.width ? { width: column.width } : {}),
                 ...(column.primary ? { primary: true } : {}),
             })),
+            filters: (widget.filters ?? []).map((filter) => ({
+                id: filter.id,
+                label: filter.label,
+                type: filter.type === "select" ? "select" : "text",
+                ...(filter.placeholder ? { placeholder: filter.placeholder } : {}),
+                ...(filter.options ? { options: filter.options } : {}),
+            })),
+            filterValues: parseFilterValues(this.dataset.filtersJson ?? ""),
             rows: [],
         };
     }
@@ -134,6 +189,28 @@ export class DashboardWTable extends Component {
         }
     };
 
+    private onFilterSubmit = (event: Event): void => {
+        event.preventDefault();
+        const filters = filterFormValues(event.currentTarget as HTMLFormElement);
+        emitWidgetEvent(this, WIDGET_FILTER_CHANGE_EVENT, {
+            widget: parseJson<TableWidget>(this.dataset.configJson ?? "")?.id ?? "",
+            filters,
+        });
+    };
+
+    private onFilterClear = (): void => {
+        const form = this.query<HTMLFormElement>("[data-filters]");
+        for (const control of Array.from(form.elements)) {
+            if (control instanceof HTMLInputElement || control instanceof HTMLSelectElement) {
+                control.value = "";
+            }
+        }
+        emitWidgetEvent(this, WIDGET_FILTER_CHANGE_EVENT, {
+            widget: parseJson<TableWidget>(this.dataset.configJson ?? "")?.id ?? "",
+            filters: {},
+        });
+    };
+
     private query<T extends Element>(selector: string): T {
         return this.shadowRoot!.querySelector(selector) as T;
     }
@@ -156,4 +233,27 @@ function parseJson<T>(value: string): T | null {
     } catch {
         return null;
     }
+}
+
+function parseFilterValues(value: string): Record<string, string> {
+    const parsed = parseJson<unknown>(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return {};
+    }
+    return Object.fromEntries(
+        Object.entries(parsed)
+            .filter(([, entry]) => typeof entry === "string")
+            .map(([key, entry]) => [key, entry as string]),
+    );
+}
+
+function filterFormValues(form: HTMLFormElement): Record<string, string> {
+    const values: Record<string, string> = {};
+    for (const control of Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-filter-id]"))) {
+        const value = control.value.trim();
+        if (value) {
+            values[control.dataset.filterId!] = value;
+        }
+    }
+    return values;
 }

@@ -72,6 +72,7 @@ export type WDetailField = {
         | "checkbox"
         | "textarea"
         | "select"
+        | "cms-user"
         | "combobox"
         | "tokens"
         | "chips"
@@ -95,6 +96,9 @@ export type WDetailField = {
     maxItems?: number;
     editable?: boolean;
     required?: boolean;
+    invalid?: boolean;
+    hint?: string;
+    hintLevel?: "info" | "success" | "error";
     placeholder?: string;
     rows?: number;
     min?: number;

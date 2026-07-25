@@ -116,15 +116,17 @@ function tableElement(
     context: RenderContext,
     detail: DetailSelection | null,
 ): HTMLElement {
+    const filters = { ...(context.filters?.get(widget.id) ?? {}) };
     const wrapper = sourceWrapper(
         context.dashboard.source,
         widget.source,
-        selectionVars(detail),
+        { ...selectionVars(detail), filters },
         "dashboardData",
         requiredSourceParams(context, widget.source),
     );
     const element = document.createElement("cms-dashboard-w-table");
     element.setAttribute("data-config-json", jsonAttr(widget));
+    element.setAttribute("data-filters-json", jsonAttr(filters));
     element.setAttribute("data-selected", context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "");
     element.append(tableRowsTemplate(widget));
     appendSourceContent(wrapper, element);

@@ -19,6 +19,7 @@ export type RenderContext = {
     dashboard: DashboardDto;
     selectedRows: ReadonlyMap<string, string>;
     drafts: ReadonlyMap<string, Record<string, unknown>>;
+    filters?: ReadonlyMap<string, Readonly<Record<string, string>>>;
     detailResource?: DetailResourceOverride | null;
 };
 

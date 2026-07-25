@@ -8,6 +8,61 @@ import { resetActionTest } from "./actionTestSetup";
 afterEach(resetActionTest);
 
 describe("dashboard detail widget actions", () => {
+    test("keeps required blank fields in the form instead of submitting an invalid request", async () => {
+        const detail = document.createElement("cms-dashboard-w-detail");
+        detail.setAttribute(
+            "data-config-json",
+            JSON.stringify({
+                widget: "w-detail",
+                id: "partnerDetail",
+                source: { endpoint: "partner" },
+                actions: [{ id: "savePartner", label: "Save partner", endpoint: { endpoint: "savePartner" } }],
+                main: [
+                    {
+                        id: "identity",
+                        title: "Identity",
+                        fields: [
+                            {
+                                id: "displayName",
+                                label: "Display name",
+                                path: "displayName",
+                                type: "text",
+                                required: true,
+                            },
+                        ],
+                    },
+                ],
+            }),
+        );
+        detail.setAttribute("data-source-json", JSON.stringify({ displayName: "" }));
+        detail.setAttribute("data-row-key", "__new__");
+        const actions: WidgetActionDetail[] = [];
+        detail.addEventListener(WIDGET_ACTION_EVENT, (event) =>
+            actions.push((event as CustomEvent<WidgetActionDetail>).detail),
+        );
+        document.body.append(detail);
+        await Promise.resolve();
+
+        const input = detail.shadowRoot!.querySelector("p9r-input") as HTMLElement & {
+            value: string;
+            shadowRoot: ShadowRoot;
+        };
+        const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement;
+        input.value = "   ";
+        save.click();
+
+        expect(actions).toEqual([]);
+        expect(input.hasAttribute("invalid")).toBe(true);
+        expect(input.getAttribute("hint")).toBe("This field is required.");
+
+        input.value = "Partner browser";
+        input.shadowRoot.querySelector("input")!.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+        expect(input.hasAttribute("invalid")).toBe(false);
+        save.click();
+
+        expect(actions[0]?.fields).toEqual({ displayName: "Partner browser" });
+    });
+
     test("snapshots current field values when an action is clicked", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");
         detail.setAttribute(
@@ -55,6 +110,7 @@ describe("dashboard detail widget actions", () => {
         nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
 
         const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement & { shadowRoot: ShadowRoot };
+        expect(save.shadowRoot.querySelector("button")?.getAttribute("aria-label")).toBe("Save product");
         save.shadowRoot.querySelector("button")!.click();
 
         expect(actions).toHaveLength(1);

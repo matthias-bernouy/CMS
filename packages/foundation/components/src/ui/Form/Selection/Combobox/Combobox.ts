@@ -9,7 +9,7 @@ import { ComboboxView, type ComboboxHandlers } from "./ComboboxView";
 export class Combobox extends Component {
     static formAssociated = true;
     static get observedAttributes(): string[] {
-        return ["value", "label", "placeholder", "disabled", "creatable"];
+        return ["value", "label", "placeholder", "disabled", "required", "invalid", "hint", "hint-level", "creatable"];
     }
 
     private readonly view: ComboboxView;
@@ -25,7 +25,7 @@ export class Combobox extends Component {
     }
 
     override connectedCallback(): void {
-        for (const property of ["value", "disabled"]) {
+        for (const property of ["value", "disabled", "required"]) {
             upgradeProperty(this, property);
         }
         this.view.connect(this.handlers);
@@ -59,6 +59,12 @@ export class Combobox extends Component {
     }
     set disabled(value: boolean) {
         value ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    get required(): boolean {
+        return this.hasAttribute("required");
+    }
+    set required(value: boolean) {
+        value ? this.setAttribute("required", "") : this.removeAttribute("required");
     }
     override focus(): void {
         this.view.input?.focus();

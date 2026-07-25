@@ -8,6 +8,7 @@ export type DashboardViewActionContext = {
     dashboard: DashboardDto | null | undefined;
     detail: DetailSelection | null;
     drafts: Map<string, Record<string, unknown>>;
+    filters?: ReadonlyMap<string, Readonly<Record<string, string>>>;
     render: () => void;
     reloadDefinitions?: () => Promise<void>;
     reload: (collection: string, row: string) => void;

@@ -6,6 +6,7 @@ export {
 } from "./options";
 export {
     allLookupTargetKeys,
+    cmsUserTarget,
     detailLookupTargets,
     isLookupField,
     lookupTargetKeysDependingOn,

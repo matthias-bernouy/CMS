@@ -13,6 +13,27 @@ import {
 } from "./typedDashboardFieldSupport";
 
 describe("typed dashboard field parsing", () => {
+    test("parses the CMS user directory picker without a source lookup", () => {
+        expect(
+            parsedFields([
+                {
+                    ...base("cmsUserId", "cms-user"),
+                    placeholder: "Search by name, email, or CMS user id",
+                    required: true,
+                },
+            ]),
+        ).toEqual([
+            {
+                id: "cmsUserId",
+                label: "cmsUserId",
+                path: "cmsUserId",
+                type: "cms-user",
+                placeholder: "Search by name, email, or CMS user id",
+                required: true,
+            },
+        ]);
+    });
+
     test("parses all field contracts without truncating exact limits", () => {
         const fields = parsedFields([
             { ...base("quantity", "number"), min: 0, max: 10, step: 0.5 },

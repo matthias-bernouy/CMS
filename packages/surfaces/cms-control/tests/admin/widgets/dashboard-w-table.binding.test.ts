@@ -3,8 +3,10 @@ import { Button } from "@bernouy/components";
 import "../../../src/components/admin/Resources/Dashboards/widgets/w-table/WTable";
 import {
     WIDGET_ACTION_EVENT,
+    WIDGET_FILTER_CHANGE_EVENT,
     WIDGET_ROW_SELECT_EVENT,
     type WidgetActionDetail,
+    type WidgetFilterChangeDetail,
     type WidgetRowSelectDetail,
 } from "../../../src/components/admin/Resources/Dashboards/widgets/shared";
 
@@ -83,7 +85,69 @@ describe("dashboard table widget binding", () => {
         const button = table.shadowRoot!.querySelector("p9r-button") as HTMLElement;
         button.click();
 
+        expect(button.shadowRoot?.querySelector("button")?.getAttribute("aria-label")).toBe("Export CSV");
         expect(actions).toEqual([{ action: "exportSubscriptions", widget: "subscriptionsTable", target: undefined }]);
+    });
+
+    test("renders declared filters and emits the submitted filter values", async () => {
+        const table = document.createElement("cms-dashboard-w-table");
+        table.setAttribute(
+            "data-config-json",
+            JSON.stringify({
+                widget: "w-table",
+                id: "productsTable",
+                source: {
+                    endpoint: "products",
+                    params: { q: "$filter.q", status: "$filter.status" },
+                    itemsPath: "items",
+                },
+                rowKey: "id",
+                columns: [{ id: "title", label: "Product", path: "title", primary: true }],
+                filters: [
+                    { id: "q", label: "Search", type: "text", placeholder: "Search products" },
+                    {
+                        id: "status",
+                        label: "Status",
+                        type: "select",
+                        options: [
+                            { value: "draft", label: "Draft" },
+                            { value: "published", label: "Published" },
+                        ],
+                    },
+                ],
+            }),
+        );
+        table.setAttribute("data-filters-json", JSON.stringify({ q: "racket", status: "published" }));
+        const changes: WidgetFilterChangeDetail[] = [];
+        table.addEventListener(WIDGET_FILTER_CHANGE_EVENT, (event) =>
+            changes.push((event as CustomEvent<WidgetFilterChangeDetail>).detail),
+        );
+
+        document.body.append(table);
+        await Promise.resolve();
+
+        const form = table.shadowRoot!.querySelector<HTMLFormElement>("[data-filters]")!;
+        const search = form.querySelector<HTMLInputElement>("[name='q']")!;
+        const status = form.querySelector<HTMLSelectElement>("[name='status']")!;
+        expect(form.hidden).toBeFalse();
+        expect(Array.from(form.querySelectorAll("label")).map((label) => label.textContent)).toEqual([
+            "Search",
+            "StatusAllDraftPublished",
+        ]);
+        expect({ search: search.value, status: status.value }).toEqual({
+            search: "racket",
+            status: "published",
+        });
+
+        search.value = "pro";
+        status.value = "draft";
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        table.shadowRoot!.querySelector<HTMLButtonElement>("[data-filter-clear]")!.click();
+
+        expect(changes).toEqual([
+            { widget: "productsTable", filters: { q: "pro", status: "draft" } },
+            { widget: "productsTable", filters: {} },
+        ]);
     });
 
     test("does not select rows when the table has no detail target", async () => {

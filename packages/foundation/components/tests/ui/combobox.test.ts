@@ -8,7 +8,16 @@ if (!customElements.get(tag)) {
 
 afterEach(() => document.body.replaceChildren());
 
-type MountOptions = { value?: string; placeholder?: string; disabled?: boolean; creatable?: boolean };
+type MountOptions = {
+    value?: string;
+    placeholder?: string;
+    disabled?: boolean;
+    required?: boolean;
+    invalid?: boolean;
+    hint?: string;
+    hintLevel?: string;
+    creatable?: boolean;
+};
 
 function addOption(control: Combobox, value: string, label: string): void {
     const option = document.createElement("option");
@@ -28,6 +37,14 @@ function mountCombobox(options: MountOptions = {}): Combobox {
         control.setAttribute("placeholder", options.placeholder);
     }
     control.toggleAttribute("disabled", options.disabled ?? false);
+    control.toggleAttribute("required", options.required ?? false);
+    control.toggleAttribute("invalid", options.invalid ?? false);
+    if (options.hint !== undefined) {
+        control.setAttribute("hint", options.hint);
+    }
+    if (options.hintLevel !== undefined) {
+        control.setAttribute("hint-level", options.hintLevel);
+    }
     control.toggleAttribute("creatable", options.creatable ?? false);
     document.body.append(control);
     return control;
@@ -85,6 +102,64 @@ describe("Combobox", () => {
         expect(input.value).toBe("Gamma");
         control.focus();
         expect(control.shadowRoot!.activeElement).toBe(input);
+    });
+
+    test("exposes required and invalid hints to the internal combobox", () => {
+        const control = mountCombobox({
+            required: true,
+            invalid: true,
+            hint: "This field is required.",
+            hintLevel: "error",
+        });
+        const input = shadowElement<HTMLInputElement>(control, "input");
+        const hint = shadowElement<HTMLElement>(control, "#hint");
+
+        expect({
+            required: input.required,
+            ariaRequired: input.getAttribute("aria-required"),
+            ariaInvalid: input.getAttribute("aria-invalid"),
+            describedBy: input.getAttribute("aria-describedby"),
+            hint: hint.textContent,
+            hintLevel: hint.dataset.level,
+            hintHidden: hint.hidden,
+        }).toEqual({
+            required: true,
+            ariaRequired: "true",
+            ariaInvalid: "true",
+            describedBy: "hint",
+            hint: "This field is required.",
+            hintLevel: "error",
+            hintHidden: false,
+        });
+
+        control.removeAttribute("required");
+        control.removeAttribute("invalid");
+        control.removeAttribute("hint");
+        expect({
+            required: input.required,
+            ariaRequired: input.hasAttribute("aria-required"),
+            ariaInvalid: input.hasAttribute("aria-invalid"),
+            describedBy: input.hasAttribute("aria-describedby"),
+            hintHidden: hint.hidden,
+        }).toEqual({
+            required: false,
+            ariaRequired: false,
+            ariaInvalid: false,
+            describedBy: false,
+            hintHidden: true,
+        });
+    });
+
+    test("connects the input to its listbox and announces the selected option", () => {
+        const control = mountCombobox({ value: "beta" });
+        const input = shadowElement<HTMLInputElement>(control, "input");
+        const list = shadowElement<HTMLElement>(control, "[role='listbox']");
+
+        input.value = "";
+        input.focus();
+        const options = Array.from(list.querySelectorAll<HTMLElement>("[role='option']"));
+        expect(input.getAttribute("aria-controls")).toBe(list.id);
+        expect(options.map((option) => option.getAttribute("aria-selected"))).toEqual(["false", "true"]);
     });
 
     test("selects an option with ArrowDown and Enter", () => {
