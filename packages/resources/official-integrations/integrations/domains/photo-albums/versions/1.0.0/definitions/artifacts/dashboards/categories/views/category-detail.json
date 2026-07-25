@@ -1,0 +1,118 @@
+{
+    "widget": "w-detail",
+    "id": "categoryDetail",
+    "source": {
+        "endpoint": "manageCategory",
+        "params": {
+            "id": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "name",
+        "fallback": "New album category"
+    },
+    "actions": [
+        {
+            "id": "saveCategory",
+            "label": "Save category",
+            "tone": "primary",
+            "placement": "primary",
+            "endpoint": {
+                "endpoint": "upsertCategory",
+                "body": {
+                    "id": "$resource.id",
+                    "version": "$resource.version",
+                    "name": "$field.name",
+                    "slug": "$field.slug",
+                    "description": "$field.description",
+                    "position": "$field.position"
+                }
+            },
+            "after": {
+                "resource": "$result"
+            }
+        },
+        {
+            "id": "deleteCategory",
+            "label": "Delete category",
+            "icon": "trash",
+            "tone": "danger",
+            "placement": "more",
+            "confirm": "Delete this category? Categories used by albums cannot be deleted.",
+            "visibleWhen": {
+                "value": "$field.id",
+                "notEquals": ""
+            },
+            "endpoint": {
+                "endpoint": "deleteCategory",
+                "params": {
+                    "id": "$resource.id"
+                },
+                "body": {
+                    "version": "$resource.version"
+                }
+            }
+        }
+    ],
+    "main": [
+        {
+            "id": "categoryDetails",
+            "title": "Category details",
+            "fields": [
+                {
+                    "id": "name",
+                    "label": "Name",
+                    "path": "name",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "id": "slug",
+                    "label": "Slug",
+                    "path": "slug",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "id": "description",
+                    "label": "Description",
+                    "path": "description",
+                    "type": "textarea",
+                    "rows": 4
+                }
+            ]
+        }
+    ],
+    "aside": [
+        {
+            "id": "categoryState",
+            "title": "Ordering",
+            "fields": [
+                {
+                    "id": "position",
+                    "label": "Position",
+                    "path": "position",
+                    "type": "number",
+                    "min": 0,
+                    "step": 1
+                },
+                {
+                    "id": "albumCount",
+                    "label": "Albums",
+                    "path": "albumCount",
+                    "type": "readonly"
+                },
+                {
+                    "id": "id",
+                    "label": "ID",
+                    "path": "id",
+                    "type": "readonly",
+                    "visibleWhen": {
+                        "value": "$field.id",
+                        "notEquals": ""
+                    }
+                }
+            ]
+        }
+    ]
+}

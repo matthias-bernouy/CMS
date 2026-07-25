@@ -7,6 +7,7 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 const expectedBlocs = new Map([
     ["mondial-relay", ["mondial-relay-picker"]],
     ["newsletter", ["newsletter-subscription"]],
+    ["photo-albums", ["photo-album-gallery", "photo-album-list"]],
     ["stripe-connect", ["stripe-connect-onboarding"]],
     ["commerce-stripe-payments", ["commerce-stripe-payment"]],
     [

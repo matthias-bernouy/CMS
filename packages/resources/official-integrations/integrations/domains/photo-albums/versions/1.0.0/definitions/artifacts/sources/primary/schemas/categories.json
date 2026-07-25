@@ -1,0 +1,23 @@
+{
+    "type": "object",
+    "properties": {
+        "items": {
+            "type": "array",
+            "items": {
+                "$include": "category.json"
+            }
+        },
+        "total": {
+            "type": "number"
+        },
+        "limit": {
+            "type": "number"
+        },
+        "offset": {
+            "type": "number"
+        }
+    },
+    "required": [
+        "items"
+    ]
+}

@@ -1,0 +1,23 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "file": "model/namespace.sql" },
+        { "file": "model/catalog.sql" },
+        { "file": "model/media.sql" },
+        { "file": "model/settings.sql" },
+        { "file": "operations/categories/read.sql" },
+        { "file": "operations/categories/write.sql" },
+        { "file": "operations/albums/read.sql" },
+        { "file": "operations/albums/write.sql" },
+        { "file": "operations/photos/read.sql" },
+        { "file": "operations/photos/upload.sql" },
+        { "file": "operations/photos/write.sql" },
+        { "file": "operations/public/categories.sql" },
+        { "file": "operations/public/albums.sql" },
+        { "file": "operations/public/photos.sql" },
+        { "file": "operations/settings.sql" },
+        { "file": "access/table-privileges.sql" },
+        { "file": "access/function-privileges.sql" }
+    ]
+}

@@ -8,7 +8,7 @@ import type { SourceImageRecipe } from "../../../interfaces/recipe";
 import type { SourceImageTransformer } from "../../../interfaces/transformer";
 import type { GeneratedDerivative } from "../generation";
 import { invalidSourceImageResponse, sourceImageBusyResponse } from "../responses";
-import { readValidatedSource, SourceImageAdmissionSaturated } from "../sourceValidation";
+import { readValidatedSource } from "../sourceValidation";
 import type { SourceImageRequestTelemetry } from "../telemetry";
 import { derivativeFor, imageFailureReason, publishLookup } from "./derivative";
 
@@ -40,6 +40,30 @@ export type ProcessSourceImageUpstreamOptions = {
 };
 
 export async function processSourceImageUpstream(options: ProcessSourceImageUpstreamOptions): Promise<UpstreamResult> {
+    const releaseAdmission = await options.telemetry.measure("semaphore_wait", () =>
+        options.semaphore.acquire(options.semaphoreWaitTimeoutMs),
+    );
+    if (!releaseAdmission) {
+        await options.telemetry.finish("failed", "semaphore_saturated");
+        return {
+            kind: "response",
+            response: sourceImageBusyResponse(),
+            published: false,
+            outcome: "failed",
+            reason: "semaphore_saturated",
+        };
+    }
+    try {
+        return await processAdmittedSourceImageUpstream(options, releaseAdmission);
+    } finally {
+        releaseAdmission();
+    }
+}
+
+async function processAdmittedSourceImageUpstream(
+    options: ProcessSourceImageUpstreamOptions,
+    releaseAdmission: () => void,
+): Promise<UpstreamResult> {
     let upstream: Response;
     try {
         upstream = await options.telemetry.measure("upstream", () => options.next(options.request));
@@ -83,20 +107,9 @@ export async function processSourceImageUpstream(options: ProcessSourceImageUpst
             transformer: options.transformer,
             telemetry: options.telemetry,
             readTimeoutMs: options.readTimeoutMs,
-            semaphore: options.semaphore,
-            semaphoreWaitTimeoutMs: options.semaphoreWaitTimeoutMs,
+            releaseAdmission,
         });
     } catch (error) {
-        if (error instanceof SourceImageAdmissionSaturated) {
-            await options.telemetry.finish("failed", "semaphore_saturated");
-            return {
-                kind: "response",
-                response: sourceImageBusyResponse(),
-                published: false,
-                outcome: "failed",
-                reason: "semaphore_saturated",
-            };
-        }
         const reason = error instanceof SourceImageFailure ? error.reason : "invalid_image";
         await options.telemetry.finish("rejected", reason);
         return {

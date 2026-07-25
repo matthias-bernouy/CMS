@@ -34,7 +34,8 @@
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*"
+        "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-source-images": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"

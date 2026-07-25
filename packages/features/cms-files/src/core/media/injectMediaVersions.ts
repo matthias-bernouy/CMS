@@ -3,8 +3,6 @@ import type { CmsFilesMetadataRepository } from "cms-files/interfaces/CmsFilesMe
 import { readManifest, type VariantManifest } from "cms-files/core/media/imageVariants";
 import { cmsImageVariantBaseUrlFromByIdUrl, mediaIdFromUrl, withFileVersion } from "cms-files/core/media/fileUrls";
 
-const DEFAULT_SIZES = "100vw";
-
 const isRaster = (mime: string | undefined): boolean => !!mime && mime.startsWith("image/") && mime !== "image/svg+xml";
 
 type Target = { el: Element; attr: string; url: string; id: string };
@@ -87,7 +85,7 @@ export async function injectMediaVersions(
                         .join(", "),
                 );
                 if (!t.el.getAttribute("sizes")) {
-                    t.el.setAttribute("sizes", DEFAULT_SIZES);
+                    t.el.setAttribute("sizes", t.el.getAttribute("loading") === "lazy" ? "auto, 100vw" : "100vw");
                 }
                 const dim = rec!.manifest.intrinsic;
                 if (dim && !t.el.hasAttribute("width") && !t.el.hasAttribute("height")) {

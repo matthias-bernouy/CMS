@@ -1,0 +1,95 @@
+[
+    {
+        "endpointId": "managePhoto",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/photo/metadata",
+        "params": [
+            {
+                "name": "id",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../../schemas/photo.json"
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "updatePhoto",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/photo/metadata",
+        "params": [
+            {
+                "name": "albumId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            },
+            {
+                "name": "id",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "alt": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "caption": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "takenAt": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "version": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "version"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../../schemas/photo.json"
+                }
+            }
+        ]
+    }
+]

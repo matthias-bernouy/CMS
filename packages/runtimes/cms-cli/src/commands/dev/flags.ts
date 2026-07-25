@@ -11,6 +11,7 @@ export type DevFlags = {
     deliveryPort: number;
     publicHost: string;
     workers: boolean;
+    sourceImages: boolean;
 };
 
 export const LOCAL_RUNTIME_PROFILES = {
@@ -22,6 +23,7 @@ export function parseDevFlags(args: string[]): DevFlags {
     let port = 5000;
     let host = "localhost";
     let workers = true;
+    let sourceImages = true;
     for (const arg of args) {
         if (arg.startsWith("--port=")) {
             port = parsePortFlag(arg.slice("--port=".length));
@@ -31,6 +33,10 @@ export function parseDevFlags(args: string[]): DevFlags {
             workers = true;
         } else if (arg === "--no-workers") {
             workers = false;
+        } else if (arg === "--source-images") {
+            sourceImages = true;
+        } else if (arg === "--no-source-images") {
+            sourceImages = false;
         }
     }
 
@@ -39,7 +45,7 @@ export function parseDevFlags(args: string[]): DevFlags {
         throw new Error("--port must be <= 65534 because Delivery uses port + 1");
     }
     const publicHost = host === "0.0.0.0" ? "localhost" : host;
-    return { port, host, deliveryPort, publicHost, workers };
+    return { port, host, deliveryPort, publicHost, workers, sourceImages };
 }
 
 function parsePortFlag(raw: string): number {

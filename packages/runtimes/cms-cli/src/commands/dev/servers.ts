@@ -7,6 +7,7 @@ import { RepositoryCms } from "@bernouy/cms-repository";
 import { BunRunner } from "@bernouy/http-runner";
 import { startDevScheduledTriggers } from "../../dev-server/runtime/scheduledTriggers";
 import { createLocalEndpointPerformance } from "../../dev-server/runtime/endpointPerformance";
+import { createLocalSourceImageComposition } from "../../dev-server/runtime/sourceImages";
 import { createBlocRegistry } from "../../dev-server/watch/index";
 import type { ReloadEmitter } from "../../dev-server/watch/types";
 import type { LocalBlocs } from "./blocs";
@@ -41,6 +42,11 @@ export async function startLocalServers(options: ServerOptions) {
         options.runtime.mode,
         services.integrationConnectorDeployers,
     );
+    const sourceImages = await createLocalSourceImageComposition({
+        siteDir: options.siteDir,
+        scope: `http://${flags.publicHost}:${flags.deliveryPort}`,
+        enabled: flags.sourceImages,
+    });
     const analyticsVisitorSecret = crypto.randomUUID();
     const runner = new BunRunner();
     runner.addEndpoint("GET", "/dev/reload", sseHandler(options.reload));
@@ -84,6 +90,9 @@ export async function startLocalServers(options: ServerOptions) {
             sourceOverlays: services.sourceOverlays,
             endpointPerformanceReports: endpointPerformance.reports,
             sourceTelemetry: endpointPerformance.controlTelemetry,
+            sourceImageInterceptor: sourceImages.sourceImageInterceptor,
+            responsivePublicSourceImagesEnabled: sourceImages.responsivePublicSourceImagesEnabled,
+            responsivePrivateSourceImagesEnabled: sourceImages.responsivePrivateSourceImagesEnabled,
             sourceTrustedConnectorTarget: endpointPerformance.trustedConnectorTarget,
             integrationBlocRepository: services.integrationBlocRepository,
         },
@@ -127,6 +136,9 @@ export async function startLocalServers(options: ServerOptions) {
         sources: services.sources,
         sourceOverlays: services.sourceOverlays,
         sourceTelemetry: endpointPerformance.deliveryTelemetry,
+        sourceImageInterceptor: sourceImages.sourceImageInterceptor,
+        responsivePublicSourceImagesEnabled: sourceImages.responsivePublicSourceImagesEnabled,
+        responsivePrivateSourceImagesEnabled: sourceImages.responsivePrivateSourceImagesEnabled,
         sourceTrustedConnectorTarget: endpointPerformance.trustedConnectorTarget,
         functions: services.functions,
         triggers: services.triggers,
@@ -151,6 +163,7 @@ export async function startLocalServers(options: ServerOptions) {
                 await Promise.all([runner.stopGracefully(), deliveryRunner.stopGracefully()]);
                 await endpointPerformance.flush();
                 await scheduledTriggers?.stop();
+                await sourceImages.dispose();
             })();
             return stopping;
         },

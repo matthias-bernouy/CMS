@@ -23,6 +23,7 @@
         { "path": "../../features/cms-integrations" },
         { "path": "../../features/cms-notifications" },
         { "path": "../../features/cms-secrets" },
+        { "path": "../../features/cms-source-images" },
         { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-functions" },
         { "path": "../../features/cms-triggers" },

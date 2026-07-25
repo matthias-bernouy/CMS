@@ -39,6 +39,16 @@ async function renderImage(id: string, files: InMemoryCmsFilesMetadata, variantS
     };
 }
 
+async function renderMarkup(
+    markup: string,
+    files: InMemoryCmsFilesMetadata,
+    variantStore: InMemoryCmsFilesBlob,
+): Promise<Element> {
+    const { document } = parseHTML(`<!DOCTYPE html><html><head></head><body>${markup}</body></html>`);
+    await injectMediaVersions(document as unknown as Document, { files, variantStore });
+    return document.querySelector("img")!;
+}
+
 describe("injectMediaVersions responsive expansion", () => {
     test("expands a raster image with a manifest to versioned variants", async () => {
         const { files, variantStore, id } = await setupImage("image/png", true);
@@ -49,6 +59,19 @@ describe("injectMediaVersions responsive expansion", () => {
         expect(result.src).toBe(`/.cms/files/by-id/${id}?v=h9`);
         expect(result.width).toBe("640");
         expect(result.height).toBe("480");
+    });
+
+    test("lets lazy images use their rendered width without overriding authored sizes", async () => {
+        const { files, variantStore, id } = await setupImage("image/png", true);
+        const automatic = await renderMarkup(`<img src="/.cms/files/by-id/${id}" loading="lazy">`, files, variantStore);
+        const authored = await renderMarkup(
+            `<img src="/.cms/files/by-id/${id}" loading="lazy" sizes="50vw">`,
+            files,
+            variantStore,
+        );
+
+        expect(automatic.getAttribute("sizes")).toBe("auto, 100vw");
+        expect(authored.getAttribute("sizes")).toBe("50vw");
     });
 
     test("returns a raster image without a manifest for optimization", async () => {

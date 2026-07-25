@@ -85,6 +85,9 @@ function logReady(
     console.log(`  Profile  : ${adminSubject} / current password "${DEV_PASSWORD}" (Profile → Password)`);
     console.log(`  Watching : ${blocCount} authored bloc folder(s) — edit + auto-reload`);
     console.log(`  Workers  : ${flags.workers ? "enabled" : "paused for this runtime (--no-workers)"}`);
+    console.log(
+        `  Images   : ${flags.sourceImages ? "responsive Source variants enabled" : "disabled (--no-source-images)"}`,
+    );
     if (runtime.mode === "PROD") {
         console.log("  Warning  : local adapters and development authentication; not for public deployment");
     }

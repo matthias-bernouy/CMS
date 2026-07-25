@@ -10,11 +10,12 @@ function printHelp() {
     console.log(`p9r — Cms CLI
 
 Usage:
-  p9r dev [--port=N --host=H --no-workers]
+  p9r dev [--port=N --host=H --no-workers --no-source-images]
                                     Run the editor locally; scheduled triggers start by default.
+                                   Responsive Source images are enabled by default.
                                    No remote calls, no auth. Run \`p9r pull\`
                                    first to bootstrap site/ from a tenant.
-  p9r preview [--port=N --host=H --no-workers]
+  p9r preview [--port=N --host=H --no-workers --no-source-images]
                                    Run the same local CMS with production
                                    caching, minification, and security headers.
                                    Uses local adapters and development auth;
