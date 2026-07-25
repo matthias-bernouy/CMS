@@ -11621,6 +11621,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     properties,
     ...required.length ? { required } : {}
   });
+  var arrayShape = (items) => ({ type: "array", items });
   var subjectShape = objectShape({
     identifier: stringShape(),
     email: stringShape(),
@@ -11629,6 +11630,18 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
   var okShape = objectShape({ ok: booleanShape() });
   var emailBody = objectShape({ email: stringShape() }, ["email"]);
   var tokenBody = objectShape({ token: stringShape() }, ["token"]);
+  var legalRequirementShape = objectShape({
+    documentKey: stringShape(),
+    versionId: stringShape(),
+    label: stringShape(),
+    consentText: stringShape(),
+    page: objectShape({
+      id: stringShape(),
+      path: stringShape(),
+      title: stringShape()
+    }, ["id", "path", "title"]),
+    contentHash: stringShape()
+  }, ["documentKey", "versionId", "label", "consentText", "page", "contentHash"]);
   var SYSTEM_AUTH_SOURCE = {
     urn: SYSTEM_AUTH_SOURCE_URN,
     meta: {
@@ -11667,12 +11680,31 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
         output: [{ status: "200", body: okShape }]
       },
       {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signupLegalRequirements"),
+        method: "GET",
+        access: { mode: "public" },
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup/legal-requirements`,
+        meta: { name: "Get signup legal requirements" },
+        output: [
+          {
+            status: "200",
+            body: objectShape({ documents: arrayShape(legalRequirementShape) }, ["documents"])
+          }
+        ]
+      },
+      {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signup"),
         method: "POST",
         access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup`,
         meta: { name: "Sign up" },
-        input: { body: objectShape({ email: stringShape(), password: stringShape() }, ["email", "password"]) },
+        input: {
+          body: objectShape({
+            email: stringShape(),
+            password: stringShape(),
+            acceptedLegalDocumentVersionIds: arrayShape(stringShape())
+          }, ["email", "password"])
+        },
         output: [{ status: "200", body: okShape }]
       },
       {

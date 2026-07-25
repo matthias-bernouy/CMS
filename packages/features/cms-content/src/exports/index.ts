@@ -12,7 +12,7 @@
 export type { TBloc } from "cms-content/interfaces/blocs";
 export type { TPage, TPageRef } from "cms-content/interfaces/pages";
 export type { TTemplate } from "cms-content/interfaces/templates";
-export type { TSystem } from "cms-content/interfaces/settings";
+export type { AuthSettings, SignupLegalDocumentSettings, TSystem } from "cms-content/interfaces/settings";
 export type {
     ThemeCategory,
     ThemeDefinition,
@@ -81,6 +81,7 @@ export {
     validateTemplatePatch,
 } from "cms-content/core/validation/documents/templates";
 export { validateSettingsPatch } from "cms-content/core/validation/settings";
+export { validateSignupLegalDocuments } from "cms-content/core/validation/signupLegalSettings";
 export { coercePageRef, pageRefToString } from "cms-content/core/validation/documents/pageRef";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────

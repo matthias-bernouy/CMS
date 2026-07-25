@@ -6,6 +6,7 @@ import {
     sendVerificationForCredential,
 } from "cms-auth/core/public-auth/emailDelivery";
 import { normalizeEmail, requireToken, validateEmail } from "cms-auth/core/public-auth/input";
+import { compensateFailedSignup } from "cms-auth/core/public-auth/signupCompensation";
 import type {
     PublicAuthFlowConfig,
     PublicAuthSendResult,
@@ -38,15 +39,26 @@ export async function signupLocalUser<Role extends string>(
         return { created: false, sent: await sendVerificationForCredential(cfg, existing) };
     }
 
+    const legalAcceptance = cfg.signupLegalAcceptance;
+    const preparedLegalAcceptance = legalAcceptance
+        ? await legalAcceptance.prepare(input.acceptedLegalDocumentVersionIds ?? [])
+        : null;
     const identity = await cfg.credentials.create({
         email,
         password: input.password,
         emailVerified: !emailDeliveryEnabled,
     });
-    await cfg.users.upsert(
-        { ...identity, sub: internalUserId("local", identity.sub), provider: "local" },
-        cfg.defaultRole,
-    );
+    const cmsUserId = internalUserId("local", identity.sub);
+    let membershipPersisted = false;
+    try {
+        await cfg.users.upsert({ ...identity, sub: cmsUserId, provider: "local" }, cfg.defaultRole);
+        membershipPersisted = true;
+        if (preparedLegalAcceptance && legalAcceptance) {
+            await legalAcceptance.record(preparedLegalAcceptance, cmsUserId);
+        }
+    } catch (error) {
+        await compensateFailedSignup(cfg, identity.sub, cmsUserId, membershipPersisted, error);
+    }
     if (!emailDeliveryEnabled) {
         return { created: true, sent: false };
     }

@@ -8,13 +8,15 @@ import {
     requestPasswordReset,
     signupLocalUser,
 } from "cms-auth/core/public-auth/flows";
-import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse } from "cms-auth/http/authResponse";
+import { optionalRepeatedStrings, readJsonObject, requiredString } from "cms-auth/http/requestInput";
 import { resolveRequestSubject } from "cms-auth/http/requestSubject";
+import type { SignupLegalRequirements } from "cms-auth/signup-legal/contracts";
 
 export const PUBLIC_AUTH_ROUTES = {
     base: "/.cms/auth",
     signup: "/signup",
+    signupLegalRequirements: "/signup/legal-requirements",
     login: "/login",
     logout: "/logout",
     me: "/me",
@@ -31,11 +33,15 @@ export type PublicAuthRoutesConfig<Role extends string = string> = PublicAuthFlo
 
 export function registerPublicAuthRoutes<Role extends string>(runner: Runner, cfg: PublicAuthRoutesConfig<Role>): void {
     if (cfg.allowSignup !== false) {
+        runner.addEndpoint("GET", PUBLIC_AUTH_ROUTES.signupLegalRequirements, async () =>
+            privateAuthJsonResponse(await signupLegalRequirements(cfg)),
+        );
         runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.signup, async (req) => {
             const body = await readJsonObject(req);
             await signupLocalUser(cfg, {
                 email: requiredString(body, "email"),
                 password: requiredString(body, "password"),
+                acceptedLegalDocumentVersionIds: optionalRepeatedStrings(body, "acceptedLegalDocumentVersionIds"),
             });
             return ok();
         });
@@ -75,25 +81,10 @@ export function registerPublicAuthRoutes<Role extends string>(runner: Runner, cf
     });
 }
 
-async function readJsonObject(req: Request): Promise<Record<string, unknown>> {
-    const body = await req.json().catch(() => null);
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-        throw new AuthValidationError("body", "object expected");
-    }
-    return body as Record<string, unknown>;
-}
-
-function requiredString(body: Record<string, unknown>, field: string): string {
-    const value = body[field];
-    if (typeof value !== "string" || !value) {
-        throw new AuthValidationError(field, "required");
-    }
-    return value;
-}
-
-function optionalString(body: Record<string, unknown>, field: string): string | undefined {
-    const value = body[field];
-    return typeof value === "string" && value ? value : undefined;
+async function signupLegalRequirements<Role extends string>(
+    cfg: PublicAuthRoutesConfig<Role>,
+): Promise<SignupLegalRequirements> {
+    return cfg.signupLegalAcceptance?.requirements() ?? { documents: [] };
 }
 
 const ok = (): Response => privateAuthJsonResponse({ ok: true });

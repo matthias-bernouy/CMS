@@ -18,7 +18,8 @@ these endpoints are available on the site origin:
 | `GET` | `/.cms/sources/system-auth/me` | none | `{ "subject": Subject \| null }` |
 | `POST` | `/.cms/sources/system-auth/login` | `{ "email": string, "password": string, "returnTo"?: string }` | `{ "subject": Subject }` and a session cookie |
 | `POST` | `/.cms/sources/system-auth/logout` | none | `{ "ok": true }` and a cleared session cookie |
-| `POST` | `/.cms/sources/system-auth/signup` | `{ "email": string, "password": string, "displayName"?: string }` | `{ "ok": true }` |
+| `GET` | `/.cms/sources/system-auth/signupLegalRequirements` | none | `{ "documents": SignupLegalRequirement[] }` |
+| `POST` | `/.cms/sources/system-auth/signup` | `{ "email": string, "password": string, "acceptedLegalDocumentVersionIds"?: string[] }` | `{ "ok": true }` |
 | `POST` | `/.cms/sources/system-auth/requestEmailVerification` | `{ "email": string }` | `{ "ok": true }` |
 | `POST` | `/.cms/sources/system-auth/confirmEmailVerification` | `{ "token": string }` | `{ "ok": true }` |
 | `POST` | `/.cms/sources/system-auth/requestPasswordReset` | `{ "email": string }` | `{ "ok": true }` |
@@ -27,6 +28,36 @@ these endpoints are available on the site origin:
 `@bernouy/cms-control` mounts the same provider behind the admin guard and keeps
 signup disabled there. `@bernouy/cms-delivery` can expose signup when its public
 auth config allows it.
+
+When `signupLegalAcceptance` is configured, clients load the current
+requirements first and submit every returned `versionId`. The server resolves
+the published CMS pages again, computes their canonical SHA-256 hashes, and
+records the immutable snapshots against the newly-created CMS user. Page
+content and hashes supplied by a client are never accepted. Omitting the policy
+preserves the legacy signup behavior and returns an empty requirements list.
+
+The direct auth equivalent is
+`GET /.cms/auth/signup/legal-requirements`. The production runtime backs the
+policy with the `auth.signupLegalDocuments` system setting:
+
+```json
+{
+    "auth.signupLegalDocuments": [
+        {
+            "key": "terms-of-use",
+            "label": "Terms of use",
+            "consentText": "I accept the terms of use.",
+            "pageId": "stable-cms-page-id",
+            "enabled": true
+        }
+    ]
+}
+```
+
+Every enabled entry must point to a published page. Draft or missing pages fail
+closed. Empty settings leave signup unchanged and do not create proof records.
+Changing the page, label, or consent text creates a new version id; existing
+proofs remain untouched.
 
 ## Authoring Contract
 
