@@ -58,3 +58,41 @@ begin
     );
 end;
 $$;
+
+create or replace function commerce.request_allocated_order_refund(
+    p_order_id bigint,
+    p_reason text,
+    p_merchandise_refund_amount bigint,
+    p_shipping_refund_amount bigint,
+    p_protection_fee_refund_amount bigint,
+    p_actor_kind text,
+    p_actor_id text
+)
+returns jsonb
+language plpgsql
+set search_path = ''
+as $$
+declare
+    v_request jsonb;
+begin
+    if p_actor_kind is distinct from 'admin' then
+        raise exception 'forbidden: admin refund request actor is required';
+    end if;
+    v_request := commerce.create_allocated_refund_request(
+        p_order_id,
+        null,
+        null,
+        p_reason,
+        p_merchandise_refund_amount,
+        p_shipping_refund_amount,
+        p_protection_fee_refund_amount,
+        p_actor_kind,
+        p_actor_id,
+        false
+    );
+    return v_request || jsonb_build_object(
+        'refundAuthorization',
+        commerce.refund_authorization_payload((v_request->>'id')::bigint)
+    );
+end;
+$$;

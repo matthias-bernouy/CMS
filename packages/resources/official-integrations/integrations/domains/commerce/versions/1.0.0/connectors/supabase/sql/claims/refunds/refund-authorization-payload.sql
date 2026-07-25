@@ -15,6 +15,9 @@ select jsonb_build_object(
     'commerceRefundRequestId', request.id,
     'businessKey', request.business_key,
     'amount', request.requested_amount,
+    'merchandiseRefundAmount', request.merchandise_refund_amount,
+    'shippingRefundAmount', request.shipping_refund_amount,
+    'allocationVersion', request.allocation_version,
     'authorizedSellerAmount', greatest(
         0, settlement.authorized_seller_amount - request.seller_recovery_amount
     ),

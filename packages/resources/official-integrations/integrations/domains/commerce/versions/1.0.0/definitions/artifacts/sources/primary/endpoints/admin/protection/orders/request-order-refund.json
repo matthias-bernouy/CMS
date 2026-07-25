@@ -40,14 +40,24 @@
                 "reason": {
                     "type": "string"
                 },
-                "amount": {
+                "merchandiseRefundAmount": {
+                    "type": "number",
+                    "description": "Minor-unit amount allocated to refunded merchandise."
+                },
+                "shippingRefundAmount": {
+                    "type": "number",
+                    "description": "Minor-unit amount allocated to refunded shipping."
+                },
+                "protectionFeeRefundAmount": {
                     "type": "number"
                 }
             },
             "required": [
                 "orderId",
                 "reason",
-                "amount"
+                "merchandiseRefundAmount",
+                "shippingRefundAmount",
+                "protectionFeeRefundAmount"
             ]
         },
         "output": [
@@ -69,6 +79,18 @@
                             "type": "string"
                         },
                         "requestedAmount": {
+                            "type": "number"
+                        },
+                        "merchandiseRefundAmount": {
+                            "type": "number"
+                        },
+                        "shippingRefundAmount": {
+                            "type": "number"
+                        },
+                        "protectionFeeRefundAmount": {
+                            "type": "number"
+                        },
+                        "allocationVersion": {
                             "type": "number"
                         },
                         "requiresFinanceApproval": {

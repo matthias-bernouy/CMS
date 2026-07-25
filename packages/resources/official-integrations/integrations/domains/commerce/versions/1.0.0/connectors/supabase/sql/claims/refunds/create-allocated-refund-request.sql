@@ -1,13 +1,11 @@
-
-
-create or replace function commerce.create_refund_request(
+create or replace function commerce.create_allocated_refund_request(
     p_order_id bigint,
     p_claim_id bigint,
     p_business_key text,
     p_reason text,
-    p_requested_amount bigint,
+    p_merchandise_refund_amount bigint,
+    p_shipping_refund_amount bigint,
     p_protection_fee_refund_amount bigint,
-    p_seller_recovery_amount bigint,
     p_requested_by_kind text,
     p_requested_by text,
     p_auto_approve boolean default false
@@ -22,13 +20,18 @@ declare
     v_protection commerce.protection_policies%rowtype;
     v_settlement commerce.order_settlements%rowtype;
     v_existing_amount bigint;
+    v_existing_merchandise_refund bigint;
+    v_existing_shipping_refund bigint;
     v_existing_protection_refund bigint;
     v_existing_seller_recovery bigint;
     v_existing_platform_contribution bigint;
+    v_requested_amount bigint;
+    v_expected_protection_refund bigint;
+    v_seller_backed_refund bigint;
+    v_seller_recovery bigint;
     v_platform_contribution bigint;
     v_platform_contribution_cap bigint;
     v_cumulative_amount bigint;
-    v_expected_protection_refund bigint;
     v_requires_finance boolean;
     v_requires_dual boolean;
     v_request commerce.refund_requests%rowtype;
@@ -38,6 +41,16 @@ begin
         or p_requested_by_kind not in ('buyer', 'seller', 'admin', 'system')
         or p_requested_by is null or length(btrim(p_requested_by)) = 0 then
         raise exception 'forbidden: refund request actor is not allowed';
+    end if;
+    if p_merchandise_refund_amount is null or p_merchandise_refund_amount < 0
+        or p_shipping_refund_amount is null or p_shipping_refund_amount < 0
+        or p_protection_fee_refund_amount is null or p_protection_fee_refund_amount < 0 then
+        raise exception 'validation: refund allocations must be non-negative integers';
+    end if;
+    v_requested_amount := p_merchandise_refund_amount
+        + p_shipping_refund_amount + p_protection_fee_refund_amount;
+    if v_requested_amount <= 0 or v_requested_amount > 9007199254740991 then
+        raise exception 'validation: allocated refund requires a positive safe-integer total';
     end if;
     select * into v_order from commerce.orders where id = p_order_id for update;
     if not found then raise exception 'not_found: order'; end if;
@@ -49,36 +62,64 @@ begin
     ) then raise exception 'conflict: refund requires confirmed payment'; end if;
     select * into v_protection from commerce.protection_policies where id = v_terms.protection_policy_id;
     select * into v_settlement from commerce.order_settlements where order_id = v_order.id for update;
-    select coalesce(sum(requested_amount), 0),
+    if exists (
+        select 1 from commerce.refund_requests
+        where order_id = v_order.id
+          and status not in ('rejected', 'cancelled', 'failed')
+          and allocation_version = 0
+    ) then
+        raise exception 'conflict: a legacy refund allocation requires manual reconciliation';
+    end if;
+    select
+        coalesce(sum(requested_amount), 0),
+        coalesce(sum(merchandise_refund_amount), 0),
+        coalesce(sum(shipping_refund_amount), 0),
         coalesce(sum(protection_fee_refund_amount), 0),
         coalesce(sum(seller_recovery_amount), 0),
         coalesce(sum(
             requested_amount - protection_fee_refund_amount - seller_recovery_amount
         ), 0)
-    into v_existing_amount, v_existing_protection_refund, v_existing_seller_recovery,
+    into
+        v_existing_amount,
+        v_existing_merchandise_refund,
+        v_existing_shipping_refund,
+        v_existing_protection_refund,
+        v_existing_seller_recovery,
         v_existing_platform_contribution
     from commerce.refund_requests
     where order_id = v_order.id and status not in ('rejected', 'cancelled', 'failed');
-    if p_requested_amount <= 0 or p_requested_amount + v_existing_amount > v_terms.buyer_total_amount then
+    if v_requested_amount + v_existing_amount > v_terms.buyer_total_amount then
         raise exception 'validation: cumulative refund requests exceed captured buyer total';
     end if;
-    v_expected_protection_refund := commerce.calculate_protection_fee_refund(
-        v_order.id, p_requested_amount, p_protection_fee_refund_amount
+    if p_merchandise_refund_amount + v_existing_merchandise_refund
+        > v_terms.merchandise_subtotal_amount then
+        raise exception 'validation: cumulative merchandise refunds exceed immutable financial terms';
+    end if;
+    if p_shipping_refund_amount + v_existing_shipping_refund > v_terms.shipping_amount then
+        raise exception 'validation: cumulative shipping refunds exceed immutable financial terms';
+    end if;
+    v_expected_protection_refund := commerce.calculate_allocated_protection_fee_refund(
+        v_order.id,
+        v_requested_amount,
+        p_merchandise_refund_amount,
+        p_protection_fee_refund_amount
     );
     if p_protection_fee_refund_amount is distinct from v_expected_protection_refund then
         raise exception 'validation: protection fee refund does not match the immutable fee policy';
     end if;
-    if p_protection_fee_refund_amount < 0 or p_protection_fee_refund_amount > p_requested_amount
-        or p_seller_recovery_amount < 0 or p_seller_recovery_amount > p_requested_amount then
-        raise exception 'validation: invalid refund allocation';
+    if v_existing_protection_refund + p_protection_fee_refund_amount
+        > v_terms.buyer_protection_fee_amount then
+        raise exception 'validation: cumulative protection fee refund exceeds immutable financial terms';
     end if;
-    if p_protection_fee_refund_amount + p_seller_recovery_amount > p_requested_amount
-        or v_existing_protection_refund + p_protection_fee_refund_amount > v_terms.buyer_protection_fee_amount
-        or v_existing_seller_recovery + p_seller_recovery_amount > v_terms.seller_proceeds_amount then
-        raise exception 'validation: cumulative refund allocation exceeds immutable financial terms';
-    end if;
-    v_platform_contribution := p_requested_amount
-        - p_protection_fee_refund_amount - p_seller_recovery_amount;
+    v_seller_backed_refund := p_merchandise_refund_amount
+        + case when v_terms.seller_shipping_share_amount > 0
+            then p_shipping_refund_amount else 0 end;
+    v_seller_recovery := least(
+        v_seller_backed_refund,
+        greatest(0, v_terms.seller_proceeds_amount - v_existing_seller_recovery)
+    );
+    v_platform_contribution := v_requested_amount
+        - p_protection_fee_refund_amount - v_seller_recovery;
     v_platform_contribution_cap := greatest(
         0,
         v_terms.platform_retained_amount - v_terms.buyer_protection_fee_amount
@@ -88,7 +129,7 @@ begin
             > v_platform_contribution_cap then
         raise exception 'validation: cumulative platform-funded refund exceeds immutable platform contribution';
     end if;
-    v_cumulative_amount := v_existing_amount + p_requested_amount;
+    v_cumulative_amount := v_existing_amount + v_requested_amount;
     v_requires_finance := v_cumulative_amount >= v_protection.finance_review_threshold_amount
         or p_requested_by_kind = 'admin';
     v_requires_dual := v_cumulative_amount >= v_protection.dual_approval_threshold_amount;
@@ -98,14 +139,18 @@ begin
     );
     insert into commerce.refund_requests (
         order_id, claim_id, business_key, reason, status, requested_amount,
-        protection_fee_refund_amount, seller_recovery_amount, seller_reserve_offset_amount,
+        merchandise_refund_amount, shipping_refund_amount,
+        protection_fee_refund_amount, allocation_version,
+        seller_recovery_amount, seller_reserve_offset_amount,
         requires_finance_approval, dual_approval_required, requested_by_kind, requested_by,
         approved_by, decision_reason
     ) values (
         v_order.id, p_claim_id, v_business_key, p_reason,
         case when p_auto_approve and not v_requires_finance then 'approved' else 'requested' end,
-        p_requested_amount, p_protection_fee_refund_amount, p_seller_recovery_amount,
-        least(p_seller_recovery_amount, v_settlement.seller_reserve_liability_remaining_amount),
+        v_requested_amount, p_merchandise_refund_amount, p_shipping_refund_amount,
+        p_protection_fee_refund_amount, 1,
+        v_seller_recovery,
+        least(v_seller_recovery, v_settlement.seller_reserve_liability_remaining_amount),
         v_requires_finance, v_requires_dual, p_requested_by_kind, p_requested_by,
         case when p_auto_approve and not v_requires_finance then p_requested_by end,
         case when p_auto_approve and not v_requires_finance then 'Policy-authorized business resolution' end
@@ -120,7 +165,13 @@ begin
     perform commerce.append_financial_event(
         v_order.id, 'refund_request', v_request.id::text, 'refund_requested',
         p_requested_by_kind, p_requested_by, p_reason,
-        jsonb_build_object('amount', p_requested_amount, 'requiresFinanceApproval', v_requires_finance),
+        jsonb_build_object(
+            'amount', v_requested_amount,
+            'merchandiseRefundAmount', p_merchandise_refund_amount,
+            'shippingRefundAmount', p_shipping_refund_amount,
+            'protectionFeeRefundAmount', p_protection_fee_refund_amount,
+            'requiresFinanceApproval', v_requires_finance
+        ),
         'commerce.refund.requested', 'refund:' || v_request.id || ':requested'
     );
     return to_jsonb(v_request);

@@ -27,6 +27,7 @@ declare
     v_projection_observed_at timestamptz;
     v_handoff_timestamp_anomalous boolean;
     v_terminal_occurred_at timestamptz;
+    v_refund jsonb;
 begin
     if p_normalized_status not in (
         'label_created', 'seller_handoff_declared', 'carrier_accepted', 'in_transit',
@@ -217,8 +218,40 @@ begin
     where order_id = v_order.id returning * into v_fulfillment;
     if v_blocking then
         update commerce.order_settlements set
-            status = 'blocked', manual_review_reason = 'fulfillment_' || p_normalized_status
+            status = case when p_normalized_status = 'returned_to_sender'
+                then 'manual_review' else 'blocked' end,
+            manual_review_reason = 'fulfillment_' || p_normalized_status
         where order_id = v_order.id and status not in ('released', 'refunded', 'reversed');
+    end if;
+    if p_normalized_status = 'lost' then
+        v_refund := commerce.create_cancellation_refund_request(
+            v_order.id,
+            'fulfillment:lost:' || p_provider_event_id,
+            'carrier_confirmed_lost',
+            'system',
+            'delivery'
+        );
+    elsif p_normalized_status = 'returned_to_sender' then
+        insert into commerce.financial_exceptions (
+            deduplication_key, order_id, kind, severity, reason, details
+        ) values (
+            'returned-to-sender:' || p_provider_event_id,
+            v_order.id,
+            'fulfillment_ambiguity',
+            'warning',
+            'Returned shipment requires an allocated refund decision',
+            jsonb_build_object(
+                'providerEventId', p_provider_event_id,
+                'providerReference', p_provider_reference,
+                'occurredAt', p_occurred_at,
+                'requiredAllocations', jsonb_build_array(
+                    'merchandiseRefundAmount',
+                    'shippingRefundAmount',
+                    'protectionFeeRefundAmount'
+                )
+            )
+        ) on conflict (deduplication_key) where deduplication_key is not null do update set
+            status = 'open', details = excluded.details;
     end if;
     if v_handoff_timestamp_anomalous then
         update commerce.order_settlements set
@@ -246,6 +279,10 @@ begin
         jsonb_build_object('providerEventId', p_provider_event_id, 'occurredAt', p_occurred_at),
         'commerce.order.fulfillment_projection', 'delivery:' || p_provider_event_id
     );
-    return to_jsonb(v_fulfillment) || jsonb_build_object('order_public_id', v_order.public_id, 'idempotentReplay', false);
+    return to_jsonb(v_fulfillment) || jsonb_build_object(
+        'order_public_id', v_order.public_id,
+        'refundRequest', v_refund,
+        'idempotentReplay', false
+    );
 end;
 $$;

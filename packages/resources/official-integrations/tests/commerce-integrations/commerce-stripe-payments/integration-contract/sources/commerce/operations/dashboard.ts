@@ -8,7 +8,9 @@ export function commerceDashboardEndpoints(): Source["endpoints"] {
         command("requestOrderRefund", {
             orderId: { type: "number" },
             reason: { type: "string" },
-            amount: { type: "number" },
+            merchandiseRefundAmount: { type: "number" },
+            shippingRefundAmount: { type: "number" },
+            protectionFeeRefundAmount: { type: "number" },
         }),
         query("claims", ["status", "reason", "limit", "offset"]),
         query("claim", ["id"]),

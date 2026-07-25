@@ -69,7 +69,16 @@
                         "requestedAmount": {
                             "type": "number"
                         },
+                        "merchandiseRefundAmount": {
+                            "type": "number"
+                        },
+                        "shippingRefundAmount": {
+                            "type": "number"
+                        },
                         "protectionFeeRefundAmount": {
+                            "type": "number"
+                        },
+                        "allocationVersion": {
                             "type": "number"
                         },
                         "sellerRecoveryAmount": {

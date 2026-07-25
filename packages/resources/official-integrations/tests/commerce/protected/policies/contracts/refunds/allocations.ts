@@ -14,10 +14,22 @@ export function registerRefundAllocationsTest(): void {
         const resolveClaim = functionSql(schema, "resolve_marketplace_claim", "request_order_refund");
         const recoverShipment = functionSql(schema, "recover_order_shipment_creation", "fail_order_shipment_creation");
 
-        expect(requestRefund).not.toContain("p_seller_recovery_amount");
-        expect(requestRefund).not.toContain("p_protection_fee_refund_amount");
+        expect(requestRefund).toContain("request_allocated_order_refund");
+        expect(requestRefund).toContain("p_merchandise_refund_amount");
+        expect(requestRefund).toContain("p_shipping_refund_amount");
+        expect(requestRefund).toContain("p_protection_fee_refund_amount");
+        expect(requestRefund).toContain("commerce.create_allocated_refund_request");
         expect(requestRefund).toContain("commerce.calculate_protection_fee_refund");
         expect(requestRefund).toContain("v_terms.seller_proceeds_amount - v_existing_seller_recovery");
+        expect(schema).toContain("calculate_allocated_protection_fee_refund");
+        expect(schema).toContain("v_terms.merchandise_subtotal_amount");
+        expect(schema).toContain("a legacy refund allocation requires manual reconciliation");
+        expect(schema).toContain("merchandise_refund_amount bigint not null default 0");
+        expect(schema).toContain("shipping_refund_amount bigint not null default 0");
+        expect(schema).toContain("allocation_version smallint not null default 0");
+        expect(schema).toContain("merchandise_refund_amount + shipping_refund_amount");
+        expect(schema).toContain("'merchandiseRefundAmount', p_merchandise_refund_amount");
+        expect(schema).toContain("'shippingRefundAmount', p_shipping_refund_amount");
         expect(schema).toContain("refund_requests_one_nonterminal_order_idx");
         expect(schema).toContain("v_cumulative_amount >= v_protection.finance_review_threshold_amount");
         expect(schema).toContain("v_cumulative_amount >= v_protection.dual_approval_threshold_amount");
