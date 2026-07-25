@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { padelSchema, tennisSchema } from "./offer-filter-panel.fixtures";
+import { padelSchema, tennisSchema } from "../panel/fixtures";
 import {
     captureSourceWrites,
     defineFilter,
@@ -8,7 +8,7 @@ import {
     listTag,
     settleLifecycle,
     settleUntil,
-} from "./offer-filter-panel.harness";
+} from "../panel/harness";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
 

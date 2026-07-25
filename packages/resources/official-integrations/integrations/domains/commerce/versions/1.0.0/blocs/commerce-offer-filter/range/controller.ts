@@ -1,13 +1,7 @@
-import { NumericRangeElements } from "./range-elements";
-import {
-    activateSlider,
-    commitManualControl,
-    commitSlider,
-    updateManualControl,
-    updateSlider,
-} from "./range-interactions";
-import { snapRangeValue } from "./range-values";
-import { applyRangeView, markRangePending, markRangeReady } from "./range-view";
+import { NumericRangeElements } from "./elements";
+import { activateSlider, commitManualControl, commitSlider, updateManualControl, updateSlider } from "./interactions";
+import { snapRangeValue } from "./values";
+import { applyRangeView, markRangePending, markRangeReady } from "./view";
 
 export class NumericRangeFilters {
     constructor(host) {

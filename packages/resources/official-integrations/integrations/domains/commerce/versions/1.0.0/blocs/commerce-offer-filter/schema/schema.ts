@@ -1,7 +1,7 @@
-import { filterControls, filterableFields } from "./schema-helpers";
-import { loadSchema, schemaSourceUrl } from "./schema-loader";
-import { prepareSchemaFilterParams } from "./schema-params";
-import { renderSchema, renderSchemaState } from "./render-schema";
+import { renderSchema, renderSchemaState } from "../view/schema";
+import { filterControls, filterableFields } from "./helpers";
+import { loadSchema, schemaSourceUrl } from "./loader";
+import { prepareSchemaFilterParams } from "./params";
 
 export class SchemaOfferFilters {
     constructor(host) {

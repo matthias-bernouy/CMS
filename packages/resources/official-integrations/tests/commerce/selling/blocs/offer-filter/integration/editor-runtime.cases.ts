@@ -1,16 +1,15 @@
-import { afterEach, describe, expect, test } from "bun:test";
-import { BindingRuntime } from "../../../../../../foundation/components/src/binding/runtime/BindingRuntime";
-import { tennisSchema } from "./offer-filter-panel.fixtures";
-import {
-    defineFilter,
-    defineList,
-    filterTag,
-    listTag,
-    settleLifecycle,
-    settleUntil,
-} from "./offer-filter-panel.harness";
+import { afterEach, beforeAll, describe, expect, test } from "bun:test";
+import { BINDING_CORE_TAG, BindingCore } from "@bernouy/components/binding";
+import { tennisSchema } from "../panel/fixtures";
+import { defineFilter, defineList, filterTag, listTag, settleLifecycle, settleUntil } from "../panel/harness";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
+
+beforeAll(() => {
+    if (!customElements.get(BINDING_CORE_TAG)) {
+        customElements.define(BINDING_CORE_TAG, BindingCore);
+    }
+});
 
 afterEach(() => {
     history.replaceState(history.state, "", originalUrl);
@@ -47,22 +46,21 @@ describe("Commerce filter editor and Source runtime integration", () => {
         authored.textContent = "Original";
         panel.append(authored);
         list.append(category, panel);
-        const runtime = new BindingRuntime(list);
-        runtime.start();
+        const core = document.createElement(BINDING_CORE_TAG) as BindingCore;
+        core.append(list);
 
         try {
-            document.body.append(list);
+            document.body.append(core);
             await settleLifecycle();
-            await settleUntil(() => runtime.size === 1);
+            await settleUntil(() => core.runtime?.size === 1);
 
-            runtime.deactivate();
+            core.runtime?.deactivate();
             const restoredPanel = list.querySelector(`${filterTag}[schema-driven]`);
             restoredPanel?.setAttribute("schema-driven", "false");
 
             expect(restoredPanel?.querySelector("[data-original-authored]")?.textContent).toBe("Original");
         } finally {
-            runtime.stop();
-            list.remove();
+            core.remove();
             globalThis.fetch = realFetch;
         }
     });

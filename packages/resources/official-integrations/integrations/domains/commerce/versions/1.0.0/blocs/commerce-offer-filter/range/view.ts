@@ -1,4 +1,4 @@
-import { formatRangeValue, rangePrecision } from "./range-values";
+import { formatRangeValue, rangePrecision } from "./values";
 
 export function applyRangeView(elements, minimum, maximum, reflectManual, activeBound) {
     elements.minimumSlider.max = String(maximum);

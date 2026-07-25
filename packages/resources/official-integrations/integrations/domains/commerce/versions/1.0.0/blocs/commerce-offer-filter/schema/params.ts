@@ -1,5 +1,5 @@
-import { filterControls, filterableFields, legacyFilterParam, numericRange } from "./schema-helpers";
-import { snapRangeValue } from "./range-values";
+import { snapRangeValue } from "../range/values";
+import { filterControls, filterableFields, legacyFilterParam, numericRange } from "./helpers";
 
 export function prepareSchemaFilterParams(host, schema) {
     if (typeof location === "undefined" || typeof history === "undefined") {

@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, test } from "bun:test";
-import { ParamSync } from "../../../../../../foundation/components/src/binding/params/ParamSync";
-import { padelSchema, tennisSchema } from "./offer-filter-panel.fixtures";
+import { afterEach, beforeAll, describe, expect, test } from "bun:test";
+import { BINDING_CORE_TAG, BindingCore } from "@bernouy/components/binding";
+import { padelSchema, tennisSchema } from "../panel/fixtures";
 import {
     captureSourceWrites,
     defineFilter,
@@ -9,9 +9,15 @@ import {
     listTag,
     settleLifecycle,
     settleUntil,
-} from "./offer-filter-panel.harness";
+} from "../panel/harness";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
+
+beforeAll(() => {
+    if (!customElements.get(BINDING_CORE_TAG)) {
+        customElements.define(BINDING_CORE_TAG, BindingCore);
+    }
+});
 
 afterEach(() => {
     history.replaceState(history.state, "", originalUrl);
@@ -112,20 +118,17 @@ describe("Commerce filter and offer list integration", () => {
         panel.setAttribute("schema-driven", "");
         panel.setAttribute("source-prefix", "/param-sync-sources");
         list.append(category, panel);
-        const bindings: ParamSync[] = [];
+        const core = document.createElement(BINDING_CORE_TAG);
+        core.append(list);
 
         try {
-            document.body.append(list);
+            document.body.append(core);
             await settleLifecycle();
             await settleUntil(() => Boolean(list.getAttribute("cms-source")));
+            await settleUntil(() => Boolean(panel.querySelector("[data-numeric-range]")));
             const range = panel.querySelector("[data-numeric-range]")!;
             const minimumSlider = range.querySelector('[data-range-slider="minimum"]') as HTMLInputElement;
             const minimumControl = range.querySelector('[data-range-control="minimum"]') as HTMLInputElement;
-            for (const proxy of range.querySelectorAll("[cms-param-sync]")) {
-                const binding = new ParamSync(proxy);
-                binding.start();
-                bindings.push(binding);
-            }
             document.dispatchEvent(new Event("cms-params:change"));
             await settleLifecycle();
 
@@ -151,8 +154,7 @@ describe("Commerce filter and offer list integration", () => {
             expect(new URLSearchParams(location.search).has("filter_model_year:gte")).toBe(false);
             expect(sourceParams(list).has("filters")).toBe(false);
         } finally {
-            bindings.forEach((binding) => binding.dispose());
-            list.remove();
+            core.remove();
             globalThis.fetch = realFetch;
         }
     });

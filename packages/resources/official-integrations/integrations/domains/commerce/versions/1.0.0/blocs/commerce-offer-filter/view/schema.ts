@@ -1,7 +1,7 @@
-import { filterControls, filterableFields, numericRange, schemaBrands } from "./schema-helpers";
-import { basicOption, basicSelect, element, filterWrapper } from "./render-elements";
-import { renderNumberRange } from "./render-range";
-import { schemaFilterStyle } from "./schema-style";
+import { filterControls, filterableFields, numericRange, schemaBrands } from "../schema/helpers";
+import { schemaFilterStyle } from "../schema/style";
+import { basicOption, basicSelect, element, filterWrapper } from "./elements";
+import { renderNumberRange } from "./range";
 
 export function renderSchema(host, schema) {
     host.setAttribute("data-schema-status", "initializing");

@@ -1,4 +1,4 @@
-import { isRangeValue } from "./range-values";
+import { isRangeValue } from "./values";
 
 export function activateSlider(range, event) {
     range.activeBound = event.currentTarget === range.elements.minimumSlider ? "minimum" : "maximum";

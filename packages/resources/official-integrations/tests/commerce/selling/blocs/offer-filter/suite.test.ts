@@ -1,0 +1,9 @@
+import "./contract.cases";
+import "./panel/panel.cases";
+import "./panel/lifecycle.cases";
+import "./integration/source-change.cases";
+import "./integration/list.cases";
+import "./integration/brand.cases";
+import "./integration/range-bookmark.cases";
+import "./integration/pagination.cases";
+import "./integration/editor-runtime.cases";
