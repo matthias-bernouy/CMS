@@ -34,5 +34,8 @@
         "./integrations/sales-configurator/*": "./integrations/domains/sales-configurator/*",
         "./integrations/stripe-connect/*": "./integrations/providers/stripe-connect/*",
         "./integrations/user-account/*": "./integrations/domains/user-account/*"
+    },
+    "devDependencies": {
+        "@bernouy/cms-integration-packages": "workspace:*"
     }
 }

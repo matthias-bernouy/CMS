@@ -18,3 +18,6 @@ Feature package for deterministic integration version packages.
   package protocol.
 - Only the shared RFC 8785 canonicalizer may produce digest input.
 - Keep filesystem-only imports out of the root export.
+- Filesystem readers consume committed, immutable version roots. They fail on
+  observed concurrent changes but are not an isolation boundary against an
+  untrusted local process with write access to the same paths.

@@ -306,6 +306,9 @@
     "packages/resources/official-integrations": {
       "name": "@bernouy/cms-official-integrations",
       "version": "0.1.0",
+      "devDependencies": {
+        "@bernouy/cms-integration-packages": "workspace:*",
+      },
     },
     "packages/runtimes/cms-cli": {
       "name": "@bernouy/cms-cli",
