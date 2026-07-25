@@ -46,7 +46,7 @@ new findings relative to this baseline.
 | L0.2b | Dependencies accept optional supported `versionRange` values and enforce them. | Integration dependency types, parser, and resolution. | Exact, caret, tilde, bounded-comparator, and legacy fixtures. | Complete |
 | L0.3a | Package v1 envelope supports UTF-8/base64 files and release notes. | New `@bernouy/cms-integration-packages` contracts and parser. | Round-trip, malformed encoding, legacy notes, and identity tests. | Partial |
 | L0.3b | RFC 8785 canonical bytes produce the package SHA-256 identity. | Shared canonicalizer and digest service. | JCS ordering, escaping, Unicode, surrogate, and key-order fixtures. | Complete |
-| L0.3c | Generic filesystem reader is deterministic, bounded, and symlink-safe. | Filesystem subpath of the package feature. | Traversal, symlink, special-file, depth, count, size, and binary tests. | Pending |
+| L0.3c | Generic filesystem reader is deterministic, bounded, and symlink-safe. | `@bernouy/cms-integration-packages/fs` reads immutable roots with bounded entry collection, realpath confinement, and actual-byte accounting. | 14 focused filesystem tests plus deterministic reads of all 14 official versions. | Complete |
 | L0.4a | Exact package and release-notes GET/HEAD endpoints are public. | Repository surface with required exact version. | 404 legacy notes, immutable cache, ETag, HEAD, and CORS tests. | Partial |
 | L0.4b | Public package downloads are limited before origin work. | Delivery-injected limiter and generic HTTP client-address resolver. | 429/Retry-After and proof no upstream/walk occurs first. | Pending |
 | L0.4c | Client-address modes handle direct, proxy, loopback, disabled, and CDN hops safely. | `@bernouy/http-runner` resolver plus runtime configuration. | Spoofing, malformed-chain 400, IPv4/IPv6, loopback, one-hop and two-hop tests. | Partial |
@@ -135,3 +135,18 @@ evidence.
 - `f247e473` — added direct, disabled, and trusted-proxy client-address
   resolution with canonical IP keys, loopback handling, full-chain validation,
   and stable `400` errors. Verified by all 54 HTTP runner tests and typecheck.
+- `27763859` — defined the strict package v1 envelope, UTF-8/base64 file
+  encoding, release-note references, RFC 8785 canonicalization, and Web Crypto
+  SHA-256 identity. Verified by 62 protocol tests and package typecheck.
+- `7063a9e7` — bounded hostile raw and programmatic package inputs by canonical
+  byte size and JSON nesting depth, with iterative I-JSON validation and stable
+  error classes. Verified by all 80 package tests and package typecheck.
+- `60f8b430` — added the deterministic filesystem package reader with bounded
+  fanout, realpath and symlink checks, actual-byte limits, mutation detection,
+  and an official-catalog smoke test. Verified by 80 package tests, 14 official
+  version reads, both package typechecks, and frozen install.
+
+The post-Lot-0.3 `bun run check:all` remained at 3 passed and 3 failed. Its
+failures match the recorded baseline exactly. The reader introduces one
+non-blocking 163-line file-size `INFO`; it remains cohesive because traversal,
+confinement, and shared counter invariants are one responsibility.
