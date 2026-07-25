@@ -32,15 +32,15 @@ Pre-existing baseline failures:
 Style, architecture-tooling, and CI-tooling passed. Task validation must not add
 new findings relative to this baseline.
 
-Current implementation checkpoint at `0b966aa7`:
+Current implementation checkpoint at `094750cd`:
 
-- all 133 `@bernouy/cms-integration-packages` tests pass, including HTTP
+- all 134 `@bernouy/cms-integration-packages` tests pass, including HTTP
   retrieval, immutable coordinate references, and adversarial concurrency,
   restart, repair, and cleanup cache coverage;
-- all 247 `@bernouy/cms-integrations` tests pass, including cache-first exact
-  resolution, digest pins, offline legacy fallback, and package-definition
-  validation;
-- all 140 `@bernouy/cms-cli` tests and all 480 `@bernouy/cms-control` tests
+- all 276 `@bernouy/cms-integrations` tests pass, including cache-first exact
+  resolution, transactional digest pins, offline legacy fallback,
+  package-definition validation, and Supabase deployment from resolved roots;
+- all 140 `@bernouy/cms-cli` tests and all 486 `@bernouy/cms-control` tests
   pass, including package-provenance preservation and public Control views;
 - direct TypeScript checks pass for all four packages above and
   `@bernouy/cms-server`; the earlier repository-surface runtime check remains
@@ -68,8 +68,8 @@ Current implementation checkpoint at `0b966aa7`:
 | L0.4c | Client-address modes handle direct, proxy, loopback, disabled, and CDN hops safely. | `@bernouy/http-runner` resolution, strict runtime parsing, production/CLI composition, Compose defaults, and operator documentation. | Resolver, runtime, and deployment tests cover spoofing, malformed-chain 400, IPv4/IPv6, loopback, disabled, one-hop, and CDN two-hop configurations. | Complete |
 | L0.5a | CMS package cache has a dedicated durable mount and validated non-overlap. | Runtime environment, image mount-point preparation, dedicated Compose bind mount, host documentation, and canonical root validation. | Deployment tests prove distinct mounts and runtime ownership preparation; storage-root tests reject exact, symlink, nested, and missing roots after realpath/device/inode checks. | Complete |
 | L0.6a | Packages materialize atomically into content-addressed durable objects. | Bounded anonymous HTTP package source plus `FsIntegrationPackageCache` with same-filesystem staging, read-only committed objects, repair locks, and quarantine. | The 116-test package suite covers response limits, restart, independent concurrent writers, valid reuse, interrupted modes, corruption, symlink substitution, stale locks, safety-aged cleanup, and source identity disagreement. | Complete |
-| L0.6b | Installations persist `packageDigest` only after success and support legacy fallback. | Installation contract, resolver, cache, and embedded exact root. | Failure rollback, legacy reconstruction, and no-false-provenance tests. | Pending |
-| L0.7a | Connector SQL and Edge Functions deploy only from the resolved package root. | Injected package-root resolver replaces hard-coded official root. | Remote-only version absent from image installs and reruns. | Pending |
+| L0.6b | Installations persist `packageDigest` only after success and support legacy fallback. | Installation contract, resolver, cache, and embedded exact root. | Failure rollback, legacy reconstruction, and no-false-provenance tests. | Partial |
+| L0.7a | Connector SQL and Edge Functions deploy only from the resolved package root. | Injected package-root resolver replaces hard-coded official root. | Remote-only version absent from image installs and reruns. | Partial |
 | L0.8a | The 13-step degraded acceptance scenario passes across a process restart. | CMS runtime, remote fixture, persistent bind mount, cache and deployer. | End-to-end process/repository outage acceptance test. | Pending |
 
 ## Lot 1 — Mutable Filesystem Registry
@@ -246,6 +246,23 @@ evidence.
 - `0b966aa7` — exposed persisted package provenance through Control list and
   detail views while omitting the field for legacy installations. Verified by
   all 480 Control tests and surface typecheck.
+- `6c04ec99` — resolved packages before installation side effects, injected
+  their roots into connector imports, and committed digest/version/snapshot
+  pins only with successful creates, reruns, and upgrades. Verified by 19 new
+  lifecycle tests with 81 assertions and the feature typecheck.
+- `640f6c95` — rejected relative package roots from injected resolvers before
+  side effects. Verified by the six resolver-contract tests.
+- `de7a75c3` — injected the package resolver through Control create, rerun, and
+  upgrade actions, allowing snapshot-less exact legacy reruns to avoid an eager
+  catalog request. Verified by all 486 Control tests and surface typecheck.
+- `f0f4a149` — published the shared no-follow, non-blocking bounded filesystem
+  readers through the integration-package filesystem subpath. Verified within
+  the full integration-package suite and package typecheck.
+- `094750cd` — removed Supabase's embedded-catalog locator and deployed SQL,
+  function configs, and deterministic function bundles only from the resolved
+  package root, with symlink, special-file, depth, count, and byte defenses.
+  Verified by 602 tests across features, runtimes, and the official rollout,
+  five package typechecks, and comparative architecture/shape checks.
 
 The post-cache `bun run check:all` at `e90beaa6` remained exactly 3 passed and 3
 failed. The failures match the recorded baseline: the same three official
@@ -256,8 +273,8 @@ There is no new file-size warning; the cache layout adds one non-blocking
 
 Lots 0.4, 0.5, and the standalone materializer in 0.6 are directly proven.
 Lot 0.6 now has standalone persistence, cache-first exact resolution, embedded
-legacy fallback, and CLI/Control serialization evidence. It is not complete
-end to end until installation execution commits the resolved root and digest
-transactionally and runtime composition injects that resolver. Deployer
-inversion and the degraded acceptance scenario then remain under L0.7 and
-L0.8.
+legacy fallback, transactional installation execution, and CLI/Control
+serialization evidence. Lot 0.7 has a root-injected, bounded Supabase deployer.
+Neither is complete end to end until production and CLI runtimes compose and
+inject the HTTP source, durable cache, and resolver. The degraded process
+restart scenario then remains under L0.8.
