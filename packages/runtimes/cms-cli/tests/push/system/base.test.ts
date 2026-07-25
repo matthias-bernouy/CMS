@@ -14,7 +14,7 @@ function tmpSite(files: Record<string, string>): string {
     return root;
 }
 
-describe("scanSystem", () => {
+describe("scanSystem base settings", () => {
     test("returns null when neither system.json nor theme.css exist", async () => {
         const dir = tmpSite({});
         expect(await scanSystem(dir)).toBeNull();
