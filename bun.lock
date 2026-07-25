@@ -17,6 +17,7 @@
         "@bernouy/cms-functions": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integration-registry": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-official-integrations": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
@@ -164,6 +165,17 @@
       },
       "devDependencies": {
         "@types/semver": "^7.7.1",
+      },
+      "peerDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/features/cms-integration-registry": {
+      "name": "@bernouy/cms-integration-registry",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -480,6 +492,8 @@
     "@bernouy/cms-identities": ["@bernouy/cms-identities@workspace:packages/features/cms-identities"],
 
     "@bernouy/cms-integration-packages": ["@bernouy/cms-integration-packages@workspace:packages/features/cms-integration-packages"],
+
+    "@bernouy/cms-integration-registry": ["@bernouy/cms-integration-registry@workspace:packages/features/cms-integration-registry"],
 
     "@bernouy/cms-integrations": ["@bernouy/cms-integrations@workspace:packages/features/cms-integrations"],
 

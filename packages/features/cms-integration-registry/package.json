@@ -1,0 +1,24 @@
+{
+    "name": "@bernouy/cms-integration-registry",
+    "version": "0.1.0",
+    "description": "Immutable publication and filesystem registry support for CMS integrations.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./fs": "./src/exports/fs.ts"
+    },
+    "files": [
+        "src/",
+        "dist/",
+        "tsconfig.json"
+    ],
+    "dependencies": {
+        "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    }
+}
