@@ -160,10 +160,10 @@ does not create responsive variants, cleanup jobs, or automatic retention
 expiry.
 
 Private seller and administrator responses are `private, no-store`, so detach
-revocation is immediate on their next request. A public response may remain in
-a browser or shared cache for its existing maximum one-hour freshness window;
-after that window, the Source context revalidates and returns detached media as
-not found.
+revocation is immediate on their next request. Public media identities use
+`public, max-age=31536000, immutable`: replacement creates a different identity,
+while a browser or shared cache may continue serving an identity that was
+previously public for up to one year after it is detached or unpublished.
 
 CMS runtimes may derive a bounded WebP response on demand when an eligible image
 Source URL contains a canonical `cms-width`. Those derivatives are disposable

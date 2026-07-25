@@ -112,11 +112,17 @@ validation. Their response is `private, no-store`; a derivative cache entry is
 never proof of access.
 
 A public Source lookup may bypass the upstream only for an endpoint declared
-public whose identity is not computed from the caller, and while the previous
-response explicitly allowed shared caching, has no `Set-Cookie`, varies only on
-`Accept` and/or `Accept-Language`, and retains a valid positive freshness
-lifetime. CmsCore caps that lifetime at one hour. Public responses use the
-remaining `max-age`, `must-revalidate`, and
+public whose identity is not computed from the caller and whose target is a
+recognized connector. The previous response must explicitly allow shared
+caching, vary only on `Accept` and/or `Accept-Language`, and retain a valid
+positive freshness lifetime. Upstream cookies are never exposed. Their presence
+does not disable caching for this bounded public flow; every other cookie-bearing
+response remains private. `Accept-Encoding` is removed from `Vary` because the
+proxy has already decoded the upstream representation and removes its encoding
+headers.
+
+CmsCore caps public freshness at one year. Public responses use the remaining
+`max-age`, `immutable`, `must-revalidate`, and
 `Vary: Accept, Accept-Language`.
 
 Every successful Source derivative includes a byte-derived ETag and supports

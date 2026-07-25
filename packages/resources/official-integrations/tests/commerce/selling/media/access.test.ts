@@ -72,7 +72,7 @@ describe("Commerce detached image access", () => {
         const response = await requestCommerce("/offer/image?id=17");
 
         expect(response.status).toBe(200);
-        expect(response.headers.get("cache-control")).toBe("public, max-age=3600");
+        expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
         expect(response.headers.get("etag")).toBe('"original-etag"');
         expect(capturedFetches().map(callKind)).toEqual(["get_offer_media_download_context", "storage:GET"]);
     });

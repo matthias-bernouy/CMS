@@ -48,8 +48,10 @@ Do not combine the stores operationally:
 The default production Source image cache is local and bounded to 512 MiB,
 10,000 derivatives, and 20,000 lookup records. Its configured derivative age is
 seven days, enforced when the cache initializes and when entries are read,
-rather than by a periodic sweep. Public authorization freshness remains capped
-at one hour even if a lookup file is retained longer.
+rather than by a periodic sweep. Lookup records are retained for one day by
+default. Those internal retention limits may cause a miss before an HTTP cache
+entry expires; they do not shorten the public response freshness, which is
+capped at one year and remains subject to byte and entry-count eviction.
 
 For the Source image cache, a cache read or write failure is treated as a miss
 or an unstored generated response where safe. Partial files are not published,
