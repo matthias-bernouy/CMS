@@ -74,56 +74,72 @@ describe("Source image processing admission", () => {
         expect(busy.headers.get("content-type")).not.toStartWith("image/");
         expect(busy.headers.get("retry-after")).toBe("1");
         expect(transformer.maxActive).toBe(1);
+        expect(harness.next).toHaveBeenCalledTimes(1);
         expect(harness.observations.some((item) => item.reason === "semaphore_saturated")).toBe(true);
     });
 
-    test("acquires admission before reading distinct derivative bodies", async () => {
+    test("acquires admission before opening queued upstream bodies", async () => {
         const transformer = new FakeImageTransformer();
         transformer.delayMs = 30;
+        const semaphore = new SourceImageSemaphore(1);
         const harness = interceptorHarness({
             transformer,
             access: "auth",
-            semaphore: new SourceImageSemaphore(1, 0),
-            semaphoreWaitTimeoutMs: 1,
+            semaphore,
+            semaphoreWaitTimeoutMs: 1_000,
         });
-        let readers = 0;
-        let cancellations = 0;
+        let openBodies = 0;
+        let maxOpenBodies = 0;
         const next = mock(async () => responseWithObservedBody());
 
         function responseWithObservedBody(): Response {
-            const response = upstreamImage();
-            const bytes = new Uint8Array(awaitableBodyBytes());
+            openBodies++;
+            maxOpenBodies = Math.max(maxOpenBodies, openBodies);
             let emitted = false;
-            Object.defineProperty(response, "body", {
-                configurable: true,
-                value: {
-                    cancel: async () => {
-                        cancellations++;
+            let closed = false;
+            const closeBody = () => {
+                if (!closed) {
+                    closed = true;
+                    openBodies--;
+                }
+            };
+            return new Response(
+                new ReadableStream<Uint8Array>({
+                    pull(controller) {
+                        if (emitted) {
+                            controller.close();
+                            closeBody();
+                            return;
+                        }
+                        emitted = true;
+                        controller.enqueue(new Uint8Array(awaitableBodyBytes()));
                     },
-                    getReader: () => ({
-                        cancel: async () => undefined,
-                        read: async () => {
-                            if (emitted) {
-                                return { done: true, value: undefined };
-                            }
-                            emitted = true;
-                            readers++;
-                            return { done: false, value: bytes };
-                        },
-                        releaseLock: () => undefined,
-                    }),
+                    cancel() {
+                        closeBody();
+                    },
+                }),
+                {
+                    headers: {
+                        "content-type": "image/png",
+                        "cache-control": "private, no-store",
+                    },
                 },
-            });
-            return response;
+            );
         }
 
-        await Promise.all([
-            invoke(harness.interceptor, harness.endpoint, sourceRequest(128), next),
-            invoke(harness.interceptor, harness.endpoint, sourceRequest(256), next),
-        ]);
+        const responses = await Promise.all(
+            [128, 256, 384].map((width) => {
+                const request = new URL(sourceRequest(width).url);
+                request.searchParams.set("id", `offer-${width}`);
+                return invoke(harness.interceptor, harness.endpoint, new Request(request), next);
+            }),
+        );
 
-        expect(readers).toBe(1);
-        expect(cancellations).toBe(1);
+        expect(responses.every((response) => response.status === 200)).toBe(true);
+        expect(next).toHaveBeenCalledTimes(3);
+        expect(maxOpenBodies).toBe(1);
+        expect(openBodies).toBe(0);
+        expect(semaphore.activeCount).toBe(0);
     });
 });
 
