@@ -48,7 +48,7 @@ describe("integration repository SemVer", () => {
 
     test("requires the raw filesystem definition version to exactly match the index", async () => {
         const repository = filesystemRepository({ versions: ["1.2.3"], definitionVersion: " 1.2.3 " });
-        await expect(repository.get("demo", "1.2.3")).rejects.toThrow(/must exactly match index version/);
+        await expect(repository.get("demo", "1.2.3")).rejects.toThrow(/does not match index version/);
     });
 
     test("never selects a prerelease implicitly for the stable channel", async () => {

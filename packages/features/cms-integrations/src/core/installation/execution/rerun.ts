@@ -1,4 +1,5 @@
 import { findIntegration } from "../../definitions/catalog";
+import { isExactIntegrationVersion } from "../../definitions/versioning";
 import { IntegrationInputError, MissingIntegrationInstallationError } from "../../errors";
 import {
     declarativeSecretBindingNames,
@@ -19,6 +20,7 @@ import type {
     RunIntegrationInstallationUpgradeRequest,
 } from "./runIntegrationInstallation";
 import { assertResolvedRerunDefinition, assertRerunVersion, buildRerunDto } from "./rerunRequest";
+import { assertUpgradePreservesDependentRanges } from "./upgradeDependencies";
 
 type ExistingInstallationRequest = RunIntegrationInstallationRerunRequest | RunIntegrationInstallationUpgradeRequest;
 
@@ -55,12 +57,13 @@ export async function runUpgrade(
     if (!definition) {
         throw new IntegrationInputError("kind", `upgrade target must match integration "${installation.id}"`);
     }
-    if (!definition.version) {
+    if (!definition.version || !isExactIntegrationVersion(definition.version)) {
         throw new IntegrationInputError("version", "upgrade target must declare an exact version");
     }
     if (definition.version === installation.definitionVersion) {
         throw new IntegrationInputError("version", `version "${definition.version}" is already installed`);
     }
+    await assertUpgradePreservesDependentRanges(request.installations, installation.id, definition.version);
     const siteIntegrations = [
         definition,
         ...(request.siteIntegrations ?? []).filter((candidate) => candidate.kind !== definition.kind),

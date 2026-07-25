@@ -125,3 +125,7 @@ evidence.
   against installed exact versions while preserving range-less legacy
   snapshots. Verified by the full 220-test integration feature suite, feature
   typecheck, and focused style checks.
+- `d65fefb0` — enforced canonical repository SemVer identities across FS and
+  HTTP, validated channel membership, and prevented implicit prerelease
+  selection. Verified by 26 focused tests, feature typecheck, and seven
+  official-catalog installation scenarios.

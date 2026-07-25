@@ -41,10 +41,17 @@ describe("integration dependency versions", () => {
         expect(() => assertDefinitionUsable(consumer(""))).toThrow(/versionRange/);
     });
 
-    test("accepts an installed dependency within range", async () => {
-        const installations = await installedDependency("1.5.0");
-        const context = await resolveDependencyContext(consumer("^1.2.0"), installations);
-        expect(context.catalog?.id).toBe("catalog");
+    test("accepts exact, caret, tilde, and bounded ranges", async () => {
+        for (const [version, range] of [
+            ["1.2.3", "1.2.3"],
+            ["1.5.0", "^1.2.0"],
+            ["1.2.8", "~1.2.0"],
+            ["1.9.9", ">=1.2.0 <2.0.0"],
+        ]) {
+            const installations = await installedDependency(version!);
+            const context = await resolveDependencyContext(consumer(range!), installations);
+            expect(context.catalog?.id).toBe("catalog");
+        }
     });
 
     test("rejects installed required or optional dependencies outside the range", async () => {
@@ -60,6 +67,17 @@ describe("integration dependency versions", () => {
     test("does not let a prerelease satisfy a stable range implicitly", async () => {
         const installations = await installedDependency("1.3.0-beta.1");
         await expect(resolveDependencyContext(consumer("^1.2.0"), installations)).rejects.toThrow(/1\.3\.0-beta\.1/);
+    });
+
+    test("allows an absent optional dependency but rejects an unversioned installed dependency", async () => {
+        const absent = await resolveDependencyContext(
+            consumer("^1.0.0", true),
+            new InMemoryIntegrationInstallationRepository(),
+        );
+        expect(absent).toEqual({});
+
+        const legacy = await installedDependency("unversioned");
+        await expect(resolveDependencyContext(consumer("^1.0.0", true), legacy)).rejects.toThrow(/unversioned/);
     });
 });
 

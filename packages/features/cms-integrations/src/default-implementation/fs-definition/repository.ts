@@ -109,15 +109,17 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
 }
 
 function assertRawDefinitionVersion(value: unknown, expectedVersion: string): void {
-    if (
-        !value ||
-        typeof value !== "object" ||
-        Array.isArray(value) ||
-        !("version" in value) ||
-        typeof value.version !== "string" ||
-        !isExactIntegrationVersion(value.version) ||
-        value.version !== expectedVersion
-    ) {
-        throw new Error(`definition.version: definition version must exactly match index version "${expectedVersion}"`);
+    const version =
+        value &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        "version" in value &&
+        typeof value.version === "string"
+            ? value.version
+            : "";
+    if (!isExactIntegrationVersion(version) || version !== expectedVersion) {
+        throw new Error(
+            `definition.version: definition version "${version}" does not match index version "${expectedVersion}"`,
+        );
     }
 }

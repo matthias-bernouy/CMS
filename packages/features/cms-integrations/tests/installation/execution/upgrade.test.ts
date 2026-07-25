@@ -62,6 +62,37 @@ describe("@bernouy/cms-integrations explicit upgrades", () => {
         await expect(upgrade(context, upgradeDefinition)).rejects.toThrow(/missing-source/);
         await expectPreviousPin(context);
     });
+
+    test("blocks an upgrade that would violate an installed dependent range before changing state", async () => {
+        const context = await installedContext();
+        await context.installations.create({
+            id: "dependent",
+            label: "Dependent",
+            definitionVersion: "1.0.0",
+            definitionSnapshot: {
+                kind: "dependent",
+                label: "Dependent",
+                version: "1.0.0",
+                inputs: [],
+                dependencies: [{ name: "target", kind: context.installedDefinition.kind, versionRange: "^1.0.0" }],
+            },
+            status: "success",
+            answersSnapshot: {},
+            secretRefs: {},
+            secretInputs: [],
+            artifacts: [],
+            runs: [],
+        });
+
+        await expect(upgrade(context, rerunDefinition("2.0.0", "https://api.example.com/v2/items"))).rejects.toThrow(
+            /installed integration "dependent" requires "\^1\.0\.0"/,
+        );
+
+        const unchanged = await context.installations.get(context.installedDefinition.kind);
+        expect(unchanged?.status).toBe("success");
+        expect(unchanged?.definitionVersion).toBe("1.0.0");
+        expect(unchanged?.runCount).toBe(1);
+    });
 });
 
 async function installedContext() {
