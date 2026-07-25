@@ -1,5 +1,8 @@
 import {
+    assertRerunVersion,
+    IntegrationInputError,
     integrationRegistry,
+    MissingIntegrationParam,
     type IntegrationDefinition,
     type IntegrationDefinitionRepository,
     type IntegrationInstallationRepository,
@@ -19,6 +22,22 @@ export async function listIntegrationDefinitions(
         }),
     );
     return integrationRegistry(compact(definitions));
+}
+
+export async function definitionForUpgrade(
+    repository: IntegrationDefinitionRepository,
+    integrationId: string,
+    body: Record<string, unknown>,
+): Promise<IntegrationDefinition> {
+    const version = text(body.version);
+    if (!version) {
+        throw new MissingIntegrationParam("version");
+    }
+    const definition = await repository.get(integrationId, version);
+    if (!definition) {
+        throw new IntegrationInputError("version", `unknown integration version "${integrationId}@${version}"`);
+    }
+    return definition;
 }
 
 export async function definitionsForImport(
@@ -43,7 +62,14 @@ export async function definitionsForRerun(
     if (!installation) {
         return [];
     }
-    const definition = await repository.get(installation.id, text(body.version));
+    assertRerunVersion(installation, body.version);
+    if (installation.definitionSnapshot) {
+        return [installation.definitionSnapshot];
+    }
+    if (installation.definitionVersion === "unversioned") {
+        return [];
+    }
+    const definition = await repository.get(installation.id, installation.definitionVersion);
     return definition ? [definition] : [];
 }
 

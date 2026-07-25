@@ -32,6 +32,32 @@ export async function buildRerunDto(
     );
 }
 
+export function assertRerunVersion(installation: IntegrationInstallation, requestedVersion: unknown): void {
+    if (requestedVersion === undefined) {
+        return;
+    }
+    const version = typeof requestedVersion === "string" ? requestedVersion.trim() : "";
+    if (version !== installation.definitionVersion) {
+        throw new IntegrationInputError(
+            "version",
+            `rerun is pinned to installed version "${installation.definitionVersion}"; use the explicit upgrade action`,
+        );
+    }
+}
+
+export function assertResolvedRerunDefinition(
+    installation: IntegrationInstallation,
+    definition: IntegrationDefinition,
+): void {
+    const resolvedVersion = definition.version ?? "unversioned";
+    if (resolvedVersion !== installation.definitionVersion) {
+        throw new IntegrationInputError(
+            "version",
+            `repository resolved version "${resolvedVersion}" instead of installed version "${installation.definitionVersion}"`,
+        );
+    }
+}
+
 async function restoreSecretAnswer(
     deps: IntegrationImportDeps,
     installation: IntegrationInstallation,

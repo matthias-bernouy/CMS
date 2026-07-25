@@ -30,11 +30,11 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
             dto: { kind: previous.kind, answers: {}, options: {} },
         });
         await runIntegrationInstallation({
-            mode: "rerun",
+            mode: "upgrade",
             deps,
             installations,
             integrationId: current.kind,
-            siteIntegrations: [current],
+            targetDefinition: current,
         });
 
         expect(await sources.getSource("urn:products")).toBeNull();

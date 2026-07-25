@@ -1,5 +1,5 @@
 import { runCreate } from "../create";
-import { runRerun } from "./rerun";
+import { runRerun, runUpgrade } from "./rerun";
 import { integrationInstallationId } from "../ids";
 import { reconcileAfterInstallation } from "./afterInstallation";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
@@ -28,6 +28,16 @@ export type RunIntegrationInstallationRerunRequest = {
     siteIntegrations?: IntegrationDefinition[];
 };
 
+export type RunIntegrationInstallationUpgradeRequest = {
+    mode: "upgrade";
+    deps: IntegrationImportDeps;
+    installations: IntegrationInstallationRepository;
+    integrationId: string;
+    targetDefinition: IntegrationDefinition;
+    body?: Record<string, unknown>;
+    siteIntegrations?: IntegrationDefinition[];
+};
+
 export type RunIntegrationInstallationResult = IntegrationImportResult & {
     installation: IntegrationInstallation;
     run: IntegrationRun;
@@ -36,9 +46,19 @@ export type RunIntegrationInstallationResult = IntegrationImportResult & {
 export { integrationInstallationId };
 
 export async function runIntegrationInstallation(
-    request: RunIntegrationInstallationCreateRequest | RunIntegrationInstallationRerunRequest,
+    request:
+        | RunIntegrationInstallationCreateRequest
+        | RunIntegrationInstallationRerunRequest
+        | RunIntegrationInstallationUpgradeRequest,
 ): Promise<RunIntegrationInstallationResult> {
-    const result = request.mode === "create" ? await runCreate(request) : await runRerun(request);
-    await reconcileAfterInstallation(request.deps, request.installations, result.installation.id);
+    const result =
+        request.mode === "create"
+            ? await runCreate(request)
+            : request.mode === "upgrade"
+              ? await runUpgrade(request)
+              : await runRerun(request);
+    if (request.mode !== "upgrade") {
+        await reconcileAfterInstallation(request.deps, request.installations, result.installation.id);
+    }
     return result;
 }

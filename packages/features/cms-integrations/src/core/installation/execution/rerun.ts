@@ -6,6 +6,7 @@ import {
     resolveDeclarativeSecretRefs,
 } from "../../import/declarative";
 import { withObsoleteArtifactCleanup } from "../artifactCleanup";
+import { reconcileAfterInstallation } from "./afterInstallation";
 import { appendRun, failedRun, successRun } from "./runs";
 import { assertSecretKeysAvailable, deleteObsoleteSecretRefs } from "../secretRefs";
 import { sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "../snapshots";
@@ -15,8 +16,11 @@ import type { IntegrationInstallation, IntegrationRun } from "../../../interface
 import type {
     RunIntegrationInstallationRerunRequest,
     RunIntegrationInstallationResult,
+    RunIntegrationInstallationUpgradeRequest,
 } from "./runIntegrationInstallation";
-import { buildRerunDto } from "./rerunRequest";
+import { assertResolvedRerunDefinition, assertRerunVersion, buildRerunDto } from "./rerunRequest";
+
+type ExistingInstallationRequest = RunIntegrationInstallationRerunRequest | RunIntegrationInstallationUpgradeRequest;
 
 export async function runRerun(
     request: RunIntegrationInstallationRerunRequest,
@@ -25,16 +29,52 @@ export async function runRerun(
     if (!installation) {
         throw new MissingIntegrationInstallationError(request.integrationId);
     }
+    assertRerunVersion(installation, request.body?.version);
 
     const siteIntegrations = [
-        ...(request.siteIntegrations ?? []),
         ...(installation.definitionSnapshot ? [installation.definitionSnapshot] : []),
+        ...(request.siteIntegrations ?? []),
     ];
     const definition = findIntegration(installation.id, siteIntegrations);
     if (!definition) {
         throw new IntegrationInputError("kind", `unknown integration "${installation.id}"`);
     }
+    assertResolvedRerunDefinition(installation, definition);
 
+    return runExistingInstallation(request, installation, definition, siteIntegrations);
+}
+
+export async function runUpgrade(
+    request: RunIntegrationInstallationUpgradeRequest,
+): Promise<RunIntegrationInstallationResult> {
+    const installation = await request.installations.get(request.integrationId);
+    if (!installation) {
+        throw new MissingIntegrationInstallationError(request.integrationId);
+    }
+    const definition = findIntegration(installation.id, [request.targetDefinition]);
+    if (!definition) {
+        throw new IntegrationInputError("kind", `upgrade target must match integration "${installation.id}"`);
+    }
+    if (!definition.version) {
+        throw new IntegrationInputError("version", "upgrade target must declare an exact version");
+    }
+    if (definition.version === installation.definitionVersion) {
+        throw new IntegrationInputError("version", `version "${definition.version}" is already installed`);
+    }
+    const siteIntegrations = [
+        definition,
+        ...(request.siteIntegrations ?? []).filter((candidate) => candidate.kind !== definition.kind),
+    ];
+
+    return runExistingInstallation(request, installation, definition, siteIntegrations);
+}
+
+async function runExistingInstallation(
+    request: ExistingInstallationRequest,
+    installation: IntegrationInstallation,
+    definition: IntegrationDefinition,
+    siteIntegrations: IntegrationDefinition[],
+): Promise<RunIntegrationInstallationResult> {
     const pending = { ...installation, status: "pending" as const, updatedAt: new Date() };
     await request.installations.replace(pending);
     const startedAt = new Date();
@@ -49,7 +89,7 @@ export async function runRerun(
 }
 
 async function runRerunImport(
-    request: RunIntegrationInstallationRerunRequest,
+    request: ExistingInstallationRequest,
     installation: IntegrationInstallation,
     definition: IntegrationDefinition,
     startedAt: Date,
@@ -73,7 +113,7 @@ async function runRerunImport(
 }
 
 async function commitSuccessfulRerun(
-    request: RunIntegrationInstallationRerunRequest,
+    request: ExistingInstallationRequest,
     installation: IntegrationInstallation,
     definition: IntegrationDefinition,
     dto: IntegrationImportDto,
@@ -89,8 +129,12 @@ async function commitSuccessfulRerun(
         answersSnapshot: sanitizeAnswers(definition, dto.answers),
         secretRefs: nextSecretRefs,
         secretInputs,
-        definitionVersion: definition.version ?? installation.definitionVersion,
-        definitionSnapshot: sanitizeDefinitionSnapshot(definition),
+        ...(request.mode === "upgrade"
+            ? {
+                  definitionVersion: definition.version as string,
+                  definitionSnapshot: sanitizeDefinitionSnapshot(definition),
+              }
+            : {}),
     });
     return withObsoleteArtifactCleanup({
         deps: request.deps,
@@ -100,6 +144,9 @@ async function commitSuccessfulRerun(
         nextArtifacts: result.artifacts,
         operation: async () => {
             const saved = await request.installations.replace(next);
+            if (request.mode === "upgrade") {
+                await reconcileAfterInstallation(request.deps, request.installations, saved.id);
+            }
             await deleteObsoleteSecretRefs(request.deps.secrets, installation.secretRefs, saved.secretRefs);
             return { installation: saved, run };
         },

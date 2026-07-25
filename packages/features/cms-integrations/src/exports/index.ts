@@ -106,7 +106,9 @@ export {
     runIntegrationInstallation,
     type RunIntegrationInstallationCreateRequest,
     type RunIntegrationInstallationRerunRequest,
+    type RunIntegrationInstallationUpgradeRequest,
 } from "../core/installation/execution/runIntegrationInstallation";
+export { assertResolvedRerunDefinition, assertRerunVersion } from "../core/installation/execution/rerunRequest";
 export {
     resolveTemplate,
     resolveTemplates,

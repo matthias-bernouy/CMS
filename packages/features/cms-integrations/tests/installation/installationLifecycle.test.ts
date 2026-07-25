@@ -1,12 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import {
-    InMemoryIntegrationInstallationRepository,
-    runIntegrationInstallation,
-    type IntegrationDefinition,
-} from "@bernouy/cms-integrations";
+import { InMemoryIntegrationInstallationRepository, runIntegrationInstallation } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import { sourceArtifact, TEST_SECRET_SOURCE_DEFINITION } from "../helpers";
+import { TEST_SECRET_SOURCE_DEFINITION } from "../helpers";
+import { rerunDefinition } from "./execution/definitions";
 
 describe("@bernouy/cms-integrations installation lifecycle", () => {
     test("does not persist a new installation when the first import fails", async () => {
@@ -100,36 +97,6 @@ describe("@bernouy/cms-integrations installation lifecycle", () => {
         expect(installation?.runCount).toBe(Math.max(...storedRunNumbers));
     });
 
-    test.failing("keeps a rerun pinned to the installed definition snapshot", async () => {
-        const sources = new InMemorySourceRepository();
-        const secrets = new InMemorySecretStore();
-        const installations = new InMemoryIntegrationInstallationRepository();
-        const oldDefinition = rerunDefinition("1.0.0", "https://api.example.com/v1/items");
-        const currentDefinition = rerunDefinition("1.0.1", "https://api.example.com/v2/items");
-
-        await runIntegrationInstallation({
-            mode: "create",
-            deps: { sources, secrets },
-            installations,
-            siteIntegrations: [oldDefinition],
-            dto: { kind: oldDefinition.kind, answers: { id: "rerun-source" }, options: {} },
-        });
-
-        const result = await runIntegrationInstallation({
-            mode: "rerun",
-            deps: { sources, secrets },
-            installations,
-            integrationId: "rerun-definition",
-            body: {},
-            siteIntegrations: [currentDefinition],
-        });
-        const source = await sources.getSource("urn:rerun-source");
-
-        expect(result.installation.definitionVersion).toBe("1.0.0");
-        expect(result.installation.definitionSnapshot?.version).toBe("1.0.0");
-        expect(source?.endpoints[0]?.targetUrl).toBe("https://api.example.com/v1/items");
-    });
-
     test("records a failed rerun when answers try to change the identity", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
@@ -159,14 +126,3 @@ describe("@bernouy/cms-integrations installation lifecycle", () => {
         expect(installation?.runs.map((run) => run.status)).toEqual(["success", "failed"]);
     });
 });
-
-function rerunDefinition(version: string, targetUrl: string): IntegrationDefinition {
-    return {
-        kind: "rerun-definition",
-        label: "Rerun definition",
-        version,
-        category: "Test",
-        inputs: [{ name: "id", label: "Source id", type: "text", required: true }],
-        artifacts: [sourceArtifact("{{answers.id}}", targetUrl)],
-    };
-}

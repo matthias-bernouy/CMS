@@ -4,10 +4,10 @@ import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { definition, functionDefinition } from "./cleanupDefinitions";
-import { install, rerun } from "./cleanupSupport";
+import { install, upgrade } from "./cleanupSupport";
 
 describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
-    test("deletes source and function artifacts removed by a successful rerun", async () => {
+    test("deletes source and function artifacts removed by a successful upgrade", async () => {
         const sources = new InMemorySourceRepository();
         const functions = new InMemoryFunctionRepository();
         const secrets = new InMemorySecretStore();
@@ -16,7 +16,7 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
         const current = definition("cleanup", "2.0.0", false);
 
         await install(previous, { sources, functions, secrets, installations });
-        const result = await rerun(current, { sources, functions, secrets, installations });
+        const result = await upgrade(current, { sources, functions, secrets, installations });
 
         expect(await sources.getSource("urn:legacy-source")).toBeNull();
         expect(await functions.getFunction("legacyFunction")).toBeNull();
@@ -40,7 +40,7 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
             siteIntegrations: [second],
             dto: { kind: second.kind, answers: {}, options: { force: true } },
         });
-        await rerun(functionDefinition("first", "2.0.0", false), {
+        await upgrade(functionDefinition("first", "2.0.0", false), {
             sources,
             functions,
             secrets,

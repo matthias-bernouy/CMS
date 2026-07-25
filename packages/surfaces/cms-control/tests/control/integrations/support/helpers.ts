@@ -87,3 +87,12 @@ export function postRerun(id?: string, body?: Record<string, unknown>) {
         headers: body === undefined ? undefined : { "content-type": "application/json" },
     });
 }
+
+export function postUpgrade(id?: string, body?: Record<string, unknown>) {
+    const query = id ? `?id=${encodeURIComponent(id)}` : "";
+    return new Request(`http://localhost/cms/api/integrations/installations/upgrade${query}`, {
+        method: "POST",
+        body: body === undefined ? undefined : JSON.stringify(body),
+        headers: body === undefined ? undefined : { "content-type": "application/json" },
+    });
+}

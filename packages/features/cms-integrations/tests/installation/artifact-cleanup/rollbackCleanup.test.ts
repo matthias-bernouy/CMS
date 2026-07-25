@@ -5,7 +5,7 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { SuccessReplaceFailingIntegrationInstallationRepository } from "../../helpers";
 import { blocDefinition, definition } from "./cleanupDefinitions";
-import { install, rerun } from "./cleanupSupport";
+import { install, upgrade } from "./cleanupSupport";
 
 describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
     test("restores deleted artifacts when successful installation persistence fails", async () => {
@@ -17,7 +17,7 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
         const current = definition("cleanup", "2.0.0", false);
 
         await install(previous, { sources, functions, secrets, installations });
-        await expect(rerun(current, { sources, functions, secrets, installations })).rejects.toThrow(
+        await expect(upgrade(current, { sources, functions, secrets, installations })).rejects.toThrow(
             /installation replace failed/,
         );
 
@@ -56,11 +56,11 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
         });
         await expect(
             runIntegrationInstallation({
-                mode: "rerun",
+                mode: "upgrade",
                 deps,
                 installations,
                 integrationId: current.kind,
-                siteIntegrations: [current],
+                targetDefinition: current,
             }),
         ).rejects.toThrow(/bloc deletion is not supported/);
 
