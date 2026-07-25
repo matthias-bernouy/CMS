@@ -70,6 +70,17 @@ export function postgresContractConfiguration(packageRoot: string): {
             },
             {
                 bundle: "commerce",
+                id: "commerce-fulfillment-truth",
+                label: "Commerce fulfillment carrier truth",
+                steps: [
+                    step("commerce/protected/postgres/fulfillment-truth", "contracts.pg.sql", [
+                        "run_fulfillment_truth_contract=true",
+                        "allow_fulfillment_truth_schema_reset=true",
+                    ]),
+                ],
+            },
+            {
+                bundle: "commerce",
                 id: "commerce-service-withdrawal-requests",
                 label: "Commerce service withdrawal requests",
                 steps: [
