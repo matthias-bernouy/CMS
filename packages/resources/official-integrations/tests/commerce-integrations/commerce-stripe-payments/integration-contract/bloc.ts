@@ -69,4 +69,6 @@ export async function assertBlocContracts({ roles, importedBlocs }: IntegrationC
     expect(importedBlocs[0]?.viewJS).not.toContain("🔒");
     expect(importedBlocs[0]?.viewJS).toContain("<svg");
     expect(importedBlocs[0]?.editorJS).toContain('type: "color"');
+    expect(importedBlocs[0]?.editorJS).toContain('attribute: "legal-appearance"');
+    expect(importedBlocs[0]?.editorJS).toContain('defaultValue: "detailed"');
 }

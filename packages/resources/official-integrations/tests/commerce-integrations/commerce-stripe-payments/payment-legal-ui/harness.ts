@@ -8,7 +8,7 @@ export type TestPaymentElement = HTMLElement & {
     root: ShadowRoot;
 };
 
-export async function mountPaymentElement(): Promise<TestPaymentElement> {
+export async function mountPaymentElement(attributes: Record<string, string> = {}): Promise<TestPaymentElement> {
     const tag = `test-commerce-stripe-legal-${++tagSequence}`;
     const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
         "commerce-stripe-payments",
@@ -31,6 +31,9 @@ export async function mountPaymentElement(): Promise<TestPaymentElement> {
     new Function(compiled.viewJS)();
     const element = document.createElement(tag) as TestPaymentElement;
     element.setAttribute("order-id", "42");
+    for (const [name, value] of Object.entries(attributes)) {
+        element.setAttribute(name, value);
+    }
     document.body.append(element);
     await settlePaymentLifecycle();
     return element;

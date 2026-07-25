@@ -16,6 +16,8 @@ export type PaymentLegalRequirements = {
     documents: LegalDocumentRequirement[];
 };
 
+export type LegalRequirementsAppearance = "detailed" | "compact";
+
 let legalControlSequence = 0;
 
 export function normalizeLegalRequirements(value: unknown): PaymentLegalRequirements {
@@ -39,7 +41,13 @@ export function renderLegalRequirements(
     container: HTMLElement,
     requirements: PaymentLegalRequirements,
     onChange: () => void,
+    appearance: LegalRequirementsAppearance = "detailed",
 ): void {
+    const selectedVersionIds = new Set(
+        Array.from(container.querySelectorAll<HTMLInputElement>("[data-legal-version-id]:checked"), (input) =>
+            String(input.dataset.legalVersionId),
+        ),
+    );
     container.replaceChildren();
     for (const documentRequirement of requirements.documents) {
         const row = document.createElement("div");
@@ -49,24 +57,31 @@ export function renderLegalRequirements(
         checkbox.type = "checkbox";
         checkbox.required = true;
         checkbox.autocomplete = "off";
-        checkbox.checked = false;
         checkbox.defaultChecked = false;
+        checkbox.checked = selectedVersionIds.has(documentRequirement.versionId);
         checkbox.id = `commerce-payment-legal-${++legalControlSequence}`;
         checkbox.dataset.legalVersionId = documentRequirement.versionId;
         checkbox.addEventListener("change", onChange);
         label.htmlFor = checkbox.id;
-        label.textContent = documentRequirement.consentText;
         const content = document.createElement("span");
         content.className = "legal-document-content";
         const link = document.createElement("a");
         link.href = safeDocumentUrl(documentRequirement.pageUrl);
         link.target = "_blank";
         link.rel = "noopener noreferrer";
-        link.textContent = `Consulter ${documentRequirement.label}`;
-        const version = document.createElement("span");
-        version.className = "legal-document-version";
-        version.textContent = `Version du ${formatVersionDate(documentRequirement.versionDate)}`;
-        content.append(label, link, version);
+        if (appearance === "compact") {
+            label.className = "legal-document-consent";
+            link.textContent = documentRequirement.label;
+            appendLinkedConsent(label, documentRequirement.consentText, documentRequirement.label, link);
+            content.append(label);
+        } else {
+            label.textContent = documentRequirement.consentText;
+            link.textContent = `Consulter ${documentRequirement.label}`;
+            const version = document.createElement("span");
+            version.className = "legal-document-version";
+            version.textContent = `Version du ${formatVersionDate(documentRequirement.versionDate)}`;
+            content.append(label, link, version);
+        }
         row.append(checkbox, content);
         container.append(row);
     }
@@ -139,6 +154,20 @@ function safeDocumentUrl(value: string): string {
 function formatVersionDate(value: string): string {
     const locale = document.documentElement.lang || navigator.language || "fr-FR";
     return new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(new Date(value));
+}
+
+function appendLinkedConsent(
+    label: HTMLLabelElement,
+    consentText: string,
+    documentLabel: string,
+    link: HTMLAnchorElement,
+): void {
+    const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
+    if (start < 0) {
+        label.append(consentText, " ", link);
+        return;
+    }
+    label.append(consentText.slice(0, start), link, consentText.slice(start + documentLabel.length));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

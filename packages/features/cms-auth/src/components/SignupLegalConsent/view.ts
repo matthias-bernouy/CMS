@@ -9,6 +9,8 @@ export type SignupLegalConsentCopy = {
     newTabLabel: string;
 };
 
+export type SignupLegalConsentAppearance = "detailed" | "compact";
+
 export type SignupLegalConsentViewState =
     | { kind: "loading" }
     | { kind: "error" }
@@ -20,6 +22,7 @@ export function renderSignupLegalConsent(
     state: SignupLegalConsentViewState,
     copy: SignupLegalConsentCopy,
     callbacks: { change(): void; retry(): void },
+    appearance: SignupLegalConsentAppearance = "detailed",
 ): HTMLInputElement[] {
     const document = root.ownerDocument;
     const style = document.createElement("style");
@@ -29,10 +32,15 @@ export function renderSignupLegalConsent(
     const legend = document.createElement("legend");
     legend.setAttribute("part", "legend");
     legend.textContent = copy.heading;
+    if (appearance === "compact") {
+        legend.className = "sr-only";
+    }
     fieldset.append(legend);
 
     const checkboxes =
-        state.kind === "ready" ? renderDocuments(fieldset, state.documents, state.selectedIds, callbacks.change) : [];
+        state.kind === "ready"
+            ? renderDocuments(fieldset, state.documents, state.selectedIds, callbacks.change, appearance)
+            : [];
     if (state.kind === "loading") {
         fieldset.append(status(document, copy.loadingLabel, "status"));
     } else if (state.kind === "error") {
@@ -54,6 +62,7 @@ function renderDocuments(
     documents: SignupLegalRequirementView[],
     selectedIds: ReadonlySet<string>,
     onChange: () => void,
+    appearance: SignupLegalConsentAppearance,
 ): HTMLInputElement[] {
     const owner = fieldset.ownerDocument;
     const list = owner.createElement("div");
@@ -72,7 +81,6 @@ function renderDocuments(
         checkbox.checked = selectedIds.has(requirement.versionId);
         checkbox.dataset.versionId = requirement.versionId;
         checkbox.setAttribute("part", "checkbox");
-        checkbox.setAttribute("aria-describedby", linkId);
         checkbox.addEventListener("change", onChange);
 
         const copy = owner.createElement("div");
@@ -80,7 +88,6 @@ function renderDocuments(
         const label = owner.createElement("label");
         label.htmlFor = checkboxId;
         label.setAttribute("part", "consent");
-        label.textContent = requirement.consentText;
         const link = owner.createElement("a");
         link.id = linkId;
         link.href = requirement.href;
@@ -88,13 +95,34 @@ function renderDocuments(
         link.rel = "noopener";
         link.setAttribute("part", "link");
         link.append(owner.createTextNode(requirement.label), newTabNotice(owner));
-        copy.append(label, link);
+        if (appearance === "compact") {
+            appendLinkedConsent(label, requirement.consentText, requirement.label, link);
+            copy.append(label);
+        } else {
+            checkbox.setAttribute("aria-describedby", linkId);
+            label.textContent = requirement.consentText;
+            copy.append(label, link);
+        }
         row.append(checkbox, copy);
         list.append(row);
         return checkbox;
     });
     fieldset.append(list);
     return checkboxes;
+}
+
+function appendLinkedConsent(
+    label: HTMLLabelElement,
+    consentText: string,
+    documentLabel: string,
+    link: HTMLAnchorElement,
+): void {
+    const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
+    if (start < 0) {
+        label.append(consentText, " ", link);
+        return;
+    }
+    label.append(consentText.slice(0, start), link, consentText.slice(start + documentLabel.length));
 }
 
 function newTabNotice(document: Document): HTMLSpanElement {

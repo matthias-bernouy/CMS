@@ -41,6 +41,35 @@ describe("cms-signup-legal-consent form behavior", () => {
         expect(probeFor(element).validity).toEqual({});
     });
 
+    test("renders compact consent as one checkbox line with the document label as its link", async () => {
+        const body = requirements("version-1") as {
+            documents: Array<{ label: string; consentText: string }>;
+        };
+        body.documents[0]!.label = "Terms of use";
+        body.documents[0]!.consentText = "I accept the terms of use.";
+        globalThis.fetch = (async () => jsonResponse(body)) as typeof fetch;
+
+        const element = createConsent();
+        element.setAttribute("appearance", "compact");
+        await waitForState(element, "ready");
+
+        const checkbox = element.shadowRoot!.querySelector<HTMLInputElement>("input")!;
+        const legend = element.shadowRoot!.querySelector("legend")!;
+        const label = element.shadowRoot!.querySelector<HTMLLabelElement>("label")!;
+        const link = label.querySelector<HTMLAnchorElement>("a")!;
+        expect(checkbox.required).toBe(true);
+        expect(legend.classList.contains("sr-only")).toBe(true);
+        expect(label.htmlFor).toBe(checkbox.id);
+        expect(label.childNodes[0]?.textContent).toBe("I accept the ");
+        expect(link.firstChild?.textContent).toBe("Terms of use");
+        expect(label.childNodes[2]?.textContent).toBe(".");
+        expect(element.shadowRoot!.querySelector(".copy > a")).toBeNull();
+
+        checkbox.checked = true;
+        checkbox.dispatchEvent(new Event("change"));
+        expect(Array.from((probeFor(element).formValue as FormData).values())).toEqual(["version-1"]);
+    });
+
     test("requires every document and resets to an unchecked state", async () => {
         globalThis.fetch = (async () => jsonResponse(requirements("version-1", "version-2"))) as typeof fetch;
         const element = createConsent();

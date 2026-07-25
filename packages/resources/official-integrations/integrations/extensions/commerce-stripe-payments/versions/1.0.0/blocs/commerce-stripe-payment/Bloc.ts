@@ -33,6 +33,7 @@ class CommerceStripePayment extends HTMLElement {
             "border-color",
             "text-color",
             "appearance",
+            "legal-appearance",
         ];
     }
 
@@ -100,6 +101,10 @@ class CommerceStripePayment extends HTMLElement {
         }
         if (name === "layout") {
             this.paymentElement?.update({ layout: { type: this.paymentLayout() } });
+            return;
+        }
+        if (name === "legal-appearance") {
+            this.renderLegalRequirements();
             return;
         }
         if (paymentAttributes().includes(name) && !isFramed()) {
@@ -344,12 +349,17 @@ class CommerceStripePayment extends HTMLElement {
 
     renderLegalRequirements() {
         const requirements = this.legalRequirements || { enabled: false, documents: [] };
-        renderLegalRequirements(this.legalDocuments, requirements, () => {
-            if (this.status.dataset.errorCode === LEGAL_ACCEPTANCE_REQUIRED) {
-                this.setStatus("", "idle");
-                delete this.status.dataset.errorCode;
-            }
-        });
+        renderLegalRequirements(
+            this.legalDocuments,
+            requirements,
+            () => {
+                if (this.status.dataset.errorCode === LEGAL_ACCEPTANCE_REQUIRED) {
+                    this.setStatus("", "idle");
+                    delete this.status.dataset.errorCode;
+                }
+            },
+            this.legalAppearance(),
+        );
         this.legalRegion.hidden = !requirements.enabled;
     }
 
@@ -685,6 +695,10 @@ class CommerceStripePayment extends HTMLElement {
 
     linkWallet() {
         return this.getAttribute("link-wallet") === "auto" ? "auto" : "never";
+    }
+
+    legalAppearance() {
+        return this.getAttribute("legal-appearance") === "compact" ? "compact" : "detailed";
     }
 
     returnUrl(paymentId) {

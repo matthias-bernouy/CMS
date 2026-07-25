@@ -13276,6 +13276,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
 
   // ../../features/cms-auth/src/components/SignupLegalConsent/configuration.ts
   var SIGNUP_LEGAL_CONSENT_ATTRIBUTES = [
+    "appearance",
     "disabled",
     "heading",
     "load-error-label",
@@ -13286,6 +13287,9 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     "source-id",
     "source-prefix"
   ];
+  function signupLegalConsentAppearance(element) {
+    return element.getAttribute("appearance") === "compact" ? "compact" : "detailed";
+  }
   function signupLegalConsentCopy(element) {
     return {
       heading: attribute(element, "heading", "Agreements"),
@@ -13489,6 +13493,10 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
         gap: .25rem;
     }
 
+    :host([appearance="compact"]) .copy {
+        display: block;
+    }
+
     label {
         cursor: pointer;
     }
@@ -13541,7 +13549,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
 `;
 
   // ../../features/cms-auth/src/components/SignupLegalConsent/view.ts
-  function renderSignupLegalConsent(root, state, copy, callbacks) {
+  function renderSignupLegalConsent(root, state, copy, callbacks, appearance = "detailed") {
     const document2 = root.ownerDocument;
     const style = document2.createElement("style");
     style.textContent = SIGNUP_LEGAL_CONSENT_STYLES;
@@ -13550,8 +13558,11 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     const legend = document2.createElement("legend");
     legend.setAttribute("part", "legend");
     legend.textContent = copy.heading;
+    if (appearance === "compact") {
+      legend.className = "sr-only";
+    }
     fieldset.append(legend);
-    const checkboxes = state.kind === "ready" ? renderDocuments(fieldset, state.documents, state.selectedIds, callbacks.change) : [];
+    const checkboxes = state.kind === "ready" ? renderDocuments(fieldset, state.documents, state.selectedIds, callbacks.change, appearance) : [];
     if (state.kind === "loading") {
       fieldset.append(status(document2, copy.loadingLabel, "status"));
     } else if (state.kind === "error") {
@@ -13566,7 +13577,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     root.replaceChildren(style, fieldset);
     return checkboxes;
   }
-  function renderDocuments(fieldset, documents, selectedIds, onChange) {
+  function renderDocuments(fieldset, documents, selectedIds, onChange, appearance) {
     const owner = fieldset.ownerDocument;
     const list = owner.createElement("div");
     list.className = "documents";
@@ -13584,14 +13595,12 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
       checkbox.checked = selectedIds.has(requirement.versionId);
       checkbox.dataset.versionId = requirement.versionId;
       checkbox.setAttribute("part", "checkbox");
-      checkbox.setAttribute("aria-describedby", linkId);
       checkbox.addEventListener("change", onChange);
       const copy = owner.createElement("div");
       copy.className = "copy";
       const label = owner.createElement("label");
       label.htmlFor = checkboxId;
       label.setAttribute("part", "consent");
-      label.textContent = requirement.consentText;
       const link = owner.createElement("a");
       link.id = linkId;
       link.href = requirement.href;
@@ -13599,13 +13608,28 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
       link.rel = "noopener";
       link.setAttribute("part", "link");
       link.append(owner.createTextNode(requirement.label), newTabNotice(owner));
-      copy.append(label, link);
+      if (appearance === "compact") {
+        appendLinkedConsent(label, requirement.consentText, requirement.label, link);
+        copy.append(label);
+      } else {
+        checkbox.setAttribute("aria-describedby", linkId);
+        label.textContent = requirement.consentText;
+        copy.append(label, link);
+      }
       row.append(checkbox, copy);
       list.append(row);
       return checkbox;
     });
     fieldset.append(list);
     return checkboxes;
+  }
+  function appendLinkedConsent(label, consentText, documentLabel, link) {
+    const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
+    if (start < 0) {
+      label.append(consentText, " ", link);
+      return;
+    }
+    label.append(consentText.slice(0, start), link, consentText.slice(start + documentLabel.length));
   }
   function newTabNotice(document2) {
     const notice = document2.createElement("span");
@@ -13725,7 +13749,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
       this.checkboxes = renderSignupLegalConsent(this.root, this.state, copy, {
         change: () => this.syncFormValue(),
         retry: () => void this.load()
-      });
+      }, signupLegalConsentAppearance(this));
       setNewTabNotices(this.root, copy.newTabLabel);
       this.syncDisabled();
       this.syncFormValue();

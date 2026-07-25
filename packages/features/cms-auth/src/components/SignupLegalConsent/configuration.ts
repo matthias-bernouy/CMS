@@ -1,6 +1,7 @@
-import type { SignupLegalConsentCopy } from "./view";
+import type { SignupLegalConsentAppearance, SignupLegalConsentCopy } from "./view";
 
 export const SIGNUP_LEGAL_CONSENT_ATTRIBUTES = [
+    "appearance",
     "disabled",
     "heading",
     "load-error-label",
@@ -15,6 +16,10 @@ export const SIGNUP_LEGAL_CONSENT_ATTRIBUTES = [
 export type SignupLegalConsentResolvedCopy = SignupLegalConsentCopy & {
     requiredMessage: string;
 };
+
+export function signupLegalConsentAppearance(element: HTMLElement): SignupLegalConsentAppearance {
+    return element.getAttribute("appearance") === "compact" ? "compact" : "detailed";
+}
 
 export function signupLegalConsentCopy(element: HTMLElement): SignupLegalConsentResolvedCopy {
     return {

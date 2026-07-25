@@ -55,6 +55,10 @@ export const SIGNUP_LEGAL_CONSENT_STYLES = `
         gap: .25rem;
     }
 
+    :host([appearance="compact"]) .copy {
+        display: block;
+    }
+
     label {
         cursor: pointer;
     }

@@ -1,4 +1,4 @@
-import { SIGNUP_LEGAL_CONSENT_ATTRIBUTES, signupLegalConsentCopy } from "./configuration";
+import { SIGNUP_LEGAL_CONSENT_ATTRIBUTES, signupLegalConsentAppearance, signupLegalConsentCopy } from "./configuration";
 import { applySelectedVersionIds, restoredVersionIds, selectedVersionIds, syncSignupLegalFormValue } from "./form";
 import { fetchSignupLegalRequirements } from "./requirements";
 import { renderSignupLegalConsent, setNewTabNotices, type SignupLegalConsentViewState } from "./view";
@@ -105,10 +105,16 @@ export class CmsSignupLegalConsent extends HTMLElement {
         }
         this.dataset.state = this.state.kind;
         const copy = signupLegalConsentCopy(this);
-        this.checkboxes = renderSignupLegalConsent(this.root, this.state, copy, {
-            change: () => this.syncFormValue(),
-            retry: () => void this.load(),
-        });
+        this.checkboxes = renderSignupLegalConsent(
+            this.root,
+            this.state,
+            copy,
+            {
+                change: () => this.syncFormValue(),
+                retry: () => void this.load(),
+            },
+            signupLegalConsentAppearance(this),
+        );
         setNewTabNotices(this.root, copy.newTabLabel);
         this.syncDisabled();
         this.syncFormValue();
