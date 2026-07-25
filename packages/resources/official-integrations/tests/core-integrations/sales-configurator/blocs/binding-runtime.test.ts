@@ -37,8 +37,8 @@ describe("sales-configurator binding runtime", () => {
         core.innerHTML = defaultContent;
         document.body.append(core);
 
-        await waitFor(() => core.querySelector("[data-sales-proposal-empty]") !== null);
-        expect(core.querySelector("[data-sales-proposal-empty]")).not.toBeNull();
+        await waitFor(() => core.querySelector(".sales-proposal-empty") !== null);
+        expect(core.querySelector(".sales-proposal-empty")).not.toBeNull();
         expect(requested).toHaveLength(1);
 
         payload = {
@@ -61,7 +61,7 @@ describe("sales-configurator binding runtime", () => {
         await waitFor(() => core.textContent?.includes("Restaurant booking") === true);
 
         expect(core.textContent).toContain("Bistro");
-        expect(core.querySelector("[data-sales-proposal-empty]")).toBeNull();
+        expect(core.querySelector(".sales-proposal-empty")).toBeNull();
         expect(requested).toHaveLength(2);
     });
 

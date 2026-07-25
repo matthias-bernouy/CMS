@@ -226,8 +226,8 @@ describe("sales client directory", () => {
         );
         document.body.append(core);
         await waitFor(() => core.querySelector('[data-sales-client-open][data-client-id="7"]') !== null);
-        const table = core.querySelector<HTMLTableElement>("[data-sales-client-table]")!;
-        const scrollRegion = core.querySelector<HTMLElement>("[data-sales-client-table-scroll]")!;
+        const table = core.querySelector<HTMLTableElement>(".sales-client-table")!;
+        const scrollRegion = core.querySelector<HTMLElement>(".sales-client-table-scroll")!;
         expect(table.localName).toBe("table");
         expect(Array.from(table.querySelectorAll("th")).map((heading) => heading.textContent?.trim())).toEqual([
             "Entreprise / SIRET",
@@ -236,7 +236,7 @@ describe("sales client directory", () => {
             "Ville / Pays",
             "Action",
         ]);
-        expect(table.querySelectorAll("tbody [data-sales-client-row]")).toHaveLength(1);
+        expect(table.querySelectorAll("tbody .sales-client-row")).toHaveLength(1);
         expect(table.querySelectorAll('th[scope="col"]')).toHaveLength(5);
         expect(scrollRegion.getAttribute("role")).toBe("region");
         expect(scrollRegion.getAttribute("tabindex")).toBe("0");

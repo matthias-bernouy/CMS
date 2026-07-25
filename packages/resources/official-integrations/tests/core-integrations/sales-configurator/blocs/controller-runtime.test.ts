@@ -94,10 +94,22 @@ describe("sales-configurator bloc controllers", () => {
         const builder = document.createElement(builderTag);
         builder.innerHTML = `
             <section data-sales-catalog-source></section>
+            <input data-sales-catalog-search>
             <form data-sales-draft-form>
-                <input type="checkbox" data-sales-variant data-module-id="module-1" data-catalog-id="variant-1">
-                <input type="checkbox" data-sales-variant data-module-id="module-1" data-catalog-id="variant-2">
-                <input type="checkbox" data-sales-feature data-module-id="module-1" data-variant-id="variant-1" data-catalog-id="feature-1">
+                <div data-sales-catalog-row data-sales-row-kind="module" data-sales-module-id="module-1" data-sales-search-text="Booking">
+                    <button data-sales-module-toggle data-module-id="module-1" data-sales-collapsed-label="Configure" data-sales-expanded-label="Collapse" type="button" aria-expanded="false"><span data-sales-module-toggle-label>Configure</span></button>
+                    <span data-sales-module-counts data-sales-variant-singular="variant" data-sales-variant-plural="variants" data-sales-feature-singular="feature" data-sales-feature-plural="features"></span>
+                    <span data-sales-module-selected-label hidden>Selected</span>
+                </div>
+                <div data-sales-catalog-row data-sales-row-kind="variant" data-sales-module-id="module-1" data-sales-variant-id="variant-1" data-sales-search-text="ReserveCo provider">
+                    <input type="checkbox" data-sales-variant data-module-id="module-1" data-catalog-id="variant-1">
+                </div>
+                <div data-sales-catalog-row data-sales-row-kind="variant" data-sales-module-id="module-1" data-sales-variant-id="variant-2" data-sales-search-text="Other provider">
+                    <input type="checkbox" data-sales-variant data-module-id="module-1" data-catalog-id="variant-2">
+                </div>
+                <div data-sales-catalog-row data-sales-row-kind="feature" data-sales-module-id="module-1" data-sales-variant-id="variant-1" data-sales-availability="optional" data-sales-search-text="Online payment">
+                    <input type="checkbox" data-sales-feature data-module-id="module-1" data-variant-id="variant-1" data-catalog-id="feature-1">
+                </div>
             </form>
             <form data-sales-publish-form></form>
         `;
@@ -117,16 +129,55 @@ describe("sales-configurator bloc controllers", () => {
 
         const variants = builder.querySelectorAll<HTMLInputElement>("[data-sales-variant]");
         const feature = builder.querySelector<HTMLInputElement>("[data-sales-feature]")!;
+        const rows = builder.querySelectorAll<HTMLElement>("[data-sales-catalog-row]");
         expect(feature.disabled).toBe(true);
+        expect(rows[0]?.querySelector("[data-sales-module-counts]")?.textContent).toBe("2 variants · 1 feature");
+        expect(rows[3]?.hasAttribute("data-sales-disabled")).toBe(false);
+
+        const search = builder.querySelector<HTMLInputElement>("[data-sales-catalog-search]")!;
+        search.value = "reserveco";
+        search.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: "o" }));
+        expect(rows[0]?.hidden).toBe(false);
+        expect(rows[1]?.hidden).toBe(false);
+        expect(rows[2]?.hidden).toBe(true);
+        expect(rows[3]?.hidden).toBe(false);
+        const moduleToggle = builder.querySelector<HTMLButtonElement>("[data-sales-module-toggle]")!;
+        expect(moduleToggle.getAttribute("aria-expanded")).toBe("true");
+        expect(moduleToggle.hidden).toBe(true);
+        moduleToggle.click();
+        search.value = "";
+        search.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "deleteContentBackward" }));
+        expect(
+            Array.from(rows)
+                .slice(1)
+                .every((row) => row.hidden),
+        ).toBe(true);
+        expect(moduleToggle.getAttribute("aria-expanded")).toBe("false");
+        expect(moduleToggle.hidden).toBe(false);
+
         variants[0]!.checked = true;
         variants[0]!.dispatchEvent(new Event("change", { bubbles: true }));
         expect(feature.disabled).toBe(false);
+        expect(rows[0]?.hasAttribute("data-sales-selected")).toBe(true);
+        expect(rows[1]?.hasAttribute("data-sales-selected")).toBe(true);
+        expect(rows[3]?.hasAttribute("data-sales-disabled")).toBe(false);
         feature.checked = true;
+        feature.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(rows[3]?.hasAttribute("data-sales-selected")).toBe(true);
         variants[1]!.checked = true;
         variants[1]!.dispatchEvent(new Event("change", { bubbles: true }));
         expect(variants[0]!.checked).toBe(false);
         expect(variants[1]!.checked).toBe(true);
         expect(feature.checked).toBe(false);
+        expect(feature.disabled).toBe(true);
+        expect(rows[1]?.hasAttribute("data-sales-selected")).toBe(false);
+        expect(rows[2]?.hasAttribute("data-sales-selected")).toBe(true);
+        expect(rows[3]?.hasAttribute("data-sales-disabled")).toBe(false);
+
+        moduleToggle.click();
+        expect(rows[0]?.hasAttribute("data-sales-expanded")).toBe(false);
+        expect(builder.querySelector("[data-sales-module-toggle]")?.getAttribute("aria-expanded")).toBe("true");
+        expect(builder.querySelector("[data-sales-module-toggle]")?.textContent).toContain("Collapse");
     });
 
     test("editor-disabled and forced states never start network work", async () => {

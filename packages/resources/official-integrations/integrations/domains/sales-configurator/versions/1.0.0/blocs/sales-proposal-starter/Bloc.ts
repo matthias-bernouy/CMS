@@ -20,7 +20,11 @@ export class SalesProposalStarter extends HTMLElement {
         this.addEventListener("cancel", this.onCancel, true);
         this.addEventListener("cms-source:success", this.onSourceSuccess);
         this.addEventListener("submit", this.onSubmit, true);
-        this.observer = new MutationObserver(() => this.queueSync());
+        this.observer = new MutationObserver((records) => {
+            if (records.some((record) => !presentationMutation(record))) {
+                this.queueSync();
+            }
+        });
         this.observer.observe(this, { childList: true, subtree: true });
         this.sync();
     }
@@ -46,6 +50,9 @@ export class SalesProposalStarter extends HTMLElement {
     onChange = (event) => {
         const variant = closestWithin(this, event.target, "[data-sales-variant]");
         if (!variant) {
+            if (closestWithin(this, event.target, "[data-sales-feature]")) {
+                syncCatalogRowStates(this);
+            }
             return;
         }
         const moduleId = variant.getAttribute("data-module-id") || "";
@@ -111,6 +118,9 @@ export class SalesProposalStarter extends HTMLElement {
         const toggle = closestWithin(this, event.target, "[data-sales-module-toggle]");
         if (toggle) {
             event.preventDefault();
+            if (toggle.hasAttribute("hidden")) {
+                return;
+            }
             const moduleId = toggle.getAttribute("data-module-id") || "";
             if (moduleId) {
                 if (this.expandedModuleIds.has(moduleId)) {
@@ -206,17 +216,19 @@ export class SalesProposalStarter extends HTMLElement {
         );
         for (const feature of this.querySelectorAll("[data-sales-feature]")) {
             const available = selectedVariants.has(feature.getAttribute("data-variant-id"));
-            feature.disabled = !available;
             if (!available) {
                 setChecked(feature, false);
             }
+            setDisabled(feature, !available);
         }
+        syncCatalogRowStates(this);
     }
 
     syncCatalogVisibility() {
         const rows = Array.from(this.querySelectorAll("[data-sales-catalog-row]"));
-        const moduleRows = rows.filter((row) => row.getAttribute("data-sales-row-kind") === "module");
-        if (moduleRows.length === 0) {
+        const catalog = indexCatalogRows(rows);
+        const modules = Array.from(catalog.values()).filter((entry) => entry.moduleRow);
+        if (modules.length === 0) {
             return;
         }
         const selectedModuleIds = new Set(
@@ -226,37 +238,41 @@ export class SalesProposalStarter extends HTMLElement {
                 .filter(Boolean),
         );
         const query = normalizeSearch(this.catalogQuery);
-        const visibleModuleIds = new Set();
+        let visibleModules = 0;
 
-        for (const row of moduleRows) {
+        syncModuleCounts(catalog);
+        syncCatalogRowStates(this, rows);
+
+        for (const entry of modules) {
+            const row = entry.moduleRow;
             const moduleId = row.getAttribute("data-sales-module-id") || "";
             const selected = selectedModuleIds.has(moduleId);
-            const matches = !query || normalizeSearch(row.getAttribute("data-sales-search-text") || "").includes(query);
-            const visible = matches || selected;
+            const queryRows = rowsMatchingCatalogQuery(entry, query);
+            const visible = !query || queryRows.size > 0 || selected;
+            const manuallyExpanded = this.expandedModuleIds.has(moduleId);
+            const expanded = query ? queryRows.size > 0 : manuallyExpanded;
             row.hidden = !visible;
-            row.toggleAttribute("data-sales-module-selected", selected);
+            row.toggleAttribute("data-sales-selected", selected);
             if (visible) {
-                visibleModuleIds.add(moduleId);
+                visibleModules += 1;
             }
-            const toggle = row.querySelector("[data-sales-module-toggle]");
-            toggle?.setAttribute("aria-expanded", String(this.expandedModuleIds.has(moduleId)));
+            syncModuleToggle(row, expanded, Boolean(query));
             const selectedLabel = row.querySelector("[data-sales-module-selected-label]");
             if (selectedLabel) {
                 selectedLabel.hidden = !selected;
             }
-        }
-
-        for (const row of rows) {
-            if (row.getAttribute("data-sales-row-kind") === "module") {
-                continue;
+            for (const childRow of entry.rows) {
+                if (childRow === row) {
+                    continue;
+                }
+                const relevant = !query || queryRows.has(childRow);
+                childRow.hidden = !(visible && expanded && relevant);
             }
-            const moduleId = row.getAttribute("data-sales-module-id") || "";
-            row.hidden = !(visibleModuleIds.has(moduleId) && this.expandedModuleIds.has(moduleId));
         }
 
         const noMatch = this.querySelector("[data-sales-catalog-no-match]");
         if (noMatch) {
-            noMatch.hidden = visibleModuleIds.size > 0;
+            noMatch.hidden = visibleModules > 0;
         }
     }
 
@@ -400,6 +416,166 @@ function setChecked(control, value) {
     if (control.checked !== value) {
         control.checked = value;
     }
+}
+
+function setDisabled(control, value) {
+    if (control.disabled !== value) {
+        control.disabled = value;
+    }
+    if (value) {
+        control.setAttribute("disabled", "");
+    } else {
+        control.removeAttribute("disabled");
+    }
+}
+
+function indexCatalogRows(rows) {
+    const modules = new Map();
+    for (const row of rows) {
+        const moduleId = row.getAttribute("data-sales-module-id") || "";
+        const variantId = row.getAttribute("data-sales-variant-id") || "";
+        const kind = row.getAttribute("data-sales-row-kind") || "";
+        const entry = modules.get(moduleId) || {
+            rows: [],
+            moduleRow: null,
+            variantRows: new Map(),
+            featureRowsByVariant: new Map(),
+            variants: 0,
+            features: 0,
+        };
+        entry.rows.push(row);
+        if (kind === "module") {
+            entry.moduleRow = row;
+        } else if (kind === "variant") {
+            entry.variantRows.set(variantId, row);
+            entry.variants += 1;
+        } else if (kind === "feature") {
+            const featureRows = entry.featureRowsByVariant.get(variantId) || [];
+            featureRows.push(row);
+            entry.featureRowsByVariant.set(variantId, featureRows);
+            entry.features += 1;
+        }
+        modules.set(moduleId, entry);
+    }
+    return modules;
+}
+
+function rowsMatchingCatalogQuery(entry, query) {
+    if (!query) {
+        return new Set(entry.rows);
+    }
+    if (
+        entry.moduleRow &&
+        normalizeSearch(entry.moduleRow.getAttribute("data-sales-search-text") || "").includes(query)
+    ) {
+        return new Set(entry.rows);
+    }
+    const usefulRows = new Set();
+    const directVariantIds = new Set();
+    const contextualVariantIds = new Set();
+    for (const row of entry.rows) {
+        const kind = row.getAttribute("data-sales-row-kind") || "";
+        if (kind === "module" || !normalizeSearch(row.getAttribute("data-sales-search-text") || "").includes(query)) {
+            continue;
+        }
+        usefulRows.add(row);
+        const variantId = row.getAttribute("data-sales-variant-id") || "";
+        if (kind === "variant") {
+            directVariantIds.add(variantId);
+            contextualVariantIds.add(variantId);
+        } else if (kind === "feature") {
+            contextualVariantIds.add(variantId);
+        }
+    }
+    for (const variantId of contextualVariantIds) {
+        const variantRow = entry.variantRows.get(variantId);
+        if (variantRow) {
+            usefulRows.add(variantRow);
+        }
+    }
+    for (const variantId of directVariantIds) {
+        for (const featureRow of entry.featureRowsByVariant.get(variantId) || []) {
+            usefulRows.add(featureRow);
+        }
+    }
+    return usefulRows;
+}
+
+function syncCatalogRowStates(root, providedRows = null) {
+    const rows = providedRows ?? Array.from(root.querySelectorAll("[data-sales-catalog-row]"));
+    const selectedVariants = new Set(
+        Array.from(root.querySelectorAll("[data-sales-variant]"))
+            .filter((control) => checked(control))
+            .map((control) => control.getAttribute("data-catalog-id"))
+            .filter(Boolean),
+    );
+    const selectedModuleIds = new Set(
+        Array.from(root.querySelectorAll("[data-sales-variant]"))
+            .filter((control) => checked(control))
+            .map((control) => control.getAttribute("data-module-id"))
+            .filter(Boolean),
+    );
+
+    for (const row of rows) {
+        const kind = row.getAttribute("data-sales-row-kind") || "";
+        const moduleId = row.getAttribute("data-sales-module-id") || "";
+        const variantId = row.getAttribute("data-sales-variant-id") || "";
+        const control = row.querySelector(kind === "variant" ? "[data-sales-variant]" : "[data-sales-feature]");
+        const enabled = kind !== "feature" || selectedVariants.has(variantId);
+        const selected =
+            (kind === "module" && selectedModuleIds.has(moduleId)) ||
+            (kind === "variant" && Boolean(control && checked(control))) ||
+            (kind === "feature" &&
+                enabled &&
+                (row.getAttribute("data-sales-availability") === "included" || Boolean(control && checked(control))));
+        row.toggleAttribute("data-sales-selected", selected);
+    }
+}
+
+function syncModuleCounts(catalog) {
+    for (const { moduleRow, variants, features } of catalog.values()) {
+        if (!moduleRow) {
+            continue;
+        }
+        const output = moduleRow.querySelector("[data-sales-module-counts]");
+        if (!output) {
+            continue;
+        }
+        const variantLabel = output.getAttribute(
+            variants === 1 ? "data-sales-variant-singular" : "data-sales-variant-plural",
+        );
+        const featureLabel = output.getAttribute(
+            features === 1 ? "data-sales-feature-singular" : "data-sales-feature-plural",
+        );
+        const label = `${variants} ${variantLabel || "variants"} · ${features} ${featureLabel || "features"}`;
+        if (output.textContent !== label) {
+            output.textContent = label;
+        }
+    }
+}
+
+function syncModuleToggle(row, expanded, filtering) {
+    const toggle = row.querySelector("[data-sales-module-toggle]");
+    if (!toggle) {
+        return;
+    }
+    toggle.toggleAttribute("hidden", filtering);
+    toggle.setAttribute("aria-expanded", String(expanded));
+    const attribute = expanded ? "data-sales-expanded-label" : "data-sales-collapsed-label";
+    const label = toggle.getAttribute(attribute) || (expanded ? "Collapse" : "Configure");
+    const output = toggle.querySelector("[data-sales-module-toggle-label]");
+    if (output && output.textContent !== label) {
+        output.textContent = label;
+    }
+}
+
+function presentationMutation(record) {
+    return (
+        record.target instanceof Element &&
+        Boolean(
+            record.target.closest("[data-sales-money], [data-sales-module-counts], [data-sales-module-toggle-label]"),
+        )
+    );
 }
 
 function setAttributeIfChanged(element, name, value) {

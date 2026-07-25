@@ -23,7 +23,7 @@
 
     <basic-toast role="alert" cms-condition="$source.error">Proposals could not be loaded. Try again in a moment.</basic-toast>
 
-    <basic-card data-sales-proposal-empty cms-condition="$source.empty || $source.loaded && proposals.items.length == 0">
+    <basic-card class="sales-proposal-empty" cms-condition="$source.empty || $source.loaded && proposals.items.length == 0">
         <strong data-sales-empty-unfiltered slot="title">No proposals yet</strong>
         <strong data-sales-empty-filtered slot="title" hidden>No matching proposals</strong>
         <span data-sales-empty-unfiltered slot="description">Create a proposal to start configuring a client offer.</span>

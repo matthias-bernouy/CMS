@@ -65,7 +65,7 @@ describe("sales proposal starter", () => {
         expect(content).toContain("data-sales-client-dialog-close");
         expect(content).toContain("/getPartnerCatalog as catalogData");
         expect(content).toContain('cms-repeat="catalogData.selectionRows as row"');
-        expect(content).toContain("<table data-sales-catalog-table");
+        expect(content).toContain('<table class="sales-catalog-table"');
         expect(content).toContain("data-sales-catalog-search");
         expect(content).toContain("data-sales-module-toggle");
         expect(content).toContain("/saveMyProposalDraft as saveResult");
@@ -194,10 +194,10 @@ describe("sales proposal starter", () => {
         core.innerHTML = (await read("default.html")).replaceAll("sales-proposal-starter", tag);
         document.body.append(core);
 
-        await waitFor(() => core.querySelector("[data-sales-another-client-title]") !== null);
+        await waitFor(() => core.querySelector(".sales-another-client-title") !== null);
 
-        expect(core.querySelector("[data-sales-first-client-title]")).toBeNull();
-        expect(core.querySelector("[data-sales-client-create-card]")).not.toBeNull();
+        expect(core.querySelector(".sales-first-client-title")).toBeNull();
+        expect(core.querySelector(".sales-client-create-card")).not.toBeNull();
         expect(core.querySelector("[data-sales-client-form]")).not.toBeNull();
         expect(core.textContent).toContain("Bistro");
 
@@ -315,15 +315,15 @@ describe("sales proposal starter", () => {
         await waitFor(() => core.querySelectorAll("[data-sales-catalog-row]").length === 4);
         await settle();
 
-        const table = core.querySelector<HTMLTableElement>("[data-sales-catalog-table]")!;
-        const region = core.querySelector<HTMLElement>("[data-sales-catalog-table-scroll]")!;
+        const table = core.querySelector<HTMLTableElement>(".sales-catalog-table")!;
+        const region = core.querySelector<HTMLElement>(".sales-catalog-table-scroll")!;
         const rows = Array.from(core.querySelectorAll<HTMLElement>("[data-sales-catalog-row]"));
         const feature = core.querySelector<HTMLElement>("[data-sales-feature]")!;
 
         expect(table.caption?.textContent).toContain("Choose one variant per module");
         expect(region.getAttribute("role")).toBe("region");
         expect(region.getAttribute("tabindex")).toBe("0");
-        expect(table.querySelectorAll('th[scope="col"]')).toHaveLength(7);
+        expect(table.querySelectorAll('th[scope="col"]')).toHaveLength(5);
         expect(table.querySelectorAll('th[scope="row"]')).toHaveLength(4);
         expect(rows.map((row) => row.getAttribute("data-sales-row-kind"))).toEqual([
             "module",
@@ -331,19 +331,41 @@ describe("sales proposal starter", () => {
             "feature",
             "feature",
         ]);
-        expect(rows.map((row) => row.getAttribute("data-sales-depth"))).toEqual(["0", "1", "2", "2"]);
+        expect(rows.every((row) => !row.hasAttribute("data-sales-depth"))).toBe(true);
         expect(table.querySelectorAll("[data-sales-variant]")).toHaveLength(1);
         expect(table.querySelectorAll("[data-sales-feature]")).toHaveLength(1);
+        expect(table.querySelectorAll(".sales-kind-badge")).toHaveLength(4);
+        expect(table.querySelectorAll(".sales-availability-badge")).toHaveLength(4);
+        expect(table.querySelectorAll(".sales-service-cell")).toHaveLength(4);
+        expect(table.querySelectorAll(".sales-choice-cell")).toHaveLength(4);
+        expect(rows[0]?.querySelector("[data-sales-module-counts]")?.textContent).toBe("1 variant · 2 features");
         expect(rows[0]?.hidden).toBe(false);
         expect(rows.slice(1).every((row) => row.hidden)).toBe(true);
+        expect(rows[2]?.hasAttribute("data-sales-disabled")).toBe(false);
+        expect(rows[3]?.hasAttribute("data-sales-disabled")).toBe(false);
         core.querySelector<HTMLElement>("[data-sales-module-toggle]")!.click();
         expect(rows.slice(1).every((row) => !row.hidden)).toBe(true);
         expect(core.querySelector("[data-sales-module-toggle]")?.getAttribute("aria-expanded")).toBe("true");
+        expect(core.querySelector("[data-sales-module-toggle]")?.textContent).toContain("Collapse");
+        expect(rows[0]?.hasAttribute("data-sales-expanded")).toBe(false);
         expect(feature.getAttribute("data-module-id")).toBe("10");
         expect(feature.getAttribute("data-variant-id")).toBe("11");
         expect(feature.getAttribute("data-catalog-id")).toBe("13");
         expect(rows[2]?.textContent).toContain("Automatic");
         expect(rows[3]?.textContent).toContain("Payment module");
+
+        const variant = core.querySelector<HTMLElement>("[data-sales-variant]")!;
+        (variant as HTMLElement & { checked: boolean }).checked = true;
+        variant.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+        expect(rows[0]?.hasAttribute("data-sales-selected")).toBe(true);
+        expect(rows[1]?.hasAttribute("data-sales-selected")).toBe(true);
+        expect(rows[2]?.hasAttribute("data-sales-selected")).toBe(true);
+        expect(rows[2]?.hasAttribute("data-sales-disabled")).toBe(false);
+        expect(rows[3]?.hasAttribute("data-sales-disabled")).toBe(false);
+
+        (feature as HTMLElement & { checked: boolean }).checked = true;
+        feature.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+        expect(rows[3]?.hasAttribute("data-sales-selected")).toBe(true);
         expect(table.textContent).not.toContain("{{");
     });
 
@@ -355,15 +377,15 @@ describe("sales proposal starter", () => {
             <table>
                 <tbody>
                     <tr data-sales-catalog-row data-sales-row-kind="module" data-sales-module-id="1" data-sales-search-text="Réservation Café booking">
-                        <td><button data-sales-module-toggle data-module-id="1" type="button" aria-expanded="false">Configure</button><span data-sales-module-selected-label hidden>Selected</span></td>
+                        <td><button data-sales-module-toggle data-module-id="1" data-sales-collapsed-label="Configure" data-sales-expanded-label="Collapse" type="button" aria-expanded="false">Configure</button><span data-sales-module-selected-label hidden>Selected</span></td>
                     </tr>
-                    <tr data-sales-catalog-row data-sales-row-kind="variant" data-sales-module-id="1">
+                    <tr data-sales-catalog-row data-sales-row-kind="variant" data-sales-module-id="1" data-sales-variant-id="11" data-sales-search-text="TableHero provider">
                         <td><input type="checkbox" data-sales-variant data-module-id="1" data-catalog-id="11"></td>
                     </tr>
                     <tr data-sales-catalog-row data-sales-row-kind="module" data-sales-module-id="2" data-sales-search-text="Paiement en ligne payment">
-                        <td><button data-sales-module-toggle data-module-id="2" type="button" aria-expanded="false">Configure</button><span data-sales-module-selected-label hidden>Selected</span></td>
+                        <td><button data-sales-module-toggle data-module-id="2" data-sales-collapsed-label="Configure" data-sales-expanded-label="Collapse" type="button" aria-expanded="false">Configure</button><span data-sales-module-selected-label hidden>Selected</span></td>
                     </tr>
-                    <tr data-sales-catalog-row data-sales-row-kind="variant" data-sales-module-id="2">
+                    <tr data-sales-catalog-row data-sales-row-kind="variant" data-sales-module-id="2" data-sales-variant-id="21" data-sales-search-text="Stripe provider">
                         <td><input type="checkbox" checked data-sales-variant data-module-id="2" data-catalog-id="21"></td>
                     </tr>
                 </tbody>
@@ -391,8 +413,25 @@ describe("sales proposal starter", () => {
         expect(moduleTwo.hidden).toBe(false);
         expect(moduleOneDetails.hidden).toBe(true);
         expect(moduleTwoDetails.hidden).toBe(true);
-        expect(moduleTwo.hasAttribute("data-sales-module-selected")).toBe(true);
+        expect(moduleTwo.hasAttribute("data-sales-selected")).toBe(true);
+        expect(moduleTwo.hasAttribute("data-sales-module-selected")).toBe(false);
         expect(moduleTwo.querySelector<HTMLElement>("[data-sales-module-selected-label]")?.hidden).toBe(false);
+
+        search.value = "tablehero";
+        search.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: "o" }));
+        expect(moduleOne.hidden).toBe(false);
+        expect(moduleOneDetails.hidden).toBe(false);
+        const moduleOneToggle = moduleOne.querySelector<HTMLButtonElement>("[data-sales-module-toggle]")!;
+        expect(moduleOneToggle.getAttribute("aria-expanded")).toBe("true");
+        expect(moduleOneToggle.hidden).toBe(true);
+        moduleOneToggle.click();
+        search.value = "";
+        search.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "deleteContentBackward" }));
+        expect(moduleOneDetails.hidden).toBe(true);
+        expect(moduleOneToggle.getAttribute("aria-expanded")).toBe("false");
+        expect(moduleOneToggle.hidden).toBe(false);
+        moduleOneToggle.click();
+        expect(moduleOneDetails.hidden).toBe(false);
 
         search.value = "CAFE";
         search.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: "E" }));
@@ -400,9 +439,10 @@ describe("sales proposal starter", () => {
         expect(moduleTwo.hidden).toBe(false);
         expect(noMatch.hidden).toBe(true);
 
-        moduleOne.querySelector<HTMLButtonElement>("[data-sales-module-toggle]")!.click();
+        expect(moduleOneToggle.hidden).toBe(true);
+        moduleOneToggle.click();
         expect(moduleOneDetails.hidden).toBe(false);
-        expect(moduleOne.querySelector("[data-sales-module-toggle]")?.getAttribute("aria-expanded")).toBe("true");
+        expect(moduleOneToggle.getAttribute("aria-expanded")).toBe("true");
 
         search.value = "introuvable";
         search.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: "e" }));
@@ -422,6 +462,7 @@ describe("sales proposal starter", () => {
         expect(moduleOne.hidden).toBe(false);
         expect(moduleTwo.hidden).toBe(false);
         expect(moduleOneDetails.hidden).toBe(false);
+        expect(moduleOneToggle.hidden).toBe(false);
         expect(noMatch.hidden).toBe(true);
     });
 

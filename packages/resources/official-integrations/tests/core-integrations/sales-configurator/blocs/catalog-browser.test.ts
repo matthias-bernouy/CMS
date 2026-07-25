@@ -35,20 +35,43 @@ describe("sales catalog browser", () => {
         await waitFor(() => core.querySelectorAll("[data-sales-catalog-row]").length === 4);
         await waitFor(() => core.textContent?.includes("Support prioritaire") === true);
 
-        const table = core.querySelector<HTMLTableElement>("[data-sales-catalog-table]")!;
-        const scrollRegion = core.querySelector<HTMLElement>("[data-sales-catalog-table-scroll]")!;
-        const headings = Array.from(table.querySelectorAll("th"), (heading) => heading.textContent?.trim());
+        const table = core.querySelector<HTMLTableElement>(".sales-catalog-table")!;
+        const scrollRegion = core.querySelector<HTMLElement>(".sales-catalog-table-scroll")!;
+        const headings = Array.from(table.querySelectorAll("thead th"), (heading) => heading.textContent?.trim());
         const rows = table.querySelectorAll<HTMLTableRowElement>("[data-sales-catalog-row]");
+        const moduleToggle = rows[0]?.querySelector<HTMLButtonElement>("[data-sales-module-toggle]")!;
+        const resultCount = core.querySelector<HTMLOutputElement>("[data-sales-catalog-result-count]")!;
 
         expect(requested).toHaveLength(1);
         expect(new URL(requested[0]!, "http://localhost").pathname).toEndWith("/getPartnerCatalog");
         expect(table.localName).toBe("table");
-        expect(headings).toEqual(["Type", "Service", "Provider", "Disponibilité", "Prix", "Prérequis"]);
-        expect(table.querySelectorAll('th[scope="col"]')).toHaveLength(6);
-        expect(table.querySelectorAll("[data-sales-catalog-cell]")).toHaveLength(24);
+        expect(headings).toEqual(["Service", "Provider", "Prix", "Prérequis"]);
+        expect(table.querySelectorAll('th[scope="col"]')).toHaveLength(4);
+        expect(table.querySelectorAll('th[scope="row"]')).toHaveLength(4);
+        expect(table.querySelectorAll(".sales-catalog-cell")).toHaveLength(16);
+        expect(table.querySelectorAll(".sales-price-cell")).toHaveLength(4);
         expect(scrollRegion.getAttribute("role")).toBe("region");
         expect(scrollRegion.getAttribute("tabindex")).toBe("0");
-        expect(scrollRegion.getAttribute("style")).toContain("overflow-x: auto");
+        expect(rows[0]?.hasAttribute("data-sales-expanded")).toBe(false);
+        expect(visibleRows(core)).toEqual([rows[0]]);
+        expect(moduleToggle.localName).toBe("button");
+        expect(moduleToggle.getAttribute("data-sales-collapsed-label")).toBe("Afficher");
+        expect(moduleToggle.getAttribute("data-sales-expanded-label")).toBe("Réduire");
+        expect(moduleToggle.getAttribute("aria-expanded")).toBe("false");
+        expect(moduleToggle.hidden).toBe(false);
+        expect(resultCount.textContent).toBe("1 service affiché");
+        expect(rows[0]?.querySelector("[data-sales-module-counts]")?.textContent).toBe(
+            "1 variante · 2 fonctionnalités",
+        );
+        expect(Array.from(rows, (row) => row.getAttribute("data-sales-row-kind"))).toEqual([
+            "module",
+            "variant",
+            "feature",
+            "feature",
+        ]);
+        expect(Array.from(rows, (row) => row.hasAttribute("data-sales-depth"))).toEqual([false, false, false, false]);
+        expect(table.querySelectorAll(".sales-kind-badge")).toHaveLength(4);
+        expect(table.querySelectorAll(".sales-availability-badge")).toHaveLength(4);
         expect(core.textContent).toContain("Variante");
         expect(core.textContent).toContain("Sélectionnable");
         expect(core.textContent).toContain("Incluse");
@@ -57,9 +80,24 @@ describe("sales catalog browser", () => {
         expect(core.textContent).toContain("Sur devis");
         expect(core.textContent).toContain("Inclus");
         expect(core.textContent).toContain("125");
-        expect(rows[3]?.querySelector<HTMLElement>("[data-sales-catalog-service]")?.style.paddingInlineStart).toBe(
-            "2.5rem",
-        );
+        moduleToggle.click();
+        expect(visibleRows(core)).toHaveLength(4);
+        expect(rows[0]?.hasAttribute("data-sales-expanded")).toBe(false);
+        expect(moduleToggle.getAttribute("aria-expanded")).toBe("true");
+        expect(moduleToggle.textContent).toContain("Réduire");
+        expect(resultCount.textContent).toBe("4 services affichés");
+
+        await settle();
+        const browser = core.querySelector<HTMLElement & { syncPresentation: () => void }>(tag)!;
+        const syncPresentation = browser.syncPresentation.bind(browser);
+        let presentationSyncs = 0;
+        browser.syncPresentation = () => {
+            presentationSyncs += 1;
+            syncPresentation();
+        };
+        table.querySelector<HTMLElement>("[data-sales-money]")!.textContent = "125 €";
+        await settle();
+        expect(presentationSyncs).toBe(0);
     });
 
     test("filters rendered rows locally without another source request", async () => {
@@ -80,22 +118,38 @@ describe("sales catalog browser", () => {
         const query = core.querySelector<HTMLElement>("[data-sales-catalog-query]")!;
         const status = core.querySelector<HTMLElement>("[data-sales-catalog-status]")!;
         const filteredEmpty = core.querySelector<HTMLElement>("[data-sales-catalog-filter-empty]")!;
+        const moduleToggle = core.querySelector<HTMLButtonElement>("[data-sales-module-toggle]")!;
+
+        moduleToggle.click();
+        expect(moduleToggle.getAttribute("aria-expanded")).toBe("true");
 
         setControlValue(query, "identite", "input");
-        expect(visibleRows(core)).toHaveLength(2);
+        expect(visibleRows(core)).toHaveLength(4);
+        expect(moduleToggle.hidden).toBe(true);
+        moduleToggle.click();
 
         setControlValue(query, "HelpCo", "input");
-        expect(visibleRows(core)).toHaveLength(1);
-        expect(visibleRows(core)[0]?.textContent).toContain("Support prioritaire");
+        expect(visibleRows(core)).toHaveLength(3);
+        expect(visibleRows(core).map((row) => row.getAttribute("data-sales-row-kind"))).toEqual([
+            "module",
+            "variant",
+            "feature",
+        ]);
+        expect(visibleRows(core)[2]?.textContent).toContain("Support prioritaire");
 
         setControlValue(status, "included", "change");
         expect(visibleRows(core)).toHaveLength(0);
         expect(filteredEmpty.hasAttribute("hidden")).toBe(false);
+        expect(moduleToggle.hidden).toBe(true);
 
         setControlValue(query, "", "input");
-        expect(visibleRows(core)).toHaveLength(1);
-        expect(visibleRows(core)[0]?.textContent).toContain("Audit inclus");
+        expect(visibleRows(core)).toHaveLength(3);
+        expect(visibleRows(core)[2]?.textContent).toContain("Audit inclus");
         expect(filteredEmpty.hasAttribute("hidden")).toBe(true);
+        setControlValue(status, "", "change");
+        expect(moduleToggle.hidden).toBe(false);
+        expect(moduleToggle.getAttribute("aria-expanded")).toBe("true");
+        expect(visibleRows(core)).toHaveLength(4);
         expect(calls).toBe(1);
     });
 

@@ -1,4 +1,36 @@
 <sales-proposal-builder source-id="sales-configurator" proposal-param="proposalId" share-path="/proposal" share-token-param="proposalToken">
+    <style>
+        :where(sales-proposal-builder) [data-sales-draft-form] { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+        :where(sales-proposal-builder) .sales-catalog-table-scroll { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; }
+        :where(sales-proposal-builder) .sales-catalog-table { width: 100%; min-width: 48rem; border-collapse: collapse; font-size: 0.875rem; line-height: 1.4; }
+        :where(sales-proposal-builder) .sales-catalog-table caption { padding: 0.75rem; text-align: start; font-weight: 600; }
+        :where(sales-proposal-builder) .sales-catalog-table thead th { padding: 0.65rem 0.75rem; text-align: start; }
+        :where(sales-proposal-builder) [data-sales-catalog-row] > * { padding: 0.75rem; border-block-start: 1px solid var(--border-default, #d8d8d8); text-align: start; vertical-align: top; }
+        :where(sales-proposal-builder) [data-sales-catalog-row][data-sales-row-kind="module"] { background: var(--bg-soft, #f3f1eb); }
+        :where(sales-proposal-builder) [data-sales-catalog-row][data-sales-row-kind="variant"] { background: var(--bg-surface, #fff); }
+        :where(sales-proposal-builder) [data-sales-catalog-row][data-sales-row-kind="feature"] { background: color-mix(in srgb, var(--bg-soft, #f3f1eb) 45%, var(--bg-surface, #fff)); }
+        :where(sales-proposal-builder) [data-sales-catalog-row][data-sales-selected] { box-shadow: inset 0.25rem 0 var(--primary-base, #176b52); background: var(--primary-muted, #e3f1eb); }
+        :where(sales-proposal-builder) [data-sales-catalog-row]:has(basic-checkbox[data-sales-feature][disabled]) { opacity: 0.58; }
+        :where(sales-proposal-builder) .sales-service-cell { min-width: 19rem; }
+        :where(sales-proposal-builder) .sales-service-heading { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; margin-block-end: 0.35rem; }
+        :where(sales-proposal-builder) .sales-catalog-service, :where(sales-proposal-builder) .sales-service-cell > small:not([hidden]) { display: block; }
+        :where(sales-proposal-builder) [data-sales-catalog-row][data-sales-row-kind="variant"] .sales-service-cell { padding-inline-start: 2rem; }
+        :where(sales-proposal-builder) [data-sales-catalog-row][data-sales-row-kind="feature"] .sales-service-cell { padding-inline-start: 3.25rem; }
+        :where(sales-proposal-builder) .sales-service-cell > small { margin-block-start: 0.2rem; }
+        :where(sales-proposal-builder) .sales-kind-badge, :where(sales-proposal-builder) .sales-availability-badge { display: inline-flex; align-items: center; min-height: 1.45rem; padding: 0.15rem 0.45rem; border: 1px solid var(--border-default, #d8d8d8); border-radius: 999px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.035em; line-height: 1; text-transform: uppercase; }
+        :where(sales-proposal-builder) [data-sales-row-kind="module"] .sales-kind-badge { border-radius: 0.3rem; color: var(--primary-base, #176b52); background: var(--primary-muted, #e3f1eb); }
+        :where(sales-proposal-builder) [data-sales-row-kind="variant"] .sales-kind-badge { color: var(--info-base, #356d91); background: color-mix(in srgb, var(--info-base, #356d91) 10%, transparent); }
+        :where(sales-proposal-builder) [data-sales-row-kind="feature"] .sales-kind-badge { color: var(--text-muted, #6d776f); background: var(--bg-surface, #fff); }
+        :where(sales-proposal-builder) [data-sales-availability="optional"] .sales-availability-badge { color: var(--warning-base, #946211); background: color-mix(in srgb, var(--warning-base, #946211) 10%, transparent); }
+        :where(sales-proposal-builder) [data-sales-availability="included"] .sales-availability-badge { color: var(--success-base, #27744f); background: color-mix(in srgb, var(--success-base, #27744f) 10%, transparent); }
+        :where(sales-proposal-builder) [data-sales-module-toggle] { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 2rem; margin-inline-start: auto; padding: 0.3rem 0.55rem; border: 1px solid var(--primary-base, currentColor); border-radius: 0.4rem; color: var(--primary-base, currentColor); background: transparent; font: inherit; font-weight: 700; cursor: pointer; }
+        :where(sales-proposal-builder) [data-sales-module-toggle][hidden] { display: none; }
+        :where(sales-proposal-builder) [data-sales-module-toggle]:focus-visible { outline: 2px solid var(--primary-base, currentColor); outline-offset: 2px; }
+        :where(sales-proposal-builder) .sales-module-toggle-icon { transition: transform 120ms ease; }
+        :where(sales-proposal-builder) [data-sales-catalog-row]:has([data-sales-module-toggle][aria-expanded="true"]) .sales-module-toggle-icon { transform: rotate(90deg); }
+        :where(sales-proposal-builder) [data-sales-module-counts], :where(sales-proposal-builder) [data-sales-module-selected-label] { color: var(--text-muted, #6d776f); }
+        :where(sales-proposal-builder) .sales-catalog-cell ul { margin: 0; padding-inline-start: 1.1rem; }
+    </style>
     <basic-stack gap="md" cms-condition="$source.loading">
         <basic-skeleton height="10rem" animation="wave" label="Loading proposal"></basic-skeleton>
         <basic-skeleton height="18rem" animation="wave" aria-hidden="true"></basic-skeleton>
@@ -12,7 +44,7 @@
     </basic-card>
 
     <basic-stack gap="lg" cms-condition="$source.loaded">
-        <header>
+        <header class="sales-section-header">
             <small>{{ proposalData.proposal.reference }} · {{ proposalData.proposal.status }}</small>
             <h2>{{ proposalData.proposal.title }}</h2>
             <p>{{ proposalData.proposal.client.companyName }} · {{ proposalData.proposal.client.contactName }}</p>
@@ -62,7 +94,7 @@
                 <basic-textarea name="privateNotes" label="Private partner notes" rows="3" value="{{ proposalData.proposal.privateNotes }}"></basic-textarea>
             </basic-stack>
 
-            <section data-sales-catalog-source cms-source="/.cms/sources/sales-configurator/getPartnerCatalog as catalogData">
+            <section class="sales-form-section" data-sales-catalog-source cms-source="/.cms/sources/sales-configurator/getPartnerCatalog as catalogData">
                 <basic-stack gap="md" cms-condition="$source.loading">
                     <basic-skeleton height="12rem" animation="wave" label="Loading catalogue"></basic-skeleton>
                 </basic-stack>
@@ -74,68 +106,91 @@
                     <span slot="description">Ask an administrator to publish the catalogue before configuring proposals.</span>
                 </basic-card>
 
-                <basic-stack data-sales-catalog-picker gap="sm" cms-condition="$source.loaded && catalogData.modules.length > 0">
-                    <basic-input data-sales-catalog-search type="search" label="Search modules" placeholder="Name, code, or description" autocomplete="off"></basic-input>
-                    <small data-sales-catalog-search-status>Selected modules stay visible while you search.</small>
+                <basic-stack class="sales-catalog-picker" gap="sm" cms-condition="$source.loaded && catalogData.modules.length > 0">
+                    <basic-input data-sales-catalog-search type="search" label="Search services" placeholder="Service, provider, code, or description" autocomplete="off"></basic-input>
+                    <small class="sales-catalog-search-status">Selected modules stay visible while you search.</small>
                     <p data-sales-catalog-no-match role="status" hidden>No module matches this search.</p>
-                    <div data-sales-catalog-table-scroll role="region" aria-label="Published service catalogue" tabindex="0" style="max-width: 100%; overflow-x: auto;">
-                        <table data-sales-catalog-table style="width: 100%; min-width: 64rem; border-collapse: collapse;">
-                        <caption style="padding-block-end: 0.75rem; text-align: left;">Choose one variant per module, then add any optional features.</caption>
-                        <thead>
-                            <tr>
-                                <th scope="col" style="padding: 0.5rem; text-align: left;">Type</th>
-                                <th scope="col" style="padding: 0.5rem; text-align: left;">Service</th>
-                                <th scope="col" style="padding: 0.5rem; text-align: left;">Provider</th>
-                                <th scope="col" style="padding: 0.5rem; text-align: left;">Availability</th>
-                                <th scope="col" style="padding: 0.5rem; text-align: left;">Price</th>
-                                <th scope="col" style="padding: 0.5rem; text-align: left;">Prerequisites</th>
-                                <th scope="col" style="padding: 0.5rem; text-align: left;">Selection</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr data-sales-catalog-row data-sales-row-kind="{{ row.kind }}" data-sales-depth="{{ row.depth }}" data-sales-module-id="{{ row.moduleId }}" data-sales-search-text="{{ row.name }} {{ row.code }} {{ row.description }}" cms-repeat="catalogData.selectionRows as row">
-                                <td style="padding: 0.5rem; vertical-align: top;">{{ row.typeLabel }}</td>
-                                <th scope="row" style="padding: 0.5rem; text-align: left; vertical-align: top;">
-                                    <span aria-hidden="true" cms-condition="row.kind == 'variant'">↳ </span>
-                                    <span aria-hidden="true" cms-condition="row.kind == 'feature'">↳ ↳ </span>
-                                    <strong>{{ row.name }}</strong>
-                                    <small style="display: block;">{{ row.code }}</small>
-                                    <small style="display: block;" cms-condition="row.description">{{ row.description }}</small>
-                                </th>
-                                <td style="padding: 0.5rem; vertical-align: top;">
-                                    <span cms-condition="row.providerName">{{ row.providerName }}</span>
-                                    <span cms-condition="!row.providerName">—</span>
-                                </td>
-                                <td style="padding: 0.5rem; vertical-align: top;">{{ row.availabilityLabel }}</td>
-                                <td style="padding: 0.5rem; vertical-align: top;">
-                                    <span cms-condition="row.kind == 'module'">—</span>
-                                    <span cms-condition="row.pricingMode == 'included'">Included</span>
-                                    <strong data-sales-money data-amount-cents="{{ row.unitAmountCents }}" data-currency="{{ row.currency }}" cms-condition="row.pricingMode == 'fixed'">—</strong>
-                                    <span cms-condition="row.pricingMode == 'quote'">On request</span>
-                                </td>
-                                <td style="padding: 0.5rem; vertical-align: top;">
-                                    <span cms-condition="row.requirements.length == 0">—</span>
-                                    <ul style="margin: 0; padding-inline-start: 1rem;" cms-condition="row.requirements.length > 0">
-                                        <li cms-repeat="row.requirements as requirement">{{ requirement.requiredName }}</li>
-                                    </ul>
-                                </td>
-                                <td style="padding: 0.5rem; vertical-align: top;">
-                                    <basic-stack gap="xs" cms-condition="row.kind == 'module'">
-                                        <basic-button data-sales-module-toggle data-module-id="{{ row.moduleId }}" type="button" appearance="outlined" aria-expanded="false">Configure</basic-button>
-                                        <small data-sales-module-selected-label hidden>Selected</small>
-                                    </basic-stack>
-                                    <basic-checkbox value="{{ row.id }}" data-sales-variant data-module-id="{{ row.moduleId }}" data-catalog-id="{{ row.id }}" cms-condition="row.kind == 'variant'">Select</basic-checkbox>
-                                    <span cms-condition="row.kind == 'feature' && row.availability == 'included'">Automatic</span>
-                                    <basic-checkbox disabled value="{{ row.id }}" data-sales-feature data-module-id="{{ row.moduleId }}" data-variant-id="{{ row.variantId }}" data-catalog-id="{{ row.id }}" cms-condition="row.kind == 'feature' && row.availability == 'optional'">Add</basic-checkbox>
-                                </td>
-                            </tr>
+                    <div class="sales-catalog-table-scroll" role="region" aria-label="Published service catalogue" tabindex="0">
+                        <table class="sales-catalog-table">
+                            <caption>Choose one variant per module, then add any optional features.</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Service</th>
+                                    <th scope="col">Provider</th>
+                                    <th scope="col">Price</th>
+                                    <th scope="col">Prerequisites</th>
+                                    <th scope="col">Selection</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    data-sales-catalog-row
+                                    data-sales-row-kind="{{ row.kind }}"
+                                    data-sales-module-id="{{ row.moduleId }}"
+                                    data-sales-variant-id="{{ row.variantId }}"
+                                    data-sales-availability="{{ row.availability }}"
+                                    data-sales-search-text="{{ row.name }} {{ row.code }} {{ row.description }} {{ row.providerName }} {{ row.availabilityLabel }}"
+                                    cms-repeat="catalogData.selectionRows as row"
+                                >
+                                    <th class="sales-catalog-cell sales-service-cell" data-label="Service" scope="row">
+                                        <div class="sales-service-heading">
+                                            <span class="sales-kind-badge">{{ row.typeLabel }}</span>
+                                            <span class="sales-availability-badge">{{ row.availabilityLabel }}</span>
+                                            <button
+                                                data-sales-module-toggle
+                                                data-module-id="{{ row.moduleId }}"
+                                                data-sales-collapsed-label="Configure"
+                                                data-sales-expanded-label="Collapse"
+                                                type="button"
+                                                aria-expanded="false"
+                                                cms-condition="row.kind == 'module'"
+                                            >
+                                                <span class="sales-module-toggle-icon" aria-hidden="true">›</span>
+                                                <span data-sales-module-toggle-label>Configure</span>
+                                            </button>
+                                        </div>
+                                        <strong class="sales-catalog-service">{{ row.name }}</strong>
+                                        <small>{{ row.code }}</small>
+                                        <small cms-condition="row.description">{{ row.description }}</small>
+                                        <small
+                                            data-sales-module-counts
+                                            data-sales-variant-singular="variant"
+                                            data-sales-variant-plural="variants"
+                                            data-sales-feature-singular="feature"
+                                            data-sales-feature-plural="features"
+                                            cms-condition="row.kind == 'module'"
+                                        ></small>
+                                    </th>
+                                    <td class="sales-catalog-cell" data-label="Provider">
+                                        <span cms-condition="row.kind == 'variant' && row.providerName">{{ row.providerName }}</span>
+                                        <span cms-condition="row.kind != 'variant' || !row.providerName">—</span>
+                                    </td>
+                                    <td class="sales-catalog-cell sales-price-cell" data-label="Price">
+                                        <span cms-condition="row.kind == 'module'">—</span>
+                                        <span cms-condition="row.pricingMode == 'included'">Included</span>
+                                        <strong data-sales-money data-amount-cents="{{ row.unitAmountCents }}" data-currency="{{ row.currency }}" cms-condition="row.pricingMode == 'fixed'">—</strong>
+                                        <span cms-condition="row.pricingMode == 'quote'">On request</span>
+                                    </td>
+                                    <td class="sales-catalog-cell" data-label="Prerequisites">
+                                        <span cms-condition="row.requirements.length == 0">—</span>
+                                        <ul cms-condition="row.requirements.length > 0">
+                                            <li cms-repeat="row.requirements as requirement">{{ requirement.requiredName }}</li>
+                                        </ul>
+                                    </td>
+                                    <td class="sales-catalog-cell sales-choice-cell" data-label="Selection">
+                                        <small data-sales-module-selected-label hidden cms-condition="row.kind == 'module'">Selected</small>
+                                        <basic-checkbox value="{{ row.id }}" data-sales-variant data-module-id="{{ row.moduleId }}" data-catalog-id="{{ row.id }}" cms-condition="row.kind == 'variant'">Select</basic-checkbox>
+                                        <span cms-condition="row.kind == 'feature' && row.availability == 'included'">Automatic</span>
+                                        <basic-checkbox disabled value="{{ row.id }}" data-sales-feature data-module-id="{{ row.moduleId }}" data-variant-id="{{ row.variantId }}" data-catalog-id="{{ row.id }}" cms-condition="row.kind == 'feature' && row.availability == 'optional'">Add</basic-checkbox>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </basic-stack>
             </section>
 
-            <basic-stack gap="sm">
+            <basic-stack class="sales-form-section" gap="sm">
                 <basic-card data-sales-custom-request appearance="outlined" cms-repeat="proposalData.proposal.draftVersion.items as item" cms-condition="item.kind == 'custom'">
                     <strong slot="title">Specific request</strong>
                     <basic-input data-sales-request-label label="Request label" value="{{ item.label }}" required></basic-input>

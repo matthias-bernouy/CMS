@@ -1,8 +1,11 @@
 <sales-client-directory source-id="sales-configurator" client-limit="100" cms-source="/.cms/sources/sales-configurator/listMyClients?limit=100 as clientsData" cms-reload-on="sales-clients:changed">
-    <header>
-        <small>Client directory</small>
-        <h2>Manage your clients</h2>
-        <p>Create complete customer profiles, then select one to update it without leaving the page.</p>
+    <header class="sales-section-header" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; justify-content: space-between;">
+        <div>
+            <small>Client directory</small>
+            <h2>Manage your clients</h2>
+            <p>Create complete customer profiles, then select one to update it without leaving the page.</p>
+        </div>
+        <basic-button data-sales-client-create-open type="button" appearance="filled" cms-condition="$source.empty || $source.loaded">Nouveau client</basic-button>
     </header>
 
     <basic-stack gap="md" cms-condition="$source.loading">
@@ -12,13 +15,13 @@
 
     <basic-toast role="alert" cms-condition="$source.error">Your clients could not be loaded. Try again in a moment.</basic-toast>
 
-    <basic-card data-sales-client-empty cms-condition="$source.empty || $source.loaded && clientsData.items.length == 0">
+    <basic-card class="sales-client-empty" cms-condition="$source.empty || $source.loaded && clientsData.items.length == 0">
         <strong slot="title">No clients yet</strong>
         <span slot="description">Create the first customer profile with the New client button.</span>
     </basic-card>
 
-    <div data-sales-client-list data-sales-client-table-scroll role="region" aria-label="Clients enregistrés" tabindex="0" style="max-width: 100%; overflow-x: auto;" cms-condition="$source.loaded && clientsData.items.length > 0">
-        <table data-sales-client-table style="width: 100%; border-collapse: collapse;">
+    <div class="sales-client-list sales-client-table-scroll" role="region" aria-label="Clients enregistrés" tabindex="0" style="max-width: 100%; overflow-x: auto;" cms-condition="$source.loaded && clientsData.items.length > 0">
+        <table class="sales-client-table" style="width: 100%; border-collapse: collapse;">
             <caption>Clients enregistrés</caption>
             <thead>
                 <tr>
@@ -30,24 +33,24 @@
                 </tr>
             </thead>
             <tbody>
-                <tr data-sales-client-row cms-repeat="clientsData.items as client">
-                    <td data-sales-client-cell data-label="Entreprise / SIRET">
+                <tr class="sales-client-row" cms-repeat="clientsData.items as client">
+                    <td class="sales-client-cell" data-label="Entreprise / SIRET">
                         <strong>{{ client.companyName }}</strong>
                         <small cms-condition="client.companyRegistrationNumber">{{ client.companyRegistrationNumber }}</small>
                     </td>
-                    <td data-sales-client-cell data-label="Contact / fonction">
+                    <td class="sales-client-cell" data-label="Contact / fonction">
                         <span>{{ client.contactName }}</span>
                         <small cms-condition="client.contactJobTitle">{{ client.contactJobTitle }}</small>
                     </td>
-                    <td data-sales-client-cell data-label="Coordonnées">
+                    <td class="sales-client-cell" data-label="Coordonnées">
                         <a href="mailto:{{ client.contactEmail }}">{{ client.contactEmail }}</a>
                         <a href="tel:{{ client.contactPhone }}" cms-condition="client.contactPhone">{{ client.contactPhone }}</a>
                     </td>
-                    <td data-sales-client-cell data-label="Ville / Pays">
+                    <td class="sales-client-cell" data-label="Ville / Pays">
                         <span cms-condition="client.postalCode || client.city">{{ client.postalCode }} {{ client.city }}</span>
                         <small cms-condition="client.country">{{ client.country }}</small>
                     </td>
-                    <td data-sales-client-cell data-label="Action">
+                    <td class="sales-client-cell" data-label="Action">
                         <basic-button data-sales-client-open data-client-id="{{ client.id }}" type="button" appearance="outlined" aria-pressed="false">Modifier</basic-button>
                     </td>
                 </tr>
@@ -55,15 +58,14 @@
         </table>
     </div>
 
-    <div data-sales-client-create-region cms-condition="$source.empty || $source.loaded">
-        <basic-button data-sales-client-create-open type="button" appearance="filled">Nouveau client</basic-button>
+    <div class="sales-client-create-region" cms-condition="$source.empty || $source.loaded">
         <dialog data-sales-client-create-dialog aria-label="Nouveau client" style="width: min(42rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto;">
             <header>
                 <h3>Nouveau client</h3>
                 <p>Company, contact, and email are required. The other details remain optional.</p>
             </header>
             <form data-sales-client-create-form cms-source="/.cms/sources/sales-configurator/saveMyClient as clientResult" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="true" cms-source-publish="sales-clients:changed">
-                <div data-sales-client-dialog-fields style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem;">
+                <div class="sales-client-dialog-fields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem;">
                     <basic-stack gap="md">
                         <strong>Company</strong>
                         <basic-input name="companyName" label="Company name" autocomplete="organization" required></basic-input>
@@ -86,15 +88,15 @@
                 <basic-toast role="status" cms-condition="$source.loading">Saving the client…</basic-toast>
                 <basic-toast role="alert" cms-condition="$source.error">The client could not be created.</basic-toast>
                 <basic-toast role="status" cms-condition="$source.loaded">Client created.</basic-toast>
-                <basic-stack direction="row" gap="sm" justify-content="end" wrap="true">
-                    <basic-button data-sales-client-dialog-close type="button" appearance="text">Annuler</basic-button>
+                <basic-stack class="sales-dialog-actions" direction="row" gap="sm" justify-content="end" wrap="true">
+                    <basic-button data-sales-client-dialog-close type="button" appearance="ghost">Annuler</basic-button>
                     <basic-button type="submit" appearance="filled">Create client</basic-button>
                 </basic-stack>
             </form>
         </dialog>
     </div>
 
-    <div data-sales-client-detail-region cms-condition="$source.loaded && clientsData.items.length > 0">
+    <div class="sales-client-detail-region" cms-condition="$source.loaded && clientsData.items.length > 0">
         <div data-sales-client-detail-mount></div>
         <template data-sales-client-detail-template>
             <dialog data-sales-client-detail-source data-sales-client-edit-dialog aria-label="Modifier le client" style="width: min(42rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto;">
@@ -111,7 +113,7 @@
                     </header>
                     <form data-sales-client-edit-form>
                         <input type="hidden" name="id" value="{{ clientData.id }}">
-                        <div data-sales-client-dialog-fields style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem;">
+                        <div class="sales-client-dialog-fields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem;">
                             <basic-stack gap="md">
                                 <strong>Company</strong>
                                 <basic-input name="companyName" label="Company name" autocomplete="organization" value="{{ clientData.companyName }}" required></basic-input>
@@ -134,13 +136,13 @@
                         <basic-toast role="status" cms-condition="$source.loading">Saving changes…</basic-toast>
                         <basic-toast role="alert" cms-condition="$source.error">The client could not be updated.</basic-toast>
                         <basic-toast role="status" cms-condition="$source.loaded">Client updated.</basic-toast>
-                        <basic-stack direction="row" gap="sm" justify-content="end" wrap="true">
-                            <basic-button data-sales-client-dialog-close type="button" appearance="text">Annuler</basic-button>
+                        <basic-stack class="sales-dialog-actions" direction="row" gap="sm" justify-content="end" wrap="true">
+                            <basic-button data-sales-client-dialog-close type="button" appearance="ghost">Annuler</basic-button>
                             <basic-button type="submit" appearance="filled">Save client</basic-button>
                         </basic-stack>
                     </form>
                 </basic-stack>
-                <basic-button data-sales-client-dialog-close type="button" appearance="text" cms-condition="$source.loading || $source.error || $source.empty">Annuler</basic-button>
+                <basic-button data-sales-client-dialog-close type="button" appearance="ghost" cms-condition="$source.loading || $source.error || $source.empty">Annuler</basic-button>
             </dialog>
         </template>
     </div>

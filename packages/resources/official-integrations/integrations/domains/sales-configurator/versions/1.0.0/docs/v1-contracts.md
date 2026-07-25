@@ -114,7 +114,7 @@ the delegated detail read, and both create/update submissions are binding-owned.
 The controller validates and encodes the selected numeric id before configuring
 the nested `getMyClient` source; it never reads the page URL or calls an API.
 The directory is a native table inside the focusable
-`[data-sales-client-table-scroll]` overflow region. Cells expose `data-label`
+`.sales-client-table-scroll` overflow region. Cells expose `data-label`
 for optional site-level compact/mobile styling without requiring a new bloc or
 runtime primitive.
 Creation and editing use compact native dialogs. The edit dialog remains inside
