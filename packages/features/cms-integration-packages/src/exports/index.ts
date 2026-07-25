@@ -6,6 +6,7 @@ export {
     type IntegrationPackageLimits,
     type IntegrationPackageValidationOptions,
 } from "../interfaces/envelope";
+export type { IntegrationPackageSource, ResolvedIntegrationPackage } from "../interfaces/source";
 export {
     DEFAULT_INTEGRATION_PACKAGE_LIMITS,
     resolveIntegrationPackageLimits,
