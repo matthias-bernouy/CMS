@@ -16,6 +16,14 @@
                 "decreaseAuthorizationId": "$steps.terms.platformPayoutDecreaseAuthorizationId",
                 "delayDaysOverride": "$steps.terms.payoutDelayDays",
                 "reason": "Commerce protected seller liabilities"
+            },
+            "onError": {
+                "propagate": [
+                    {
+                        "sourceStatus": 409,
+                        "status": 409
+                    }
+                ]
             }
         }
     },

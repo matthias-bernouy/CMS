@@ -15,6 +15,7 @@ import { errorMessage, numberAt, objectAt, stripUndefined } from "../../shared/d
 import { protectedPlatformPayoutInterval } from "../../shared/runtime.ts";
 import type { JsonRecord } from "../../shared/types.ts";
 import { readPlatformPayoutProtectionInput } from "./platform-protection-input.ts";
+import { claimPlatformPayoutProtectionLease } from "./platform-protection-lease.ts";
 
 type PlatformPayoutProtectionDependencies = {
     platformPayoutControl(result: JsonRecord): PlatformPayoutControlRow;
@@ -35,11 +36,11 @@ export function createConfigurePlatformPayoutProtection({
             reason,
         } = await readPlatformPayoutProtectionInput(request);
         const owner = crypto.randomUUID();
-        let claim = await platformPayoutControlRpc("claim_platform_payout_protection", {
-            p_owner: owner,
-            p_required_minimum_amount: minimumBalanceEur ?? 0,
-            p_liability_revision: liabilityRevision,
-            p_decrease_authorization_id: decreaseAuthorizationId,
+        let claim = await claimPlatformPayoutProtectionLease({
+            owner,
+            requiredMinimumAmount: minimumBalanceEur ?? 0,
+            liabilityRevision,
+            decreaseAuthorizationId,
         });
         if (claim.claimed !== true) {
             throw new HttpError(
