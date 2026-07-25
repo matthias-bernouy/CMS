@@ -4,6 +4,7 @@ import { assertPackageDigest, initializeCacheLayout, type IntegrationPackageCach
 import { publishStagedPackage, validOrMissing } from "./publication";
 import { validateReferenceCoordinate } from "./publication/referenceDocument";
 import { getPackageReference, recordPackageReference } from "./publication/references";
+import { prepareIntegrationPackage } from "../writer/prepare";
 import type {
     ExpectedIntegrationPackageIdentity,
     FsIntegrationPackageCacheConfig,
@@ -12,7 +13,7 @@ import type {
     MaterializedIntegrationPackage,
 } from "./types";
 import { IntegrationPackageCacheCorruptionError } from "./types";
-import { prepareIntegrationPackage, writeStagedPackage } from "./writing";
+import { writeStagedPackage } from "./writing";
 import { verifyCachedPackage } from "./verification";
 
 const DEFAULT_STAGING_SAFETY_AGE_MS = 5 * 60 * 1_000;

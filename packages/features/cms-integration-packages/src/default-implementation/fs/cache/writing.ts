@@ -1,44 +1,13 @@
 import { constants } from "node:fs";
 import { chmod, mkdir, mkdtemp, open, utimes } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { canonicalJsonBytes } from "../../../core/canonical/canonicalizeJson";
-import { sha256Hex } from "../../../core/digest";
 import { decodeIntegrationPackageFile } from "../../../core/envelope/encoding";
-import { validateIntegrationPackageEnvelope } from "../../../core/envelope/validate";
 import type { IntegrationPackageLimits } from "../../../interfaces/envelope";
-import type { ResolvedIntegrationPackage } from "../../../interfaces/source";
+import { prepareIntegrationPackage, type PreparedIntegrationPackage } from "../writer/prepare";
 import { removeCacheTree } from "./cleanup";
 import { assertWithinCache } from "./paths";
 import type { IntegrationPackageCacheLayout } from "./paths";
-import type { ExpectedIntegrationPackageIdentity } from "./types";
 import { verifyStagedPackage } from "./verification";
-
-export type PreparedIntegrationPackage = ResolvedIntegrationPackage & {
-    readonly canonicalBytes: Uint8Array;
-};
-
-export async function prepareIntegrationPackage(
-    input: ResolvedIntegrationPackage,
-    expected: ExpectedIntegrationPackageIdentity,
-    limits: Partial<IntegrationPackageLimits> | undefined,
-): Promise<PreparedIntegrationPackage> {
-    const envelope = validateIntegrationPackageEnvelope(input.envelope, { limits });
-    const canonicalBytes = canonicalJsonBytes(envelope);
-    if (!equalBytes(canonicalBytes, input.canonicalBytes)) {
-        throw new Error("Integration package source bytes are not the canonical envelope");
-    }
-    const digest = await sha256Hex(canonicalBytes);
-    if (input.digest !== digest || (expected.digest !== undefined && expected.digest !== digest)) {
-        throw new Error("Integration package source digest does not match canonical content");
-    }
-    if (expected.kind !== undefined && envelope.kind !== expected.kind) {
-        throw new Error(`Integration package kind must be ${JSON.stringify(expected.kind)}`);
-    }
-    if (expected.version !== undefined && envelope.version !== expected.version) {
-        throw new Error(`Integration package version must be ${JSON.stringify(expected.version)}`);
-    }
-    return { envelope, canonicalBytes, digest };
-}
 
 export async function writeStagedPackage(
     layout: IntegrationPackageCacheLayout,
@@ -121,8 +90,4 @@ function deepestFirst(left: string, right: string): number {
 
 function comparePaths(left: [string, unknown], right: [string, unknown]): number {
     return left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0;
-}
-
-function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
-    return left.byteLength === right.byteLength && left.every((byte, index) => byte === right[index]);
 }

@@ -1,4 +1,5 @@
 import type { IntegrationPackageEnvelopeV1, IntegrationPackageLimits } from "../../../interfaces/envelope";
+export type { ExpectedIntegrationPackageIdentity } from "../writer/types";
 
 export const INTEGRATION_PACKAGE_CACHE_REFERENCE_SCHEMA = "cms.integration.package.reference.v1" as const;
 
@@ -32,12 +33,6 @@ export type FsIntegrationPackageCacheConfig = {
     repairLockStaleAgeMs?: number;
     now?: () => number;
     observe?: (event: IntegrationPackageCacheEvent) => void;
-};
-
-export type ExpectedIntegrationPackageIdentity = {
-    kind?: string;
-    version?: string;
-    digest?: string;
 };
 
 export class IntegrationPackageCacheCorruptionError extends Error {
