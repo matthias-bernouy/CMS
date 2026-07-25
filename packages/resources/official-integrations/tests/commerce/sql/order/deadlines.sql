@@ -17,7 +17,9 @@ from (values
     ('seller-response-due', '31000000-0000-4000-8000-000000000003'::uuid),
     ('seller-response-future', '31000000-0000-4000-8000-000000000004'::uuid),
     ('return-ship-due', '31000000-0000-4000-8000-000000000005'::uuid),
-    ('return-ship-future', '31000000-0000-4000-8000-000000000006'::uuid)
+    ('return-ship-future', '31000000-0000-4000-8000-000000000006'::uuid),
+    ('seller-handoff-due', '31000000-0000-4000-8000-000000000007'::uuid),
+    ('seller-handoff-declared', '31000000-0000-4000-8000-000000000008'::uuid)
 ) fixture(key, checkout_id);
 
 insert into commerce.orders (
@@ -40,20 +42,37 @@ from (values
     ('return-ship-due', '31000000-0000-4000-8000-000000000005'::uuid,
         '32000000-0000-4000-8000-000000000005'::uuid),
     ('return-ship-future', '31000000-0000-4000-8000-000000000006'::uuid,
-        '32000000-0000-4000-8000-000000000006'::uuid)
+        '32000000-0000-4000-8000-000000000006'::uuid),
+    ('seller-handoff-due', '31000000-0000-4000-8000-000000000007'::uuid,
+        '32000000-0000-4000-8000-000000000007'::uuid),
+    ('seller-handoff-declared', '31000000-0000-4000-8000-000000000008'::uuid,
+        '32000000-0000-4000-8000-000000000008'::uuid)
 ) fixture(key, checkout_id, public_id);
 
 insert into commerce.order_fulfillments (
-    order_id, status, seller_handoff_deadline, scan_grace_deadline
+    order_id, status, payment_confirmed_at, seller_handoff_deadline,
+    scan_grace_deadline, seller_handoff_declared_at
 )
-select order_row.id, 'label_created',
+select order_row.id,
+    case when order_row.order_number = 'DEADLINE-SELLER-HANDOFF-DECLARED'
+        then 'seller_handoff_declared' else 'label_created' end,
+    now() - interval '4 hours',
+    case
+        when order_row.order_number = 'DEADLINE-FULFILLMENT-DUE'
+            then now() - interval '3 hours'
+        when order_row.order_number in (
+            'DEADLINE-SELLER-HANDOFF-DUE', 'DEADLINE-SELLER-HANDOFF-DECLARED'
+        ) then now() - interval '1 hour'
+        else now() + interval '1 hour'
+    end,
     case when order_row.order_number = 'DEADLINE-FULFILLMENT-DUE'
-        then now() - interval '3 hours' else now() + interval '1 hour' end,
-    case when order_row.order_number = 'DEADLINE-FULFILLMENT-DUE'
-        then now() - interval '2 hours' else now() + interval '2 hours' end
+        then now() - interval '2 hours' else now() + interval '2 hours' end,
+    case when order_row.order_number = 'DEADLINE-SELLER-HANDOFF-DECLARED'
+        then now() - interval '90 minutes' end
 from commerce.orders order_row
 where order_row.order_number in (
-    'DEADLINE-FULFILLMENT-DUE', 'DEADLINE-FULFILLMENT-FUTURE'
+    'DEADLINE-FULFILLMENT-DUE', 'DEADLINE-FULFILLMENT-FUTURE',
+    'DEADLINE-SELLER-HANDOFF-DUE', 'DEADLINE-SELLER-HANDOFF-DECLARED'
 );
 
 insert into commerce.order_settlements (
@@ -63,7 +82,8 @@ insert into commerce.order_settlements (
 select order_row.id, 'held', 100, 0, 0
 from commerce.orders order_row
 where order_row.order_number in (
-    'DEADLINE-FULFILLMENT-DUE', 'DEADLINE-FULFILLMENT-FUTURE'
+    'DEADLINE-FULFILLMENT-DUE', 'DEADLINE-FULFILLMENT-FUTURE',
+    'DEADLINE-SELLER-HANDOFF-DUE', 'DEADLINE-SELLER-HANDOFF-DECLARED'
 );
 
 insert into commerce.marketplace_claims (
@@ -102,9 +122,10 @@ begin
     into event_kinds
     from jsonb_array_elements(first_run->'events') with ordinality item(value, ordinality);
     if first_run->>'runKey' <> 'order-deadlines-smoke'
-        or (first_run->>'processed')::integer <> 3
+        or (first_run->>'processed')::integer <> 4
         or event_kinds <> array[
-            'fulfillment_scan_grace', 'seller_response_deadline', 'return_ship_deadline'
+            'fulfillment_seller_handoff', 'fulfillment_scan_grace',
+            'seller_response_deadline', 'return_ship_deadline'
         ] then
         raise exception 'order deadlines: event order changed: %', first_run;
     end if;
@@ -131,6 +152,67 @@ begin
           and (fulfillment.status <> 'label_created' or settlement.status <> 'held')
     ) then
         raise exception 'order deadlines: fulfillment state changed';
+    end if;
+
+    if not exists (
+        select 1
+        from commerce.orders order_row
+        join commerce.order_fulfillments fulfillment on fulfillment.order_id = order_row.id
+        join commerce.order_settlements settlement on settlement.order_id = order_row.id
+        join commerce.financial_exceptions exception on exception.order_id = order_row.id
+        where order_row.order_number = 'DEADLINE-SELLER-HANDOFF-DUE'
+          and fulfillment.status = 'label_created'
+          and fulfillment.blocking_reason =
+              'seller_handoff_deadline_elapsed_without_declaration'
+          and settlement.status = 'held'
+          and exception.deduplication_key =
+              'deadline:seller-handoff:' || order_row.id
+          and exception.severity = 'medium'
+    ) or exists (
+        select 1
+        from commerce.orders order_row
+        join commerce.order_fulfillments fulfillment on fulfillment.order_id = order_row.id
+        join commerce.order_settlements settlement on settlement.order_id = order_row.id
+        where order_row.order_number = 'DEADLINE-SELLER-HANDOFF-DECLARED'
+          and (
+              fulfillment.status <> 'seller_handoff_declared'
+              or fulfillment.blocking_reason is not null
+              or settlement.status <> 'held'
+          )
+    ) then
+        raise exception 'order deadlines: seller handoff and scan grace were not separated';
+    end if;
+
+    perform commerce.record_order_fulfillment_projection(
+        (
+            select order_row.public_id
+            from commerce.orders order_row
+            where order_row.order_number = 'DEADLINE-SELLER-HANDOFF-DUE'
+        ),
+        'deadline-seller-handoff-carrier-recovery',
+        'carrier_accepted',
+        clock_timestamp(),
+        'deadline-seller-handoff-shipment',
+        null,
+        clock_timestamp(),
+        null
+    );
+    if not exists (
+        select 1
+        from commerce.orders order_row
+        join commerce.order_fulfillments fulfillment on fulfillment.order_id = order_row.id
+        join commerce.order_settlements settlement on settlement.order_id = order_row.id
+        join commerce.financial_exceptions exception on exception.order_id = order_row.id
+        where order_row.order_number = 'DEADLINE-SELLER-HANDOFF-DUE'
+          and fulfillment.status = 'carrier_accepted'
+          and fulfillment.blocking_reason is null
+          and settlement.status = 'held'
+          and exception.deduplication_key =
+              'deadline:seller-handoff:' || order_row.id
+          and exception.status = 'resolved'
+          and exception.resolved_by = 'trusted-carrier-acceptance'
+    ) then
+        raise exception 'order deadlines: trusted carrier recovery did not clear the seller block';
     end if;
 
     if (select count(*)
@@ -169,10 +251,10 @@ begin
             where order_row.order_number like 'DEADLINE-%') <> 2
         or (select count(*) from commerce.audit_events audit
             join commerce.orders order_row on order_row.id = audit.order_id
-            where order_row.order_number like 'DEADLINE-%') <> 3
+            where order_row.order_number like 'DEADLINE-%') <> 5
         or (select count(*) from commerce.outbox_events outbox
             join commerce.orders order_row on order_row.id = outbox.order_id
-            where order_row.order_number like 'DEADLINE-%') <> 3 then
+            where order_row.order_number like 'DEADLINE-%') <> 5 then
         raise exception 'order deadlines: replay was not idempotent: %', replay;
     end if;
 end;

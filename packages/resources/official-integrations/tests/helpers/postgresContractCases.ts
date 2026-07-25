@@ -50,6 +50,17 @@ export function postgresContractConfiguration(packageRoot: string): {
                 "commerce/protected/settlement",
                 ["run_protected_settlement_contract=true", "allow_protected_settlement_schema_reset=true"],
             ),
+            {
+                bundle: "commerce",
+                id: "commerce-protected-deadlines",
+                label: "Commerce protected order deadlines",
+                steps: [
+                    step("commerce/protected", "deadlines/contracts.pg.sql", [
+                        "run_protected_deadline_contract=true",
+                        "allow_protected_deadline_schema_reset=true",
+                    ]),
+                ],
+            },
             contract("commerce-media", "Commerce media lifecycle", "commerce", "commerce/selling/media", [
                 "allow_commerce_media_schema_reset=true",
             ]),

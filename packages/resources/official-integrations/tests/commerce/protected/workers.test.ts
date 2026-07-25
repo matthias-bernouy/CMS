@@ -32,12 +32,28 @@ describe("commerce 1.0.0 protected workers", () => {
         const schema = await loadSupabaseSchemaSql(integrationRoot);
 
         expect(schema).toContain("create or replace function commerce.process_due_order_deadlines");
+        expect(schema).toContain("payment_confirmed_at timestamptz");
+        expect(schema).toContain("v_payment_confirmed_at := coalesce(");
+        expect(schema).toContain("clock_timestamp()");
+        expect(schema).toContain(
+            "v_payment_confirmed_at\n                                + make_interval(hours => v_protection.seller_handoff_hours)",
+        );
+        expect(schema).toContain(
+            "v_protection.seller_handoff_hours\n                                    + v_protection.scan_grace_hours",
+        );
         expect(schema).toContain("for update of order_row, settlement skip locked");
         expect(schema).toContain("commerce.ensure_payment_cancellation_request");
         expect(schema).toContain("payment_deadline_provider_cancellation_pending");
         expect(schema).toContain("provider cancellation must be confirmed before inventory restoration");
         expect(schema).not.toContain("v_attempt.status in ('failed', 'cancelled')");
         expect(schema).toContain("Missing scans without an eligible cancellation never imply a refund");
+        expect(schema).toContain("The seller handoff deadline and carrier scan grace are separate facts");
+        expect(schema).toContain("seller_handoff_deadline_elapsed_without_declaration");
+        expect(schema).toContain("'kind', 'fulfillment_seller_handoff'");
+        expect(schema).toContain("'outcome', 'blocked_until_carrier_scan'");
+        expect(schema).toContain("and fulfillment.payment_confirmed_at is not null");
+        expect(schema).toContain("when blocking_reason = 'seller_handoff_deadline_elapsed_without_declaration'");
+        expect(schema).toContain("resolved_by = 'trusted-carrier-acceptance'");
         expect(schema).toContain("manual review is required before any financial decision");
         expect(schema).toContain("review_order_cancellation_as(");
         expect(schema).toContain("v_candidate.id, 'approved', 'system', 'deadline-worker:'");
