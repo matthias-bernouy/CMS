@@ -22,3 +22,9 @@ export {
     type IntegrationPackageCacheReference,
     type MaterializedIntegrationPackage,
 } from "./cache";
+export {
+    type ImmutableIntegrationPackageIdentity,
+    type WriteImmutableIntegrationPackageDirectoryOptions,
+    type WrittenImmutableIntegrationPackageDirectory,
+    writeImmutableIntegrationPackageDirectory,
+} from "./writer";
