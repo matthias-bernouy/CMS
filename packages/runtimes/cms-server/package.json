@@ -25,6 +25,7 @@
         "@bernouy/cms-dashboards":  "workspace:*",
         "@bernouy/cms-relations":   "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
+        "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-notifications": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-official-integrations": "workspace:*",

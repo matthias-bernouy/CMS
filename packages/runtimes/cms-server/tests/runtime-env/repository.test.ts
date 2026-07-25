@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readRuntimeEnv } from "../src/runtimeEnv";
+import { readRuntimeEnv } from "../../src/runtimeEnv";
 
 describe("repository runtime environment", () => {
     test("keeps download protection explicitly disabled for bare processes", () => {

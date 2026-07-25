@@ -19,6 +19,8 @@ export function surfaceMountFixtures() {
             CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: true,
             CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: true,
             CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: true,
+            CMS_HTTP_CLIENT_ADDRESS_MODE: "trusted-proxy",
+            CMS_HTTP_TRUSTED_PROXY_HOPS: 1,
         },
         analyticsVisitorSecret: "analytics-secret",
         core: {
@@ -37,6 +39,7 @@ export function surfaceMountFixtures() {
             pats: token("pats"),
             credentials: token("credentials"),
             roles: token("roles"),
+            repositoryPackageDownloadRateLimit: token("repository-package-download-rate-limit"),
             db: { databaseName: "cms-test" },
         },
         features: {
@@ -57,6 +60,7 @@ export function surfaceMountFixtures() {
         },
         integrations: {
             integrationRepositoryCatalog: token("repository-catalog"),
+            integrationRepositoryPackages: token("repository-packages"),
             integrationCatalog: token("integration-catalog"),
             integrationConnectorDeployers: [token("deployer")],
             integrationProvisioners: [token("provisioner")],

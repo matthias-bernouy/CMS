@@ -7,6 +7,7 @@ import {
     InMemoryUsersRepository,
 } from "@bernouy/cms-auth";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
+import { FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
@@ -87,7 +88,7 @@ describe("production runtime services", () => {
         ).rejects.toThrow(/Invalid CMS_ADMIN_PASSWORD for first admin bootstrap/);
     });
 
-    test("selects the remote catalog and forwards only allow-listed function secrets", () => {
+    test("selects the remote catalog and forwards only allow-listed function secrets", async () => {
         const services = createProductionIntegrationServices({
             providerRepository: {} as never,
             secrets: {} as never,
@@ -101,6 +102,14 @@ describe("production runtime services", () => {
         });
 
         expect(services.integrationCatalog).toBeInstanceOf(HttpIntegrationDefinitionRepository);
+        expect(services.integrationRepositoryPackages).toBeInstanceOf(FsIntegrationPackageSource);
+        const embeddedPackage = await services.integrationRepositoryPackages.getPackage("commerce", "1.0.0");
+        expect(embeddedPackage?.envelope).toMatchObject({
+            kind: "commerce",
+            version: "1.0.0",
+            releaseNotes: "README.md",
+        });
+        expect(embeddedPackage?.digest).toMatch(/^[a-f0-9]{64}$/);
         expect((services.integrationCatalog as unknown as { baseUrl: string }).baseUrl).toBe(
             "https://integrations.example.test/catalog",
         );

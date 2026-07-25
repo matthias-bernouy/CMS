@@ -3,6 +3,7 @@ import type {
     IntegrationDefinitionRepository,
     IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
+import { FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
@@ -22,6 +23,9 @@ export function createLocalIntegrationServices(siteDir: string, repositoryUrl: s
         }),
     ];
     const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+    const integrationRepositoryPackages = new FsIntegrationPackageSource({
+        locate: (kind, version) => integrationRepositoryCatalog.locateExactVersion(kind, version),
+    });
     const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
     const remoteRepositoryUrl = process.env.P9R_INTEGRATION_REPOSITORY_URL?.trim();
     const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository(
@@ -32,6 +36,7 @@ export function createLocalIntegrationServices(siteDir: string, repositoryUrl: s
         integrationConnectorDeployers,
         integrationProvisioners,
         integrationRepositoryCatalog,
+        integrationRepositoryPackages,
         integrationCatalog,
     };
 }

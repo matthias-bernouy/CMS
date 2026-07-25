@@ -125,11 +125,9 @@ describe("production surface mounting", () => {
             sourceTrustedConnectorTarget: expect.any(Function),
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
-
-        expect(repositoryConfig).toEqual({
-            runner: { basePath: "/.cms/repository", owner: "delivery" },
-            integrationCatalog: options.integrations.integrationRepositoryCatalog,
-        });
+        expect(repositoryConfig?.runner).toEqual({ basePath: "/.cms/repository", owner: "delivery" });
+        expect(repositoryConfig?.integrationCatalog).toBe(options.integrations.integrationRepositoryCatalog);
+        expect(repositoryConfig?.integrationPackages).toBe(options.integrations.integrationRepositoryPackages);
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],

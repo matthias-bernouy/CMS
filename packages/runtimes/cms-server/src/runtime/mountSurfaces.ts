@@ -4,6 +4,7 @@ import type { ProductionAuthentication } from "./auth";
 import type { ProductionIntegrationServices } from "./integrations";
 import type { CoreStores } from "./stores/core";
 import type { FeatureStores } from "./stores/features";
+import { productionRepositoryReadConfig } from "./repositoryReads";
 import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
@@ -110,10 +111,12 @@ export async function mountProductionSurfaces(
     await controlCms.ready;
 
     const deliveryRunner = new runtime.Runner();
+    const repositoryReads = productionRepositoryReadConfig(env, integrations, core, runtime.log);
     deliveryRunner.group("/.cms/repository", (repositoryRunner) => {
         new runtime.Repository({
             runner: repositoryRunner,
             integrationCatalog: integrations.integrationRepositoryCatalog,
+            ...repositoryReads,
         });
     });
     new runtime.Delivery({

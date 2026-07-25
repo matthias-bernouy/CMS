@@ -5,6 +5,7 @@ import { DeliveryCms } from "@bernouy/cms-delivery";
 import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { RepositoryCms } from "@bernouy/cms-repository";
 import { BunRunner } from "@bernouy/http-runner";
+import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { startDevScheduledTriggers } from "../../dev-server/runtime/scheduledTriggers";
 import { createLocalEndpointPerformance } from "../../dev-server/runtime/endpointPerformance";
 import { createLocalSourceImageComposition } from "../../dev-server/runtime/sourceImages";
@@ -120,10 +121,16 @@ export async function startLocalServers(options: ServerOptions) {
     runner.start(flags.port);
 
     const deliveryRunner = new BunRunner();
+    const repositoryPackageDownloadRateLimit = new InMemoryRateLimiter({ limit: 60, windowSeconds: 60 });
     deliveryRunner.group("/.cms/repository", (repositoryRunner) => {
         new RepositoryCms({
             runner: repositoryRunner,
             integrationCatalog: services.integrationRepositoryCatalog,
+            integrationPackages: services.integrationRepositoryPackages,
+            packageDownloadProtection: {
+                clientAddressPolicy: { mode: "direct" },
+                rateLimiter: repositoryPackageDownloadRateLimit,
+            },
         });
     });
     const variantStore = new LocalFsCmsFilesBlob(`${options.siteDir}/.cms-variants`);

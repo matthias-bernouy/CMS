@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parsePort, readRuntimeEnv } from "../src/runtimeEnv";
+import { parsePort, readRuntimeEnv } from "../../src/runtimeEnv";
 
 const validEnv = () => ({
     CONTROL_PUBLIC_URL: "https://admin.example.com",

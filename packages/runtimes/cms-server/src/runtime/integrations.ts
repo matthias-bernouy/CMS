@@ -4,6 +4,7 @@ import type {
     IntegrationDefinitionRepository,
     IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
+import { FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
@@ -20,6 +21,9 @@ type IntegrationServiceOptions = {
 
 export function createProductionIntegrationServices(options: IntegrationServiceOptions) {
     const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+    const integrationRepositoryPackages = new FsIntegrationPackageSource({
+        locate: (kind, version) => integrationRepositoryCatalog.locateExactVersion(kind, version),
+    });
     const repositoryUrl = options.environment.P9R_INTEGRATION_REPOSITORY_URL?.trim();
     const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository(
         repositoryUrl || options.localRepositoryUrl,
@@ -35,6 +39,7 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
     const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
     return {
         integrationRepositoryCatalog,
+        integrationRepositoryPackages,
         integrationCatalog,
         integrationConnectorDeployers,
         integrationProvisioners,

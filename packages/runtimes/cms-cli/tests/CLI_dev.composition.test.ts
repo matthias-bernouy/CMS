@@ -50,6 +50,7 @@ describe("local CMS listener composition", () => {
     test("mounts repository reads only on Delivery and points loopback consumption at Delivery", async () => {
         const servers = await source();
         const services = await source("services.ts");
+        const integrations = await source("integrations.ts");
         const controlSection = servers.slice(servers.indexOf("const runner"), servers.indexOf("const deliveryRunner"));
         const deliverySection = servers.slice(servers.indexOf("const deliveryRunner"));
 
@@ -57,6 +58,11 @@ describe("local CMS listener composition", () => {
         expect(deliverySection).toContain('deliveryRunner.group("/.cms/repository"');
         expect(services).toContain("options.deliveryPort}/.cms/repository");
         expect(services).not.toContain("options.port}/.cms/repository");
+        expect(integrations).toContain("new FsIntegrationPackageSource");
+        expect(integrations).toContain("integrationRepositoryCatalog.locateExactVersion");
+        expect(deliverySection).toContain("new InMemoryRateLimiter({ limit: 60, windowSeconds: 60 })");
+        expect(deliverySection).toContain('clientAddressPolicy: { mode: "direct" }');
+        expect(deliverySection).toContain("integrationPackages: services.integrationRepositoryPackages");
     });
 
     test("coalesces repeated process shutdown signals", async () => {
