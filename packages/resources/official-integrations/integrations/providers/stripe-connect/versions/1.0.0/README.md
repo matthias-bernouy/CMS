@@ -345,6 +345,9 @@ concurrent higher aggregate before finalization, and never lowers a confirmed
 minimum automatically. An ambiguous update enters `manual_review`. There is no
 connector endpoint that manually pays out the platform balance. A privileged
 out-of-band manual or instant payout is a critical trust-boundary exception.
+Concurrent commands briefly wait for the active lease and then re-evaluate
+provider truth; persistent contention returns a retryable `409` before payment
+creation can call Stripe.
 
 The required platform amount remains an exact, revisioned Commerce aggregate.
 The provider minimum may safely overcover it: without a decrease authorization,

@@ -12,6 +12,11 @@ export type IntegrationImportResponse = {
     };
 };
 
+export type IntegrationPageLink = {
+    path: string;
+    title: string;
+};
+
 export function basePath(): string {
     const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
     return raw.replace(/\/+$/, "");
@@ -70,6 +75,14 @@ export async function rerunIntegrationInstallation(id: string): Promise<void> {
     await postJson(`${route("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id)}`, {});
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
+}
+
+export async function getPageLinks(): Promise<IntegrationPageLink[]> {
+    const response = await fetch(route("/api/page/links?visible=published"));
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+    return response.json() as Promise<IntegrationPageLink[]>;
 }
 
 async function postJson<T = unknown>(url: string, body: unknown): Promise<T> {

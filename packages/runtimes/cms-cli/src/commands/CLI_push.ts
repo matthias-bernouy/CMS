@@ -1,5 +1,6 @@
 import { getAccessToken } from "../credentials";
 import { runPages } from "../push/pages/run";
+import { runIntegrationPageDependencies } from "../push/pages/integrationDependencies";
 import { runTemplates } from "../push/templates/run";
 import { runSystem } from "../push/system/run";
 import { runFiles } from "../push/files/run";
@@ -9,12 +10,19 @@ import { runBlocs } from "../push/blocs/run";
 type Flags = { force: boolean; yes: boolean; dryRun: boolean; type: string; only: Set<string> | null };
 
 const TYPES = ["*", "system", "integrations", "files", "blocs", "templates", "pages"] as const;
-// Files (media) ship right after system so pages/templates that reference
-// `/.cms/files/<path>` resolve once the rest of the content lands. Integrations
-// ship right after system too because they generate source contracts referenced
-// at runtime via `/.cms/sources/*`.
-const ORDER = ["system", "integrations", "files", "blocs", "templates", "pages"] as const;
-type Stage = (typeof ORDER)[number];
+// Publish only page-link inputs before integrations. The complete page set stays
+// last so a failed integration cannot expose the rest of a site against missing
+// runtime sources or generated blocs.
+export const FULL_PUSH_ORDER = [
+    "system",
+    "files",
+    "blocs",
+    "templates",
+    "integration-pages",
+    "integrations",
+    "pages",
+] as const;
+type Stage = (typeof FULL_PUSH_ORDER)[number];
 
 function parseFlags(args: string[]): Flags {
     const f: Flags = { force: false, yes: false, dryRun: false, type: "*", only: null };
@@ -68,6 +76,8 @@ async function runStage(stage: Stage, args: string[], adminBase: URL, token: str
             return runBlocs(adminBase, token, flags);
         case "templates":
             return runTemplates(adminBase, token, flags);
+        case "integration-pages":
+            return runIntegrationPageDependencies(adminBase, token, flags);
         case "pages":
             return runPages(adminBase, token, flags);
     }
@@ -83,7 +93,7 @@ export default async function CLI_push(args: string[]) {
     const { adminBase, token } = await resolveAdmin();
     console.log(`→ Tenant   : ${adminBase.href.replace(/\/$/, "")}`);
 
-    const targets: readonly Stage[] = flags.type === "*" ? ORDER : [flags.type as Stage];
+    const targets: readonly Stage[] = flags.type === "*" ? FULL_PUSH_ORDER : [flags.type as Stage];
 
     for (const stage of targets) {
         if (targets.length > 1) {

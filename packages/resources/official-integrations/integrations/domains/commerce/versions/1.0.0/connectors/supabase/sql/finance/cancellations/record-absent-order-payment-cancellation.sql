@@ -1,5 +1,3 @@
-
-
 create or replace function commerce.record_absent_order_payment_cancellation(
     p_order_public_id uuid,
     p_provider_event_id text,
@@ -14,6 +12,7 @@ as $$
 declare
     v_order commerce.orders%rowtype;
     v_cancellation commerce.payment_cancellation_requests%rowtype;
+    v_attempt commerce.order_payment_attempts%rowtype;
     v_event_id bigint;
     v_idempotent_replay boolean;
     v_row_count integer;
@@ -23,31 +22,60 @@ begin
     if nullif(btrim(p_cancellation_request_id), '') is null then
         raise exception 'validation: cancellation request id is required';
     end if;
-    select * into v_order
-    from commerce.orders
-    where public_id = p_order_public_id
-    for update;
+    select * into v_order from commerce.orders
+    where public_id = p_order_public_id for update;
     if not found then raise exception 'not_found: order'; end if;
-    select * into v_cancellation
-    from commerce.payment_cancellation_requests
+    select * into v_cancellation from commerce.payment_cancellation_requests
     where order_id = v_order.id
-      and business_key = p_cancellation_request_id
-    for update;
+      and business_key = p_cancellation_request_id for update;
     if not found then raise exception 'conflict: payment cancellation request does not match Commerce authority'; end if;
     v_event_id := commerce.claim_provider_projection_event(
         'stripe', p_provider_event_id, v_order.id, 'payment.absent', p_occurred_at,
         jsonb_build_object(
             'cancellationRequestId', p_cancellation_request_id,
             'providerPaymentAbsent', true,
-            'snapshot', coalesce(p_provider_snapshot, '{}'::jsonb)
-        )
+            'snapshot', coalesce(p_provider_snapshot, '{}'::jsonb))
     );
     v_idempotent_replay := v_event_id is null;
-    if exists (
-        select 1 from commerce.order_payment_attempts attempt
-        where attempt.order_id = v_order.id
+    select * into v_attempt from commerce.order_payment_attempts
+    where order_id = v_order.id order by created_at desc, id desc limit 1 for update;
+    if found and (
+        v_attempt.provider <> 'stripe'
+        or v_attempt.provider_payment_id is not null
+        or v_attempt.provider_payment_intent_id is not null
+        or v_attempt.provider_charge_id is not null
+        or exists (
+            select 1 from commerce.order_payment_attempts
+            where order_id = v_order.id and id <> v_attempt.id
+        )
+        or v_attempt.status not in ('created', 'cancelled')
+        or (v_attempt.status = 'cancelled'
+            and not (v_attempt.provider_snapshot @> jsonb_build_object(
+                'providerPaymentAbsent', true,
+                'cancelledBeforeProviderCreation', true,
+                'cancellationRequestId', p_cancellation_request_id
+            )))
     ) then
         raise exception 'conflict: absent provider truth cannot finalize an order with a payment attempt';
+    end if;
+    if v_attempt.status = 'created' then
+        update commerce.order_payment_attempts set
+            status = 'cancelled',
+            cancelled_at = p_occurred_at,
+            provider_snapshot = provider_snapshot || jsonb_build_object(
+                'providerPaymentAbsent', true,
+                'cancelledBeforeProviderCreation', true,
+                'cancellationRequestId', p_cancellation_request_id
+            )
+        where id = v_attempt.id;
+        perform commerce.append_financial_event(
+            v_order.id, 'payment', v_attempt.id::text,
+            'payment_attempt_cancelled_before_provider_creation', 'provider', 'stripe',
+            'Provider confirmed that no payment was created',
+            jsonb_build_object('cancellationRequestId', p_cancellation_request_id),
+            'commerce.order.payment_attempt_cancelled_before_provider_creation',
+            'payment-attempt:' || v_attempt.id || ':cancelled-before-provider'
+        );
     end if;
     if v_cancellation.status not in ('requested', 'processing', 'completed') then
         raise exception 'conflict: payment cancellation is not awaiting absent provider truth';
@@ -64,18 +92,15 @@ begin
             'payment_cancellation_provider_absent', 'provider', 'stripe', null,
             jsonb_build_object(
                 'cancellationRequestId', p_cancellation_request_id,
-                'targetOrderStatus', v_cancellation.target_order_status
-            ),
+                'targetOrderStatus', v_cancellation.target_order_status),
             'commerce.order.payment_cancellation_absent',
             v_cancellation.business_key || ':provider-absent'
         );
     end if;
-    -- Re-apply terminal invariants even when an older deployment already marked
-    -- the cancellation completed before releasing its financial state.
+    -- Re-apply terminal invariants for legacy partially completed cancellations.
     perform commerce.restore_order_inventory(v_order.id);
     update commerce.orders
-    set status = v_cancellation.target_order_status,
-        version = version + 1,
+    set status = v_cancellation.target_order_status, version = version + 1,
         updated_at = now()
     where id = v_order.id and status = 'cancellation_pending';
     update commerce.order_fulfillments
@@ -101,19 +126,9 @@ begin
         version = version + 1,
         updated_at = now()
     where order_id = v_order.id
-      and (
-          status,
-          authorized_seller_amount,
-          seller_reserve_liability_remaining_amount,
-          platform_gross_remainder_amount,
-          manual_review_reason
-      ) is distinct from (
-          'released',
-          0::bigint,
-          0::bigint,
-          0::bigint,
-          null::text
-      );
+      and (status, authorized_seller_amount, seller_reserve_liability_remaining_amount,
+          platform_gross_remainder_amount, manual_review_reason)
+      is distinct from ('released', 0::bigint, 0::bigint, 0::bigint, null::text);
     get diagnostics v_row_count = row_count;
     v_platform_liability_changed := v_row_count > 0;
     v_seller_risk_changed := v_row_count > 0;
@@ -125,15 +140,9 @@ begin
     where order_id = v_order.id
       and exposure_key = 'reserve:' || v_order.id
       and exposure_type = 'reserve'
-      and (
-          recovered_amount,
-          status,
-          reason
-      ) is distinct from (
-          amount,
-          'recovered',
-          'Seller reserve released because the provider payment is absent'
-      );
+      and (recovered_amount, status, reason) is distinct from (
+          amount, 'recovered',
+          'Seller reserve released because the provider payment is absent');
     get diagnostics v_row_count = row_count;
     v_seller_risk_changed := v_seller_risk_changed or v_row_count > 0;
     if v_seller_risk_changed then
@@ -147,11 +156,9 @@ begin
     set status = 'resolved', resolved_at = now(), resolved_by = 'stripe-payment-absent'
     where deduplication_key = 'deadline:payment:' || v_order.id
       and status <> 'resolved';
-    insert into commerce.platform_payout_order_liabilities as liability (
-        order_id, lifecycle_status, risk_release_at
-    ) values (
-        v_order.id, 'released', null
-    ) on conflict (order_id) do update set
+    insert into commerce.platform_payout_order_liabilities as liability
+        (order_id, lifecycle_status, risk_release_at)
+    values (v_order.id, 'released', null) on conflict (order_id) do update set
         lifecycle_status = excluded.lifecycle_status,
         risk_release_at = excluded.risk_release_at,
         updated_at = now()
@@ -162,14 +169,11 @@ begin
     if v_platform_liability_changed then
         perform commerce.refresh_platform_payout_liability_delta(
             array[v_order.id],
-            'Provider-absent payment cancellation released prospective liability', null
-        );
+            'Provider-absent payment cancellation released prospective liability', null);
     end if;
     return jsonb_build_object(
-        'orderId', v_order.id,
-        'status', v_cancellation.status,
+        'orderId', v_order.id, 'status', v_cancellation.status,
         'providerPaymentAbsent', true,
-        'idempotentReplay', v_idempotent_replay
-    );
+        'idempotentReplay', v_idempotent_replay);
 end;
 $$;

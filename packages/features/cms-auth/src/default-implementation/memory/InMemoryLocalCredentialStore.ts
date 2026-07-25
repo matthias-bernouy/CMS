@@ -34,6 +34,15 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
     }
 
     async verify(email: string, password: string): Promise<Identity | null> {
+        const identity = await this.verifyPassword(email, password);
+        if (!identity) {
+            return null;
+        }
+        const rec = this._bySub.get(identity.sub);
+        return rec?.emailVerifiedAt === null ? null : identity;
+    }
+
+    async verifyPassword(email: string, password: string): Promise<Identity | null> {
         const sub = this._emailToSub.get(email.trim().toLowerCase());
         const rec = sub ? this._bySub.get(sub) : undefined;
         // Spend a verify's worth of time on an unknown email (timing parity).
@@ -42,9 +51,6 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
             return null;
         }
         if (!(await Bun.password.verify(password, rec.hash))) {
-            return null;
-        }
-        if (rec.emailVerifiedAt === null) {
             return null;
         }
         return { sub: rec.sub, email: rec.email };

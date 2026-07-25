@@ -6,6 +6,7 @@ export async function assertBlocContracts({ roles, importedBlocs }: IntegrationC
     expect((await roles.get(USER_ROLE))?.grants.map((grant) => grant.permission)).toEqual(
         expect.arrayContaining([
             "urn:system-functions:createPaymentForOrder",
+            "urn:system-functions:getPaymentLegalRequirements",
             "urn:system-functions:getStripePaymentClientConfig",
             "urn:system-functions:getPaymentForOrder",
             "urn:system-functions:refreshPaymentForOrder",
@@ -16,6 +17,9 @@ export async function assertBlocContracts({ roles, importedBlocs }: IntegrationC
     );
     expect(importedBlocs[0]?.viewJS).toContain("confirmPayment");
     expect(importedBlocs[0]?.viewJS).toContain("createPaymentForOrder");
+    expect(importedBlocs[0]?.viewJS).toContain("getPaymentLegalRequirements");
+    expect(importedBlocs[0]?.viewJS).toContain("acceptedLegalDocumentVersionIds");
+    expect(importedBlocs[0]?.viewJS).toContain("renderLegalRequirements");
     expect(importedBlocs[0]?.viewJS).toContain("refreshPaymentForOrder");
     expect(importedBlocs[0]?.viewJS).toContain("refreshPaymentUntilSettled");
     expect(importedBlocs[0]?.viewJS).toContain("PAYMENT_RECONCILIATION_POLL_TIMEOUT_MS = 60_000");
@@ -24,7 +28,9 @@ export async function assertBlocContracts({ roles, importedBlocs }: IntegrationC
     expect(importedBlocs[0]?.viewJS).not.toContain("charge_balance_transaction_expansion");
     expect(importedBlocs[0]?.viewJS).toContain('!["blocked", "reversed"].includes(settlement)');
     expect(importedBlocs[0]?.viewJS).toContain("this.paymentSubmissionLocked = true");
-    expect(importedBlocs[0]?.viewJS).toContain("this.paymentSubmissionLocked || !currentFormIsUsable");
+    expect(importedBlocs[0]?.viewJS).toContain(
+        "this.paymentSubmissionLocked || (!currentFormIsUsable && !legalAcceptanceCanRetry)",
+    );
     const transientReconciliationBranch =
         importedBlocs[0]?.viewJS.indexOf("if (payment?.reconciliationPending === true") ?? -1;
     const manualReviewBranch = importedBlocs[0]?.viewJS.indexOf('if (settlement === "manual_review")') ?? -1;

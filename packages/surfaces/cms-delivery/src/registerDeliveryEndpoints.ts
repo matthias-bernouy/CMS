@@ -15,7 +15,12 @@ import {
     serveFilesRequest,
     serveVariantRequest,
 } from "@bernouy/cms-files";
-import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
+import {
+    generateStyleEntry,
+    P9R_CACHE,
+    PUBLISHED_PAGE_SNAPSHOT_ROUTE,
+    servePublishedPageSnapshot,
+} from "@bernouy/cms-content";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
 import { registerDeliverySourceProxy } from "cms-delivery/core/sources/registerSourceProxy";
@@ -57,6 +62,9 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     runner.addEndpoint("GET", "/.cms/assets/component.js", (req) => ComponentServer(req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/cms-binding-core.js", (req) => BindingCoreServer(req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/favicon", (req) => FaviconServer(req, delivery));
+    runner.addEndpoint("GET", PUBLISHED_PAGE_SNAPSHOT_ROUTE, (req) =>
+        servePublishedPageSnapshot(delivery.repository, req),
+    );
 
     if (delivery.auth) {
         runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {

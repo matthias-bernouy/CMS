@@ -2,15 +2,20 @@ import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 
 export class CaptureRunner implements Runner {
     private readonly defaults: Map<string, RouteHandler>;
+    private readonly endpoints: Map<string, RouteHandler>;
 
     constructor(
         readonly basePath: string = "/",
         sharedDefaults?: Map<string, RouteHandler>,
+        sharedEndpoints?: Map<string, RouteHandler>,
     ) {
         this.defaults = sharedDefaults ?? new Map();
+        this.endpoints = sharedEndpoints ?? new Map();
     }
 
-    addEndpoint() {}
+    addEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", path: string, handler: RouteHandler) {
+        this.endpoints.set(`${method} ${joinPath(this.basePath, path)}`, handler);
+    }
     use() {}
     get(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
         this.addEndpoint("GET", path, handler, middlewares);
@@ -35,7 +40,7 @@ export class CaptureRunner implements Runner {
     stop() {}
 
     group(prefix: string, callback: (runner: Runner) => void): void {
-        callback(new CaptureRunner(joinPath(this.basePath, prefix), this.defaults));
+        callback(new CaptureRunner(joinPath(this.basePath, prefix), this.defaults, this.endpoints));
     }
 
     setDefaultEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", handler: RouteHandler): void {
@@ -46,6 +51,14 @@ export class CaptureRunner implements Runner {
         const handler = this.defaults.get(`${method} ${prefix}`);
         if (!handler) {
             throw new Error(`missing captured handler: ${method} ${prefix}`);
+        }
+        return handler;
+    }
+
+    endpointHandler(method: string, path: string): RouteHandler {
+        const handler = this.endpoints.get(`${method} ${path}`);
+        if (!handler) {
+            throw new Error(`missing captured handler: ${method} ${path}`);
         }
         return handler;
     }

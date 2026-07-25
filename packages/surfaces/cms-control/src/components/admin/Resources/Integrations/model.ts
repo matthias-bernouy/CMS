@@ -57,4 +57,6 @@ export type {
     IntegrationAnswerValue,
     IntegrationDefinition,
     IntegrationInput,
+    IntegrationObjectListField,
+    IntegrationObjectListInput,
 } from "@bernouy/cms-integrations";

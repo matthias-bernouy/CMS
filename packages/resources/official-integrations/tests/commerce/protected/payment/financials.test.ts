@@ -5,7 +5,7 @@ import {
     installCommerceTestEnvironment,
     requestCommerce,
     setRestResponder,
-} from "../harness";
+} from "../../harness";
 
 installCommerceTestEnvironment();
 
@@ -41,16 +41,32 @@ describe("commerce protected C2C financial routes", () => {
     });
 
     test("prepares payment from immutable Commerce terms and trusted buyer identity", async () => {
+        setRestResponder((request) =>
+            request.url.endsWith("/rpc/get_buyer_legal_verification_context")
+                ? Response.json({
+                      enabled: false,
+                      paymentAlreadyCreated: false,
+                      documents: [],
+                  })
+                : Response.json({ id: 1 }),
+        );
         const response = await requestCommerce("/me/order/payment/prepare", {
             userId: "buyer-17",
             body: { orderId: 42, amount: 1, sellerId: "spoofed", currency: "usd" },
         });
 
         expect(response.status).toBe(200);
-        expect(expectSingleRpc("prepare_protected_payment").body).toEqual({
+        const body = expectRpc("prepare_protected_payment").body;
+        expect(body).toMatchObject({
             p_order_id: 42,
             p_buyer_cms_user_id: "buyer-17",
+            p_accepted_legal_document_version_ids: [],
+            p_payment_provider: "stripe",
+            p_verified_legal_documents: [],
         });
+        expect(body.p_correlation_id).toMatch(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+        );
     });
 
     test("records a provider payment without allowing an amount-less projection", async () => {

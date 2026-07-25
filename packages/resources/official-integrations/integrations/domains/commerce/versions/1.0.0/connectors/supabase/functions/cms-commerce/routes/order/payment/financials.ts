@@ -11,6 +11,7 @@ import {
     text,
 } from "../../../core/records.ts";
 import { rpc } from "../../../core/rest.ts";
+import { acceptedLegalDocumentVersionIds, verifiedLegalDocuments } from "./legal.ts";
 
 export async function lockOrderFinancialTerms(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
@@ -37,12 +38,34 @@ export async function getOrderDeliveryQuoteAuthorization(request: Request): Prom
 
 export async function prepareProtectedPayment(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
+    const orderId = integer(body.orderId, "orderId", true)!;
+    const buyerCmsUserId = cmsUserId(request);
+    const acceptedVersionIds = acceptedLegalDocumentVersionIds(body.acceptedLegalDocumentVersionIds);
+    const paymentProvider = text(body.paymentProvider) ?? "stripe";
+    if (!/^[a-z][a-z0-9_.-]{1,79}$/.test(paymentProvider)) {
+        throw new HttpError(400, "paymentProvider is invalid");
+    }
+    const verifiedDocuments = await verifiedLegalDocuments(orderId, buyerCmsUserId, paymentProvider);
     const result = await rpc("prepare_protected_payment", {
-        p_order_id: integer(body.orderId, "orderId", true),
-        p_buyer_cms_user_id: cmsUserId(request),
+        p_order_id: orderId,
+        p_buyer_cms_user_id: buyerCmsUserId,
+        p_accepted_legal_document_version_ids: acceptedVersionIds,
+        p_payment_provider: paymentProvider,
+        p_correlation_id: requestCorrelationId(request),
+        p_verified_legal_documents: verifiedDocuments,
     });
     return json(camelize(result));
 }
+
+function requestCorrelationId(request: Request): string {
+    const value = request.headers.get("x-correlation-id")?.trim();
+    if (value && uuidPattern.test(value)) {
+        return value.toLowerCase();
+    }
+    return crypto.randomUUID();
+}
+
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function refreshPlatformPayoutLiability(request: Request): Promise<Response> {
     const body = await readJsonObject(request);

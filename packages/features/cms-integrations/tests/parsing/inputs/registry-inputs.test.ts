@@ -5,7 +5,7 @@ import {
     type IntegrationDefinition,
 } from "@bernouy/cms-integrations";
 
-describe("@bernouy/cms-integrations registry and input DTO parsing", () => {
+describe("@bernouy/cms-integrations registry and scalar input DTO parsing", () => {
     test("has no implicit definitions in the public registry", () => {
         expect(integrationRegistry()).toEqual([]);
     });

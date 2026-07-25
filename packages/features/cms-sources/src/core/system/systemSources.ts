@@ -15,6 +15,7 @@ const objectShape = (properties: Record<string, DataShape>, required: string[] =
     properties,
     ...(required.length ? { required } : {}),
 });
+const arrayShape = (items: DataShape): DataShape => ({ type: "array", items });
 
 const subjectShape = objectShape({
     identifier: stringShape(),
@@ -25,6 +26,24 @@ const subjectShape = objectShape({
 const okShape = objectShape({ ok: booleanShape() });
 const emailBody = objectShape({ email: stringShape() }, ["email"]);
 const tokenBody = objectShape({ token: stringShape() }, ["token"]);
+const legalRequirementShape = objectShape(
+    {
+        documentKey: stringShape(),
+        versionId: stringShape(),
+        label: stringShape(),
+        consentText: stringShape(),
+        page: objectShape(
+            {
+                id: stringShape(),
+                path: stringShape(),
+                title: stringShape(),
+            },
+            ["id", "path", "title"],
+        ),
+        contentHash: stringShape(),
+    },
+    ["documentKey", "versionId", "label", "consentText", "page", "contentHash"],
+);
 
 export const SYSTEM_AUTH_SOURCE: Source = {
     urn: SYSTEM_AUTH_SOURCE_URN,
@@ -64,12 +83,34 @@ export const SYSTEM_AUTH_SOURCE: Source = {
             output: [{ status: "200", body: okShape }],
         },
         {
+            urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signupLegalRequirements"),
+            method: "GET",
+            access: { mode: "public" },
+            targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup/legal-requirements`,
+            meta: { name: "Get signup legal requirements" },
+            output: [
+                {
+                    status: "200",
+                    body: objectShape({ documents: arrayShape(legalRequirementShape) }, ["documents"]),
+                },
+            ],
+        },
+        {
             urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signup"),
             method: "POST",
             access: { mode: "public" },
             targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup`,
             meta: { name: "Sign up" },
-            input: { body: objectShape({ email: stringShape(), password: stringShape() }, ["email", "password"]) },
+            input: {
+                body: objectShape(
+                    {
+                        email: stringShape(),
+                        password: stringShape(),
+                        acceptedLegalDocumentVersionIds: arrayShape(stringShape()),
+                    },
+                    ["email", "password"],
+                ),
+            },
             output: [{ status: "200", body: okShape }],
         },
         {

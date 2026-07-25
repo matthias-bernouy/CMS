@@ -64,6 +64,7 @@ export async function loadIntegrationContract() {
         [definition],
     );
     const fn = await functions.getFunction("createPaymentForOrder");
+    const legalFn = await functions.getFunction("getPaymentLegalRequirements");
     const configFn = await functions.getFunction("getStripePaymentClientConfig");
     const statusFn = await functions.getFunction("getPaymentForOrder");
     const refreshFn = await functions.getFunction("refreshPaymentForOrder");
@@ -81,6 +82,9 @@ export async function loadIntegrationContract() {
     const protectedOrderFn = await functions.getFunction("createProtectedOrder");
     if (!fn) {
         throw new Error("createPaymentForOrder function not imported");
+    }
+    if (!legalFn) {
+        throw new Error("getPaymentLegalRequirements function not imported");
     }
     if (!configFn) {
         throw new Error("getStripePaymentClientConfig function not imported");
@@ -116,6 +120,7 @@ export async function loadIntegrationContract() {
         importedBlocs,
         result,
         fn,
+        legalFn,
         configFn,
         statusFn,
         refreshFn,

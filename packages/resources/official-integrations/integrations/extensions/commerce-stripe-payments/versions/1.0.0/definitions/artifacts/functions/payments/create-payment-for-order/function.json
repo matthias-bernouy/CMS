@@ -14,6 +14,12 @@
             "properties": {
                 "orderId": {
                     "type": "number"
+                },
+                "acceptedLegalDocumentVersionIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": [
@@ -82,6 +88,20 @@
         },
         {
             "status": "409",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "422",
             "body": {
                 "type": "object",
                 "properties": {

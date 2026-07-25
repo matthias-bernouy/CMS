@@ -2,6 +2,7 @@ import type { AuthEmailComposer } from "cms-auth/interfaces/AuthEmailComposer";
 import type { AuthTokenStore } from "cms-auth/interfaces/AuthTokenStore";
 import type { Emailer } from "cms-auth/interfaces/Emailer";
 import type { LocalCredentialStore } from "cms-auth/interfaces/LocalCredentialStore";
+import type { SignupLegalAcceptancePolicy } from "cms-auth/signup-legal/contracts";
 import type { UsersRepository } from "cms-auth/interfaces/UsersRepository";
 
 export type VerificationTarget = {
@@ -29,11 +30,17 @@ export type PublicAuthFlowConfig<Role extends string = string> = {
     authEmailCooldownSeconds?: number;
     buildEmailVerificationUrl?: (token: string) => string;
     buildPasswordResetUrl?: (token: string) => string;
+    /**
+     * Optional signup-only legal proof policy. Omit it to preserve the legacy
+     * signup behavior without requiring or recording any acceptance.
+     */
+    signupLegalAcceptance?: SignupLegalAcceptancePolicy;
 };
 
 export type SignupLocalUserInput = {
     email: string;
     password: string;
+    acceptedLegalDocumentVersionIds?: string[];
 };
 
 export type PublicAuthSendResult = {

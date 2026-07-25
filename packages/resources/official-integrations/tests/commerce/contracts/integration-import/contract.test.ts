@@ -114,7 +114,7 @@ describe("commerce 1.0.0 contract", () => {
             "commerce-offer-price-form",
             "commerce-notification-preferences",
         ]);
-        expect(endpointUrns).toHaveLength(167);
+        expect(endpointUrns).toHaveLength(171);
         expect(endpointUrns).not.toEqual(
             expect.arrayContaining(["urn:commerce:variants", "urn:commerce:variant", "urn:commerce:upsertVariant"]),
         );

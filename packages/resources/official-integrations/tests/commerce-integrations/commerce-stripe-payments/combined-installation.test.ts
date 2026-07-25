@@ -83,7 +83,13 @@ describe("Commerce protected Stripe combined installation", () => {
         };
 
         await install("basic-blocs", {}, definitions, deps, installations);
-        await install("commerce", { id: "commerce" }, definitions, deps, installations);
+        await install(
+            "commerce",
+            { id: "commerce", buyerLegalEnabled: false, buyerLegalDocuments: [] },
+            definitions,
+            deps,
+            installations,
+        );
         await install(
             "stripe-connect",
             {
@@ -132,7 +138,7 @@ describe("Commerce protected Stripe combined installation", () => {
         ]);
         expect(linkingResult.installation.status).toBe("success");
         expect(linkingResult.artifacts.map((artifact) => artifact.type)).toEqual([
-            ...Array(16).fill("function"),
+            ...Array(17).fill("function"),
             ...Array(15).fill("trigger"),
             "dashboard",
             "bloc",
@@ -183,6 +189,7 @@ describe("Commerce protected Stripe combined installation", () => {
             "executeAuthorizedSettlementRelease",
             "executeProviderPaymentCancellation",
             "getPaymentForOrder",
+            "getPaymentLegalRequirements",
             "getSellerSaleEnrollment",
             "getStripePaymentClientConfig",
             "processDueOrderDeadlines",
@@ -370,6 +377,9 @@ function afterInstallationResponse(request: Request): Response {
             readyCount: 0,
             notReadyCount: 0,
         });
+    }
+    if (request.url.includes("/cms-commerce/system/buyer-legal-documents/sync")) {
+        return Response.json({ enabled: false, documents: [] });
     }
     return Response.json({ error: `unexpected after-installation request: ${request.url}` }, { status: 500 });
 }

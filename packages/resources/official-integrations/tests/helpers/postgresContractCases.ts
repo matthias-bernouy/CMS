@@ -29,6 +29,20 @@ export function postgresContractConfiguration(packageRoot: string): {
             stripeConnect: resolve(packageRoot, "integrations/providers/stripe-connect/versions/1.0.0"),
         },
         contracts: [
+            contract(
+                "commerce-pre-provider-cancellation",
+                "Commerce pre-provider cancellation",
+                "commerce",
+                "commerce/protected/payment/pre-provider-cancellation",
+                ["run_pre_provider_cancellation_contract=true", "allow_pre_provider_cancellation_schema_reset=true"],
+            ),
+            contract(
+                "commerce-buyer-legal-acceptance",
+                "Commerce buyer legal acceptance",
+                "commerce",
+                "commerce/protected/payment",
+                ["run_buyer_legal_install_contract=true", "allow_buyer_legal_schema_reset=true"],
+            ),
             contract("commerce-media", "Commerce media lifecycle", "commerce", "commerce/selling/media", [
                 "allow_commerce_media_schema_reset=true",
             ]),

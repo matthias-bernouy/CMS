@@ -61,17 +61,29 @@ type RemotePagePayload = {
 
 /** Fetch a remote page in full and return its canonical hash. */
 export async function fetchRemotePageHash(adminBase: URL, token: string, id: string): Promise<string> {
+    return (await fetchRemotePageState(adminBase, token, id)).hash;
+}
+
+export async function fetchRemotePageState(
+    adminBase: URL,
+    token: string,
+    id: string,
+): Promise<{ hash: string; visible: boolean }> {
     const url = new URL(`api/page?id=${encodeURIComponent(id)}`, adminBase).href;
     const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
     if (!res.ok) {
         throw new Error(`GET ${url} → HTTP ${res.status}`);
     }
     const raw = (await res.json()) as RemotePagePayload;
-    return canonicalHash({
-        title: raw.title ?? "",
-        description: raw.description ?? "",
-        visible: raw.visible === true || raw.visible === "on",
-        tags: Array.isArray(raw.tags) ? raw.tags : raw.tags ? raw.tags.split(",").filter(Boolean) : [],
-        content: raw.content ?? "",
-    });
+    const visible = raw.visible === true || raw.visible === "on";
+    return {
+        visible,
+        hash: canonicalHash({
+            title: raw.title ?? "",
+            description: raw.description ?? "",
+            visible,
+            tags: Array.isArray(raw.tags) ? raw.tags : raw.tags ? raw.tags.split(",").filter(Boolean) : [],
+            content: raw.content ?? "",
+        }),
+    };
 }

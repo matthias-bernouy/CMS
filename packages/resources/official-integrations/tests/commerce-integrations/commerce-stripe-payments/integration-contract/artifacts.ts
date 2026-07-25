@@ -5,6 +5,7 @@ import type { IntegrationContractContext } from "./harness";
 
 export async function assertArtifactContracts({
     fn,
+    legalFn,
     enrollmentFn,
     sources,
     result,
@@ -24,6 +25,14 @@ export async function assertArtifactContracts({
     reconciliationWorker,
 }: IntegrationContractContext): Promise<void> {
     expect(fn.access).toEqual({ mode: "auth" });
+    const buyerLegalBrowserInputs = JSON.stringify({
+        requirements: legalFn.input,
+        payment: fn.input,
+    });
+    expect(buyerLegalBrowserInputs).toContain("acceptedLegalDocumentVersionIds");
+    expect(buyerLegalBrowserInputs).not.toContain("contentHash");
+    expect(buyerLegalBrowserInputs).not.toContain("acceptedAt");
+    expect(buyerLegalBrowserInputs).not.toContain("buyerCmsUserId");
     expect(enrollmentFn.output?.[0]?.body?.properties?.connect?.properties?.stripeAccountId).toEqual({
         type: "string",
         nullable: true,
@@ -37,6 +46,7 @@ export async function assertArtifactContracts({
         { type: "function", id: submitPriceFn.id, action: "created" },
         { type: "function", id: protectedOrderFn.id, action: "created" },
         { type: "function", id: "getStripePaymentClientConfig", action: "created" },
+        { type: "function", id: legalFn.id, action: "created" },
         { type: "function", id: fn.id, action: "created" },
         { type: "function", id: statusFn.id, action: "created" },
         { type: "function", id: refundFn.id, action: "created" },
@@ -67,6 +77,7 @@ export async function assertArtifactContracts({
         { type: "bloc", id: "commerce-stripe-payment", action: "created" },
     ]);
     expect(await validateFunction(fn, { sources })).toEqual([]);
+    expect(await validateFunction(legalFn, { sources })).toEqual([]);
     expect(await validateFunction(configFn, { sources })).toEqual([]);
     expect(await validateFunction(statusFn, { sources })).toEqual([]);
     expect(await validateFunction(refreshFn, { sources })).toEqual([]);

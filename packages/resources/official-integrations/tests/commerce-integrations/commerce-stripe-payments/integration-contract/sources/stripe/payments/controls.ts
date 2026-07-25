@@ -33,6 +33,15 @@ export function stripePaymentControlEndpoints(): Source["endpoints"] {
                         },
                     },
                 },
+                {
+                    status: "409",
+                    body: {
+                        type: "object",
+                        properties: {
+                            error: { type: "string" },
+                        },
+                    },
+                },
             ],
         },
         {
