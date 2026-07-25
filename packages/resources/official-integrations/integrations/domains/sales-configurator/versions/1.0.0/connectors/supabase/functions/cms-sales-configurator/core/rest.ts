@@ -53,10 +53,9 @@ export async function one(
 }
 
 export function exactFilter(value: string | number): string {
-    if (typeof value === "number") {
-        return `eq.${value}`;
-    }
-    return `eq."${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
+    // This is a scalar query parameter, so URLSearchParams owns transport encoding.
+    // PostgREST treats quotes around a simple `eq` operand as part of the value.
+    return `eq.${value}`;
 }
 
 export async function listRows(path: string): Promise<{ rows: JsonRecord[]; total: number }> {
