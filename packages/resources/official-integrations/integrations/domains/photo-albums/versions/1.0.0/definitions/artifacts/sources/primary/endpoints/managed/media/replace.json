@@ -16,6 +16,21 @@
                 "in": "query",
                 "type": "number",
                 "required": true
+            },
+            {
+                "name": "alt",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "caption",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "takenAt",
+                "in": "query",
+                "type": "string"
             }
         ],
         "headers": [

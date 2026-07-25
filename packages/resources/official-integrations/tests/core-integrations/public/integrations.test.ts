@@ -97,6 +97,8 @@ describe("public integrations 1.0.0", () => {
                 "publicPhoto",
                 "manageAlbums",
                 "manageAlbum",
+                "managePhoto",
+                "updatePhoto",
                 "uploadPhoto",
                 "settings",
             ],

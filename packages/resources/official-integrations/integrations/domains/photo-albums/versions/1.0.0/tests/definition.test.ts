@@ -10,6 +10,7 @@ const versionRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 type EndpointArtifact = {
     endpointId: string;
     access?: string;
+    params?: Array<{ name: string; in: string; required?: boolean }>;
     responseKind?: string;
     output?: Array<{ status: string; body?: DataShape }>;
 };
@@ -63,6 +64,7 @@ describe("Photo Albums declarative contract", () => {
                 "manageAlbums",
                 "manageCategories",
                 "manageCategory",
+                "managePhoto",
                 "photo",
                 "publicPhoto",
                 "removePhoto",
@@ -73,6 +75,7 @@ describe("Photo Albums declarative contract", () => {
                 "settings",
                 "setup",
                 "updateSettings",
+                "updatePhoto",
                 "uploadPhoto",
                 "upsertAlbum",
                 "upsertCategory",
@@ -87,6 +90,15 @@ describe("Photo Albums declarative contract", () => {
             responseKind: "file",
             output: [{ status: "200" }, { status: "206" }],
         });
+
+        for (const id of ["uploadPhoto", "replacePhoto"]) {
+            const queryParams = endpoints
+                .find((endpoint) => endpoint.endpointId === id)
+                ?.params?.filter((param) => param.in === "query")
+                .map((param) => param.name);
+            expect(queryParams).toEqual(expect.arrayContaining(["albumId", "alt", "caption", "takenAt"]));
+        }
+        expect(endpoints.find((endpoint) => endpoint.endpointId === "updatePhoto")?.access).toBe("admin");
     });
 
     test("projects nullable category and cover photo values", async () => {

@@ -1,6 +1,7 @@
 {
     "$files": [
         "read.json",
+        "metadata.json",
         "upload.json",
         "replace.json",
         "mutations.json"
