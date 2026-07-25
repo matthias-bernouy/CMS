@@ -1,6 +1,7 @@
 import { IntegrationInputError, IntegrationRepositoryContractError, IntegrationRuntimeError } from "../errors";
 import { isExactIntegrationVersion } from "../definitions/versioning";
 import { definitionSnapshotsEqual } from "./snapshots";
+import { isAbsolute } from "node:path";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import type { IntegrationImportDeps } from "../../interfaces/IntegrationImport";
 import type { IntegrationInstallation } from "../../interfaces/IntegrationInstallation";
@@ -104,6 +105,7 @@ async function resolvePackage(options: ResolvePackageOptions): Promise<ResolvedI
         resolved.definition.version !== options.version ||
         !/^[a-f0-9]{64}$/.test(resolved.digest) ||
         !resolved.root.trim() ||
+        !isAbsolute(resolved.root) ||
         (options.expectedDigest && resolved.digest !== options.expectedDigest) ||
         (options.expectedDefinition && !definitionSnapshotsEqual(resolved.definition, options.expectedDefinition))
     ) {

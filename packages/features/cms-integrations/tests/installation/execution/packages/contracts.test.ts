@@ -22,6 +22,7 @@ describe("integration package resolver contract", () => {
         { name: "version", mutate: (result) => void (result.version = "2.0.0") },
         { name: "digest", mutate: (result) => void (result.digest = "not-a-sha256") },
         { name: "root", mutate: (result) => void (result.root = "   ") },
+        { name: "relative root", mutate: (result) => void (result.root = "cache/package") },
         {
             name: "definition",
             mutate: (result) => {
