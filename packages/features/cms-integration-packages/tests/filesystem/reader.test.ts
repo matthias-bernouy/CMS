@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { canonicalizeJson } from "@bernouy/cms-integration-packages";
+import {
+    canonicalJsonBytes,
+    canonicalizeJson,
+    sha256Hex,
+    validateIntegrationPackageEnvelope,
+} from "@bernouy/cms-integration-packages";
 import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import { createVersionRoot, readerOptions, writeBytes, writeText } from "./fixtures";
 
@@ -35,6 +40,34 @@ describe("filesystem integration package reader", () => {
         const result = await readIntegrationPackageDirectory(readerOptions(root));
 
         expect(result.envelope.files["bom.txt"]).toEqual({ encoding: "utf8", content: "\ufeffa" });
+    });
+
+    test("uses a persisted envelope to preserve an intentional base64 encoding", async () => {
+        const root = createVersionRoot();
+        writeText(root, "text-as-base64.txt", "text");
+        const inferred = await readIntegrationPackageDirectory(readerOptions(root));
+        const expectedEnvelope = validateIntegrationPackageEnvelope({
+            ...inferred.envelope,
+            files: {
+                ...inferred.envelope.files,
+                "text-as-base64.txt": { encoding: "base64", content: "dGV4dA==" },
+            },
+        });
+        const expectedBytes = canonicalJsonBytes(expectedEnvelope);
+
+        const result = await readIntegrationPackageDirectory({
+            ...readerOptions(root),
+            expectedEnvelope,
+        });
+
+        expect(result.envelope.files["text-as-base64.txt"]).toEqual({ encoding: "base64", content: "dGV4dA==" });
+        expect(result.canonicalBytes).toEqual(expectedBytes);
+        expect(result.digest).toBe(await sha256Hex(expectedBytes));
+
+        writeText(root, "text-as-base64.txt", "changed");
+        await expect(readIntegrationPackageDirectory({ ...readerOptions(root), expectedEnvelope })).rejects.toThrow(
+            /differs from its expected envelope/,
+        );
     });
 
     test("supports release-note-less legacy roots only when explicitly selected", async () => {
