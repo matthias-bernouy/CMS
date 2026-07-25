@@ -82,6 +82,25 @@ describe("public integrations 1.0.0", () => {
             schemas: ["user_account"],
             expectedEndpoints: ["getAccount", "updateAccount", "listAccounts", "createUserPersonalInformation"],
         },
+        {
+            kind: "photo-albums",
+            sourceId: "photo-albums",
+            dashboardId: "photo-albums",
+            blocTags: ["photo-album-list", "photo-album-gallery"],
+            answers: { id: "photo-albums" },
+            functionName: "cms-photo-albums",
+            schemas: ["photo_albums"],
+            expectedEndpoints: [
+                "albums",
+                "album",
+                "categories",
+                "publicPhoto",
+                "manageAlbums",
+                "manageAlbum",
+                "uploadPhoto",
+                "settings",
+            ],
+        },
     ])("installs $kind source, dashboard, connector, and blocs", async (scenario) => {
         const harness = await importScenario(scenario.kind, scenario.answers);
         const source = await harness.sources.getSource(`urn:${scenario.sourceId}`);
