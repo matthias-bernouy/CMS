@@ -1,11 +1,11 @@
 import type { IntegrationPackageLimits } from "@bernouy/cms-integration-packages";
-import { createIntegrationRegistryCatalogSnapshot } from "../../core/catalog/snapshot";
+import { createIntegrationRegistryCatalogSnapshot } from "../../../core/catalog/snapshot";
 import type {
     IntegrationRegistryCatalogDiagnostic,
     IntegrationRegistryCatalogSnapshot,
     IntegrationRegistryQuarantinedEntry,
     IntegrationRegistryValidatedCatalogEntry,
-} from "../../interfaces/catalog";
+} from "../../../interfaces/catalog";
 import { CandidateValidationError, validateIntegrationCandidate } from "./candidate";
 import { discoverIntegrationPackages, type FsIntegrationRegistryCatalogLimits } from "./discovery";
 

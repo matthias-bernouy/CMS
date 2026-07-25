@@ -4,7 +4,7 @@ import {
     parseIntegrationDefinition,
     type IntegrationDefinition,
 } from "@bernouy/cms-integrations";
-import { hydrateSnapshotDefinitionAssets } from "../asset";
+import { hydrateSnapshotDefinitionAssets } from "../snapshot/asset";
 import { resolveIntegrationDefinitionEnvelopeValue } from "./definitionBundle";
 
 export function loadIntegrationDefinitionFromPackageEnvelope(

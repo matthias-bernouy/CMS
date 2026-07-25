@@ -1,21 +1,21 @@
 export {
     buildFsIntegrationRegistryCatalogSnapshot,
     type BuildFsIntegrationRegistryCatalogSnapshotConfig,
-} from "../default-implementation/fs/builder";
+} from "../default-implementation/fs/snapshot/builder";
 export {
     DEFAULT_FS_INTEGRATION_REGISTRY_CATALOG_LIMITS,
     RESERVED_FS_INTEGRATION_REGISTRY_DIRECTORIES,
     type FsIntegrationRegistryCandidate,
     type FsIntegrationRegistryCatalogLimits,
-} from "../default-implementation/fs/discovery";
+} from "../default-implementation/fs/snapshot/discovery";
 export {
     SnapshotIntegrationDefinitionRepository,
     type SnapshotIntegrationDefinitionRepositoryConfig,
-} from "../default-implementation/fs/snapshotDefinitionRepository";
+} from "../default-implementation/fs/snapshot/snapshotDefinitionRepository";
 export {
     SnapshotIntegrationPackageSource,
     type SnapshotIntegrationPackageSourceConfig,
-} from "../default-implementation/fs/snapshotPackageSource";
+} from "../default-implementation/fs/snapshot/snapshotPackageSource";
 export {
     INTEGRATION_REGISTRY_VERSION_MANIFEST_SCHEMA,
     type IntegrationRegistryVersionManifestV1,

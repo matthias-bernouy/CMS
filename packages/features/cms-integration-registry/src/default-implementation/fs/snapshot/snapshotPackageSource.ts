@@ -7,8 +7,8 @@ import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packag
 import type {
     IntegrationRegistryCatalogSnapshotProvider,
     IntegrationRegistryExactVersionLocation,
-} from "../../interfaces/catalog";
-import { readIntegrationRegistryVersionManifest } from "./manifest/reader";
+} from "../../../interfaces/catalog";
+import { readIntegrationRegistryVersionManifest } from "../manifest/reader";
 
 export type SnapshotIntegrationPackageSourceConfig = Readonly<{
     snapshots: IntegrationRegistryCatalogSnapshotProvider;

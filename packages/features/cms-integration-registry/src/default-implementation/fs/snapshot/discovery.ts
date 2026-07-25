@@ -4,7 +4,7 @@ import { isAbsolute, join, relative, sep } from "node:path";
 import type {
     IntegrationRegistryCatalogDiagnostic,
     IntegrationRegistryQuarantinedEntry,
-} from "../../interfaces/catalog";
+} from "../../../interfaces/catalog";
 
 const INDEX_NAME = "integration.json";
 

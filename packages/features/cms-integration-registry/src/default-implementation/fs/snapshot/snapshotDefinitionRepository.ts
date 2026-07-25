@@ -7,7 +7,7 @@ import type {
     IntegrationDefinitionVersion,
 } from "@bernouy/cms-integrations";
 import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
-import type { IntegrationRegistryCatalogSnapshotProvider } from "../../interfaces/catalog";
+import type { IntegrationRegistryCatalogSnapshotProvider } from "../../../interfaces/catalog";
 import { readSnapshotIntegrationAsset } from "./asset";
 import { SnapshotIntegrationPackageSource } from "./snapshotPackageSource";
 import { resolveSnapshotVersion } from "./versionResolution";

@@ -13,11 +13,11 @@ import type {
     IntegrationRegistryDiagnosticStage,
     IntegrationRegistryExactVersionLocation,
     IntegrationRegistryValidatedCatalogEntry,
-} from "../../interfaces/catalog";
+} from "../../../interfaces/catalog";
 import type { FsIntegrationRegistryCandidate } from "./discovery";
-import { integrationRegistryVersionManifestPath } from "./manifest/paths";
-import { readIntegrationRegistryVersionManifest } from "./manifest/reader";
-import { loadIntegrationDefinitionFromPackageEnvelope } from "./manifest/definition";
+import { loadIntegrationDefinitionFromPackageEnvelope } from "../manifest/definition";
+import { integrationRegistryVersionManifestPath } from "../manifest/paths";
+import { readIntegrationRegistryVersionManifest } from "../manifest/reader";
 
 const indexDecoder = new TextDecoder("utf-8", { fatal: true });
 
