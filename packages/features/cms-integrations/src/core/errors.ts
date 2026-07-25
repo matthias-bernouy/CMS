@@ -49,6 +49,18 @@ export class IntegrationRepositoryContractError extends IntegrationRepositoryErr
     }
 }
 
+export class MissingIntegrationPackageError extends IntegrationRuntimeError {
+    readonly publicCode = "integration_package_not_found";
+
+    constructor(
+        readonly kind: string,
+        readonly version: string,
+    ) {
+        super(`Integration package "${kind}" version "${version}" was not found`, 404);
+        this.name = "MissingIntegrationPackageError";
+    }
+}
+
 export class DuplicateIntegrationInstallationError extends Error {
     status = 409;
     constructor(id: string) {

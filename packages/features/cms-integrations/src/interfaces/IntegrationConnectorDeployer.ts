@@ -1,4 +1,27 @@
-import type { IntegrationAnswerValue } from "./Integration";
+import type { IntegrationAnswerValue, IntegrationDefinition } from "./Integration";
+
+export type IntegrationPackageResolutionReason = "create" | "rerun" | "upgrade";
+
+export type ResolveIntegrationPackageRequest = {
+    kind: string;
+    version: string;
+    reason: IntegrationPackageResolutionReason;
+    expectedDigest?: string;
+    expectedDefinition?: IntegrationDefinition;
+    allowEmbeddedFallback: boolean;
+};
+
+export type ResolvedIntegrationPackageRoot = {
+    root: string;
+    kind: string;
+    version: string;
+    digest: string;
+    definition: IntegrationDefinition;
+};
+
+export interface IntegrationPackageResolver {
+    resolve(request: ResolveIntegrationPackageRequest): Promise<ResolvedIntegrationPackageRoot>;
+}
 
 export type IntegrationConnectorSchemaDeployment =
     | { path: string; manifest?: never }

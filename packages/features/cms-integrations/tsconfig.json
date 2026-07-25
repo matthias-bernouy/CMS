@@ -12,6 +12,7 @@
     "references": [
         { "path": "../cms-dashboards" },
         { "path": "../cms-functions" },
+        { "path": "../cms-integration-packages" },
         { "path": "../cms-triggers" },
         { "path": "../cms-permissions" },
         { "path": "../cms-relations" },

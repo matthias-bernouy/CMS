@@ -175,6 +175,7 @@
       "dependencies": {
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-functions": "workspace:*",
+        "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",

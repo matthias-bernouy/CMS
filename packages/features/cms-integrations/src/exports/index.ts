@@ -38,8 +38,12 @@ export type {
     IntegrationConnectorDeployment,
     IntegrationConnectorDeployResult,
     IntegrationConnectorFunctionDeployment,
+    IntegrationPackageResolutionReason,
+    IntegrationPackageResolver,
     IntegrationConnectorResourceResult,
     IntegrationConnectorSchemaDeployment,
+    ResolveIntegrationPackageRequest,
+    ResolvedIntegrationPackageRoot,
 } from "../interfaces/IntegrationConnectorDeployer";
 export {
     SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
@@ -91,6 +95,7 @@ export {
     IntegrationRepositoryError,
     IntegrationRepositoryUnavailableError,
     IntegrationRuntimeError,
+    MissingIntegrationPackageError,
     MissingIntegrationInstallationError,
     MissingIntegrationParam,
 } from "../core/errors";

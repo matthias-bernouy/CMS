@@ -11,4 +11,8 @@ export {
     loadIntegrationDefinitionFromVersionRoot,
     type LoadIntegrationDefinitionFromVersionRootOptions,
 } from "../default-implementation/fs-definition/definitionLoader";
+export {
+    FsIntegrationPackageResolver,
+    type FsIntegrationPackageResolverConfig,
+} from "../default-implementation/fs-definition/package-resolver";
 export { resolveIntegrationDefinitionFile } from "../default-implementation/fs-definition/definition-bundle/resolver";
