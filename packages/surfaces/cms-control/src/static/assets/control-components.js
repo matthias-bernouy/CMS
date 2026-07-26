@@ -30653,6 +30653,7 @@ ${controls_default3}`;
   function migration(value3) {
     const source2 = readRecord(value3);
     const identity = readRecord(source2.source);
+    const runner = readRecord(source2.runner);
     const cutover = readRecord(source2.cutover);
     return {
       reportId: readText(source2.reportId),
@@ -30668,6 +30669,13 @@ ${controls_default3}`;
       lineageId: readText(source2.lineageId),
       migrationRevision: readCount(source2.migrationRevision),
       outcome: readText(source2.outcome),
+      runner: {
+        name: readText(runner.name),
+        version: readText(runner.version),
+        imageDigest: readText(runner.imageDigest)
+      },
+      environmentDigest: readText(source2.environmentDigest),
+      checks: checkRecord(source2.checks),
       cutover: {
         cmsMediated: readText(cutover.cmsMediated),
         providerDirect: readText(cutover.providerDirect)
@@ -30676,6 +30684,20 @@ ${controls_default3}`;
       pointOfNoReturn: readText(source2.pointOfNoReturn),
       delayedCleanupVerified: readBoolean(source2.delayedCleanupVerified)
     };
+  }
+  function checkRecord(value3) {
+    const source2 = readRecord(value3);
+    return Object.fromEntries(Object.entries(source2).slice(0, 64).map(([key, value4]) => {
+      const check = readRecord(value4);
+      const evidenceDigest = readOptionalText(check.evidenceDigest);
+      return [
+        key,
+        {
+          outcome: readText(check.outcome),
+          ...evidenceDigest ? { evidenceDigest } : {}
+        }
+      ];
+    }));
   }
   function decision(value3) {
     const source2 = readRecord(value3);
@@ -31213,15 +31235,18 @@ ${controls_default3}`;
       return;
     }
     for (const migration2 of release.migrations) {
-      target2.append(section(`${migration2.source.kind}@${migration2.source.version} (${migration2.supportedSourceRange}) → ${release.version}`, [
+      const report = section(`${migration2.source.kind}@${migration2.source.version} (${migration2.supportedSourceRange}) → ${release.version}`, [
         `Outcome ${migration2.outcome}`,
         `Origin ${migration2.origin}`,
+        `Runner ${migration2.runner.name} ${migration2.runner.version}`,
         `CMS cutover ${migration2.cutover.cmsMediated}`,
         `Provider-direct ${migration2.cutover.providerDirect}`,
         `Rollback ${migration2.rollback}`,
         `PONR ${migration2.pointOfNoReturn}`,
         `Delayed cleanup ${migration2.delayedCleanupVerified ? "verified" : "not verified"}`
-      ]));
+      ]);
+      report.append(codeLine2("Report digest", migration2.reportDigest), codeLine2("Runner image", migration2.runner.imageDigest), codeLine2("Environment digest", migration2.environmentDigest), list("Checks", Object.entries(migration2.checks).map(([name, result]) => `${name} · ${result.outcome}${result.evidenceDigest ? ` · ${result.evidenceDigest}` : ""}`)));
+      target2.append(report);
     }
   }
   function section(title2, parts) {

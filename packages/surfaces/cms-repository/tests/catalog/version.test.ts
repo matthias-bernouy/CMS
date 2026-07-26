@@ -46,7 +46,11 @@ describe("repository catalog integration and version pages", () => {
         expect(html).toContain("cms-schema-generator");
         expect(html).toContain("sql-install-and-reapply");
         expect(html).toContain("verification-bundle?digest=");
-        expect(html).toContain("No source-to-target migration report is published");
+        expect(html).toContain("cms-postgres-migration");
+        expect(html).toContain("sha256:migration");
+        expect(html).toContain("Fresh Install");
+        expect(html).toContain("Equivalence");
+        expect(html).toContain("Provider-direct cutover");
     });
 
     test("changes cache identity whenever the reader revision changes", async () => {

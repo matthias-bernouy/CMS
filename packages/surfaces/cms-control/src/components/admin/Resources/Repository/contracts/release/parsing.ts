@@ -80,6 +80,7 @@ function verification(value: unknown): RepositoryReleaseVerificationView {
 function migration(value: unknown): RepositoryReleaseMigrationView {
     const source = readRecord(value);
     const identity = readRecord(source.source);
+    const runner = readRecord(source.runner);
     const cutover = readRecord(source.cutover);
     return {
         reportId: readText(source.reportId),
@@ -95,6 +96,13 @@ function migration(value: unknown): RepositoryReleaseMigrationView {
         lineageId: readText(source.lineageId),
         migrationRevision: readCount(source.migrationRevision),
         outcome: readText(source.outcome),
+        runner: {
+            name: readText(runner.name),
+            version: readText(runner.version),
+            imageDigest: readText(runner.imageDigest),
+        },
+        environmentDigest: readText(source.environmentDigest),
+        checks: checkRecord(source.checks),
         cutover: {
             cmsMediated: readText(cutover.cmsMediated),
             providerDirect: readText(cutover.providerDirect),
@@ -103,6 +111,25 @@ function migration(value: unknown): RepositoryReleaseMigrationView {
         pointOfNoReturn: readText(source.pointOfNoReturn),
         delayedCleanupVerified: readBoolean(source.delayedCleanupVerified),
     };
+}
+
+function checkRecord(value: unknown): RepositoryReleaseMigrationView["checks"] {
+    const source = readRecord(value);
+    return Object.fromEntries(
+        Object.entries(source)
+            .slice(0, 64)
+            .map(([key, value]) => {
+                const check = readRecord(value);
+                const evidenceDigest = readOptionalText(check.evidenceDigest);
+                return [
+                    key,
+                    {
+                        outcome: readText(check.outcome),
+                        ...(evidenceDigest ? { evidenceDigest } : {}),
+                    },
+                ];
+            }),
+    );
 }
 
 function decision(value: unknown): NonNullable<RepositoryReleaseView["decision"]> {

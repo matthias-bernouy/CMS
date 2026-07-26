@@ -35,6 +35,9 @@ export type RepositoryReleaseMigrationView = Readonly<{
     lineageId: string;
     migrationRevision: number;
     outcome: string;
+    runner: Readonly<{ name: string; version: string; imageDigest: string }>;
+    environmentDigest: string;
+    checks: Readonly<Record<string, Readonly<{ outcome: string; evidenceDigest?: string }>>>;
     cutover: Readonly<{ cmsMediated: string; providerDirect: string }>;
     rollback: string;
     pointOfNoReturn: string;

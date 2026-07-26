@@ -31,6 +31,13 @@ describe("@bernouy/cms-repository public release evidence", () => {
                 outcome: "passed",
                 runner: { name: "cms-schema-generator", imageDigest: "sha256:pinned" },
             },
+            migrations: [
+                {
+                    runner: { name: "cms-postgres-migration", imageDigest: "sha256:migration" },
+                    environmentDigest: REPORT_DIGEST,
+                    checks: { freshInstall: { outcome: "passed", evidenceDigest: REPORT_DIGEST } },
+                },
+            ],
             decision: { admissible: true, reasons: [] },
         });
         expect(JSON.stringify(body)).not.toContain("private-actor");
@@ -142,6 +149,39 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
         outcome: "passed" as const,
         provenance: { actor: "private-actor", reason: "Legacy backfill" },
     };
+    const migration = {
+        schema: "cms.integration.migration-report.v1" as const,
+        reportId: "migration-1",
+        revisionType: "root" as const,
+        origin: "admission" as const,
+        createdAt: "2026-07-26T10:00:00.000Z",
+        source: { kind: "demo", version: "0.9.0", packageDigest: "d".repeat(64) },
+        target: { kind: "demo", version: "1.0.0", packageDigest: PACKAGE_DIGEST },
+        connectorKey: "primary",
+        lineageId: "demo-supabase-v1",
+        migrationRevision: 1,
+        supportedSourceRange: "^0.9.0",
+        runner: { name: "cms-postgres-migration", version: "1.0.0", imageDigest: "sha256:migration" },
+        policy: { name: "official", version: "1.0.0" },
+        policySnapshotDigest: REPORT_DIGEST,
+        migrationInputDigest: REPORT_DIGEST,
+        migrationJobResultDigest: REPORT_DIGEST,
+        statefulChangeSelectionDigest: REPORT_DIGEST,
+        environmentDigest: REPORT_DIGEST,
+        checks: {
+            freshInstall: { outcome: "passed" as const, evidenceDigest: REPORT_DIGEST },
+            migratedState: { outcome: "passed" as const, evidenceDigest: REPORT_DIGEST },
+            equivalence: { outcome: "passed" as const, evidenceDigest: REPORT_DIGEST },
+            failureInjection: { outcome: "not-supported" as const },
+            resumption: { outcome: "not-supported" as const },
+        },
+        cutover: { cmsMediated: "binding-revision" as const, providerDirect: "expand-in-code" as const },
+        rollback: "available" as const,
+        pointOfNoReturn: "cleanup",
+        delayedCleanupVerified: true,
+        outcome: "passed" as const,
+        provenance: { actor: "private-actor", reason: "Migration admission" },
+    };
     const decision = {
         schema: "cms.integration.release-admission-decision.v1" as const,
         decisionId: "decision-1",
@@ -151,7 +191,16 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
         packageDigest: PACKAGE_DIGEST,
         compatibilityReport: { revisionId: compatibility.reportId, reportDigest: REPORT_DIGEST },
         verificationReport: { revisionId: verification.reportId, reportDigest: REPORT_DIGEST },
-        migrationReports: [],
+        migrationReports: [
+            {
+                revisionId: migration.reportId,
+                reportDigest: REPORT_DIGEST,
+                source: migration.source,
+                connectorKey: migration.connectorKey,
+                lineageId: migration.lineageId,
+                migrationRevision: migration.migrationRevision,
+            },
+        ],
         policy: { name: "official", version: "1.0.0" },
         policySnapshotDigest: REPORT_DIGEST,
         statefulChanges: {
@@ -160,7 +209,13 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
             policySnapshotDigest: REPORT_DIGEST,
             target: { kind: "demo", version: "1.0.0", packageDigest: PACKAGE_DIGEST },
             compatibilityReport: { revisionId: compatibility.reportId, reportDigest: REPORT_DIGEST },
-            requiredMigrations: [],
+            requiredMigrations: [
+                {
+                    source: migration.source,
+                    connectorKey: migration.connectorKey,
+                    lineageId: migration.lineageId,
+                },
+            ],
         },
         statefulChangeSelectionDigest: REPORT_DIGEST,
         admissible: true,
@@ -175,7 +230,7 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
         verificationDigest: VERIFICATION_DIGEST,
         compatibility: history(compatibility),
         verification: history(verification),
-        migrations: [],
+        migrations: [history(migration)],
         decision: history(decision),
     };
 }

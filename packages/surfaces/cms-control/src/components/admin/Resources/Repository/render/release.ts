@@ -109,20 +109,32 @@ function appendMigrations(target: DocumentFragment, release: RepositoryReleaseVi
         return;
     }
     for (const migration of release.migrations) {
-        target.append(
-            section(
-                `${migration.source.kind}@${migration.source.version} (${migration.supportedSourceRange}) → ${release.version}`,
-                [
-                    `Outcome ${migration.outcome}`,
-                    `Origin ${migration.origin}`,
-                    `CMS cutover ${migration.cutover.cmsMediated}`,
-                    `Provider-direct ${migration.cutover.providerDirect}`,
-                    `Rollback ${migration.rollback}`,
-                    `PONR ${migration.pointOfNoReturn}`,
-                    `Delayed cleanup ${migration.delayedCleanupVerified ? "verified" : "not verified"}`,
-                ],
+        const report = section(
+            `${migration.source.kind}@${migration.source.version} (${migration.supportedSourceRange}) → ${release.version}`,
+            [
+                `Outcome ${migration.outcome}`,
+                `Origin ${migration.origin}`,
+                `Runner ${migration.runner.name} ${migration.runner.version}`,
+                `CMS cutover ${migration.cutover.cmsMediated}`,
+                `Provider-direct ${migration.cutover.providerDirect}`,
+                `Rollback ${migration.rollback}`,
+                `PONR ${migration.pointOfNoReturn}`,
+                `Delayed cleanup ${migration.delayedCleanupVerified ? "verified" : "not verified"}`,
+            ],
+        );
+        report.append(
+            codeLine("Report digest", migration.reportDigest),
+            codeLine("Runner image", migration.runner.imageDigest),
+            codeLine("Environment digest", migration.environmentDigest),
+            list(
+                "Checks",
+                Object.entries(migration.checks).map(
+                    ([name, result]) =>
+                        `${name} · ${result.outcome}${result.evidenceDigest ? ` · ${result.evidenceDigest}` : ""}`,
+                ),
             ),
         );
+        target.append(report);
     }
 }
 

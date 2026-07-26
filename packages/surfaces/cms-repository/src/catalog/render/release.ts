@@ -81,14 +81,30 @@ function renderMigrations(release: PublicRepositoryRelease): string {
                 migration,
             ) => `<li><article><h4>${escapeHtml(migration.connectorKey)} from ${escapeHtml(migration.supportedSourceRange)}</h4><dl>
 <div><dt>Outcome</dt><dd>${escapeHtml(humanLabel(migration.outcome))}</dd></div>
+<div><dt>Report</dt><dd><code>${escapeHtml(migration.reportId)}</code> · <code>${escapeHtml(migration.reportDigest)}</code></dd></div>
 <div><dt>Source</dt><dd><code>${escapeHtml(migration.source.kind)}@${escapeHtml(migration.source.version)} · ${escapeHtml(migration.source.packageDigest)}</code></dd></div>
 <div><dt>Lineage / revision</dt><dd><code>${escapeHtml(migration.lineageId)}</code> / ${migration.migrationRevision}</dd></div>
+<div><dt>Runner</dt><dd>${escapeHtml(migration.runner.name)} ${escapeHtml(migration.runner.version)} · <code>${escapeHtml(migration.runner.imageDigest)}</code></dd></div>
+<div><dt>Environment</dt><dd><code>${escapeHtml(migration.environmentDigest)}</code></dd></div>
 <div><dt>Rollback</dt><dd>${escapeHtml(humanLabel(migration.rollback))}</dd></div>
 <div><dt>Point of no return</dt><dd>${escapeHtml(migration.pointOfNoReturn)}</dd></div>
 <div><dt>CMS-mediated cutover</dt><dd>${escapeHtml(humanLabel(migration.cutover.cmsMediated))}</dd></div>
 <div><dt>Provider-direct cutover</dt><dd>${escapeHtml(humanLabel(migration.cutover.providerDirect))}</dd></div>
 <div><dt>Delayed cleanup verified</dt><dd>${migration.delayedCleanupVerified ? "Yes" : "No"}</dd></div>
-</dl></article></li>`,
+</dl>${renderMigrationChecks(migration.checks)}</article></li>`,
         )
         .join("")}</ol>`;
+}
+
+function renderMigrationChecks(checks: PublicRepositoryRelease["migrations"][number]["checks"]): string {
+    const entries = Object.entries(checks);
+    if (entries.length === 0) {
+        return "<p>No migration check result is available.</p>";
+    }
+    return `<h5>Checks</h5><ul>${entries
+        .map(
+            ([name, result]) =>
+                `<li><strong>${escapeHtml(humanLabel(name))}</strong> — ${escapeHtml(humanLabel(result.outcome))}${result.evidenceDigest ? ` · <code>${escapeHtml(result.evidenceDigest)}</code>` : ""}</li>`,
+        )
+        .join("")}</ul>`;
 }

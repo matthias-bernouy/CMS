@@ -40,7 +40,10 @@ describe("repository administration presentation", () => {
         expect(console.textContent).toContain("Runner cms-postgres 1.0.0");
         expect(console.textContent).toContain("sql-install-and-reapply");
         expect(console.textContent).toContain("Verification bundle digest");
-        expect(console.textContent).toContain("No tested in-place source range");
+        expect(console.textContent).toContain("cms-postgres-migration");
+        expect(console.textContent).toContain("freshInstall · passed");
+        expect(console.textContent).toContain("equivalence · passed");
+        expect(console.textContent).toContain("Provider-direct expand-in-code");
         expect(console.textContent).toContain("Exact downloads and pinned reruns remain available");
         expect(console.textContent).toContain("Revision history (1)");
         expect(console.textContent).toContain("ci-schema-42");
