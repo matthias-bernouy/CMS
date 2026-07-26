@@ -98,6 +98,12 @@ cms-shell-detail {
     font-weight: 700;
 }
 
+.token-label-text {
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 700;
+}
+
 .token-label-input:focus {
     outline: 0;
     box-shadow: 0 1px 0 var(--primary-base);

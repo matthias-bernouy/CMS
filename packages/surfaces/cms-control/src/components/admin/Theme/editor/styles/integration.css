@@ -1,0 +1,65 @@
+.category-fields :is(input, textarea)[readonly] {
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    cursor: default;
+}
+
+.source-provenance {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    align-items: center;
+    margin-bottom: 16px;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.source-provenance[hidden] {
+    display: none;
+}
+
+.source-provenance span:last-child {
+    flex-basis: 100%;
+}
+
+.font-family-control {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.token-controls {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.token-default {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.token-default span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.token-default button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--primary-base);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+}
+
+.token-default button:disabled {
+    color: var(--text-muted);
+    cursor: default;
+    opacity: .55;
+}

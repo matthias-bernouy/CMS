@@ -8,7 +8,7 @@ import {
     type ThemeSelection,
 } from "./events";
 import { loadThemeSettings, saveThemeSettings } from "./editor/api";
-import { clickAction, handleThemeInput } from "./editor/inputEvents";
+import { clickAction, handleThemeInput, resetThemeToken } from "./editor/inputEvents";
 import { addCategory, addTheme, addToken, selectionFromUrl } from "./editor/model";
 import css from "./editor/styles";
 import template from "./editor/ThemeEditor.html" with { type: "text" };
@@ -122,6 +122,10 @@ export class CmsThemeEditor extends Component {
     }
 
     private onClick = (event: Event): void => {
+        if (this.settings && resetThemeToken(event, this.settings, this.selection, this.selectedThemeId, this.mode)) {
+            this.render();
+            return;
+        }
         const action = clickAction(event);
         if (action === "theme") {
             this.addTheme();

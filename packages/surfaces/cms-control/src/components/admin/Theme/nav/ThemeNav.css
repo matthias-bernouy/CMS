@@ -20,3 +20,15 @@ w13c-lateral-menu-item.category-item {
     margin-left: 18px;
     --item-font-size: .8125rem;
 }
+
+.integration-badge {
+    margin-left: auto;
+    padding: 2px 5px;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: .5625rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}

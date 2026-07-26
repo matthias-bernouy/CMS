@@ -8,6 +8,11 @@
     <p9r-button slot="actions" type="button" color="primary" data-activate-theme>Activate</p9r-button>
 
     <cms-detail-section slot="main" data-category-section>
+        <div class="source-provenance" data-source-provenance hidden>
+            <p9r-tag color="primary">Integration</p9r-tag>
+            <span data-source-owner-label></span>
+            <span>CSS values and var(--token) references are supported.</span>
+        </div>
         <div class="mode-switch" data-mode-switch hidden>
             <button type="button" data-mode="light">Light mode</button>
             <button type="button" data-mode="dark">Dark mode</button>
@@ -35,6 +40,9 @@
                 <textarea rows="3" data-category-description-input></textarea>
             </label>
         </div>
+        <p class="theme-note" data-category-lock-note hidden>
+            This catalogue is managed by its integration. Labels, variables and categories are read-only; theme values remain editable.
+        </p>
         <p class="theme-note" data-category-description></p>
     </cms-detail-section>
 </cms-shell-detail>

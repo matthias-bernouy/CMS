@@ -17574,6 +17574,15 @@ circle.endpoint-timeline__errors {
     window.dispatchEvent(new CustomEvent(THEME_SETTINGS_CHANGED_EVENT));
   }
 
+  // src/components/admin/Theme/ownership.ts
+  function integrationOwnerId(source2) {
+    const owner = source2?.owner;
+    return owner?.kind === "integration" ? owner.integrationId : undefined;
+  }
+  function isIntegrationSource(source2) {
+    return integrationOwnerId(source2) !== undefined;
+  }
+
   // src/components/admin/Theme/editor/model.ts
   function currentSource(settings, selection) {
     return settings?.sources.find((item) => item.id === selection.sourceId) ?? settings?.sources[0];
@@ -17602,7 +17611,7 @@ circle.endpoint-timeline__errors {
   }
   function addCategory(settings, selection) {
     const source2 = currentSource(settings, selection);
-    if (!source2) {
+    if (!source2 || isIntegrationSource(source2)) {
       return;
     }
     const number = source2.categories.length + 1;
@@ -17619,7 +17628,7 @@ circle.endpoint-timeline__errors {
   function addToken(settings, selection) {
     const source2 = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
-    if (!source2 || !category) {
+    if (!source2 || !category || isIntegrationSource(source2)) {
       return;
     }
     const allIds = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.map((token) => token.id))));
@@ -17632,6 +17641,19 @@ circle.endpoint-timeline__errors {
       description: "Custom design token",
       type: source2.supportsModes ? "color" : "value"
     });
+  }
+  function resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) {
+    const source2 = currentSource(settings, selection);
+    const token = currentCategory(settings, selection)?.tokens.find((item) => item.id === tokenId);
+    const theme = currentTheme(settings, selectedThemeId);
+    if (!isIntegrationSource(source2) || !token || !theme) {
+      return false;
+    }
+    if (!token.defaults || !Object.hasOwn(theme.values[mode] ?? {}, token.id)) {
+      return false;
+    }
+    delete theme.values[mode][token.id];
+    return true;
   }
   function themeSettingsFromCss(css) {
     const values = {};
@@ -17727,21 +17749,22 @@ circle.endpoint-timeline__errors {
     }
     const category = currentCategory(context.settings, context.selection);
     const source2 = currentSource(context.settings, context.selection);
-    if (input.matches("[data-category-label-input]") && category && source2) {
+    const catalogEditable = !isIntegrationSource(source2);
+    if (input.matches("[data-category-label-input]") && category && source2 && catalogEditable) {
       category.label = input.value;
       query3(context.root, "[data-category-title]").textContent = category.label;
       query3(context.root, "[data-category-section]").setAttribute("heading", category.label);
       dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
       return;
     }
-    if (input.matches("[data-category-description-input]") && category && source2) {
+    if (input.matches("[data-category-description-input]") && category && source2 && catalogEditable) {
       category.description = input.value;
       query3(context.root, "[data-category-section]").setAttribute("description", category.description);
       query3(context.root, "[data-category-description]").textContent = `${source2.label} · ${category.description}`;
       dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
       return;
     }
-    if (input.matches("[data-token-label]")) {
+    if (input.matches("[data-token-label]") && catalogEditable) {
       const tokenId2 = input.closest("[data-token-id]")?.dataset.tokenId;
       const token = category?.tokens.find((item) => item.id === tokenId2);
       if (token) {
@@ -17764,6 +17787,10 @@ circle.endpoint-timeline__errors {
         text3.value = input.value;
       }
     }
+  }
+  function resetThemeToken(event, settings, selection, selectedThemeId, mode) {
+    const tokenId = event.target?.closest("[data-reset-token]")?.dataset.resetToken;
+    return tokenId ? resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
   }
   function clickAction(event) {
     const target2 = event.target;
@@ -17874,6 +17901,74 @@ circle.endpoint-timeline__errors {
 }
 `;
 
+  // src/components/admin/Theme/editor/styles/integration.css
+  var integration_default = `.category-fields :is(input, textarea)[readonly] {
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    cursor: default;
+}
+
+.source-provenance {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    align-items: center;
+    margin-bottom: 16px;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.source-provenance[hidden] {
+    display: none;
+}
+
+.source-provenance span:last-child {
+    flex-basis: 100%;
+}
+
+.font-family-control {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.token-controls {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.token-default {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.token-default span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.token-default button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--primary-base);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+}
+
+.token-default button:disabled {
+    color: var(--text-muted);
+    cursor: default;
+    opacity: .55;
+}
+`;
+
   // src/components/admin/Theme/editor/styles/tokens.css
   var tokens_default = `:host {
     display: block;
@@ -17975,6 +18070,12 @@ cms-shell-detail {
     font-weight: 700;
 }
 
+.token-label-text {
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 700;
+}
+
 .token-label-input:focus {
     outline: 0;
     box-shadow: 0 1px 0 var(--primary-base);
@@ -18019,7 +18120,7 @@ cms-shell-detail {
 `;
 
   // src/components/admin/Theme/editor/styles/index.ts
-  var styles_default = [tokens_default, editor_default].join(`
+  var styles_default = [tokens_default, editor_default, integration_default].join(`
 `);
 
   // src/components/admin/Theme/editor/ThemeEditor.html
@@ -18033,6 +18134,11 @@ cms-shell-detail {
     <p9r-button slot="actions" type="button" color="primary" data-activate-theme>Activate</p9r-button>
 
     <cms-detail-section slot="main" data-category-section>
+        <div class="source-provenance" data-source-provenance hidden>
+            <p9r-tag color="primary">Integration</p9r-tag>
+            <span data-source-owner-label></span>
+            <span>CSS values and var(--token) references are supported.</span>
+        </div>
         <div class="mode-switch" data-mode-switch hidden>
             <button type="button" data-mode="light">Light mode</button>
             <button type="button" data-mode="dark">Dark mode</button>
@@ -18060,10 +18166,108 @@ cms-shell-detail {
                 <textarea rows="3" data-category-description-input></textarea>
             </label>
         </div>
+        <p class="theme-note" data-category-lock-note hidden>
+            This catalogue is managed by its integration. Labels, variables and categories are read-only; theme values remain editable.
+        </p>
         <p class="theme-note" data-category-description></p>
     </cms-detail-section>
 </cms-shell-detail>
 `;
+
+  // src/components/admin/Theme/editor/tokenView.ts
+  function renderToken(token, theme, mode, catalogEditable) {
+    const overridden = Object.hasOwn(theme.values[mode] ?? {}, token.id);
+    const value2 = effectiveValue(token, theme, mode);
+    const row = document.createElement("div");
+    row.className = "element-row";
+    row.dataset.tokenId = token.id;
+    row.dataset.tokenType = token.type;
+    row.append(renderLabel(token, catalogEditable), renderControls(token, value2, mode, overridden));
+    return row;
+  }
+  function renderLabel(token, catalogEditable) {
+    const label2 = document.createElement("div");
+    label2.className = "element-label";
+    if (catalogEditable) {
+      const input = document.createElement("input");
+      input.className = "token-label-input";
+      input.type = "text";
+      input.value = token.label;
+      input.ariaLabel = `Label for --${token.variable}`;
+      input.dataset.tokenLabel = "true";
+      label2.append(input);
+    } else {
+      const name = document.createElement("strong");
+      name.className = "token-label-text";
+      name.textContent = token.label;
+      label2.append(name);
+    }
+    const detail = document.createElement("span");
+    detail.textContent = `${token.description} · var(--${token.variable})`;
+    label2.append(detail);
+    return label2;
+  }
+  function renderControls(token, value2, mode, overridden) {
+    const group = document.createElement("div");
+    group.className = "token-controls";
+    group.append(renderControl(token, value2));
+    const defaults = token.defaults;
+    if (defaults) {
+      group.append(renderDefault(token, mode, defaults, overridden));
+    }
+    return group;
+  }
+  function renderControl(token, value2) {
+    if (token.type !== "color") {
+      return valueInput(token, value2);
+    }
+    const control = document.createElement("div");
+    control.className = "color-control";
+    const picker = document.createElement("input");
+    picker.type = "color";
+    picker.value = /^#[0-9a-f]{6}$/i.test(value2) ? value2 : "#000000";
+    picker.dataset.valueControl = "true";
+    picker.ariaLabel = `${token.label} color picker`;
+    control.append(picker, valueInput(token, value2));
+    return control;
+  }
+  function valueInput(token, value2) {
+    const input = document.createElement("input");
+    const fontFamily = token.type === "font-family";
+    input.className = fontFamily ? "value-control font-family-control" : "value-control";
+    input.type = "text";
+    input.value = value2;
+    input.dataset.valueControl = "true";
+    input.ariaLabel = fontFamily ? `${token.label} font family` : `${token.label} CSS value`;
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    if (fontFamily) {
+      input.placeholder = "Inter, system-ui, sans-serif";
+    }
+    return input;
+  }
+  function renderDefault(token, mode, defaults, overridden) {
+    const line3 = document.createElement("div");
+    line3.className = "token-default";
+    const expected = defaults[mode];
+    const text3 = document.createElement("span");
+    text3.textContent = expected === undefined ? "Default: inherits the light value" : `Default: ${expected}`;
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.dataset.resetToken = token.id;
+    reset.textContent = "Reset";
+    reset.disabled = !overridden;
+    reset.ariaLabel = `Reset ${token.label} to its integration default`;
+    line3.append(text3, reset);
+    return line3;
+  }
+  function effectiveValue(token, theme, mode) {
+    const direct = theme.values[mode]?.[token.id] ?? token.defaults?.[mode];
+    if (direct !== undefined || mode === "light") {
+      return direct ?? "";
+    }
+    return token.defaults?.light ?? "";
+  }
 
   // src/components/admin/Theme/editor/view.ts
   function renderThemeEditor(root, state) {
@@ -18088,6 +18292,15 @@ cms-shell-detail {
     status.setAttribute("color", active ? "success" : "warning");
     query4(root, "[data-save-theme]").toggleAttribute("disabled", !state.canPersist);
     query4(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
+    const integrationId = integrationOwnerId(source2);
+    const catalogEditable = !isIntegrationSource(source2);
+    query4(root, "[data-source-provenance]").hidden = !integrationId;
+    query4(root, "[data-source-owner-label]").textContent = integrationId ? `Provided by ${source2.label} · ${integrationId}` : "";
+    query4(root, "[data-category-lock-note]").hidden = catalogEditable;
+    query4(root, "[data-category-label-input]").readOnly = !catalogEditable;
+    query4(root, "[data-category-description-input]").readOnly = !catalogEditable;
+    query4(root, "[data-add-theme-category]").hidden = !catalogEditable;
+    query4(root, "[data-add-element]").hidden = !catalogEditable;
     const mode = source2.supportsModes ? state.mode : "light";
     const modeSwitch = query4(root, "[data-mode-switch]");
     modeSwitch.hidden = !source2.supportsModes;
@@ -18099,7 +18312,7 @@ cms-shell-detail {
     section.setAttribute("description", category.description);
     const list = document.createElement("div");
     list.className = "element-list";
-    category.tokens.forEach((token) => list.append(renderToken(token, theme, mode)));
+    category.tokens.forEach((token) => list.append(renderToken(token, theme, mode, catalogEditable)));
     query4(root, "[data-groups]").replaceChildren(category.tokens.length ? list : emptyCategory());
     return mode;
   }
@@ -18109,45 +18322,6 @@ cms-shell-detail {
       element.textContent = message;
       element.toggleAttribute("data-error", error);
     }
-  }
-  function renderToken(token, theme, mode) {
-    const row = document.createElement("div");
-    row.className = "element-row";
-    row.dataset.tokenId = token.id;
-    const label2 = document.createElement("div");
-    label2.className = "element-label";
-    const name = document.createElement("input");
-    name.className = "token-label-input";
-    name.type = "text";
-    name.value = token.label;
-    name.ariaLabel = `Label for --${token.variable}`;
-    name.dataset.tokenLabel = "true";
-    const detail = document.createElement("span");
-    detail.textContent = `${token.description} · var(--${token.variable})`;
-    label2.append(name, detail);
-    row.append(label2, renderControl(token, theme.values[mode]?.[token.id] ?? ""));
-    return row;
-  }
-  function renderControl(token, value2) {
-    if (token.type !== "color") {
-      return valueInput(value2);
-    }
-    const control = document.createElement("div");
-    control.className = "color-control";
-    const picker = document.createElement("input");
-    picker.type = "color";
-    picker.value = /^#[0-9a-f]{6}$/i.test(value2) ? value2 : "#000000";
-    picker.dataset.valueControl = "true";
-    control.append(picker, valueInput(value2));
-    return control;
-  }
-  function valueInput(value2) {
-    const input = document.createElement("input");
-    input.className = "value-control";
-    input.type = "text";
-    input.value = value2;
-    input.dataset.valueControl = "true";
-    return input;
   }
   function emptyCategory() {
     const empty = document.createElement("div");
@@ -18260,6 +18434,10 @@ cms-shell-detail {
       }
     }
     onClick = (event) => {
+      if (this.settings && resetThemeToken(event, this.settings, this.selection, this.selectedThemeId, this.mode)) {
+        this.render();
+        return;
+      }
       const action = clickAction(event);
       if (action === "theme") {
         this.addTheme();
@@ -18329,6 +18507,18 @@ w13c-lateral-menu-item.category-item {
     margin-left: 18px;
     --item-font-size: .8125rem;
 }
+
+.integration-badge {
+    margin-left: auto;
+    padding: 2px 5px;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: .5625rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
 `;
 
   // src/components/admin/Theme/nav/ThemeNav.html
@@ -18382,6 +18572,12 @@ w13c-lateral-menu-item.category-item {
       sourceItem.dataset.source = source2.id;
       sourceItem.toggleAttribute("active", source2.id === selection.sourceId);
       sourceItem.append(createSourceIcon(source2.id), document.createTextNode(source2.label));
+      if (isIntegrationSource(source2)) {
+        const badge = document.createElement("span");
+        badge.className = "integration-badge";
+        badge.textContent = "Integration";
+        sourceItem.append(badge);
+      }
       menu.append(sourceItem);
       if (source2.id !== selection.sourceId) {
         continue;

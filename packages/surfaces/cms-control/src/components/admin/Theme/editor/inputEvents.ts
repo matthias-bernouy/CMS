@@ -1,7 +1,8 @@
 import type { ThemeSettings } from "@bernouy/cms-content";
 
 import { dispatchThemeCategoryUpdated, type ThemeSelection } from "../events";
-import { currentCategory, currentSource, currentTheme } from "./model";
+import { isIntegrationSource } from "../ownership";
+import { currentCategory, currentSource, currentTheme, resetIntegrationTokenValue } from "./model";
 
 export type ThemeInputContext = {
     root: ShadowRoot;
@@ -23,14 +24,15 @@ export function handleThemeInput(event: Event, context: ThemeInputContext): void
     }
     const category = currentCategory(context.settings, context.selection);
     const source = currentSource(context.settings, context.selection);
-    if (input.matches("[data-category-label-input]") && category && source) {
+    const catalogEditable = !isIntegrationSource(source);
+    if (input.matches("[data-category-label-input]") && category && source && catalogEditable) {
         category.label = input.value;
         query<HTMLElement>(context.root, "[data-category-title]").textContent = category.label;
         query<HTMLElement>(context.root, "[data-category-section]").setAttribute("heading", category.label);
         dispatchThemeCategoryUpdated({ sourceId: source.id, category });
         return;
     }
-    if (input.matches("[data-category-description-input]") && category && source) {
+    if (input.matches("[data-category-description-input]") && category && source && catalogEditable) {
         category.description = input.value;
         query<HTMLElement>(context.root, "[data-category-section]").setAttribute("description", category.description);
         query<HTMLElement>(context.root, "[data-category-description]").textContent =
@@ -38,7 +40,7 @@ export function handleThemeInput(event: Event, context: ThemeInputContext): void
         dispatchThemeCategoryUpdated({ sourceId: source.id, category });
         return;
     }
-    if (input.matches("[data-token-label]")) {
+    if (input.matches("[data-token-label]") && catalogEditable) {
         const tokenId = input.closest<HTMLElement>("[data-token-id]")?.dataset.tokenId;
         const token = category?.tokens.find((item) => item.id === tokenId);
         if (token) {
@@ -63,6 +65,18 @@ export function handleThemeInput(event: Event, context: ThemeInputContext): void
             text.value = input.value;
         }
     }
+}
+
+export function resetThemeToken(
+    event: Event,
+    settings: ThemeSettings,
+    selection: ThemeSelection,
+    selectedThemeId: string,
+    mode: "light" | "dark",
+): boolean {
+    const tokenId = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-reset-token]")?.dataset
+        .resetToken;
+    return tokenId ? resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
 }
 
 export function clickAction(event: Event): "theme" | "category" | "token" | "save" | "activate" | undefined {

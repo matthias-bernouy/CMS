@@ -1,7 +1,9 @@
-import type { ThemeDefinition, ThemeSettings, ThemeToken } from "@bernouy/cms-content";
+import type { ThemeDefinition, ThemeSettings } from "@bernouy/cms-content";
 
 import type { ThemeSelection } from "../events";
+import { integrationOwnerId, isIntegrationSource } from "../ownership";
 import { currentCategory, currentSource, currentTheme } from "./model";
+import { renderToken } from "./tokenView";
 
 export type ThemeEditorViewState = {
     settings: ThemeSettings;
@@ -39,6 +41,18 @@ export function renderThemeEditor(root: ShadowRoot, state: ThemeEditorViewState)
     query<HTMLElement>(root, "[data-save-theme]").toggleAttribute("disabled", !state.canPersist);
     query<HTMLElement>(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
 
+    const integrationId = integrationOwnerId(source);
+    const catalogEditable = !isIntegrationSource(source);
+    query<HTMLElement>(root, "[data-source-provenance]").hidden = !integrationId;
+    query<HTMLElement>(root, "[data-source-owner-label]").textContent = integrationId
+        ? `Provided by ${source.label} · ${integrationId}`
+        : "";
+    query<HTMLElement>(root, "[data-category-lock-note]").hidden = catalogEditable;
+    query<HTMLInputElement>(root, "[data-category-label-input]").readOnly = !catalogEditable;
+    query<HTMLTextAreaElement>(root, "[data-category-description-input]").readOnly = !catalogEditable;
+    query<HTMLElement>(root, "[data-add-theme-category]").hidden = !catalogEditable;
+    query<HTMLElement>(root, "[data-add-element]").hidden = !catalogEditable;
+
     const mode = source.supportsModes ? state.mode : "light";
     const modeSwitch = query<HTMLElement>(root, "[data-mode-switch]");
     modeSwitch.hidden = !source.supportsModes;
@@ -51,7 +65,7 @@ export function renderThemeEditor(root: ShadowRoot, state: ThemeEditorViewState)
     section.setAttribute("description", category.description);
     const list = document.createElement("div");
     list.className = "element-list";
-    category.tokens.forEach((token) => list.append(renderToken(token, theme, mode)));
+    category.tokens.forEach((token) => list.append(renderToken(token, theme, mode, catalogEditable)));
     query<HTMLElement>(root, "[data-groups]").replaceChildren(category.tokens.length ? list : emptyCategory());
     return mode;
 }
@@ -62,48 +76,6 @@ export function setThemeMessage(root: ShadowRoot | null, message: string, error 
         element.textContent = message;
         element.toggleAttribute("data-error", error);
     }
-}
-
-function renderToken(token: ThemeToken, theme: ThemeDefinition, mode: "light" | "dark"): HTMLElement {
-    const row = document.createElement("div");
-    row.className = "element-row";
-    row.dataset.tokenId = token.id;
-    const label = document.createElement("div");
-    label.className = "element-label";
-    const name = document.createElement("input");
-    name.className = "token-label-input";
-    name.type = "text";
-    name.value = token.label;
-    name.ariaLabel = `Label for --${token.variable}`;
-    name.dataset.tokenLabel = "true";
-    const detail = document.createElement("span");
-    detail.textContent = `${token.description} · var(--${token.variable})`;
-    label.append(name, detail);
-    row.append(label, renderControl(token, theme.values[mode]?.[token.id] ?? ""));
-    return row;
-}
-
-function renderControl(token: ThemeToken, value: string): HTMLElement {
-    if (token.type !== "color") {
-        return valueInput(value);
-    }
-    const control = document.createElement("div");
-    control.className = "color-control";
-    const picker = document.createElement("input");
-    picker.type = "color";
-    picker.value = /^#[0-9a-f]{6}$/i.test(value) ? value : "#000000";
-    picker.dataset.valueControl = "true";
-    control.append(picker, valueInput(value));
-    return control;
-}
-
-function valueInput(value: string): HTMLInputElement {
-    const input = document.createElement("input");
-    input.className = "value-control";
-    input.type = "text";
-    input.value = value;
-    input.dataset.valueControl = "true";
-    return input;
 }
 
 function emptyCategory(): HTMLElement {

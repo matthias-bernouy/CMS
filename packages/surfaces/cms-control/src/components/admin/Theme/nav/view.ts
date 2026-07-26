@@ -1,6 +1,7 @@
 import type { ThemeSource } from "@bernouy/cms-content";
 
 import type { ThemeSelection } from "../events";
+import { isIntegrationSource } from "../ownership";
 import { createCategoryIcon, createSourceIcon } from "./icons";
 
 export function renderThemeNav(root: ShadowRoot | null, sources: ThemeSource[], selection: ThemeSelection): void {
@@ -15,6 +16,12 @@ export function renderThemeNav(root: ShadowRoot | null, sources: ThemeSource[], 
         sourceItem.dataset.source = source.id;
         sourceItem.toggleAttribute("active", source.id === selection.sourceId);
         sourceItem.append(createSourceIcon(source.id), document.createTextNode(source.label));
+        if (isIntegrationSource(source)) {
+            const badge = document.createElement("span");
+            badge.className = "integration-badge";
+            badge.textContent = "Integration";
+            sourceItem.append(badge);
+        }
         menu.append(sourceItem);
 
         if (source.id !== selection.sourceId) {

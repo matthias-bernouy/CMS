@@ -1,6 +1,7 @@
 import type { ThemeCategory, ThemeDefinition, ThemeSettings, ThemeSource, ThemeToken } from "@bernouy/cms-content";
 
 import type { ThemeSelection } from "../events";
+import { isIntegrationSource } from "../ownership";
 
 export function currentSource(settings: ThemeSettings | null, selection: ThemeSelection): ThemeSource | undefined {
     return settings?.sources.find((item) => item.id === selection.sourceId) ?? settings?.sources[0];
@@ -40,7 +41,7 @@ export function addCategory(
     selection: ThemeSelection,
 ): { sourceId: string; category: ThemeCategory } | undefined {
     const source = currentSource(settings, selection);
-    if (!source) {
+    if (!source || isIntegrationSource(source)) {
         return undefined;
     }
     const number = source.categories.length + 1;
@@ -58,7 +59,7 @@ export function addCategory(
 export function addToken(settings: ThemeSettings, selection: ThemeSelection): void {
     const source = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
-    if (!source || !category) {
+    if (!source || !category || isIntegrationSource(source)) {
         return;
     }
     const allIds = new Set(
@@ -73,6 +74,26 @@ export function addToken(settings: ThemeSettings, selection: ThemeSelection): vo
         description: "Custom design token",
         type: source.supportsModes ? "color" : "value",
     });
+}
+
+export function resetIntegrationTokenValue(
+    settings: ThemeSettings,
+    selection: ThemeSelection,
+    selectedThemeId: string,
+    mode: "light" | "dark",
+    tokenId: string,
+): boolean {
+    const source = currentSource(settings, selection);
+    const token = currentCategory(settings, selection)?.tokens.find((item) => item.id === tokenId);
+    const theme = currentTheme(settings, selectedThemeId);
+    if (!isIntegrationSource(source) || !token || !theme) {
+        return false;
+    }
+    if (!token.defaults || !Object.hasOwn(theme.values[mode] ?? {}, token.id)) {
+        return false;
+    }
+    delete theme.values[mode][token.id];
+    return true;
 }
 
 export function themeSettingsFromCss(css: string): ThemeSettings {
