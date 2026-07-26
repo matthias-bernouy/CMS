@@ -28,6 +28,21 @@ describe("scoped compatibility finding resolution", () => {
         });
     });
 
+    test("keeps an exact proof applicable when only the human finding message changes", async () => {
+        const finding = await unknownFinding();
+        const result = await resolveCompatibilityFindings({
+            findings: [{ ...finding, message: "Reworded without changing the contract address" }],
+            proofs: [resolutionProof(finding.findingId)],
+            policy: POLICY,
+            rules: [rule()],
+        });
+
+        expect(result.findings[0]).toMatchObject({
+            finding: { findingId: finding.findingId },
+            effectiveClassification: "compatible",
+        });
+    });
+
     test("fails closed for stale digest identities, policies, runners, producers, and proof types", async () => {
         const finding = await unknownFinding();
         const attempts = [

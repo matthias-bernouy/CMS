@@ -35,7 +35,12 @@ export {
     MIGRATION_REPORT_SCHEMA,
     RELEASE_ADMISSION_DECISION_SCHEMA,
     VERIFICATION_REPORT_SCHEMA,
+    type CompatibilityNoBaselineReason,
+    type CompatibilityReleaseLevel,
+    type CompatibilityReportAssessment,
+    type CompatibilityReportOutcome,
     type CompatibilityReportV2,
+    type CompatibilityRequiredReleaseLevel,
     type ComposeReleaseAdmissionDecisionInput,
     type DigestContractReference,
     type MigrationCheckResult,
@@ -74,6 +79,7 @@ export {
     runnerSatisfiesRequirement,
 } from "../core/runner";
 export { parseCompatibilityReportV2 } from "../core/reports/compatibility";
+export { deriveCompatibilityReportAssessment } from "../core/reports/compatibilityAssessment";
 export { parseVerificationReport } from "../core/reports/verification";
 export { parseMigrationReport } from "../core/reports/migration";
 export {

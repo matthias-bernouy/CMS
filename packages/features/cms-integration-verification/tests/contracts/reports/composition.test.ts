@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import {
     composeReleaseAdmissionDecision,
     createCompatibilityFinding,
+    deriveCompatibilityReportAssessment,
+    type CompatibilityFindingClassification,
     type CompatibilityReportV2,
 } from "../../../src/exports/index";
 import { CREATED_AT, DIGEST_A, DIGEST_B, migrationReport, provenance, verificationReport } from "../fixtures";
@@ -74,7 +76,7 @@ describe("release admission decision composition", () => {
     });
 
     test("allows a major without an advertised in-place path while keeping verification mandatory", async () => {
-        const compatibility = await compatibilityReport({ releaseLevel: "major", requiredReleaseLevel: "major" });
+        const compatibility = await compatibilityReport({ releaseLevel: "major", classification: "breaking" });
         const decision = await composeReleaseAdmissionDecision({
             ...decisionInput(compatibility),
             verification: verificationReport(),
@@ -87,17 +89,22 @@ describe("release admission decision composition", () => {
 });
 
 async function compatibilityReport(
-    overrides: Partial<Pick<CompatibilityReportV2, "releaseLevel" | "requiredReleaseLevel">> = {},
+    overrides: Readonly<{
+        releaseLevel?: CompatibilityReportV2["releaseLevel"];
+        classification?: CompatibilityFindingClassification;
+    }> = {},
 ): Promise<CompatibilityReportV2> {
+    const releaseLevel = overrides.releaseLevel ?? "minor";
     const finding = await createCompatibilityFinding({
         surface: "schema",
         path: "public.orders.status",
         code: "column-added",
         baselineDigest: DIGEST_B,
         candidateDigest: DIGEST_A,
-        classification: "additive",
+        classification: overrides.classification ?? "additive",
         message: "Column status was added",
     });
+    const assessment = deriveCompatibilityReportAssessment({ effectiveFindings: [finding], releaseLevel });
     return {
         schema: "cms.integration.compatibility-report.v2",
         reportId: "compatibility-1",
@@ -111,12 +118,9 @@ async function compatibilityReport(
         baselines: [{ kind: "example", version: "1.1.0", packageDigest: DIGEST_B }],
         informationalBaselines: [],
         findings: [finding],
-        outcome: "compatible",
-        requiredReleaseLevel: "minor",
-        releaseLevel: "minor",
-        contractAdmissible: true,
+        ...assessment,
+        releaseLevel,
         provenance: provenance(),
-        ...overrides,
     };
 }
 
