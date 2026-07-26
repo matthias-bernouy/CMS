@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { parseCanonicalVerificationSandboxInput, runCanonicalVerificationSandboxProgram } from "../../src";
@@ -22,6 +23,18 @@ if (mode === "hang") {
     const input = await parseCanonicalVerificationSandboxInput(await readStdin(), 40 * 1_048_576);
     const result = await validSandboxResult(input);
     process.stdout.write(Buffer.from(canonicalJsonBytes({ ...result, fencingToken: result.fencingToken + 1 })));
+} else if (mode === "orphan") {
+    const input = await parseCanonicalVerificationSandboxInput(await readStdin(), 40 * 1_048_576);
+    const orphan = spawn(process.execPath, [import.meta.filename, "hang"], {
+        detached: false,
+        stdio: "ignore",
+    });
+    if (sidecar && orphan.pid) {
+        await writeFile(sidecar, String(orphan.pid));
+    }
+    orphan.unref();
+    const result = await validSandboxResult(input);
+    process.stdout.write(Buffer.from(canonicalJsonBytes(result)));
 } else {
     await runCanonicalVerificationSandboxProgram(async (input) => {
         const result = await validSandboxResult(input);

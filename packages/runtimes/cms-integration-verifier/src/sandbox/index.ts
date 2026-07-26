@@ -19,3 +19,4 @@ export {
     type ProcessVerificationSandboxConfig,
     type ProcessVerificationSandboxErrorCode,
 } from "./process";
+export * from "./service";

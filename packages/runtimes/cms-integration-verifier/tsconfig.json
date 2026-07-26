@@ -12,6 +12,7 @@
     "references": [
         { "path": "../../features/cms-integration-packages" },
         { "path": "../../features/cms-integration-verification" },
+        { "path": "../../features/cms-integrations" },
         { "path": "../../surfaces/cms-repository-management" }
     ]
 }

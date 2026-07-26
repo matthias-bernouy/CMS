@@ -89,11 +89,21 @@ export function sandboxArguments(raw: string | undefined): readonly string[] {
 
 export function runnerIdentity(source: Record<string, string | undefined>): PinnedVerificationRunnerIdentity {
     try {
-        return parsePinnedVerificationRunnerIdentity({
+        const identity = parsePinnedVerificationRunnerIdentity({
             name: source.CMS_INTEGRATION_VERIFIER_RUNNER_NAME,
             version: source.CMS_INTEGRATION_VERIFIER_RUNNER_VERSION,
             imageDigest: source.CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST,
         });
+        const deployedImage = source.CMS_INTEGRATION_VERIFIER_DEPLOYED_IMAGE_REFERENCE;
+        if (
+            (source.NODE_ENV === "production" && deployedImage === undefined) ||
+            (deployedImage !== undefined &&
+                (!/^[^\s@]+@sha256:[a-f0-9]{64}$/u.test(deployedImage) ||
+                    !deployedImage.endsWith(`@${identity.imageDigest}`)))
+        ) {
+            throw new TypeError();
+        }
+        return identity;
     } catch {
         throw new Error("Integration verifier runner identity must be exact and digest-pinned");
     }

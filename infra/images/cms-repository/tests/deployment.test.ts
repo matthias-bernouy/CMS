@@ -116,7 +116,7 @@ const dockerComposeAvailable =
     Bun.spawnSync({ cmd: ["docker", "compose", "version"], stdout: "ignore", stderr: "ignore" }).exitCode === 0;
 const composeTest = dockerComposeAvailable ? test : test.skip;
 
-composeTest("Compose renders with one isolated service and no published ports", () => {
+composeTest("Compose renders the isolated repository and verifier trust zones without published ports", () => {
     const rendered = Bun.spawnSync({
         cmd: ["docker", "compose", "--env-file", "/dev/null", "-f", composeFile, "config", "--format", "json"],
         cwd: imageRoot,
@@ -127,6 +127,12 @@ composeTest("Compose renders with one isolated service and no published ports", 
             CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-maintenance-token",
             CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-worker-token",
             CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE: "/run/operator-secrets/repository-worker-capability-key",
+            CMS_INTEGRATION_VERIFIER_IMAGE:
+                "registry.example.test/bernouy/cms-integration-verifier@sha256:" + "d".repeat(64),
+            CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: "sha256:" + "d".repeat(64),
+            CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE: "/run/operator-secrets/verifier-private.pem",
+            CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: "/run/operator-secrets/verifier-public.pem",
+            CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE: "/run/operator-secrets/verifier-postgres-password",
         },
         stdout: "pipe",
         stderr: "pipe",
@@ -149,7 +155,12 @@ composeTest("Compose renders with one isolated service and no published ports", 
         >;
         networks: Record<string, { internal?: boolean }>;
     };
-    expect(Object.keys(config.services)).toEqual(["cms-repository"]);
+    expect(Object.keys(config.services).toSorted()).toEqual([
+        "cms-integration-verifier",
+        "cms-integration-verifier-postgres",
+        "cms-integration-verifier-sandbox",
+        "cms-repository",
+    ]);
     expect(config.services["cms-repository"]).toMatchObject({ read_only: true });
     expect(config.services["cms-repository"]?.environment).toMatchObject({
         CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE: "/run/secrets/cms-repository-management-token",

@@ -18,6 +18,7 @@ export interface PostgresInstallAndReapplyAdapter {
         }>,
         signal: AbortSignal,
     ): Promise<PostgresSqlApplicationEvidence>;
+    dispose?(): Promise<void>;
 }
 
 export async function runPostgresInstallAndReapply(

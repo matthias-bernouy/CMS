@@ -389,6 +389,7 @@
       "dependencies": {
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-verification": "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-repository-management": "workspace:*",
       },
       "peerDependencies": {
@@ -400,6 +401,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/cms-integration-registry": "workspace:*",
+        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-official-integrations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-repository-management": "workspace:*",
@@ -511,6 +513,7 @@
       "dependencies": {
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integration-registry": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",

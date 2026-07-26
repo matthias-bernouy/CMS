@@ -20,6 +20,7 @@
     "dependencies": {
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-verification": "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-repository-management": "workspace:*"
     },
     "peerDependencies": {

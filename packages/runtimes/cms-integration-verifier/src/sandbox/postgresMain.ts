@@ -10,9 +10,13 @@ export async function runPostgresVerificationSandboxExecutable(arguments_: reado
         throw new TypeError("PostgreSQL sandbox requires one adapter module and one suite identity");
     }
     const adapter = await loadPostgresInstallAndReapplyAdapter(adapterModule);
-    await runCanonicalVerificationSandboxProgram(
-        async (input, signal) => await runPostgresInstallAndReapply(input, adapter, suiteId, signal),
-    );
+    try {
+        await runCanonicalVerificationSandboxProgram(
+            async (input, signal) => await runPostgresInstallAndReapply(input, adapter, suiteId, signal),
+        );
+    } finally {
+        await adapter.dispose?.();
+    }
 }
 
 if (import.meta.main) {

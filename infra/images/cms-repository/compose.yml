@@ -83,6 +83,203 @@ services:
             start_period: 15s
         stop_grace_period: 30s
 
+    cms-integration-verifier:
+        image: ${CMS_INTEGRATION_VERIFIER_IMAGE:?CMS_INTEGRATION_VERIFIER_IMAGE must be an immutable digest}
+        restart: unless-stopped
+        init: true
+        user: "1001:1001"
+        depends_on:
+            cms-repository:
+                condition: service_healthy
+            cms-integration-verifier-sandbox:
+                condition: service_healthy
+            cms-integration-verifier-postgres:
+                condition: service_healthy
+        environment:
+            NODE_ENV: production
+            CMS_INTEGRATION_VERIFIER_REPOSITORY_URL: http://cms-repository:3000
+            CMS_INTEGRATION_VERIFIER_WORKER_ID: ${CMS_INTEGRATION_VERIFIER_WORKER_ID:-verifier-1}
+            CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_FILE: /run/secrets/cms-integration-verifier-worker-token
+            CMS_INTEGRATION_VERIFIER_DATABASE_PROVIDER_MODULE: /app/packages/runtimes/cms-integration-verifier/src/runtime/providers/postgres/index.ts
+            CMS_INTEGRATION_VERIFIER_SANDBOX_URL: http://cms-integration-verifier-sandbox:3101
+            CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_FILE: /run/secrets/cms-integration-verifier-sandbox-signing-key
+            CMS_INTEGRATION_VERIFIER_SANDBOX_CAPABILITY_LIFETIME_MS: "${CMS_INTEGRATION_VERIFIER_SANDBOX_CAPABILITY_LIFETIME_MS:-15000}"
+            CMS_INTEGRATION_VERIFIER_RUNNER_NAME: cms-postgres
+            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.0.0"
+            CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: ${CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST:?CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST must be the deployed sandbox sha256 digest}
+            CMS_INTEGRATION_VERIFIER_DEPLOYED_IMAGE_REFERENCE: ${CMS_INTEGRATION_VERIFIER_IMAGE:?CMS_INTEGRATION_VERIFIER_IMAGE must be an immutable digest}
+            CMS_INTEGRATION_VERIFIER_HEALTH_PORT: "3100"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS: "${CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS:-600000}"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_INPUT_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_INPUT_BYTES:-41943040}"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES:-1048576}"
+            CMS_INTEGRATION_VERIFIER_POLL_INTERVAL_MS: "${CMS_INTEGRATION_VERIFIER_POLL_INTERVAL_MS:-5000}"
+            CMS_INTEGRATION_VERIFIER_ERROR_BACKOFF_MS: "${CMS_INTEGRATION_VERIFIER_ERROR_BACKOFF_MS:-10000}"
+            CMS_INTEGRATION_VERIFIER_POSTGRES_HOST: cms-integration-verifier-postgres
+            CMS_INTEGRATION_VERIFIER_POSTGRES_PORT: "5432"
+            CMS_INTEGRATION_VERIFIER_POSTGRES_USER: postgres
+            CMS_INTEGRATION_VERIFIER_POSTGRES_DATABASE: postgres
+            CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_FILE: /run/secrets/cms-integration-verifier-postgres-password
+            CMS_INTEGRATION_VERIFIER_POSTGRES_STATEMENT_TIMEOUT_MS: "${CMS_INTEGRATION_VERIFIER_POSTGRES_STATEMENT_TIMEOUT_MS:-120000}"
+        secrets:
+            - source: cms_repository_worker_token
+              target: cms-integration-verifier-worker-token
+              uid: "1001"
+              gid: "1001"
+              mode: 0400
+            - source: cms_integration_verifier_sandbox_signing_key
+              target: cms-integration-verifier-sandbox-signing-key
+              uid: "1001"
+              gid: "1001"
+              mode: 0400
+            - source: cms_integration_verifier_postgres_password
+              target: cms-integration-verifier-postgres-password
+              uid: "1001"
+              gid: "1001"
+              mode: 0400
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=32m,mode=1770,uid=1001,gid=1001
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        pids_limit: 64
+        mem_limit: 512m
+        cpus: "1.0"
+        expose:
+            - "3100"
+        networks:
+            cms_repository: {}
+            cms_verifier_control: {}
+            cms_verifier_database: {}
+        healthcheck:
+            test:
+                - CMD
+                - bun
+                - -e
+                - >-
+                    const response = await fetch("http://127.0.0.1:3100/ready", {
+                      signal: AbortSignal.timeout(4000)
+                    });
+                    if (!response.ok) process.exit(1);
+                    await response.body?.cancel();
+            interval: 30s
+            timeout: 5s
+            retries: 5
+            start_period: 15s
+        stop_grace_period: 30s
+
+    cms-integration-verifier-sandbox:
+        image: ${CMS_INTEGRATION_VERIFIER_IMAGE:?CMS_INTEGRATION_VERIFIER_IMAGE must be an immutable digest}
+        restart: unless-stopped
+        init: true
+        user: "1002:1002"
+        command:
+            - bun
+            - run
+            - packages/runtimes/cms-integration-verifier/src/sandbox/service/main.ts
+        depends_on:
+            cms-integration-verifier-postgres:
+                condition: service_healthy
+        environment:
+            NODE_ENV: production
+            CMS_INTEGRATION_VERIFIER_SANDBOX_PORT: "3101"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: /run/configs/cms-integration-verifier-sandbox-verification-key
+            CMS_INTEGRATION_VERIFIER_SANDBOX_EXECUTABLE: /usr/local/bin/bun
+            CMS_INTEGRATION_VERIFIER_SANDBOX_ARGUMENTS_JSON: '["run","packages/runtimes/cms-integration-verifier/src/sandbox/postgresMain.ts","/app/packages/runtimes/cms-integration-verifier/src/sandbox/service/postgresAdapter.ts","platform-install"]'
+            CMS_INTEGRATION_VERIFIER_SANDBOX_TMP_ROOT: /tmp/cms-integration-verifier
+            CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS: "${CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS:-600000}"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_TERMINATION_GRACE_MS: "${CMS_INTEGRATION_VERIFIER_SANDBOX_TERMINATION_GRACE_MS:-2000}"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_INPUT_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_INPUT_BYTES:-41943040}"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES:-1048576}"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_ERROR_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_ERROR_BYTES:-65536}"
+            CMS_INTEGRATION_VERIFIER_RUNNER_NAME: cms-postgres
+            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.0.0"
+            CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: ${CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST:?CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST must be the deployed sandbox sha256 digest}
+            CMS_INTEGRATION_VERIFIER_DEPLOYED_IMAGE_REFERENCE: ${CMS_INTEGRATION_VERIFIER_IMAGE:?CMS_INTEGRATION_VERIFIER_IMAGE must be an immutable digest}
+        configs:
+            - source: cms_integration_verifier_sandbox_verification_key
+              target: /run/configs/cms-integration-verifier-sandbox-verification-key
+              uid: "1002"
+              gid: "1002"
+              mode: 0444
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=256m,mode=1700,uid=1002,gid=1002
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        pids_limit: 128
+        mem_limit: 1g
+        cpus: "2.0"
+        expose:
+            - "3101"
+        networks:
+            cms_verifier_control: {}
+            cms_verifier_database: {}
+        healthcheck:
+            test:
+                - CMD
+                - bun
+                - -e
+                - >-
+                    const response = await fetch("http://127.0.0.1:3101/ready", {
+                      signal: AbortSignal.timeout(4000)
+                    });
+                    if (!response.ok) process.exit(1);
+                    await response.body?.cancel();
+            interval: 15s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+        stop_grace_period: 15s
+
+    cms-integration-verifier-postgres:
+        image: postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
+        restart: unless-stopped
+        user: "70:70"
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_DB: postgres
+            POSTGRES_PASSWORD_FILE: /run/secrets/cms-integration-verifier-postgres-password
+            PGDATA: /var/lib/postgresql/data/pgdata
+        secrets:
+            - source: cms_integration_verifier_postgres_password
+              target: cms-integration-verifier-postgres-password
+              uid: "70"
+              gid: "70"
+              mode: 0400
+        read_only: true
+        tmpfs:
+            - /var/lib/postgresql/data:rw,nosuid,nodev,noexec,size=1g,mode=0700,uid=70,gid=70
+            - /var/run/postgresql:rw,nosuid,nodev,noexec,size=16m,mode=0770,uid=70,gid=70
+            - /tmp:rw,nosuid,nodev,noexec,size=64m,mode=0700,uid=70,gid=70
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        pids_limit: 128
+        mem_limit: 1g
+        cpus: "2.0"
+        expose:
+            - "5432"
+        networks:
+            cms_verifier_database: {}
+        healthcheck:
+            test:
+                - CMD
+                - pg_isready
+                - -U
+                - postgres
+                - -d
+                - postgres
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 20s
+        stop_grace_period: 15s
+
 secrets:
     cms_repository_management_token:
         file: ${CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE must reference a mode-0600 secret file}
@@ -92,8 +289,22 @@ secrets:
         file: ${CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE:?CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE must reference a distinct mode-0600 secret file}
     cms_repository_worker_capability_key:
         file: ${CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE:?CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE must reference a distinct mode-0600 secret file}
+    cms_integration_verifier_sandbox_signing_key:
+        file: ${CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE must reference a mode-0600 Ed25519 private key}
+    cms_integration_verifier_postgres_password:
+        file: ${CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE must reference a mode-0600 password file}
+
+configs:
+    cms_integration_verifier_sandbox_verification_key:
+        file: ${CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE:?CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE must reference the matching Ed25519 public key}
 
 networks:
     cms_repository:
         name: ${CMS_REPOSITORY_NETWORK_NAME:-cms_repository}
+        internal: true
+    cms_verifier_control:
+        name: ${CMS_INTEGRATION_VERIFIER_CONTROL_NETWORK_NAME:-cms_verifier_control}
+        internal: true
+    cms_verifier_database:
+        name: ${CMS_INTEGRATION_VERIFIER_DATABASE_NETWORK_NAME:-cms_verifier_database}
         internal: true

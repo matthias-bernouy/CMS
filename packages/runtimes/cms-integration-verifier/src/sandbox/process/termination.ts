@@ -24,27 +24,27 @@ export async function terminateChild(
     graceMs: number,
     closed = observeChildClose(child),
 ): Promise<void> {
-    if (!child.pid) {
+    const pid = child.pid;
+    if (!pid) {
         await closed;
         return;
     }
-    if (child.exitCode !== null || child.signalCode !== null) {
+    if (!processGroupExists(pid)) {
         await closed;
         return;
     }
-    signalProcessGroup(child, "SIGTERM");
-    await Promise.race([closed, delay(graceMs)]);
-    if (child.exitCode === null && child.signalCode === null) {
-        signalProcessGroup(child, "SIGKILL");
-        await closed;
+    signalProcessGroup(pid, child, "SIGTERM");
+    await waitForProcessGroupExit(pid, graceMs);
+    if (processGroupExists(pid)) {
+        signalProcessGroup(pid, child, "SIGKILL");
     }
+    await closed;
 }
 
-function signalProcessGroup(child: ChildProcessWithoutNullStreams, signal: NodeJS.Signals): void {
-    const pid = child.pid;
-    if (process.platform !== "win32" && Number.isSafeInteger(pid) && (pid as number) > 0) {
+function signalProcessGroup(pid: number, child: ChildProcessWithoutNullStreams, signal: NodeJS.Signals): void {
+    if (process.platform !== "win32") {
         try {
-            process.kill(-(pid as number), signal);
+            process.kill(-pid, signal);
             return;
         } catch {
             // The process may have exited between the status check and the signal.
@@ -53,6 +53,21 @@ function signalProcessGroup(child: ChildProcessWithoutNullStreams, signal: NodeJ
     child.kill(signal);
 }
 
-async function delay(durationMs: number): Promise<void> {
-    await new Promise<void>((resolve) => setTimeout(resolve, durationMs));
+function processGroupExists(pid: number): boolean {
+    if (process.platform === "win32") {
+        return true;
+    }
+    try {
+        process.kill(-pid, 0);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function waitForProcessGroupExit(pid: number, graceMs: number): Promise<void> {
+    const deadline = performance.now() + graceMs;
+    while (processGroupExists(pid) && performance.now() < deadline) {
+        await new Promise<void>((resolve) => setTimeout(resolve, Math.min(10, graceMs)));
+    }
 }

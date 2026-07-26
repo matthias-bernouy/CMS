@@ -56,6 +56,18 @@ describe("local process verification sandbox", () => {
         expect(await readdir(fixture.tempRoot)).toEqual([]);
     });
 
+    test("kills an untrusted descendant even when its successful parent already exited", async () => {
+        const fixture = await trackedFixture("orphan", { terminationGraceMs: 25 }, true);
+
+        await expect(
+            fixture.sandbox.run(await sandboxInputFixture(), new AbortController().signal),
+        ).resolves.toBeObject();
+
+        const pid = Number(await readFile(fixture.sidecar, "utf8"));
+        expectProcessGone(pid);
+        expect(await readdir(fixture.tempRoot)).toEqual([]);
+    });
+
     test("maps an unavailable executable to a bounded launch failure", async () => {
         const fixture = await trackedFixture("unused", { executable: "/missing/private/verifier-secret" });
 

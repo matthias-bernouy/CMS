@@ -24,7 +24,7 @@ export async function executeSandboxProcess(
         throw new ProcessVerificationSandboxError(child ? "process-failed" : "launch-failed");
     } finally {
         try {
-            if (child?.pid && child.exitCode === null && child.signalCode === null) {
+            if (child?.pid) {
                 await terminateChild(child, config.terminationGraceMs);
             }
             await removeIsolatedTempDirectory(temporaryDirectory);
