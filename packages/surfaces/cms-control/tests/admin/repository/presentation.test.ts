@@ -23,6 +23,7 @@ describe("repository administration presentation", () => {
         expect(console.textContent).toContain("Registry capacity");
         expect(console.textContent).toContain("4 downloads / 4.0 KiB");
         expect(console.textContent).toContain("6/8 succeeded");
+        expect(console.textContent).toContain("1 not found");
         expect(console.textContent).toContain("publication: succeeded");
         expect(console.textContent).toContain("publication-operation");
         expect(console.textContent).toContain("A <script>alert(1)</script> package failed");

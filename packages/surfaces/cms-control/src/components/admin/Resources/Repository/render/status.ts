@@ -27,7 +27,7 @@ export function renderRepositoryStatus(target: HTMLElement, status: RepositorySt
             labelledValue("Rate-limit rejections", String(status.metrics.publicPackages.rateLimitRejections)),
             labelledValue(
                 "Repository reads",
-                `${status.metrics.repositoryReads.succeeded}/${status.metrics.repositoryReads.total} succeeded, ${status.metrics.repositoryReads.rejected} rejected, ${status.metrics.repositoryReads.failed} failed, max ${status.metrics.repositoryReads.maximumDurationMs} ms`,
+                `${status.metrics.repositoryReads.succeeded}/${status.metrics.repositoryReads.total} succeeded, ${status.metrics.repositoryReads.notFound} not found, ${status.metrics.repositoryReads.rejected} rejected, ${status.metrics.repositoryReads.failed} failed, max ${status.metrics.repositoryReads.maximumDurationMs} ms`,
             ),
             labelledValue("Registry capacity", filesystemSummary(status.metrics.filesystem)),
         );
