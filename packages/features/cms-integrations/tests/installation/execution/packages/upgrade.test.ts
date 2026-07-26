@@ -47,6 +47,33 @@ describe("package-backed integration upgrades", () => {
         expect(result.installation.packageDigest).toBe(SECOND_DIGEST);
     });
 
+    test("leaves the complete pin untouched when package materialization runs out of disk", async () => {
+        const context = packageLifecycleContext();
+        const installed = rerunDefinition("1.0.0", "https://api.example.com/v1/items");
+        const target = rerunDefinition("1.1.0", "https://api.example.com/v2/items");
+        await createPinned(context, installed);
+        const before = await context.installations.get(installed.kind);
+        const resolver = new RecordingPackageResolver(() => {
+            throw Object.assign(new Error("package cache staging has no space left"), { code: "ENOSPC" });
+        });
+
+        const failure = await runIntegrationInstallation({
+            mode: "upgrade",
+            deps: { sources: context.sources, secrets: context.secrets },
+            installations: context.installations,
+            integrationId: installed.kind,
+            targetDefinition: target,
+            packageResolver: resolver,
+        }).catch((error) => error);
+
+        expect(failure).toMatchObject({
+            code: "ENOSPC",
+            message: "package cache staging has no space left",
+        });
+        expect(resolver.requests).toHaveLength(1);
+        expect(await context.installations.get(installed.kind)).toEqual(before);
+    });
+
     test("does not enter pending or append a run when target resolution fails", async () => {
         const context = packageLifecycleContext();
         const installed = rerunDefinition("1.0.0", "https://api.example.com/v1/items");
