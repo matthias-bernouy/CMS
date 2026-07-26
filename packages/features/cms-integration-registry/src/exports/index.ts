@@ -42,6 +42,11 @@ export type {
     IntegrationRegistryRecoveryDiagnosticCode,
     IntegrationRegistryRecoveryResult,
 } from "../interfaces/recovery";
+export type {
+    IntegrationCompatibilityReevaluationRequest,
+    IntegrationCompatibilityReevaluationResult,
+    IntegrationCompatibilityReevaluator,
+} from "../interfaces/reevaluation";
 export type { IntegrationRegistryMutationCoordinator } from "../interfaces/mutations";
 export type {
     IntegrationRegistryStablePromoter,
@@ -78,6 +83,13 @@ export {
     IntegrationCompatibilityRevisionConflictError,
     IntegrationCompatibilityRevisionValidationError,
 } from "../core/compatibility/reportStoreErrors";
+export {
+    IntegrationCompatibilityReevaluationConflictError,
+    IntegrationCompatibilityReevaluationIntegrityError,
+    IntegrationCompatibilityReevaluationNotFoundError,
+    IntegrationCompatibilityReevaluationStaleReportError,
+    IntegrationCompatibilityReevaluationValidationError,
+} from "../core/compatibility/reevaluation/errors";
 export { changedIntegrationPackagePaths } from "../core/publication/changedPaths";
 export {
     IntegrationRegistryVersionConflictError,
