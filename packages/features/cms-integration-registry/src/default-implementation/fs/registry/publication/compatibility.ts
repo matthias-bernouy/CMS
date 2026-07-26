@@ -8,6 +8,7 @@ import { changedIntegrationPackagePaths } from "../../../../core/publication/cha
 import type { IntegrationRegistryCatalogSnapshot } from "../../../../interfaces/catalog";
 import type {
     IntegrationCompatibilityAdmissionReport,
+    IntegrationCompatibilityAdmissionDecision,
     IntegrationCompatibilityEvaluationInput,
     IntegrationCompatibilityPackage,
     TrustedSchemaDeclarationEvidence,
@@ -24,6 +25,24 @@ export async function evaluatePublicationCompatibility(
     schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
     reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
 ): Promise<IntegrationCompatibilityAdmissionReport> {
+    return assertIntegrationCompatibilityAdmission(
+        await evaluatePublicationCompatibilityDecision(
+            snapshot,
+            candidate,
+            evaluator,
+            schemaDeclarationEvidence,
+            reviewedSchemaBaselines,
+        ),
+    );
+}
+
+export async function evaluatePublicationCompatibilityDecision(
+    snapshot: IntegrationRegistryCatalogSnapshot,
+    candidate: PreparedFsIntegrationRegistryCandidate,
+    evaluator: IntegrationCompatibilityEvaluator,
+    schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
+    reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
+): Promise<IntegrationCompatibilityAdmissionDecision> {
     const candidateReviewedSchemaBaselines = await loadPackageReviewedSchemaBaselines(
         reviewedSchemaBaselines,
         candidate.definition.kind,
@@ -40,9 +59,7 @@ export async function evaluatePublicationCompatibility(
     };
     const index = snapshot.getIndex(candidate.definition.kind);
     if (!index) {
-        return assertIntegrationCompatibilityAdmission(
-            evaluator.evaluateAdmission({ candidate: candidatePackage, noBaselineReason: "new-kind" }),
-        );
+        return evaluator.evaluateAdmission({ candidate: candidatePackage, noBaselineReason: "new-kind" });
     }
     const enforcingVersion = [...index.versions]
         .reverse()
@@ -55,13 +72,11 @@ export async function evaluatePublicationCompatibility(
             enforcingVersion,
             reviewedSchemaBaselines,
         );
-        return assertIntegrationCompatibilityAdmission(
-            evaluator.evaluateAdmission({
-                baseline,
-                candidate: candidatePackage,
-                changedPaths: await changedPaths(snapshot, candidate.limits, baseline, candidate),
-            }),
-        );
+        return evaluator.evaluateAdmission({
+            baseline,
+            candidate: candidatePackage,
+            changedPaths: await changedPaths(snapshot, candidate.limits, baseline, candidate),
+        });
     }
     const informationalVersion = index.stable ?? index.latest;
     const informationalBaseline = informationalVersion
@@ -81,7 +96,7 @@ export async function evaluatePublicationCompatibility(
             ? { changedPaths: await changedPaths(snapshot, candidate.limits, informationalBaseline, candidate) }
             : {}),
     };
-    return assertIntegrationCompatibilityAdmission(evaluator.evaluateAdmission(input));
+    return evaluator.evaluateAdmission(input);
 }
 
 async function changedPaths(

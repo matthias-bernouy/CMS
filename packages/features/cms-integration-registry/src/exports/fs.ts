@@ -69,6 +69,7 @@ export {
     FsIntegrationCompatibilityV2ReportStore,
     FsIntegrationMigrationReportStore,
     FsIntegrationVerificationReportStore,
+    FsIntegrationVerificationBundleStore,
     FsReleaseAdmissionDecisionStore,
     RELEASE_REPORT_HISTORY_DIRECTORY,
     recoverFsReleaseReportHistories,
@@ -140,3 +141,13 @@ export {
     type PrunedIntegrationRegistryCandidateRecord,
     type RecoverFsIntegrationRegistryCandidatesConfig,
 } from "../default-implementation/fs/registry/candidates";
+export {
+    FsIntegrationRegistryCandidateAdmissionPlanner,
+    FsIntegrationRegistryCandidateAdmissionPlanningError,
+    type CandidateAdmissionPlanningErrorCode,
+    type FsIntegrationRegistryCandidateAdmissionPlan,
+    type FsIntegrationRegistryCandidateAdmissionPlannerConfig,
+    type InheritedVerificationContract,
+    type IntegrationVerificationContractCatalog,
+    type PlanFsIntegrationRegistryCandidateInput,
+} from "../default-implementation/fs/registry/publication/transaction/planning";

@@ -6,6 +6,8 @@ import {
     readCandidatePolicy,
     readCandidateVerification,
     readCandidateVerificationJobResult,
+    readCandidateCompatibilityReport,
+    readCandidateStatefulSelection,
 } from "../../objects";
 import type { FsIntegrationRegistryCandidateRecoveryDiagnostic } from "../types";
 import {
@@ -16,7 +18,14 @@ import {
 } from "./support";
 
 const OBJECT_FILE = /^([a-f0-9]{64})\.json$/u;
-type CandidateObjectKind = "package" | "verification" | "policy" | "admission" | "result";
+type CandidateObjectKind =
+    | "package"
+    | "verification"
+    | "policy"
+    | "admission"
+    | "compatibility-report"
+    | "stateful-selection"
+    | "result";
 
 export async function recoverObjectInventory(
     layout: FsIntegrationRegistryCandidateLayout,
@@ -70,6 +79,10 @@ function readCandidateObject(layout: FsIntegrationRegistryCandidateLayout, kind:
             return readCandidatePolicy(layout, digest);
         case "admission":
             return readCandidateAdmission(layout, digest);
+        case "compatibility-report":
+            return readCandidateCompatibilityReport(layout, digest);
+        case "stateful-selection":
+            return readCandidateStatefulSelection(layout, digest);
         case "result":
             return readCandidateVerificationJobResult(layout, digest);
     }

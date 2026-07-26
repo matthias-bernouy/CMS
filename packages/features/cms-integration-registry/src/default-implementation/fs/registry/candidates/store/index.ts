@@ -12,11 +12,13 @@ import type {
     IntegrationRegistryCandidateObjects,
     IntegrationRegistryCandidateRecord,
     IntegrationRegistryCandidateStore,
+    PersistIntegrationRegistryCandidatePlanningInput,
     QueueIntegrationRegistryCandidateInput,
     RejectIntegrationRegistryCandidateValidationInput,
 } from "cms-integration-registry/interfaces/publication";
 import { ensureFsIntegrationRegistryCandidateLayout, type FsIntegrationRegistryCandidateLayout } from "../layout";
 import { readFsIntegrationRegistryCandidateObjects } from "../objects";
+import { persistCandidatePlanningArtifacts } from "../objects";
 import { withCandidateMutationLock } from "./lock";
 import {
     completeStoredCandidate,
@@ -59,6 +61,28 @@ export class FsIntegrationRegistryCandidateStore implements IntegrationRegistryC
             layout,
             await requireCandidateRecord(layout, candidateId),
         );
+    }
+
+    async persistPlanningArtifacts(
+        candidateId: string,
+        input: PersistIntegrationRegistryCandidatePlanningInput,
+    ): Promise<Readonly<{ compatibilityReportDigest: string; statefulChangeSelectionDigest: string }>> {
+        const layout = await this.#loadLayout();
+        return await withCandidateMutationLock(layout, async () => {
+            const record = await requireCandidateRecord(layout, candidateId);
+            await readFsIntegrationRegistryCandidateObjects(layout, record);
+            if (record.revision !== input.expectedRevision || record.status !== "validating") {
+                throw new IntegrationRegistryCandidateError(
+                    "revision_conflict",
+                    `Candidate ${candidateId} is no longer at its expected validating revision`,
+                );
+            }
+            const binding = await persistCandidatePlanningArtifacts(layout, record, input);
+            return {
+                compatibilityReportDigest: binding.compatibilityReportDigest,
+                statefulChangeSelectionDigest: binding.statefulChangeSelectionDigest,
+            };
+        });
     }
 
     async listClaimable(now: string, limit = 100): Promise<readonly IntegrationRegistryCandidateRecord[]> {

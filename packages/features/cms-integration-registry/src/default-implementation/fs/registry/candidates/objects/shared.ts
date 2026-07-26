@@ -35,7 +35,15 @@ export async function assertCandidateObjectCapacity(
     justWrittenPath?: string,
 ): Promise<void> {
     let total = 0;
-    for (const root of [layout.packages, layout.verifications, layout.policies, layout.admissions, layout.results]) {
+    for (const root of [
+        layout.packages,
+        layout.verifications,
+        layout.policies,
+        layout.admissions,
+        layout.compatibilityReports,
+        layout.statefulSelections,
+        layout.results,
+    ]) {
         await readVerifiedRegistryDirectory(root);
         const entries = await readdir(root);
         if (

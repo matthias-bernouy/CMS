@@ -5,6 +5,7 @@ import type {
 } from "./compatibility";
 import type {
     CompatibilityReportV2,
+    IntegrationVerificationEnvelopeV1,
     MigrationReport,
     ReleaseAdmissionDecision,
     VerificationReport,
@@ -158,6 +159,17 @@ export interface ReleaseAdmissionDecisionStore {
     append(
         request: AppendReleaseReportRequest<ReleaseAdmissionDecision>,
     ): Promise<ReleaseReportHistory<ReleaseAdmissionDecision>>;
+}
+
+export type StoredIntegrationVerificationBundle = Readonly<{
+    envelope: IntegrationVerificationEnvelopeV1;
+    canonicalBytes: Uint8Array;
+    digest: string;
+}>;
+
+export interface IntegrationVerificationBundleStore {
+    get(digest: string): Promise<StoredIntegrationVerificationBundle | null>;
+    put(bundle: StoredIntegrationVerificationBundle): Promise<StoredIntegrationVerificationBundle>;
 }
 
 export type FsReleaseReportRecoveryDiagnostic = Readonly<{

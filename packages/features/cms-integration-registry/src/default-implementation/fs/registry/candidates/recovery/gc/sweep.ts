@@ -12,6 +12,8 @@ import {
     readCandidatePolicy,
     readCandidateVerification,
     readCandidateVerificationJobResult,
+    readCandidateCompatibilityReport,
+    readCandidateStatefulSelection,
 } from "../../objects";
 import { boundedCandidateInventory, CANDIDATE_TEMPORARY_FILE } from "../inventory/support";
 
@@ -76,6 +78,16 @@ function objectInventories(layout: FsIntegrationRegistryCandidateLayout) {
             kind: "admission",
             root: layout.admissions,
             read: (digest: string) => readCandidateAdmission(layout, digest),
+        },
+        {
+            kind: "compatibility-report",
+            root: layout.compatibilityReports,
+            read: (digest: string) => readCandidateCompatibilityReport(layout, digest),
+        },
+        {
+            kind: "stateful-selection",
+            root: layout.statefulSelections,
+            read: (digest: string) => readCandidateStatefulSelection(layout, digest),
         },
         {
             kind: "result",

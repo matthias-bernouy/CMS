@@ -1,7 +1,9 @@
 import type {
     AdmissionInputSnapshotV1,
+    CompatibilityReportV2,
     IntegrationVerificationEnvelopeV1,
     ReleaseAdmissionPolicySnapshotV1,
+    StatefulChangeSelectionV1,
     VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import type { IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
@@ -10,6 +12,7 @@ import type {
     CompleteIntegrationRegistryCandidateInput,
     CreateIntegrationRegistryCandidateInput,
     IntegrationRegistryCandidateRecord,
+    PersistIntegrationRegistryCandidatePlanningInput,
     QueueIntegrationRegistryCandidateInput,
     RejectIntegrationRegistryCandidateValidationInput,
 } from "./candidate";
@@ -19,6 +22,8 @@ export type IntegrationRegistryCandidateObjects = Readonly<{
     verification: IntegrationVerificationEnvelopeV1;
     policy?: ReleaseAdmissionPolicySnapshotV1;
     admission?: AdmissionInputSnapshotV1;
+    compatibilityReport?: CompatibilityReportV2;
+    statefulChanges?: StatefulChangeSelectionV1;
     verificationJobResult?: VerificationJobResultV1;
 }>;
 
@@ -26,6 +31,10 @@ export interface IntegrationRegistryCandidateStore {
     create(input: CreateIntegrationRegistryCandidateInput): Promise<IntegrationRegistryCandidateRecord>;
     get(candidateId: string): Promise<IntegrationRegistryCandidateRecord | null>;
     objects(candidateId: string): Promise<IntegrationRegistryCandidateObjects>;
+    persistPlanningArtifacts(
+        candidateId: string,
+        input: PersistIntegrationRegistryCandidatePlanningInput,
+    ): Promise<Readonly<{ compatibilityReportDigest: string; statefulChangeSelectionDigest: string }>>;
     listClaimable(now: string, limit?: number): Promise<readonly IntegrationRegistryCandidateRecord[]>;
     advanceValidation(
         candidateId: string,

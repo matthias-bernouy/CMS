@@ -20,6 +20,10 @@ export async function queueIntegrationRegistryCandidate(
         now: string;
         policy: ReleaseAdmissionPolicySnapshotV1;
         admission: AdmissionInputSnapshotV1;
+        planningArtifacts?: Readonly<{
+            compatibilityReportDigest: string;
+            statefulChangeSelectionDigest: string;
+        }>;
     }>,
 ): Promise<IntegrationRegistryCandidateRecord> {
     assertCandidateRevision(record, input.expectedRevision);
@@ -36,6 +40,7 @@ export async function queueIntegrationRegistryCandidate(
         updatedAt: now,
         policyDigest: policy.digest,
         admissionInputDigest: admission.digest,
+        ...(input.planningArtifacts ?? {}),
     });
 }
 

@@ -16,6 +16,9 @@ export type FsIntegrationRegistryCandidateLayout = Readonly<{
     verifications: string;
     policies: string;
     admissions: string;
+    compatibilityReports: string;
+    statefulSelections: string;
+    plans: string;
     results: string;
     records: string;
     pruning: string;
@@ -36,6 +39,9 @@ export async function ensureFsIntegrationRegistryCandidateLayout(
         verifications: await ensureVerifiedRegistryChildDirectory(objects, "verifications"),
         policies: await ensureVerifiedRegistryChildDirectory(objects, "policies"),
         admissions: await ensureVerifiedRegistryChildDirectory(objects, "admissions"),
+        compatibilityReports: await ensureVerifiedRegistryChildDirectory(objects, "compatibility-reports"),
+        statefulSelections: await ensureVerifiedRegistryChildDirectory(objects, "stateful-selections"),
+        plans: await ensureVerifiedRegistryChildDirectory(root, "plans"),
         results: await ensureVerifiedRegistryChildDirectory(objects, "results"),
         records: await ensureVerifiedRegistryChildDirectory(root, "records"),
         pruning: await ensureVerifiedRegistryChildDirectory(root, "pruning"),
@@ -66,6 +72,24 @@ export function candidateAdmissionPath(layout: FsIntegrationRegistryCandidateLay
 export function candidateResultPath(layout: FsIntegrationRegistryCandidateLayout, digest: string): string {
     assertSha256Digest(digest);
     return join(layout.results, `${digest}.json`);
+}
+
+export function candidateCompatibilityReportPath(layout: FsIntegrationRegistryCandidateLayout, digest: string): string {
+    assertSha256Digest(digest);
+    return join(layout.compatibilityReports, `${digest}.json`);
+}
+
+export function candidateStatefulSelectionPath(layout: FsIntegrationRegistryCandidateLayout, digest: string): string {
+    assertSha256Digest(digest);
+    return join(layout.statefulSelections, `${digest}.json`);
+}
+
+export function candidatePlanningBindingPath(
+    layout: FsIntegrationRegistryCandidateLayout,
+    candidateId: string,
+): string {
+    assertCandidateId(candidateId);
+    return join(layout.plans, `${candidateId}.json`);
 }
 
 export function candidateRecordRoot(layout: FsIntegrationRegistryCandidateLayout, candidateId: string): string {

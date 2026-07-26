@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { readPersistedIntegrationRegistryCandidateRecord } from "../../document";
 import { FsIntegrationRegistryCandidateStoreError } from "../../errors";
 import { candidateRevisionPath, type FsIntegrationRegistryCandidateLayout } from "../../layout";
+import { readCandidatePlanBinding } from "../../objects";
 import { boundedCandidateInventory, CANDIDATE_TEMPORARY_FILE } from "../inventory/support";
 
 const REVISION_FILE = /^(\d{16})\.json$/u;
@@ -34,11 +35,20 @@ export async function collectCandidateObjectReferences(
             }
             references.add(`package:${record.packageDigest}`);
             references.add(`verification:${record.verificationDigest}`);
-            if (record.schema === "cms.integration.registry.candidate-record.v2") {
+            if (record.schema !== "cms.integration.registry.candidate-record.v1") {
                 addOptionalReference(references, "policy", record.policyDigest);
                 addOptionalReference(references, "admission", record.admissionInputDigest);
                 addOptionalReference(references, "result", record.verificationJobResultDigest);
             }
+            if (record.schema === "cms.integration.registry.candidate-record.v3") {
+                addOptionalReference(references, "compatibility-report", record.compatibilityReportDigest);
+                addOptionalReference(references, "stateful-selection", record.statefulChangeSelectionDigest);
+            }
+        }
+        const plan = await readCandidatePlanBinding(layout, candidate.name);
+        if (plan) {
+            references.add(`compatibility-report:${plan.compatibilityReportDigest}`);
+            references.add(`stateful-selection:${plan.statefulChangeSelectionDigest}`);
         }
     }
     return references;

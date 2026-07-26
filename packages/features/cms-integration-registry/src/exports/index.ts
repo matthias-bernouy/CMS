@@ -42,6 +42,8 @@ export type {
     IntegrationRegistryCandidateRecord,
     IntegrationRegistryCandidateStatus,
     LegacyIntegrationRegistryCandidateRecordV1,
+    LegacyIntegrationRegistryCandidateRecordV2,
+    PersistIntegrationRegistryCandidatePlanningInput,
     PersistedIntegrationRegistryCandidateRecord,
     QueueIntegrationRegistryCandidateInput,
     RejectIntegrationRegistryCandidateValidationInput,
@@ -60,6 +62,7 @@ export type {
 export {
     INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA,
     LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V1_SCHEMA,
+    LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V2_SCHEMA,
     OFFICIAL_REPOSITORY_BOOTSTRAP_PLAN_SCHEMA,
 } from "../interfaces/publication";
 export type {

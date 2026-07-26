@@ -11,6 +11,8 @@ export function assertInitialCandidateRecord(record: IntegrationRegistryCandidat
         record.lastFailure ||
         record.policyDigest ||
         record.admissionInputDigest ||
+        record.compatibilityReportDigest ||
+        record.statefulChangeSelectionDigest ||
         record.verificationJobResultDigest ||
         record.updatedAt !== record.createdAt
     ) {
@@ -71,7 +73,15 @@ function assertQueuedPlan(
     if (!current.policyDigest || !current.admissionInputDigest || current.verificationJobResultDigest) {
         corrupt(`Candidate ${current.candidateId} queued without a fresh exact admission plan`);
     }
-    assertRecordDelta(previous, current, ["revision", "status", "updatedAt", "policyDigest", "admissionInputDigest"]);
+    assertRecordDelta(previous, current, [
+        "revision",
+        "status",
+        "updatedAt",
+        "policyDigest",
+        "admissionInputDigest",
+        "compatibilityReportDigest",
+        "statefulChangeSelectionDigest",
+    ]);
 }
 
 function assertValidationRejection(

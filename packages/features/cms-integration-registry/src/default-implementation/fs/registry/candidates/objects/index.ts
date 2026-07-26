@@ -1,9 +1,13 @@
 import type {
     AdmissionInputSnapshotV1,
+    CompatibilityReportV2,
     ReleaseAdmissionPolicySnapshotV1,
+    StatefulChangeSelectionV1,
     VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import {
+    identifyCompatibilityReportV2,
+    identifyStatefulChangeSelection,
     validateAdmissionInputSnapshotForPolicy,
     validateIntegrationCandidateEnvelope,
     validateVerificationJobResultForAdmission,
@@ -15,6 +19,7 @@ import type {
 import type { FsIntegrationRegistryCandidateLayout } from "../layout";
 import { readCandidateAdmission, readCandidatePolicy, readCandidateVerificationJobResult } from "./control";
 import { readCandidatePackage, readCandidateVerification } from "./package";
+import { readCandidateCompatibilityReport, readCandidateStatefulSelection } from "./planning";
 
 export {
     persistCandidateAdmissionObjects,
@@ -24,6 +29,13 @@ export {
     readCandidateVerificationJobResult,
 } from "./control";
 export { persistCandidatePackageObjects, readCandidatePackage, readCandidateVerification } from "./package";
+export {
+    persistCandidatePlanningArtifacts,
+    readCandidateCompatibilityReport,
+    readCandidatePlanBinding,
+    readCandidateStatefulSelection,
+    type CandidatePlanBinding,
+} from "./planning";
 export { readCandidatePackage as readPackage, readCandidateVerification as readVerification } from "./package";
 export { assertCandidateObjectCapacity } from "./shared";
 export type FsIntegrationRegistryCandidateObjects = IntegrationRegistryCandidateObjects;
@@ -54,6 +66,8 @@ export async function readFsIntegrationRegistryCandidateObjects(
     }
     let policy: ReleaseAdmissionPolicySnapshotV1 | undefined;
     let admission: AdmissionInputSnapshotV1 | undefined;
+    let compatibilityReport: CompatibilityReportV2 | undefined;
+    let statefulChanges: StatefulChangeSelectionV1 | undefined;
     let verificationJobResult: VerificationJobResultV1 | undefined;
     if (record.policyDigest && record.admissionInputDigest) {
         policy = await readCandidatePolicy(layout, record.policyDigest);
@@ -89,11 +103,31 @@ export async function readFsIntegrationRegistryCandidateObjects(
             throw new Error(`Candidate ${record.candidateId} result does not match its record attempt`);
         }
     }
+    if (record.compatibilityReportDigest && record.statefulChangeSelectionDigest) {
+        compatibilityReport = await readCandidateCompatibilityReport(layout, record.compatibilityReportDigest);
+        statefulChanges = await readCandidateStatefulSelection(layout, record.statefulChangeSelectionDigest);
+        const report = await identifyCompatibilityReportV2(compatibilityReport);
+        const selection = await identifyStatefulChangeSelection(statefulChanges);
+        if (
+            report.digest !== record.compatibilityReportDigest ||
+            selection.digest !== record.statefulChangeSelectionDigest ||
+            !admission ||
+            admission.compatibilityRevision.revisionId !== report.report.reportId ||
+            admission.compatibilityRevision.digest !== report.digest ||
+            statefulChanges.compatibilityReport.revisionId !== report.report.reportId ||
+            statefulChanges.compatibilityReport.reportDigest !== report.digest ||
+            statefulChanges.policySnapshotDigest !== record.policyDigest
+        ) {
+            throw new Error(`Candidate ${record.candidateId} planning artifacts do not match its admission input`);
+        }
+    }
     return Object.freeze({
         package: packageEnvelope,
         verification,
         ...(policy ? { policy } : {}),
         ...(admission ? { admission } : {}),
+        ...(compatibilityReport ? { compatibilityReport } : {}),
+        ...(statefulChanges ? { statefulChanges } : {}),
         ...(verificationJobResult ? { verificationJobResult } : {}),
     });
 }

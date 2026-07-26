@@ -1,8 +1,10 @@
 import {
     INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA,
     LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V1_SCHEMA,
+    LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V2_SCHEMA,
     type IntegrationRegistryCandidateRecord,
     type LegacyIntegrationRegistryCandidateRecordV1,
+    type LegacyIntegrationRegistryCandidateRecordV2,
     type PersistedIntegrationRegistryCandidateRecord,
 } from "cms-integration-registry/interfaces/publication";
 import { readCanonicalJsonFile } from "../../persistence/canonicalFile";
@@ -27,13 +29,14 @@ const LEGACY_FIELDS = [
     "lease",
     "lastFailure",
 ] as const;
-const CURRENT_FIELDS = [
+const LEGACY_V2_FIELDS = [
     ...LEGACY_FIELDS,
     "candidateDigest",
     "policyDigest",
     "admissionInputDigest",
     "verificationJobResultDigest",
 ] as const;
+const CURRENT_FIELDS = [...LEGACY_V2_FIELDS, "compatibilityReportDigest", "statefulChangeSelectionDigest"] as const;
 
 export async function readPersistedIntegrationRegistryCandidateRecord(
     path: string,
@@ -59,7 +62,28 @@ export function parsePersistedIntegrationRegistryCandidateRecord(
             ...parseCandidateSharedFields(input),
         });
     }
+    if (schemaOf(value) === LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V2_SCHEMA) {
+        return parseLegacyV2Record(value);
+    }
     return parseIntegrationRegistryCandidateRecord(value);
+}
+
+function parseLegacyV2Record(value: unknown): LegacyIntegrationRegistryCandidateRecordV2 {
+    const input = strictRecord(value, "legacy candidate record v2", LEGACY_V2_FIELDS);
+    return Object.freeze({
+        schema: LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V2_SCHEMA,
+        ...parseCandidateSharedFields(input),
+        candidateDigest: digest(input.candidateDigest, "candidateDigest"),
+        ...(input.policyDigest === undefined ? {} : { policyDigest: digest(input.policyDigest, "policyDigest") }),
+        ...(input.admissionInputDigest === undefined
+            ? {}
+            : { admissionInputDigest: digest(input.admissionInputDigest, "admissionInputDigest") }),
+        ...(input.verificationJobResultDigest === undefined
+            ? {}
+            : {
+                  verificationJobResultDigest: digest(input.verificationJobResultDigest, "verificationJobResultDigest"),
+              }),
+    });
 }
 
 export function parseIntegrationRegistryCandidateRecord(value: unknown): IntegrationRegistryCandidateRecord {
@@ -75,6 +99,17 @@ export function parseIntegrationRegistryCandidateRecord(value: unknown): Integra
         ...(input.admissionInputDigest === undefined
             ? {}
             : { admissionInputDigest: digest(input.admissionInputDigest, "admissionInputDigest") }),
+        ...(input.compatibilityReportDigest === undefined
+            ? {}
+            : { compatibilityReportDigest: digest(input.compatibilityReportDigest, "compatibilityReportDigest") }),
+        ...(input.statefulChangeSelectionDigest === undefined
+            ? {}
+            : {
+                  statefulChangeSelectionDigest: digest(
+                      input.statefulChangeSelectionDigest,
+                      "statefulChangeSelectionDigest",
+                  ),
+              }),
         ...(input.verificationJobResultDigest === undefined
             ? {}
             : {
@@ -88,10 +123,10 @@ export function parseIntegrationRegistryCandidateRecord(value: unknown): Integra
 export function requireCurrentIntegrationRegistryCandidateRecord(
     record: PersistedIntegrationRegistryCandidateRecord,
 ): IntegrationRegistryCandidateRecord {
-    if (record.schema === LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V1_SCHEMA) {
+    if (record.schema !== INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA) {
         throw new FsIntegrationRegistryCandidateStoreError(
             "legacy_candidate",
-            `Candidate ${record.candidateId} uses legacy record v1 and requires an explicit migration before admission`,
+            `Candidate ${record.candidateId} uses ${record.schema} and requires an explicit migration before admission`,
         );
     }
     return record;
@@ -100,6 +135,12 @@ export function requireCurrentIntegrationRegistryCandidateRecord(
 function assertAdmissionState(record: IntegrationRegistryCandidateRecord): void {
     if (Boolean(record.policyDigest) !== Boolean(record.admissionInputDigest)) {
         invalid("Candidate policy and admission input digests must be present together");
+    }
+    if (Boolean(record.compatibilityReportDigest) !== Boolean(record.statefulChangeSelectionDigest)) {
+        invalid("Candidate compatibility report and stateful-change selection digests must be present together");
+    }
+    if ((record.compatibilityReportDigest || record.statefulChangeSelectionDigest) && !record.admissionInputDigest) {
+        invalid("Candidate planning artifacts require exact admission inputs");
     }
     if (["queued", "running", "passed", "publishing", "published"].includes(record.status)) {
         if (!record.policyDigest || !record.admissionInputDigest) {
@@ -139,4 +180,4 @@ function schemaOf(value: unknown): unknown {
         : undefined;
 }
 
-export type { LegacyIntegrationRegistryCandidateRecordV1 };
+export type { LegacyIntegrationRegistryCandidateRecordV1, LegacyIntegrationRegistryCandidateRecordV2 };
