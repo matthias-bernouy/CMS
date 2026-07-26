@@ -12,7 +12,7 @@ import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/s
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
-import { HttpRepositoryCompatibilityReader } from "../repositoryCatalog";
+import { HttpRepositoryCompatibilityReader } from "../repositoryCatalog/compatibilityReader";
 
 type IntegrationServiceOptions = {
     providerRepository: IntegrationConnectorProviderRepository;
