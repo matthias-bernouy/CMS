@@ -5,14 +5,21 @@ import { ensureFsIntegrationRegistryLayout } from "../persistence/layout";
 import { ensureVerifiedRegistryChildDirectory, readVerifiedRegistryDirectory } from "../persistence/ownedDirectory";
 
 export const FS_INTEGRATION_REGISTRY_CANDIDATE_DOCUMENT_LIMIT = 64 * 1_024;
+export const FS_INTEGRATION_REGISTRY_CANDIDATE_CONTROL_DOCUMENT_LIMIT = 1_048_576;
 export const FS_INTEGRATION_REGISTRY_CANDIDATE_INVENTORY_LIMIT = 4_096;
+export const FS_INTEGRATION_REGISTRY_CANDIDATE_GLOBAL_OBJECT_LIMIT = 16_384;
 
 export type FsIntegrationRegistryCandidateLayout = Readonly<{
     registry: FsIntegrationRegistryLayout;
     root: string;
     packages: string;
     verifications: string;
+    policies: string;
+    admissions: string;
+    results: string;
     records: string;
+    pruning: string;
+    pruned: string;
 }>;
 
 export async function ensureFsIntegrationRegistryCandidateLayout(
@@ -27,7 +34,12 @@ export async function ensureFsIntegrationRegistryCandidateLayout(
         root,
         packages: await ensureVerifiedRegistryChildDirectory(objects, "packages"),
         verifications: await ensureVerifiedRegistryChildDirectory(objects, "verifications"),
+        policies: await ensureVerifiedRegistryChildDirectory(objects, "policies"),
+        admissions: await ensureVerifiedRegistryChildDirectory(objects, "admissions"),
+        results: await ensureVerifiedRegistryChildDirectory(objects, "results"),
         records: await ensureVerifiedRegistryChildDirectory(root, "records"),
+        pruning: await ensureVerifiedRegistryChildDirectory(root, "pruning"),
+        pruned: await ensureVerifiedRegistryChildDirectory(root, "pruned"),
     };
 }
 
@@ -39,6 +51,21 @@ export function candidatePackagePath(layout: FsIntegrationRegistryCandidateLayou
 export function candidateVerificationPath(layout: FsIntegrationRegistryCandidateLayout, digest: string): string {
     assertSha256Digest(digest);
     return join(layout.verifications, `${digest}.json`);
+}
+
+export function candidatePolicyPath(layout: FsIntegrationRegistryCandidateLayout, digest: string): string {
+    assertSha256Digest(digest);
+    return join(layout.policies, `${digest}.json`);
+}
+
+export function candidateAdmissionPath(layout: FsIntegrationRegistryCandidateLayout, digest: string): string {
+    assertSha256Digest(digest);
+    return join(layout.admissions, `${digest}.json`);
+}
+
+export function candidateResultPath(layout: FsIntegrationRegistryCandidateLayout, digest: string): string {
+    assertSha256Digest(digest);
+    return join(layout.results, `${digest}.json`);
 }
 
 export function candidateRecordRoot(layout: FsIntegrationRegistryCandidateLayout, candidateId: string): string {

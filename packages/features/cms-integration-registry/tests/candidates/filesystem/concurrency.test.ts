@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { join } from "node:path";
-import { candidateStoreFixture, queueCandidate } from "./fixtures";
+import { candidateJobResult, candidateStoreFixture, queueCandidate } from "./fixtures";
 
 let cleanup: (() => void) | undefined;
 afterEach(() => cleanup?.());
@@ -50,10 +50,8 @@ describe("filesystem integration registry candidate concurrency", () => {
         await expect(
             fixture.store.complete(fixture.candidateId, {
                 expectedRevision: second.revision,
-                attemptId: "attempt-1",
-                fencingToken: 1,
                 now: "2026-07-26T10:04:02.000Z",
-                outcome: "passed",
+                result: await candidateJobResult(fixture, { attemptId: "attempt-1", fencingToken: 1 }),
             }),
         ).rejects.toMatchObject({ code: "lease_conflict" });
         expect((await fixture.store.get(fixture.candidateId))?.lease?.fencingToken).toBe(2);

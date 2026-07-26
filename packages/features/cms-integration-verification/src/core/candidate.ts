@@ -2,6 +2,7 @@ import {
     DEFAULT_CANONICAL_FILE_SET_LIMITS,
     canonicalJsonBytes,
     computeIntegrationPackageDigest,
+    sha256Hex,
     validateIntegrationPackageEnvelope,
 } from "@bernouy/cms-integration-packages";
 import type { IntegrationCandidateEnvelopeV1, ValidatedIntegrationCandidateEnvelopeV1 } from "../interfaces/candidate";
@@ -52,6 +53,7 @@ export async function validateIntegrationCandidateEnvelope(
     }
     return {
         envelope,
+        candidateDigest: await sha256Hex(canonicalJsonBytes(envelope)),
         packageDigest,
         verificationDigest: await computeIntegrationVerificationDigest(verification),
     };

@@ -1,12 +1,22 @@
 export { FsIntegrationRegistryCandidateStoreError } from "./errors";
 export {
+    parsePersistedIntegrationRegistryCandidateRecord,
     readIntegrationRegistryCandidateRecord,
+    readPersistedIntegrationRegistryCandidateRecord,
+    requireCurrentIntegrationRegistryCandidateRecord,
     parseIntegrationRegistryCandidateRecord,
 } from "./document";
 export {
+    garbageCollectFsIntegrationRegistryCandidateObjects,
+    PRUNED_INTEGRATION_REGISTRY_CANDIDATE_DOCUMENT_LIMIT,
+    PRUNED_INTEGRATION_REGISTRY_CANDIDATE_SCHEMA,
+    readPrunedCandidate,
     recoverFsIntegrationRegistryCandidates,
     type FsIntegrationRegistryCandidateRecoveryDiagnostic,
     type FsIntegrationRegistryCandidateRecoveryResult,
+    type FsIntegrationRegistryCandidateGarbageCollectionResult,
+    type GarbageCollectFsIntegrationRegistryCandidateObjectsConfig,
+    type PrunedIntegrationRegistryCandidateRecord,
     type RecoverFsIntegrationRegistryCandidatesConfig,
 } from "./recovery";
 export {

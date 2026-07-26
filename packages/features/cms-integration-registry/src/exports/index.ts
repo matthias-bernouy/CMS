@@ -33,10 +33,18 @@ export type {
 } from "../interfaces/compatibility";
 export type {
     CreateIntegrationRegistryCandidateInput,
+    ClaimIntegrationRegistryCandidateInput,
+    CompleteIntegrationRegistryCandidateInput,
+    IntegrationRegistryCandidateObjects,
+    IntegrationRegistryCandidateStore,
     IntegrationRegistryCandidateFailure,
     IntegrationRegistryCandidateLease,
     IntegrationRegistryCandidateRecord,
     IntegrationRegistryCandidateStatus,
+    LegacyIntegrationRegistryCandidateRecordV1,
+    PersistedIntegrationRegistryCandidateRecord,
+    QueueIntegrationRegistryCandidateInput,
+    RejectIntegrationRegistryCandidateValidationInput,
     IntegrationRegistryPublicationRequest,
     IntegrationRegistryPublicationResult,
     IntegrationRegistryPublisher,
@@ -51,6 +59,7 @@ export type {
 } from "../interfaces/publication";
 export {
     INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA,
+    LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V1_SCHEMA,
     OFFICIAL_REPOSITORY_BOOTSTRAP_PLAN_SCHEMA,
 } from "../interfaces/publication";
 export type {
@@ -139,6 +148,7 @@ export {
     claimIntegrationRegistryCandidate,
     completeIntegrationRegistryCandidateAttempt,
     createIntegrationRegistryCandidateRecord,
+    queueIntegrationRegistryCandidate,
     renewIntegrationRegistryCandidateLease,
 } from "../core/publication/candidates/state";
 export { recoverExpiredIntegrationRegistryCandidateLease } from "../core/publication/candidates/recovery";

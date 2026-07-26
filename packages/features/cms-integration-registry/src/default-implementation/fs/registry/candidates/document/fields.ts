@@ -1,19 +1,11 @@
 import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@bernouy/cms-integration-packages";
-import {
-    INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA,
-    type IntegrationRegistryCandidateFailure,
-    type IntegrationRegistryCandidateLease,
-    type IntegrationRegistryCandidateRecord,
-    type IntegrationRegistryCandidateStatus,
+import type {
+    IntegrationRegistryCandidateFailure,
+    IntegrationRegistryCandidateLease,
+    IntegrationRegistryCandidateStatus,
 } from "cms-integration-registry/interfaces/publication";
-import { IntegrationRegistryCandidateError } from "cms-integration-registry/core/publication/candidates/errors";
-import { readCanonicalJsonFile } from "../persistence/canonicalFile";
-import {
-    assertCandidateId,
-    assertCandidateRevision,
-    assertSha256Digest,
-    FS_INTEGRATION_REGISTRY_CANDIDATE_DOCUMENT_LIMIT,
-} from "./layout";
+import { assertCandidateId, assertCandidateRevision } from "../layout";
+import { digest, identifier, invalid, safeInteger, strictRecord, text, timestamp } from "./values";
 
 const STATUSES = new Set<IntegrationRegistryCandidateStatus>([
     "uploaded",
@@ -27,44 +19,15 @@ const STATUSES = new Set<IntegrationRegistryCandidateStatus>([
     "expired",
 ]);
 
-export async function readIntegrationRegistryCandidateRecord(
-    path: string,
-): Promise<IntegrationRegistryCandidateRecord | null> {
-    const value = await readCanonicalJsonFile(path, FS_INTEGRATION_REGISTRY_CANDIDATE_DOCUMENT_LIMIT);
-    return value === null ? null : parseIntegrationRegistryCandidateRecord(value);
-}
-
-export function parseIntegrationRegistryCandidateRecord(value: unknown): IntegrationRegistryCandidateRecord {
-    const input = strictRecord(value, "candidate record", [
-        "schema",
-        "candidateId",
-        "revision",
-        "status",
-        "kind",
-        "version",
-        "packageDigest",
-        "verificationDigest",
-        "requestedChannel",
-        "createdAt",
-        "updatedAt",
-        "expiresAt",
-        "attemptCount",
-        "lease",
-        "lastFailure",
-    ]);
-    if (input.schema !== INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA) {
-        invalid(`Candidate record schema must be ${INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA}`);
-    }
+export function parseCandidateSharedFields(input: Record<string, unknown>) {
     const candidateId = text(input.candidateId, "candidateId");
     const kind = text(input.kind, "kind");
     const version = text(input.version, "version");
-    const packageDigest = text(input.packageDigest, "packageDigest");
-    const verificationDigest = text(input.verificationDigest, "verificationDigest");
+    const packageDigest = digest(input.packageDigest, "packageDigest");
+    const verificationDigest = digest(input.verificationDigest, "verificationDigest");
     assertCandidateId(candidateId);
     assertIntegrationPackageKind(kind);
     assertIntegrationPackageVersion(version);
-    assertSha256Digest(packageDigest);
-    assertSha256Digest(verificationDigest);
     const revision = safeInteger(input.revision, "revision");
     const attemptCount = safeInteger(input.attemptCount, "attemptCount");
     assertCandidateRevision(revision);
@@ -96,8 +59,7 @@ export function parseIntegrationRegistryCandidateRecord(value: unknown): Integra
     if (input.requestedChannel !== undefined && input.requestedChannel !== "latest") {
         invalid("Candidate requestedChannel must be latest when present");
     }
-    return Object.freeze({
-        schema: INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA,
+    return {
         candidateId,
         revision,
         status,
@@ -112,7 +74,7 @@ export function parseIntegrationRegistryCandidateRecord(value: unknown): Integra
         attemptCount,
         ...(lease ? { lease } : {}),
         ...(lastFailure ? { lastFailure } : {}),
-    });
+    };
 }
 
 function parseLease(value: unknown): IntegrationRegistryCandidateLease {
@@ -162,49 +124,4 @@ function candidateStatus(value: unknown): IntegrationRegistryCandidateStatus {
     return value as IntegrationRegistryCandidateStatus;
 }
 
-function strictRecord(value: unknown, source: string, fields: readonly string[]): Record<string, unknown> {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-        invalid(`${source} must be an object`);
-    }
-    const input = value as Record<string, unknown>;
-    const unknown = Object.keys(input).filter((field) => !fields.includes(field));
-    if (unknown.length > 0) {
-        invalid(`${source} contains unknown field ${unknown[0]}`);
-    }
-    return input;
-}
-
-function identifier(value: unknown, field: string): string {
-    const parsed = text(value, field);
-    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u.test(parsed)) {
-        invalid(`Candidate ${field} must be a path-safe identifier`);
-    }
-    return parsed;
-}
-
-function text(value: unknown, field: string): string {
-    if (typeof value !== "string") {
-        invalid(`Candidate ${field} must be text`);
-    }
-    return value;
-}
-
-function safeInteger(value: unknown, field: string): number {
-    if (!Number.isSafeInteger(value) || Number(value) < 0) {
-        invalid(`Candidate ${field} must be a non-negative safe integer`);
-    }
-    return Number(value);
-}
-
-function timestamp(value: unknown, field: string): string {
-    const parsed = text(value, field);
-    const milliseconds = Date.parse(parsed);
-    if (!Number.isFinite(milliseconds) || new Date(milliseconds).toISOString() !== parsed) {
-        invalid(`Candidate ${field} must be an ISO timestamp`);
-    }
-    return parsed;
-}
-
-function invalid(message: string): never {
-    throw new IntegrationRegistryCandidateError("invalid_candidate", message);
-}
+export { digest, invalid, strictRecord } from "./values";

@@ -1,5 +1,11 @@
 export type FsIntegrationRegistryCandidateRecoveryDiagnostic = Readonly<{
-    code: "quarantined_candidate" | "quarantined_object" | "quarantined_temporary" | "lease_recovered" | "expired";
+    code:
+        | "quarantined_candidate"
+        | "quarantined_object"
+        | "quarantined_temporary"
+        | "quarantined_lock"
+        | "lease_recovered"
+        | "expired";
     path: string;
     message: string;
 }>;

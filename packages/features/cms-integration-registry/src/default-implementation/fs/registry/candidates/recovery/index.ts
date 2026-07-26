@@ -1,11 +1,24 @@
 import { ensureFsIntegrationRegistryCandidateLayout } from "../layout";
 import { FsIntegrationRegistryCandidateStore } from "../store";
-import { recoverCandidateInventory, recoverObjectInventory } from "./inventory";
+import { recoverCandidateInventory, recoverCandidateMutationLock, recoverObjectInventory } from "./inventory";
+import { recoverInterruptedCandidatePruning } from "./retention";
 import type {
     FsIntegrationRegistryCandidateRecoveryDiagnostic,
     FsIntegrationRegistryCandidateRecoveryResult,
     RecoverFsIntegrationRegistryCandidatesConfig,
 } from "./types";
+
+export {
+    garbageCollectFsIntegrationRegistryCandidateObjects,
+    type FsIntegrationRegistryCandidateGarbageCollectionResult,
+    type GarbageCollectFsIntegrationRegistryCandidateObjectsConfig,
+} from "./gc";
+export {
+    PRUNED_INTEGRATION_REGISTRY_CANDIDATE_DOCUMENT_LIMIT,
+    PRUNED_INTEGRATION_REGISTRY_CANDIDATE_SCHEMA,
+    readPrunedCandidate,
+    type PrunedIntegrationRegistryCandidateRecord,
+} from "./retention";
 
 const DEFAULT_TEMPORARY_GRACE_MS = 60_000;
 
@@ -19,8 +32,13 @@ export async function recoverFsIntegrationRegistryCandidates(
     }
     const layout = await ensureFsIntegrationRegistryCandidateLayout(config.root);
     const diagnostics: FsIntegrationRegistryCandidateRecoveryDiagnostic[] = [];
+    await recoverCandidateMutationLock(layout, now, grace, diagnostics);
+    await recoverInterruptedCandidatePruning(layout);
     await recoverObjectInventory(layout, layout.packages, "package", now, grace, diagnostics);
     await recoverObjectInventory(layout, layout.verifications, "verification", now, grace, diagnostics);
+    await recoverObjectInventory(layout, layout.policies, "policy", now, grace, diagnostics);
+    await recoverObjectInventory(layout, layout.admissions, "admission", now, grace, diagnostics);
+    await recoverObjectInventory(layout, layout.results, "result", now, grace, diagnostics);
     const store = new FsIntegrationRegistryCandidateStore({ root: layout.registry.root });
     await recoverCandidateInventory(layout, store, now, grace, diagnostics);
     return Object.freeze({

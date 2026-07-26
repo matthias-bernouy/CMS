@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { computeIntegrationPackageDigest } from "@bernouy/cms-integration-packages";
+import { canonicalJsonBytes, computeIntegrationPackageDigest, sha256Hex } from "@bernouy/cms-integration-packages";
 import {
     computeIntegrationVerificationDigest,
     parseIntegrationCandidateEnvelope,
@@ -21,6 +21,7 @@ describe("integration candidate envelope", () => {
 
         expect(parsed.packageDigest).toBe(await computeIntegrationPackageDigest(packageValue));
         expect(parsed.verificationDigest).toBe(await computeIntegrationVerificationDigest(verification));
+        expect(parsed.candidateDigest).toBe(await sha256Hex(canonicalJsonBytes(candidate)));
         expect(parsed.envelope.package).toEqual(packageValue);
     });
 

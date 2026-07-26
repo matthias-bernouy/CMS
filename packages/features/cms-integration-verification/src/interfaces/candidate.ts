@@ -14,6 +14,7 @@ export type IntegrationCandidateEnvelopeV1 = Readonly<{
 
 export type ValidatedIntegrationCandidateEnvelopeV1 = Readonly<{
     envelope: IntegrationCandidateEnvelopeV1;
+    candidateDigest: string;
     packageDigest: string;
     verificationDigest: string;
 }>;

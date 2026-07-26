@@ -5,7 +5,13 @@ import {
     FsIntegrationRegistryCandidateStore,
     FsIntegrationRegistryCandidateStoreError,
 } from "@bernouy/cms-integration-registry/fs";
-import { CANDIDATE_TIMES, candidateStoreFixture, createCandidate, queueCandidate } from "./fixtures";
+import {
+    CANDIDATE_TIMES,
+    candidateJobResult,
+    candidateStoreFixture,
+    createCandidate,
+    queueCandidate,
+} from "./fixtures";
 
 let cleanup: (() => void) | undefined;
 afterEach(() => cleanup?.());
@@ -75,16 +81,8 @@ describe("filesystem integration registry candidate store", () => {
         });
         const retried = await fixture.store.complete(fixture.candidateId, {
             expectedRevision: running.revision,
-            attemptId: "attempt-1",
-            fencingToken: 1,
             now: CANDIDATE_TIMES.completed,
-            outcome: "infrastructure-failure",
-            failure: {
-                kind: "infrastructure",
-                code: "runner_unavailable",
-                message: "Runner unavailable",
-                occurredAt: CANDIDATE_TIMES.completed,
-            },
+            result: await candidateJobResult(fixture, { outcome: "infrastructure-failure" }),
         });
         const second = await fixture.store.claim(fixture.candidateId, {
             expectedRevision: retried.revision,
@@ -124,5 +122,50 @@ describe("filesystem integration registry candidate store", () => {
                 leaseExpiresAt: "2026-07-26T10:05:00.000Z",
             }),
         ).rejects.toMatchObject({ code: "invalid_candidate" });
+
+        expect(await fixture.store.expireDueCandidates("2026-07-26T10:03:00.000Z")).toMatchObject([
+            { status: "expired" },
+        ]);
+        expect(await fixture.store.expireDueCandidates("2026-07-26T10:03:00.000Z")).toEqual([]);
+    });
+
+    test("sweeps expired leases at the exact boundary without requiring a process restart", async () => {
+        const fixture = await candidateStoreFixture();
+        cleanup = fixture.cleanup;
+        const queued = await queueCandidate(fixture);
+        await fixture.store.claim(fixture.candidateId, {
+            expectedRevision: queued.revision,
+            jobId: "job-sweep",
+            attemptId: "attempt-sweep",
+            workerId: "worker-sweep",
+            now: "2026-07-26T10:03:00.000Z",
+            leaseExpiresAt: "2026-07-26T10:04:00.000Z",
+        });
+
+        expect(await fixture.store.recoverExpiredLeases("2026-07-26T10:04:00.000Z")).toMatchObject([
+            { status: "queued", lastFailure: { code: "lease_expired" } },
+        ]);
+        expect(await fixture.store.recoverExpiredLeases("2026-07-26T10:04:00.000Z")).toEqual([]);
+    });
+
+    test("recovers then expires a running candidate at its TTL without a restart", async () => {
+        const fixture = await candidateStoreFixture("running-ttl", "2026-07-26T10:04:00.000Z");
+        cleanup = fixture.cleanup;
+        const queued = await queueCandidate(fixture);
+        await fixture.store.claim(fixture.candidateId, {
+            expectedRevision: queued.revision,
+            jobId: "job-ttl",
+            attemptId: "attempt-ttl",
+            workerId: "worker-ttl",
+            now: "2026-07-26T10:03:00.000Z",
+            leaseExpiresAt: "2026-07-26T10:04:00.000Z",
+        });
+
+        expect(await fixture.store.recoverExpiredLeases("2026-07-26T10:04:00.000Z")).toMatchObject([
+            { status: "queued" },
+        ]);
+        expect(await fixture.store.expireDueCandidates("2026-07-26T10:04:00.000Z")).toMatchObject([
+            { status: "expired", lastFailure: { code: "lease_expired" } },
+        ]);
     });
 });
