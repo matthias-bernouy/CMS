@@ -125,9 +125,35 @@ describe("production repository management", () => {
             versions: Array<{ version: string; compatibility: { currentReportRevisionId: string } }>;
         };
         expect(history).toMatchObject({ stable: "1.0.0", latest: "1.1.0" });
-        const reportRevisionId = history.versions.find((item) => item.version === "1.1.0")?.compatibility
+        const admissionReportId = history.versions.find((item) => item.version === "1.1.0")?.compatibility
             .currentReportRevisionId;
-        expect(reportRevisionId).toBeString();
+        expect(admissionReportId).toBeString();
+        if (!admissionReportId) {
+            throw new Error("Published version did not expose its admission report");
+        }
+        const reevaluated = await authenticatedJson(
+            `${managementOrigin}/.cms/repository-management/api/integrations/compatibility/reevaluations`,
+            JSON.stringify({
+                kind: "remote-demo",
+                version: "1.1.0",
+                currentReportRevisionId: admissionReportId,
+                actor: "repository-owner",
+                reason: "Evaluator rollout",
+                evidenceIds: ["acceptance-evidence"],
+            }),
+        );
+        expect(reevaluated.status).toBe(201);
+        const reevaluation = (await reevaluated.json()) as {
+            currentReportRevisionId: string;
+            revision: { provenance: { actor: string; evidenceIds: string[] }; supersedes: string };
+        };
+        expect(reevaluation).toMatchObject({
+            revision: {
+                supersedes: admissionReportId,
+                provenance: { actor: "repository-owner", evidenceIds: ["acceptance-evidence"] },
+            },
+        });
+        const reportRevisionId = reevaluation.currentReportRevisionId;
         const promoted = await authenticatedJson(
             `${managementOrigin}/.cms/repository-management/api/integrations/stable-promotions`,
             JSON.stringify({

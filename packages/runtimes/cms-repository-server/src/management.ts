@@ -5,6 +5,7 @@ import {
     type IntegrationRegistryRecoveryResult,
 } from "@bernouy/cms-integration-registry";
 import {
+    FsIntegrationCompatibilityReevaluator,
     FsIntegrationCompatibilityReportStore,
     FsIntegrationRegistryPublisher,
     FsIntegrationRegistryRecoverer,
@@ -48,6 +49,11 @@ export async function createProductionRepositoryManagement(input: {
         reports,
         mutations,
     });
+    const reevaluator = new FsIntegrationCompatibilityReevaluator({
+        snapshots,
+        reports,
+        evaluator: compatibility,
+    });
 
     return Object.freeze({
         recovery,
@@ -62,6 +68,7 @@ export async function createProductionRepositoryManagement(input: {
                     recoveryDiagnostics: () => recovery.diagnostics,
                 },
                 stablePromotions: { promoter, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
+                compatibilityReevaluations: { reevaluator, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
                 existingVersionDigest(kind, version) {
                     return input.catalog.current().locateExactVersion(kind, version)?.package.digest ?? null;
                 },
