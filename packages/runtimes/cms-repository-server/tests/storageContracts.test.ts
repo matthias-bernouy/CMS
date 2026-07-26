@@ -54,6 +54,23 @@ describe("repository storage contracts", () => {
         await writeFile(tokenFile, "x".repeat(8_193));
         await expect(readRepositoryManagementToken(tokenFile)).rejects.toThrow("bounded regular file");
     });
+
+    test("refuses symlinked and malformed management token files without exposing their paths", async () => {
+        const root = await temporaryRoot();
+        const tokenFile = join(root, "private-token");
+        const linkedTokenFile = join(root, "linked-token");
+        await writeFile(tokenFile, "management-secret", { mode: 0o600 });
+        await symlink(tokenFile, linkedTokenFile);
+
+        for (const path of [linkedTokenFile, root, join(root, "missing-token")]) {
+            const failure = readRepositoryManagementToken(path).catch((error) => error);
+            expect(String(await failure)).toContain("bounded regular file");
+            expect(String(await failure)).not.toContain(path);
+        }
+
+        await writeFile(tokenFile, new Uint8Array([0xc3, 0x28]));
+        await expect(readRepositoryManagementToken(tokenFile)).rejects.toThrow("bounded regular file");
+    });
 });
 
 async function temporaryRoot(): Promise<string> {
