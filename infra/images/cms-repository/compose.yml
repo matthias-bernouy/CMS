@@ -28,9 +28,11 @@ services:
             - type: bind
               source: ./registry
               target: /var/lib/cms-repository/registry
+              bind:
+                  create_host_path: false
         read_only: true
         tmpfs:
-            - /tmp:rw,nosuid,nodev,noexec,size=64m,mode=1770
+            - /tmp:rw,nosuid,nodev,noexec,size=64m,mode=1770,uid=1000,gid=1000
         cap_drop:
             - ALL
         security_opt:

@@ -47,9 +47,11 @@ describe("repository Compose isolation", () => {
         expect(composeSource).toContain("read_only: true");
         expect(composeSource).toContain("source: ./registry");
         expect(composeSource).toContain("target: /var/lib/cms-repository/registry");
-        expect(composeSource).toContain("/tmp:rw,nosuid,nodev,noexec,size=64m,mode=1770");
+        expect(composeSource).toMatch(/bind:\n\s+create_host_path: false/);
+        expect(composeSource).toContain("/tmp:rw,nosuid,nodev,noexec,size=64m,mode=1770,uid=1000,gid=1000");
         expect(composeSource).toContain("no-new-privileges:true");
         expect(composeSource).toMatch(/cap_drop:\n\s+- ALL/);
+        expect(readmeSource).toContain("refuses to create `./registry`");
     });
 
     test("loads only the management credential from a Docker secret file", () => {
@@ -107,11 +109,29 @@ composeTest("Compose renders with one isolated service and no published ports", 
         throw new Error(rendered.stderr.toString());
     }
     const config = JSON.parse(rendered.stdout.toString()) as {
-        services: Record<string, { ports?: unknown; read_only?: boolean; networks?: Record<string, unknown> }>;
+        services: Record<
+            string,
+            {
+                ports?: unknown;
+                read_only?: boolean;
+                networks?: Record<string, unknown>;
+                tmpfs?: string[];
+                volumes?: Array<{ target?: string; bind?: { create_host_path?: boolean } }>;
+            }
+        >;
         networks: Record<string, { internal?: boolean }>;
     };
     expect(Object.keys(config.services)).toEqual(["cms-repository"]);
     expect(config.services["cms-repository"]).toMatchObject({ read_only: true });
     expect(config.services["cms-repository"]?.ports).toBeUndefined();
+    expect(config.services["cms-repository"]?.tmpfs).toContain(
+        "/tmp:rw,nosuid,nodev,noexec,size=64m,mode=1770,uid=1000,gid=1000",
+    );
+    expect(config.services["cms-repository"]?.volumes).toContainEqual(
+        expect.objectContaining({
+            target: "/var/lib/cms-repository/registry",
+            bind: { create_host_path: false },
+        }),
+    );
     expect(config.networks.cms_repository).toMatchObject({ internal: true });
 });

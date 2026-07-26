@@ -44,10 +44,15 @@ docker compose config --quiet
 docker compose up -d --wait
 ```
 
+Compose intentionally refuses to create `./registry` on the operator's behalf.
+This prevents Docker from silently creating a root-owned bind directory that
+the UID/GID 1000 runtime cannot write. Run the preparation commands above before
+the first `docker compose up`.
+
 The root filesystem is read-only. The dedicated `./registry` bind mount is the
-only durable writable location; `/tmp` is bounded, non-executable, and erased
-on restart. Back up the registry volume independently from CMS media and
-package caches.
+only durable writable location; `/tmp` is owned by UID/GID 1000, bounded,
+non-executable, and erased on restart. Back up the registry volume independently
+from CMS media and package caches.
 
 ## Management CMS connection
 
