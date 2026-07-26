@@ -20,6 +20,11 @@ export type VersionDigestReference = Readonly<{
     packageDigest: string;
 }>;
 
+export type ReportRevisionDigestReference = Readonly<{
+    revisionId: string;
+    reportDigest: string;
+}>;
+
 export type DigestContractReference = Readonly<{
     contractId: string;
     ownerVersion: string;

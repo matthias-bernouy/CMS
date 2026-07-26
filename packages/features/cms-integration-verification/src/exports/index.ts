@@ -64,15 +64,20 @@ export {
     type DigestContractReference,
     type MigrationCheckResult,
     type MigrationReport,
+    type MigrationReportRevisionDigestReference,
     type ReleaseAdmissionDecision,
     type RequiredMigrationEvidence,
+    type IdentifiedStatefulChangeSelectionV1,
+    type ReportRevisionDigestReference,
     type ReportHistoryFields,
     type ReportOrigin,
     type ReportProvenance,
     type VerificationReport,
     type VerificationSuiteResult,
     type VersionDigestReference,
+    type StatefulChangeSelectionV1,
 } from "../interfaces/reports";
+export { STATEFUL_CHANGE_SELECTION_SCHEMA } from "../interfaces/reports";
 export {
     assertVerificationJobResultReplay,
     computeIntegrationVerificationDigest,
@@ -109,16 +114,22 @@ export {
     parseVerificationRunnerRequirement,
     runnerSatisfiesRequirement,
 } from "../core/runner";
-export { parseCompatibilityReportV2 } from "../core/reports/compatibility";
+export { identifyCompatibilityReportV2, parseCompatibilityReportV2 } from "../core/reports/compatibility";
 export { deriveCompatibilityReportAssessment } from "../core/reports/compatibilityAssessment";
-export { parseVerificationReport } from "../core/reports/verification";
-export { parseMigrationReport } from "../core/reports/migration";
+export { identifyVerificationReport, parseVerificationReport } from "../core/reports/verification";
+export { identifyMigrationReport, parseMigrationReport } from "../core/reports/migration";
 export {
     appendReleaseAdmissionDecision,
     assertReleaseAdmissionDecisionHistory,
+    identifyReleaseAdmissionDecision,
+    identifyStatefulChangeSelection,
     parseReleaseAdmissionDecision,
+    parseStatefulChangeSelection,
 } from "../core/reports/decision";
-export { composeReleaseAdmissionDecision } from "../core/reports/decisionComposition";
+export {
+    assertReleaseAdmissionDecisionMatchesReports,
+    composeReleaseAdmissionDecision,
+} from "../core/reports/decision/composition";
 export { assertReportRevisionFollows } from "../core/reports/shared";
 export {
     IntegrationVerificationContractError,

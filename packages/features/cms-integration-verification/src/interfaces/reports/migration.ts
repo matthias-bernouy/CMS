@@ -19,6 +19,10 @@ export type MigrationReport = ReportHistoryFields &
         supportedSourceRange: string;
         runner: PinnedVerificationRunnerIdentity;
         policy: VerificationPolicyIdentity;
+        policySnapshotDigest: string;
+        migrationInputDigest: string;
+        migrationJobResultDigest: string;
+        statefulChangeSelectionDigest: string;
         environmentDigest: string;
         checks: Readonly<{
             freshInstall: MigrationCheckResult;

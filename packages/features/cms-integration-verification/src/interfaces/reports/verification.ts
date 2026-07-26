@@ -1,4 +1,5 @@
 import type { PinnedVerificationRunnerIdentity, VerificationPolicyIdentity } from "../runner";
+import type { AdmissionReviewedBaselineReferenceV1 } from "../verification/admission";
 import type { DigestContractReference, ReportHistoryFields, ReportProvenance, VersionDigestReference } from "./common";
 
 export const VERIFICATION_REPORT_SCHEMA = "cms.integration.verification-report.v1" as const;
@@ -11,11 +12,12 @@ export type VerificationSuiteResult = Readonly<{
     durationMs: number;
     attempts: number;
     cacheHit: boolean;
-    diagnostic?: Readonly<{
+    evidenceDigests: readonly string[];
+    diagnostics: readonly Readonly<{
         code: string;
         message: string;
         redacted: true;
-    }>;
+    }>[];
 }>;
 
 export type VerificationReport = ReportHistoryFields &
@@ -27,8 +29,11 @@ export type VerificationReport = ReportHistoryFields &
         verificationDigest: string;
         runner: PinnedVerificationRunnerIdentity;
         policy: VerificationPolicyIdentity;
+        policySnapshotDigest: string;
+        admissionInputDigest: string;
+        verificationJobResultDigest: string;
         dependencies: readonly VersionDigestReference[];
-        baselines: readonly VersionDigestReference[];
+        baselines: readonly AdmissionReviewedBaselineReferenceV1[];
         activeContracts: readonly DigestContractReference[];
         environment: Readonly<{
             digest: string;

@@ -7,11 +7,14 @@ import {
     positiveInteger,
     requiredBoolean,
     requiredText,
+    sha256Digest,
     stableIdentifier,
 } from "../validation/values";
 
 const MAX_DIAGNOSTIC_BYTES = 16_384;
 const MAX_TOTAL_DIAGNOSTIC_BYTES = 65_536;
+const MAX_DIAGNOSTICS_PER_SUITE = 8;
+const MAX_EVIDENCE_DIGESTS_PER_SUITE = 64;
 const utf8 = new TextEncoder();
 
 export function parseVerificationResults(value: unknown): VerificationSuiteResult[] {
@@ -21,7 +24,8 @@ export function parseVerificationResults(value: unknown): VerificationSuiteResul
         "verificationReport.results.suiteId",
     );
     const diagnosticBytes = results.reduce(
-        (bytes, result) => bytes + utf8.encode(result.diagnostic?.message ?? "").byteLength,
+        (bytes, result) =>
+            bytes + result.diagnostics.reduce((sum, diagnostic) => sum + utf8.encode(diagnostic.message).byteLength, 0),
         0,
     );
     if (diagnosticBytes > MAX_TOTAL_DIAGNOSTIC_BYTES) {
@@ -72,28 +76,46 @@ function parseSuiteResult(value: unknown, field: string): VerificationSuiteResul
         "durationMs",
         "attempts",
         "cacheHit",
-        "diagnostic",
+        "evidenceDigests",
+        "diagnostics",
     ]);
+    const outcome = oneOf(input.outcome, `${field}.outcome`, [
+        "passed",
+        "failed",
+        "skipped",
+        "infrastructure-failure",
+    ] as const);
+    const evidenceDigests = boundedArray(input.evidenceDigests, `${field}.evidenceDigests`, sha256Digest, {
+        maximum: MAX_EVIDENCE_DIGESTS_PER_SUITE,
+    });
+    assertUnique(evidenceDigests, `${field}.evidenceDigests`);
+    if ((outcome === "passed" || outcome === "failed") && evidenceDigests.length === 0) {
+        throw invalid(`${field}.evidenceDigests`, `must identify evidence for ${outcome}`);
+    }
+    const diagnostics = boundedArray(input.diagnostics, `${field}.diagnostics`, parseDiagnostic, {
+        maximum: MAX_DIAGNOSTICS_PER_SUITE,
+    });
+    assertUnique(
+        diagnostics.map((entry) => entry.code),
+        `${field}.diagnostics.code`,
+    );
+    if ((outcome === "failed" || outcome === "infrastructure-failure") && diagnostics.length === 0) {
+        throw invalid(`${field}.diagnostics`, `must explain ${outcome}`);
+    }
     return {
         suiteId: stableIdentifier(input.suiteId, `${field}.suiteId`),
         source: oneOf(input.source, `${field}.source`, ["platform", "author-contract", "author-conformance"] as const),
         required: requiredBoolean(input.required, `${field}.required`),
-        outcome: oneOf(input.outcome, `${field}.outcome`, [
-            "passed",
-            "failed",
-            "skipped",
-            "infrastructure-failure",
-        ] as const),
+        outcome,
         durationMs: nonNegativeInteger(input.durationMs, `${field}.durationMs`),
         attempts: positiveInteger(input.attempts, `${field}.attempts`),
         cacheHit: requiredBoolean(input.cacheHit, `${field}.cacheHit`),
-        ...(input.diagnostic === undefined
-            ? {}
-            : { diagnostic: parseDiagnostic(input.diagnostic, `${field}.diagnostic`) }),
+        evidenceDigests,
+        diagnostics,
     };
 }
 
-function parseDiagnostic(value: unknown, field: string): NonNullable<VerificationSuiteResult["diagnostic"]> {
+function parseDiagnostic(value: unknown, field: string): VerificationSuiteResult["diagnostics"][number] {
     const input = strictRecord(value, field, ["code", "message", "redacted"]);
     if (input.redacted !== true) {
         throw invalid(`${field}.redacted`, "must be true");

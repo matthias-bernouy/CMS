@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     appendReleaseAdmissionDecision,
+    identifyReleaseAdmissionDecision,
     parseMigrationReport,
     parseReleaseAdmissionDecision,
 } from "../../../src/exports/index";
@@ -14,6 +15,9 @@ describe("migration report contract", () => {
         expect(parsed.target.version).toBe("1.2.0");
         expect(parsed.cutover.cmsMediated).toBe("binding-revision");
         expect(parsed.cutover.providerDirect).toBe("expand-in-code");
+        expect(parsed.policySnapshotDigest).toHaveLength(64);
+        expect(parsed.migrationInputDigest).toHaveLength(64);
+        expect(parsed.migrationJobResultDigest).toHaveLength(64);
     });
 
     test("fails closed on an unsupported source or inconsistent overall result", () => {
@@ -58,7 +62,7 @@ describe("composite release admission decisions", () => {
         const history = appendReleaseAdmissionDecision([root], revision);
 
         expect(history).toHaveLength(2);
-        expect(history[1]?.verificationReportRevisionId).toBe("verification-1");
+        expect(history[1]?.verificationReport?.revisionId).toBe("verification-1");
         expect(history[1]?.provenance.actor).toBe("repository-ci");
         expect(Object.isFrozen(history)).toBeTrue();
     });
@@ -81,5 +85,10 @@ describe("composite release admission decisions", () => {
         expect(() => parseReleaseAdmissionDecision({ ...root, admissible: false, reasons: [] })).toThrow(
             /must explain an inadmissible decision/,
         );
+    });
+
+    test("binds the decision digest to its embedded trusted stateful-change selection", async () => {
+        const value = admissionDecision();
+        await expect(identifyReleaseAdmissionDecision(value)).rejects.toThrow(/statefulChangeSelectionDigest/);
     });
 });

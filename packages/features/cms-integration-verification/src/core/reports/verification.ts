@@ -8,6 +8,7 @@ import {
     parseDigestContractReference,
     parseReportHistoryFields,
     parseReportProvenance,
+    parseReviewedBaselineReferences,
     parseVersionDigestReferences,
 } from "./shared";
 import {
@@ -15,6 +16,7 @@ import {
     assertVerificationOutcome,
     parseVerificationResults,
 } from "./verificationResult";
+import { identifyCanonicalVerificationContract } from "../verification/shared";
 
 const FIELDS = [
     "schema",
@@ -29,6 +31,9 @@ const FIELDS = [
     "verificationDigest",
     "runner",
     "policy",
+    "policySnapshotDigest",
+    "admissionInputDigest",
+    "verificationJobResultDigest",
     "dependencies",
     "baselines",
     "activeContracts",
@@ -66,8 +71,14 @@ export function parseVerificationReport(value: unknown): VerificationReport {
         verificationDigest: sha256Digest(input.verificationDigest, "verificationReport.verificationDigest"),
         runner: pinnedRunner(input.runner, "verificationReport.runner"),
         policy: parseVerificationPolicyIdentity(input.policy, "verificationReport.policy"),
+        policySnapshotDigest: sha256Digest(input.policySnapshotDigest, "verificationReport.policySnapshotDigest"),
+        admissionInputDigest: sha256Digest(input.admissionInputDigest, "verificationReport.admissionInputDigest"),
+        verificationJobResultDigest: sha256Digest(
+            input.verificationJobResultDigest,
+            "verificationReport.verificationJobResultDigest",
+        ),
         dependencies: parseVersionDigestReferences(input.dependencies, "verificationReport.dependencies"),
-        baselines: parseVersionDigestReferences(input.baselines, "verificationReport.baselines"),
+        baselines: parseReviewedBaselineReferences(input.baselines, "verificationReport.baselines"),
         activeContracts,
         environment: parseEnvironment(input.environment),
         results: parseVerificationResults(input.results),
@@ -81,6 +92,14 @@ export function parseVerificationReport(value: unknown): VerificationReport {
     assertVerificationOutcome(report);
     assertActiveContractsExecuted(report);
     return report;
+}
+
+export async function identifyVerificationReport(
+    value: unknown,
+): Promise<Readonly<{ report: VerificationReport; canonicalBytes: Uint8Array; digest: string }>> {
+    const report = parseVerificationReport(value);
+    const identified = await identifyCanonicalVerificationContract(report);
+    return { report, canonicalBytes: identified.canonicalBytes, digest: identified.digest };
 }
 
 function parseEnvironment(value: unknown): VerificationReport["environment"] {

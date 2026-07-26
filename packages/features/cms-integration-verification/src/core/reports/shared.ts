@@ -4,6 +4,7 @@ import type {
     ReportProvenance,
     VersionDigestReference,
 } from "../../interfaces/reports/common";
+import type { AdmissionReviewedBaselineReferenceV1 } from "../../interfaces/verification";
 import { IntegrationVerificationContractError } from "../validation/errors";
 import { assertUnique, boundedArray, strictRecord } from "../validation/structure";
 import {
@@ -74,6 +75,42 @@ export function parseVersionDigestReferences(value: unknown, field: string): Ver
         field,
     );
     return references;
+}
+
+export function parseReviewedBaselineReferences(value: unknown, field: string): AdmissionReviewedBaselineReferenceV1[] {
+    const references = boundedArray(value, field, parseReviewedBaselineReference);
+    assertUnique(
+        references.map(
+            (entry) =>
+                `${entry.kind}\0${entry.version}\0${entry.packageDigest}\0${entry.connectorKey}\0${entry.lineageId}`,
+        ),
+        field,
+    );
+    return references;
+}
+
+function parseReviewedBaselineReference(value: unknown, field: string): AdmissionReviewedBaselineReferenceV1 {
+    const input = strictRecord(value, field, [
+        "kind",
+        "version",
+        "packageDigest",
+        "connectorKey",
+        "lineageId",
+        "revisionId",
+        "baselineDigest",
+        "observedSchemaDigest",
+    ]);
+    return {
+        ...parseVersionDigestReference(
+            { kind: input.kind, version: input.version, packageDigest: input.packageDigest },
+            field,
+        ),
+        connectorKey: stableIdentifier(input.connectorKey, `${field}.connectorKey`),
+        lineageId: stableIdentifier(input.lineageId, `${field}.lineageId`),
+        revisionId: stableIdentifier(input.revisionId, `${field}.revisionId`),
+        baselineDigest: sha256Digest(input.baselineDigest, `${field}.baselineDigest`),
+        observedSchemaDigest: sha256Digest(input.observedSchemaDigest, `${field}.observedSchemaDigest`),
+    };
 }
 
 export function parseDigestContractReference(value: unknown, field: string): DigestContractReference {

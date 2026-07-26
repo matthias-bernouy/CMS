@@ -1,35 +1,44 @@
 import { describe, expect, test } from "bun:test";
 import {
+    assertReleaseAdmissionDecisionMatchesReports,
     composeReleaseAdmissionDecision,
     createCompatibilityFinding,
     deriveCompatibilityReportAssessment,
+    identifyCompatibilityReportV2,
+    identifyStatefulChangeSelection,
     type CompatibilityFindingClassification,
     type CompatibilityReportV2,
 } from "../../../src/exports/index";
-import { CREATED_AT, DIGEST_A, DIGEST_B, migrationReport, provenance, verificationReport } from "../fixtures";
+import { CREATED_AT, DIGEST_A, DIGEST_B, DIGEST_C, migrationReport, provenance, verificationReport } from "../fixtures";
 
 describe("release admission decision composition", () => {
     test("requires static, executable, and selected migration evidence", async () => {
         const compatibility = await compatibilityReport();
         const requiredMigrations = [migrationRequirement()] as const;
+        const input = await decisionInput(compatibility, requiredMigrations);
         const admitted = await composeReleaseAdmissionDecision({
-            ...decisionInput(compatibility),
+            ...input,
             verification: verificationReport(),
-            migrations: [migrationReport()],
-            requiredMigrations,
+            migrations: [{ ...migrationReport(), statefulChangeSelectionDigest: input.statefulChanges.digest }],
         });
         expect(admitted).toMatchObject({
             admissible: true,
-            compatibilityReportRevisionId: "compatibility-1",
-            verificationReportRevisionId: "verification-1",
-            migrationReportRevisionIds: ["migration-1"],
+            compatibilityReport: { revisionId: "compatibility-1" },
+            verificationReport: { revisionId: "verification-1" },
+            migrationReports: [{ revisionId: "migration-1" }],
             reasons: [],
         });
+        await expect(
+            assertReleaseAdmissionDecisionMatchesReports(admitted, {
+                compatibility,
+                verification: verificationReport(),
+                migrations: [{ ...migrationReport(), statefulChangeSelectionDigest: input.statefulChanges.digest }],
+            }),
+        ).resolves.toEqual(admitted);
 
         const missing = await composeReleaseAdmissionDecision({
-            ...decisionInput(compatibility),
+            ...input,
             migrations: [],
-            requiredMigrations,
         });
         expect(missing.admissible).toBeFalse();
         expect(missing.reasons).toEqual([
@@ -40,14 +49,18 @@ describe("release admission decision composition", () => {
 
     test("keeps infrastructure failures distinct from integration failures", async () => {
         const compatibility = await compatibilityReport();
+        const input = await decisionInput(compatibility, []);
         const infrastructure = verificationReport();
-        infrastructure.results[0] = { ...infrastructure.results[0]!, outcome: "infrastructure-failure" };
+        infrastructure.results[0] = {
+            ...infrastructure.results[0]!,
+            outcome: "infrastructure-failure",
+            diagnostics: [{ code: "runner-unavailable", message: "Runner exited", redacted: true }],
+        };
         infrastructure.outcome = "infrastructure-failure";
         const decision = await composeReleaseAdmissionDecision({
-            ...decisionInput(compatibility),
+            ...input,
             verification: infrastructure,
             migrations: [],
-            requiredMigrations: [],
         });
         expect(decision).toMatchObject({
             admissible: false,
@@ -57,34 +70,86 @@ describe("release admission decision composition", () => {
 
     test("rejects report identity substitution and duplicate migration claims", async () => {
         const compatibility = await compatibilityReport();
+        const input = await decisionInput(compatibility, []);
         await expect(
             composeReleaseAdmissionDecision({
-                ...decisionInput(compatibility),
+                ...input,
                 verification: { ...verificationReport(), packageDigest: "c".repeat(64) },
                 migrations: [],
-                requiredMigrations: [],
             }),
         ).rejects.toThrow(/does not target/);
+        const migrationInput = await decisionInput(compatibility, [migrationRequirement()]);
+        const migration = {
+            ...migrationReport(),
+            statefulChangeSelectionDigest: migrationInput.statefulChanges.digest,
+        };
         await expect(
             composeReleaseAdmissionDecision({
-                ...decisionInput(compatibility),
+                ...migrationInput,
                 verification: verificationReport(),
-                migrations: [migrationReport(), { ...migrationReport(), reportId: "migration-2" }],
-                requiredMigrations: [],
+                migrations: [migration, { ...migration, reportId: "migration-2" }],
             }),
         ).rejects.toThrow(/duplicate source and connector/);
     });
 
     test("allows a major without an advertised in-place path while keeping verification mandatory", async () => {
         const compatibility = await compatibilityReport({ releaseLevel: "major", classification: "breaking" });
+        const input = await decisionInput(compatibility, []);
         const decision = await composeReleaseAdmissionDecision({
-            ...decisionInput(compatibility),
+            ...input,
             verification: verificationReport(),
             migrations: [],
-            requiredMigrations: [],
         });
         expect(decision.admissible).toBeTrue();
-        expect(decision.migrationReportRevisionIds).toEqual([]);
+        expect(decision.migrationReports).toEqual([]);
+    });
+
+    test("fails closed when a cited current report is substituted", async () => {
+        const compatibility = await compatibilityReport();
+        const input = await decisionInput(compatibility, []);
+        const verification = verificationReport();
+        const decision = await composeReleaseAdmissionDecision({ ...input, verification, migrations: [] });
+        const revisedVerification = {
+            ...verification,
+            reportId: "verification-2",
+            revisionType: "revision" as const,
+            supersedes: verification.reportId,
+        };
+
+        await expect(
+            assertReleaseAdmissionDecisionMatchesReports(decision, {
+                compatibility,
+                verification: revisedVerification,
+                migrations: [],
+            }),
+        ).rejects.toThrow(/stale|exact report revisions/);
+    });
+
+    test("rejects policy identity substitution even when the snapshot digest is unchanged", async () => {
+        const compatibility = await compatibilityReport();
+        const input = await decisionInput(compatibility, []);
+        await expect(
+            composeReleaseAdmissionDecision({
+                ...input,
+                verification: {
+                    ...verificationReport(),
+                    policy: { name: "substituted-policy", version: "1.2.0" },
+                },
+                migrations: [],
+            }),
+        ).rejects.toThrow(/policy identity and snapshot/);
+
+        const decision = await composeReleaseAdmissionDecision({
+            ...input,
+            verification: verificationReport(),
+            migrations: [],
+        });
+        await expect(
+            assertReleaseAdmissionDecisionMatchesReports(
+                { ...decision, policy: { name: "substituted-policy", version: "1.2.0" } },
+                { compatibility, verification: verificationReport(), migrations: [] },
+            ),
+        ).rejects.toThrow(/statefulChanges|policy/);
     });
 });
 
@@ -124,12 +189,33 @@ async function compatibilityReport(
     };
 }
 
-function decisionInput(compatibility: CompatibilityReportV2) {
+async function decisionInput(
+    compatibility: CompatibilityReportV2,
+    requiredMigrations: readonly ReturnType<typeof migrationRequirement>[],
+) {
+    const compatibilityIdentity = await identifyCompatibilityReportV2(compatibility);
+    const statefulChanges = await identifyStatefulChangeSelection({
+        schema: "cms.integration.stateful-change-selection.v1",
+        selector: { name: "default-admission", version: "1.2.0" },
+        policySnapshotDigest: DIGEST_C,
+        target: {
+            kind: compatibility.kind,
+            version: compatibility.version,
+            packageDigest: compatibility.packageDigest,
+        },
+        compatibilityReport: {
+            revisionId: compatibility.reportId,
+            reportDigest: compatibilityIdentity.digest,
+        },
+        requiredMigrations,
+    });
     return {
         decisionId: "decision-composed-1",
         revisionType: "root" as const,
         compatibility,
+        statefulChanges,
         policy: { name: "default-admission", version: "1.2.0" },
+        policySnapshotDigest: DIGEST_C,
         createdAt: CREATED_AT,
         provenance: provenance(),
     };

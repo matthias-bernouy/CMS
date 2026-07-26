@@ -8,7 +8,16 @@ describe("verification report contract", () => {
 
         expect(parsed.outcome).toBe("passed");
         expect(parsed.runner.imageDigest).toStartWith("sha256:");
+        expect(parsed.policySnapshotDigest).toHaveLength(64);
+        expect(parsed.admissionInputDigest).toHaveLength(64);
+        expect(parsed.verificationJobResultDigest).toHaveLength(64);
+        expect(parsed.baselines[0]).toMatchObject({
+            connectorKey: "primary",
+            revisionId: "baseline-1",
+            observedSchemaDigest: expect.any(String),
+        });
         expect(parsed.results[0]?.attempts).toBe(2);
+        expect(parsed.results[0]?.evidenceDigests).toHaveLength(1);
         expect(parsed.activeContracts[0]?.digest).toHaveLength(64);
     });
 
@@ -47,11 +56,7 @@ describe("verification report contract", () => {
         const failedResult = {
             ...base.results[0]!,
             outcome: "failed",
-            diagnostic: {
-                code: "assertion-failed",
-                message: "Expected idempotence",
-                redacted: true,
-            },
+            diagnostics: [{ code: "assertion-failed", message: "Expected idempotence", redacted: true }],
         };
         expect(parseVerificationReport({ ...base, results: [failedResult], outcome: "failed" }).outcome).toBe("failed");
         expect(() => parseVerificationReport({ ...base, results: [failedResult], outcome: "passed" })).toThrow(
@@ -76,7 +81,7 @@ describe("verification report contract", () => {
                     {
                         ...base.results[0]!,
                         outcome: "failed",
-                        diagnostic: { code: "failure", message: "secret", redacted: false },
+                        diagnostics: [{ code: "failure", message: "secret", redacted: false }],
                     },
                 ],
                 outcome: "failed",
@@ -88,5 +93,16 @@ describe("verification report contract", () => {
                 results: [{ ...base.results[0]!, suiteId: "different" }],
             }),
         ).toThrow(/has no required execution result/);
+    });
+
+    test("refuses reports that omit exact admission or worker evidence identities", () => {
+        const { admissionInputDigest: _, ...withoutAdmission } = verificationReport();
+        expect(() => parseVerificationReport(withoutAdmission)).toThrow(/admissionInputDigest/);
+        expect(() =>
+            parseVerificationReport({
+                ...verificationReport(),
+                results: [{ ...verificationReport().results[0]!, evidenceDigests: [] }],
+            }),
+        ).toThrow(/must identify evidence for passed/);
     });
 });
