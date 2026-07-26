@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 import { writeImmutableIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import type { IntegrationCompatibilityAdmissionReport } from "../../../../interfaces/compatibility";
 import type { IntegrationRegistryCatalogSnapshot } from "../../../../interfaces/catalog";
-import { IntegrationRegistryVerificationRequiredError } from "../../../../core/publication/errors";
+import {
+    IntegrationRegistryVerificationRequiredError,
+    IntegrationRegistryVersionConflictError,
+} from "../../../../core/publication/errors";
 import type {
     IntegrationRegistryPublicationRequest,
     IntegrationRegistryPublisher,
@@ -22,16 +25,16 @@ export class FsIntegrationRegistryPublisher implements IntegrationRegistryPublis
     constructor(private readonly config: FsIntegrationRegistryPublisherConfig) {}
 
     async publish(request: IntegrationRegistryPublicationRequest) {
+        const { kind, version } = request.package.envelope;
+        if (this.config.snapshots.current().locateExactVersion(kind, version)) {
+            throw new IntegrationRegistryVersionConflictError(kind, version);
+        }
         const policy = this.config.rawPublicationPolicy;
         if (policy !== "publish-unverified" && policy !== "reject-unverified") {
             throw new TypeError("Raw integration publication policy must be configured explicitly");
         }
         if (policy === "reject-unverified") {
-            throw new IntegrationRegistryVerificationRequiredError(
-                request.package.envelope.kind,
-                request.package.envelope.version,
-                request.package.digest,
-            );
+            throw new IntegrationRegistryVerificationRequiredError(kind, version, request.package.digest);
         }
         const candidate = await prepareFsIntegrationRegistryCandidate(request.package, this.config.packageLimits);
         return publishPreparedFsIntegrationRegistryCandidate(

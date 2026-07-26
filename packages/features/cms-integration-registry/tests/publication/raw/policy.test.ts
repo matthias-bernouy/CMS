@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { readdirSync } from "node:fs";
-import { IntegrationRegistryVerificationRequiredError } from "@bernouy/cms-integration-registry";
+import {
+    IntegrationRegistryVerificationRequiredError,
+    IntegrationRegistryVersionConflictError,
+} from "@bernouy/cms-integration-registry";
+import { FsIntegrationRegistryPublisher } from "@bernouy/cms-integration-registry/fs";
 import { cleanupRegistryFixtures, publicationPackage, registryFixture } from "../fixtures";
 
 afterEach(cleanupRegistryFixtures);
@@ -41,5 +45,22 @@ describe("raw filesystem integration publication policy", () => {
         expect(fixture.snapshots.current().getIndex("demo")).toBeNull();
         expect(boundaries).toBe(0);
         expect(readdirSync(fixture.root)).toEqual([]);
+    });
+
+    test("preserves immutable conflict semantics before the verification gate", async () => {
+        const fixture = registryFixture({ rawPublicationPolicy: "publish-unverified" });
+        const input = await publicationPackage("demo", "1.0.0");
+        await fixture.rawPublisher.publish({ package: input });
+        const rejectingPublisher = new FsIntegrationRegistryPublisher({
+            ...fixture.publicationConfig,
+            rawPublicationPolicy: "reject-unverified",
+        });
+
+        await expect(rejectingPublisher.publish({ package: input })).rejects.toBeInstanceOf(
+            IntegrationRegistryVersionConflictError,
+        );
+        expect(fixture.snapshots.current().getIndex("demo")).toMatchObject({
+            versions: [{ version: "1.0.0", status: "unverified" }],
+        });
     });
 });

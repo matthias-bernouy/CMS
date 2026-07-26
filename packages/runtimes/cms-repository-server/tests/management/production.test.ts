@@ -1,30 +1,23 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { chmod, lstat, mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
-import { BunRunner } from "@bernouy/http-runner";
-import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { buildFsIntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry/fs";
-import { RepositoryCatalogRuntime } from "../src/core/catalogRuntime";
-import { startRepositoryServer, type RepositoryServer } from "../src/core/repositoryServer";
-import { createProductionRepositoryManagement } from "../src/management";
+import { BunRunner } from "@bernouy/http-runner";
+import { RepositoryCatalogRuntime } from "../../src/core/catalogRuntime";
+import { startRepositoryServer, type RepositoryServer } from "../../src/core/repositoryServer";
+import { createProductionRepositoryManagement } from "../../src/management";
+import { TemporaryRoots } from "../storage/fixtures";
+import { authenticatedFetch, managementGuard, origin, publicationDocument } from "./support";
 
-const roots: string[] = [];
+const roots = new TemporaryRoots();
 const servers: RepositoryServer[] = [];
 
 afterEach(async () => {
     await Promise.all(servers.splice(0).map((server) => server.stop()));
-    for (const root of roots.splice(0)) {
-        await makeWritable(root);
-        await rm(root, { recursive: true, force: true });
-    }
+    await roots.cleanup();
 });
 
 describe("production repository management", () => {
     test("keeps the raw wire-compatible publication route private and fail-closed", async () => {
-        const root = await mkdtemp(join(tmpdir(), "cms-repository-production-"));
-        roots.push(root);
+        const root = await roots.create();
         const catalog = new RepositoryCatalogRuntime();
         const loadCatalog = () => buildFsIntegrationRegistryCatalogSnapshot({ root });
         expect((await catalog.refresh(loadCatalog)).applied).toBe(true);
@@ -40,11 +33,7 @@ describe("production repository management", () => {
             loadCatalog,
             packageDownloadProtection: { clientAddressPolicy: { mode: "disabled" } },
             integrationCompatibility: management.compatibility,
-            managementGuard: createRepositoryManagementGuard({
-                serviceToken: "management-secret",
-                servicePrincipal: "management-cms",
-                rateLimiter: new InMemoryRateLimiter({ limit: 10, windowSeconds: 60 }),
-            }),
+            managementGuard: managementGuard(),
             mountManagement: management.mount,
         });
         servers.push(server);
@@ -112,44 +101,3 @@ describe("production repository management", () => {
         );
     });
 });
-
-function authenticatedFetch(url: string): Promise<Response> {
-    return fetch(url, { headers: { authorization: "Bearer management-secret" } });
-}
-
-function publicationDocument(version: string): string {
-    return JSON.stringify({
-        schema: "cms.integration.package.v1",
-        kind: "remote-demo",
-        version,
-        definition: "definition.json",
-        releaseNotes: "README.md",
-        files: {
-            "README.md": { encoding: "utf8", content: "# Remote demo\n" },
-            "definition.json": {
-                encoding: "utf8",
-                content: JSON.stringify({ kind: "remote-demo", label: "Remote demo", version, inputs: [] }),
-            },
-        },
-    });
-}
-
-function origin(runner: BunRunner): string {
-    if (!runner.port) {
-        throw new Error("Test runner did not start");
-    }
-    return `http://127.0.0.1:${runner.port}`;
-}
-
-async function makeWritable(path: string): Promise<void> {
-    const metadata = await lstat(path);
-    if (!metadata.isDirectory()) {
-        return;
-    }
-    await chmod(path, 0o750);
-    for (const entry of await readdir(path, { withFileTypes: true })) {
-        if (entry.isDirectory()) {
-            await makeWritable(join(path, entry.name));
-        }
-    }
-}
