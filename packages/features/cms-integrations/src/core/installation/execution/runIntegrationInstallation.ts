@@ -37,6 +37,7 @@ export type RunIntegrationInstallationUpgradeRequest = {
     installations: IntegrationInstallationRepository;
     integrationId: string;
     targetDefinition: IntegrationDefinition;
+    expectedPackageDigest?: string;
     body?: Record<string, unknown>;
     siteIntegrations?: IntegrationDefinition[];
     packageResolver?: IntegrationPackageResolver;

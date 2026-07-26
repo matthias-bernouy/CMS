@@ -1,10 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
-import {
-    integrationVersionReleaseLevel,
-    isExactIntegrationVersion,
-    isIntegrationDefinitionVersionInstallable,
-} from "@bernouy/cms-integrations";
+import { integrationVersionReleaseLevel, isExactIntegrationVersion } from "@bernouy/cms-integrations";
+import { preflightIntegrationUpgrade } from "cms-control/core/management/integrations/upgrade/preflight";
 
 export default async function getIntegrationInstallationVersions(request: Request, cms: ControlCms): Promise<Response> {
     const id = new URL(request.url).searchParams.get("id")?.trim();
@@ -26,15 +23,26 @@ export default async function getIntegrationInstallationVersions(request: Reques
         );
     }
     const current = installation.definitionVersion;
-    const versions = index.versions
-        .filter(isIntegrationDefinitionVersionInstallable)
-        .map(({ version }) => version)
-        .filter((version) => !isExactIntegrationVersion(current) || integrationVersionReleaseLevel(current, version));
+    const candidates = index.versions.filter(
+        ({ version }) => !isExactIntegrationVersion(current) || integrationVersionReleaseLevel(current, version),
+    );
+    const targets = await Promise.all(
+        candidates.map((version) =>
+            preflightIntegrationUpgrade({
+                repository: cms.integrationCatalog,
+                releases: cms.integrationUpgradeReleases,
+                installation,
+                version,
+            }),
+        ),
+    );
+    const versions = targets.filter(({ eligible }) => eligible).map(({ version }) => version);
     return Response.json({
         id: installation.id,
         current,
         ...(index.stable && versions.includes(index.stable) ? { stable: index.stable } : {}),
         ...(index.latest && versions.includes(index.latest) ? { latest: index.latest } : {}),
         versions,
+        targets,
     });
 }

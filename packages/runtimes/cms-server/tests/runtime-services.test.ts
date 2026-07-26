@@ -118,6 +118,7 @@ describe("production runtime services", () => {
         expect(services.publicRepositoryCatalog).toBe(services.integrationCatalog);
         expect(services.publicRepositoryPackages).toBe(services.integrationPackageSource);
         expect(services.publicRepositoryCompatibility).toBeInstanceOf(HttpRepositoryCompatibilityReader);
+        expect(services.integrationUpgradeReleases).toBeDefined();
         expect(services.integrationPackageCache).toBeInstanceOf(FsIntegrationPackageCache);
         expect(services.integrationPackageResolver).toBeInstanceOf(FsIntegrationPackageResolver);
         expect(services.integrationRepositoryPackages).toBeInstanceOf(FsIntegrationPackageSource);
@@ -175,6 +176,7 @@ describe("production runtime services", () => {
         expect(services.publicRepositoryCatalog).toBe(services.integrationRepositoryCatalog);
         expect(services.publicRepositoryPackages).toBe(services.integrationRepositoryPackages);
         expect(services.publicRepositoryCompatibility).toBeUndefined();
+        expect(services.integrationUpgradeReleases).toBeUndefined();
         expect((await services.publicRepositoryCatalog.list()).some(({ kind }) => kind === "commerce")).toBeTrue();
         expect(await services.publicRepositoryPackages.getPackage("commerce", "1.0.0")).not.toBeNull();
         expect(definitionFetch).not.toHaveBeenCalled();

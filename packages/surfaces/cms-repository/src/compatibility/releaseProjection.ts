@@ -125,7 +125,10 @@ function freshInstallOnly(
 ): boolean {
     const required = source.decision?.current.statefulChanges.requiredMigrations ?? [];
     if (required.length === 0) {
-        return false;
+        return (
+            source.compatibility?.current.releaseLevel === "major" &&
+            !migrations.some(({ outcome }) => outcome === "passed")
+        );
     }
     return !required.every((requirement) =>
         migrations.some(

@@ -45,6 +45,31 @@ describe("Control migration-aware integration upgrade", () => {
         expect(fixture.runtime.executed).toEqual([]);
         expect((await fixture.installations.get("commerce"))?.definitionVersion).toBe("1.0.0");
     });
+
+    test("rejects a forged upgrade when the composite release has no exact migration path", async () => {
+        const fixture = await migrationControlFixture(true);
+        Object.assign(fixture.cms, {
+            integrationUpgradeReleases: {
+                get: async () => ({
+                    kind: "commerce",
+                    version: "1.1.0",
+                    packageDigest: TARGET_DIGEST,
+                    status: "installable",
+                    installable: true,
+                    freshInstallOnly: true,
+                    compatibility: { releaseLevel: "minor" },
+                    decision: { admissible: true },
+                    migrations: [],
+                }),
+            },
+        });
+
+        await expect(
+            postIntegrationInstallationUpgrade(postUpgrade("commerce", { version: "1.1.0" }), fixture.cms),
+        ).rejects.toThrow(/fresh-install-only|No passed migration proof/);
+        expect(fixture.runtime.executed).toEqual([]);
+        expect((await fixture.installations.get("commerce"))?.definitionVersion).toBe("1.0.0");
+    });
 });
 
 class RecordingMigrationRuntime implements IntegrationMigrationRuntime {
@@ -121,6 +146,36 @@ async function migrationControlFixture(withBinding: boolean) {
     Object.assign(fixture.cms, {
         integrationMigrationRuntime: runtime,
         integrationPackageResolver: resolver,
+        integrationUpgradeReleases: {
+            get: async () => ({
+                kind: "commerce",
+                version: "1.1.0",
+                packageDigest: TARGET_DIGEST,
+                status: "installable",
+                installable: true,
+                freshInstallOnly: false,
+                compatibility: { releaseLevel: "minor" },
+                decision: { admissible: true },
+                migrations: [
+                    {
+                        reportId: "migration-1",
+                        reportDigest: "1".repeat(64),
+                        source: { kind: "commerce", version: "1.0.0", packageDigest: "c".repeat(64) },
+                        supportedSourceRange: "^1.0.0",
+                        connectorKey: "primary",
+                        lineageId: "commerce-supabase-v1",
+                        migrationRevision: 2,
+                        outcome: "passed",
+                        runner: { name: "cms-postgres", version: "1.0.0", imageDigest: "sha256:pinned" },
+                        environmentDigest: "2".repeat(64),
+                        cutover: { cmsMediated: "binding-revision", providerDirect: "expand-in-code" },
+                        rollback: "available",
+                        pointOfNoReturn: "cleanup",
+                        delayedCleanupVerified: true,
+                    },
+                ],
+            }),
+        },
     });
     return { cms: fixture.cms, installations: fixture.integrationInstallations, runtime };
 }

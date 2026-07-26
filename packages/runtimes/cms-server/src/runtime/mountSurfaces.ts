@@ -107,6 +107,7 @@ export async function mountProductionSurfaces(
             },
             integrationCatalog: integrations.integrationCatalog,
             integrationPackageResolver: integrations.integrationPackageResolver,
+            integrationUpgradeReleases: integrations.integrationUpgradeReleases,
             integrationInstallations: features.integrationInstallations,
             integrationConnectorProviders: features.integrationConnectorProviders,
             integrationConnectorDeployers: integrations.integrationConnectorDeployers,

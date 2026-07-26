@@ -68,6 +68,7 @@ export async function resolveUpgradePackage(
     resolver: IntegrationPackageResolver | undefined,
     installation: IntegrationInstallation,
     definition: IntegrationDefinition,
+    expectedDigest?: string,
 ): Promise<ResolvedIntegrationPackageRoot | undefined> {
     if (!resolver) {
         assertPinnedResolverAvailable(installation);
@@ -78,6 +79,7 @@ export async function resolveUpgradePackage(
         kind: definition.kind,
         version: definition.version as string,
         reason: "upgrade",
+        expectedDigest,
         expectedDefinition: definition,
         allowEmbeddedFallback: false,
     });

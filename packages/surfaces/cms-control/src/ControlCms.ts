@@ -93,6 +93,9 @@ export class ControlCms {
     get integrationPackageResolver() {
         return controlCmsAccessors.integrationPackageResolver(this.state);
     }
+    get integrationUpgradeReleases() {
+        return controlCmsAccessors.integrationUpgradeReleases(this.state);
+    }
     get dashboards() {
         return controlCmsAccessors.dashboards(this.state);
     }

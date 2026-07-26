@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { IntegrationDefinitionIndex } from "@bernouy/cms-integrations";
 import getIntegrationInstallationVersions from "cms-control/api/_platform/integrations/installations/versions.get";
-import { createInstallation, makeCms } from "../support/helpers";
+import { createInstallation, makeCms, TEST_SECRET_SOURCE_DEFINITION } from "../support/helpers";
 
 const INDEX: IntegrationDefinitionIndex = {
     kind: "test-secret-source",
@@ -27,13 +27,18 @@ describe("GET integration installation versions", () => {
         );
         const text = await response.text();
         expect(response.status).toBe(200);
-        expect(JSON.parse(text)).toEqual({
+        const body = JSON.parse(text);
+        expect(body).toMatchObject({
             id: "test-secret-source",
             current: "1.0.0",
             stable: "1.1.0",
             latest: "2.0.0-beta.1",
             versions: ["1.1.0", "2.0.0-beta.1"],
         });
+        expect(body.targets).toEqual([
+            expect.objectContaining({ version: "1.1.0", eligible: true, evidence: "legacy-index" }),
+            expect.objectContaining({ version: "2.0.0-beta.1", eligible: true, evidence: "legacy-index" }),
+        ]);
         expect(text).not.toContain("versions/1.0.0");
         expect(text).not.toContain("definition.json");
     });
@@ -50,11 +55,12 @@ describe("GET integration installation versions", () => {
             cms,
         );
 
-        expect(await response.json()).toEqual({
+        expect(await response.json()).toMatchObject({
             id: "test-secret-source",
             current: "1.1.0",
             latest: "2.0.0-beta.1",
             versions: ["2.0.0-beta.1"],
+            targets: [expect.objectContaining({ version: "2.0.0-beta.1", eligible: true })],
         });
     });
 
@@ -83,11 +89,74 @@ describe("GET integration installation versions", () => {
             cms,
         );
 
-        expect(await response.json()).toEqual({
+        const body = await response.json();
+        expect(body).toMatchObject({
             id: "test-secret-source",
             current: "1.0.0",
             versions: [],
         });
+        expect(body.targets).toEqual([
+            expect.objectContaining({
+                version: "1.1.0",
+                eligible: false,
+                reasons: [expect.stringContaining("blocked")],
+            }),
+            expect.objectContaining({
+                version: "2.0.0-beta.1",
+                eligible: false,
+                reasons: [expect.stringContaining("unverified")],
+            }),
+            expect.objectContaining({
+                version: "2.0.0",
+                eligible: false,
+                reasons: [expect.stringContaining("inadmissible")],
+            }),
+        ]);
+    });
+
+    test("uses exact composite evidence to separate eligible upgrades from fresh-install-only releases", async () => {
+        const sourceDigest = "a".repeat(64);
+        const fixture = makeCms([
+            TEST_SECRET_SOURCE_DEFINITION,
+            { ...TEST_SECRET_SOURCE_DEFINITION, version: "1.1.0" },
+            { ...TEST_SECRET_SOURCE_DEFINITION, version: "2.0.0-beta.1" },
+        ]);
+        await createInstallation(fixture.integrationInstallations, "test-secret-source", sourceDigest);
+        fixture.integrationCatalog.getIndex = async () => INDEX;
+        Object.assign(fixture.cms, {
+            integrationUpgradeReleases: {
+                get: async (_kind: string, version: string) => ({
+                    kind: "test-secret-source",
+                    version,
+                    packageDigest: version === "1.1.0" ? "b".repeat(64) : "c".repeat(64),
+                    status: "installable",
+                    installable: true,
+                    freshInstallOnly: version !== "1.1.0",
+                    compatibility: { releaseLevel: version === "1.1.0" ? "minor" : "major" },
+                    decision: { admissible: true },
+                    migrations: [],
+                }),
+            },
+        });
+
+        const response = await getIntegrationInstallationVersions(
+            new Request("http://control.test/api/integrations/installations/versions?id=test-secret-source"),
+            fixture.cms,
+        );
+        const body = await response.json();
+
+        expect(body.versions).toEqual(["1.1.0"]);
+        expect(body.stable).toBe("1.1.0");
+        expect(body.latest).toBeUndefined();
+        expect(body.targets).toEqual([
+            expect.objectContaining({ version: "1.1.0", eligible: true, evidence: "composite" }),
+            expect.objectContaining({
+                version: "2.0.0-beta.1",
+                eligible: false,
+                freshInstallOnly: true,
+                reasons: expect.arrayContaining([expect.stringContaining("fresh-install-only")]),
+            }),
+        ]);
     });
 
     test("distinguishes missing installations and unavailable repository history", async () => {

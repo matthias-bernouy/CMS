@@ -38,6 +38,7 @@ import type { ScheduledTriggerRunResult, TriggerRepository } from "@bernouy/cms-
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { CMS_ROLES } from "types/roles";
 import type { RepositoryManagementAccess } from "cms-control/core/admin/control/mountRoutes/repositoryAccess";
+import type { IntegrationUpgradeReleaseReader } from "cms-control/core/management/integrations/upgrade/contracts";
 
 type Configuration = {
     deliveryUrl?: string;
@@ -49,6 +50,7 @@ export type ControlCmsOptions = Configuration & {
     repositoryManagement?: RepositoryManagementAccess;
     integrationCatalog?: IntegrationDefinitionRepository;
     integrationPackageResolver?: IntegrationPackageResolver;
+    integrationUpgradeReleases?: IntegrationUpgradeReleaseReader;
     integrationInstallations?: IntegrationInstallationRepository;
     integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
     integrationMigrationRuntime?: IntegrationMigrationRuntime;

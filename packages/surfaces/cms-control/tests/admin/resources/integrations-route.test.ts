@@ -94,18 +94,54 @@ describe("explicit integration upgrade UI", () => {
             id: "commerce",
             current: "1.0.0",
             stable: "1.1.0",
-            latest: "2.0.0-beta.1",
-            versions: ["1.1.0", "2.0.0-beta.1"],
+            versions: ["1.1.0"],
+            targets: [
+                {
+                    version: "1.1.0",
+                    eligible: true,
+                    evidence: "composite",
+                    freshInstallOnly: false,
+                    releaseLevel: "minor",
+                    reasons: [],
+                    migrations: [
+                        {
+                            connectorKey: "primary",
+                            lineageId: "commerce-supabase-v1",
+                            supportedSourceRange: "^1.0.0",
+                            rollback: "available",
+                            pointOfNoReturn: "cleanup",
+                            cmsMediatedCutover: "binding-revision",
+                            providerDirectCutover: "expand-in-code",
+                            cmsDrainSeconds: 30,
+                        },
+                    ],
+                },
+                {
+                    version: "2.0.0-beta.1",
+                    eligible: false,
+                    evidence: "composite",
+                    freshInstallOnly: true,
+                    releaseLevel: "major",
+                    reasons: ["The release is fresh-install-only."],
+                    migrations: [],
+                },
+            ],
         });
 
         const select = panel.querySelector<HTMLSelectElement>("[data-upgrade-target]")!;
         expect(Array.from(select.options).map(({ value, textContent }) => ({ value, textContent }))).toEqual([
-            { value: "1.1.0", textContent: "1.1.0 (stable)" },
-            { value: "2.0.0-beta.1", textContent: "2.0.0-beta.1 (latest)" },
+            {
+                value: "1.1.0",
+                textContent: "1.1.0 (stable, migration from ^1.0.0, rollback available)",
+            },
         ]);
         expect(select.value).toBe("1.1.0");
         expect(panel.querySelector<HTMLInputElement>("[data-upgrade-confirmation]")?.placeholder).toBe("1.1.0");
         expect(panel.textContent).toContain("Select and confirm an exact target version");
+        expect(panel.textContent).toContain("tested migration ^1.0.0");
+        expect(panel.textContent).toContain("PONR cleanup");
+        expect(panel.textContent).toContain("drain 30s");
+        expect(panel.textContent).toContain("2.0.0-beta.1: The release is fresh-install-only");
     });
 
     test("does not submit until the administrator types the exact selected version", async () => {

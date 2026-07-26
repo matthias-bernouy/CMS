@@ -90,9 +90,7 @@ export function renderUpgradeChoices(panel: HTMLElement, choices: IntegrationUpg
     form.hidden = choices.versions.length === 0;
     setStatus(
         statusElement(panel),
-        choices.versions.length
-            ? `Installed: ${choices.current}. Select and confirm an exact target version.`
-            : `Version ${choices.current} is up to date.`,
+        choices.versions.length ? upgradeSummary(choices) : unavailableUpgradeSummary(choices),
     );
 }
 
@@ -118,8 +116,41 @@ function versionOption(version: string, choices: IntegrationUpgradeVersions): HT
     const channels = [choices.stable === version ? "stable" : "", choices.latest === version ? "latest" : ""].filter(
         Boolean,
     );
-    option.textContent = channels.length ? `${version} (${channels.join(", ")})` : version;
+    const target = choices.targets?.find((candidate) => candidate.version === version);
+    const migration = target?.migrations[0];
+    const labels = [
+        ...channels,
+        ...(migration ? [`migration from ${migration.supportedSourceRange}`, `rollback ${migration.rollback}`] : []),
+    ];
+    option.textContent = labels.length ? `${version} (${labels.join(", ")})` : version;
     return option;
+}
+
+function upgradeSummary(choices: IntegrationUpgradeVersions): string {
+    const unavailable = choices.targets?.filter((target) => !target.eligible) ?? [];
+    const eligible = choices.versions
+        .map((version) => choices.targets?.find((target) => target.version === version))
+        .filter((target) => target?.migrations.length)
+        .map((target) => {
+            const migration = target!.migrations[0]!;
+            const drains = [migration.cmsDrainSeconds, migration.providerDrainSeconds].filter(
+                (value): value is number => value !== undefined,
+            );
+            const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; downtime not declared";
+            return `${target!.version}: tested migration ${migration.supportedSourceRange}; ${migration.rollback} rollback; PONR ${migration.pointOfNoReturn}${drain}`;
+        });
+    return [
+        `Installed: ${choices.current}. Select and confirm an exact target version.`,
+        ...eligible,
+        ...unavailable.map((target) => `${target.version}: ${target.reasons.join(" ")}`),
+    ].join(" ");
+}
+
+function unavailableUpgradeSummary(choices: IntegrationUpgradeVersions): string {
+    const reasons = choices.targets?.flatMap((target) =>
+        target.reasons.map((reason) => `${target.version}: ${reason}`),
+    );
+    return reasons?.length ? `No eligible upgrade. ${reasons.join(" ")}` : `Version ${choices.current} is up to date.`;
 }
 
 function upgradePanel(element: HTMLElement): HTMLElement | null {

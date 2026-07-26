@@ -30,6 +30,7 @@ describe("package-backed integration upgrades", () => {
             installations: context.installations,
             integrationId: installed.kind,
             targetDefinition: target,
+            expectedPackageDigest: SECOND_DIGEST,
             packageResolver: resolver,
         });
 
@@ -39,12 +40,37 @@ describe("package-backed integration upgrades", () => {
             reason: "upgrade",
             allowEmbeddedFallback: false,
         });
-        expect(resolver.requests[0]?.expectedDigest).toBeUndefined();
+        expect(resolver.requests[0]?.expectedDigest).toBe(SECOND_DIGEST);
         expect(resolver.requests[0]?.expectedDefinition?.version).toBe("1.1.0");
         expect(deployer.calls.at(-1)?.context.packageRoot).toBe(SECOND_PACKAGE_ROOT);
         expect(result.installation.definitionVersion).toBe("1.1.0");
         expect(result.installation.definitionSnapshot?.version).toBe("1.1.0");
         expect(result.installation.packageDigest).toBe(SECOND_DIGEST);
+    });
+
+    test("rejects package bytes that do not match the exact composite release decision", async () => {
+        const context = packageLifecycleContext();
+        const installed = rerunDefinition("1.0.0", "https://api.example.com/v1/items");
+        const target = rerunDefinition("1.1.0", "https://api.example.com/v2/items");
+        await createPinned(context, installed);
+        const before = await context.installations.get(installed.kind);
+        const resolver = new RecordingPackageResolver(() =>
+            resolvedPackage(target, SECOND_DIGEST, SECOND_PACKAGE_ROOT),
+        );
+
+        await expect(
+            runIntegrationInstallation({
+                mode: "upgrade",
+                deps: { sources: context.sources, secrets: context.secrets },
+                installations: context.installations,
+                integrationId: installed.kind,
+                targetDefinition: target,
+                expectedPackageDigest: "f".repeat(64),
+                packageResolver: resolver,
+            }),
+        ).rejects.toThrow(/repository returned an invalid response/i);
+
+        expect(await context.installations.get(installed.kind)).toEqual(before);
     });
 
     test("leaves the complete pin untouched when package materialization runs out of disk", async () => {

@@ -53,6 +53,29 @@ describe("@bernouy/cms-repository public release evidence", () => {
         expect(body.decision.admissible).toBe(true);
     });
 
+    test("marks a major without any passed migration path as fresh-install-only", async () => {
+        const source = releaseEvidence();
+        const compatibility = source.compatibility!;
+        const compatibilityCurrent = { ...compatibility.current, releaseLevel: "major" as const };
+        const decision = source.decision!;
+        const decisionCurrent = {
+            ...decision.current,
+            migrationReports: [],
+            statefulChanges: { ...decision.current.statefulChanges, requiredMigrations: [] },
+        };
+        const runner = mounted({
+            ...source,
+            migrations: [],
+            compatibility: { ...compatibility, current: compatibilityCurrent, revisions: [compatibilityCurrent] },
+            decision: { ...decision, current: decisionCurrent, revisions: [decisionCurrent] },
+        });
+
+        const body = await (await runner.handle("/api/integrations/release?kind=demo&version=1.0.0")).json();
+
+        expect(body.installable).toBe(true);
+        expect(body.freshInstallOnly).toBe(true);
+    });
+
     test("serves immutable verification bundles by exact digest", async () => {
         const canonicalBytes = canonicalJsonBytes({ schema: "test.verification.v1" });
         const digest = await sha256Hex(canonicalBytes);

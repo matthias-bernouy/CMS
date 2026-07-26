@@ -90,7 +90,12 @@ export async function runUpgrade(
         );
     }
     await assertUpgradePreservesDependentRanges(request.installations, installation.id, definition.version);
-    const resolvedPackage = await resolveUpgradePackage(request.packageResolver, installation, definition);
+    const resolvedPackage = await resolveUpgradePackage(
+        request.packageResolver,
+        installation,
+        definition,
+        request.expectedPackageDigest,
+    );
     const importDefinition = resolvedPackage?.definition ?? definition;
     const siteIntegrations = [
         importDefinition,

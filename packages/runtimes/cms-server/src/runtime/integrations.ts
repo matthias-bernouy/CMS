@@ -22,6 +22,8 @@ import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { HttpRepositoryCompatibilityReader } from "../repositoryCatalog/compatibility/reader";
+import { DEFAULT_REPOSITORY_CATALOG_READER_LIMITS } from "../repositoryCatalog/limits";
+import { HttpRepositoryReleaseReader } from "../repositoryCatalog/release/reader";
 
 type IntegrationServiceOptions = {
     providerRepository: IntegrationConnectorProviderRepository;
@@ -88,6 +90,20 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
               ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
           })
         : undefined;
+    const upgradeReleaseReader = globalRepositoryUrl
+        ? new HttpRepositoryReleaseReader({
+              baseUrl: globalRepositoryUrl,
+              ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
+              timeoutMs: 10_000,
+              maxResponseBytes: DEFAULT_REPOSITORY_CATALOG_READER_LIMITS.releaseEvidenceBytes,
+          })
+        : undefined;
+    const integrationUpgradeReleases = upgradeReleaseReader
+        ? {
+              get: async (kind: string, version: string) =>
+                  (await upgradeReleaseReader.getDocument(kind, version))?.value ?? null,
+          }
+        : undefined;
     return {
         repositoryReadMode,
         repositoryUrl,
@@ -96,6 +112,7 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
         publicRepositoryCatalog,
         publicRepositoryPackages,
         publicRepositoryCompatibility,
+        integrationUpgradeReleases,
         integrationCatalog,
         integrationPackageSource,
         integrationPackageCache,

@@ -22,6 +22,28 @@ export type IntegrationUpgradeVersions = {
     stable?: string;
     latest?: string;
     versions: string[];
+    targets?: IntegrationUpgradeTarget[];
+};
+
+export type IntegrationUpgradeTarget = {
+    version: string;
+    eligible: boolean;
+    evidence: "composite" | "legacy-index";
+    freshInstallOnly: boolean;
+    releaseLevel?: string;
+    packageDigest?: string;
+    reasons: string[];
+    migrations: Array<{
+        connectorKey: string;
+        lineageId: string;
+        supportedSourceRange: string;
+        rollback: string;
+        pointOfNoReturn: string;
+        cmsMediatedCutover: string;
+        providerDirectCutover: string;
+        cmsDrainSeconds?: number;
+        providerDrainSeconds?: number;
+    }>;
 };
 
 export type IntegrationImportPayload = Omit<IntegrationImportDto, "options"> & {
