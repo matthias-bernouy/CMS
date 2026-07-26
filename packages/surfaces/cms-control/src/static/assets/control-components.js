@@ -30327,6 +30327,7 @@ ${controls_default3}`;
     const operations = readRecord(metrics.operations);
     const compatibility = readRecord(metrics.compatibility);
     const publicPackages = readRecord(metrics.publicPackages);
+    const repositoryReads = readRecord(metrics.repositoryReads);
     const snapshot = readRecord(metrics.snapshot);
     return {
       operations: {
@@ -30345,6 +30346,15 @@ ${controls_default3}`;
         releaseNotesBytes: readCount(publicPackages.releaseNotesBytes),
         rateLimitRejections: readCount(publicPackages.rateLimitRejections),
         downloadRateLimitRejections: readCount(publicPackages.downloadRateLimitRejections)
+      },
+      repositoryReads: {
+        total: readCount(repositoryReads.total),
+        succeeded: readCount(repositoryReads.succeeded),
+        notFound: readCount(repositoryReads.notFound),
+        rejected: readCount(repositoryReads.rejected),
+        failed: readCount(repositoryReads.failed),
+        totalDurationMs: readCount(repositoryReads.totalDurationMs),
+        maximumDurationMs: readCount(repositoryReads.maximumDurationMs)
       },
       snapshot: {
         integrations: readCount(snapshot.integrations),
@@ -31102,7 +31112,7 @@ ${controls_default3}`;
     ];
     if (status.metrics) {
       const operations = status.metrics.operations;
-      values.push(labelledValue("Publications", operationSummary(operations.publication)), labelledValue("Stable promotions", operationSummary(operations.stablePromotion)), labelledValue("Compatibility reevaluations", operationSummary(operations.compatibilityReevaluation)), labelledValue("Compatibility warnings", String(status.metrics.compatibility.warnings)), labelledValue("Package traffic", `${status.metrics.publicPackages.packagesServed} downloads / ${formatBytes(String(status.metrics.publicPackages.packageBytes))}`), labelledValue("Rate-limit rejections", String(status.metrics.publicPackages.rateLimitRejections)), labelledValue("Registry capacity", filesystemSummary(status.metrics.filesystem)));
+      values.push(labelledValue("Publications", operationSummary(operations.publication)), labelledValue("Stable promotions", operationSummary(operations.stablePromotion)), labelledValue("Compatibility reevaluations", operationSummary(operations.compatibilityReevaluation)), labelledValue("Compatibility warnings", String(status.metrics.compatibility.warnings)), labelledValue("Package traffic", `${status.metrics.publicPackages.packagesServed} downloads / ${formatBytes(String(status.metrics.publicPackages.packageBytes))}`), labelledValue("Rate-limit rejections", String(status.metrics.publicPackages.rateLimitRejections)), labelledValue("Repository reads", `${status.metrics.repositoryReads.succeeded}/${status.metrics.repositoryReads.total} succeeded, ${status.metrics.repositoryReads.rejected} rejected, ${status.metrics.repositoryReads.failed} failed, max ${status.metrics.repositoryReads.maximumDurationMs} ms`), labelledValue("Registry capacity", filesystemSummary(status.metrics.filesystem)));
     }
     target2.replaceChildren(...values);
   }

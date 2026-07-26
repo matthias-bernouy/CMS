@@ -25,6 +25,15 @@ export type RepositoryMetricsView = Readonly<{
         rateLimitRejections: number;
         downloadRateLimitRejections: number;
     }>;
+    repositoryReads: Readonly<{
+        total: number;
+        succeeded: number;
+        notFound: number;
+        rejected: number;
+        failed: number;
+        totalDurationMs: number;
+        maximumDurationMs: number;
+    }>;
     snapshot: Readonly<{
         integrations: number;
         versions: number;
@@ -67,6 +76,7 @@ export function parseRepositoryMetrics(value: unknown): RepositoryMetricsView {
     const operations = readRecord(metrics.operations);
     const compatibility = readRecord(metrics.compatibility);
     const publicPackages = readRecord(metrics.publicPackages);
+    const repositoryReads = readRecord(metrics.repositoryReads);
     const snapshot = readRecord(metrics.snapshot);
     return {
         operations: {
@@ -85,6 +95,15 @@ export function parseRepositoryMetrics(value: unknown): RepositoryMetricsView {
             releaseNotesBytes: readCount(publicPackages.releaseNotesBytes),
             rateLimitRejections: readCount(publicPackages.rateLimitRejections),
             downloadRateLimitRejections: readCount(publicPackages.downloadRateLimitRejections),
+        },
+        repositoryReads: {
+            total: readCount(repositoryReads.total),
+            succeeded: readCount(repositoryReads.succeeded),
+            notFound: readCount(repositoryReads.notFound),
+            rejected: readCount(repositoryReads.rejected),
+            failed: readCount(repositoryReads.failed),
+            totalDurationMs: readCount(repositoryReads.totalDurationMs),
+            maximumDurationMs: readCount(repositoryReads.maximumDurationMs),
         },
         snapshot: {
             integrations: readCount(snapshot.integrations),

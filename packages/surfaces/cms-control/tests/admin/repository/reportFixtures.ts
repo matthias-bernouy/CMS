@@ -23,6 +23,15 @@ const metricsFixture = {
         rateLimitRejections: 2,
         downloadRateLimitRejections: 1,
     },
+    repositoryReads: {
+        total: 8,
+        succeeded: 6,
+        notFound: 1,
+        rejected: 1,
+        failed: 0,
+        totalDurationMs: 45,
+        maximumDurationMs: 12,
+    },
     snapshot: { integrations: 14, versions: 18, diagnostics: 1, quarantined: 1, recoveryDiagnostics: 1 },
     filesystem: {
         status: "available",
