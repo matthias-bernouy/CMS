@@ -9,6 +9,7 @@ export type IntegrationDefinitionVersion = {
     version: string;
     path: string;
     definition: string;
+    status?: "blocked";
 };
 
 export type IntegrationDefinitionIndex = {

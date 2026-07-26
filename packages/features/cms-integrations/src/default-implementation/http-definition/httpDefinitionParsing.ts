@@ -39,12 +39,23 @@ export function parseVersions(value: unknown): IntegrationDefinitionVersion[] {
             version: requiredVersion(entry.version, "version"),
             path: requiredText(entry.path, "path"),
             definition: requiredText(entry.definition, "definition"),
+            ...(versionStatus(entry.status) ? { status: "blocked" as const } : {}),
         };
     });
     if (new Set(versions.map((entry) => entry.version)).size !== versions.length) {
         throw new Error("integration versions response must not contain duplicate versions");
     }
     return versions;
+}
+
+function versionStatus(value: unknown): "blocked" | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value !== "blocked") {
+        throw new Error("integration repository response version status must be blocked when present");
+    }
+    return value;
 }
 
 function parseSummary(value: unknown): IntegrationDefinitionSummary {

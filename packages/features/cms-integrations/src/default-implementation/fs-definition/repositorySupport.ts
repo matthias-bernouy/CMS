@@ -1,6 +1,10 @@
 import { realpath } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { parseIntegrationIcon } from "../../core/parsing/definition/icon";
+import {
+    resolveExactIntegrationDefinitionVersion,
+    resolveInstallableIntegrationDefinitionVersion,
+} from "../../core/definitions/repositoryVersions";
 import { assertExactIntegrationVersion, isIntegrationPrerelease } from "../../core/definitions/versioning";
 import type {
     IntegrationDefinitionIndex,
@@ -13,18 +17,9 @@ export function resolveVersion(
     defaultChannel: "stable" | "latest",
 ): IntegrationDefinitionVersion | null {
     if (requestedVersion) {
-        return index.versions.find((version) => version.version === requestedVersion) ?? null;
+        return resolveExactIntegrationDefinitionVersion(index, requestedVersion);
     }
-    const target =
-        defaultChannel === "latest"
-            ? (index.latest ?? index.stable)
-            : (index.stable ?? (index.latest && !isIntegrationPrerelease(index.latest) ? index.latest : undefined));
-    if (!target) {
-        return defaultChannel === "stable"
-            ? (index.versions.find((version) => !isIntegrationPrerelease(version.version)) ?? null)
-            : (index.versions[0] ?? null);
-    }
-    return index.versions.find((version) => version.version === target) ?? null;
+    return resolveInstallableIntegrationDefinitionVersion(index, undefined, defaultChannel);
 }
 
 export function parseIntegrationDefinitionIndex(value: unknown, source: string): IntegrationDefinitionIndex {
@@ -107,7 +102,23 @@ function parseVersion(value: unknown, source: string): IntegrationDefinitionVers
     if (!definition) {
         throw new Error(`${source}.definition is required`);
     }
-    return { version: assertExactIntegrationVersion(version, `${source}.version`), path, definition };
+    const status = parseVersionStatus(value.status, `${source}.status`);
+    return {
+        version: assertExactIntegrationVersion(version, `${source}.version`),
+        path,
+        definition,
+        ...(status ? { status } : {}),
+    };
+}
+
+function parseVersionStatus(value: unknown, source: string): "blocked" | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value !== "blocked") {
+        throw new Error(`${source} must be blocked when present`);
+    }
+    return value;
 }
 
 function parseChannel(

@@ -6,6 +6,8 @@ import {
     integrationVersionSatisfies,
     isExactIntegrationVersion,
     isSupportedIntegrationVersionRange,
+    resolveExactIntegrationDefinitionVersion,
+    resolveInstallableIntegrationDefinitionVersion,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
@@ -57,6 +59,23 @@ describe("integration repository SemVer", () => {
         expect((await repository.get("demo", "2.0.0-beta.1"))?.version).toBe("2.0.0-beta.1");
     });
 
+    test("keeps blocked versions exact but excludes them from installable resolution", async () => {
+        const repository = filesystemRepository({
+            versions: ["2.0.0", "1.4.0", "1.3.0"],
+            stable: "1.4.0",
+            latest: "2.0.0",
+            blocked: ["2.0.0", "1.4.0"],
+        });
+        const index = (await repository.getIndex("demo"))!;
+
+        expect(resolveExactIntegrationDefinitionVersion(index, "2.0.0")?.status).toBe("blocked");
+        expect(resolveInstallableIntegrationDefinitionVersion(index, "2.0.0", "latest")).toBeNull();
+        expect(resolveInstallableIntegrationDefinitionVersion(index, undefined, "latest")?.version).toBe("1.3.0");
+        expect(resolveInstallableIntegrationDefinitionVersion(index, undefined, "stable")?.version).toBe("1.3.0");
+        expect((await repository.get("demo"))?.version).toBe("1.3.0");
+        expect((await repository.get("demo", "2.0.0"))?.version).toBe("2.0.0");
+    });
+
     test("treats malformed remote versions and missing definition versions as contract failures", async () => {
         const malformedIndex = new HttpIntegrationDefinitionRepository({
             baseUrl: "https://repository.example.test",
@@ -88,6 +107,20 @@ describe("integration repository SemVer", () => {
             versions: [{ version: "1.0.0", path: "versions/1.0.0", definition: "definition.json" }],
         });
         await expect(danglingStable.getIndex("demo")).rejects.toMatchObject({ status: 502 });
+
+        const invalidStatus = httpRepositoryResponse({
+            kind: "demo",
+            label: "Demo",
+            versions: [
+                {
+                    version: "1.0.0",
+                    path: "versions/1.0.0",
+                    definition: "definition.json",
+                    status: "available",
+                },
+            ],
+        });
+        await expect(invalidStatus.getIndex("demo")).rejects.toMatchObject({ status: 502 });
     });
 
     test("accepts a remote prerelease only when requested explicitly", async () => {
@@ -107,6 +140,7 @@ function filesystemRepository(options: {
     stable?: string;
     latest?: string;
     definitionVersion?: string;
+    blocked?: readonly string[];
 }): FsIntegrationDefinitionRepository {
     const root = mkdtempSync(join(tmpdir(), "cms-integration-semver-"));
     const packageRoot = join(root, "demo");
@@ -118,7 +152,12 @@ function filesystemRepository(options: {
             join(versionRoot, "definition.json"),
             JSON.stringify({ kind: "demo", label: "Demo", version: options.definitionVersion ?? version, inputs: [] }),
         );
-        return { version, path: `versions/${version}`, definition: `versions/${version}/definition.json` };
+        return {
+            version,
+            path: `versions/${version}`,
+            definition: `versions/${version}/definition.json`,
+            ...(options.blocked?.includes(version) ? { status: "blocked" } : {}),
+        };
     });
     writeFileSync(
         join(packageRoot, "integration.json"),

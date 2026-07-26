@@ -36,7 +36,12 @@ describe("HttpIntegrationDefinitionRepository", () => {
                         icon: { path: "assets/icon.svg" },
                         stable: "1.0.0",
                         versions: [
-                            { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
+                            {
+                                version: "1.0.0",
+                                path: "versions/1.0.0",
+                                definition: "versions/1.0.0/definition.json",
+                                status: "blocked",
+                            },
                         ],
                     });
                 }
@@ -67,7 +72,14 @@ describe("HttpIntegrationDefinitionRepository", () => {
             label: "Demo",
             icon: { path: "assets/icon.svg" },
             stable: "1.0.0",
-            versions: [{ version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" }],
+            versions: [
+                {
+                    version: "1.0.0",
+                    path: "versions/1.0.0",
+                    definition: "versions/1.0.0/definition.json",
+                    status: "blocked",
+                },
+            ],
         });
         expect(await repo.listVersions("demo")).toEqual([
             { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
