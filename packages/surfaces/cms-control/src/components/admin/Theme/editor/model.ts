@@ -1,7 +1,7 @@
-import type { ThemeCategory, ThemeDefinition, ThemeSettings, ThemeSource, ThemeToken } from "@bernouy/cms-content";
+import type { ThemeCategory, ThemeDefinition, ThemeSettings, ThemeSource } from "@bernouy/cms-content";
 
 import type { ThemeSelection } from "../events";
-import { isIntegrationSource } from "../ownership";
+import { isIntegrationSource, isSiteTokenSource } from "../ownership";
 
 export function currentSource(settings: ThemeSettings | null, selection: ThemeSelection): ThemeSource | undefined {
     return settings?.sources.find((item) => item.id === selection.sourceId) ?? settings?.sources[0];
@@ -41,7 +41,7 @@ export function addCategory(
     selection: ThemeSelection,
 ): { sourceId: string; category: ThemeCategory } | undefined {
     const source = currentSource(settings, selection);
-    if (!source || isIntegrationSource(source)) {
+    if (!isSiteTokenSource(source)) {
         return undefined;
     }
     const number = source.categories.length + 1;
@@ -56,11 +56,11 @@ export function addCategory(
     return { sourceId: source.id, category };
 }
 
-export function addToken(settings: ThemeSettings, selection: ThemeSelection): void {
+export function addToken(settings: ThemeSettings, selection: ThemeSelection): boolean {
     const source = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
-    if (!source || !category || isIntegrationSource(source)) {
-        return;
+    if (!isSiteTokenSource(source) || !category) {
+        return false;
     }
     const allIds = new Set(
         settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.map((token) => token.id))),
@@ -72,8 +72,9 @@ export function addToken(settings: ThemeSettings, selection: ThemeSelection): vo
         variable: id,
         label: `New token ${number}`,
         description: "Custom design token",
-        type: source.supportsModes ? "color" : "value",
+        type: "value",
     });
+    return true;
 }
 
 export function resetIntegrationTokenValue(
@@ -84,7 +85,7 @@ export function resetIntegrationTokenValue(
     tokenId: string,
 ): boolean {
     const source = currentSource(settings, selection);
-    const token = currentCategory(settings, selection)?.tokens.find((item) => item.id === tokenId);
+    const token = source?.categories.flatMap((category) => category.tokens).find((item) => item.id === tokenId);
     const theme = currentTheme(settings, selectedThemeId);
     if (!isIntegrationSource(source) || !token || !theme) {
         return false;
@@ -96,47 +97,6 @@ export function resetIntegrationTokenValue(
     return true;
 }
 
-export function themeSettingsFromCss(css: string): ThemeSettings {
-    const values: Record<string, string> = {};
-    const tokens: ThemeToken[] = [];
-    const seen = new Set<string>();
-    for (const match of css.matchAll(/--([a-z][a-z0-9-]*)\s*:\s*([^;{}]+)\s*;/gi)) {
-        const variable = match[1]!.toLowerCase();
-        if (seen.has(variable)) {
-            continue;
-        }
-        seen.add(variable);
-        const value = match[2]!.trim();
-        tokens.push({
-            id: variable,
-            variable,
-            label: variable.split("-").map(capitalize).join(" "),
-            description: `Existing --${variable} variable`,
-            type: looksLikeColor(value) ? "color" : "value",
-        });
-        values[variable] = value;
-    }
-    return {
-        activeThemeId: "imported",
-        sources: [
-            {
-                id: "other",
-                label: "Other",
-                supportsModes: false,
-                categories: [
-                    {
-                        id: "general",
-                        label: "General",
-                        description: "Variables inferred from the current free-form stylesheet.",
-                        tokens,
-                    },
-                ],
-            },
-        ],
-        themes: [{ id: "imported", name: "Imported theme", values: { light: values, dark: {} } }],
-    };
-}
-
 function uniqueId(base: string, existing: Set<string>): string {
     let value = base;
     let suffix = 2;
@@ -144,12 +104,4 @@ function uniqueId(base: string, existing: Set<string>): string {
         value = `${base}-${suffix++}`;
     }
     return value;
-}
-
-function capitalize(value: string): string {
-    return value ? value[0]!.toUpperCase() + value.slice(1) : value;
-}
-
-function looksLikeColor(value: string): boolean {
-    return /^(#|rgb\(|rgba\(|hsl\(|hsla\(|oklch\(|oklab\(|lab\(|lch\(|color\(|transparent$|currentcolor$)/i.test(value);
 }

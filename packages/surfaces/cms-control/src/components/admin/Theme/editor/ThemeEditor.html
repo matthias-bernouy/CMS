@@ -1,48 +1,71 @@
 <cms-shell-detail>
-    <span slot="title" data-category-title>Colors</span>
+    <span slot="title" data-category-title>Theme</span>
     <p9r-select slot="actions" data-theme-switch aria-label="Select theme"></p9r-select>
     <p9r-button slot="actions" type="button" variant="outlined" data-add-theme>+ Theme</p9r-button>
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-theme-category>+ Category</p9r-button>
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-element>+ Add element</p9r-button>
+    <p9r-button slot="actions" type="button" variant="outlined" data-add-theme-category hidden>+ Category</p9r-button>
+    <p9r-button slot="actions" type="button" variant="outlined" data-add-element hidden>+ Token</p9r-button>
     <p9r-button slot="actions" type="button" color="primary" data-save-theme>Save</p9r-button>
     <p9r-button slot="actions" type="button" color="primary" data-activate-theme>Activate</p9r-button>
 
+    <cms-detail-section slot="main" density="compact" data-theme-overview>
+        <div class="theme-overview">
+            <label class="theme-name-field">
+                <span>Theme name</span>
+                <input class="theme-name" type="text" aria-label="Theme name" data-theme-name-input>
+            </label>
+            <div class="theme-context">
+                <p9r-tag color="success" data-theme-status>Active</p9r-tag>
+                <span data-site-name></span>
+            </div>
+        </div>
+        <p class="theme-message" data-message aria-live="polite"></p>
+    </cms-detail-section>
+
     <cms-detail-section slot="main" data-category-section>
-        <div class="source-provenance" data-source-provenance hidden>
-            <p9r-tag color="primary">Integration</p9r-tag>
-            <span data-source-owner-label></span>
-            <span>CSS values and var(--token) references are supported.</span>
+        <div class="source-provenance" data-source-provenance>
+            <p9r-tag data-source-owner-kind>Site</p9r-tag>
+            <strong data-source-owner-label></strong>
+            <span data-source-owner-note></span>
         </div>
         <div class="mode-switch" data-mode-switch hidden>
             <button type="button" data-mode="light">Light mode</button>
             <button type="button" data-mode="dark">Dark mode</button>
         </div>
-        <div class="groups" data-groups></div>
-    </cms-detail-section>
-
-    <cms-detail-section slot="aside" heading="Current theme" description="The active theme is used by the published site.">
-        <div class="theme-meta">
-            <input class="theme-name" type="text" aria-label="Theme name" data-theme-name-input>
-            <p9r-tag color="success" data-theme-status>Active</p9r-tag>
+        <div class="token-tools">
+            <label class="token-search">
+                <span class="visually-hidden">Search tokens</span>
+                <input type="search" placeholder="Search tokens, variables or categories…" data-token-search>
+            </label>
+            <div class="token-filters" data-token-filters aria-label="Filter token types"></div>
         </div>
-        <p class="theme-note" data-site-name></p>
-        <p class="theme-message" data-message aria-live="polite"></p>
-    </cms-detail-section>
-
-    <cms-detail-section slot="aside" heading="About this category" data-category-about>
-        <div class="category-fields">
+        <div class="category-fields" data-category-fields hidden>
             <label>
-                <span>Label</span>
+                <span>Category name</span>
                 <input type="text" data-category-label-input>
             </label>
             <label>
                 <span>Description</span>
-                <textarea rows="3" data-category-description-input></textarea>
+                <input type="text" data-category-description-input>
             </label>
         </div>
-        <p class="theme-note" data-category-lock-note hidden>
-            This catalogue is managed by its integration. Labels, variables and categories are read-only; theme values remain editable.
-        </p>
-        <p class="theme-note" data-category-description></p>
+        <div class="groups" data-groups></div>
     </cms-detail-section>
+
+    <div slot="main" class="reference-picker-backdrop" data-reference-picker hidden>
+        <section class="reference-picker" role="dialog" aria-modal="true" aria-labelledby="reference-picker-title">
+            <header>
+                <div>
+                    <span class="eyebrow">Token reference</span>
+                    <h4 id="reference-picker-title" data-reference-picker-title>Link token</h4>
+                </div>
+                <button type="button" class="reference-close" data-close-token-reference aria-label="Close token picker">×</button>
+            </header>
+            <label class="reference-search">
+                <span class="visually-hidden">Search available tokens</span>
+                <input type="search" placeholder="Search by name, variable or integration…" data-reference-search>
+            </label>
+            <div class="reference-results" data-reference-results></div>
+            <p class="reference-empty" data-reference-empty hidden>No matching token.</p>
+        </section>
+    </div>
 </cms-shell-detail>

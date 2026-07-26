@@ -1,7 +1,7 @@
 import type { ThemeSettings } from "@bernouy/cms-content";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
-import { themeSettingsFromCss } from "./model";
+import { themeSettingsFromCss } from "./importCss";
 
 type SettingsResponse = { site?: { name?: string; theme?: string }; theme?: ThemeSettings };
 

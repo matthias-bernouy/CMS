@@ -1,0 +1,119 @@
+:host {
+    display: block;
+}
+
+cms-shell-detail {
+    --w-detail-main-width: min(900px, 100%);
+    --w-detail-aside-width: 0px;
+    --w-detail-gap: 0px;
+}
+
+[data-add-theme-category][hidden],
+[data-add-element][hidden] {
+    display: none;
+}
+
+.mode-switch {
+    display: inline-flex;
+    gap: 2px;
+    margin-bottom: 14px;
+    padding: 3px;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    background: var(--bg-base);
+}
+
+.mode-switch[hidden] {
+    display: none;
+}
+
+.mode-switch button,
+.token-filters button {
+    min-height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+}
+
+.mode-switch button[aria-pressed="true"],
+.token-filters button[aria-pressed="true"] {
+    background: var(--bg-surface);
+    color: var(--text-main);
+    box-shadow: 0 1px 2px rgb(15 31 26 / 12%);
+    font-weight: 700;
+}
+
+.token-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.token-search {
+    min-width: min(280px, 100%);
+}
+
+.token-search input,
+.reference-search input {
+    width: 100%;
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 0 10px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--bg-base);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 12px;
+}
+
+.token-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    background: var(--bg-base);
+}
+
+.groups,
+.group {
+    display: grid;
+    gap: 16px;
+}
+
+.group-heading {
+    display: grid;
+    gap: 3px;
+}
+
+.group h4,
+.group p {
+    margin: 0;
+}
+
+.group h4 {
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.group-heading p {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+@media (max-width: 760px) {
+    .token-tools {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

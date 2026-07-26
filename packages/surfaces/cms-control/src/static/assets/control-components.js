@@ -17582,6 +17582,12 @@ circle.endpoint-timeline__errors {
   function isIntegrationSource(source2) {
     return integrationOwnerId(source2) !== undefined;
   }
+  function isSiteTokenSource(source2) {
+    return source2?.owner?.kind === "site" && !["custom", "existing-css", "imported-css", "other"].includes(source2.id);
+  }
+  function isImportedCssSource(source2) {
+    return source2?.owner?.kind === "site" && ["custom", "existing-css", "imported-css", "other"].includes(source2.id);
+  }
 
   // src/components/admin/Theme/editor/model.ts
   function currentSource(settings, selection) {
@@ -17611,7 +17617,7 @@ circle.endpoint-timeline__errors {
   }
   function addCategory(settings, selection) {
     const source2 = currentSource(settings, selection);
-    if (!source2 || isIntegrationSource(source2)) {
+    if (!isSiteTokenSource(source2)) {
       return;
     }
     const number = source2.categories.length + 1;
@@ -17628,8 +17634,8 @@ circle.endpoint-timeline__errors {
   function addToken(settings, selection) {
     const source2 = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
-    if (!source2 || !category || isIntegrationSource(source2)) {
-      return;
+    if (!isSiteTokenSource(source2) || !category) {
+      return false;
     }
     const allIds = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.map((token) => token.id))));
     const number = allIds.size + 1;
@@ -17639,12 +17645,13 @@ circle.endpoint-timeline__errors {
       variable: id,
       label: `New token ${number}`,
       description: "Custom design token",
-      type: source2.supportsModes ? "color" : "value"
+      type: "value"
     });
+    return true;
   }
   function resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) {
     const source2 = currentSource(settings, selection);
-    const token = currentCategory(settings, selection)?.tokens.find((item) => item.id === tokenId);
+    const token = source2?.categories.flatMap((category) => category.tokens).find((item) => item.id === tokenId);
     const theme = currentTheme(settings, selectedThemeId);
     if (!isIntegrationSource(source2) || !token || !theme) {
       return false;
@@ -17655,6 +17662,124 @@ circle.endpoint-timeline__errors {
     delete theme.values[mode][token.id];
     return true;
   }
+  function uniqueId(base, existing) {
+    let value2 = base;
+    let suffix = 2;
+    while (existing.has(value2)) {
+      value2 = `${base}-${suffix++}`;
+    }
+    return value2;
+  }
+
+  // src/components/admin/Theme/editor/controller/inputEvents.ts
+  function handleThemeInput(event, context) {
+    const input = event.target;
+    const theme = currentTheme(context.settings, context.selectedThemeId);
+    if (!input || !theme) {
+      return;
+    }
+    if (input.matches("[data-theme-name-input]")) {
+      theme.name = input.value;
+      return;
+    }
+    const category = currentCategory(context.settings, context.selection);
+    const source2 = currentSource(context.settings, context.selection);
+    const catalogEditable = isSiteTokenSource(source2);
+    if (input.matches("[data-category-label-input]") && category && source2 && catalogEditable) {
+      category.label = input.value;
+      query3(context.root, "[data-category-title]").textContent = category.label;
+      query3(context.root, "[data-category-section]").setAttribute("heading", category.label);
+      dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
+      return;
+    }
+    if (input.matches("[data-category-description-input]") && category && source2 && catalogEditable) {
+      category.description = input.value;
+      query3(context.root, "[data-category-section]").setAttribute("description", category.description);
+      dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
+      return;
+    }
+    if (input.matches("[data-token-label]") && catalogEditable) {
+      updateToken(context, input, (token) => {
+        token.label = input.value;
+      });
+      return;
+    }
+    if (input.matches("[data-token-description]") && catalogEditable) {
+      updateToken(context, input, (token) => {
+        token.description = input.value;
+      });
+      return;
+    }
+    if (input.matches("[data-token-type-control]") && catalogEditable && isTokenType(input.value)) {
+      updateToken(context, input, (token) => {
+        token.type = input.value;
+      });
+      return;
+    }
+    if (!input.matches("[data-value-control]")) {
+      return;
+    }
+    const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
+    if (!tokenId) {
+      return;
+    }
+    theme.values[context.mode] ??= {};
+    theme.values[context.mode][tokenId] = input.value;
+    if (input.type === "color") {
+      const text3 = input.closest("[data-token-id]")?.querySelector('input.value-control[type="text"]');
+      if (text3) {
+        text3.value = input.value;
+      }
+    }
+  }
+  function resetThemeToken(event, settings, selection, selectedThemeId, mode) {
+    const tokenId = event.target?.closest("[data-reset-token]")?.dataset.resetToken;
+    return tokenId ? resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
+  }
+  function clickAction(event) {
+    const target2 = event.target;
+    const actions = ["theme", "category", "token", "save", "activate"];
+    const selectors = [
+      "[data-add-theme]",
+      "[data-add-theme-category]",
+      "[data-add-element]",
+      "[data-save-theme]",
+      "[data-activate-theme]"
+    ];
+    return actions.find((_3, index) => target2?.closest(selectors[index]));
+  }
+  function updateToken(context, input, update) {
+    const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
+    const source2 = currentSource(context.settings, context.selection);
+    const token = source2?.categories.flatMap((item) => item.tokens).find((item) => item.id === tokenId);
+    if (token) {
+      update(token);
+    }
+  }
+  function isTokenType(value2) {
+    return ["color", "font-family", "length", "number", "shadow", "value"].includes(value2);
+  }
+  function query3(root, selector) {
+    return root.querySelector(selector);
+  }
+
+  // src/components/admin/Theme/editor/controller/lifecycle.ts
+  function addThemeEditorListeners(root, selectionEvent, handlers) {
+    root?.addEventListener("click", handlers.click);
+    root?.addEventListener("change", handlers.change);
+    root?.addEventListener("input", handlers.input);
+    root?.addEventListener("keydown", handlers.keydown);
+    window.addEventListener(selectionEvent, handlers.selection);
+  }
+  function removeThemeEditorListeners(root, selectionEvent, handlers) {
+    root?.removeEventListener("click", handlers.click);
+    root?.removeEventListener("change", handlers.change);
+    root?.removeEventListener("input", handlers.input);
+    root?.removeEventListener("keydown", handlers.keydown);
+    window.removeEventListener(selectionEvent, handlers.selection);
+  }
+
+  // src/components/admin/Theme/editor/importCss.ts
   function themeSettingsFromCss(css) {
     const values = {};
     const tokens = [];
@@ -17671,37 +17796,73 @@ circle.endpoint-timeline__errors {
         variable,
         label: variable.split("-").map(capitalize).join(" "),
         description: `Existing --${variable} variable`,
-        type: looksLikeColor(value2) ? "color" : "value"
+        type: inferredTokenType(variable, value2)
       });
       values[variable] = value2;
     }
+    assignReferencedTokenTypes(tokens, values);
     return {
       activeThemeId: "imported",
-      sources: [
-        {
-          id: "other",
-          label: "Other",
-          supportsModes: false,
-          categories: [
-            {
-              id: "general",
-              label: "General",
-              description: "Variables inferred from the current free-form stylesheet.",
-              tokens
-            }
-          ]
-        }
-      ],
+      sources: [siteTokensSource(), importedCssSource(tokens)],
       themes: [{ id: "imported", name: "Imported theme", values: { light: values, dark: {} } }]
     };
   }
-  function uniqueId(base, existing) {
-    let value2 = base;
-    let suffix = 2;
-    while (existing.has(value2)) {
-      value2 = `${base}-${suffix++}`;
+  function assignReferencedTokenTypes(tokens, values) {
+    const byVariable = new Map(tokens.map((token) => [token.variable, token]));
+    const resolving = new Set;
+    const resolve = (token) => {
+      if (resolving.has(token.id)) {
+        return;
+      }
+      resolving.add(token.id);
+      const reference = /^\s*var\(\s*--([a-z][a-z0-9-]*)/i.exec(values[token.id] ?? "")?.[1]?.toLowerCase();
+      const target2 = reference ? byVariable.get(reference) : undefined;
+      if (target2 && target2.id !== token.id) {
+        resolve(target2);
+        token.type = target2.type;
+      }
+      resolving.delete(token.id);
+    };
+    tokens.forEach(resolve);
+  }
+  function siteTokensSource() {
+    return {
+      id: "site-tokens",
+      label: "Site tokens",
+      supportsModes: true,
+      owner: { kind: "site" },
+      categories: [
+        { id: "general", label: "General", description: "Design tokens created for this site.", tokens: [] }
+      ]
+    };
+  }
+  function importedCssSource(tokens) {
+    return {
+      id: "imported-css",
+      label: "Imported CSS",
+      supportsModes: false,
+      owner: { kind: "site" },
+      categories: [
+        {
+          id: "general",
+          label: "Imported variables",
+          description: "Variables preserved from the former free-form stylesheet.",
+          tokens
+        }
+      ]
+    };
+  }
+  function inferredTokenType(variable, value2) {
+    if (/^(font-family|font-(heading|body))(-|$)/.test(variable)) {
+      return "font-family";
     }
-    return value2;
+    if (/^(shadow|ctx-shadow)(-|$)/.test(variable)) {
+      return "shadow";
+    }
+    if (/^(font-size|space|gap|padding|margin|radius|width|height|size)(-|$)/.test(variable)) {
+      return "length";
+    }
+    return looksLikeColor(value2) ? "color" : "value";
   }
   function capitalize(value2) {
     return value2 ? value2[0].toUpperCase() + value2.slice(1) : value2;
@@ -17736,127 +17897,857 @@ circle.endpoint-timeline__errors {
     }
   }
 
-  // src/components/admin/Theme/editor/inputEvents.ts
-  function handleThemeInput(event, context) {
-    const input = event.target;
-    const theme = currentTheme(context.settings, context.selectedThemeId);
-    if (!input || !theme) {
+  // src/components/admin/Theme/editor/tokens/cssReference.ts
+  function parseDirectTokenReference(value2) {
+    const match = /^\s*var\(\s*--([a-z][a-z0-9-]*)\s*(?:,\s*(.+))?\)\s*$/is.exec(value2);
+    if (!match) {
       return;
     }
-    if (input.matches("[data-theme-name-input]")) {
-      theme.name = input.value;
-      return;
+    const fallback = match[2]?.trim();
+    return {
+      variable: match[1].toLowerCase(),
+      ...fallback ? { fallback } : {}
+    };
+  }
+  function directTokenReference(value2) {
+    return parseDirectTokenReference(value2)?.variable;
+  }
+
+  // src/components/admin/Theme/editor/tokens/values.ts
+  function themeTokenEntries(settings) {
+    return settings.sources.flatMap((source2) => source2.categories.flatMap((category) => category.tokens.map((token) => ({ source: source2, category, token }))));
+  }
+  function effectiveTokenValue(token, theme, mode) {
+    const direct = theme.values[mode]?.[token.id] ?? token.defaults?.[mode];
+    if (direct !== undefined || mode === "light") {
+      return direct ?? "";
     }
-    const category = currentCategory(context.settings, context.selection);
-    const source2 = currentSource(context.settings, context.selection);
-    const catalogEditable = !isIntegrationSource(source2);
-    if (input.matches("[data-category-label-input]") && category && source2 && catalogEditable) {
-      category.label = input.value;
-      query3(context.root, "[data-category-title]").textContent = category.label;
-      query3(context.root, "[data-category-section]").setAttribute("heading", category.label);
-      dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
-      return;
+    return theme.values.light?.[token.id] ?? token.defaults?.light ?? "";
+  }
+  function resolveThemeTokenValue(settings, theme, mode, tokenId) {
+    const entries = themeTokenEntries(settings);
+    const byId = new Map(entries.map((entry) => [entry.token.id, entry]));
+    const byVariable = new Map(entries.map((entry) => [entry.token.variable, entry]));
+    const initial = byId.get(tokenId);
+    if (!initial) {
+      return { raw: "", value: "", state: "missing" };
     }
-    if (input.matches("[data-category-description-input]") && category && source2 && catalogEditable) {
-      category.description = input.value;
-      query3(context.root, "[data-category-section]").setAttribute("description", category.description);
-      query3(context.root, "[data-category-description]").textContent = `${source2.label} · ${category.description}`;
-      dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
-      return;
+    const raw = effectiveTokenValue(initial.token, theme, mode);
+    return followValue(raw, theme, mode, byVariable, new Set([initial.token.id]));
+  }
+  function canReferenceThemeToken(settings, theme, mode, tokenId, targetId) {
+    const entries = themeTokenEntries(settings);
+    const byId = new Map(entries.map((entry) => [entry.token.id, entry]));
+    const byVariable = new Map(entries.map((entry) => [entry.token.variable, entry]));
+    const current = byId.get(tokenId);
+    let target2 = byId.get(targetId);
+    if (!current || !target2 || current.token.id === target2.token.id || !compatibleTokenTypes(current.token, target2.token) || !compatibleTokenOwners(current, target2)) {
+      return false;
     }
-    if (input.matches("[data-token-label]") && catalogEditable) {
-      const tokenId2 = input.closest("[data-token-id]")?.dataset.tokenId;
-      const token = category?.tokens.find((item) => item.id === tokenId2);
-      if (token) {
-        token.label = input.value;
+    const visited = new Set;
+    while (target2) {
+      if (target2.token.id === current.token.id || visited.has(target2.token.id)) {
+        return false;
       }
-      return;
+      visited.add(target2.token.id);
+      const reference = directTokenReference(effectiveTokenValue(target2.token, theme, mode));
+      target2 = reference ? byVariable.get(reference) : undefined;
     }
-    if (!input.matches("[data-value-control]")) {
-      return;
+    return true;
+  }
+  function compatibleTokenTypes(current, target2) {
+    return current.type === "value" || current.type === target2.type;
+  }
+  function compatibleTokenOwners(current, target2) {
+    const currentOwner = current.source.owner;
+    const targetOwner = target2.source.owner;
+    return currentOwner?.kind !== "integration" || targetOwner?.kind !== "integration" || currentOwner.integrationId === targetOwner.integrationId;
+  }
+  function setThemeTokenReference(settings, theme, mode, tokenId, targetId) {
+    if (!canReferenceThemeToken(settings, theme, mode, tokenId, targetId)) {
+      return false;
     }
-    const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
-    if (!tokenId) {
-      return;
+    const target2 = themeTokenEntries(settings).find((entry) => entry.token.id === targetId);
+    if (!target2) {
+      return false;
     }
-    theme.values[context.mode] ??= {};
-    theme.values[context.mode][tokenId] = input.value;
-    if (input.type === "color") {
-      const text3 = input.closest("[data-token-id]")?.querySelector('input[type="text"]');
-      if (text3) {
-        text3.value = input.value;
-      }
+    theme.values[mode] ??= {};
+    theme.values[mode][tokenId] = `var(--${target2.token.variable})`;
+    return true;
+  }
+  function themeReferenceCycles(settings, theme, mode) {
+    return themeTokenEntries(settings).filter((entry) => resolveThemeTokenValue(settings, theme, mode, entry.token.id).state === "cycle").map((entry) => entry.token.label);
+  }
+  function followValue(raw, theme, mode, byVariable, visited) {
+    const reference = parseDirectTokenReference(raw);
+    if (!reference) {
+      return { raw, value: raw, state: "literal" };
+    }
+    const target2 = byVariable.get(reference.variable);
+    if (!target2) {
+      return reference.fallback ? resolvedFallback(raw, reference.fallback, theme, mode, byVariable, visited) : { raw, value: raw, state: "missing" };
+    }
+    if (visited.has(target2.token.id)) {
+      return reference.fallback ? resolvedFallback(raw, reference.fallback, theme, mode, byVariable, visited) : { raw, value: raw, reference: target2, state: "cycle" };
+    }
+    visited.add(target2.token.id);
+    const resolved = followValue(effectiveTokenValue(target2.token, theme, mode), theme, mode, byVariable, visited);
+    if ((resolved.state === "missing" || resolved.state === "cycle") && reference.fallback) {
+      return resolvedFallback(raw, reference.fallback, theme, mode, byVariable, visited);
+    }
+    return { ...resolved, raw, reference: target2, state: resolved.state === "literal" ? "resolved" : resolved.state };
+  }
+  function resolvedFallback(raw, fallback, theme, mode, byVariable, visited) {
+    const resolved = followValue(fallback, theme, mode, byVariable, new Set(visited));
+    return { ...resolved, raw, state: resolved.state === "literal" ? "resolved" : resolved.state };
+  }
+
+  // src/components/admin/Theme/editor/tokens/controls.ts
+  function renderTokenControls(token, settings, theme, mode) {
+    const value2 = effectiveTokenValue(token, theme, mode);
+    const group = document.createElement("div");
+    group.className = "token-controls";
+    const valueLine = document.createElement("div");
+    valueLine.className = "token-value-line";
+    valueLine.append(renderControl(token, settings, theme, value2, mode), referenceButton(token, value2));
+    group.append(valueLine, referenceStatus(token, settings, theme, mode));
+    if (token.defaults) {
+      group.append(renderDefault(token, mode, Object.hasOwn(theme.values[mode] ?? {}, token.id)));
+    }
+    return group;
+  }
+  function renderControl(token, settings, theme, value2, mode) {
+    if (token.type !== "color") {
+      return valueInput(token, value2);
+    }
+    const control = document.createElement("div");
+    control.className = "color-control";
+    const picker = document.createElement("input");
+    const resolved = resolveThemeTokenValue(settings, theme, mode, token.id).value;
+    const hasPreview = /^#[0-9a-f]{6}$/i.test(resolved);
+    picker.type = "color";
+    picker.value = hasPreview ? resolved : "#000000";
+    picker.hidden = !hasPreview;
+    picker.dataset.valueControl = "true";
+    picker.ariaLabel = `${token.label} color picker`;
+    control.append(picker, valueInput(token, value2));
+    return control;
+  }
+  function valueInput(token, value2) {
+    const input = document.createElement("input");
+    input.className = `value-control ${token.type}-control`;
+    input.type = "text";
+    input.value = value2;
+    input.dataset.valueControl = "true";
+    input.ariaLabel = `${token.label} ${controlLabel(token.type)}`;
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.inputMode = token.type === "number" ? "decimal" : "text";
+    input.placeholder = placeholderFor(token.type);
+    return input;
+  }
+  function referenceButton(token, value2) {
+    const button = document.createElement("button");
+    button.className = "reference-button";
+    button.type = "button";
+    button.dataset.openTokenReference = token.id;
+    button.textContent = directTokenReference(value2) ? "Change link" : "Link token";
+    button.ariaLabel = `Link ${token.label} to another token`;
+    return button;
+  }
+  function referenceStatus(token, settings, theme, mode) {
+    const status = document.createElement("p");
+    status.className = "reference-status";
+    const resolved = resolveThemeTokenValue(settings, theme, mode, token.id);
+    if (resolved.state === "resolved" && resolved.reference) {
+      status.textContent = `Linked to ${resolved.reference.token.label} · resolves to ${resolved.value}`;
+    } else if (resolved.state === "cycle") {
+      status.dataset.error = "true";
+      status.textContent = "Circular token reference. Choose a different token before saving.";
+    } else if (resolved.state === "missing") {
+      status.dataset.error = "true";
+      status.textContent = "This value references a token that is not available.";
+    } else {
+      status.hidden = true;
+    }
+    return status;
+  }
+  function renderDefault(token, mode, overridden) {
+    const line3 = document.createElement("div");
+    line3.className = "token-default";
+    const expected = token.defaults?.[mode];
+    const text3 = document.createElement("span");
+    text3.textContent = expected === undefined ? "Default: inherits the light value" : `Default: ${expected}`;
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.dataset.resetToken = token.id;
+    reset.textContent = "Reset";
+    reset.disabled = !overridden;
+    reset.ariaLabel = `Reset ${token.label} to its integration default`;
+    line3.append(text3, reset);
+    return line3;
+  }
+  function controlLabel(type) {
+    return type === "font-family" ? "font family" : `${type} CSS value`;
+  }
+  function placeholderFor(type) {
+    const examples = {
+      "font-family": "Inter, system-ui, sans-serif",
+      length: "1rem",
+      number: "1",
+      shadow: "0 2px 8px rgb(0 0 0 / 10%)"
+    };
+    return examples[type] ?? "CSS value";
+  }
+
+  // src/components/admin/Theme/editor/tokens/view.ts
+  var TOKEN_TYPES = [
+    { value: "color", label: "Color" },
+    { value: "font-family", label: "Font family" },
+    { value: "length", label: "Length" },
+    { value: "number", label: "Number" },
+    { value: "shadow", label: "Shadow" },
+    { value: "value", label: "CSS value" }
+  ];
+  function renderToken(token, settings, theme, mode, catalogEditable) {
+    const row = document.createElement("div");
+    row.className = "element-row";
+    row.dataset.tokenId = token.id;
+    row.dataset.tokenType = token.type;
+    row.append(renderLabel(token, catalogEditable), renderTokenControls(token, settings, theme, mode));
+    return row;
+  }
+  function renderLabel(token, catalogEditable) {
+    const label2 = document.createElement("div");
+    label2.className = "element-label";
+    label2.append(catalogEditable ? editableLabel(token) : fixedLabel(token));
+    const detail = catalogEditable ? editableDescription(token) : fixedDescription(token);
+    const variable = document.createElement("code");
+    variable.textContent = `var(--${token.variable})`;
+    label2.append(detail, variable);
+    return label2;
+  }
+  function editableDescription(token) {
+    const input = document.createElement("input");
+    input.className = "token-description-input";
+    input.type = "text";
+    input.value = token.description;
+    input.ariaLabel = `Description for ${token.label}`;
+    input.dataset.tokenDescription = "true";
+    return input;
+  }
+  function fixedDescription(token) {
+    const detail = document.createElement("span");
+    detail.textContent = token.description;
+    return detail;
+  }
+  function editableLabel(token) {
+    const fragment = document.createDocumentFragment();
+    const input = document.createElement("input");
+    input.className = "token-label-input";
+    input.type = "text";
+    input.value = token.label;
+    input.ariaLabel = `Label for --${token.variable}`;
+    input.dataset.tokenLabel = "true";
+    const type = document.createElement("select");
+    type.className = "token-type-select";
+    type.dataset.tokenTypeControl = "true";
+    type.ariaLabel = `Type for ${token.label}`;
+    type.append(...TOKEN_TYPES.map((item) => option(item.value, item.label, item.value === token.type)));
+    type.value = token.type;
+    fragment.append(input, type);
+    return fragment;
+  }
+  function fixedLabel(token) {
+    const name = document.createElement("strong");
+    name.className = "token-label-text";
+    name.textContent = token.label;
+    return name;
+  }
+  function option(value2, label2, selected2) {
+    const element = document.createElement("option");
+    element.value = value2;
+    element.textContent = label2;
+    element.selected = selected2;
+    return element;
+  }
+
+  // src/components/admin/Theme/editor/tokens/explorer.ts
+  var FILTER_LABELS = {
+    all: "All",
+    color: "Colors",
+    "font-family": "Typography",
+    length: "Lengths",
+    number: "Numbers",
+    shadow: "Shadows",
+    value: "CSS values"
+  };
+  function renderTokenExplorer(root, state) {
+    const categories = isIntegrationSource(state.source) ? state.source.categories : [state.category];
+    const allTokens = categories.flatMap((category) => category.tokens);
+    const availableFilters = new Set(allTokens.map((token) => token.type));
+    const activeFilter = state.filter === "all" || availableFilters.has(state.filter) ? state.filter : "all";
+    const filters = root.querySelector("[data-token-filters]");
+    filters.replaceChildren(...["all", ...availableFilters].map((filter) => filterButton(filter, activeFilter)));
+    const search = root.querySelector("[data-token-search]");
+    if (search.value !== state.search) {
+      search.value = state.search;
+    }
+    const visible = categories.map((category) => ({
+      category,
+      tokens: category.tokens.filter((token) => (activeFilter === "all" || token.type === activeFilter) && matchesSearch(state.source, category, token, state.search))
+    })).filter((entry) => entry.tokens.length > 0);
+    const groups = visible.map(({ category, tokens }) => tokenGroup(category, tokens, state, isIntegrationSource(state.source)));
+    root.querySelector("[data-groups]").replaceChildren(...groups.length ? groups : [emptyResults()]);
+  }
+  function tokenGroup(category, tokens, state, showHeading) {
+    const group = document.createElement("section");
+    group.className = "group";
+    if (showHeading) {
+      const heading4 = document.createElement("div");
+      heading4.className = "group-heading";
+      const title = document.createElement("h4");
+      title.textContent = category.label;
+      const description = document.createElement("p");
+      description.textContent = category.description;
+      heading4.append(title, description);
+      group.append(heading4);
+    }
+    const list = document.createElement("div");
+    list.className = "element-list";
+    list.append(...tokens.map((token) => renderToken(token, state.settings, state.theme, state.mode, state.catalogEditable)));
+    group.append(list);
+    return group;
+  }
+  function matchesSearch(source2, category, token, search) {
+    const query4 = search.trim().toLowerCase();
+    return !query4 || [source2.label, category.label, token.label, token.description, token.variable, token.type].join(" ").toLowerCase().includes(query4);
+  }
+  function filterButton(filter, active) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.tokenFilter = filter;
+    button.textContent = FILTER_LABELS[filter];
+    button.setAttribute("aria-pressed", String(filter === active));
+    return button;
+  }
+  function emptyResults() {
+    const empty = document.createElement("div");
+    empty.className = "empty-category";
+    empty.textContent = "No token matches this search and filter.";
+    return empty;
+  }
+
+  // src/components/admin/Theme/editor/view.ts
+  function renderThemeEditor(root, state) {
+    const source2 = currentSource(state.settings, state.selection);
+    const category = currentCategory(state.settings, state.selection);
+    const theme = currentTheme(state.settings, state.selectedThemeId);
+    if (!source2 || !category || !theme) {
+      return state.mode;
+    }
+    const integration = isIntegrationSource(source2);
+    const catalogEditable = isSiteTokenSource(source2);
+    const mode = source2.supportsModes ? state.mode : "light";
+    renderHeader(root, state, source2, category.label, theme, integration);
+    renderOwnership(root, source2);
+    renderCategoryFields(root, category, catalogEditable);
+    renderActions(root, state, theme, catalogEditable);
+    renderModes(root, source2, mode);
+    const section = query4(root, "[data-category-section]");
+    section.setAttribute("heading", integration ? source2.label : category.label);
+    section.setAttribute("description", integration ? integrationDescription(source2) : category.description);
+    renderTokenExplorer(root, {
+      settings: state.settings,
+      source: source2,
+      category,
+      theme,
+      mode,
+      catalogEditable,
+      filter: state.tokenFilter,
+      search: state.tokenSearch
+    });
+    return mode;
+  }
+  function setThemeMessage(root, message, error = false) {
+    const element = root?.querySelector("[data-message]");
+    if (element) {
+      element.textContent = message;
+      element.toggleAttribute("data-error", error);
     }
   }
-  function resetThemeToken(event, settings, selection, selectedThemeId, mode) {
-    const tokenId = event.target?.closest("[data-reset-token]")?.dataset.resetToken;
-    return tokenId ? resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
+  function renderHeader(root, state, source2, categoryLabel, theme, integration) {
+    query4(root, "[data-category-title]").textContent = integration ? source2.label : categoryLabel;
+    query4(root, "[data-theme-name-input]").value = theme.name;
+    query4(root, "[data-site-name]").textContent = state.siteName || "Current site";
+    const select = query4(root, "[data-theme-switch]");
+    select.replaceChildren(...state.settings.themes.map(themeOption));
+    select.value = theme.id;
   }
-  function clickAction(event) {
-    const target2 = event.target;
-    if (target2?.closest("[data-add-theme]")) {
-      return "theme";
-    }
-    if (target2?.closest("[data-add-theme-category]")) {
-      return "category";
-    }
-    if (target2?.closest("[data-add-element]")) {
-      return "token";
-    }
-    if (target2?.closest("[data-save-theme]")) {
-      return "save";
-    }
-    if (target2?.closest("[data-activate-theme]")) {
-      return "activate";
-    }
-    return;
+  function renderActions(root, state, theme, catalogEditable) {
+    const active = theme.id === state.settings.activeThemeId;
+    const status = query4(root, "[data-theme-status]");
+    status.textContent = active ? "Active" : "Draft";
+    status.setAttribute("color", active ? "success" : "warning");
+    query4(root, "[data-save-theme]").toggleAttribute("disabled", !state.canPersist);
+    query4(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
+    query4(root, "[data-add-theme-category]").hidden = !catalogEditable;
+    query4(root, "[data-add-element]").hidden = !catalogEditable;
   }
-  function query3(root, selector) {
+  function renderOwnership(root, source2) {
+    const integrationId = integrationOwnerId(source2);
+    const kind = query4(root, "[data-source-owner-kind]");
+    const label2 = query4(root, "[data-source-owner-label]");
+    const note = query4(root, "[data-source-owner-note]");
+    if (integrationId) {
+      kind.textContent = "Integration";
+      label2.textContent = `${source2.label} · ${integrationId}`;
+      note.textContent = "The integration owns this catalogue; this theme only overrides its values.";
+    } else if (isImportedCssSource(source2)) {
+      kind.textContent = "Imported CSS";
+      label2.textContent = "Legacy variables";
+      note.textContent = "Names are preserved from the former stylesheet; values remain editable.";
+    } else if (isSiteTokenSource(source2)) {
+      kind.textContent = "Site";
+      label2.textContent = "Site tokens";
+      note.textContent = "Create reusable tokens that belong only to this site.";
+    } else {
+      kind.textContent = "CmsCore";
+      label2.textContent = source2.label;
+      note.textContent = "Built-in tokens shared by blocks and integrations.";
+    }
+  }
+  function renderCategoryFields(root, category, editable) {
+    query4(root, "[data-category-fields]").hidden = !editable;
+    query4(root, "[data-category-label-input]").value = category.label;
+    query4(root, "[data-category-description-input]").value = category.description;
+  }
+  function renderModes(root, source2, mode) {
+    const modeSwitch = query4(root, "[data-mode-switch]");
+    modeSwitch.hidden = !source2.supportsModes;
+    for (const button of Array.from(modeSwitch.querySelectorAll("[data-mode]"))) {
+      button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
+    }
+  }
+  function integrationDescription(source2) {
+    const tokenCount = source2.categories.reduce((sum, category) => sum + category.tokens.length, 0);
+    return `${source2.categories.length} categories · ${tokenCount} tokens · filter or search without changing ownership.`;
+  }
+  function themeOption(theme) {
+    const option2 = document.createElement("option");
+    option2.value = theme.id;
+    option2.textContent = theme.name;
+    return option2;
+  }
+  function query4(root, selector) {
     return root.querySelector(selector);
   }
 
+  // src/components/admin/Theme/editor/controller/load.ts
+  async function loadThemeEditor(root, state, render, afterLoad) {
+    setThemeMessage(root, "Loading theme…");
+    try {
+      state.applyLoaded(await loadThemeSettings());
+      render();
+      setThemeMessage(root, state.canPersist ? "" : "Restart the Control server to enable theme persistence.", !state.canPersist);
+      afterLoad();
+    } catch (error) {
+      setThemeMessage(root, error instanceof Error ? error.message : "Unable to load theme", true);
+    }
+  }
+
+  // src/components/admin/Theme/editor/controller/persistence.ts
+  async function persistTheme(root, state, activate, afterSave) {
+    const settings = state.settings;
+    if (!settings || !state.canPersist) {
+      return;
+    }
+    const theme = settings.themes.find((item) => item.id === state.selectedThemeId);
+    const cycles = theme ? new Set([...themeReferenceCycles(settings, theme, "light"), ...themeReferenceCycles(settings, theme, "dark")]) : new Set;
+    if (cycles.size > 0) {
+      setThemeMessage(root, `Circular token references: ${[...cycles].join(", ")}.`, true);
+      return;
+    }
+    if (activate) {
+      settings.activeThemeId = state.selectedThemeId;
+    }
+    setThemeMessage(root, "Saving…");
+    try {
+      await saveThemeSettings(settings);
+      setThemeMessage(root, activate ? "Theme activated." : "Theme saved.");
+      afterSave();
+    } catch (error) {
+      setThemeMessage(root, error instanceof Error ? error.message : "Unable to save theme", true);
+    }
+  }
+
+  // src/components/admin/Theme/editor/tokens/referencePicker.ts
+  function renderTokenReferencePicker(root, state) {
+    const panel = root.querySelector("[data-reference-picker]");
+    if (!panel) {
+      return;
+    }
+    panel.hidden = !state.tokenId;
+    setBackgroundInert(root, Boolean(state.tokenId));
+    if (!state.tokenId) {
+      return;
+    }
+    const entries = themeTokenEntries(state.settings);
+    const current = entries.find((entry) => entry.token.id === state.tokenId);
+    if (!current) {
+      panel.hidden = true;
+      return;
+    }
+    root.querySelector("[data-reference-picker-title]").textContent = `Link ${current.token.label}`;
+    const search = root.querySelector("[data-reference-search]");
+    if (search.value !== state.search) {
+      search.value = state.search;
+    }
+    const query5 = state.search.trim().toLowerCase();
+    const candidates = entries.filter((entry) => {
+      const haystack = [
+        entry.token.label,
+        entry.token.variable,
+        entry.token.description,
+        entry.category.label,
+        entry.source.label
+      ].join(" ").toLowerCase();
+      return entry.token.id !== current.token.id && compatibleTokenTypes(current.token, entry.token) && compatibleTokenOwners(current, entry) && (!query5 || haystack.includes(query5));
+    });
+    const groups = groupBySource(candidates);
+    const list = root.querySelector("[data-reference-results]");
+    list.replaceChildren(...groups.map(([sourceId, sourceEntries]) => sourceGroup(sourceId, sourceEntries, state)));
+    root.querySelector("[data-reference-empty]").hidden = candidates.length > 0;
+  }
+  function setBackgroundInert(root, inert) {
+    for (const element of Array.from(root.querySelectorAll("cms-shell-detail > :not([data-reference-picker])"))) {
+      element.inert = inert;
+    }
+  }
+  function groupBySource(entries) {
+    const groups = new Map;
+    for (const entry of entries) {
+      const group = groups.get(entry.source.id) ?? [];
+      group.push(entry);
+      groups.set(entry.source.id, group);
+    }
+    return [...groups.entries()];
+  }
+  function sourceGroup(sourceId, entries, state) {
+    const group = document.createElement("section");
+    group.className = "reference-group";
+    group.dataset.referenceSource = sourceId;
+    const heading4 = document.createElement("h5");
+    const source2 = entries[0].source;
+    heading4.textContent = isIntegrationSource(source2) ? `${source2.label} · Integration` : source2.label;
+    group.append(heading4, ...entries.map((entry) => referenceOption(entry, state)));
+    return group;
+  }
+  function referenceOption(entry, state) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "reference-option";
+    button.dataset.referenceTarget = entry.token.id;
+    const allowed = canReferenceThemeToken(state.settings, state.theme, state.mode, state.tokenId, entry.token.id);
+    button.disabled = !allowed;
+    const current = themeTokenEntries(state.settings).find((item) => item.token.id === state.tokenId);
+    const selected2 = directTokenReference(effectiveTokenValue(current.token, state.theme, state.mode));
+    button.toggleAttribute("aria-pressed", selected2 === entry.token.variable);
+    const identity = document.createElement("span");
+    identity.className = "reference-option-identity";
+    const name = document.createElement("strong");
+    name.textContent = entry.token.label;
+    const variable = document.createElement("code");
+    variable.textContent = `--${entry.token.variable}`;
+    identity.append(name, variable);
+    const preview = document.createElement("span");
+    preview.className = "reference-option-value";
+    preview.textContent = allowed ? resolveThemeTokenValue(state.settings, state.theme, state.mode, entry.token.id).value || "No value" : "Would create a circular reference";
+    button.append(identity, preview);
+    return button;
+  }
+
+  // src/components/admin/Theme/editor/controller/explorerController.ts
+  class ThemeExplorerController {
+    tokenFilter = "all";
+    tokenSearch = "";
+    referenceTokenId;
+    referenceSearch = "";
+    handleClick(event, context) {
+      const target2 = event.target;
+      const referenceToken = target2?.closest("[data-open-token-reference]")?.dataset.openTokenReference;
+      if (referenceToken) {
+        this.referenceTokenId = referenceToken;
+        this.referenceSearch = "";
+        this.renderReferencePicker(context);
+        context.root.querySelector("[data-reference-search]")?.focus();
+        return true;
+      }
+      if (target2?.closest("[data-close-token-reference]") || target2?.matches("[data-reference-picker]")) {
+        this.closeReferencePicker(context);
+        return true;
+      }
+      const referenceTarget = target2?.closest("[data-reference-target]")?.dataset.referenceTarget;
+      if (referenceTarget) {
+        this.selectReference(referenceTarget, context);
+        return true;
+      }
+      const filter = target2?.closest("[data-token-filter]")?.dataset.tokenFilter;
+      if (isTokenFilter(filter)) {
+        this.tokenFilter = filter;
+        context.render();
+        return true;
+      }
+      return false;
+    }
+    handleInput(event, context) {
+      const input = event.target;
+      if (input?.matches("[data-token-search]")) {
+        this.tokenSearch = input.value;
+        context.render();
+        restoreSearch(context.root, "[data-token-search]");
+        return true;
+      }
+      if (input?.matches("[data-reference-search]")) {
+        this.referenceSearch = input.value;
+        this.renderReferencePicker(context);
+        return true;
+      }
+      return false;
+    }
+    handleKeyDown(event, context) {
+      if (!(event instanceof KeyboardEvent) || !this.referenceTokenId) {
+        return false;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.closeReferencePicker(context);
+        return true;
+      }
+      return event.key === "Tab" ? trapReferenceFocus(event, context.root) : false;
+    }
+    reset(context) {
+      this.tokenFilter = "all";
+      this.tokenSearch = "";
+      this.referenceTokenId = undefined;
+      this.referenceSearch = "";
+      if (context) {
+        this.renderReferencePicker(context);
+      }
+    }
+    renderReferencePicker(context) {
+      const theme = context.settings.themes.find((item) => item.id === context.selectedThemeId);
+      if (!theme) {
+        return;
+      }
+      renderTokenReferencePicker(context.root, {
+        settings: context.settings,
+        theme,
+        mode: context.mode,
+        tokenId: this.referenceTokenId,
+        search: this.referenceSearch
+      });
+    }
+    selectReference(targetId, context) {
+      const theme = context.settings.themes.find((item) => item.id === context.selectedThemeId);
+      if (!theme || !this.referenceTokenId) {
+        return;
+      }
+      if (!setThemeTokenReference(context.settings, theme, context.mode, this.referenceTokenId, targetId)) {
+        context.showError("This link would create a circular token reference.");
+        return;
+      }
+      const tokenId = this.referenceTokenId;
+      this.closeReferencePicker(context, false);
+      context.render();
+      restoreReferenceFocus(context.root, tokenId);
+    }
+    closeReferencePicker(context, restoreFocus = true) {
+      const tokenId = this.referenceTokenId;
+      this.referenceTokenId = undefined;
+      this.referenceSearch = "";
+      this.renderReferencePicker(context);
+      if (restoreFocus && tokenId) {
+        restoreReferenceFocus(context.root, tokenId);
+      }
+    }
+  }
+  function trapReferenceFocus(event, root) {
+    const panel = root.querySelector("[data-reference-picker]");
+    const focusable = Array.from(panel?.querySelectorAll("button:not([disabled]), input:not([disabled]), select:not([disabled])") ?? []).filter((element) => !element.hidden);
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return true;
+    }
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    const active = root.activeElement;
+    if (event.shiftKey && (active === first || !panel?.contains(active))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+    return true;
+  }
+  function restoreReferenceFocus(root, tokenId) {
+    root.querySelector(`[data-open-token-reference="${tokenId}"]`)?.focus();
+  }
+  function restoreSearch(root, selector) {
+    const search = root.querySelector(selector);
+    search?.focus();
+    search?.setSelectionRange(search.value.length, search.value.length);
+  }
+  function isTokenFilter(value2) {
+    return ["all", "color", "font-family", "length", "number", "shadow", "value"].includes(value2 ?? "");
+  }
+
+  // src/components/admin/Theme/editor/controller/state.ts
+  class ThemeEditorState {
+    selection = { sourceId: "", categoryId: "" };
+    mode = "light";
+    settings = null;
+    selectedThemeId = "";
+    siteName = "";
+    canPersist = true;
+    explorer = new ThemeExplorerController;
+    applyLoaded(loaded) {
+      this.canPersist = loaded.canPersist;
+      this.settings = loaded.settings;
+      this.siteName = loaded.siteName;
+      this.selectedThemeId = this.settings.activeThemeId || this.settings.themes[0]?.id || "";
+      this.selection = selectionFromUrl(this.settings);
+    }
+    viewState() {
+      if (!this.settings) {
+        return;
+      }
+      return {
+        settings: this.settings,
+        selection: this.selection,
+        selectedThemeId: this.selectedThemeId,
+        mode: this.mode,
+        siteName: this.siteName,
+        canPersist: this.canPersist,
+        tokenFilter: this.explorer.tokenFilter,
+        tokenSearch: this.explorer.tokenSearch
+      };
+    }
+    createTheme() {
+      if (!this.settings) {
+        return false;
+      }
+      this.selectedThemeId = addTheme(this.settings);
+      return true;
+    }
+    createCategory() {
+      if (!this.settings) {
+        return;
+      }
+      const added = addCategory(this.settings, this.selection);
+      if (added) {
+        this.selection = { sourceId: added.sourceId, categoryId: added.category.id };
+        this.explorer.reset();
+      }
+      return added;
+    }
+    createToken() {
+      if (!this.settings) {
+        return false;
+      }
+      if (!addToken(this.settings, this.selection)) {
+        return false;
+      }
+      this.explorer.reset();
+      return true;
+    }
+    selectCategory(selection) {
+      const source2 = this.settings?.sources.find((item) => item.id === selection.sourceId);
+      if (!source2?.categories.some((category) => category.id === selection.categoryId)) {
+        return false;
+      }
+      this.selection = selection;
+      this.explorer.reset();
+      return true;
+    }
+  }
+
   // src/components/admin/Theme/editor/styles/editor.css
-  var editor_default = `.theme-meta {
+  var editor_default = `.theme-overview {
     display: flex;
-    align-items: center;
+    align-items: end;
     justify-content: space-between;
-    gap: 10px;
+    gap: 18px;
 }
 
-.theme-name {
-    min-width: 0;
+.theme-name-field {
+    display: grid;
+    width: min(360px, 100%);
+    gap: 5px;
+}
+
+.theme-name-field > span,
+.category-fields label > span {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.theme-name,
+.category-fields input {
     width: 100%;
-    min-height: 32px;
-    padding: 0 8px;
+    min-width: 0;
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 0 9px;
     border: 1px solid var(--border-default);
     border-radius: 6px;
     background: var(--bg-base);
     color: var(--text-main);
     font: inherit;
+}
+
+.theme-name {
     font-weight: 700;
 }
 
+.theme-context {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
 .theme-message {
-    min-height: 18px;
-    margin: 10px 0 0;
+    min-height: 0;
+    margin: 8px 0 0;
     color: var(--success-base, #21865f);
     font-size: 12px;
+}
+
+.theme-message:empty {
+    display: none;
 }
 
 .theme-message[data-error] {
     color: var(--danger-base, #c4473d);
 }
 
-.theme-note {
-    margin: 10px 0 0;
-    color: var(--text-muted);
-    font-size: 12px;
-    line-height: 1.45;
-}
-
 .category-fields {
     display: grid;
+    grid-template-columns: minmax(160px, .65fr) minmax(240px, 1.35fr);
     gap: 10px;
+    margin-bottom: 14px;
+    padding: 12px;
+    border: 1px dashed var(--border-default);
+    border-radius: 7px;
+    background: var(--bg-base);
+}
+
+.category-fields[hidden] {
+    display: none;
 }
 
 .category-fields label {
@@ -17864,28 +18755,8 @@ circle.endpoint-timeline__errors {
     gap: 5px;
 }
 
-.category-fields label > span {
-    color: var(--text-muted);
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.category-fields input,
-.category-fields textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 7px 8px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    background: var(--bg-base);
-    color: var(--text-main);
-    font: inherit;
-    font-size: 12px;
-    resize: vertical;
-}
-
 .empty-category {
-    padding: 18px;
+    padding: 28px 18px;
     border: 1px dashed var(--border-default);
     border-radius: 7px;
     color: var(--text-muted);
@@ -17893,47 +18764,201 @@ circle.endpoint-timeline__errors {
     text-align: center;
 }
 
-@media (max-width: 880px) {
-    .element-row {
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+@media (max-width: 720px) {
+    .theme-overview,
+    .theme-context {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .category-fields {
         grid-template-columns: 1fr;
-        gap: 7px;
+    }
+}
+`;
+
+  // src/components/admin/Theme/editor/styles/explorer.css
+  var explorer_default = `:host {
+    display: block;
+}
+
+cms-shell-detail {
+    --w-detail-main-width: min(900px, 100%);
+    --w-detail-aside-width: 0px;
+    --w-detail-gap: 0px;
+}
+
+[data-add-theme-category][hidden],
+[data-add-element][hidden] {
+    display: none;
+}
+
+.mode-switch {
+    display: inline-flex;
+    gap: 2px;
+    margin-bottom: 14px;
+    padding: 3px;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    background: var(--bg-base);
+}
+
+.mode-switch[hidden] {
+    display: none;
+}
+
+.mode-switch button,
+.token-filters button {
+    min-height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+}
+
+.mode-switch button[aria-pressed="true"],
+.token-filters button[aria-pressed="true"] {
+    background: var(--bg-surface);
+    color: var(--text-main);
+    box-shadow: 0 1px 2px rgb(15 31 26 / 12%);
+    font-weight: 700;
+}
+
+.token-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.token-search {
+    min-width: min(280px, 100%);
+}
+
+.token-search input,
+.reference-search input {
+    width: 100%;
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 0 10px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--bg-base);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 12px;
+}
+
+.token-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    background: var(--bg-base);
+}
+
+.groups,
+.group {
+    display: grid;
+    gap: 16px;
+}
+
+.group-heading {
+    display: grid;
+    gap: 3px;
+}
+
+.group h4,
+.group p {
+    margin: 0;
+}
+
+.group h4 {
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.group-heading p {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+@media (max-width: 760px) {
+    .token-tools {
+        align-items: stretch;
+        flex-direction: column;
     }
 }
 `;
 
   // src/components/admin/Theme/editor/styles/integration.css
-  var integration_default = `.category-fields :is(input, textarea)[readonly] {
-    background: var(--bg-surface);
-    color: var(--text-muted);
-    cursor: default;
-}
-
-.source-provenance {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
+  var integration_default = `.source-provenance {
+    display: grid;
+    grid-template-columns: auto max-content 1fr;
+    gap: 8px;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     color: var(--text-muted);
     font-size: 11px;
 }
 
-.source-provenance[hidden] {
-    display: none;
-}
-
-.source-provenance span:last-child {
-    flex-basis: 100%;
-}
-
-.font-family-control {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+.source-provenance strong {
+    color: var(--text-main);
 }
 
 .token-controls {
     display: grid;
     gap: 5px;
     min-width: 0;
+}
+
+.token-value-line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px;
+    align-items: start;
+}
+
+.reference-button {
+    min-height: 34px;
+    padding: 0 9px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--bg-surface);
+    color: var(--primary-base);
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.reference-status {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.reference-status[data-error] {
+    color: var(--danger-base, #c4473d);
 }
 
 .token-default {
@@ -17967,73 +18992,170 @@ circle.endpoint-timeline__errors {
     cursor: default;
     opacity: .55;
 }
+
+@media (max-width: 600px) {
+    .source-provenance {
+        grid-template-columns: 1fr;
+    }
+
+    .source-provenance p9r-tag {
+        width: max-content;
+    }
+}
 `;
 
-  // src/components/admin/Theme/editor/styles/tokens.css
-  var tokens_default = `:host {
-    display: block;
+  // src/components/admin/Theme/editor/styles/reference.css
+  var reference_default = `.reference-picker-backdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgb(15 31 26 / 38%);
+    backdrop-filter: blur(2px);
 }
 
-cms-shell-detail {
-    --shell-detail-main-width: 620px;
-    --shell-detail-aside-width: 270px;
+.reference-picker-backdrop[hidden] {
+    display: none;
 }
 
-.mode-switch {
-    display: inline-flex;
-    gap: 2px;
-    margin-bottom: 16px;
-    padding: 3px;
+.reference-picker {
+    display: grid;
+    width: min(620px, 100%);
+    max-height: min(720px, calc(100vh - 40px));
+    overflow: hidden;
     border: 1px solid var(--border-default);
-    border-radius: 7px;
-    background: var(--bg-base);
-}
-
-.mode-switch button {
-    min-height: 30px;
-    padding: 0 10px;
-    border: 0;
-    border-radius: 5px;
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    font: inherit;
-    font-size: 12px;
-}
-
-.mode-switch button[aria-pressed="true"] {
+    border-radius: 10px;
     background: var(--bg-surface);
-    color: var(--text-main);
-    box-shadow: 0 1px 2px rgb(15 31 26 / 12%);
-    font-weight: 700;
+    box-shadow: 0 24px 60px rgb(15 31 26 / 26%);
 }
 
-.groups {
-    display: grid;
+.reference-picker > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 16px;
+    padding: 17px 18px 12px;
 }
 
-.group {
-    display: grid;
-    gap: 7px;
-}
-
-.group h4 {
+.reference-picker h4,
+.reference-group h5 {
     margin: 0;
     color: var(--text-main);
-    font-size: 12px;
+}
+
+.reference-picker h4 {
+    font-size: 16px;
+}
+
+.eyebrow {
+    color: var(--text-muted);
+    font-size: 10px;
     font-weight: 750;
-    letter-spacing: .03em;
+    letter-spacing: .07em;
     text-transform: uppercase;
 }
 
-.group p {
-    margin: -3px 0 2px;
-    color: var(--text-muted);
-    font-size: 12px;
+.reference-close {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 20px;
 }
 
-.element-list {
+.reference-search {
+    padding: 0 18px 12px;
+}
+
+.reference-results {
+    display: grid;
+    gap: 15px;
+    overflow: auto;
+    padding: 0 18px 18px;
+}
+
+.reference-group {
+    display: grid;
+    gap: 5px;
+}
+
+.reference-group h5 {
+    padding: 5px 2px;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.reference-option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(110px, .55fr);
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    cursor: pointer;
+    text-align: left;
+}
+
+.reference-option:hover,
+.reference-option[aria-pressed="true"] {
+    border-color: var(--primary-base);
+    background: color-mix(in srgb, var(--primary-base) 7%, var(--bg-surface));
+}
+
+.reference-option:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.reference-option-identity {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.reference-option code,
+.reference-option-value {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.reference-option-value {
+    text-align: right;
+}
+
+.reference-empty {
+    margin: 0;
+    padding: 24px;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .reference-option {
+        grid-template-columns: 1fr;
+    }
+
+    .reference-option-value {
+        text-align: left;
+    }
+}
+`;
+
+  // src/components/admin/Theme/editor/styles/tokens.css
+  var tokens_default = `.element-list {
     overflow: hidden;
     border: 1px solid var(--border-default);
     border-radius: 7px;
@@ -18041,11 +19163,11 @@ cms-shell-detail {
 
 .element-row {
     display: grid;
-    grid-template-columns: minmax(130px, 1fr) minmax(160px, 1.1fr);
-    gap: 12px;
+    grid-template-columns: minmax(190px, .8fr) minmax(330px, 1.2fr);
+    gap: 18px;
     align-items: center;
-    min-height: 58px;
-    padding: 10px 11px;
+    min-height: 62px;
+    padding: 11px 13px;
     border-top: 1px solid var(--border-default);
 }
 
@@ -18055,19 +19177,39 @@ cms-shell-detail {
 
 .element-label {
     display: grid;
-    gap: 2px;
+    min-width: 0;
+    gap: 3px;
 }
 
-.token-label-input {
-    width: 100%;
+.token-label-input,
+.token-description-input,
+.token-type-select {
     min-width: 0;
-    padding: 0;
     border: 0;
     background: transparent;
     color: var(--text-main);
     font: inherit;
+}
+
+.token-description-input {
+    width: 100%;
+    padding: 0;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.token-label-input {
+    width: 100%;
+    padding: 0;
     font-size: 13px;
     font-weight: 700;
+}
+
+.token-type-select {
+    width: max-content;
+    padding: 0;
+    color: var(--text-muted);
+    font-size: 11px;
 }
 
 .token-label-text {
@@ -18076,14 +19218,22 @@ cms-shell-detail {
     font-weight: 700;
 }
 
-.token-label-input:focus {
-    outline: 0;
-    box-shadow: 0 1px 0 var(--primary-base);
-}
-
-.element-label span {
+.element-label span,
+.element-label code {
+    overflow: hidden;
     color: var(--text-muted);
     font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.element-label code {
+    width: max-content;
+    max-width: 100%;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--bg-base);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .color-control {
@@ -18094,8 +19244,8 @@ cms-shell-detail {
 }
 
 .color-control input[type="color"] {
-    width: 31px;
-    height: 31px;
+    width: 32px;
+    height: 32px;
     flex: 0 0 auto;
     padding: 0;
     border: 1px solid var(--border-default);
@@ -18104,11 +19254,11 @@ cms-shell-detail {
     cursor: pointer;
 }
 
-.color-control input[type="text"],
 .value-control {
     width: 100%;
     min-width: 0;
-    min-height: 32px;
+    min-height: 34px;
+    box-sizing: border-box;
     padding: 0 8px;
     border: 1px solid var(--border-default);
     border-radius: 6px;
@@ -18117,368 +19267,226 @@ cms-shell-detail {
     font: inherit;
     font-size: 12px;
 }
+
+.font-family-control,
+.shadow-control {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+@media (max-width: 760px) {
+    .element-row {
+        grid-template-columns: 1fr;
+        gap: 9px;
+    }
+}
 `;
 
   // src/components/admin/Theme/editor/styles/index.ts
-  var styles_default = [tokens_default, editor_default, integration_default].join(`
+  var styles_default = [editor_default, explorer_default, tokens_default, integration_default, reference_default].join(`
 `);
 
   // src/components/admin/Theme/editor/ThemeEditor.html
   var ThemeEditor_default = `<cms-shell-detail>
-    <span slot="title" data-category-title>Colors</span>
+    <span slot="title" data-category-title>Theme</span>
     <p9r-select slot="actions" data-theme-switch aria-label="Select theme"></p9r-select>
     <p9r-button slot="actions" type="button" variant="outlined" data-add-theme>+ Theme</p9r-button>
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-theme-category>+ Category</p9r-button>
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-element>+ Add element</p9r-button>
+    <p9r-button slot="actions" type="button" variant="outlined" data-add-theme-category hidden>+ Category</p9r-button>
+    <p9r-button slot="actions" type="button" variant="outlined" data-add-element hidden>+ Token</p9r-button>
     <p9r-button slot="actions" type="button" color="primary" data-save-theme>Save</p9r-button>
     <p9r-button slot="actions" type="button" color="primary" data-activate-theme>Activate</p9r-button>
 
+    <cms-detail-section slot="main" density="compact" data-theme-overview>
+        <div class="theme-overview">
+            <label class="theme-name-field">
+                <span>Theme name</span>
+                <input class="theme-name" type="text" aria-label="Theme name" data-theme-name-input>
+            </label>
+            <div class="theme-context">
+                <p9r-tag color="success" data-theme-status>Active</p9r-tag>
+                <span data-site-name></span>
+            </div>
+        </div>
+        <p class="theme-message" data-message aria-live="polite"></p>
+    </cms-detail-section>
+
     <cms-detail-section slot="main" data-category-section>
-        <div class="source-provenance" data-source-provenance hidden>
-            <p9r-tag color="primary">Integration</p9r-tag>
-            <span data-source-owner-label></span>
-            <span>CSS values and var(--token) references are supported.</span>
+        <div class="source-provenance" data-source-provenance>
+            <p9r-tag data-source-owner-kind>Site</p9r-tag>
+            <strong data-source-owner-label></strong>
+            <span data-source-owner-note></span>
         </div>
         <div class="mode-switch" data-mode-switch hidden>
             <button type="button" data-mode="light">Light mode</button>
             <button type="button" data-mode="dark">Dark mode</button>
         </div>
-        <div class="groups" data-groups></div>
-    </cms-detail-section>
-
-    <cms-detail-section slot="aside" heading="Current theme" description="The active theme is used by the published site.">
-        <div class="theme-meta">
-            <input class="theme-name" type="text" aria-label="Theme name" data-theme-name-input>
-            <p9r-tag color="success" data-theme-status>Active</p9r-tag>
+        <div class="token-tools">
+            <label class="token-search">
+                <span class="visually-hidden">Search tokens</span>
+                <input type="search" placeholder="Search tokens, variables or categories…" data-token-search>
+            </label>
+            <div class="token-filters" data-token-filters aria-label="Filter token types"></div>
         </div>
-        <p class="theme-note" data-site-name></p>
-        <p class="theme-message" data-message aria-live="polite"></p>
-    </cms-detail-section>
-
-    <cms-detail-section slot="aside" heading="About this category" data-category-about>
-        <div class="category-fields">
+        <div class="category-fields" data-category-fields hidden>
             <label>
-                <span>Label</span>
+                <span>Category name</span>
                 <input type="text" data-category-label-input>
             </label>
             <label>
                 <span>Description</span>
-                <textarea rows="3" data-category-description-input></textarea>
+                <input type="text" data-category-description-input>
             </label>
         </div>
-        <p class="theme-note" data-category-lock-note hidden>
-            This catalogue is managed by its integration. Labels, variables and categories are read-only; theme values remain editable.
-        </p>
-        <p class="theme-note" data-category-description></p>
+        <div class="groups" data-groups></div>
     </cms-detail-section>
+
+    <div slot="main" class="reference-picker-backdrop" data-reference-picker hidden>
+        <section class="reference-picker" role="dialog" aria-modal="true" aria-labelledby="reference-picker-title">
+            <header>
+                <div>
+                    <span class="eyebrow">Token reference</span>
+                    <h4 id="reference-picker-title" data-reference-picker-title>Link token</h4>
+                </div>
+                <button type="button" class="reference-close" data-close-token-reference aria-label="Close token picker">×</button>
+            </header>
+            <label class="reference-search">
+                <span class="visually-hidden">Search available tokens</span>
+                <input type="search" placeholder="Search by name, variable or integration…" data-reference-search>
+            </label>
+            <div class="reference-results" data-reference-results></div>
+            <p class="reference-empty" data-reference-empty hidden>No matching token.</p>
+        </section>
+    </div>
 </cms-shell-detail>
 `;
 
-  // src/components/admin/Theme/editor/tokenView.ts
-  function renderToken(token, theme, mode, catalogEditable) {
-    const overridden = Object.hasOwn(theme.values[mode] ?? {}, token.id);
-    const value2 = effectiveValue(token, theme, mode);
-    const row = document.createElement("div");
-    row.className = "element-row";
-    row.dataset.tokenId = token.id;
-    row.dataset.tokenType = token.type;
-    row.append(renderLabel(token, catalogEditable), renderControls(token, value2, mode, overridden));
-    return row;
-  }
-  function renderLabel(token, catalogEditable) {
-    const label2 = document.createElement("div");
-    label2.className = "element-label";
-    if (catalogEditable) {
-      const input = document.createElement("input");
-      input.className = "token-label-input";
-      input.type = "text";
-      input.value = token.label;
-      input.ariaLabel = `Label for --${token.variable}`;
-      input.dataset.tokenLabel = "true";
-      label2.append(input);
-    } else {
-      const name = document.createElement("strong");
-      name.className = "token-label-text";
-      name.textContent = token.label;
-      label2.append(name);
-    }
-    const detail = document.createElement("span");
-    detail.textContent = `${token.description} · var(--${token.variable})`;
-    label2.append(detail);
-    return label2;
-  }
-  function renderControls(token, value2, mode, overridden) {
-    const group = document.createElement("div");
-    group.className = "token-controls";
-    group.append(renderControl(token, value2));
-    const defaults = token.defaults;
-    if (defaults) {
-      group.append(renderDefault(token, mode, defaults, overridden));
-    }
-    return group;
-  }
-  function renderControl(token, value2) {
-    if (token.type !== "color") {
-      return valueInput(token, value2);
-    }
-    const control = document.createElement("div");
-    control.className = "color-control";
-    const picker = document.createElement("input");
-    picker.type = "color";
-    picker.value = /^#[0-9a-f]{6}$/i.test(value2) ? value2 : "#000000";
-    picker.dataset.valueControl = "true";
-    picker.ariaLabel = `${token.label} color picker`;
-    control.append(picker, valueInput(token, value2));
-    return control;
-  }
-  function valueInput(token, value2) {
-    const input = document.createElement("input");
-    const fontFamily = token.type === "font-family";
-    input.className = fontFamily ? "value-control font-family-control" : "value-control";
-    input.type = "text";
-    input.value = value2;
-    input.dataset.valueControl = "true";
-    input.ariaLabel = fontFamily ? `${token.label} font family` : `${token.label} CSS value`;
-    input.autocomplete = "off";
-    input.spellcheck = false;
-    if (fontFamily) {
-      input.placeholder = "Inter, system-ui, sans-serif";
-    }
-    return input;
-  }
-  function renderDefault(token, mode, defaults, overridden) {
-    const line3 = document.createElement("div");
-    line3.className = "token-default";
-    const expected = defaults[mode];
-    const text3 = document.createElement("span");
-    text3.textContent = expected === undefined ? "Default: inherits the light value" : `Default: ${expected}`;
-    const reset = document.createElement("button");
-    reset.type = "button";
-    reset.dataset.resetToken = token.id;
-    reset.textContent = "Reset";
-    reset.disabled = !overridden;
-    reset.ariaLabel = `Reset ${token.label} to its integration default`;
-    line3.append(text3, reset);
-    return line3;
-  }
-  function effectiveValue(token, theme, mode) {
-    const direct = theme.values[mode]?.[token.id] ?? token.defaults?.[mode];
-    if (direct !== undefined || mode === "light") {
-      return direct ?? "";
-    }
-    return token.defaults?.light ?? "";
-  }
-
-  // src/components/admin/Theme/editor/view.ts
-  function renderThemeEditor(root, state) {
-    const source2 = currentSource(state.settings, state.selection);
-    const category = currentCategory(state.settings, state.selection);
-    const theme = currentTheme(state.settings, state.selectedThemeId);
-    if (!source2 || !category || !theme) {
-      return state.mode;
-    }
-    query4(root, "[data-category-title]").textContent = category.label;
-    query4(root, "[data-category-description]").textContent = `${source2.label} · ${category.description}`;
-    query4(root, "[data-theme-name-input]").value = theme.name;
-    query4(root, "[data-category-label-input]").value = category.label;
-    query4(root, "[data-category-description-input]").value = category.description;
-    query4(root, "[data-site-name]").textContent = state.siteName ? `Editing the appearance of ${state.siteName}.` : "Editing the appearance of this site.";
-    const select = query4(root, "[data-theme-switch]");
-    select.replaceChildren(...state.settings.themes.map(themeOption));
-    select.value = theme.id;
-    const active = theme.id === state.settings.activeThemeId;
-    const status = query4(root, "[data-theme-status]");
-    status.textContent = active ? "Active" : "Draft";
-    status.setAttribute("color", active ? "success" : "warning");
-    query4(root, "[data-save-theme]").toggleAttribute("disabled", !state.canPersist);
-    query4(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
-    const integrationId = integrationOwnerId(source2);
-    const catalogEditable = !isIntegrationSource(source2);
-    query4(root, "[data-source-provenance]").hidden = !integrationId;
-    query4(root, "[data-source-owner-label]").textContent = integrationId ? `Provided by ${source2.label} · ${integrationId}` : "";
-    query4(root, "[data-category-lock-note]").hidden = catalogEditable;
-    query4(root, "[data-category-label-input]").readOnly = !catalogEditable;
-    query4(root, "[data-category-description-input]").readOnly = !catalogEditable;
-    query4(root, "[data-add-theme-category]").hidden = !catalogEditable;
-    query4(root, "[data-add-element]").hidden = !catalogEditable;
-    const mode = source2.supportsModes ? state.mode : "light";
-    const modeSwitch = query4(root, "[data-mode-switch]");
-    modeSwitch.hidden = !source2.supportsModes;
-    for (const button of Array.from(modeSwitch.querySelectorAll("[data-mode]"))) {
-      button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
-    }
-    const section = query4(root, "[data-category-section]");
-    section.setAttribute("heading", category.label);
-    section.setAttribute("description", category.description);
-    const list = document.createElement("div");
-    list.className = "element-list";
-    category.tokens.forEach((token) => list.append(renderToken(token, theme, mode, catalogEditable)));
-    query4(root, "[data-groups]").replaceChildren(category.tokens.length ? list : emptyCategory());
-    return mode;
-  }
-  function setThemeMessage(root, message, error = false) {
-    const element = root?.querySelector("[data-message]");
-    if (element) {
-      element.textContent = message;
-      element.toggleAttribute("data-error", error);
-    }
-  }
-  function emptyCategory() {
-    const empty = document.createElement("div");
-    empty.className = "empty-category";
-    empty.textContent = "This category is ready for its first token.";
-    return empty;
-  }
-  function themeOption(theme) {
-    const option = document.createElement("option");
-    option.value = theme.id;
-    option.textContent = theme.name;
-    return option;
-  }
-  function query4(root, selector) {
-    return root.querySelector(selector);
-  }
-
   // src/components/admin/Theme/ThemeEditor.ts
   class CmsThemeEditor extends U2 {
-    selection = { sourceId: "", categoryId: "" };
-    mode = "light";
-    settings = null;
-    selectedThemeId = "";
-    siteName = "";
-    canPersist = true;
+    state = new ThemeEditorState;
     constructor() {
       super({ css: styles_default, template: ThemeEditor_default });
     }
     connectedCallback() {
       super.connectedCallback();
-      this.shadowRoot?.addEventListener("click", this.onClick);
-      this.shadowRoot?.addEventListener("change", this.onChange);
-      this.shadowRoot?.addEventListener("input", this.onInput);
-      window.addEventListener(THEME_CATEGORY_SELECTED_EVENT, this.onCategorySelected);
-      this.load();
+      addThemeEditorListeners(this.shadowRoot, THEME_CATEGORY_SELECTED_EVENT, this.eventHandlers());
+      loadThemeEditor(this.shadowRoot, this.state, () => this.render(), dispatchThemeSettingsChanged);
     }
     disconnectedCallback() {
-      this.shadowRoot?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.removeEventListener("change", this.onChange);
-      this.shadowRoot?.removeEventListener("input", this.onInput);
-      window.removeEventListener(THEME_CATEGORY_SELECTED_EVENT, this.onCategorySelected);
-    }
-    async load() {
-      setThemeMessage(this.shadowRoot, "Loading theme…");
-      try {
-        const loaded = await loadThemeSettings();
-        this.canPersist = loaded.canPersist;
-        this.settings = loaded.settings;
-        this.siteName = loaded.siteName;
-        this.selectedThemeId = this.settings.activeThemeId || this.settings.themes[0]?.id || "";
-        this.selection = selectionFromUrl(this.settings);
-        this.render();
-        setThemeMessage(this.shadowRoot, this.canPersist ? "" : "Restart the Control server to enable theme persistence.", !this.canPersist);
-        dispatchThemeSettingsChanged();
-      } catch (error) {
-        setThemeMessage(this.shadowRoot, error instanceof Error ? error.message : "Unable to load theme", true);
-      }
+      removeThemeEditorListeners(this.shadowRoot, THEME_CATEGORY_SELECTED_EVENT, this.eventHandlers());
     }
     render() {
-      if (!this.settings || !this.shadowRoot) {
+      const viewState = this.state.viewState();
+      if (!viewState || !this.shadowRoot) {
         return;
       }
-      this.mode = renderThemeEditor(this.shadowRoot, {
-        settings: this.settings,
-        selection: this.selection,
-        selectedThemeId: this.selectedThemeId,
-        mode: this.mode,
-        siteName: this.siteName,
-        canPersist: this.canPersist
-      });
-    }
-    addTheme() {
-      if (this.settings) {
-        this.selectedThemeId = addTheme(this.settings);
-        this.render();
-      }
-    }
-    addCategory() {
-      if (!this.settings) {
-        return;
-      }
-      const added = addCategory(this.settings, this.selection);
-      if (added) {
-        this.selection = { sourceId: added.sourceId, categoryId: added.category.id };
-        this.render();
-        dispatchThemeCategoryAdded(added);
-      }
-    }
-    addToken() {
-      if (this.settings) {
-        addToken(this.settings, this.selection);
-        this.render();
-      }
-    }
-    async save(activate) {
-      if (!this.settings || !this.canPersist) {
-        return;
-      }
-      if (activate) {
-        this.settings.activeThemeId = this.selectedThemeId;
-      }
-      setThemeMessage(this.shadowRoot, "Saving…");
-      try {
-        await saveThemeSettings(this.settings);
-        setThemeMessage(this.shadowRoot, activate ? "Theme activated." : "Theme saved.");
-        this.render();
-        dispatchThemeSettingsChanged();
-      } catch (error) {
-        setThemeMessage(this.shadowRoot, error instanceof Error ? error.message : "Unable to save theme", true);
+      this.state.mode = renderThemeEditor(this.shadowRoot, viewState);
+      const context = this.explorerContext();
+      if (context) {
+        this.state.explorer.renderReferencePicker(context);
       }
     }
     onClick = (event) => {
-      if (this.settings && resetThemeToken(event, this.settings, this.selection, this.selectedThemeId, this.mode)) {
+      const context = this.explorerContext();
+      if (context && this.state.explorer.handleClick(event, context)) {
+        return;
+      }
+      if (this.state.settings && resetThemeToken(event, this.state.settings, this.state.selection, this.state.selectedThemeId, this.state.mode)) {
         this.render();
         return;
       }
       const action = clickAction(event);
       if (action === "theme") {
-        this.addTheme();
+        if (this.state.createTheme()) {
+          this.render();
+        }
       } else if (action === "category") {
-        this.addCategory();
+        const added = this.state.createCategory();
+        if (added) {
+          this.render();
+          dispatchThemeCategoryAdded(added);
+        }
       } else if (action === "token") {
-        this.addToken();
+        if (this.state.createToken()) {
+          this.render();
+        }
       } else if (action === "save" || action === "activate") {
-        this.save(action === "activate");
+        persistTheme(this.shadowRoot, this.state, action === "activate", () => {
+          this.render();
+          dispatchThemeSettingsChanged();
+        });
       }
       const mode = event.target?.closest("[data-mode]")?.dataset.mode;
       if (mode === "light" || mode === "dark") {
-        this.mode = mode;
+        this.state.mode = mode;
         this.render();
       }
     };
     onInput = (event) => {
-      if (this.settings && this.shadowRoot) {
+      const context = this.explorerContext();
+      if (context && this.state.explorer.handleInput(event, context)) {
+        return;
+      }
+      if (this.state.settings && this.shadowRoot) {
         handleThemeInput(event, {
           root: this.shadowRoot,
-          settings: this.settings,
-          selection: this.selection,
-          selectedThemeId: this.selectedThemeId,
-          mode: this.mode
+          settings: this.state.settings,
+          selection: this.state.selection,
+          selectedThemeId: this.state.selectedThemeId,
+          mode: this.state.mode
         });
       }
     };
     onChange = (event) => {
       const target2 = event.target;
       if (target2.matches?.("[data-theme-switch]") && target2.value) {
-        this.selectedThemeId = target2.value;
+        this.state.selectedThemeId = target2.value;
+        this.state.explorer.reset(this.explorerContext());
+        this.render();
+        return;
+      }
+      if (target2.matches?.("[data-token-type-control]") && this.state.settings && this.shadowRoot) {
+        handleThemeInput(event, {
+          root: this.shadowRoot,
+          settings: this.state.settings,
+          selection: this.state.selection,
+          selectedThemeId: this.state.selectedThemeId,
+          mode: this.state.mode
+        });
         this.render();
       }
     };
     onCategorySelected = (event) => {
-      const source2 = this.settings?.sources.find((item) => item.id === event.detail?.sourceId);
-      if (source2?.categories.some((category) => category.id === event.detail.categoryId)) {
-        this.selection = event.detail;
+      if (this.state.selectCategory(event.detail)) {
         this.render();
       }
     };
+    onKeyDown = (event) => {
+      const context = this.explorerContext();
+      if (context) {
+        this.state.explorer.handleKeyDown(event, context);
+      }
+    };
+    explorerContext() {
+      if (!this.shadowRoot || !this.state.settings) {
+        return;
+      }
+      return {
+        root: this.shadowRoot,
+        settings: this.state.settings,
+        selectedThemeId: this.state.selectedThemeId,
+        mode: this.state.mode,
+        render: () => this.render(),
+        showError: (message) => setThemeMessage(this.shadowRoot, message, true)
+      };
+    }
+    eventHandlers() {
+      return {
+        click: this.onClick,
+        change: this.onChange,
+        input: this.onInput,
+        keydown: this.onKeyDown,
+        selection: this.onCategorySelected
+      };
+    }
   }
   if (!customElements.get("cms-theme-editor")) {
     customElements.define("cms-theme-editor", CmsThemeEditor);
@@ -18508,16 +19516,8 @@ w13c-lateral-menu-item.category-item {
     --item-font-size: .8125rem;
 }
 
-.integration-badge {
-    margin-left: auto;
-    padding: 2px 5px;
-    border: 1px solid var(--border-default);
-    border-radius: 999px;
-    color: var(--text-muted);
-    font-size: .5625rem;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
+.theme-group[data-theme-group="integrations"] {
+    margin-top: 6px;
 }
 `;
 
@@ -18560,26 +19560,40 @@ w13c-lateral-menu-item.category-item {
   }
 
   // src/components/admin/Theme/nav/view.ts
+  var CORE_SOURCE_LABELS = {
+    colors: "Colors",
+    typography: "Typography",
+    spacing: "Spacing & layout",
+    shape: "Shape & effects"
+  };
+  var IMPORTED_SOURCE_IDS = new Set(["custom", "existing-css", "other", "imported-css"]);
   function renderThemeNav(root, sources, selection) {
     const menu = root?.querySelector("w13c-lateral-menu");
     if (!menu) {
       return;
     }
     menu.querySelectorAll("[data-generated]").forEach((item) => item.remove());
+    renderSourceGroup(menu, "site", "Site", sources.filter((source2) => !isIntegrationSource(source2)), selection);
+    renderSourceGroup(menu, "integrations", "Integrations", sources.filter(isIntegrationSource), selection);
+  }
+  function renderSourceGroup(menu, groupId, groupLabel, sources, selection) {
+    if (sources.length === 0) {
+      return;
+    }
+    const heading4 = document.createElement("span");
+    heading4.className = "menu-section theme-group";
+    heading4.dataset.generated = "true";
+    heading4.dataset.themeGroup = groupId;
+    heading4.textContent = groupLabel;
+    menu.append(heading4);
     for (const source2 of sources) {
       const sourceItem = document.createElement("w13c-lateral-menu-item");
       sourceItem.dataset.generated = "true";
       sourceItem.dataset.source = source2.id;
       sourceItem.toggleAttribute("active", source2.id === selection.sourceId);
-      sourceItem.append(createSourceIcon(source2.id), document.createTextNode(source2.label));
-      if (isIntegrationSource(source2)) {
-        const badge = document.createElement("span");
-        badge.className = "integration-badge";
-        badge.textContent = "Integration";
-        sourceItem.append(badge);
-      }
+      sourceItem.append(createSourceIcon(source2.id), document.createTextNode(sourceNavigationLabel(source2)));
       menu.append(sourceItem);
-      if (source2.id !== selection.sourceId) {
+      if (source2.id !== selection.sourceId || isIntegrationSource(source2) || source2.categories.length < 2) {
         continue;
       }
       for (const category of source2.categories) {
@@ -18593,6 +19607,18 @@ w13c-lateral-menu-item.category-item {
         menu.append(categoryItem);
       }
     }
+  }
+  function sourceNavigationLabel(source2) {
+    if (isIntegrationSource(source2)) {
+      return source2.label;
+    }
+    if (IMPORTED_SOURCE_IDS.has(source2.id)) {
+      return "Imported CSS";
+    }
+    if (source2.owner?.kind === "site") {
+      return "Site tokens";
+    }
+    return CORE_SOURCE_LABELS[source2.id] ?? source2.label;
   }
   function selectionFromUrl2(sources) {
     const url = new URL(window.location.href);
@@ -20089,16 +21115,16 @@ w13c-lateral-menu-item {
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/fieldSupport.ts
-  function optionData(option) {
-    return { label: option.label, value: option.value };
+  function optionData(option2) {
+    return { label: option2.label, value: option2.value };
   }
   function optionList(staticOptions, dynamicOptions) {
     const seen = new Set;
-    return [...staticOptions ?? [], ...dynamicOptions].filter((option) => {
-      if (seen.has(option.value)) {
+    return [...staticOptions ?? [], ...dynamicOptions].filter((option2) => {
+      if (seen.has(option2.value)) {
         return false;
       }
-      seen.add(option.value);
+      seen.add(option2.value);
       return true;
     }).map(optionData);
   }
@@ -21648,11 +22674,11 @@ button {
   function bindFieldControl(control, field2) {
     control.dataset.fieldControl = field2.id;
   }
-  function optionElement(option, value2) {
+  function optionElement(option2, value2) {
     const element = document.createElement("option");
-    element.value = option.value;
-    element.textContent = option.label;
-    element.selected = option.value === value2;
+    element.value = option2.value;
+    element.textContent = option2.label;
+    element.selected = option2.value === value2;
     return element;
   }
   function isValueControl(control) {
@@ -21718,7 +22744,7 @@ button {
     if (field2.required) {
       input.setAttribute("required", "");
     }
-    input.replaceChildren(...(field2.options ?? []).map((option) => optionElement(option, String(field2.value))));
+    input.replaceChildren(...(field2.options ?? []).map((option2) => optionElement(option2, String(field2.value))));
     bindFieldControl(input, field2);
     return input;
   }
@@ -21734,7 +22760,7 @@ button {
       input.setAttribute("creatable", "");
     }
     applyFeedbackMetadata(input, field2);
-    input.replaceChildren(...(field2.options ?? []).map((option) => optionElement(option, String(field2.value))));
+    input.replaceChildren(...(field2.options ?? []).map((option2) => optionElement(option2, String(field2.value))));
     input.value = String(field2.value);
     bindFieldControl(input, field2);
     return input;
@@ -21750,7 +22776,7 @@ button {
     if (field2.creatable) {
       input.setAttribute("creatable", "");
     }
-    input.replaceChildren(...(field2.options ?? []).map((option) => optionElement(option, "")));
+    input.replaceChildren(...(field2.options ?? []).map((option2) => optionElement(option2, "")));
     bindFieldControl(input, field2);
     return input;
   }
@@ -21881,13 +22907,13 @@ button {
     const group = document.createElement("div");
     group.className = "chip-group";
     bindFieldControl(group, field2);
-    for (const option of field2.options ?? []) {
+    for (const option2 of field2.options ?? []) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "chip";
-      button.dataset.value = option.value;
-      button.setAttribute("aria-pressed", String(selected2.has(option.value)));
-      button.textContent = option.label;
+      button.dataset.value = option2.value;
+      button.setAttribute("aria-pressed", String(selected2.has(option2.value)));
+      button.textContent = option2.label;
       group.append(button);
     }
     return group;
@@ -21967,7 +22993,7 @@ button {
       if (definition.required) {
         input2.setAttribute("required", "");
       }
-      input2.replaceChildren(...definition.options.map((option) => optionElement(option, selected2)));
+      input2.replaceChildren(...definition.options.map((option2) => optionElement(option2, selected2)));
       input2.value = selected2;
       return input2;
     }
@@ -22041,11 +23067,11 @@ button {
       const control = document.createElement(field2.type === "select" ? "p9r-select" : "p9r-combobox");
       control.setAttribute("aria-label", field2.label);
       control.setAttribute("value", value2);
-      control.replaceChildren(...(field2.options ?? []).map((option) => {
+      control.replaceChildren(...(field2.options ?? []).map((option2) => {
         const element = document.createElement("option");
-        element.value = option.value;
-        element.textContent = option.label;
-        element.selected = option.value === value2;
+        element.value = option2.value;
+        element.textContent = option2.label;
+        element.selected = option2.value === value2;
         return element;
       }));
       control.value = value2;
@@ -22130,7 +23156,7 @@ button {
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/view.ts
   function renderList2(root, value2) {
     query6(root, "[data-rows]").replaceChildren(...value2.items.map((item, index) => renderRow(value2, item, index)));
-    renderHeader(root, value2);
+    renderHeader2(root, value2);
     const add = query6(root, "[data-add]");
     add.textContent = value2.addLabel ?? "Add item";
     add.disabled = value2.maxItems !== undefined && value2.items.length >= value2.maxItems;
@@ -22138,7 +23164,7 @@ button {
   function renderedRows(root) {
     return Array.from(root.querySelectorAll(".row"));
   }
-  function renderHeader(root, value2) {
+  function renderHeader2(root, value2) {
     const header = query6(root, "[data-header]");
     header.style.setProperty("--reorderable-columns", columns(value2));
     const cells = [document.createElement("span")];
@@ -22422,14 +23448,14 @@ button {
     const input = document.createElement("p9r-select");
     const text3 = textValue3(value2);
     input.setAttribute("value", text3);
-    input.replaceChildren(...column.options.map((option) => optionElement(option, text3)));
+    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text3)));
     return input;
   }
   function comboboxEditor(column, value2) {
     const input = document.createElement("p9r-combobox");
     const text3 = textValue3(value2);
     input.setAttribute("value", text3);
-    input.replaceChildren(...column.options.map((option) => optionElement(option, text3)));
+    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text3)));
     input.value = text3;
     return input;
   }
@@ -22673,14 +23699,14 @@ button {
       return this.root.querySelector(selector);
     }
   }
-  function applyLookupOption(control, value2, option) {
-    const existing = Array.from(control.querySelectorAll("option")).find((item) => item.value === option.value);
+  function applyLookupOption(control, value2, option2) {
+    const existing = Array.from(control.querySelectorAll("option")).find((item) => item.value === option2.value);
     if (existing) {
-      existing.textContent = option.label;
+      existing.textContent = option2.label;
     } else {
       const element = document.createElement("option");
-      element.value = option.value;
-      element.textContent = option.label;
+      element.value = option2.value;
+      element.textContent = option2.label;
       control.append(element);
     }
     const nextValue = Array.isArray(value2) ? value2.map(String).join(",") : String(value2 ?? "");
@@ -23515,8 +24541,8 @@ p9r-token-input {
   }
   function optionsFromItems(items, lookup) {
     return items.flatMap((item) => {
-      const option = optionFromItem(item, lookup, true);
-      return option ? [option] : [];
+      const option2 = optionFromItem(item, lookup, true);
+      return option2 ? [option2] : [];
     });
   }
   function selectedOptions(target2, resource, fields) {
@@ -23533,8 +24559,8 @@ p9r-token-input {
     const resolved = resolveExpression(expression, { resource, fields });
     const items = Array.isArray(resolved) ? resolved : [resolved];
     return dedupeOptions(items.flatMap((item) => {
-      const option = optionFromItem(item, target2.lookup, false);
-      return option && selected2.has(option.value) ? [option] : [];
+      const option2 = optionFromItem(item, target2.lookup, false);
+      return option2 && selected2.has(option2.value) ? [option2] : [];
     }));
   }
   function optionFromItem(item, lookup, fallbackToValue) {
@@ -23567,11 +24593,11 @@ p9r-token-input {
   }
   function dedupeOptions(options) {
     const seen = new Set;
-    return options.filter((option) => {
-      if (seen.has(option.value)) {
+    return options.filter((option2) => {
+      if (seen.has(option2.value)) {
         return false;
       }
-      seen.add(option.value);
+      seen.add(option2.value);
       return true;
     });
   }
@@ -23907,7 +24933,7 @@ p9r-token-input {
   }
   function preserveCmsUserSelection(options, selected2) {
     const value2 = typeof selected2 === "string" ? selected2 : "";
-    if (!value2 || options.some((option) => option.value === value2)) {
+    if (!value2 || options.some((option2) => option2.value === value2)) {
       return options;
     }
     return [...options, { value: value2, label: `Unknown CMS user · ${value2}` }];
@@ -23953,15 +24979,15 @@ p9r-token-input {
       return [];
     }
     const seen = new Set;
-    return value2.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option) => {
+    return value2.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option2) => {
       let result;
-      if (typeof option === "string" || typeof option === "number") {
-        const value3 = text3(option, LABEL_MAX_LENGTH);
+      if (typeof option2 === "string" || typeof option2 === "number") {
+        const value3 = text3(option2, LABEL_MAX_LENGTH);
         if (value3) {
           result = { value: value3, label: value3 };
         }
       } else {
-        const entry = record2(option);
+        const entry = record2(option2);
         const optionValue = text3(entry?.value, LABEL_MAX_LENGTH);
         const optionLabel = text3(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
         if (optionValue && optionLabel) {
@@ -24252,11 +25278,11 @@ p9r-token-input {
         this.render();
       }
     }
-    applyLookupCreate(fieldId, value2, option) {
+    applyLookupCreate(fieldId, value2, option2) {
       const control = this.runtime.fields.control(fieldId);
       const field2 = control ? this.runtime.fields.find(fieldId) : undefined;
       if (control && field2) {
-        applyLookupOption(control, value2, option);
+        applyLookupOption(control, value2, option2);
       }
     }
     static get observedAttributes() {
@@ -24916,10 +25942,10 @@ slot {
           const empty = document.createElement("option");
           empty.value = "";
           empty.textContent = "All";
-          select2.append(empty, ...(filter.options ?? []).map((option) => {
+          select2.append(empty, ...(filter.options ?? []).map((option2) => {
             const element = document.createElement("option");
-            element.value = option.value;
-            element.textContent = option.label;
+            element.value = option2.value;
+            element.textContent = option2.label;
             return element;
           }));
           control = select2;
@@ -25264,8 +26290,8 @@ slot {
   }
   function endpointMethod(group, groups, ref) {
     const sourceId = ref.sourceId ?? group.source.id;
-    const sourceGroup = groups.find((candidate) => candidate.source.id === sourceId);
-    const endpoint = sourceGroup?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
+    const sourceGroup2 = groups.find((candidate) => candidate.source.id === sourceId);
+    const endpoint = sourceGroup2?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
     if (!endpoint) {
       throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
     }
@@ -26648,9 +27674,9 @@ slot { display: contents; }
       np(error instanceof Error ? error.message : "Lookup creation failed", { type: "error" });
     }
   }
-  function applyLookupCreate(target2, field2, value2, option) {
+  function applyLookupCreate(target2, field2, value2, option2) {
     const detail = target2;
-    detail?.applyLookupCreate?.(field2, value2, option);
+    detail?.applyLookupCreate?.(field2, value2, option2);
   }
 
   // src/components/admin/Resources/Dashboards/view/styles/base.css
@@ -27275,7 +28301,7 @@ p {
     el2.textContent = text4;
     return el2;
   }
-  function option(value2, text4) {
+  function option2(value2, text4) {
     const el2 = document.createElement("option");
     el2.value = value2;
     el2.textContent = text4;
@@ -27339,7 +28365,7 @@ p {
   function sourceSelectField(field2, draft, onChange) {
     const select2 = document.createElement("select");
     select2.dataset.path = field2.path;
-    select2.append(option("", "Loading..."));
+    select2.append(option2("", "Loading..."));
     select2.value = String(valueAtDraft(draft, field2.path) ?? "");
     select2.addEventListener("change", () => {
       setDraftValue(draft, field2.path, select2.value);
@@ -27373,18 +28399,18 @@ p {
     try {
       const response = await fetchSourceEndpoint(field2.source, field2.endpoint, resolvedParams(field2.params, draft));
       const items = arrayAt2(response, field2.itemsPath ?? "items");
-      select2.replaceChildren(option("", "Select..."));
+      select2.replaceChildren(option2("", "Select..."));
       for (const item of items) {
         const value2 = stringValue2(valueAt2(item, field2.valuePath ?? "id"));
         if (!value2) {
           continue;
         }
         const label3 = stringValue2(valueAt2(item, field2.labelPath ?? field2.valuePath ?? "id")) || value2;
-        select2.append(option(value2, label3));
+        select2.append(option2(value2, label3));
       }
       select2.value = String(valueAtDraft(draft, field2.path) ?? "");
     } catch (error) {
-      select2.replaceChildren(option("", error instanceof Error ? error.message : "Failed to load options"));
+      select2.replaceChildren(option2("", error instanceof Error ? error.message : "Failed to load options"));
     }
   }
   async function seedObject(seed, draft) {
@@ -27852,11 +28878,11 @@ pre {
     const wrap = document.createElement("div");
     wrap.className = "value-picker";
     const select2 = document.createElement("select");
-    select2.append(option2("", label3));
+    select2.append(option3("", label3));
     for (const reference of references) {
-      select2.append(option2(reference.value, reference.label));
+      select2.append(option3(reference.value, reference.label));
     }
-    select2.append(option2("__literal__", "Fixed value…"));
+    select2.append(option3("__literal__", "Fixed value…"));
     select2.value = draft.mode === "literal" ? "__literal__" : draft.value;
     const literal = document.createElement("input");
     literal.type = "text";
@@ -27907,7 +28933,7 @@ pre {
       return reference.shape.type === shape.type && reference.shape.semantic?.kind !== "user-id";
     });
   }
-  function option2(value2, label3) {
+  function option3(value2, label3) {
     const el2 = document.createElement("option");
     el2.value = value2;
     el2.textContent = label3;
@@ -27962,10 +28988,10 @@ pre {
     name.addEventListener("change", onChange);
     const type = document.createElement("select");
     for (const value2 of ["string", "number", "boolean", "object", "array"]) {
-      const option3 = document.createElement("option");
-      option3.value = value2;
-      option3.textContent = value2;
-      type.append(option3);
+      const option4 = document.createElement("option");
+      option4.value = value2;
+      option4.textContent = value2;
+      type.append(option4);
     }
     type.value = field2.type;
     type.setAttribute("aria-label", "Field type");
@@ -28034,10 +29060,10 @@ pre {
   function select2(options2, current, onChange) {
     const element = document.createElement("select");
     for (const [optionValue, label3] of options2) {
-      const option3 = document.createElement("option");
-      option3.value = optionValue;
-      option3.textContent = label3;
-      element.append(option3);
+      const option4 = document.createElement("option");
+      option4.value = optionValue;
+      option4.textContent = label3;
+      element.append(option4);
     }
     element.value = current;
     element.addEventListener("change", () => onChange(element.value));
@@ -29337,10 +30363,10 @@ details[open] > summary > .chevron {
   function select3(input2) {
     const element = document.createElement("select");
     element.name = input2.name;
-    for (const option3 of input2.options ?? []) {
+    for (const option4 of input2.options ?? []) {
       const child = document.createElement("option");
-      child.value = option3.value;
-      child.textContent = option3.label;
+      child.value = option4.value;
+      child.textContent = option4.label;
       element.append(child);
     }
     return element;
@@ -31156,7 +32182,7 @@ button.run:disabled {
   function checkbox2(root, name) {
     return input2(root, name);
   }
-  function option3(value3, label3) {
+  function option4(value3, label3) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label3;
@@ -31897,18 +32923,18 @@ details[open] > summary > .chevron {
   function populateSources(host, sources) {
     const sourceSelect = select4(host, "source");
     for (const source2 of sources) {
-      sourceSelect.append(option3(source2.id, source2.label));
+      sourceSelect.append(option4(source2.id, source2.label));
     }
   }
   function syncEndpointOptions(host, sources) {
     const endpointSelect = select4(host, "endpoint");
     const source2 = sources.find((item) => item.id === select4(host, "source").value);
-    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option3(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
+    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option4(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
   }
   function populateFunctions(host, functions) {
     const functionSelect = select4(host, "function");
     for (const fn2 of functions) {
-      functionSelect.append(option3(fn2.id, `${fn2.label} (${fn2.method})`));
+      functionSelect.append(option4(fn2.id, `${fn2.label} (${fn2.method})`));
     }
   }
   function syncFunctionContract(host, functions) {
@@ -32982,7 +34008,7 @@ button:hover {
     controls.className = "param-controls";
     const mode = document.createElement("select");
     mode.className = "param-mode";
-    mode.append(option4("queryParam", "Query param"), option4("raw", "Raw value"), option4("state", "Page state"));
+    mode.append(option5("queryParam", "Query param"), option5("raw", "Raw value"), option5("state", "Page state"));
     const value3 = document.createElement("input");
     value3.className = "param-value";
     value3.placeholder = name;
@@ -32993,7 +34019,7 @@ button:hover {
     controls.append(mode, value3);
     return controls;
   }
-  function option4(value3, label3) {
+  function option5(value3, label3) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label3;
@@ -33005,7 +34031,7 @@ button:hover {
     return element;
   }
   function selectOption(select5, value3) {
-    const index = Array.from(select5.options).findIndex((option5) => option5.value === value3);
+    const index = Array.from(select5.options).findIndex((option6) => option6.value === value3);
     if (index >= 0) {
       select5.selectedIndex = index;
     }
@@ -33083,7 +34109,7 @@ button:hover {
     label3.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
-    trigger.append(option5("auto", "Auto"), option5("submit", "Submit"), option5("change", "Change"));
+    trigger.append(option6("auto", "Auto"), option6("submit", "Submit"), option6("change", "Change"));
     selectOption2(trigger, value3);
     label3.append(trigger);
     return label3;
@@ -33125,14 +34151,14 @@ button:hover {
       }, initialBinding?.body?.[field3.name]));
     }
   }
-  function option5(value3, label3) {
+  function option6(value3, label3) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label3;
     return element;
   }
   function selectOption2(select5, value3) {
-    const index = Array.from(select5.options).findIndex((option6) => option6.value === value3);
+    const index = Array.from(select5.options).findIndex((option7) => option7.value === value3);
     if (index >= 0) {
       select5.selectedIndex = index;
     }
@@ -33284,17 +34310,17 @@ button:hover {
   }
   function selectMethodFilter(filter, value3) {
     const options2 = Array.from(filter.options);
-    const index = options2.findIndex((option6) => option6.value === value3);
+    const index = options2.findIndex((option7) => option7.value === value3);
     filter.selectedIndex = index >= 0 ? index : 0;
-    options2.forEach((option6, optionIndex) => {
-      option6.selected = optionIndex === filter.selectedIndex;
-      option6.toggleAttribute("selected", option6.selected);
+    options2.forEach((option7, optionIndex) => {
+      option7.selected = optionIndex === filter.selectedIndex;
+      option7.toggleAttribute("selected", option7.selected);
     });
     filter.setAttribute("value", options2[filter.selectedIndex]?.value ?? "GET");
   }
   function selectedMethodFilter(filter) {
     const options2 = Array.from(filter.options);
-    const selected2 = options2.find((option6) => option6.selected);
+    const selected2 = options2.find((option7) => option7.selected);
     if (selected2?.value) {
       return selected2.value;
     }
@@ -33302,7 +34328,7 @@ button:hover {
     if (selectedIndexValue) {
       return selectedIndexValue;
     }
-    const selectedAttribute = options2.find((option6) => option6.hasAttribute("selected"));
+    const selectedAttribute = options2.find((option7) => option7.hasAttribute("selected"));
     return selectedAttribute?.value ?? filter.getAttribute("value") ?? "GET";
   }
 
@@ -34220,10 +35246,10 @@ textarea { min-height: 92px; resize: vertical; }
     const select5 = document.createElement("select");
     select5.className = "field-path";
     for (const field3 of fields) {
-      const option6 = document.createElement("option");
-      option6.value = field3.path;
-      option6.textContent = `${field3.scopeLabel}: ${field3.path}`;
-      select5.append(option6);
+      const option7 = document.createElement("option");
+      option7.value = field3.path;
+      option7.textContent = `${field3.scopeLabel}: ${field3.path}`;
+      select5.append(option7);
     }
     select5.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
     select5.addEventListener("change", () => {
@@ -34236,10 +35262,10 @@ textarea { min-height: 92px; resize: vertical; }
     const select5 = document.createElement("select");
     select5.className = "field-operator";
     for (const operator of OPERATORS) {
-      const option6 = document.createElement("option");
-      option6.value = operator.value;
-      option6.textContent = operator.label;
-      select5.append(option6);
+      const option7 = document.createElement("option");
+      option7.value = operator.value;
+      option7.textContent = operator.label;
+      select5.append(option7);
     }
     select5.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
     select5.addEventListener("change", () => {
@@ -35035,33 +36061,33 @@ dd {
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
-  function normalizeBlockPickerOption(option6) {
-    if (option6.item) {
+  function normalizeBlockPickerOption(option7) {
+    if (option7.item) {
       return {
-        ...option6,
-        kind: option6.item.kind
+        ...option7,
+        kind: option7.item.kind
       };
     }
-    if (!option6.entry) {
+    if (!option7.entry) {
       throw new Error("Block picker option requires either item or entry.");
     }
     return {
-      ...option6,
+      ...option7,
       kind: "block",
       item: {
         kind: "block",
-        entry: option6.entry
+        entry: option7.entry
       }
     };
   }
-  function blockPickerOptionItem(option6) {
-    if (option6.item) {
-      return option6.item;
+  function blockPickerOptionItem(option7) {
+    if (option7.item) {
+      return option7.item;
     }
-    if (option6.entry) {
+    if (option7.entry) {
       return {
         kind: "block",
-        entry: option6.entry
+        entry: option7.entry
       };
     }
     throw new Error("Block picker option requires either item or entry.");
@@ -35105,54 +36131,54 @@ dd {
   function blockPickerIconText(item) {
     return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
   }
-  function blockPickerCategoryLabel(option6) {
-    const item = blockPickerOptionItem(option6);
+  function blockPickerCategoryLabel(option7) {
+    const item = blockPickerOptionItem(option7);
     const category = blockPickerItemCategory(item) ?? blockPickerSourceLabel(item.kind);
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option6, query8) {
+  function blockPickerOptionMatches(option7, query8) {
     if (!query8) {
       return true;
     }
-    const item = blockPickerOptionItem(option6);
+    const item = blockPickerOptionItem(option7);
     return [
       blockPickerItemLabel(item),
       blockPickerItemDescription(item),
       blockPickerItemCategory(item),
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
-      option6.slotLabel
+      option7.slotLabel
     ].some((value3) => value3?.toLowerCase().includes(query8));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
   function blockPickerVisibleOptions(group, source2, category, query8) {
-    return group?.options.filter((option6) => {
-      const item = blockPickerOptionItem(option6);
+    return group?.options.filter((option7) => {
+      const item = blockPickerOptionItem(option7);
       if (item.kind !== source2) {
         return false;
       }
-      if (category && blockPickerCategoryLabel(option6) !== category) {
+      if (category && blockPickerCategoryLabel(option7) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option6, query8);
+      return blockPickerOptionMatches(option7, query8);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
-    return group?.options.filter((option6) => blockPickerOptionItem(option6).kind === source2) ?? [];
+    return group?.options.filter((option7) => blockPickerOptionItem(option7).kind === source2) ?? [];
   }
   function blockPickerSourceCount(group, source2) {
     return blockPickerOptionsForSource(group, source2).length;
   }
   function blockPickerCategoryCount(group, source2, category) {
-    return group?.options.filter((option6) => blockPickerOptionItem(option6).kind === source2 && blockPickerCategoryLabel(option6) === category).length ?? 0;
+    return group?.options.filter((option7) => blockPickerOptionItem(option7).kind === source2 && blockPickerCategoryLabel(option7) === category).length ?? 0;
   }
   function blockPickerCategories(group, source2) {
     const categories = new Set;
-    for (const option6 of group?.options ?? []) {
-      if (blockPickerOptionItem(option6).kind === source2) {
-        categories.add(blockPickerCategoryLabel(option6));
+    for (const option7 of group?.options ?? []) {
+      if (blockPickerOptionItem(option7).kind === source2) {
+        categories.add(blockPickerCategoryLabel(option7));
       }
     }
     return [...categories].sort((left, right) => left.localeCompare(right));
@@ -35168,16 +36194,16 @@ dd {
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerView.ts
-  function renderBlockPickerDetails(container, option6, onSelect) {
+  function renderBlockPickerDetails(container, option7, onSelect) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select content to see details.";
       container.append(empty4);
       return;
     }
-    const item = blockPickerOptionItem(option6);
+    const item = blockPickerOptionItem(option7);
     const eyebrow = document.createElement("div");
     eyebrow.className = "details-eyebrow";
     eyebrow.textContent = blockPickerSourceLabel(item.kind);
@@ -35192,22 +36218,22 @@ dd {
     previewIcon.textContent = blockPickerIconText(item);
     preview.append(previewIcon);
     const meta = document.createElement("dl");
-    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option6.slotLabel), metaRow("Category", blockPickerCategoryLabel(option6)));
+    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option7.slotLabel), metaRow("Category", blockPickerCategoryLabel(option7)));
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Insert";
-    insert.addEventListener("click", () => onSelect(option6));
+    insert.addEventListener("click", () => onSelect(option7));
     container.append(preview, eyebrow, title2, description, meta, insert);
   }
-  function renderBlockPickerOption(option6, activeOption, onActivate, onSelect) {
+  function renderBlockPickerOption(option7, activeOption, onActivate, onSelect) {
     const button2 = document.createElement("button");
     button2.className = "block";
     button2.type = "button";
-    button2.ariaSelected = String(option6 === activeOption);
-    button2.addEventListener("click", () => onActivate(option6));
-    button2.addEventListener("dblclick", () => onSelect(option6));
-    const item = blockPickerOptionItem(option6);
+    button2.ariaSelected = String(option7 === activeOption);
+    button2.addEventListener("click", () => onActivate(option7));
+    button2.addEventListener("dblclick", () => onSelect(option7));
+    const item = blockPickerOptionItem(option7);
     const icon = document.createElement("span");
     icon.className = "icon";
     icon.textContent = blockPickerIconText(item);
@@ -35220,7 +36246,7 @@ dd {
     description.textContent = blockPickerItemDescription(item);
     const category = document.createElement("span");
     category.className = "category";
-    category.textContent = blockPickerCategoryLabel(option6);
+    category.textContent = blockPickerCategoryLabel(option7);
     body.append(name, description, category);
     button2.append(icon, body);
     return button2;
@@ -35270,8 +36296,8 @@ dd {
       return null;
     }
     const activeOption = input3.activeOption && options2.includes(input3.activeOption) ? input3.activeOption : options2[0];
-    for (const option6 of options2) {
-      input3.results.append(renderBlockPickerOption(option6, activeOption, input3.onActivate, input3.onSelect));
+    for (const option7 of options2) {
+      input3.results.append(renderBlockPickerOption(option7, activeOption, input3.onActivate, input3.onSelect));
     }
     renderBlockPickerDetails(input3.details, activeOption, input3.onSelect);
     return activeOption;
@@ -35282,21 +36308,21 @@ dd {
     input3.sources.replaceChildren();
     input3.categories.replaceChildren();
     input3.sources.append(sourceButton("Blocks", "block", input3), sourceButton("Templates", "template", input3), sourceButton("Media", "media", input3));
-    input3.categories.append(filterButton("All", input3.activeCategory === "", () => input3.onCategory(""), blockPickerSourceCount(input3.group, input3.activeSource)));
+    input3.categories.append(filterButton2("All", input3.activeCategory === "", () => input3.onCategory(""), blockPickerSourceCount(input3.group, input3.activeSource)));
     for (const category of blockPickerCategories(input3.group, input3.activeSource)) {
-      input3.categories.append(filterButton(category, input3.activeCategory === category, () => input3.onCategory(category), blockPickerCategoryCount(input3.group, input3.activeSource, category)));
+      input3.categories.append(filterButton2(category, input3.activeCategory === category, () => input3.onCategory(category), blockPickerCategoryCount(input3.group, input3.activeSource, category)));
     }
   }
   function sourceButton(label3, source2, input3) {
     const count = blockPickerSourceCount(input3.group, source2);
-    return filterButton(label3, input3.activeSource === source2, () => {
+    return filterButton2(label3, input3.activeSource === source2, () => {
       if (source2 === "media" && input3.onSingleMedia()) {
         return;
       }
       input3.onSource(source2);
     }, count, source2 !== "block" && count === 0);
   }
-  function filterButton(label3, active, onClick, count, disabled = false) {
+  function filterButton2(label3, active, onClick, count, disabled = false) {
     const button2 = document.createElement("button");
     button2.className = "filter";
     button2.type = "button";
@@ -35364,7 +36390,7 @@ dd {
     open(groups, contextLabel) {
       this._groups = groups.map((group) => ({
         ...group,
-        options: group.options.map((option6) => normalizeBlockPickerOption(option6))
+        options: group.options.map((option7) => normalizeBlockPickerOption(option7))
       }));
       this._activeSlotKey = firstEnabledBlockPickerGroup(this._groups)?.slot ?? "";
       this._activeSource = "block";
@@ -35400,11 +36426,11 @@ dd {
         activeSource: this._activeSource,
         details: this.elements.details,
         group: this._activeGroup(),
-        onActivate: (option6) => {
-          this._activeOption = option6;
+        onActivate: (option7) => {
+          this._activeOption = option7;
           this._renderEntries();
         },
-        onSelect: (option6) => this._selectOption(option6),
+        onSelect: (option7) => this._selectOption(option7),
         query: this.elements.search.value.trim().toLowerCase(),
         results: this.elements.results
       });
@@ -35433,11 +36459,11 @@ dd {
         sources: this.elements.sources
       });
     }
-    _selectOption(option6) {
+    _selectOption(option7) {
       this.dispatchEvent(new CustomEvent(BLOCK_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { option: option6 }
+        detail: { option: option7 }
       }));
       this.close();
     }
@@ -36065,9 +37091,9 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureBlockPicker.ts
   function openPickerOrEmitSingleMedia(action, groups, contextLabel, context) {
-    const option6 = singleEnabledOption(groups);
-    if (option6?.item?.kind === "media") {
-      context.emitAction(action.action, option6.item, option6.slot);
+    const option7 = singleEnabledOption(groups);
+    if (option7?.item?.kind === "media") {
+      context.emitAction(action.action, option7.item, option7.slot);
       return;
     }
     context.setPendingPickerAction(action);
@@ -36155,9 +37181,9 @@ dd {
       }
     ] : [];
     return [
-      ...blockOptions.filter((option6) => canFitItem(context, parent, slot, option6.item, replaced)),
+      ...blockOptions.filter((option7) => canFitItem(context, parent, slot, option7.item, replaced)),
       ...externalOptions,
-      ...mediaOptions.filter((option6) => option6.item && canFitItem(context, parent, slot, option6.item, replaced))
+      ...mediaOptions.filter((option7) => option7.item && canFitItem(context, parent, slot, option7.item, replaced))
     ];
   }
   function mediaAcceptForSlot(slot) {
@@ -36303,9 +37329,9 @@ dd {
   function conditionFieldOptions(scopes) {
     const byPath = new Map;
     for (const scope of scopes) {
-      for (const option6 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
-        if (!byPath.has(option6.path)) {
-          byPath.set(option6.path, option6);
+      for (const option7 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
+        if (!byPath.has(option7.path)) {
+          byPath.set(option7.path, option7);
         }
       }
     }
@@ -37805,7 +38831,7 @@ input:disabled {
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
   function matchingDynamicDataOptions(options2, query8) {
     const normalized = query8.trim().toLowerCase();
-    return normalized ? options2.filter((option6) => `${option6.label} ${option6.path}`.toLowerCase().includes(normalized)) : options2;
+    return normalized ? options2.filter((option7) => `${option7.label} ${option7.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
     list.replaceChildren();
@@ -37816,18 +38842,18 @@ input:disabled {
       list.append(empty4);
       return;
     }
-    for (const option6 of options2) {
+    for (const option7 of options2) {
       const button2 = document.createElement("button");
       button2.className = "data-option";
       button2.type = "button";
-      button2.dataset.path = option6.path;
+      button2.dataset.path = option7.path;
       const label3 = document.createElement("span");
       label3.className = "data-label";
-      label3.textContent = option6.label;
+      label3.textContent = option7.label;
       const path = document.createElement("code");
-      path.textContent = option6.path;
+      path.textContent = option7.path;
       button2.append(label3, path);
-      button2.addEventListener("click", () => onSelect(option6.path));
+      button2.addEventListener("click", () => onSelect(option7.path));
       list.append(button2);
     }
   }
@@ -37837,9 +38863,9 @@ input:disabled {
     const byPath = new Map;
     for (const scope of scopes) {
       const options2 = fieldOptions2(scope.fields, scope.name, scope.label ?? scope.name);
-      for (const option6 of options2) {
-        if (!byPath.has(option6.path)) {
-          byPath.set(option6.path, option6);
+      for (const option7 of options2) {
+        if (!byPath.has(option7.path)) {
+          byPath.set(option7.path, option7);
         }
       }
     }
@@ -39101,11 +40127,11 @@ select:disabled {
       syncFieldCopy(this);
       const current = this.getAttribute("value");
       const options2 = this._parseOptions();
-      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option6) => {
+      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option7) => {
         const element = document.createElement("option");
-        element.textContent = option6.label;
-        element.value = option6.value;
-        element.selected = option6.value === current;
+        element.textContent = option7.label;
+        element.value = option7.value;
+        element.selected = option7.value === current;
         return element;
       }));
     }
@@ -41028,12 +42054,12 @@ input {
     select5.append(custom);
     const groups = new Map;
     for (const token of tokens) {
-      const option6 = document.createElement("option");
-      option6.value = `var(--${token.variable})`;
-      option6.textContent = token.label;
+      const option7 = document.createElement("option");
+      option7.value = `var(--${token.variable})`;
+      option7.textContent = token.label;
       const category = token.category?.trim();
       if (!category) {
-        select5.append(option6);
+        select5.append(option7);
         continue;
       }
       let group = groups.get(category);
@@ -41043,9 +42069,9 @@ input {
         groups.set(category, group);
         select5.append(group);
       }
-      group.append(option6);
+      group.append(option7);
     }
-    const selected2 = Array.from(select5.querySelectorAll("option")).find((option6) => option6.value === (setting.defaultValue ?? ""));
+    const selected2 = Array.from(select5.querySelectorAll("option")).find((option7) => option7.value === (setting.defaultValue ?? ""));
     if (selected2) {
       selected2.selected = true;
     }
@@ -41313,15 +42339,15 @@ input {
       const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
       const control3 = document.createElement("cms-editor-v2-segmented-control");
       control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-      for (const option6 of setting.options) {
+      for (const option7 of setting.options) {
         const button2 = document.createElement("button");
         button2.type = "button";
-        button2.value = option6.value;
+        button2.value = option7.value;
         button2.disabled = setting.disabled === true;
-        button2.title = option6.ariaLabel ?? option6.label;
-        button2.ariaLabel = option6.ariaLabel ?? option6.label;
-        button2.ariaPressed = String(option6.value === setting.defaultValue);
-        button2.append(...renderOptionContent(setting.display, option6.display, option6.icon ?? setting.icon, option6.label));
+        button2.title = option7.ariaLabel ?? option7.label;
+        button2.ariaLabel = option7.ariaLabel ?? option7.label;
+        button2.ariaPressed = String(option7.value === setting.defaultValue);
+        button2.append(...renderOptionContent(setting.display, option7.display, option7.icon ?? setting.icon, option7.label));
         button2.addEventListener("click", () => {
           if (setting.disabled) {
             return;
@@ -41329,7 +42355,7 @@ input {
           for (const item of Array.from(control3.querySelectorAll("button"))) {
             item.ariaPressed = String(item === button2);
           }
-          this.emitSettingChange(setting, option6.value);
+          this.emitSettingChange(setting, option7.value);
         });
         control3.append(button2);
       }
@@ -41510,7 +42536,7 @@ input {
       capability.link ? "link" : null,
       capability.code ? "code" : null,
       capability.dynamic ? "dynamic" : null
-    ].filter((option6) => Boolean(option6));
+    ].filter((option7) => Boolean(option7));
     return options2.length > 0 ? options2.join(", ") : "Plain text";
   }
 
@@ -42203,9 +43229,9 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
   function repeatArrayOptions(scopes) {
     const byPath = new Map;
-    for (const option6 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-      if (!byPath.has(option6.path)) {
-        byPath.set(option6.path, option6);
+    for (const option7 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
+      if (!byPath.has(option7.path)) {
+        byPath.set(option7.path, option7);
       }
     }
     return [...byPath.values()];
@@ -42232,7 +43258,7 @@ label {
     if (!normalizedQuery) {
       return options2;
     }
-    return options2.filter((option6) => [option6.path, option6.label, option6.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
+    return options2.filter((option7) => [option7.path, option7.label, option7.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
     const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
@@ -42241,9 +43267,9 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatPickerDetails.ts
-  function renderRepeatDetails(container, option6) {
+  function renderRepeatDetails(container, option7) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to inspect item fields.";
@@ -42253,11 +43279,11 @@ label {
     const heading4 = document.createElement("div");
     heading4.className = "details-eyebrow";
     heading4.textContent = "Response fields";
-    container.append(heading4, renderFields2(option6.fields));
+    container.append(heading4, renderFields2(option7.fields));
   }
-  function renderRepeatBinding(container, option6, onSelect) {
+  function renderRepeatBinding(container, option7, onSelect) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to configure repeat.";
@@ -42272,7 +43298,7 @@ label {
     const pathLabel2 = document.createElement("span");
     pathLabel2.textContent = "Array";
     const pathValue = document.createElement("strong");
-    pathValue.textContent = option6.path;
+    pathValue.textContent = option7.path;
     path.append(pathLabel2, pathValue);
     const config = document.createElement("section");
     config.className = "binding-config";
@@ -42280,14 +43306,14 @@ label {
     label3.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "alias";
-    alias.value = defaultRepeatAlias(option6.path);
+    alias.value = defaultRepeatAlias(option7.path);
     label3.append(alias);
     config.append(label3);
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Use repeat";
-    insert.addEventListener("click", () => onSelect(option6, alias.value));
+    insert.addEventListener("click", () => onSelect(option7, alias.value));
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
     scroll.append(heading4, path, config);
@@ -42371,7 +43397,7 @@ label {
     _render() {
       this._renderOptions();
       renderRepeatDetails(this.details, this._activeOption);
-      renderRepeatBinding(this.binding, this._activeOption, (option6, alias) => this._select(option6, alias));
+      renderRepeatBinding(this.binding, this._activeOption, (option7, alias) => this._select(option7, alias));
     }
     _renderOptions() {
       this.arrays.replaceChildren();
@@ -42387,27 +43413,27 @@ label {
       if (!this._activeOption || !options2.includes(this._activeOption)) {
         this._activeOption = options2[0] ?? null;
       }
-      for (const option6 of options2) {
+      for (const option7 of options2) {
         const button2 = document.createElement("button");
         button2.className = "array";
         button2.type = "button";
-        button2.ariaSelected = String(option6 === this._activeOption);
+        button2.ariaSelected = String(option7 === this._activeOption);
         const name = document.createElement("span");
         name.className = "name";
-        name.textContent = option6.path;
+        name.textContent = option7.path;
         const scope = document.createElement("span");
         scope.className = "scope";
-        scope.textContent = option6.scopeLabel;
+        scope.textContent = option7.scopeLabel;
         button2.append(name, scope);
         button2.addEventListener("click", () => {
-          this._activeOption = option6;
+          this._activeOption = option7;
           this._render();
         });
-        button2.addEventListener("dblclick", () => this._select(option6));
+        button2.addEventListener("dblclick", () => this._select(option7));
         this.arrays.append(button2);
       }
     }
-    _select(option6, alias = defaultRepeatAlias(option6.path)) {
+    _select(option7, alias = defaultRepeatAlias(option7.path)) {
       const cleanAlias = alias.trim();
       if (!cleanAlias) {
         return;
@@ -42416,7 +43442,7 @@ label {
         bubbles: true,
         composed: true,
         detail: {
-          path: option6.path,
+          path: option7.path,
           alias: cleanAlias
         }
       }));

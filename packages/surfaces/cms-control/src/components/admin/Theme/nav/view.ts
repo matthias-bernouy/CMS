@@ -4,27 +4,57 @@ import type { ThemeSelection } from "../events";
 import { isIntegrationSource } from "../ownership";
 import { createCategoryIcon, createSourceIcon } from "./icons";
 
+const CORE_SOURCE_LABELS: Readonly<Record<string, string>> = {
+    colors: "Colors",
+    typography: "Typography",
+    spacing: "Spacing & layout",
+    shape: "Shape & effects",
+};
+
+const IMPORTED_SOURCE_IDS = new Set(["custom", "existing-css", "other", "imported-css"]);
+
 export function renderThemeNav(root: ShadowRoot | null, sources: ThemeSource[], selection: ThemeSelection): void {
     const menu = root?.querySelector("w13c-lateral-menu");
     if (!menu) {
         return;
     }
     menu.querySelectorAll("[data-generated]").forEach((item) => item.remove());
+    renderSourceGroup(
+        menu,
+        "site",
+        "Site",
+        sources.filter((source) => !isIntegrationSource(source)),
+        selection,
+    );
+    renderSourceGroup(menu, "integrations", "Integrations", sources.filter(isIntegrationSource), selection);
+}
+
+function renderSourceGroup(
+    menu: Element,
+    groupId: string,
+    groupLabel: string,
+    sources: ThemeSource[],
+    selection: ThemeSelection,
+): void {
+    if (sources.length === 0) {
+        return;
+    }
+    const heading = document.createElement("span");
+    heading.className = "menu-section theme-group";
+    heading.dataset.generated = "true";
+    heading.dataset.themeGroup = groupId;
+    heading.textContent = groupLabel;
+    menu.append(heading);
+
     for (const source of sources) {
         const sourceItem = document.createElement("w13c-lateral-menu-item");
         sourceItem.dataset.generated = "true";
         sourceItem.dataset.source = source.id;
         sourceItem.toggleAttribute("active", source.id === selection.sourceId);
-        sourceItem.append(createSourceIcon(source.id), document.createTextNode(source.label));
-        if (isIntegrationSource(source)) {
-            const badge = document.createElement("span");
-            badge.className = "integration-badge";
-            badge.textContent = "Integration";
-            sourceItem.append(badge);
-        }
+        sourceItem.append(createSourceIcon(source.id), document.createTextNode(sourceNavigationLabel(source)));
         menu.append(sourceItem);
 
-        if (source.id !== selection.sourceId) {
+        if (source.id !== selection.sourceId || isIntegrationSource(source) || source.categories.length < 2) {
             continue;
         }
         for (const category of source.categories) {
@@ -38,6 +68,19 @@ export function renderThemeNav(root: ShadowRoot | null, sources: ThemeSource[], 
             menu.append(categoryItem);
         }
     }
+}
+
+export function sourceNavigationLabel(source: ThemeSource): string {
+    if (isIntegrationSource(source)) {
+        return source.label;
+    }
+    if (IMPORTED_SOURCE_IDS.has(source.id)) {
+        return "Imported CSS";
+    }
+    if (source.owner?.kind === "site") {
+        return "Site tokens";
+    }
+    return CORE_SOURCE_LABELS[source.id] ?? source.label;
 }
 
 export function selectionFromUrl(sources: ThemeSource[]): ThemeSelection {

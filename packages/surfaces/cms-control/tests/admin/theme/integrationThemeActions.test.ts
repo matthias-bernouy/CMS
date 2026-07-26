@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import type { ThemeSettings } from "@bernouy/cms-content";
-import { handleThemeInput } from "cms-control/components/admin/Theme/editor/inputEvents";
+import { defaultThemeSettings, type ThemeSettings } from "@bernouy/cms-content";
+import { handleThemeInput } from "cms-control/components/admin/Theme/editor/controller/inputEvents";
+import { themeSettingsFromCss } from "cms-control/components/admin/Theme/editor/importCss";
 import { addCategory, addToken, resetIntegrationTokenValue } from "cms-control/components/admin/Theme/editor/model";
 
 describe("integration theme editor actions", () => {
@@ -37,6 +38,31 @@ describe("integration theme editor actions", () => {
         expect(
             resetIntegrationTokenValue(settings, selection, "default", "light", "integration-demo-accent"),
         ).toBeFalse();
+    });
+
+    test("allows catalogue creation only inside the dedicated site source", () => {
+        const settings = defaultThemeSettings();
+        const colors = { sourceId: "colors", categoryId: "brand" };
+        const colorCount = settings.sources[0]!.categories[0]!.tokens.length;
+
+        expect(addCategory(settings, colors)).toBeUndefined();
+        addToken(settings, colors);
+        expect(settings.sources[0]!.categories[0]!.tokens).toHaveLength(colorCount);
+
+        const site = { sourceId: "site-tokens", categoryId: "general" };
+        const added = addCategory(settings, site)!;
+        addToken(settings, { sourceId: added.sourceId, categoryId: added.category.id });
+
+        expect(added.category.tokens).toHaveLength(1);
+        expect(added.category.tokens[0]).toMatchObject({ type: "value", description: "Custom design token" });
+    });
+
+    test("keeps fallback CSS imports aligned with referenced token types", () => {
+        const settings = themeSettingsFromCss(":root { --space-md: 1rem; --custom-gap: var(--space-md); }");
+        const tokens = settings.sources.flatMap((source) => source.categories.flatMap((category) => category.tokens));
+
+        expect(tokens.find((token) => token.id === "space-md")?.type).toBe("length");
+        expect(tokens.find((token) => token.id === "custom-gap")?.type).toBe("length");
     });
 });
 

@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { ThemeSettings } from "@bernouy/cms-content";
 import { renderThemeEditor } from "cms-control/components/admin/Theme/editor/view";
-import { renderThemeNav } from "cms-control/components/admin/Theme/nav/view";
 
 describe("integration theme catalogue", () => {
     test("shows provenance while keeping only theme values editable", () => {
@@ -14,13 +13,16 @@ describe("integration theme catalogue", () => {
             mode: "light",
             siteName: "Portfolio",
             canPersist: true,
+            tokenFilter: "all",
+            tokenSearch: "",
         });
 
         expect(root.querySelector<HTMLElement>("[data-source-provenance]")!.hidden).toBeFalse();
         expect(root.querySelector("[data-source-owner-label]")?.textContent).toContain("photo-albums");
+        expect(root.querySelector("[data-source-owner-kind]")?.textContent).toBe("Integration");
         expect(root.querySelector<HTMLElement>("[data-add-theme-category]")!.hidden).toBeTrue();
         expect(root.querySelector<HTMLElement>("[data-add-element]")!.hidden).toBeTrue();
-        expect(root.querySelector<HTMLInputElement>("[data-category-label-input]")!.readOnly).toBeTrue();
+        expect(root.querySelector<HTMLElement>("[data-category-fields]")!.hidden).toBeTrue();
         expect(root.querySelector("[data-token-label]")).toBeNull();
         expect(root.querySelector(".token-label-text")?.textContent).toBe("Gallery font");
 
@@ -43,6 +45,8 @@ describe("integration theme catalogue", () => {
             mode: "dark",
             siteName: "Portfolio",
             canPersist: true,
+            tokenFilter: "all",
+            tokenSearch: "",
         });
         expect(
             root.querySelector<HTMLInputElement>("[data-token-type='font-family'] [data-value-control]")!.value,
@@ -52,21 +56,6 @@ describe("integration theme catalogue", () => {
                 "[data-token-id='integration-photo-albums-accent'] [data-value-control]",
             )!.value,
         ).toBe("#336699");
-    });
-
-    test("marks integration-owned sources in the navigation", () => {
-        const host = document.createElement("div");
-        const root = host.attachShadow({ mode: "open" });
-        root.innerHTML = "<w13c-lateral-menu></w13c-lateral-menu>";
-        const settings = integrationTheme();
-
-        renderThemeNav(root, settings.sources, {
-            sourceId: "integration-photo-albums",
-            categoryId: "gallery",
-        });
-
-        expect(root.querySelector(".integration-badge")?.textContent).toBe("Integration");
-        expect(root.querySelector("[data-category='gallery']")?.textContent).toContain("Gallery");
     });
 });
 
@@ -79,11 +68,11 @@ function editorRoot(): ShadowRoot {
         <button data-add-theme-category></button><button data-add-element></button>
         <button data-save-theme></button><button data-activate-theme></button>
         <input data-theme-name-input><span data-theme-status></span><span data-site-name></span>
-        <div data-source-provenance hidden><span data-source-owner-label></span></div>
+        <div data-source-provenance><span data-source-owner-kind></span><span data-source-owner-label></span><span data-source-owner-note></span></div>
         <div data-mode-switch><button data-mode="light"></button><button data-mode="dark"></button></div>
-        <section data-category-section></section><div data-groups></div>
-        <input data-category-label-input><textarea data-category-description-input></textarea>
-        <span data-category-lock-note hidden></span><span data-category-description></span>
+        <section data-category-section></section>
+        <input data-token-search><div data-token-filters></div><div data-groups></div>
+        <div data-category-fields><input data-category-label-input><input data-category-description-input></div>
     `;
     return root;
 }

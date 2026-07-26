@@ -1,8 +1,8 @@
-import type { ThemeSettings } from "@bernouy/cms-content";
+import type { ThemeSettings, ThemeTokenType } from "@bernouy/cms-content";
 
-import { dispatchThemeCategoryUpdated, type ThemeSelection } from "../events";
-import { isIntegrationSource } from "../ownership";
-import { currentCategory, currentSource, currentTheme, resetIntegrationTokenValue } from "./model";
+import { dispatchThemeCategoryUpdated, type ThemeSelection } from "../../events";
+import { isSiteTokenSource } from "../../ownership";
+import { currentCategory, currentSource, currentTheme, resetIntegrationTokenValue } from "../model";
 
 export type ThemeInputContext = {
     root: ShadowRoot;
@@ -24,7 +24,7 @@ export function handleThemeInput(event: Event, context: ThemeInputContext): void
     }
     const category = currentCategory(context.settings, context.selection);
     const source = currentSource(context.settings, context.selection);
-    const catalogEditable = !isIntegrationSource(source);
+    const catalogEditable = isSiteTokenSource(source);
     if (input.matches("[data-category-label-input]") && category && source && catalogEditable) {
         category.label = input.value;
         query<HTMLElement>(context.root, "[data-category-title]").textContent = category.label;
@@ -35,17 +35,25 @@ export function handleThemeInput(event: Event, context: ThemeInputContext): void
     if (input.matches("[data-category-description-input]") && category && source && catalogEditable) {
         category.description = input.value;
         query<HTMLElement>(context.root, "[data-category-section]").setAttribute("description", category.description);
-        query<HTMLElement>(context.root, "[data-category-description]").textContent =
-            `${source.label} · ${category.description}`;
         dispatchThemeCategoryUpdated({ sourceId: source.id, category });
         return;
     }
     if (input.matches("[data-token-label]") && catalogEditable) {
-        const tokenId = input.closest<HTMLElement>("[data-token-id]")?.dataset.tokenId;
-        const token = category?.tokens.find((item) => item.id === tokenId);
-        if (token) {
+        updateToken(context, input, (token) => {
             token.label = input.value;
-        }
+        });
+        return;
+    }
+    if (input.matches("[data-token-description]") && catalogEditable) {
+        updateToken(context, input, (token) => {
+            token.description = input.value;
+        });
+        return;
+    }
+    if (input.matches("[data-token-type-control]") && catalogEditable && isTokenType(input.value)) {
+        updateToken(context, input, (token) => {
+            token.type = input.value as ThemeTokenType;
+        });
         return;
     }
     if (!input.matches("[data-value-control]")) {
@@ -60,7 +68,7 @@ export function handleThemeInput(event: Event, context: ThemeInputContext): void
     if (input.type === "color") {
         const text = input
             .closest<HTMLElement>("[data-token-id]")
-            ?.querySelector<HTMLInputElement>('input[type="text"]');
+            ?.querySelector<HTMLInputElement>('input.value-control[type="text"]');
         if (text) {
             text.value = input.value;
         }
@@ -81,22 +89,32 @@ export function resetThemeToken(
 
 export function clickAction(event: Event): "theme" | "category" | "token" | "save" | "activate" | undefined {
     const target = event.target as HTMLElement | null;
-    if (target?.closest("[data-add-theme]")) {
-        return "theme";
+    const actions = ["theme", "category", "token", "save", "activate"] as const;
+    const selectors = [
+        "[data-add-theme]",
+        "[data-add-theme-category]",
+        "[data-add-element]",
+        "[data-save-theme]",
+        "[data-activate-theme]",
+    ];
+    return actions.find((_, index) => target?.closest(selectors[index]!));
+}
+
+function updateToken(
+    context: ThemeInputContext,
+    input: HTMLInputElement,
+    update: (token: ThemeSettings["sources"][number]["categories"][number]["tokens"][number]) => void,
+): void {
+    const tokenId = input.closest<HTMLElement>("[data-token-id]")?.dataset.tokenId;
+    const source = currentSource(context.settings, context.selection);
+    const token = source?.categories.flatMap((item) => item.tokens).find((item) => item.id === tokenId);
+    if (token) {
+        update(token);
     }
-    if (target?.closest("[data-add-theme-category]")) {
-        return "category";
-    }
-    if (target?.closest("[data-add-element]")) {
-        return "token";
-    }
-    if (target?.closest("[data-save-theme]")) {
-        return "save";
-    }
-    if (target?.closest("[data-activate-theme]")) {
-        return "activate";
-    }
-    return undefined;
+}
+
+function isTokenType(value: string): value is ThemeTokenType {
+    return ["color", "font-family", "length", "number", "shadow", "value"].includes(value);
 }
 
 function query<T extends Element>(root: ShadowRoot, selector: string): T {
