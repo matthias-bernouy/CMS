@@ -128,7 +128,11 @@ export class FsIntegrationPackageCache {
     }
 
     private observe(event: IntegrationPackageCacheEvent): void {
-        this.config.observe?.(event);
+        try {
+            this.config.observe?.(event);
+        } catch {
+            // Telemetry must never change cache correctness or package availability.
+        }
     }
 
     private now(): number {

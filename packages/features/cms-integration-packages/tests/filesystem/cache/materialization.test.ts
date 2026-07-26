@@ -80,6 +80,20 @@ describe("filesystem integration package cache", () => {
         expect(events).toEqual(["hit"]);
     });
 
+    test("keeps observer failures outside materialization and cache hits", async () => {
+        const cacheRoot = await temporaryCacheRoot(cleanup);
+        const input = await resolvedPackage();
+        const cache = new FsIntegrationPackageCache({
+            root: cacheRoot,
+            observe: () => {
+                throw new Error("telemetry unavailable");
+            },
+        });
+
+        expect((await cache.materialize(input)).digest).toBe(input.digest);
+        expect((await cache.get(input.digest))?.digest).toBe(input.digest);
+    });
+
     test("recovers the final read-only mode after an interrupted publication", async () => {
         const cacheRoot = await temporaryCacheRoot(cleanup);
         const input = await resolvedPackage();
