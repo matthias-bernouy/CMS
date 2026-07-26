@@ -100,21 +100,31 @@ preceding CDN. `direct` is suitable only when callers connect without a proxy.
 
 ## Empty-volume bootstrap policy
 
-The default image never copies official packages into the registry. A fresh
-bind mount therefore starts as a valid empty catalog. Official packages are
-imported explicitly through the same validated publication workflow as any
-other package.
+On first startup only, the default image builds all 14 checked-in official
+packages with the shared canonical package builder and prevalidates the entire
+publication plan before writing to a completely empty registry bind mount. A
+separate, explicitly privileged bootstrap publisher admits the nine legacy SQL
+packages that predate `compatibility.schema`; the normal management publisher
+remains strict and cannot use that exemption.
 
-The runtime's bootstrap port invokes an injected importer only when the
-registry root has no entries at all. Any existing index, version, journal,
-staging directory, or marker makes bootstrap a no-op. After initialization:
+After preflight, the runtime durably creates
+`.official-bootstrap-in-progress`, publishes the prepared packages through the
+normal immutable index and snapshot machinery, and removes the marker only
+after every expected kind, version, and digest was committed. If publication
+is interrupted, the marker remains and every later startup fails closed instead
+of serving a partial seed. Do not remove only the marker. Archive the partial
+fresh-volume contents for diagnosis, replace them with a new empty mode-0750
+registry directory owned by UID/GID 1000, and restart the same immutable image.
+
+Any non-empty registry without that marker is already initialized and is left
+untouched by bootstrap. After initialization:
 
 - image upgrades never reconcile or mutate registry contents;
 - `docker compose pull` cannot publish a version;
 - official updates go through authenticated, locked, auditable publication.
 
-This rule deliberately makes the registry volume, not the image tag, the source
-of truth.
+This rule deliberately makes the registry volume, not later image contents, the
+source of truth. Pulling a newer image does not merge newly bundled resources.
 
 ### Publishing the official catalog
 
@@ -150,8 +160,9 @@ runner labeled `repository-management`, which must have private network access
 to the management listener. Store `REPOSITORY_MANAGEMENT_TOKEN` in the selected
 GitHub deployment environment; the workflow writes it to an ephemeral mode-0600
 file and removes it after the run. Image builds and pulls never invoke this
-workflow automatically, so initial seed and every later official update remain
-explicit, reviewable publication operations.
+workflow automatically. The first empty-volume seed is performed locally by
+the repository runtime; every later official update remains an explicit,
+reviewable publication operation.
 
 ## Probes and shutdown
 

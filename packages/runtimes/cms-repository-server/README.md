@@ -52,5 +52,8 @@ separate, consumer-owned stores with a different recovery policy; see the CMS
 image backup documentation. Never merge a cache backup into the registry or
 restore registry files selectively from a cache.
 
-The image deployment and empty-volume bootstrap policy are documented in
-`infra/images/cms-repository/README.md`.
+On a completely empty registry root, production prevalidates and publishes the
+14 checked-in official packages before starting either listener. A durable
+in-progress marker makes an interrupted seed fail closed on every later start;
+an initialized volume is never reconciled with a newer image. The operator
+procedure is documented in `infra/images/cms-repository/README.md`.

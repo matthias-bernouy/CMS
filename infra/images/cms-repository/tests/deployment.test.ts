@@ -90,7 +90,10 @@ describe("repository Compose isolation", () => {
 
 describe("registry lifecycle documentation", () => {
     test("documents empty-only bootstrap and image-upgrade immutability", () => {
-        expect(readmeSource).toMatch(/only when the\s+registry root has no entries at all/);
+        expect(readmeSource).toMatch(/all 14 checked-in official\s+packages/);
+        expect(readmeSource).toContain(".official-bootstrap-in-progress");
+        expect(readmeSource).toContain("every later startup fails closed");
+        expect(readmeSource).toContain("Any non-empty registry without that marker is already initialized");
         expect(readmeSource).toContain("image upgrades never reconcile or mutate registry contents");
         expect(readmeSource).toContain("Public reads have no token");
         expect(readmeSource).toContain("last valid snapshot stays available");
