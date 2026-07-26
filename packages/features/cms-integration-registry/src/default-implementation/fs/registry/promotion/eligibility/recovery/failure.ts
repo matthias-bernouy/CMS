@@ -1,41 +1,41 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
-import type { IntegrationRegistryRecoveryDiagnostic } from "../../../../../interfaces/recovery";
-import { readJsonFile, replaceCanonicalJson } from "../../persistence/canonicalFile";
-import type { FsIntegrationRegistryLayout } from "../../persistence/layout";
-import { quarantineRegistryPath } from "../../recovery/quarantine";
-import { readStablePromotionRecord } from "../document";
-import { sameIntegrationRegistryIndex } from "../eligibility/channels";
-import { stablePromotionPaths, stablePromotionStoragePaths } from "../layout";
-import type { StablePromotionJournalInventoryEntry } from "./inventory";
+import type { IntegrationRegistryRecoveryDiagnostic } from "../../../../../../interfaces/recovery";
+import { readJsonFile, replaceCanonicalJson } from "../../../persistence/canonicalFile";
+import type { FsIntegrationRegistryLayout } from "../../../persistence/layout";
+import { quarantineRegistryPath } from "../../../recovery/quarantine";
+import { sameIntegrationRegistryIndex } from "../channels";
+import { readVersionEligibilityRecord } from "../document";
+import { versionEligibilityPaths, versionEligibilityStoragePaths } from "../layout";
+import type { VersionEligibilityJournalInventoryEntry } from "./inventory";
 
 const MAX_INDEX_DOCUMENT_BYTES = 2 * 1_024 * 1_024;
 
-export async function quarantineFailedStablePromotion(
-    entry: StablePromotionJournalInventoryEntry,
+export async function quarantineFailedVersionEligibility(
+    entry: VersionEligibilityJournalInventoryEntry,
     layout: FsIntegrationRegistryLayout,
     integrationRoot: string,
     cause: unknown,
 ): Promise<IntegrationRegistryRecoveryDiagnostic> {
     const journal = entry.journal;
     if (!journal) {
-        await quarantineRegistryPath(layout, entry.operationId, "stable-promotion-journal", entry.path);
+        await quarantineRegistryPath(layout, entry.operationId, "version-eligibility-journal", entry.path);
         return diagnostic(entry, cause);
     }
-    const paths = stablePromotionPaths(
-        stablePromotionStoragePaths(integrationRoot),
+    const paths = versionEligibilityPaths(
+        versionEligibilityStoragePaths(integrationRoot),
         journal.operationId,
         journal.record.id,
     );
     let recordMatches = false;
     try {
-        const existing = await readStablePromotionRecord(paths.record);
+        const existing = await readVersionEligibilityRecord(paths.record);
         recordMatches = sameJson(existing, journal.record);
         if (existing && !recordMatches) {
-            await quarantineRegistryPath(layout, journal.operationId, "stable-promotion-record", paths.record);
+            await quarantineRegistryPath(layout, journal.operationId, "version-eligibility-record", paths.record);
         }
     } catch {
-        await quarantineRegistryPath(layout, journal.operationId, "stable-promotion-record", paths.record);
+        await quarantineRegistryPath(layout, journal.operationId, "version-eligibility-record", paths.record);
     }
     try {
         const current = await readCurrentIndex(paths.index);
@@ -43,9 +43,9 @@ export async function quarantineFailedStablePromotion(
             await replaceCanonicalJson(paths.index, journal.previousIndex, MAX_INDEX_DOCUMENT_BYTES);
         }
     } catch (error) {
-        cause = new AggregateError([cause, error], "Stable promotion and live index require operator review");
+        cause = new AggregateError([cause, error], "Version eligibility and live index require operator review");
     }
-    await quarantineRegistryPath(layout, journal.operationId, "stable-promotion-journal", entry.path);
+    await quarantineRegistryPath(layout, journal.operationId, "version-eligibility-journal", entry.path);
     return diagnostic(entry, cause, journal.record.kind, journal.record.version);
 }
 
@@ -66,15 +66,15 @@ function sameJson(left: unknown, right: unknown): boolean {
 }
 
 function diagnostic(
-    entry: StablePromotionJournalInventoryEntry,
+    entry: VersionEligibilityJournalInventoryEntry,
     cause: unknown,
     kind?: string,
     version?: string,
 ): IntegrationRegistryRecoveryDiagnostic {
     return {
-        code: "stable-promotion-quarantined",
+        code: "version-eligibility-quarantined",
         source: entry.path,
-        message: `Quarantined incomplete stable promotion: ${errorMessage(cause)}`,
+        message: `Quarantined incomplete version eligibility mutation: ${errorMessage(cause)}`,
         operationId: entry.operationId,
         ...(kind ? { kind } : {}),
         ...(version ? { version } : {}),

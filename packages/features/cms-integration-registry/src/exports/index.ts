@@ -82,6 +82,12 @@ export type {
     IntegrationRegistryStablePromotionRecord,
     IntegrationRegistryStablePromotionRequest,
     IntegrationRegistryStablePromotionResult,
+    IntegrationRegistryVersionBlockRequest,
+    IntegrationRegistryVersionEligibilityDecisionReference,
+    IntegrationRegistryVersionEligibilityManager,
+    IntegrationRegistryVersionEligibilityRecord,
+    IntegrationRegistryVersionEligibilityResult,
+    IntegrationRegistryVersionInadmissibleRequest,
 } from "../interfaces/promotion";
 export type {
     AppendReviewedSchemaBaselineRequest,
@@ -126,6 +132,14 @@ export {
     IntegrationRegistryStablePromotionStaleReportError,
     IntegrationRegistryStablePromotionValidationError,
 } from "../core/promotion/errors";
+export {
+    IntegrationRegistryVersionEligibilityConfirmationError,
+    IntegrationRegistryVersionEligibilityConflictError,
+    IntegrationRegistryVersionEligibilityIneligibleError,
+    IntegrationRegistryVersionEligibilityNotFoundError,
+    IntegrationRegistryVersionEligibilityStaleDecisionError,
+    IntegrationRegistryVersionEligibilityValidationError,
+} from "../core/promotion/eligibilityErrors";
 export {
     IntegrationCompatibilityHistoryCursorError,
     IntegrationCompatibilityHistoryNotFoundError,

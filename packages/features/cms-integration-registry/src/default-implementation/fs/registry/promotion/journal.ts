@@ -3,7 +3,7 @@ import { parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
 import type { IntegrationRegistryStablePromotionRecord } from "../../../../interfaces/promotion";
 import { readCanonicalJsonFile, replaceCanonicalJson, writeCanonicalJsonNoReplace } from "../persistence/canonicalFile";
 import { parseStablePromotionRecord } from "./document";
-import { nextStableIntegrationRegistryIndex, sameIntegrationRegistryIndex } from "./index";
+import { nextStableIntegrationRegistryIndex, sameIntegrationRegistryIndex } from "./eligibility/channels";
 
 export const LEGACY_INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_SCHEMA =
     "cms.integration.registry.stable-promotion-journal.v1" as const;

@@ -65,3 +65,62 @@ export interface IntegrationRegistryStablePromoter {
         request: IntegrationRegistryStablePromotionRequest,
     ): Promise<IntegrationRegistryStablePromotionResult>;
 }
+
+export type IntegrationRegistryVersionEligibilityDecisionReference = Readonly<{
+    revisionId: string;
+    digest: string;
+}>;
+
+export type IntegrationRegistryVersionBlockRequest = Readonly<{
+    kind: string;
+    version: string;
+    currentDecision: IntegrationRegistryVersionEligibilityDecisionReference;
+    actor: string;
+    reason: string;
+    confirmation: Readonly<{
+        action: "block";
+        kind: string;
+        version: string;
+        decisionRevisionId: string;
+        decisionDigest: string;
+    }>;
+}>;
+
+export type IntegrationRegistryVersionInadmissibleRequest = Readonly<{
+    kind: string;
+    version: string;
+    currentDecision: IntegrationRegistryVersionEligibilityDecisionReference;
+    actor: string;
+    reason: string;
+}>;
+
+export type IntegrationRegistryVersionEligibilityRecord = Readonly<{
+    schema: "cms.integration.registry.version-eligibility.v1";
+    id: string;
+    operationId: string;
+    action: "block" | "mark-inadmissible";
+    kind: string;
+    version: string;
+    packageDigest: string;
+    decision: IntegrationRegistryVersionEligibilityDecisionReference;
+    previousStatus?: "blocked" | "inadmissible" | "unverified";
+    nextStatus: "blocked" | "inadmissible";
+    previousChannels: Readonly<{ stable?: string; latest?: string }>;
+    nextChannels: Readonly<{ stable?: string; latest?: string }>;
+    provenance: Readonly<{ actor: string; reason: string }>;
+    confirmation?: IntegrationRegistryVersionBlockRequest["confirmation"];
+    createdAt: string;
+}>;
+
+export type IntegrationRegistryVersionEligibilityResult = Readonly<{
+    operationId: string;
+    record: IntegrationRegistryVersionEligibilityRecord;
+    snapshot: IntegrationRegistryCatalogSnapshot;
+}>;
+
+export interface IntegrationRegistryVersionEligibilityManager {
+    blockVersion(request: IntegrationRegistryVersionBlockRequest): Promise<IntegrationRegistryVersionEligibilityResult>;
+    markVersionInadmissible(
+        request: IntegrationRegistryVersionInadmissibleRequest,
+    ): Promise<IntegrationRegistryVersionEligibilityResult>;
+}

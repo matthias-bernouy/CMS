@@ -14,6 +14,7 @@ import { ensureFsIntegrationRegistryLayout, type FsIntegrationRegistryLayout } f
 import { quarantineRegistryPath } from "./quarantine";
 import { quarantineFailedPublication, replayPublicationJournal } from "./replay/index";
 import { recoverStablePromotions } from "../promotion/recovery/index";
+import { recoverVersionEligibilityMutations } from "../promotion/eligibility/recovery";
 
 export type FsIntegrationRegistryRecovererConfig = Readonly<{
     root: string;
@@ -60,6 +61,16 @@ export async function recoverFsIntegrationRegistry(
             ...(config.releaseDecisions ? { releaseDecisions: config.releaseDecisions } : {}),
         })),
     );
+    if (config.releaseDecisions) {
+        diagnostics.push(
+            ...(await recoverVersionEligibilityMutations({
+                layout,
+                snapshots: config.snapshots,
+                packageLimits: config.packageLimits,
+                decisions: config.releaseDecisions,
+            })),
+        );
+    }
     snapshot = config.snapshots.current();
     await quarantineOrphanVersions(layout, snapshot, diagnostics);
     snapshot = await buildFsIntegrationRegistryCatalogSnapshot({

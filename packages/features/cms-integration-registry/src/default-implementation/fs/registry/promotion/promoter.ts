@@ -14,7 +14,7 @@ import type {
 } from "../../../../interfaces/promotion";
 import { ensureFsIntegrationRegistryLayout } from "../persistence/layout";
 import { parseStablePromotionRecord } from "./document";
-import { nextStableIntegrationRegistryIndex } from "./index";
+import { nextStableIntegrationRegistryIndex } from "./eligibility/channels";
 import { ensureStablePromotionPaths } from "./layout";
 import { commitFsIntegrationRegistryStablePromotion } from "./transaction/commit";
 import type { FsIntegrationRegistryStablePromoterConfig } from "./types";

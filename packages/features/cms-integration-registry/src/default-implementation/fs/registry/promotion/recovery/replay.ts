@@ -11,7 +11,7 @@ import { readFsIntegrationCompatibilityReportCollection } from "../../history/st
 import { readJsonFile, removeFileIfExists, replaceCanonicalJson } from "../../persistence/canonicalFile";
 import type { FsIntegrationRegistryLayout } from "../../persistence/layout";
 import { readStablePromotionRecord, writeStablePromotionRecord } from "../document";
-import { sameIntegrationRegistryIndex } from "../index";
+import { sameIntegrationRegistryIndex } from "../eligibility/channels";
 import {
     stablePromotionPhaseAtLeast,
     type FsIntegrationRegistryStablePromotionJournal,

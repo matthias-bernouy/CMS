@@ -120,6 +120,25 @@ export {
     type FsIntegrationRegistryStablePromotionBoundary,
 } from "../default-implementation/fs/registry/promotion/types";
 export {
+    FsIntegrationRegistryVersionEligibilityManager,
+    type FsIntegrationRegistryVersionEligibilityManagerConfig,
+} from "../default-implementation/fs/registry/promotion/eligibility";
+export {
+    INTEGRATION_REGISTRY_VERSION_ELIGIBILITY_RECORD_SCHEMA,
+    MAX_INTEGRATION_REGISTRY_VERSION_ELIGIBILITY_DOCUMENT_BYTES,
+    readVersionEligibilityRecord,
+} from "../default-implementation/fs/registry/promotion/eligibility/document";
+export {
+    FS_INTEGRATION_REGISTRY_VERSION_ELIGIBILITY_PHASES,
+    type FsIntegrationRegistryVersionEligibilityPhase,
+} from "../default-implementation/fs/registry/promotion/eligibility/journal";
+export {
+    FsIntegrationRegistryVersionEligibilityRecoveryRequiredError,
+    FsIntegrationRegistryVersionEligibilitySimulatedCrashError,
+    type FsIntegrationRegistryVersionEligibilityBoundary,
+} from "../default-implementation/fs/registry/promotion/eligibility/types";
+export { recoverVersionEligibilityMutations } from "../default-implementation/fs/registry/promotion/eligibility/recovery";
+export {
     FsIntegrationRegistryCandidateStore,
     FsIntegrationRegistryCandidateStoreError,
     garbageCollectFsIntegrationRegistryCandidateObjects,
