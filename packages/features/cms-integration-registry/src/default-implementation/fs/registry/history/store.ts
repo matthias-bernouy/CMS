@@ -1,4 +1,4 @@
-import { lstat, opendir } from "node:fs/promises";
+import { opendir } from "node:fs/promises";
 import { join } from "node:path";
 import {
     IntegrationCompatibilityHistoryNotFoundError,
@@ -16,6 +16,7 @@ import type {
 } from "../../../../interfaces/reportStore";
 import type { IntegrationRegistryMutationCoordinator } from "../../../../interfaces/mutations";
 import { readCompatibilityAdmissionReport } from "../persistence/report";
+import { withVerifiedRegistryDirectory } from "../persistence/ownedDirectory";
 import {
     ensureIntegrationCompatibilityRevisionDirectory,
     integrationCompatibilityHistoryPaths,
@@ -128,34 +129,33 @@ async function loadHistory(location: Parameters<typeof integrationCompatibilityH
 }
 
 async function readRevisionDirectory(path: string): Promise<readonly IntegrationCompatibilityReportRevision[]> {
-    let metadata;
     try {
-        metadata = await lstat(path);
+        return await withVerifiedRegistryDirectory(path, async (descriptorPath) => {
+            const handle = await opendir(descriptorPath);
+            const reports: IntegrationCompatibilityReportRevision[] = [];
+            for await (const entry of handle) {
+                if (!entry.isFile() || entry.isSymbolicLink() || !entry.name.endsWith(".json")) {
+                    throw new Error(`Invalid integration compatibility revision entry: ${join(path, entry.name)}`);
+                }
+                const report = await readCompatibilityRevision(join(descriptorPath, entry.name));
+                if (!report || entry.name !== integrationCompatibilityRevisionFilename(report.id)) {
+                    throw new Error(
+                        `Integration compatibility revision filename does not match its report ID: ${entry.name}`,
+                    );
+                }
+                reports.push(report);
+                if (reports.length > MAX_REVISIONS) {
+                    throw new Error(`Integration compatibility history exceeds ${MAX_REVISIONS} revisions`);
+                }
+            }
+            return reports;
+        });
     } catch (error) {
         if (isNodeError(error) && error.code === "ENOENT") {
             return [];
         }
         throw error;
     }
-    if (metadata.isSymbolicLink() || !metadata.isDirectory()) {
-        throw new Error(`Integration compatibility revision root must be a real directory: ${path}`);
-    }
-    const handle = await opendir(path);
-    const reports: IntegrationCompatibilityReportRevision[] = [];
-    for await (const entry of handle) {
-        if (!entry.isFile() || entry.isSymbolicLink() || !entry.name.endsWith(".json")) {
-            throw new Error(`Invalid integration compatibility revision entry: ${join(path, entry.name)}`);
-        }
-        const report = await readCompatibilityRevision(join(path, entry.name));
-        if (!report || entry.name !== integrationCompatibilityRevisionFilename(report.id)) {
-            throw new Error(`Integration compatibility revision filename does not match its report ID: ${entry.name}`);
-        }
-        reports.push(report);
-        if (reports.length > MAX_REVISIONS) {
-            throw new Error(`Integration compatibility history exceeds ${MAX_REVISIONS} revisions`);
-        }
-    }
-    return reports;
 }
 
 function collection(history: InMemoryIntegrationCompatibilityReportHistory): IntegrationCompatibilityReportCollection {

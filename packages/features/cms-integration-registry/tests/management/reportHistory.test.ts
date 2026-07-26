@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { readdirSync } from "node:fs";
+import { readdirSync, renameSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import {
     IntegrationCompatibilityRevisionConflictError,
@@ -90,6 +90,24 @@ describe("filesystem compatibility report history", () => {
             IntegrationCompatibilityRevisionConflictError,
         );
         expect((await store.get("demo", "1.0.0"))?.reports).toHaveLength(2);
+    });
+
+    test("rejects a revision directory substituted by a symlink", async () => {
+        const fixture = registryFixture();
+        const published = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const store = reportStore(fixture);
+        const revision = fixture.compatibility.evaluateRevision(
+            { candidate: compatibilityPackage(fixture, "demo", "1.0.0"), noBaselineReason: "new-kind" },
+            published.report.id,
+            { actor: "admin:user-1", reason: "Create the revision directory" },
+        );
+        await store.appendRevision(revision);
+        const revisions = revisionsPath(fixture.root);
+        const moved = `${revisions}-moved`;
+        renameSync(revisions, moved);
+        symlinkSync(moved, revisions);
+
+        await expect(store.get("demo", "1.0.0")).rejects.toThrow();
     });
 });
 
