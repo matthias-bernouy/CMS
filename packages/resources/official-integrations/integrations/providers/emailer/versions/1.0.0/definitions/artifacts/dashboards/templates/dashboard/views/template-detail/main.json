@@ -51,6 +51,13 @@
                 "path": "htmlBody",
                 "rows": 12,
                 "required": true
+            },
+            {
+                "id": "textBody",
+                "label": "Plain-text body",
+                "type": "textarea",
+                "path": "textBody",
+                "rows": 8
             }
         ]
     },
@@ -84,6 +91,13 @@
                         "editable": true
                     }
                 ]
+            },
+            {
+                "id": "sampleDataJson",
+                "label": "Sample data (JSON)",
+                "type": "textarea",
+                "path": "sampleDataJson",
+                "rows": 8
             }
         ]
     }

@@ -49,6 +49,9 @@
             },
             "sampleDataJson": {
                 "type": "string"
+            },
+            "metadata": {
+                "type": "object"
             }
         },
         "required": [

@@ -30,7 +30,10 @@
                     "replyTo": "$field.replyTo",
                     "subject": "$field.subject",
                     "htmlBody": "$field.htmlBody",
-                    "requiredTokens": "$field.requiredTokens"
+                    "textBody": "$field.textBody",
+                    "requiredTokens": "$field.requiredTokens",
+                    "sampleDataJson": "$field.sampleDataJson",
+                    "metadata": "$resource.metadata"
                 }
             },
             "after": {

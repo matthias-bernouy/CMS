@@ -173,8 +173,9 @@ describe("public integrations 1.0.0", () => {
             expect(dashboardJson).toContain("newTemplate");
             expect(dashboardJson).toContain("sendTestEmail");
             expect(dashboardJson).not.toContain("messagesTable");
-            expect(dashboardJson).not.toContain("textBody");
-            expect(dashboardJson).not.toContain("sampleDataJson");
+            expect(dashboardJson).toContain("textBody");
+            expect(dashboardJson).toContain("sampleDataJson");
+            expect(dashboardJson).toContain('"metadata":"$resource.metadata"');
             expect(settingsJson).toContain("emailerSettings");
             expect(settingsJson).toContain("getSettings");
             expect(settingsJson).toContain("saveSettings");
