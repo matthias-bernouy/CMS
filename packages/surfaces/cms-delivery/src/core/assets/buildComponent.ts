@@ -25,7 +25,7 @@ export const RESPONSIVE_SOURCE_IMAGE_ROLLOUT_VARIANTS: readonly ResponsiveSource
 ];
 
 export async function generateComponentJsEntry(
-    rollout: ResponsiveSourceImageRollout = { public: false, private: false },
+    rollout: ResponsiveSourceImageRollout = { public: true, private: true },
 ): Promise<CacheEntry> {
     const result = await Bun.build({
         entrypoints: [SOURCE],

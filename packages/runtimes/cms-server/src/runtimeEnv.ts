@@ -115,17 +115,17 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: parseBoolean(
             source.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED,
             "CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED",
-            false,
+            true,
         ),
         CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: parseBoolean(
             source.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED,
             "CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED",
-            false,
+            true,
         ),
         CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: parseBoolean(
             source.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED,
             "CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED",
-            false,
+            true,
         ),
     };
 }

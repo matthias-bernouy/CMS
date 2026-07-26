@@ -46,9 +46,9 @@ export type DeliveryCmsConfig = {
     sourceTelemetry?: SourceRequestTelemetryOptions;
     /** Shared post-authorization interceptor for bounded Source image variants. */
     sourceImageInterceptor?: SourceEndpointInterceptor;
-    /** Enables explicitly public responsive consumers when the interceptor is configured. Defaults to false. */
+    /** Enables explicitly public responsive consumers when the interceptor is configured. Defaults to true. */
     responsivePublicSourceImagesEnabled?: boolean;
-    /** Enables private and unclassified responsive consumers when the interceptor is configured. Defaults to false. */
+    /** Enables private and unclassified responsive consumers when the interceptor is configured. Defaults to true. */
     responsivePrivateSourceImagesEnabled?: boolean;
     /** Runtime-owned allowlist for forwarding the opaque correlation header. */
     sourceTrustedConnectorTarget?: NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>;

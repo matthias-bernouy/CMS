@@ -103,6 +103,10 @@ describe("responsive Source image delivery rollout", () => {
             responsivePublicSourceImagesEnabled: true,
             responsivePrivateSourceImagesEnabled: true,
         });
+        const enabledByDefault = new DeliveryCmsContext({
+            repository: {} as ContentReader,
+            sourceImageInterceptor: async (_endpoint, request, next) => next(request),
+        });
         const withInterceptor = new DeliveryCmsContext({
             repository: {} as ContentReader,
             responsivePublicSourceImagesEnabled: true,
@@ -111,7 +115,14 @@ describe("responsive Source image delivery rollout", () => {
         });
 
         expect(withoutInterceptor.responsiveSourceImageRollout).toEqual({ public: false, private: false });
+        expect(enabledByDefault.responsiveSourceImageRollout).toEqual({ public: true, private: true });
         expect(withInterceptor.responsiveSourceImageRollout).toEqual({ public: true, private: false });
+    });
+
+    test("builds both responsive cohorts when no rollout override is supplied", async () => {
+        expect((await generateComponentJsEntry()).hash).toBe(
+            (await generateComponentJsEntry({ public: true, private: true })).hash,
+        );
     });
 });
 

@@ -84,6 +84,31 @@ describe("editor component runtime endpoint", () => {
         expect(response.headers.get("cache-control")).toBe("no-cache, must-revalidate");
     });
 
+    test("enables both responsive cohorts when an interceptor is configured without overrides", async () => {
+        const cms = {
+            config: {
+                sourceImageInterceptor: async (
+                    _endpoint: unknown,
+                    request: Request,
+                    next: (forwarded: Request) => Promise<Response>,
+                ) => next(request),
+            },
+            cache: {
+                get: () => null,
+                set: () => undefined,
+            },
+        };
+        const response = await editorComponentGet(
+            new Request("http://localhost/cms/api/editor/component.js"),
+            cms as any,
+        );
+        (window as any).p9r = {};
+        window.eval(await response.text());
+
+        expect((window as any).p9r.syncResponsiveSourceImageElement(sourceImage("public"))).toBe(true);
+        expect((window as any).p9r.syncResponsiveSourceImageElement(sourceImage())).toBe(true);
+    });
+
     test("keeps responsive markup dark without a matching Source interceptor", async () => {
         const cms = {
             config: {

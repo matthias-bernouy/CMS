@@ -53,11 +53,11 @@ services:
             SOURCE_TIMING_SAMPLE_RATE:             "${SOURCE_TIMING_SAMPLE_RATE:-0.01}"
             SOURCE_SLOW_REQUEST_THRESHOLD_MS:      "${SOURCE_SLOW_REQUEST_THRESHOLD_MS:-1000}"
 
-            # Independent dark-rollout switches for bounded Source derivatives,
+            # Independent opt-out switches for bounded Source derivatives,
             # explicitly public markup, and private/unclassified markup.
-            CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED:           "${CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED:-false}"
-            CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED:   "${CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED:-false}"
-            CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED:  "${CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED:-false}"
+            CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED:           "${CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED:-true}"
+            CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED:   "${CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED:-true}"
+            CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED:  "${CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED:-true}"
 
             # Required for both the server-wide MongoDB service and an external
             # cluster. The database path is dedicated to this instance; the

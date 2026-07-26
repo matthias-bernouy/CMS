@@ -26,9 +26,9 @@ describe("runtime env validation", () => {
         expect(env.ENDPOINT_PERFORMANCE_ENABLED).toBe(true);
         expect(env.SOURCE_TIMING_SAMPLE_RATE).toBe(0.01);
         expect(env.SOURCE_SLOW_REQUEST_THRESHOLD_MS).toBe(1_000);
-        expect(env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED).toBe(false);
-        expect(env.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED).toBe(false);
-        expect(env.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED).toBe(false);
+        expect(env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED).toBe(true);
+        expect(env.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED).toBe(true);
+        expect(env.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED).toBe(true);
         expect(
             readRuntimeEnv({
                 ...validEnv(),
@@ -106,18 +106,18 @@ describe("runtime env validation", () => {
         );
     });
 
-    test("parses image rollout switches strictly and keeps them dark by default", () => {
+    test("enables image capabilities by default and accepts only explicit boolean overrides", () => {
         expect(
             readRuntimeEnv({
                 ...validEnv(),
-                CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: "true",
-                CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: "true",
-                CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: "true",
+                CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: "false",
+                CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: "false",
+                CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: "false",
             }),
         ).toMatchObject({
-            CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: true,
-            CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: true,
-            CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: true,
+            CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: false,
+            CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: false,
+            CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: false,
         });
         expect(() =>
             readRuntimeEnv({

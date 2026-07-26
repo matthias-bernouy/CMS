@@ -81,8 +81,8 @@ export class DeliveryCmsContext {
     get responsiveSourceImageRollout(): ResponsiveSourceImageRollout {
         const interceptorReady = Boolean(this.config.sourceImageInterceptor);
         return {
-            public: interceptorReady && Boolean(this.config.responsivePublicSourceImagesEnabled),
-            private: interceptorReady && Boolean(this.config.responsivePrivateSourceImagesEnabled),
+            public: interceptorReady && this.config.responsivePublicSourceImagesEnabled !== false,
+            private: interceptorReady && this.config.responsivePrivateSourceImagesEnabled !== false,
         };
     }
 

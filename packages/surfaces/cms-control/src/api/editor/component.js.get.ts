@@ -6,8 +6,8 @@ const SOURCE = join(import.meta.dir, "component.client.ts");
 
 export default async function editorComponentGet(req: Request, cms: ControlCms): Promise<Response> {
     const interceptorReady = Boolean(cms.config.sourceImageInterceptor);
-    const publicEnabled = interceptorReady && Boolean(cms.config.responsivePublicSourceImagesEnabled);
-    const privateEnabled = interceptorReady && Boolean(cms.config.responsivePrivateSourceImagesEnabled);
+    const publicEnabled = interceptorReady && cms.config.responsivePublicSourceImagesEnabled !== false;
+    const privateEnabled = interceptorReady && cms.config.responsivePrivateSourceImagesEnabled !== false;
     const cacheKey = `js:editor-component-runtime:responsive-source-images:public-${
         publicEnabled ? "on" : "off"
     }:private-${privateEnabled ? "on" : "off"}`;
