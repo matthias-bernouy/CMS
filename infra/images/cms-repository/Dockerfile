@@ -34,7 +34,9 @@ RUN bun install --frozen-lockfile --production --omit=peer --filter=@bernouy/cms
 ENV NODE_ENV=production \
     CMS_REPOSITORY_REGISTRY_ROOT=/var/lib/cms-repository/registry \
     CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE=/run/secrets/cms-repository-management-token \
-    CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE=/run/secrets/cms-repository-maintenance-token
+    CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE=/run/secrets/cms-repository-maintenance-token \
+    CMS_REPOSITORY_WORKER_TOKEN_FILE=/run/secrets/cms-repository-worker-token \
+    CMS_REPOSITORY_WORKER_CAPABILITY_KEY_FILE=/run/secrets/cms-repository-worker-capability-key
 
 EXPOSE 3000 3001
 

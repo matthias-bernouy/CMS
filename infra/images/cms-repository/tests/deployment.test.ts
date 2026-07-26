@@ -54,18 +54,23 @@ describe("repository Compose isolation", () => {
         expect(readmeSource).toContain("refuses to create `./registry`");
     });
 
-    test("loads distinct management and maintenance credentials from Docker secret files", () => {
+    test("loads four distinct capability credentials from Docker secret files", () => {
         expect(composeSource).toContain("CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE: /run/secrets/");
         expect(composeSource).toContain("CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE: /run/secrets/");
+        expect(composeSource).toContain("CMS_REPOSITORY_WORKER_TOKEN_FILE: /run/secrets/");
+        expect(composeSource).toContain("CMS_REPOSITORY_WORKER_CAPABILITY_KEY_FILE: /run/secrets/");
         expect(composeSource).toContain("CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE");
         expect(composeSource).toContain("CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE");
+        expect(composeSource).toContain("CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE");
+        expect(composeSource).toContain("CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE");
         expect(composeSource).toContain("mode: 0400");
         expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_MANAGEMENT_TOKEN=/m);
         expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_MAINTENANCE_TOKEN=/m);
+        expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_WORKER_TOKEN=/m);
+        expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_WORKER_CAPABILITY_KEY=/m);
         expect(`${composeSource}\n${envExampleSource}`).not.toMatch(/READ_TOKEN|REPOSITORY_TOKEN=/);
-        expect(readmeSource).toMatch(
-            /runtime refuses to start if management and\s+maintenance secret files contain the same token/,
-        );
+        expect(overrideSource).not.toContain("cms_repository_worker_token");
+        expect(overrideSource).not.toContain("cms_repository_worker_capability_key");
     });
 
     test("does not reject standard internal CMS fetches that have no forwarding chain", () => {
@@ -120,6 +125,8 @@ composeTest("Compose renders with one isolated service and no published ports", 
             CMS_REPOSITORY_IMAGE: "registry.example.test/bernouy/cms-repository:2026.07.26-1",
             CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-token",
             CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-maintenance-token",
+            CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-worker-token",
+            CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE: "/run/operator-secrets/repository-worker-capability-key",
         },
         stdout: "pipe",
         stderr: "pipe",
@@ -135,7 +142,7 @@ composeTest("Compose renders with one isolated service and no published ports", 
                 ports?: unknown;
                 read_only?: boolean;
                 networks?: Record<string, unknown>;
-                secrets?: Array<{ source?: string; target?: string }>;
+                secrets?: Array<{ source?: string; target?: string; uid?: string; gid?: string; mode?: string }>;
                 tmpfs?: string[];
                 volumes?: Array<{ target?: string; bind?: { create_host_path?: boolean } }>;
             }
@@ -147,6 +154,12 @@ composeTest("Compose renders with one isolated service and no published ports", 
     expect(config.services["cms-repository"]?.environment).toMatchObject({
         CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE: "/run/secrets/cms-repository-management-token",
         CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE: "/run/secrets/cms-repository-maintenance-token",
+        CMS_REPOSITORY_WORKER_TOKEN_FILE: "/run/secrets/cms-repository-worker-token",
+        CMS_REPOSITORY_WORKER_CAPABILITY_KEY_FILE: "/run/secrets/cms-repository-worker-capability-key",
+        CMS_REPOSITORY_WORKER_RATE_LIMIT: "120",
+        CMS_REPOSITORY_WORKER_RATE_LIMIT_WINDOW_SECONDS: "60",
+        CMS_REPOSITORY_CANDIDATE_TTL_MS: "86400000",
+        CMS_REPOSITORY_WORKER_LEASE_DURATION_MS: "300000",
     });
     expect(config.services["cms-repository"]?.secrets).toEqual(
         expect.arrayContaining([
@@ -158,8 +171,19 @@ composeTest("Compose renders with one isolated service and no published ports", 
                 source: "cms_repository_maintenance_token",
                 target: "cms-repository-maintenance-token",
             }),
+            expect.objectContaining({
+                source: "cms_repository_worker_token",
+                target: "cms-repository-worker-token",
+            }),
+            expect.objectContaining({
+                source: "cms_repository_worker_capability_key",
+                target: "cms-repository-worker-capability-key",
+            }),
         ]),
     );
+    for (const secret of config.services["cms-repository"]?.secrets ?? []) {
+        expect(secret).toMatchObject({ uid: "1000", gid: "1000", mode: "0400" });
+    }
     expect(config.services["cms-repository"]?.ports).toBeUndefined();
     expect(config.services["cms-repository"]?.tmpfs).toContain(
         "/tmp:rw,nosuid,nodev,noexec,size=64m,mode=1770,uid=1000,gid=1000",
