@@ -1,0 +1,11 @@
+{
+    "runtime": "native",
+    "default-tag": "header",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Header",
+        "description": "Native introductory content for a page or section."
+    }
+}

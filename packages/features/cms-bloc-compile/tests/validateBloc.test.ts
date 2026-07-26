@@ -143,11 +143,12 @@ describe("validateBloc — graceful degradation", () => {
         expect(r.errors.length).toBeGreaterThan(0);
     });
 
-    test("accepts native text tags without manifest runtime metadata", () => {
-        expect(isNativeBlocTag("a")).toBe(true);
-        expect(validateBloc({ tag: "a" }).errors).toEqual([]);
-        expect(validateBloc({ tag: "p" }).errors).toEqual([]);
-        expect(validateBloc({ tag: "h1" }).errors).toEqual([]);
+    test("accepts native content tags without manifest runtime metadata", () => {
+        const tags = ["a", "article", "aside", "footer", "h1", "header", "nav", "p", "section"];
+        for (const tag of tags) {
+            expect(isNativeBlocTag(tag)).toBe(true);
+            expect(validateBloc({ tag }).errors).toEqual([]);
+        }
         expect(validateBloc({ tag: "my-bloc", native: true }).errors[0]).toContain("Invalid native tag");
     });
 

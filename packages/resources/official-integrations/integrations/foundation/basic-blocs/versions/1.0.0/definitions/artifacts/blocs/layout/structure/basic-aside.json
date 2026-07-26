@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "aside",
+        "name": "Aside",
+        "group": "Structure",
+        "description": "Native complementary content related to its surroundings.",
+        "path": "blocs/layout/structure/basic-aside"
+    }
+}

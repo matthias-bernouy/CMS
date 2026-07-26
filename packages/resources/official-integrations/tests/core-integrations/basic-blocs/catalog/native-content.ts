@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { File } from "node:buffer";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
-import { type TextCapability } from "@bernouy/cms-content/editor";
+import { type ContentSlot, type SettingSection, type TextCapability } from "@bernouy/cms-content/editor";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { decodeDefaultContent, decodeSource } from "../source";
@@ -26,7 +26,32 @@ const linkCapability: TextCapability = {
     dynamic: true,
 };
 
-const nativeContentCases = [
+type NativeContentCase = {
+    tag: string;
+    path: string;
+    capability: TextCapability | null;
+    contentSlots?: ContentSlot[];
+    settings?: SettingSection[];
+};
+
+const structuralContentSlots: ContentSlot[] = [{ label: "Content", accepts: [{ kind: "any-component" }] }];
+
+const structuralSettings: SettingSection[] = [
+    {
+        kind: "self",
+        label: "Accessibility",
+        settings: [
+            {
+                type: "text",
+                label: "Accessible label",
+                attribute: "aria-label",
+                help: "Optional accessible name for this structural region.",
+            },
+        ],
+    },
+];
+
+const nativeContentCases: NativeContentCase[] = [
     ...[1, 2, 3, 4, 5, 6].map((level) => ({
         tag: `h${level}`,
         path: `blocs/content/headings/basic-heading-${level}`,
@@ -39,10 +64,26 @@ const nativeContentCases = [
     { tag: "li", path: "blocs/content/lists/basic-list-item", capability: paragraphCapability },
     { tag: "ol", path: "blocs/content/lists/basic-ordered-list", capability: null },
     { tag: "ul", path: "blocs/content/lists/basic-unordered-list", capability: null },
+    ...(
+        [
+            ["article", "basic-article"],
+            ["aside", "basic-aside"],
+            ["footer", "basic-footer"],
+            ["header", "basic-header"],
+            ["nav", "basic-navigation"],
+            ["section", "basic-section"],
+        ] as const
+    ).map(([tag, directory]) => ({
+        tag,
+        path: `blocs/layout/structure/${directory}`,
+        capability: null,
+        contentSlots: structuralContentSlots,
+        settings: structuralSettings,
+    })),
 ];
 
 export function registerNativeContentTest(): void {
-    test("hydrates native text artifacts as editable catalog entries", async () => {
+    test("hydrates native content artifacts as editable catalog entries", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repository.get("basic-blocs");
 
@@ -82,6 +123,12 @@ export function registerNativeContentTest(): void {
             expect(registration.defaultContent).toBe(defaultContent);
             const editor = new registration.editor!(document.createElement(testCase.tag));
             expect(editor.getTextCapability()).toEqual(testCase.capability);
+            if (testCase.contentSlots) {
+                expect(editor.getContentSlots()).toEqual(testCase.contentSlots);
+            }
+            if (testCase.settings) {
+                expect(editor.getSettings()).toEqual(testCase.settings);
+            }
         }
     });
 }

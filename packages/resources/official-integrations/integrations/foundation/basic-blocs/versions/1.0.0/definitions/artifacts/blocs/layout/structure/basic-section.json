@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "section",
+        "name": "Section",
+        "group": "Structure",
+        "description": "Native thematic section for grouping related content.",
+        "path": "blocs/layout/structure/basic-section"
+    }
+}

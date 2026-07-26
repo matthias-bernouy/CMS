@@ -1,5 +1,6 @@
 import { isValidCustomElementTag } from "@bernouy/cms-content";
 import { RESERVED_PREFIXES } from "@bernouy/cms-content";
+import { isNativeBlocTag, validateNativeBlocTag } from "cms-bloc-compile/core/nativeBlocTags";
 
 /**
  * Inputs passed to `validateBloc`. All source fields are optional —
@@ -62,53 +63,6 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     }
 
     return { errors };
-}
-
-const NATIVE_BLOC_TAGS = new Set([
-    "a",
-    "button",
-    "datalist",
-    "fieldset",
-    "form",
-    "input",
-    "label",
-    "legend",
-    "meter",
-    "optgroup",
-    "option",
-    "output",
-    "p",
-    "progress",
-    "select",
-    "span",
-    "strong",
-    "em",
-    "small",
-    "code",
-    "pre",
-    "blockquote",
-    "ul",
-    "ol",
-    "li",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "img",
-    "textarea",
-]);
-
-export function isNativeBlocTag(tag: string): boolean {
-    return NATIVE_BLOC_TAGS.has(tag);
-}
-
-function validateNativeBlocTag(tag: string): string | null {
-    if (isNativeBlocTag(tag)) {
-        return null;
-    }
-    return `Invalid native tag "${tag}" — must be one of: ${[...NATIVE_BLOC_TAGS].join(", ")}.`;
 }
 
 // ── #3: Hardcoded `customElements.define` ─────────────────────────────────

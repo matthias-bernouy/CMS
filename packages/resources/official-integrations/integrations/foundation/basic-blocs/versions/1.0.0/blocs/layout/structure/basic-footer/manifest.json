@@ -1,0 +1,11 @@
+{
+    "runtime": "native",
+    "default-tag": "footer",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Footer",
+        "description": "Native footer content for a page or section."
+    }
+}

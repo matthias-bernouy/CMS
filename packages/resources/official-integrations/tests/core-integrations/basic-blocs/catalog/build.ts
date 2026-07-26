@@ -13,6 +13,8 @@ export function registerBuildTest(): void {
 
         expect(artifacts.map((artifact) => artifact.bloc.tag).sort()).toEqual([
             "a",
+            "article",
+            "aside",
             "basic-button",
             "basic-card",
             "basic-checkbox",
@@ -30,6 +32,7 @@ export function registerBuildTest(): void {
             "basic-textarea",
             "basic-toast",
             "blockquote",
+            "footer",
             "form",
             "h1",
             "h2",
@@ -37,10 +40,13 @@ export function registerBuildTest(): void {
             "h4",
             "h5",
             "h6",
+            "header",
             "img",
             "li",
+            "nav",
             "ol",
             "p",
+            "section",
             "span",
             "ul",
         ]);
