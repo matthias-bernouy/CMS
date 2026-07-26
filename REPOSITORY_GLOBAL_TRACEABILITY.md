@@ -78,6 +78,26 @@ Continuation checkpoint at `85f472d2`:
   pass. Promotion, the complete private/public APIs, the CMS gateway, catalog,
   Control console, seed automation, and final global validation remain open.
 
+Management and catalog checkpoint at `a14ee3fb`:
+
+- stable promotion and append-only compatibility reevaluation are available
+  through the private runtime, CMS gateway, and exact-owner Control console,
+  while compatibility admission and revision history remain public;
+- CMS Delivery renders the searchable catalog, integration and exact-version
+  pages with status channels, dependency ranges, artifact summaries, release
+  notes, compatibility evidence, and same-origin immutable downloads;
+- explicit installation upgrades list only strictly newer versions, require an
+  exact target confirmation, and preserve the installed pin when preflight or
+  deployment fails;
+- a real repository process plus real Control and Delivery listeners proves
+  that only the configured CMS administrator can publish, the management token
+  and private URL never enter browser traffic or responses, and an upstream
+  outage becomes a sanitized `503` without stopping Delivery;
+- all 107 `@bernouy/cms-server` tests pass with 673 assertions. The public
+  package-traffic observer is independently covered by 14 repository-surface
+  tests. Empty-volume official bootstrap, complete operational diagnostics,
+  and final workspace validation remain open.
+
 ## Lot 0 — Complete Remote Consumption
 
 | ID | Requirement | Intended implementation evidence | Required verification | Status |
@@ -111,8 +131,8 @@ Continuation checkpoint at `85f472d2`:
 | L1.3 | Readers use an immutable memory snapshot; corrupt integrations are quarantined independently. | Snapshot builder, diagnostics, quarantine, atomic reference, and snapshot-backed read adapters. | Old-reader continuity, one-corrupt-entry isolation, duplicate quarantine, and zero-rescan tests. | Complete |
 | L1.4 | Recovery deterministically handles staging, orphans, interrupted indexes, corruption, and duplicates. | Journal replay, abandoned/orphan quarantine, bounded inventory, and snapshot rebuild under `cms-integration-registry/fs`. | Recovery and corruption fixtures cover every committed publication boundary and hostile registry state. | Complete |
 | L1.5 | Declarative schema and HTTP contracts classify compatible, breaking, and unknown changes. | Strict schema/HTTP declarations and `IntegrationCompatibilityEvaluator`. | Admission tests cover patch/minor/major, new kind/major, schema evidence contradictions, implementation-only changes, and lossy HTTP shapes. | Complete |
-| L1.6 | Admission reports are immutable; reevaluations append provenance-bearing revisions. | Canonical admission report plus `FsIntegrationCompatibilityReportStore`. | Immutable supersedes-chain, pagination, concurrent branch rejection, reload, symlink, and directory-substitution tests pass; management reevaluation route and public ETag remain. | Partial |
-| L1.7 | Stable promotion records the newest completed report revision and never auto-demotes. | Management operation and channel index mutation. | Promotion, adverse reassessment warning, and channel tests. | Pending |
+| L1.6 | Admission reports are immutable; reevaluations append provenance-bearing revisions. | Canonical admission report, `FsIntegrationCompatibilityReportStore`, management reevaluation route, runtime operation, and public compatibility projection. | Immutable supersedes-chain, pagination, concurrent branch rejection, reload, symlink/directory substitution, management authorization, runtime persistence, and changing collection-ETag tests. | Complete |
+| L1.7 | Stable promotion records the newest completed report revision and never auto-demotes. | Filesystem promotion journal/recovery, management operation, runtime route, and exact-confirmation Control workflow. | Promotion, crash recovery, stale-revision rejection, adverse reassessment warning, channel preservation, and authorization tests. | Complete |
 
 ## Lot 2 — Repository Runtime And Image
 
@@ -120,7 +140,7 @@ Continuation checkpoint at `85f472d2`:
 | --- | --- | --- | --- | --- |
 | L2.1 | `@bernouy/cms-repository-server` mounts separate anonymous read and authenticated management surfaces. | Production composition performs recovery and mounts `RepositoryCms` and `RepositoryManagementCms` on distinct runners with one snapshot reference. | 22 runtime tests cover real listeners, auth boundary, private publication, immediate public visibility, health, readiness, degradation, and shutdown. | Complete |
 | L2.2 | `infra/images/cms-repository` runs read-only with only bounded writable registry storage. | Dedicated Dockerfile, Compose service, registry bind, bounded noexec tmpfs, and runtime UID preparation. | 10 image/deployment tests, including a real runtime-filesystem permission probe. | Complete |
-| L2.3 | Repository is internal-only; CMS Delivery is the canonical public read gateway. | Dedicated internal network, no published repository ports, and CMS Delivery loopback proxy. | Deployment tests prove no host ports and public-vs-management route separation; final merged-stack acceptance remains. | Partial |
+| L2.3 | Repository is internal-only; CMS Delivery is the canonical public read gateway. | Dedicated internal network, no published repository ports, CMS Delivery public relay, and Control-only management gateway. | Deployment tests plus the real-process CMS/repository acceptance prove listener separation, anonymous public reads, and server-only private access. | Complete |
 | L2.4 | Empty-volume bootstrap uses normal validation and image upgrades never reconcile initialized data. | Runtime seed/import policy. | Empty/non-empty volume and image-upgrade tests. | Pending |
 | L2.5 | Valid snapshots remain ready while quarantine produces degraded health and metrics. | Snapshot-backed health/readiness and recovery diagnostics. | Ready/degraded/last-valid-snapshot tests pass; management diagnostics, filesystem-capacity metrics, and restart acceptance remain. | Partial |
 
@@ -128,23 +148,23 @@ Continuation checkpoint at `85f472d2`:
 
 | ID | Requirement | Intended implementation evidence | Required verification | Status |
 | --- | --- | --- | --- | --- |
-| L3.1 | CMS Delivery renders a searchable public catalog and version detail pages. | Generic injected page-provider seam is complete; repository-specific provider and anonymous HTTP reader are in progress. | Provider priority/fallback/query/status/cache/HEAD/sitemap tests pass; catalog rendering and composition remain. | Partial |
-| L3.2 | Public UI shows stable/latest, dependencies, reports, notes, artifacts, and documentation safely. | Maintained Markdown parser plus sanitizer is complete; repository view models/pages remain. | XSS/HTML/link/title/list/code Markdown tests pass; complete catalog unavailable/cache tests remain. | Partial |
-| L3.3 | Only the initial CMS administrator can publish versions, reevaluate, and promote stable. | Exact opaque-subject guard, all-or-none gateway env, and descriptor-safe token readers exist. | Unit access matrix and gateway configuration/token tests pass; mounted Control workflows and browser-to-private HTTP acceptance remain. | Partial |
-| L3.4 | Control supports explicit installation upgrades without changing pins on failure. | Admin endpoint and UI action over the feature upgrade boundary. | Success, dependency failure, deploy failure, and rollback tests. | Pending |
+| L3.1 | CMS Delivery renders a searchable public catalog and version detail pages. | Repository catalog provider, strict anonymous HTTP reader, and production Delivery composition. | Search/filter/detail/history, provider fallback, unavailable-state, cache/HEAD/sitemap, and real-listener rendering tests. | Complete |
+| L3.2 | Public UI shows stable/latest, dependencies, reports, notes, artifacts, and documentation safely. | Repository view models and pages plus maintained Markdown parser and sanitizer. | Complete catalog projections and XSS/HTML/link/title/list/code Markdown tests. | Complete |
+| L3.3 | Only the initial CMS administrator can publish versions, reevaluate, and promote stable. | Exact opaque-subject guard, strict allowlisted gateway, descriptor-safe server token, mounted Control console, and private repository listener. | Unit access matrix plus real-process owner/other-admin/anonymous, secret-boundary, publication, outage-sanitization, and listener-separation acceptance. | Complete |
+| L3.4 | Control supports explicit installation upgrades without changing pins on failure. | Strictly-newer version endpoint, exact-confirmation UI action, and feature upgrade transaction boundary. | Success, downgrade/current-target rejection, dependency/deploy failure, exact confirmation, and rollback tests. | Complete |
 
 ## Cross-Cutting Definition Of Done
 
 | ID | Requirement | Proof required before completion | Status |
 | --- | --- | --- | --- |
-| D1 | Public metadata, definitions, assets, notes, and exact packages need no credential. | Anonymous API, CORS/cache/HEAD tests and Delivery proxy composition exist; compatibility history is not yet public. | Partial |
-| D2 | Management is reachable only through authenticated Control with a server-only token. | Route/network tests and secret inspection. | Pending |
+| D1 | Public metadata, definitions, assets, notes, and exact packages need no credential. | Anonymous API, compatibility history, CORS/cache/HEAD, public catalog, and real Delivery proxy evidence. | Complete |
+| D2 | Management is reachable only through authenticated Control with a server-only token. | Deployment topology, exact-owner guard, strict gateway projections, listener separation, and real secret-inspection acceptance. | Complete |
 | D3 | Install, rerun, and remote connector deployment are pinned to immutable content. | Exact version/snapshot/digest persistence, remote SQL and Function deployment, outage rerun, and corruption rollback are proven across process restart. | Complete |
 | D4 | Minor/patch incompatibility or contract uncertainty fails closed. | Compatibility evaluator and real publisher admission boundary. | Complete |
 | D5 | Publication is immutable, atomic, snapshot-based, recoverable, and fault-isolated. | Publication, concurrency, every crash boundary, quarantine, recovery, and immediate visibility tests. | Complete |
 | D6 | Dedicated internal repository image persists data and follows empty-volume seed policy. | Image and deployment evidence. | Pending |
-| D7 | Official updates use the publication API after bootstrap. | CI/bootstrap workflow evidence. | Pending |
-| D8 | Delivery catalog and Control administration provide the complete public/private UX. | Browser and authorization evidence. | Pending |
+| D7 | Official updates use the publication API after bootstrap. | Deterministic CLI and credential-scoped CI workflow exist; empty-volume bootstrap evidence remains. | Partial |
+| D8 | Delivery catalog and Control administration provide the complete public/private UX. | Catalog rendering, Control workflows, exact-owner authorization, and browser-boundary acceptance. | Complete |
 | D9 | Final workspace validation has no new task-introduced finding. | Baseline comparison plus final `bun run check:all`. | Pending |
 
 ## Commit Log
@@ -387,6 +407,60 @@ evidence.
   and the real management surface in production. A real two-listener test proves
   authenticated publication and immediate anonymous visibility; all 22 runtime
   tests and 83 assertions pass.
+- `6c2e29be` — recorded the first mutable-registry continuation evidence without
+  changing runtime behavior.
+- `7a76319b` and `068d66a7` — promoted stable against the current compatibility
+  revision through a durable journal, recovered every interrupted boundary, and
+  retained adverse later revisions as warnings without automatic demotion.
+- `1ae82c13` — returned the immutable existing digest with publication conflicts
+  so administrators can distinguish idempotent content from a coordinate clash.
+- `da5b4994` — mounted repository administration behind the exact opaque CMS
+  owner subject, returning capability absence and authorization failures before
+  gateway work.
+- `a4624576` and `fd48ac44` — projected bounded private status, diagnostics,
+  versions, and compatibility history through the management surface and real
+  runtime.
+- `66e293ad` — rendered the repository-specific searchable Delivery catalog,
+  details, histories, compatibility evidence, notes, and download links through
+  the generic page-provider seam.
+- `ae7c04f0` and `4eb4c3a0` — built all official version packages
+  deterministically and added explicit dry-run or authenticated publication from
+  the CLI.
+- `d1c2e98c` and `e689de16` — exposed stable promotion through the authenticated
+  management surface and production runtime.
+- `fdf85ea4` — added the credential-scoped, manually visible CI workflow for
+  deterministic official publication after bootstrap.
+- `391335ca`, `4453029f`, and `5fcdf7a5` — implemented append-only compatibility
+  reevaluation in the registry, private management surface, and runtime.
+- `1c0aa2eb` — added the Control allowlist for private repository operations
+  without exposing arbitrary upstream paths or bodies.
+- `9cd9369d` and `82ec9925` — exposed bounded public compatibility admission and
+  reassessment history with collection ETags through the surface and runtime.
+- `7836bd78` — configured the management CMS as the sole server-side owner of
+  repository management URL, token file, and administrator subject.
+- `526641f0`, `8fb5c0ae`, `76bd3295`, `dd8c2d1e`, `caad4057`, and `4c1bffcf` —
+  completed explicit installation upgrades: strictly newer choices, server-side
+  downgrade rejection, exact typed confirmation, distinct synchronization, and
+  pin-preserving failure handling.
+- `16300588` — hardened the server-side management gateway with seven strict
+  operations, bounded transport, exact DTO validation, sanitized failures, and
+  server-only authorization headers.
+- `a07b5106`, `6e80a289`, and `17437207` — added strict anonymous CMS readers for
+  public catalog and compatibility data, including exact package metadata, and
+  re-served them through the canonical Delivery origin.
+- `bf53fb5b`, `c37aa599`, and `97d690be` — composed management access, public
+  catalog pages, and the complete Control repository console into production
+  surfaces only when the management capability is configured.
+- `fb45fd53` — documented the management/public boundary and the server-only
+  deployment configuration.
+- `09e3c263` — observed public package bytes and rate-limit rejections through a
+  best-effort seam that records no client address or limiter key.
+- `a14ee3fb` — proved the complete management boundary with a real repository
+  process and real CMS Control/Delivery listeners. The 107-test CMS-server suite
+  passes with 673 assertions.
+- `3cb49bb9` — wrapped publication, promotion, and reevaluation with bounded
+  private operation metrics and structured allowlisted logs; tests prove secrets,
+  paths, package contents, actors, and free-form reasons are excluded.
 
 The post-Lot-0 `bun run check:all` at `fc6c4d42` reports 4 passed and 2 failed.
 TypeScript, style, architecture tooling, and CI tooling pass. Architecture still
@@ -397,9 +471,10 @@ the file remains a cohesive declarative contract, while extracting a ninth
 immediate `interfaces/` entry would create a blocking fanout error.
 
 Lot 0 is proven end to end, including its remote-only and degraded process
-scenario. Lot 1 now has immutable atomic publication, compatibility admission,
-snapshot visibility, recovery, quarantine, and append-only report storage;
-promotion and the HTTP reevaluation/read projections remain in progress. The
-Lot 2 runtime and image boundaries are operational, while the management CMS
-gateway, seed automation, Lot 3 catalog/console, and final global validation are
-still required before this initiative can be called complete.
+scenario. Lot 1 now includes immutable atomic publication, compatibility
+admission and reassessment, stable promotion, snapshot visibility, recovery,
+and quarantine. The runtime/image boundary, CMS gateway, public catalog,
+private Control console, and explicit installation upgrade are operational and
+covered through real listeners. Empty-volume official bootstrap, the remaining
+operational diagnostics, and final comparative workspace validation are still
+required before this initiative can be called complete.
