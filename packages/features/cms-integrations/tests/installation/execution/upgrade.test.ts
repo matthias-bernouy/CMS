@@ -42,6 +42,19 @@ describe("@bernouy/cms-integrations explicit upgrades", () => {
         await expectPreviousPin(context);
     });
 
+    test("rejects a downgrade before changing the installation state", async () => {
+        const context = await installedContext("1.1.0");
+
+        await expect(upgrade(context, rerunDefinition("1.0.0", "https://api.example.com/v1/items"))).rejects.toThrow(
+            /is not newer than installed version "1\.1\.0"/,
+        );
+
+        const unchanged = await context.installations.get(context.installedDefinition.kind);
+        expect(unchanged?.status).toBe("success");
+        expect(unchanged?.definitionVersion).toBe("1.1.0");
+        expect(unchanged?.runCount).toBe(1);
+    });
+
     test("rolls back the pin when post-installation reconciliation fails", async () => {
         const context = await installedContext();
         const upgradeDefinition: IntegrationDefinition = {
@@ -95,11 +108,11 @@ describe("@bernouy/cms-integrations explicit upgrades", () => {
     });
 });
 
-async function installedContext() {
+async function installedContext(version = "1.0.0") {
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
     const installations = new InMemoryIntegrationInstallationRepository();
-    const installedDefinition = rerunDefinition("1.0.0", "https://api.example.com/v1/items");
+    const installedDefinition = rerunDefinition(version, "https://api.example.com/v1/items");
     await runIntegrationInstallation({
         mode: "create",
         deps: { sources, secrets },

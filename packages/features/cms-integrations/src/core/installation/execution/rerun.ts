@@ -1,5 +1,5 @@
 import { findIntegration } from "../../definitions/catalog";
-import { isExactIntegrationVersion } from "../../definitions/versioning";
+import { integrationVersionReleaseLevel, isExactIntegrationVersion } from "../../definitions/versioning";
 import { IntegrationInputError, MissingIntegrationInstallationError } from "../../errors";
 import {
     declarativeSecretBindingNames,
@@ -63,6 +63,15 @@ export async function runUpgrade(
     }
     if (definition.version === installation.definitionVersion) {
         throw new IntegrationInputError("version", `version "${definition.version}" is already installed`);
+    }
+    if (
+        isExactIntegrationVersion(installation.definitionVersion) &&
+        integrationVersionReleaseLevel(installation.definitionVersion, definition.version) === null
+    ) {
+        throw new IntegrationInputError(
+            "version",
+            `version "${definition.version}" is not newer than installed version "${installation.definitionVersion}"`,
+        );
     }
     await assertUpgradePreservesDependentRanges(request.installations, installation.id, definition.version);
     const resolvedPackage = await resolveUpgradePackage(request.packageResolver, installation, definition);
