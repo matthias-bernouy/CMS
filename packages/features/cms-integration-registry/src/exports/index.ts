@@ -32,10 +32,16 @@ export type {
     TrustedSchemaDeclarationEvidence,
 } from "../interfaces/compatibility";
 export type {
+    CreateIntegrationRegistryCandidateInput,
+    IntegrationRegistryCandidateFailure,
+    IntegrationRegistryCandidateLease,
+    IntegrationRegistryCandidateRecord,
+    IntegrationRegistryCandidateStatus,
     IntegrationRegistryPublicationRequest,
     IntegrationRegistryPublicationResult,
     IntegrationRegistryPublisher,
 } from "../interfaces/publication";
+export { INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA } from "../interfaces/publication";
 export type {
     IntegrationRegistryRecoverer,
     IntegrationRegistryRecoveryDiagnostic,
@@ -95,3 +101,11 @@ export {
     IntegrationRegistryVersionConflictError,
     IntegrationRegistryVersionOrderError,
 } from "../core/publication/errors";
+export {
+    advanceIntegrationRegistryCandidate,
+    claimIntegrationRegistryCandidate,
+    completeIntegrationRegistryCandidateAttempt,
+    createIntegrationRegistryCandidateRecord,
+    renewIntegrationRegistryCandidateLease,
+} from "../core/publication/candidates/state";
+export { IntegrationRegistryCandidateError } from "../core/publication/candidates/errors";
