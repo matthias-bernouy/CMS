@@ -20,6 +20,7 @@ export function registerBuildTest(): void {
             "basic-checkbox",
             "basic-chip",
             "basic-chip-group",
+            "basic-container",
             "basic-file-input",
             "basic-grid",
             "basic-input",
