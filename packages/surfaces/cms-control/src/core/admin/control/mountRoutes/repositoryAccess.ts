@@ -1,11 +1,13 @@
 import { resolveRequestSubject, type Authentication } from "@bernouy/cms-auth";
 import type { Middleware } from "@bernouy/http-runner";
 import type { CMS_ROLES } from "types/roles";
+import type { RepositoryManagementGateway } from "cms-control/core/admin/control/mountRoutes/repositoryGateway";
 
 const REPOSITORY_MANAGEMENT_PATHS = ["/admin/repository", "/api/repository"] as const;
 
 export type RepositoryManagementAccess = Readonly<{
     administratorSubjectIdentifier: string;
+    gateway?: RepositoryManagementGateway;
 }>;
 
 /**
