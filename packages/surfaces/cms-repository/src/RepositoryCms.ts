@@ -16,11 +16,17 @@ import {
     publicNotFound,
     publicOptionsResponse,
 } from "cms-repository/publicReadResponse";
+import {
+    observePublicRepositoryRead,
+    type PublicRepositoryReadObserver,
+    type PublicRepositoryReadResource,
+} from "cms-repository/readObservation";
 
 type RepositoryCmsBaseConfig = {
     runner: Runner;
     integrationCatalog: IntegrationDefinitionRepository;
     integrationCompatibility?: RepositoryCompatibilityReader;
+    observeRead?: PublicRepositoryReadObserver;
 };
 
 export type RepositoryCmsConfig = RepositoryCmsBaseConfig &
@@ -38,6 +44,7 @@ export class RepositoryCms {
     private readonly integrationCompatibility?: RepositoryCompatibilityReader;
     private readonly integrationPackages?: IntegrationPackageSource;
     private readonly packageDownloadProtection?: PublicPackageDownloadProtection;
+    private readonly observeRead?: PublicRepositoryReadObserver;
 
     constructor(config: RepositoryCmsConfig) {
         this.runner = config.runner;
@@ -45,6 +52,7 @@ export class RepositoryCms {
         this.integrationCompatibility = config.integrationCompatibility;
         this.integrationPackages = config.integrationPackages;
         this.packageDownloadProtection = config.packageDownloadProtection;
+        this.observeRead = config.observeRead;
         if (this.packageDownloadProtection) {
             assertPackageDownloadProtection(this.packageDownloadProtection);
         }
@@ -57,17 +65,17 @@ export class RepositoryCms {
     }
 
     private registerRoutes(): void {
-        this.registerPublicRead("/api/integrations", async (req) =>
+        this.registerPublicRead("/api/integrations", "integrations", async (req) =>
             publicJsonResponse(req, await this.integrationCatalog.list(), "catalog"),
         );
 
-        this.registerPublicRead("/api/integrations/index", async (req) => {
+        this.registerPublicRead("/api/integrations/index", "integration-index", async (req) => {
             const kind = requiredSearchParam(req, "kind");
             const index = await this.integrationCatalog.getIndex(kind);
             return index ? publicJsonResponse(req, index, "catalog") : publicNotFound("integration not found");
         });
 
-        this.registerPublicRead("/api/integrations/versions", async (req) => {
+        this.registerPublicRead("/api/integrations/versions", "integration-versions", async (req) => {
             const kind = requiredSearchParam(req, "kind");
             const index = await this.integrationCatalog.getIndex(kind);
             if (!index) {
@@ -76,7 +84,7 @@ export class RepositoryCms {
             return publicJsonResponse(req, index.versions, "catalog");
         });
 
-        this.registerPublicRead("/api/integrations/definition", async (req) => {
+        this.registerPublicRead("/api/integrations/definition", "integration-definition", async (req) => {
             const url = new URL(req.url);
             const kind = requiredSearchParam(req, "kind");
             const version = optionalText(url.searchParams.get("version"));
@@ -86,7 +94,7 @@ export class RepositoryCms {
                 : publicNotFound("integration definition not found");
         });
 
-        this.registerPublicRead("/api/integrations/asset", async (req) => {
+        this.registerPublicRead("/api/integrations/asset", "integration-asset", async (req) => {
             const url = new URL(req.url);
             const kind = requiredSearchParam(req, "kind");
             const path = requiredSearchParam(req, "path");
@@ -101,23 +109,45 @@ export class RepositoryCms {
         if (this.integrationCompatibility) {
             this.registerPublicRead(
                 "/api/integrations/compatibility",
+                "integration-compatibility",
                 integrationCompatibilityRouteHandler(this.integrationCompatibility),
             );
         }
 
         if (this.integrationPackages && this.packageDownloadProtection) {
             const handlers = integrationPackageRouteHandlers(this.integrationPackages, this.packageDownloadProtection);
-            this.registerPublicRead("/api/integrations/package", handlers.package);
-            this.registerPublicRead("/api/integrations/release-notes", handlers.releaseNotes);
+            this.registerPublicRead("/api/integrations/package", "integration-package", handlers.package);
+            this.registerPublicRead(
+                "/api/integrations/release-notes",
+                "integration-release-notes",
+                handlers.releaseNotes,
+            );
         }
     }
 
-    private registerPublicRead(path: string, handler: (request: Request) => Promise<Response>): void {
+    private registerPublicRead(
+        path: string,
+        resource: PublicRepositoryReadResource,
+        handler: (request: Request) => Promise<Response>,
+    ): void {
         const publicHandler = async (request: Request) => {
+            const startedAt = performance.now();
+            let status = 500;
             try {
-                return await handler(request);
+                const response = await handler(request);
+                status = response.status;
+                return response;
             } catch (error) {
-                return publicErrorResponse(error);
+                const response = publicErrorResponse(error);
+                status = response.status;
+                return response;
+            } finally {
+                observePublicRepositoryRead(this.observeRead, {
+                    resource,
+                    method: request.method === "HEAD" ? "HEAD" : "GET",
+                    status,
+                    durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
+                });
             }
         };
         this.runner.get(path, publicHandler);

@@ -10,6 +10,11 @@ export type {
     PublicPackageReadObservation,
 } from "cms-repository/packageDownloadGuard";
 export type {
+    PublicRepositoryReadObservation,
+    PublicRepositoryReadObserver,
+    PublicRepositoryReadResource,
+} from "cms-repository/readObservation";
+export type {
     PublicRepositoryCompatibilityAdmission,
     PublicRepositoryCompatibilityBaseline,
     PublicRepositoryCompatibilityEvidence,
