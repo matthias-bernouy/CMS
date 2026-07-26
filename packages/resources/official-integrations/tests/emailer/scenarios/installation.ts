@@ -43,8 +43,14 @@ export function registerInstallationTest(): void {
         expect(dashboardJson).toContain("newTemplate");
         expect(dashboardJson).toContain("sendTestEmail");
         expect(dashboardJson).not.toContain("messagesTable");
-        expect(dashboardJson).not.toContain("textBody");
-        expect(dashboardJson).not.toContain("sampleDataJson");
+        expect(dashboardJson).toContain("textBody");
+        expect(dashboardJson).toContain("sampleDataJson");
+        const saveTemplate = templateDetail.actions?.find((action) => action.id === "saveTemplate");
+        expect(saveTemplate?.endpoint.body).toMatchObject({
+            textBody: "$field.textBody",
+            sampleDataJson: "$field.sampleDataJson",
+            metadata: "$resource.metadata",
+        });
         expect(settingsJson).toContain("emailerSettings");
         expect(harness.deployment?.dataApiSchemas).toEqual(["emailer", "broadcast"]);
         expect(
@@ -89,6 +95,12 @@ export function registerInstallationTest(): void {
             key: { type: "string" },
             subject: { type: "string" },
             htmlBody: { type: "string" },
+            metadata: { type: "object" },
+        });
+        const upsertEndpoint = source?.endpoints.find((endpoint) => endpoint.urn === "urn:emailer:upsertTemplate");
+        expect(upsertEndpoint?.input?.body?.properties).toMatchObject({
+            textBody: { type: "string" },
+            sampleDataJson: { type: "string" },
             metadata: { type: "object" },
         });
     });
