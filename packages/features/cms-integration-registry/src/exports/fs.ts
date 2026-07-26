@@ -68,6 +68,7 @@ export {
     FsReviewedSchemaBaselineStore,
     type FsReviewedSchemaBaselineStoreConfig,
 } from "../default-implementation/fs/registry/baselines/store";
+export { loadReviewedConnectorSchemaBaselines } from "../default-implementation/fs/registry/baselines/projection";
 export {
     FsIntegrationCompatibilityReevaluator,
     type FsIntegrationCompatibilityReevaluatorConfig,

@@ -9,7 +9,10 @@ import {
     ReviewedSchemaBaselineIntegrityError,
     type ReviewedSchemaBaselineLogicalKey,
 } from "@bernouy/cms-integration-registry";
-import { FsReviewedSchemaBaselineStore } from "@bernouy/cms-integration-registry/fs";
+import {
+    FsReviewedSchemaBaselineStore,
+    loadReviewedConnectorSchemaBaselines,
+} from "@bernouy/cms-integration-registry/fs";
 import { PACKAGE_DIGEST, reviewedBaseline } from "./fixtures";
 
 const roots: string[] = [];
@@ -41,6 +44,36 @@ describe("filesystem reviewed schema baseline store", () => {
         expect(await restarted.listForPackage("other", "1.0.0", PACKAGE_DIGEST)).toEqual([]);
         await expect(restarted.listForPackage("../escape", "1.0.0", PACKAGE_DIGEST)).rejects.toThrow(/kind/i);
         await expect(restarted.listForPackage("example", "1.0.0", "invalid")).rejects.toThrow(/digest/i);
+    });
+
+    test("projects the current digest-bound observation into legacy compatibility input", async () => {
+        const store = new FsReviewedSchemaBaselineStore({ root: await registryRoot() });
+        const root = await reviewedBaseline();
+        const first = await store.append({ baseline: root, expectedCurrentRevisionId: null });
+        const revision = await reviewedBaseline("baseline-reviewed", { supersedes: root.reportId });
+        const current = await store.append({ baseline: revision, expectedCurrentRevisionId: root.reportId });
+
+        const projected = await loadReviewedConnectorSchemaBaselines(
+            store,
+            logicalKey.kind,
+            logicalKey.version,
+            logicalKey.packageDigest,
+        );
+
+        expect(projected).toEqual([
+            {
+                connector: revision.legacySelector,
+                packageDigest: PACKAGE_DIGEST,
+                schema: { namespaces: revision.observedSchema.namespaces },
+                provenance: {
+                    evidenceId: `reviewed-schema-baseline-${current.currentBaselineDigest}`,
+                    source: "legacy-backfill:legacy-schema-baseline@1.0.0",
+                    reviewedAt: revision.createdAt,
+                },
+            },
+        ]);
+        expect(projected[0]?.provenance.evidenceId).not.toContain(first.currentBaselineDigest);
+        expect(Object.isFrozen(projected)).toBeTrue();
     });
 
     test("appends by current-revision CAS and keeps exact reimports idempotent", async () => {
