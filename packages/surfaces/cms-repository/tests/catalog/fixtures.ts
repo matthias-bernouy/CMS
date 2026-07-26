@@ -41,8 +41,23 @@ export function commerceSummary(): RepositoryCatalogIntegrationSummary {
             currentRevisionId: "commerce-current",
         },
         versions: [
-            { version: "1.1.0", package: { digest: DIGEST, canonicalBytes: 2_048 } },
-            { version: "1.0.0", package: { digest: "b".repeat(64), canonicalBytes: 1_024 } },
+            {
+                version: "1.1.0",
+                package: { digest: DIGEST, canonicalBytes: 2_048 },
+                release: {
+                    status: "installable",
+                    installable: true,
+                    freshInstallOnly: false,
+                    verificationDigest: "c".repeat(64),
+                    verificationOrigin: "legacy-backfill",
+                    verificationOutcome: "passed",
+                },
+            },
+            {
+                version: "1.0.0",
+                package: { digest: "b".repeat(64), canonicalBytes: 1_024 },
+                release: { status: "installable", installable: true, freshInstallOnly: false },
+            },
         ],
     };
 }
@@ -115,6 +130,61 @@ export function commerceVersion(version = "1.1.0"): RepositoryCatalogVersionCont
                 },
             ],
             currentRevisionId: "revision-2",
+        },
+        release: releaseEvidence(version),
+    };
+}
+
+function releaseEvidence(version: string): NonNullable<RepositoryCatalogVersionContent["release"]> {
+    const reportDigest = "d".repeat(64);
+    return {
+        kind: "commerce",
+        version,
+        packageDigest: DIGEST,
+        status: "installable",
+        installable: true,
+        freshInstallOnly: false,
+        verificationDigest: "c".repeat(64),
+        compatibility: {
+            reportId: `compatibility-${version}`,
+            reportDigest,
+            origin: "legacy-backfill",
+            outcome: "compatible",
+            contractAdmissible: true,
+            releaseLevel: "minor",
+            requiredReleaseLevel: "minor",
+            evaluator: { name: "cms-compatibility", version: "2.0.0" },
+            baselines: [{ kind: "commerce", version: "1.0.0", packageDigest: "b".repeat(64) }],
+            findings: [],
+        },
+        verification: {
+            reportId: `verification-${version}`,
+            reportDigest,
+            origin: "legacy-backfill",
+            outcome: "passed",
+            runner: { name: "cms-schema-generator", version: "1.0.0", imageDigest: "sha256:pinned" },
+            environment: { digest: reportDigest, versions: { postgres: "16.9", bun: "1.3.14" } },
+            policy: { name: "official", version: "1.0.0", snapshotDigest: reportDigest },
+            results: [
+                {
+                    suiteId: "sql-install-and-reapply",
+                    source: "platform",
+                    required: true,
+                    outcome: "passed",
+                    attempts: 1,
+                    cacheHit: false,
+                    diagnostics: [],
+                },
+            ],
+        },
+        migrations: [],
+        decision: {
+            decisionId: `decision-${version}`,
+            decisionDigest: reportDigest,
+            admissible: true,
+            reasons: [],
+            createdAt: "2026-07-26T12:00:00.000Z",
+            policy: { name: "official", version: "1.0.0", snapshotDigest: reportDigest },
         },
     };
 }

@@ -1,5 +1,6 @@
 import type { TPage } from "@bernouy/cms-content";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
+import type { PublicRepositoryRelease } from "../compatibility/releaseContracts";
 
 export type RepositoryCatalogCompatibilityOutcome =
     | "compatible"
@@ -30,6 +31,11 @@ export type RepositoryCatalogVersionSummary = Readonly<{
     version: string;
     package?: RepositoryCatalogPackageSummary;
     compatibility?: RepositoryCatalogCompatibilitySummary;
+    release?: Pick<PublicRepositoryRelease, "status" | "installable" | "freshInstallOnly" | "verificationDigest"> &
+        Readonly<{
+            verificationOrigin?: "admission" | "legacy-backfill";
+            verificationOutcome?: string;
+        }>;
 }>;
 
 export type RepositoryCatalogIntegrationSummary = Readonly<{
@@ -89,6 +95,7 @@ export type RepositoryCatalogVersionContent = Readonly<{
     package?: RepositoryCatalogPackageSummary;
     releaseNotes?: string;
     compatibility?: RepositoryCatalogCompatibilityHistory;
+    release?: PublicRepositoryRelease;
 }>;
 
 export type RepositoryCatalogIntegrationPage = Readonly<{

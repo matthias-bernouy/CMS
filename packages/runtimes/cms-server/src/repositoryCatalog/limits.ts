@@ -6,6 +6,7 @@ export type RepositoryCatalogReaderLimits = Readonly<{
     totalVersions: number;
     releaseNotesBytes: number;
     compatibilityBytes: number;
+    releaseEvidenceBytes: number;
     compatibilityRevisions: number;
     concurrency: number;
 }>;
@@ -16,6 +17,7 @@ export const DEFAULT_REPOSITORY_CATALOG_READER_LIMITS: RepositoryCatalogReaderLi
     totalVersions: 10_000,
     releaseNotesBytes: DEFAULT_INTEGRATION_PACKAGE_LIMITS.maxFileBytes,
     compatibilityBytes: 1_048_576,
+    releaseEvidenceBytes: 2_097_152,
     compatibilityRevisions: 256,
     concurrency: 8,
 });

@@ -28,6 +28,7 @@ export {
     REPOSITORY_COMPATIBILITY_PATH,
     REPOSITORY_DIAGNOSTICS_PATH,
     REPOSITORY_STATUS_PATH,
+    REPOSITORY_RELEASE_PATH,
     REPOSITORY_VERSIONS_PATH,
     type RepositoryManagementReadConfig,
 } from "cms-repository-management/operations/readRoutes";
@@ -36,6 +37,11 @@ export {
     REPOSITORY_STABLE_PROMOTIONS_PATH,
     type RepositoryStablePromotionRoutesConfig,
 } from "cms-repository-management/operations/promotionRoutes";
+export {
+    mountRepositoryVersionEligibilityRoutes,
+    REPOSITORY_VERSION_BLOCKS_PATH,
+    type RepositoryVersionEligibilityRoutesConfig,
+} from "cms-repository-management/operations/versionEligibilityRoutes";
 export {
     mountRepositoryCompatibilityReevaluationRoutes,
     REPOSITORY_COMPATIBILITY_REEVALUATIONS_PATH,
@@ -68,6 +74,7 @@ export {
     type RepositoryCandidateAdmissionCoordinator,
     type RepositoryCandidateAdmissionPlan,
     type RepositoryCandidateAdmissionPlanner,
+    type RepositoryCandidatePublicationFinalizer,
     type RepositoryCandidateManagementRoutesConfig,
     type RepositoryCandidateWorkerRoutesConfig,
     type RepositoryCandidateWorkerSurfaceMount,

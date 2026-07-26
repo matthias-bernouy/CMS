@@ -8,6 +8,7 @@ import type {
     RepositoryCatalogVersionContent,
     RepositoryCatalogVersionSummary,
 } from "../contracts";
+import type { PublicRepositoryRelease } from "../../compatibility/releaseContracts";
 
 export type RepositoryCatalogFilters = Readonly<{
     query: string;
@@ -32,6 +33,7 @@ export type RepositoryCatalogVersionView = Readonly<{
     package?: RepositoryCatalogPackageSummary;
     releaseNotes?: string;
     compatibility?: RepositoryCatalogCompatibilityHistory;
+    release?: PublicRepositoryRelease;
     providers: readonly string[];
     artifacts: readonly RepositoryCatalogArtifactSummary[];
     dependencies: readonly IntegrationDependency[];
@@ -62,6 +64,7 @@ export function versionContentView(
         package: content.package,
         releaseNotes: content.releaseNotes,
         compatibility: content.compatibility,
+        release: content.release,
         providers: collectTechnicalProviders(content.definition, integration.technicalProviders),
         artifacts: collectArtifacts(content.definition, integration.artifacts),
         dependencies: content.definition.dependencies ?? [],

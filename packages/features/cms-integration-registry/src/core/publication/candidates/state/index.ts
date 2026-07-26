@@ -6,3 +6,8 @@ export {
     completeIntegrationRegistryCandidateAttempt,
     renewIntegrationRegistryCandidateLease,
 } from "./attempt";
+export {
+    beginIntegrationRegistryCandidatePublication,
+    completeIntegrationRegistryCandidatePublication,
+    rejectIntegrationRegistryCandidatePublication,
+} from "./publication";

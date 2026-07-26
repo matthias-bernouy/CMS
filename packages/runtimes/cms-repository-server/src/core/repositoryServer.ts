@@ -3,6 +3,10 @@ import {
     SnapshotIntegrationPackageSource,
 } from "@bernouy/cms-integration-registry/fs";
 import type { IntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry";
+import type {
+    IntegrationRegistryReleaseEvidenceReader,
+    IntegrationVerificationBundleStore,
+} from "@bernouy/cms-integration-registry";
 import {
     RepositoryCms,
     type PublicPackageDownloadProtection,
@@ -38,6 +42,8 @@ export type RepositoryServerConfig = Readonly<{
     loadCatalog: () => Promise<IntegrationRegistryCatalogSnapshot>;
     packageDownloadProtection: PublicPackageDownloadProtection;
     integrationCompatibility?: RepositoryCompatibilityReader;
+    integrationReleases?: IntegrationRegistryReleaseEvidenceReader;
+    integrationVerificationBundles?: Pick<IntegrationVerificationBundleStore, "get">;
     observePublicRead?: PublicRepositoryReadObserver;
     managementGuard: Middleware;
     mountManagement: RepositoryManagementSurfaceMount;
@@ -65,6 +71,8 @@ export function startRepositoryServer(config: RepositoryServerConfig): Repositor
             runner,
             integrationCatalog: definitions,
             integrationCompatibility: config.integrationCompatibility,
+            integrationReleases: config.integrationReleases,
+            integrationVerificationBundles: config.integrationVerificationBundles,
             integrationPackages: packages,
             packageDownloadProtection: config.packageDownloadProtection,
             observeRead: config.observePublicRead,

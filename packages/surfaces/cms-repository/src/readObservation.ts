@@ -5,6 +5,8 @@ export type PublicRepositoryReadResource =
     | "integration-definition"
     | "integration-asset"
     | "integration-compatibility"
+    | "integration-release"
+    | "integration-verification-bundle"
     | "integration-package"
     | "integration-release-notes";
 

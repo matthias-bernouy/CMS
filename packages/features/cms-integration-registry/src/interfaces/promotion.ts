@@ -71,6 +71,11 @@ export type IntegrationRegistryVersionEligibilityDecisionReference = Readonly<{
     digest: string;
 }>;
 
+export type IntegrationRegistryVersionChannelRepairPreview = Readonly<{
+    current: Readonly<{ stable?: string; latest?: string }>;
+    next: Readonly<{ stable?: string; latest?: string }>;
+}>;
+
 export type IntegrationRegistryVersionBlockRequest = Readonly<{
     kind: string;
     version: string;

@@ -4,6 +4,7 @@ import {
     type IntegrationDefinitionIndex,
     type IntegrationDefinitionRepository,
 } from "@bernouy/cms-integrations";
+import type { PublicRepositoryRelease } from "@bernouy/cms-repository";
 import type {
     RepositoryCatalogIntegrationSummary,
     RepositoryCatalogVersionContent,
@@ -11,6 +12,7 @@ import type {
 } from "@bernouy/cms-repository/catalog";
 import type { HttpRepositoryCompatibilityReader } from "../compatibilityReader";
 import { BoundedCatalogWork, type RepositoryCatalogReaderLimits } from "../limits";
+import type { HttpRepositoryReleaseReader } from "../release/reader";
 import type { RepositoryCatalogHttpTransport, RepositoryPackageMetadata } from "../transport";
 import { loadCatalogCompatibility, type LoadedCompatibility } from "./compatibilityHistory";
 import { exactDefinition } from "./definitionCatalog";
@@ -19,6 +21,7 @@ import { artifactSummaries, compatibilitySummary, technicalProviders } from "./p
 type LoadedVersion = Readonly<{
     summary: RepositoryCatalogVersionSummary;
     compatibility: LoadedCompatibility;
+    release?: PublicRepositoryRelease;
     validators: readonly string[];
 }>;
 
@@ -32,6 +35,7 @@ export type RepositoryCatalogLoaderConfig = Readonly<{
     catalog: IntegrationDefinitionRepository;
     transport: RepositoryCatalogHttpTransport;
     compatibility: HttpRepositoryCompatibilityReader;
+    releases: HttpRepositoryReleaseReader;
     limits: RepositoryCatalogReaderLimits;
 }>;
 
@@ -92,13 +96,14 @@ export class RepositoryCatalogLoader {
                 ...(resources.summary.package ? { package: resources.summary.package } : {}),
                 ...(notes ? { releaseNotes: notes.value } : {}),
                 ...(resources.compatibility.history ? { compatibility: resources.compatibility.history } : {}),
+                ...(resources.release ? { release: resources.release } : {}),
             },
             validators,
         };
     }
 
     private async loadVersion(kind: string, version: string, work: BoundedCatalogWork): Promise<LoadedVersion> {
-        const [packageMetadata, compatibility] = await Promise.all([
+        const [packageMetadata, compatibility, releaseDocument] = await Promise.all([
             work.run(() =>
                 this.config.transport.headPackage(
                     endpoint("package", kind, version),
@@ -106,8 +111,13 @@ export class RepositoryCatalogLoader {
                 ),
             ),
             loadCatalogCompatibility(this.config.compatibility, this.config.limits, kind, version, work),
+            work.run(() => this.config.releases.getDocument(kind, version)),
         ]);
         assertDigestAgreement(packageMetadata, compatibility);
+        if (packageMetadata && releaseDocument && packageMetadata.digest !== releaseDocument.value.packageDigest) {
+            throw new IntegrationRepositoryContractError();
+        }
+        const release = releaseDocument?.value;
         return {
             summary: {
                 version,
@@ -115,11 +125,29 @@ export class RepositoryCatalogLoader {
                     ? { package: { digest: packageMetadata.digest, canonicalBytes: packageMetadata.canonicalBytes } }
                     : {}),
                 ...(compatibility.history ? { compatibility: compatibilitySummary(compatibility.history) } : {}),
+                ...(release
+                    ? {
+                          release: {
+                              status: release.status,
+                              installable: release.installable,
+                              freshInstallOnly: release.freshInstallOnly,
+                              ...(release.verificationDigest ? { verificationDigest: release.verificationDigest } : {}),
+                              ...(release.verification
+                                  ? {
+                                        verificationOrigin: release.verification.origin,
+                                        verificationOutcome: release.verification.outcome,
+                                    }
+                                  : {}),
+                          },
+                      }
+                    : {}),
             },
             compatibility,
+            ...(release ? { release } : {}),
             validators: [
                 ...(packageMetadata ? [`package:${kind}@${version}:${packageMetadata.etag}`] : []),
                 ...compatibility.validators,
+                ...(releaseDocument ? [`release:${kind}@${version}:${releaseDocument.etag}`] : []),
             ],
         };
     }

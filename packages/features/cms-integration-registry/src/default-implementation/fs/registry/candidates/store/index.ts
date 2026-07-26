@@ -1,6 +1,9 @@
 import {
     advanceIntegrationRegistryCandidate,
+    beginIntegrationRegistryCandidatePublication,
     claimIntegrationRegistryCandidate,
+    completeIntegrationRegistryCandidatePublication,
+    rejectIntegrationRegistryCandidatePublication,
     renewIntegrationRegistryCandidateLease,
 } from "cms-integration-registry/core/publication/candidates/state";
 import { IntegrationRegistryCandidateError } from "cms-integration-registry/core/publication/candidates/errors";
@@ -29,6 +32,7 @@ import {
 } from "./operations";
 import {
     listClaimableCandidateRecords,
+    listPublicationPendingCandidateRecords,
     readCandidateRecordOrNull,
     sweepDueCandidateExpirations,
     sweepExpiredCandidateLeases,
@@ -90,6 +94,11 @@ export class FsIntegrationRegistryCandidateStore implements IntegrationRegistryC
         return await listClaimableCandidateRecords(layout, now, limit, (candidateId) => this.get(candidateId));
     }
 
+    async listPublicationPending(limit = 100): Promise<readonly IntegrationRegistryCandidateRecord[]> {
+        const layout = await this.#loadLayout();
+        return await listPublicationPendingCandidateRecords(layout, limit, (candidateId) => this.get(candidateId));
+    }
+
     async advanceValidation(
         candidateId: string,
         input: Readonly<{ expectedRevision: number; now: string }>,
@@ -145,6 +154,31 @@ export class FsIntegrationRegistryCandidateStore implements IntegrationRegistryC
     ): Promise<IntegrationRegistryCandidateRecord> {
         const layout = await this.#loadLayout();
         return await withCandidateMutationLock(layout, () => completeStoredCandidate(layout, candidateId, input));
+    }
+
+    async beginPublication(
+        candidateId: string,
+        input: Parameters<typeof beginIntegrationRegistryCandidatePublication>[1],
+    ): Promise<IntegrationRegistryCandidateRecord> {
+        return await this.#mutate(candidateId, (record) => beginIntegrationRegistryCandidatePublication(record, input));
+    }
+
+    async completePublication(
+        candidateId: string,
+        input: Parameters<typeof completeIntegrationRegistryCandidatePublication>[1],
+    ): Promise<IntegrationRegistryCandidateRecord> {
+        return await this.#mutate(candidateId, (record) =>
+            completeIntegrationRegistryCandidatePublication(record, input),
+        );
+    }
+
+    async rejectPublication(
+        candidateId: string,
+        input: Parameters<typeof rejectIntegrationRegistryCandidatePublication>[1],
+    ): Promise<IntegrationRegistryCandidateRecord> {
+        return await this.#mutate(candidateId, (record) =>
+            rejectIntegrationRegistryCandidatePublication(record, input),
+        );
     }
 
     async recoverExpiredLease(

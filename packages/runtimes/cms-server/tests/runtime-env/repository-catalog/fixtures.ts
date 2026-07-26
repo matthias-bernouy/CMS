@@ -9,6 +9,7 @@ export const PACKAGE_DIGEST = "a".repeat(64);
 const COMPATIBILITY_ETAG = "c".repeat(64);
 const APPENDED_COMPATIBILITY_ETAG = "d".repeat(64);
 const NOTES_ETAG = "e".repeat(64);
+const RELEASE_ETAG = "f".repeat(64);
 
 export type FetchRecord = Readonly<{ url: URL; init: RequestInit | undefined }>;
 
@@ -40,6 +41,9 @@ export function catalogFixture(options: Readonly<{ appended?: () => boolean }> =
                 appended ? APPENDED_COMPATIBILITY_ETAG : COMPATIBILITY_ETAG,
             );
         }
+        if (url.pathname.endsWith("/api/integrations/release")) {
+            return jsonResponse(releaseDocument(url.searchParams.get("version") ?? "1.0.0"), RELEASE_ETAG);
+        }
         throw new Error(`Unexpected repository request: ${url.pathname}`);
     };
     return {
@@ -51,6 +55,61 @@ export function catalogFixture(options: Readonly<{ appended?: () => boolean }> =
             fetch: fetchImpl,
         }),
         fetch: fetchImpl,
+    };
+}
+
+export function releaseDocument(version: string) {
+    const verificationDigest = "b".repeat(64);
+    const reportDigest = "c".repeat(64);
+    return {
+        kind: "commerce",
+        version,
+        packageDigest: PACKAGE_DIGEST,
+        status: "installable",
+        installable: true,
+        freshInstallOnly: false,
+        verificationDigest,
+        compatibility: {
+            reportId: `compatibility-${version}`,
+            reportDigest,
+            origin: "legacy-backfill",
+            outcome: "compatible",
+            contractAdmissible: true,
+            releaseLevel: version === "1.0.0" ? "initial" : "minor",
+            requiredReleaseLevel: "none",
+            evaluator: { name: "compatibility", version: "2.0.0" },
+            baselines: [],
+            findings: [],
+        },
+        verification: {
+            reportId: `verification-${version}`,
+            reportDigest,
+            origin: "legacy-backfill",
+            outcome: "passed",
+            runner: { name: "cms-schema-generator", version: "1.0.0", imageDigest: "sha256:pinned" },
+            environment: { digest: reportDigest, versions: { postgres: "16.9" } },
+            policy: { name: "official", version: "1.0.0", snapshotDigest: reportDigest },
+            results: [
+                {
+                    suiteId: "sql-install-and-reapply",
+                    source: "platform",
+                    required: true,
+                    outcome: "passed",
+                    attempts: 1,
+                    cacheHit: false,
+                    diagnostics: [],
+                },
+            ],
+        },
+        migrations: [],
+        decision: {
+            decisionId: `decision-${version}`,
+            decisionDigest: reportDigest,
+            admissible: true,
+            reasons: [],
+            createdAt: "2026-07-26T12:00:00.000Z",
+            policy: { name: "official", version: "1.0.0", snapshotDigest: reportDigest },
+        },
     };
 }
 

@@ -40,6 +40,14 @@ export function candidateProtocolErrorResponse(error: unknown): Response {
             return candidateError(410, code, "Candidate worker lease expired");
         case "invalid_candidate":
             return candidateError(422, code, "Candidate state transition is invalid");
+        case "candidate_not_ready":
+            return candidateError(409, code, "Candidate is not ready for publication");
+        case "admission_rejected":
+            return candidateError(422, code, "Candidate release admission was rejected");
+        case "admission_stale":
+            return candidateError(409, code, "Candidate admission inputs changed; submit a new candidate");
+        case "publication_recovery_required":
+            return candidateError(503, code, "Candidate publication requires recovery");
         case "inventory_limit":
         case "corrupt_candidate":
         case "legacy_candidate":

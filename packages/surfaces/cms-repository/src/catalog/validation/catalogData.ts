@@ -9,6 +9,7 @@ import type {
 import { assertCompatibilityHistory } from "./compatibilityData";
 import { boundedArray, boundedText, REPOSITORY_CATALOG_LIMITS, RepositoryCatalogDataError } from "./limits";
 import { assertPackageSummary, assertRepositoryCatalogSummary } from "./summaryData";
+import { assertReleaseEvidence } from "./releaseData";
 
 export function assertCatalogListDocument(
     document: RepositoryCatalogDocument<readonly RepositoryCatalogIntegrationSummary[]>,
@@ -117,5 +118,8 @@ function assertVersionContent(content: RepositoryCatalogVersionContent, expected
     assertPackageSummary(content.package);
     if (content.compatibility) {
         assertCompatibilityHistory(content.compatibility);
+    }
+    if (content.release) {
+        assertReleaseEvidence(content.release, expectedKind, content.version);
     }
 }

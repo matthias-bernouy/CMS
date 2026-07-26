@@ -34,6 +34,7 @@ import {
     readRepositoryWorkerToken,
 } from "./credentials";
 import { createProductionRepositoryManagement } from "./management";
+import { productionReleaseAdmissionPolicy } from "./core/candidates/policy";
 import {
     bootstrapRepositoryRegistryIfEmpty,
     type EmptyRegistryBootstrap,
@@ -91,6 +92,7 @@ export async function startProductionRepositoryServer(
             candidateTtlMs: env.candidateTtlMs,
             leaseDurationMs: env.workerLeaseDurationMs,
         },
+        candidateAdmissionPolicy: productionReleaseAdmissionPolicy(env.verifierRunner),
     });
 
     const managementGuard = createRepositoryManagementGuard({
@@ -130,6 +132,8 @@ export async function startProductionRepositoryServer(
         packageDownloadProtection,
         observePublicRead: (observation) => telemetry.observePublicRead(observation),
         integrationCompatibility: repositoryManagement.compatibility,
+        integrationReleases: repositoryManagement.releases,
+        integrationVerificationBundles: repositoryManagement.verificationBundles,
         managementGuard,
         mountManagement: repositoryManagement.mount,
         maintenance: { guard: maintenanceGuard, mount: repositoryManagement.mountMaintenance },

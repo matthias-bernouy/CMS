@@ -29,3 +29,9 @@ export type {
     RepositoryCompatibilityReader,
     RepositoryCompatibilityReportSource,
 } from "cms-repository/compatibility/contracts";
+export type {
+    PublicRepositoryMigrationEvidence,
+    PublicRepositoryRelease,
+    RepositoryReleaseReader,
+    RepositoryVerificationBundleReader,
+} from "cms-repository/compatibility/releaseContracts";

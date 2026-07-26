@@ -1,11 +1,7 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
-import {
-    integrationVersionReleaseLevel,
-    isIntegrationPrerelease,
-    type IntegrationDefinitionIndex,
-    type IntegrationDefinitionVersion,
-} from "@bernouy/cms-integrations";
+import { isIntegrationPrerelease, type IntegrationDefinitionIndex } from "@bernouy/cms-integrations";
 import { parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
+import { projectIntegrationRegistryVersionEligibility } from "../../../../../core/promotion/eligibilityProjection";
 
 export function nextStableIntegrationRegistryIndex(
     previous: IntegrationDefinitionIndex,
@@ -28,24 +24,12 @@ export function nextVersionEligibilityIndex(
     version: string,
     status: "blocked" | "inadmissible",
 ): IntegrationDefinitionIndex {
-    let found = false;
-    const versions = previous.versions.map((entry) => {
-        if (entry.version !== version) {
-            return entry;
-        }
-        found = true;
-        return { ...entry, status };
-    });
-    if (!found) {
-        throw new Error(`Version eligibility target is absent from the integration index: ${previous.kind}@${version}`);
-    }
-    const installable = versions.filter((entry) => entry.status === undefined);
-    const stable = newest(installable.filter((entry) => !isIntegrationPrerelease(entry.version)))?.version;
-    const latest = newest(installable)?.version;
+    const projection = projectIntegrationRegistryVersionEligibility(previous, version, status);
+    const { stable, latest } = projection.channels.next;
     return parseIntegrationDefinitionIndex(
         {
             ...previous,
-            versions,
+            versions: projection.versions,
             ...(stable ? { stable } : { stable: undefined }),
             ...(latest ? { latest } : { latest: undefined }),
         },
@@ -65,13 +49,4 @@ export function sameIntegrationRegistryIndex(
     return (
         leftBytes.byteLength === rightBytes.byteLength && leftBytes.every((byte, index) => byte === rightBytes[index])
     );
-}
-
-function newest(versions: readonly IntegrationDefinitionVersion[]): IntegrationDefinitionVersion | undefined {
-    return versions.reduce<IntegrationDefinitionVersion | undefined>((current, candidate) => {
-        if (!current || integrationVersionReleaseLevel(current.version, candidate.version)) {
-            return candidate;
-        }
-        return current;
-    }, undefined);
 }

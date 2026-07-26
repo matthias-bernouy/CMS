@@ -12,6 +12,7 @@ import {
     mountRepositoryCandidateManagementRoutes,
     RepositoryCandidateAdmissionPlanningError,
     type RepositoryCandidateAdmissionPlanner,
+    type RepositoryCandidatePublicationFinalizer,
 } from "@bernouy/cms-repository-management";
 import type { Runner } from "@bernouy/http-runner";
 
@@ -28,6 +29,8 @@ export type ProductionRepositoryCandidateProtocolConfig = Readonly<{
     leaseDurationMs?: number;
     now?: () => string;
     plan?: RepositoryCandidateAdmissionPlanner;
+    publication?: RepositoryCandidatePublicationFinalizer;
+    store?: FsIntegrationRegistryCandidateStore;
 }>;
 
 export type ProductionRepositoryCandidateProtocol = Readonly<{
@@ -41,7 +44,7 @@ export async function createProductionRepositoryCandidateProtocol(
     config: ProductionRepositoryCandidateProtocolConfig,
 ): Promise<ProductionRepositoryCandidateProtocol> {
     const now = config.now ?? (() => new Date().toISOString());
-    const store = new FsIntegrationRegistryCandidateStore({ root: config.root });
+    const store = config.store ?? new FsIntegrationRegistryCandidateStore({ root: config.root });
     const recovery = await recoverFsIntegrationRegistryCandidates({ root: config.root, now: now() });
     const admission = createRepositoryCandidateAdmissionCoordinator({
         store,
@@ -63,6 +66,7 @@ export async function createProductionRepositoryCandidateProtocol(
         now,
         createJobId: () => randomUUID(),
         createAttemptId: () => randomUUID(),
+        ...(config.publication ? { publication: config.publication } : {}),
     };
     return Object.freeze({
         recovery,

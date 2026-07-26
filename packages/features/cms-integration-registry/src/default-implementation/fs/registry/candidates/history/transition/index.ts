@@ -53,6 +53,17 @@ export function assertCandidateRecordFollows(
                 assertLeaseRecovery(previous, current);
             }
             return;
+        case "passed->publishing":
+        case "publishing->published":
+            assertRecordDelta(previous, current, ["revision", "status", "updatedAt"]);
+            return;
+        case "passed->rejected":
+        case "publishing->rejected":
+            if (current.lastFailure?.kind !== "stale") {
+                corrupt(`Candidate ${current.candidateId} publication rejection has no stale-input failure`);
+            }
+            assertRecordDelta(previous, current, ["revision", "status", "updatedAt", "lastFailure"]);
+            return;
         case "uploaded->expired":
         case "validating->expired":
         case "queued->expired":

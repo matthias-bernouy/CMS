@@ -1,4 +1,8 @@
 import { isAbsolute, resolve } from "node:path";
+import {
+    parsePinnedVerificationRunnerIdentity,
+    type PinnedVerificationRunnerIdentity,
+} from "@bernouy/cms-integration-verification";
 
 export type RepositoryRuntimeEnvSource = Record<string, string | undefined>;
 
@@ -16,6 +20,7 @@ export type RepositoryRuntimeEnv = Readonly<{
     workerRateLimitWindowSeconds: number;
     candidateTtlMs: number;
     workerLeaseDurationMs: number;
+    verifierRunner: PinnedVerificationRunnerIdentity;
     clientAddressMode: "direct" | "disabled" | "trusted-proxy";
     trustedProxyHops: number;
     packageDownloadLimit: number;
@@ -87,6 +92,7 @@ export function readRepositoryRuntimeEnv(source: RepositoryRuntimeEnvSource): Re
             10_000,
             3_600_000,
         ),
+        verifierRunner: readVerifierRunner(source),
         ...clientAddress,
         packageDownloadLimit: positiveInteger(
             source.CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT,
@@ -105,6 +111,16 @@ export function readRepositoryRuntimeEnv(source: RepositoryRuntimeEnvSource): Re
             1,
             60_000,
         ),
+    });
+}
+
+function readVerifierRunner(source: RepositoryRuntimeEnvSource): PinnedVerificationRunnerIdentity {
+    return parsePinnedVerificationRunnerIdentity({
+        name: source.CMS_INTEGRATION_VERIFIER_RUNNER_NAME ?? "cms-postgres",
+        version: source.CMS_INTEGRATION_VERIFIER_RUNNER_VERSION ?? "1.0.0",
+        imageDigest:
+            source.CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST ??
+            "sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0",
     });
 }
 

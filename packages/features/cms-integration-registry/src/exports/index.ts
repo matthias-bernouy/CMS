@@ -9,6 +9,8 @@ export type {
     IntegrationRegistryExactVersionLocation,
     IntegrationRegistryPackageMetadata,
     IntegrationRegistryQuarantinedEntry,
+    IntegrationRegistryReleaseEvidence,
+    IntegrationRegistryReleaseEvidenceReader,
     IntegrationRegistryValidatedCatalogEntry,
 } from "../interfaces/catalog";
 export type {
@@ -85,12 +87,17 @@ export type {
     IntegrationRegistryStablePromotionRequest,
     IntegrationRegistryStablePromotionResult,
     IntegrationRegistryVersionBlockRequest,
+    IntegrationRegistryVersionChannelRepairPreview,
     IntegrationRegistryVersionEligibilityDecisionReference,
     IntegrationRegistryVersionEligibilityManager,
     IntegrationRegistryVersionEligibilityRecord,
     IntegrationRegistryVersionEligibilityResult,
     IntegrationRegistryVersionInadmissibleRequest,
 } from "../interfaces/promotion";
+export {
+    projectIntegrationRegistryVersionEligibility,
+    type IntegrationRegistryVersionEligibilityProjection,
+} from "../core/promotion/eligibilityProjection";
 export type {
     AppendReviewedSchemaBaselineRequest,
     AppendReleaseReportRequest,
@@ -122,6 +129,10 @@ export { REVIEWED_SCHEMA_BASELINE_IMPORT_SCHEMA } from "../interfaces/reportStor
 export { createIntegrationRegistryCatalogSnapshot } from "../core/catalog/snapshot";
 export { InMemoryIntegrationRegistryMutationCoordinator } from "../core/catalog/mutationCoordinator";
 export { IntegrationRegistryCatalogSnapshotReference } from "../core/catalog/reference";
+export {
+    CurrentIntegrationRegistryReleaseEvidenceReader,
+    type IntegrationRegistryReleaseEvidenceReaderConfig,
+} from "../core/catalog/releaseEvidence";
 export {
     assertIntegrationCompatibilityAdmission,
     IntegrationCompatibilityAdmissionError,
@@ -181,10 +192,13 @@ export {
 } from "../core/publication/errors";
 export {
     advanceIntegrationRegistryCandidate,
+    beginIntegrationRegistryCandidatePublication,
     claimIntegrationRegistryCandidate,
+    completeIntegrationRegistryCandidatePublication,
     completeIntegrationRegistryCandidateAttempt,
     createIntegrationRegistryCandidateRecord,
     queueIntegrationRegistryCandidate,
+    rejectIntegrationRegistryCandidatePublication,
     renewIntegrationRegistryCandidateLease,
 } from "../core/publication/candidates/state";
 export { recoverExpiredIntegrationRegistryCandidateLease } from "../core/publication/candidates/recovery";

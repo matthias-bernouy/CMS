@@ -10,6 +10,7 @@ import type {
     RepositoryCatalogVersionPage,
 } from "@bernouy/cms-repository/catalog";
 import { HttpRepositoryCompatibilityReader } from "./compatibilityReader";
+import { HttpRepositoryReleaseReader } from "./release/reader";
 import { assertSummaryMatchesIndex, catalogIndex, catalogSummaries } from "./loading/definitionCatalog";
 import { featuredVersion, RepositoryCatalogLoader } from "./loading/integrationLoader";
 import { catalogDocument } from "./loading/projection";
@@ -42,10 +43,15 @@ export class HttpRepositoryCatalogReader implements RepositoryCatalogReader {
             ...transportConfig,
             maxResponseBytes: this.limits.compatibilityBytes,
         });
+        const releases = new HttpRepositoryReleaseReader({
+            ...transportConfig,
+            maxResponseBytes: this.limits.releaseEvidenceBytes,
+        });
         this.loader = new RepositoryCatalogLoader({
             catalog: config.catalog,
             transport,
             compatibility,
+            releases,
             limits: this.limits,
         });
     }

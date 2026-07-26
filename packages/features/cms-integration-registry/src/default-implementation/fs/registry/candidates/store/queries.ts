@@ -41,6 +41,26 @@ export async function listClaimableCandidateRecords(
     return Object.freeze(result);
 }
 
+export async function listPublicationPendingCandidateRecords(
+    layout: FsIntegrationRegistryCandidateLayout,
+    limit: number,
+    read: (candidateId: string) => Promise<IntegrationRegistryCandidateRecord | null>,
+): Promise<readonly IntegrationRegistryCandidateRecord[]> {
+    boundedCandidateListLimit(limit);
+    const result: IntegrationRegistryCandidateRecord[] = [];
+    for (const entry of await candidateRecordInventory(layout)) {
+        assertInventoryEntry(entry);
+        const record = await read(entry.name);
+        if (record?.status === "passed" || record?.status === "publishing") {
+            result.push(record);
+            if (result.length === limit) {
+                break;
+            }
+        }
+    }
+    return Object.freeze(result);
+}
+
 export async function sweepExpiredCandidateLeases(
     layout: FsIntegrationRegistryCandidateLayout,
     now: string,

@@ -2,10 +2,12 @@ import { renderSafeMarkdown } from "@bernouy/cms-content";
 import type { RepositoryCatalogVersionView } from "../view/models";
 import { repositoryPackageDownloadPath } from "../routes";
 import { escapeAttr, escapeHtml, formatBytes, humanLabel } from "./html";
+import { renderReleaseEvidence } from "./release";
 
 export function renderVersionSections(view: RepositoryCatalogVersionView): string {
     return [
         renderPackage(view),
+        renderReleaseEvidence(view.release),
         renderProviders(view),
         renderDependencies(view),
         renderArtifacts(view),

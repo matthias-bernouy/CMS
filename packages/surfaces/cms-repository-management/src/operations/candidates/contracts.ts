@@ -65,6 +65,10 @@ export interface RepositoryCandidateAdmissionCoordinator {
     ): Promise<IntegrationRegistryCandidateRecord>;
 }
 
+export interface RepositoryCandidatePublicationFinalizer {
+    finalize(candidateId: string): Promise<IntegrationRegistryCandidateRecord>;
+}
+
 export type RepositoryCandidateWorkerRoutesConfig = Readonly<{
     store: IntegrationRegistryCandidateStore;
     capabilityAuthority: RepositoryCandidateCapabilityAuthority;
@@ -74,6 +78,7 @@ export type RepositoryCandidateWorkerRoutesConfig = Readonly<{
     now(): string;
     createJobId(): string;
     createAttemptId(): string;
+    publication?: RepositoryCandidatePublicationFinalizer;
 }>;
 
 export type RepositoryCandidateWorkerSurfaceMount = Readonly<{

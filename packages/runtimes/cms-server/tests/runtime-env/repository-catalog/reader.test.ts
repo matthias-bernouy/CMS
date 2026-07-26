@@ -29,6 +29,10 @@ describe("HTTP repository catalog reader", () => {
                     expect.objectContaining({
                         version: "1.0.0",
                         package: { digest: PACKAGE_DIGEST, canonicalBytes: 2048 },
+                        release: expect.objectContaining({
+                            status: "installable",
+                            verificationOrigin: "legacy-backfill",
+                        }),
                     }),
                     expect.objectContaining({ version: "1.1.0" }),
                 ],
@@ -38,6 +42,10 @@ describe("HTTP repository catalog reader", () => {
             version: "1.0.0",
             releaseNotes: "# Release notes\n\nSafe Markdown.\n",
             compatibility: { currentRevisionId: "revision-1" },
+            release: {
+                status: "installable",
+                verification: expect.objectContaining({ origin: "legacy-backfill", outcome: "passed" }),
+            },
         });
         expect(version?.value.version).toMatchObject({
             version: "1.1.0",

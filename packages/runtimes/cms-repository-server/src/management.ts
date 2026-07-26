@@ -1,24 +1,36 @@
 import { randomUUID } from "node:crypto";
 import {
     InMemoryIntegrationRegistryMutationCoordinator,
+    CurrentIntegrationRegistryReleaseEvidenceReader,
     IntegrationCompatibilityEvaluator,
     type IntegrationRegistryRecoveryResult,
+    type IntegrationRegistryReleaseEvidenceReader,
+    type IntegrationVerificationBundleStore,
     type OfficialRepositoryBootstrapBaselineApproval,
 } from "@bernouy/cms-integration-registry";
+import type { ReleaseAdmissionPolicySnapshotV1 } from "@bernouy/cms-integration-verification";
 import {
     FsIntegrationCompatibilityReevaluator,
     FsIntegrationCompatibilityReportStore,
     FsIntegrationCompatibilityV2ReportStore,
     FsIntegrationMigrationReportStore,
+    FsIntegrationRegistryCandidateAdmissionPlanner,
+    FsIntegrationRegistryCandidateFinalizationError,
+    FsIntegrationRegistryCandidateFinalizer,
+    FsIntegrationRegistryCandidateStore,
     FsIntegrationRegistryPublisher,
     FsIntegrationRegistryRecoverer,
     FsIntegrationRegistryStablePromoter,
+    FsIntegrationRegistryVersionEligibilityManager,
     FsIntegrationVerificationReportStore,
+    FsIntegrationVerificationBundleStore,
     FsReleaseAdmissionDecisionStore,
     FsReviewedSchemaBaselineStore,
     FsReviewedSchemaBaselineImporter,
     MAX_REVIEWED_SCHEMA_BASELINE_IMPORT_DOCUMENT_BYTES,
     recoverReviewedSchemaBaselineImports,
+    recoverVerifiedCandidateActivations,
+    type CandidateMigrationReportProvider,
     type ReviewedSchemaBaselineImportTarget,
 } from "@bernouy/cms-integration-registry/fs";
 import { mountRepositorySchemaBaselineImportRoutes, RepositoryManagementCms } from "@bernouy/cms-repository-management";
@@ -47,6 +59,8 @@ export type ProductionRepositoryManagement = Readonly<{
     recovery: IntegrationRegistryRecoveryResult;
     candidateRecovery: Awaited<ReturnType<typeof createProductionRepositoryCandidateProtocol>>["recovery"];
     compatibility: RepositoryCompatibilityReader;
+    releases: IntegrationRegistryReleaseEvidenceReader;
+    verificationBundles: Pick<IntegrationVerificationBundleStore, "get">;
 }>;
 
 export async function createProductionRepositoryManagement(input: {
@@ -58,6 +72,8 @@ export async function createProductionRepositoryManagement(input: {
         approvedTargets: readonly ReviewedSchemaBaselineImportTarget[];
     }>;
     candidateProtocol?: Omit<ProductionRepositoryCandidateProtocolConfig, "root">;
+    candidateAdmissionPolicy?: ReleaseAdmissionPolicySnapshotV1;
+    candidateMigrationReports?: CandidateMigrationReportProvider;
 }): Promise<ProductionRepositoryManagement> {
     const telemetry = input.telemetry ?? new RepositoryOperationalTelemetry();
     const snapshots = input.catalog.snapshotReference();
@@ -66,12 +82,25 @@ export async function createProductionRepositoryManagement(input: {
     const releaseReportConfig = { root: input.root, snapshots, mutations };
     const compatibilityReports = new FsIntegrationCompatibilityV2ReportStore(releaseReportConfig);
     const verificationReports = new FsIntegrationVerificationReportStore(releaseReportConfig);
+    const verificationBundles = new FsIntegrationVerificationBundleStore(input.root);
     const migrationReports = new FsIntegrationMigrationReportStore(releaseReportConfig);
     const releaseDecisions = new FsReleaseAdmissionDecisionStore({
         ...releaseReportConfig,
         compatibilityReports,
         verificationReports,
         migrationReports,
+    });
+    const releaseEvidence = new CurrentIntegrationRegistryReleaseEvidenceReader({
+        catalog: snapshots,
+        compatibility: compatibilityReports,
+        verification: verificationReports,
+        migrations: migrationReports,
+        decisions: releaseDecisions,
+    });
+    const compatibility = new IntegrationCompatibilityEvaluator({
+        identity: { name: "cms-repository-server", version: "1.0.0" },
+        now: () => new Date().toISOString(),
+        createReportId: () => randomUUID(),
     });
     const registryRecovery = await new FsIntegrationRegistryRecoverer({
         root: input.root,
@@ -93,20 +122,78 @@ export async function createProductionRepositoryManagement(input: {
     const baselineImportDiagnostics = baselineImportConfig
         ? await recoverReviewedSchemaBaselineImports(baselineImportConfig)
         : [];
+    const candidateStore = new FsIntegrationRegistryCandidateStore({ root: input.root });
+    const candidatePlanner = input.candidateAdmissionPolicy
+        ? new FsIntegrationRegistryCandidateAdmissionPlanner({
+              snapshots,
+              mutations,
+              candidates: candidateStore,
+              reviewedSchemaBaselines,
+              policy: input.candidateAdmissionPolicy,
+          })
+        : undefined;
+    const candidateFinalizerConfig = input.candidateAdmissionPolicy
+        ? {
+              root: input.root,
+              snapshots,
+              mutations,
+              compatibility,
+              reviewedSchemaBaselines,
+              candidates: candidateStore,
+              policy: input.candidateAdmissionPolicy,
+              compatibilityReports,
+              verificationReports,
+              migrationReports,
+              releaseDecisions,
+              verificationBundles,
+              ...(input.candidateMigrationReports ? { loadMigrationReports: input.candidateMigrationReports } : {}),
+          }
+        : undefined;
+    const candidateFinalizer = candidateFinalizerConfig
+        ? new FsIntegrationRegistryCandidateFinalizer(candidateFinalizerConfig)
+        : undefined;
     const candidateProtocol = await createProductionRepositoryCandidateProtocol({
         root: input.root,
         ...input.candidateProtocol,
+        store: candidateStore,
+        ...(candidatePlanner ? { plan: (request) => candidatePlanner.plan(request) } : {}),
+        ...(candidateFinalizer
+            ? {
+                  publication: {
+                      async finalize(candidateId: string) {
+                          await candidateFinalizer.finalize(candidateId);
+                          const current = await candidateStore.get(candidateId);
+                          if (!current) {
+                              throw new Error("Finalized candidate disappeared from its persistent store");
+                          }
+                          return current;
+                      },
+                  },
+              }
+            : {}),
     });
+    if (candidateFinalizerConfig && candidateFinalizer) {
+        await recoverVerifiedCandidateActivations(candidateFinalizerConfig);
+        for (const candidate of await candidateStore.listPublicationPending()) {
+            try {
+                await candidateFinalizer.recover(candidate.candidateId);
+            } catch (error) {
+                if (
+                    !(
+                        error instanceof FsIntegrationRegistryCandidateFinalizationError &&
+                        error.code === "admission_rejected"
+                    )
+                ) {
+                    throw error;
+                }
+            }
+        }
+    }
     const recovery: IntegrationRegistryRecoveryResult = Object.freeze({
         snapshot: registryRecovery.snapshot,
         diagnostics: Object.freeze([...registryRecovery.diagnostics, ...baselineImportDiagnostics]),
     });
     const reports = new FsIntegrationCompatibilityReportStore({ snapshots, mutations });
-    const compatibility = new IntegrationCompatibilityEvaluator({
-        identity: { name: "cms-repository-server", version: "1.0.0" },
-        now: () => new Date().toISOString(),
-        createReportId: () => randomUUID(),
-    });
     const publisher = new ObservedIntegrationRegistryPublisher(
         new FsIntegrationRegistryPublisher({
             root: input.root,
@@ -127,6 +214,12 @@ export async function createProductionRepositoryManagement(input: {
         }),
         telemetry,
     );
+    const versionEligibility = new FsIntegrationRegistryVersionEligibilityManager({
+        root: input.root,
+        snapshots,
+        decisions: releaseDecisions,
+        mutations,
+    });
     const reevaluator = new ObservedIntegrationCompatibilityReevaluator(
         new FsIntegrationCompatibilityReevaluator({
             snapshots,
@@ -140,6 +233,8 @@ export async function createProductionRepositoryManagement(input: {
         recovery,
         candidateRecovery: candidateProtocol.recovery,
         compatibility: reports,
+        releases: releaseEvidence,
+        verificationBundles,
         mountMaintenance(runner: Runner) {
             if (baselineImporter) {
                 mountRepositorySchemaBaselineImportRoutes(runner, {
@@ -162,6 +257,7 @@ export async function createProductionRepositoryManagement(input: {
                 reads: {
                     catalog: snapshots,
                     reports,
+                    releases: releaseEvidence,
                     recoveryDiagnostics: () => recovery.diagnostics,
                     operational: {
                         snapshot: () => telemetry.snapshot(),
@@ -169,6 +265,7 @@ export async function createProductionRepositoryManagement(input: {
                     },
                 },
                 stablePromotions: { promoter, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
+                versionEligibility: { manager: versionEligibility, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
                 compatibilityReevaluations: { reevaluator, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
                 existingVersionDigest(kind, version) {
                     return input.catalog.current().locateExactVersion(kind, version)?.package.digest ?? null;

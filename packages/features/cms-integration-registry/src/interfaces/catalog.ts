@@ -4,6 +4,13 @@ import type {
     IntegrationDefinitionSummary,
     IntegrationDefinitionVersion,
 } from "@bernouy/cms-integrations";
+import type {
+    CompatibilityReportV2,
+    MigrationReport,
+    ReleaseAdmissionDecision,
+    VerificationReport,
+} from "@bernouy/cms-integration-verification";
+import type { ReleaseReportHistory } from "./reportStore";
 
 export type IntegrationRegistryCatalogHealth = "healthy" | "degraded";
 
@@ -78,3 +85,19 @@ export type IntegrationRegistryCatalogSnapshot = Readonly<{
 export type IntegrationRegistryCatalogSnapshotProvider = Readonly<{
     current(): IntegrationRegistryCatalogSnapshot;
 }>;
+
+export type IntegrationRegistryReleaseEvidence = Readonly<{
+    kind: string;
+    version: string;
+    packageDigest: string;
+    status?: "blocked" | "inadmissible" | "unverified";
+    verificationDigest?: string;
+    compatibility?: ReleaseReportHistory<CompatibilityReportV2>;
+    verification?: ReleaseReportHistory<VerificationReport>;
+    migrations: readonly ReleaseReportHistory<MigrationReport>[];
+    decision?: ReleaseReportHistory<ReleaseAdmissionDecision>;
+}>;
+
+export interface IntegrationRegistryReleaseEvidenceReader {
+    get(kind: string, version: string): Promise<IntegrationRegistryReleaseEvidence | null>;
+}

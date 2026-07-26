@@ -41,6 +41,12 @@ describe("repository catalog integration and version pages", () => {
         expect(html).toContain("Comparator update");
         expect(html).toContain("a".repeat(64));
         expect(html).toContain("Download commerce@1.1.0");
+        expect(html).toContain("Release admission");
+        expect(html).toContain("Legacy backfill");
+        expect(html).toContain("cms-schema-generator");
+        expect(html).toContain("sql-install-and-reapply");
+        expect(html).toContain("verification-bundle?digest=");
+        expect(html).toContain("No source-to-target migration report is published");
     });
 
     test("changes cache identity whenever the reader revision changes", async () => {

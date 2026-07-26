@@ -116,6 +116,7 @@ describe("production repository management", () => {
                     version: "1.0.0",
                     digest: publication.digest,
                     status: "unverified",
+                    blockPreview: { current: {}, next: {} },
                     compatibility: {
                         admissionReportId: expect.any(String),
                         currentReportRevisionId: expect.any(String),
@@ -123,6 +124,7 @@ describe("production repository management", () => {
                         admissible: true,
                         warning: false,
                     },
+                    release: { admissible: false },
                 },
             ],
         });

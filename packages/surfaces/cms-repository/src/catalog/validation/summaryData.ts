@@ -2,6 +2,7 @@ import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@
 import type { RepositoryCatalogIntegrationSummary, RepositoryCatalogPackageSummary } from "../contracts";
 import { assertCompatibilitySummary } from "./compatibilityData";
 import { boundedArray, boundedText, REPOSITORY_CATALOG_LIMITS, RepositoryCatalogDataError } from "./limits";
+import { assertReleaseSummary } from "./releaseData";
 
 const DIGEST = /^[a-f0-9]{64}$/;
 
@@ -28,6 +29,7 @@ export function assertRepositoryCatalogSummary(summary: RepositoryCatalogIntegra
         versionIds.add(entry.version);
         assertPackageSummary(entry.package);
         assertCompatibilitySummary(entry.compatibility);
+        assertReleaseSummary(entry.release);
     }
     assertChannel(summary.stable, "stable", versionIds);
     assertChannel(summary.latest, "latest", versionIds);

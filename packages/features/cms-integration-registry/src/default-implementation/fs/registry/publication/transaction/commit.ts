@@ -1,5 +1,6 @@
 import { manifestDocumentByteLimit } from "../../../manifest/contract";
 import type { IntegrationCompatibilityAdmissionReport } from "../../../../../interfaces/compatibility";
+import type { IntegrationRegistryCatalogSnapshot } from "../../../../../interfaces/catalog";
 import type { IntegrationRegistryPublicationResult } from "../../../../../interfaces/publication";
 import {
     createPublicationJournal,
@@ -34,10 +35,12 @@ export async function commitFsIntegrationRegistryPublication(
         admissionReport?: IntegrationCompatibilityAdmissionReport;
         versionStatus?: "unverified";
         verificationDigest?: string;
+        validateUnderLock?: (snapshot: IntegrationRegistryCatalogSnapshot) => Promise<void>;
     }>,
 ): Promise<IntegrationRegistryPublicationResult> {
     const { config, layout, paths, operationId, candidate } = input;
     const capturedSnapshot = config.snapshots.current();
+    await input.validateUnderLock?.(capturedSnapshot);
     const previousIndex = capturedSnapshot.getIndex(candidate.definition.kind);
     const nextIndex = nextIntegrationRegistryIndex(previousIndex, candidate.definition, candidate.package.envelope, {
         ...(input.versionStatus ? { status: input.versionStatus } : {}),

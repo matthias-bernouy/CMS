@@ -3,11 +3,14 @@ import type {
     IntegrationCompatibilityReportPageRequest,
     IntegrationCompatibilityReportStore,
     IntegrationRegistryCatalogSnapshotProvider,
+    IntegrationRegistryReleaseEvidenceReader,
     IntegrationRegistryRecoveryDiagnostic,
 } from "@bernouy/cms-integration-registry";
+import { projectIntegrationRegistryVersionEligibility } from "@bernouy/cms-integration-registry";
 import type { Runner } from "@bernouy/http-runner";
 import type { RepositoryManagementOperationalReadSource } from "./observability/contracts";
 import { projectRepositoryOperationalRead } from "./observability/projection";
+import { projectRepositoryManagementRelease } from "./observability/releaseProjection";
 
 export type { RepositoryManagementOperationalReadSource } from "./observability/contracts";
 
@@ -15,12 +18,14 @@ export const REPOSITORY_STATUS_PATH = "/api/status";
 export const REPOSITORY_DIAGNOSTICS_PATH = "/api/diagnostics";
 export const REPOSITORY_VERSIONS_PATH = "/api/integrations/versions";
 export const REPOSITORY_COMPATIBILITY_PATH = "/api/integrations/compatibility";
+export const REPOSITORY_RELEASE_PATH = "/api/integrations/release";
 
 const MAX_COMPATIBILITY_PAGE_SIZE = 100;
 
 export type RepositoryManagementReadConfig = Readonly<{
     catalog: IntegrationRegistryCatalogSnapshotProvider;
     reports: IntegrationCompatibilityReportStore;
+    releases?: IntegrationRegistryReleaseEvidenceReader;
     recoveryDiagnostics?: () => readonly IntegrationRegistryRecoveryDiagnostic[];
     operational?: RepositoryManagementOperationalReadSource;
 }>;
@@ -30,6 +35,7 @@ export function mountRepositoryManagementReadRoutes(runner: Runner, config: Repo
     runner.get(REPOSITORY_DIAGNOSTICS_PATH, () => diagnosticsResponse(config));
     runner.get(REPOSITORY_VERSIONS_PATH, (request) => versionsResponse(request, config));
     runner.get(REPOSITORY_COMPATIBILITY_PATH, (request) => compatibilityResponse(request, config));
+    runner.get(REPOSITORY_RELEASE_PATH, (request) => releaseResponse(request, config));
 }
 
 async function statusResponse(config: RepositoryManagementReadConfig): Promise<Response> {
@@ -87,10 +93,17 @@ async function versionsResponse(request: Request, config: RepositoryManagementRe
             snapshot.listVersions(kind).map(async ({ version, status }) => {
                 const location = snapshot.locateExactVersion(kind, version);
                 const history = await config.reports.get(kind, version);
+                const release = await config.releases?.get(kind, version);
                 return {
                     version,
                     digest: location?.package.digest,
                     ...(status ? { status } : {}),
+                    ...(status === "blocked" || status === "inadmissible"
+                        ? {}
+                        : {
+                              blockPreview: projectIntegrationRegistryVersionEligibility(index, version, "blocked")
+                                  .channels,
+                          }),
                     compatibility: history
                         ? {
                               admissionReportId: history.admission.id,
@@ -100,10 +113,40 @@ async function versionsResponse(request: Request, config: RepositoryManagementRe
                               warning: history.current.id !== history.admission.id && !history.current.admissible,
                           }
                         : null,
+                    ...(release
+                        ? {
+                              release: {
+                                  verificationDigest: release.verificationDigest,
+                                  verificationOrigin: release.verification?.current.origin,
+                                  verificationOutcome: release.verification?.current.outcome,
+                                  decisionRevisionId: release.decision?.currentRevisionId,
+                                  decisionDigest: release.decision?.currentReportDigest,
+                                  admissible: release.decision?.current.admissible ?? false,
+                              },
+                          }
+                        : {}),
                 };
             }),
         );
         return jsonResponse({ kind, stable: index.stable, latest: index.latest, versions });
+    } catch (error) {
+        return invalidRequest(error);
+    }
+}
+
+async function releaseResponse(request: Request, config: RepositoryManagementReadConfig): Promise<Response> {
+    try {
+        if (!config.releases) {
+            return errorResponse(404, "release_evidence_not_configured", "Release evidence is not configured");
+        }
+        const kind = requiredParam(request, "kind");
+        const version = requiredParam(request, "version");
+        assertIntegrationPackageKind(kind);
+        assertIntegrationPackageVersion(version);
+        const release = await config.releases.get(kind, version);
+        return release
+            ? jsonResponse(projectRepositoryManagementRelease(release))
+            : errorResponse(404, "release_evidence_not_found", "Release evidence was not found");
     } catch (error) {
         return invalidRequest(error);
     }

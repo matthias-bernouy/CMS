@@ -35,11 +35,19 @@ export function mountWorkerResultRoutes(runner: Runner, config: RepositoryCandid
             ) {
                 return workerAttemptConflict();
             }
-            const record = await config.store.complete(identity.candidateId, {
-                expectedRevision: input.expectedRevision,
-                now,
-                result: input.result,
-            });
+            let record = exactReplay
+                ? current
+                : await config.store.complete(identity.candidateId, {
+                      expectedRevision: input.expectedRevision,
+                      now,
+                      result: input.result,
+                  });
+            if (!record) {
+                return workerAttemptConflict();
+            }
+            if (config.publication && (record.status === "passed" || record.status === "publishing")) {
+                record = await config.publication.finalize(record.candidateId);
+            }
             return candidateJsonResponse(200, { candidate: projectCandidateStatus(record) });
         } catch (error) {
             return candidateProtocolErrorResponse(error);

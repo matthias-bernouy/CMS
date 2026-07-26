@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { writeImmutableIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import type { IntegrationCompatibilityAdmissionReport } from "../../../../interfaces/compatibility";
+import type { IntegrationRegistryCatalogSnapshot } from "../../../../interfaces/catalog";
 import { IntegrationRegistryVerificationRequiredError } from "../../../../core/publication/errors";
 import type {
     IntegrationRegistryPublicationRequest,
@@ -46,6 +47,7 @@ export async function publishPreparedFsIntegrationRegistryCandidate(
     admissionReport?: IntegrationCompatibilityAdmissionReport,
     versionStatus?: "unverified",
     verificationDigest?: string,
+    validateUnderLock?: (snapshot: IntegrationRegistryCatalogSnapshot) => Promise<void>,
 ) {
     const operationId = config.createOperationId?.() ?? randomUUID();
     const layout = await ensureFsIntegrationRegistryLayout(config.root);
@@ -65,21 +67,20 @@ export async function publishPreparedFsIntegrationRegistryCandidate(
         limits: candidate.limits,
     });
     try {
-        return await config.mutations.runExclusive(
-            candidate.definition.kind,
-            async () =>
-                await commitFsIntegrationRegistryPublication({
-                    config,
-                    layout,
-                    paths,
-                    operationId,
-                    candidate,
-                    ...(schemaDeclarationEvidence ? { schemaDeclarationEvidence } : {}),
-                    ...(admissionReport ? { admissionReport } : {}),
-                    ...(versionStatus ? { versionStatus } : {}),
-                    ...(verificationDigest ? { verificationDigest } : {}),
-                }),
-        );
+        return await config.mutations.runExclusive(candidate.definition.kind, async () => {
+            return await commitFsIntegrationRegistryPublication({
+                config,
+                layout,
+                paths,
+                operationId,
+                candidate,
+                ...(schemaDeclarationEvidence ? { schemaDeclarationEvidence } : {}),
+                ...(admissionReport ? { admissionReport } : {}),
+                ...(versionStatus ? { versionStatus } : {}),
+                ...(verificationDigest ? { verificationDigest } : {}),
+                ...(validateUnderLock ? { validateUnderLock } : {}),
+            });
+        });
     } catch (error) {
         if (
             !(error instanceof FsIntegrationRegistrySimulatedCrashError) &&

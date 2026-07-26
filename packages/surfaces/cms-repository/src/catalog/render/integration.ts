@@ -28,6 +28,7 @@ function renderVersions(data: RepositoryCatalogIntegrationPage): string {
             (entry) => `<li>
 <a href="${escapeAttr(repositoryVersionPath(integration.kind, entry.version))}">${escapeHtml(entry.version)}</a>
 ${renderStatusBadges(integration.stable === entry.version, integration.latest === entry.version)}
+${entry.release ? `<span>${escapeHtml(entry.release.status)}${entry.release.verificationOrigin ? ` · ${escapeHtml(entry.release.verificationOrigin)}` : ""}</span>` : ""}
 <span>${renderCompatibilitySummary(entry.compatibility)}</span>
 ${entry.package?.digest ? `<code>${escapeHtml(entry.package.digest)}</code>` : ""}
 ${entry.package?.canonicalBytes === undefined ? "" : `<span>${escapeHtml(formatBytes(entry.package.canonicalBytes))}</span>`}

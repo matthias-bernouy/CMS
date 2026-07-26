@@ -8,12 +8,15 @@ import type {
 } from "@bernouy/cms-integration-verification";
 import type { IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
 import type {
+    BeginIntegrationRegistryCandidatePublicationInput,
     ClaimIntegrationRegistryCandidateInput,
     CompleteIntegrationRegistryCandidateInput,
+    CompleteIntegrationRegistryCandidatePublicationInput,
     CreateIntegrationRegistryCandidateInput,
     IntegrationRegistryCandidateRecord,
     PersistIntegrationRegistryCandidatePlanningInput,
     QueueIntegrationRegistryCandidateInput,
+    RejectIntegrationRegistryCandidatePublicationInput,
     RejectIntegrationRegistryCandidateValidationInput,
 } from "./candidate";
 
@@ -36,6 +39,7 @@ export interface IntegrationRegistryCandidateStore {
         input: PersistIntegrationRegistryCandidatePlanningInput,
     ): Promise<Readonly<{ compatibilityReportDigest: string; statefulChangeSelectionDigest: string }>>;
     listClaimable(now: string, limit?: number): Promise<readonly IntegrationRegistryCandidateRecord[]>;
+    listPublicationPending(limit?: number): Promise<readonly IntegrationRegistryCandidateRecord[]>;
     advanceValidation(
         candidateId: string,
         input: Readonly<{ expectedRevision: number; now: string }>,
@@ -65,6 +69,18 @@ export interface IntegrationRegistryCandidateStore {
     complete(
         candidateId: string,
         input: CompleteIntegrationRegistryCandidateInput,
+    ): Promise<IntegrationRegistryCandidateRecord>;
+    beginPublication(
+        candidateId: string,
+        input: BeginIntegrationRegistryCandidatePublicationInput,
+    ): Promise<IntegrationRegistryCandidateRecord>;
+    completePublication(
+        candidateId: string,
+        input: CompleteIntegrationRegistryCandidatePublicationInput,
+    ): Promise<IntegrationRegistryCandidateRecord>;
+    rejectPublication(
+        candidateId: string,
+        input: RejectIntegrationRegistryCandidatePublicationInput,
     ): Promise<IntegrationRegistryCandidateRecord>;
     recoverExpiredLease(
         candidateId: string,

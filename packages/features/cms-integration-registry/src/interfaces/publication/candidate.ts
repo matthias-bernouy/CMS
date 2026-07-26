@@ -130,3 +130,19 @@ export type CompleteIntegrationRegistryCandidateInput = Readonly<{
     now: string;
     result: VerificationJobResultV1;
 }>;
+
+export type BeginIntegrationRegistryCandidatePublicationInput = Readonly<{
+    expectedRevision: number;
+    now: string;
+}>;
+
+export type CompleteIntegrationRegistryCandidatePublicationInput = Readonly<{
+    expectedRevision: number;
+    now: string;
+}>;
+
+export type RejectIntegrationRegistryCandidatePublicationInput = Readonly<{
+    expectedRevision: number;
+    now: string;
+    failure: IntegrationRegistryCandidateFailure & Readonly<{ kind: "stale" }>;
+}>;

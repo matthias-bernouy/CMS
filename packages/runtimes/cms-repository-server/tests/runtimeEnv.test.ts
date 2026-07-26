@@ -17,6 +17,11 @@ describe("readRepositoryRuntimeEnv", () => {
             workerRateLimitWindowSeconds: 60,
             candidateTtlMs: 86_400_000,
             workerLeaseDurationMs: 300_000,
+            verifierRunner: {
+                name: "cms-postgres",
+                version: "1.0.0",
+                imageDigest: "sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0",
+            },
             clientAddressMode: "disabled",
             trustedProxyHops: 0,
             packageDownloadLimit: 60,
@@ -72,6 +77,21 @@ describe("readRepositoryRuntimeEnv", () => {
             managementRateLimitWindowSeconds: 20,
             gracefulStopTimeoutMs: 5000,
         });
+    });
+
+    test("requires an exact digest-pinned verification runner", () => {
+        expect(
+            readRepositoryRuntimeEnv({
+                CMS_INTEGRATION_VERIFIER_RUNNER_NAME: "cms-postgres-hardened",
+                CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "2.1.0",
+                CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: `sha256:${"a".repeat(64)}`,
+            }).verifierRunner,
+        ).toEqual({
+            name: "cms-postgres-hardened",
+            version: "2.1.0",
+            imageDigest: `sha256:${"a".repeat(64)}`,
+        });
+        expect(() => readRepositoryRuntimeEnv({ CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: "latest" })).toThrow();
     });
 
     test("requires explicit trusted hops and keeps disabled mode explicit", () => {

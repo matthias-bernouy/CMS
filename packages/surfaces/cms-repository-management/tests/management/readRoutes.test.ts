@@ -4,6 +4,7 @@ import type {
     IntegrationCompatibilityReportPage,
     IntegrationCompatibilityReportStore,
     IntegrationRegistryCatalogSnapshot,
+    IntegrationRegistryReleaseEvidence,
 } from "@bernouy/cms-integration-registry";
 import { createIntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry";
 import {
@@ -11,6 +12,7 @@ import {
     REPOSITORY_COMPATIBILITY_PATH,
     REPOSITORY_DIAGNOSTICS_PATH,
     REPOSITORY_STATUS_PATH,
+    REPOSITORY_RELEASE_PATH,
     REPOSITORY_VERSIONS_PATH,
 } from "@bernouy/cms-repository-management";
 import type { RouteHandler, Runner } from "@bernouy/http-runner";
@@ -84,6 +86,10 @@ describe("repository management read routes", () => {
                 {
                     version: "1.0.0",
                     digest: "a".repeat(64),
+                    blockPreview: {
+                        current: { stable: "1.0.0", latest: "1.0.0" },
+                        next: {},
+                    },
                     compatibility: {
                         admissionReportId: "admission-1",
                         currentReportRevisionId: "revision-1",
@@ -117,6 +123,36 @@ describe("repository management read routes", () => {
                 expect(((await invalid.json()) as { code: string }).code).toBe("management_request_invalid");
             }
         }
+    });
+
+    test("returns composite release evidence and exact blocked eligibility", async () => {
+        const runner = new ReadTestRunner();
+        const release: IntegrationRegistryReleaseEvidence = {
+            kind: "commerce",
+            version: "1.0.0",
+            packageDigest: "a".repeat(64),
+            status: "blocked",
+            verificationDigest: "b".repeat(64),
+            migrations: [],
+        };
+        mountRepositoryManagementReadRoutes(runner as unknown as Runner, {
+            catalog: { current: fixtureSnapshot },
+            reports: new ReportStore(),
+            releases: { get: async (kind, version) => (kind === "commerce" && version === "1.0.0" ? release : null) },
+        });
+
+        const response = await runner.handle(`${REPOSITORY_RELEASE_PATH}?kind=commerce&version=1.0.0`);
+        expect(await response.json()).toEqual({
+            kind: "commerce",
+            version: "1.0.0",
+            packageDigest: "a".repeat(64),
+            verificationDigest: "b".repeat(64),
+            status: "blocked",
+            installable: false,
+            freshInstallOnly: false,
+            migrations: [],
+        });
+        expect((await runner.handle(`${REPOSITORY_RELEASE_PATH}?kind=commerce&version=2.0.0`)).status).toBe(404);
     });
 
     test("returns stable 400 and 404 errors", async () => {

@@ -11,6 +11,7 @@ import {
     mountRepositoryCandidateManagementRoutes,
     mountRepositoryCandidateWorkerRoutes,
     RepositoryCandidateAdmissionPlanningError,
+    type RepositoryCandidatePublicationFinalizer,
 } from "@bernouy/cms-repository-management";
 import { BunRunner, type Runner } from "@bernouy/http-runner";
 import { serveForTest, type TestServer } from "@bernouy/http-runner/testing";
@@ -29,7 +30,10 @@ export const TIMES = {
 
 export type CandidateProtocolFixture = Awaited<ReturnType<typeof candidateProtocolFixture>>;
 
-export async function candidateProtocolFixture(planningFailure = false) {
+export async function candidateProtocolFixture(
+    planningFailure = false,
+    publication?: RepositoryCandidatePublicationFinalizer,
+) {
     const root = mkdtempSync(join(tmpdir(), "cms-candidate-protocol-"));
     const store = new FsIntegrationRegistryCandidateStore({ root });
     const candidate = await candidateValue();
@@ -54,6 +58,7 @@ export async function candidateProtocolFixture(planningFailure = false) {
         now: () => clock.value,
         createJobId: () => "job-1",
         createAttemptId: () => `attempt-${clock.value === TIMES.claimed ? "1" : "2"}`,
+        ...(publication ? { publication } : {}),
     };
     const admission = createRepositoryCandidateAdmissionCoordinator({
         store,
