@@ -1,5 +1,6 @@
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
 import type { IntegrationInput } from "../../../../interfaces/Integration";
+import { isStringSecretInputType } from "../../../shared/inputSensitivity";
 import { isInputType, isRecord, RESERVED_INPUT_NAMES, text } from "../values";
 import { parseObjectListInput, validateObjectListInput } from "./objectList";
 import { parseOptionsList } from "./options";
@@ -25,6 +26,9 @@ export function parseInput(value: unknown, name: string): IntegrationInput {
             `${name}.type`,
             "must be text, url, password, select, boolean, json, or object-list",
         );
+    }
+    if (value.secret === true && !isStringSecretInputType(type)) {
+        throw new IntegrationInputError(`${name}.secret`, "secret inputs must use text, url, or password");
     }
     if (type === "object-list") {
         return parseObjectListInput(value, name, inputName, label);
