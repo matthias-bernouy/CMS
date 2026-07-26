@@ -42,6 +42,7 @@ export function createIntegrationRegistryCandidateRecord(
         version: envelope.package.version,
         packageDigest: input.candidate.packageDigest,
         verificationDigest: input.candidate.verificationDigest,
+        ...(envelope.submission.requestedChannel ? { requestedChannel: envelope.submission.requestedChannel } : {}),
         createdAt,
         updatedAt: createdAt,
         expiresAt,
@@ -96,6 +97,9 @@ export function claimIntegrationRegistryCandidate(
         transition(record.status, "running");
     }
     const now = monotonicTimestamp(record, input.now);
+    if (Date.parse(now) >= Date.parse(record.expiresAt)) {
+        invalid("Expired candidate cannot be claimed");
+    }
     const lease = parseLease(input, now);
     return nextRecord(record, {
         status: "running",
@@ -216,7 +220,7 @@ function assertLease(
 }
 
 function assertLeaseCurrent(lease: IntegrationRegistryCandidateLease, now: string): void {
-    if (Date.parse(now) > Date.parse(lease.leaseExpiresAt)) {
+    if (Date.parse(now) >= Date.parse(lease.leaseExpiresAt)) {
         throw new IntegrationRegistryCandidateError("lease_expired", "Candidate attempt lease has expired");
     }
 }
@@ -264,7 +268,8 @@ function identifier(value: string, field: string): void {
 }
 
 function timestamp(value: string, field: string): string {
-    if (typeof value !== "string" || !value.trim() || !Number.isFinite(Date.parse(value))) {
+    const parsed = typeof value === "string" ? Date.parse(value) : Number.NaN;
+    if (!Number.isFinite(parsed) || new Date(parsed).toISOString() !== value) {
         invalid(`Candidate ${field} must be an ISO timestamp`);
     }
     return value;

@@ -14,7 +14,8 @@ export function recoverExpiredIntegrationRegistryCandidateLease(
     if (record.status !== "running" || !record.lease) {
         throw new IntegrationRegistryCandidateError("lease_conflict", "Candidate has no running lease to recover");
     }
-    if (!input.now.trim() || !Number.isFinite(Date.parse(input.now))) {
+    const parsedNow = Date.parse(input.now);
+    if (!Number.isFinite(parsedNow) || new Date(parsedNow).toISOString() !== input.now) {
         throw new IntegrationRegistryCandidateError(
             "invalid_candidate",
             "Candidate recovery time must be an ISO timestamp",
@@ -26,7 +27,7 @@ export function recoverExpiredIntegrationRegistryCandidateLease(
             "Candidate update time must not move backwards",
         );
     }
-    if (Date.parse(input.now) <= Date.parse(record.lease.leaseExpiresAt)) {
+    if (Date.parse(input.now) < Date.parse(record.lease.leaseExpiresAt)) {
         throw new IntegrationRegistryCandidateError("lease_conflict", "Candidate running lease has not expired");
     }
     const { lease: _expiredLease, ...withoutLease } = record;

@@ -98,6 +98,7 @@ export type IntegrationRegistryCandidateRecord = Readonly<{
     version: string;
     packageDigest: string;
     verificationDigest: string;
+    requestedChannel?: "latest";
     createdAt: string;
     updatedAt: string;
     expiresAt: string;

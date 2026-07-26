@@ -78,6 +78,17 @@ describe("integration registry candidate lifecycle", () => {
                 }),
             "lease_expired",
         );
+        expectCandidateError(
+            () =>
+                completeIntegrationRegistryCandidateAttempt(first, {
+                    expectedRevision: first.revision,
+                    attemptId: "attempt-1",
+                    fencingToken: 1,
+                    now: TIMES.lease,
+                    outcome: "passed",
+                }),
+            "lease_expired",
+        );
 
         const retried = completeIntegrationRegistryCandidateAttempt(first, {
             expectedRevision: first.revision,
@@ -141,6 +152,27 @@ describe("integration registry candidate lifecycle", () => {
         const expiring = await candidate();
         const expired = advance(expiring, "expired", TIMES.expires);
         expect(expired.status).toBe("expired");
+
+        const shortLived = createIntegrationRegistryCandidateRecord({
+            candidateId: "short-lived",
+            candidate: candidateValue,
+            createdAt: TIMES.created,
+            expiresAt: TIMES.queued,
+        });
+        const expiredQueue = advance(advance(shortLived, "validating", TIMES.validating), "queued", TIMES.queued);
+        expectCandidateError(
+            () =>
+                claimIntegrationRegistryCandidate(expiredQueue, {
+                    expectedRevision: expiredQueue.revision,
+                    jobId: "job-expired",
+                    attemptId: "attempt-expired",
+                    fencingToken: 1,
+                    workerId: "worker-1",
+                    now: TIMES.queued,
+                    leaseExpiresAt: TIMES.lease,
+                }),
+            "invalid_candidate",
+        );
     });
 
     test("fails closed on malformed identity, time, failure, and direct running transitions", async () => {
@@ -155,6 +187,7 @@ describe("integration registry candidate lifecycle", () => {
         ).toThrow(IntegrationRegistryCandidateError);
         expectCandidateError(() => advance(uploaded, "queued", TIMES.queued), "invalid_transition");
         expect(() => advance(uploaded, "expired", TIMES.created)).toThrow(/before expiresAt/);
+        expect(() => advance(uploaded, "validating", "2026-07-26T10:01:00Z")).toThrow(/ISO timestamp/);
     });
 
     test("recovers an expired worker lease with a fenced infrastructure retry", async () => {
