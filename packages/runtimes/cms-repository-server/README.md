@@ -24,11 +24,13 @@ request headers, actors, reasons, package contents, or filesystem paths.
 Authenticated management reads expose operational counters only through
 `/.cms/repository-management/api/status` and
 `/.cms/repository-management/api/diagnostics`. They include mutation outcomes
-and latency, snapshot integration/version/quarantine/recovery counts,
-compatibility warnings and reevaluations, public package bytes and rate-limit
-rejections, and registry filesystem capacity. The public listener does not
-expose these fields. The recent-operation diagnostic list is capped at 32 by
-the runtime and at 100 by the management projection.
+and latency, aggregate `GET`/`HEAD` read outcomes and latency, snapshot
+integration/version/quarantine/recovery counts, compatibility warnings and
+reevaluations, public package bytes and rate-limit rejections, and registry
+filesystem capacity. The public listener does not expose these fields. Read
+metrics retain no URL, query, client address, or package identity. The
+recent-operation diagnostic list is capped at 32 by the runtime and at 100 by
+the management projection.
 
 This MVP deliberately has no general metrics backend. Counters and recent
 operations are process-local and reset on restart; immutable compatibility and
