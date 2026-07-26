@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { chmodSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { FsReleaseAdmissionReconciler } from "@bernouy/cms-integration-registry/fs";
 import { createIntegrationRegistryCatalogSnapshot } from "../../../src/core/catalog/snapshot";
 import { IntegrationRegistryCatalogSnapshotReference } from "../../../src/core/catalog/reference";
 import { FsIntegrationRegistryRecoverer } from "../../../src/default-implementation/fs/registry/recovery/recoverer";
@@ -146,6 +147,34 @@ describe("filesystem version eligibility recovery", () => {
             expect.objectContaining({ code: "version-eligibility-quarantined", operationId: "corrupt-record" }),
         );
         expect(readdirSync(records)).toEqual([]);
+        expect(readdirSync(eligibilityJournals(fixture.root))).toEqual([]);
+    });
+
+    test("repairs channels after a decision commit that crashed before eligibility mutation", async () => {
+        const fixture = registryFixture();
+        await publishVersions(fixture, ["1.0.0", "1.1.0"]);
+        const current = await appendDecision(fixture, "1.1.0");
+        await appendAdverseDecisionRevision(current.stores, current);
+        const eligibility = eligibilityManager(fixture, current.stores.decisions);
+        const reconciler = new FsReleaseAdmissionReconciler({
+            snapshots: fixture.snapshots,
+            compatibility: current.stores.compatibilityReports,
+            verification: current.stores.verificationReports,
+            migrations: current.stores.migrationReports,
+            decisions: current.stores.decisions,
+            eligibility,
+        });
+
+        await reconciler.reconcileAll({
+            actor: "repository:recovery",
+            reason: "Repair current composite decision eligibility",
+        });
+
+        expect(fixture.snapshots.current().getIndex("demo")).toMatchObject({
+            stable: "1.0.0",
+            latest: "1.0.0",
+            versions: [{ version: "1.0.0" }, { version: "1.1.0", status: "inadmissible" }],
+        });
         expect(readdirSync(eligibilityJournals(fixture.root))).toEqual([]);
     });
 });

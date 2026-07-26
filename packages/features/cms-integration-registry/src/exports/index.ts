@@ -52,6 +52,10 @@ export type {
     IntegrationRegistryPublicationRequest,
     IntegrationRegistryPublicationResult,
     IntegrationRegistryPublisher,
+    IdentifiedIntegrationVerificationBackfillRequest,
+    IntegrationVerificationBackfiller,
+    IntegrationVerificationBackfillRequest,
+    IntegrationVerificationBackfillResult,
     IdentifiedOfficialRepositoryBootstrapPlan,
     OfficialBootstrapAnonymousConstraintFinding,
     OfficialBootstrapAnonymousConstraintGrandfathering,
@@ -64,6 +68,7 @@ export type {
     PreparedOfficialVerificationBackfill,
 } from "../interfaces/publication";
 export {
+    INTEGRATION_VERIFICATION_BACKFILL_SCHEMA,
     INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA,
     LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V1_SCHEMA,
     LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V2_SCHEMA,
@@ -169,6 +174,11 @@ export {
     ReleaseReportValidationError,
 } from "../core/compatibility/reportStoreErrors";
 export {
+    identifyIntegrationVerificationBackfillRequest,
+    IntegrationVerificationBackfillError,
+    type IntegrationVerificationBackfillErrorCode,
+} from "../core/publication/backfill";
+export {
     ReviewedSchemaBaselineImportError,
     type ReviewedSchemaBaselineImportErrorCode,
 } from "../core/baselines/errors";
@@ -180,6 +190,7 @@ export {
     IntegrationCompatibilityReevaluationConflictError,
     IntegrationCompatibilityReevaluationIntegrityError,
     IntegrationCompatibilityReevaluationNotFoundError,
+    IntegrationCompatibilityReevaluationStaleDecisionError,
     IntegrationCompatibilityReevaluationStaleReportError,
     IntegrationCompatibilityReevaluationValidationError,
 } from "../core/compatibility/reevaluation/errors";

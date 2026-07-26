@@ -78,6 +78,24 @@ export {
     type FsReleaseReportHistoryStoreConfig,
 } from "../default-implementation/fs/registry/history/evidence";
 export {
+    FS_INTEGRATION_VERIFICATION_BACKFILL_PHASES,
+    FsIntegrationVerificationBackfiller,
+    FsIntegrationVerificationBackfillSimulatedCrashError,
+    INTEGRATION_VERIFICATION_BACKFILL_JOURNAL_SCHEMA,
+    MAX_INTEGRATION_VERIFICATION_BACKFILL_DOCUMENT_BYTES,
+    recoverIntegrationVerificationBackfills,
+    type FsIntegrationVerificationBackfillBoundary,
+    type FsIntegrationVerificationBackfillerConfig,
+    type FsIntegrationVerificationBackfillJournal,
+    type FsIntegrationVerificationBackfillPhase,
+} from "../default-implementation/fs/registry/history/backfill";
+export {
+    FsReleaseAdmissionReconciler,
+    type FsReleaseAdmissionReconcilerConfig,
+    type ReleaseAdmissionReconciliationProvenance,
+    type ReleaseAdmissionReconciliationResult,
+} from "../default-implementation/fs/registry/history/admission";
+export {
     FsReviewedSchemaBaselineStore,
     type FsReviewedSchemaBaselineStoreConfig,
 } from "../default-implementation/fs/registry/baselines/store";

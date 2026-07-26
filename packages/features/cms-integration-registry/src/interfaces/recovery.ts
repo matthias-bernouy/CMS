@@ -9,6 +9,9 @@ export type IntegrationRegistryRecoveryDiagnosticCode =
     | "version-eligibility-quarantined"
     | "schema-baseline-import-replayed"
     | "schema-baseline-import-quarantined"
+    | "verification-backfill-replayed"
+    | "verification-backfill-quarantined"
+    | "release-report-history-quarantined"
     | "abandoned-staging-quarantined"
     | "orphan-version-quarantined";
 

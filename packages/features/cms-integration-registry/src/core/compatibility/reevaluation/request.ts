@@ -3,7 +3,7 @@ import type { IntegrationCompatibilityReevaluationRequest } from "../../../inter
 import { IntegrationCompatibilityReevaluationValidationError } from "./errors";
 
 const REQUIRED_KEYS = ["actor", "currentReportRevisionId", "kind", "reason", "version"];
-const OPTIONAL_KEYS = ["evidenceIds"];
+const OPTIONAL_KEYS = ["currentDecision", "evidenceIds"];
 const MAX_EVIDENCE_IDS = 128;
 
 export function validateCompatibilityReevaluationRequest(
@@ -24,6 +24,7 @@ export function validateCompatibilityReevaluationRequest(
         );
     }
     assertBoundedText(request.currentReportRevisionId, "report revision ID", 512);
+    const currentDecision = validateCurrentDecision(request.currentDecision);
     assertBoundedText(request.actor, "actor", 512);
     assertBoundedText(request.reason, "reason", 4_096);
     const evidenceIds = validateEvidenceIds(request.evidenceIds);
@@ -31,10 +32,31 @@ export function validateCompatibilityReevaluationRequest(
         kind: request.kind,
         version: request.version,
         currentReportRevisionId: request.currentReportRevisionId,
+        ...(currentDecision ? { currentDecision } : {}),
         actor: request.actor,
         reason: request.reason,
         ...(evidenceIds ? { evidenceIds } : {}),
     });
+}
+
+function validateCurrentDecision(
+    value: unknown,
+): IntegrationCompatibilityReevaluationRequest["currentDecision"] | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (!isRecord(value) || !hasAllowedKeys(value, ["digest", "revisionId"], [])) {
+        throw new IntegrationCompatibilityReevaluationValidationError(
+            "Compatibility reevaluation current decision has an invalid shape",
+        );
+    }
+    assertBoundedText(value.revisionId, "decision revision ID", 512);
+    if (typeof value.digest !== "string" || !/^[a-f0-9]{64}$/u.test(value.digest)) {
+        throw new IntegrationCompatibilityReevaluationValidationError(
+            "Compatibility reevaluation decision digest must be lowercase SHA-256",
+        );
+    }
+    return Object.freeze({ revisionId: value.revisionId, digest: value.digest });
 }
 
 function validateEvidenceIds(value: unknown): readonly string[] | undefined {

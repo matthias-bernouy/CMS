@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import {
     IntegrationCompatibilityReevaluationNotFoundError,
+    IntegrationCompatibilityReevaluationStaleDecisionError,
     IntegrationCompatibilityReevaluationStaleReportError,
     IntegrationCompatibilityReevaluationValidationError,
 } from "@bernouy/cms-integration-registry";
@@ -10,7 +11,15 @@ import {
     publishReviewedSqlVersionPair,
     registryFixture,
 } from "../publication/fixtures";
-import { publishVersionPair, reevaluationRequest, reevaluationServices } from "./reevaluationFixtures";
+import { appendDecision } from "./eligibility/decisionFixtures";
+import { migrationReport } from "../reports/fixtures/reports";
+import {
+    compositeReevaluationServices,
+    publishMigrationAwareVersionPair,
+    publishVersionPair,
+    reevaluationRequest,
+    reevaluationServices,
+} from "./reevaluationFixtures";
 
 afterEach(cleanupRegistryFixtures);
 
@@ -118,4 +127,152 @@ describe("compatibility reevaluation", () => {
             expect.objectContaining({ code: "legacy-schema-baseline-missing" }),
         );
     });
+
+    test("appends a composite decision revision from the same compatibility revision", async () => {
+        const fixture = registryFixture();
+        const { candidate } = await publishVersionPair(fixture);
+        const admission = await appendDecision(fixture, candidate.version);
+        const { reevaluator } = compositeReevaluationServices(fixture, admission.stores, admission.policy);
+
+        const result = await reevaluator.reevaluate({
+            ...reevaluationRequest(candidate.report.id),
+            version: candidate.version,
+            currentDecision: admission.reference,
+        });
+
+        expect(result.release).toMatchObject({
+            compatibilityReportRevisionId: `compat-${result.revision.id}`,
+            admissible: true,
+            eligibilityChanged: false,
+        });
+        const decisions = await admission.stores.decisions.get("demo", candidate.version);
+        expect(decisions?.revisions).toHaveLength(2);
+        expect(decisions?.current.compatibilityReport.revisionId).toBe(`compat-${result.revision.id}`);
+        expect(decisions?.current.decisionId).toBe(result.release?.decision.revisionId);
+    });
+
+    test("reselects stateful migration evidence when schema findings change", async () => {
+        const fixture = registryFixture();
+        const { candidate } = await publishReviewedSqlVersionPair(fixture, additiveSchemaContract(), "1.1.0");
+        const admission = await appendDecision(fixture, candidate.version);
+        const { reevaluator } = compositeReevaluationServices(fixture, admission.stores, admission.policy);
+
+        const result = await reevaluator.reevaluate({
+            ...reevaluationRequest(candidate.report.id),
+            version: candidate.version,
+            currentDecision: admission.reference,
+        });
+
+        expect(result.release).toMatchObject({ admissible: false, eligibilityChanged: true });
+        const decisions = await admission.stores.decisions.get("demo", candidate.version);
+        expect(decisions?.current.statefulChanges.requiredMigrations).toEqual([
+            expect.objectContaining({
+                source: expect.objectContaining({ kind: "demo", version: "1.0.0" }),
+                connectorKey: "primary",
+            }),
+        ]);
+        expect(decisions?.current.reasons).toEqual([expect.stringMatching(/^migration-missing:/)]);
+        expect(fixture.snapshots.current().getIndex("demo")?.versions).toContainEqual(
+            expect.objectContaining({ version: candidate.version, status: "inadmissible" }),
+        );
+    });
+
+    test("discovers newly appended migration evidence from the current stateful selection", async () => {
+        const fixture = registryFixture();
+        const { source, candidate } = await publishMigrationAwareVersionPair(fixture, additiveSchemaContract());
+        const admission = await appendDecision(fixture, candidate.version);
+        const services = compositeReevaluationServices(fixture, admission.stores, admission.policy);
+
+        const reevaluated = await services.reevaluator.reevaluate({
+            ...reevaluationRequest(candidate.report.id),
+            version: candidate.version,
+            currentDecision: admission.reference,
+        });
+        expect(reevaluated.release?.admissible).toBeFalse();
+        const missing = (await admission.stores.decisions.getHistory("demo", candidate.version))!.current;
+        expect(missing.migrationReports).toEqual([]);
+        const staleRevision = await migrationReport(
+            source.digest,
+            candidate.digest,
+            missing.statefulChangeSelectionDigest,
+            {
+                reportId: "migration-for-stale-target-revision",
+                migrationRevision: 1,
+                policy: missing.policy,
+                policySnapshotDigest: missing.policySnapshotDigest,
+            },
+        );
+        await admission.stores.migrationReports.append({ report: staleRevision, expectedCurrent: null });
+        const ignored = await services.reconciler.reconcile("demo", candidate.version, {
+            actor: "repository:recovery",
+            reason: "Ignore evidence for a stale target migration revision",
+        });
+        expect(ignored).toMatchObject({ decisionChanged: false });
+        expect(ignored?.decision.current.admissible).toBeFalse();
+        const report = await migrationReport(source.digest, candidate.digest, missing.statefulChangeSelectionDigest, {
+            reportId: "migration-after-missing-decision",
+            migrationRevision: 2,
+            policy: missing.policy,
+            policySnapshotDigest: missing.policySnapshotDigest,
+        });
+        await admission.stores.migrationReports.append({ report, expectedCurrent: null });
+
+        const recovered = await services.reconciler.reconcile("demo", candidate.version, {
+            actor: "repository:recovery",
+            reason: "Attach current migration evidence",
+        });
+
+        expect(recovered?.decisionChanged).toBeTrue();
+        expect(recovered?.decision.current).toMatchObject({
+            admissible: true,
+            migrationReports: [
+                {
+                    revisionId: report.reportId,
+                    migrationRevision: 2,
+                    connectorKey: "primary",
+                    lineageId: "demo-supabase-v1",
+                },
+            ],
+        });
+        expect(
+            (
+                await services.reconciler.reconcile("demo", candidate.version, {
+                    actor: "repository:recovery",
+                    reason: "Repeat migration evidence reconciliation",
+                })
+            )?.decisionChanged,
+        ).toBeFalse();
+    });
+
+    test("requires an exact current composite decision CAS", async () => {
+        const fixture = registryFixture();
+        const { candidate } = await publishVersionPair(fixture);
+        const admission = await appendDecision(fixture, candidate.version);
+        const { reevaluator } = compositeReevaluationServices(fixture, admission.stores, admission.policy);
+
+        const promise = reevaluator.reevaluate({
+            ...reevaluationRequest(candidate.report.id),
+            currentDecision: { ...admission.reference, digest: "f".repeat(64) },
+        });
+
+        await expect(promise).rejects.toBeInstanceOf(IntegrationCompatibilityReevaluationStaleDecisionError);
+        expect((await admission.stores.compatibilityReports.get("demo", candidate.version))?.revisions).toHaveLength(1);
+    });
 });
+
+function additiveSchemaContract() {
+    return {
+        namespaces: [
+            {
+                name: "public",
+                relations: [
+                    {
+                        name: "items",
+                        columns: [{ name: "label", type: "text", nullable: true }],
+                        constraints: [],
+                    },
+                ],
+            },
+        ],
+    };
+}

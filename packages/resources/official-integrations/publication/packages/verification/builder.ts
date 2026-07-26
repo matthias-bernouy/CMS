@@ -15,10 +15,7 @@ import {
     OFFICIAL_VERIFICATION_BACKFILL_SCHEMA,
 } from "./contracts";
 import { loadOfficialVerificationBackfillIndex } from "./loader";
-import {
-    parseOfficialVerificationBackfillIndex,
-    selectOfficialVerificationBackfillPackages,
-} from "./validation";
+import { parseOfficialVerificationBackfillIndex, selectOfficialVerificationBackfillPackages } from "./validation";
 
 const PHOTO_ALBUMS_LEGACY_TEST_PATH = "fixtures/legacy-test-ownership.v1.json";
 const PHOTO_ALBUMS_LEGACY_SUITES = Object.freeze([

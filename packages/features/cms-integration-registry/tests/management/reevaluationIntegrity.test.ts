@@ -3,16 +3,19 @@ import { chmodSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
+    IntegrationCompatibilityEvaluator,
     IntegrationCompatibilityReevaluationIntegrityError,
     IntegrationCompatibilityReevaluationStaleReportError,
 } from "@bernouy/cms-integration-registry";
 import { cleanupRegistryFixtures, publishReviewedSqlVersionPair, registryFixture } from "../publication/fixtures";
 import {
+    compositeReevaluationServices,
     publishVersionPair,
     reevaluationRequest,
     reevaluationServices,
     rewriteAdmission,
 } from "./reevaluationFixtures";
+import { appendDecision } from "./eligibility/decisionFixtures";
 
 afterEach(cleanupRegistryFixtures);
 
@@ -94,4 +97,74 @@ describe("compatibility reevaluation integrity", () => {
 
         await expect(reevaluation).rejects.toBeInstanceOf(IntegrationCompatibilityReevaluationIntegrityError);
     });
+
+    test("recovers a crash after the legacy revision append and remains idempotent after restart", async () => {
+        const fixture = registryFixture();
+        const { candidate } = await publishVersionPair(fixture);
+        const admission = await appendDecision(fixture, candidate.version);
+        const legacy = reevaluationServices(fixture, laterEvaluator("legacy-after-crash"));
+        const revision = await legacy.reevaluator.reevaluate(reevaluationRequest(candidate.report.id));
+
+        const restarted = compositeReevaluationServices(fixture, admission.stores, admission.policy);
+        const recovered = await restarted.reconciler.reconcile("demo", candidate.version, {
+            actor: "repository:recovery",
+            reason: "Recover interrupted compatibility projection",
+        });
+
+        expect(recovered?.decisionChanged).toBeTrue();
+        expect((await admission.stores.compatibilityReports.get("demo", candidate.version))?.current).toMatchObject({
+            reportId: `compat-${revision.revision.id}`,
+            supersedes: admission.decision.compatibilityReport.revisionId,
+        });
+        expect(recovered?.decision.current.compatibilityReport.revisionId).toBe(`compat-${revision.revision.id}`);
+        const repeated = await restarted.reconciler.reconcile("demo", candidate.version, {
+            actor: "repository:recovery",
+            reason: "Repeat interrupted compatibility recovery",
+        });
+        expect(repeated).toMatchObject({ decisionChanged: false, eligibilityChanged: false });
+        expect(repeated?.decision.revisions).toHaveLength(2);
+    });
+
+    test("does not replace a projected compatibility revision newer than the legacy stream", async () => {
+        const fixture = registryFixture();
+        const { candidate } = await publishVersionPair(fixture);
+        const admission = await appendDecision(fixture, candidate.version);
+        const legacy = reevaluationServices(fixture, laterEvaluator("legacy-before-newer-v2"));
+        const revision = await legacy.reevaluator.reevaluate(reevaluationRequest(candidate.report.id));
+        const current = (await admission.stores.compatibilityReports.get("demo", candidate.version))!;
+        const newer = {
+            ...current.current,
+            reportId: "compatibility-newer-than-legacy",
+            revisionType: "revision" as const,
+            supersedes: current.currentRevisionId,
+            createdAt: "2026-07-26T14:00:00.000Z",
+            provenance: { actor: "repository-ci", reason: "Newer projected compatibility evidence" },
+        };
+        await admission.stores.compatibilityReports.append({
+            report: newer,
+            expectedCurrent: {
+                revisionId: current.currentRevisionId,
+                reportDigest: current.currentReportDigest,
+            },
+        });
+
+        const restarted = compositeReevaluationServices(fixture, admission.stores, admission.policy);
+        const recovered = await restarted.reconciler.reconcile("demo", candidate.version, {
+            actor: "repository:recovery",
+            reason: "Preserve the newer projected compatibility stream",
+        });
+        const compatibility = (await admission.stores.compatibilityReports.get("demo", candidate.version))!;
+
+        expect(compatibility.currentRevisionId).toBe(newer.reportId);
+        expect(compatibility.revisions.map(({ reportId }) => reportId)).not.toContain(`compat-${revision.revision.id}`);
+        expect(recovered?.decision.current.compatibilityReport.revisionId).toBe(newer.reportId);
+    });
 });
+
+function laterEvaluator(reportId: string): IntegrationCompatibilityEvaluator {
+    return new IntegrationCompatibilityEvaluator({
+        identity: { name: "registry-recovery-test", version: "1.0.0" },
+        now: () => "2026-07-26T13:00:00.000Z",
+        createReportId: () => reportId,
+    });
+}

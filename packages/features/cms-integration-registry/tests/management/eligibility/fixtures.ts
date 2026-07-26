@@ -7,7 +7,12 @@ import { publicationPackage, registryFixture } from "../../publication/fixtures"
 
 const CREATED_AT = "2026-07-26T12:00:00.000Z";
 
-export { appendAdverseDecisionRevision, appendDecision, restartedDecisions } from "./decisionFixtures";
+export {
+    appendAdverseDecisionRevision,
+    appendAdverseVerificationRevision,
+    appendDecision,
+    restartedDecisions,
+} from "./decisionFixtures";
 
 export async function publishVersions(fixture: ReturnType<typeof registryFixture>, versions: readonly string[]) {
     for (const version of versions) {

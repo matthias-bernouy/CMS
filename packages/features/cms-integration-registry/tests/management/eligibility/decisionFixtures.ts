@@ -3,8 +3,10 @@ import {
     deriveCompatibilityReportAssessment,
     identifyCompatibilityReportV2,
     identifyReleaseAdmissionDecision,
+    identifyReleaseAdmissionPolicySnapshot,
     identifyStatefulChangeSelection,
     identifyVerificationReport,
+    type ReleaseAdmissionPolicySnapshotV1,
 } from "@bernouy/cms-integration-verification";
 import type { IntegrationRegistryCatalogSnapshotReference } from "../../../src/core/catalog/reference";
 import { InMemoryIntegrationRegistryMutationCoordinator } from "../../../src/core/catalog/mutationCoordinator";
@@ -19,7 +21,6 @@ import { releasePolicy, releaseProvenance, verificationReport } from "../../repo
 import { releaseStores } from "../../reports/fixtures/stores";
 
 const CREATED_AT = "2026-07-26T12:00:00.000Z";
-const POLICY_DIGEST = "c".repeat(64);
 
 export async function appendDecision(
     fixture: ReturnType<typeof registryFixture>,
@@ -29,6 +30,8 @@ export async function appendDecision(
     const stores = options.stores ?? releaseStores(fixture);
     const location = fixture.snapshots.current().locateExactVersion("demo", version)!;
     const id = options.id ?? `decision-${version.replaceAll(".", "-")}`;
+    const policy = decisionPolicySnapshot();
+    const policyDigest = (await identifyReleaseAdmissionPolicySnapshot(policy)).digest;
     const compatibility = {
         schema: "cms.integration.compatibility-report.v2" as const,
         reportId: `compatibility-${id}`,
@@ -55,7 +58,7 @@ export async function appendDecision(
     const statefulChanges = await identifyStatefulChangeSelection({
         schema: "cms.integration.stateful-change-selection.v1",
         selector: releasePolicy(),
-        policySnapshotDigest: POLICY_DIGEST,
+        policySnapshotDigest: policyDigest,
         target: { kind: "demo", version, packageDigest: location.package.digest },
         compatibilityReport: {
             revisionId: compatibility.reportId,
@@ -66,6 +69,7 @@ export async function appendDecision(
     const verification = verificationReport(location.package.digest, {
         reportId: `verification-${id}`,
         version,
+        policySnapshotDigest: policyDigest,
     });
     const decision = await composeReleaseAdmissionDecision({
         decisionId: id,
@@ -75,7 +79,7 @@ export async function appendDecision(
         migrations: [],
         statefulChanges,
         policy: releasePolicy(),
-        policySnapshotDigest: POLICY_DIGEST,
+        policySnapshotDigest: policyDigest,
         createdAt: CREATED_AT,
         provenance: releaseProvenance(),
     });
@@ -85,7 +89,7 @@ export async function appendDecision(
     }
     await stores.decisions.append({ report: decision, expectedCurrent: null });
     const identified = await identifyReleaseAdmissionDecision(decision);
-    return { stores, decision, reference: { revisionId: decision.decisionId, digest: identified.digest } };
+    return { stores, decision, policy, reference: { revisionId: decision.decisionId, digest: identified.digest } };
 }
 
 export async function appendAdverseDecisionRevision(
@@ -93,6 +97,62 @@ export async function appendAdverseDecisionRevision(
     current: Awaited<ReturnType<typeof appendDecision>>,
 ) {
     const compatibility = (await stores.compatibilityReports.get("demo", current.decision.version))!.current;
+    const verification = await appendAdverseVerificationRevision(stores, current);
+    const decision = await composeReleaseAdmissionDecision({
+        decisionId: `${current.decision.decisionId}-adverse`,
+        revisionType: "revision",
+        supersedes: current.decision.decisionId,
+        compatibility,
+        verification,
+        migrations: [],
+        statefulChanges: await identifyStatefulChangeSelection(current.decision.statefulChanges),
+        policy: releasePolicy(),
+        policySnapshotDigest: current.decision.policySnapshotDigest,
+        createdAt: "2026-07-26T12:01:00.000Z",
+        provenance: releaseProvenance(),
+    });
+    await stores.decisions.append({
+        report: decision,
+        expectedCurrent: { revisionId: current.reference.revisionId, reportDigest: current.reference.digest },
+    });
+    const identified = await identifyReleaseAdmissionDecision(decision);
+    return { decision, reference: { revisionId: decision.decisionId, digest: identified.digest } };
+}
+
+function decisionPolicySnapshot(): ReleaseAdmissionPolicySnapshotV1 {
+    const runner = {
+        name: "cms-postgres",
+        version: "1.0.0",
+        imageDigest: `sha256:${"e".repeat(64)}`,
+    } as const;
+    return {
+        schema: "cms.integration.release-admission-policy.v1" as const,
+        identity: { name: "eligibility-test", version: "1.0.0" },
+        staticEvaluator: { name: "static-compatibility", version: "2.0.0" },
+        verificationPolicy: releasePolicy(),
+        migrationPolicy: releasePolicy(),
+        approvedRunners: [runner],
+        platformRequiredSuites: [{ suiteId: "platform-install-rerun", suiteDigest: "a".repeat(64), runner }],
+        findingResolutionRules: [],
+        retry: { maximumAttempts: 1, retryableOutcomes: [] },
+        cache: { mode: "disabled" as const, minimumConcordantRuns: 1, maximumAgeSeconds: 0 },
+        migrationEvidence: {
+            requiredForReleaseLevels: ["patch", "minor", "major"],
+            requiredChecks: ["fresh-install", "migrated-state", "equivalence"],
+            requireExactSourcePackageDigest: true as const,
+            requireExactTargetPackageDigest: true as const,
+            requireCmsMediatedCutoverEvidence: false,
+            requireProviderDirectCutoverEvidence: false,
+            requireRollbackEvidence: false,
+            requireDelayedCleanupEvidence: false,
+        },
+    };
+}
+
+export async function appendAdverseVerificationRevision(
+    stores: ReturnType<typeof releaseStores>,
+    current: Awaited<ReturnType<typeof appendDecision>>,
+) {
     const verificationHistory = (await stores.verificationReports.get("demo", current.decision.version))!;
     const verification = {
         ...verificationHistory.current,
@@ -115,25 +175,7 @@ export async function appendAdverseDecisionRevision(
             reportDigest: (await identifyVerificationReport(verificationHistory.current)).digest,
         },
     });
-    const decision = await composeReleaseAdmissionDecision({
-        decisionId: `${current.decision.decisionId}-adverse`,
-        revisionType: "revision",
-        supersedes: current.decision.decisionId,
-        compatibility,
-        verification,
-        migrations: [],
-        statefulChanges: await identifyStatefulChangeSelection(current.decision.statefulChanges),
-        policy: releasePolicy(),
-        policySnapshotDigest: POLICY_DIGEST,
-        createdAt: "2026-07-26T12:01:00.000Z",
-        provenance: releaseProvenance(),
-    });
-    await stores.decisions.append({
-        report: decision,
-        expectedCurrent: { revisionId: current.reference.revisionId, reportDigest: current.reference.digest },
-    });
-    const identified = await identifyReleaseAdmissionDecision(decision);
-    return { decision, reference: { revisionId: decision.decisionId, digest: identified.digest } };
+    return verification;
 }
 
 export function restartedDecisions(root: string, snapshots: IntegrationRegistryCatalogSnapshotReference) {

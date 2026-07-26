@@ -45,7 +45,11 @@ export async function publicationPackage(
     return { envelope, canonicalBytes, digest: await sha256Hex(canonicalBytes) };
 }
 
-export async function publishReviewedSqlVersionPair(fixture: ReturnType<typeof registryFixture>) {
+export async function publishReviewedSqlVersionPair(
+    fixture: ReturnType<typeof registryFixture>,
+    candidateSchema: unknown = reviewedSchemaContract(),
+    candidateVersion = "1.0.1",
+) {
     const baselinePackage = await seedLegacySqlBaseline(fixture);
     await fixture.reviewedSchemaBaselines.append({
         baseline: await reviewedBaseline("demo-schema-baseline", {
@@ -55,7 +59,7 @@ export async function publishReviewedSqlVersionPair(fixture: ReturnType<typeof r
         expectedCurrentRevisionId: null,
     });
     const candidate = await fixture.publisher.publish({
-        package: await sqlPublicationPackage("demo", "1.0.1", reviewedSchemaContract()),
+        package: await sqlPublicationPackage("demo", candidateVersion, candidateSchema),
     });
     return { baselinePackage, candidate };
 }

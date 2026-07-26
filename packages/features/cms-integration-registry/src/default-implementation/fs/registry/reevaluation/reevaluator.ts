@@ -19,6 +19,11 @@ import type {
 import type { IntegrationCompatibilityReportStore } from "../../../../interfaces/reportStore";
 import type { ReviewedSchemaBaselineStore } from "../../../../interfaces/reportStore";
 import { buildFsCompatibilityReevaluationInput } from "./input";
+import {
+    appendReleaseReevaluationRevision,
+    captureReleaseReevaluationContext,
+    type ReleaseReevaluationConfig,
+} from "./release";
 
 export type FsIntegrationCompatibilityReevaluatorConfig = Readonly<{
     snapshots: IntegrationRegistryCatalogSnapshotProvider;
@@ -26,6 +31,7 @@ export type FsIntegrationCompatibilityReevaluatorConfig = Readonly<{
     evaluator: IntegrationCompatibilityEvaluator;
     reviewedSchemaBaselines?: ReviewedSchemaBaselineStore;
     packageLimits?: Partial<IntegrationPackageLimits>;
+    release?: ReleaseReevaluationConfig;
 }>;
 
 export class FsIntegrationCompatibilityReevaluator implements IntegrationCompatibilityReevaluator {
@@ -42,6 +48,9 @@ export class FsIntegrationCompatibilityReevaluator implements IntegrationCompati
             throw new IntegrationCompatibilityReevaluationNotFoundError(validated.kind, validated.version);
         }
         assertCurrentReport(validated.currentReportRevisionId, history.current.id);
+        const release = this.config.release
+            ? await captureReleaseReevaluationContext(this.config.release, validated)
+            : null;
         const input = await buildFsCompatibilityReevaluationInput(
             snapshot,
             history.admission,
@@ -63,7 +72,15 @@ export class FsIntegrationCompatibilityReevaluator implements IntegrationCompati
         }
         try {
             const appended = await this.config.reports.appendRevision(revision);
-            return Object.freeze({ revision, history: appended });
+            const releaseResult =
+                release && this.config.release
+                    ? await appendReleaseReevaluationRevision({
+                          release: this.config.release,
+                          revision,
+                          context: release,
+                      })
+                    : undefined;
+            return Object.freeze({ revision, history: appended, ...(releaseResult ? { release: releaseResult } : {}) });
         } catch (error) {
             if (error instanceof IntegrationCompatibilityHistoryNotFoundError) {
                 throw new IntegrationCompatibilityReevaluationNotFoundError(validated.kind, validated.version);

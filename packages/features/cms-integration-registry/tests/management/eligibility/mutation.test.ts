@@ -6,9 +6,11 @@ import {
     IntegrationRegistryVersionEligibilityIneligibleError,
     IntegrationRegistryVersionEligibilityStaleDecisionError,
 } from "../../../src/core/promotion/eligibilityErrors";
+import { FsReleaseAdmissionReconciler } from "@bernouy/cms-integration-registry/fs";
 import { cleanupRegistryFixtures, registryFixture } from "../../publication/fixtures";
 import {
     appendAdverseDecisionRevision,
+    appendAdverseVerificationRevision,
     appendDecision,
     blockRequest,
     eligibilityJournals,
@@ -144,6 +146,36 @@ describe("filesystem version eligibility mutations", () => {
         });
         expect(result.record).toMatchObject({ action: "mark-inadmissible", decision: adverse.reference });
         expect(result.record.confirmation).toBeUndefined();
+    });
+
+    test("composes an adverse current decision and repairs channels from a report revision", async () => {
+        const fixture = registryFixture();
+        await publishVersions(fixture, ["1.0.0", "1.1.0"]);
+        const current = await appendDecision(fixture, "1.1.0");
+        await appendAdverseVerificationRevision(current.stores, current);
+        const manager = eligibilityManager(fixture, current.stores.decisions);
+        const reconciler = new FsReleaseAdmissionReconciler({
+            snapshots: fixture.snapshots,
+            compatibility: current.stores.compatibilityReports,
+            verification: current.stores.verificationReports,
+            migrations: current.stores.migrationReports,
+            decisions: current.stores.decisions,
+            eligibility: manager,
+        });
+
+        const result = await reconciler.reconcile("demo", "1.1.0", {
+            actor: "repository:reevaluator",
+            reason: "Verification report was superseded",
+        });
+
+        expect(result).toMatchObject({ decisionChanged: true, eligibilityChanged: true });
+        expect(result?.decision.current).toMatchObject({ admissible: false, reasons: ["verification-failed"] });
+        expect(fixture.snapshots.current().getIndex("demo")).toMatchObject({
+            stable: "1.0.0",
+            latest: "1.0.0",
+            versions: [{ version: "1.0.0" }, { version: "1.1.0", status: "inadmissible" }],
+        });
+        expect(fixture.snapshots.current().locateExactVersion("demo", "1.1.0")).not.toBeNull();
     });
 
     test("serializes concurrent blocks so one immutable audit record wins", async () => {

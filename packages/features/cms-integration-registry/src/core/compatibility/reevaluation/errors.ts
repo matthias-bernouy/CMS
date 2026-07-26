@@ -24,6 +24,19 @@ export class IntegrationCompatibilityReevaluationStaleReportError extends Error 
     }
 }
 
+export class IntegrationCompatibilityReevaluationStaleDecisionError extends Error {
+    readonly status = 409;
+    readonly code = "integration_compatibility_reevaluation_stale_decision";
+
+    constructor(
+        readonly currentDecisionRevisionId: string,
+        readonly currentDecisionDigest: string,
+    ) {
+        super(`Compatibility reevaluation release decision is stale: expected "${currentDecisionRevisionId}"`);
+        this.name = "IntegrationCompatibilityReevaluationStaleDecisionError";
+    }
+}
+
 export class IntegrationCompatibilityReevaluationConflictError extends Error {
     readonly status = 409;
     readonly code = "integration_compatibility_reevaluation_conflict";
