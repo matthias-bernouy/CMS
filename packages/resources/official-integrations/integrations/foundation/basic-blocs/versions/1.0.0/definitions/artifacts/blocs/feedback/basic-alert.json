@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-alert",
+        "name": "Alert",
+        "group": "Feedback",
+        "description": "Persistent inline feedback with explicit announcement and dismissal behavior.",
+        "path": "blocs/feedback/basic-alert"
+    }
+}

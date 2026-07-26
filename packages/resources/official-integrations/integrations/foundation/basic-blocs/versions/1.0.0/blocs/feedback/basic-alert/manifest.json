@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-alert",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Alert",
+        "description": "Persistent inline feedback with explicit announcement and dismissal behavior."
+    }
+}

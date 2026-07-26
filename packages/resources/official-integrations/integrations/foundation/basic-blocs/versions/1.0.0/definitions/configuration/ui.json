@@ -24,7 +24,7 @@
     "resources": [
         [
             "Blocs",
-            "Neutral text, layout, media, and form blocs"
+            "Neutral text, structure, layout, media, form, and feedback blocs"
         ]
     ],
     "review": [
@@ -36,8 +36,10 @@
         "Install basic-button",
         "Install basic-card",
         "Install native text and list editors",
+        "Install native structure editors",
         "Install basic-skeleton",
         "Install intrinsic layout blocs",
+        "Install inline feedback blocs",
         "Install basic-redirect",
         "Install native form editor",
         "Install form controls including file uploads",

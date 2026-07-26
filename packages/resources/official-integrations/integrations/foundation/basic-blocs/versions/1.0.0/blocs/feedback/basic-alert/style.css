@@ -1,0 +1,89 @@
+:host {
+    --basic-alert-background: var(--info-muted, #edf6fb);
+    --basic-alert-color: var(--info-contrasted, var(--text-main, #26261f));
+    --basic-alert-accent: var(--info-base, #2f6f98);
+    --basic-alert-border: var(--basic-alert-accent);
+
+    display: block;
+    color: var(--basic-alert-color);
+
+    --ctx-bg: var(--basic-alert-background);
+    --ctx-fg: var(--basic-alert-color);
+    --ctx-fg-muted: color-mix(in oklab, var(--basic-alert-color) 72%, var(--basic-alert-background));
+    --ctx-border: var(--basic-alert-border);
+}
+
+:host([hidden]) { display: none !important; }
+
+:host([type="success"]) {
+    --basic-alert-background: var(--success-muted, #e8f4ef);
+    --basic-alert-color: var(--success-contrasted, var(--text-main, #26261f));
+    --basic-alert-accent: var(--success-base, #21865f);
+}
+
+:host([type="warning"]) {
+    --basic-alert-background: var(--warning-muted, #f8f0df);
+    --basic-alert-color: var(--warning-contrasted, #6b470c);
+    --basic-alert-accent: var(--warning-base, #b7791f);
+}
+
+:host([type="danger"]),
+:host([type="error"]) {
+    --basic-alert-background: var(--danger-muted, #f9e9e7);
+    --basic-alert-color: var(--danger-contrasted, #7b2923);
+    --basic-alert-accent: var(--danger-base, #c4473d);
+}
+
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm, .5rem);
+    padding: var(--space-md, 1rem);
+    border: 1px solid var(--basic-alert-border);
+    border-inline-start-width: .25rem;
+    border-radius: var(--radius-card, .5rem);
+    background: var(--basic-alert-background);
+    color: inherit;
+    line-height: 1.45;
+}
+
+.icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    color: var(--basic-alert-accent);
+}
+
+.body {
+    flex: 1;
+    min-width: 0;
+}
+
+.title {
+    margin-block-end: .25rem;
+    font-weight: 700;
+}
+
+.title ::slotted(*),
+.message ::slotted(*) {
+    margin-block: 0;
+}
+
+.close {
+    flex: 0 0 auto;
+    margin: -.25rem -.25rem 0 0;
+    padding: .125rem .25rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    font-size: 1.25rem;
+    line-height: 1;
+    opacity: .65;
+}
+
+.close:hover { opacity: 1; }
+.close:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+[hidden] { display: none !important; }

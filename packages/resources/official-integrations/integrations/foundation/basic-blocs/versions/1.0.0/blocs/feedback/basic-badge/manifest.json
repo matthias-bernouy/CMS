@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-badge",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Badge",
+        "description": "Compact presentational label with semantic color, variant, size, and status-dot options."
+    }
+}

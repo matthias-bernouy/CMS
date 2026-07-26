@@ -15,6 +15,8 @@ export function registerBuildTest(): void {
             "a",
             "article",
             "aside",
+            "basic-alert",
+            "basic-badge",
             "basic-button",
             "basic-card",
             "basic-checkbox",
