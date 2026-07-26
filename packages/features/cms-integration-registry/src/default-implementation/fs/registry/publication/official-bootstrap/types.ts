@@ -4,6 +4,13 @@ import type {
     OfficialRepositoryBootstrapPlanProjection,
 } from "../../../../../interfaces/publication";
 import type { ReviewedSchemaBaselineStore } from "../../../../../interfaces/reportStore";
+import type {
+    IntegrationCompatibilityV2ReportStore,
+    IntegrationMigrationReportStore,
+    IntegrationVerificationBundleStore,
+    IntegrationVerificationReportStore,
+    ReleaseAdmissionDecisionStore,
+} from "../../../../../interfaces/reportStore";
 import type { PreparedFsIntegrationRegistryCandidate } from "../candidate";
 import type { FsIntegrationRegistryPublisherConfig } from "../types";
 
@@ -13,6 +20,11 @@ export type FsOfficialIntegrationRegistryBootstrapPublisherConfig = FsIntegratio
     Readonly<{
         baselineApproval: OfficialRepositoryBootstrapBaselineApproval;
         baselineStore?: ReviewedSchemaBaselineStore;
+        verificationBundles?: IntegrationVerificationBundleStore;
+        compatibilityV2Reports?: IntegrationCompatibilityV2ReportStore;
+        verificationReports?: IntegrationVerificationReportStore;
+        migrationReports?: IntegrationMigrationReportStore;
+        releaseDecisions?: ReleaseAdmissionDecisionStore;
     }>;
 
 export type PreparedFsOfficialIntegrationRegistryBootstrap = Readonly<{
@@ -21,11 +33,13 @@ export type PreparedFsOfficialIntegrationRegistryBootstrap = Readonly<{
     packageCount: number;
     pendingPackageCount: number;
     baselineCount: number;
+    verificationBackfillCount: number;
     plan: OfficialRepositoryBootstrapPlanProjection;
 }>;
 
 export type PreflightedOfficialBootstrapPackage = Readonly<{
     candidate: PreparedFsIntegrationRegistryCandidate;
+    verificationDigest: string;
     report?: IntegrationCompatibilityAdmissionReport;
 }>;
 

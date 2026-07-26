@@ -1,0 +1,1 @@
+{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-schema-generator","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"sales-configurator","packageDigest":"eed63c4a93dd25d7fe2bef106dd1c6ece8d84ea5765367f1d794cdaa351b5f50","version":"1.0.0"}}

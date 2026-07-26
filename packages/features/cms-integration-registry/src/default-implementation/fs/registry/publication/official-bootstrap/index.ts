@@ -7,6 +7,11 @@ import { publishPreparedFsIntegrationRegistryCandidate } from "../publisher";
 import { hydratePreparedOfficialBootstrap, preflightOfficialBootstrapPlan } from "./preflight";
 import { assertCompleteStoredBootstrapBaselines } from "./storedBaselines";
 import {
+    assertCompleteOfficialVerificationBackfills,
+    bootstrapReleaseEvidenceStores,
+    commitOfficialVerificationBackfills,
+} from "./backfill";
+import {
     PREPARED_OFFICIAL_BOOTSTRAP_SCHEMA,
     type FsOfficialIntegrationRegistryBootstrapPublisherConfig,
     type PreparedFsOfficialIntegrationRegistryBootstrap,
@@ -28,6 +33,7 @@ export class FsOfficialIntegrationRegistryBootstrapPublisher {
             packageCount: prepared.packages.length,
             pendingPackageCount: prepared.packages.filter(({ report }) => report !== undefined).length,
             baselineCount: prepared.plan.reviewedSchemaBaselines.length,
+            verificationBackfillCount: prepared.plan.verificationBackfills.length,
             plan: prepared.plan,
         });
     }
@@ -43,15 +49,23 @@ export class FsOfficialIntegrationRegistryBootstrapPublisher {
             prepared.planDigest !== preparation.planDigest ||
             prepared.packages.length !== preparation.packageCount ||
             prepared.plan.reviewedSchemaBaselines.length !== preparation.baselineCount ||
+            prepared.plan.verificationBackfills.length !== preparation.verificationBackfillCount ||
             prepared.packages.filter(({ report }) => report !== undefined).length !== preparation.pendingPackageCount
         ) {
             throw new TypeError("Official integration registry bootstrap preparation changed after preflight");
         }
         const results: IntegrationRegistryPublicationResult[] = [];
-        for (const { candidate, report } of prepared.packages) {
+        for (const { candidate, report, verificationDigest } of prepared.packages) {
             if (report) {
                 results.push(
-                    await publishPreparedFsIntegrationRegistryCandidate(this.config, candidate, undefined, report),
+                    await publishPreparedFsIntegrationRegistryCandidate(
+                        this.config,
+                        candidate,
+                        undefined,
+                        report,
+                        undefined,
+                        verificationDigest,
+                    ),
                 );
             }
         }
@@ -59,6 +73,8 @@ export class FsOfficialIntegrationRegistryBootstrapPublisher {
         for (const baseline of prepared.plan.reviewedSchemaBaselines) {
             await baselines.append({ baseline, expectedCurrentRevisionId: null });
         }
+        const releaseEvidence = bootstrapReleaseEvidenceStores(this.config);
+        await commitOfficialVerificationBackfills(releaseEvidence, prepared.plan);
         const completed = await preflightOfficialBootstrapPlan(
             this.config,
             hydratePreparedOfficialBootstrap(preparation),
@@ -67,6 +83,7 @@ export class FsOfficialIntegrationRegistryBootstrapPublisher {
             throw new Error("Official integration registry bootstrap did not commit the complete exact plan");
         }
         await assertCompleteStoredBootstrapBaselines(baselines, completed.plan);
+        await assertCompleteOfficialVerificationBackfills(releaseEvidence, completed.plan);
         return Object.freeze(results);
     }
 }

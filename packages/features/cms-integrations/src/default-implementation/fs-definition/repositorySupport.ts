@@ -103,12 +103,24 @@ function parseVersion(value: unknown, source: string): IntegrationDefinitionVers
         throw new Error(`${source}.definition is required`);
     }
     const status = parseVersionStatus(value.status, `${source}.status`);
+    const verificationDigest = parseDigest(value.verificationDigest, `${source}.verificationDigest`);
     return {
         version: assertExactIntegrationVersion(version, `${source}.version`),
         path,
         definition,
+        ...(verificationDigest ? { verificationDigest } : {}),
         ...(status ? { status } : {}),
     };
+}
+
+function parseDigest(value: unknown, source: string): string | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (typeof value !== "string" || !/^[a-f0-9]{64}$/u.test(value)) {
+        throw new Error(`${source} must be lowercase SHA-256 when present`);
+    }
+    return value;
 }
 
 function parseVersionStatus(value: unknown, source: string): IntegrationDefinitionVersion["status"] {

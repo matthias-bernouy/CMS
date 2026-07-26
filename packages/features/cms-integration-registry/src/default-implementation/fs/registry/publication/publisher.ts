@@ -45,6 +45,7 @@ export async function publishPreparedFsIntegrationRegistryCandidate(
     schemaDeclarationEvidence?: IntegrationRegistryPublicationRequest["schemaDeclarationEvidence"],
     admissionReport?: IntegrationCompatibilityAdmissionReport,
     versionStatus?: "unverified",
+    verificationDigest?: string,
 ) {
     const operationId = config.createOperationId?.() ?? randomUUID();
     const layout = await ensureFsIntegrationRegistryLayout(config.root);
@@ -76,6 +77,7 @@ export async function publishPreparedFsIntegrationRegistryCandidate(
                     ...(schemaDeclarationEvidence ? { schemaDeclarationEvidence } : {}),
                     ...(admissionReport ? { admissionReport } : {}),
                     ...(versionStatus ? { versionStatus } : {}),
+                    ...(verificationDigest ? { verificationDigest } : {}),
                 }),
         );
     } catch (error) {

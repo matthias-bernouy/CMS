@@ -57,7 +57,9 @@ export type {
     OfficialRepositoryBootstrapPlan,
     OfficialRepositoryBootstrapPlanProjection,
     OfficialRepositoryBootstrapProjectedPackage,
+    OfficialRepositoryBootstrapProjectedVerificationBackfill,
     PreparedOfficialIntegrationPackage,
+    PreparedOfficialVerificationBackfill,
 } from "../interfaces/publication";
 export {
     INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA,
@@ -109,10 +111,12 @@ export type {
     ReviewedSchemaBaselineStore,
     IntegrationMigrationReportLogicalKey,
     IntegrationMigrationReportStore,
+    IntegrationVerificationBundleStore,
     IntegrationVerificationReportStore,
     ReleaseAdmissionDecisionStore,
     ReleaseReportCurrentReference,
     ReleaseReportHistory,
+    StoredIntegrationVerificationBundle,
 } from "../interfaces/reportStore";
 export { REVIEWED_SCHEMA_BASELINE_IMPORT_SCHEMA } from "../interfaces/reportStore";
 export { createIntegrationRegistryCatalogSnapshot } from "../core/catalog/snapshot";

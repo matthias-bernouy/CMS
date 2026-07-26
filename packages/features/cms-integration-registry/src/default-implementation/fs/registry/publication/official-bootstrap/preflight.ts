@@ -1,6 +1,9 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { identifyOfficialRepositoryBootstrapPlan } from "../../../../../core/publication/bootstrapPlan";
-import type { OfficialRepositoryBootstrapPlan } from "../../../../../interfaces/publication";
+import type {
+    OfficialRepositoryBootstrapPlan,
+    OfficialRepositoryBootstrapProjectedVerificationBackfill,
+} from "../../../../../interfaces/publication";
 import { FsReviewedSchemaBaselineStore } from "../../baselines/store";
 import { prepareFsOfficialBootstrapCandidate, type PreparedFsIntegrationRegistryCandidate } from "../candidate";
 import { evaluatePublicationCompatibility } from "../compatibility";
@@ -44,11 +47,22 @@ export async function preflightOfficialBootstrapPlan(
         packages.push(candidate);
     }
     await validateBootstrapBaselines(identified.plan, packages, config.baselineApproval);
-    const existingKinds = validateCatalogSubset(config, packagesByKind);
+    const backfillByIdentity = new Map(
+        identified.plan.verificationBackfills.map((entry) => [
+            `${entry.transition.kind}\0${entry.transition.version}`,
+            entry,
+        ]),
+    );
+    const existingKinds = validateCatalogSubset(config, packagesByKind, backfillByIdentity);
     const prepared: PreflightedOfficialBootstrapPackage[] = [];
     for (const candidate of packages) {
+        const backfill = backfillByIdentity.get(`${candidate.definition.kind}\0${candidate.package.envelope.version}`);
+        if (!backfill || backfill.transition.packageDigest !== candidate.package.digest) {
+            throw new TypeError("Official bootstrap candidate lost its exact verification backfill");
+        }
         prepared.push({
             candidate,
+            verificationDigest: backfill.verification.digest,
             ...(existingKinds.has(candidate.definition.kind)
                 ? {}
                 : {
@@ -83,12 +97,24 @@ export function hydratePreparedOfficialBootstrap(
             anonymousConstraintGrandfathering: entry.anonymousConstraintGrandfathering,
         })),
         reviewedSchemaBaselines: preparation.plan.reviewedSchemaBaselines,
+        verificationBackfills: preparation.plan.verificationBackfills.map((entry) => ({
+            verification: {
+                envelope: entry.verification.envelope,
+                canonicalBytes: canonicalJsonBytes(entry.verification.envelope),
+                digest: entry.verification.digest,
+            },
+            compatibilityReport: entry.compatibilityReport,
+            verificationReport: entry.verificationReport,
+            statefulChanges: entry.statefulChanges,
+            decision: entry.decision,
+        })),
     };
 }
 
 function validateCatalogSubset(
     config: FsOfficialIntegrationRegistryBootstrapPublisherConfig,
     packagesByKind: ReadonlyMap<string, PreparedFsIntegrationRegistryCandidate>,
+    backfillByIdentity: ReadonlyMap<string, OfficialRepositoryBootstrapProjectedVerificationBackfill>,
 ): ReadonlySet<string> {
     const snapshot = config.snapshots.current();
     if (snapshot.diagnostics.length > 0 || snapshot.quarantined.length > 0) {
@@ -102,9 +128,13 @@ function validateCatalogSubset(
             throw new Error("Official integration registry bootstrap catalog contains state outside the exact plan");
         }
         const version = candidate.package.envelope.version;
+        const backfill = backfillByIdentity.get(`${candidate.definition.kind}\0${version}`);
         const location = snapshot.locateExactVersion(summary.kind, version);
-        const expectedIndex = nextIntegrationRegistryIndex(null, candidate.definition, candidate.package.envelope);
+        const expectedIndex = nextIntegrationRegistryIndex(null, candidate.definition, candidate.package.envelope, {
+            ...(backfill ? { verificationDigest: backfill.verification.digest } : {}),
+        });
         if (
+            !backfill ||
             !location ||
             location.package.digest !== candidate.package.digest ||
             !equalBytes(canonicalJsonBytes(index), canonicalJsonBytes(expectedIndex))
@@ -117,7 +147,15 @@ function validateCatalogSubset(
 }
 
 function assertPreparedShape(value: PreparedFsOfficialIntegrationRegistryBootstrap): void {
-    const expected = ["baselineCount", "packageCount", "pendingPackageCount", "plan", "planDigest", "schema"];
+    const expected = [
+        "baselineCount",
+        "packageCount",
+        "pendingPackageCount",
+        "plan",
+        "planDigest",
+        "schema",
+        "verificationBackfillCount",
+    ];
     const keys = Object.keys(value);
     if (
         keys.length !== expected.length ||
@@ -130,7 +168,9 @@ function assertPreparedShape(value: PreparedFsOfficialIntegrationRegistryBootstr
         value.pendingPackageCount < 0 ||
         value.pendingPackageCount > value.packageCount ||
         !Number.isSafeInteger(value.baselineCount) ||
-        value.baselineCount < 0
+        value.baselineCount < 0 ||
+        !Number.isSafeInteger(value.verificationBackfillCount) ||
+        value.verificationBackfillCount !== value.packageCount
     ) {
         throw new TypeError("Official integration registry bootstrap preparation is invalid");
     }

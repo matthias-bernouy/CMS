@@ -33,6 +33,7 @@ export async function commitFsIntegrationRegistryPublication(
         schemaDeclarationEvidence?: Parameters<typeof evaluatePublicationCompatibility>[3];
         admissionReport?: IntegrationCompatibilityAdmissionReport;
         versionStatus?: "unverified";
+        verificationDigest?: string;
     }>,
 ): Promise<IntegrationRegistryPublicationResult> {
     const { config, layout, paths, operationId, candidate } = input;
@@ -40,6 +41,7 @@ export async function commitFsIntegrationRegistryPublication(
     const previousIndex = capturedSnapshot.getIndex(candidate.definition.kind);
     const nextIndex = nextIntegrationRegistryIndex(previousIndex, candidate.definition, candidate.package.envelope, {
         ...(input.versionStatus ? { status: input.versionStatus } : {}),
+        ...(input.verificationDigest ? { verificationDigest: input.verificationDigest } : {}),
         advanceChannels: !input.versionStatus,
     });
     const report =

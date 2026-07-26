@@ -1,1 +1,0 @@
-{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-integration-verifier","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"commerce","packageDigest":"eadfb2efcb506e3f3166dc7c6581501eecd9717ed4b2c7c545ea1afd276ceef8","version":"1.0.0"}}

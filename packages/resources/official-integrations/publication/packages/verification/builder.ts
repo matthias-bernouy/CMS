@@ -10,7 +10,8 @@ import { buildOfficialIntegrationPackages } from "../runtime";
 import type { BuiltOfficialIntegrationVerification, OfficialIntegrationVerificationBackfill } from "./contracts";
 import {
     OFFICIAL_INTEGRATION_VERIFICATION_POLICY,
-    OFFICIAL_INTEGRATION_VERIFICATION_RUNNER_REQUIREMENT,
+    OFFICIAL_PACKAGE_AUDIT_RUNNER_REQUIREMENT,
+    OFFICIAL_SQL_BACKFILL_RUNNER_REQUIREMENT,
     OFFICIAL_VERIFICATION_BACKFILL_SCHEMA,
 } from "./contracts";
 import { parseOfficialVerificationBackfillIndex } from "./validation";
@@ -67,7 +68,11 @@ async function buildVerification(
             packageDigest: integrationPackage.digest,
         },
         manifest: {
-            runnerRequirements: [OFFICIAL_INTEGRATION_VERIFICATION_RUNNER_REQUIREMENT],
+            runnerRequirements: [
+                hasSqlConnector(integrationPackage)
+                    ? OFFICIAL_SQL_BACKFILL_RUNNER_REQUIREMENT
+                    : OFFICIAL_PACKAGE_AUDIT_RUNNER_REQUIREMENT,
+            ],
             contracts: [],
             conformance: [],
             fixtures: legacyOwnership ? [PHOTO_ALBUMS_LEGACY_TEST_PATH] : [],
@@ -90,6 +95,12 @@ async function buildVerification(
         envelope,
         canonicalBytes,
     };
+}
+
+function hasSqlConnector(integrationPackage: BuiltOfficialIntegrationPackage): boolean {
+    return (integrationPackage.definition.connectors ?? []).some(
+        (connector) => connector.provider === "supabase" && (connector.schemas?.length ?? 0) > 0,
+    );
 }
 
 async function photoAlbumsLegacyOwnership(

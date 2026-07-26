@@ -7,7 +7,8 @@ import {
 } from "@bernouy/cms-integration-packages";
 import {
     OFFICIAL_INTEGRATION_VERIFICATION_POLICY,
-    OFFICIAL_INTEGRATION_VERIFICATION_RUNNER_REQUIREMENT,
+    OFFICIAL_PACKAGE_AUDIT_RUNNER_REQUIREMENT,
+    OFFICIAL_SQL_BACKFILL_RUNNER_REQUIREMENT,
     OFFICIAL_VERIFICATION_BACKFILL_INDEX_PATH,
     buildOfficialIntegrationPackages,
     buildOfficialIntegrationVerificationBackfill,
@@ -44,8 +45,11 @@ describe("official verification backfill artifacts", () => {
                 version: integrationPackage.version,
                 packageDigest: integrationPackage.digest,
             });
+            const hasSql = (integrationPackage.definition.connectors ?? []).some(
+                (connector) => connector.provider === "supabase" && (connector.schemas?.length ?? 0) > 0,
+            );
             expect(verification?.envelope.manifest.runnerRequirements).toEqual([
-                OFFICIAL_INTEGRATION_VERIFICATION_RUNNER_REQUIREMENT,
+                hasSql ? OFFICIAL_SQL_BACKFILL_RUNNER_REQUIREMENT : OFFICIAL_PACKAGE_AUDIT_RUNNER_REQUIREMENT,
             ]);
             expect(rebuilt?.digest).toBe(integrationPackage.digest);
             expect(rebuilt?.canonicalBytes).toEqual(integrationPackage.canonicalBytes);

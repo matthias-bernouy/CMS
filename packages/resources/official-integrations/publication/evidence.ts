@@ -9,6 +9,10 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "../index";
 import { OFFICIAL_REPOSITORY_BOOTSTRAP_EVIDENCE_PATH, type OfficialRepositoryBootstrapEvidenceV1 } from "./contracts";
 import { joinWithin, readBoundedJsonDocument } from "./filesystem";
 import { buildOfficialIntegrationPackages } from "./packages";
+import {
+    buildOfficialVerificationBackfillReports,
+    loadOfficialIntegrationVerificationBackfill,
+} from "./packages/verification";
 import { assertOfficialRepositoryBootstrapEvidence } from "./validation";
 
 const MAX_OFFICIAL_BOOTSTRAP_EVIDENCE_BYTES = 16 * 1_024 * 1_024;
@@ -18,6 +22,8 @@ export async function buildOfficialRepositoryBootstrapPlan(
 ): Promise<OfficialRepositoryBootstrapPlan> {
     const packages = await buildOfficialIntegrationPackages(requestedRoot);
     const evidence = await loadOfficialRepositoryBootstrapEvidence(requestedRoot);
+    const verificationBundles = await loadOfficialIntegrationVerificationBackfill(requestedRoot);
+    const verificationReports = await buildOfficialVerificationBackfillReports(requestedRoot, evidence);
     assertOfficialRepositoryBootstrapEvidence(packages, evidence);
     return {
         schema: OFFICIAL_REPOSITORY_BOOTSTRAP_PLAN_SCHEMA,
@@ -28,6 +34,28 @@ export async function buildOfficialRepositoryBootstrapPlan(
             ),
         })),
         reviewedSchemaBaselines: evidence.reviewedSchemaBaselines,
+        verificationBackfills: verificationBundles.verifications.map((verification, index) => {
+            const reports = verificationReports[index];
+            if (
+                !reports ||
+                reports.compatibility.kind !== verification.kind ||
+                reports.compatibility.version !== verification.version ||
+                reports.compatibility.packageDigest !== verification.packageDigest
+            ) {
+                throw new Error("Official verification bundle and report inventories diverged");
+            }
+            return {
+                verification: {
+                    envelope: verification.envelope,
+                    canonicalBytes: verification.canonicalBytes,
+                    digest: verification.verificationDigest,
+                },
+                compatibilityReport: reports.compatibility,
+                verificationReport: reports.verification,
+                statefulChanges: reports.statefulChanges,
+                decision: reports.decision,
+            };
+        }),
     };
 }
 

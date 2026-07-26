@@ -17,6 +17,7 @@ export function nextIntegrationRegistryIndex(
     envelope: IntegrationPackageEnvelopeV1,
     options: Readonly<{
         status?: "blocked" | "inadmissible" | "unverified";
+        verificationDigest?: string;
         advanceChannels?: boolean;
     }> = {},
 ): IntegrationDefinitionIndex {
@@ -37,6 +38,7 @@ export function nextIntegrationRegistryIndex(
         version,
         path: `versions/${version}`,
         definition: `versions/${version}/${envelope.definition}`,
+        ...(options.verificationDigest ? { verificationDigest: options.verificationDigest } : {}),
         ...(options.status ? { status: options.status } : {}),
     };
     return parseIntegrationDefinitionIndex(
