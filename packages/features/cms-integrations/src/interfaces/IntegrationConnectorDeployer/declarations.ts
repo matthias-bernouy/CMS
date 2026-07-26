@@ -1,4 +1,5 @@
 import type { DeclarativeConnectorFunctionTemplate } from "./httpCompatibility";
+import type { DeclarativeConnectorMigrationPlan } from "./migrations";
 
 export type DeclarativeConnectorSchemaTemplate =
     | { path: string; manifest?: never }
@@ -72,6 +73,10 @@ export type DeclarativeConnectorCompatibility = {
 
 export type DeclarativeConnectorTemplate = {
     provider: string;
+    connectorKey?: string;
+    lineageId?: string;
+    migrationRevision?: number;
+    migration?: DeclarativeConnectorMigrationPlan;
     root?: string;
     dataApiSchemas?: string[];
     schemas?: DeclarativeConnectorSchemaTemplate[];

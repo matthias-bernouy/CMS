@@ -1,4 +1,5 @@
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
+import { isExactIntegrationVersion } from "../../definitions/versioning";
 import { assertPasswordInputsDeclareSecrets, sensitiveInputNames } from "../../shared/inputSensitivity";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
 import { parseArtifactTemplates } from "../templates/sourceTemplates";
@@ -82,7 +83,18 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     const secrets = parseSecretTemplates(value.secrets, new Set(sensitiveInputNames(parsedDefinition)));
     const generatedSecrets = parseGeneratedSecretTemplates(value.generatedSecrets);
     assertUniqueSecretBindingNames(secrets, generatedSecrets);
-    const connectors = parseConnectorTemplates(value.connectors);
+    const version = text(value.version);
+    if (version && !isExactIntegrationVersion(version)) {
+        throw new IntegrationInputError("definition.version", "must be an exact SemVer version");
+    }
+    const connectors = parseConnectorTemplates(value.connectors, version);
+    for (const connector of connectors) {
+        validateConnectorDefinition(connector);
+    }
+    const connectorKeys = connectors.flatMap((connector) => (connector.connectorKey ? [connector.connectorKey] : []));
+    if (new Set(connectorKeys).size !== connectorKeys.length) {
+        throw new IntegrationInputError("definition.connectors", "must use unique connectorKey values");
+    }
     const provisions = parseProvisionTemplates(value.provisions);
     const afterInstallation = parseAfterInstallationTemplates(value.afterInstallation);
     const artifacts = parseArtifactTemplates(value.artifacts);
@@ -95,7 +107,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     return {
         kind,
         label,
-        ...(text(value.version) ? { version: text(value.version)! } : {}),
+        ...(version ? { version } : {}),
         ...(text(value.category) ? { category: text(value.category)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),
         ...(icon ? { icon } : {}),

@@ -15,19 +15,43 @@ export function buildConnectorDeployments(
         connectors?: DeclarativeConnectorTemplate[];
     },
     context: TemplateContext,
+    connectorInstanceIds: Record<string, string> = {},
 ): IntegrationConnectorDeployment[] {
     return (definition.connectors ?? []).map((connector) => {
         const resolved = resolveTemplates(connector, context);
+        const connectorKey = resolved.connectorKey ?? resolved.provider;
         return {
             integrationKind: definition.kind,
             ...(definition.version ? { version: definition.version } : {}),
             provider: resolved.provider,
+            ...(resolved.connectorKey ? { connectorKey } : {}),
+            ...(resolved.migration && resolved.lineageId && resolved.migrationRevision !== undefined
+                ? {
+                      migration: {
+                          connectorKey,
+                          lineageId: resolved.lineageId,
+                          migrationRevision: resolved.migrationRevision,
+                          connectorInstanceId: requiredConnectorInstanceId(connectorKey, connectorInstanceIds),
+                          plan: resolved.migration,
+                      },
+                  }
+                : {}),
             ...(resolved.root ? { root: resolved.root } : {}),
             dataApiSchemas: resolved.dataApiSchemas ?? [],
             schemas: resolved.schemas ?? [],
             functions: resolved.functions ?? [],
         };
     });
+}
+
+function requiredConnectorInstanceId(connectorKey: string, connectorInstanceIds: Record<string, string>): string {
+    const connectorInstanceId = connectorInstanceIds[connectorKey]?.trim();
+    if (!connectorInstanceId) {
+        throw new IntegrationRuntimeError(
+            `migration-aware connector "${connectorKey}" requires a connector instance id`,
+        );
+    }
+    return connectorInstanceId;
 }
 
 export async function deployConnectorDeployments(
@@ -57,9 +81,10 @@ export async function deployConnectorDeployments(
             ...(deps.packageRoot ? { packageRoot: deps.packageRoot } : {}),
             env: deps.env ?? {},
         });
-        results.push(result);
-        outputs[deployment.provider] = {
-            ...(outputs[deployment.provider] ?? {}),
+        const connectorKey = deployment.connectorKey ?? deployment.provider;
+        results.push(deployment.migration ? { ...result, connectorKey } : result);
+        outputs[connectorKey] = {
+            ...(outputs[connectorKey] ?? {}),
             ...(result.outputs ?? {}),
         };
     }
@@ -76,6 +101,7 @@ export async function previewConnectorOutputs(
     const outputs: Record<string, Record<string, string>> = {};
     for (const connector of definition.connectors ?? []) {
         const provider = resolveTemplates(connector.provider, context);
+        const connectorKey = resolveTemplates(connector.connectorKey ?? provider, context);
         const deployer = deployers.get(provider);
         if (!deployer) {
             throw new IntegrationRuntimeError(`connector deployer "${provider}" not configured`);
@@ -83,8 +109,8 @@ export async function previewConnectorOutputs(
         if (!deployer.previewOutputs) {
             continue;
         }
-        outputs[provider] = {
-            ...(outputs[provider] ?? {}),
+        outputs[connectorKey] = {
+            ...(outputs[connectorKey] ?? {}),
             ...(await deployer.previewOutputs()),
         };
     }

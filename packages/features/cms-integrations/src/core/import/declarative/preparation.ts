@@ -50,11 +50,15 @@ export async function prepareDeclarativeIntegration(
             generatedSecretWrites,
             secretWrites,
         );
-        const deployments = buildConnectorDeployments(definition, {
-            ...baseContext,
-            connectors: connectorOutputs,
-            connectorSecrets: Object.fromEntries(secretWrites.map((secret) => [secret.input, secret.value])),
-        });
+        const deployments = buildConnectorDeployments(
+            definition,
+            {
+                ...baseContext,
+                connectors: connectorOutputs,
+                connectorSecrets: Object.fromEntries(secretWrites.map((secret) => [secret.input, secret.value])),
+            },
+            deps.connectorInstanceIds,
+        );
         return { baseContext, deployments, provisions, secretWrites };
     } catch (error) {
         await provisions.rollback();

@@ -29,3 +29,26 @@ export {
     type AnonymousConstraintFinding,
     type AnonymousConstraintLintLimits,
 } from "../default-implementation/supabase/sql/anonymousConstraintLint";
+export { SupabaseConnectorMigrationAdapter } from "../default-implementation/supabase/migration/executor";
+export { SupabaseFunctionMigrationHandler } from "../default-implementation/supabase/migration/functions";
+export {
+    ConfiguredSupabaseConnectorMigrationAdapter,
+    ConfiguredSupabaseFunctionMigrationHandler,
+} from "../default-implementation/supabase/migration/production/runtime";
+export { ConfiguredSupabaseConnectorBaselineAdopter } from "../default-implementation/supabase/migration/production/adopter";
+export type { ConfiguredSupabaseMigrationServicesConfig } from "../default-implementation/supabase/migration/production/config";
+export {
+    computeSupabaseInstallDigest,
+    loadSupabaseMigrationAssets,
+    loadSupabaseRepeatableAssets,
+    type LoadedSupabaseMigration,
+    type LoadedSupabaseRepeatable,
+} from "../default-implementation/supabase/migration/assets";
+export {
+    buildSupabaseFreshInstallSql,
+    buildSupabaseMigrationPhaseSql,
+} from "../default-implementation/supabase/migration/sql";
+export {
+    buildSupabaseBaselineAdoptionSql,
+    confirmSupabaseBaselineAdoptionSql,
+} from "../default-implementation/supabase/migration/production/adoptionSql";

@@ -1,4 +1,5 @@
 import type { IntegrationAnswerValue, IntegrationDefinition } from "../Integration";
+import type { IntegrationConnectorMigrationDeployment } from "./migrations";
 
 export type IntegrationPackageResolutionReason = "create" | "rerun" | "upgrade";
 
@@ -38,6 +39,8 @@ export type IntegrationConnectorDeployment = {
     integrationKind: string;
     version?: string;
     provider: string;
+    connectorKey?: string;
+    migration?: IntegrationConnectorMigrationDeployment;
     root?: string;
     dataApiSchemas: string[];
     schemas: IntegrationConnectorSchemaDeployment[];
@@ -60,6 +63,10 @@ export type IntegrationConnectorResourceResult = {
 
 export type IntegrationConnectorDeployResult = {
     provider: string;
+    connectorKey?: string;
+    connectorInstanceId?: string;
+    lineageId?: string;
+    migrationRevision?: number;
     outputs?: Record<string, string>;
     resources?: IntegrationConnectorResourceResult[];
 };

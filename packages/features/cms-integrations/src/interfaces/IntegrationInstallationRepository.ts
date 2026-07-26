@@ -15,4 +15,8 @@ export type IntegrationInstallationRepository = {
     get(id: string): Promise<IntegrationInstallation | null>;
     create(installation: IntegrationInstallationCreate): Promise<IntegrationInstallation>;
     replace(installation: IntegrationInstallation): Promise<IntegrationInstallation>;
+    compareAndSwapMigration?(
+        expected: IntegrationInstallation,
+        next: IntegrationInstallation,
+    ): Promise<IntegrationInstallation | null>;
 };

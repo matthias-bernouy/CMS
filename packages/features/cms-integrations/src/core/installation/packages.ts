@@ -10,6 +10,7 @@ import type {
     IntegrationPackageResolutionReason,
     ResolvedIntegrationPackageRoot,
 } from "../../interfaces/IntegrationConnectorDeployer";
+import { assertConnectorAdoptionProvenance } from "./migration/adoption/provenance";
 
 type ResolvePackageOptions = {
     resolver?: IntegrationPackageResolver;
@@ -87,6 +88,28 @@ export function depsWithPackageRoot(
     resolved: ResolvedIntegrationPackageRoot | undefined,
 ): IntegrationImportDeps {
     return resolved ? { ...deps, packageRoot: resolved.root } : deps;
+}
+
+export function assertIntegrationInstallationProvenance(
+    installation: Pick<
+        IntegrationInstallation,
+        "definitionVersion" | "packageDigest" | "connectorBindings" | "connectorBaselineAdoptions"
+    >,
+): void {
+    if (installation.definitionVersion === "unversioned") {
+        if (installation.packageDigest !== undefined) {
+            throw new IntegrationRuntimeError("an unversioned installation cannot carry a package digest");
+        }
+        assertConnectorAdoptionProvenance(installation);
+        return;
+    }
+    if (!isExactIntegrationVersion(installation.definitionVersion)) {
+        throw new IntegrationRuntimeError("integration installation definitionVersion must be exact SemVer");
+    }
+    if (installation.packageDigest !== undefined && !/^[a-f0-9]{64}$/.test(installation.packageDigest)) {
+        throw new IntegrationRuntimeError("integration installation packageDigest must be a lowercase SHA-256 digest");
+    }
+    assertConnectorAdoptionProvenance(installation);
 }
 
 async function resolvePackage(options: ResolvePackageOptions): Promise<ResolvedIntegrationPackageRoot> {

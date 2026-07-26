@@ -1,6 +1,6 @@
 import { findIntegration } from "../../definitions/catalog";
 import { integrationVersionReleaseLevel, isExactIntegrationVersion } from "../../definitions/versioning";
-import { IntegrationInputError, MissingIntegrationInstallationError } from "../../errors";
+import { IntegrationInputError, IntegrationRuntimeError, MissingIntegrationInstallationError } from "../../errors";
 import {
     declarativeSecretBindingNames,
     importDeclarativeIntegrationWithCommit,
@@ -10,7 +10,12 @@ import { withObsoleteArtifactCleanup } from "../artifactCleanup";
 import { reconcileAfterInstallation } from "./afterInstallation";
 import { appendRun, failedRun, successRun } from "./runs";
 import { assertSecretKeysAvailable, deleteObsoleteSecretRefs } from "../secretRefs";
-import { depsWithPackageRoot, resolveRerunPackage, resolveUpgradePackage } from "../packages";
+import {
+    assertIntegrationInstallationProvenance,
+    depsWithPackageRoot,
+    resolveRerunPackage,
+    resolveUpgradePackage,
+} from "../packages";
 import { sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "../snapshots";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
 import type { IntegrationImportDto, IntegrationImportResult } from "../../../interfaces/IntegrationImport";
@@ -23,6 +28,8 @@ import type {
 } from "./runIntegrationInstallation";
 import { assertResolvedRerunDefinition, assertRerunVersion, buildRerunDto } from "./rerunRequest";
 import { assertUpgradePreservesDependentRanges } from "./upgradeDependencies";
+import { connectorBindingsFromResult, connectorInstanceIds } from "../migration/adoption/installationBindings";
+import { runDurableMigrationUpgrade } from "../migration/engine";
 
 type ExistingInstallationRequest = RunIntegrationInstallationRerunRequest | RunIntegrationInstallationUpgradeRequest;
 
@@ -33,6 +40,7 @@ export async function runRerun(
     if (!installation) {
         throw new MissingIntegrationInstallationError(request.integrationId);
     }
+    assertIntegrationInstallationProvenance(installation);
     assertRerunVersion(installation, request.body?.version);
     const resolvedPackage = await resolveRerunPackage(request.packageResolver, installation);
 
@@ -54,6 +62,7 @@ export async function runUpgrade(
     if (!installation) {
         throw new MissingIntegrationInstallationError(request.integrationId);
     }
+    assertIntegrationInstallationProvenance(installation);
     const definition = findIntegration(installation.id, [request.targetDefinition]);
     if (!definition) {
         throw new IntegrationInputError("kind", `upgrade target must match integration "${installation.id}"`);
@@ -61,16 +70,23 @@ export async function runUpgrade(
     if (!definition.version || !isExactIntegrationVersion(definition.version)) {
         throw new IntegrationInputError("version", "upgrade target must declare an exact version");
     }
-    if (definition.version === installation.definitionVersion) {
+    const unfinishedMigration = installation.migrationOperation;
+    const resumingMigration =
+        unfinishedMigration !== undefined &&
+        unfinishedMigration.status !== "completed" &&
+        unfinishedMigration.status !== "aborted" &&
+        unfinishedMigration.targetVersion === definition.version;
+    const comparisonVersion = resumingMigration ? unfinishedMigration.currentVersion : installation.definitionVersion;
+    if (definition.version === installation.definitionVersion && !resumingMigration) {
         throw new IntegrationInputError("version", `version "${definition.version}" is already installed`);
     }
     if (
-        isExactIntegrationVersion(installation.definitionVersion) &&
-        integrationVersionReleaseLevel(installation.definitionVersion, definition.version) === null
+        isExactIntegrationVersion(comparisonVersion) &&
+        integrationVersionReleaseLevel(comparisonVersion, definition.version) === null
     ) {
         throw new IntegrationInputError(
             "version",
-            `version "${definition.version}" is not newer than installed version "${installation.definitionVersion}"`,
+            `version "${definition.version}" is not newer than installed version "${comparisonVersion}"`,
         );
     }
     await assertUpgradePreservesDependentRanges(request.installations, installation.id, definition.version);
@@ -80,6 +96,24 @@ export async function runUpgrade(
         importDefinition,
         ...(request.siteIntegrations ?? []).filter((candidate) => candidate.kind !== importDefinition.kind),
     ];
+
+    if ((importDefinition.connectors ?? []).some((connector) => connector.migration)) {
+        if (!resolvedPackage) {
+            throw new IntegrationInputError("version", "migration-aware upgrade requires an immutable target package");
+        }
+        if (!request.deps.migrationRuntime) {
+            throw new IntegrationRuntimeError("migration-aware upgrade runtime is not configured", 503);
+        }
+        return await runDurableMigrationUpgrade({
+            installations: request.installations,
+            installation,
+            targetDefinition: importDefinition,
+            resolvedPackage,
+            runtime: request.deps.migrationRuntime,
+            clock: request.deps.migrationClock,
+            leaseMs: request.deps.migrationLeaseMs,
+        });
+    }
 
     return runExistingInstallation(request, installation, importDefinition, siteIntegrations, resolvedPackage);
 }
@@ -117,8 +151,10 @@ async function runRerunImport(
     const plannedSecretRefs = resolveDeclarativeSecretRefs(definition, dto.answers);
     await assertSecretKeysAvailable(request.installations, installation.id, plannedSecretRefs);
 
+    const instanceIds = connectorInstanceIds(definition, installation.connectorBindings);
     const deps = {
         ...depsWithPackageRoot(request.deps, resolvedPackage),
+        connectorInstanceIds: instanceIds,
         installations: request.deps.installations ?? request.installations,
     };
     const { importResult, committed } = await importDeclarativeIntegrationWithCommit(
@@ -136,6 +172,7 @@ async function runRerunImport(
                 startedAt,
                 result,
                 resolvedPackage,
+                instanceIds,
             ),
     );
     return { ...importResult, ...committed };
@@ -150,6 +187,7 @@ async function commitSuccessfulRerun(
     startedAt: Date,
     result: IntegrationImportResult,
     resolvedPackage?: ResolvedIntegrationPackageRoot,
+    instanceIds: Record<string, string> = {},
 ): Promise<{ installation: IntegrationInstallation; run: IntegrationRun }> {
     const run = successRun(installation.runCount + 1, startedAt, result);
     const nextSecretRefs = updateSecretRefs(installation.secretRefs, result, secretInputs);
@@ -159,6 +197,7 @@ async function commitSuccessfulRerun(
         answersSnapshot: sanitizeAnswers(definition, dto.answers),
         secretRefs: nextSecretRefs,
         secretInputs,
+        connectorBindings: connectorBindingsFromResult(definition, result, instanceIds, installation.connectorBindings),
         ...(!installation.packageDigest && resolvedPackage ? { packageDigest: resolvedPackage.digest } : {}),
         ...(request.mode === "upgrade"
             ? {

@@ -10,6 +10,7 @@ import { successRun } from "./execution/runs";
 import { depsWithPackageRoot, resolveCreatePackage } from "./packages";
 import { assertSecretKeysAvailable } from "./secretRefs";
 import { installationLabel, sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "./snapshots";
+import { connectorBindingsFromResult, connectorInstanceIds } from "./migration/adoption/installationBindings";
 import type {
     RunIntegrationInstallationCreateRequest,
     RunIntegrationInstallationResult,
@@ -30,6 +31,7 @@ export async function runCreate(
     }
     const resolvedPackage = await resolveCreatePackage(request.packageResolver, definition);
     const importDefinition = resolvedPackage?.definition ?? definition;
+    const instanceIds = connectorInstanceIds(importDefinition);
 
     const secretInputs = declarativeSecretBindingNames(importDefinition);
     const plannedSecretRefs = resolveDeclarativeSecretRefs(importDefinition, request.dto.answers);
@@ -38,6 +40,7 @@ export async function runCreate(
 
     const deps = {
         ...depsWithPackageRoot(request.deps, resolvedPackage),
+        connectorInstanceIds: instanceIds,
         installations: request.deps.installations ?? request.installations,
     };
     const { importResult, committed } = await importDeclarativeIntegrationWithCommit(
@@ -53,6 +56,9 @@ export async function runCreate(
                 definitionVersion: importDefinition.version ?? "unversioned",
                 definitionSnapshot: sanitizeDefinitionSnapshot(importDefinition),
                 ...(resolvedPackage ? { packageDigest: resolvedPackage.digest } : {}),
+                ...(Object.keys(instanceIds).length
+                    ? { connectorBindings: connectorBindingsFromResult(importDefinition, result, instanceIds) }
+                    : {}),
                 status: "success",
                 artifacts: result.artifacts,
                 answersSnapshot: sanitizeAnswers(importDefinition, request.dto.answers),

@@ -32,6 +32,18 @@ export type {
     DeclarativeConnectorSchemaTemplate,
     DeclarativeConnectorTemplate,
 } from "./IntegrationConnectorDeployer";
+export type {
+    DeclarativeConnectorLegacyAdoptionBaseline,
+    DeclarativeConnectorInstallBaseline,
+    DeclarativeConnectorMigrationDescriptor,
+    DeclarativeConnectorMigrationPlan,
+    DeclarativeConnectorMigrationReference,
+    DeclarativeConnectorMigrationSource,
+    DeclarativeConnectorRepeatableDescriptor,
+    IntegrationCmsMediatedCutover,
+    IntegrationMigrationChecksum,
+    IntegrationProviderDirectCutover,
+} from "./IntegrationConnectorDeployer";
 export {
     OBSERVED_SCHEMA_CONTRACT_V1,
     type ObservedSchemaColumnV1,

@@ -19,6 +19,13 @@ export type {
     DeclarativeConnectorFunctionHttpResponseContract,
     DeclarativeConnectorFunctionHttpStringFormat,
     DeclarativeConnectorFunctionTemplate,
+    DeclarativeConnectorInstallBaseline,
+    DeclarativeConnectorLegacyAdoptionBaseline,
+    DeclarativeConnectorMigrationDescriptor,
+    DeclarativeConnectorMigrationPlan,
+    DeclarativeConnectorMigrationReference,
+    DeclarativeConnectorMigrationSource,
+    DeclarativeConnectorRepeatableDescriptor,
     DeclarativeConnectorSchemaColumnContract,
     DeclarativeConnectorSchemaConstraintContract,
     DeclarativeConnectorSchemaContract,
@@ -43,6 +50,9 @@ export type {
     IntegrationDependency,
     IntegrationIcon,
     IntegrationInput,
+    IntegrationCmsMediatedCutover,
+    IntegrationMigrationChecksum,
+    IntegrationProviderDirectCutover,
     IntegrationSecurityDefinition,
     IntegrationUiDefinition,
 } from "../interfaces/Integration";
@@ -62,6 +72,20 @@ export type {
     IntegrationConnectorDeployment,
     IntegrationConnectorDeployResult,
     IntegrationConnectorFunctionDeployment,
+    IntegrationConnectorMigrationDeployment,
+    IntegrationConnectorMigrationIdentity,
+    IntegrationConnectorMigrationAdapter,
+    IntegrationConnectorBaselineAdopter,
+    IntegrationConnectorBaselineAdoptionContext,
+    IntegrationMigrationConnectorTransition,
+    IntegrationMigrationExternalPhaseHandler,
+    IntegrationMigrationProbe,
+    IntegrationMigrationPhase,
+    IntegrationMigrationRuntime,
+    IntegrationMigrationStepConfirmation,
+    IntegrationMigrationStepContext,
+    IntegrationMigrationStepResult,
+    IntegrationProviderDirectMigrationAdapter,
     IntegrationPackageResolutionReason,
     IntegrationPackageResolver,
     IntegrationConnectorResourceResult,
@@ -97,6 +121,12 @@ export type {
 export type {
     IntegrationInstallation,
     IntegrationInstallationStatus,
+    IntegrationConnectorBinding,
+    IntegrationConnectorBaselineAdoptionAudit,
+    IntegrationMigrationJournalEntry,
+    IntegrationMigrationJournalStatus,
+    IntegrationMigrationOperation,
+    IntegrationMigrationOperationStatus,
     IntegrationRun,
     IntegrationRunError,
 } from "../interfaces/IntegrationInstallation";
@@ -170,7 +200,27 @@ export {
     type RunIntegrationInstallationRerunRequest,
     type RunIntegrationInstallationUpgradeRequest,
 } from "../core/installation/execution/runIntegrationInstallation";
+export {
+    abortIntegrationMigration,
+    runDurableMigrationUpgrade,
+    type DurableMigrationUpgradeRequest,
+} from "../core/installation/migration/engine";
+export {
+    adoptLegacyConnectorBaseline,
+    legacyBaselineAdoptionConfirmation,
+    type AdoptLegacyConnectorBaselineRequest,
+} from "../core/installation/migration/adoption/service";
+export {
+    ConfiguredIntegrationMigrationRuntime,
+    ProductionIntegrationMigrationRuntime,
+    type ConfiguredIntegrationMigrationRuntimeOptions,
+    type ProductionIntegrationMigrationRuntimeOptions,
+} from "../core/installation/migration/runtime";
+export { ConfirmedMigrationPhaseProbe } from "../core/installation/migration/runtime/controlPhases";
+export { CmsSourceBindingMigrationHandler } from "../core/installation/migration/runtime/cmsBinding";
+export { ProviderDirectMigrationHandler } from "../core/installation/migration/runtime/providerDirect";
 export { assertResolvedRerunDefinition, assertRerunVersion } from "../core/installation/execution/rerunRequest";
+export { resolveUpgradePackage } from "../core/installation/packages";
 export {
     resolveTemplate,
     resolveTemplates,

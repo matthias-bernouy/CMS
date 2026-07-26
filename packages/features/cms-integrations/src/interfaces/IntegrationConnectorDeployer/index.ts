@@ -11,6 +11,34 @@ export type {
     DeclarativeConnectorTemplate,
 } from "./declarations";
 export type {
+    DeclarativeConnectorLegacyAdoptionBaseline,
+    DeclarativeConnectorInstallBaseline,
+    DeclarativeConnectorMigrationDescriptor,
+    DeclarativeConnectorMigrationPlan,
+    DeclarativeConnectorMigrationReference,
+    DeclarativeConnectorMigrationSource,
+    DeclarativeConnectorRepeatableDescriptor,
+    IntegrationCmsMediatedCutover,
+    IntegrationConnectorMigrationDeployment,
+    IntegrationConnectorMigrationIdentity,
+    IntegrationMigrationChecksum,
+    IntegrationProviderDirectCutover,
+} from "./migrations";
+export type {
+    IntegrationConnectorBaselineAdopter,
+    IntegrationConnectorBaselineAdoptionContext,
+    IntegrationConnectorMigrationAdapter,
+    IntegrationMigrationConnectorTransition,
+    IntegrationMigrationExternalPhaseHandler,
+    IntegrationMigrationProbe,
+    IntegrationMigrationPhase,
+    IntegrationMigrationRuntime,
+    IntegrationMigrationStepConfirmation,
+    IntegrationMigrationStepContext,
+    IntegrationMigrationStepResult,
+    IntegrationProviderDirectMigrationAdapter,
+} from "./migrationRuntime";
+export type {
     IntegrationConnectorDeployer,
     IntegrationConnectorDeployContext,
     IntegrationConnectorDeployment,

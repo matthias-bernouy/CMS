@@ -1,6 +1,7 @@
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import { DuplicateIntegrationInstallationError } from "../../core/errors";
 import { trimIntegrationRuns } from "../../core/installation/execution/runRetention";
+import { assertIntegrationInstallationProvenance } from "../../core/installation/packages";
 import type { IntegrationInstallation } from "../../interfaces/IntegrationInstallation";
 import type {
     IntegrationInstallationCreate,
@@ -33,15 +34,16 @@ export class MongoIntegrationInstallationRepository implements IntegrationInstal
 
     async list(): Promise<IntegrationInstallation[]> {
         const docs = await this.installations.find().sort({ updatedAt: -1 }).toArray();
-        return docs.map(fromDoc);
+        return docs.map(fromDoc).map(validInstallation);
     }
 
     async get(id: string): Promise<IntegrationInstallation | null> {
         const doc = await this.installations.findOne({ _id: id });
-        return doc ? fromDoc(doc) : null;
+        return doc ? validInstallation(fromDoc(doc)) : null;
     }
 
     async create(input: IntegrationInstallationCreate): Promise<IntegrationInstallation> {
+        assertIntegrationInstallationProvenance(input);
         const now = new Date();
         const installation: IntegrationInstallation = {
             ...input,
@@ -66,6 +68,7 @@ export class MongoIntegrationInstallationRepository implements IntegrationInstal
     }
 
     async replace(installation: IntegrationInstallation): Promise<IntegrationInstallation> {
+        assertIntegrationInstallationProvenance(installation);
         const next: IntegrationInstallation = {
             ...installation,
             runs: trimIntegrationRuns(installation.runs),
@@ -73,6 +76,27 @@ export class MongoIntegrationInstallationRepository implements IntegrationInstal
         const { _id, ...replacement } = toDoc(next);
         await this.installations.replaceOne({ _id }, replacement, { upsert: true });
         return structuredClone(next);
+    }
+
+    async compareAndSwapMigration(
+        expected: IntegrationInstallation,
+        next: IntegrationInstallation,
+    ): Promise<IntegrationInstallation | null> {
+        assertIntegrationInstallationProvenance(expected);
+        assertIntegrationInstallationProvenance(next);
+        const { _id, ...replacement } = toDoc(next);
+        const operation = expected.migrationOperation;
+        const filter = operation
+            ? {
+                  _id,
+                  updatedAt: expected.updatedAt,
+                  "migrationOperation.id": operation.id,
+                  "migrationOperation.revision": operation.revision,
+                  "migrationOperation.fencingToken": operation.fencingToken,
+              }
+            : { _id, updatedAt: expected.updatedAt, migrationOperation: { $exists: false } };
+        const stored = await this.installations.findOneAndReplace(filter, replacement, { returnDocument: "after" });
+        return stored ? validInstallation(fromDoc(stored)) : null;
     }
 }
 
@@ -84,6 +108,11 @@ function toDoc(installation: IntegrationInstallation): IntegrationInstallationDo
 function fromDoc(doc: IntegrationInstallationDoc): IntegrationInstallation {
     const { _id, ...rest } = doc;
     return { id: _id, ...rest };
+}
+
+function validInstallation(installation: IntegrationInstallation): IntegrationInstallation {
+    assertIntegrationInstallationProvenance(installation);
+    return installation;
 }
 
 function isDuplicateKey(error: unknown): boolean {

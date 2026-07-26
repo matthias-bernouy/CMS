@@ -43,6 +43,37 @@ describe("integration installation package provenance", () => {
         assertPackageDigestAbsent((await repository.get("legacy"))!);
         assertPackageDigestAbsent((await repository.list())[0]!);
     });
+
+    test("rejects package digests that are not tied to an exact SemVer version", async () => {
+        for (const repository of [
+            new InMemoryIntegrationInstallationRepository(),
+            createMongoInstallationRepository().repository,
+        ]) {
+            await expect(
+                repository.create({
+                    ...createInput("invalid"),
+                    definitionVersion: "unversioned",
+                    packageDigest: FIRST_DIGEST,
+                }),
+            ).rejects.toThrow(/unversioned installation cannot carry a package digest/);
+            await expect(
+                repository.create({
+                    ...createInput("channel"),
+                    definitionVersion: "stable",
+                }),
+            ).rejects.toThrow(/definitionVersion must be exact SemVer/);
+        }
+    });
+
+    test("rejects corrupt persisted provenance while reading", async () => {
+        const { collection, repository } = createMongoInstallationRepository();
+        seedLegacyDocument(collection, { definitionVersion: "unversioned", packageDigest: FIRST_DIGEST });
+
+        await expect(repository.get("legacy")).rejects.toThrow(
+            /unversioned installation cannot carry a package digest/,
+        );
+        await expect(repository.list()).rejects.toThrow(/unversioned installation cannot carry a package digest/);
+    });
 });
 
 async function expectRepositoryRoundTrip(repository: IntegrationInstallationRepository): Promise<void> {
@@ -68,7 +99,7 @@ function createInput(id: string): IntegrationInstallationCreate {
     };
 }
 
-function seedLegacyDocument(collection: FakeInstallationCollection): void {
+function seedLegacyDocument(collection: FakeInstallationCollection, overrides: Partial<StoredInstallation> = {}): void {
     const now = new Date("2026-01-01T00:00:00.000Z");
     const document: StoredInstallation = {
         _id: "legacy",
@@ -84,7 +115,7 @@ function seedLegacyDocument(collection: FakeInstallationCollection): void {
         artifacts: [],
         runs: [],
     };
-    collection.seed(document);
+    collection.seed({ ...document, ...overrides });
 }
 
 function assertPackageDigestAbsent(installation: IntegrationInstallation): void {

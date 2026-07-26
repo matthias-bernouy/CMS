@@ -1,4 +1,5 @@
 import { IntegrationRuntimeError } from "../../core/errors";
+import { randomUUID } from "node:crypto";
 import type {
     IntegrationConnectorDeployer,
     IntegrationConnectorDeployContext,
@@ -12,6 +13,8 @@ import { requiredText, resolveExistingSupabaseDirectory } from "./paths";
 import { loadSupabaseSqlSchemas } from "./sql/schemaLoader";
 import { SupabaseManagementClient } from "./SupabaseManagementClient";
 import type { SupabaseConnectorDeployerConfig, SupabaseConnectorFunctionSecrets } from "./types";
+import { computeSupabaseInstallDigest } from "./migration/assets";
+import { buildSupabaseFreshInstallSql } from "./migration/sql";
 
 export type { SupabaseConnectorDeployerConfig, SupabaseConnectorFunctionSecrets } from "./types";
 
@@ -47,11 +50,34 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
         const resources: IntegrationConnectorResourceResult[] = [];
         let reloadSchemaCache = false;
         const schemas = await loadSupabaseSqlSchemas(connectorRoot, deployment.schemas);
-
-        for (const schema of schemas) {
-            await this.client.applySchema(schema.sql);
-            resources.push({ type: "schema", id: schema.id, action: "applied" });
-            reloadSchemaCache = true;
+        if (deployment.migration) {
+            const digest = await computeSupabaseInstallDigest(schemas);
+            if (digest !== deployment.migration.plan.install.digest) {
+                throw new IntegrationRuntimeError(
+                    `Supabase install baseline digest mismatch for connector "${deployment.migration.connectorKey}": expected ${deployment.migration.plan.install.digest}, received ${digest}`,
+                );
+            }
+            await this.client.applyMigrationTransaction(
+                buildSupabaseFreshInstallSql({
+                    integrationKind: deployment.integrationKind,
+                    version: deployment.version as string,
+                    provider: deployment.provider,
+                    migration: deployment.migration,
+                    schemas,
+                    attemptId: randomUUID(),
+                }),
+            );
+            resources.push(
+                ...schemas.map((schema) => ({ type: "schema" as const, id: schema.id, action: "applied" as const })),
+            );
+            resources.push({ type: "schema", id: "cms_integration_runtime.migration_ledger", action: "applied" });
+            reloadSchemaCache = schemas.length > 0;
+        } else {
+            for (const schema of schemas) {
+                await this.client.applySchema(schema.sql);
+                resources.push({ type: "schema", id: schema.id, action: "applied" });
+                reloadSchemaCache = true;
+            }
         }
 
         if (deployment.dataApiSchemas.length) {
@@ -73,6 +99,14 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
 
         return {
             provider: this.provider,
+            ...(deployment.migration
+                ? {
+                      connectorKey: deployment.migration.connectorKey,
+                      lineageId: deployment.migration.lineageId,
+                      migrationRevision: deployment.migration.migrationRevision,
+                      connectorInstanceId: deployment.migration.connectorInstanceId,
+                  }
+                : {}),
             outputs: { functionsBaseUrl: `https://${this.projectRef}.supabase.co/functions/v1` },
             resources,
         };

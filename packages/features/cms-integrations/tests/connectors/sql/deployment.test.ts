@@ -7,7 +7,7 @@ import {
     emptyContext,
     supabaseConnectorRoot,
     userAccountDeployment,
-} from "../supabaseFixtures";
+} from "../supabase/supabaseFixtures";
 
 describe("Supabase SQL bundle deployment", () => {
     test("sends one atomic query for one manifest", async () => {
