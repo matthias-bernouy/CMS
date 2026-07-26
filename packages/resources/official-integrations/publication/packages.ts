@@ -1,36 +1,31 @@
-import { constants, type Dirent } from "node:fs";
-import { lstat, open, opendir, realpath } from "node:fs/promises";
-import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import type { ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
+import type { Dirent } from "node:fs";
+import { lstat, opendir, realpath } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
-import { parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
+import { FsIntegrationDefinitionRepository, parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
 import { compare as compareSemVer } from "semver";
-import { OFFICIAL_INTEGRATIONS_ROOT } from "./index";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "../index";
+import type { BuiltOfficialIntegrationPackage, OfficialIntegrationPackage } from "./contracts";
+import { assertWithin, compareText, joinWithin, portableRelative, readBoundedJsonDocument } from "./filesystem";
 
 const MAX_DISCOVERY_DEPTH = 8;
 const MAX_DISCOVERY_ENTRIES = 8_192;
 const MAX_INTEGRATION_INDEX_BYTES = 256 * 1_024;
 
-export type OfficialIntegrationPackage = Readonly<{
-    kind: string;
-    version: string;
-    digest: string;
-    canonicalBytes: Uint8Array;
-}>;
-
-export type BuiltOfficialIntegrationPackage = OfficialIntegrationPackage &
-    Readonly<{ package: ResolvedIntegrationPackage }>;
-
 export async function buildOfficialIntegrationPackages(
     requestedRoot: string = OFFICIAL_INTEGRATIONS_ROOT,
 ): Promise<readonly BuiltOfficialIntegrationPackage[]> {
     const indexPaths = await discoverIntegrationIndexes(requestedRoot);
+    const definitions = new FsIntegrationDefinitionRepository(requestedRoot);
     const packages: BuiltOfficialIntegrationPackage[] = [];
     const identities = new Set<string>();
     const kinds = new Set<string>();
     for (const indexPath of indexPaths) {
         const integrationRoot = resolve(indexPath, "..");
-        const index = parseIntegrationDefinitionIndex(await readJson(indexPath), indexPath);
+        const index = parseIntegrationDefinitionIndex(
+            (await readBoundedJsonDocument(indexPath, MAX_INTEGRATION_INDEX_BYTES)).value,
+            indexPath,
+        );
         if (kinds.has(index.kind)) {
             throw new Error(`Official integration kind is duplicated: ${index.kind}`);
         }
@@ -43,20 +38,24 @@ export async function buildOfficialIntegrationPackages(
             identities.add(identity);
             const versionRoot = joinWithin(integrationRoot, entry.path);
             const definitionPath = joinWithin(integrationRoot, entry.definition);
-            const definition = portableRelative(versionRoot, definitionPath);
             const resolved = await readIntegrationPackageDirectory({
                 root: versionRoot,
                 kind: index.kind,
                 version: entry.version,
-                definition,
+                definition: portableRelative(versionRoot, definitionPath),
                 releaseNotes: "README.md",
             });
+            const definition = await definitions.get(index.kind, entry.version);
+            if (!definition) {
+                throw new Error(`Official package definition disappeared: ${index.kind}@${entry.version}`);
+            }
             packages.push({
                 kind: index.kind,
                 version: entry.version,
                 digest: resolved.digest,
                 canonicalBytes: resolved.canonicalBytes,
                 package: resolved,
+                definition,
             });
         }
     }
@@ -122,60 +121,10 @@ async function readDirectoryEntries(directory: string, state: { entries: number 
     return entries.sort((left, right) => compareText(left.name, right.name));
 }
 
-async function readJson(path: string): Promise<unknown> {
-    const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
-    try {
-        const stats = await handle.stat();
-        if (!stats.isFile() || stats.size < 1 || stats.size > MAX_INTEGRATION_INDEX_BYTES) {
-            throw new Error("Official integration index must be a bounded regular JSON file");
-        }
-        const buffer = Buffer.alloc(MAX_INTEGRATION_INDEX_BYTES + 1);
-        let offset = 0;
-        while (offset < buffer.byteLength) {
-            const { bytesRead } = await handle.read(buffer, offset, buffer.byteLength - offset, null);
-            if (bytesRead === 0) {
-                break;
-            }
-            offset += bytesRead;
-        }
-        if (offset < 1 || offset > MAX_INTEGRATION_INDEX_BYTES) {
-            throw new Error("Official integration index must be a bounded regular JSON file");
-        }
-        return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(buffer.subarray(0, offset)));
-    } finally {
-        await handle.close();
-    }
-}
-
-function joinWithin(root: string, source: string): string {
-    if (isAbsolute(source)) {
-        throw new Error("Official integration index path must be relative");
-    }
-    const target = resolve(root, source);
-    assertWithin(root, target);
-    return target;
-}
-
-function portableRelative(root: string, target: string): string {
-    assertWithin(root, target);
-    return relative(root, target).split(sep).join("/");
-}
-
-function assertWithin(root: string, target: string): void {
-    const relation = relative(root, target);
-    if (relation === ".." || relation.startsWith(`..${sep}`) || isAbsolute(relation)) {
-        throw new Error("Official integration index path escapes its integration root");
-    }
-}
-
 function comparePackages(left: OfficialIntegrationPackage, right: OfficialIntegrationPackage): number {
     return compareText(left.kind, right.kind) || compareVersions(left.version, right.version);
 }
 
 function compareVersions(left: string, right: string): number {
     return compareSemVer(left, right) || compareText(left, right);
-}
-
-function compareText(left: string, right: string): number {
-    return left < right ? -1 : left > right ? 1 : 0;
 }

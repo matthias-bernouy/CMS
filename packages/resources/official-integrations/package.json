@@ -11,7 +11,7 @@
     },
     "files": [
         "index.ts",
-        "publication.ts",
+        "publication",
         "dist/",
         "integrations"
     ],
@@ -22,9 +22,9 @@
             "default": "./index.ts"
         },
         "./publication": {
-            "types": "./dist/publication.d.ts",
-            "bun": "./publication.ts",
-            "default": "./publication.ts"
+            "types": "./dist/publication/index.d.ts",
+            "bun": "./publication/index.ts",
+            "default": "./publication/index.ts"
         },
         "./integrations/ban/*": "./integrations/providers/ban/*",
         "./integrations/basic-blocs/*": "./integrations/foundation/basic-blocs/*",
@@ -43,11 +43,12 @@
     },
     "dependencies": {
         "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integration-registry": "workspace:*",
+        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "semver": "^7.8.2"
     },
     "devDependencies": {
-        "@bernouy/cms-integration-registry": "workspace:*",
         "@types/semver": "^7.7.1"
     }
 }

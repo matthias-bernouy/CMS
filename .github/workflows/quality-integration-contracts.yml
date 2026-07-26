@@ -45,16 +45,26 @@ jobs:
       - name: Run Commerce media and negotiation contracts
         env:
           ALLOW_POSTGRES_CONTRACT_SCHEMA_RESET: cmscore-postgres-contracts
+          CMS_SCHEMA_BASELINE_GENERATOR_IMAGE: oven/bun:1.3.14-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cmscore_contracts
         run: |
           bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-media
           bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-negotiated-checkout
 
-      - name: Calibrate all official PostgreSQL schemas
+      - name: Calibrate and verify all official PostgreSQL schema baselines
         env:
           ALLOW_POSTGRES_CONTRACT_SCHEMA_RESET: cmscore-postgres-contracts
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cmscore_contracts
-        run: bun run packages/resources/official-integrations/tests/helpers/postgres/schema-calibration/execution/run.ts
+        run: |
+          docker run --rm --network host \
+            --user "$(id -u):$(id -g)" \
+            --volume "$GITHUB_WORKSPACE:/workspace:ro" \
+            --workdir /workspace \
+            --env ALLOW_POSTGRES_CONTRACT_SCHEMA_RESET \
+            --env CMS_SCHEMA_BASELINE_GENERATOR_IMAGE \
+            --env DATABASE_URL \
+            oven/bun:1.3.14-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0 \
+            bun run packages/resources/official-integrations/tests/helpers/postgres/schema-calibration/execution/baselines/generateBaselines.ts --check
 
   source-image-safety:
     name: Source image safety and Chromium smoke

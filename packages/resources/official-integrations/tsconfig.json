@@ -4,9 +4,11 @@
         "outDir": "dist",
         "rootDir": "."
     },
-    "include": ["index.ts", "publication.ts"],
+    "include": ["index.ts", "publication/**/*.ts"],
     "references": [
         { "path": "../../features/cms-integration-packages" },
+        { "path": "../../features/cms-integration-registry" },
+        { "path": "../../features/cms-integration-verification" },
         { "path": "../../features/cms-integrations" }
     ]
 }

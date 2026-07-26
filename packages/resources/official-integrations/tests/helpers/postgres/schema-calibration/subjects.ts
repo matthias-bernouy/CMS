@@ -1,26 +1,21 @@
 import { resolve } from "node:path";
-import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
+import type { ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
 import {
-    integrationVersionSatisfies,
-    type DeclarativeConnectorTemplate,
-    type IntegrationDefinition,
-} from "@bernouy/cms-integrations";
+    buildOfficialIntegrationPackages,
+    OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS,
+    resolveOfficialIntegrationDependencies,
+} from "@bernouy/cms-official-integrations/publication";
+import { type DeclarativeConnectorTemplate, type IntegrationDefinition } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { compare as compareVersions } from "semver";
 
-export const OFFICIAL_SQL_INTEGRATION_KINDS = Object.freeze([
-    "commerce",
-    "newsletter",
-    "photo-albums",
-    "sales-configurator",
-    "user-account",
-    "commerce-negotiation",
-    "emailer",
-    "mondial-relay",
-    "stripe-connect",
-] as const);
+export const OFFICIAL_SQL_INTEGRATION_KINDS = Object.freeze(
+    OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS.map(({ kind }) => kind),
+);
 
-const EXPECTED_NAMESPACES: Readonly<Record<(typeof OFFICIAL_SQL_INTEGRATION_KINDS)[number], readonly string[]>> = {
+type OfficialSqlIntegrationKind = (typeof OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS)[number]["kind"];
+
+const EXPECTED_NAMESPACES: Readonly<Record<OfficialSqlIntegrationKind, readonly string[]>> = {
     commerce: ["commerce"],
     newsletter: ["newsletter"],
     "photo-albums": ["photo_albums"],
@@ -44,6 +39,7 @@ export type OfficialSchemaCalibrationSubject = SchemaCalibrationPackage &
         connectorKey: "primary";
         lineageId: string;
         namespaces: readonly string[];
+        package: ResolvedIntegrationPackage;
         root: string;
         dependencies: readonly SchemaCalibrationPackage[];
         sqlInstallationOrder: readonly SchemaCalibrationPackage[];
@@ -71,11 +67,12 @@ export async function loadOfficialSchemaCalibrationSubjects(
     assertExpectedSqlKinds(sqlKinds);
     const subjects: OfficialSchemaCalibrationSubject[] = [];
     for (const kind of OFFICIAL_SQL_INTEGRATION_KINDS) {
+        const target = OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS.find((candidate) => candidate.kind === kind)!;
         const matches = packages
             .filter((entry) => entry.kind === kind)
             .sort((left, right) => compareVersions(right.version, left.version));
-        if (matches.length !== 1) {
-            throw new Error(`Schema calibration requires exactly one official ${kind} version`);
+        if (matches.length !== 1 || matches[0]?.version !== target.version) {
+            throw new Error(`Schema calibration requires the reviewed official ${kind}@${target.version} version`);
         }
         const entry = matches[0]!;
         const definition = definitions.get(identity(entry.kind, entry.version))!;
@@ -87,69 +84,22 @@ export async function loadOfficialSchemaCalibrationSubjects(
         if (!location) {
             throw new Error(`Official package location disappeared: ${entry.kind}@${entry.version}`);
         }
-        const dependencies = resolveDependencies(definition, packages, definitions);
+        const dependencies = resolveOfficialIntegrationDependencies(definition, packages);
         subjects.push({
             kind: entry.kind,
             version: entry.version,
             digest: entry.digest,
             connector,
-            connectorKey: "primary",
-            lineageId: `${entry.kind}-supabase-v1`,
+            connectorKey: target.connectorKey,
+            lineageId: target.lineageId,
             namespaces: expectedNamespaces(kind, connector),
+            package: entry.package,
             root: location.root,
             dependencies,
             sqlInstallationOrder: dependencies.filter((dependency) => sqlKinds.has(dependency.kind)),
         });
     }
     return Object.freeze(subjects);
-}
-
-function resolveDependencies(
-    definition: IntegrationDefinition,
-    packages: readonly SchemaCalibrationPackage[],
-    definitions: ReadonlyMap<string, IntegrationDefinition>,
-): readonly SchemaCalibrationPackage[] {
-    const resolved: SchemaCalibrationPackage[] = [];
-    const visited = new Set<string>();
-    const visiting = new Set<string>();
-    const visit = (current: IntegrationDefinition): void => {
-        for (const dependency of current.dependencies ?? []) {
-            if (dependency.optional) {
-                continue;
-            }
-            const selected = packages
-                .filter(
-                    (entry) =>
-                        entry.kind === dependency.kind &&
-                        (!dependency.versionRange ||
-                            integrationVersionSatisfies(entry.version, dependency.versionRange)),
-                )
-                .sort((left, right) => compareVersions(right.version, left.version))[0];
-            if (!selected) {
-                throw new Error(
-                    `Required official dependency cannot be resolved: ${current.kind} -> ${dependency.kind}`,
-                );
-            }
-            const key = identity(selected.kind, selected.version);
-            if (visited.has(key)) {
-                continue;
-            }
-            if (visiting.has(key)) {
-                throw new Error(`Required official dependency cycle includes ${key.replace("\0", "@")}`);
-            }
-            const selectedDefinition = definitions.get(key);
-            if (!selectedDefinition) {
-                throw new Error(`Required official dependency definition is missing: ${key.replace("\0", "@")}`);
-            }
-            visiting.add(key);
-            visit(selectedDefinition);
-            visiting.delete(key);
-            visited.add(key);
-            resolved.push(selected);
-        }
-    };
-    visit(definition);
-    return Object.freeze(resolved);
 }
 
 function sqlConnector(definition: IntegrationDefinition): DeclarativeConnectorTemplate | null {
