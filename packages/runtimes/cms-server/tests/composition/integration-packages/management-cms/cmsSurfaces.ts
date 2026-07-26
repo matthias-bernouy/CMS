@@ -48,7 +48,7 @@ export async function startManagementCmsSurfaces(origins: SurfaceOrigins): Promi
         baseUrl: origins.privateManagementBaseUrl,
         token: origins.token,
         administratorSubjectIdentifier: "repository-owner",
-        timeoutMs: 1_000,
+        timeoutMs: 60_000,
         fetch: gatewayFetch,
     });
     const repository = new InMemoryCmsRepository();

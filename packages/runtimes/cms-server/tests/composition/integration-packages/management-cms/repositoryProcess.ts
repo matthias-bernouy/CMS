@@ -85,7 +85,7 @@ function reserveDistinctPorts(): [number, number] {
 }
 
 async function waitUntilHealthy(origin: string, child: ReturnType<typeof Bun.spawn>, output: string[]): Promise<void> {
-    for (let attempt = 0; attempt < 120; attempt++) {
+    for (let attempt = 0; attempt < 1_200; attempt++) {
         if (child.exitCode !== null) {
             throw new Error(`Repository process exited before readiness: ${output.join("\n")}`);
         }

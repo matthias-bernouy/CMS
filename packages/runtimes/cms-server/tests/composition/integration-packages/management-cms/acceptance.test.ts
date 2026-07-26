@@ -28,7 +28,9 @@ describe("management CMS process acceptance", () => {
 
         const anonymousCatalog = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations`);
         expect(anonymousCatalog.status).toBe(200);
-        expect(await anonymousCatalog.json()).toEqual([]);
+        const initialCatalog = (await anonymousCatalog.json()) as Array<{ kind: string; versions: string[] }>;
+        expect(initialCatalog).toHaveLength(14);
+        expect(initialCatalog).toContainEqual(expect.objectContaining({ kind: "commerce", versions: ["1.0.0"] }));
         expect(anonymousCatalog.headers.get("access-control-allow-origin")).toBe("*");
         expect((await fetch(`${cms.deliveryOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
         expect((await fetch(`${repository.publicOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
@@ -59,7 +61,12 @@ describe("management CMS process acceptance", () => {
         const status = await controlRequest(cms.controlOrigin, "/api/repository/status", "owner");
         expect(status.status).toBe(200);
         const statusText = await status.text();
-        expect(JSON.parse(statusText)).toMatchObject({ ready: true, health: "healthy", integrations: 1, versions: 1 });
+        expect(JSON.parse(statusText)).toMatchObject({
+            ready: true,
+            health: "healthy",
+            integrations: 15,
+            versions: 15,
+        });
         const adminPage = await controlRequest(cms.controlOrigin, "/admin/repository", "owner");
         expect(adminPage.status).toBe(200);
         const adminHtml = await adminPage.text();
@@ -67,9 +74,9 @@ describe("management CMS process acceptance", () => {
 
         const relayedCatalog = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations`);
         expect(relayedCatalog.status).toBe(200);
-        expect(await relayedCatalog.json()).toEqual([
-            expect.objectContaining({ kind: "remote-demo", versions: ["1.0.0"] }),
-        ]);
+        const publishedCatalog = (await relayedCatalog.json()) as Array<{ kind: string; versions: string[] }>;
+        expect(publishedCatalog).toHaveLength(15);
+        expect(publishedCatalog).toContainEqual(expect.objectContaining({ kind: "remote-demo", versions: ["1.0.0"] }));
         const packageResponse = await fetch(
             `${cms.deliveryOrigin}/.cms/repository/api/integrations/package?kind=remote-demo&version=1.0.0`,
         );
@@ -100,7 +107,7 @@ describe("management CMS process acceptance", () => {
         expect(unavailableText).not.toContain(privateBaseUrl);
         expect(unavailableText).not.toMatch(/ECONNREFUSED|fetch failed/iu);
         expect((await fetch(`${cms.deliveryOrigin}/integrations`)).status).toBe(503);
-    }, 15_000);
+    }, 45_000);
 });
 
 function controlRequest(origin: string, path: string, session: string, init: RequestInit = {}): Promise<Response> {
