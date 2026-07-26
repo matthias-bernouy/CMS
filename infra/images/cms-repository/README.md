@@ -31,7 +31,7 @@ management token without putting it in `.env`:
 cd /opt/cms-repository
 umask 077
 install -d -m 0750 registry secrets
-openssl rand -hex 32 > secrets/repository-management-token
+openssl rand -hex 32 | tr -d '\n' > secrets/repository-management-token
 chmod 0600 secrets/repository-management-token
 sudo chown -R 1000:1000 registry secrets/repository-management-token
 cp .env.example .env
@@ -92,6 +92,43 @@ staging directory, or marker makes bootstrap a no-op. After initialization:
 
 This rule deliberately makes the registry volume, not the image tag, the source
 of truth.
+
+### Publishing the official catalog
+
+The non-interactive publisher builds every checked-in official version with the
+shared canonical package reader before making any request. A credential-free
+validation is available from the workspace root:
+
+```bash
+bun run packages/runtimes/cms-cli/src/index.ts \
+  repository publish-official --dry-run
+```
+
+Actual publication requires the private management base URL and an absolute
+token-file path. The token file must contain exactly one non-whitespace token
+and is never passed as a command-line argument:
+
+```bash
+P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL=http://cms-repository:3000/.cms/repository-management \
+P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE=/run/secrets/cms-repository-management-token \
+bun run packages/runtimes/cms-cli/src/index.ts repository publish-official
+```
+
+Packages are published sequentially by kind and ascending SemVer. Re-running
+the command is idempotent only when the registry's immutable existing digest
+exactly matches the rebuilt package. A digest conflict, compatibility rejection,
+rate limit, invalid response, timeout, or transport failure returns a non-zero
+exit status.
+
+`.github/workflows/publish-official-integrations.yml` exposes the same operation
+through both `workflow_dispatch` and `workflow_call`. Every run first executes a
+credential-free plan on a hosted runner. Mutation runs only on a self-hosted
+runner labeled `repository-management`, which must have private network access
+to the management listener. Store `REPOSITORY_MANAGEMENT_TOKEN` in the selected
+GitHub deployment environment; the workflow writes it to an ephemeral mode-0600
+file and removes it after the run. Image builds and pulls never invoke this
+workflow automatically, so initial seed and every later official update remain
+explicit, reviewable publication operations.
 
 ## Probes and shutdown
 
