@@ -1,6 +1,7 @@
 import { constants, type Dirent } from "node:fs";
 import { lstat, open, opendir, realpath } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import type { ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
 import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import { parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
 import { compare as compareSemVer } from "semver";
@@ -17,11 +18,14 @@ export type OfficialIntegrationPackage = Readonly<{
     canonicalBytes: Uint8Array;
 }>;
 
+export type BuiltOfficialIntegrationPackage = OfficialIntegrationPackage &
+    Readonly<{ package: ResolvedIntegrationPackage }>;
+
 export async function buildOfficialIntegrationPackages(
     requestedRoot: string = OFFICIAL_INTEGRATIONS_ROOT,
-): Promise<readonly OfficialIntegrationPackage[]> {
+): Promise<readonly BuiltOfficialIntegrationPackage[]> {
     const indexPaths = await discoverIntegrationIndexes(requestedRoot);
-    const packages: OfficialIntegrationPackage[] = [];
+    const packages: BuiltOfficialIntegrationPackage[] = [];
     const identities = new Set<string>();
     const kinds = new Set<string>();
     for (const indexPath of indexPaths) {
@@ -52,6 +56,7 @@ export async function buildOfficialIntegrationPackages(
                 version: entry.version,
                 digest: resolved.digest,
                 canonicalBytes: resolved.canonicalBytes,
+                package: resolved,
             });
         }
     }

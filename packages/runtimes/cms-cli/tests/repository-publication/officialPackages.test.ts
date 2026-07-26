@@ -35,9 +35,13 @@ describe("official integration publication source", () => {
 
         expect(first.map(({ kind }) => kind)).toEqual(EXPECTED_KINDS);
         expect(first).toHaveLength(14);
-        expect(
-            first.map(({ kind, version, digest, canonicalBytes }) => ({ kind, version, digest, canonicalBytes })),
-        ).toEqual(second);
+        const identity = ({ kind, version, digest, canonicalBytes }: (typeof first)[number]) => ({
+            kind,
+            version,
+            digest,
+            canonicalBytes,
+        });
+        expect(first.map(identity)).toEqual(second.map(identity));
         for (const integrationPackage of first) {
             const envelope = JSON.parse(new TextDecoder().decode(integrationPackage.canonicalBytes));
             expect(envelope).toMatchObject({
