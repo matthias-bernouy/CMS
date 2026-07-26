@@ -40,10 +40,13 @@ export type {
     IntegrationRegistryPublicationRequest,
     IntegrationRegistryPublicationResult,
     IntegrationRegistryPublisher,
+    IdentifiedOfficialRepositoryBootstrapPlan,
     OfficialBootstrapAnonymousConstraintFinding,
     OfficialBootstrapAnonymousConstraintGrandfathering,
     OfficialRepositoryBootstrapBaselineApproval,
     OfficialRepositoryBootstrapPlan,
+    OfficialRepositoryBootstrapPlanProjection,
+    OfficialRepositoryBootstrapProjectedPackage,
     PreparedOfficialIntegrationPackage,
 } from "../interfaces/publication";
 export {
@@ -112,6 +115,7 @@ export {
     IntegrationCompatibilityReevaluationValidationError,
 } from "../core/compatibility/reevaluation/errors";
 export { changedIntegrationPackagePaths } from "../core/publication/changedPaths";
+export { identifyOfficialRepositoryBootstrapPlan } from "../core/publication/bootstrapPlan";
 export {
     IntegrationRegistryVersionConflictError,
     IntegrationRegistryVersionOrderError,

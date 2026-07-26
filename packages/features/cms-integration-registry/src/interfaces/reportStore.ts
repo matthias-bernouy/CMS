@@ -57,6 +57,7 @@ export type AppendReviewedSchemaBaselineRequest = Readonly<{
 
 export interface ReviewedSchemaBaselineStore {
     get(logicalKey: ReviewedSchemaBaselineLogicalKey): Promise<ReviewedSchemaBaselineHistory | null>;
+    listAll(): Promise<readonly ReviewedSchemaBaselineHistory[]>;
     listForPackage(
         kind: string,
         version: string,

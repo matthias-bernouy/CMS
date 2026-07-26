@@ -52,7 +52,12 @@ export const OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS = Object.freeze([
 export const OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL: OfficialRepositoryBootstrapBaselineApproval =
     Object.freeze({
         generator: OFFICIAL_SCHEMA_BASELINE_GENERATOR,
-        environmentDigests: [OFFICIAL_SCHEMA_BASELINE_ENVIRONMENT_DIGEST],
+        environments: [
+            {
+                digest: OFFICIAL_SCHEMA_BASELINE_ENVIRONMENT_DIGEST,
+                postgresVersion: OFFICIAL_SCHEMA_BASELINE_POSTGRES_VERSION,
+            },
+        ],
         policy: OFFICIAL_SCHEMA_BASELINE_POLICY,
         provenanceActors: [OFFICIAL_SCHEMA_BASELINE_PROVENANCE_ACTOR],
     });

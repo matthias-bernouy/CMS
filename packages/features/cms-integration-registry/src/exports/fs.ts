@@ -39,8 +39,9 @@ export {
 export { FsIntegrationRegistryPublisher } from "../default-implementation/fs/registry/publication/publisher";
 export {
     FsOfficialIntegrationRegistryBootstrapPublisher,
+    type FsOfficialIntegrationRegistryBootstrapPublisherConfig,
     type PreparedFsOfficialIntegrationRegistryBootstrap,
-} from "../default-implementation/fs/registry/publication/officialBootstrapPublisher";
+} from "../default-implementation/fs/registry/publication/official-bootstrap";
 export {
     FsIntegrationRegistryRecoveryRequiredError,
     FsIntegrationRegistrySimulatedCrashError,

@@ -16,7 +16,7 @@ import {
     loadReviewedSchemaBaselineHistory,
     requireReviewedSchemaBaselineHistory,
 } from "./history";
-import { listReviewedSchemaBaselinesForPackage } from "./inventory";
+import { listReviewedSchemaBaselineHistories, listReviewedSchemaBaselinesForPackage } from "./inventory";
 import {
     ensureReviewedSchemaBaselinePaths,
     reviewedSchemaBaselinePaths,
@@ -46,6 +46,10 @@ export class FsReviewedSchemaBaselineStore implements ReviewedSchemaBaselineStor
         packageDigest: string,
     ): Promise<readonly ReviewedSchemaBaselineHistory[]> {
         return await listReviewedSchemaBaselinesForPackage(this.config.root, kind, version, packageDigest);
+    }
+
+    async listAll(): Promise<readonly ReviewedSchemaBaselineHistory[]> {
+        return await listReviewedSchemaBaselineHistories(this.config.root);
     }
 
     async append(request: AppendReviewedSchemaBaselineRequest): Promise<ReviewedSchemaBaselineHistory> {

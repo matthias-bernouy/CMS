@@ -53,9 +53,30 @@ export type OfficialRepositoryBootstrapPlan = Readonly<{
     reviewedSchemaBaselines: readonly ReviewedSchemaBaselineV1[];
 }>;
 
+export type OfficialRepositoryBootstrapProjectedPackage = Readonly<{
+    package: Readonly<{
+        digest: string;
+        envelope: ResolvedIntegrationPackage["envelope"];
+    }>;
+    anonymousConstraintGrandfathering: readonly OfficialBootstrapAnonymousConstraintGrandfathering[];
+}>;
+
+/** Canonical, byte-free representation used as the durable bootstrap identity. */
+export type OfficialRepositoryBootstrapPlanProjection = Readonly<{
+    schema: typeof OFFICIAL_REPOSITORY_BOOTSTRAP_PLAN_SCHEMA;
+    packages: readonly OfficialRepositoryBootstrapProjectedPackage[];
+    reviewedSchemaBaselines: readonly ReviewedSchemaBaselineV1[];
+}>;
+
+export type IdentifiedOfficialRepositoryBootstrapPlan = Readonly<{
+    plan: OfficialRepositoryBootstrapPlanProjection;
+    canonicalBytes: Uint8Array;
+    digest: string;
+}>;
+
 export type OfficialRepositoryBootstrapBaselineApproval = Readonly<{
     generator: PinnedVerificationRunnerIdentity;
-    environmentDigests: readonly string[];
+    environments: readonly Readonly<{ digest: string; postgresVersion: string }>[];
     policy: VerificationPolicyIdentity;
     provenanceActors: readonly string[];
 }>;

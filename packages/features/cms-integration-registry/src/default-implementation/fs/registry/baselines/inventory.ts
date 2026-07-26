@@ -19,6 +19,17 @@ export async function listReviewedSchemaBaselinesForPackage(
     packageDigest: string,
 ): Promise<readonly ReviewedSchemaBaselineHistory[]> {
     assertReviewedSchemaBaselinePackageIdentity(kind, version, packageDigest);
+    return (await listReviewedSchemaBaselineHistories(registryRoot)).filter(
+        (history) =>
+            history.logicalKey.kind === kind &&
+            history.logicalKey.version === version &&
+            history.logicalKey.packageDigest === packageDigest,
+    );
+}
+
+export async function listReviewedSchemaBaselineHistories(
+    registryRoot: string,
+): Promise<readonly ReviewedSchemaBaselineHistory[]> {
     const root = reviewedSchemaBaselineRoot(registryRoot);
     let names: string[];
     try {
@@ -32,13 +43,7 @@ export async function listReviewedSchemaBaselinesForPackage(
     const histories: ReviewedSchemaBaselineHistory[] = [];
     for (const name of names) {
         const history = requireReviewedSchemaBaselineHistory(await loadReviewedSchemaBaselineHistory(join(root, name)));
-        if (
-            history.logicalKey.kind === kind &&
-            history.logicalKey.version === version &&
-            history.logicalKey.packageDigest === packageDigest
-        ) {
-            histories.push(history);
-        }
+        histories.push(history);
     }
     return histories.sort((left, right) => compareReviewedSchemaBaselineKey(left.logicalKey, right.logicalKey));
 }

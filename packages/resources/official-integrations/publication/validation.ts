@@ -3,7 +3,6 @@ import type { DeclarativeConnectorTemplate } from "@bernouy/cms-integrations";
 import {
     OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
     OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS,
-    OFFICIAL_SCHEMA_BASELINE_POSTGRES_VERSION,
     type BuiltOfficialIntegrationPackage,
     type OfficialRepositoryBootstrapEvidenceV1,
 } from "./contracts";
@@ -69,8 +68,11 @@ function assertApprovedBaseline(
         baseline.generator.name !== approval.generator.name ||
         baseline.generator.version !== approval.generator.version ||
         baseline.generator.imageDigest !== approval.generator.imageDigest ||
-        !approval.environmentDigests.includes(baseline.environment.digest) ||
-        baseline.environment.postgresVersion !== OFFICIAL_SCHEMA_BASELINE_POSTGRES_VERSION ||
+        !approval.environments.some(
+            (environment) =>
+                environment.digest === baseline.environment.digest &&
+                environment.postgresVersion === baseline.environment.postgresVersion,
+        ) ||
         baseline.policy.name !== approval.policy.name ||
         baseline.policy.version !== approval.policy.version ||
         !approval.provenanceActors.includes(baseline.provenance.actor) ||
