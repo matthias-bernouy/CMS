@@ -7,7 +7,6 @@ import type {
 import { ensureFsIntegrationRegistryLayout, ensurePublicationPaths } from "../persistence/layout";
 import { removeImmutableTreeIfExists } from "../persistence/tree";
 import { prepareFsIntegrationRegistryCandidate } from "./candidate";
-import { IntegrationRegistryKindLock } from "./lock";
 import { commitFsIntegrationRegistryPublication } from "./transaction/commit";
 import {
     FsIntegrationRegistryRecoveryRequiredError,
@@ -16,8 +15,6 @@ import {
 } from "./types";
 
 export class FsIntegrationRegistryPublisher implements IntegrationRegistryPublisher {
-    private readonly kindLock = new IntegrationRegistryKindLock();
-
     constructor(private readonly config: FsIntegrationRegistryPublisherConfig) {}
 
     async publish(request: IntegrationRegistryPublicationRequest) {
@@ -40,7 +37,7 @@ export class FsIntegrationRegistryPublisher implements IntegrationRegistryPublis
             limits: candidate.limits,
         });
         try {
-            return await this.kindLock.run(
+            return await this.config.mutations.runExclusive(
                 candidate.definition.kind,
                 async () =>
                     await commitFsIntegrationRegistryPublication({

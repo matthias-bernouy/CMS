@@ -42,7 +42,9 @@ export type {
     IntegrationRegistryRecoveryDiagnosticCode,
     IntegrationRegistryRecoveryResult,
 } from "../interfaces/recovery";
+export type { IntegrationRegistryMutationCoordinator } from "../interfaces/mutations";
 export { createIntegrationRegistryCatalogSnapshot } from "../core/catalog/snapshot";
+export { InMemoryIntegrationRegistryMutationCoordinator } from "../core/catalog/mutationCoordinator";
 export { IntegrationRegistryCatalogSnapshotReference } from "../core/catalog/reference";
 export {
     assertIntegrationCompatibilityAdmission,

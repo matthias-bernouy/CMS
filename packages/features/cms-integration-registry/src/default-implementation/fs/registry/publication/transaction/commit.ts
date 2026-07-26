@@ -99,6 +99,7 @@ export async function commitFsIntegrationRegistryPublication(
         await notifyPublicationBoundary(config, journal);
         await cleanupCommitted(paths);
         return {
+            operationId,
             kind: candidate.definition.kind,
             version: candidate.package.envelope.version,
             digest: candidate.package.digest,

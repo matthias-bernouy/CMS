@@ -9,6 +9,7 @@ import {
 } from "@bernouy/cms-integration-packages";
 import {
     createIntegrationRegistryCatalogSnapshot,
+    InMemoryIntegrationRegistryMutationCoordinator,
     IntegrationCompatibilityEvaluator,
     IntegrationRegistryCatalogSnapshotReference,
 } from "@bernouy/cms-integration-registry";
@@ -51,14 +52,16 @@ export function registryFixture(
         now: () => "2026-07-26T10:00:00.000Z",
         createReportId: () => `report-${++reportSequence}`,
     });
+    const mutations = new InMemoryIntegrationRegistryMutationCoordinator();
     const publisher = new FsIntegrationRegistryPublisher({
         root,
         snapshots,
         compatibility,
+        mutations,
         now: () => "2026-07-26T10:00:00.000Z",
         ...overrides,
     });
-    return { root, snapshots, compatibility, publisher };
+    return { root, snapshots, compatibility, mutations, publisher };
 }
 
 export async function publicationPackage(
