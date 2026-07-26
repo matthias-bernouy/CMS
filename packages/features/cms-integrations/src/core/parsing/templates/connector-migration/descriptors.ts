@@ -104,11 +104,20 @@ export function parseMigrationSources(value: unknown, name: string) {
 
 function parseLegacyAdoption(value: unknown, name: string) {
     const input = migrationRecord(value, name);
-    assertRequiredMigrationKeys(input, ["definitionVersion", "packageDigest", "observedSchema"], name);
+    assertRequiredMigrationKeys(
+        input,
+        ["definitionVersion", "packageDigest", "observedSchema", "coveredMigrations"],
+        name,
+    );
+    const coveredMigrations = migrationArray(input.coveredMigrations, `${name}.coveredMigrations`).map((entry, index) =>
+        parseMigrationReference(entry, `${name}.coveredMigrations.${index}`),
+    );
+    assertCanonicalMigrationReferences(coveredMigrations, `${name}.coveredMigrations`);
     return {
         definitionVersion: parseMigrationVersion(input.definitionVersion, `${name}.definitionVersion`),
         packageDigest: parseMigrationPackageDigest(input.packageDigest, `${name}.packageDigest`),
         observedSchema: parseObservedSchemaContractV1(input.observedSchema, `${name}.observedSchema`),
+        coveredMigrations,
     };
 }
 
@@ -121,4 +130,15 @@ function parseMigrationReference(value: unknown, name: string): DeclarativeConne
         revision: parseMigrationRevision(input.revision, `${name}.revision`),
         introducedIn: parseMigrationVersion(input.introducedIn, `${name}.introducedIn`),
     };
+}
+
+function assertCanonicalMigrationReferences(references: DeclarativeConnectorMigrationReference[], name: string): void {
+    const keys = references.map((entry) => `${entry.revision.toString().padStart(16, "0")}\0${entry.id}`);
+    if (new Set(references.map((entry) => entry.id)).size !== references.length) {
+        invalidMigrationValue(name, "must contain unique migration ids");
+    }
+    const ordered = [...keys].sort();
+    if (keys.some((entry, index) => entry !== ordered[index])) {
+        invalidMigrationValue(name, "must use canonical revision and id order");
+    }
 }

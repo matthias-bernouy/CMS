@@ -1,6 +1,7 @@
 export class FakeSupabaseManagementApi {
     readonly functions = new Map<string, string>();
     revision = 1;
+    migrationRuntimeSchemaReady = false;
 
     readonly fetch: typeof fetch = async (input, init) => {
         const url = new URL(String(input));
@@ -19,6 +20,12 @@ export class FakeSupabaseManagementApi {
 
     private databaseResponse(body: string): Response {
         const query = (JSON.parse(body) as { query: string }).query;
+        if (query.includes("AS migration_runtime_schema_ready")) {
+            return Response.json([{ migration_runtime_schema_ready: this.migrationRuntimeSchemaReady }]);
+        }
+        if (query.includes("CREATE TABLE IF NOT EXISTS cms_integration_runtime.migration_fences")) {
+            this.migrationRuntimeSchemaReady = true;
+        }
         const expectedRevision = query.match(/instance\.migration_revision >= (\d+)/)?.[1];
         if (expectedRevision) {
             const migrations = [...query.matchAll(/\('([^']+)', 'sha256:[a-f0-9]+'\)/g)].length;

@@ -25,17 +25,20 @@ describe("Supabase integration migration ledger", () => {
                 },
             ],
             attemptId: "attempt-1",
+            packageDigest: "d".repeat(64),
         });
 
         expect(sql.startsWith("BEGIN;\n")).toBe(true);
         expect(sql.endsWith("COMMIT;")).toBe(true);
         expect(sql).toContain("pg_advisory_xact_lock");
+        expect(sql.indexOf("cms-integration-runtime-schema-v1")).toBeLessThan(sql.indexOf("CREATE SCHEMA"));
         expect(sql).toContain("CREATE TABLE public.orders");
         expect(sql).toContain("cms_integration_runtime.migration_ledger");
         expect(sql).toContain("cms integration fresh baseline conflict");
         expect(sql).toContain("checksum <> 'sha256:");
         expect(sql).toContain("expand-orders");
         expect(sql).toContain("cleanup-orders");
+        expect(sql).toContain(`NULL, '${"d".repeat(64)}', 'fresh-install:attempt-1', NULL`);
         expect(sql.indexOf("CREATE TABLE public.orders")).toBeLessThan(
             sql.lastIndexOf("INSERT INTO cms_integration_runtime.migration_ledger"),
         );
@@ -65,6 +68,8 @@ describe("Supabase integration migration ledger", () => {
 
         expect(sql).toContain("recorded_checksum IS NOT NULL");
         expect(sql).toContain("recorded_checksum IS NULL");
+        expect(sql).toContain("EXECUTE $cms_migration_sql_");
+        expect(sql).not.toContain("CREATE OR REPLACE PROCEDURE");
         expect(sql).toContain("migration checksum conflict");
         expect(sql).toContain("migration ledger is incomplete for current revision");
         expect(sql).toContain("GREATEST(migration_revision, 2)");
@@ -74,6 +79,7 @@ describe("Supabase integration migration ledger", () => {
         expect(sql.indexOf("INSERT INTO cms_integration_runtime.migration_ledger")).toBeLessThan(
             sql.lastIndexOf("COMMIT;"),
         );
+        expect(sql).toContain("ADD COLUMN IF NOT EXISTS source_package_digest");
     });
 });
 

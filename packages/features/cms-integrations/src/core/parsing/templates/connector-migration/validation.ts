@@ -64,6 +64,15 @@ export function validateMigrationAwareConnectorLayout(
                 "legacy adoption schema owner lineageId must match the connector",
             );
         }
+        const expectedCoveredMigrations = connector.migration.install.coveredMigrations
+            .filter((migration) => migration.revision <= source.migrationRevision)
+            .sort(compareMigrationReference);
+        if (!sameMigrationReferences(adoption.coveredMigrations, expectedCoveredMigrations)) {
+            invalidMigrationValue(
+                `${name}.migration.supportedSources`,
+                "legacy adoption coveredMigrations must exactly match the install prefix at its source revision",
+            );
+        }
     }
     for (const schema of connector.schemas ?? []) {
         assertMigrationLayoutPath("path" in schema ? schema.path : schema.manifest, "install/", `${name}.schemas`);
@@ -71,4 +80,32 @@ export function validateMigrationAwareConnectorLayout(
     for (const fn of connector.functions ?? []) {
         assertMigrationLayoutPath(fn.directory, "functions/", `${name}.functions`);
     }
+}
+
+function compareMigrationReference(
+    left: { revision: number; id: string },
+    right: { revision: number; id: string },
+): number {
+    if (left.revision !== right.revision) {
+        return left.revision - right.revision;
+    }
+    return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+}
+
+function sameMigrationReferences(
+    actual: DeclarativeConnectorMigrationPlan["install"]["coveredMigrations"],
+    expected: DeclarativeConnectorMigrationPlan["install"]["coveredMigrations"],
+): boolean {
+    return (
+        actual.length === expected.length &&
+        actual.every((entry, index) => {
+            const reference = expected[index];
+            return (
+                entry.id === reference?.id &&
+                entry.checksum === reference.checksum &&
+                entry.revision === reference.revision &&
+                entry.introducedIn === reference.introducedIn
+            );
+        })
+    );
 }

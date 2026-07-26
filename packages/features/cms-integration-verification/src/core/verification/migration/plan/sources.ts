@@ -13,6 +13,7 @@ import {
     supportedVersionRange,
 } from "../../../validation/values";
 import { assertCanonicalUniqueOrder, canonicalIdentifiers, MAX_MIGRATION_DESCRIPTORS } from "../shared";
+import { parseMigrationReference } from "./descriptors";
 
 export function parseMigrationSources(value: unknown, field: string): DeclarativeConnectorMigrationSource[] {
     const sources = boundedArray(value, field, parseSource, { minimum: 1, maximum: MAX_MIGRATION_DESCRIPTORS });
@@ -66,10 +67,31 @@ function parseSource(value: unknown, field: string): DeclarativeConnectorMigrati
 }
 
 function parseLegacyAdoption(value: unknown, field: string) {
-    const input = strictRecord(value, field, ["definitionVersion", "packageDigest", "observedSchema"]);
+    const input = strictRecord(value, field, [
+        "definitionVersion",
+        "packageDigest",
+        "observedSchema",
+        "coveredMigrations",
+    ]);
+    const coveredMigrations = boundedArray(
+        input.coveredMigrations,
+        `${field}.coveredMigrations`,
+        parseMigrationReference,
+        { maximum: MAX_MIGRATION_DESCRIPTORS },
+    );
+    assertUnique(
+        coveredMigrations.map((entry) => entry.id),
+        `${field}.coveredMigrations.id`,
+    );
+    assertCanonicalUniqueOrder(
+        coveredMigrations,
+        `${field}.coveredMigrations`,
+        (entry) => `${entry.revision.toString().padStart(16, "0")}\0${entry.id}`,
+    );
     return {
         definitionVersion: exactVersion(input.definitionVersion, `${field}.definitionVersion`),
         packageDigest: sha256Digest(input.packageDigest, `${field}.packageDigest`),
         observedSchema: parseObservedSchemaContractV1(input.observedSchema, `${field}.observedSchema`),
+        coveredMigrations,
     };
 }

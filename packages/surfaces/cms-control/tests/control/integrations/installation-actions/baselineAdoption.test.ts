@@ -158,6 +158,7 @@ function targetDefinition(): IntegrationDefinition {
                                 definitionVersion: "1.0.0",
                                 packageDigest: SOURCE_DIGEST,
                                 observedSchema: BASELINE,
+                                coveredMigrations: [],
                             },
                         },
                     ],

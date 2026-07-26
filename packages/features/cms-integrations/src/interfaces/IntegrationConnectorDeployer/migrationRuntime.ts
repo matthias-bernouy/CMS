@@ -3,6 +3,7 @@ import type { IntegrationImportResult } from "../IntegrationImport";
 import type { IntegrationInstallation, IntegrationMigrationOperation } from "../IntegrationInstallation";
 import type {
     DeclarativeConnectorLegacyAdoptionBaseline,
+    DeclarativeConnectorMigrationReference,
     DeclarativeConnectorMigrationPlan,
     IntegrationProviderDirectCutover,
 } from "./migrations";
@@ -100,6 +101,7 @@ export type IntegrationConnectorBaselineAdoptionContext = {
     connectorInstanceId: string;
     migrationRevision: number;
     baseline: DeclarativeConnectorLegacyAdoptionBaseline;
+    coveredMigrations: readonly DeclarativeConnectorMigrationReference[];
     attemptId: string;
 };
 

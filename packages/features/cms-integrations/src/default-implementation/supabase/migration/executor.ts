@@ -9,7 +9,12 @@ import { resolveExistingSupabaseDirectory } from "../paths";
 import { SupabaseManagementClient } from "../SupabaseManagementClient";
 import type { SupabaseConnectorDeployerConfig } from "../types";
 import { loadSupabaseMigrationAssets, loadSupabaseRepeatableAssets } from "./assets";
-import { buildSupabaseMigrationPhaseSql } from "./sql";
+import { migrationRuntimeSchemaReadinessSql, type SupabaseMigrationExecution } from "./ledger";
+import {
+    buildSupabaseMigrationFenceRegistrationSql,
+    buildSupabaseMigrationPhaseSql,
+    buildSupabaseMigrationRuntimeSchemaSql,
+} from "./sql";
 
 export class SupabaseConnectorMigrationAdapter implements IntegrationConnectorMigrationAdapter {
     readonly provider = "supabase";
@@ -41,6 +46,15 @@ export class SupabaseConnectorMigrationAdapter implements IntegrationConnectorMi
             context.phase === "expand"
                 ? await loadSupabaseRepeatableAssets(connectorRoot, connector.plan.repeatables ?? [])
                 : [];
+        const execution = migrationExecution(context);
+        await this.ensureMigrationRuntimeSchema();
+        await this.client.applyMigrationTransaction(
+            buildSupabaseMigrationFenceRegistrationSql({
+                integrationKind: context.targetDefinition.kind,
+                migration: phaseIdentity(connector, context.phase),
+                execution,
+            }),
+        );
         await this.client.applyMigrationTransaction(
             buildSupabaseMigrationPhaseSql({
                 integrationKind: context.targetDefinition.kind,
@@ -49,7 +63,8 @@ export class SupabaseConnectorMigrationAdapter implements IntegrationConnectorMi
                 migration: phaseIdentity(connector, context.phase),
                 migrations,
                 repeatables,
-                attemptId: context.operation.attemptId,
+                execution,
+                finalizeTargetPackageDigest: context.phase === "contract",
             }),
         );
         return { externalOperationId: context.idempotencyKey };
@@ -69,6 +84,7 @@ export class SupabaseConnectorMigrationAdapter implements IntegrationConnectorMi
                 connector,
                 phaseTargetRevision(connector, context.phase),
                 migrations,
+                context.phase === "contract" ? context.operation.targetPackageDigest : undefined,
             ),
         );
         return (
@@ -77,6 +93,28 @@ export class SupabaseConnectorMigrationAdapter implements IntegrationConnectorMi
             Number(rows[0]?.matching_migrations) === migrations.length
         );
     }
+
+    private async ensureMigrationRuntimeSchema(): Promise<void> {
+        const rows = await this.client.readDatabaseRows(migrationRuntimeSchemaReadinessSql());
+        if (rows.length === 1 && rows[0]?.migration_runtime_schema_ready === true) {
+            return;
+        }
+        await this.client.applyMigrationTransaction(buildSupabaseMigrationRuntimeSchemaSql());
+    }
+}
+
+function migrationExecution(context: IntegrationMigrationStepContext): SupabaseMigrationExecution {
+    const sourcePackageDigest = context.operation.currentPackageDigest;
+    if (!sourcePackageDigest || !/^[a-f0-9]{64}$/.test(sourcePackageDigest)) {
+        throw new IntegrationRuntimeError("Supabase migration requires an exact source package digest");
+    }
+    return {
+        sourcePackageDigest,
+        targetPackageDigest: context.operation.targetPackageDigest,
+        operationId: context.operation.id,
+        attemptId: context.operation.attemptId,
+        fencingToken: context.operation.fencingToken,
+    };
 }
 
 function requiredConnectorDefinition(context: IntegrationMigrationStepContext, connectorKey: string) {
@@ -143,6 +181,7 @@ function confirmationQuery(
     connector: IntegrationMigrationConnectorTransition,
     revision: number,
     migrations: Array<{ id: string; checksum: string }>,
+    packageDigest?: string,
 ): string {
     const checks = migrations.length
         ? migrations.map((migration) => `(${literal(migration.id)}, ${literal(migration.checksum)})`).join(", ")
@@ -160,7 +199,12 @@ WHERE instance.connector_instance_id = ${literal(connector.connectorInstanceId)}
   AND instance.integration_kind = ${literal(integrationKind)}
   AND instance.connector_key = ${literal(connector.connectorKey)}
   AND instance.lineage_id = ${literal(connector.lineageId)}
-  AND instance.migration_revision >= ${revision};`;
+  AND instance.migration_revision >= ${revision}${
+      packageDigest
+          ? `
+  AND instance.package_digest = ${literal(packageDigest)}`
+          : ""
+};`;
 }
 
 function literal(value: string): string {

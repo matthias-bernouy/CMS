@@ -13,6 +13,12 @@ const BASELINE: ObservedSchemaContractV1 = {
     owner: { connectorKey: "primary", lineageId: "commerce-supabase-v1" },
     namespaces: [{ name: "commerce", relations: [] }],
 };
+const COVERED_MIGRATION = {
+    id: "initial-schema",
+    checksum: `sha256:${"c".repeat(64)}` as const,
+    revision: 1,
+    introducedIn: "1.0.0",
+};
 
 describe("Supabase legacy connector baseline adopter", () => {
     test("introspects the exact schema before transactionally recording an immutable identity", async () => {
@@ -28,9 +34,18 @@ describe("Supabase legacy connector baseline adopter", () => {
         expect(fixture.queries.slice(0, 4).every((query) => query.includes("ARRAY['commerce']::text[]"))).toBeTrue();
         const transaction = fixture.queries.find((query) => query.startsWith("BEGIN;"));
         expect(transaction).toContain("pg_advisory_xact_lock");
+        expect(transaction!.indexOf("cms-integration-runtime-schema-v1")).toBeLessThan(
+            transaction!.indexOf("CREATE SCHEMA"),
+        );
         expect(transaction).toContain("cms integration legacy baseline conflict");
+        expect(transaction).toContain("cms integration legacy adoption ledger conflict");
+        expect(transaction).toContain("source_package_digest");
         expect(transaction).toContain("ON CONFLICT");
         expect(transaction).toEndWith("COMMIT;");
+        const confirmation = fixture.queries.find((query) => query.startsWith("SELECT migration_revision"));
+        expect(confirmation).toContain("migration_ledger");
+        expect(confirmation).toContain("ledger.target_package_digest IS NULL");
+        expect(confirmation).toContain("ledger.fencing_token IS NULL");
         expect(fixture.authorizations.every((value) => value === "Bearer sbp_secret")).toBeTrue();
     });
 
@@ -40,6 +55,15 @@ describe("Supabase legacy connector baseline adopter", () => {
         await expect(fixture.adopter.adopt(adoptionContext())).rejects.toMatchObject({ status: 409 });
         expect(fixture.queries.some((query) => query.startsWith("BEGIN;"))).toBeFalse();
         expect(fixture.queries.some((query) => query.includes("connector_instances\nWHERE"))).toBeFalse();
+    });
+
+    test("rejects an adoption context that omits part of the signed source ledger", async () => {
+        const fixture = await adopterFixture();
+
+        await expect(fixture.adopter.adopt({ ...adoptionContext(), coveredMigrations: [] })).rejects.toThrow(
+            /bind the exact source package/,
+        );
+        expect(fixture.queries.some((query) => query.startsWith("BEGIN;"))).toBeFalse();
     });
 
     test("redacts the current access token from Management API failures", async () => {
@@ -115,7 +139,9 @@ function adoptionContext(): IntegrationConnectorBaselineAdoptionContext {
             definitionVersion: "1.0.0",
             packageDigest: "a".repeat(64),
             observedSchema: BASELINE,
+            coveredMigrations: [COVERED_MIGRATION],
         },
+        coveredMigrations: [COVERED_MIGRATION],
         attemptId: "attempt-1",
     };
 }

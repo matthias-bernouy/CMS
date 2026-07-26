@@ -39,6 +39,7 @@ describe("package-backed integration creation", () => {
         expect(resolver.requests[0]?.expectedDefinition?.version).toBe("1.0.0");
         expect(deployer.calls[0]?.deployment.root).toBe("connectors/capture");
         expect(deployer.calls[0]?.context.packageRoot).toBe(FIRST_PACKAGE_ROOT);
+        expect(deployer.calls[0]?.context.packageDigest).toBe(FIRST_DIGEST);
         expect(result.installation.packageDigest).toBe(FIRST_DIGEST);
         expect(result.installation.definitionVersion).toBe("1.0.0");
     });

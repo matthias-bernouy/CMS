@@ -45,8 +45,11 @@ export {
     type LoadedSupabaseRepeatable,
 } from "../default-implementation/supabase/migration/assets";
 export {
+    buildSupabaseMigrationFenceRegistrationSql,
     buildSupabaseFreshInstallSql,
     buildSupabaseMigrationPhaseSql,
+    buildSupabaseMigrationRuntimeSchemaSql,
+    type SupabaseMigrationExecution,
 } from "../default-implementation/supabase/migration/sql";
 export {
     buildSupabaseBaselineAdoptionSql,

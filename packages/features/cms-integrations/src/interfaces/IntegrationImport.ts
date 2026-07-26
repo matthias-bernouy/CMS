@@ -114,6 +114,7 @@ export type IntegrationImportDeps = {
     provisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
     sourceExecutorDeps?: ExecutorDeps;
     packageRoot?: string;
+    packageDigest?: string;
     connectorInstanceIds?: Record<string, string>;
     migrationRuntime?: IntegrationMigrationRuntime;
     migrationClock?: { now(): Date };

@@ -4,6 +4,7 @@ import {
     parseMigrationVerificationInput,
     validateMigrationVerificationInput,
 } from "../../../../src/core/verification/migration/input";
+import { identifyMigrationVerificationPlan } from "../../../../src/core/verification/migration/plan";
 import { DIGEST_A } from "../../fixtures";
 import { migrationControlFixture } from "./fixtures";
 
@@ -109,5 +110,59 @@ describe("migration verification input", () => {
         await expect(validateMigrationVerificationInput({ ...fixture.input, trusted: true })).rejects.toThrow(
             /trusted.*not an allowed field/,
         );
+    });
+
+    test("binds legacy adoption to the exact canonical source ledger prefix", async () => {
+        const fixture = await migrationControlFixture();
+        const reference = fixture.input.migrationPlan.plan.install.coveredMigrations[0]!;
+        const plan = {
+            ...fixture.input.migrationPlan.plan,
+            supportedSources: [
+                {
+                    ...fixture.input.migrationPlan.plan.supportedSources[0]!,
+                    legacyAdoption: {
+                        definitionVersion: fixture.input.source.version,
+                        packageDigest: fixture.input.source.packageDigest,
+                        observedSchema: {
+                            schema: "cms.integration.observed-schema.v1" as const,
+                            owner: { connectorKey: "primary", lineageId: "example-supabase-v1" },
+                            namespaces: [],
+                        },
+                        coveredMigrations: [reference],
+                    },
+                },
+            ],
+        };
+        const identified = await identifyMigrationVerificationPlan(
+            plan,
+            fixture.input.target.version,
+            fixture.input.targetMigrationRevision,
+        );
+        await expect(
+            validateMigrationVerificationInput({
+                ...fixture.input,
+                migrationPlan: { digest: identified.digest, plan: identified.plan },
+            }),
+        ).resolves.toBeDefined();
+
+        const mismatch = await identifyMigrationVerificationPlan(
+            {
+                ...plan,
+                supportedSources: [
+                    {
+                        ...plan.supportedSources[0]!,
+                        legacyAdoption: { ...plan.supportedSources[0]!.legacyAdoption, coveredMigrations: [] },
+                    },
+                ],
+            },
+            fixture.input.target.version,
+            fixture.input.targetMigrationRevision,
+        );
+        await expect(
+            validateMigrationVerificationInput({
+                ...fixture.input,
+                migrationPlan: { digest: mismatch.digest, plan: mismatch.plan },
+            }),
+        ).rejects.toThrow(/exactly match the source ledger prefix/);
     });
 });

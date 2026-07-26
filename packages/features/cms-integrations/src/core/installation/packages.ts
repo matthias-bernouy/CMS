@@ -87,7 +87,7 @@ export function depsWithPackageRoot(
     deps: IntegrationImportDeps,
     resolved: ResolvedIntegrationPackageRoot | undefined,
 ): IntegrationImportDeps {
-    return resolved ? { ...deps, packageRoot: resolved.root } : deps;
+    return resolved ? { ...deps, packageRoot: resolved.root, packageDigest: resolved.digest } : deps;
 }
 
 export function assertIntegrationInstallationProvenance(

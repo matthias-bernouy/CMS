@@ -52,6 +52,7 @@ export type IntegrationConnectorDeployContext = {
     generated: Record<string, string>;
     secrets: Record<string, string>;
     packageRoot?: string;
+    packageDigest?: string;
     env: Record<string, string | undefined>;
 };
 

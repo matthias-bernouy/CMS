@@ -59,7 +59,7 @@ export function parseRepeatables(value: unknown, field: string): DeclarativeConn
     return repeatables;
 }
 
-function parseMigrationReference(value: unknown, field: string): DeclarativeConnectorMigrationReference {
+export function parseMigrationReference(value: unknown, field: string): DeclarativeConnectorMigrationReference {
     const input = strictRecord(value, field, ["id", "checksum", "revision", "introducedIn"]);
     return {
         id: stableIdentifier(input.id, `${field}.id`),

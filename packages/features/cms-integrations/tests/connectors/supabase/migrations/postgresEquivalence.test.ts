@@ -15,6 +15,8 @@ const enabled =
 const postgresTest = enabled ? test : test.skip;
 const CHECKSUM_EXPAND = `sha256:${"a".repeat(64)}` as const;
 const CHECKSUM_CONTRACT = `sha256:${"b".repeat(64)}` as const;
+const SOURCE_PACKAGE_DIGEST = "c".repeat(64);
+const TARGET_PACKAGE_DIGEST = "d".repeat(64);
 const DATABASES = ["cmscore_contracts_migration_fresh", "cmscore_contracts_migration_upgraded"] as const;
 
 postgresTest("fresh and migrated Supabase targets are equivalent and migration replay is a no-op", async () => {
@@ -26,6 +28,9 @@ postgresTest("fresh and migrated Supabase targets are equivalent and migration r
         const upgraded = new SQL(databaseUrl(baseUrl, DATABASES[1]), { max: 1 });
         try {
             await fresh.unsafe(freshTargetSql());
+            const digestConflict = await capturedSqlError(fresh, freshTargetSql("e".repeat(64)));
+            expect(digestConflict.message).toMatch(/fresh baseline conflict/);
+            expect(await installedPackageDigest(fresh)).toBe(TARGET_PACKAGE_DIGEST);
             await fresh.unsafe("INSERT INTO public.orders (id, note) VALUES (1, NULL)");
 
             await upgraded.unsafe(sourceInstallSql());
@@ -85,10 +90,11 @@ function sourceInstallSql(): string {
         }),
         schemas: [schema("CREATE TABLE public.orders (id bigint PRIMARY KEY, legacy text NOT NULL);", "source")],
         attemptId: "source-install",
+        packageDigest: SOURCE_PACKAGE_DIGEST,
     });
 }
 
-function freshTargetSql(): string {
+function freshTargetSql(packageDigest = TARGET_PACKAGE_DIGEST): string {
     const plan = targetPlan();
     return buildSupabaseFreshInstallSql({
         integrationKind: "commerce",
@@ -97,6 +103,7 @@ function freshTargetSql(): string {
         migration: deployment(3, plan),
         schemas: [schema("CREATE TABLE public.orders (id bigint PRIMARY KEY, note text);", "target")],
         attemptId: "fresh-install",
+        packageDigest,
     });
 }
 
@@ -178,6 +185,21 @@ async function observedState(sql: SQL) {
          ORDER BY connector_instance_id
     `;
     return { columns: [...columns], rows: [...rows], ledger: [...ledger], instances: [...instances] };
+}
+
+async function installedPackageDigest(sql: SQL): Promise<string> {
+    const rows = await sql`SELECT package_digest FROM cms_integration_runtime.connector_instances`;
+    return String(rows[0]?.package_digest);
+}
+
+async function capturedSqlError(sql: SQL, query: string): Promise<Error> {
+    try {
+        await sql.unsafe(query);
+    } catch (error) {
+        await sql.unsafe("ROLLBACK");
+        return error as Error;
+    }
+    throw new Error("expected SQL query to fail");
 }
 
 async function resetDatabases(admin: SQL, create = true): Promise<void> {

@@ -79,6 +79,7 @@ export async function deployConnectorDeployments(
             generated: context.generated ?? {},
             secrets: context.secrets,
             ...(deps.packageRoot ? { packageRoot: deps.packageRoot } : {}),
+            ...(deps.packageDigest ? { packageDigest: deps.packageDigest } : {}),
             env: deps.env ?? {},
         });
         const connectorKey = deployment.connectorKey ?? deployment.provider;

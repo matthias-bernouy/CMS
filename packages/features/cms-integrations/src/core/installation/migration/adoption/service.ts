@@ -96,6 +96,7 @@ export async function adoptLegacyConnectorBaseline(request: AdoptLegacyConnector
         connectorInstanceId,
         migrationRevision: baseline.migrationRevision,
         baseline: baseline.legacyAdoption,
+        coveredMigrations: baseline.legacyAdoption.coveredMigrations,
         attemptId,
     });
     if (adopted.baselineDigest !== expectedBaselineDigest || !adopted.externalOperationId) {

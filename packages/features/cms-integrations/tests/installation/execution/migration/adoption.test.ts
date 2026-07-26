@@ -35,6 +35,7 @@ describe("explicit legacy connector baseline adoption", () => {
             connectorKey: "primary",
             lineageId: "commerce-supabase-v1",
             migrationRevision: 1,
+            baseline: { coveredMigrations: [] },
         });
         expect(fixture.contexts[0]?.connectorInstanceId).toMatch(/^cms-[a-f0-9]{64}$/);
         expect(result.installation.connectorBindings?.primary).toMatchObject({
@@ -191,6 +192,7 @@ function targetDefinition(declaredSourceDigest: string): IntegrationDefinition {
                                 definitionVersion: "1.0.0",
                                 packageDigest: declaredSourceDigest,
                                 observedSchema: BASELINE,
+                                coveredMigrations: [],
                             },
                         },
                     ],

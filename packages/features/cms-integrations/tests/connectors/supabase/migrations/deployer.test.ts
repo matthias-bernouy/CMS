@@ -37,6 +37,7 @@ describe("Supabase migration-aware fresh installation", () => {
             generated: {},
             secrets: {},
             packageRoot: root,
+            packageDigest: "d".repeat(64),
             env: {},
         });
 
@@ -50,6 +51,7 @@ describe("Supabase migration-aware fresh installation", () => {
         expect(queries[0]).toContain("CREATE TABLE public.orders");
         expect(queries[0]).toContain("connector-instance-1");
         expect(queries[0]).toContain("cms_integration_runtime.connector_instances");
+        expect(queries[0]).toContain(`package_digest = EXCLUDED.package_digest`);
         expect(queries[0]?.trim().endsWith("COMMIT;")).toBe(true);
     });
 
@@ -71,9 +73,34 @@ describe("Supabase migration-aware fresh installation", () => {
                 generated: {},
                 secrets: {},
                 packageRoot: root,
+                packageDigest: "d".repeat(64),
                 env: {},
             }),
         ).rejects.toThrow(/install baseline digest mismatch/);
+        expect(calls).toBe(0);
+    });
+
+    test("requires exact package provenance before a migration-aware deployment", async () => {
+        const root = await packageRoot();
+        let calls = 0;
+        const deployer = new SupabaseConnectorDeployer({
+            projectRef: "project",
+            accessToken: "access-token",
+            fetch: async () => {
+                calls += 1;
+                return Response.json([]);
+            },
+        });
+
+        await expect(
+            deployer.deploy(deployment(`sha256:${"f".repeat(64)}`), {
+                answers: {},
+                generated: {},
+                secrets: {},
+                packageRoot: root,
+                env: {},
+            }),
+        ).rejects.toThrow(/requires an exact package digest/);
         expect(calls).toBe(0);
     });
 });

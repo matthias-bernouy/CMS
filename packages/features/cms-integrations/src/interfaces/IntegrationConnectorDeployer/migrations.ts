@@ -42,6 +42,7 @@ export type DeclarativeConnectorLegacyAdoptionBaseline = {
     definitionVersion: string;
     packageDigest: string;
     observedSchema: ObservedSchemaContractV1;
+    coveredMigrations: DeclarativeConnectorMigrationReference[];
 };
 
 export type DeclarativeConnectorMigrationSource = {

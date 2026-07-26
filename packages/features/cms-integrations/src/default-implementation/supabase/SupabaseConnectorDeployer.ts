@@ -51,6 +51,7 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
         let reloadSchemaCache = false;
         const schemas = await loadSupabaseSqlSchemas(connectorRoot, deployment.schemas);
         if (deployment.migration) {
+            const packageDigest = requiredPackageDigest(context.packageDigest);
             const digest = await computeSupabaseInstallDigest(schemas);
             if (digest !== deployment.migration.plan.install.digest) {
                 throw new IntegrationRuntimeError(
@@ -65,6 +66,7 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
                     migration: deployment.migration,
                     schemas,
                     attemptId: randomUUID(),
+                    packageDigest,
                 }),
             );
             resources.push(
@@ -169,4 +171,13 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
             ? this.functionSecrets({ deployment, fn, context })
             : this.functionSecrets;
     }
+}
+
+function requiredPackageDigest(value: string | undefined): string {
+    if (!value || !/^[a-f0-9]{64}$/.test(value)) {
+        throw new IntegrationRuntimeError(
+            "Supabase migration-aware connector deployment requires an exact package digest",
+        );
+    }
+    return value;
 }

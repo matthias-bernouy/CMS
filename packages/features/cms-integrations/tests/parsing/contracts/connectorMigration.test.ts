@@ -112,6 +112,25 @@ describe("connector migration definitions", () => {
         expect(() => parseIntegrationDefinition(wrongOwner)).toThrow(/owner connectorKey must match/);
     });
 
+    test("requires a canonical exact legacy ledger prefix", () => {
+        const mismatch = migrationDefinition();
+        mismatch.connectors[0].migration.supportedSources[0].legacyAdoption = {
+            ...legacyAdoption(),
+            coveredMigrations: [{ id: "historical", checksum: DIGEST_B, revision: 1, introducedIn: "1.0.0" }],
+        };
+        expect(() => parseIntegrationDefinition(mismatch)).toThrow(/must exactly match the install prefix/);
+
+        const nonCanonical = migrationDefinition();
+        nonCanonical.connectors[0].migration.supportedSources[0].legacyAdoption = {
+            ...legacyAdoption(),
+            coveredMigrations: [
+                { id: "second", checksum: DIGEST_B, revision: 2, introducedIn: "1.0.0" },
+                { id: "first", checksum: DIGEST_A, revision: 1, introducedIn: "1.0.0" },
+            ],
+        };
+        expect(() => parseIntegrationDefinition(nonCanonical)).toThrow(/canonical revision and id order/);
+    });
+
     test("requires every supported source revision to reach the install baseline", () => {
         const definition = migrationDefinition();
         definition.connectors[0].migration.supportedSources.push({ range: "^0.9.0", migrationRevision: 0 });
@@ -137,6 +156,7 @@ function legacyAdoption() {
             owner: { connectorKey: "primary", lineageId: "commerce-supabase-v1" },
             namespaces: [{ name: "commerce", relations: [] }],
         },
+        coveredMigrations: [],
     };
 }
 
