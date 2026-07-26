@@ -26,3 +26,23 @@ Package `GET` requests require an injected client-address policy and limiter
 unless protection is explicitly disabled. The guard executes before reading the
 package source; `HEAD`, release notes, and catalog metadata do not consume the
 download budget.
+
+## Public Catalog Provider
+
+`@bernouy/cms-repository/catalog` exports `RepositoryCatalogPageProvider`. A
+runtime injects a bounded `RepositoryCatalogReader`, then registers the provider
+with Delivery. The provider has no network adapter, registry dependency, or
+Delivery dependency of its own.
+
+It renders canonical, server-side pages for:
+
+- `/integrations`;
+- `/integrations/:kind`;
+- `/integrations/:kind/versions/:version`.
+
+The list page supports no-JavaScript search and category, technical-provider,
+and compatibility filters. Exact pages show channels, dependencies, artifact
+summaries, package identity, safe Markdown release notes and instructions, and
+public compatibility history. Package links always target the anonymous
+same-origin `/.cms/repository` API. Reader unavailability produces an explicit
+uncached error page without affecting unrelated Delivery paths.
