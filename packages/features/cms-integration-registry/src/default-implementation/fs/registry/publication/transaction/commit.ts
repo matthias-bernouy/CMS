@@ -1,0 +1,122 @@
+import { manifestDocumentByteLimit } from "../../../manifest/contract";
+import type { IntegrationRegistryPublicationResult } from "../../../../../interfaces/publication";
+import {
+    createPublicationJournal,
+    publicationJournalByteLimit,
+    type FsIntegrationRegistryPublicationJournal,
+} from "../../persistence/journal";
+import { replaceCanonicalJson, writeCanonicalJsonNoReplace } from "../../persistence/canonicalFile";
+import type { FsIntegrationRegistryLayout, FsIntegrationRegistryPublicationPaths } from "../../persistence/layout";
+import { writeCompatibilityAdmissionReport } from "../../persistence/report";
+import type { PreparedFsIntegrationRegistryCandidate } from "../candidate";
+import { evaluatePublicationCompatibility } from "../compatibility";
+import { nextIntegrationRegistryIndex } from "../index";
+import {
+    FsIntegrationRegistryRecoveryRequiredError,
+    FsIntegrationRegistrySimulatedCrashError,
+    type FsIntegrationRegistryPublisherConfig,
+} from "../types";
+import { advancePublicationJournal, notifyPublicationBoundary, publicationBoundary } from "./journalBoundary";
+import { cleanupCommitted, moveVersionLive, rollbackPublication, type PublicationMutationState } from "./lifecycle";
+import { buildAndSwapPublicationSnapshot } from "./snapshot";
+
+const MAX_INDEX_DOCUMENT_BYTES = 2 * 1_024 * 1_024;
+
+export async function commitFsIntegrationRegistryPublication(
+    input: Readonly<{
+        config: FsIntegrationRegistryPublisherConfig;
+        layout: FsIntegrationRegistryLayout;
+        paths: FsIntegrationRegistryPublicationPaths;
+        operationId: string;
+        candidate: PreparedFsIntegrationRegistryCandidate;
+        schemaDeclarationEvidence?: Parameters<typeof evaluatePublicationCompatibility>[3];
+    }>,
+): Promise<IntegrationRegistryPublicationResult> {
+    const { config, layout, paths, operationId, candidate } = input;
+    const capturedSnapshot = config.snapshots.current();
+    const previousIndex = capturedSnapshot.getIndex(candidate.definition.kind);
+    const nextIndex = nextIntegrationRegistryIndex(previousIndex, candidate.definition, candidate.package.envelope);
+    const report = await evaluatePublicationCompatibility(
+        capturedSnapshot,
+        candidate,
+        config.compatibility,
+        input.schemaDeclarationEvidence,
+    );
+    let journal: FsIntegrationRegistryPublicationJournal = {
+        schema: "cms.integration.registry.publication-journal.v1",
+        operationId,
+        phase: "staged",
+        createdAt: config.now?.() ?? new Date().toISOString(),
+        kind: candidate.definition.kind,
+        version: candidate.package.envelope.version,
+        digest: candidate.package.digest,
+        envelope: candidate.package.envelope,
+        report,
+        previousIndex,
+        nextIndex,
+    };
+    const state: PublicationMutationState = {
+        journalCreated: false,
+        versionMoved: false,
+        manifestWritten: false,
+        reportWritten: false,
+        indexWritten: false,
+        snapshotSwapped: false,
+    };
+    const journalLimit = publicationJournalByteLimit(candidate.limits);
+    try {
+        await createPublicationJournal(paths.journal, journal, journalLimit);
+        state.journalCreated = true;
+        await notifyPublicationBoundary(config, journal);
+
+        await moveVersionLive(paths, candidate.definition.kind, candidate.package.envelope.version);
+        state.versionMoved = true;
+        journal = await advancePublicationJournal(paths.journal, journal, "version-live", journalLimit);
+        await notifyPublicationBoundary(config, journal);
+
+        await writeCanonicalJsonNoReplace(
+            paths.manifest,
+            candidate.manifest.document,
+            manifestDocumentByteLimit(candidate.limits),
+        );
+        state.manifestWritten = true;
+        journal = await advancePublicationJournal(paths.journal, journal, "manifest-written", journalLimit);
+        await notifyPublicationBoundary(config, journal);
+
+        await writeCompatibilityAdmissionReport(paths.report, report);
+        state.reportWritten = true;
+        journal = await advancePublicationJournal(paths.journal, journal, "report-written", journalLimit);
+        await notifyPublicationBoundary(config, journal);
+
+        await replaceCanonicalJson(paths.index, nextIndex, MAX_INDEX_DOCUMENT_BYTES);
+        state.indexWritten = true;
+        journal = await advancePublicationJournal(paths.journal, journal, "index-written", journalLimit);
+        await notifyPublicationBoundary(config, journal);
+
+        const snapshot = await buildAndSwapPublicationSnapshot(config, layout, candidate);
+        state.snapshotSwapped = true;
+        journal = await advancePublicationJournal(paths.journal, journal, "snapshot-swapped", journalLimit);
+        await notifyPublicationBoundary(config, journal);
+        await cleanupCommitted(paths);
+        return {
+            kind: candidate.definition.kind,
+            version: candidate.package.envelope.version,
+            digest: candidate.package.digest,
+            report,
+            snapshot,
+        };
+    } catch (error) {
+        if (error instanceof FsIntegrationRegistrySimulatedCrashError) {
+            throw error;
+        }
+        if (state.snapshotSwapped) {
+            throw new FsIntegrationRegistryRecoveryRequiredError(publicationBoundary(journal), error);
+        }
+        try {
+            await rollbackPublication(paths, previousIndex, state);
+        } catch (rollbackError) {
+            throw new AggregateError([error, rollbackError], "Integration registry publication and rollback failed");
+        }
+        throw error;
+    }
+}

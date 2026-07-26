@@ -36,3 +36,18 @@ export {
     type WriteIntegrationRegistryVersionManifestOptions,
     type WrittenIntegrationRegistryVersionManifest,
 } from "../default-implementation/fs/manifest/writer";
+export { FsIntegrationRegistryPublisher } from "../default-implementation/fs/registry/publication/publisher";
+export {
+    FsIntegrationRegistryRecoveryRequiredError,
+    FsIntegrationRegistrySimulatedCrashError,
+    type FsIntegrationRegistryPublicationBoundary,
+    type FsIntegrationRegistryPublisherConfig,
+} from "../default-implementation/fs/registry/publication/types";
+export {
+    FS_INTEGRATION_REGISTRY_PUBLICATION_PHASES,
+    type FsIntegrationRegistryPublicationPhase,
+} from "../default-implementation/fs/registry/persistence/journal";
+export {
+    INTEGRATION_COMPATIBILITY_REPORT_DOCUMENT_SCHEMA,
+    readCompatibilityAdmissionReport,
+} from "../default-implementation/fs/registry/persistence/report";
