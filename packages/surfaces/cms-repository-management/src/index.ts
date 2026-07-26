@@ -30,3 +30,8 @@ export {
     REPOSITORY_VERSIONS_PATH,
     type RepositoryManagementReadConfig,
 } from "cms-repository-management/operations/readRoutes";
+export {
+    mountRepositoryStablePromotionRoutes,
+    REPOSITORY_STABLE_PROMOTIONS_PATH,
+    type RepositoryStablePromotionRoutesConfig,
+} from "cms-repository-management/operations/promotionRoutes";
