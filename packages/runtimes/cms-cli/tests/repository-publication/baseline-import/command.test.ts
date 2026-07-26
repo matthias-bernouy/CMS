@@ -92,5 +92,6 @@ function plan() {
         schema: "cms.integration.official-bootstrap-plan.v1" as const,
         packages: [],
         reviewedSchemaBaselines: [BASELINE_A, BASELINE_B],
+        verificationBackfills: [],
     };
 }

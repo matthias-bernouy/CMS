@@ -55,6 +55,10 @@ describe("integration verifier trust zones", () => {
         expect(sandbox).toContain("SANDBOX_TIMEOUT_MS");
         expect(sandbox).toContain("SANDBOX_MAX_OUTPUT_BYTES");
         expect(sandbox).toContain("SANDBOX_MAX_ERROR_BYTES");
+        expect(sandbox).toContain("/sandbox/service/postgres/index.ts");
+        expect(sandbox).toContain('CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.0"');
+        expect(sandbox).not.toContain("service/postgresAdapter.ts");
+        expect(sandbox).not.toContain('"platform-install"');
     });
 
     test("uses an ephemeral digest-pinned PostgreSQL 16 provider on its own network", () => {

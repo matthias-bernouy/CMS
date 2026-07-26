@@ -80,10 +80,10 @@ jobs:
           bun run packages/runtimes/cms-cli/src/index.ts
           repository publish-official --dry-run
 
-      - name: Validate the joint package and reviewed-baseline plan without credentials
-        run: >-
-          bun run packages/runtimes/cms-cli/src/index.ts
-          repository import-official-schema-baselines --dry-run
+      - name: Validate maintenance evidence plans without credentials
+        run: |
+          bun run packages/runtimes/cms-cli/src/index.ts repository import-official-schema-baselines --dry-run
+          bun run packages/runtimes/cms-cli/src/index.ts repository backfill-official-verification --dry-run
 
   import-baselines:
     name: Import reviewed legacy schema baselines
@@ -119,10 +119,10 @@ jobs:
           umask 077
           printf '%s' "$MAINTENANCE_TOKEN" > "$REPOSITORY_MAINTENANCE_TOKEN_FILE"
 
-      - name: Import reviewed baselines in deterministic order
-        run: >-
-          bun run packages/runtimes/cms-cli/src/index.ts
-          repository import-official-schema-baselines
+      - name: Import reviewed baselines and legacy verification in deterministic order
+        run: |
+          bun run packages/runtimes/cms-cli/src/index.ts repository import-official-schema-baselines
+          bun run packages/runtimes/cms-cli/src/index.ts repository backfill-official-verification
 
       - name: Remove the ephemeral maintenance credential
         if: ${{ always() }}

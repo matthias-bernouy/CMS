@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { parseRepositoryBaselineImportConfig } from "../../../src/repositoryPublication/baselineImportConfig";
+import {
+    parseRepositoryBaselineImportConfig,
+    parseRepositoryVerificationBackfillConfig,
+} from "../../../src/repositoryPublication/baselineImportConfig";
 
 const COMMAND = "import-official-schema-baselines";
 
@@ -69,5 +72,20 @@ describe("official schema baseline import configuration", () => {
                 ),
             ).toThrow("between 1 and 120000");
         }
+    });
+});
+
+describe("official verification backfill configuration", () => {
+    test("uses the same isolated maintenance configuration", () => {
+        expect(parseRepositoryVerificationBackfillConfig(["backfill-official-verification", "--dry-run"], {})).toEqual({
+            dryRun: true,
+            timeoutMs: 60_000,
+        });
+        expect(() => parseRepositoryVerificationBackfillConfig(["backfill-official-verification"], {})).toThrow(
+            "Verification backfill requires a maintenance URL and token file",
+        );
+        expect(() => parseRepositoryVerificationBackfillConfig([COMMAND, "--dry-run"], {})).toThrow(
+            "backfill-official-verification",
+        );
     });
 });

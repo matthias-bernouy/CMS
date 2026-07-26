@@ -23,15 +23,42 @@ Environment fallbacks:
   P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TOKEN_FILE
   P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TIMEOUT_MS`;
 
+export const REPOSITORY_VERIFICATION_BACKFILL_HELP = `Usage:
+  p9r repository backfill-official-verification [--dry-run]
+      [--url=https://management.example/.cms/repository-management]
+      [--token-file=/absolute/path/to/maintenance-token]
+      [--timeout-ms=60000]
+
+Environment fallbacks:
+  P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL
+  P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TOKEN_FILE
+  P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TIMEOUT_MS`;
+
 export function parseRepositoryBaselineImportConfig(
     args: readonly string[],
     environment: RepositoryBaselineImportEnvironment,
 ): RepositoryBaselineImportConfig | "help" {
+    return parseMaintenanceConfig(args, environment, "import-official-schema-baselines", "Baseline import");
+}
+
+export function parseRepositoryVerificationBackfillConfig(
+    args: readonly string[],
+    environment: RepositoryBaselineImportEnvironment,
+): RepositoryBaselineImportConfig | "help" {
+    return parseMaintenanceConfig(args, environment, "backfill-official-verification", "Verification backfill");
+}
+
+function parseMaintenanceConfig(
+    args: readonly string[],
+    environment: RepositoryBaselineImportEnvironment,
+    command: string,
+    operation: string,
+): RepositoryBaselineImportConfig | "help" {
     if (args[0] === "--help" || args[0] === "-h") {
         return "help";
     }
-    if (args[0] !== "import-official-schema-baselines") {
-        throw new Error("Repository command must be import-official-schema-baselines");
+    if (args[0] !== command) {
+        throw new Error(`Repository command must be ${command}`);
     }
     const flags = parseFlags(args.slice(1));
     if (flags.help) {
@@ -41,7 +68,7 @@ export function parseRepositoryBaselineImportConfig(
     const rawTokenFile = flags.tokenFile ?? environment.P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TOKEN_FILE;
     const rawTimeout = flags.timeoutMs ?? environment.P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TIMEOUT_MS;
     if (!flags.dryRun && (!rawUrl?.trim() || !rawTokenFile?.trim())) {
-        throw new Error("Baseline import requires a maintenance URL and token file");
+        throw new Error(`${operation} requires a maintenance URL and token file`);
     }
     return Object.freeze({
         dryRun: flags.dryRun,

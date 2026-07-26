@@ -1,9 +1,20 @@
-import type { OfficialRepositoryBootstrapEvidenceV1 } from "@bernouy/cms-official-integrations/publication";
+import type { PreparedOfficialVerificationBackfill } from "@bernouy/cms-integration-registry";
+import {
+    buildOfficialRepositoryBootstrapPlan,
+    type OfficialRepositoryBootstrapEvidenceV1,
+} from "@bernouy/cms-official-integrations/publication";
 
 export const PACKAGE_DIGEST = "a".repeat(64);
 export const OBSERVED_SCHEMA_DIGEST = "b".repeat(64);
 
 export type OfficialBaseline = OfficialRepositoryBootstrapEvidenceV1["reviewedSchemaBaselines"][number];
+
+let officialPlan: ReturnType<typeof buildOfficialRepositoryBootstrapPlan> | undefined;
+
+export async function officialVerificationBackfills(): Promise<readonly PreparedOfficialVerificationBackfill[]> {
+    officialPlan ??= buildOfficialRepositoryBootstrapPlan();
+    return (await officialPlan).verificationBackfills;
+}
 
 export function officialBaseline(kind = "demo"): OfficialBaseline {
     return {

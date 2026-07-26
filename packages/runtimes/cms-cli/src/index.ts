@@ -51,6 +51,9 @@ Usage:
   p9r repository import-official-schema-baselines [--dry-run]
                                    Import reviewed legacy SQL baselines through
                                    the separate maintenance capability.
+  p9r repository backfill-official-verification [--dry-run]
+                                   Attach legacy verification evidence to exact
+                                   packages through the maintenance capability.
   p9r help                         Show this help
 
 Env (loaded from .env or the environment):
@@ -90,7 +93,11 @@ try {
                     ? await (
                           await import("./repositoryPublication/baselineImportCommand")
                       ).runRepositoryBaselineImportCommand(rest)
-                    : await (await import("./repositoryPublication/command")).runRepositoryPublicationCommand(rest);
+                    : rest[0] === "backfill-official-verification"
+                      ? await (
+                            await import("./repositoryPublication/maintenance/backfillCommand")
+                        ).runRepositoryVerificationBackfillCommand(rest)
+                      : await (await import("./repositoryPublication/command")).runRepositoryPublicationCommand(rest);
             break;
         case undefined:
         case "help":

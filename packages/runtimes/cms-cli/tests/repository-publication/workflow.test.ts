@@ -16,6 +16,7 @@ describe("official integration publication workflow", () => {
         expect(source).toContain("Submit and poll official candidates in deterministic order");
         expect(source).toContain("Per-candidate admission and polling timeout");
         expect(source).toContain("repository import-official-schema-baselines --dry-run");
+        expect(source).toContain("repository backfill-official-verification --dry-run");
     });
 
     test("keeps mutation and credentials on the private self-hosted runner", async () => {
@@ -32,7 +33,7 @@ describe("official integration publication workflow", () => {
         expect(source).not.toContain("--token=");
     });
 
-    test("imports reviewed baselines before normal package publication", async () => {
+    test("imports reviewed baselines and verification before normal package publication", async () => {
         const source = await readFile(WORKFLOW, "utf8");
         const importJob = source.indexOf("  import-baselines:");
         const publishJob = source.indexOf("  publish:");
@@ -42,5 +43,7 @@ describe("official integration publication workflow", () => {
         expect(source).toContain("needs: [plan, import-baselines]");
         expect(source).toContain("P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ inputs.management_url }}");
         expect(source).toContain("repository import-official-schema-baselines");
+        expect(source).toContain("repository backfill-official-verification");
+        expect(source.indexOf("repository backfill-official-verification")).toBeLessThan(publishJob);
     });
 });
