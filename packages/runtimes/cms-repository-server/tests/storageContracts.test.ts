@@ -1,9 +1,14 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
-import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { readRepositoryManagementToken } from "../src/credentials";
-import { bootstrapRepositoryRegistryIfEmpty, validateRepositoryRegistryRoot } from "../src/registryRoot";
+import {
+    bootstrapRepositoryRegistryIfEmpty,
+    REPOSITORY_BOOTSTRAP_MARKER,
+    RepositoryRegistryBootstrapIncompleteError,
+    validateRepositoryRegistryRoot,
+} from "../src/registryRoot";
 
 const roots: string[] = [];
 
@@ -14,9 +19,9 @@ afterEach(async () => {
 describe("repository storage contracts", () => {
     test("runs bootstrap only for a completely empty registry root", async () => {
         const root = await temporaryRoot();
-        const bootstrap = mock(async (target: string) => {
-            await writeFile(join(target, "bootstrap-marker"), "validated publication");
-        });
+        const bootstrap = mock(async (target: string) => ({
+            commit: async () => await writeFile(join(target, "catalog-entry"), "validated publication"),
+        }));
 
         expect(await bootstrapRepositoryRegistryIfEmpty(root, bootstrap)).toBe("bootstrapped");
         expect(await bootstrapRepositoryRegistryIfEmpty(root, bootstrap)).toBe("already-initialized");
@@ -30,6 +35,37 @@ describe("repository storage contracts", () => {
 
         expect(await bootstrapRepositoryRegistryIfEmpty(root, bootstrap)).toBe("already-initialized");
         expect(bootstrap).not.toHaveBeenCalled();
+    });
+
+    test("does not claim the registry until preparation has validated without writing", async () => {
+        const root = await temporaryRoot();
+        const bootstrap = mock(async () => {
+            expect(await readdir(root)).toEqual([]);
+            throw new Error("official package validation failed");
+        });
+
+        await expect(bootstrapRepositoryRegistryIfEmpty(root, bootstrap)).rejects.toThrow(
+            "official package validation failed",
+        );
+        expect(await readdir(root)).toEqual([]);
+    });
+
+    test("leaves a durable fail-closed marker when bootstrap publication is interrupted", async () => {
+        const root = await temporaryRoot();
+        const bootstrap = mock(async (target: string) => ({
+            commit: async () => {
+                expect(await readdir(target)).toContain(REPOSITORY_BOOTSTRAP_MARKER);
+                await writeFile(join(target, "partial-catalog-entry"), "partial");
+                throw new Error("simulated interruption");
+            },
+        }));
+
+        await expect(bootstrapRepositoryRegistryIfEmpty(root, bootstrap)).rejects.toThrow("simulated interruption");
+        expect(await readdir(root)).toContain(REPOSITORY_BOOTSTRAP_MARKER);
+        await expect(bootstrapRepositoryRegistryIfEmpty(root, bootstrap)).rejects.toBeInstanceOf(
+            RepositoryRegistryBootstrapIncompleteError,
+        );
+        expect(bootstrap).toHaveBeenCalledTimes(1);
     });
 
     test("rejects a symlink registry root", async () => {
