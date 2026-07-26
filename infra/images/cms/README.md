@@ -382,6 +382,10 @@ not required for the origin limiter to be active.
 | Variable | Purpose |
 | --- | --- |
 | `P9R_INTEGRATION_REPOSITORY_URL` | Optional public, anonymous global integration catalog; the embedded official catalog is used when unset. |
+| `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL` | Internal management API base URL for the one designated repository-management CMS. Configure it only through the management override. |
+| `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE` | Absolute in-container path to the shared management-token secret. Token bytes are read server-side and never sent to the browser. |
+| `P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER` | Exact opaque authentication subject allowed to open the repository console and gateway routes. Roles alone do not grant this capability. |
+| `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS` | Bounded private upstream timeout; defaults to 60 seconds in the management override. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Optional SMTP connection settings forwarded when deploying Supabase connector functions. |
 | `SMTP_USER`, `SMTP_PASSWORD` | Optional SMTP credentials forwarded to those functions. |
 | `SMTP_FROM`, `SMTP_REPLY_TO` | Optional sender settings forwarded to those functions. |
@@ -395,6 +399,21 @@ catalog remains an internal legacy fallback for already installed packages.
 When the variable is unset, Delivery serves that embedded catalog directly and
 the CMS consumer uses its Delivery loopback without recursively calling itself.
 Neither mode uses a repository read token.
+
+The designated management CMS additionally publishes the searchable public
+catalog at `/integrations` through Delivery and exposes `/admin/repository`
+through authenticated Control. The console can inspect health, versions and
+compatibility history, upload an immutable package, append a compatibility
+reassessment, and explicitly promote a report-backed version to `stable`.
+Only the exact configured subject can reach the page or its `/api/repository/*`
+gateway. Browser requests remain same-origin and never contain the internal
+management URL, Bearer token, report actors, filesystem paths, or raw upstream
+responses.
+
+Use `infra/images/cms-repository/management-cms.override.yml` only for that CMS
+instance. Ordinary CMS instances should configure at most the anonymous
+`P9R_INTEGRATION_REPOSITORY_URL`; leaving every management variable unset keeps
+the private capability and its navigation entry absent.
 
 Configure Supabase connector deployments after the CMS is running: open
 **Settings → Connector providers → Supabase**, then enter the project reference
