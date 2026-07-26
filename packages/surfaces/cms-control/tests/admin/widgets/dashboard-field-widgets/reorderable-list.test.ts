@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import "../../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList";
-import type { DashboardWReorderableList } from "../../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList";
+import "../../../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList";
+import type { DashboardWReorderableList } from "../../../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList";
 
 afterEach(() => {
     document.body.replaceChildren();

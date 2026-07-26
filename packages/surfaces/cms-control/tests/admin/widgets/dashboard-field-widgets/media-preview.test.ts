@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import type { DashboardWMediaField } from "../../../src/components/admin/Resources/Dashboards/widgets/w-media-field/WMediaField";
-import "../../../src/components/admin/Resources/Dashboards/widgets/w-media-field/WMediaField";
+import type { DashboardWMediaField } from "../../../../src/components/admin/Resources/Dashboards/widgets/w-media-field/WMediaField";
+import "../../../../src/components/admin/Resources/Dashboards/widgets/w-media-field/WMediaField";
 import {
     W_MEDIA_FIELD_ACTION_EVENT,
     type DashboardMediaItem,
-} from "../../../src/components/admin/Resources/Dashboards/widgets/w-media-field/types";
+} from "../../../../src/components/admin/Resources/Dashboards/widgets/w-media-field/types";
 
 const items: DashboardMediaItem[] = [
     {
