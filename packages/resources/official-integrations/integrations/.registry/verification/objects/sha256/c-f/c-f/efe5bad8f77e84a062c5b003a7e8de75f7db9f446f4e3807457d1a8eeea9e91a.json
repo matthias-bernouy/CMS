@@ -1,0 +1,1 @@
+{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-integration-verifier","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"stripe-connect","packageDigest":"3499453dc33056cd408db2566b83981d073199b7042d096d64d8ac981ebb69f0","version":"1.0.0"}}

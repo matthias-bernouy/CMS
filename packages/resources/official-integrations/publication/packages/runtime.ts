@@ -4,9 +4,9 @@ import { join, resolve } from "node:path";
 import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import { FsIntegrationDefinitionRepository, parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
 import { compare as compareSemVer } from "semver";
-import { OFFICIAL_INTEGRATIONS_ROOT } from "../index";
-import type { BuiltOfficialIntegrationPackage, OfficialIntegrationPackage } from "./contracts";
-import { assertWithin, compareText, joinWithin, portableRelative, readBoundedJsonDocument } from "./filesystem";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "../../index";
+import type { BuiltOfficialIntegrationPackage, OfficialIntegrationPackage } from "../contracts";
+import { assertWithin, compareText, joinWithin, portableRelative, readBoundedJsonDocument } from "../filesystem";
 
 const MAX_DISCOVERY_DEPTH = 8;
 const MAX_DISCOVERY_ENTRIES = 8_192;

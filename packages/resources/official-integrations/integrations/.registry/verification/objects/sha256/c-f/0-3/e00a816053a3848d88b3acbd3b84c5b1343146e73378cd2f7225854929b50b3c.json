@@ -1,0 +1,1 @@
+{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-integration-verifier","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"commerce-stripe-payments","packageDigest":"50116777e3da0f70f1336c8250c659361be5bde58385f01db6150580550f9f25","version":"1.0.0"}}
