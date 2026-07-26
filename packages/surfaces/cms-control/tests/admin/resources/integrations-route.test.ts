@@ -9,6 +9,7 @@ import {
     upgradeIntegrationInstallation,
 } from "cms-control/components/admin/Resources/Integrations/api";
 import {
+    confirmIntegrationUpgrade,
     integrationUpgradeErrorMessage,
     renderUpgradeChoices,
 } from "cms-control/components/admin/Resources/Integrations/ui/actions/installation";
@@ -107,6 +108,34 @@ describe("explicit integration upgrade UI", () => {
         expect(panel.textContent).toContain("Select and confirm an exact target version");
     });
 
+    test("does not submit until the administrator types the exact selected version", async () => {
+        const panel = upgradePanel();
+        panel.dataset.integrationId = "commerce";
+        const button = document.createElement("button");
+        button.dataset.upgradeConfirm = "";
+        panel.append(button);
+        renderUpgradeChoices(panel, {
+            id: "commerce",
+            current: "1.0.0",
+            stable: "1.1.0",
+            versions: ["1.1.0"],
+        });
+        let requests = 0;
+        globalThis.fetch = (async () => {
+            requests++;
+            return Response.json({});
+        }) as typeof fetch;
+
+        panel.querySelector<HTMLInputElement>("[data-upgrade-confirmation]")!.value = "stable";
+        await confirmIntegrationUpgrade(button);
+        expect(requests).toBe(0);
+        expect(panel.querySelector("[data-upgrade-status]")?.textContent).toContain("Type 1.1.0 exactly");
+
+        panel.querySelector<HTMLInputElement>("[data-upgrade-confirmation]")!.value = "1.1.0";
+        await confirmIntegrationUpgrade(button);
+        expect(requests).toBe(1);
+    });
+
     test("turns repository conflicts, validation failures, and outages into actionable messages", () => {
         expect(integrationUpgradeErrorMessage(new IntegrationApiError(409, "conflict"))).toContain(
             "Reload the available versions",
@@ -122,6 +151,7 @@ describe("explicit integration upgrade UI", () => {
 
 function upgradePanel(): HTMLElement {
     const panel = document.createElement("section");
+    panel.dataset.upgradePanel = "";
     panel.innerHTML = `
         <div data-upgrade-form hidden>
             <select data-upgrade-target></select>
