@@ -164,3 +164,32 @@ crossing the management API authentication boundary.
 
 `SIGINT` and `SIGTERM` stop both listeners gracefully. Compose allows 30
 seconds before forcing termination.
+
+## Registry backup, restore, and capacity
+
+The `./registry` bind mount is the authoritative publication record. Back it up
+independently from CMS media and from every CMS `integration-packages` cache.
+To obtain a consistent online-read snapshot, first stop or disconnect the
+designated management CMS so no publication, promotion, or reevaluation can
+start, wait for in-flight management requests to finish, then archive the whole
+registry tree while preserving ownership, modes, and timestamps. Encrypt the
+archive and copy it off the application host.
+
+Restore only into an empty prepared registry directory owned by UID/GID 1000
+with mode `0750`. Restore the complete tree rather than selected indexes or
+version directories, then start the repository and inspect `/ready` plus the
+authenticated management status and diagnostics before reconnecting the
+management CMS. A bootstrap-in-progress marker is recovery evidence, not a file
+to delete blindly; an interrupted initial seed should be investigated or the
+still-new volume replaced from a known-good backup.
+
+The registry status reports exact decimal byte capacity from the mounted
+filesystem. Monitor available space outside the container and retain room for
+the largest accepted package, its staging tree, publication journal, and the
+backup tool's temporary overhead. The MVP performs no automatic registry or
+cache garbage collection.
+
+CMS caches remain reconstructible only while every pinned historical package
+is still available from the registry. Their separate backup policy is in
+`infra/images/cms/README.md`: back them up when offline reruns must remain
+guaranteed, but never treat them as the source of truth for registry recovery.
