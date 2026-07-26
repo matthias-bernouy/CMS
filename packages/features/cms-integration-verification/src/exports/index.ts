@@ -13,10 +13,13 @@ export {
     FINDING_RESOLUTION_PROOF_SCHEMA,
     type CompatibilityFinding,
     type CompatibilityFindingClassification,
+    type CompatibilityFindingResolutionResult,
     type CompatibilityFindingIdentityInput,
     type CompatibilityFindingInput,
     type CompatibilityFindingSurface,
     type FindingResolutionProof,
+    type FindingResolutionPolicyRule,
+    type ResolvedCompatibilityFinding,
 } from "../interfaces/finding";
 export {
     REVIEWED_SCHEMA_BASELINE_SCHEMA,
@@ -62,6 +65,7 @@ export {
     parseCompatibilityFinding,
     parseFindingResolutionProof,
 } from "../core/finding";
+export { resolveCompatibilityFindings } from "../core/findingResolution";
 export { identifyReviewedSchemaBaseline, parseReviewedSchemaBaseline } from "../core/baseline";
 export {
     parsePinnedVerificationRunnerIdentity,

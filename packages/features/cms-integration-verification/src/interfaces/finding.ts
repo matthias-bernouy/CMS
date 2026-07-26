@@ -36,3 +36,22 @@ export type FindingResolutionProof = Readonly<{
     evidenceDigest: string;
     createdAt: string;
 }>;
+
+export type FindingResolutionPolicyRule = Readonly<{
+    surface: CompatibilityFindingSurface;
+    code: string;
+    proofTypes: readonly string[];
+    producers: readonly string[];
+    runnerDigests?: readonly string[];
+}>;
+
+export type ResolvedCompatibilityFinding = Readonly<{
+    finding: CompatibilityFinding;
+    effectiveClassification: CompatibilityFindingClassification;
+    proof?: FindingResolutionProof;
+}>;
+
+export type CompatibilityFindingResolutionResult = Readonly<{
+    findings: readonly ResolvedCompatibilityFinding[];
+    contractAdmissible: boolean;
+}>;
