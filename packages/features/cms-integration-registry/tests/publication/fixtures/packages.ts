@@ -1,5 +1,4 @@
-import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
     canonicalJsonBytes,
@@ -9,69 +8,11 @@ import {
 } from "@bernouy/cms-integration-packages";
 import { writeImmutableIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import {
-    createIntegrationRegistryCatalogSnapshot,
-    InMemoryIntegrationRegistryMutationCoordinator,
-    IntegrationCompatibilityEvaluator,
-    IntegrationRegistryCatalogSnapshotReference,
-} from "@bernouy/cms-integration-registry";
-import {
     buildFsIntegrationRegistryCatalogSnapshot,
-    FsIntegrationRegistryPublisher,
-    FsReviewedSchemaBaselineStore,
     writeIntegrationRegistryVersionManifest,
 } from "@bernouy/cms-integration-registry/fs";
-import { reviewedBaseline } from "../baselines/fixtures";
-
-const roots: string[] = [];
-
-export function cleanupRegistryFixtures(): void {
-    for (const root of roots.splice(0)) {
-        makeFixtureWritable(root);
-        rmSync(root, { recursive: true, force: true });
-    }
-}
-
-function makeFixtureWritable(path: string): void {
-    const metadata = lstatSync(path);
-    if (!metadata.isDirectory()) {
-        return;
-    }
-    chmodSync(path, 0o750);
-    for (const entry of readdirSync(path, { withFileTypes: true })) {
-        if (entry.isDirectory()) {
-            makeFixtureWritable(join(path, entry.name));
-        }
-    }
-}
-
-export function registryFixture(
-    overrides: Partial<ConstructorParameters<typeof FsIntegrationRegistryPublisher>[0]> = {},
-) {
-    const root = mkdtempSync(join(tmpdir(), "cms-integration-registry-publisher-"));
-    roots.push(root);
-    mkdirSync(root, { recursive: true });
-    const snapshots = new IntegrationRegistryCatalogSnapshotReference(
-        createIntegrationRegistryCatalogSnapshot({ entries: [] }),
-    );
-    let reportSequence = 0;
-    const compatibility = new IntegrationCompatibilityEvaluator({
-        identity: { name: "registry-test", version: "1.0.0" },
-        now: () => "2026-07-26T10:00:00.000Z",
-        createReportId: () => `report-${++reportSequence}`,
-    });
-    const mutations = new InMemoryIntegrationRegistryMutationCoordinator();
-    const reviewedSchemaBaselines = new FsReviewedSchemaBaselineStore({ root });
-    const publisher = new FsIntegrationRegistryPublisher({
-        root,
-        snapshots,
-        compatibility,
-        mutations,
-        reviewedSchemaBaselines,
-        now: () => "2026-07-26T10:00:00.000Z",
-        ...overrides,
-    });
-    return { root, snapshots, compatibility, mutations, publisher, reviewedSchemaBaselines };
-}
+import { reviewedBaseline } from "../../baselines/fixtures";
+import type { registryFixture } from "./registry";
 
 export async function publicationPackage(
     kind: string,

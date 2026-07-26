@@ -1,10 +1,10 @@
 import { buildFsIntegrationRegistryCatalogSnapshot } from "../../../snapshot/builder";
 import type { FsIntegrationRegistryLayout } from "../../persistence/layout";
 import type { PreparedFsIntegrationRegistryCandidate } from "../candidate";
-import type { FsIntegrationRegistryPublisherConfig } from "../types";
+import type { FsIntegrationRegistryPublicationConfig } from "../types";
 
 export async function buildAndSwapPublicationSnapshot(
-    config: FsIntegrationRegistryPublisherConfig,
+    config: FsIntegrationRegistryPublicationConfig,
     layout: FsIntegrationRegistryLayout,
     candidate: PreparedFsIntegrationRegistryCandidate,
 ) {

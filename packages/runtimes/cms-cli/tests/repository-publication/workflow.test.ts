@@ -13,6 +13,8 @@ describe("official integration publication workflow", () => {
         expect(source).not.toMatch(/^\s+push:/m);
         expect(source).toContain("contents: read");
         expect(source).toContain("repository publish-official --dry-run");
+        expect(source).toContain("Submit and poll official candidates in deterministic order");
+        expect(source).toContain("Per-candidate admission and polling timeout");
         expect(source).toContain("repository import-official-schema-baselines --dry-run");
     });
 

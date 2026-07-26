@@ -12,7 +12,7 @@ import {
 } from "../../persistence/journal";
 import { publicationPaths, type FsIntegrationRegistryLayout } from "../../persistence/layout";
 import { removeImmutableTreeIfExists } from "../../persistence/tree";
-import type { FsIntegrationRegistryPublisherConfig } from "../../publication/types";
+import type { FsIntegrationRegistryPublicationConfig } from "../../publication/types";
 import type { PublicationJournalInventoryEntry } from "../inventory";
 import { readCurrentIntegrationIndex, sameIndex, validateRecoveryJournal } from "../validation";
 import { ensureLiveVersion, ensureManifest, ensureReport } from "./artifacts";
@@ -24,7 +24,7 @@ export async function replayPublicationJournal(
     input: Readonly<{
         entry: PublicationJournalInventoryEntry;
         layout: FsIntegrationRegistryLayout;
-        config: Pick<FsIntegrationRegistryPublisherConfig, "snapshots" | "packageLimits">;
+        config: Pick<FsIntegrationRegistryPublicationConfig, "snapshots" | "packageLimits">;
     }>,
 ): Promise<
     Readonly<{ snapshot: IntegrationRegistryCatalogSnapshot; diagnostic: IntegrationRegistryRecoveryDiagnostic }>
@@ -86,7 +86,7 @@ async function advanceAtLeast(
 }
 
 async function buildAndSwap(
-    config: Pick<FsIntegrationRegistryPublisherConfig, "snapshots" | "packageLimits">,
+    config: Pick<FsIntegrationRegistryPublicationConfig, "snapshots" | "packageLimits">,
     layout: FsIntegrationRegistryLayout,
     journal: FsIntegrationRegistryPublicationJournal,
 ) {

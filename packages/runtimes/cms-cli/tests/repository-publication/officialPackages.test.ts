@@ -3,7 +3,10 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
+import {
+    buildOfficialIntegrationCandidates,
+    buildOfficialIntegrationPackages,
+} from "@bernouy/cms-official-integrations/publication";
 
 const EXPECTED_KINDS = [
     "ban",
@@ -54,6 +57,34 @@ describe("official integration publication source", () => {
         }
     });
 
+    test("binds every official package to a deterministic candidate verification policy", async () => {
+        const first = await buildOfficialIntegrationCandidates();
+        const second = await buildOfficialIntegrationCandidates(OFFICIAL_INTEGRATIONS_ROOT);
+
+        expect(first).toEqual(second);
+        expect(first.map(({ kind }) => kind)).toEqual(EXPECTED_KINDS);
+        for (const candidate of first) {
+            const envelope = JSON.parse(new TextDecoder().decode(candidate.canonicalBytes));
+            expect(envelope).toMatchObject({
+                schema: "cms.integration.candidate.v1",
+                package: { kind: candidate.kind, version: candidate.version },
+                verification: {
+                    target: {
+                        kind: candidate.kind,
+                        version: candidate.version,
+                        packageDigest: candidate.packageDigest,
+                    },
+                    manifest: {
+                        runnerRequirements: [{ name: "cms-postgres", versionRange: "1.0.0" }],
+                    },
+                },
+                submission: { requestedChannel: "latest" },
+            });
+            expect(candidate.candidateDigest).toMatch(/^[a-f0-9]{64}$/u);
+            expect(candidate.verificationDigest).toMatch(/^[a-f0-9]{64}$/u);
+        }
+    });
+
     test("rejects index paths escaping their integration root", async () => {
         const root = await temporaryRoot();
         const integration = join(root, "domains", "unsafe");
@@ -69,7 +100,7 @@ describe("official integration publication source", () => {
             }),
         );
 
-        await expect(buildOfficialIntegrationPackages(root)).rejects.toThrow("escapes its integration root");
+        await expect(buildOfficialIntegrationPackages(root)).rejects.toThrow("escapes its root");
     });
 
     test("rejects symlinks during source discovery", async () => {

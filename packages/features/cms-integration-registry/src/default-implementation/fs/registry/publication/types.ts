@@ -13,18 +13,22 @@ export type FsIntegrationRegistryPublicationBoundary = Readonly<{
     digest: string;
 }>;
 
-export type FsIntegrationRegistryPublisherConfig = Readonly<{
+export type FsIntegrationRegistryPublicationConfig = Readonly<{
     root: string;
     snapshots: IntegrationRegistryCatalogSnapshotReference;
     compatibility: IntegrationCompatibilityEvaluator;
     mutations: IntegrationRegistryMutationCoordinator;
     reviewedSchemaBaselines?: ReviewedSchemaBaselineStore;
-    rawPublicationPolicy?: "legacy-installable" | "publish-unverified" | "reject-unverified";
     packageLimits?: Partial<IntegrationPackageLimits>;
     createOperationId?: () => string;
     now?: () => string;
     afterBoundary?: (boundary: FsIntegrationRegistryPublicationBoundary) => void | Promise<void>;
 }>;
+
+export type FsIntegrationRegistryPublisherConfig = FsIntegrationRegistryPublicationConfig &
+    Readonly<{
+        rawPublicationPolicy: "publish-unverified" | "reject-unverified";
+    }>;
 
 export class FsIntegrationRegistrySimulatedCrashError extends Error {
     constructor(

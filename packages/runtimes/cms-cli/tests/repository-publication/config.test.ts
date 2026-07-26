@@ -5,7 +5,7 @@ describe("official repository publication configuration", () => {
     test("allows a credential-free dry run", () => {
         expect(parseRepositoryPublicationConfig(["publish-official", "--dry-run"], {})).toEqual({
             dryRun: true,
-            timeoutMs: 60_000,
+            timeoutMs: 900_000,
         });
     });
 
@@ -63,7 +63,7 @@ describe("official repository publication configuration", () => {
                 {},
             ),
         ).toThrow("absolute path");
-        for (const timeout of ["0", "120001", "1.5", "forever"]) {
+        for (const timeout of ["0", "1800001", "1.5", "forever"]) {
             expect(() =>
                 parseRepositoryPublicationConfig(
                     [
@@ -74,7 +74,7 @@ describe("official repository publication configuration", () => {
                     ],
                     {},
                 ),
-            ).toThrow("between 1 and 120000");
+            ).toThrow("between 1 and 1800000");
         }
     });
 });

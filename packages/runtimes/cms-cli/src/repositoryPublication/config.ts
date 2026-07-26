@@ -1,7 +1,7 @@
 import { isAbsolute, resolve } from "node:path";
 
-const DEFAULT_TIMEOUT_MS = 60_000;
-const MAX_TIMEOUT_MS = 120_000;
+const DEFAULT_TIMEOUT_MS = 900_000;
+const MAX_TIMEOUT_MS = 1_800_000;
 
 export type RepositoryPublicationEnvironment = Readonly<Record<string, string | undefined>>;
 
@@ -16,7 +16,7 @@ export const REPOSITORY_PUBLICATION_HELP = `Usage:
   p9r repository publish-official [--dry-run]
       [--url=https://management.example/.cms/repository-management]
       [--token-file=/absolute/path/to/token]
-      [--timeout-ms=60000]
+      [--timeout-ms=900000]
 
 Environment fallbacks:
   P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL

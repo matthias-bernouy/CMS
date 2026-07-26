@@ -14,6 +14,7 @@ import { commitFsIntegrationRegistryPublication } from "./transaction/commit";
 import {
     FsIntegrationRegistryRecoveryRequiredError,
     FsIntegrationRegistrySimulatedCrashError,
+    type FsIntegrationRegistryPublicationConfig,
     type FsIntegrationRegistryPublisherConfig,
 } from "./types";
 
@@ -21,7 +22,10 @@ export class FsIntegrationRegistryPublisher implements IntegrationRegistryPublis
     constructor(private readonly config: FsIntegrationRegistryPublisherConfig) {}
 
     async publish(request: IntegrationRegistryPublicationRequest) {
-        const policy = this.config.rawPublicationPolicy ?? "legacy-installable";
+        const policy = this.config.rawPublicationPolicy;
+        if (policy !== "publish-unverified" && policy !== "reject-unverified") {
+            throw new TypeError("Raw integration publication policy must be configured explicitly");
+        }
         if (policy === "reject-unverified") {
             throw new IntegrationRegistryVerificationRequiredError(
                 request.package.envelope.kind,
@@ -35,13 +39,13 @@ export class FsIntegrationRegistryPublisher implements IntegrationRegistryPublis
             candidate,
             request.schemaDeclarationEvidence,
             undefined,
-            policy === "publish-unverified" ? "unverified" : undefined,
+            "unverified",
         );
     }
 }
 
 export async function publishPreparedFsIntegrationRegistryCandidate(
-    config: FsIntegrationRegistryPublisherConfig,
+    config: FsIntegrationRegistryPublicationConfig,
     candidate: Awaited<ReturnType<typeof prepareFsIntegrationRegistryCandidate>>,
     schemaDeclarationEvidence?: IntegrationRegistryPublicationRequest["schemaDeclarationEvidence"],
     admissionReport?: IntegrationCompatibilityAdmissionReport,

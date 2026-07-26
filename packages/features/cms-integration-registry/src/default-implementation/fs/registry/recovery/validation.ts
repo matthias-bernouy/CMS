@@ -24,7 +24,22 @@ export async function validateRecoveryJournal(
     );
     const previous = parseOptionalIndex(journal.previousIndex, `journal:${journal.operationId}:previousIndex`);
     const next = parseIntegrationDefinitionIndex(journal.nextIndex, `journal:${journal.operationId}:nextIndex`);
-    const expected = nextIntegrationRegistryIndex(previous, candidate.definition, candidate.package.envelope);
+    const publishedVersion = next.versions.filter((entry) => entry.version === journal.version);
+    if (publishedVersion.length !== 1) {
+        throw new Error("Integration registry publication journal must contain its exact published version once");
+    }
+    const entry = publishedVersion[0]!;
+    const expectedStatus = journal.publication.disposition === "unverified" ? "unverified" : undefined;
+    if (entry.status !== expectedStatus || entry.verificationDigest !== journal.publication.verificationDigest) {
+        throw new Error("Integration registry publication journal disposition differs from its next index");
+    }
+    const expected = nextIntegrationRegistryIndex(previous, candidate.definition, candidate.package.envelope, {
+        ...(expectedStatus ? { status: expectedStatus } : {}),
+        ...(journal.publication.verificationDigest
+            ? { verificationDigest: journal.publication.verificationDigest }
+            : {}),
+        advanceChannels: journal.publication.disposition === "installable",
+    });
     if (!sameJson(expected, next)) {
         throw new Error("Integration registry publication journal next index cannot be reproduced");
     }

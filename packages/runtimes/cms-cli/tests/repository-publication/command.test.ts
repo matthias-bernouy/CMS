@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { OfficialIntegrationPackage } from "@bernouy/cms-official-integrations/publication";
+import type { BuiltOfficialIntegrationCandidate } from "@bernouy/cms-official-integrations/publication";
 import { runRepositoryPublicationCommand } from "../../src/repositoryPublication/command";
 
 const PACKAGE_A = integrationPackage("alpha", "1.0.0", "a");
@@ -10,7 +10,7 @@ describe("official repository publication command", () => {
         const output: string[] = [];
         const exit = await runRepositoryPublicationCommand(["publish-official", "--dry-run"], {
             environment: {},
-            buildPackages: async () => [PACKAGE_A, PACKAGE_B],
+            buildCandidates: async () => [PACKAGE_A, PACKAGE_B],
             readToken: async () => Promise.reject(new Error("must not read")),
             publish: async () => Promise.reject(new Error("must not publish")),
             write: (line) => output.push(line),
@@ -19,9 +19,9 @@ describe("official repository publication command", () => {
 
         expect(exit).toBe(0);
         expect(output).toEqual([
-            "Official repository publication plan: 2 package(s)",
-            expect.stringMatching(/^PLAN alpha@1\.0\.0 sha256:a{64} /),
-            expect.stringMatching(/^PLAN beta@2\.0\.0 sha256:b{64} /),
+            "Official repository candidate plan: 2 candidate(s)",
+            expect.stringMatching(/^PLAN alpha@1\.0\.0 package-sha256:a{64} verification-sha256:/),
+            expect.stringMatching(/^PLAN beta@2\.0\.0 package-sha256:b{64} verification-sha256:/),
             "Summary: planned=2 published=0 unchanged=0 failed=0 skipped=0",
         ]);
     });
@@ -30,7 +30,7 @@ describe("official repository publication command", () => {
         const output: string[] = [];
         const attempts: string[] = [];
         const outcomes = [
-            { outcome: "published", operationId: "operation-1" } as const,
+            { outcome: "published", candidateId: "candidate-1" } as const,
             { outcome: "unchanged" } as const,
         ];
         const exit = await runRepositoryPublicationCommand(
@@ -41,14 +41,14 @@ describe("official repository publication command", () => {
             ],
             {
                 environment: {},
-                buildPackages: async () => [PACKAGE_A, PACKAGE_B],
+                buildCandidates: async () => [PACKAGE_A, PACKAGE_B],
                 readToken: async (path) => {
                     expect(path).toBe("/run/secrets/token");
                     return "management-token";
                 },
-                publish: async (config, integrationPackage) => {
+                publish: async (config, candidate) => {
                     expect(config.token).toBe("management-token");
-                    attempts.push(`${integrationPackage.kind}@${integrationPackage.version}`);
+                    attempts.push(`${candidate.kind}@${candidate.version}`);
                     return outcomes.shift()!;
                 },
                 write: (line) => output.push(line),
@@ -71,7 +71,7 @@ describe("official repository publication command", () => {
             ],
             {
                 environment: {},
-                buildPackages: async () => [PACKAGE_A, PACKAGE_B],
+                buildCandidates: async () => [PACKAGE_A, PACKAGE_B],
                 readToken: async () => "management-token",
                 publish: async () => ({
                     outcome: "failed",
@@ -106,11 +106,13 @@ describe("official repository publication command", () => {
     });
 });
 
-function integrationPackage(kind: string, version: string, digestCharacter: string): OfficialIntegrationPackage {
+function integrationPackage(kind: string, version: string, digestCharacter: string): BuiltOfficialIntegrationCandidate {
     return {
         kind,
         version,
-        digest: digestCharacter.repeat(64),
+        packageDigest: digestCharacter.repeat(64),
+        verificationDigest: "e".repeat(64),
+        candidateDigest: "f".repeat(64),
         canonicalBytes: new TextEncoder().encode(`{"kind":"${kind}"}`),
     };
 }

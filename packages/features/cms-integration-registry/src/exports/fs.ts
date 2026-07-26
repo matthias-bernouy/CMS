@@ -46,6 +46,7 @@ export {
     FsIntegrationRegistryRecoveryRequiredError,
     FsIntegrationRegistrySimulatedCrashError,
     type FsIntegrationRegistryPublicationBoundary,
+    type FsIntegrationRegistryPublicationConfig,
     type FsIntegrationRegistryPublisherConfig,
 } from "../default-implementation/fs/registry/publication/types";
 export {

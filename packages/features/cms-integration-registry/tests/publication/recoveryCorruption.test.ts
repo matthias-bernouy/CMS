@@ -8,6 +8,57 @@ import { cleanupRegistryFixtures, publicationPackage, registryFixture } from "./
 afterEach(cleanupRegistryFixtures);
 
 describe("filesystem integration registry corruption recovery", () => {
+    test("replays an interrupted legacy v1 journal through the current recovery contract", async () => {
+        const fixture = registryFixture({
+            createOperationId: () => "legacy-journal",
+            afterBoundary: ({ phase }) => {
+                if (phase === "staged") {
+                    throw new Error("crash");
+                }
+            },
+        });
+        const input = await publicationPackage("legacy-demo", "1.0.0");
+        await expect(fixture.publisher.publish({ package: input })).rejects.toThrow(/simulated/i);
+        const journal = join(fixture.root, ".journals", "legacy-journal.json");
+        const document = readJournal(journal);
+        document.schema = "cms.integration.registry.publication-journal.v1";
+        delete document.publication;
+        chmodSync(journal, 0o640);
+        writeFileSync(journal, canonicalJsonBytes(document));
+
+        const result = await recover(fixture);
+
+        expect(result.snapshot.locateExactVersion("legacy-demo", "1.0.0")?.package.digest).toBe(input.digest);
+        expect(result.snapshot.getIndex("legacy-demo")).toMatchObject({ stable: "1.0.0", latest: "1.0.0" });
+    });
+
+    test("quarantines a journal whose explicit disposition contradicts its next index", async () => {
+        const fixture = registryFixture({
+            rawPublicationPolicy: "publish-unverified",
+            createOperationId: () => "contradictory-disposition",
+            afterBoundary: ({ phase }) => {
+                if (phase === "staged") {
+                    throw new Error("crash");
+                }
+            },
+        });
+        await expect(
+            fixture.rawPublisher.publish({ package: await publicationPackage("raw-demo", "1.0.0") }),
+        ).rejects.toThrow(/simulated/i);
+        const journal = join(fixture.root, ".journals", "contradictory-disposition.json");
+        const document = readJournal(journal);
+        document.publication = { disposition: "installable" };
+        chmodSync(journal, 0o640);
+        writeFileSync(journal, canonicalJsonBytes(document));
+
+        const result = await recover(fixture);
+
+        expect(result.snapshot.getIndex("raw-demo")).toBeNull();
+        expect(result.diagnostics).toEqual([
+            expect.objectContaining({ code: "publication-quarantined", operationId: "contradictory-disposition" }),
+        ]);
+    });
+
     test("quarantines a canonical but invalid journal and its owned staging without publishing it", async () => {
         const fixture = registryFixture({
             createOperationId: () => "invalid-journal",
@@ -120,4 +171,8 @@ async function recover(fixture: ReturnType<typeof registryFixture>) {
         root: fixture.root,
         snapshots: fixture.snapshots,
     }).recover();
+}
+
+function readJournal(path: string): Record<string, unknown> {
+    return JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
 }

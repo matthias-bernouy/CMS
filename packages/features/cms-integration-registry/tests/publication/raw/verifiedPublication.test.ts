@@ -3,7 +3,6 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import {
     IntegrationCompatibilityAdmissionError,
-    IntegrationRegistryVerificationRequiredError,
     IntegrationRegistryVersionConflictError,
     IntegrationRegistryVersionOrderError,
 } from "@bernouy/cms-integration-registry";
@@ -11,7 +10,7 @@ import {
     readCompatibilityAdmissionReport,
     SnapshotIntegrationPackageSource,
 } from "@bernouy/cms-integration-registry/fs";
-import { reviewedBaseline } from "../baselines/fixtures";
+import { reviewedBaseline } from "../../baselines/fixtures";
 import {
     cleanupRegistryFixtures,
     publicationPackage,
@@ -20,42 +19,11 @@ import {
     reviewedSchemaContract,
     seedLegacySqlBaseline,
     sqlPublicationPackage,
-} from "./fixtures";
+} from "../fixtures";
 
 afterEach(cleanupRegistryFixtures);
 
-describe("filesystem integration registry publication", () => {
-    test("keeps a raw publication exact but non-installable and leaves channels unchanged", async () => {
-        const fixture = registryFixture({ rawPublicationPolicy: "publish-unverified" });
-        const input = await publicationPackage("demo", "1.0.0");
-
-        await fixture.publisher.publish({ package: input });
-
-        const index = fixture.snapshots.current().getIndex("demo");
-        expect(index).toMatchObject({
-            versions: [{ version: "1.0.0", status: "unverified" }],
-        });
-        expect(index?.stable).toBeUndefined();
-        expect(index?.latest).toBeUndefined();
-        expect(fixture.snapshots.current().locateExactVersion("demo", "1.0.0")?.package.digest).toBe(input.digest);
-    });
-
-    test("can reject the raw publication protocol once exact decision enforcement is active", async () => {
-        const fixture = registryFixture({ rawPublicationPolicy: "reject-unverified" });
-        const input = await publicationPackage("demo", "1.0.0");
-
-        await expect(fixture.publisher.publish({ package: input })).rejects.toMatchObject({
-            code: "verification_required",
-            kind: "demo",
-            version: "1.0.0",
-            packageDigest: input.digest,
-        });
-        await expect(fixture.publisher.publish({ package: input })).rejects.toBeInstanceOf(
-            IntegrationRegistryVerificationRequiredError,
-        );
-        expect(fixture.snapshots.current().getIndex("demo")).toBeNull();
-    });
-
+describe("trusted prepared filesystem integration publication", () => {
     test("publishes a new kind atomically with stable, latest, package and admission report", async () => {
         const fixture = registryFixture();
         const input = await publicationPackage("demo", "1.0.0");
@@ -85,7 +53,6 @@ describe("filesystem integration registry publication", () => {
     test("advances latest while preserving stable and accepts implementation-only patches", async () => {
         const fixture = registryFixture();
         await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
-
         const result = await fixture.publisher.publish({
             package: await publicationPackage("demo", "1.0.1", {}, "fixed implementation\n"),
         });
@@ -109,7 +76,6 @@ describe("filesystem integration registry publication", () => {
         await expect(fixture.publisher.publish({ package: await incompatible })).rejects.toBeInstanceOf(
             IntegrationCompatibilityAdmissionError,
         );
-
         expect(fixture.snapshots.current()).toBe(before);
         expect(fixture.snapshots.current().locateExactVersion("demo", "1.0.1")).toBeNull();
         expect(existsSync(join(fixture.root, "demo", "versions", "1.0.1"))).toBe(false);
@@ -129,14 +95,12 @@ describe("filesystem integration registry publication", () => {
         await expect(
             fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.1") }),
         ).rejects.toBeInstanceOf(IntegrationRegistryVersionOrderError);
-
         expect(readFileSync(join(fixture.root, "demo", "integration.json"))).toEqual(indexBefore);
         expect(readdirSync(join(fixture.root, ".staging"))).toEqual([]);
     });
 
     test("uses an exact digest-bound reviewed schema baseline for the first compatible patch", async () => {
         const fixture = registryFixture();
-
         const { candidate } = await publishReviewedSqlVersionPair(fixture);
 
         expect(candidate.report).toMatchObject({ outcome: "compatible", releaseLevel: "patch", admissible: true });
@@ -155,7 +119,6 @@ describe("filesystem integration registry publication", () => {
             }),
             expectedCurrentRevisionId: null,
         });
-
         const publication = fixture.publisher.publish({
             package: await sqlPublicationPackage("demo", "1.0.1", reviewedSchemaContract()),
         });

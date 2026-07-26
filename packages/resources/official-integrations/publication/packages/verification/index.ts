@@ -13,6 +13,11 @@ export {
     type OfficialVerificationBackfillIndexV1,
 } from "./contracts";
 export { buildOfficialIntegrationVerificationBackfill } from "./builder";
+export {
+    OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT,
+    buildOfficialIntegrationCandidates,
+    type BuiltOfficialIntegrationCandidate,
+} from "./candidates";
 export { loadOfficialIntegrationVerificationBackfill } from "./loader";
 export { buildOfficialVerificationBackfillReports } from "./reports";
 export { verificationObjectRelativePath } from "./paths";

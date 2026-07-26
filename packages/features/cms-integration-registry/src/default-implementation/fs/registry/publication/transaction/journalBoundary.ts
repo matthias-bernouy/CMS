@@ -6,7 +6,7 @@ import {
 import {
     FsIntegrationRegistrySimulatedCrashError,
     type FsIntegrationRegistryPublicationBoundary,
-    type FsIntegrationRegistryPublisherConfig,
+    type FsIntegrationRegistryPublicationConfig,
 } from "../types";
 
 export async function advancePublicationJournal(
@@ -21,7 +21,7 @@ export async function advancePublicationJournal(
 }
 
 export async function notifyPublicationBoundary(
-    config: FsIntegrationRegistryPublisherConfig,
+    config: FsIntegrationRegistryPublicationConfig,
     journal: FsIntegrationRegistryPublicationJournal,
 ): Promise<void> {
     const value = publicationBoundary(journal);

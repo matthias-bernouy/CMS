@@ -13,9 +13,9 @@ on:
         default: integration-repository
         type: string
       timeout_ms:
-        description: Per-package request timeout in milliseconds
+        description: Per-candidate admission and polling timeout in milliseconds
         required: true
-        default: "60000"
+        default: "900000"
         type: string
       dry_run:
         description: Build and report packages without publishing
@@ -34,9 +34,9 @@ on:
         default: integration-repository
         type: string
       timeout_ms:
-        description: Per-package request timeout in milliseconds
+        description: Per-candidate admission and polling timeout in milliseconds
         required: false
-        default: "60000"
+        default: "900000"
         type: string
       dry_run:
         description: Build and report packages without publishing
@@ -129,7 +129,7 @@ jobs:
         run: rm -f -- "$REPOSITORY_MAINTENANCE_TOKEN_FILE"
 
   publish:
-    name: Publish through the private management API
+    name: Verify and publish through the private candidate API
     needs: [plan, import-baselines]
     if: ${{ ! inputs.dry_run }}
     runs-on: [self-hosted, linux, repository-management]
@@ -162,7 +162,7 @@ jobs:
           umask 077
           printf '%s' "$MANAGEMENT_TOKEN" > "$REPOSITORY_TOKEN_FILE"
 
-      - name: Publish official integrations in deterministic order
+      - name: Submit and poll official candidates in deterministic order
         run: >-
           bun run packages/runtimes/cms-cli/src/index.ts
           repository publish-official

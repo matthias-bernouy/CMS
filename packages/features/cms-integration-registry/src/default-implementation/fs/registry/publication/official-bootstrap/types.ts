@@ -12,11 +12,11 @@ import type {
     ReleaseAdmissionDecisionStore,
 } from "../../../../../interfaces/reportStore";
 import type { PreparedFsIntegrationRegistryCandidate } from "../candidate";
-import type { FsIntegrationRegistryPublisherConfig } from "../types";
+import type { FsIntegrationRegistryPublicationConfig } from "../types";
 
 export const PREPARED_OFFICIAL_BOOTSTRAP_SCHEMA = "cms.integration.registry.prepared-official-bootstrap.v1" as const;
 
-export type FsOfficialIntegrationRegistryBootstrapPublisherConfig = FsIntegrationRegistryPublisherConfig &
+export type FsOfficialIntegrationRegistryBootstrapPublisherConfig = FsIntegrationRegistryPublicationConfig &
     Readonly<{
         baselineApproval: OfficialRepositoryBootstrapBaselineApproval;
         baselineStore?: ReviewedSchemaBaselineStore;

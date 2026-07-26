@@ -4,6 +4,7 @@ import type { IntegrationRegistryCatalogSnapshot } from "../../../../../interfac
 import type { IntegrationRegistryPublicationResult } from "../../../../../interfaces/publication";
 import {
     createPublicationJournal,
+    INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_SCHEMA,
     publicationJournalByteLimit,
     type FsIntegrationRegistryPublicationJournal,
 } from "../../persistence/journal";
@@ -16,7 +17,7 @@ import { nextIntegrationRegistryIndex } from "../index";
 import {
     FsIntegrationRegistryRecoveryRequiredError,
     FsIntegrationRegistrySimulatedCrashError,
-    type FsIntegrationRegistryPublisherConfig,
+    type FsIntegrationRegistryPublicationConfig,
 } from "../types";
 import { advancePublicationJournal, notifyPublicationBoundary, publicationBoundary } from "./journalBoundary";
 import { cleanupCommitted, moveVersionLive, rollbackPublication, type PublicationMutationState } from "./lifecycle";
@@ -26,7 +27,7 @@ const MAX_INDEX_DOCUMENT_BYTES = 2 * 1_024 * 1_024;
 
 export async function commitFsIntegrationRegistryPublication(
     input: Readonly<{
-        config: FsIntegrationRegistryPublisherConfig;
+        config: FsIntegrationRegistryPublicationConfig;
         layout: FsIntegrationRegistryLayout;
         paths: FsIntegrationRegistryPublicationPaths;
         operationId: string;
@@ -57,7 +58,7 @@ export async function commitFsIntegrationRegistryPublication(
             config.reviewedSchemaBaselines,
         ));
     let journal: FsIntegrationRegistryPublicationJournal = {
-        schema: "cms.integration.registry.publication-journal.v1",
+        schema: INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_SCHEMA,
         operationId,
         phase: "staged",
         createdAt: config.now?.() ?? new Date().toISOString(),
@@ -66,6 +67,10 @@ export async function commitFsIntegrationRegistryPublication(
         digest: candidate.package.digest,
         envelope: candidate.package.envelope,
         report,
+        publication: {
+            disposition: input.versionStatus === "unverified" ? "unverified" : "installable",
+            ...(input.verificationDigest ? { verificationDigest: input.verificationDigest } : {}),
+        },
         previousIndex,
         nextIndex,
     };

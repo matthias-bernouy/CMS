@@ -8,7 +8,7 @@ import type {
     ReleaseAdmissionDecisionStore,
     ReviewedSchemaBaselineStore,
 } from "cms-integration-registry/interfaces/reportStore";
-import type { FsIntegrationRegistryPublisherConfig } from "../../types";
+import type { FsIntegrationRegistryPublicationConfig } from "../../types";
 import type { IntegrationVerificationContractCatalog } from "../planning";
 
 export type CandidateMigrationReportProvider = (
@@ -20,7 +20,7 @@ export type CandidateMigrationReportProvider = (
     }>,
 ) => Promise<readonly MigrationReport[]>;
 
-export type FsIntegrationRegistryCandidateFinalizerConfig = FsIntegrationRegistryPublisherConfig &
+export type FsIntegrationRegistryCandidateFinalizerConfig = FsIntegrationRegistryPublicationConfig &
     Readonly<{
         candidates: IntegrationRegistryCandidateStore;
         policy: ReleaseAdmissionPolicySnapshotV1;

@@ -1,8 +1,9 @@
 import {
-    buildOfficialIntegrationPackages,
-    type OfficialIntegrationPackage,
+    buildOfficialIntegrationCandidates,
+    type BuiltOfficialIntegrationCandidate,
 } from "@bernouy/cms-official-integrations/publication";
-import { publishOfficialIntegrationPackage, type ManagementPublicationResult } from "./managementClient";
+import { publishOfficialIntegrationCandidate } from "./candidate/client";
+import type { ManagementCandidateResult } from "./candidate/contracts";
 import {
     parseRepositoryPublicationConfig,
     REPOSITORY_PUBLICATION_HELP,
@@ -12,9 +13,9 @@ import { readRepositoryPublicationToken } from "./tokenFile";
 
 export type RepositoryPublicationCommandDependencies = Readonly<{
     environment?: RepositoryPublicationEnvironment;
-    buildPackages?: () => Promise<readonly OfficialIntegrationPackage[]>;
+    buildCandidates?: () => Promise<readonly BuiltOfficialIntegrationCandidate[]>;
     readToken?: (path: string) => Promise<string>;
-    publish?: typeof publishOfficialIntegrationPackage;
+    publish?: typeof publishOfficialIntegrationCandidate;
     write?: (line: string) => void;
     writeError?: (line: string) => void;
 }>;
@@ -38,19 +39,19 @@ export async function runRepositoryPublicationCommand(
         return 0;
     }
 
-    let packages: readonly OfficialIntegrationPackage[];
+    let candidates: readonly BuiltOfficialIntegrationCandidate[];
     try {
-        packages = await (dependencies.buildPackages ?? buildOfficialIntegrationPackages)();
+        candidates = await (dependencies.buildCandidates ?? buildOfficialIntegrationCandidates)();
     } catch {
-        writeError("Official integration package build failed");
+        writeError("Official integration candidate build failed");
         return 1;
     }
-    write(`Official repository publication plan: ${packages.length} package(s)`);
+    write(`Official repository candidate plan: ${candidates.length} candidate(s)`);
     if (config.dryRun) {
-        for (const integrationPackage of packages) {
-            write(packageLine("PLAN", integrationPackage));
+        for (const candidate of candidates) {
+            write(candidateLine("PLAN", candidate));
         }
-        write(summary(packages.length, 0, 0, 0, 0));
+        write(summary(candidates.length, 0, 0, 0, 0));
         return 0;
     }
 
@@ -69,41 +70,41 @@ export async function runRepositoryPublicationCommand(
     }
 
     const counts = { published: 0, unchanged: 0, failed: 0, skipped: 0 };
-    const publish = dependencies.publish ?? publishOfficialIntegrationPackage;
-    for (let index = 0; index < packages.length; index += 1) {
-        const integrationPackage = packages[index]!;
-        const result = await publish({ managementUrl, token, timeoutMs: config.timeoutMs }, integrationPackage);
+    const publish = dependencies.publish ?? publishOfficialIntegrationCandidate;
+    for (let index = 0; index < candidates.length; index += 1) {
+        const candidate = candidates[index]!;
+        const result = await publish({ managementUrl, token, timeoutMs: config.timeoutMs }, candidate);
         if (result.outcome === "published") {
             counts.published += 1;
-            write(packageLine("PUBLISHED", integrationPackage));
+            write(candidateLine("PUBLISHED", candidate));
             continue;
         }
         if (result.outcome === "unchanged") {
             counts.unchanged += 1;
-            write(packageLine("UNCHANGED", integrationPackage));
+            write(candidateLine("UNCHANGED", candidate));
             continue;
         }
         counts.failed += 1;
-        counts.skipped = packages.length - index - 1;
-        writeError(failureLine(integrationPackage, result));
+        counts.skipped = candidates.length - index - 1;
+        writeError(failureLine(candidate, result));
         break;
     }
-    write(summary(packages.length, counts.published, counts.unchanged, counts.failed, counts.skipped));
+    write(summary(candidates.length, counts.published, counts.unchanged, counts.failed, counts.skipped));
     return counts.failed === 0 ? 0 : 1;
 }
 
-function packageLine(action: string, integrationPackage: OfficialIntegrationPackage): string {
-    return `${action} ${integrationPackage.kind}@${integrationPackage.version} sha256:${integrationPackage.digest} ${integrationPackage.canonicalBytes.byteLength} bytes`;
+function candidateLine(action: string, candidate: BuiltOfficialIntegrationCandidate): string {
+    return `${action} ${candidate.kind}@${candidate.version} package-sha256:${candidate.packageDigest} verification-sha256:${candidate.verificationDigest} candidate-sha256:${candidate.candidateDigest} ${candidate.canonicalBytes.byteLength} bytes`;
 }
 
 function failureLine(
-    integrationPackage: OfficialIntegrationPackage,
-    failure: Extract<ManagementPublicationResult, { outcome: "failed" }>,
+    candidate: BuiltOfficialIntegrationCandidate,
+    failure: Extract<ManagementCandidateResult, { outcome: "failed" }>,
 ): string {
     const status = failure.status ? ` status=${failure.status}` : "";
     const code = failure.code ? ` code=${failure.code}` : "";
     const retry = failure.retryAfterSeconds ? ` retry-after=${failure.retryAfterSeconds}` : "";
-    return `FAILED ${integrationPackage.kind}@${integrationPackage.version} reason=${failure.reason}${status}${code}${retry}`;
+    return `FAILED ${candidate.kind}@${candidate.version} reason=${failure.reason}${status}${code}${retry}`;
 }
 
 function summary(planned: number, published: number, unchanged: number, failed: number, skipped: number): string {
