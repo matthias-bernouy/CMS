@@ -92,7 +92,7 @@ describe("settings runtime", () => {
         submitted.themes[0]!.values.light["integration-photo-albums-retired"] = "red";
         const submittedSource = submitted.sources.find((source) => source.id === "integration-photo-albums")!;
         submittedSource.label = "Forged";
-        submittedSource.owner = { kind: "site" };
+        delete submittedSource.owner;
         const updateSystem = mock(async (_update: Partial<TSystem>) => system);
         const cms = {
             repository: { getSystem: async () => system, updateSystem },

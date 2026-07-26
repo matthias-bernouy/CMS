@@ -23,7 +23,7 @@ export function themeSettingsFromCss(css: string): ThemeSettings {
     assignReferencedTokenTypes(tokens, values);
     return {
         activeThemeId: "imported",
-        sources: [siteTokensSource(), importedCssSource(tokens)],
+        sources: [importedCssSource(tokens)],
         themes: [{ id: "imported", name: "Imported theme", values: { light: values, dark: {} } }],
     };
 }
@@ -47,24 +47,11 @@ function assignReferencedTokenTypes(tokens: ThemeToken[], values: Record<string,
     tokens.forEach(resolve);
 }
 
-function siteTokensSource(): ThemeSettings["sources"][number] {
-    return {
-        id: "site-tokens",
-        label: "Site tokens",
-        supportsModes: true,
-        owner: { kind: "site" },
-        categories: [
-            { id: "general", label: "General", description: "Design tokens created for this site.", tokens: [] },
-        ],
-    };
-}
-
 function importedCssSource(tokens: ThemeToken[]): ThemeSettings["sources"][number] {
     return {
         id: "imported-css",
         label: "Imported CSS",
         supportsModes: false,
-        owner: { kind: "site" },
         categories: [
             {
                 id: "general",

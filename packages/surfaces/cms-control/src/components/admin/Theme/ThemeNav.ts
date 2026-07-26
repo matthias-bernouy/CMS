@@ -4,10 +4,12 @@ import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
 import {
     THEME_CATEGORY_ADDED_EVENT,
+    THEME_CATEGORY_DELETED_EVENT,
     THEME_CATEGORY_UPDATED_EVENT,
     THEME_SETTINGS_CHANGED_EVENT,
     dispatchThemeCategorySelected,
     type ThemeCategoryAdded,
+    type ThemeCategoryDeleted,
     type ThemeSelection,
 } from "./events";
 import css from "./nav/ThemeNav.css" with { type: "text" };
@@ -28,6 +30,7 @@ export class CmsThemeNav extends Component {
         this.shadowRoot?.addEventListener("click", this.onClick);
         window.addEventListener("popstate", this.onPopState);
         window.addEventListener(THEME_CATEGORY_ADDED_EVENT, this.onCategoryAdded as EventListener);
+        window.addEventListener(THEME_CATEGORY_DELETED_EVENT, this.onCategoryDeleted as EventListener);
         window.addEventListener(THEME_CATEGORY_UPDATED_EVENT, this.onCategoryUpdated as EventListener);
         window.addEventListener(THEME_SETTINGS_CHANGED_EVENT, this.onSettingsChanged);
     }
@@ -36,6 +39,7 @@ export class CmsThemeNav extends Component {
         this.shadowRoot?.removeEventListener("click", this.onClick);
         window.removeEventListener("popstate", this.onPopState);
         window.removeEventListener(THEME_CATEGORY_ADDED_EVENT, this.onCategoryAdded as EventListener);
+        window.removeEventListener(THEME_CATEGORY_DELETED_EVENT, this.onCategoryDeleted as EventListener);
         window.removeEventListener(THEME_CATEGORY_UPDATED_EVENT, this.onCategoryUpdated as EventListener);
         window.removeEventListener(THEME_SETTINGS_CHANGED_EVENT, this.onSettingsChanged);
     }
@@ -115,6 +119,19 @@ export class CmsThemeNav extends Component {
             current.description = category.description;
             this.render();
         }
+    };
+
+    private onCategoryDeleted = (event: CustomEvent<ThemeCategoryDeleted>): void => {
+        const detail = event.detail;
+        const source = this.sources.find((item) => item.id === detail?.sourceId);
+        if (!source || !detail) {
+            return;
+        }
+        source.categories = source.categories.filter((category) => category.id !== detail.categoryId);
+        if (detail.sourceRemoved) {
+            this.sources = this.sources.filter((item) => item.id !== detail.sourceId);
+        }
+        this.select(detail.selection.sourceId, detail.selection.categoryId);
     };
 
     private onSettingsChanged = (): void => {

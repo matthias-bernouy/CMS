@@ -2,7 +2,7 @@ import type { ThemeSettings } from "@bernouy/cms-content";
 
 import type { ThemeSelection } from "../../events";
 import type { LoadedThemeSettings } from "../api";
-import { addCategory, addTheme, addToken, selectionFromUrl } from "../model";
+import { addCategory, addTheme, addToken, removeCategory, removeToken, selectionFromUrl } from "../model";
 import type { ThemeEditorViewState } from "../view";
 import { ThemeExplorerController } from "./explorerController";
 
@@ -64,6 +64,26 @@ export class ThemeEditorState {
             return false;
         }
         if (!addToken(this.settings, this.selection)) {
+            return false;
+        }
+        this.explorer.reset();
+        return true;
+    }
+
+    deleteCategory(): ReturnType<typeof removeCategory> {
+        if (!this.settings) {
+            return undefined;
+        }
+        const removed = removeCategory(this.settings, this.selection);
+        if (removed) {
+            this.selection = removed.selection;
+            this.explorer.reset();
+        }
+        return removed;
+    }
+
+    deleteToken(tokenId: string): boolean {
+        if (!this.settings || !removeToken(this.settings, this.selection, tokenId)) {
             return false;
         }
         this.explorer.reset();

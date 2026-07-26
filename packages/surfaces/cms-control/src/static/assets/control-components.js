@@ -17559,6 +17559,7 @@ circle.endpoint-timeline__errors {
   // src/components/admin/Theme/events.ts
   var THEME_CATEGORY_SELECTED_EVENT = "cms:theme-category-selected";
   var THEME_CATEGORY_ADDED_EVENT = "cms:theme-category-added";
+  var THEME_CATEGORY_DELETED_EVENT = "cms:theme-category-deleted";
   var THEME_CATEGORY_UPDATED_EVENT = "cms:theme-category-updated";
   var THEME_SETTINGS_CHANGED_EVENT = "cms:theme-settings-changed";
   function dispatchThemeCategorySelected(selection) {
@@ -17566,6 +17567,9 @@ circle.endpoint-timeline__errors {
   }
   function dispatchThemeCategoryAdded(detail) {
     window.dispatchEvent(new CustomEvent(THEME_CATEGORY_ADDED_EVENT, { detail }));
+  }
+  function dispatchThemeCategoryDeleted(detail) {
+    window.dispatchEvent(new CustomEvent(THEME_CATEGORY_DELETED_EVENT, { detail }));
   }
   function dispatchThemeCategoryUpdated(detail) {
     window.dispatchEvent(new CustomEvent(THEME_CATEGORY_UPDATED_EVENT, { detail }));
@@ -17582,11 +17586,8 @@ circle.endpoint-timeline__errors {
   function isIntegrationSource(source2) {
     return integrationOwnerId(source2) !== undefined;
   }
-  function isSiteTokenSource(source2) {
-    return source2?.owner?.kind === "site" && !["custom", "existing-css", "imported-css", "other"].includes(source2.id);
-  }
-  function isImportedCssSource(source2) {
-    return source2?.owner?.kind === "site" && ["custom", "existing-css", "imported-css", "other"].includes(source2.id);
+  function isThemeCatalogEditable(source2) {
+    return Boolean(source2) && !isIntegrationSource(source2);
   }
 
   // src/components/admin/Theme/editor/model.ts
@@ -17617,7 +17618,7 @@ circle.endpoint-timeline__errors {
   }
   function addCategory(settings, selection) {
     const source2 = currentSource(settings, selection);
-    if (!isSiteTokenSource(source2)) {
+    if (!isThemeCatalogEditable(source2)) {
       return;
     }
     const number = source2.categories.length + 1;
@@ -17625,7 +17626,7 @@ circle.endpoint-timeline__errors {
     const category = {
       id,
       label: `New category ${number}`,
-      description: `Custom ${source2.label} tokens.`,
+      description: `Theme tokens for ${source2.label}.`,
       tokens: []
     };
     source2.categories.push(category);
@@ -17634,20 +17635,63 @@ circle.endpoint-timeline__errors {
   function addToken(settings, selection) {
     const source2 = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
-    if (!isSiteTokenSource(source2) || !category) {
+    if (!isThemeCatalogEditable(source2) || !category) {
       return false;
     }
-    const allIds = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.map((token) => token.id))));
-    const number = allIds.size + 1;
-    const id = uniqueId(`custom-${number}`, allIds);
+    const existingNames = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.flatMap((token) => [token.id, token.variable]))));
+    const number = existingNames.size + 1;
+    const id = uniqueId(`token-${number}`, existingNames);
     category.tokens.push({
       id,
       variable: id,
       label: `New token ${number}`,
-      description: "Custom design token",
+      description: "New theme token",
       type: "value"
     });
     return true;
+  }
+  function removeToken(settings, selection, tokenId) {
+    const source2 = currentSource(settings, selection);
+    const category = currentCategory(settings, selection);
+    if (!isThemeCatalogEditable(source2) || !category) {
+      return false;
+    }
+    const index = category.tokens.findIndex((token) => token.id === tokenId);
+    if (index < 0) {
+      return false;
+    }
+    category.tokens.splice(index, 1);
+    removeThemeValues(settings, [tokenId]);
+    return true;
+  }
+  function removeCategory(settings, selection) {
+    const source2 = currentSource(settings, selection);
+    const category = currentCategory(settings, selection);
+    if (!isThemeCatalogEditable(source2) || !category) {
+      return;
+    }
+    const destination = source2.categories.length === 1 ? settings.sources.find((item) => item !== source2 && isThemeCatalogEditable(item) && item.categories.length > 0) : source2;
+    if (!destination) {
+      return;
+    }
+    const categoryIndex = source2.categories.indexOf(category);
+    source2.categories.splice(categoryIndex, 1);
+    removeThemeValues(settings, category.tokens.map((token) => token.id));
+    const sourceRemoved = source2.categories.length === 0;
+    if (sourceRemoved) {
+      settings.sources.splice(settings.sources.indexOf(source2), 1);
+    }
+    const nextSource = sourceRemoved ? destination : source2;
+    const nextCategory = sourceRemoved ? nextSource?.categories[0] : source2.categories[Math.min(categoryIndex, source2.categories.length - 1)];
+    if (!nextSource || !nextCategory) {
+      return;
+    }
+    return {
+      sourceId: source2.id,
+      categoryId: category.id,
+      sourceRemoved,
+      selection: { sourceId: nextSource.id, categoryId: nextCategory.id }
+    };
   }
   function resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) {
     const source2 = currentSource(settings, selection);
@@ -17661,6 +17705,15 @@ circle.endpoint-timeline__errors {
     }
     delete theme.values[mode][token.id];
     return true;
+  }
+  function removeThemeValues(settings, tokenIds) {
+    for (const theme of settings.themes) {
+      for (const mode of ["light", "dark"]) {
+        for (const tokenId of tokenIds) {
+          delete theme.values[mode]?.[tokenId];
+        }
+      }
+    }
   }
   function uniqueId(base, existing) {
     let value2 = base;
@@ -17684,7 +17737,7 @@ circle.endpoint-timeline__errors {
     }
     const category = currentCategory(context.settings, context.selection);
     const source2 = currentSource(context.settings, context.selection);
-    const catalogEditable = isSiteTokenSource(source2);
+    const catalogEditable = isThemeCatalogEditable(source2);
     if (input.matches("[data-category-label-input]") && category && source2 && catalogEditable) {
       category.label = input.value;
       query3(context.root, "[data-category-title]").textContent = category.label;
@@ -17738,11 +17791,13 @@ circle.endpoint-timeline__errors {
   }
   function clickAction(event) {
     const target2 = event.target;
-    const actions = ["theme", "category", "token", "save", "activate"];
+    const actions = ["theme", "category", "token", "delete-category", "delete-token", "save", "activate"];
     const selectors = [
       "[data-add-theme]",
       "[data-add-theme-category]",
       "[data-add-element]",
+      "[data-delete-category]",
+      "[data-delete-token]",
       "[data-save-theme]",
       "[data-activate-theme]"
     ];
@@ -17803,7 +17858,7 @@ circle.endpoint-timeline__errors {
     assignReferencedTokenTypes(tokens, values);
     return {
       activeThemeId: "imported",
-      sources: [siteTokensSource(), importedCssSource(tokens)],
+      sources: [importedCssSource(tokens)],
       themes: [{ id: "imported", name: "Imported theme", values: { light: values, dark: {} } }]
     };
   }
@@ -17825,23 +17880,11 @@ circle.endpoint-timeline__errors {
     };
     tokens.forEach(resolve);
   }
-  function siteTokensSource() {
-    return {
-      id: "site-tokens",
-      label: "Site tokens",
-      supportsModes: true,
-      owner: { kind: "site" },
-      categories: [
-        { id: "general", label: "General", description: "Design tokens created for this site.", tokens: [] }
-      ]
-    };
-  }
   function importedCssSource(tokens) {
     return {
       id: "imported-css",
       label: "Imported CSS",
       supportsModes: false,
-      owner: { kind: "site" },
       categories: [
         {
           id: "general",
@@ -18115,7 +18158,20 @@ circle.endpoint-timeline__errors {
     row.dataset.tokenId = token.id;
     row.dataset.tokenType = token.type;
     row.append(renderLabel(token, catalogEditable), renderTokenControls(token, settings, theme, mode));
+    if (catalogEditable) {
+      row.dataset.catalogEditable = "true";
+      row.append(deleteTokenButton(token));
+    }
     return row;
+  }
+  function deleteTokenButton(token) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "delete-token";
+    button.dataset.deleteToken = "true";
+    button.textContent = "Delete";
+    button.ariaLabel = `Delete ${token.label}`;
+    return button;
   }
   function renderLabel(token, catalogEditable) {
     const label2 = document.createElement("div");
@@ -18247,12 +18303,12 @@ circle.endpoint-timeline__errors {
       return state.mode;
     }
     const integration = isIntegrationSource(source2);
-    const catalogEditable = isSiteTokenSource(source2);
+    const catalogEditable = isThemeCatalogEditable(source2);
     const mode = source2.supportsModes ? state.mode : "light";
     renderHeader(root, state, source2, category.label, theme, integration);
     renderOwnership(root, source2);
     renderCategoryFields(root, category, catalogEditable);
-    renderActions(root, state, theme, catalogEditable);
+    renderActions(root, state, source2, theme, catalogEditable);
     renderModes(root, source2, mode);
     const section = query4(root, "[data-category-section]");
     section.setAttribute("heading", integration ? source2.label : category.label);
@@ -18284,7 +18340,7 @@ circle.endpoint-timeline__errors {
     select.replaceChildren(...state.settings.themes.map(themeOption));
     select.value = theme.id;
   }
-  function renderActions(root, state, theme, catalogEditable) {
+  function renderActions(root, state, source2, theme, catalogEditable) {
     const active = theme.id === state.settings.activeThemeId;
     const status = query4(root, "[data-theme-status]");
     status.textContent = active ? "Active" : "Draft";
@@ -18293,29 +18349,25 @@ circle.endpoint-timeline__errors {
     query4(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
     query4(root, "[data-add-theme-category]").hidden = !catalogEditable;
     query4(root, "[data-add-element]").hidden = !catalogEditable;
+    const hasDeletionDestination = source2.categories.length > 1 || state.settings.sources.some((item) => item !== source2 && isThemeCatalogEditable(item) && item.categories.length > 0);
+    const deleteCategory = query4(root, "[data-delete-category]");
+    deleteCategory.hidden = !catalogEditable;
+    deleteCategory.disabled = !catalogEditable || !hasDeletionDestination;
+    deleteCategory.title = catalogEditable && !hasDeletionDestination ? "Keep at least one editable category." : "";
   }
   function renderOwnership(root, source2) {
     const integrationId = integrationOwnerId(source2);
+    const provenance = query4(root, "[data-source-provenance]");
+    provenance.hidden = !integrationId;
+    if (!integrationId) {
+      return;
+    }
     const kind = query4(root, "[data-source-owner-kind]");
     const label2 = query4(root, "[data-source-owner-label]");
     const note = query4(root, "[data-source-owner-note]");
-    if (integrationId) {
-      kind.textContent = "Integration";
-      label2.textContent = `${source2.label} · ${integrationId}`;
-      note.textContent = "The integration owns this catalogue; this theme only overrides its values.";
-    } else if (isImportedCssSource(source2)) {
-      kind.textContent = "Imported CSS";
-      label2.textContent = "Legacy variables";
-      note.textContent = "Names are preserved from the former stylesheet; values remain editable.";
-    } else if (isSiteTokenSource(source2)) {
-      kind.textContent = "Site";
-      label2.textContent = "Site tokens";
-      note.textContent = "Create reusable tokens that belong only to this site.";
-    } else {
-      kind.textContent = "CmsCore";
-      label2.textContent = source2.label;
-      note.textContent = "Built-in tokens shared by blocks and integrations.";
-    }
+    kind.textContent = "Integration";
+    label2.textContent = `${source2.label} · ${integrationId}`;
+    note.textContent = "The integration defines this catalogue; this theme can override its values.";
   }
   function renderCategoryFields(root, category, editable) {
     query4(root, "[data-category-fields]").hidden = !editable;
@@ -18662,6 +18714,24 @@ circle.endpoint-timeline__errors {
       this.explorer.reset();
       return true;
     }
+    deleteCategory() {
+      if (!this.settings) {
+        return;
+      }
+      const removed = removeCategory(this.settings, this.selection);
+      if (removed) {
+        this.selection = removed.selection;
+        this.explorer.reset();
+      }
+      return removed;
+    }
+    deleteToken(tokenId) {
+      if (!this.settings || !removeToken(this.settings, this.selection, tokenId)) {
+        return false;
+      }
+      this.explorer.reset();
+      return true;
+    }
     selectCategory(selection) {
       const source2 = this.settings?.sources.find((item) => item.id === selection.sourceId);
       if (!source2?.categories.some((category) => category.id === selection.categoryId)) {
@@ -18737,7 +18807,7 @@ circle.endpoint-timeline__errors {
 
 .category-fields {
     display: grid;
-    grid-template-columns: minmax(160px, .65fr) minmax(240px, 1.35fr);
+    grid-template-columns: minmax(160px, .65fr) minmax(240px, 1.35fr) auto;
     gap: 10px;
     margin-bottom: 14px;
     padding: 12px;
@@ -18753,6 +18823,29 @@ circle.endpoint-timeline__errors {
 .category-fields label {
     display: grid;
     gap: 5px;
+}
+
+.delete-category,
+.delete-token {
+    min-height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--danger-base, #c4473d);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--danger-base, #c4473d);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.delete-category {
+    align-self: end;
+}
+
+.delete-category:disabled {
+    opacity: .45;
+    cursor: not-allowed;
 }
 
 .empty-category {
@@ -19171,6 +19264,14 @@ cms-shell-detail {
     border-top: 1px solid var(--border-default);
 }
 
+.element-row[data-catalog-editable] {
+    grid-template-columns: minmax(190px, .8fr) minmax(330px, 1.2fr) auto;
+}
+
+.delete-token {
+    align-self: center;
+}
+
 .element-row:first-child {
     border-top: 0;
 }
@@ -19274,9 +19375,14 @@ cms-shell-detail {
 }
 
 @media (max-width: 760px) {
-    .element-row {
+    .element-row,
+    .element-row[data-catalog-editable] {
         grid-template-columns: 1fr;
         gap: 9px;
+    }
+
+    .delete-token {
+        justify-self: start;
     }
 }
 `;
@@ -19311,7 +19417,7 @@ cms-shell-detail {
 
     <cms-detail-section slot="main" data-category-section>
         <div class="source-provenance" data-source-provenance>
-            <p9r-tag data-source-owner-kind>Site</p9r-tag>
+            <p9r-tag data-source-owner-kind>Integration</p9r-tag>
             <strong data-source-owner-label></strong>
             <span data-source-owner-note></span>
         </div>
@@ -19335,6 +19441,7 @@ cms-shell-detail {
                 <span>Description</span>
                 <input type="text" data-category-description-input>
             </label>
+            <button type="button" class="delete-category" data-delete-category>Delete category</button>
         </div>
         <div class="groups" data-groups></div>
     </cms-detail-section>
@@ -19406,6 +19513,20 @@ cms-shell-detail {
         }
       } else if (action === "token") {
         if (this.state.createToken()) {
+          this.render();
+        }
+      } else if (action === "delete-category") {
+        if (!window.confirm("Delete this category and all of its tokens?")) {
+          return;
+        }
+        const removed = this.state.deleteCategory();
+        if (removed) {
+          this.render();
+          dispatchThemeCategoryDeleted(removed);
+        }
+      } else if (action === "delete-token") {
+        const tokenId = event.target?.closest("[data-token-id]")?.dataset.tokenId;
+        if (tokenId && window.confirm("Delete this token from every theme?") && this.state.deleteToken(tokenId)) {
           this.render();
         }
       } else if (action === "save" || action === "activate") {
@@ -19566,14 +19687,13 @@ w13c-lateral-menu-item.category-item {
     spacing: "Spacing & layout",
     shape: "Shape & effects"
   };
-  var IMPORTED_SOURCE_IDS = new Set(["custom", "existing-css", "other", "imported-css"]);
   function renderThemeNav(root, sources, selection) {
     const menu = root?.querySelector("w13c-lateral-menu");
     if (!menu) {
       return;
     }
     menu.querySelectorAll("[data-generated]").forEach((item) => item.remove());
-    renderSourceGroup(menu, "site", "Site", sources.filter((source2) => !isIntegrationSource(source2)), selection);
+    renderSources(menu, sources.filter((source2) => !isIntegrationSource(source2)), selection);
     renderSourceGroup(menu, "integrations", "Integrations", sources.filter(isIntegrationSource), selection);
   }
   function renderSourceGroup(menu, groupId, groupLabel, sources, selection) {
@@ -19586,6 +19706,9 @@ w13c-lateral-menu-item.category-item {
     heading4.dataset.themeGroup = groupId;
     heading4.textContent = groupLabel;
     menu.append(heading4);
+    renderSources(menu, sources, selection);
+  }
+  function renderSources(menu, sources, selection) {
     for (const source2 of sources) {
       const sourceItem = document.createElement("w13c-lateral-menu-item");
       sourceItem.dataset.generated = "true";
@@ -19609,15 +19732,6 @@ w13c-lateral-menu-item.category-item {
     }
   }
   function sourceNavigationLabel(source2) {
-    if (isIntegrationSource(source2)) {
-      return source2.label;
-    }
-    if (IMPORTED_SOURCE_IDS.has(source2.id)) {
-      return "Imported CSS";
-    }
-    if (source2.owner?.kind === "site") {
-      return "Site tokens";
-    }
     return CORE_SOURCE_LABELS[source2.id] ?? source2.label;
   }
   function selectionFromUrl2(sources) {
@@ -19643,6 +19757,7 @@ w13c-lateral-menu-item.category-item {
       this.shadowRoot?.addEventListener("click", this.onClick);
       window.addEventListener("popstate", this.onPopState);
       window.addEventListener(THEME_CATEGORY_ADDED_EVENT, this.onCategoryAdded);
+      window.addEventListener(THEME_CATEGORY_DELETED_EVENT, this.onCategoryDeleted);
       window.addEventListener(THEME_CATEGORY_UPDATED_EVENT, this.onCategoryUpdated);
       window.addEventListener(THEME_SETTINGS_CHANGED_EVENT, this.onSettingsChanged);
     }
@@ -19650,6 +19765,7 @@ w13c-lateral-menu-item.category-item {
       this.shadowRoot?.removeEventListener("click", this.onClick);
       window.removeEventListener("popstate", this.onPopState);
       window.removeEventListener(THEME_CATEGORY_ADDED_EVENT, this.onCategoryAdded);
+      window.removeEventListener(THEME_CATEGORY_DELETED_EVENT, this.onCategoryDeleted);
       window.removeEventListener(THEME_CATEGORY_UPDATED_EVENT, this.onCategoryUpdated);
       window.removeEventListener(THEME_SETTINGS_CHANGED_EVENT, this.onSettingsChanged);
     }
@@ -19718,6 +19834,18 @@ w13c-lateral-menu-item.category-item {
         current.description = category.description;
         this.render();
       }
+    };
+    onCategoryDeleted = (event) => {
+      const detail = event.detail;
+      const source2 = this.sources.find((item) => item.id === detail?.sourceId);
+      if (!source2 || !detail) {
+        return;
+      }
+      source2.categories = source2.categories.filter((category) => category.id !== detail.categoryId);
+      if (detail.sourceRemoved) {
+        this.sources = this.sources.filter((item) => item.id !== detail.sourceId);
+      }
+      this.select(detail.selection.sourceId, detail.selection.categoryId);
     };
     onSettingsChanged = () => {
       this.load();

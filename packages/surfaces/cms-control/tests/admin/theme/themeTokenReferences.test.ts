@@ -31,7 +31,28 @@ describe("theme token references", () => {
             "Photo Albums · Integration",
         ]);
         expect(root.querySelector("[data-reference-target='album-accent']")).toBeNull();
+        expect(root.querySelector("[data-reference-target='commerce-accent']")).toBeNull();
         expect(root.querySelector("[data-reference-target='brand-color'] code")?.textContent).toBe("--brand-color");
+    });
+
+    test("lets independent tokens reference compatible integration tokens", () => {
+        const root = pickerRoot();
+        const settings = fixture();
+
+        renderTokenReferencePicker(root, {
+            settings,
+            theme: settings.themes[0]!,
+            mode: "light",
+            tokenId: "brand-color",
+            search: "",
+        });
+
+        expect(root.querySelector("[data-reference-target='album-accent']")).not.toBeNull();
+        expect(root.querySelector("[data-reference-target='commerce-accent']")).not.toBeNull();
+        expect(
+            setThemeTokenReference(settings, settings.themes[0]!, "light", "brand-color", "commerce-accent"),
+        ).toBeTrue();
+        expect(settings.themes[0]!.values.light["brand-color"]).toBe("var(--commerce-accent)");
     });
 
     test("writes exact var references and rejects cycles", () => {
@@ -146,7 +167,6 @@ function source(id: string, label: string, tokens: ReturnType<typeof token>[]): 
         id,
         label,
         supportsModes: true,
-        owner: { kind: "core" },
         categories: [{ id: "general", label: "General", description: `${label} tokens.`, tokens }],
     };
 }

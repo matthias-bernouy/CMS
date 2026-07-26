@@ -23,7 +23,21 @@ export function renderToken(
     row.dataset.tokenId = token.id;
     row.dataset.tokenType = token.type;
     row.append(renderLabel(token, catalogEditable), renderTokenControls(token, settings, theme, mode));
+    if (catalogEditable) {
+        row.dataset.catalogEditable = "true";
+        row.append(deleteTokenButton(token));
+    }
     return row;
+}
+
+function deleteTokenButton(token: ThemeToken): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "delete-token";
+    button.dataset.deleteToken = "true";
+    button.textContent = "Delete";
+    button.ariaLabel = `Delete ${token.label}`;
+    return button;
 }
 
 function renderLabel(token: ThemeToken, catalogEditable: boolean): HTMLElement {

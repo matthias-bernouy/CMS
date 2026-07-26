@@ -3,6 +3,7 @@ import { Component } from "@bernouy/components/base";
 import {
     THEME_CATEGORY_SELECTED_EVENT,
     dispatchThemeCategoryAdded,
+    dispatchThemeCategoryDeleted,
     dispatchThemeSettingsChanged,
     type ThemeSelection,
 } from "./events";
@@ -76,6 +77,21 @@ export class CmsThemeEditor extends Component {
             }
         } else if (action === "token") {
             if (this.state.createToken()) {
+                this.render();
+            }
+        } else if (action === "delete-category") {
+            if (!window.confirm("Delete this category and all of its tokens?")) {
+                return;
+            }
+            const removed = this.state.deleteCategory();
+            if (removed) {
+                this.render();
+                dispatchThemeCategoryDeleted(removed);
+            }
+        } else if (action === "delete-token") {
+            const tokenId = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-token-id]")?.dataset
+                .tokenId;
+            if (tokenId && window.confirm("Delete this token from every theme?") && this.state.deleteToken(tokenId)) {
                 this.render();
             }
         } else if (action === "save" || action === "activate") {

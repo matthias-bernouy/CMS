@@ -14,6 +14,14 @@
     border-top: 1px solid var(--border-default);
 }
 
+.element-row[data-catalog-editable] {
+    grid-template-columns: minmax(190px, .8fr) minmax(330px, 1.2fr) auto;
+}
+
+.delete-token {
+    align-self: center;
+}
+
 .element-row:first-child {
     border-top: 0;
 }
@@ -117,8 +125,13 @@
 }
 
 @media (max-width: 760px) {
-    .element-row {
+    .element-row,
+    .element-row[data-catalog-editable] {
         grid-template-columns: 1fr;
         gap: 9px;
+    }
+
+    .delete-token {
+        justify-self: start;
     }
 }

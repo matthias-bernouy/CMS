@@ -61,7 +61,7 @@
 
 .category-fields {
     display: grid;
-    grid-template-columns: minmax(160px, .65fr) minmax(240px, 1.35fr);
+    grid-template-columns: minmax(160px, .65fr) minmax(240px, 1.35fr) auto;
     gap: 10px;
     margin-bottom: 14px;
     padding: 12px;
@@ -77,6 +77,29 @@
 .category-fields label {
     display: grid;
     gap: 5px;
+}
+
+.delete-category,
+.delete-token {
+    min-height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--danger-base, #c4473d);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--danger-base, #c4473d);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.delete-category {
+    align-self: end;
+}
+
+.delete-category:disabled {
+    opacity: .45;
+    cursor: not-allowed;
 }
 
 .empty-category {

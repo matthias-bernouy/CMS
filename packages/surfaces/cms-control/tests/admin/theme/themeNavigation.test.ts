@@ -3,23 +3,21 @@ import type { ThemeSource } from "@bernouy/cms-content";
 import { renderThemeNav, sourceNavigationLabel } from "cms-control/components/admin/Theme/nav/view";
 
 describe("theme navigation", () => {
-    test("separates site tokens from integration-owned catalogues", () => {
+    test("lists ordinary catalogues directly and groups only integration-owned catalogues", () => {
         const root = navigationRoot();
 
         renderThemeNav(root, sources(), { sourceId: "colors", categoryId: "brand" });
 
         const groups = Array.from(root.querySelectorAll<HTMLElement>("[data-theme-group]"));
-        expect(groups.map((item) => item.dataset.themeGroup)).toEqual(["site", "integrations"]);
-        expect(groups.map((item) => item.textContent)).toEqual(["Site", "Integrations"]);
+        expect(groups.map((item) => item.dataset.themeGroup)).toEqual(["integrations"]);
+        expect(groups.map((item) => item.textContent)).toEqual(["Integrations"]);
         expect(root.querySelector("[data-source='spacing']")?.textContent).toBe("Spacing & layout");
-        expect(root.querySelector("[data-source='site-brand']")?.textContent).toBe("Site tokens");
-        expect(root.querySelector("[data-source='other']")?.textContent).toBe("Imported CSS");
+        expect(root.querySelector("[data-source='site-brand']")?.textContent).toBe("Brand additions");
+        expect(root.querySelector("[data-source='other']")?.textContent).toBe("Other");
         expect(root.querySelector("[data-source='integration-photo-albums']")?.textContent).toBe("Photo Albums");
-        expect(root.textContent).not.toContain("Other");
-        expect(root.textContent).not.toContain("Custom");
     });
 
-    test("keeps site categories available but presents each integration as one entry", () => {
+    test("keeps ordinary categories available but presents each integration as one entry", () => {
         const root = navigationRoot();
 
         renderThemeNav(root, sources(), {
@@ -37,11 +35,12 @@ describe("theme navigation", () => {
         expect(root.querySelector("[data-category][data-source='other']")).toBeNull();
     });
 
-    test("uses ownership for site labels while recognizing legacy imported sources", () => {
-        expect(sourceNavigationLabel(siteSource("design-system", "Design system"))).toBe("Site tokens");
-        expect(sourceNavigationLabel(siteSource("existing-css", "Legacy variables"))).toBe("Imported CSS");
-        expect(sourceNavigationLabel(siteSource("other", "Other"))).toBe("Imported CSS");
-        expect(sourceNavigationLabel(siteSource("custom", "Custom"))).toBe("Imported CSS");
+    test("keeps ordinary labels even when an id matches a legacy special case", () => {
+        expect(sourceNavigationLabel(ordinarySource("design-system", "Design system"))).toBe("Design system");
+        expect(sourceNavigationLabel(ordinarySource("site-tokens", "Legacy site tokens"))).toBe("Legacy site tokens");
+        expect(sourceNavigationLabel(ordinarySource("existing-css", "Legacy variables"))).toBe("Legacy variables");
+        expect(sourceNavigationLabel(ordinarySource("other", "Other"))).toBe("Other");
+        expect(sourceNavigationLabel(ordinarySource("custom", "Custom"))).toBe("Custom");
     });
 });
 
@@ -58,18 +57,16 @@ function sources(): ThemeSource[] {
             id: "colors",
             label: "Colors",
             supportsModes: true,
-            owner: { kind: "core" },
             categories: [category("brand", "Brand"), category("surfaces", "Surfaces")],
         },
         {
             id: "spacing",
             label: "Spacing",
             supportsModes: false,
-            owner: { kind: "core" },
             categories: [category("scale", "Scale"), category("layout", "Layout")],
         },
-        siteSource("site-brand", "Brand additions"),
-        siteSource("other", "Other"),
+        ordinarySource("site-brand", "Brand additions"),
+        ordinarySource("other", "Other"),
         {
             id: "integration-photo-albums",
             label: "Photo Albums",
@@ -87,12 +84,11 @@ function sources(): ThemeSource[] {
     ];
 }
 
-function siteSource(id: string, label: string): ThemeSource {
+function ordinarySource(id: string, label: string): ThemeSource {
     return {
         id,
         label,
         supportsModes: false,
-        owner: { kind: "site" },
         categories: [category("general", "General")],
     };
 }

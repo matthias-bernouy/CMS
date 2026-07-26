@@ -1,7 +1,7 @@
 import type { ThemeSettings, ThemeTokenType } from "@bernouy/cms-content";
 
 import { dispatchThemeCategoryUpdated, type ThemeSelection } from "../../events";
-import { isSiteTokenSource } from "../../ownership";
+import { isThemeCatalogEditable } from "../../ownership";
 import { currentCategory, currentSource, currentTheme, resetIntegrationTokenValue } from "../model";
 
 export type ThemeInputContext = {
@@ -24,7 +24,7 @@ export function handleThemeInput(event: Event, context: ThemeInputContext): void
     }
     const category = currentCategory(context.settings, context.selection);
     const source = currentSource(context.settings, context.selection);
-    const catalogEditable = isSiteTokenSource(source);
+    const catalogEditable = isThemeCatalogEditable(source);
     if (input.matches("[data-category-label-input]") && category && source && catalogEditable) {
         category.label = input.value;
         query<HTMLElement>(context.root, "[data-category-title]").textContent = category.label;
@@ -87,13 +87,17 @@ export function resetThemeToken(
     return tokenId ? resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
 }
 
-export function clickAction(event: Event): "theme" | "category" | "token" | "save" | "activate" | undefined {
+export function clickAction(
+    event: Event,
+): "theme" | "category" | "token" | "delete-category" | "delete-token" | "save" | "activate" | undefined {
     const target = event.target as HTMLElement | null;
-    const actions = ["theme", "category", "token", "save", "activate"] as const;
+    const actions = ["theme", "category", "token", "delete-category", "delete-token", "save", "activate"] as const;
     const selectors = [
         "[data-add-theme]",
         "[data-add-theme-category]",
         "[data-add-element]",
+        "[data-delete-category]",
+        "[data-delete-token]",
         "[data-save-theme]",
         "[data-activate-theme]",
     ];

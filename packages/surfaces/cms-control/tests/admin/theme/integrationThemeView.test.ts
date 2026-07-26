@@ -22,8 +22,10 @@ describe("integration theme catalogue", () => {
         expect(root.querySelector("[data-source-owner-kind]")?.textContent).toBe("Integration");
         expect(root.querySelector<HTMLElement>("[data-add-theme-category]")!.hidden).toBeTrue();
         expect(root.querySelector<HTMLElement>("[data-add-element]")!.hidden).toBeTrue();
+        expect(root.querySelector<HTMLButtonElement>("[data-delete-category]")!.hidden).toBeTrue();
         expect(root.querySelector<HTMLElement>("[data-category-fields]")!.hidden).toBeTrue();
         expect(root.querySelector("[data-token-label]")).toBeNull();
+        expect(root.querySelector("[data-delete-token]")).toBeNull();
         expect(root.querySelector(".token-label-text")?.textContent).toBe("Gallery font");
 
         const font = root.querySelector<HTMLInputElement>("[data-token-type='font-family'] [data-value-control]")!;
@@ -57,6 +59,55 @@ describe("integration theme catalogue", () => {
             )!.value,
         ).toBe("#336699");
     });
+
+    test("keeps ordinary catalogues structurally editable without ownership metadata", () => {
+        const settings = integrationTheme();
+        settings.sources.unshift({
+            id: "colors",
+            label: "Colors",
+            supportsModes: true,
+            categories: [
+                {
+                    id: "brand",
+                    label: "Brand",
+                    description: "Brand tokens.",
+                    tokens: [
+                        {
+                            id: "brand-color",
+                            variable: "brand-color",
+                            label: "Brand color",
+                            description: "Primary brand color",
+                            type: "color",
+                        },
+                    ],
+                },
+            ],
+        });
+        const root = editorRoot();
+
+        renderThemeEditor(root, {
+            settings,
+            selection: { sourceId: "colors", categoryId: "brand" },
+            selectedThemeId: "default",
+            mode: "light",
+            siteName: "Portfolio",
+            canPersist: true,
+            tokenFilter: "all",
+            tokenSearch: "",
+        });
+
+        expect(root.querySelector<HTMLElement>("[data-source-provenance]")!.hidden).toBeTrue();
+        expect(root.querySelector<HTMLElement>("[data-add-theme-category]")!.hidden).toBeFalse();
+        expect(root.querySelector<HTMLElement>("[data-add-element]")!.hidden).toBeFalse();
+        expect(root.querySelector<HTMLButtonElement>("[data-delete-category]")!.hidden).toBeFalse();
+        expect(root.querySelector<HTMLButtonElement>("[data-delete-category]")!.disabled).toBeTrue();
+        expect(root.querySelector<HTMLButtonElement>("[data-delete-category]")!.title).toBe(
+            "Keep at least one editable category.",
+        );
+        expect(root.querySelector<HTMLElement>("[data-category-fields]")!.hidden).toBeFalse();
+        expect(root.querySelector<HTMLInputElement>("[data-token-label]")?.value).toBe("Brand color");
+        expect(root.querySelector<HTMLButtonElement>("[data-delete-token]")?.ariaLabel).toBe("Delete Brand color");
+    });
 });
 
 function editorRoot(): ShadowRoot {
@@ -72,7 +123,7 @@ function editorRoot(): ShadowRoot {
         <div data-mode-switch><button data-mode="light"></button><button data-mode="dark"></button></div>
         <section data-category-section></section>
         <input data-token-search><div data-token-filters></div><div data-groups></div>
-        <div data-category-fields><input data-category-label-input><input data-category-description-input></div>
+        <div data-category-fields><input data-category-label-input><input data-category-description-input><button data-delete-category></button></div>
     `;
     return root;
 }

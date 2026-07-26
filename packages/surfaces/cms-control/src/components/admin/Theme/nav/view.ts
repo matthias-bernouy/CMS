@@ -11,18 +11,14 @@ const CORE_SOURCE_LABELS: Readonly<Record<string, string>> = {
     shape: "Shape & effects",
 };
 
-const IMPORTED_SOURCE_IDS = new Set(["custom", "existing-css", "other", "imported-css"]);
-
 export function renderThemeNav(root: ShadowRoot | null, sources: ThemeSource[], selection: ThemeSelection): void {
     const menu = root?.querySelector("w13c-lateral-menu");
     if (!menu) {
         return;
     }
     menu.querySelectorAll("[data-generated]").forEach((item) => item.remove());
-    renderSourceGroup(
+    renderSources(
         menu,
-        "site",
-        "Site",
         sources.filter((source) => !isIntegrationSource(source)),
         selection,
     );
@@ -46,6 +42,10 @@ function renderSourceGroup(
     heading.textContent = groupLabel;
     menu.append(heading);
 
+    renderSources(menu, sources, selection);
+}
+
+function renderSources(menu: Element, sources: ThemeSource[], selection: ThemeSelection): void {
     for (const source of sources) {
         const sourceItem = document.createElement("w13c-lateral-menu-item");
         sourceItem.dataset.generated = "true";
@@ -71,15 +71,6 @@ function renderSourceGroup(
 }
 
 export function sourceNavigationLabel(source: ThemeSource): string {
-    if (isIntegrationSource(source)) {
-        return source.label;
-    }
-    if (IMPORTED_SOURCE_IDS.has(source.id)) {
-        return "Imported CSS";
-    }
-    if (source.owner?.kind === "site") {
-        return "Site tokens";
-    }
     return CORE_SOURCE_LABELS[source.id] ?? source.label;
 }
 

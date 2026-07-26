@@ -1,7 +1,7 @@
 import type { ThemeDefinition, ThemeSettings, ThemeSource } from "@bernouy/cms-content";
 
 import type { ThemeSelection } from "../events";
-import { integrationOwnerId, isImportedCssSource, isIntegrationSource, isSiteTokenSource } from "../ownership";
+import { integrationOwnerId, isIntegrationSource, isThemeCatalogEditable } from "../ownership";
 import { currentCategory, currentSource, currentTheme } from "./model";
 import { renderTokenExplorer, type ThemeTokenFilter } from "./tokens/explorer";
 
@@ -24,12 +24,12 @@ export function renderThemeEditor(root: ShadowRoot, state: ThemeEditorViewState)
         return state.mode;
     }
     const integration = isIntegrationSource(source);
-    const catalogEditable = isSiteTokenSource(source);
+    const catalogEditable = isThemeCatalogEditable(source);
     const mode = source.supportsModes ? state.mode : "light";
     renderHeader(root, state, source, category.label, theme, integration);
     renderOwnership(root, source);
     renderCategoryFields(root, category, catalogEditable);
-    renderActions(root, state, theme, catalogEditable);
+    renderActions(root, state, source, theme, catalogEditable);
     renderModes(root, source, mode);
 
     const section = query<HTMLElement>(root, "[data-category-section]");
@@ -75,6 +75,7 @@ function renderHeader(
 function renderActions(
     root: ShadowRoot,
     state: ThemeEditorViewState,
+    source: ThemeSource,
     theme: ThemeDefinition,
     catalogEditable: boolean,
 ): void {
@@ -86,30 +87,30 @@ function renderActions(
     query<HTMLElement>(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
     query<HTMLElement>(root, "[data-add-theme-category]").hidden = !catalogEditable;
     query<HTMLElement>(root, "[data-add-element]").hidden = !catalogEditable;
+    const hasDeletionDestination =
+        source.categories.length > 1 ||
+        state.settings.sources.some(
+            (item) => item !== source && isThemeCatalogEditable(item) && item.categories.length > 0,
+        );
+    const deleteCategory = query<HTMLButtonElement>(root, "[data-delete-category]");
+    deleteCategory.hidden = !catalogEditable;
+    deleteCategory.disabled = !catalogEditable || !hasDeletionDestination;
+    deleteCategory.title = catalogEditable && !hasDeletionDestination ? "Keep at least one editable category." : "";
 }
 
 function renderOwnership(root: ShadowRoot, source: ThemeSource): void {
     const integrationId = integrationOwnerId(source);
+    const provenance = query<HTMLElement>(root, "[data-source-provenance]");
+    provenance.hidden = !integrationId;
+    if (!integrationId) {
+        return;
+    }
     const kind = query<HTMLElement>(root, "[data-source-owner-kind]");
     const label = query<HTMLElement>(root, "[data-source-owner-label]");
     const note = query<HTMLElement>(root, "[data-source-owner-note]");
-    if (integrationId) {
-        kind.textContent = "Integration";
-        label.textContent = `${source.label} · ${integrationId}`;
-        note.textContent = "The integration owns this catalogue; this theme only overrides its values.";
-    } else if (isImportedCssSource(source)) {
-        kind.textContent = "Imported CSS";
-        label.textContent = "Legacy variables";
-        note.textContent = "Names are preserved from the former stylesheet; values remain editable.";
-    } else if (isSiteTokenSource(source)) {
-        kind.textContent = "Site";
-        label.textContent = "Site tokens";
-        note.textContent = "Create reusable tokens that belong only to this site.";
-    } else {
-        kind.textContent = "CmsCore";
-        label.textContent = source.label;
-        note.textContent = "Built-in tokens shared by blocks and integrations.";
-    }
+    kind.textContent = "Integration";
+    label.textContent = `${source.label} · ${integrationId}`;
+    note.textContent = "The integration defines this catalogue; this theme can override its values.";
 }
 
 function renderCategoryFields(root: ShadowRoot, category: ThemeSource["categories"][number], editable: boolean): void {

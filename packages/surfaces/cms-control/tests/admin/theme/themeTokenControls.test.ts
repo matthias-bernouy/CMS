@@ -56,6 +56,9 @@ describe("theme token controls", () => {
             expect(input.placeholder).toBe(expected.placeholder);
             expect(input.inputMode).toBe(expected.inputMode);
             expect(row.querySelector<HTMLSelectElement>("[data-token-type-control]")?.value).toBe(token.type);
+            expect(row.querySelector<HTMLButtonElement>("[data-delete-token]")?.ariaLabel).toBe(
+                `Delete ${token.label}`,
+            );
         }
     });
 });
@@ -68,7 +71,6 @@ function fixture(): ThemeSettings {
                 id: "site-tokens",
                 label: "Site tokens",
                 supportsModes: true,
-                owner: { kind: "site" },
                 categories: [
                     {
                         id: "general",
