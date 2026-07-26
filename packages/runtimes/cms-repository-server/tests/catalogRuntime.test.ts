@@ -11,6 +11,7 @@ describe("RepositoryCatalogRuntime", () => {
 
         expect(catalog.status()).toMatchObject({ status: "unready", ready: false, revision: 0 });
         expect(() => catalog.current()).toThrow("not ready");
+        expect(() => catalog.snapshotReference()).toThrow("not ready");
 
         const failed = await catalog.refresh(async () => {
             throw new Error("filesystem unavailable");
@@ -21,6 +22,19 @@ describe("RepositoryCatalogRuntime", () => {
         const applied = await catalog.refresh(async () => snapshot());
         expect(applied.applied).toBe(true);
         expect(applied.status).toMatchObject({ status: "healthy", ready: true, revision: 1 });
+    });
+
+    test("exposes the one snapshot reference shared by readers and mutations", async () => {
+        const catalog = new RepositoryCatalogRuntime(fixedClock());
+        const initial = snapshot();
+        await catalog.refresh(async () => initial);
+
+        const reference = catalog.snapshotReference();
+        const replacement = snapshot();
+        reference.swap(replacement);
+
+        expect(catalog.snapshotReference()).toBe(reference);
+        expect(catalog.current()).toBe(replacement);
     });
 
     test("retains the last valid snapshot and degrades after a refresh failure", async () => {

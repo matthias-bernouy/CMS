@@ -39,6 +39,13 @@ export class RepositoryCatalogRuntime implements IntegrationRegistryCatalogSnaps
         return this.reference.current();
     }
 
+    snapshotReference(): IntegrationRegistryCatalogSnapshotReference {
+        if (!this.reference) {
+            throw new Error("Integration repository catalog snapshot is not ready");
+        }
+        return this.reference;
+    }
+
     refresh(loader: () => Promise<IntegrationRegistryCatalogSnapshot>): Promise<RepositoryCatalogRefreshResult> {
         const refresh = this.refreshQueue.then(() => this.performRefresh(loader));
         this.refreshQueue = refresh.then(
