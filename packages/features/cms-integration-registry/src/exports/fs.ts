@@ -66,6 +66,16 @@ export {
     type FsIntegrationCompatibilityReportStoreConfig,
 } from "../default-implementation/fs/registry/history/store";
 export {
+    FsIntegrationCompatibilityV2ReportStore,
+    FsIntegrationMigrationReportStore,
+    FsIntegrationVerificationReportStore,
+    FsReleaseAdmissionDecisionStore,
+    RELEASE_REPORT_HISTORY_DIRECTORY,
+    recoverFsReleaseReportHistories,
+    type FsReleaseAdmissionDecisionStoreConfig,
+    type FsReleaseReportHistoryStoreConfig,
+} from "../default-implementation/fs/registry/history/evidence";
+export {
     FsReviewedSchemaBaselineStore,
     type FsReviewedSchemaBaselineStoreConfig,
 } from "../default-implementation/fs/registry/baselines/store";

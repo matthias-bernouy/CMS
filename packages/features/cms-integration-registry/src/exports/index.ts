@@ -82,6 +82,10 @@ export type {
 } from "../interfaces/promotion";
 export type {
     AppendReviewedSchemaBaselineRequest,
+    AppendReleaseReportRequest,
+    FsReleaseReportRecoveryDiagnostic,
+    FsReleaseReportRecoveryResult,
+    IntegrationCompatibilityV2ReportStore,
     IdentifiedReviewedSchemaBaselineImportRequest,
     IntegrationCompatibilityReportCollection,
     IntegrationCompatibilityReportPage,
@@ -94,6 +98,12 @@ export type {
     ReviewedSchemaBaselineImportResult,
     ReviewedSchemaBaselineLogicalKey,
     ReviewedSchemaBaselineStore,
+    IntegrationMigrationReportLogicalKey,
+    IntegrationMigrationReportStore,
+    IntegrationVerificationReportStore,
+    ReleaseAdmissionDecisionStore,
+    ReleaseReportCurrentReference,
+    ReleaseReportHistory,
 } from "../interfaces/reportStore";
 export { REVIEWED_SCHEMA_BASELINE_IMPORT_SCHEMA } from "../interfaces/reportStore";
 export { createIntegrationRegistryCatalogSnapshot } from "../core/catalog/snapshot";
@@ -121,6 +131,10 @@ export {
     ReviewedSchemaBaselineConflictError,
     ReviewedSchemaBaselineIntegrityError,
     ReviewedSchemaBaselineValidationError,
+    ReleaseAdmissionDecisionStaleError,
+    ReleaseReportConflictError,
+    ReleaseReportIntegrityError,
+    ReleaseReportValidationError,
 } from "../core/compatibility/reportStoreErrors";
 export {
     ReviewedSchemaBaselineImportError,
