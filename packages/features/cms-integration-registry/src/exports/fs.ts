@@ -64,3 +64,20 @@ export {
     INTEGRATION_COMPATIBILITY_REVISION_DOCUMENT_SCHEMA,
     readCompatibilityRevision,
 } from "../default-implementation/fs/registry/history/revisionDocument";
+export {
+    FsIntegrationRegistryStablePromoter,
+    type FsIntegrationRegistryStablePromoterConfig,
+} from "../default-implementation/fs/registry/promotion/promoter";
+export {
+    readStablePromotionRecord,
+    MAX_INTEGRATION_REGISTRY_STABLE_PROMOTION_RECORD_BYTES,
+} from "../default-implementation/fs/registry/promotion/document";
+export {
+    FS_INTEGRATION_REGISTRY_STABLE_PROMOTION_PHASES,
+    type FsIntegrationRegistryStablePromotionPhase,
+} from "../default-implementation/fs/registry/promotion/journal";
+export {
+    FsIntegrationRegistryStablePromotionRecoveryRequiredError,
+    FsIntegrationRegistryStablePromotionSimulatedCrashError,
+    type FsIntegrationRegistryStablePromotionBoundary,
+} from "../default-implementation/fs/registry/promotion/types";

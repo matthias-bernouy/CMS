@@ -1,0 +1,134 @@
+import { afterEach, describe, expect, test } from "bun:test";
+import { readdirSync } from "node:fs";
+import {
+    IntegrationRegistryStablePromotionConfirmationError,
+    IntegrationRegistryStablePromotionConflictError,
+    IntegrationRegistryStablePromotionIneligibleError,
+    IntegrationRegistryStablePromotionStaleReportError,
+} from "@bernouy/cms-integration-registry";
+import { FsIntegrationRegistryStablePromoter } from "@bernouy/cms-integration-registry/fs";
+import { cleanupRegistryFixtures, publicationPackage, registryFixture } from "../publication/fixtures";
+import {
+    adverseRevision,
+    compatibleRevision,
+    persistedRecord,
+    promotionJournals,
+    promotionRecords,
+    reportStore,
+    stablePromoter,
+} from "./promotionFixtures";
+
+afterEach(cleanupRegistryFixtures);
+
+describe("filesystem stable promotion", () => {
+    test("moves stable with an immutable current-report record and never auto-demotes", async () => {
+        const fixture = registryFixture();
+        await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const published = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.1.0") });
+        const reports = reportStore(fixture);
+        const promoter = stablePromoter(fixture, reports);
+
+        const result = await promoter.promoteStable({
+            kind: "demo",
+            version: "1.1.0",
+            currentReportRevisionId: published.report.id,
+            actor: "admin:user-1",
+            confirmation: { version: "1.1.0", reportRevisionId: published.report.id },
+            reason: "Validated for the production channel",
+        });
+
+        expect(result.snapshot.getIndex("demo")).toMatchObject({ stable: "1.1.0", latest: "1.1.0" });
+        expect(result.record).toEqual({
+            schema: "cms.integration.registry.stable-promotion.v1",
+            id: "promotion-1",
+            operationId: "promotion-operation-1",
+            kind: "demo",
+            version: "1.1.0",
+            packageDigest: published.digest,
+            reportRevisionId: published.report.id,
+            previousStable: "1.0.0",
+            actor: "admin:user-1",
+            confirmation: { version: "1.1.0", reportRevisionId: published.report.id },
+            createdAt: "2026-07-26T12:00:00.000Z",
+            reason: "Validated for the production channel",
+        });
+        expect(await persistedRecord(fixture.root)).toEqual(result.record);
+        expect(readdirSync(promotionJournals(fixture.root))).toEqual([]);
+
+        const adverse = adverseRevision(fixture, published.report.id);
+        await reports.appendRevision(adverse);
+
+        expect(fixture.snapshots.current().getIndex("demo")?.stable).toBe("1.1.0");
+        expect((await persistedRecord(fixture.root))?.reportRevisionId).toBe(published.report.id);
+        expect((await reports.get("demo", "1.1.0"))?.current.id).toBe(adverse.id);
+    });
+
+    test("returns structured errors for missing confirmation, stale reports, and adverse current reports", async () => {
+        const fixture = registryFixture();
+        await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const published = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.1.0") });
+        const reports = reportStore(fixture);
+        const promoter = stablePromoter(fixture, reports);
+        const request = {
+            kind: "demo",
+            version: "1.1.0",
+            currentReportRevisionId: published.report.id,
+            actor: "admin:user-1",
+            confirmation: { version: "1.1.0", reportRevisionId: published.report.id },
+        };
+
+        await expect(
+            promoter.promoteStable({
+                ...request,
+                confirmation: { version: "1.0.0", reportRevisionId: published.report.id },
+            }),
+        ).rejects.toBeInstanceOf(IntegrationRegistryStablePromotionConfirmationError);
+        const reassessed = compatibleRevision(fixture, published.report.id);
+        await reports.appendRevision(reassessed);
+        await expect(promoter.promoteStable(request)).rejects.toBeInstanceOf(
+            IntegrationRegistryStablePromotionStaleReportError,
+        );
+        const adverse = adverseRevision(fixture, reassessed.id);
+        await reports.appendRevision(adverse);
+        await expect(
+            promoter.promoteStable({
+                ...request,
+                currentReportRevisionId: adverse.id,
+                confirmation: { version: "1.1.0", reportRevisionId: adverse.id },
+            }),
+        ).rejects.toBeInstanceOf(IntegrationRegistryStablePromotionIneligibleError);
+        expect(fixture.snapshots.current().getIndex("demo")?.stable).toBe("1.0.0");
+    });
+
+    test("serializes duplicate promotions so exactly one audit record wins", async () => {
+        const fixture = registryFixture();
+        await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const published = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.1.0") });
+        const reports = reportStore(fixture);
+        let sequence = 0;
+        const promoter = new FsIntegrationRegistryStablePromoter({
+            root: fixture.root,
+            snapshots: fixture.snapshots,
+            reports,
+            mutations: fixture.mutations,
+            createOperationId: () => `operation-${++sequence}`,
+            createPromotionId: () => `promotion-${sequence}`,
+            now: () => "2026-07-26T12:00:00.000Z",
+        });
+        const request = {
+            kind: "demo",
+            version: "1.1.0",
+            currentReportRevisionId: published.report.id,
+            actor: "admin:user-1",
+            confirmation: { version: "1.1.0", reportRevisionId: published.report.id },
+        };
+
+        const results = await Promise.allSettled([promoter.promoteStable(request), promoter.promoteStable(request)]);
+
+        expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+        const rejected = results.find((result) => result.status === "rejected") as PromiseRejectedResult;
+        expect(rejected.reason).toBeInstanceOf(IntegrationRegistryStablePromotionConflictError);
+        expect(readdirSync(promotionRecords(fixture.root))).toHaveLength(1);
+        expect(fixture.snapshots.current().getIndex("demo")?.stable).toBe("1.1.0");
+    });
+});

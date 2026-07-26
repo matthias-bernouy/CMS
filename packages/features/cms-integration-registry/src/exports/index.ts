@@ -44,6 +44,12 @@ export type {
 } from "../interfaces/recovery";
 export type { IntegrationRegistryMutationCoordinator } from "../interfaces/mutations";
 export type {
+    IntegrationRegistryStablePromoter,
+    IntegrationRegistryStablePromotionRecord,
+    IntegrationRegistryStablePromotionRequest,
+    IntegrationRegistryStablePromotionResult,
+} from "../interfaces/promotion";
+export type {
     IntegrationCompatibilityReportCollection,
     IntegrationCompatibilityReportPage,
     IntegrationCompatibilityReportPageRequest,
@@ -58,6 +64,14 @@ export {
     IntegrationCompatibilityEvaluator,
 } from "../core/compatibility/evaluation";
 export { InMemoryIntegrationCompatibilityReportHistory } from "../core/compatibility/history";
+export {
+    IntegrationRegistryStablePromotionConfirmationError,
+    IntegrationRegistryStablePromotionConflictError,
+    IntegrationRegistryStablePromotionIneligibleError,
+    IntegrationRegistryStablePromotionNotFoundError,
+    IntegrationRegistryStablePromotionStaleReportError,
+    IntegrationRegistryStablePromotionValidationError,
+} from "../core/promotion/errors";
 export {
     IntegrationCompatibilityHistoryCursorError,
     IntegrationCompatibilityHistoryNotFoundError,
