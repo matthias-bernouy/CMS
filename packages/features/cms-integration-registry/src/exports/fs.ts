@@ -93,3 +93,15 @@ export {
     FsIntegrationRegistryStablePromotionSimulatedCrashError,
     type FsIntegrationRegistryStablePromotionBoundary,
 } from "../default-implementation/fs/registry/promotion/types";
+export {
+    FsIntegrationRegistryCandidateStore,
+    FsIntegrationRegistryCandidateStoreError,
+    parseIntegrationRegistryCandidateRecord,
+    readIntegrationRegistryCandidateRecord,
+    recoverFsIntegrationRegistryCandidates,
+    type FsIntegrationRegistryCandidateObjects,
+    type FsIntegrationRegistryCandidateRecoveryDiagnostic,
+    type FsIntegrationRegistryCandidateRecoveryResult,
+    type FsIntegrationRegistryCandidateStoreConfig,
+    type RecoverFsIntegrationRegistryCandidatesConfig,
+} from "../default-implementation/fs/registry/candidates";
