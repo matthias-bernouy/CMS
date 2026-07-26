@@ -15,6 +15,11 @@ import { RepositoryManagementCms } from "@bernouy/cms-repository-management";
 import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
 import type { Runner } from "@bernouy/http-runner";
 import type { RepositoryCatalogRuntime } from "./core/catalogRuntime";
+import { readRepositoryFilesystemCapacity } from "./core/filesystemCapacity";
+import { ObservedIntegrationRegistryStablePromoter } from "./core/observability/promoter";
+import { ObservedIntegrationRegistryPublisher } from "./core/observability/publisher";
+import { ObservedIntegrationCompatibilityReevaluator } from "./core/observability/reevaluator";
+import { RepositoryOperationalTelemetry } from "./core/observability/telemetry";
 import type { RepositoryManagementSurfaceMount } from "./core/repositoryServer";
 
 const MAX_PUBLICATION_UPLOAD_BYTES = 32 * 1_024 * 1_024;
@@ -29,7 +34,9 @@ export type ProductionRepositoryManagement = Readonly<{
 export async function createProductionRepositoryManagement(input: {
     root: string;
     catalog: RepositoryCatalogRuntime;
+    telemetry?: RepositoryOperationalTelemetry;
 }): Promise<ProductionRepositoryManagement> {
+    const telemetry = input.telemetry ?? new RepositoryOperationalTelemetry();
     const snapshots = input.catalog.snapshotReference();
     const mutations = new InMemoryIntegrationRegistryMutationCoordinator();
     const recovery = await new FsIntegrationRegistryRecoverer({ root: input.root, snapshots }).recover();
@@ -39,23 +46,32 @@ export async function createProductionRepositoryManagement(input: {
         now: () => new Date().toISOString(),
         createReportId: () => randomUUID(),
     });
-    const publisher = new FsIntegrationRegistryPublisher({
-        root: input.root,
-        snapshots,
-        compatibility,
-        mutations,
-    });
-    const promoter = new FsIntegrationRegistryStablePromoter({
-        root: input.root,
-        snapshots,
-        reports,
-        mutations,
-    });
-    const reevaluator = new FsIntegrationCompatibilityReevaluator({
-        snapshots,
-        reports,
-        evaluator: compatibility,
-    });
+    const publisher = new ObservedIntegrationRegistryPublisher(
+        new FsIntegrationRegistryPublisher({
+            root: input.root,
+            snapshots,
+            compatibility,
+            mutations,
+        }),
+        telemetry,
+    );
+    const promoter = new ObservedIntegrationRegistryStablePromoter(
+        new FsIntegrationRegistryStablePromoter({
+            root: input.root,
+            snapshots,
+            reports,
+            mutations,
+        }),
+        telemetry,
+    );
+    const reevaluator = new ObservedIntegrationCompatibilityReevaluator(
+        new FsIntegrationCompatibilityReevaluator({
+            snapshots,
+            reports,
+            evaluator: compatibility,
+        }),
+        telemetry,
+    );
 
     return Object.freeze({
         recovery,
@@ -69,6 +85,10 @@ export async function createProductionRepositoryManagement(input: {
                     catalog: snapshots,
                     reports,
                     recoveryDiagnostics: () => recovery.diagnostics,
+                    operational: {
+                        snapshot: () => telemetry.snapshot(),
+                        filesystemCapacity: () => readRepositoryFilesystemCapacity(input.root),
+                    },
                 },
                 stablePromotions: { promoter, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
                 compatibilityReevaluations: { reevaluator, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
