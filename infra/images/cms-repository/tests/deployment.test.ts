@@ -75,8 +75,16 @@ describe("repository Compose isolation", () => {
         expect(overrideSource).toContain("cms_repository_management_token");
         expect(overrideSource).toContain("CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE");
         expect(overrideSource).toContain("P9R_INTEGRATION_REPOSITORY_URL: http://cms-repository:3001/.cms/repository");
+        expect(overrideSource).toContain(
+            "P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL: http://cms-repository:3000/.cms/repository-management",
+        );
+        expect(overrideSource).toContain(
+            "P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE: /run/secrets/cms-repository-management-token",
+        );
+        expect(overrideSource).toContain("P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER");
         expect(overrideSource).toMatch(/cms_repository:\n\s+external: true/);
         expect(overrideSource).not.toContain("3000:");
+        expect(readmeSource).toMatch(/stable\s+opaque user `sub`/);
     });
 });
 
@@ -134,4 +142,67 @@ composeTest("Compose renders with one isolated service and no published ports", 
         }),
     );
     expect(config.networks.cms_repository).toMatchObject({ internal: true });
+});
+
+composeTest("management CMS override renders one private client and no repository ingress", () => {
+    const cmsCompose = resolve(imageRoot, "../cms/compose.yml");
+    const rendered = Bun.spawnSync({
+        cmd: [
+            "docker",
+            "compose",
+            "--env-file",
+            "/dev/null",
+            "-f",
+            cmsCompose,
+            "-f",
+            resolve(imageRoot, "management-cms.override.yml"),
+            "config",
+            "--format",
+            "json",
+        ],
+        cwd: imageRoot,
+        env: {
+            PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin",
+            DOMAIN: "integrations.example.test",
+            CMS_IMAGE: "registry.example.test/bernouy/cms:2026.07.26-1",
+            MONGO_URL: "mongodb://cms:test@mongo:27017/integrations?authSource=admin",
+            CMS_SESSION_SECRET: "a".repeat(64),
+            CMS_KEK_HEX: "b".repeat(64),
+            CMS_ADMIN_PASSWORD: "acceptance-password",
+            ANALYTICS_SALT_SECRET: "c".repeat(64),
+            P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER: "opaque-admin-subject",
+            CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-token",
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+    });
+    if (rendered.exitCode !== 0) {
+        throw new Error(rendered.stderr.toString());
+    }
+    const config = JSON.parse(rendered.stdout.toString()) as {
+        services: Record<
+            string,
+            {
+                environment?: Record<string, string>;
+                networks?: Record<string, unknown>;
+                ports?: unknown;
+                secrets?: Array<{ source?: string; target?: string }>;
+            }
+        >;
+    };
+    const cms = config.services.cms;
+    expect(cms?.ports).toBeUndefined();
+    expect(cms?.networks).toHaveProperty("cms_repository");
+    expect(cms?.environment).toMatchObject({
+        P9R_INTEGRATION_REPOSITORY_URL: "http://cms-repository:3001/.cms/repository",
+        P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL: "http://cms-repository:3000/.cms/repository-management",
+        P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE: "/run/secrets/cms-repository-management-token",
+        P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER: "opaque-admin-subject",
+    });
+    expect(cms?.secrets).toContainEqual(
+        expect.objectContaining({
+            source: "cms_repository_management_token",
+            target: "cms-repository-management-token",
+        }),
+    );
 });

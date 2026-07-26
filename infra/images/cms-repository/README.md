@@ -60,11 +60,34 @@ Run the designated CMS instance with its normal Compose file plus
 `management-cms.override.yml`. The override joins the internal network and
 mounts the same Docker secret server-side. It also points the CMS runtime at
 `http://cms-repository:3001/.cms/repository`, so definition and package
-consumption use the global catalog immediately. The Delivery read gateway and
-Control management client are the next composition seams to activate: Delivery
-will provide the canonical anonymous origin, while Control will send approved
-operations to port 3000. The credential must never enter Delivery responses or
-browser code.
+consumption use the global catalog immediately. Delivery provides the canonical
+anonymous origin, while authenticated Control operations use the private
+`http://cms-repository:3000/.cms/repository-management` listener. The
+credential never enters Delivery responses or browser code.
+
+Before applying the override, identify the one administrator by its stable
+opaque user `sub` (visible in the Control Users response and detail URL), not by
+email, and add these values to that CMS instance's private `.env`:
+
+```dotenv
+P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER=<opaque-user-sub>
+CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE=/opt/cms-repository/secrets/repository-management-token
+CMS_REPOSITORY_NETWORK_NAME=cms_repository
+```
+
+Then render and start the designated CMS with both files. No ordinary CMS uses
+this override or receives the management secret:
+
+```bash
+docker compose \
+  -f /path/to/cms/compose.yml \
+  -f /path/to/cms-repository/management-cms.override.yml \
+  config --quiet
+docker compose \
+  -f /path/to/cms/compose.yml \
+  -f /path/to/cms-repository/management-cms.override.yml \
+  up -d --wait
+```
 
 The standard deployment applies end-user package-download limiting at the CMS
 Delivery gateway. Server-to-server repository calls do not carry

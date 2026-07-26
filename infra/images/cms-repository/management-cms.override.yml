@@ -4,6 +4,10 @@ services:
     cms:
         environment:
             P9R_INTEGRATION_REPOSITORY_URL: http://cms-repository:3001/.cms/repository
+            P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL: http://cms-repository:3000/.cms/repository-management
+            P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE: /run/secrets/cms-repository-management-token
+            P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER: ${P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER:?P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER must identify the one repository administrator}
+            P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS: "${P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS:-60000}"
         networks:
             cms_repository: {}
         secrets:
