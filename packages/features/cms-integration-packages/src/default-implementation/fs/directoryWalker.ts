@@ -3,13 +3,14 @@ import type { Dirent, Stats } from "node:fs";
 import { lstat, opendir, realpath } from "node:fs/promises";
 import { isAbsolute, join, relative, sep } from "node:path";
 import type { IntegrationPackageFileV1, IntegrationPackageLimits } from "../../interfaces/envelope";
+import type { CanonicalFile, CanonicalFileSet, CanonicalFileSetLimits } from "../../interfaces/fileSet";
 import { readBoundedRegularFile } from "./boundedFile";
 
 type WalkState = {
     decodedBytes: number;
     directories: number;
     files: number;
-    output: Record<string, IntegrationPackageFileV1>;
+    output: CanonicalFileSet;
 };
 
 const utf8 = new TextEncoder();
@@ -19,6 +20,13 @@ export async function readIntegrationPackageFiles(
     requestedRoot: string,
     limits: Readonly<IntegrationPackageLimits>,
 ): Promise<Record<string, IntegrationPackageFileV1>> {
+    return readCanonicalFileSetDirectory(requestedRoot, limits);
+}
+
+export async function readCanonicalFileSetDirectory(
+    requestedRoot: string,
+    limits: Readonly<CanonicalFileSetLimits>,
+): Promise<CanonicalFileSet> {
     const rootStats = await lstat(requestedRoot);
     if (rootStats.isSymbolicLink()) {
         throw new Error("Integration package root must not be a symlink");
@@ -33,7 +41,7 @@ export async function readIntegrationPackageFiles(
         decodedBytes: 0,
         directories: 1,
         files: 0,
-        output: Object.create(null) as Record<string, IntegrationPackageFileV1>,
+        output: Object.create(null) as CanonicalFileSet,
     };
     await walkDirectory(root, root, "", 0, state, limits);
     assertStableEntry(canonicalRootStats, await lstat(root), ".");
@@ -111,7 +119,7 @@ async function readBoundedEntries(
     return entries.sort(compareEntries);
 }
 
-function encodeFile(bytes: Uint8Array): IntegrationPackageFileV1 {
+function encodeFile(bytes: Uint8Array): CanonicalFile {
     try {
         return { encoding: "utf8", content: strictUtf8.decode(bytes) };
     } catch {

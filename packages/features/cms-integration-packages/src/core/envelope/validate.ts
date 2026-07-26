@@ -1,12 +1,11 @@
 import {
     INTEGRATION_PACKAGE_SCHEMA,
     type IntegrationPackageEnvelopeV1,
-    type IntegrationPackageFileV1,
     type IntegrationPackageValidationOptions,
 } from "../../interfaces/envelope";
 import { canonicalJsonBytes } from "../canonical/canonicalizeJson";
+import { validateCanonicalFileSet } from "../file-set/validate";
 import { resolveIntegrationPackageLimits } from "./constants";
-import { decodedIntegrationPackageFileByteLength } from "./encoding";
 import { IntegrationPackageValidationError } from "./errors";
 import {
     assertEnvelopeIJson,
@@ -14,12 +13,10 @@ import {
     exactPackageVersion,
     packageKind,
     parseEnvelopeRecord,
-    parseIntegrationPackageFile,
     requiredString,
     requiredStringField,
-    strictRecord,
 } from "./fields";
-import { assertIntegrationPackageFileLayout, assertIntegrationPackagePath } from "./path";
+import { assertIntegrationPackagePath } from "./path";
 import { parseStrictPackageJson } from "./strictJson";
 
 export function parseIntegrationPackageEnvelope(
@@ -68,51 +65,7 @@ export function validateIntegrationPackageEnvelope(
         );
     }
 
-    const fileValues = strictRecord(envelope.files, "files");
-    const entries = Object.entries(fileValues);
-    if (entries.length > limits.maxFiles) {
-        throw new IntegrationPackageValidationError(
-            "file_limit_exceeded",
-            `files contains more than ${limits.maxFiles} entries`,
-            "files",
-        );
-    }
-    let decodedBytes = 0;
-    const files: Array<[string, IntegrationPackageFileV1]> = [];
-    const canonicalPaths = new Set<string>();
-    const directoryPaths = new Set<string>();
-    for (const [path, value] of entries) {
-        const canonicalPath = assertIntegrationPackagePath(path, limits);
-        if (canonicalPaths.has(canonicalPath)) {
-            throw new IntegrationPackageValidationError(
-                "invalid_path",
-                `duplicate normalized file path ${JSON.stringify(canonicalPath)}`,
-                canonicalPath,
-            );
-        }
-        assertIntegrationPackageFileLayout(canonicalPath, canonicalPaths, directoryPaths, limits.maxDirectories);
-        canonicalPaths.add(canonicalPath);
-        const file = parseIntegrationPackageFile(value, `files.${path}`);
-        const fileBytes = decodedIntegrationPackageFileByteLength(file);
-        if (fileBytes > limits.maxFileBytes) {
-            throw new IntegrationPackageValidationError(
-                "decoded_bytes_limit_exceeded",
-                `${canonicalPath} exceeds ${limits.maxFileBytes} decoded bytes`,
-                canonicalPath,
-            );
-        }
-        decodedBytes += fileBytes;
-        if (decodedBytes > limits.maxDecodedBytes) {
-            throw new IntegrationPackageValidationError(
-                "decoded_bytes_limit_exceeded",
-                `decoded files exceed ${limits.maxDecodedBytes} bytes`,
-                "files",
-            );
-        }
-        files.push([canonicalPath, file]);
-    }
-
-    const parsedFiles = Object.fromEntries(files);
+    const parsedFiles = validateCanonicalFileSet(envelope.files, { limits });
     assertReferencedUtf8File(parsedFiles, definition, "definition");
     if (releaseNotes) {
         assertReferencedUtf8File(parsedFiles, releaseNotes, "releaseNotes");

@@ -1,11 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
+    DEFAULT_CANONICAL_FILE_SET_LIMITS,
     canonicalJsonBytes,
     canonicalizeJson,
     sha256Hex,
     validateIntegrationPackageEnvelope,
 } from "@bernouy/cms-integration-packages";
-import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
+import { readCanonicalFileSetDirectory, readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import { createVersionRoot, readerOptions, writeBytes, writeText } from "./fixtures";
 
 describe("filesystem integration package reader", () => {
@@ -31,6 +32,18 @@ describe("filesystem integration package reader", () => {
         expect(second.digest).toBe(first.digest);
         expect(second.canonicalBytes).toEqual(first.canonicalBytes);
         expect(new TextDecoder().decode(first.canonicalBytes)).toBe(canonicalizeJson(first.envelope));
+    });
+
+    test("uses the same deterministic walker for generic canonical file sets", async () => {
+        const root = createVersionRoot();
+        writeText(root, "z-last.txt", "last");
+        writeBytes(root, "assets/binary.bin", Uint8Array.of(0, 0xff, 1));
+        const packageResult = await readIntegrationPackageDirectory(readerOptions(root));
+
+        const fileSet = await readCanonicalFileSetDirectory(root, DEFAULT_CANONICAL_FILE_SET_LIMITS);
+
+        expect(fileSet).toEqual(packageResult.envelope.files);
+        expect(canonicalJsonBytes(fileSet)).toEqual(canonicalJsonBytes(packageResult.envelope.files));
     });
 
     test("preserves a UTF-8 BOM as package content", async () => {

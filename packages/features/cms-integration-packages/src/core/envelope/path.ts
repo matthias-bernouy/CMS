@@ -1,14 +1,20 @@
 import type { IntegrationPackageLimits } from "../../interfaces/envelope";
-import { DEFAULT_INTEGRATION_PACKAGE_LIMITS, resolveIntegrationPackageLimits } from "./constants";
+import type { CanonicalFileSetLimits } from "../../interfaces/fileSet";
+import {
+    DEFAULT_CANONICAL_FILE_SET_LIMITS,
+    DEFAULT_INTEGRATION_PACKAGE_LIMITS,
+    resolveCanonicalFileSetLimits,
+    resolveIntegrationPackageLimits,
+} from "./constants";
 import { IntegrationPackageValidationError } from "./errors";
 
 const utf8 = new TextEncoder();
 
-export function assertIntegrationPackagePath(
+export function assertCanonicalFilePath(
     value: string,
-    limits: Readonly<IntegrationPackageLimits> = DEFAULT_INTEGRATION_PACKAGE_LIMITS,
+    limits: Readonly<CanonicalFileSetLimits> = DEFAULT_CANONICAL_FILE_SET_LIMITS,
 ): string {
-    const resolvedLimits = resolveIntegrationPackageLimits(limits);
+    const resolvedLimits = resolveCanonicalFileSetLimits(limits);
     if (!value || value.includes("\\") || value.includes("\0") || value.startsWith("/") || /^[A-Za-z]:/.test(value)) {
         throw invalidPath(value, "must be a non-empty relative path using forward slashes");
     }
@@ -30,7 +36,14 @@ export function assertIntegrationPackagePath(
     return value;
 }
 
-export function assertIntegrationPackageFileLayout(
+export function assertIntegrationPackagePath(
+    value: string,
+    limits: Readonly<IntegrationPackageLimits> = DEFAULT_INTEGRATION_PACKAGE_LIMITS,
+): string {
+    return assertCanonicalFilePath(value, resolveIntegrationPackageLimits(limits));
+}
+
+export function assertCanonicalFileLayout(
     filePath: string,
     filePaths: ReadonlySet<string>,
     directoryPaths: Set<string>,
@@ -62,6 +75,15 @@ export function assertIntegrationPackageFileLayout(
             );
         }
     }
+}
+
+export function assertIntegrationPackageFileLayout(
+    filePath: string,
+    filePaths: ReadonlySet<string>,
+    directoryPaths: Set<string>,
+    maxDirectories: number,
+): void {
+    assertCanonicalFileLayout(filePath, filePaths, directoryPaths, maxDirectories);
 }
 
 function invalidPath(value: string, reason: string): IntegrationPackageValidationError {

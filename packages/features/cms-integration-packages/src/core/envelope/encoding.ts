@@ -1,4 +1,5 @@
 import type { IntegrationPackageFileV1 } from "../../interfaces/envelope";
+import type { CanonicalFile } from "../../interfaces/fileSet";
 import { IntegrationPackageValidationError } from "./errors";
 
 const CANONICAL_BASE64 = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
@@ -38,7 +39,7 @@ function base64Value(code: number): number {
     return code === 0x2b ? 62 : 63;
 }
 
-export function decodedIntegrationPackageFileByteLength(file: IntegrationPackageFileV1): number {
+export function decodedCanonicalFileByteLength(file: CanonicalFile): number {
     if (file.encoding === "utf8") {
         return utf8.encode(file.content).byteLength;
     }
@@ -47,7 +48,11 @@ export function decodedIntegrationPackageFileByteLength(file: IntegrationPackage
     return (file.content.length / 4) * 3 - padding;
 }
 
-export function decodeIntegrationPackageFile(file: IntegrationPackageFileV1): Uint8Array {
+export function decodedIntegrationPackageFileByteLength(file: IntegrationPackageFileV1): number {
+    return decodedCanonicalFileByteLength(file);
+}
+
+export function decodeCanonicalFile(file: CanonicalFile): Uint8Array {
     if (file.encoding === "utf8") {
         return utf8.encode(file.content);
     }
@@ -58,4 +63,8 @@ export function decodeIntegrationPackageFile(file: IntegrationPackageFileV1): Ui
         bytes[index] = binary.charCodeAt(index);
     }
     return bytes;
+}
+
+export function decodeIntegrationPackageFile(file: IntegrationPackageFileV1): Uint8Array {
+    return decodeCanonicalFile(file);
 }

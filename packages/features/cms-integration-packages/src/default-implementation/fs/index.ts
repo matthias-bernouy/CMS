@@ -4,7 +4,7 @@ export {
     type ReadIntegrationPackageDirectoryResult,
 } from "./reader";
 export { readBoundedRegularFile } from "./boundedFile";
-export { readIntegrationPackageFiles } from "./directoryWalker";
+export { readCanonicalFileSetDirectory, readIntegrationPackageFiles } from "./directoryWalker";
 export {
     FsIntegrationPackageSource,
     type FsIntegrationPackageLocation,
