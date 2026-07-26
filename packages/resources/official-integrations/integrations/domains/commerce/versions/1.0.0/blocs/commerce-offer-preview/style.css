@@ -14,10 +14,10 @@
     display: grid;
     grid-template-rows: auto 1fr;
     overflow: hidden;
-    border: 1px solid var(--commerce-offer-border, var(--border-subtle, color-mix(in srgb, currentColor 16%, transparent)));
-    border-radius: var(--commerce-offer-radius, var(--radius-lg, 1rem));
-    background: var(--commerce-offer-background, var(--bg-surface, Canvas));
-    color: var(--commerce-offer-color, var(--text-main, inherit));
+    border: 1px solid var(--commerce-offer-border, var(--integration-commerce-offer-border, var(--border-default, color-mix(in srgb, currentColor 16%, transparent))));
+    border-radius: var(--commerce-offer-radius, var(--integration-commerce-offer-radius, var(--radius-card, 1rem)));
+    background: var(--commerce-offer-background, var(--integration-commerce-offer-background, var(--bg-surface, Canvas)));
+    color: var(--commerce-offer-color, var(--integration-commerce-offer-text, var(--text-main, inherit)));
 }
 
 :host([stretch]:not([stretch="false"])) [part="card"] {
@@ -70,7 +70,7 @@
 }
 
 [part="eyebrow"] {
-    color: var(--commerce-offer-accent, var(--primary-base, currentColor));
+    color: var(--commerce-offer-accent, var(--integration-commerce-offer-accent, var(--primary-base, currentColor)));
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .06em;
@@ -78,13 +78,13 @@
 }
 
 [part="title"] {
-    font-family: var(--font-display, inherit);
+    font-family: var(--integration-commerce-offer-heading-font, var(--font-heading, inherit));
     font-size: var(--commerce-offer-title-size, 1.25rem);
     line-height: 1.2;
 }
 
 [part="description"] {
-    color: var(--commerce-offer-muted-color, var(--text-muted, color-mix(in srgb, currentColor 68%, transparent)));
+    color: var(--commerce-offer-muted-color, var(--integration-commerce-offer-muted-text, var(--text-muted, color-mix(in srgb, currentColor 68%, transparent))));
     line-height: 1.45;
 }
 
@@ -94,8 +94,8 @@
 
 [part="price"] {
     margin-top: auto;
-    color: var(--commerce-offer-price-color, var(--secondary-base, currentColor));
-    font-family: var(--font-display, inherit);
+    color: var(--commerce-offer-price-color, var(--integration-commerce-offer-price, var(--secondary-base, currentColor)));
+    font-family: var(--integration-commerce-offer-heading-font, var(--font-heading, inherit));
     font-size: var(--commerce-offer-price-size, 1.35rem);
     font-weight: 700;
 }

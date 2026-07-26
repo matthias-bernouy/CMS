@@ -9,13 +9,13 @@
 
     <basic-toast slot="error" role="alert" cms-condition="$source.error">Photo albums could not be loaded.</basic-toast>
 
-    <basic-card slot="empty" appearance="outlined" cms-condition="$source.loaded && data.total == 0">
+    <basic-card slot="empty" appearance="outlined" background-color="var(--integration-photo-albums-card-background, var(--bg-surface, Canvas))" border-color="var(--integration-photo-albums-card-border, var(--border-default, currentColor))" text-color="var(--integration-photo-albums-card-text, var(--text-main, inherit))" muted-text-color="var(--integration-photo-albums-card-muted-text, var(--text-muted, currentColor))" cms-condition="$source.loaded && data.total == 0">
         <strong slot="title">No photo album is available yet.</strong>
     </basic-card>
 
     <basic-grid slot="catalogue" min="sm" max="lg" gap="md" data-album-grid cms-condition="$source.loaded && data.total > 0">
         <a href="/photo-album?slug={{ album.slug }}" cms-repeat="data.items as album">
-            <basic-card appearance="outlined" stretch>
+            <basic-card appearance="outlined" background-color="var(--integration-photo-albums-card-background, var(--bg-surface, Canvas))" border-color="var(--integration-photo-albums-card-border, var(--border-default, currentColor))" text-color="var(--integration-photo-albums-card-text, var(--text-main, inherit))" muted-text-color="var(--integration-photo-albums-card-muted-text, var(--text-muted, currentColor))" stretch>
                 <img slot="media" src="/.cms/sources/photo-albums/publicPhoto?id={{ album.coverPhoto.id }}" data-photo-source-url="publicPhoto" data-source-image-access="public" data-source-width="{{ album.coverPhoto.width }}" data-source-height="{{ album.coverPhoto.height }}" alt="{{ album.coverPhoto.alt }}" loading="lazy" decoding="async" style="display:block;width:100%;height:auto" cms-condition="album.coverPhoto.id">
                 <strong slot="title">{{ album.title }}</strong>
                 <span slot="description">{{ album.description }}</span>

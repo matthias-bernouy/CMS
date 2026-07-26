@@ -17,6 +17,9 @@
     "ui": {
         "$include": "configuration/ui.json"
     },
+    "theme": {
+        "$include": "configuration/theme.json"
+    },
     "generatedSecrets": {
         "$include": "configuration/generated-secrets.json"
     },

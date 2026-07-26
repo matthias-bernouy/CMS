@@ -38,8 +38,8 @@ export class BasicCard extends HTMLElement {
                     display: grid;
                     gap: var(--cms-card-section-gap, 1.25rem);
                     padding: var(--cms-card-padding, 1.5rem);
-                    border: var(--cms-card-border, 1px solid var(--cms-card-border-color, var(--border-subtle, color-mix(in srgb, currentColor 16%, transparent))));
-                    border-radius: var(--cms-card-radius, var(--radius-lg, 1rem));
+                    border: var(--cms-card-border, 1px solid var(--cms-card-border-color, var(--border-subtle, var(--border-default, color-mix(in srgb, currentColor 16%, transparent)))));
+                    border-radius: var(--cms-card-radius, var(--radius-lg, var(--radius-card, 1rem)));
                     background: var(--cms-card-background, var(--bg-surface, Canvas));
                     color: var(--cms-card-color, var(--text-main, inherit));
                     box-shadow: var(--cms-card-shadow, none);
@@ -72,7 +72,7 @@ export class BasicCard extends HTMLElement {
                 ::slotted([slot="title"]) {
                     margin: 0;
                     color: inherit;
-                    font-family: var(--font-display, inherit);
+                    font-family: var(--cms-card-title-font, var(--font-display, var(--font-heading, inherit)));
                     font-size: var(--cms-card-title-size, 1.25rem);
                     font-weight: 700;
                     line-height: 1.2;
@@ -95,7 +95,7 @@ export class BasicCard extends HTMLElement {
 
                 :host([appearance="elevated"]) [part="card"] {
                     border-color: var(--cms-card-border-color, transparent);
-                    box-shadow: var(--cms-card-shadow, var(--ctx-shadow-rest, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent)));
+                    box-shadow: var(--cms-card-shadow, var(--ctx-shadow-rest, var(--shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent))));
                 }
 
                 :host([density="compact"]) [part="card"] {

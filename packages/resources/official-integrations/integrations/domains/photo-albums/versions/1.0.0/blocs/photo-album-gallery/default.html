@@ -10,7 +10,7 @@
             <p cms-condition="data.description">{{ data.description }}</p>
         </header>
 
-        <basic-card appearance="outlined" cms-condition="data.photoCount == 0">
+        <basic-card appearance="outlined" background-color="var(--integration-photo-albums-card-background, var(--bg-surface, Canvas))" border-color="var(--integration-photo-albums-card-border, var(--border-default, currentColor))" text-color="var(--integration-photo-albums-card-text, var(--text-main, inherit))" muted-text-color="var(--integration-photo-albums-card-muted-text, var(--text-muted, currentColor))" cms-condition="data.photoCount == 0">
             <strong slot="title">This album has no photos yet.</strong>
         </basic-card>
 
