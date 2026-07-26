@@ -70,7 +70,9 @@ export {
     type ComposeReleaseAdmissionDecisionInput,
     type DigestContractReference,
     type MigrationCheckResult,
+    type MigrationPolicyEvaluationCheck,
     type MigrationReport,
+    type MigrationReportPolicyEvaluation,
     type MigrationReportRevisionDigestReference,
     type ReleaseAdmissionDecision,
     type RequiredMigrationEvidence,
@@ -128,6 +130,10 @@ export { identifyCompatibilityReportV2, parseCompatibilityReportV2 } from "../co
 export { deriveCompatibilityReportAssessment } from "../core/reports/compatibilityAssessment";
 export { identifyVerificationReport, parseVerificationReport } from "../core/reports/verification";
 export { identifyMigrationReport, parseMigrationReport } from "../core/reports/migration";
+export {
+    assertMigrationReportAgainstPolicy,
+    evaluateMigrationReportAgainstPolicy,
+} from "../core/reports/migration/policy";
 export {
     appendReleaseAdmissionDecision,
     assertReleaseAdmissionDecisionHistory,

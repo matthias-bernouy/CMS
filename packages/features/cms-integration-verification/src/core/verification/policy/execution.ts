@@ -5,7 +5,7 @@ import type {
 } from "../../../interfaces/verification";
 import { IntegrationVerificationContractError } from "../../validation/errors";
 import { assertUnique, boundedArray, strictRecord } from "../../validation/structure";
-import { nonNegativeInteger, oneOf, positiveInteger, requiredBoolean } from "../../validation/values";
+import { nonNegativeInteger, oneOf, positiveInteger, requiredBoolean, sha256Digest } from "../../validation/values";
 import { compareText } from "../shared";
 
 const RELEASE_LEVELS = ["patch", "minor", "major"] as const;
@@ -44,6 +44,7 @@ export function parseMigrationEvidence(value: unknown): MigrationEvidencePolicyV
         "requiredChecks",
         "requireExactSourcePackageDigest",
         "requireExactTargetPackageDigest",
+        "approvedEnvironmentDigests",
         "requireCmsMediatedCutoverEvidence",
         "requireProviderDirectCutoverEvidence",
         "requireRollbackEvidence",
@@ -58,6 +59,10 @@ export function parseMigrationEvidence(value: unknown): MigrationEvidencePolicyV
         RELEASE_LEVELS,
     );
     const requiredChecks = sortedEnum(input.requiredChecks, "requiredChecks", MIGRATION_CHECKS);
+    const approvedEnvironmentDigests =
+        input.approvedEnvironmentDigests === undefined
+            ? undefined
+            : sortedDigests(input.approvedEnvironmentDigests, "approvedEnvironmentDigests");
     if (requiredForReleaseLevels.length > 0) {
         for (const required of ["fresh-install", "migrated-state", "equivalence"] as const) {
             if (!requiredChecks.includes(required)) {
@@ -70,6 +75,7 @@ export function parseMigrationEvidence(value: unknown): MigrationEvidencePolicyV
         requiredChecks,
         requireExactSourcePackageDigest: true,
         requireExactTargetPackageDigest: true,
+        ...(approvedEnvironmentDigests ? { approvedEnvironmentDigests } : {}),
         requireCmsMediatedCutoverEvidence: requiredBoolean(
             input.requireCmsMediatedCutoverEvidence,
             "policy.migrationEvidence.requireCmsMediatedCutoverEvidence",
@@ -87,6 +93,15 @@ export function parseMigrationEvidence(value: unknown): MigrationEvidencePolicyV
             "policy.migrationEvidence.requireDelayedCleanupEvidence",
         ),
     };
+}
+
+function sortedDigests(value: unknown, name: string): string[] {
+    const field = `policy.migrationEvidence.${name}`;
+    const result = boundedArray(value, field, (entry, entryField) => sha256Digest(entry, entryField)).toSorted(
+        compareText,
+    );
+    assertUnique(result, field);
+    return result;
 }
 
 function sortedEnum<const T extends readonly string[]>(value: unknown, name: string, allowed: T): T[number][] {

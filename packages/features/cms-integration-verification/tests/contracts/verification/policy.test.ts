@@ -4,7 +4,7 @@ import {
     parseReleaseAdmissionPolicySnapshot,
     validateReleaseAdmissionPolicySnapshot,
 } from "../../../src/exports/index";
-import { DIGEST_F, IMAGE_B, policySnapshot } from "./controlFixtures";
+import { DIGEST_D, DIGEST_E, DIGEST_F, IMAGE_B, policySnapshot } from "./controlFixtures";
 
 describe("release admission policy snapshot", () => {
     test("canonically binds every global evaluator, runner, suite, proof, retry, cache, and migration rule", async () => {
@@ -91,6 +91,31 @@ describe("release admission policy snapshot", () => {
                 cache: { mode: "passed-only", minimumConcordantRuns: 1, maximumAgeSeconds: 3_600 },
             }),
         ).rejects.toThrow(/two concordant runs/);
+    });
+
+    test("canonicalizes unique approved migration environments while reading historical omissions", async () => {
+        const historical = await policySnapshot();
+        const parsedHistorical = await validateReleaseAdmissionPolicySnapshot(historical);
+        expect(parsedHistorical.migrationEvidence.approvedEnvironmentDigests).toBeUndefined();
+        const pinned = {
+            ...historical,
+            migrationEvidence: {
+                ...historical.migrationEvidence,
+                approvedEnvironmentDigests: [DIGEST_E, DIGEST_D],
+            },
+        };
+        const parsed = await validateReleaseAdmissionPolicySnapshot(pinned);
+
+        expect(parsed.migrationEvidence.approvedEnvironmentDigests).toEqual([DIGEST_D, DIGEST_E]);
+        await expect(
+            validateReleaseAdmissionPolicySnapshot({
+                ...pinned,
+                migrationEvidence: {
+                    ...pinned.migrationEvidence,
+                    approvedEnvironmentDigests: [DIGEST_D, DIGEST_D],
+                },
+            }),
+        ).rejects.toThrow(/approvedEnvironmentDigests.*duplicate/);
     });
 
     test("uses strict JSON and a closed policy shape", async () => {

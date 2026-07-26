@@ -8,6 +8,32 @@ export type MigrationCheckResult = Readonly<{
     evidenceDigest?: string;
 }>;
 
+export type MigrationPolicyEvaluationCheck = Readonly<{
+    check:
+        | "report-outcome"
+        | "environment"
+        | "fresh-install"
+        | "migrated-state"
+        | "equivalence"
+        | "failure-injection"
+        | "resumption"
+        | "cms-mediated-cutover"
+        | "provider-direct-cutover"
+        | "rollback"
+        | "delayed-cleanup";
+    applicable: boolean;
+    satisfied: boolean;
+    observed: string | boolean;
+    reason?: string;
+}>;
+
+export type MigrationReportPolicyEvaluation = Readonly<{
+    applicable: boolean;
+    satisfied: boolean;
+    checks: readonly MigrationPolicyEvaluationCheck[];
+    reasons: readonly string[];
+}>;
+
 export type MigrationReport = ReportHistoryFields &
     Readonly<{
         schema: typeof MIGRATION_REPORT_SCHEMA;

@@ -35,6 +35,8 @@ export type MigrationEvidencePolicyV1 = Readonly<{
     )[];
     requireExactSourcePackageDigest: true;
     requireExactTargetPackageDigest: true;
+    /** Missing only on historical policy snapshots written before environment pinning. */
+    approvedEnvironmentDigests?: readonly string[];
     requireCmsMediatedCutoverEvidence: boolean;
     requireProviderDirectCutoverEvidence: boolean;
     requireRollbackEvidence: boolean;
