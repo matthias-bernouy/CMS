@@ -13,13 +13,10 @@ services:
         secrets:
             - source: cms_repository_management_token
               target: cms-repository-management-token
-              uid: "1000"
-              gid: "1000"
-              mode: 0400
 
 secrets:
     cms_repository_management_token:
-        file: ${CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE must reference the repository service secret file}
+        file: ${CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE must reference the repository service secret file owned by UID/GID 1000}
 
 networks:
     cms_repository:

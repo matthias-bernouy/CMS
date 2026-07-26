@@ -9,6 +9,8 @@ const dockerfileSource = readFileSync(resolve(imageRoot, "Dockerfile"), "utf8");
 const envExampleSource = readFileSync(resolve(imageRoot, ".env.example"), "utf8");
 const overrideSource = readFileSync(resolve(imageRoot, "management-cms.override.yml"), "utf8");
 const readmeSource = readFileSync(resolve(imageRoot, "README.md"), "utf8");
+const gitignoreSource = readFileSync(resolve(imageRoot, "../../..", ".gitignore"), "utf8");
+const dockerignoreSource = readFileSync(resolve(imageRoot, "../../..", ".dockerignore"), "utf8");
 
 describe("repository image", () => {
     test("uses a pinned Bun base and the repository runtime dependency closure", () => {
@@ -63,7 +65,8 @@ describe("repository Compose isolation", () => {
         expect(composeSource).toContain("CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE");
         expect(composeSource).toContain("CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE");
         expect(composeSource).toContain("CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE");
-        expect(composeSource).toContain("mode: 0400");
+        expect(composeSource).not.toMatch(/^\s+(?:uid|gid|mode):/m);
+        expect(overrideSource).not.toMatch(/^\s+(?:uid|gid|mode):/m);
         expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_MANAGEMENT_TOKEN=/m);
         expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_MAINTENANCE_TOKEN=/m);
         expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_WORKER_TOKEN=/m);
@@ -71,6 +74,8 @@ describe("repository Compose isolation", () => {
         expect(`${composeSource}\n${envExampleSource}`).not.toMatch(/READ_TOKEN|REPOSITORY_TOKEN=/);
         expect(overrideSource).not.toContain("cms_repository_worker_token");
         expect(overrideSource).not.toContain("cms_repository_worker_capability_key");
+        expect(gitignoreSource).toContain("/infra/images/cms-repository/secrets/");
+        expect(dockerignoreSource).toContain("infra/images/cms-repository/secrets/");
     });
 
     test("does not reject standard internal CMS fetches that have no forwarding chain", () => {
@@ -127,12 +132,15 @@ composeTest("Compose renders the isolated repository and verifier trust zones wi
             CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-maintenance-token",
             CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-worker-token",
             CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE: "/run/operator-secrets/repository-worker-capability-key",
+            CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_SECRET_FILE: "/run/operator-secrets/verifier-worker-token",
             CMS_INTEGRATION_VERIFIER_IMAGE:
                 "registry.example.test/bernouy/cms-integration-verifier@sha256:" + "d".repeat(64),
             CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: "sha256:" + "d".repeat(64),
             CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE: "/run/operator-secrets/verifier-private.pem",
             CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: "/run/operator-secrets/verifier-public.pem",
             CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE: "/run/operator-secrets/verifier-postgres-password",
+            CMS_INTEGRATION_VERIFIER_POSTGRES_SERVER_PASSWORD_SECRET_FILE:
+                "/run/operator-secrets/verifier-postgres-server-password",
         },
         stdout: "pipe",
         stderr: "pipe",
@@ -147,6 +155,13 @@ composeTest("Compose renders the isolated repository and verifier trust zones wi
                 environment?: Record<string, string>;
                 ports?: unknown;
                 read_only?: boolean;
+                user?: string;
+                restart?: string;
+                network_mode?: string;
+                cap_add?: string[];
+                cap_drop?: string[];
+                healthcheck?: { disable?: boolean };
+                depends_on?: Record<string, { condition?: string }>;
                 networks?: Record<string, unknown>;
                 secrets?: Array<{ source?: string; target?: string; uid?: string; gid?: string; mode?: string }>;
                 tmpfs?: string[];
@@ -160,7 +175,21 @@ composeTest("Compose renders the isolated repository and verifier trust zones wi
         "cms-integration-verifier-postgres",
         "cms-integration-verifier-sandbox",
         "cms-repository",
+        "cms-repository-secret-check",
     ]);
+    expect(config.services["cms-repository-secret-check"]).toMatchObject({
+        user: "0:0",
+        restart: "no",
+        read_only: true,
+        network_mode: "none",
+        cap_add: ["DAC_READ_SEARCH"],
+        cap_drop: ["ALL"],
+        healthcheck: { disable: true },
+    });
+    expect(config.services["cms-repository-secret-check"]?.ports).toBeUndefined();
+    expect(config.services["cms-repository"]?.depends_on?.["cms-repository-secret-check"]).toMatchObject({
+        condition: "service_completed_successfully",
+    });
     expect(config.services["cms-repository"]).toMatchObject({ read_only: true });
     expect(config.services["cms-repository"]?.environment).toMatchObject({
         CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE: "/run/secrets/cms-repository-management-token",
@@ -193,7 +222,9 @@ composeTest("Compose renders the isolated repository and verifier trust zones wi
         ]),
     );
     for (const secret of config.services["cms-repository"]?.secrets ?? []) {
-        expect(secret).toMatchObject({ uid: "1000", gid: "1000", mode: "0400" });
+        expect(secret).not.toHaveProperty("uid");
+        expect(secret).not.toHaveProperty("gid");
+        expect(secret).not.toHaveProperty("mode");
     }
     expect(config.services["cms-repository"]?.ports).toBeUndefined();
     expect(config.services["cms-repository"]?.tmpfs).toContain(

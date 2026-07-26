@@ -25,6 +25,18 @@ describe("integration verifier image", () => {
 });
 
 describe("integration verifier trust zones", () => {
+    test("compares duplicated multi-UID secrets in an isolated one-shot preflight", () => {
+        const checker = serviceSource("cms-repository-secret-check", "cms-repository");
+        expect(checker).toContain('user: "0:0"');
+        expect(checker).toContain("network_mode: none");
+        expect(checker).toContain('restart: "no"');
+        expect(checker).toMatch(/cap_drop:\n\s+- ALL/);
+        expect(checker).toMatch(/cap_add:\n\s+- DAC_READ_SEARCH/);
+        expect(checker).toContain("no-new-privileges:true");
+        expect(checker).toContain("timingSafeEqual");
+        expect(checker).not.toMatch(/console\.|stdout|stderr/);
+    });
+
     test("keeps the supervisor credential out of the fixed sandbox", () => {
         const supervisor = serviceSource("cms-integration-verifier", "cms-integration-verifier-sandbox");
         const sandbox = serviceSource("cms-integration-verifier-sandbox", "cms-integration-verifier-postgres");
@@ -76,9 +88,14 @@ describe("integration verifier trust zones", () => {
 
     test("requires file-backed worker, signing, and database credentials", () => {
         expect(envExample).toContain("CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE=");
+        expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_SECRET_FILE=");
         expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE=");
         expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE=");
         expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE=");
+        expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_POSTGRES_SERVER_PASSWORD_SECRET_FILE=");
+        expect(compose).toContain("source: cms_integration_verifier_worker_token");
+        expect(compose).toContain("source: cms_integration_verifier_postgres_server_password");
+        expect(compose).not.toMatch(/^\s+(?:uid|gid|mode):/m);
         expect(compose).not.toMatch(/^\s+CMS_INTEGRATION_VERIFIER_WORKER_TOKEN:/m);
         expect(compose).not.toMatch(/^\s+CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD:/m);
     });
@@ -104,9 +121,43 @@ composeTest("renders exact network membership, identities, secrets, and resource
     const supervisor = config.services["cms-integration-verifier"]!;
     const sandbox = config.services["cms-integration-verifier-sandbox"]!;
     const postgres = config.services["cms-integration-verifier-postgres"]!;
+    const secretCheck = config.services["cms-repository-secret-check"]!;
+    expect(secretCheck).toMatchObject({
+        user: "0:0",
+        restart: "no",
+        read_only: true,
+        network_mode: "none",
+        cap_add: ["DAC_READ_SEARCH"],
+        cap_drop: ["ALL"],
+        healthcheck: { disable: true },
+    });
+    expect(secretCheck).not.toHaveProperty("ports");
+    expect(secretCheck).not.toHaveProperty("networks");
     expect(supervisor.user).toBe("1001:1001");
     expect(sandbox.user).toBe("1002:1002");
     expect(postgres.user).toBe("70:70");
+    expect(supervisor.secrets).toEqual(
+        expect.arrayContaining([
+            expect.objectContaining({ source: "cms_integration_verifier_worker_token" }),
+            expect.objectContaining({ source: "cms_integration_verifier_postgres_password" }),
+        ]),
+    );
+    expect(postgres.secrets).toEqual(
+        expect.arrayContaining([
+            expect.objectContaining({ source: "cms_integration_verifier_postgres_server_password" }),
+        ]),
+    );
+    expect(
+        (supervisor.depends_on as Record<string, { condition?: string }>)["cms-repository-secret-check"],
+    ).toMatchObject({ condition: "service_completed_successfully" });
+    expect(
+        (postgres.depends_on as Record<string, { condition?: string }>)["cms-repository-secret-check"],
+    ).toMatchObject({ condition: "service_completed_successfully" });
+    for (const secret of [...(supervisor.secrets as object[]), ...(postgres.secrets as object[])]) {
+        expect(secret).not.toHaveProperty("uid");
+        expect(secret).not.toHaveProperty("gid");
+        expect(secret).not.toHaveProperty("mode");
+    }
     expect(Object.keys(supervisor.networks as object).toSorted()).toEqual([
         "cms_repository",
         "cms_verifier_control",
@@ -157,8 +208,10 @@ function renderEnvironment(): Record<string, string> {
         CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE: "/secrets/maintenance",
         CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE: "/secrets/worker",
         CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE: "/secrets/capability",
+        CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_SECRET_FILE: "/secrets/verifier-worker",
         CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE: "/secrets/private.pem",
         CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: "/secrets/public.pem",
         CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE: "/secrets/postgres",
+        CMS_INTEGRATION_VERIFIER_POSTGRES_SERVER_PASSWORD_SECRET_FILE: "/secrets/postgres-server",
     };
 }

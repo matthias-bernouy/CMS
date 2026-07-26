@@ -1,8 +1,57 @@
 services:
+    cms-repository-secret-check:
+        image: ${CMS_REPOSITORY_IMAGE:?CMS_REPOSITORY_IMAGE must be an immutable version tag or digest}
+        restart: "no"
+        init: true
+        user: "0:0"
+        command:
+            - bun
+            - -e
+            - >-
+                const { timingSafeEqual } = await import("node:crypto");
+                const read = async (path) => Buffer.from(await Bun.file(path).arrayBuffer());
+                const same = (left, right) => left.length > 0 && left.length === right.length && timingSafeEqual(left, right);
+                try {
+                  const [repositoryWorker, verifierWorker, verifierDatabase, postgresDatabase] = await Promise.all([
+                    read("/run/secrets/repository-worker-token"),
+                    read("/run/secrets/verifier-worker-token"),
+                    read("/run/secrets/verifier-database-password"),
+                    read("/run/secrets/postgres-database-password")
+                  ]);
+                  if (!same(repositoryWorker, verifierWorker) || !same(verifierDatabase, postgresDatabase)) process.exit(1);
+                } catch {
+                  process.exit(1);
+                }
+        secrets:
+            - source: cms_repository_worker_token
+              target: repository-worker-token
+            - source: cms_integration_verifier_worker_token
+              target: verifier-worker-token
+            - source: cms_integration_verifier_postgres_password
+              target: verifier-database-password
+            - source: cms_integration_verifier_postgres_server_password
+              target: postgres-database-password
+        read_only: true
+        cap_drop:
+            - ALL
+        cap_add:
+            - DAC_READ_SEARCH
+        security_opt:
+            - no-new-privileges:true
+        pids_limit: 16
+        mem_limit: 64m
+        cpus: "0.25"
+        network_mode: none
+        healthcheck:
+            disable: true
+
     cms-repository:
         image: ${CMS_REPOSITORY_IMAGE:?CMS_REPOSITORY_IMAGE must be an immutable version tag or digest}
         restart: unless-stopped
         init: true
+        depends_on:
+            cms-repository-secret-check:
+                condition: service_completed_successfully
         environment:
             NODE_ENV: production
             CMS_REPOSITORY_PUBLIC_PORT: "3001"
@@ -28,24 +77,12 @@ services:
         secrets:
             - source: cms_repository_management_token
               target: cms-repository-management-token
-              uid: "1000"
-              gid: "1000"
-              mode: 0400
             - source: cms_repository_maintenance_token
               target: cms-repository-maintenance-token
-              uid: "1000"
-              gid: "1000"
-              mode: 0400
             - source: cms_repository_worker_token
               target: cms-repository-worker-token
-              uid: "1000"
-              gid: "1000"
-              mode: 0400
             - source: cms_repository_worker_capability_key
               target: cms-repository-worker-capability-key
-              uid: "1000"
-              gid: "1000"
-              mode: 0400
         volumes:
             - type: bind
               source: ./registry
@@ -89,6 +126,8 @@ services:
         init: true
         user: "1001:1001"
         depends_on:
+            cms-repository-secret-check:
+                condition: service_completed_successfully
             cms-repository:
                 condition: service_healthy
             cms-integration-verifier-sandbox:
@@ -121,21 +160,12 @@ services:
             CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_FILE: /run/secrets/cms-integration-verifier-postgres-password
             CMS_INTEGRATION_VERIFIER_POSTGRES_STATEMENT_TIMEOUT_MS: "${CMS_INTEGRATION_VERIFIER_POSTGRES_STATEMENT_TIMEOUT_MS:-120000}"
         secrets:
-            - source: cms_repository_worker_token
+            - source: cms_integration_verifier_worker_token
               target: cms-integration-verifier-worker-token
-              uid: "1001"
-              gid: "1001"
-              mode: 0400
             - source: cms_integration_verifier_sandbox_signing_key
               target: cms-integration-verifier-sandbox-signing-key
-              uid: "1001"
-              gid: "1001"
-              mode: 0400
             - source: cms_integration_verifier_postgres_password
               target: cms-integration-verifier-postgres-password
-              uid: "1001"
-              gid: "1001"
-              mode: 0400
         read_only: true
         tmpfs:
             - /tmp:rw,nosuid,nodev,noexec,size=32m,mode=1770,uid=1001,gid=1001
@@ -200,9 +230,6 @@ services:
         configs:
             - source: cms_integration_verifier_sandbox_verification_key
               target: /run/configs/cms-integration-verifier-sandbox-verification-key
-              uid: "1002"
-              gid: "1002"
-              mode: 0444
         read_only: true
         tmpfs:
             - /tmp:rw,nosuid,nodev,noexec,size=256m,mode=1700,uid=1002,gid=1002
@@ -239,17 +266,17 @@ services:
         image: postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
         restart: unless-stopped
         user: "70:70"
+        depends_on:
+            cms-repository-secret-check:
+                condition: service_completed_successfully
         environment:
             POSTGRES_USER: postgres
             POSTGRES_DB: postgres
             POSTGRES_PASSWORD_FILE: /run/secrets/cms-integration-verifier-postgres-password
             PGDATA: /var/lib/postgresql/data/pgdata
         secrets:
-            - source: cms_integration_verifier_postgres_password
+            - source: cms_integration_verifier_postgres_server_password
               target: cms-integration-verifier-postgres-password
-              uid: "70"
-              gid: "70"
-              mode: 0400
         read_only: true
         tmpfs:
             - /var/lib/postgresql/data:rw,nosuid,nodev,noexec,size=1g,mode=0700,uid=70,gid=70
@@ -282,21 +309,25 @@ services:
 
 secrets:
     cms_repository_management_token:
-        file: ${CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE must reference a mode-0600 secret file}
+        file: ${CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE must reference a mode-0600 secret file owned by UID/GID 1000}
     cms_repository_maintenance_token:
-        file: ${CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE must reference a distinct mode-0600 secret file}
+        file: ${CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE must reference a distinct mode-0600 secret file owned by UID/GID 1000}
     cms_repository_worker_token:
-        file: ${CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE:?CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE must reference a distinct mode-0600 secret file}
+        file: ${CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE:?CMS_REPOSITORY_WORKER_TOKEN_SECRET_FILE must reference the mode-0600 repository worker-token copy owned by UID/GID 1000}
     cms_repository_worker_capability_key:
-        file: ${CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE:?CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE must reference a distinct mode-0600 secret file}
+        file: ${CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE:?CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE must reference a distinct mode-0600 secret file owned by UID/GID 1000}
+    cms_integration_verifier_worker_token:
+        file: ${CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_SECRET_FILE must reference the matching mode-0600 worker-token copy owned by UID/GID 1001}
     cms_integration_verifier_sandbox_signing_key:
-        file: ${CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE must reference a mode-0600 Ed25519 private key}
+        file: ${CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE must reference a mode-0600 Ed25519 private key owned by UID/GID 1001}
     cms_integration_verifier_postgres_password:
-        file: ${CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE must reference a mode-0600 password file}
+        file: ${CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE must reference the mode-0600 verifier Postgres-password copy owned by UID/GID 1001}
+    cms_integration_verifier_postgres_server_password:
+        file: ${CMS_INTEGRATION_VERIFIER_POSTGRES_SERVER_PASSWORD_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_POSTGRES_SERVER_PASSWORD_SECRET_FILE must reference the matching mode-0600 Postgres-password copy owned by UID/GID 70}
 
 configs:
     cms_integration_verifier_sandbox_verification_key:
-        file: ${CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE:?CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE must reference the matching Ed25519 public key}
+        file: ${CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE:?CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE must reference the matching Ed25519 public key readable by UID/GID 1002}
 
 networks:
     cms_repository:
