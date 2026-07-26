@@ -8,9 +8,13 @@ import {
 import {
     FsIntegrationCompatibilityReevaluator,
     FsIntegrationCompatibilityReportStore,
+    FsIntegrationCompatibilityV2ReportStore,
+    FsIntegrationMigrationReportStore,
     FsIntegrationRegistryPublisher,
     FsIntegrationRegistryRecoverer,
     FsIntegrationRegistryStablePromoter,
+    FsIntegrationVerificationReportStore,
+    FsReleaseAdmissionDecisionStore,
     FsReviewedSchemaBaselineStore,
     FsReviewedSchemaBaselineImporter,
     MAX_REVIEWED_SCHEMA_BASELINE_IMPORT_DOCUMENT_BYTES,
@@ -59,7 +63,21 @@ export async function createProductionRepositoryManagement(input: {
     const snapshots = input.catalog.snapshotReference();
     const mutations = new InMemoryIntegrationRegistryMutationCoordinator();
     const reviewedSchemaBaselines = new FsReviewedSchemaBaselineStore({ root: input.root });
-    const registryRecovery = await new FsIntegrationRegistryRecoverer({ root: input.root, snapshots }).recover();
+    const releaseReportConfig = { root: input.root, snapshots, mutations };
+    const compatibilityReports = new FsIntegrationCompatibilityV2ReportStore(releaseReportConfig);
+    const verificationReports = new FsIntegrationVerificationReportStore(releaseReportConfig);
+    const migrationReports = new FsIntegrationMigrationReportStore(releaseReportConfig);
+    const releaseDecisions = new FsReleaseAdmissionDecisionStore({
+        ...releaseReportConfig,
+        compatibilityReports,
+        verificationReports,
+        migrationReports,
+    });
+    const registryRecovery = await new FsIntegrationRegistryRecoverer({
+        root: input.root,
+        snapshots,
+        releaseDecisions,
+    }).recover();
     const baselineImportConfig = input.baselineImports
         ? {
               root: input.root,
@@ -104,7 +122,7 @@ export async function createProductionRepositoryManagement(input: {
         new FsIntegrationRegistryStablePromoter({
             root: input.root,
             snapshots,
-            reports,
+            decisions: releaseDecisions,
             mutations,
         }),
         telemetry,

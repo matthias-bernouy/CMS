@@ -57,17 +57,19 @@ export class FsReleaseAdmissionDecisionStore implements ReleaseAdmissionDecision
     }
 
     async get(kind: string, version: string): Promise<ReleaseReportHistory<ReleaseAdmissionDecision> | null> {
-        return await this.config.mutations.runExclusive(kind, async () => {
-            const location = this.config.snapshots.current().locateExactVersion(kind, version);
-            if (!location) {
-                return null;
-            }
-            const history = await this.store.get({ kind, version, packageDigest: location.package.digest });
-            if (history) {
-                await this.assertCurrentDecision(history.current);
-            }
-            return history;
-        });
+        const history = await this.getHistory(kind, version);
+        if (history) {
+            await this.assertCurrentDecision(history.current);
+        }
+        return history;
+    }
+
+    async getHistory(kind: string, version: string): Promise<ReleaseReportHistory<ReleaseAdmissionDecision> | null> {
+        const location = this.config.snapshots.current().locateExactVersion(kind, version);
+        if (!location) {
+            return null;
+        }
+        return await this.store.get({ kind, version, packageDigest: location.package.digest });
     }
 
     async append(

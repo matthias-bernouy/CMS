@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
+import { identifyReleaseAdmissionDecision } from "@bernouy/cms-integration-verification";
 import {
     IntegrationRegistryStablePromotionConfirmationError,
     IntegrationRegistryStablePromotionConflictError,
     IntegrationRegistryStablePromotionIneligibleError,
+    IntegrationRegistryStablePromotionNotFoundError,
     IntegrationRegistryStablePromotionStaleReportError,
 } from "@bernouy/cms-integration-registry";
 import { FsIntegrationRegistryStablePromoter } from "@bernouy/cms-integration-registry/fs";
@@ -17,10 +19,73 @@ import {
     reportStore,
     stablePromoter,
 } from "./promotionFixtures";
+import { completeDecisionEvidence, releaseStores } from "../reports/fixtures";
 
 afterEach(cleanupRegistryFixtures);
 
 describe("filesystem stable promotion", () => {
+    test("promotes only from the exact current composite release decision", async () => {
+        const fixture = registryFixture();
+        const source = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const target = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.1.0") });
+        const stores = releaseStores(fixture);
+        const evidence = await completeDecisionEvidence(source.digest, target.digest);
+        await stores.compatibilityReports.append({ report: evidence.compatibility, expectedCurrent: null });
+        await stores.verificationReports.append({ report: evidence.verification, expectedCurrent: null });
+        await stores.migrationReports.append({ report: evidence.migration, expectedCurrent: null });
+        await stores.decisions.append({ report: evidence.decision, expectedCurrent: null });
+        const promoter = new FsIntegrationRegistryStablePromoter({
+            root: fixture.root,
+            snapshots: fixture.snapshots,
+            decisions: stores.decisions,
+            mutations: fixture.mutations,
+            createOperationId: () => "composite-operation-1",
+            createPromotionId: () => "composite-promotion-1",
+            now: () => "2026-07-26T12:00:00.000Z",
+        });
+
+        const result = await promoter.promoteStable({
+            kind: "demo",
+            version: "1.1.0",
+            currentReportRevisionId: evidence.decision.decisionId,
+            actor: "admin:user-1",
+            confirmation: { version: "1.1.0", reportRevisionId: evidence.decision.decisionId },
+        });
+
+        expect(result.record).toMatchObject({
+            schema: "cms.integration.registry.stable-promotion.v2",
+            reportRevisionId: evidence.decision.decisionId,
+            reportDigest: (await identifyReleaseAdmissionDecision(evidence.decision)).digest,
+            reportType: "release-admission-decision",
+        });
+        expect(result.snapshot.getIndex("demo")?.stable).toBe("1.1.0");
+    });
+
+    test("does not fall back to an admissible legacy compatibility report when no composite decision exists", async () => {
+        const fixture = registryFixture();
+        await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const target = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.1.0") });
+        const stores = releaseStores(fixture);
+        const promoter = new FsIntegrationRegistryStablePromoter({
+            root: fixture.root,
+            snapshots: fixture.snapshots,
+            decisions: stores.decisions,
+            mutations: fixture.mutations,
+        });
+
+        expect(target.report.admissible).toBeTrue();
+        await expect(
+            promoter.promoteStable({
+                kind: "demo",
+                version: "1.1.0",
+                currentReportRevisionId: target.report.id,
+                actor: "admin:user-1",
+                confirmation: { version: "1.1.0", reportRevisionId: target.report.id },
+            }),
+        ).rejects.toBeInstanceOf(IntegrationRegistryStablePromotionNotFoundError);
+        expect(fixture.snapshots.current().getIndex("demo")?.stable).toBe("1.0.0");
+    });
+
     test("moves stable with an immutable current-report record and never auto-demotes", async () => {
         const fixture = registryFixture();
         await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });

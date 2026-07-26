@@ -3,15 +3,21 @@ import { chmodSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
     createIntegrationRegistryCatalogSnapshot,
+    InMemoryIntegrationRegistryMutationCoordinator,
     IntegrationRegistryCatalogSnapshotReference,
 } from "@bernouy/cms-integration-registry";
 import {
     FS_INTEGRATION_REGISTRY_STABLE_PROMOTION_PHASES,
+    FsIntegrationCompatibilityV2ReportStore,
+    FsIntegrationMigrationReportStore,
     FsIntegrationRegistryRecoverer,
     FsIntegrationRegistryStablePromoter,
     FsIntegrationRegistryStablePromotionSimulatedCrashError,
+    FsIntegrationVerificationReportStore,
+    FsReleaseAdmissionDecisionStore,
 } from "@bernouy/cms-integration-registry/fs";
 import { cleanupRegistryFixtures, publicationPackage, registryFixture } from "../publication/fixtures";
+import { completeDecisionEvidence, releaseStores } from "../reports/fixtures";
 import {
     adverseRevision,
     persistedRecord,
@@ -23,6 +29,55 @@ import {
 afterEach(cleanupRegistryFixtures);
 
 describe("filesystem stable promotion recovery", () => {
+    test("replays a composite promotion against the exact immutable decision digest", async () => {
+        const fixture = registryFixture();
+        const source = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const target = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.1.0") });
+        const stores = releaseStores(fixture);
+        const evidence = await completeDecisionEvidence(source.digest, target.digest);
+        await stores.compatibilityReports.append({ report: evidence.compatibility, expectedCurrent: null });
+        await stores.verificationReports.append({ report: evidence.verification, expectedCurrent: null });
+        await stores.migrationReports.append({ report: evidence.migration, expectedCurrent: null });
+        await stores.decisions.append({ report: evidence.decision, expectedCurrent: null });
+        const promoter = new FsIntegrationRegistryStablePromoter({
+            root: fixture.root,
+            snapshots: fixture.snapshots,
+            decisions: stores.decisions,
+            mutations: fixture.mutations,
+            createOperationId: () => "composite-crash",
+            createPromotionId: () => "composite-promotion",
+            afterBoundary: (boundary) => {
+                if (boundary.phase === "index-written") {
+                    throw new Error("crash after composite index write");
+                }
+            },
+        });
+        await expect(
+            promoter.promoteStable({
+                kind: "demo",
+                version: "1.1.0",
+                currentReportRevisionId: evidence.decision.decisionId,
+                actor: "admin:user-1",
+                confirmation: { version: "1.1.0", reportRevisionId: evidence.decision.decisionId },
+            }),
+        ).rejects.toBeInstanceOf(FsIntegrationRegistryStablePromotionSimulatedCrashError);
+
+        const snapshots = emptySnapshotReference();
+        const decisions = restartedReleaseDecisions(fixture.root, snapshots);
+        const recovered = await new FsIntegrationRegistryRecoverer({
+            root: fixture.root,
+            snapshots,
+            releaseDecisions: decisions,
+        }).recover();
+
+        expect(recovered.snapshot.getIndex("demo")?.stable).toBe("1.1.0");
+        expect(await persistedRecord(fixture.root)).toMatchObject({
+            schema: "cms.integration.registry.stable-promotion.v2",
+            reportRevisionId: evidence.decision.decisionId,
+            reportType: "release-admission-decision",
+        });
+    });
+
     test("replays every durable promotion boundary and is idempotent", async () => {
         for (const phase of FS_INTEGRATION_REGISTRY_STABLE_PROMOTION_PHASES) {
             const fixture = registryFixture();
@@ -173,4 +228,18 @@ describe("filesystem stable promotion recovery", () => {
 
 function emptySnapshotReference(): IntegrationRegistryCatalogSnapshotReference {
     return new IntegrationRegistryCatalogSnapshotReference(createIntegrationRegistryCatalogSnapshot({ entries: [] }));
+}
+
+function restartedReleaseDecisions(root: string, snapshots: IntegrationRegistryCatalogSnapshotReference) {
+    const mutations = new InMemoryIntegrationRegistryMutationCoordinator();
+    const config = { root, snapshots, mutations };
+    const compatibilityReports = new FsIntegrationCompatibilityV2ReportStore(config);
+    const verificationReports = new FsIntegrationVerificationReportStore(config);
+    const migrationReports = new FsIntegrationMigrationReportStore(config);
+    return new FsReleaseAdmissionDecisionStore({
+        ...config,
+        compatibilityReports,
+        verificationReports,
+        migrationReports,
+    });
 }

@@ -42,30 +42,30 @@ export class FsIntegrationRegistryStablePromoter implements IntegrationRegistryS
                     `A ${versionEntry?.status ?? "missing"} version cannot be promoted to stable`,
                 );
             }
-            const history = await this.config.reports.get(validated.kind, validated.version);
-            if (!history) {
+            const evidence = await currentPromotionEvidence(this.config, validated.kind, validated.version);
+            if (!evidence) {
                 throw new IntegrationRegistryStablePromotionNotFoundError(validated.kind, validated.version);
             }
-            if (history.current.id !== validated.currentReportRevisionId) {
+            if (evidence.revisionId !== validated.currentReportRevisionId) {
                 throw new IntegrationRegistryStablePromotionStaleReportError(
                     validated.currentReportRevisionId,
-                    history.current.id,
+                    evidence.revisionId,
                 );
             }
             if (isIntegrationPrerelease(validated.version)) {
                 throw new IntegrationRegistryStablePromotionIneligibleError(
                     validated.kind,
                     validated.version,
-                    history.current.id,
+                    evidence.revisionId,
                     "Prerelease versions cannot be promoted to stable",
                 );
             }
-            if (!history.current.admissible) {
+            if (!evidence.admissible) {
                 throw new IntegrationRegistryStablePromotionIneligibleError(
                     validated.kind,
                     validated.version,
-                    history.current.id,
-                    "The current compatibility report does not admit this version",
+                    evidence.revisionId,
+                    `The current ${evidence.label} does not admit this version`,
                 );
             }
             if (index.stable === validated.version) {
@@ -73,13 +73,21 @@ export class FsIntegrationRegistryStablePromoter implements IntegrationRegistryS
             }
             const createdAt = this.config.now?.() ?? new Date().toISOString();
             const record: IntegrationRegistryStablePromotionRecord = parseStablePromotionRecord({
-                schema: "cms.integration.registry.stable-promotion.v1",
+                schema: evidence.digest
+                    ? "cms.integration.registry.stable-promotion.v2"
+                    : "cms.integration.registry.stable-promotion.v1",
                 id: promotionId,
                 operationId,
                 kind: validated.kind,
                 version: validated.version,
                 packageDigest: location.package.digest,
-                reportRevisionId: history.current.id,
+                reportRevisionId: evidence.revisionId,
+                ...(evidence.digest
+                    ? {
+                          reportDigest: evidence.digest,
+                          reportType: "release-admission-decision",
+                      }
+                    : {}),
                 ...(index.stable ? { previousStable: index.stable } : {}),
                 actor: validated.actor,
                 confirmation: validated.confirmation,
@@ -97,6 +105,32 @@ export class FsIntegrationRegistryStablePromoter implements IntegrationRegistryS
             });
         });
     }
+}
+
+async function currentPromotionEvidence(
+    config: FsIntegrationRegistryStablePromoterConfig,
+    kind: string,
+    version: string,
+): Promise<Readonly<{ revisionId: string; digest?: string; admissible: boolean; label: string }> | null> {
+    if (config.decisions) {
+        const history = await config.decisions.get(kind, version);
+        return history
+            ? {
+                  revisionId: history.currentRevisionId,
+                  digest: history.currentReportDigest,
+                  admissible: history.current.admissible,
+                  label: "release admission decision",
+              }
+            : null;
+    }
+    const history = await config.reports.get(kind, version);
+    return history
+        ? {
+              revisionId: history.current.id,
+              admissible: history.current.admissible,
+              label: "legacy compatibility report",
+          }
+        : null;
 }
 
 export type { FsIntegrationRegistryStablePromoterConfig } from "./types";

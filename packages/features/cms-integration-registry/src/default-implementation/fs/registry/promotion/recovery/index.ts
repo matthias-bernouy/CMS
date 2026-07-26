@@ -1,6 +1,7 @@
 import type { IntegrationPackageLimits } from "@bernouy/cms-integration-packages";
 import type { IntegrationRegistryCatalogSnapshotReference } from "../../../../../core/catalog/reference";
 import type { IntegrationRegistryRecoveryDiagnostic } from "../../../../../interfaces/recovery";
+import type { ReleaseAdmissionDecisionStore } from "../../../../../interfaces/reportStore";
 import type { FsIntegrationRegistryLayout } from "../../persistence/layout";
 import { stablePromotionStoragePaths } from "../layout";
 import { quarantineFailedStablePromotion } from "./failure";
@@ -12,6 +13,7 @@ export async function recoverStablePromotions(
         layout: FsIntegrationRegistryLayout;
         snapshots: IntegrationRegistryCatalogSnapshotReference;
         packageLimits?: Partial<IntegrationPackageLimits>;
+        releaseDecisions?: ReleaseAdmissionDecisionStore;
     }>,
 ): Promise<readonly IntegrationRegistryRecoveryDiagnostic[]> {
     const diagnostics: IntegrationRegistryRecoveryDiagnostic[] = [];

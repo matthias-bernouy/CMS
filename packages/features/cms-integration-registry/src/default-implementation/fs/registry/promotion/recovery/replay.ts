@@ -1,8 +1,11 @@
 import { canonicalJsonBytes, type IntegrationPackageLimits } from "@bernouy/cms-integration-packages";
 import type { IntegrationDefinitionIndex } from "@bernouy/cms-integrations";
 import { parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
+import { identifyReleaseAdmissionDecision } from "@bernouy/cms-integration-verification";
 import type { IntegrationRegistryCatalogSnapshotReference } from "../../../../../core/catalog/reference";
+import type { IntegrationRegistryExactVersionLocation } from "../../../../../interfaces/catalog";
 import type { IntegrationRegistryRecoveryDiagnostic } from "../../../../../interfaces/recovery";
+import type { ReleaseAdmissionDecisionStore } from "../../../../../interfaces/reportStore";
 import { buildFsIntegrationRegistryCatalogSnapshot } from "../../../snapshot/builder";
 import { readFsIntegrationCompatibilityReportCollection } from "../../history/store";
 import { readJsonFile, removeFileIfExists, replaceCanonicalJson } from "../../persistence/canonicalFile";
@@ -26,6 +29,7 @@ export async function replayStablePromotion(
         layout: FsIntegrationRegistryLayout;
         snapshots: IntegrationRegistryCatalogSnapshotReference;
         packageLimits?: Partial<IntegrationPackageLimits>;
+        releaseDecisions?: ReleaseAdmissionDecisionStore;
     }>,
 ): Promise<IntegrationRegistryRecoveryDiagnostic> {
     const journal = input.entry.journal;
@@ -37,11 +41,7 @@ export async function replayStablePromotion(
     if (!location || location.package.digest !== journal.record.packageDigest) {
         throw new Error("Stable promotion journal references an unavailable package");
     }
-    const history = await readFsIntegrationCompatibilityReportCollection(location);
-    const referencedReport = history?.reports.find((report) => report.id === journal.record.reportRevisionId);
-    if (!history || !referencedReport || !referencedReport.admissible) {
-        throw new Error("Stable promotion journal references an absent or ineligible compatibility report");
-    }
+    const evidence = await loadPromotionEvidence(input, journal, location);
     const storage = stablePromotionStoragePaths(location.integrationRoot);
     const paths = stablePromotionPaths(storage, journal.operationId, journal.record.id);
     let currentIndex = await readCurrentIndex(paths.index);
@@ -61,9 +61,15 @@ export async function replayStablePromotion(
     }
     if (
         sameIntegrationRegistryIndex(currentIndex, journal.previousIndex) &&
-        history.current.id !== journal.record.reportRevisionId
+        (evidence.currentRevisionId !== journal.record.reportRevisionId ||
+            (journal.record.schema === "cms.integration.registry.stable-promotion.v2" &&
+                evidence.currentDigest !== journal.record.reportDigest))
     ) {
-        throw new Error("Uncommitted stable promotion report is no longer the current compatibility revision");
+        throw new Error(
+            journal.record.schema === "cms.integration.registry.stable-promotion.v1"
+                ? "Uncommitted stable promotion report is no longer the current compatibility revision"
+                : "Uncommitted stable promotion evidence is no longer the current release decision",
+        );
     }
     let currentJournal = journal;
     if (sameIntegrationRegistryIndex(currentIndex, journal.previousIndex)) {
@@ -86,6 +92,34 @@ export async function replayStablePromotion(
         currentJournal,
         `Recovered stable promotion through ${currentJournal.phase}`,
     );
+}
+
+async function loadPromotionEvidence(
+    input: Pick<Parameters<typeof replayStablePromotion>[0], "releaseDecisions">,
+    journal: FsIntegrationRegistryStablePromotionJournal,
+    location: IntegrationRegistryExactVersionLocation,
+): Promise<Readonly<{ currentRevisionId: string; currentDigest?: string }>> {
+    if (journal.record.schema === "cms.integration.registry.stable-promotion.v1") {
+        const history = await readFsIntegrationCompatibilityReportCollection(location);
+        const referenced = history?.reports.find((report) => report.id === journal.record.reportRevisionId);
+        if (!history || !referenced?.admissible) {
+            throw new Error("Legacy stable promotion references an absent or ineligible compatibility report");
+        }
+        return { currentRevisionId: history.current.id };
+    }
+    if (!input.releaseDecisions) {
+        throw new Error("Composite stable promotion recovery requires the release decision store");
+    }
+    const history = await input.releaseDecisions.getHistory(journal.record.kind, journal.record.version);
+    const referenced = history?.revisions.find((decision) => decision.decisionId === journal.record.reportRevisionId);
+    const identified = referenced ? await identifyReleaseAdmissionDecision(referenced) : null;
+    if (!history || !identified || identified.digest !== journal.record.reportDigest || !referenced?.admissible) {
+        throw new Error("Stable promotion references an absent, substituted, or ineligible release decision");
+    }
+    return {
+        currentRevisionId: history.currentRevisionId,
+        currentDigest: history.currentReportDigest,
+    };
 }
 
 async function advanceAtLeast(

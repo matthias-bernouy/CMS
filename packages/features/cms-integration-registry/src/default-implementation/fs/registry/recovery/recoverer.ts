@@ -7,6 +7,7 @@ import type {
     IntegrationRegistryRecoveryResult,
 } from "../../../../interfaces/recovery";
 import type { IntegrationRegistryCatalogSnapshotReference } from "../../../../core/catalog/reference";
+import type { ReleaseAdmissionDecisionStore } from "../../../../interfaces/reportStore";
 import { buildFsIntegrationRegistryCatalogSnapshot } from "../../snapshot/builder";
 import { boundedDirectoryNames, publicationJournalInventory, stagingInventory } from "./inventory";
 import { ensureFsIntegrationRegistryLayout, type FsIntegrationRegistryLayout } from "../persistence/layout";
@@ -18,6 +19,7 @@ export type FsIntegrationRegistryRecovererConfig = Readonly<{
     root: string;
     snapshots: IntegrationRegistryCatalogSnapshotReference;
     packageLimits?: Partial<IntegrationPackageLimits>;
+    releaseDecisions?: ReleaseAdmissionDecisionStore;
 }>;
 
 export class FsIntegrationRegistryRecoverer implements IntegrationRegistryRecoverer {
@@ -55,6 +57,7 @@ export async function recoverFsIntegrationRegistry(
             layout,
             snapshots: config.snapshots,
             packageLimits: config.packageLimits,
+            ...(config.releaseDecisions ? { releaseDecisions: config.releaseDecisions } : {}),
         })),
     );
     snapshot = config.snapshots.current();

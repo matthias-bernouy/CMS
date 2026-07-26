@@ -153,6 +153,7 @@ export interface IntegrationMigrationReportStore {
 }
 
 export interface ReleaseAdmissionDecisionStore {
+    getHistory(kind: string, version: string): Promise<ReleaseReportHistory<ReleaseAdmissionDecision> | null>;
     get(kind: string, version: string): Promise<ReleaseReportHistory<ReleaseAdmissionDecision> | null>;
     append(
         request: AppendReleaseReportRequest<ReleaseAdmissionDecision>,
