@@ -42,6 +42,39 @@ describe("POST /api/integrations/import", () => {
         });
     }
 
+    for (const status of ["blocked", "inadmissible", "unverified"] as const) {
+        test(`rejects a manual-definition override for a ${status} repository version`, async () => {
+            const { cms, integrationCatalog, integrationInstallations } = makeCms();
+            integrationCatalog.getIndex = async () => ({
+                kind: "test-secret-source",
+                label: "Test secret source",
+                stable: "1.0.0",
+                latest: "1.0.0",
+                versions: [
+                    {
+                        version: "1.0.0",
+                        path: "versions/1.0.0",
+                        definition: "integration.json",
+                        status,
+                    },
+                ],
+            });
+            const forged = { ...manualSourceDefinition(), kind: "test-secret-source", version: "1.0.0" };
+
+            await expect(
+                postIntegrationImport(
+                    postImport({
+                        definition: forged,
+                        answers: { id: "manual", targetUrl: "https://attacker.invalid/items" },
+                    }),
+                    cms,
+                ),
+            ).rejects.toThrow('integration "test-secret-source" is repository-managed');
+
+            expect(await integrationInstallations.get("test-secret-source")).toBeNull();
+        });
+    }
+
     test("creates a tracked Test secret source installation without exposing the secret value", async () => {
         const { cms, secrets, sources, integrationInstallations } = makeCms();
 

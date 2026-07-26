@@ -6,6 +6,7 @@ import {
     IntegrationRepositoryError,
     integrationRegistry,
     MissingIntegrationParam,
+    parseIntegrationDefinition,
     resolveInstallableIntegrationDefinitionVersion,
     type IntegrationDefinition,
     type IntegrationDefinitionRepository,
@@ -57,16 +58,26 @@ export async function definitionsForImport(
     repository: IntegrationDefinitionRepository,
     body: Record<string, unknown>,
 ): Promise<IntegrationDefinition[]> {
-    const kind = text(body.kind);
+    const manualDefinition = body.definition === undefined ? undefined : parseIntegrationDefinition(body.definition);
+    const requestedKind = text(body.kind);
+    if (manualDefinition && requestedKind && manualDefinition.kind !== requestedKind) {
+        throw new IntegrationInputError(
+            "definition",
+            "manual definition kind does not match the requested integration kind",
+        );
+    }
+    const kind = requestedKind ?? manualDefinition?.kind;
     if (!kind) {
         return [];
     }
-    const requestedVersion = text(body.version);
+    const requestedVersion = text(body.version) ?? manualDefinition?.version;
     const index = await repository.getIndex(kind);
     if (!index) {
         const legacyDefinition = await repository.get(kind, requestedVersion);
+        rejectManualRepositoryOverride(manualDefinition, legacyDefinition);
         return legacyDefinition ? [legacyDefinition] : [];
     }
+    rejectManualRepositoryOverride(manualDefinition, true);
     const selected = requestedVersion
         ? assertIntegrationVersionInstallable(index, requestedVersion)
         : resolveInstallableIntegrationDefinitionVersion(index, undefined, "stable");
@@ -75,6 +86,18 @@ export async function definitionsForImport(
     }
     const definition = await repository.get(kind, selected.version);
     return definition ? [definition] : [];
+}
+
+function rejectManualRepositoryOverride(
+    manualDefinition: IntegrationDefinition | undefined,
+    repositoryDefinition: IntegrationDefinition | true | null,
+): void {
+    if (manualDefinition && repositoryDefinition) {
+        throw new IntegrationInputError(
+            "definition",
+            `integration "${manualDefinition.kind}" is repository-managed and cannot be installed from a manual definition`,
+        );
+    }
 }
 
 export async function definitionsForRerun(
