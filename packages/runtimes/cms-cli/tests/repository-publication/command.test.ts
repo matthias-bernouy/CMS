@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { OfficialIntegrationPackage } from "../../src/repositoryPublication/officialPackages";
+import type { OfficialIntegrationPackage } from "@bernouy/cms-official-integrations/publication";
 import { runRepositoryPublicationCommand } from "../../src/repositoryPublication/command";
 
 const PACKAGE_A = integrationPackage("alpha", "1.0.0", "a");

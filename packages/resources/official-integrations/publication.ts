@@ -3,8 +3,8 @@ import { lstat, open, opendir, realpath } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import { parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
-import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { compare as compareSemVer } from "semver";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "./index";
 
 const MAX_DISCOVERY_DEPTH = 8;
 const MAX_DISCOVERY_ENTRIES = 8_192;

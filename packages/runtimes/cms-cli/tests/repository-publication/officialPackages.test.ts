@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { buildOfficialIntegrationPackages } from "../../src/repositoryPublication/officialPackages";
+import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
 
 const EXPECTED_KINDS = [
     "ban",

@@ -1,4 +1,7 @@
-import { buildOfficialIntegrationPackages, type OfficialIntegrationPackage } from "./officialPackages";
+import {
+    buildOfficialIntegrationPackages,
+    type OfficialIntegrationPackage,
+} from "@bernouy/cms-official-integrations/publication";
 import { publishOfficialIntegrationPackage, type ManagementPublicationResult } from "./managementClient";
 import {
     parseRepositoryPublicationConfig,

@@ -1,4 +1,4 @@
-import type { OfficialIntegrationPackage } from "./officialPackages";
+import type { OfficialIntegrationPackage } from "@bernouy/cms-official-integrations/publication";
 
 const PUBLICATION_PATH = "/api/integrations/publications";
 const MAX_RESPONSE_BYTES = 1_048_576;

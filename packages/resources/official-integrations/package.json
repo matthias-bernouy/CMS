@@ -20,6 +20,11 @@
             "bun": "./index.ts",
             "default": "./index.ts"
         },
+        "./publication": {
+            "types": "./dist/publication.d.ts",
+            "bun": "./publication.ts",
+            "default": "./publication.ts"
+        },
         "./integrations/ban/*": "./integrations/providers/ban/*",
         "./integrations/basic-blocs/*": "./integrations/foundation/basic-blocs/*",
         "./integrations/commerce/*": "./integrations/domains/commerce/*",
@@ -35,7 +40,12 @@
         "./integrations/stripe-connect/*": "./integrations/providers/stripe-connect/*",
         "./integrations/user-account/*": "./integrations/domains/user-account/*"
     },
+    "dependencies": {
+        "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*",
+        "semver": "^7.8.2"
+    },
     "devDependencies": {
-        "@bernouy/cms-integration-packages": "workspace:*"
+        "@types/semver": "^7.7.1"
     }
 }

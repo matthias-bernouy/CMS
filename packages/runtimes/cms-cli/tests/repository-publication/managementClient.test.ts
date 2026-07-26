@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import type { OfficialIntegrationPackage } from "../../src/repositoryPublication/officialPackages";
+import type { OfficialIntegrationPackage } from "@bernouy/cms-official-integrations/publication";
 import { publishOfficialIntegrationPackage } from "../../src/repositoryPublication/managementClient";
 
 const servers: Bun.Server<unknown>[] = [];
