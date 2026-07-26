@@ -41,3 +41,8 @@ export {
     REPOSITORY_COMPATIBILITY_REEVALUATIONS_PATH,
     type RepositoryCompatibilityReevaluationRoutesConfig,
 } from "cms-repository-management/operations/reevaluationRoutes";
+export {
+    mountRepositorySchemaBaselineImportRoutes,
+    REPOSITORY_SCHEMA_BASELINE_IMPORT_PATH,
+    type RepositorySchemaBaselineImportRoutesConfig,
+} from "cms-repository-management/operations/schemaBaselineImportRoutes";

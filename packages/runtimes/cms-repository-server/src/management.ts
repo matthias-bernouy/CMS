@@ -3,6 +3,7 @@ import {
     InMemoryIntegrationRegistryMutationCoordinator,
     IntegrationCompatibilityEvaluator,
     type IntegrationRegistryRecoveryResult,
+    type OfficialRepositoryBootstrapBaselineApproval,
 } from "@bernouy/cms-integration-registry";
 import {
     FsIntegrationCompatibilityReevaluator,
@@ -11,8 +12,12 @@ import {
     FsIntegrationRegistryRecoverer,
     FsIntegrationRegistryStablePromoter,
     FsReviewedSchemaBaselineStore,
+    FsReviewedSchemaBaselineImporter,
+    MAX_REVIEWED_SCHEMA_BASELINE_IMPORT_DOCUMENT_BYTES,
+    recoverReviewedSchemaBaselineImports,
+    type ReviewedSchemaBaselineImportTarget,
 } from "@bernouy/cms-integration-registry/fs";
-import { RepositoryManagementCms } from "@bernouy/cms-repository-management";
+import { mountRepositorySchemaBaselineImportRoutes, RepositoryManagementCms } from "@bernouy/cms-repository-management";
 import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
 import type { Runner } from "@bernouy/http-runner";
 import type { RepositoryCatalogRuntime } from "./core/catalogRuntime";
@@ -37,13 +42,36 @@ export async function createProductionRepositoryManagement(input: {
     root: string;
     catalog: RepositoryCatalogRuntime;
     telemetry?: RepositoryOperationalTelemetry;
+    baselineImports?: Readonly<{
+        approval: OfficialRepositoryBootstrapBaselineApproval;
+        approvedTargets: readonly ReviewedSchemaBaselineImportTarget[];
+    }>;
 }): Promise<ProductionRepositoryManagement> {
     const telemetry = input.telemetry ?? new RepositoryOperationalTelemetry();
     const snapshots = input.catalog.snapshotReference();
     const mutations = new InMemoryIntegrationRegistryMutationCoordinator();
-    const recovery = await new FsIntegrationRegistryRecoverer({ root: input.root, snapshots }).recover();
-    const reports = new FsIntegrationCompatibilityReportStore({ snapshots, mutations });
     const reviewedSchemaBaselines = new FsReviewedSchemaBaselineStore({ root: input.root });
+    const registryRecovery = await new FsIntegrationRegistryRecoverer({ root: input.root, snapshots }).recover();
+    const baselineImportConfig = input.baselineImports
+        ? {
+              root: input.root,
+              snapshots,
+              store: reviewedSchemaBaselines,
+              mutations,
+              ...input.baselineImports,
+          }
+        : undefined;
+    const baselineImporter = baselineImportConfig
+        ? new FsReviewedSchemaBaselineImporter(baselineImportConfig)
+        : undefined;
+    const baselineImportDiagnostics = baselineImportConfig
+        ? await recoverReviewedSchemaBaselineImports(baselineImportConfig)
+        : [];
+    const recovery: IntegrationRegistryRecoveryResult = Object.freeze({
+        snapshot: registryRecovery.snapshot,
+        diagnostics: Object.freeze([...registryRecovery.diagnostics, ...baselineImportDiagnostics]),
+    });
+    const reports = new FsIntegrationCompatibilityReportStore({ snapshots, mutations });
     const compatibility = new IntegrationCompatibilityEvaluator({
         identity: { name: "cms-repository-server", version: "1.0.0" },
         now: () => new Date().toISOString(),
@@ -81,8 +109,13 @@ export async function createProductionRepositoryManagement(input: {
     return Object.freeze({
         recovery,
         compatibility: reports,
-        mountMaintenance() {
-            return undefined;
+        mountMaintenance(runner: Runner) {
+            if (baselineImporter) {
+                mountRepositorySchemaBaselineImportRoutes(runner, {
+                    importer: baselineImporter,
+                    maxBodyBytes: MAX_REVIEWED_SCHEMA_BASELINE_IMPORT_DOCUMENT_BYTES,
+                });
+            }
         },
         mount(runner: Runner) {
             new RepositoryManagementCms({

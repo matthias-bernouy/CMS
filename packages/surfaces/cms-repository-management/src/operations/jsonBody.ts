@@ -1,3 +1,5 @@
+import { parseStrictJsonDocument } from "@bernouy/cms-integration-packages";
+
 const JSON_MEDIA_TYPE = "application/json";
 
 export class RepositoryManagementJsonBodyError extends Error {
@@ -12,6 +14,13 @@ export class RepositoryManagementJsonBodyError extends Error {
 }
 
 export async function readRepositoryManagementJsonBody(request: Request, maxBytes: number): Promise<unknown> {
+    return (await readRepositoryManagementJsonDocument(request, maxBytes)).value;
+}
+
+export async function readRepositoryManagementJsonDocument(
+    request: Request,
+    maxBytes: number,
+): Promise<Readonly<{ value: unknown; bytes: Uint8Array }>> {
     assertLimit(maxBytes);
     assertRepresentation(request.headers);
     const declaredLength = parseContentLength(request.headers.get("content-length"));
@@ -23,8 +32,7 @@ export async function readRepositoryManagementJsonBody(request: Request, maxByte
         throw new RepositoryManagementJsonBodyError(400);
     }
     try {
-        const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-        return JSON.parse(text) as unknown;
+        return { value: parseStrictJsonDocument(bytes, maxBytes), bytes };
     } catch {
         throw new RepositoryManagementJsonBodyError(400);
     }
