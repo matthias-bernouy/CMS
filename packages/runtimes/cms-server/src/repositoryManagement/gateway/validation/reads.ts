@@ -15,6 +15,7 @@ import {
     type JsonObject,
 } from "./helpers";
 import { validateCompatibilityPage } from "./reports";
+import { validateOperationalMetrics, validateRecentOperations } from "./observability";
 
 const HEALTH_VALUES = ["healthy", "degraded"] as const;
 const DIAGNOSTIC_CODES = [
@@ -43,15 +44,11 @@ export function validateStatusResponse(
         return rateLimitResult(response);
     }
     assertEqual(response.status, 200);
-    const body = exactObject(response.body, [
-        "ready",
-        "health",
-        "integrations",
-        "versions",
-        "diagnostics",
-        "quarantined",
-        "recoveryDiagnostics",
-    ]);
+    const body = exactObject(
+        response.body,
+        ["ready", "health", "integrations", "versions", "diagnostics", "quarantined", "recoveryDiagnostics"],
+        ["metrics"],
+    );
     assertEqual(boolean(body.ready), true);
     enumValue(body.health, HEALTH_VALUES);
     nonNegativeInteger(body.integrations);
@@ -59,6 +56,9 @@ export function validateStatusResponse(
     nonNegativeInteger(body.diagnostics);
     nonNegativeInteger(body.quarantined);
     nonNegativeInteger(body.recoveryDiagnostics);
+    if (body.metrics !== undefined) {
+        validateOperationalMetrics(body.metrics);
+    }
     return { status: 200, body };
 }
 
@@ -69,11 +69,21 @@ export function validateDiagnosticsResponse(
         return rateLimitResult(response);
     }
     assertEqual(response.status, 200);
-    const body = exactObject(response.body, ["health", "diagnostics", "quarantined", "recovery"]);
+    const body = exactObject(
+        response.body,
+        ["health", "diagnostics", "quarantined", "recovery"],
+        ["metrics", "recentOperations"],
+    );
     enumValue(body.health, HEALTH_VALUES);
     array(body.diagnostics).forEach(validateDiagnostic);
     array(body.quarantined).forEach(validateQuarantinedEntry);
     array(body.recovery).forEach(validateRecoveryDiagnostic);
+    if (body.metrics !== undefined) {
+        validateOperationalMetrics(body.metrics);
+    }
+    if (body.recentOperations !== undefined) {
+        validateRecentOperations(body.recentOperations);
+    }
     return { status: 200, body };
 }
 

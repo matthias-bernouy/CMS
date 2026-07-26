@@ -1,5 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { gateway, jsonResponse, packageFixture, TEST_ACTOR, validStatus, validVersions } from "./fixtures";
+import {
+    gateway,
+    jsonResponse,
+    packageFixture,
+    TEST_ACTOR,
+    validOperationalMetrics,
+    validStatus,
+    validVersions,
+} from "./fixtures";
 import {
     admissionReport,
     compatibilityPage,
@@ -14,6 +22,19 @@ describe("HTTP repository management gateway DTO validation", () => {
         const publication = await packageFixture();
         const cases: Array<() => Promise<Response>> = [
             () => gateway(oneResponse({ ...validStatus(), internal: "secret" })).status(),
+            () =>
+                gateway(
+                    oneResponse({
+                        ...validStatus(),
+                        metrics: {
+                            ...validOperationalMetrics(),
+                            filesystem: {
+                                ...(validOperationalMetrics().filesystem as Record<string, unknown>),
+                                path: "/private/registry",
+                            },
+                        },
+                    }),
+                ).status(),
             () =>
                 gateway(
                     oneResponse({
@@ -97,6 +118,7 @@ describe("HTTP repository management gateway DTO validation", () => {
         const compatibility = compatibilityPage();
         const successCases: Array<() => Promise<Response>> = [
             () => gateway(oneResponse(validStatus())).status(),
+            () => gateway(oneResponse({ ...validStatus(), metrics: validOperationalMetrics() })).status(),
             () => gateway(oneResponse(validVersions())).versions(TEST_KIND),
             () => gateway(oneResponse(compatibility)).compatibility({ kind: TEST_KIND, version: TEST_VERSION }),
             () =>
@@ -130,7 +152,7 @@ describe("HTTP repository management gateway DTO validation", () => {
                 ).promoteStable(promotionInput()),
         ];
         expect(await Promise.all(successCases.map(async (execute) => (await execute()).status))).toEqual([
-            200, 200, 200, 201, 201, 201,
+            200, 200, 200, 200, 201, 201, 201,
         ]);
     });
 

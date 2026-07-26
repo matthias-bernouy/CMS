@@ -72,6 +72,44 @@ export function validDiagnostics(): Readonly<Record<string, unknown>> {
     return { health: "healthy", diagnostics: [], quarantined: [], recovery: [] };
 }
 
+export function validOperationalMetrics(): Readonly<Record<string, unknown>> {
+    const counter = {
+        attempted: 1,
+        inFlight: 0,
+        succeeded: 1,
+        rejected: 0,
+        failed: 0,
+        totalDurationMs: 7,
+        maximumDurationMs: 7,
+    };
+    return {
+        operations: {
+            publication: counter,
+            stablePromotion: counter,
+            compatibilityReevaluation: counter,
+        },
+        compatibility: { reevaluations: 1, warnings: 0 },
+        publicPackages: {
+            packagesServed: 2,
+            packageBytes: 4_096,
+            releaseNotesServed: 1,
+            releaseNotesBytes: 100,
+            rateLimitRejections: 1,
+            downloadRateLimitRejections: 1,
+        },
+        snapshot: { integrations: 1, versions: 1, diagnostics: 0, quarantined: 0, recoveryDiagnostics: 0 },
+        filesystem: {
+            status: "available",
+            checkedAt: "2026-07-26T12:00:00.000Z",
+            totalBytes: "10000",
+            freeBytes: "4000",
+            availableBytes: "3500",
+            usedBytes: "6000",
+            usedBasisPoints: 6000,
+        },
+    };
+}
+
 export function validVersions(): Readonly<Record<string, unknown>> {
     return {
         kind: TEST_KIND,
