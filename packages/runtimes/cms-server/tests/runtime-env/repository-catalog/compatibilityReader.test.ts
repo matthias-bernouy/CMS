@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { IntegrationRepositoryContractError } from "@bernouy/cms-integrations";
-import { HttpRepositoryCompatibilityReader } from "../../../src/repositoryCatalog/compatibilityReader";
+import { HttpRepositoryCompatibilityReader } from "../../../src/repositoryCatalog/compatibility/reader";
 
 describe("HTTP public compatibility reader", () => {
     test("projects one strict anonymous page for Delivery reuse", async () => {

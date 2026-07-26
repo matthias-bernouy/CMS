@@ -21,7 +21,7 @@ import {
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
-import { HttpRepositoryCompatibilityReader } from "../repositoryCatalog/compatibilityReader";
+import { HttpRepositoryCompatibilityReader } from "../repositoryCatalog/compatibility/reader";
 
 type IntegrationServiceOptions = {
     providerRepository: IntegrationConnectorProviderRepository;

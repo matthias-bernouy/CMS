@@ -1,7 +1,7 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { IntegrationRepositoryContractError } from "@bernouy/cms-integrations";
 import type { RepositoryCompatibilityPageSource } from "@bernouy/cms-repository";
-import type { HttpRepositoryCompatibilityReader } from "../compatibilityReader";
+import type { HttpRepositoryCompatibilityReader } from "../compatibility/reader";
 import { BoundedCatalogWork, type RepositoryCatalogReaderLimits } from "../limits";
 import { compatibilityHistory } from "./projection";
 

@@ -10,7 +10,7 @@ import type {
     RepositoryCatalogVersionContent,
     RepositoryCatalogVersionSummary,
 } from "@bernouy/cms-repository/catalog";
-import type { HttpRepositoryCompatibilityReader } from "../compatibilityReader";
+import type { HttpRepositoryCompatibilityReader } from "../compatibility/reader";
 import { BoundedCatalogWork, type RepositoryCatalogReaderLimits } from "../limits";
 import type { HttpRepositoryReleaseReader } from "../release/reader";
 import type { RepositoryCatalogHttpTransport, RepositoryPackageMetadata } from "../transport";

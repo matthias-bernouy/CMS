@@ -9,7 +9,7 @@ import type {
     RepositoryCatalogReader,
     RepositoryCatalogVersionPage,
 } from "@bernouy/cms-repository/catalog";
-import { HttpRepositoryCompatibilityReader } from "./compatibilityReader";
+import { HttpRepositoryCompatibilityReader } from "./compatibility/reader";
 import { HttpRepositoryReleaseReader } from "./release/reader";
 import { assertSummaryMatchesIndex, catalogIndex, catalogSummaries } from "./loading/definitionCatalog";
 import { featuredVersion, RepositoryCatalogLoader } from "./loading/integrationLoader";

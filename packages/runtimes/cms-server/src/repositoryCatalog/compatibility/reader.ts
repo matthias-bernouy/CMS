@@ -5,8 +5,8 @@ import type {
     RepositoryCompatibilityPageSource,
     RepositoryCompatibilityReader,
 } from "@bernouy/cms-repository";
-import { array, parseCompatibilityReport, record, text } from "./compatibilityReport";
-import { RepositoryCatalogHttpTransport, type RepositoryHttpDocument } from "./transport";
+import { RepositoryCatalogHttpTransport, type RepositoryHttpDocument } from "../transport";
+import { array, parseCompatibilityReport, record, text } from "./report";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 1_048_576;

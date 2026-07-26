@@ -5,7 +5,7 @@ export {
 export {
     HttpRepositoryCompatibilityReader,
     type HttpRepositoryCompatibilityReaderConfig,
-} from "./compatibilityReader";
+} from "./compatibility/reader";
 export { HttpRepositoryReleaseReader, type HttpRepositoryReleaseReaderConfig } from "./release/reader";
 export {
     DEFAULT_REPOSITORY_CATALOG_READER_LIMITS,
