@@ -87,6 +87,7 @@ describe("dashboard media field preview", () => {
         const root = field.shadowRoot!;
         const trigger = root.querySelector<HTMLButtonElement>("[data-preview-open]")!;
         expect(trigger.hidden).toBe(true);
+        expect(getComputedStyle(trigger).display).toBe("none");
 
         field.items = [items[0]!];
         expect(trigger.hidden).toBe(false);
