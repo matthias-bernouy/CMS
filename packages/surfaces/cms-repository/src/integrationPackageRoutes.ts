@@ -5,8 +5,9 @@ import {
     assertIntegrationPackageVersion,
     type IntegrationPackageSource,
     type ResolvedIntegrationPackage,
+    type ResolvedIntegrationPackageMetadata,
 } from "@bernouy/cms-integration-packages";
-import { publicBytesResponse, publicNotFound } from "cms-repository/publicReadResponse";
+import { publicBytesResponse, publicMetadataResponse, publicNotFound } from "cms-repository/publicReadResponse";
 import { guardPackageDownload, type PublicPackageDownloadProtection } from "cms-repository/packageDownloadGuard";
 
 export type IntegrationPackageRouteHandlers = {
@@ -28,6 +29,22 @@ export function integrationPackageRouteHandlers(
             );
             if (limited) {
                 return limited;
+            }
+            if (request.method === "HEAD" && source.getPackageMetadata) {
+                const metadata = await resolveExactPackageMetadata(identity, source.getPackageMetadata.bind(source));
+                if (metadata instanceof Response) {
+                    return metadata;
+                }
+                return publicMetadataResponse(
+                    request,
+                    metadata.canonicalBytes,
+                    "immutable",
+                    "application/json; charset=utf-8",
+                    {
+                        representationDigest: metadata.digest,
+                        headers: { [INTEGRATION_PACKAGE_DIGEST_HEADER]: metadata.digest },
+                    },
+                );
             }
             const resolved = await resolveExactPackage(identity, source);
             if (resolved instanceof Response) {
@@ -70,6 +87,27 @@ export function integrationPackageRouteHandlers(
             );
         },
     };
+}
+
+async function resolveExactPackageMetadata(
+    identity: ExactPackageIdentity,
+    load: (kind: string, version: string) => Promise<ResolvedIntegrationPackageMetadata | null>,
+): Promise<ResolvedIntegrationPackageMetadata | Response> {
+    const { kind, version } = identity;
+    const resolved = await load(kind, version);
+    if (!resolved) {
+        return publicNotFound("integration package not found");
+    }
+    if (
+        resolved.kind !== kind ||
+        resolved.version !== version ||
+        !/^[a-f0-9]{64}$/.test(resolved.digest) ||
+        !Number.isSafeInteger(resolved.canonicalBytes) ||
+        resolved.canonicalBytes < 0
+    ) {
+        throw sourceContractError("Integration package metadata does not match the requested version");
+    }
+    return resolved;
 }
 
 async function resolveExactPackage(

@@ -1,5 +1,9 @@
 import type { IntegrationPackageLimits } from "../../interfaces/envelope";
-import type { IntegrationPackageSource, ResolvedIntegrationPackage } from "../../interfaces/source";
+import type {
+    IntegrationPackageSource,
+    ResolvedIntegrationPackage,
+    ResolvedIntegrationPackageMetadata,
+} from "../../interfaces/source";
 import { canonicalJsonBytes } from "../../core/canonical/canonicalizeJson";
 import { sha256Hex } from "../../core/digest";
 import { resolveIntegrationPackageLimits } from "../../core/envelope/constants";
@@ -14,7 +18,14 @@ import {
     assertMatchingPackageMetadata,
     integrationPackageResponseMetadata,
     readIntegrationPackageResponse,
+    type IntegrationPackageResponseMetadata,
 } from "./response";
+import {
+    assertSuccessfulPackageStatus,
+    equalBytes,
+    integrationPackageEndpoint,
+    parsePackageTimeout,
+} from "./sourceSupport";
 
 export const DEFAULT_HTTP_INTEGRATION_PACKAGE_TIMEOUT_MS = 10_000;
 
@@ -32,10 +43,10 @@ export class HttpIntegrationPackageSource implements IntegrationPackageSource {
     private readonly timeoutMs: number;
 
     constructor(config: HttpIntegrationPackageSourceConfig) {
-        this.endpoint = packageEndpoint(config.baseUrl);
+        this.endpoint = integrationPackageEndpoint(config.baseUrl);
         this.fetchImpl = config.fetch ?? fetch;
         this.limits = resolveIntegrationPackageLimits(config.limits);
-        this.timeoutMs = parseTimeout(config.timeoutMs ?? DEFAULT_HTTP_INTEGRATION_PACKAGE_TIMEOUT_MS);
+        this.timeoutMs = parsePackageTimeout(config.timeoutMs ?? DEFAULT_HTTP_INTEGRATION_PACKAGE_TIMEOUT_MS);
     }
 
     async getPackage(kind: string, version: string): Promise<ResolvedIntegrationPackage | null> {
@@ -44,22 +55,55 @@ export class HttpIntegrationPackageSource implements IntegrationPackageSource {
         return await this.withTimeout((signal) => this.load(expectedKind, expectedVersion, signal));
     }
 
+    async getPackageMetadata(kind: string, version: string): Promise<ResolvedIntegrationPackageMetadata | null> {
+        const expectedKind = assertIntegrationPackageKind(kind);
+        const expectedVersion = assertIntegrationPackageVersion(version);
+        return await this.withTimeout((signal) => this.loadMetadata(expectedKind, expectedVersion, signal));
+    }
+
     private async load(kind: string, version: string, signal: AbortSignal): Promise<ResolvedIntegrationPackage | null> {
-        const url = new URL(this.endpoint);
-        url.search = new URLSearchParams({ kind, version }).toString();
-        const head = await this.request(url, "HEAD", signal);
-        if (head.status === 404) {
+        const headMetadata = await this.loadHead(kind, version, signal);
+        if (!headMetadata) {
             return null;
         }
-        assertSuccessfulStatus(head);
-        const headMetadata = integrationPackageResponseMetadata(head, this.limits.maxDocumentBytes);
-
+        const url = new URL(this.endpoint);
+        url.search = new URLSearchParams({ kind, version }).toString();
         const response = await this.request(url, "GET", signal);
-        assertSuccessfulStatus(response);
+        assertSuccessfulPackageStatus(response);
         const getMetadata = integrationPackageResponseMetadata(response, this.limits.maxDocumentBytes);
         assertMatchingPackageMetadata(headMetadata, getMetadata);
         const bytes = await readIntegrationPackageResponse(response, this.limits.maxDocumentBytes, signal);
         return await this.resolve(bytes, getMetadata.digest, kind, version);
+    }
+
+    private async loadMetadata(
+        kind: string,
+        version: string,
+        signal: AbortSignal,
+    ): Promise<ResolvedIntegrationPackageMetadata | null> {
+        const metadata = await this.loadHead(kind, version, signal);
+        if (!metadata) {
+            return null;
+        }
+        if (metadata.contentLength === undefined) {
+            throw new IntegrationPackageRepositoryContractError();
+        }
+        return { kind, version, digest: metadata.digest, canonicalBytes: metadata.contentLength };
+    }
+
+    private async loadHead(
+        kind: string,
+        version: string,
+        signal: AbortSignal,
+    ): Promise<IntegrationPackageResponseMetadata | null> {
+        const url = new URL(this.endpoint);
+        url.search = new URLSearchParams({ kind, version }).toString();
+        const response = await this.request(url, "HEAD", signal);
+        if (response.status === 404) {
+            return null;
+        }
+        assertSuccessfulPackageStatus(response);
+        return integrationPackageResponseMetadata(response, this.limits.maxDocumentBytes);
     }
 
     private async request(url: URL, method: "GET" | "HEAD", signal: AbortSignal): Promise<Response> {
@@ -122,41 +166,4 @@ export class HttpIntegrationPackageSource implements IntegrationPackageSource {
             }
         }
     }
-}
-
-function assertSuccessfulStatus(response: Response): void {
-    if (response.ok) {
-        return;
-    }
-    if (response.status === 429 || response.status >= 500) {
-        throw new IntegrationPackageRepositoryUnavailableError();
-    }
-    throw new IntegrationPackageRepositoryContractError();
-}
-
-function packageEndpoint(value: string): URL {
-    const base = new URL(value);
-    if (base.protocol !== "http:" && base.protocol !== "https:") {
-        throw new TypeError("Integration package repository URL must use HTTP or HTTPS");
-    }
-    if (base.username || base.password) {
-        throw new TypeError("Integration package repository URL must not contain credentials");
-    }
-    base.search = "";
-    base.hash = "";
-    if (!base.pathname.endsWith("/")) {
-        base.pathname = `${base.pathname}/`;
-    }
-    return new URL("api/integrations/package", base);
-}
-
-function parseTimeout(value: number): number {
-    if (!Number.isSafeInteger(value) || value <= 0 || value > 2_147_483_647) {
-        throw new RangeError("Integration package repository timeout must be a positive 32-bit integer");
-    }
-    return value;
-}
-
-function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
-    return left.byteLength === right.byteLength && left.every((byte, index) => byte === right[index]);
 }

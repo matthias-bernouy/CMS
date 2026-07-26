@@ -49,6 +49,26 @@ describe("HTTP integration package source", () => {
         expect(methods).toEqual(["HEAD"]);
     });
 
+    test("resolves metadata with exactly one HEAD request", async () => {
+        const fixture = await httpPackageFixture();
+        const methods: string[] = [];
+        const source = new HttpIntegrationPackageSource({
+            baseUrl: "https://integrations.example.test/.cms/repository/",
+            fetch: (async (_input, init) => {
+                methods.push(init?.method ?? "GET");
+                return packageHead(fixture);
+            }) as typeof fetch,
+        });
+
+        expect(await source.getPackageMetadata("commerce", "1.2.3")).toEqual({
+            kind: "commerce",
+            version: "1.2.3",
+            digest: fixture.digest,
+            canonicalBytes: fixture.bytes.byteLength,
+        });
+        expect(methods).toEqual(["HEAD"]);
+    });
+
     test("does not retain an in-memory response cache", async () => {
         const fixture = await httpPackageFixture();
         let calls = 0;

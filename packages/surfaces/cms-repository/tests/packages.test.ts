@@ -82,6 +82,61 @@ describe("@bernouy/cms-repository exact package routes", () => {
         expect(response.status).toBe(500);
         expect(await json(response)).toMatchObject({ code: "integration_package_source_invalid" });
     });
+
+    test("answers package HEAD from snapshot metadata without resolving package bytes", async () => {
+        const document = await packageDocument();
+        let bodyReads = 0;
+        let metadataReads = 0;
+        const runner = mounted({
+            getPackage: async () => {
+                bodyReads += 1;
+                return document;
+            },
+            getPackageMetadata: async (kind, version) => {
+                metadataReads += 1;
+                return {
+                    kind,
+                    version,
+                    digest: document.digest,
+                    canonicalBytes: document.canonicalBytes.byteLength,
+                };
+            },
+        });
+        const path = "/api/integrations/package?kind=demo&version=1.0.0";
+
+        const head = await runner.handle(path, { method: "HEAD" });
+        const notModified = await runner.handle(path, {
+            method: "HEAD",
+            headers: { "if-none-match": `"${document.digest}"` },
+        });
+
+        expect(head.status).toBe(200);
+        expect(head.headers.get("content-length")).toBe(String(document.canonicalBytes.byteLength));
+        expect(head.headers.get(INTEGRATION_PACKAGE_DIGEST_HEADER)).toBe(document.digest);
+        expect(await head.text()).toBe("");
+        expect(notModified.status).toBe(304);
+        expect(bodyReads).toBe(0);
+        expect(metadataReads).toBe(2);
+    });
+
+    test("fails closed on invalid package HEAD metadata", async () => {
+        const runner = mounted({
+            getPackage: async () => null,
+            getPackageMetadata: async () => ({
+                kind: "other",
+                version: "1.0.0",
+                digest: "invalid",
+                canonicalBytes: -1,
+            }),
+        });
+
+        const response = await runner.handle("/api/integrations/package?kind=demo&version=1.0.0", {
+            method: "HEAD",
+        });
+
+        expect(response.status).toBe(500);
+        expect(await response.text()).toBe("");
+    });
 });
 
 function mounted(integrationPackages: IntegrationPackageSource): TestRunner {

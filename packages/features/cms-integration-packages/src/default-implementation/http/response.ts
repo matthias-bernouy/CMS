@@ -67,7 +67,12 @@ export function assertMatchingPackageMetadata(
     head: IntegrationPackageResponseMetadata,
     get: IntegrationPackageResponseMetadata,
 ): void {
-    if (head.digest !== get.digest) {
+    if (
+        head.digest !== get.digest ||
+        (head.contentLength !== undefined &&
+            get.contentLength !== undefined &&
+            head.contentLength !== get.contentLength)
+    ) {
         throw new IntegrationPackageRepositoryContractError();
     }
 }

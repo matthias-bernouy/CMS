@@ -18,6 +18,11 @@ export type PublicBytesResponseOptions = {
     headers?: Readonly<Record<string, string>>;
 };
 
+export type PublicMetadataResponseOptions = {
+    representationDigest: string;
+    headers?: Readonly<Record<string, string>>;
+};
+
 export function publicJsonResponse(request: Request, body: unknown, cache: PublicRepositoryCache): Response {
     const bytes = new TextEncoder().encode(JSON.stringify(body));
     return publicContentResponse(request, bytes, cache, "application/json; charset=utf-8");
@@ -31,6 +36,23 @@ export function publicBytesResponse(
     options: PublicBytesResponseOptions = {},
 ): Response {
     return publicContentResponse(request, bytes, cache, contentType, options);
+}
+
+export function publicMetadataResponse(
+    request: Request,
+    contentLength: number,
+    cache: PublicRepositoryCache,
+    contentType: string,
+    options: PublicMetadataResponseOptions,
+): Response {
+    if (!Number.isSafeInteger(contentLength) || contentLength < 0) {
+        throw new TypeError("Public repository content length must be a non-negative safe integer");
+    }
+    const headers = publicContentHeaders(contentLength, cache, contentType, options);
+    if (matchesEtag(request.headers.get("if-none-match"), headers.get("etag")!)) {
+        return new Response(null, { status: 304, headers });
+    }
+    return new Response(null, { headers });
 }
 
 export function publicNotFound(message: string): Response {
@@ -111,25 +133,36 @@ function publicContentResponse(
     options: PublicBytesResponseOptions = {},
 ): Response {
     const digest = options.representationDigest ?? createHash("sha256").update(bytes).digest("hex");
-    if (!/^[a-f0-9]{64}$/.test(digest)) {
-        throw new TypeError("Public repository representation digest must be lowercase hexadecimal SHA-256");
-    }
-    const etag = `"${digest}"`;
-    const headers = new Headers({
-        ...CORS_HEADERS,
-        "cache-control": CACHE_CONTROL[cache],
-        "content-length": String(bytes.byteLength),
-        "content-type": contentType,
-        etag,
-        ...options.headers,
+    const headers = publicContentHeaders(bytes.byteLength, cache, contentType, {
+        representationDigest: digest,
+        headers: options.headers,
     });
-    if (matchesEtag(request.headers.get("if-none-match"), etag)) {
+    if (matchesEtag(request.headers.get("if-none-match"), headers.get("etag")!)) {
         return new Response(null, { status: 304, headers });
     }
     if (request.method === "HEAD") {
         return new Response(null, { headers });
     }
     return new Response(responseBuffer(bytes), { headers });
+}
+
+function publicContentHeaders(
+    contentLength: number,
+    cache: PublicRepositoryCache,
+    contentType: string,
+    options: PublicMetadataResponseOptions,
+): Headers {
+    if (!/^[a-f0-9]{64}$/.test(options.representationDigest)) {
+        throw new TypeError("Public repository representation digest must be lowercase hexadecimal SHA-256");
+    }
+    return new Headers({
+        ...CORS_HEADERS,
+        "cache-control": CACHE_CONTROL[cache],
+        "content-length": String(contentLength),
+        "content-type": contentType,
+        etag: `"${options.representationDigest}"`,
+        ...options.headers,
+    });
 }
 
 function matchesEtag(header: string | null, etag: string): boolean {

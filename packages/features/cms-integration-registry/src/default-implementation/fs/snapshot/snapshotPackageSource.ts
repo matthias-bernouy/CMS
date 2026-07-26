@@ -2,6 +2,7 @@ import type {
     IntegrationPackageLimits,
     IntegrationPackageSource,
     ResolvedIntegrationPackage,
+    ResolvedIntegrationPackageMetadata,
 } from "@bernouy/cms-integration-packages";
 import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import type {
@@ -19,6 +20,19 @@ export class SnapshotIntegrationPackageSource implements IntegrationPackageSourc
     private readonly inFlight = new Map<string, Promise<ResolvedIntegrationPackage>>();
 
     constructor(private readonly config: SnapshotIntegrationPackageSourceConfig) {}
+
+    async getPackageMetadata(kind: string, version: string): Promise<ResolvedIntegrationPackageMetadata | null> {
+        const location = this.config.snapshots.current().locateExactVersion(kind, version);
+        if (!location) {
+            return null;
+        }
+        return {
+            kind: location.kind,
+            version: location.version,
+            digest: location.package.digest,
+            canonicalBytes: location.package.canonicalBytes,
+        };
+    }
 
     async getPackage(kind: string, version: string): Promise<ResolvedIntegrationPackage | null> {
         const location = this.config.snapshots.current().locateExactVersion(kind, version);

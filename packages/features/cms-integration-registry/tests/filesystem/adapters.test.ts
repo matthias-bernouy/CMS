@@ -69,6 +69,25 @@ describe("snapshot-backed repository adapters", () => {
         await expect(source.getPackage("demo", "1.0.0")).rejects.toThrow(/no such file or directory/i);
     });
 
+    test("serves package HEAD metadata from the snapshot after package files disappear", async () => {
+        const root = registryRoot();
+        const integrationRoot = writeIntegrationFixture(root, "demo");
+        const snapshot = await buildFsIntegrationRegistryCatalogSnapshot({ root });
+        const source = new SnapshotIntegrationPackageSource({
+            snapshots: new IntegrationRegistryCatalogSnapshotReference(snapshot),
+        });
+        const captured = snapshot.locateExactVersion("demo", "1.0.0")!;
+        rmSync(join(integrationRoot, "versions"), { recursive: true });
+
+        expect(await source.getPackageMetadata("demo", "1.0.0")).toEqual({
+            kind: "demo",
+            version: "1.0.0",
+            digest: captured.package.digest,
+            canonicalBytes: captured.package.canonicalBytes,
+        });
+        await expect(source.getPackage("demo", "1.0.0")).rejects.toThrow(/no such file or directory/i);
+    });
+
     test("fails closed when exact package bytes diverge from snapshot metadata", async () => {
         const root = registryRoot();
         const integrationRoot = writeIntegrationFixture(root, "demo");
