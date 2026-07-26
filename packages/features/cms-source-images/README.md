@@ -15,14 +15,16 @@ The host supplies two independent markup switches to
 
 Public classification is opt-in. An image joins the public cohort only when it
 has `data-source-image-access="public"`. A missing, misspelled, or unknown value
-is classified as private, so the public-first rollout cannot accidentally
-activate an authenticated consumer.
+is classified as private.
 
 Both intrinsic dimensions must resolve to positive integers before responsive
 markup is emitted. A pair rendered as empty strings by the binding runtime is a
 historical row with unknown dimensions and receives the immutable original.
 Partial, invalid, or still-unresolved bindings remain network-dark.
 
-The server-side Source interceptor is independent from these markup switches.
-Enable transforms first, then public markup, and finally private markup after
-reauthorization has been observed. Roll back those stages in reverse order.
+The official runtime enables the server-side transformer and both markup
+cohorts when their configuration is omitted. Only an explicit `false` disables
+a capability. The transformer remains the prerequisite: disabling it also
+forces both markup cohorts off. During rollback, disable private markup, then
+public markup, and finally the transformer after previously loaded bundles have
+drained.
