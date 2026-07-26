@@ -2,6 +2,7 @@ import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages
 import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 import type { ClientAddressPolicy } from "@bernouy/http-runner";
 import type { PublicPackageDownloadProtection } from "@bernouy/cms-repository";
+import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { ProductionIntegrationServices } from "./integrations";
 import type { CoreStores } from "./stores/core";
@@ -10,12 +11,16 @@ type RepositoryReadEnv = Pick<RuntimeEnv, "CMS_HTTP_CLIENT_ADDRESS_MODE" | "CMS_
 
 export function productionRepositoryReadConfig(
     env: RepositoryReadEnv,
-    integrations: Pick<ProductionIntegrationServices, "publicRepositoryCatalog" | "publicRepositoryPackages">,
+    integrations: Pick<
+        ProductionIntegrationServices,
+        "publicRepositoryCatalog" | "publicRepositoryPackages" | "publicRepositoryCompatibility"
+    >,
     core: Pick<CoreStores, "repositoryPackageDownloadRateLimit">,
     report: (message: string) => void,
 ): {
     integrationCatalog: IntegrationDefinitionRepository;
     integrationPackages: IntegrationPackageSource;
+    integrationCompatibility?: RepositoryCompatibilityReader;
     packageDownloadProtection: PublicPackageDownloadProtection;
 } {
     const clientAddressPolicy = policyFromEnv(env);
@@ -24,12 +29,18 @@ export function productionRepositoryReadConfig(
         return {
             integrationCatalog: integrations.publicRepositoryCatalog,
             integrationPackages: integrations.publicRepositoryPackages,
+            ...(integrations.publicRepositoryCompatibility
+                ? { integrationCompatibility: integrations.publicRepositoryCompatibility }
+                : {}),
             packageDownloadProtection: { clientAddressPolicy },
         };
     }
     return {
         integrationCatalog: integrations.publicRepositoryCatalog,
         integrationPackages: integrations.publicRepositoryPackages,
+        ...(integrations.publicRepositoryCompatibility
+            ? { integrationCompatibility: integrations.publicRepositoryCompatibility }
+            : {}),
         packageDownloadProtection: { clientAddressPolicy, rateLimiter: core.repositoryPackageDownloadRateLimit },
     };
 }

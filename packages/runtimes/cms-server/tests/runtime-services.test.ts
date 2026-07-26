@@ -15,6 +15,7 @@ import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/h
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { createProductionAuth } from "../src/runtime/auth";
 import { createProductionIntegrationServices } from "../src/runtime/integrations";
+import { HttpRepositoryCompatibilityReader } from "../src/repositoryCatalog";
 import type { CoreStores } from "../src/runtime/stores/core";
 import { readRuntimeEnv } from "../src/runtimeEnv";
 
@@ -108,8 +109,10 @@ describe("production runtime services", () => {
         expect(services.integrationCatalog).toBeInstanceOf(HttpIntegrationDefinitionRepository);
         expect(services.integrationPackageSource).toBeInstanceOf(HttpIntegrationPackageSource);
         expect(services.repositoryReadMode).toBe("global");
+        expect(services.repositoryUrl).toBe("https://integrations.example.test/catalog");
         expect(services.publicRepositoryCatalog).toBe(services.integrationCatalog);
         expect(services.publicRepositoryPackages).toBe(services.integrationPackageSource);
+        expect(services.publicRepositoryCompatibility).toBeInstanceOf(HttpRepositoryCompatibilityReader);
         expect(services.integrationPackageCache).toBeInstanceOf(FsIntegrationPackageCache);
         expect(services.integrationPackageResolver).toBeInstanceOf(FsIntegrationPackageResolver);
         expect(services.integrationRepositoryPackages).toBeInstanceOf(FsIntegrationPackageSource);
@@ -156,8 +159,10 @@ describe("production runtime services", () => {
         });
 
         expect(services.repositoryReadMode).toBe("embedded");
+        expect(services.repositoryUrl).toBe("http://127.0.0.1:3001/.cms/repository");
         expect(services.publicRepositoryCatalog).toBe(services.integrationRepositoryCatalog);
         expect(services.publicRepositoryPackages).toBe(services.integrationRepositoryPackages);
+        expect(services.publicRepositoryCompatibility).toBeUndefined();
         expect((await services.publicRepositoryCatalog.list()).some(({ kind }) => kind === "commerce")).toBeTrue();
         expect(await services.publicRepositoryPackages.getPackage("commerce", "1.0.0")).not.toBeNull();
         expect(definitionFetch).not.toHaveBeenCalled();

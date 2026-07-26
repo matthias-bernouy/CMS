@@ -12,6 +12,7 @@ import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/s
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
+import { HttpRepositoryCompatibilityReader } from "../repositoryCatalog";
 
 type IntegrationServiceOptions = {
     providerRepository: IntegrationConnectorProviderRepository;
@@ -56,12 +57,20 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
     const publicRepositoryCatalog = repositoryReadMode === "global" ? integrationCatalog : integrationRepositoryCatalog;
     const publicRepositoryPackages =
         repositoryReadMode === "global" ? integrationPackageSource : integrationRepositoryPackages;
+    const publicRepositoryCompatibility = globalRepositoryUrl
+        ? new HttpRepositoryCompatibilityReader({
+              baseUrl: globalRepositoryUrl,
+              ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
+          })
+        : undefined;
     return {
         repositoryReadMode,
+        repositoryUrl,
         integrationRepositoryCatalog,
         integrationRepositoryPackages,
         publicRepositoryCatalog,
         publicRepositoryPackages,
+        publicRepositoryCompatibility,
         integrationCatalog,
         integrationPackageSource,
         integrationPackageCache,
