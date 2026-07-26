@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { IntegrationRepositoryContractError, IntegrationRepositoryUnavailableError } from "@bernouy/cms-integrations";
 import { HttpRepositoryCatalogReader } from "../../../src/repositoryCatalog";
-import { catalogFixture, FixtureDefinitionRepository, jsonResponse, PACKAGE_DIGEST } from "./fixtures";
+import { catalogFixture, FixtureDefinitionRepository, jsonResponse, PACKAGE_DIGEST, releaseDocument } from "./fixtures";
 
 describe("repository catalog upstream errors", () => {
     test("maps malformed DTOs and inconsistent immutable digests to 502", async () => {
@@ -32,6 +32,32 @@ describe("repository catalog upstream errors", () => {
         await expect(inconsistent.getVersion("commerce", "1.0.0")).rejects.toBeInstanceOf(
             IntegrationRepositoryContractError,
         );
+
+        const fabricatedRollback = reader(async (input, init) => {
+            const url = new URL(String(input));
+            if (!url.pathname.endsWith("/release")) {
+                return await fixture.fetch(input, init);
+            }
+            const release = releaseDocument("1.0.0");
+            const migration = release.migrations[0]!;
+            return jsonResponse({
+                ...release,
+                migrations: [
+                    {
+                        ...migration,
+                        operationalEvidence: {
+                            ...migration.operationalEvidence,
+                            rollback: {
+                                capability: "unavailable",
+                                verified: true,
+                                evidenceDigest: "c".repeat(64),
+                            },
+                        },
+                    },
+                ],
+            });
+        });
+        await expect(fabricatedRollback.getVersion("commerce", "1.0.0")).rejects.toMatchObject({ status: 502 });
     });
 
     test("treats a definition missing behind a listed exact version as a 502 contract failure", async () => {

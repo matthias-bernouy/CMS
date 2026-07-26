@@ -140,7 +140,10 @@ describe("explicit integration upgrade UI", () => {
         expect(panel.textContent).toContain("Select and confirm an exact target version");
         expect(panel.textContent).toContain("tested migration ^1.0.0");
         expect(panel.textContent).toContain("PONR cleanup");
+        expect(panel.textContent).toContain("PONR cleanup (not recorded)");
         expect(panel.textContent).toContain("drain 30s");
+        expect(panel.textContent).toContain("rollback (not verified)");
+        expect(panel.textContent).toContain("downtime evidence not recorded");
         expect(panel.textContent).toContain("2.0.0-beta.1: The release is fresh-install-only");
     });
 

@@ -3,7 +3,7 @@ import type {
     IdentifiedStatefulChangeSelectionV1,
     ReleaseAdmissionDecision,
 } from "../../../../interfaces/reports/decision";
-import { MIGRATION_REPORT_V2_SCHEMA } from "../../../../interfaces/reports/migration";
+import { MIGRATION_REPORT_SCHEMA } from "../../../../interfaces/reports/migration";
 import { identifyCompatibilityReportV2 } from "../../compatibility";
 import { identifyMigrationReport } from "../../migration";
 import { identifyVerificationReport } from "../../verification";
@@ -60,7 +60,7 @@ export async function composeReleaseAdmissionDecision(
             reasons.push(`migration-missing:${key}`);
         } else {
             selectedMigrations.push(report);
-            if (report.report.schema === MIGRATION_REPORT_V2_SCHEMA) {
+            if (report.report.schema !== MIGRATION_REPORT_SCHEMA) {
                 if (report.report.policyEvaluation.releaseLevel !== compatibility.report.releaseLevel) {
                     invalid(`migration report ${report.report.reportId} evaluated a different release level`);
                 }

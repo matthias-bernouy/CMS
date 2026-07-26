@@ -198,6 +198,17 @@ function releaseEvidence(version: string): NonNullable<RepositoryCatalogVersionC
                 rollback: "available",
                 pointOfNoReturn: "cleanup",
                 delayedCleanupVerified: true,
+                operationalEvidence: {
+                    downtime: { status: "not-measured" },
+                    drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
+                    rollback: { capability: "available", verified: true, evidenceDigest: reportDigest },
+                    pointOfNoReturn: {
+                        phase: "cleanup",
+                        observation: "crossed",
+                        evidenceDigest: reportDigest,
+                    },
+                    cleanup: { delaySeconds: 60, observed: true, evidenceDigest: reportDigest },
+                },
             },
         ],
         decision: {

@@ -36,6 +36,17 @@ describe("@bernouy/cms-repository public release evidence", () => {
                     runner: { name: "cms-postgres-migration", imageDigest: "sha256:migration" },
                     environmentDigest: REPORT_DIGEST,
                     checks: { freshInstall: { outcome: "passed", evidenceDigest: REPORT_DIGEST } },
+                    operationalEvidence: {
+                        downtime: { status: "not-measured" },
+                        drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
+                        rollback: { capability: "available", verified: true, evidenceDigest: REPORT_DIGEST },
+                        pointOfNoReturn: {
+                            phase: "cleanup",
+                            observation: "crossed",
+                            evidenceDigest: REPORT_DIGEST,
+                        },
+                        cleanup: { delaySeconds: 60, observed: true, evidenceDigest: REPORT_DIGEST },
+                    },
                 },
             ],
             decision: { admissible: true, reasons: [] },
@@ -173,7 +184,7 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
         provenance: { actor: "private-actor", reason: "Legacy backfill" },
     };
     const migration = {
-        schema: "cms.integration.migration-report.v1" as const,
+        schema: "cms.integration.migration-report.v3" as const,
         reportId: "migration-1",
         revisionType: "root" as const,
         origin: "admission" as const,
@@ -203,6 +214,24 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
         pointOfNoReturn: "cleanup",
         delayedCleanupVerified: true,
         outcome: "passed" as const,
+        policyEvaluation: {
+            releaseLevel: "minor" as const,
+            applicable: true,
+            satisfied: true,
+            checks: [],
+            reasons: [],
+        },
+        operationalEvidence: {
+            downtime: { status: "not-measured" as const },
+            drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
+            rollback: { capability: "available" as const, verified: true, evidenceDigest: REPORT_DIGEST },
+            pointOfNoReturn: {
+                phase: "cleanup",
+                observation: "crossed" as const,
+                evidenceDigest: REPORT_DIGEST,
+            },
+            cleanup: { delaySeconds: 60, observed: true, evidenceDigest: REPORT_DIGEST },
+        },
         provenance: { actor: "private-actor", reason: "Migration admission" },
     };
     const decision = {

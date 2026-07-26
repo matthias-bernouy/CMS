@@ -91,9 +91,32 @@ function renderMigrations(release: PublicRepositoryRelease): string {
 <div><dt>CMS-mediated cutover</dt><dd>${escapeHtml(humanLabel(migration.cutover.cmsMediated))}</dd></div>
 <div><dt>Provider-direct cutover</dt><dd>${escapeHtml(humanLabel(migration.cutover.providerDirect))}</dd></div>
 <div><dt>Delayed cleanup verified</dt><dd>${migration.delayedCleanupVerified ? "Yes" : "No"}</dd></div>
+${renderOperationalEvidence(migration)}
 </dl>${renderMigrationChecks(migration.checks)}</article></li>`,
         )
         .join("")}</ol>`;
+}
+
+function renderOperationalEvidence(migration: PublicRepositoryRelease["migrations"][number]): string {
+    const evidence = migration.operationalEvidence;
+    if (!evidence) {
+        return "<div><dt>Operational evidence</dt><dd>Not recorded by this legacy report.</dd></div>";
+    }
+    const downtime =
+        evidence.downtime.status === "not-measured"
+            ? "Not measured by the current verifier"
+            : `${humanLabel(evidence.downtime.status)} · ${evidence.downtime.observedSeconds}s · ${evidence.downtime.evidenceDigest}`;
+    const drains = [
+        evidence.drain.cmsMediatedSeconds === undefined ? "" : `CMS-mediated ${evidence.drain.cmsMediatedSeconds}s`,
+        evidence.drain.providerDirectSeconds === undefined
+            ? ""
+            : `provider-direct ${evidence.drain.providerDirectSeconds}s`,
+    ].filter(Boolean);
+    return `<div><dt>Downtime</dt><dd>${escapeHtml(downtime)}</dd></div>
+<div><dt>Drain / grace</dt><dd>${drains.length ? escapeHtml(drains.join(", ")) : "Not declared"}</dd></div>
+<div><dt>Rollback proof</dt><dd>${evidence.rollback.verified ? "Verified" : "Not verified"}${evidence.rollback.evidenceDigest ? ` · <code>${escapeHtml(evidence.rollback.evidenceDigest)}</code>` : ""}</dd></div>
+<div><dt>PONR observation</dt><dd>${escapeHtml(humanLabel(evidence.pointOfNoReturn.observation))}${evidence.pointOfNoReturn.evidenceDigest ? ` · <code>${escapeHtml(evidence.pointOfNoReturn.evidenceDigest)}</code>` : ""}</dd></div>
+<div><dt>Cleanup evidence</dt><dd>${evidence.cleanup.observed ? "Observed" : "Not observed"}${evidence.cleanup.delaySeconds === undefined ? "" : ` after ${evidence.cleanup.delaySeconds}s`}${evidence.cleanup.evidenceDigest ? ` · <code>${escapeHtml(evidence.cleanup.evidenceDigest)}</code>` : ""}</dd></div>`;
 }
 
 function renderMigrationChecks(checks: PublicRepositoryRelease["migrations"][number]["checks"]): string {

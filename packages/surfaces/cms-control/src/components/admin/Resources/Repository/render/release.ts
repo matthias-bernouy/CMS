@@ -120,6 +120,7 @@ function appendMigrations(target: DocumentFragment, release: RepositoryReleaseVi
                 `Rollback ${migration.rollback}`,
                 `PONR ${migration.pointOfNoReturn}`,
                 `Delayed cleanup ${migration.delayedCleanupVerified ? "verified" : "not verified"}`,
+                ...operationalMetadata(migration),
             ],
         );
         report.append(
@@ -136,6 +137,28 @@ function appendMigrations(target: DocumentFragment, release: RepositoryReleaseVi
         );
         target.append(report);
     }
+}
+
+function operationalMetadata(migration: RepositoryReleaseView["migrations"][number]): string[] {
+    const evidence = migration.operationalEvidence;
+    if (!evidence) {
+        return ["Operational evidence not recorded by this legacy report"];
+    }
+    const drains = [
+        evidence.drain.cmsMediatedSeconds === undefined ? "" : `CMS drain ${evidence.drain.cmsMediatedSeconds}s`,
+        evidence.drain.providerDirectSeconds === undefined
+            ? ""
+            : `provider drain ${evidence.drain.providerDirectSeconds}s`,
+    ].filter(Boolean);
+    return [
+        evidence.downtime.status === "not-measured"
+            ? "Downtime not measured by the current verifier"
+            : `Downtime ${evidence.downtime.status} ${evidence.downtime.observedSeconds}s`,
+        drains.length > 0 ? drains.join(" · ") : "Drain not declared",
+        `Rollback proof ${evidence.rollback.verified ? "verified" : "not verified"}`,
+        `PONR observation ${evidence.pointOfNoReturn.observation}`,
+        `Cleanup ${evidence.cleanup.observed ? "observed" : "not observed"}${evidence.cleanup.delaySeconds === undefined ? "" : ` after ${evidence.cleanup.delaySeconds}s`}`,
+    ];
 }
 
 function section(title: string, parts: readonly string[]): HTMLElement {

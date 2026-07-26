@@ -3,6 +3,7 @@ import type { ReportHistoryFields, ReportProvenance, VersionDigestReference } fr
 
 export const MIGRATION_REPORT_SCHEMA = "cms.integration.migration-report.v1" as const;
 export const MIGRATION_REPORT_V2_SCHEMA = "cms.integration.migration-report.v2" as const;
+export const MIGRATION_REPORT_V3_SCHEMA = "cms.integration.migration-report.v3" as const;
 
 export type MigrationCheckResult = Readonly<{
     outcome: "passed" | "failed" | "not-supported" | "not-applicable" | "infrastructure-failure";
@@ -34,6 +35,35 @@ export type MigrationReportPolicyEvaluation = Readonly<{
     satisfied: boolean;
     checks: readonly MigrationPolicyEvaluationCheck[];
     reasons: readonly string[];
+}>;
+
+export type MigrationOperationalEvidence = Readonly<{
+    downtime:
+        | Readonly<{ status: "not-measured" }>
+        | Readonly<{
+              status: "zero-downtime" | "bounded-downtime";
+              observedSeconds: number;
+              evidenceDigest: string;
+          }>;
+    drain: Readonly<{
+        cmsMediatedSeconds?: number;
+        providerDirectSeconds?: number;
+    }>;
+    rollback: Readonly<{
+        capability: "available" | "unavailable" | "not-applicable";
+        verified: boolean;
+        evidenceDigest?: string;
+    }>;
+    pointOfNoReturn: Readonly<{
+        phase: string;
+        observation: "crossed" | "not-crossed" | "not-observed";
+        evidenceDigest?: string;
+    }>;
+    cleanup: Readonly<{
+        delaySeconds?: number;
+        observed: boolean;
+        evidenceDigest?: string;
+    }>;
 }>;
 
 type MigrationReportFields = ReportHistoryFields &
@@ -80,4 +110,11 @@ export type MigrationReportV2 = MigrationReportFields &
         policyEvaluation: MigrationReportPolicyEvaluation;
     }>;
 
-export type MigrationReport = LegacyMigrationReportV1 | MigrationReportV2;
+export type MigrationReportV3 = MigrationReportFields &
+    Readonly<{
+        schema: typeof MIGRATION_REPORT_V3_SCHEMA;
+        policyEvaluation: MigrationReportPolicyEvaluation;
+        operationalEvidence: MigrationOperationalEvidence;
+    }>;
+
+export type MigrationReport = LegacyMigrationReportV1 | MigrationReportV2 | MigrationReportV3;

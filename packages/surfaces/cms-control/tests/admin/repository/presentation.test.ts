@@ -44,6 +44,10 @@ describe("repository administration presentation", () => {
         expect(console.textContent).toContain("freshInstall · passed");
         expect(console.textContent).toContain("equivalence · passed");
         expect(console.textContent).toContain("Provider-direct expand-in-code");
+        expect(console.textContent).toContain("Downtime not measured by the current verifier");
+        expect(console.textContent).toContain("CMS drain 30s");
+        expect(console.textContent).toContain("Rollback proof verified");
+        expect(console.textContent).toContain("PONR observation crossed");
         expect(console.textContent).toContain("Exact downloads and pinned reruns remain available");
         expect(console.textContent).toContain("Revision history (1)");
         expect(console.textContent).toContain("ci-schema-42");

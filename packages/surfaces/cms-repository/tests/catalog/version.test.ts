@@ -51,6 +51,10 @@ describe("repository catalog integration and version pages", () => {
         expect(html).toContain("Fresh Install");
         expect(html).toContain("Equivalence");
         expect(html).toContain("Provider-direct cutover");
+        expect(html).toContain("Not measured by the current verifier");
+        expect(html).toContain("CMS-mediated 30s");
+        expect(html).toContain("Rollback proof");
+        expect(html).toContain("PONR observation");
     });
 
     test("changes cache identity whenever the reader revision changes", async () => {

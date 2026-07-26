@@ -110,6 +110,53 @@ function migration(value: unknown): RepositoryReleaseMigrationView {
         rollback: readText(source.rollback),
         pointOfNoReturn: readText(source.pointOfNoReturn),
         delayedCleanupVerified: readBoolean(source.delayedCleanupVerified),
+        ...(source.operationalEvidence === undefined
+            ? {}
+            : { operationalEvidence: operationalEvidence(source.operationalEvidence) }),
+    };
+}
+
+function operationalEvidence(value: unknown): NonNullable<RepositoryReleaseMigrationView["operationalEvidence"]> {
+    const source = readRecord(value);
+    const downtime = readRecord(source.downtime);
+    const drain = readRecord(source.drain);
+    const rollback = readRecord(source.rollback);
+    const pointOfNoReturn = readRecord(source.pointOfNoReturn);
+    const cleanup = readRecord(source.cleanup);
+    const observedSeconds = downtime.observedSeconds === undefined ? undefined : readCount(downtime.observedSeconds);
+    const downtimeDigest = readOptionalText(downtime.evidenceDigest);
+    const cmsDrain = drain.cmsMediatedSeconds === undefined ? undefined : readCount(drain.cmsMediatedSeconds);
+    const providerDrain =
+        drain.providerDirectSeconds === undefined ? undefined : readCount(drain.providerDirectSeconds);
+    const rollbackDigest = readOptionalText(rollback.evidenceDigest);
+    const pointOfNoReturnDigest = readOptionalText(pointOfNoReturn.evidenceDigest);
+    const cleanupDelay = cleanup.delaySeconds === undefined ? undefined : readCount(cleanup.delaySeconds);
+    const cleanupDigest = readOptionalText(cleanup.evidenceDigest);
+    return {
+        downtime: {
+            status: readText(downtime.status),
+            ...(observedSeconds === undefined ? {} : { observedSeconds }),
+            ...(downtimeDigest ? { evidenceDigest: downtimeDigest } : {}),
+        },
+        drain: {
+            ...(cmsDrain === undefined ? {} : { cmsMediatedSeconds: cmsDrain }),
+            ...(providerDrain === undefined ? {} : { providerDirectSeconds: providerDrain }),
+        },
+        rollback: {
+            capability: readText(rollback.capability),
+            verified: readBoolean(rollback.verified),
+            ...(rollbackDigest ? { evidenceDigest: rollbackDigest } : {}),
+        },
+        pointOfNoReturn: {
+            phase: readText(pointOfNoReturn.phase),
+            observation: readText(pointOfNoReturn.observation),
+            ...(pointOfNoReturnDigest ? { evidenceDigest: pointOfNoReturnDigest } : {}),
+        },
+        cleanup: {
+            ...(cleanupDelay === undefined ? {} : { delaySeconds: cleanupDelay }),
+            observed: readBoolean(cleanup.observed),
+            ...(cleanupDigest ? { evidenceDigest: cleanupDigest } : {}),
+        },
     };
 }
 

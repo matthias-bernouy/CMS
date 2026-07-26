@@ -191,6 +191,25 @@ export function releaseFixture() {
                 rollback: "available",
                 pointOfNoReturn: "cleanup",
                 delayedCleanupVerified: true,
+                operationalEvidence: {
+                    downtime: { status: "not-measured" },
+                    drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
+                    rollback: {
+                        capability: "available",
+                        verified: true,
+                        evidenceDigest: "8".repeat(64),
+                    },
+                    pointOfNoReturn: {
+                        phase: "cleanup",
+                        observation: "crossed",
+                        evidenceDigest: "9".repeat(64),
+                    },
+                    cleanup: {
+                        delaySeconds: 60,
+                        observed: true,
+                        evidenceDigest: "a".repeat(64),
+                    },
+                },
             },
         ],
         decision: {

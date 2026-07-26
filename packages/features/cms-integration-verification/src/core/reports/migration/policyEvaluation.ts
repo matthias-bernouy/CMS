@@ -2,6 +2,7 @@ import type {
     MigrationPolicyEvaluationCheck,
     MigrationReportPolicyEvaluation,
     MigrationReportV2,
+    MigrationReportV3,
 } from "../../../interfaces/reports/migration";
 import { assertUnique, boundedArray, invalid, strictRecord } from "../../validation/structure";
 import { oneOf, requiredBoolean, requiredText } from "../../validation/values";
@@ -69,7 +70,7 @@ export function parseMigrationPolicyEvaluation(value: unknown): MigrationReportP
     });
 }
 
-export function assertMigrationPolicyEvaluationMatchesReport(report: MigrationReportV2): void {
+export function assertMigrationPolicyEvaluationMatchesReport(report: MigrationReportV2 | MigrationReportV3): void {
     if (!report.policyEvaluation.applicable) {
         return;
     }

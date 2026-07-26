@@ -43,6 +43,12 @@ export type IntegrationUpgradeTarget = {
         providerDirectCutover: string;
         cmsDrainSeconds?: number;
         providerDrainSeconds?: number;
+        downtimeStatus?: string;
+        observedDowntimeSeconds?: number;
+        rollbackVerified?: boolean;
+        pointOfNoReturnObservation?: string;
+        cleanupObserved?: boolean;
+        cleanupDelaySeconds?: number;
     }>;
 };
 

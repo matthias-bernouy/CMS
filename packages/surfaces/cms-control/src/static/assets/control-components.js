@@ -29058,8 +29058,10 @@ details[open] > summary > .chevron {
     const eligible = choices.versions.map((version) => choices.targets?.find((target2) => target2.version === version)).filter((target2) => target2?.migrations.length).map((target2) => {
       const migration = target2.migrations[0];
       const drains = [migration.cmsDrainSeconds, migration.providerDrainSeconds].filter((value3) => value3 !== undefined);
-      const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; downtime not declared";
-      return `${target2.version}: tested migration ${migration.supportedSourceRange}; ${migration.rollback} rollback; PONR ${migration.pointOfNoReturn}${drain}`;
+      const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; drain not declared";
+      const downtime = migration.downtimeStatus === undefined ? "; downtime evidence not recorded" : migration.downtimeStatus === "not-measured" ? "; downtime not measured" : migration.observedDowntimeSeconds === undefined ? `; downtime ${migration.downtimeStatus}` : `; downtime ${migration.downtimeStatus} ${migration.observedDowntimeSeconds}s`;
+      const pointObservation = migration.pointOfNoReturnObservation ?? "not recorded";
+      return `${target2.version}: tested migration ${migration.supportedSourceRange}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
     });
     return [
       `Installed: ${choices.current}. Select and confirm an exact target version.`,
@@ -30706,7 +30708,50 @@ ${controls_default3}`;
       },
       rollback: readText(source2.rollback),
       pointOfNoReturn: readText(source2.pointOfNoReturn),
-      delayedCleanupVerified: readBoolean(source2.delayedCleanupVerified)
+      delayedCleanupVerified: readBoolean(source2.delayedCleanupVerified),
+      ...source2.operationalEvidence === undefined ? {} : { operationalEvidence: operationalEvidence(source2.operationalEvidence) }
+    };
+  }
+  function operationalEvidence(value3) {
+    const source2 = readRecord(value3);
+    const downtime = readRecord(source2.downtime);
+    const drain = readRecord(source2.drain);
+    const rollback = readRecord(source2.rollback);
+    const pointOfNoReturn = readRecord(source2.pointOfNoReturn);
+    const cleanup = readRecord(source2.cleanup);
+    const observedSeconds = downtime.observedSeconds === undefined ? undefined : readCount(downtime.observedSeconds);
+    const downtimeDigest = readOptionalText(downtime.evidenceDigest);
+    const cmsDrain = drain.cmsMediatedSeconds === undefined ? undefined : readCount(drain.cmsMediatedSeconds);
+    const providerDrain = drain.providerDirectSeconds === undefined ? undefined : readCount(drain.providerDirectSeconds);
+    const rollbackDigest = readOptionalText(rollback.evidenceDigest);
+    const pointOfNoReturnDigest = readOptionalText(pointOfNoReturn.evidenceDigest);
+    const cleanupDelay = cleanup.delaySeconds === undefined ? undefined : readCount(cleanup.delaySeconds);
+    const cleanupDigest = readOptionalText(cleanup.evidenceDigest);
+    return {
+      downtime: {
+        status: readText(downtime.status),
+        ...observedSeconds === undefined ? {} : { observedSeconds },
+        ...downtimeDigest ? { evidenceDigest: downtimeDigest } : {}
+      },
+      drain: {
+        ...cmsDrain === undefined ? {} : { cmsMediatedSeconds: cmsDrain },
+        ...providerDrain === undefined ? {} : { providerDirectSeconds: providerDrain }
+      },
+      rollback: {
+        capability: readText(rollback.capability),
+        verified: readBoolean(rollback.verified),
+        ...rollbackDigest ? { evidenceDigest: rollbackDigest } : {}
+      },
+      pointOfNoReturn: {
+        phase: readText(pointOfNoReturn.phase),
+        observation: readText(pointOfNoReturn.observation),
+        ...pointOfNoReturnDigest ? { evidenceDigest: pointOfNoReturnDigest } : {}
+      },
+      cleanup: {
+        ...cleanupDelay === undefined ? {} : { delaySeconds: cleanupDelay },
+        observed: readBoolean(cleanup.observed),
+        ...cleanupDigest ? { evidenceDigest: cleanupDigest } : {}
+      }
     };
   }
   function checkRecord(value3) {
@@ -31267,11 +31312,29 @@ ${controls_default3}`;
         `Provider-direct ${migration2.cutover.providerDirect}`,
         `Rollback ${migration2.rollback}`,
         `PONR ${migration2.pointOfNoReturn}`,
-        `Delayed cleanup ${migration2.delayedCleanupVerified ? "verified" : "not verified"}`
+        `Delayed cleanup ${migration2.delayedCleanupVerified ? "verified" : "not verified"}`,
+        ...operationalMetadata(migration2)
       ]);
       report.append(codeLine2("Report digest", migration2.reportDigest), codeLine2("Runner image", migration2.runner.imageDigest), codeLine2("Environment digest", migration2.environmentDigest), list("Checks", Object.entries(migration2.checks).map(([name, result]) => `${name} · ${result.outcome}${result.evidenceDigest ? ` · ${result.evidenceDigest}` : ""}`)));
       target2.append(report);
     }
+  }
+  function operationalMetadata(migration2) {
+    const evidence = migration2.operationalEvidence;
+    if (!evidence) {
+      return ["Operational evidence not recorded by this legacy report"];
+    }
+    const drains = [
+      evidence.drain.cmsMediatedSeconds === undefined ? "" : `CMS drain ${evidence.drain.cmsMediatedSeconds}s`,
+      evidence.drain.providerDirectSeconds === undefined ? "" : `provider drain ${evidence.drain.providerDirectSeconds}s`
+    ].filter(Boolean);
+    return [
+      evidence.downtime.status === "not-measured" ? "Downtime not measured by the current verifier" : `Downtime ${evidence.downtime.status} ${evidence.downtime.observedSeconds}s`,
+      drains.length > 0 ? drains.join(" · ") : "Drain not declared",
+      `Rollback proof ${evidence.rollback.verified ? "verified" : "not verified"}`,
+      `PONR observation ${evidence.pointOfNoReturn.observation}`,
+      `Cleanup ${evidence.cleanup.observed ? "observed" : "not observed"}${evidence.cleanup.delaySeconds === undefined ? "" : ` after ${evidence.cleanup.delaySeconds}s`}`
+    ];
   }
   function section(title2, parts) {
     const node = element("article", undefined, "report");

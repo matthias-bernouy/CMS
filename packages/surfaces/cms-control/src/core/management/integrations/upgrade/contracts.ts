@@ -13,6 +13,13 @@ export type IntegrationUpgradeMigrationEvidence = Readonly<{
     rollback: string;
     pointOfNoReturn: string;
     delayedCleanupVerified: boolean;
+    operationalEvidence?: Readonly<{
+        downtime: Readonly<{ status: string; observedSeconds?: number; evidenceDigest?: string }>;
+        drain: Readonly<{ cmsMediatedSeconds?: number; providerDirectSeconds?: number }>;
+        rollback: Readonly<{ capability: string; verified: boolean; evidenceDigest?: string }>;
+        pointOfNoReturn: Readonly<{ phase: string; observation: string; evidenceDigest?: string }>;
+        cleanup: Readonly<{ delaySeconds?: number; observed: boolean; evidenceDigest?: string }>;
+    }>;
 }>;
 
 export type IntegrationUpgradeReleaseEvidence = Readonly<{
@@ -53,5 +60,11 @@ export type IntegrationUpgradeTarget = Readonly<{
         pointOfNoReturn: string;
         cmsDrainSeconds?: number;
         providerDrainSeconds?: number;
+        downtimeStatus?: string;
+        observedDowntimeSeconds?: number;
+        rollbackVerified?: boolean;
+        pointOfNoReturnObservation?: string;
+        cleanupObserved?: boolean;
+        cleanupDelaySeconds?: number;
     }>[];
 }>;

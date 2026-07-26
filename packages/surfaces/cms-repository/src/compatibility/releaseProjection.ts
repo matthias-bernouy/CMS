@@ -109,6 +109,9 @@ function projectMigration(
         rollback: report.rollback,
         pointOfNoReturn: report.pointOfNoReturn,
         delayedCleanupVerified: report.delayedCleanupVerified,
+        ...(report.schema === "cms.integration.migration-report.v3"
+            ? { operationalEvidence: report.operationalEvidence }
+            : {}),
     };
 }
 

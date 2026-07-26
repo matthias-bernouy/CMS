@@ -79,4 +79,32 @@ export type PublicRepositoryMigrationEvidence = Readonly<{
     rollback: string;
     pointOfNoReturn: string;
     delayedCleanupVerified: boolean;
+    operationalEvidence?: Readonly<{
+        downtime:
+            | Readonly<{ status: "not-measured" }>
+            | Readonly<{
+                  status: "zero-downtime" | "bounded-downtime";
+                  observedSeconds: number;
+                  evidenceDigest: string;
+              }>;
+        drain: Readonly<{
+            cmsMediatedSeconds?: number;
+            providerDirectSeconds?: number;
+        }>;
+        rollback: Readonly<{
+            capability: string;
+            verified: boolean;
+            evidenceDigest?: string;
+        }>;
+        pointOfNoReturn: Readonly<{
+            phase: string;
+            observation: string;
+            evidenceDigest?: string;
+        }>;
+        cleanup: Readonly<{
+            delaySeconds?: number;
+            observed: boolean;
+            evidenceDigest?: string;
+        }>;
+    }>;
 }>;

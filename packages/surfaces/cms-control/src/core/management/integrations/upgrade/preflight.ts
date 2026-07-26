@@ -137,6 +137,10 @@ function verifiedMigrations(
         if (!report) {
             return [];
         }
+        const operational = report.operationalEvidence;
+        const cmsDrainSeconds = operational?.drain.cmsMediatedSeconds ?? connector.migration.cmsMediated?.drainSeconds;
+        const providerDrainSeconds =
+            operational?.drain.providerDirectSeconds ?? connector.migration.providerDirect?.drainSeconds;
         return [
             {
                 connectorKey: report.connectorKey,
@@ -150,12 +154,18 @@ function verifiedMigrations(
                 providerDirectCutover: report.cutover.providerDirect,
                 rollback: report.rollback,
                 pointOfNoReturn: report.pointOfNoReturn,
-                ...(connector.migration.cmsMediated?.drainSeconds === undefined
+                ...(cmsDrainSeconds === undefined ? {} : { cmsDrainSeconds }),
+                ...(providerDrainSeconds === undefined ? {} : { providerDrainSeconds }),
+                downtimeStatus: operational?.downtime.status ?? "not-recorded",
+                ...(operational?.downtime.observedSeconds === undefined
                     ? {}
-                    : { cmsDrainSeconds: connector.migration.cmsMediated.drainSeconds }),
-                ...(connector.migration.providerDirect?.drainSeconds === undefined
+                    : { observedDowntimeSeconds: operational.downtime.observedSeconds }),
+                rollbackVerified: operational?.rollback.verified ?? false,
+                pointOfNoReturnObservation: operational?.pointOfNoReturn.observation ?? "not-recorded",
+                cleanupObserved: operational?.cleanup.observed ?? report.delayedCleanupVerified,
+                ...(operational?.cleanup.delaySeconds === undefined
                     ? {}
-                    : { providerDrainSeconds: connector.migration.providerDirect.drainSeconds }),
+                    : { cleanupDelaySeconds: operational.cleanup.delaySeconds }),
             },
         ];
     });

@@ -136,8 +136,17 @@ function upgradeSummary(choices: IntegrationUpgradeVersions): string {
             const drains = [migration.cmsDrainSeconds, migration.providerDrainSeconds].filter(
                 (value): value is number => value !== undefined,
             );
-            const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; downtime not declared";
-            return `${target!.version}: tested migration ${migration.supportedSourceRange}; ${migration.rollback} rollback; PONR ${migration.pointOfNoReturn}${drain}`;
+            const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; drain not declared";
+            const downtime =
+                migration.downtimeStatus === undefined
+                    ? "; downtime evidence not recorded"
+                    : migration.downtimeStatus === "not-measured"
+                      ? "; downtime not measured"
+                      : migration.observedDowntimeSeconds === undefined
+                        ? `; downtime ${migration.downtimeStatus}`
+                        : `; downtime ${migration.downtimeStatus} ${migration.observedDowntimeSeconds}s`;
+            const pointObservation = migration.pointOfNoReturnObservation ?? "not recorded";
+            return `${target!.version}: tested migration ${migration.supportedSourceRange}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
         });
     return [
         `Installed: ${choices.current}. Select and confirm an exact target version.`,

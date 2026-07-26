@@ -55,6 +55,19 @@ describe("HTTP repository catalog reader", () => {
                 dependencies: [{ name: "Core", kind: "core", versionRange: "^1.0.0" }],
             },
             package: { digest: PACKAGE_DIGEST, canonicalBytes: 2048 },
+            release: {
+                migrations: [
+                    {
+                        operationalEvidence: {
+                            downtime: { status: "zero-downtime", observedSeconds: 0 },
+                            drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
+                            rollback: { capability: "available", verified: true },
+                            pointOfNoReturn: { phase: "cleanup", observation: "crossed" },
+                            cleanup: { delaySeconds: 60, observed: true },
+                        },
+                    },
+                ],
+            },
         });
         expect(list.revision).toMatch(/^[a-f0-9]{64}$/);
         const packageRequests = fixture.requests.filter(({ url }) => url.pathname.endsWith("/package"));
