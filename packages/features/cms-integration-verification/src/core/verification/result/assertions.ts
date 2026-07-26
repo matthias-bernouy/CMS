@@ -6,6 +6,7 @@ import type {
     VerificationJobResultV1,
 } from "../../../interfaces/verification";
 import { compareText, invalidReference, samePinnedRunner } from "../shared";
+import { POSTGRES_PLATFORM_VERIFICATION_SUITES_V1, identifyPlatformVerificationSuiteDefinition } from "../platform";
 
 export function assertAttempt(
     result: VerificationJobResultV1,
@@ -40,7 +41,9 @@ export function assertBindings(
         reviewedObservedSchemaDigests: admission.reviewedBaselines
             .map((entry) => entry.observedSchemaDigest)
             .toSorted(compareText),
-        dependencyDigests: admission.dependencies.map((entry) => entry.packageDigest).toSorted(compareText),
+        dependencyDigests: [...new Set(admission.dependencies.map((entry) => entry.packageDigest))].toSorted(
+            compareText,
+        ),
         activeContractDigests: admission.activeContracts.map((entry) => entry.contractDigest).toSorted(compareText),
         suiteContentDigests: admission.suites.map((entry) => entry.contentDigest).toSorted(compareText),
         catalogRevisionDigest: admission.catalogRevision.digest,
@@ -52,11 +55,11 @@ export function assertBindings(
     }
 }
 
-export function assertRunnerAndSuites(
+export async function assertRunnerAndSuites(
     result: VerificationJobResultV1,
     admission: AdmissionInputSnapshotV1,
     policy: ReleaseAdmissionPolicySnapshotV1,
-): void {
+): Promise<void> {
     if (!samePinnedRunner(result.runner, admission.selectedRunner)) {
         invalidReference("jobResult.runner", "does not match the exact selected runner");
     }
@@ -69,6 +72,46 @@ export function assertRunnerAndSuites(
         }
     }
     for (const suite of result.results) {
+        const planned = admission.suites.find((entry) => entry.suiteId === suite.suiteId)!;
+        const isApplicable = planned.applicable !== false;
+        if (isApplicable === (suite.outcome === "not-applicable")) {
+            invalidReference(
+                "jobResult.results.outcome",
+                `must be not-applicable exactly when planned suite ${suite.suiteId} is not applicable`,
+            );
+        }
+        const platformPolicy = policy.platformRequiredSuites.find((entry) => entry.suiteId === suite.suiteId);
+        if (planned.source === "platform" && platformPolicy?.applicability !== undefined) {
+            const definition = POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.find(
+                (entry) => entry.suiteId === suite.suiteId,
+            );
+            const definitionDigest = definition
+                ? (await identifyPlatformVerificationSuiteDefinition(definition)).digest
+                : undefined;
+            if (
+                !definition ||
+                definitionDigest !== platformPolicy.suiteDigest ||
+                definition.applicability !== platformPolicy.applicability ||
+                !suite.platformEvidence ||
+                suite.platformEvidence.suiteDigest !== planned.contentDigest ||
+                suite.platformEvidence.applicability !== platformPolicy.applicability
+            ) {
+                invalidReference(
+                    "jobResult.results.platformEvidence",
+                    `does not prove exact platform suite ${suite.suiteId}`,
+                );
+            }
+            const expectedChecks = [...definition.checks].toSorted(compareText);
+            const actualChecks = suite.platformEvidence.checks.map((entry) => entry.checkId).toSorted(compareText);
+            if (!sameBytes(canonicalJsonBytes(expectedChecks), canonicalJsonBytes(actualChecks))) {
+                invalidReference(
+                    "jobResult.results.platformEvidence.checks",
+                    `does not prove every check in platform suite ${suite.suiteId}`,
+                );
+            }
+        } else if (planned.source !== "platform" && suite.platformEvidence) {
+            invalidReference("jobResult.results.platformEvidence", "is reserved for policy-generated suites");
+        }
         if (suite.attempts > policy.retry.maximumAttempts) {
             invalidReference("jobResult.results.attempts", "exceeds the admission retry policy");
         }

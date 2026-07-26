@@ -1,6 +1,7 @@
 import type { PinnedVerificationRunnerIdentity, VerificationPolicyIdentity } from "../runner";
-import type { AdmissionReviewedBaselineReferenceV1 } from "../verification/admission";
-import type { DigestContractReference, ReportHistoryFields, ReportProvenance, VersionDigestReference } from "./common";
+import type { AdmissionDependencyReferenceV1, AdmissionReviewedBaselineReferenceV1 } from "../verification/admission";
+import type { PlatformVerificationEvidenceV1 } from "../verification/platform";
+import type { DigestContractReference, ReportHistoryFields, ReportProvenance } from "./common";
 
 export const VERIFICATION_REPORT_SCHEMA = "cms.integration.verification-report.v1" as const;
 
@@ -8,7 +9,8 @@ export type VerificationSuiteResult = Readonly<{
     suiteId: string;
     source: "platform" | "author-contract" | "author-conformance";
     required: boolean;
-    outcome: "passed" | "failed" | "skipped" | "infrastructure-failure";
+    applicable?: boolean;
+    outcome: "passed" | "failed" | "skipped" | "not-applicable" | "infrastructure-failure";
     durationMs: number;
     attempts: number;
     cacheHit: boolean;
@@ -18,6 +20,7 @@ export type VerificationSuiteResult = Readonly<{
         message: string;
         redacted: true;
     }>[];
+    platformEvidence?: PlatformVerificationEvidenceV1;
 }>;
 
 export type VerificationReport = ReportHistoryFields &
@@ -32,7 +35,7 @@ export type VerificationReport = ReportHistoryFields &
         policySnapshotDigest: string;
         admissionInputDigest: string;
         verificationJobResultDigest: string;
-        dependencies: readonly VersionDigestReference[];
+        dependencies: readonly AdmissionDependencyReferenceV1[];
         baselines: readonly AdmissionReviewedBaselineReferenceV1[];
         activeContracts: readonly DigestContractReference[];
         environment: Readonly<{

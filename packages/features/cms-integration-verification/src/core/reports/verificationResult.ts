@@ -10,6 +10,7 @@ import {
     sha256Digest,
     stableIdentifier,
 } from "../validation/values";
+import { parsePlatformVerificationEvidence } from "../verification/platform";
 
 const MAX_DIAGNOSTIC_BYTES = 16_384;
 const MAX_TOTAL_DIAGNOSTIC_BYTES = 65_536;
@@ -72,17 +73,20 @@ function parseSuiteResult(value: unknown, field: string): VerificationSuiteResul
         "suiteId",
         "source",
         "required",
+        "applicable",
         "outcome",
         "durationMs",
         "attempts",
         "cacheHit",
         "evidenceDigests",
         "diagnostics",
+        "platformEvidence",
     ]);
     const outcome = oneOf(input.outcome, `${field}.outcome`, [
         "passed",
         "failed",
         "skipped",
+        "not-applicable",
         "infrastructure-failure",
     ] as const);
     const evidenceDigests = boundedArray(input.evidenceDigests, `${field}.evidenceDigests`, sha256Digest, {
@@ -102,16 +106,28 @@ function parseSuiteResult(value: unknown, field: string): VerificationSuiteResul
     if ((outcome === "failed" || outcome === "infrastructure-failure") && diagnostics.length === 0) {
         throw invalid(`${field}.diagnostics`, `must explain ${outcome}`);
     }
+    const applicable =
+        input.applicable === undefined ? undefined : requiredBoolean(input.applicable, `${field}.applicable`);
+    if ((applicable !== false) === (outcome === "not-applicable")) {
+        throw invalid(`${field}.outcome`, "must be not-applicable exactly when applicable is false");
+    }
+    const platformEvidence =
+        input.platformEvidence === undefined ? undefined : parsePlatformVerificationEvidence(input.platformEvidence);
+    if (platformEvidence && (platformEvidence.suiteId !== input.suiteId || platformEvidence.outcome !== outcome)) {
+        throw invalid(`${field}.platformEvidence`, "must identify the same suite and outcome");
+    }
     return {
         suiteId: stableIdentifier(input.suiteId, `${field}.suiteId`),
         source: oneOf(input.source, `${field}.source`, ["platform", "author-contract", "author-conformance"] as const),
         required: requiredBoolean(input.required, `${field}.required`),
+        ...(applicable === undefined ? {} : { applicable }),
         outcome,
         durationMs: nonNegativeInteger(input.durationMs, `${field}.durationMs`),
         attempts: positiveInteger(input.attempts, `${field}.attempts`),
         cacheHit: requiredBoolean(input.cacheHit, `${field}.cacheHit`),
         evidenceDigests,
         diagnostics,
+        ...(platformEvidence ? { platformEvidence } : {}),
     };
 }
 

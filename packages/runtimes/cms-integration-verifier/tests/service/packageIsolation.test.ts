@@ -4,8 +4,12 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
+import {
+    POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
+    identifyPlatformVerificationSuiteDefinition,
+} from "@bernouy/cms-integration-verification";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../src/runtime/providers/postgres";
-import { createPostgresInstallAndReapplyAdapter } from "../../src/sandbox/service/postgresAdapter";
+import { createPostgresPlatformVerificationAdapter } from "../../src/sandbox/service/postgres";
 import { DIGEST_A, DIGEST_B } from "../fixtures/contracts";
 import { disposablePostgresAvailable, startDisposablePostgres } from "./postgresFixture";
 
@@ -16,7 +20,7 @@ postgresTest(
     async () => {
         const postgres = await startDisposablePostgres();
         const tempRoot = await mkdtemp(join(tmpdir(), "cms-verifier-package-cache-"));
-        const adapter = createPostgresInstallAndReapplyAdapter({ packageTempRoot: tempRoot, maxCachedPackages: 2 });
+        const adapter = createPostgresPlatformVerificationAdapter({ packageTempRoot: tempRoot, maxCachedPackages: 2 });
         try {
             const provider = await createDisposableVerificationDatabaseProviderFromEnv({
                 CMS_INTEGRATION_VERIFIER_POSTGRES_HOST: postgres.host,
@@ -31,19 +35,25 @@ postgresTest(
             );
             try {
                 const signal = new AbortController().signal;
-                const first = await adapter.applyPackageSql(
-                    { package: packageFixture("verifier_first"), database: lease.credential, phase: "install" },
+                const suites = await platformSuites(true, false);
+                const first = await adapter.verifyPackage(
+                    { package: packageFixture("verifier_first"), database: lease.credential, platformSuites: suites },
                     signal,
                 );
-                const second = await adapter.applyPackageSql(
-                    { package: packageFixture("verifier_second"), database: lease.credential, phase: "install" },
+                const second = await adapter.verifyPackage(
+                    { package: packageFixture("verifier_second"), database: lease.credential, platformSuites: suites },
                     signal,
                 );
-                expect(first.observedSchemaDigest).not.toBe(second.observedSchemaDigest);
+                expect(first.suites.filter((suite) => suite.outcome === "failed")).toEqual([]);
+                expect(second.suites.filter((suite) => suite.outcome === "failed")).toEqual([]);
                 expect(await namespaces(lease.credential.connectionUri)).toEqual(["verifier_first", "verifier_second"]);
                 await expect(
-                    adapter.applyPackageSql(
-                        { package: packageFixture("verifier_third"), database: lease.credential, phase: "install" },
+                    adapter.verifyPackage(
+                        {
+                            package: packageFixture("verifier_third"),
+                            database: lease.credential,
+                            platformSuites: suites,
+                        },
                         signal,
                     ),
                 ).rejects.toThrow(/exact identity limit/);
@@ -71,6 +81,19 @@ async function namespaces(connectionUri: string): Promise<readonly string[]> {
     } finally {
         await database.close();
     }
+}
+
+async function platformSuites(sql: boolean, dataApi: boolean) {
+    return await Promise.all(
+        POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.map(async (definition) => ({
+            suiteId: definition.suiteId,
+            suiteDigest: (await identifyPlatformVerificationSuiteDefinition(definition)).digest,
+            applicable:
+                definition.applicability === "always" ||
+                (definition.applicability === "sql-connectors" && sql) ||
+                (definition.applicability === "data-api-schemas" && dataApi),
+        })),
+    );
 }
 
 function packageFixture(namespace: string): IntegrationPackageEnvelopeV1 {

@@ -1,48 +1,68 @@
 import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
-import { identifyAdmissionInputSnapshot, type VerificationJobResultV1 } from "@bernouy/cms-integration-verification";
+import {
+    identifyAdmissionInputSnapshot,
+    parsePlatformVerificationEvidence,
+    type PlatformVerificationEvidenceV1,
+    type VerificationJobResultV1,
+} from "@bernouy/cms-integration-verification";
 import type { VerificationSandboxInput } from "../supervisor";
 
-export type PostgresSqlApplicationEvidence = Readonly<{
-    observedSchemaDigest: string;
-    evidenceDigest: string;
+export type PostgresPlatformVerificationEvidence = Readonly<{
     durationMs: number;
+    suites: readonly PlatformVerificationEvidenceV1[];
 }>;
 
-export interface PostgresInstallAndReapplyAdapter {
+export interface PostgresPlatformVerificationAdapter {
     environmentVersions(signal: AbortSignal): Promise<readonly Readonly<{ name: string; version: string }>[]>;
-    applyPackageSql(
+    verifyPackage(
         input: Readonly<{
             package: VerificationSandboxInput["workload"]["package"];
+            dependencies: VerificationSandboxInput["workload"]["admission"]["dependencies"];
             database: VerificationSandboxInput["database"];
-            phase: "install" | "reapply";
+            platformSuites: readonly Readonly<{
+                suiteId: string;
+                suiteDigest: string;
+                applicable: boolean;
+            }>[];
         }>,
         signal: AbortSignal,
-    ): Promise<PostgresSqlApplicationEvidence>;
+    ): Promise<PostgresPlatformVerificationEvidence>;
     dispose?(): Promise<void>;
 }
 
-export async function runPostgresInstallAndReapply(
+export async function runPostgresPlatformVerification(
     input: VerificationSandboxInput,
-    adapter: PostgresInstallAndReapplyAdapter,
-    suiteId: string,
+    adapter: PostgresPlatformVerificationAdapter,
     signal: AbortSignal,
 ): Promise<VerificationJobResultV1> {
-    const suite = input.workload.admission.suites.find((entry) => entry.suiteId === suiteId);
-    if (!suite || suite.source !== "platform") {
-        throw new TypeError("PostgreSQL install-and-reapply suite is not part of the exact admission plan");
+    const plannedPlatform = input.workload.admission.suites
+        .filter((entry) => entry.source === "platform")
+        .map((entry) => ({
+            suiteId: entry.suiteId,
+            suiteDigest: entry.contentDigest,
+            applicable: entry.applicable !== false,
+        }));
+    const execution = await adapter.verifyPackage(
+        {
+            package: input.workload.package,
+            dependencies: input.workload.admission.dependencies,
+            database: input.database,
+            platformSuites: plannedPlatform,
+        },
+        signal,
+    );
+    const evidence = new Map(
+        execution.suites.map((entry) => {
+            const parsed = parsePlatformVerificationEvidence(entry);
+            return [parsed.suiteId, parsed] as const;
+        }),
+    );
+    if (evidence.size !== execution.suites.length || evidence.size !== plannedPlatform.length) {
+        throw new TypeError("PostgreSQL verification adapter did not return every and only planned platform suite");
     }
-    const install = await adapter.applyPackageSql(
-        { package: input.workload.package, database: input.database, phase: "install" },
-        signal,
-    );
-    const reapply = await adapter.applyPackageSql(
-        { package: input.workload.package, database: input.database, phase: "reapply" },
-        signal,
-    );
     const environmentVersions = [...(await adapter.environmentVersions(signal))].toSorted((left, right) =>
         left.name.localeCompare(right.name),
     );
-    const idempotent = install.observedSchemaDigest === reapply.observedSchemaDigest;
     const admissionDigest = (await identifyAdmissionInputSnapshot(input.workload.admission)).digest;
     return {
         schema: "cms.integration.verification-job-result.v1",
@@ -54,42 +74,73 @@ export async function runPostgresInstallAndReapply(
             digest: await sha256Hex(canonicalJsonBytes(environmentVersions)),
             versions: environmentVersions,
         },
-        results: input.workload.admission.suites.map((planned) =>
-            planned.suiteId === suiteId
-                ? {
-                      suiteId,
-                      outcome: idempotent ? "passed" : "failed",
-                      durationMs: install.durationMs + reapply.durationMs,
-                      attempts: 1,
-                      cacheHit: false,
-                      evidenceDigests: [...new Set([install.evidenceDigest, reapply.evidenceDigest])].toSorted(),
-                      diagnostics: idempotent
-                          ? []
-                          : [
-                                {
-                                    code: "postgres-reapply-changed-schema",
-                                    message: "Reapplying the package SQL changed the observed schema digest",
-                                    redacted: true,
-                                },
-                            ],
-                  }
-                : {
-                      suiteId: planned.suiteId,
-                      outcome: "skipped",
-                      durationMs: 0,
-                      attempts: 1,
-                      cacheHit: false,
-                      evidenceDigests: [],
-                      diagnostics: [
-                          {
-                              code: "suite-not-supported-by-postgres-runner",
-                              message: "This runner only executes the generated PostgreSQL install-and-reapply suite",
-                              redacted: true,
-                          },
-                      ],
-                  },
+        results: await Promise.all(
+            input.workload.admission.suites.map(async (planned) => {
+                if (planned.source !== "platform") {
+                    return unsupportedAuthorSuite(planned.suiteId);
+                }
+                const proof = evidence.get(planned.suiteId);
+                if (
+                    !proof ||
+                    proof.suiteDigest !== planned.contentDigest ||
+                    (proof.outcome === "not-applicable") !== (planned.applicable === false)
+                ) {
+                    throw new TypeError(`PostgreSQL verification evidence does not match ${planned.suiteId}`);
+                }
+                const evidenceDigest = await sha256Hex(canonicalJsonBytes(proof));
+                return {
+                    suiteId: planned.suiteId,
+                    outcome: proof.outcome,
+                    durationMs: execution.durationMs,
+                    attempts: 1,
+                    cacheHit: false,
+                    evidenceDigests: [evidenceDigest],
+                    diagnostics: diagnostics(proof),
+                    platformEvidence: proof,
+                };
+            }),
         ),
     };
+}
+
+function unsupportedAuthorSuite(suiteId: string): VerificationJobResultV1["results"][number] {
+    return {
+        suiteId,
+        outcome: "skipped",
+        durationMs: 0,
+        attempts: 1,
+        cacheHit: false,
+        evidenceDigests: [],
+        diagnostics: [
+            {
+                code: "author-suite-runner-unavailable",
+                message: "The PostgreSQL platform runner does not execute author-provided code",
+                redacted: true,
+            },
+        ],
+    };
+}
+
+function diagnostics(
+    evidence: PlatformVerificationEvidenceV1,
+): VerificationJobResultV1["results"][number]["diagnostics"] {
+    if (evidence.outcome === "not-applicable") {
+        return [
+            {
+                code: "platform-suite-not-applicable",
+                message: `Policy marked ${evidence.suiteId} not applicable to this exact definition`,
+                redacted: true,
+            },
+        ];
+    }
+    return evidence.checks
+        .flatMap((check) => check.findings.map((finding) => ({ check, finding })))
+        .slice(0, 8)
+        .map(({ check, finding }) => ({
+            code: finding.code,
+            message: `${check.checkId} rejected ${finding.path}`,
+            redacted: true as const,
+        }));
 }
 
 function resultBindings(input: VerificationSandboxInput, admissionDigest: string): VerificationJobResultV1["bindings"] {
@@ -105,7 +156,7 @@ function resultBindings(input: VerificationSandboxInput, admissionDigest: string
         reviewedObservedSchemaDigests: admission.reviewedBaselines
             .map((entry) => entry.observedSchemaDigest)
             .toSorted(),
-        dependencyDigests: admission.dependencies.map((entry) => entry.packageDigest).toSorted(),
+        dependencyDigests: [...new Set(admission.dependencies.map((entry) => entry.packageDigest))].toSorted(),
         activeContractDigests: admission.activeContracts.map((entry) => entry.contractDigest).toSorted(),
         suiteContentDigests: admission.suites.map((entry) => entry.contentDigest).toSorted(),
         catalogRevisionDigest: admission.catalogRevision.digest,

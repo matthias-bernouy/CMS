@@ -18,7 +18,7 @@ import {
 } from "../shared";
 import { assertAttempt, assertBindings, assertRunnerAndSuites } from "./assertions";
 import { parseBindings, parseEnvironment } from "./fields";
-import { assertTotalDiagnosticLimit, parseSuiteResult } from "./suites";
+import { assertPlatformEvidenceIntegrity, assertTotalDiagnosticLimit, parseSuiteResult } from "./suites";
 
 export async function parseVerificationJobResult(input: string | Uint8Array): Promise<VerificationJobResultV1> {
     return await validateVerificationJobResult(parseVerificationControlDocument(input));
@@ -52,6 +52,7 @@ export async function validateVerificationJobResult(value: unknown): Promise<Ver
         "jobResult.results.suiteId",
     );
     assertTotalDiagnosticLimit(results);
+    await assertPlatformEvidenceIntegrity(results);
     return {
         schema: VERIFICATION_JOB_RESULT_SCHEMA,
         candidateId: stableIdentifier(input.candidateId, "jobResult.candidateId"),
@@ -82,7 +83,7 @@ export async function validateVerificationJobResultForAdmission(
     const identified = await identifyVerificationJobResult(value);
     assertAttempt(identified.result, admission.snapshot, attempt);
     assertBindings(identified.result, admission.snapshot, admission.digest);
-    assertRunnerAndSuites(identified.result, admission.snapshot, policy);
+    await assertRunnerAndSuites(identified.result, admission.snapshot, policy);
     return identified;
 }
 

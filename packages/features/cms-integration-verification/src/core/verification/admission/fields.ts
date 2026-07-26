@@ -6,7 +6,14 @@ import type {
     AdmissionSuitePlanEntryV1,
 } from "../../../interfaces/verification";
 import { strictRecord } from "../../validation/structure";
-import { exactVersion, oneOf, packageKind, sha256Digest, stableIdentifier } from "../../validation/values";
+import {
+    exactVersion,
+    oneOf,
+    packageKind,
+    requiredBoolean,
+    sha256Digest,
+    stableIdentifier,
+} from "../../validation/values";
 import { compareText } from "../shared";
 
 export function parseCandidate(value: unknown): AdmissionInputSnapshotV1["candidate"] {
@@ -52,8 +59,11 @@ export function parseReviewedBaseline(value: unknown, field: string): AdmissionR
 }
 
 export function parseDependency(value: unknown, field: string): AdmissionDependencyReferenceV1 {
-    const input = strictRecord(value, field, ["kind", "version", "packageDigest"]);
+    const input = strictRecord(value, field, ["selection", "kind", "version", "packageDigest"]);
     return {
+        ...(input.selection === undefined
+            ? {}
+            : { selection: oneOf(input.selection, `${field}.selection`, ["minimum", "stable"] as const) }),
         kind: packageKind(input.kind, `${field}.kind`),
         version: exactVersion(input.version, `${field}.version`),
         packageDigest: sha256Digest(input.packageDigest, `${field}.packageDigest`),
@@ -71,11 +81,14 @@ export function parseActiveContract(value: unknown, field: string): AdmissionAct
 }
 
 export function parseSuite(value: unknown, field: string): AdmissionSuitePlanEntryV1 {
-    const input = strictRecord(value, field, ["suiteId", "source", "contentDigest"]);
+    const input = strictRecord(value, field, ["suiteId", "source", "contentDigest", "applicable"]);
     return {
         suiteId: stableIdentifier(input.suiteId, `${field}.suiteId`),
         source: oneOf(input.source, `${field}.source`, ["platform", "author-contract", "author-conformance"] as const),
         contentDigest: sha256Digest(input.contentDigest, `${field}.contentDigest`),
+        ...(input.applicable === undefined
+            ? {}
+            : { applicable: requiredBoolean(input.applicable, `${field}.applicable`) }),
     };
 }
 
@@ -109,7 +122,7 @@ export function compareBaseline(
 
 export function compareDependency(left: AdmissionDependencyReferenceV1, right: AdmissionDependencyReferenceV1): number {
     return compareText(
-        `${left.kind}\0${left.version}\0${left.packageDigest}`,
-        `${right.kind}\0${right.version}\0${right.packageDigest}`,
+        `${left.selection ?? "legacy"}\0${left.kind}\0${left.version}\0${left.packageDigest}`,
+        `${right.selection ?? "legacy"}\0${right.kind}\0${right.version}\0${right.packageDigest}`,
     );
 }

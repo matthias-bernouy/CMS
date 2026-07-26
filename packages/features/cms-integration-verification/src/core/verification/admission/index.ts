@@ -66,7 +66,9 @@ export function validateAdmissionInputSnapshot(value: unknown): AdmissionInputSn
         compareDependency,
     );
     assertUnique(
-        dependencies.map((entry) => `${entry.kind}\0${entry.version}\0${entry.packageDigest}`),
+        dependencies.map(
+            (entry) => `${entry.selection ?? "legacy"}\0${entry.kind}\0${entry.version}\0${entry.packageDigest}`,
+        ),
         "admission.dependencies identity",
     );
     const activeContracts = boundedArray(

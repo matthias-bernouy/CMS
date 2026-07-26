@@ -77,11 +77,15 @@ async function assertDependencies(
 ): Promise<void> {
     for (const dependency of dependencies) {
         const location = snapshot.locateExactVersion(dependency.kind, dependency.version);
-        const entry = snapshot
-            .getIndex(dependency.kind)
-            ?.versions.find((version: Readonly<{ version: string }>) => version.version === dependency.version);
+        const index = snapshot.getIndex(dependency.kind);
+        const entry = index?.versions.find(
+            (version: Readonly<{ version: string }>) => version.version === dependency.version,
+        );
         if (!location || location.package.digest !== dependency.packageDigest || entry?.status !== undefined) {
             stale(`Pinned dependency ${dependency.kind}@${dependency.version} is no longer installable`);
+        }
+        if (dependency.selection === "stable" && index?.stable !== dependency.version) {
+            stale(`Pinned stable dependency ${dependency.kind}@${dependency.version} is no longer the stable channel`);
         }
     }
 }

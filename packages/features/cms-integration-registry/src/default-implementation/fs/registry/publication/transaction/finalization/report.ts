@@ -71,13 +71,14 @@ export async function buildCandidateReleaseEvidence(
                 ...entry,
                 source: planned.source,
                 required: true,
+                ...(planned.applicable === undefined ? {} : { applicable: planned.applicable }),
             };
         }),
-        outcome: result.result.results.every((entry) => entry.outcome === "passed")
-            ? "passed"
-            : result.result.results.some((entry) => entry.outcome === "infrastructure-failure")
-              ? "infrastructure-failure"
-              : "failed",
+        outcome: result.result.results.some((entry) => entry.outcome === "infrastructure-failure")
+            ? "infrastructure-failure"
+            : result.result.results.some((entry) => entry.outcome === "failed" || entry.outcome === "skipped")
+              ? "failed"
+              : "passed",
         provenance: {
             actor: "repository-verifier",
             reason: "candidate-admission",

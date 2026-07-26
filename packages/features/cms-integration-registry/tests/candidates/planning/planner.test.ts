@@ -54,7 +54,8 @@ describe("filesystem candidate admission planning", () => {
         expect(queued.compatibilityReportDigest).toBe(plan.compatibilityReportDigest);
         expect(queued.statefulChangeSelectionDigest).toBe(plan.statefulChangeSelectionDigest);
         expect(plan.admission.dependencies).toEqual([
-            { kind: "dependency", version: "1.0.0", packageDigest: dependency.digest },
+            { selection: "minimum", kind: "dependency", version: "1.0.0", packageDigest: dependency.digest },
+            { selection: "stable", kind: "dependency", version: "1.0.0", packageDigest: dependency.digest },
         ]);
         expect(plan.admission.activeContracts[0]?.contractId).toBe("public-api");
         expect(plan.admission.suites.map((suite) => suite.suiteId)).toEqual([

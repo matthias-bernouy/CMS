@@ -5,8 +5,10 @@ import {
     type AdmissionSuitePlanEntryV1,
     type IntegrationVerificationEnvelopeV1,
     type PinnedVerificationRunnerIdentity,
+    type PlatformRequiredVerificationSuiteV1,
     type ReleaseAdmissionPolicySnapshotV1,
 } from "@bernouy/cms-integration-verification";
+import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import {
     FsIntegrationRegistryCandidateAdmissionPlanningError,
     type IntegrationVerificationContractCatalog,
@@ -23,6 +25,7 @@ export async function selectCandidateSuites(input: {
     version: string;
     verification: IntegrationVerificationEnvelopeV1;
     policy: ReleaseAdmissionPolicySnapshotV1;
+    definition?: IntegrationDefinition;
     inherited?: IntegrationVerificationContractCatalog;
 }): Promise<CandidateSuiteSelection> {
     const runner = selectRunner(input.verification, input.policy);
@@ -35,6 +38,9 @@ export async function selectCandidateSuites(input: {
                 suiteId: suite.suiteId,
                 source: "platform" as const,
                 contentDigest: suite.suiteDigest,
+                ...(suite.applicability === undefined
+                    ? {}
+                    : { applicable: platformSuiteApplies(suite.applicability, input.definition) }),
             })),
         ...inherited.map((entry) => entry.suite),
     ];
@@ -70,6 +76,28 @@ export async function selectCandidateSuites(input: {
         ),
         suites: Object.freeze(suites.toSorted((left, right) => compareText(left.suiteId, right.suiteId))),
     });
+}
+
+function platformSuiteApplies(
+    applicability: NonNullable<PlatformRequiredVerificationSuiteV1["applicability"]>,
+    definition: IntegrationDefinition | undefined,
+): boolean {
+    if (applicability === "always") {
+        return true;
+    }
+    if (!definition) {
+        throw new FsIntegrationRegistryCandidateAdmissionPlanningError(
+            "runner_unavailable",
+            "Platform suite applicability requires the exact parsed candidate definition",
+        );
+    }
+    const sqlConnectors = (definition.connectors ?? []).filter(
+        (connector) => connector.provider === "supabase" && (connector.schemas?.length ?? 0) > 0,
+    );
+    if (applicability === "sql-connectors") {
+        return sqlConnectors.length > 0;
+    }
+    return sqlConnectors.some((connector) => (connector.dataApiSchemas?.length ?? 0) > 0);
 }
 
 function selectRunner(

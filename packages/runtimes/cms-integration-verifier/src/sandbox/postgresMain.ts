@@ -1,18 +1,16 @@
 import { runCanonicalVerificationSandboxProgram } from "./program";
-import { runPostgresInstallAndReapply } from "./postgres";
-import { loadPostgresInstallAndReapplyAdapter } from "./postgresAdapter";
-
-const SUITE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
+import { runPostgresPlatformVerification } from "./postgres";
+import { loadPostgresPlatformVerificationAdapter } from "./postgresAdapter";
 
 export async function runPostgresVerificationSandboxExecutable(arguments_: readonly string[] = process.argv.slice(2)) {
-    const [adapterModule, suiteId] = arguments_;
-    if (!adapterModule || !suiteId || !SUITE_ID.test(suiteId) || arguments_.length !== 2) {
-        throw new TypeError("PostgreSQL sandbox requires one adapter module and one suite identity");
+    const [adapterModule] = arguments_;
+    if (!adapterModule || arguments_.length !== 1) {
+        throw new TypeError("PostgreSQL sandbox requires one adapter module");
     }
-    const adapter = await loadPostgresInstallAndReapplyAdapter(adapterModule);
+    const adapter = await loadPostgresPlatformVerificationAdapter(adapterModule);
     try {
         await runCanonicalVerificationSandboxProgram(
-            async (input, signal) => await runPostgresInstallAndReapply(input, adapter, suiteId, signal),
+            async (input, signal) => await runPostgresPlatformVerification(input, adapter, signal),
         );
     } finally {
         await adapter.dispose?.();

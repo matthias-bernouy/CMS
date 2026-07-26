@@ -17,6 +17,7 @@ import {
 } from "@bernouy/cms-integration-registry/fs";
 import { publicationPackage, registryFixture } from "../../publication/fixtures";
 import { planningPolicy, validatingCandidate, verificationCandidate } from "../planning/fixtures";
+import { passedSuiteResult } from "./platformResult";
 
 export async function passedCandidate(fixture: ReturnType<typeof registryFixture>, candidateId: string) {
     const candidate = await verificationCandidate(await publicationPackage("demo", "1.0.0"));
@@ -134,14 +135,6 @@ async function passedResult(
         },
         runner: admission.selectedRunner,
         environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },
-        results: admission.suites.map(({ suiteId }) => ({
-            suiteId,
-            outcome: "passed",
-            durationMs: 10,
-            attempts: 1,
-            cacheHit: false,
-            evidenceDigests: ["e".repeat(64)],
-            diagnostics: [],
-        })),
+        results: await Promise.all(admission.suites.map(async (suite) => await passedSuiteResult(suite))),
     };
 }

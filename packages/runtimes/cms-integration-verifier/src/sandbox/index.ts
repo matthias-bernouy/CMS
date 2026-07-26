@@ -4,13 +4,13 @@ export {
     type VerificationSandboxProgram,
 } from "./program";
 export {
-    runPostgresInstallAndReapply,
-    type PostgresInstallAndReapplyAdapter,
-    type PostgresSqlApplicationEvidence,
+    runPostgresPlatformVerification,
+    type PostgresPlatformVerificationAdapter,
+    type PostgresPlatformVerificationEvidence,
 } from "./postgres";
 export {
-    loadPostgresInstallAndReapplyAdapter,
-    type PostgresInstallAndReapplyAdapterFactory,
+    loadPostgresPlatformVerificationAdapter,
+    type PostgresPlatformVerificationAdapterFactory,
 } from "./postgresAdapter";
 export { runPostgresVerificationSandboxExecutable } from "./postgresMain";
 export {

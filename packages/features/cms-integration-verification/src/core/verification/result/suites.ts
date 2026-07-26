@@ -1,4 +1,6 @@
+import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
 import type { VerificationJobSuiteResultV1 } from "../../../interfaces/verification";
+import { parsePlatformVerificationEvidence } from "../platform";
 import { IntegrationVerificationContractError } from "../../validation/errors";
 import { assertUnique, boundedArray, strictRecord } from "../../validation/structure";
 import {
@@ -27,6 +29,7 @@ export function parseSuiteResult(value: unknown, field: string): VerificationJob
         "cacheHit",
         "evidenceDigests",
         "diagnostics",
+        "platformEvidence",
     ]);
     const evidenceDigests = boundedArray(input.evidenceDigests, `${field}.evidenceDigests`, sha256Digest, {
         maximum: MAX_EVIDENCE_DIGESTS_PER_SUITE,
@@ -45,6 +48,7 @@ export function parseSuiteResult(value: unknown, field: string): VerificationJob
             "passed",
             "failed",
             "skipped",
+            "not-applicable",
             "infrastructure-failure",
         ] as const),
         durationMs: nonNegativeInteger(input.durationMs, `${field}.durationMs`),
@@ -52,7 +56,32 @@ export function parseSuiteResult(value: unknown, field: string): VerificationJob
         cacheHit: requiredBoolean(input.cacheHit, `${field}.cacheHit`),
         evidenceDigests,
         diagnostics,
+        ...(input.platformEvidence === undefined
+            ? {}
+            : { platformEvidence: parsePlatformVerificationEvidence(input.platformEvidence) }),
     };
+}
+
+export async function assertPlatformEvidenceIntegrity(results: readonly VerificationJobSuiteResultV1[]): Promise<void> {
+    for (const result of results) {
+        const evidence = result.platformEvidence;
+        if (!evidence) {
+            continue;
+        }
+        if (evidence.suiteId !== result.suiteId || evidence.outcome !== result.outcome) {
+            throw invalidResult(
+                `jobResult.results.${result.suiteId}.platformEvidence`,
+                "must identify the same suite and outcome",
+            );
+        }
+        const digest = await sha256Hex(canonicalJsonBytes(evidence));
+        if (!result.evidenceDigests.includes(digest)) {
+            throw invalidResult(
+                `jobResult.results.${result.suiteId}.evidenceDigests`,
+                "must contain the canonical platform evidence digest",
+            );
+        }
+    }
 }
 
 export function assertTotalDiagnosticLimit(results: readonly VerificationJobSuiteResultV1[]): void {

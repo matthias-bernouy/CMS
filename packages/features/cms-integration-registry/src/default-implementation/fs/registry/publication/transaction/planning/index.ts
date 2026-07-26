@@ -67,6 +67,7 @@ export class FsIntegrationRegistryCandidateAdmissionPlanner {
             version: record.version,
             verification: input.candidate.envelope.verification,
             policy: policy.snapshot,
+            definition: prepared.definition,
             inherited: this.config.inheritedContracts,
         });
         const stateful = await selectStatefulChanges({

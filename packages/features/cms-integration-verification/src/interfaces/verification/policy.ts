@@ -3,10 +3,14 @@ import type { PinnedVerificationRunnerIdentity, VerificationPolicyIdentity } fro
 
 export const RELEASE_ADMISSION_POLICY_SNAPSHOT_SCHEMA = "cms.integration.release-admission-policy.v1" as const;
 
+export type PlatformVerificationSuiteApplicabilityV1 = "always" | "sql-connectors" | "data-api-schemas";
+
 export type PlatformRequiredVerificationSuiteV1 = Readonly<{
     suiteId: string;
     suiteDigest: string;
     runner: PinnedVerificationRunnerIdentity;
+    /** Missing only on policy snapshots written before applicability was introduced. */
+    applicability?: PlatformVerificationSuiteApplicabilityV1;
 }>;
 
 export type VerificationRetryPolicyV1 = Readonly<{

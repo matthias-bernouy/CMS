@@ -1,38 +1,47 @@
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
-import { validateVerificationJobResultForAdmission } from "@bernouy/cms-integration-verification";
 import {
-    runPostgresInstallAndReapply,
-    type PostgresInstallAndReapplyAdapter,
+    PLATFORM_VERIFICATION_EVIDENCE_SCHEMA,
+    POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
+    validateVerificationJobResultForAdmission,
+} from "@bernouy/cms-integration-verification";
+import {
+    runPostgresPlatformVerification,
+    type PostgresPlatformVerificationAdapter,
     type VerificationSandboxInput,
 } from "../../src";
-import { DIGEST_A, DIGEST_B, DIGEST_C } from "../fixtures/contracts";
-import { sandboxInputFixture } from "../fixtures/workload";
+import { DIGEST_A } from "../fixtures/contracts";
+import { postgresPlatformInputFixture } from "../fixtures/postgresAdapter";
 import { processSandboxFixture } from "./support";
 
-describe("PostgreSQL install-and-reapply sandbox program", () => {
+describe("PostgreSQL platform verification sandbox program", () => {
     test("runs through the canonical child-process executable with a prebuilt adapter module", async () => {
         const executable = join(import.meta.dir, "../../src/sandbox/postgresMain.ts");
         const adapterModule = join(import.meta.dir, "../fixtures/postgresAdapter.ts");
-        const fixture = await processSandboxFixture("unused", {
-            arguments: [executable, adapterModule, "platform-install"],
-        });
+        const fixture = await processSandboxFixture("unused", { arguments: [executable, adapterModule] });
         try {
-            const result = await fixture.sandbox.run(await sandboxInputFixture(), new AbortController().signal);
-            expect(result.results.find((suite) => suite.suiteId === "platform-install")?.outcome).toBe("passed");
+            const result = await fixture.sandbox.run(
+                await postgresPlatformInputFixture(),
+                new AbortController().signal,
+            );
+            expect(result.results.find((suite) => suite.suiteId === "platform-package-materialization")?.outcome).toBe(
+                "passed",
+            );
+            expect(result.results.find((suite) => suite.suiteId === "platform-postgres-rls-shape")?.outcome).toBe(
+                "not-applicable",
+            );
             expect(result.results.find((suite) => suite.suiteId === "implementation")?.outcome).toBe("skipped");
         } finally {
             await fixture.cleanup();
         }
     });
 
-    test("applies SQL twice to the same disposable database and reports only observed evidence", async () => {
-        const input = await sandboxInputFixture();
-        const calls: Array<Readonly<{ phase: string; database: VerificationSandboxInput["database"] }>> = [];
-        const result = await runPostgresInstallAndReapply(
+    test("executes every exact platform suite and never treats author code as platform evidence", async () => {
+        const input = await postgresPlatformInputFixture();
+        const calls: VerificationSandboxInput["database"][] = [];
+        const result = await runPostgresPlatformVerification(
             input,
-            adapter(DIGEST_A, (phase, database) => calls.push({ phase, database })),
-            "platform-install",
+            adapter((database) => calls.push(database)),
             new AbortController().signal,
         );
 
@@ -44,62 +53,82 @@ describe("PostgreSQL install-and-reapply sandbox program", () => {
                 input.workload.attempt,
             ),
         ).resolves.toBeDefined();
-        expect(calls.map((call) => call.phase)).toEqual(["install", "reapply"]);
-        expect(calls[0]!.database).toBe(input.database);
-        expect(calls[1]!.database).toBe(input.database);
-        expect(result.results.find((suite) => suite.suiteId === "platform-install")?.outcome).toBe("passed");
-        expect(result.results.find((suite) => suite.suiteId === "implementation")?.outcome).toBe("skipped");
+        expect(calls).toEqual([input.database]);
+        expect(result.results.filter((suite) => suite.platformEvidence)).toHaveLength(
+            POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.length,
+        );
+        const author = result.results.find((suite) => suite.suiteId === "implementation")!;
+        expect(author.outcome).toBe("skipped");
+        expect(author.platformEvidence).toBeUndefined();
     });
 
-    test("fails the generated suite when reapplication changes the observed schema", async () => {
-        const input = await sandboxInputFixture();
-        let applications = 0;
-        const result = await runPostgresInstallAndReapply(
+    test("reports a structured failed platform proof", async () => {
+        const input = await postgresPlatformInputFixture();
+        const result = await runPostgresPlatformVerification(
             input,
-            adapter(DIGEST_A, undefined, () => (++applications === 1 ? DIGEST_A : DIGEST_B)),
-            "platform-install",
+            adapter(undefined, true),
             new AbortController().signal,
         );
+        const suite = result.results.find((entry) => entry.suiteId === "platform-package-materialization")!;
 
-        const suite = result.results.find((entry) => entry.suiteId === "platform-install")!;
         expect(suite.outcome).toBe("failed");
-        expect(suite.diagnostics).toEqual([
-            expect.objectContaining({ code: "postgres-reapply-changed-schema", redacted: true }),
-        ]);
+        expect(suite.platformEvidence?.checks[0]).toMatchObject({
+            outcome: "failed",
+            findings: [{ code: "probe-failed", path: "package" }],
+        });
     });
 
     test("propagates provisioning failures instead of fabricating a verification result", async () => {
-        const input = await sandboxInputFixture();
-        const failing: PostgresInstallAndReapplyAdapter = {
+        const input = await postgresPlatformInputFixture();
+        const failing: PostgresPlatformVerificationAdapter = {
             async environmentVersions() {
                 return [];
             },
-            async applyPackageSql() {
+            async verifyPackage() {
                 throw new Error("no external disposable database was provisioned");
             },
         };
 
-        await expect(
-            runPostgresInstallAndReapply(input, failing, "platform-install", new AbortController().signal),
-        ).rejects.toThrow("no external disposable database was provisioned");
+        await expect(runPostgresPlatformVerification(input, failing, new AbortController().signal)).rejects.toThrow(
+            "no external disposable database was provisioned",
+        );
     });
 });
 
 function adapter(
-    defaultSchemaDigest: string,
-    onApply?: (phase: string, database: VerificationSandboxInput["database"]) => void,
-    schemaDigest?: () => string,
-): PostgresInstallAndReapplyAdapter {
+    onVerify?: (database: VerificationSandboxInput["database"]) => void,
+    failMaterialization = false,
+): PostgresPlatformVerificationAdapter {
     return {
         async environmentVersions() {
             return [{ name: "postgres", version: "16.4" }];
         },
-        async applyPackageSql({ phase, database }) {
-            onApply?.(phase, database);
+        async verifyPackage({ database, platformSuites }) {
+            onVerify?.(database);
             return {
-                observedSchemaDigest: schemaDigest?.() ?? defaultSchemaDigest,
-                evidenceDigest: phase === "install" ? DIGEST_B : DIGEST_C,
-                durationMs: 5,
+                durationMs: 10,
+                suites: platformSuites.map((suite) => {
+                    const definition = POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.find(
+                        (entry) => entry.suiteId === suite.suiteId,
+                    )!;
+                    const failed = failMaterialization && suite.suiteId === "platform-package-materialization";
+                    const outcome = failed ? "failed" : suite.applicable ? "passed" : "not-applicable";
+                    return {
+                        schema: PLATFORM_VERIFICATION_EVIDENCE_SCHEMA,
+                        suiteId: suite.suiteId,
+                        suiteDigest: suite.suiteDigest,
+                        applicability: definition.applicability,
+                        outcome,
+                        checks: definition.checks.map((checkId) => ({
+                            checkId,
+                            outcome,
+                            subjectCount: suite.applicable ? 1 : 0,
+                            observationDigest: DIGEST_A,
+                            findings: failed ? [{ code: "probe-failed", path: "package" }] : [],
+                            findingsTruncated: false,
+                        })),
+                    };
+                }),
             };
         },
     };

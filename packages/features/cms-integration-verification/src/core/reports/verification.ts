@@ -9,8 +9,8 @@ import {
     parseReportHistoryFields,
     parseReportProvenance,
     parseReviewedBaselineReferences,
-    parseVersionDigestReferences,
 } from "./shared";
+import { compareDependency, parseDependency } from "../verification/admission/fields";
 import {
     assertActiveContractsExecuted,
     assertVerificationOutcome,
@@ -77,7 +77,7 @@ export function parseVerificationReport(value: unknown): VerificationReport {
             input.verificationJobResultDigest,
             "verificationReport.verificationJobResultDigest",
         ),
-        dependencies: parseVersionDigestReferences(input.dependencies, "verificationReport.dependencies"),
+        dependencies: parseVerificationDependencies(input.dependencies),
         baselines: parseReviewedBaselineReferences(input.baselines, "verificationReport.baselines"),
         activeContracts,
         environment: parseEnvironment(input.environment),
@@ -92,6 +92,19 @@ export function parseVerificationReport(value: unknown): VerificationReport {
     assertVerificationOutcome(report);
     assertActiveContractsExecuted(report);
     return report;
+}
+
+function parseVerificationDependencies(value: unknown): VerificationReport["dependencies"] {
+    const dependencies = boundedArray(value, "verificationReport.dependencies", parseDependency).toSorted(
+        compareDependency,
+    );
+    assertUnique(
+        dependencies.map(
+            (entry) => `${entry.selection ?? "legacy"}\0${entry.kind}\0${entry.version}\0${entry.packageDigest}`,
+        ),
+        "verificationReport.dependencies identity",
+    );
+    return dependencies;
 }
 
 export async function identifyVerificationReport(

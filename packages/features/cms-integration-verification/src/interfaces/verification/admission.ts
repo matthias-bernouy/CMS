@@ -14,6 +14,8 @@ export type AdmissionReviewedBaselineReferenceV1 = Readonly<{
 }>;
 
 export type AdmissionDependencyReferenceV1 = Readonly<{
+    /** Missing only on admission snapshots written before the two-point matrix was introduced. */
+    selection?: "minimum" | "stable";
     kind: string;
     version: string;
     packageDigest: string;
@@ -30,6 +32,8 @@ export type AdmissionSuitePlanEntryV1 = Readonly<{
     suiteId: string;
     source: "platform" | "author-contract" | "author-conformance";
     contentDigest: string;
+    /** Explicit only for policy-generated suites with an applicability rule. */
+    applicable?: boolean;
 }>;
 
 export type AdmissionInputSnapshotV1 = Readonly<{

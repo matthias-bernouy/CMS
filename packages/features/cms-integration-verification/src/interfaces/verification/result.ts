@@ -1,10 +1,11 @@
 import type { PinnedVerificationRunnerIdentity } from "../runner";
+import type { PlatformVerificationEvidenceV1 } from "./platform";
 
 export const VERIFICATION_JOB_RESULT_SCHEMA = "cms.integration.verification-job-result.v1" as const;
 
 export type VerificationJobSuiteResultV1 = Readonly<{
     suiteId: string;
-    outcome: "passed" | "failed" | "skipped" | "infrastructure-failure";
+    outcome: "passed" | "failed" | "skipped" | "not-applicable" | "infrastructure-failure";
     durationMs: number;
     attempts: number;
     cacheHit: boolean;
@@ -14,6 +15,8 @@ export type VerificationJobSuiteResultV1 = Readonly<{
         message: string;
         redacted: true;
     }>[];
+    /** Present on new policy-generated suites; absent on legacy job results. */
+    platformEvidence?: PlatformVerificationEvidenceV1;
 }>;
 
 export type VerificationJobResultV1 = Readonly<{

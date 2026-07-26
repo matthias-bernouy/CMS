@@ -12,11 +12,20 @@ import { compareText, invalidReference } from "../shared";
 const FINDING_SURFACES = ["definition", "input", "dependency", "artifact", "schema", "function"] as const;
 
 export function parsePlatformSuite(value: unknown, field: string): PlatformRequiredVerificationSuiteV1 {
-    const input = strictRecord(value, field, ["suiteId", "suiteDigest", "runner"]);
+    const input = strictRecord(value, field, ["suiteId", "suiteDigest", "runner", "applicability"]);
     return {
         suiteId: stableIdentifier(input.suiteId, `${field}.suiteId`),
         suiteDigest: sha256Digest(input.suiteDigest, `${field}.suiteDigest`),
         runner: pinnedRunner(input.runner, `${field}.runner`),
+        ...(input.applicability === undefined
+            ? {}
+            : {
+                  applicability: oneOf(input.applicability, `${field}.applicability`, [
+                      "always",
+                      "sql-connectors",
+                      "data-api-schemas",
+                  ] as const),
+              }),
     };
 }
 

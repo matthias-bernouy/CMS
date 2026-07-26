@@ -21,6 +21,19 @@ describe("verification report contract", () => {
         expect(parsed.activeContracts[0]?.digest).toHaveLength(64);
     });
 
+    test("preserves distinct minimum and stable dependency points sharing one package digest", () => {
+        const base = verificationReport();
+        const parsed = parseVerificationReport({
+            ...base,
+            dependencies: [
+                { selection: "minimum", kind: "dependency", version: "1.0.0", packageDigest: base.packageDigest },
+                { selection: "stable", kind: "dependency", version: "1.0.0", packageDigest: base.packageDigest },
+            ],
+        });
+
+        expect(parsed.dependencies.map((dependency) => dependency.selection)).toEqual(["minimum", "stable"]);
+    });
+
     test("allows an honest legacy-backfill root without fabricating a predecessor", () => {
         const parsed = parseVerificationReport({
             ...verificationReport(),

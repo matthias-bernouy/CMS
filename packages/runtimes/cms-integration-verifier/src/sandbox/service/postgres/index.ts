@@ -1,0 +1,125 @@
+import { SQL } from "bun";
+import type { PostgresPlatformVerificationAdapter } from "../../postgres";
+import { createSqlPackageLoader, applyPackageSql, observeConnectorSchemas } from "./application";
+import {
+    readBoundarySnapshot,
+    readGrantObservation,
+    readRlsObservation,
+    readRoutineObservation,
+    readViewObservation,
+} from "./catalog";
+import { buildPlatformEvidence } from "./checks";
+
+const POSTGRES_IMAGE = "postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777";
+
+export type PostgresPlatformVerificationAdapterConfig = Readonly<{
+    packageTempRoot?: string;
+    maxCachedPackages?: number;
+}>;
+
+export function createPostgresPlatformVerificationAdapter(
+    config: PostgresPlatformVerificationAdapterConfig = {},
+): PostgresPlatformVerificationAdapter {
+    const packages = createSqlPackageLoader(config);
+    return Object.freeze({
+        async environmentVersions(signal: AbortSignal) {
+            signal.throwIfAborted();
+            return [
+                { name: "bun", version: Bun.version },
+                { name: "postgres-image", version: POSTGRES_IMAGE },
+                { name: "platform-policy", version: "postgres-platform-v1.2.0" },
+            ];
+        },
+        async verifyPackage(
+            input: Parameters<PostgresPlatformVerificationAdapter["verifyPackage"]>[0],
+            signal: AbortSignal,
+        ) {
+            const { package: envelope, dependencies = [], database, platformSuites } = input;
+            const started = performance.now();
+            const loaded = await packages.load(envelope);
+            const sql = new SQL(database.connectionUri, { max: 1 });
+            try {
+                if (loaded.connectors.length === 0) {
+                    return {
+                        durationMs: elapsed(started),
+                        suites: await buildPlatformEvidence(platformSuites, loaded, dependencies, undefined),
+                    };
+                }
+                const ownedNamespaces = unique(loaded.connectors.flatMap((connector) => connector.ownedNamespaces));
+                const dataApiSchemas = unique(loaded.connectors.flatMap((connector) => connector.dataApiSchemas));
+                const before = await readBoundarySnapshot(sql, ownedNamespaces);
+                try {
+                    await applyPackageSql(sql, loaded, signal);
+                    const installedSchemas = await observeConnectorSchemas(sql, loaded.connectors);
+                    const afterInstall = await readBoundarySnapshot(sql, ownedNamespaces);
+                    await applyPackageSql(sql, loaded, signal);
+                    const reappliedSchemas = await observeConnectorSchemas(sql, loaded.connectors);
+                    const afterReapply = await readBoundarySnapshot(sql, ownedNamespaces);
+                    const rls = await readRlsObservation(sql, dataApiSchemas);
+                    const grants = await readGrantObservation(sql, dataApiSchemas);
+                    const views = await readViewObservation(sql, dataApiSchemas);
+                    const routines = await readRoutineObservation(sql, ownedNamespaces);
+                    return {
+                        durationMs: elapsed(started),
+                        suites: await buildPlatformEvidence(platformSuites, loaded, dependencies, {
+                            loaded,
+                            before,
+                            afterInstall,
+                            afterReapply,
+                            installedSchemas,
+                            reappliedSchemas,
+                            rls,
+                            grants,
+                            views,
+                            routines,
+                        }),
+                    };
+                } catch (error) {
+                    if (signal.aborted) {
+                        throw signal.reason;
+                    }
+                    if (infrastructureFailure(error)) {
+                        throw error;
+                    }
+                    return {
+                        durationMs: elapsed(started),
+                        suites: await buildPlatformEvidence(platformSuites, loaded, dependencies, undefined),
+                    };
+                }
+            } finally {
+                await sql.close();
+            }
+        },
+        async dispose() {
+            await packages.dispose();
+        },
+    });
+}
+
+function unique(values: readonly string[]): string[] {
+    return [...new Set(values)].toSorted();
+}
+
+function elapsed(started: number): number {
+    return Math.max(0, Math.round(performance.now() - started));
+}
+
+function infrastructureFailure(error: unknown): boolean {
+    const code = (error as { code?: unknown })?.code;
+    return (
+        typeof code === "string" &&
+        (/^08/u.test(code) ||
+            [
+                "53300",
+                "57P01",
+                "57P02",
+                "57P03",
+                "ECONNREFUSED",
+                "ECONNRESET",
+                "EHOSTUNREACH",
+                "ENETUNREACH",
+                "EPIPE",
+                "ETIMEDOUT",
+            ].includes(code))
+    );
+}

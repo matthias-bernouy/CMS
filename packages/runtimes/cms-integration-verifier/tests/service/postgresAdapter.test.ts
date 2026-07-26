@@ -2,19 +2,15 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { canonicalJsonBytes, type IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
 import {
-    canonicalJsonBytes,
-    computeIntegrationPackageDigest,
-    type IntegrationPackageEnvelopeV1,
-} from "@bernouy/cms-integration-packages";
-import {
-    computeIntegrationVerificationDigest,
+    POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
     parseVerificationJobResult,
 } from "@bernouy/cms-integration-verification";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../src/runtime/providers/postgres";
 import type { VerificationSandboxInput } from "../../src";
 import { DIGEST_A, DIGEST_B } from "../fixtures/contracts";
-import { sandboxInputFixture } from "../fixtures/workload";
+import { postgresPlatformInputFixture } from "../fixtures/postgresAdapter";
 import { disposablePostgresAvailable, startDisposablePostgres } from "./postgresFixture";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
@@ -38,11 +34,17 @@ postgresTest(
             );
             try {
                 const result = await runAdapter(await productionInput(lease.credential), root);
-                expect(result.results.find((entry) => entry.suiteId === "platform-install")).toMatchObject({
+                expect(result.results.filter((entry) => entry.platformEvidence)).toHaveLength(
+                    POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.length,
+                );
+                expect(result.results.find((entry) => entry.suiteId === "platform-postgres-rls-shape")).toMatchObject({
                     outcome: "passed",
                     attempts: 1,
                     cacheHit: false,
                 });
+                expect(
+                    result.results.find((entry) => entry.suiteId === "platform-postgres-schema-contract")?.outcome,
+                ).toBe("passed");
                 expect(result.results.find((entry) => entry.suiteId === "implementation")?.outcome).toBe("skipped");
                 expect(await readdir(root)).toEqual([]);
             } finally {
@@ -61,8 +63,7 @@ async function runAdapter(input: VerificationSandboxInput, cwd: string) {
         [
             process.execPath,
             join(import.meta.dir, "../../src/sandbox/postgresMain.ts"),
-            join(import.meta.dir, "../../src/sandbox/service/postgresAdapter.ts"),
-            "platform-install",
+            join(import.meta.dir, "../../src/sandbox/service/postgres/index.ts"),
         ],
         {
             cwd,
@@ -84,30 +85,7 @@ async function runAdapter(input: VerificationSandboxInput, cwd: string) {
 }
 
 async function productionInput(database: VerificationSandboxInput["database"]): Promise<VerificationSandboxInput> {
-    const base = await sandboxInputFixture();
-    const packageEnvelope = sqlPackage();
-    const packageDigest = await computeIntegrationPackageDigest(packageEnvelope);
-    const verification = {
-        ...base.workload.verification,
-        target: { ...base.workload.verification.target, packageDigest },
-    };
-    const verificationDigest = await computeIntegrationVerificationDigest(verification);
-    return {
-        database,
-        workload: {
-            ...base.workload,
-            package: packageEnvelope,
-            verification,
-            admission: {
-                ...base.workload.admission,
-                candidate: {
-                    ...base.workload.admission.candidate,
-                    packageDigest,
-                    verificationDigest,
-                },
-            },
-        },
-    };
+    return { ...(await postgresPlatformInputFixture(sqlPackage())), database };
 }
 
 function sqlPackage(): IntegrationPackageEnvelopeV1 {
@@ -129,8 +107,43 @@ function sqlPackage(): IntegrationPackageEnvelopeV1 {
                         {
                             provider: "supabase",
                             root: "connectors/supabase",
+                            dataApiSchemas: ["verifier_probe"],
                             schemas: [{ manifest: "sql/schema.manifest.json" }],
-                            compatibility: { schema: { namespaces: [{ name: "verifier_probe", relations: [] }] } },
+                            compatibility: {
+                                schema: {
+                                    namespaces: [
+                                        {
+                                            name: "verifier_probe",
+                                            relations: [
+                                                {
+                                                    name: "items",
+                                                    kind: "table",
+                                                    columns: [
+                                                        {
+                                                            name: "id",
+                                                            type: "bigint",
+                                                            nullable: false,
+                                                            identity: "by-default",
+                                                            sequenceDependency: "internal",
+                                                        },
+                                                        { name: "name", type: "text", nullable: false },
+                                                    ],
+                                                    constraints: [
+                                                        {
+                                                            kind: "primary-key",
+                                                            name: "items_pkey",
+                                                            columns: ["id"],
+                                                            deferrable: false,
+                                                            initiallyDeferred: false,
+                                                            validated: true,
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            },
                         },
                     ],
                 }),
@@ -147,7 +160,17 @@ function sqlPackage(): IntegrationPackageEnvelopeV1 {
             "connectors/supabase/sql/schema.sql": {
                 encoding: "utf8",
                 content:
-                    "create schema if not exists verifier_probe;\ncreate table if not exists verifier_probe.items (id bigint generated by default as identity primary key, name text not null);\n",
+                    "create schema if not exists verifier_probe;\n" +
+                    "revoke all on schema verifier_probe from public, anon, authenticated;\n" +
+                    "create table if not exists verifier_probe.items (id bigint generated by default as identity primary key, name text not null);\n" +
+                    "alter table verifier_probe.items enable row level security;\n" +
+                    "alter table verifier_probe.items force row level security;\n" +
+                    "revoke all on all tables in schema verifier_probe from public, anon, authenticated;\n" +
+                    "revoke all on all functions in schema verifier_probe from public, anon, authenticated;\n" +
+                    "create or replace function verifier_probe.secure_probe() returns bigint language sql security definer set search_path = '' as 'select 1::bigint';\n" +
+                    "revoke all on function verifier_probe.secure_probe() from public, anon, authenticated;\n" +
+                    "grant usage on schema verifier_probe to service_role;\n" +
+                    "grant select, insert, update, delete on all tables in schema verifier_probe to service_role;\n",
             },
         },
     };
