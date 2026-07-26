@@ -53,8 +53,8 @@ export function defaultThemeSettings(): ThemeSettings {
         ]),
         source("typography", "Typography", false, [
             category("font-families", "Font families", "Fonts applied to headings and body copy.", [
-                token("font-heading", "Heading font", "Titles and headings", "value"),
-                token("font-body", "Body font", "Paragraphs and controls", "value"),
+                token("font-heading", "Heading font", "Titles and headings", "font-family"),
+                token("font-body", "Body font", "Paragraphs and controls", "font-family"),
             ]),
             category("text-scale", "Text scale", "Shared text sizes used across the site.", [
                 token("font-size-body", "Body size", "Default text", "value"),
@@ -92,7 +92,7 @@ export function defaultThemeSettings(): ThemeSettings {
 }
 
 function source(id: string, label: string, supportsModes: boolean, categories: ThemeSource["categories"]): ThemeSource {
-    return { id, label, supportsModes, categories };
+    return { id, label, supportsModes, categories, owner: { kind: "core" } };
 }
 
 function category(

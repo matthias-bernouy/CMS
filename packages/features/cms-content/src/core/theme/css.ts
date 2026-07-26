@@ -1,4 +1,4 @@
-import type { ThemeSettings } from "cms-content/interfaces/theme";
+import type { ThemeMode, ThemeSettings, ThemeToken } from "cms-content/interfaces/theme";
 import { allTokens } from "cms-content/core/theme/tokens";
 
 export function generateThemeCss(settings: ThemeSettings | undefined): string {
@@ -9,9 +9,9 @@ export function generateThemeCss(settings: ThemeSettings | undefined): string {
     if (!theme) {
         return "";
     }
-    const variables = new Map(allTokens(settings).map((item) => [item.id, item.variable]));
-    const light = declarations(theme.values.light, variables);
-    const dark = declarations(theme.values.dark, variables);
+    const tokens = allTokens(settings);
+    const light = declarations(theme.values.light, tokens, "light");
+    const dark = declarations(theme.values.dark, tokens, "dark");
     const chunks: string[] = [];
     if (light) {
         chunks.push(`:root {\n${light}\n}`);
@@ -23,11 +23,11 @@ export function generateThemeCss(settings: ThemeSettings | undefined): string {
     return chunks.join("\n\n");
 }
 
-function declarations(values: Record<string, string>, variables: Map<string, string>): string {
-    return Object.entries(values)
-        .flatMap(([id, value]) => {
-            const variable = variables.get(id);
-            return variable && value.trim() ? [`  --${variable}: ${value.trim()};`] : [];
+function declarations(values: Record<string, string>, tokens: ThemeToken[], mode: ThemeMode): string {
+    return tokens
+        .flatMap((token) => {
+            const value = values[token.id] ?? token.defaults?.[mode];
+            return value?.trim() ? [`  --${token.variable}: ${value.trim()};`] : [];
         })
         .join("\n");
 }

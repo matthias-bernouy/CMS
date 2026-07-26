@@ -41,6 +41,7 @@ export function organizeThemeSettings(input: ThemeSettings): ThemeSettings {
         categoryForVariable(settings, token.variable).tokens.push(token);
     }
     migrateBodyTextColor(settings);
+    assignLegacySourceOwners(settings);
     return settings;
 }
 
@@ -78,4 +79,11 @@ function migrateBodyTextColor(settings: ThemeSettings): void {
         token.description = "Default body copy color";
     }
     categoryForVariable(settings, "text-body").tokens.push(token);
+}
+
+function assignLegacySourceOwners(settings: ThemeSettings): void {
+    const coreSourceIds = new Set(["colors", "typography", "spacing", "shape"]);
+    for (const source of settings.sources) {
+        source.owner ??= { kind: coreSourceIds.has(source.id) ? "core" : "site" };
+    }
 }

@@ -14,12 +14,17 @@ export type { TPage, TPageRef } from "cms-content/interfaces/pages";
 export type { TTemplate } from "cms-content/interfaces/templates";
 export type { TSystem } from "cms-content/interfaces/settings";
 export type {
+    IntegrationThemeContribution,
+    ThemeCategoryContribution,
     ThemeCategory,
     ThemeDefinition,
     ThemeMode,
     ThemeSettings,
     ThemeSource,
+    ThemeSourceOwner,
     ThemeToken,
+    ThemeTokenContribution,
+    ThemeTokenDefaults,
     ThemeTokenType,
 } from "cms-content/interfaces/theme";
 export { wrapBindingCore } from "cms-content/interfaces/settings";
@@ -39,9 +44,17 @@ export { filterAndSortPages } from "cms-content/core/queries/pagesQuery";
 export { defaultSystem, mergeSystemUpdate } from "cms-content/core/lifecycle/system";
 export {
     allTokens,
+    composeThemeSettings,
+    createIntegrationThemeSource,
     defaultThemeSettings,
     generateThemeCss,
+    integrationThemeSourceId,
+    integrationThemeTokenId,
+    integrationThemeVariable,
     organizeThemeSettings,
+    reconcileIntegrationTheme,
+    reconcileSubmittedThemeSettings,
+    removeIntegrationTheme,
     themeSettingsFromCss,
     validateThemeSettings,
 } from "cms-content/core/theme";
