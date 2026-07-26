@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { ProductionIntegrationMigrationRuntime } from "@bernouy/cms-integrations";
 import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../src/runtime/mountSurfaces";
 import { surfaceMountFixtures, waitFor } from "./surfaceMountFixtures";
 
@@ -114,6 +115,8 @@ describe("production surface mounting", () => {
             deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
             integrationCatalog: options.integrations.integrationCatalog,
             integrationPackageResolver: options.integrations.integrationPackageResolver,
+            integrationMigrationRuntime: expect.any(ProductionIntegrationMigrationRuntime),
+            integrationConnectorBaselineAdopters: options.integrations.integrationConnectorBaselineAdopters,
             publicAuth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,

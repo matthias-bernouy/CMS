@@ -2,6 +2,7 @@ import {
     IntegrationCompatibilityReevaluationConflictError,
     IntegrationCompatibilityReevaluationIntegrityError,
     IntegrationCompatibilityReevaluationNotFoundError,
+    IntegrationCompatibilityReevaluationStaleDecisionError,
     IntegrationCompatibilityReevaluationStaleReportError,
     IntegrationCompatibilityReevaluationValidationError,
     type IntegrationCompatibilityReevaluationRequest,
@@ -33,6 +34,7 @@ export function mountRepositoryCompatibilityReevaluationRoutes(
             return jsonResponse(201, {
                 revision: result.revision,
                 currentReportRevisionId: result.history.current.id,
+                ...(result.release ? { release: result.release } : {}),
             });
         } catch (error) {
             return reevaluationErrorResponse(error);
@@ -41,7 +43,7 @@ export function mountRepositoryCompatibilityReevaluationRoutes(
 }
 
 function parseReevaluationRequest(value: unknown): IntegrationCompatibilityReevaluationRequest {
-    const required = ["actor", "currentReportRevisionId", "kind", "reason", "version"];
+    const required = ["actor", "currentDecision", "currentReportRevisionId", "kind", "reason", "version"];
     const optional = ["evidenceIds"];
     if (!isRecord(value) || !hasAllowedKeys(value, required, optional)) {
         throw invalidRequest();
@@ -50,6 +52,7 @@ function parseReevaluationRequest(value: unknown): IntegrationCompatibilityReeva
         kind: requiredString(value.kind),
         version: requiredString(value.version),
         currentReportRevisionId: requiredString(value.currentReportRevisionId),
+        currentDecision: decisionReference(value.currentDecision),
         actor: requiredString(value.actor),
         reason: requiredString(value.reason),
         ...(value.evidenceIds === undefined ? {} : { evidenceIds: stringArray(value.evidenceIds) }),
@@ -76,6 +79,16 @@ function reevaluationErrorResponse(error: unknown): Response {
             currentReportRevisionId: error.currentReportRevisionId,
         });
     }
+    if (error instanceof IntegrationCompatibilityReevaluationStaleDecisionError) {
+        return jsonResponse(error.status, {
+            code: error.code,
+            error: "Release admission decision is stale",
+            currentDecision: {
+                revisionId: error.currentDecisionRevisionId,
+                digest: error.currentDecisionDigest,
+            },
+        });
+    }
     if (
         error instanceof IntegrationCompatibilityReevaluationConflictError ||
         error instanceof IntegrationCompatibilityReevaluationIntegrityError
@@ -95,6 +108,17 @@ function reevaluationErrorResponse(error: unknown): Response {
         code: "management_operation_failed",
         error: "Repository management operation failed",
     });
+}
+
+function decisionReference(value: unknown): Readonly<{ revisionId: string; digest: string }> {
+    if (!isRecord(value) || !hasAllowedKeys(value, ["digest", "revisionId"], [])) {
+        throw invalidRequest();
+    }
+    const digest = requiredString(value.digest);
+    if (!/^[a-f0-9]{64}$/u.test(digest)) {
+        throw invalidRequest();
+    }
+    return { revisionId: requiredString(value.revisionId), digest };
 }
 
 function requiredString(value: unknown): string {

@@ -1,7 +1,7 @@
 import type { RepositoryReevaluationInput } from "@bernouy/cms-control";
 import type { RepositoryManagementTransportResponse } from "../../transport";
 import { rateLimitResult, simpleErrorResult, type SanitizedRepositoryManagementResult } from "../errors";
-import { array, assertEqual, canonicalText, exactObject } from "../helpers";
+import { array, assertEqual, boolean, canonicalText, digest, exactObject } from "../helpers";
 import { validateRevisionReport } from "../reports";
 
 export type ReevaluationIdentity = Readonly<{
@@ -45,7 +45,7 @@ export function validateReevaluationResponse(
         );
     }
     assertEqual(response.status, 201);
-    const body = exactObject(response.body, ["revision", "currentReportRevisionId"]);
+    const body = exactObject(response.body, ["revision", "currentReportRevisionId"], ["release"]);
     const revision = validateRevisionReport(body.revision, {
         kind: expected.input.kind,
         version: expected.input.version,
@@ -53,11 +53,29 @@ export function validateReevaluationResponse(
     assertEqual(revision.supersedes, expected.input.currentReportRevisionId);
     assertEqual(body.currentReportRevisionId, revision.id);
     validateExpectedProvenance(revision.provenance, expected);
+    if (body.release !== undefined) {
+        validateRelease(body.release);
+    }
     return { status: 201, body };
 }
 
+function validateRelease(value: unknown): void {
+    const release = exactObject(value, [
+        "compatibilityReportRevisionId",
+        "decision",
+        "admissible",
+        "eligibilityChanged",
+    ]);
+    canonicalText(release.compatibilityReportRevisionId, 512);
+    const decision = exactObject(release.decision, ["revisionId", "digest"]);
+    canonicalText(decision.revisionId, 512);
+    digest(decision.digest);
+    boolean(release.admissible);
+    boolean(release.eligibilityChanged);
+}
+
 function validateConflict(response: RepositoryManagementTransportResponse): SanitizedRepositoryManagementResult {
-    const initial = exactObject(response.body, ["code", "error"], ["currentReportRevisionId"]);
+    const initial = exactObject(response.body, ["code", "error"], ["currentDecision", "currentReportRevisionId"]);
     canonicalText(initial.error, 2_048);
     if (initial.code === "integration_compatibility_reevaluation_stale_report") {
         const body = exactObject(response.body, ["code", "error", "currentReportRevisionId"]);
@@ -67,6 +85,21 @@ function validateConflict(response: RepositoryManagementTransportResponse): Sani
                 code: initial.code,
                 error: "Compatibility report revision is stale",
                 currentReportRevisionId: canonicalText(body.currentReportRevisionId, 512),
+            },
+        };
+    }
+    if (initial.code === "integration_compatibility_reevaluation_stale_decision") {
+        const body = exactObject(response.body, ["code", "error", "currentDecision"]);
+        const currentDecision = exactObject(body.currentDecision, ["revisionId", "digest"]);
+        return {
+            status: 409,
+            body: {
+                code: initial.code,
+                error: "Release admission decision is stale",
+                currentDecision: {
+                    revisionId: canonicalText(currentDecision.revisionId, 512),
+                    digest: digest(currentDecision.digest),
+                },
             },
         };
     }

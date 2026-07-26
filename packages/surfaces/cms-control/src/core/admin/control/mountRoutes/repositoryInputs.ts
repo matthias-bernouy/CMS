@@ -30,7 +30,15 @@ export function repositoryCompatibilityQuery(request: Request): RepositoryCompat
 }
 
 export function parseRepositoryReevaluation(value: unknown): RepositoryReevaluationInput {
-    const object = exactObject(value, ["kind", "version", "currentReportRevisionId", "reason", "evidenceIds"]);
+    const object = exactObject(value, [
+        "kind",
+        "version",
+        "currentReportRevisionId",
+        "currentDecision",
+        "reason",
+        "evidenceIds",
+    ]);
+    const currentDecision = exactObject(object.currentDecision, ["revisionId", "digest"]);
     const evidenceIds = object.evidenceIds;
     if (evidenceIds !== undefined && (!Array.isArray(evidenceIds) || !evidenceIds.every(isNonEmptyString))) {
         throw new RepositoryControlRequestError(400);
@@ -39,6 +47,10 @@ export function parseRepositoryReevaluation(value: unknown): RepositoryReevaluat
         kind: requiredBodyText(object.kind),
         version: requiredBodyText(object.version),
         currentReportRevisionId: requiredBodyText(object.currentReportRevisionId),
+        currentDecision: {
+            revisionId: requiredBodyText(currentDecision.revisionId),
+            digest: requiredBodyText(currentDecision.digest),
+        },
         reason: requiredBodyText(object.reason),
         ...(evidenceIds ? { evidenceIds } : {}),
     };

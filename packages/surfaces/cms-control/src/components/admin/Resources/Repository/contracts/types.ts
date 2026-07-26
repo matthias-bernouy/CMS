@@ -131,6 +131,12 @@ export type RepositoryPublicationResultView = Readonly<{
 export type RepositoryReevaluationResultView = Readonly<{
     revision: RepositoryCompatibilityReportView;
     currentReportRevisionId: string;
+    release?: Readonly<{
+        compatibilityReportRevisionId: string;
+        decision: Readonly<{ revisionId: string; digest: string }>;
+        admissible: boolean;
+        eligibilityChanged: boolean;
+    }>;
 }>;
 
 export type RepositoryPromotionResultView = Readonly<{

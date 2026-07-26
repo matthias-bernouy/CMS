@@ -79,9 +79,25 @@ export function parseRepositoryPublicationResult(value: unknown): RepositoryPubl
 
 export function parseRepositoryReevaluationResult(value: unknown): RepositoryReevaluationResultView {
     const object = readRecord(value);
+    const release = object.release === undefined ? undefined : readReevaluationRelease(object.release);
     return {
         revision: parseRepositoryCompatibilityReport(object.revision, "revision"),
         currentReportRevisionId: readText(object.currentReportRevisionId),
+        ...(release ? { release } : {}),
+    };
+}
+
+function readReevaluationRelease(value: unknown): NonNullable<RepositoryReevaluationResultView["release"]> {
+    const object = readRecord(value);
+    const decision = readRecord(object.decision);
+    return {
+        compatibilityReportRevisionId: readText(object.compatibilityReportRevisionId),
+        decision: {
+            revisionId: readText(decision.revisionId),
+            digest: readText(decision.digest),
+        },
+        admissible: readBoolean(object.admissible),
+        eligibilityChanged: readBoolean(object.eligibilityChanged),
     };
 }
 

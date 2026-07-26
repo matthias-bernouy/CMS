@@ -90,6 +90,7 @@ export function reevaluationBody(): IntegrationCompatibilityReevaluationRequest 
         kind: "commerce",
         version: "1.1.0",
         currentReportRevisionId: "report-2",
+        currentDecision: { revisionId: "decision-2", digest: "b".repeat(64) },
         actor: "repository-owner",
         reason: "Run evaluator version 2",
         evidenceIds: ["schema-ci-2"],

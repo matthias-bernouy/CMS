@@ -5,7 +5,7 @@ import type {
 } from "@bernouy/cms-control";
 import { canonicalJsonBytes, parseIntegrationPackageEnvelope, sha256Hex } from "@bernouy/cms-integration-packages";
 import { REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES } from "./transport";
-import { assertEqual, canonicalText, packageKind, packageVersion, uniqueTextArray } from "./validation/helpers";
+import { assertEqual, canonicalText, digest, packageKind, packageVersion, uniqueTextArray } from "./validation/helpers";
 
 const utf8 = new TextEncoder();
 
@@ -46,12 +46,17 @@ export function prepareReevaluation(input: RepositoryReevaluationInput, actor: s
     const kind = packageKind(input.kind);
     const version = packageVersion(input.version);
     const currentReportRevisionId = canonicalText(input.currentReportRevisionId, 512);
+    const currentDecision = {
+        revisionId: canonicalText(input.currentDecision.revisionId, 512),
+        digest: digest(input.currentDecision.digest),
+    };
     const reason = canonicalText(input.reason, 4_096);
     const evidenceIds = input.evidenceIds ? [...uniqueTextArray(input.evidenceIds, 128)].sort() : undefined;
     const normalized: RepositoryReevaluationInput = {
         kind,
         version,
         currentReportRevisionId,
+        currentDecision,
         reason,
         ...(evidenceIds ? { evidenceIds } : {}),
     };

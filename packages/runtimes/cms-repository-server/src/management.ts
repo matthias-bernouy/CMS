@@ -3,10 +3,13 @@ import {
     InMemoryIntegrationRegistryMutationCoordinator,
     CurrentIntegrationRegistryReleaseEvidenceReader,
     IntegrationCompatibilityEvaluator,
+    identifyIntegrationVerificationBackfillRequest,
+    INTEGRATION_VERIFICATION_BACKFILL_SCHEMA,
     type IntegrationRegistryRecoveryResult,
     type IntegrationRegistryReleaseEvidenceReader,
     type IntegrationVerificationBundleStore,
     type OfficialRepositoryBootstrapBaselineApproval,
+    type PreparedOfficialVerificationBackfill,
 } from "@bernouy/cms-integration-registry";
 import type { ReleaseAdmissionPolicySnapshotV1 } from "@bernouy/cms-integration-verification";
 import {
@@ -24,16 +27,25 @@ import {
     FsIntegrationRegistryVersionEligibilityManager,
     FsIntegrationVerificationReportStore,
     FsIntegrationVerificationBundleStore,
+    FsIntegrationVerificationBackfiller,
+    FsReleaseAdmissionReconciler,
     FsReleaseAdmissionDecisionStore,
     FsReviewedSchemaBaselineStore,
     FsReviewedSchemaBaselineImporter,
     MAX_REVIEWED_SCHEMA_BASELINE_IMPORT_DOCUMENT_BYTES,
+    MAX_INTEGRATION_VERIFICATION_BACKFILL_DOCUMENT_BYTES,
+    recoverIntegrationVerificationBackfills,
+    recoverFsReleaseReportHistories,
     recoverReviewedSchemaBaselineImports,
     recoverVerifiedCandidateActivations,
     type CandidateMigrationReportProvider,
     type ReviewedSchemaBaselineImportTarget,
 } from "@bernouy/cms-integration-registry/fs";
-import { mountRepositorySchemaBaselineImportRoutes, RepositoryManagementCms } from "@bernouy/cms-repository-management";
+import {
+    mountRepositorySchemaBaselineImportRoutes,
+    mountRepositoryVerificationBackfillRoutes,
+    RepositoryManagementCms,
+} from "@bernouy/cms-repository-management";
 import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
 import type { Runner } from "@bernouy/http-runner";
 import type { RepositoryCatalogRuntime } from "./core/catalogRuntime";
@@ -71,6 +83,7 @@ export async function createProductionRepositoryManagement(input: {
         approval: OfficialRepositoryBootstrapBaselineApproval;
         approvedTargets: readonly ReviewedSchemaBaselineImportTarget[];
     }>;
+    verificationBackfills?: readonly PreparedOfficialVerificationBackfill[];
     candidateProtocol?: Omit<ProductionRepositoryCandidateProtocolConfig, "root">;
     candidateAdmissionPolicy?: ReleaseAdmissionPolicySnapshotV1;
     candidateMigrationReports?: CandidateMigrationReportProvider;
@@ -80,6 +93,7 @@ export async function createProductionRepositoryManagement(input: {
     const mutations = new InMemoryIntegrationRegistryMutationCoordinator();
     const reviewedSchemaBaselines = new FsReviewedSchemaBaselineStore({ root: input.root });
     const releaseReportConfig = { root: input.root, snapshots, mutations };
+    const reports = new FsIntegrationCompatibilityReportStore({ snapshots, mutations });
     const compatibilityReports = new FsIntegrationCompatibilityV2ReportStore(releaseReportConfig);
     const verificationReports = new FsIntegrationVerificationReportStore(releaseReportConfig);
     const verificationBundles = new FsIntegrationVerificationBundleStore(input.root);
@@ -89,6 +103,29 @@ export async function createProductionRepositoryManagement(input: {
         compatibilityReports,
         verificationReports,
         migrationReports,
+    });
+    const versionEligibility = new FsIntegrationRegistryVersionEligibilityManager({
+        root: input.root,
+        snapshots,
+        decisions: releaseDecisions,
+        mutations,
+    });
+    const releaseAdmission = new FsReleaseAdmissionReconciler({
+        snapshots,
+        compatibility: compatibilityReports,
+        verification: verificationReports,
+        migrations: migrationReports,
+        decisions: releaseDecisions,
+        eligibility: versionEligibility,
+        legacyCompatibility: reports,
+        ...(input.candidateAdmissionPolicy
+            ? {
+                  statefulChanges: {
+                      policy: input.candidateAdmissionPolicy,
+                      reviewedSchemaBaselines,
+                  },
+              }
+            : {}),
     });
     const releaseEvidence = new CurrentIntegrationRegistryReleaseEvidenceReader({
         catalog: snapshots,
@@ -107,6 +144,7 @@ export async function createProductionRepositoryManagement(input: {
         snapshots,
         releaseDecisions,
     }).recover();
+    const releaseReportRecovery = await recoverFsReleaseReportHistories(input.root);
     const baselineImportConfig = input.baselineImports
         ? {
               root: input.root,
@@ -122,6 +160,31 @@ export async function createProductionRepositoryManagement(input: {
     const baselineImportDiagnostics = baselineImportConfig
         ? await recoverReviewedSchemaBaselineImports(baselineImportConfig)
         : [];
+    const approvedVerificationBackfillRequests = await Promise.all(
+        (input.verificationBackfills ?? []).map((entry) =>
+            identifyIntegrationVerificationBackfillRequest({
+                schema: INTEGRATION_VERIFICATION_BACKFILL_SCHEMA,
+                verification: { envelope: entry.verification.envelope, digest: entry.verification.digest },
+                compatibilityReport: entry.compatibilityReport,
+                verificationReport: entry.verificationReport,
+                statefulChanges: entry.statefulChanges,
+                decision: entry.decision,
+            }),
+        ),
+    );
+    const verificationBackfillConfig = {
+        root: input.root,
+        snapshots,
+        mutations,
+        bundles: verificationBundles,
+        compatibilityReports,
+        verificationReports,
+        decisions: releaseDecisions,
+        reviewedSchemaBaselines,
+        approvedRequestDigests: approvedVerificationBackfillRequests.map(({ digest }) => digest),
+    };
+    const verificationBackfiller = new FsIntegrationVerificationBackfiller(verificationBackfillConfig);
+    const verificationBackfillDiagnostics = await recoverIntegrationVerificationBackfills(verificationBackfillConfig);
     const candidateStore = new FsIntegrationRegistryCandidateStore({ root: input.root });
     const candidatePlanner = input.candidateAdmissionPolicy
         ? new FsIntegrationRegistryCandidateAdmissionPlanner({
@@ -189,11 +252,23 @@ export async function createProductionRepositoryManagement(input: {
             }
         }
     }
-    const recovery: IntegrationRegistryRecoveryResult = Object.freeze({
-        snapshot: registryRecovery.snapshot,
-        diagnostics: Object.freeze([...registryRecovery.diagnostics, ...baselineImportDiagnostics]),
+    await releaseAdmission.reconcileAll({
+        actor: "repository:recovery",
+        reason: "Repair current composite release admission eligibility",
     });
-    const reports = new FsIntegrationCompatibilityReportStore({ snapshots, mutations });
+    const recovery: IntegrationRegistryRecoveryResult = Object.freeze({
+        snapshot: snapshots.current(),
+        diagnostics: Object.freeze([
+            ...registryRecovery.diagnostics,
+            ...releaseReportRecovery.diagnostics.map((diagnostic) => ({
+                code: "release-report-history-quarantined" as const,
+                source: diagnostic.quarantinePath,
+                message: `Quarantined invalid ${diagnostic.stream} release report history`,
+            })),
+            ...baselineImportDiagnostics,
+            ...verificationBackfillDiagnostics,
+        ]),
+    });
     const publisher = new ObservedIntegrationRegistryPublisher(
         new FsIntegrationRegistryPublisher({
             root: input.root,
@@ -214,18 +289,17 @@ export async function createProductionRepositoryManagement(input: {
         }),
         telemetry,
     );
-    const versionEligibility = new FsIntegrationRegistryVersionEligibilityManager({
-        root: input.root,
-        snapshots,
-        decisions: releaseDecisions,
-        mutations,
-    });
     const reevaluator = new ObservedIntegrationCompatibilityReevaluator(
         new FsIntegrationCompatibilityReevaluator({
             snapshots,
             reports,
             evaluator: compatibility,
             reviewedSchemaBaselines,
+            release: {
+                compatibility: compatibilityReports,
+                decisions: releaseDecisions,
+                reconciler: releaseAdmission,
+            },
         }),
         telemetry,
     );
@@ -242,6 +316,10 @@ export async function createProductionRepositoryManagement(input: {
                     maxBodyBytes: MAX_REVIEWED_SCHEMA_BASELINE_IMPORT_DOCUMENT_BYTES,
                 });
             }
+            mountRepositoryVerificationBackfillRoutes(runner, {
+                backfiller: verificationBackfiller,
+                maxBodyBytes: MAX_INTEGRATION_VERIFICATION_BACKFILL_DOCUMENT_BYTES,
+            });
         },
         mountWorkerAuthenticated(runner: Runner) {
             candidateProtocol.mountWorkerAuthenticated(runner);

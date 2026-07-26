@@ -1,4 +1,9 @@
 import { describe, expect, test } from "bun:test";
+import {
+    POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
+    validateReleaseAdmissionPolicySnapshot,
+} from "@bernouy/cms-integration-verification";
+import { productionReleaseAdmissionPolicy } from "../src/core/candidates/policy";
 import { readRepositoryRuntimeEnv } from "../src/runtimeEnv";
 
 describe("readRepositoryRuntimeEnv", () => {
@@ -19,7 +24,7 @@ describe("readRepositoryRuntimeEnv", () => {
             workerLeaseDurationMs: 300_000,
             verifierRunner: {
                 name: "cms-postgres",
-                version: "1.0.0",
+                version: "1.2.0",
                 imageDigest: "sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0",
             },
             clientAddressMode: "disabled",
@@ -92,6 +97,18 @@ describe("readRepositoryRuntimeEnv", () => {
             imageDigest: `sha256:${"a".repeat(64)}`,
         });
         expect(() => readRepositoryRuntimeEnv({ CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: "latest" })).toThrow();
+    });
+
+    test("binds the production runner to every generated platform suite", async () => {
+        const runner = readRepositoryRuntimeEnv({}).verifierRunner;
+        const policy = await productionReleaseAdmissionPolicy(runner);
+
+        await expect(validateReleaseAdmissionPolicySnapshot(policy)).resolves.toBeDefined();
+        expect(policy.platformRequiredSuites.map((suite) => suite.suiteId)).toEqual(
+            POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.map((suite) => suite.suiteId),
+        );
+        expect(policy.platformRequiredSuites.every((suite) => suite.runner.version === "1.2.0")).toBeTrue();
+        expect(policy.platformRequiredSuites.every((suite) => suite.suiteDigest.length === 64)).toBeTrue();
     });
 
     test("requires explicit trusted hops and keeps disabled mode explicit", () => {

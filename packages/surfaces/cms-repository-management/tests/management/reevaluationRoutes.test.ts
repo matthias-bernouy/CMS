@@ -3,6 +3,7 @@ import {
     IntegrationCompatibilityReevaluationConflictError,
     IntegrationCompatibilityReevaluationIntegrityError,
     IntegrationCompatibilityReevaluationNotFoundError,
+    IntegrationCompatibilityReevaluationStaleDecisionError,
     IntegrationCompatibilityReevaluationStaleReportError,
 } from "@bernouy/cms-integration-registry";
 import { configuredRunner, RecordingReevaluator, reevaluationBody } from "./reevaluationSupport";
@@ -52,6 +53,19 @@ describe("repository compatibility reevaluation route", () => {
             code: "integration_compatibility_reevaluation_stale_report",
             error: "Compatibility report revision is stale",
             currentReportRevisionId: "report-2",
+        });
+
+        const staleDecision = configuredRunner(
+            new RecordingReevaluator(
+                new IntegrationCompatibilityReevaluationStaleDecisionError("decision-3", "c".repeat(64)),
+            ),
+        );
+        const staleDecisionResponse = await staleDecision.request(reevaluationBody());
+        expect(staleDecisionResponse.status).toBe(409);
+        expect(await staleDecisionResponse.json()).toEqual({
+            code: "integration_compatibility_reevaluation_stale_decision",
+            error: "Release admission decision is stale",
+            currentDecision: { revisionId: "decision-3", digest: "c".repeat(64) },
         });
     });
 

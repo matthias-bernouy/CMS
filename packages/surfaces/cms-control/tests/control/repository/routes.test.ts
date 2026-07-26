@@ -50,6 +50,7 @@ describe("Control repository management routes", () => {
             kind: "commerce",
             version: "1.1.0",
             currentReportRevisionId: "report-1",
+            currentDecision: { revisionId: "decision-1", digest: "a".repeat(64) },
             reason: "New evaluator",
             evidenceIds: ["ci-1"],
         });
@@ -79,6 +80,7 @@ describe("Control repository management routes", () => {
             kind: "commerce",
             version: "1.1.0",
             currentReportRevisionId: "report-1",
+            currentDecision: { revisionId: "decision-1", digest: "a".repeat(64) },
             reason: "New evaluator",
             evidenceIds: ["ci-1"],
         });
@@ -89,6 +91,7 @@ describe("Control repository management routes", () => {
             kind: "commerce",
             version: "1.1.0",
             currentReportRevisionId: "report-1",
+            currentDecision: { revisionId: "decision-1", digest: "a".repeat(64) },
             reason: "Injected",
             actor: "browser-controlled",
         });

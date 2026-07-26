@@ -30734,9 +30734,24 @@ ${controls_default3}`;
   }
   function parseRepositoryReevaluationResult(value3) {
     const object = readRecord(value3);
+    const release = object.release === undefined ? undefined : readReevaluationRelease(object.release);
     return {
       revision: parseRepositoryCompatibilityReport(object.revision, "revision"),
-      currentReportRevisionId: readText(object.currentReportRevisionId)
+      currentReportRevisionId: readText(object.currentReportRevisionId),
+      ...release ? { release } : {}
+    };
+  }
+  function readReevaluationRelease(value3) {
+    const object = readRecord(value3);
+    const decision2 = readRecord(object.decision);
+    return {
+      compatibilityReportRevisionId: readText(object.compatibilityReportRevisionId),
+      decision: {
+        revisionId: readText(decision2.revisionId),
+        digest: readText(decision2.digest)
+      },
+      admissible: readBoolean(object.admissible),
+      eligibilityChanged: readBoolean(object.eligibilityChanged)
     };
   }
   function parseRepositoryPromotionResult(value3) {
@@ -31308,11 +31323,18 @@ ${controls_default3}`;
 
   // src/components/admin/Resources/Repository/forms/reevaluation.ts
   function readRepositoryReevaluation(form, selection) {
+    if (!selection.decision) {
+      throw new Error("A current release admission decision is required for reevaluation");
+    }
     const evidenceIds = splitEvidenceIds(optionalField(form, "evidenceIds"));
     return {
       kind: selection.kind,
       version: selection.version,
       currentReportRevisionId: selection.currentReportRevisionId,
+      currentDecision: {
+        revisionId: selection.decision.revisionId,
+        digest: selection.decision.digest
+      },
       reason: requiredField(form, "reason", "Reevaluation reason"),
       ...evidenceIds.length > 0 ? { evidenceIds } : {}
     };
@@ -31347,7 +31369,17 @@ ${controls_default3}`;
   async function submitRepositoryReevaluation(form, feedback, context) {
     await withSelection(form, feedback, context, async (selection) => {
       const result = await requestRepositoryReevaluation(readRepositoryReevaluation(form, selection), context.signal);
-      context.updateSelection({ ...selection, currentReportRevisionId: result.currentReportRevisionId });
+      context.updateSelection({
+        ...selection,
+        currentReportRevisionId: result.currentReportRevisionId,
+        ...result.release ? {
+          decision: {
+            ...result.release.decision,
+            admissible: result.release.admissible
+          },
+          ...result.release.eligibilityChanged ? { status: "inadmissible" } : {}
+        } : {}
+      });
       showFeedback(feedback, `Created compatibility revision ${result.currentReportRevisionId}: ${result.revision.outcome}.`, "success");
       form.reset();
       await context.reloadCompatibility();

@@ -32,6 +32,7 @@ describe("HTTP repository management gateway requests", () => {
                     kind: TEST_KIND,
                     version: TEST_VERSION,
                     currentReportRevisionId: "report-admission",
+                    currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
                     reason: "Manual evidence review",
                     evidenceIds: ["evidence-z", "evidence-a"],
                 }),
@@ -75,6 +76,7 @@ describe("HTTP repository management gateway requests", () => {
             kind: TEST_KIND,
             version: TEST_VERSION,
             currentReportRevisionId: "report-admission",
+            currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
             reason: "Manual evidence review",
             evidenceIds: ["evidence-a", "evidence-z"],
             actor: TEST_ACTOR,
@@ -118,6 +120,7 @@ describe("HTTP repository management gateway requests", () => {
                 kind: TEST_KIND,
                 version: TEST_VERSION,
                 currentReportRevisionId: "report-admission",
+                currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
                 reason: "Manual evidence review",
             });
 
@@ -132,6 +135,7 @@ describe("HTTP repository management gateway requests", () => {
                     kind: TEST_KIND,
                     version: TEST_VERSION,
                     currentReportRevisionId: "report-admission",
+                    currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
                     reason: "Manual evidence review",
                     actor: TEST_ACTOR,
                 },

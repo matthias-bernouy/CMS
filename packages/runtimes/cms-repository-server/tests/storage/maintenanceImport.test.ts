@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { rm } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
+import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
     identifyReviewedSchemaBaselineImportRequest,
     REVIEWED_SCHEMA_BASELINE_IMPORT_SCHEMA,
@@ -10,6 +11,7 @@ import {
     FsReviewedSchemaBaselineStore,
 } from "@bernouy/cms-integration-registry/fs";
 import {
+    buildOfficialRepositoryBootstrapPlan,
     loadOfficialRepositoryBootstrapEvidence,
     OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
 } from "@bernouy/cms-official-integrations/publication";
@@ -31,12 +33,31 @@ afterEach(async () => {
 });
 
 describe("production reviewed schema baseline maintenance import", () => {
+    test("recovers release report histories before composite admission reconciliation", async () => {
+        const root = await roots.create();
+        await mkdir(join(root, ".registry", "release-reports", "compatibility", "not-a-digest"), {
+            recursive: true,
+        });
+        const catalog = new RepositoryCatalogRuntime();
+        expect((await catalog.refresh(() => buildFsIntegrationRegistryCatalogSnapshot({ root }))).applied).toBeTrue();
+
+        const management = await createProductionRepositoryManagement({ root, catalog });
+
+        expect(management.recovery.diagnostics).toContainEqual(
+            expect.objectContaining({
+                code: "release-report-history-quarantined",
+                message: "Quarantined invalid compatibility release report history",
+            }),
+        );
+    });
+
     test("is absent from public and ordinary management capabilities and imports through maintenance", async () => {
         const root = await roots.create();
         await (await prepareOfficialRepositoryBootstrap(root)).commit();
         const importedHistories = await new FsReviewedSchemaBaselineStore({ root }).listAll();
         await rm(join(root, ".registry", "schema-baselines"), { recursive: true });
         const evidence = await loadOfficialRepositoryBootstrapEvidence();
+        const officialPlan = await buildOfficialRepositoryBootstrapPlan();
         const catalog = new RepositoryCatalogRuntime();
         const loadCatalog = () => buildFsIntegrationRegistryCatalogSnapshot({ root });
         expect((await catalog.refresh(loadCatalog)).applied).toBeTrue();
@@ -55,6 +76,7 @@ describe("production reviewed schema baseline maintenance import", () => {
                     }),
                 ),
             },
+            verificationBackfills: officialPlan.verificationBackfills,
         });
         const publicRunner = new BunRunner();
         const managementRunner = new BunRunner();
@@ -109,6 +131,24 @@ describe("production reviewed schema baseline maintenance import", () => {
         expect((await request(managementOrigin, "management-secret")).status).toBe(401);
         expect((await request(managementOrigin, "maintenance-secret")).status).toBe(201);
         expect((await request(managementOrigin, "maintenance-secret")).status).toBe(200);
+
+        const verification = officialPlan.verificationBackfills.find(
+            (entry) => entry.verificationReport.baselines.length === 0,
+        )!;
+        const verificationPath = "/.cms/repository-management/api/integrations/verification-backfills";
+        const verificationRequest = (requestedOrigin: string, token?: string) =>
+            fetch(`${requestedOrigin}${verificationPath}`, {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                    ...(token ? { authorization: `Bearer ${token}` } : {}),
+                },
+                body: canonicalVerificationBackfill(verification),
+            });
+        expect((await verificationRequest(publicOrigin, "maintenance-secret")).status).toBe(404);
+        expect((await verificationRequest(managementOrigin)).status).toBe(401);
+        expect((await verificationRequest(managementOrigin, "management-secret")).status).toBe(401);
+        expect((await verificationRequest(managementOrigin, "maintenance-secret")).status).toBe(200);
     }, 60_000);
 });
 
@@ -119,6 +159,19 @@ function guard(token: string, principal: string, maintenance: boolean) {
         rateLimiter: new InMemoryRateLimiter({ limit: 10, windowSeconds: 60 }),
     };
     return maintenance ? createRepositoryMaintenanceGuard(config) : createRepositoryManagementGuard(config);
+}
+
+function canonicalVerificationBackfill(
+    entry: Awaited<ReturnType<typeof buildOfficialRepositoryBootstrapPlan>>["verificationBackfills"][number],
+) {
+    return canonicalJsonBytes({
+        schema: "cms.integration.verification-backfill-request.v1",
+        verification: { envelope: entry.verification.envelope, digest: entry.verification.digest },
+        compatibilityReport: entry.compatibilityReport,
+        verificationReport: entry.verificationReport,
+        statefulChanges: entry.statefulChanges,
+        decision: entry.decision,
+    });
 }
 
 function origin(runner: BunRunner): string {

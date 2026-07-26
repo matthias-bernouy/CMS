@@ -77,6 +77,9 @@ export function surfaceMountFixtures() {
             integrationCatalog: token("integration-catalog"),
             integrationPackageResolver: token("package-resolver"),
             integrationConnectorDeployers: [token("deployer")],
+            integrationConnectorMigrationAdapters: [token("migration-adapter")],
+            integrationFunctionMigrationHandler: token("function-migration-handler"),
+            integrationConnectorBaselineAdopters: [token("baseline-adopter")],
             integrationProvisioners: [token("provisioner")],
         },
         authentication: {

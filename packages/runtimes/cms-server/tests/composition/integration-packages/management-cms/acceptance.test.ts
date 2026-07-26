@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import type { ManagementCmsSurfaces } from "./cmsSurfaces";
 import { startManagementCmsSurfaces } from "./cmsSurfaces";
-import { publicationDocument } from "./publication";
+import { candidateDocument } from "./publication";
 import type { RepositoryProcess } from "./repositoryProcess";
 import { startRepositoryProcess } from "./repositoryProcess";
 
@@ -16,7 +16,7 @@ afterEach(async () => {
 });
 
 describe("management CMS process acceptance", () => {
-    test("keeps public delivery anonymous while the exact CMS owner publishes through the private listener", async () => {
+    test("keeps public delivery anonymous while the exact CMS owner submits a private candidate", async () => {
         repository = await startRepositoryProcess();
         const privateBaseUrl = `${repository.managementOrigin}/.cms/repository-management`;
         const publicBaseUrl = `${repository.publicOrigin}/.cms/repository`;
@@ -42,21 +42,31 @@ describe("management CMS process acceptance", () => {
         const anonymousControl = await fetch(`${cms.controlOrigin}/api/repository/status`, { redirect: "manual" });
         expect(anonymousControl.status).toBe(302);
 
-        const publication = publicationDocument();
-        const published = await controlRequest(cms.controlOrigin, "/api/repository/publications", "owner", {
+        const candidate = await candidateDocument();
+        const submitted = await controlRequest(cms.controlOrigin, "/api/repository/candidates", "owner", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: publication,
+            body: candidate,
         });
-        expect(published.status).toBe(201);
-        const publishedText = await published.text();
-        expect(JSON.parse(publishedText)).toMatchObject({ kind: "remote-demo", version: "1.0.0" });
+        expect(submitted.status).toBe(202);
+        const submittedText = await submitted.text();
+        const submittedCandidate = JSON.parse(submittedText).candidate as { candidateId: string; status: string };
+        expect(submittedCandidate).toMatchObject({ status: "queued" });
         expect(cms.upstreamRequests).toHaveLength(1);
         expect(cms.upstreamRequests[0]).toMatchObject({
             method: "POST",
             authorization: `Bearer ${repository.token}`,
         });
-        expect(cms.upstreamRequests[0]?.url).toBe(`${privateBaseUrl}/api/integrations/publications`);
+        expect(cms.upstreamRequests[0]?.url).toBe(`${privateBaseUrl}/api/integrations/candidates`);
+
+        const candidateStatus = await controlRequest(
+            cms.controlOrigin,
+            `/api/repository/candidates/status?candidateId=${encodeURIComponent(submittedCandidate.candidateId)}`,
+            "owner",
+        );
+        expect(candidateStatus.status).toBe(200);
+        const candidateStatusText = await candidateStatus.text();
+        expect(JSON.parse(candidateStatusText)).toMatchObject({ candidate: { status: "queued" } });
 
         const status = await controlRequest(cms.controlOrigin, "/api/repository/status", "owner");
         expect(status.status).toBe(200);
@@ -64,8 +74,8 @@ describe("management CMS process acceptance", () => {
         expect(JSON.parse(statusText)).toMatchObject({
             ready: true,
             health: "healthy",
-            integrations: 15,
-            versions: 15,
+            integrations: 14,
+            versions: 14,
         });
         const adminPage = await controlRequest(cms.controlOrigin, "/admin/repository", "owner");
         expect(adminPage.status).toBe(200);
@@ -75,20 +85,20 @@ describe("management CMS process acceptance", () => {
         const relayedCatalog = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations`);
         expect(relayedCatalog.status).toBe(200);
         const publishedCatalog = (await relayedCatalog.json()) as Array<{ kind: string; versions: string[] }>;
-        expect(publishedCatalog).toHaveLength(15);
-        expect(publishedCatalog).toContainEqual(expect.objectContaining({ kind: "remote-demo", versions: ["1.0.0"] }));
+        expect(publishedCatalog).toHaveLength(14);
+        expect(publishedCatalog).not.toContainEqual(expect.objectContaining({ kind: "remote-demo" }));
         const packageResponse = await fetch(
             `${cms.deliveryOrigin}/.cms/repository/api/integrations/package?kind=remote-demo&version=1.0.0`,
         );
-        expect(packageResponse.status).toBe(200);
+        expect(packageResponse.status).toBe(404);
         const packageText = await packageResponse.text();
-        expect(JSON.parse(packageText)).toMatchObject({ kind: "remote-demo", version: "1.0.0" });
         const catalogPage = await fetch(`${cms.deliveryOrigin}/integrations`);
         expect(catalogPage.status).toBe(200);
         const catalogHtml = await catalogPage.text();
-        expect(catalogHtml).toContain("Remote demo");
+        expect(catalogHtml).not.toContain("Remote demo");
         assertBrowserBoundary(cms, repository, privateBaseUrl, [
-            publishedText,
+            submittedText,
+            candidateStatusText,
             statusText,
             adminHtml,
             packageText,
@@ -107,7 +117,7 @@ describe("management CMS process acceptance", () => {
         expect(unavailableText).not.toContain(privateBaseUrl);
         expect(unavailableText).not.toMatch(/ECONNREFUSED|fetch failed/iu);
         expect((await fetch(`${cms.deliveryOrigin}/integrations`)).status).toBe(503);
-    }, 45_000);
+    }, 75_000);
 });
 
 function controlRequest(origin: string, path: string, session: string, init: RequestInit = {}): Promise<Response> {

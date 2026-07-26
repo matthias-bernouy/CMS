@@ -8,14 +8,22 @@ export function readRepositoryReevaluation(
     kind: string;
     version: string;
     currentReportRevisionId: string;
+    currentDecision: Readonly<{ revisionId: string; digest: string }>;
     reason: string;
     evidenceIds?: readonly string[];
 }> {
+    if (!selection.decision) {
+        throw new Error("A current release admission decision is required for reevaluation");
+    }
     const evidenceIds = splitEvidenceIds(optionalField(form, "evidenceIds"));
     return {
         kind: selection.kind,
         version: selection.version,
         currentReportRevisionId: selection.currentReportRevisionId,
+        currentDecision: {
+            revisionId: selection.decision.revisionId,
+            digest: selection.decision.digest,
+        },
         reason: requiredField(form, "reason", "Reevaluation reason"),
         ...(evidenceIds.length > 0 ? { evidenceIds } : {}),
     };

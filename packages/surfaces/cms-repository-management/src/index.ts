@@ -51,7 +51,12 @@ export {
     mountRepositorySchemaBaselineImportRoutes,
     REPOSITORY_SCHEMA_BASELINE_IMPORT_PATH,
     type RepositorySchemaBaselineImportRoutesConfig,
-} from "cms-repository-management/operations/schemaBaselineImportRoutes";
+} from "cms-repository-management/operations/maintenance/schemaBaselineImportRoutes";
+export {
+    mountRepositoryVerificationBackfillRoutes,
+    REPOSITORY_VERIFICATION_BACKFILL_PATH,
+    type RepositoryVerificationBackfillRoutesConfig,
+} from "cms-repository-management/operations/maintenance/verificationBackfillRoutes";
 export {
     createRepositoryWorkerGuard,
     type RepositoryWorkerGuardConfig,

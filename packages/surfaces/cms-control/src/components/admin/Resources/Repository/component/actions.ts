@@ -63,7 +63,19 @@ export async function submitRepositoryReevaluation(
 ): Promise<void> {
     await withSelection(form, feedback, context, async (selection) => {
         const result = await requestRepositoryReevaluation(readRepositoryReevaluation(form, selection), context.signal);
-        context.updateSelection({ ...selection, currentReportRevisionId: result.currentReportRevisionId });
+        context.updateSelection({
+            ...selection,
+            currentReportRevisionId: result.currentReportRevisionId,
+            ...(result.release
+                ? {
+                      decision: {
+                          ...result.release.decision,
+                          admissible: result.release.admissible,
+                      },
+                      ...(result.release.eligibilityChanged ? { status: "inadmissible" } : {}),
+                  }
+                : {}),
+        });
         showFeedback(
             feedback,
             `Created compatibility revision ${result.currentReportRevisionId}: ${result.revision.outcome}.`,

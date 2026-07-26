@@ -11,7 +11,6 @@ import {
 } from "@bernouy/cms-integration-registry/fs";
 import {
     buildOfficialRepositoryBootstrapPlan,
-    loadOfficialRepositoryBootstrapEvidence,
     OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
 } from "@bernouy/cms-official-integrations/publication";
 import {
@@ -70,14 +69,14 @@ export async function startProductionRepositoryServer(
         throw new Error("Initial integration repository catalog snapshot could not be built");
     }
     const telemetry = createProductionRepositoryOperationalTelemetry();
-    const officialEvidence = await loadOfficialRepositoryBootstrapEvidence();
+    const officialPlan = await buildOfficialRepositoryBootstrapPlan();
     const repositoryManagement = await createProductionRepositoryManagement({
         root: env.registryRoot,
         catalog,
         telemetry,
         baselineImports: {
             approval: OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
-            approvedTargets: officialEvidence.reviewedSchemaBaselines.map(
+            approvedTargets: officialPlan.reviewedSchemaBaselines.map(
                 ({ kind, version, packageDigest, connectorKey, lineageId }) => ({
                     kind,
                     version,
@@ -87,12 +86,13 @@ export async function startProductionRepositoryServer(
                 }),
             ),
         },
+        verificationBackfills: officialPlan.verificationBackfills,
         candidateProtocol: {
             capabilitySigningKey: workerCapabilitySigningKey,
             candidateTtlMs: env.candidateTtlMs,
             leaseDurationMs: env.workerLeaseDurationMs,
         },
-        candidateAdmissionPolicy: productionReleaseAdmissionPolicy(env.verifierRunner),
+        candidateAdmissionPolicy: await productionReleaseAdmissionPolicy(env.verifierRunner),
     });
 
     const managementGuard = createRepositoryManagementGuard({

@@ -53,6 +53,7 @@ describe("repository administration actions", () => {
             kind: "commerce",
             version: "1.1.0",
             currentReportRevisionId: "revision-1",
+            currentDecision: { revisionId: "decision-1", digest: "d".repeat(64) },
             reason: "Evaluator 2 rollout",
             evidenceIds: ["ci-1", "ci-2"],
         });

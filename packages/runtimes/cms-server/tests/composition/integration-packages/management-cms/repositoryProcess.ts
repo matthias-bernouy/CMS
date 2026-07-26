@@ -17,9 +17,17 @@ export async function startRepositoryProcess(): Promise<RepositoryProcess> {
     const root = await mkdtemp(join(tmpdir(), "cms-management-acceptance-"));
     const registryRoot = join(root, "registry");
     const tokenFile = join(root, "management-token");
+    const maintenanceTokenFile = join(root, "maintenance-token");
+    const workerTokenFile = join(root, "worker-token");
+    const workerCapabilityKeyFile = join(root, "worker-capability-key");
     const token = `acceptance-token-${crypto.randomUUID()}`;
     await mkdir(registryRoot);
-    await writeFile(tokenFile, token, { mode: 0o600 });
+    await Promise.all([
+        writeFile(tokenFile, token, { mode: 0o600 }),
+        writeFile(maintenanceTokenFile, `acceptance-maintenance-${crypto.randomUUID()}`, { mode: 0o600 }),
+        writeFile(workerTokenFile, `acceptance-worker-${crypto.randomUUID()}`, { mode: 0o600 }),
+        writeFile(workerCapabilityKeyFile, `acceptance-capability-${crypto.randomUUID()}`, { mode: 0o600 }),
+    ]);
     const [publicPort, managementPort] = reserveDistinctPorts();
     const publicOrigin = `http://127.0.0.1:${publicPort}`;
     const managementOrigin = `http://127.0.0.1:${managementPort}`;
@@ -32,6 +40,9 @@ export async function startRepositoryProcess(): Promise<RepositoryProcess> {
             CMS_REPOSITORY_MANAGEMENT_PORT: String(managementPort),
             CMS_REPOSITORY_REGISTRY_ROOT: registryRoot,
             CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE: tokenFile,
+            CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE: maintenanceTokenFile,
+            CMS_REPOSITORY_WORKER_TOKEN_FILE: workerTokenFile,
+            CMS_REPOSITORY_WORKER_CAPABILITY_KEY_FILE: workerCapabilityKeyFile,
             CMS_HTTP_CLIENT_ADDRESS_MODE: "disabled",
             CMS_HTTP_TRUSTED_PROXY_HOPS: "0",
             CMS_REPOSITORY_GRACEFUL_STOP_TIMEOUT_MS: "1000",
@@ -47,6 +58,7 @@ export async function startRepositoryProcess(): Promise<RepositoryProcess> {
     } catch (error) {
         child.kill("SIGKILL");
         await child.exited;
+        await makeWritable(root);
         await rm(root, { force: true, recursive: true });
         throw error;
     }
@@ -85,7 +97,7 @@ function reserveDistinctPorts(): [number, number] {
 }
 
 async function waitUntilHealthy(origin: string, child: ReturnType<typeof Bun.spawn>, output: string[]): Promise<void> {
-    for (let attempt = 0; attempt < 1_200; attempt++) {
+    for (let attempt = 0; attempt < 2_400; attempt++) {
         if (child.exitCode !== null) {
             throw new Error(`Repository process exited before readiness: ${output.join("\n")}`);
         }
@@ -112,9 +124,7 @@ async function makeWritable(path: string): Promise<void> {
         return;
     }
     await chmod(path, 0o750);
-    for (const entry of await readdir(path, { withFileTypes: true })) {
-        if (entry.isDirectory()) {
-            await makeWritable(join(path, entry.name));
-        }
+    for (const entry of await readdir(path)) {
+        await makeWritable(join(path, entry));
     }
 }

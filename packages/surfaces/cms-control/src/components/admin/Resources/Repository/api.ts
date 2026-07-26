@@ -100,6 +100,7 @@ export function requestRepositoryReevaluation(
         kind: string;
         version: string;
         currentReportRevisionId: string;
+        currentDecision: Readonly<{ revisionId: string; digest: string }>;
         reason: string;
         evidenceIds?: readonly string[];
     }>,

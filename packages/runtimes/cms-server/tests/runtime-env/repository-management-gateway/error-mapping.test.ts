@@ -56,6 +56,7 @@ describe("HTTP repository management gateway error mapping", () => {
             kind: TEST_KIND,
             version: TEST_VERSION,
             currentReportRevisionId: "report-admission",
+            currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
             reason: "Manual evidence review",
         });
         expect(stale.status).toBe(409);
