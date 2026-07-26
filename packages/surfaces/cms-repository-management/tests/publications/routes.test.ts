@@ -32,6 +32,7 @@ describe("repository management publication route", () => {
             { envelope: fixture.envelope, canonicalBytes: fixture.bytes, digest: fixture.digest },
         ]);
         expect(await responseJson(response)).toMatchObject({
+            operationId: "publication-demo-1.0.0",
             kind: "demo",
             version: "1.0.0",
             digest: fixture.digest,
@@ -140,6 +141,7 @@ function publicationResult(
     admission: IntegrationCompatibilityAdmissionReport,
 ) {
     return {
+        operationId: `publication-${integrationPackage.envelope.kind}-${integrationPackage.envelope.version}`,
         kind: integrationPackage.envelope.kind,
         version: integrationPackage.envelope.version,
         digest: integrationPackage.digest,

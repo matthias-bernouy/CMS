@@ -16,6 +16,7 @@ const JSON_HEADERS = {
 
 export function publicationCreatedResponse(result: IntegrationRegistryPublicationResult): Response {
     return jsonResponse(201, {
+        operationId: result.operationId,
         kind: result.kind,
         version: result.version,
         digest: result.digest,
