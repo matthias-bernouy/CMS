@@ -48,6 +48,9 @@ Usage:
                                    official integration package. Publishing
                                    requires --url and --token-file (or their
                                    repository-management env equivalents).
+  p9r repository import-official-schema-baselines [--dry-run]
+                                   Import reviewed legacy SQL baselines through
+                                   the separate maintenance capability.
   p9r help                         Show this help
 
 Env (loaded from .env or the environment):
@@ -82,9 +85,12 @@ try {
             await CLI_filesReindex(rest);
             break;
         case "repository":
-            process.exitCode = await (await import("./repositoryPublication/command")).runRepositoryPublicationCommand(
-                rest,
-            );
+            process.exitCode =
+                rest[0] === "import-official-schema-baselines"
+                    ? await (
+                          await import("./repositoryPublication/baselineImportCommand")
+                      ).runRepositoryBaselineImportCommand(rest)
+                    : await (await import("./repositoryPublication/command")).runRepositoryPublicationCommand(rest);
             break;
         case undefined:
         case "help":

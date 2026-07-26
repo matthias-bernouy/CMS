@@ -47,6 +47,9 @@ on:
       REPOSITORY_MANAGEMENT_TOKEN:
         description: Bearer token accepted by the private management listener
         required: false
+      REPOSITORY_MAINTENANCE_TOKEN:
+        description: Bearer token accepted by the privileged maintenance capability
+        required: false
 
 permissions:
   contents: read
@@ -77,9 +80,57 @@ jobs:
           bun run packages/runtimes/cms-cli/src/index.ts
           repository publish-official --dry-run
 
+      - name: Validate the joint package and reviewed-baseline plan without credentials
+        run: >-
+          bun run packages/runtimes/cms-cli/src/index.ts
+          repository import-official-schema-baselines --dry-run
+
+  import-baselines:
+    name: Import reviewed legacy schema baselines
+    needs: plan
+    if: ${{ ! inputs.dry_run }}
+    runs-on: [self-hosted, linux, repository-management]
+    environment: ${{ inputs.deployment_environment }}
+    timeout-minutes: 30
+    env:
+      P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ inputs.management_url }}
+      P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TOKEN_FILE: ${{ runner.temp }}/repository-maintenance-token
+      P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TIMEOUT_MS: ${{ inputs.timeout_ms }}
+      REPOSITORY_MAINTENANCE_TOKEN_FILE: ${{ runner.temp }}/repository-maintenance-token
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Materialize the ephemeral maintenance credential
+        shell: bash
+        env:
+          MAINTENANCE_TOKEN: ${{ secrets.REPOSITORY_MAINTENANCE_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$MAINTENANCE_TOKEN" || "$MAINTENANCE_TOKEN" =~ [[:space:]] ]]; then
+            echo "::error::REPOSITORY_MAINTENANCE_TOKEN must contain one non-whitespace token"
+            exit 1
+          fi
+          umask 077
+          printf '%s' "$MAINTENANCE_TOKEN" > "$REPOSITORY_MAINTENANCE_TOKEN_FILE"
+
+      - name: Import reviewed baselines in deterministic order
+        run: >-
+          bun run packages/runtimes/cms-cli/src/index.ts
+          repository import-official-schema-baselines
+
+      - name: Remove the ephemeral maintenance credential
+        if: ${{ always() }}
+        run: rm -f -- "$REPOSITORY_MAINTENANCE_TOKEN_FILE"
+
   publish:
     name: Publish through the private management API
-    needs: plan
+    needs: [plan, import-baselines]
     if: ${{ ! inputs.dry_run }}
     runs-on: [self-hosted, linux, repository-management]
     environment: ${{ inputs.deployment_environment }}
