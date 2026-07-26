@@ -20446,6 +20446,10 @@ w13c-lateral-menu-item {
     text-transform: none;
 }
 
+.preview-trigger[hidden] {
+    display: none;
+}
+
 .preview-trigger:hover {
     background: var(--bg-hover, #f3f6f5);
     border-color: var(--border-strong, #aab6b2);
