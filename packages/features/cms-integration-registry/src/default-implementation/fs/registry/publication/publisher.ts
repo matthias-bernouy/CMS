@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { writeImmutableIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import type { IntegrationCompatibilityAdmissionReport } from "../../../../interfaces/compatibility";
+import { IntegrationRegistryVerificationRequiredError } from "../../../../core/publication/errors";
 import type {
     IntegrationRegistryPublicationRequest,
     IntegrationRegistryPublisher,
@@ -19,8 +20,22 @@ export class FsIntegrationRegistryPublisher implements IntegrationRegistryPublis
     constructor(private readonly config: FsIntegrationRegistryPublisherConfig) {}
 
     async publish(request: IntegrationRegistryPublicationRequest) {
+        const policy = this.config.rawPublicationPolicy ?? "legacy-installable";
+        if (policy === "reject-unverified") {
+            throw new IntegrationRegistryVerificationRequiredError(
+                request.package.envelope.kind,
+                request.package.envelope.version,
+                request.package.digest,
+            );
+        }
         const candidate = await prepareFsIntegrationRegistryCandidate(request.package, this.config.packageLimits);
-        return publishPreparedFsIntegrationRegistryCandidate(this.config, candidate, request.schemaDeclarationEvidence);
+        return publishPreparedFsIntegrationRegistryCandidate(
+            this.config,
+            candidate,
+            request.schemaDeclarationEvidence,
+            undefined,
+            policy === "publish-unverified" ? "unverified" : undefined,
+        );
     }
 }
 
@@ -29,6 +44,7 @@ export async function publishPreparedFsIntegrationRegistryCandidate(
     candidate: Awaited<ReturnType<typeof prepareFsIntegrationRegistryCandidate>>,
     schemaDeclarationEvidence?: IntegrationRegistryPublicationRequest["schemaDeclarationEvidence"],
     admissionReport?: IntegrationCompatibilityAdmissionReport,
+    versionStatus?: "unverified",
 ) {
     const operationId = config.createOperationId?.() ?? randomUUID();
     const layout = await ensureFsIntegrationRegistryLayout(config.root);
@@ -59,6 +75,7 @@ export async function publishPreparedFsIntegrationRegistryCandidate(
                     candidate,
                     ...(schemaDeclarationEvidence ? { schemaDeclarationEvidence } : {}),
                     ...(admissionReport ? { admissionReport } : {}),
+                    ...(versionStatus ? { versionStatus } : {}),
                 }),
         );
     } catch (error) {

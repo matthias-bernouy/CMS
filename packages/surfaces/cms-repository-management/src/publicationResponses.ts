@@ -1,5 +1,6 @@
 import {
     IntegrationCompatibilityAdmissionError,
+    IntegrationRegistryVerificationRequiredError,
     IntegrationRegistryVersionConflictError,
     IntegrationRegistryVersionOrderError,
     type IntegrationRegistryPublicationResult,
@@ -51,6 +52,15 @@ export function publicationErrorResponse(error: unknown, existingDigest?: string
             error: "Integration compatibility admission was rejected",
             code: error.code,
             report: error.report,
+        });
+    }
+    if (error instanceof IntegrationRegistryVerificationRequiredError) {
+        return jsonResponse(422, {
+            error: "Integration verification is required before publication",
+            code: error.code,
+            kind: error.kind,
+            version: error.version,
+            packageDigest: error.packageDigest,
         });
     }
     return jsonResponse(500, {

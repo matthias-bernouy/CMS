@@ -84,6 +84,7 @@ export async function createProductionRepositoryManagement(input: {
             compatibility,
             mutations,
             reviewedSchemaBaselines,
+            rawPublicationPolicy: "publish-unverified",
         }),
         telemetry,
     );

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import {
     IntegrationRegistryStablePromotionConfirmationError,
     IntegrationRegistryStablePromotionConflictError,
@@ -98,6 +98,29 @@ describe("filesystem stable promotion", () => {
             }),
         ).rejects.toBeInstanceOf(IntegrationRegistryStablePromotionIneligibleError);
         expect(fixture.snapshots.current().getIndex("demo")?.stable).toBe("1.0.0");
+    });
+
+    test("rejects promotion of a non-installable version even when its compatibility report is admissible", async () => {
+        const fixture = registryFixture({ rawPublicationPolicy: "publish-unverified" });
+        const published = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const reports = reportStore(fixture);
+        const promoter = stablePromoter(fixture, reports);
+
+        expect(published.report.admissible).toBe(true);
+        await expect(
+            promoter.promoteStable({
+                kind: "demo",
+                version: "1.0.0",
+                currentReportRevisionId: published.report.id,
+                actor: "admin:user-1",
+                confirmation: { version: "1.0.0", reportRevisionId: published.report.id },
+            }),
+        ).rejects.toBeInstanceOf(IntegrationRegistryStablePromotionIneligibleError);
+        expect(fixture.snapshots.current().getIndex("demo")).toMatchObject({
+            versions: [{ version: "1.0.0", status: "unverified" }],
+        });
+        expect(fixture.snapshots.current().getIndex("demo")?.stable).toBeUndefined();
+        expect(existsSync(promotionRecords(fixture.root))).toBe(false);
     });
 
     test("serializes duplicate promotions so exactly one audit record wins", async () => {

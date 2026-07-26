@@ -140,6 +140,7 @@ export {
 export { changedIntegrationPackagePaths } from "../core/publication/changedPaths";
 export { identifyOfficialRepositoryBootstrapPlan } from "../core/publication/bootstrapPlan";
 export {
+    IntegrationRegistryVerificationRequiredError,
     IntegrationRegistryVersionConflictError,
     IntegrationRegistryVersionOrderError,
 } from "../core/publication/errors";

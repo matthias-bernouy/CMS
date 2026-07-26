@@ -15,12 +15,17 @@ export function nextIntegrationRegistryIndex(
     previous: IntegrationDefinitionIndex | null,
     definition: IntegrationDefinition,
     envelope: IntegrationPackageEnvelopeV1,
+    options: Readonly<{
+        status?: "blocked" | "inadmissible" | "unverified";
+        advanceChannels?: boolean;
+    }> = {},
 ): IntegrationDefinitionIndex {
     const { kind, version } = envelope;
     if (previous?.versions.some((entry) => entry.version === version)) {
         throw new IntegrationRegistryVersionConflictError(kind, version);
     }
-    if (!previous && isIntegrationPrerelease(version)) {
+    const advanceChannels = options.advanceChannels ?? true;
+    if (!previous && advanceChannels && isIntegrationPrerelease(version)) {
         throw new TypeError("The first published version of an integration must be eligible for the stable channel");
     }
     for (const published of previous?.versions ?? []) {
@@ -32,6 +37,7 @@ export function nextIntegrationRegistryIndex(
         version,
         path: `versions/${version}`,
         definition: `versions/${version}/${envelope.definition}`,
+        ...(options.status ? { status: options.status } : {}),
     };
     return parseIntegrationDefinitionIndex(
         {
@@ -41,8 +47,9 @@ export function nextIntegrationRegistryIndex(
             ...(definition.icon ? { icon: definition.icon } : {}),
             ...(definition.category ? { category: definition.category } : {}),
             ...(definition.description ? { description: definition.description } : {}),
-            stable: previous?.stable ?? version,
-            latest: version,
+            ...(advanceChannels ? { stable: previous?.stable ?? version, latest: version } : {}),
+            ...(!advanceChannels && previous?.stable ? { stable: previous.stable } : {}),
+            ...(!advanceChannels && previous?.latest ? { latest: previous.latest } : {}),
             versions: [...(previous?.versions ?? []), nextVersion],
         },
         `publication:${kind}@${version}`,

@@ -111,12 +111,11 @@ describe("production repository management", () => {
         expect(versions.status).toBe(200);
         expect(await versions.json()).toEqual({
             kind: "remote-demo",
-            stable: "1.0.0",
-            latest: "1.0.0",
             versions: [
                 {
                     version: "1.0.0",
                     digest: publication.digest,
+                    status: "unverified",
                     compatibility: {
                         admissionReportId: expect.any(String),
                         currentReportRevisionId: expect.any(String),
@@ -137,11 +136,20 @@ describe("production repository management", () => {
             `${managementOrigin}/.cms/repository-management/api/integrations/versions?kind=remote-demo`,
         );
         const history = (await versionHistory.json()) as {
-            stable: string;
-            latest: string;
-            versions: Array<{ version: string; compatibility: { currentReportRevisionId: string } }>;
+            stable?: string;
+            latest?: string;
+            versions: Array<{
+                version: string;
+                status?: string;
+                compatibility: { currentReportRevisionId: string };
+            }>;
         };
-        expect(history).toMatchObject({ stable: "1.0.0", latest: "1.1.0" });
+        expect(history.stable).toBeUndefined();
+        expect(history.latest).toBeUndefined();
+        expect(history.versions.map(({ version, status }) => ({ version, status }))).toEqual([
+            { version: "1.0.0", status: "unverified" },
+            { version: "1.1.0", status: "unverified" },
+        ]);
         const admissionReportId = history.versions.find((item) => item.version === "1.1.0")?.compatibility
             .currentReportRevisionId;
         expect(admissionReportId).toBeString();
@@ -199,15 +207,10 @@ describe("production repository management", () => {
                 reason: "Production rollout",
             }),
         );
-        expect(promoted.status).toBe(201);
+        expect(promoted.status).toBe(422);
         expect(await promoted.json()).toMatchObject({
-            operationId: expect.any(String),
-            record: {
-                version: "1.1.0",
-                previousStable: "1.0.0",
-                actor: "repository-owner",
-                reportRevisionId,
-            },
+            code: "integration_registry_stable_promotion_ineligible",
+            reportRevisionId,
         });
 
         const integrations = await fetch(`${publicOrigin}/.cms/repository/api/integrations`);
@@ -215,7 +218,7 @@ describe("production repository management", () => {
         expect(await integrations.json()).toEqual([
             expect.objectContaining({ kind: "remote-demo", versions: ["1.0.0", "1.1.0"] }),
         ]);
-        expect(catalog.current().getIndex("remote-demo")?.stable).toBe("1.1.0");
+        expect(catalog.current().getIndex("remote-demo")?.stable).toBeUndefined();
         expect((await fetch(`${publicOrigin}/.cms/repository-management/api/integrations/publications`)).status).toBe(
             404,
         );

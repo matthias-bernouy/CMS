@@ -33,6 +33,15 @@ export class FsIntegrationRegistryStablePromoter implements IntegrationRegistryS
             if (!index || !location) {
                 throw new IntegrationRegistryStablePromotionNotFoundError(validated.kind, validated.version);
             }
+            const versionEntry = index.versions.find((entry) => entry.version === validated.version);
+            if (!versionEntry || versionEntry.status) {
+                throw new IntegrationRegistryStablePromotionIneligibleError(
+                    validated.kind,
+                    validated.version,
+                    validated.currentReportRevisionId,
+                    `A ${versionEntry?.status ?? "missing"} version cannot be promoted to stable`,
+                );
+            }
             const history = await this.config.reports.get(validated.kind, validated.version);
             if (!history) {
                 throw new IntegrationRegistryStablePromotionNotFoundError(validated.kind, validated.version);

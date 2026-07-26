@@ -19,6 +19,7 @@ export type FsIntegrationRegistryPublisherConfig = Readonly<{
     compatibility: IntegrationCompatibilityEvaluator;
     mutations: IntegrationRegistryMutationCoordinator;
     reviewedSchemaBaselines?: ReviewedSchemaBaselineStore;
+    rawPublicationPolicy?: "legacy-installable" | "publish-unverified" | "reject-unverified";
     packageLimits?: Partial<IntegrationPackageLimits>;
     createOperationId?: () => string;
     now?: () => string;

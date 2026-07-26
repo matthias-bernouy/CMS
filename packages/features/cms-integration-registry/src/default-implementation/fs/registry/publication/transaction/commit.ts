@@ -32,12 +32,16 @@ export async function commitFsIntegrationRegistryPublication(
         candidate: PreparedFsIntegrationRegistryCandidate;
         schemaDeclarationEvidence?: Parameters<typeof evaluatePublicationCompatibility>[3];
         admissionReport?: IntegrationCompatibilityAdmissionReport;
+        versionStatus?: "unverified";
     }>,
 ): Promise<IntegrationRegistryPublicationResult> {
     const { config, layout, paths, operationId, candidate } = input;
     const capturedSnapshot = config.snapshots.current();
     const previousIndex = capturedSnapshot.getIndex(candidate.definition.kind);
-    const nextIndex = nextIntegrationRegistryIndex(previousIndex, candidate.definition, candidate.package.envelope);
+    const nextIndex = nextIntegrationRegistryIndex(previousIndex, candidate.definition, candidate.package.envelope, {
+        ...(input.versionStatus ? { status: input.versionStatus } : {}),
+        advanceChannels: !input.versionStatus,
+    });
     const report =
         input.admissionReport ??
         (await evaluatePublicationCompatibility(

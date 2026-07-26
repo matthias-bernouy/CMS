@@ -7,6 +7,7 @@ import {
 } from "@bernouy/cms-integration-packages";
 import {
     IntegrationCompatibilityAdmissionError,
+    IntegrationRegistryVerificationRequiredError,
     IntegrationRegistryVersionConflictError,
     IntegrationRegistryVersionOrderError,
     type IntegrationCompatibilityAdmissionReport,
@@ -68,6 +69,24 @@ describe("repository management publication route", () => {
         expect(await responseJson(response)).toMatchObject({
             code: "integration_compatibility_rejected",
             report: { id: rejected.id, outcome: "breaking", admissible: false },
+        });
+    });
+
+    test("maps missing exact verification admission to a structured 422 response", async () => {
+        const fixture = await packageFixture();
+        const failure = new IntegrationRegistryVerificationRequiredError("demo", "1.0.0", fixture.digest);
+        const response = await mounted(publisherFrom(async () => Promise.reject(failure))).handle(
+            REPOSITORY_PUBLICATION_PATH,
+            packageRequest(fixture.bytes),
+        );
+
+        expect(response.status).toBe(422);
+        expect(await responseJson(response)).toEqual({
+            error: "Integration verification is required before publication",
+            code: "verification_required",
+            kind: "demo",
+            version: "1.0.0",
+            packageDigest: fixture.digest,
         });
     });
 

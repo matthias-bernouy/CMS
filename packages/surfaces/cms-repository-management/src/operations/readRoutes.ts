@@ -84,12 +84,13 @@ async function versionsResponse(request: Request, config: RepositoryManagementRe
             return errorResponse(404, "integration_not_found", "Integration was not found");
         }
         const versions = await Promise.all(
-            snapshot.listVersions(kind).map(async ({ version }) => {
+            snapshot.listVersions(kind).map(async ({ version, status }) => {
                 const location = snapshot.locateExactVersion(kind, version);
                 const history = await config.reports.get(kind, version);
                 return {
                     version,
                     digest: location?.package.digest,
+                    ...(status ? { status } : {}),
                     compatibility: history
                         ? {
                               admissionReportId: history.admission.id,
