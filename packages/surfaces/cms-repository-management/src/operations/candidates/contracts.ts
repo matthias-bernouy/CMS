@@ -1,0 +1,123 @@
+import type {
+    IntegrationRegistryCandidateRecord,
+    IntegrationRegistryCandidateStore,
+} from "@bernouy/cms-integration-registry";
+import type {
+    AdmissionInputSnapshotV1,
+    ReleaseAdmissionPolicySnapshotV1,
+    ValidatedIntegrationCandidateEnvelopeV1,
+} from "@bernouy/cms-integration-verification";
+import type { Runner } from "@bernouy/http-runner";
+
+export const REPOSITORY_CANDIDATES_PATH = "/api/integrations/candidates";
+export const REPOSITORY_CANDIDATE_STATUS_PATH = "/api/integrations/candidates/status";
+export const REPOSITORY_VERIFICATION_JOBS_PATH = "/api/integrations/verification-jobs";
+export const REPOSITORY_VERIFICATION_JOB_CLAIMS_PATH = "/api/integrations/verification-jobs/claims";
+export const REPOSITORY_VERIFICATION_JOB_LEASE_PATH = "/api/integrations/verification-jobs/lease";
+export const REPOSITORY_VERIFICATION_JOB_RESULT_CAPABILITIES_PATH =
+    "/api/integrations/verification-jobs/result-capabilities";
+export const REPOSITORY_VERIFICATION_JOB_RESULT_PATH = "/api/integrations/verification-jobs/result";
+
+export type RepositoryCandidateCapabilityIdentity = Readonly<{
+    candidateId: string;
+    jobId: string;
+    attemptId: string;
+    fencingToken: number;
+    workerId: string;
+    leaseExpiresAt: string;
+    resultDigest: string;
+}>;
+
+export interface RepositoryCandidateCapabilityAuthority {
+    issue(identity: RepositoryCandidateCapabilityIdentity): string;
+    verify(token: string, now: string): RepositoryCandidateCapabilityIdentity | null;
+}
+
+export type RepositoryCandidateManagementRoutesConfig = Readonly<{
+    store: IntegrationRegistryCandidateStore;
+    admission: RepositoryCandidateAdmissionCoordinator;
+    maxBodyBytes: number;
+    candidateTtlMs: number;
+    now(): string;
+    createCandidateId(): string;
+}>;
+
+export type RepositoryCandidateAdmissionPlan = Readonly<{
+    policy: ReleaseAdmissionPolicySnapshotV1;
+    admission: AdmissionInputSnapshotV1;
+}>;
+
+export type RepositoryCandidateAdmissionPlanner = (
+    input: Readonly<{
+        candidateId: string;
+        candidate: ValidatedIntegrationCandidateEnvelopeV1;
+    }>,
+) => Promise<RepositoryCandidateAdmissionPlan>;
+
+export interface RepositoryCandidateAdmissionCoordinator {
+    submit(
+        input: Readonly<{
+            candidateId: string;
+            candidate: ValidatedIntegrationCandidateEnvelopeV1;
+            createdAt: string;
+            expiresAt: string;
+        }>,
+    ): Promise<IntegrationRegistryCandidateRecord>;
+}
+
+export type RepositoryCandidateWorkerRoutesConfig = Readonly<{
+    store: IntegrationRegistryCandidateStore;
+    capabilityAuthority: RepositoryCandidateCapabilityAuthority;
+    maxBodyBytes: number;
+    maxResultBodyBytes: number;
+    leaseDurationMs: number;
+    now(): string;
+    createJobId(): string;
+    createAttemptId(): string;
+}>;
+
+export type RepositoryCandidateWorkerSurfaceMount = Readonly<{
+    mountAuthenticated(runner: Runner): void;
+    mountCapabilities(runner: Runner): void;
+}>;
+
+export type RepositoryCandidateStatusProjection = ReturnType<typeof projectCandidateStatus>;
+
+export function projectCandidateStatus(record: IntegrationRegistryCandidateRecord) {
+    return Object.freeze({
+        candidateId: record.candidateId,
+        revision: record.revision,
+        status: record.status,
+        kind: record.kind,
+        version: record.version,
+        candidateDigest: record.candidateDigest,
+        packageDigest: record.packageDigest,
+        verificationDigest: record.verificationDigest,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+        expiresAt: record.expiresAt,
+        attemptCount: record.attemptCount,
+        ...(record.requestedChannel ? { requestedChannel: record.requestedChannel } : {}),
+        ...(record.lease
+            ? {
+                  lease: {
+                      jobId: record.lease.jobId,
+                      attemptId: record.lease.attemptId,
+                      fencingToken: record.lease.fencingToken,
+                      workerId: record.lease.workerId,
+                      claimedAt: record.lease.claimedAt,
+                      leaseExpiresAt: record.lease.leaseExpiresAt,
+                  },
+              }
+            : {}),
+        ...(record.lastFailure
+            ? {
+                  lastFailure: {
+                      kind: record.lastFailure.kind,
+                      code: record.lastFailure.code,
+                      occurredAt: record.lastFailure.occurredAt,
+                  },
+              }
+            : {}),
+    });
+}

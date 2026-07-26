@@ -46,3 +46,35 @@ export {
     REPOSITORY_SCHEMA_BASELINE_IMPORT_PATH,
     type RepositorySchemaBaselineImportRoutesConfig,
 } from "cms-repository-management/operations/schemaBaselineImportRoutes";
+export {
+    createRepositoryWorkerGuard,
+    type RepositoryWorkerGuardConfig,
+} from "cms-repository-management/operations/candidates/auth";
+export { createRepositoryCandidateCapabilityAuthority } from "cms-repository-management/operations/candidates/capability";
+export {
+    createRepositoryCandidateAdmissionCoordinator,
+    RepositoryCandidateAdmissionPlanningError,
+} from "cms-repository-management/operations/candidates/coordinator";
+export {
+    REPOSITORY_CANDIDATES_PATH,
+    REPOSITORY_CANDIDATE_STATUS_PATH,
+    REPOSITORY_VERIFICATION_JOBS_PATH,
+    REPOSITORY_VERIFICATION_JOB_CLAIMS_PATH,
+    REPOSITORY_VERIFICATION_JOB_LEASE_PATH,
+    REPOSITORY_VERIFICATION_JOB_RESULT_CAPABILITIES_PATH,
+    REPOSITORY_VERIFICATION_JOB_RESULT_PATH,
+    type RepositoryCandidateCapabilityAuthority,
+    type RepositoryCandidateCapabilityIdentity,
+    type RepositoryCandidateAdmissionCoordinator,
+    type RepositoryCandidateAdmissionPlan,
+    type RepositoryCandidateAdmissionPlanner,
+    type RepositoryCandidateManagementRoutesConfig,
+    type RepositoryCandidateWorkerRoutesConfig,
+    type RepositoryCandidateWorkerSurfaceMount,
+} from "cms-repository-management/operations/candidates/contracts";
+export { mountRepositoryCandidateManagementRoutes } from "cms-repository-management/operations/candidates/managementRoutes";
+export {
+    mountRepositoryCandidateAuthenticatedWorkerRoutes,
+    mountRepositoryCandidateCapabilityRoutes,
+    mountRepositoryCandidateWorkerRoutes,
+} from "cms-repository-management/operations/candidates/worker";

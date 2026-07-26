@@ -12,6 +12,7 @@
     "references": [
         { "path": "../../features/cms-integration-packages" },
         { "path": "../../features/cms-integration-registry" },
+        { "path": "../../features/cms-integration-verification" },
         { "path": "../../foundation/http-runner" },
         { "path": "../../foundation/rate-limiter" }
     ]
