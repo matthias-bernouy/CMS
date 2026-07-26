@@ -1,5 +1,16 @@
-import { buildFsIntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry/fs";
-import type { IntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry";
+import { randomUUID } from "node:crypto";
+import {
+    createIntegrationRegistryCatalogSnapshot,
+    InMemoryIntegrationRegistryMutationCoordinator,
+    IntegrationCompatibilityEvaluator,
+    IntegrationRegistryCatalogSnapshotReference,
+    type IntegrationRegistryCatalogSnapshot,
+} from "@bernouy/cms-integration-registry";
+import {
+    buildFsIntegrationRegistryCatalogSnapshot,
+    FsOfficialIntegrationRegistryBootstrapPublisher,
+} from "@bernouy/cms-integration-registry/fs";
+import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
 import { createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
 import type { PublicPackageDownloadProtection } from "@bernouy/cms-repository";
 import { BunRunner } from "@bernouy/http-runner";
@@ -23,9 +34,10 @@ export async function startProductionRepositoryServer(
 ): Promise<RepositoryServer> {
     const env = readRepositoryRuntimeEnv(source);
     await validateRepositoryRegistryRoot(env.registryRoot);
-    if (options.bootstrapEmptyRegistry) {
-        await bootstrapRepositoryRegistryIfEmpty(env.registryRoot, options.bootstrapEmptyRegistry);
-    }
+    await bootstrapRepositoryRegistryIfEmpty(
+        env.registryRoot,
+        options.bootstrapEmptyRegistry ?? prepareOfficialRepositoryBootstrap,
+    );
     const token = await readRepositoryManagementToken(env.managementTokenFile);
     const catalog = new RepositoryCatalogRuntime();
     const loadCatalog = (): Promise<IntegrationRegistryCatalogSnapshot> =>
@@ -62,6 +74,40 @@ export async function startProductionRepositoryServer(
         gracefulStopTimeoutMs: env.gracefulStopTimeoutMs,
     });
 }
+
+export const prepareOfficialRepositoryBootstrap: EmptyRegistryBootstrap = async (root) => {
+    const packages = await buildOfficialIntegrationPackages();
+    const snapshots = new IntegrationRegistryCatalogSnapshotReference(
+        createIntegrationRegistryCatalogSnapshot({ entries: [] }),
+    );
+    const publisher = new FsOfficialIntegrationRegistryBootstrapPublisher({
+        root,
+        snapshots,
+        compatibility: new IntegrationCompatibilityEvaluator({
+            identity: { name: "cms-repository-server-bootstrap", version: "1.0.0" },
+            now: () => new Date().toISOString(),
+            createReportId: () => randomUUID(),
+        }),
+        mutations: new InMemoryIntegrationRegistryMutationCoordinator(),
+    });
+    const preparation = await publisher.prepare(packages.map(({ package: integrationPackage }) => integrationPackage));
+    return {
+        commit: async () => {
+            const results = await publisher.publishPrepared(preparation);
+            if (
+                results.length !== packages.length ||
+                results.some(
+                    (result, index) =>
+                        result.kind !== packages[index]?.kind ||
+                        result.version !== packages[index]?.version ||
+                        result.digest !== packages[index]?.digest,
+                )
+            ) {
+                throw new Error("Official integration repository bootstrap publication diverged from its preparation");
+            }
+        },
+    };
+};
 
 export function productionPackageDownloadProtection(
     env: ReturnType<typeof readRepositoryRuntimeEnv>,

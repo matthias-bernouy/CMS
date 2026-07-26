@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "@bernouy/cms-integration-registry": "workspace:*",
+        "@bernouy/cms-official-integrations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
