@@ -43,6 +43,11 @@ Usage:
                                    Write an .env.example with the remote's
                                    KEYS only (no values, ever). Default
                                    output: .env.example.
+  p9r repository publish-official [--dry-run]
+                                   Deterministically build and publish every
+                                   official integration package. Publishing
+                                   requires --url and --token-file (or their
+                                   repository-management env equivalents).
   p9r help                         Show this help
 
 Env (loaded from .env or the environment):
@@ -75,6 +80,11 @@ try {
             break;
         case "files":
             await CLI_filesReindex(rest);
+            break;
+        case "repository":
+            process.exitCode = await (await import("./repositoryPublication/command")).runRepositoryPublicationCommand(
+                rest,
+            );
             break;
         case undefined:
         case "help":
