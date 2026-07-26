@@ -65,6 +65,7 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
 }
 
 const NATIVE_BLOC_TAGS = new Set([
+    "a",
     "button",
     "datalist",
     "fieldset",

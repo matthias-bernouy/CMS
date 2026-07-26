@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { validateBloc, validateBlocTag } from "@bernouy/cms-bloc-compile";
+import { isNativeBlocTag, validateBloc, validateBlocTag } from "@bernouy/cms-bloc-compile";
 
 describe("validateBlocTag", () => {
     test.each([["my-card"], ["a-b"], ["app-v2"], ["base-card"], ["super-cool-bloc"]])("accepts %p", (tag) => {
@@ -144,6 +144,8 @@ describe("validateBloc — graceful degradation", () => {
     });
 
     test("accepts native text tags without manifest runtime metadata", () => {
+        expect(isNativeBlocTag("a")).toBe(true);
+        expect(validateBloc({ tag: "a" }).errors).toEqual([]);
         expect(validateBloc({ tag: "p" }).errors).toEqual([]);
         expect(validateBloc({ tag: "h1" }).errors).toEqual([]);
         expect(validateBloc({ tag: "my-bloc", native: true }).errors[0]).toContain("Invalid native tag");
