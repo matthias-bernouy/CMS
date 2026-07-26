@@ -14,7 +14,11 @@ import {
     OFFICIAL_SQL_BACKFILL_RUNNER_REQUIREMENT,
     OFFICIAL_VERIFICATION_BACKFILL_SCHEMA,
 } from "./contracts";
-import { parseOfficialVerificationBackfillIndex } from "./validation";
+import { loadOfficialVerificationBackfillIndex } from "./loader";
+import {
+    parseOfficialVerificationBackfillIndex,
+    selectOfficialVerificationBackfillPackages,
+} from "./validation";
 
 const PHOTO_ALBUMS_LEGACY_TEST_PATH = "fixtures/legacy-test-ownership.v1.json";
 const PHOTO_ALBUMS_LEGACY_SUITES = Object.freeze([
@@ -35,7 +39,11 @@ const PHOTO_ALBUMS_LEGACY_SUITES = Object.freeze([
 export async function buildOfficialIntegrationVerificationBackfill(
     requestedRoot: string = OFFICIAL_INTEGRATIONS_ROOT,
 ): Promise<OfficialIntegrationVerificationBackfill> {
-    const packages = await buildOfficialIntegrationPackages(requestedRoot);
+    const loadedIndex = await loadOfficialVerificationBackfillIndex(requestedRoot);
+    const packages = selectOfficialVerificationBackfillPackages(
+        await buildOfficialIntegrationPackages(requestedRoot),
+        loadedIndex.index,
+    );
     const verifications = await Promise.all(packages.map(buildVerification));
     const index = parseOfficialVerificationBackfillIndex({
         schema: OFFICIAL_VERIFICATION_BACKFILL_SCHEMA,
@@ -48,6 +56,9 @@ export async function buildOfficialIntegrationVerificationBackfill(
         })),
     });
     const indexCanonicalBytes = canonicalJsonBytes(index);
+    if ((await sha256Hex(indexCanonicalBytes)) !== loadedIndex.indexDigest) {
+        throw new Error("Generated official verification backfill differs from its immutable index");
+    }
     return {
         index,
         indexDigest: await sha256Hex(indexCanonicalBytes),

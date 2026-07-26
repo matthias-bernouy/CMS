@@ -20,6 +20,7 @@ import {
     type OfficialVerificationBackfillReportSet,
 } from "./contracts";
 import { loadOfficialIntegrationVerificationBackfill } from "./loader";
+import { selectOfficialVerificationBackfillPackages } from "./validation";
 
 const BUN_IMAGE_DIGEST = "sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0";
 const POSTGRES_RUNNER: PinnedVerificationRunnerIdentity = Object.freeze({
@@ -37,8 +38,9 @@ export async function buildOfficialVerificationBackfillReports(
     requestedRoot: string = OFFICIAL_INTEGRATIONS_ROOT,
     suppliedEvidence?: OfficialRepositoryBootstrapEvidenceV1,
 ): Promise<readonly OfficialVerificationBackfillReportSet[]> {
-    const packages = await buildOfficialIntegrationPackages(requestedRoot);
+    const allPackages = await buildOfficialIntegrationPackages(requestedRoot);
     const verificationBackfill = await loadOfficialIntegrationVerificationBackfill(requestedRoot);
+    const packages = selectOfficialVerificationBackfillPackages(allPackages, verificationBackfill.index);
     const evidence =
         suppliedEvidence ??
         (await (await import("../../evidence")).loadOfficialRepositoryBootstrapEvidence(requestedRoot));

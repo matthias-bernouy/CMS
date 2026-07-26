@@ -13,6 +13,7 @@ import {
     buildOfficialIntegrationPackages,
     buildOfficialIntegrationVerificationBackfill,
     loadOfficialIntegrationVerificationBackfill,
+    selectOfficialVerificationBackfillPackages,
 } from "@bernouy/cms-official-integrations/publication";
 
 describe("official verification backfill artifacts", () => {
@@ -91,6 +92,31 @@ describe("official verification backfill artifacts", () => {
             expect(suite.blockers).toEqual(["package-relative-runtime-assets", "workspace-package-imports"]);
             expect(suite.sourceDigest).toBe(await sha256Hex(decodeIntegrationPackageFile(source)));
         }
+    });
+
+    test("keeps the immutable legacy inventory closed when newer packages exist", async () => {
+        const packages = await buildOfficialIntegrationPackages();
+        const committed = await loadOfficialIntegrationVerificationBackfill();
+        const source = packages.find(({ kind }) => kind === "newsletter");
+        if (!source) {
+            throw new Error("Newsletter package is missing");
+        }
+        const future = {
+            ...source,
+            version: "1.1.0",
+            digest: "f".repeat(64),
+        };
+
+        const selected = selectOfficialVerificationBackfillPackages([...packages, future], committed.index);
+
+        expect(selected).toHaveLength(14);
+        expect(selected.some(({ version }) => version === "1.1.0")).toBeFalse();
+        expect(() =>
+            selectOfficialVerificationBackfillPackages(
+                packages.filter(({ kind }) => kind !== "newsletter"),
+                committed.index,
+            ),
+        ).toThrow("exact published package set");
     });
 });
 

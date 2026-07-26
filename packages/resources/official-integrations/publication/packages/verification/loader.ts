@@ -9,7 +9,7 @@ import { buildOfficialIntegrationPackages } from "../runtime";
 import type { BuiltOfficialIntegrationVerification, OfficialIntegrationVerificationBackfill } from "./contracts";
 import { OFFICIAL_VERIFICATION_BACKFILL_INDEX_PATH } from "./contracts";
 import { verificationObjectPath } from "./paths";
-import { parseOfficialVerificationBackfillIndex } from "./validation";
+import { parseOfficialVerificationBackfillIndex, selectOfficialVerificationBackfillPackages } from "./validation";
 
 const MAX_BACKFILL_INDEX_BYTES = 1 * 1_024 * 1_024;
 const MAX_VERIFICATION_BUNDLE_BYTES = 32 * 1_024 * 1_024;
@@ -17,17 +17,11 @@ const MAX_VERIFICATION_BUNDLE_BYTES = 32 * 1_024 * 1_024;
 export async function loadOfficialIntegrationVerificationBackfill(
     requestedRoot: string = OFFICIAL_INTEGRATIONS_ROOT,
 ): Promise<OfficialIntegrationVerificationBackfill> {
-    const indexDocument = await readBoundedJsonDocument(
-        joinWithin(requestedRoot, OFFICIAL_VERIFICATION_BACKFILL_INDEX_PATH),
-        MAX_BACKFILL_INDEX_BYTES,
-    );
-    const index = parseOfficialVerificationBackfillIndex(
-        parseStrictJsonDocument(indexDocument.bytes, MAX_BACKFILL_INDEX_BYTES),
-    );
-    const indexCanonicalBytes = canonicalJsonBytes(index);
-    if (!equalBytes(indexDocument.bytes, indexCanonicalBytes)) {
-        throw new Error("Official verification backfill index must be canonical JSON");
-    }
+    const loadedIndex = await loadOfficialVerificationBackfillIndex(requestedRoot);
+    const index = loadedIndex.index;
+    const indexCanonicalBytes = loadedIndex.indexCanonicalBytes;
+    const packages = await buildOfficialIntegrationPackages(requestedRoot);
+    selectOfficialVerificationBackfillPackages(packages, index);
     const verifications = await Promise.all(
         index.entries.map(async (entry): Promise<BuiltOfficialIntegrationVerification> => {
             const document = await readBoundedJsonDocument(
@@ -58,34 +52,33 @@ export async function loadOfficialIntegrationVerificationBackfill(
             };
         }),
     );
-    await assertExactOfficialPackageSet(requestedRoot, verifications);
     return {
         index,
-        indexDigest: await sha256Hex(indexCanonicalBytes),
+        indexDigest: loadedIndex.indexDigest,
         indexCanonicalBytes,
         verifications,
     };
 }
 
-async function assertExactOfficialPackageSet(
-    requestedRoot: string,
-    verifications: readonly BuiltOfficialIntegrationVerification[],
-): Promise<void> {
-    const packages = await buildOfficialIntegrationPackages(requestedRoot);
-    if (packages.length !== verifications.length) {
-        throw new Error("Official verification backfill must cover the exact published package inventory");
+export async function loadOfficialVerificationBackfillIndex(
+    requestedRoot: string = OFFICIAL_INTEGRATIONS_ROOT,
+): Promise<Pick<OfficialIntegrationVerificationBackfill, "index" | "indexDigest" | "indexCanonicalBytes">> {
+    const indexDocument = await readBoundedJsonDocument(
+        joinWithin(requestedRoot, OFFICIAL_VERIFICATION_BACKFILL_INDEX_PATH),
+        MAX_BACKFILL_INDEX_BYTES,
+    );
+    const index = parseOfficialVerificationBackfillIndex(
+        parseStrictJsonDocument(indexDocument.bytes, MAX_BACKFILL_INDEX_BYTES),
+    );
+    const indexCanonicalBytes = canonicalJsonBytes(index);
+    if (!equalBytes(indexDocument.bytes, indexCanonicalBytes)) {
+        throw new Error("Official verification backfill index must be canonical JSON");
     }
-    for (const [index, integrationPackage] of packages.entries()) {
-        const verification = verifications[index];
-        if (
-            !verification ||
-            verification.kind !== integrationPackage.kind ||
-            verification.version !== integrationPackage.version ||
-            verification.packageDigest !== integrationPackage.digest
-        ) {
-            throw new Error("Official verification backfill does not match the exact published package set");
-        }
-    }
+    return {
+        index,
+        indexDigest: await sha256Hex(indexCanonicalBytes),
+        indexCanonicalBytes,
+    };
 }
 
 function equalBytes(left: Uint8Array, right: Uint8Array): boolean {

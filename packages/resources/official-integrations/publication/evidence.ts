@@ -12,6 +12,7 @@ import { buildOfficialIntegrationPackages } from "./packages";
 import {
     buildOfficialVerificationBackfillReports,
     loadOfficialIntegrationVerificationBackfill,
+    selectOfficialVerificationBackfillPackages,
 } from "./packages/verification";
 import { assertOfficialRepositoryBootstrapEvidence } from "./validation";
 
@@ -20,9 +21,10 @@ const MAX_OFFICIAL_BOOTSTRAP_EVIDENCE_BYTES = 16 * 1_024 * 1_024;
 export async function buildOfficialRepositoryBootstrapPlan(
     requestedRoot: string = OFFICIAL_INTEGRATIONS_ROOT,
 ): Promise<OfficialRepositoryBootstrapPlan> {
-    const packages = await buildOfficialIntegrationPackages(requestedRoot);
+    const allPackages = await buildOfficialIntegrationPackages(requestedRoot);
     const evidence = await loadOfficialRepositoryBootstrapEvidence(requestedRoot);
     const verificationBundles = await loadOfficialIntegrationVerificationBackfill(requestedRoot);
+    const packages = selectOfficialVerificationBackfillPackages(allPackages, verificationBundles.index);
     const verificationReports = await buildOfficialVerificationBackfillReports(requestedRoot, evidence);
     assertOfficialRepositoryBootstrapEvidence(packages, evidence);
     return {

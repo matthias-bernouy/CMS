@@ -1,5 +1,6 @@
 import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@bernouy/cms-integration-packages";
 import { parseVerificationPolicyIdentity } from "@bernouy/cms-integration-verification";
+import type { BuiltOfficialIntegrationPackage } from "../../contracts";
 import type { OfficialVerificationBackfillIndexEntry, OfficialVerificationBackfillIndexV1 } from "./contracts";
 import { OFFICIAL_INTEGRATION_VERIFICATION_POLICY, OFFICIAL_VERIFICATION_BACKFILL_SCHEMA } from "./contracts";
 
@@ -41,6 +42,22 @@ export function parseOfficialVerificationBackfillIndex(value: unknown): Official
     };
 }
 
+export function selectOfficialVerificationBackfillPackages(
+    packages: readonly BuiltOfficialIntegrationPackage[],
+    index: OfficialVerificationBackfillIndexV1,
+): readonly BuiltOfficialIntegrationPackage[] {
+    const packagesByIdentity = new Map(packages.map((entry) => [packageIdentity(entry.kind, entry.version), entry]));
+    return Object.freeze(
+        index.entries.map((entry) => {
+            const integrationPackage = packagesByIdentity.get(packageIdentity(entry.kind, entry.version));
+            if (!integrationPackage || integrationPackage.digest !== entry.packageDigest) {
+                throw new Error("Official verification backfill does not match its exact published package set");
+            }
+            return integrationPackage;
+        }),
+    );
+}
+
 function parseEntry(value: unknown): OfficialVerificationBackfillIndexEntry {
     if (!hasExactKeys(value, ["kind", "packageDigest", "verificationDigest", "version"])) {
         throw new Error("Official verification backfill entry has an invalid closed schema");
@@ -69,4 +86,8 @@ function hasExactKeys(value: unknown, expected: readonly string[]): value is Rec
     }
     const keys = Object.keys(value);
     return keys.length === expected.length && expected.every((key) => keys.includes(key));
+}
+
+function packageIdentity(kind: string, version: string): string {
+    return `${kind}\0${version}`;
 }

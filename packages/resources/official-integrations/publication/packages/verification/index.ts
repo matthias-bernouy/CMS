@@ -18,6 +18,10 @@ export {
     buildOfficialIntegrationCandidates,
     type BuiltOfficialIntegrationCandidate,
 } from "./candidates";
-export { loadOfficialIntegrationVerificationBackfill } from "./loader";
+export {
+    loadOfficialIntegrationVerificationBackfill,
+    loadOfficialVerificationBackfillIndex,
+} from "./loader";
 export { buildOfficialVerificationBackfillReports } from "./reports";
 export { verificationObjectRelativePath } from "./paths";
+export { selectOfficialVerificationBackfillPackages } from "./validation";

@@ -28,6 +28,8 @@ export {
     buildOfficialIntegrationCandidates,
     buildOfficialVerificationBackfillReports,
     loadOfficialIntegrationVerificationBackfill,
+    loadOfficialVerificationBackfillIndex,
+    selectOfficialVerificationBackfillPackages,
     verificationObjectRelativePath,
     type BuiltOfficialIntegrationVerification,
     type BuiltOfficialIntegrationCandidate,
