@@ -1,10 +1,14 @@
 import { describe, expect, test } from "bun:test";
+import { P9R_CACHE } from "@bernouy/cms-content";
+import { compress } from "@bernouy/http-runner";
 import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
 import { makeCms, manualSourceDefinition, postImport, sourceWithFunctionDefinition } from "./support/helpers";
 
 describe("POST /api/integrations/import", () => {
     test("creates a tracked Test secret source installation without exposing the secret value", async () => {
-        const { cms, secrets, sources, integrationInstallations } = makeCms();
+        const { cms, secrets, sources, integrationInstallations, cache } = makeCms();
+        cache.set(P9R_CACHE.STYLE, compress("old-style", "text/css"));
+        cache.set(P9R_CACHE.page("/cached"), compress("old-page", "text/html"));
 
         const res = await postIntegrationImport(
             postImport({
@@ -23,6 +27,8 @@ describe("POST /api/integrations/import", () => {
         expect(JSON.stringify(body)).not.toContain("sk_test");
         expect(await secrets.get(secretKey)).toBe("sk_test");
         expect(await integrationInstallations.get("test-secret-source")).not.toBeNull();
+        expect(cache.get(P9R_CACHE.STYLE)).toBeNull();
+        expect(cache.get(P9R_CACHE.page("/cached"))).toBeNull();
 
         const source = await sources.getSource("urn:secret-source-main");
         expect(source?.endpoints[0]?.headers).toEqual([
@@ -97,7 +103,8 @@ describe("POST /api/integrations/import", () => {
     });
 
     test("fails before writing when no integration installation repository is configured", async () => {
-        const { cms, sources, secrets } = makeCms();
+        const { cms, sources, secrets, cache } = makeCms();
+        cache.set(P9R_CACHE.STYLE, compress("current-style", "text/css"));
         Object.defineProperty(cms, "integrationInstallations", {
             get() {
                 throw new Error("integration installations repository not configured");
@@ -116,5 +123,6 @@ describe("POST /api/integrations/import", () => {
 
         expect(await sources.getSource("urn:secret-source-main")).toBeNull();
         expect(await secrets.listKeys()).toEqual([]);
+        expect(cache.get(P9R_CACHE.STYLE)).not.toBeNull();
     });
 });

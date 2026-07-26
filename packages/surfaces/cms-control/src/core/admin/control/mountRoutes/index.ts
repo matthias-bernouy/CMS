@@ -19,6 +19,7 @@ import { mountAnalyticsRoutes } from "cms-control/core/admin/control/mountRoutes
 import serveStaticFolder from "cms-control/core/admin/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "cms-control/core/admin/registerEndpoints/serveApiFolder";
 import type { ControlCms } from "cms-control/ControlCms";
+import { getInstalledIntegrationThemeContributions } from "cms-control/core/management/integrations/themeContributions";
 
 export function mountControlCmsRoutes(
     cms: ControlCms,
@@ -84,7 +85,11 @@ export function mountControlCmsRoutes(
                 req,
                 P9R_CACHE.STYLE,
                 state.cache,
-                () => generateStyleEntry(state.repository),
+                async () =>
+                    generateStyleEntry(
+                        state.repository,
+                        await getInstalledIntegrationThemeContributions(state.integrationInstallations),
+                    ),
                 publicAssetCacheControl(req),
             ),
         [authGuard],

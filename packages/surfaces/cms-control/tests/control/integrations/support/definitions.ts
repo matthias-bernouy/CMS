@@ -5,6 +5,22 @@ export const TEST_SECRET_SOURCE_DEFINITION: IntegrationDefinition = {
     label: "Test secret source",
     version: "1.0.0",
     category: "Test",
+    theme: {
+        categories: [
+            {
+                id: "appearance",
+                label: "Appearance",
+                tokens: [
+                    {
+                        id: "accent",
+                        label: "Accent",
+                        type: "color",
+                        defaults: { light: "var(--primary-base)" },
+                    },
+                ],
+            },
+        ],
+    },
     inputs: [
         { name: "id", label: "Source id", type: "text", required: true, defaultValue: "test-source" },
         { name: "apiKey", label: "API key", type: "password", required: true, secret: true },

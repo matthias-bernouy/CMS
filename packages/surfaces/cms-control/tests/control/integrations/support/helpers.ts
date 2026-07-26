@@ -4,6 +4,7 @@ import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
+import { InMemoryCache } from "@bernouy/http-runner";
 import type { IntegrationDefinition, IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 export {
     TEST_SECRET_SOURCE_DEFINITION,
@@ -20,6 +21,7 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
     const functions = new InMemoryFunctionRepository();
     const integrationInstallations = new InMemoryIntegrationInstallationRepository();
     const integrationCatalog = integrationDefinitionRepository(siteIntegrations);
+    const cache = new InMemoryCache();
     const repository = {
         getBlocsList: async () => [],
     };
@@ -32,6 +34,7 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
         functions,
         integrationCatalog,
         integrationInstallations,
+        cache,
     };
     return {
         cms: cms as any,
@@ -43,6 +46,7 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
         functions,
         integrationInstallations,
         integrationCatalog,
+        cache,
     };
 }
 

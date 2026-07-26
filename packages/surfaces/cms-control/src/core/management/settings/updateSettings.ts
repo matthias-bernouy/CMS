@@ -1,6 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { P9R_CACHE } from "@bernouy/cms-content";
-import { invalidateAllPages } from "cms-control/core/admin/server/cache/invalidation";
+import { reconcileSubmittedThemeSettings } from "@bernouy/cms-content";
+import { invalidateGlobalStyleAndPages } from "cms-control/core/admin/server/cache/invalidation";
+import { getInstalledIntegrationThemeContributions } from "cms-control/core/management/integrations/themeContributions";
 import type { SettingsUpdateDto } from "cms-control/core/validation/settings/parseUpdateDto";
 
 /**
@@ -10,7 +11,17 @@ import type { SettingsUpdateDto } from "cms-control/core/validation/settings/par
  * the style entry AND every cached page.
  */
 export async function updateSettings(cms: ControlCms, dto: SettingsUpdateDto): Promise<void> {
-    await cms.repository.updateSystem(dto);
-    cms.cache.delete(P9R_CACHE.STYLE);
-    invalidateAllPages(cms);
+    let update = dto;
+    if (dto.theme) {
+        const [current, contributions] = await Promise.all([
+            cms.repository.getSystem(),
+            getInstalledIntegrationThemeContributions(cms.configuredIntegrationInstallations),
+        ]);
+        update = {
+            ...dto,
+            theme: reconcileSubmittedThemeSettings(current.theme, dto.theme, contributions),
+        };
+    }
+    await cms.repository.updateSystem(update);
+    invalidateGlobalStyleAndPages(cms);
 }

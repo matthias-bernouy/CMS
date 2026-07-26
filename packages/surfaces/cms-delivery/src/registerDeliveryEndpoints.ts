@@ -25,6 +25,7 @@ import {
     analyticsPrivacyPage,
     analyticsSelfAssessment,
 } from "cms-delivery/core/analytics/privacyAnalyticsEndpoints";
+import { getDeliveryIntegrationThemeContributions } from "cms-delivery/core/assets/resolveAssets";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Called from the
@@ -78,7 +79,11 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
             req,
             P9R_CACHE.STYLE,
             delivery.cache,
-            () => generateStyleEntry(delivery.repository),
+            async () =>
+                generateStyleEntry(
+                    delivery.repository,
+                    await getDeliveryIntegrationThemeContributions(delivery.integrationInstallations),
+                ),
             publicAssetCacheControl(req),
         ),
     );

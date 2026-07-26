@@ -7,6 +7,7 @@ import {
     parseIntegrationImportRequest,
     runIntegrationInstallation,
 } from "@bernouy/cms-integrations";
+import { invalidateGlobalStyleAndPages } from "cms-control/core/admin/server/cache/invalidation";
 
 export default async function postIntegrationImport(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);
@@ -31,12 +32,16 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
         provisioners: cms.integrationProvisioners,
         sourceExecutorDeps: cms.sourceExecutorDeps,
     };
-    const result = await runIntegrationInstallation({
-        mode: "create",
-        deps,
-        installations: cms.integrationInstallations,
-        dto: request.dto,
-        siteIntegrations: request.siteIntegrations,
-    });
-    return Response.json(result);
+    try {
+        const result = await runIntegrationInstallation({
+            mode: "create",
+            deps,
+            installations: cms.integrationInstallations,
+            dto: request.dto,
+            siteIntegrations: request.siteIntegrations,
+        });
+        return Response.json(result);
+    } finally {
+        invalidateGlobalStyleAndPages(cms);
+    }
 }

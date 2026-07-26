@@ -1,29 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
-import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
+import { defaultSystem, P9R_CACHE, type ContentReader, type TPage } from "@bernouy/cms-content";
 import { componentJsCacheKey, generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { resolveRuntimeAssets } from "cms-delivery/core/assets/resolveAssets";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import type { ResponsiveSourceImageRollout } from "@bernouy/cms-source-images/browser-host";
 
-const system: TSystem = {
-    initializationStep: 1,
-    site: {
-        name: "Site",
-        favicon: "",
-        visible: true,
-        host: "",
-        language: "",
-        theme: "",
-        notFound: null,
-        forbidden: null,
-        serverError: null,
-        login: null,
-    },
-    editor: { layoutCategory: "" },
-    security: { connectExtras: [], mediaExtras: [] },
-};
+const system = defaultSystem();
+system.initializationStep = 1;
+system.site.name = "Site";
 
 function deliveryWith(
     repository: ContentReader,

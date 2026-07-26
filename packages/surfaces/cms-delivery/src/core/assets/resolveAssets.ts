@@ -5,6 +5,10 @@ import { generateBlocSetEntry, generateStyleEntry } from "@bernouy/cms-content";
 import { componentJsCacheKey, generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { generateBindingCoreJsEntry } from "cms-delivery/core/assets/buildBindingCore";
 import { P9R_CACHE } from "@bernouy/cms-content";
+import {
+    collectIntegrationInstallationThemeContributions,
+    type IntegrationInstallationRepository,
+} from "@bernouy/cms-integrations";
 
 /**
  * Content-addressed URLs for every asset a page references. The hash is the
@@ -80,7 +84,12 @@ export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: stri
             generateComponentJsEntry(delivery.responsiveSourceImageRollout),
         ),
         getOrGenerateEntryAsync(bindingCoreJsCacheKey, delivery.cache, generateBindingCoreJsEntry),
-        getOrGenerateEntryAsync(P9R_CACHE.STYLE, delivery.cache, () => generateStyleEntry(delivery.repository)),
+        getOrGenerateEntryAsync(P9R_CACHE.STYLE, delivery.cache, async () =>
+            generateStyleEntry(
+                delivery.repository,
+                await getDeliveryIntegrationThemeContributions(delivery.integrationInstallations),
+            ),
+        ),
         ...bundles.map((tags) =>
             getOrGenerateEntryAsync(P9R_CACHE.blocset(tags), delivery.cache, () =>
                 generateBlocSetEntry(tags, delivery.repository),
@@ -100,4 +109,10 @@ export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: stri
     const scriptUrls = [componentUrl, ...blocUrls];
 
     return { componentUrl, bindingCoreUrl, styleUrl, blocUrls, scriptUrls };
+}
+
+export async function getDeliveryIntegrationThemeContributions(
+    installations: IntegrationInstallationRepository | undefined,
+) {
+    return installations ? collectIntegrationInstallationThemeContributions(await installations.list()) : [];
 }

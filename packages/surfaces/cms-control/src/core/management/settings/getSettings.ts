@@ -1,6 +1,6 @@
+import { composeThemeSettings, type PageLink, type TSystem } from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
-import type { PageLink } from "@bernouy/cms-content";
-import type { TSystem } from "@bernouy/cms-content";
+import { getInstalledIntegrationThemeContributions } from "cms-control/core/management/integrations/themeContributions";
 
 export type SettingsResponse = {
     site: TSystem["site"];
@@ -20,16 +20,17 @@ export type SettingsResponse = {
  * or `getAllTemplates` paying for fields the form never reads.
  */
 export async function getSettings(cms: ControlCms): Promise<SettingsResponse> {
-    const [system, pages, layoutCategories] = await Promise.all([
+    const [system, pages, layoutCategories, themeContributions] = await Promise.all([
         cms.repository.getSystem(),
         cms.repository.getLinks(),
         cms.repository.getTemplateCategories(),
+        getInstalledIntegrationThemeContributions(cms.configuredIntegrationInstallations),
     ]);
 
     return {
         site: system.site,
         editor: system.editor,
-        theme: system.theme,
+        theme: composeThemeSettings(system.theme, themeContributions),
         security: system.security,
         email: system.email,
         pages,

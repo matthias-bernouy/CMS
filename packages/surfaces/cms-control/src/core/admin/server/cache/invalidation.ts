@@ -73,3 +73,9 @@ export async function invalidatePagesReferencingFile(cms: ControlCms, fileId: st
 export function invalidateAllPages(cms: ControlCms): void {
     cms.cache.deleteMatching((key) => key.startsWith("page:"));
 }
+
+/** Invalidate a global stylesheet and every page carrying its content hash. */
+export function invalidateGlobalStyleAndPages(cms: ControlCms): void {
+    cms.cache.delete(P9R_CACHE.STYLE);
+    invalidateAllPages(cms);
+}

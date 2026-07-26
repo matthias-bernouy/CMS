@@ -4,6 +4,7 @@ import { definitionsForRerun } from "cms-control/core/management/integrations/de
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import { runIntegrationInstallation, type IntegrationImportDeps } from "@bernouy/cms-integrations";
+import { invalidateGlobalStyleAndPages } from "cms-control/core/admin/server/cache/invalidation";
 
 export default async function postIntegrationInstallationRerun(req: Request, cms: ControlCms) {
     const id = new URL(req.url).searchParams.get("id");
@@ -31,15 +32,19 @@ export default async function postIntegrationInstallationRerun(req: Request, cms
         provisioners: cms.integrationProvisioners,
         sourceExecutorDeps: cms.sourceExecutorDeps,
     };
-    const result = await runIntegrationInstallation({
-        mode: "rerun",
-        deps,
-        installations: cms.integrationInstallations,
-        integrationId: id,
-        body,
-        siteIntegrations: definitions,
-    });
-    return Response.json(result);
+    try {
+        const result = await runIntegrationInstallation({
+            mode: "rerun",
+            deps,
+            installations: cms.integrationInstallations,
+            integrationId: id,
+            body,
+            siteIntegrations: definitions,
+        });
+        return Response.json(result);
+    } finally {
+        invalidateGlobalStyleAndPages(cms);
+    }
 }
 
 async function readOptionalJsonBody(req: Request): Promise<Record<string, unknown>> {
