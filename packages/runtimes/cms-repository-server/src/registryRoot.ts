@@ -1,21 +1,22 @@
 import { constants } from "node:fs";
-import { access, lstat, open, readdir, realpath, unlink } from "node:fs/promises";
-import { join } from "node:path";
+import { access, lstat, readdir, realpath } from "node:fs/promises";
+import {
+    assertBootstrapPlanDigest,
+    readRepositoryBootstrapMarker,
+    removeRepositoryBootstrapMarker,
+    REPOSITORY_BOOTSTRAP_MARKER,
+    RepositoryRegistryBootstrapIncompleteError,
+    writeRepositoryBootstrapMarker,
+} from "./core/bootstrapMarker";
 
-export const REPOSITORY_BOOTSTRAP_MARKER = ".official-bootstrap-in-progress";
+export { REPOSITORY_BOOTSTRAP_MARKER, RepositoryRegistryBootstrapIncompleteError } from "./core/bootstrapMarker";
 
 export type PreparedEmptyRegistryBootstrap = Readonly<{
+    planDigest: string;
     commit(): Promise<void>;
 }>;
 
 export type EmptyRegistryBootstrap = (registryRoot: string) => Promise<PreparedEmptyRegistryBootstrap>;
-
-export class RepositoryRegistryBootstrapIncompleteError extends Error {
-    constructor() {
-        super("Integration repository bootstrap is incomplete and requires operator recovery");
-        this.name = "RepositoryRegistryBootstrapIncompleteError";
-    }
-}
 
 export async function validateRepositoryRegistryRoot(root: string): Promise<void> {
     const stats = await lstat(root);
@@ -33,12 +34,13 @@ export async function bootstrapRepositoryRegistryIfEmpty(
     await validateRepositoryRegistryRoot(root);
     const entries = await readdir(root);
     if (entries.includes(REPOSITORY_BOOTSTRAP_MARKER)) {
-        throw new RepositoryRegistryBootstrapIncompleteError();
+        return await resumeRepositoryBootstrap(root, bootstrap);
     }
     if (entries.length > 0) {
         return "already-initialized";
     }
     const prepared = await bootstrap(root);
+    assertPreparedBootstrap(prepared);
     const entriesAfterPreparation = await readdir(root);
     if (entriesAfterPreparation.includes(REPOSITORY_BOOTSTRAP_MARKER)) {
         throw new RepositoryRegistryBootstrapIncompleteError();
@@ -46,33 +48,27 @@ export async function bootstrapRepositoryRegistryIfEmpty(
     if (entriesAfterPreparation.length > 0) {
         return "already-initialized";
     }
-    await writeBootstrapMarker(root);
+    await writeRepositoryBootstrapMarker(root, prepared.planDigest);
     await prepared.commit();
-    await removeBootstrapMarker(root);
+    await removeRepositoryBootstrapMarker(root, prepared.planDigest);
     return "bootstrapped";
 }
 
-async function writeBootstrapMarker(root: string): Promise<void> {
-    const marker = await open(join(root, REPOSITORY_BOOTSTRAP_MARKER), "wx", 0o600);
-    try {
-        await marker.writeFile('{"schema":"cms.integration.repository.bootstrap.v1","state":"in-progress"}\n', "utf8");
-        await marker.sync();
-    } finally {
-        await marker.close();
+async function resumeRepositoryBootstrap(root: string, bootstrap: EmptyRegistryBootstrap): Promise<"bootstrapped"> {
+    const marker = await readRepositoryBootstrapMarker(root);
+    const prepared = await bootstrap(root);
+    assertPreparedBootstrap(prepared);
+    if (prepared.planDigest !== marker.planDigest) {
+        throw new RepositoryRegistryBootstrapIncompleteError();
     }
-    await syncDirectory(root);
+    await prepared.commit();
+    await removeRepositoryBootstrapMarker(root, prepared.planDigest);
+    return "bootstrapped";
 }
 
-async function removeBootstrapMarker(root: string): Promise<void> {
-    await unlink(join(root, REPOSITORY_BOOTSTRAP_MARKER));
-    await syncDirectory(root);
-}
-
-async function syncDirectory(path: string): Promise<void> {
-    const directory = await open(path, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
-    try {
-        await directory.sync();
-    } finally {
-        await directory.close();
+function assertPreparedBootstrap(prepared: PreparedEmptyRegistryBootstrap): void {
+    assertBootstrapPlanDigest(prepared.planDigest);
+    if (typeof prepared.commit !== "function") {
+        throw new TypeError("Integration repository bootstrap preparation is invalid");
     }
 }

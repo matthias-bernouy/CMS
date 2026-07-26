@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import {
-    createIntegrationRegistryCatalogSnapshot,
     InMemoryIntegrationRegistryMutationCoordinator,
     IntegrationCompatibilityEvaluator,
     IntegrationRegistryCatalogSnapshotReference,
@@ -10,7 +9,10 @@ import {
     buildFsIntegrationRegistryCatalogSnapshot,
     FsOfficialIntegrationRegistryBootstrapPublisher,
 } from "@bernouy/cms-integration-registry/fs";
-import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
+import {
+    buildOfficialRepositoryBootstrapPlan,
+    OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
+} from "@bernouy/cms-official-integrations/publication";
 import { createRepositoryMaintenanceGuard, createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
 import type { PublicPackageDownloadProtection, PublicPackageReadObservation } from "@bernouy/cms-repository";
 import { BunRunner } from "@bernouy/http-runner";
@@ -102,9 +104,9 @@ export async function startProductionRepositoryServer(
 }
 
 export const prepareOfficialRepositoryBootstrap: EmptyRegistryBootstrap = async (root) => {
-    const packages = await buildOfficialIntegrationPackages();
+    const plan = await buildOfficialRepositoryBootstrapPlan();
     const snapshots = new IntegrationRegistryCatalogSnapshotReference(
-        createIntegrationRegistryCatalogSnapshot({ entries: [] }),
+        await buildFsIntegrationRegistryCatalogSnapshot({ root }),
     );
     const publisher = new FsOfficialIntegrationRegistryBootstrapPublisher({
         root,
@@ -115,22 +117,13 @@ export const prepareOfficialRepositoryBootstrap: EmptyRegistryBootstrap = async 
             createReportId: () => randomUUID(),
         }),
         mutations: new InMemoryIntegrationRegistryMutationCoordinator(),
+        baselineApproval: OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
     });
-    const preparation = await publisher.prepare(packages.map(({ package: integrationPackage }) => integrationPackage));
+    const preparation = await publisher.prepare(plan);
     return {
+        planDigest: preparation.planDigest,
         commit: async () => {
-            const results = await publisher.publishPrepared(preparation);
-            if (
-                results.length !== packages.length ||
-                results.some(
-                    (result, index) =>
-                        result.kind !== packages[index]?.kind ||
-                        result.version !== packages[index]?.version ||
-                        result.digest !== packages[index]?.digest,
-                )
-            ) {
-                throw new Error("Official integration repository bootstrap publication diverged from its preparation");
-            }
+            await publisher.publishPrepared(preparation);
         },
     };
 };
