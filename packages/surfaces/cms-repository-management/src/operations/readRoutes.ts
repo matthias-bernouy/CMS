@@ -6,6 +6,10 @@ import type {
     IntegrationRegistryRecoveryDiagnostic,
 } from "@bernouy/cms-integration-registry";
 import type { Runner } from "@bernouy/http-runner";
+import type { RepositoryManagementOperationalReadSource } from "./observability/contracts";
+import { projectRepositoryOperationalRead } from "./observability/projection";
+
+export type { RepositoryManagementOperationalReadSource } from "./observability/contracts";
 
 export const REPOSITORY_STATUS_PATH = "/api/status";
 export const REPOSITORY_DIAGNOSTICS_PATH = "/api/diagnostics";
@@ -18,6 +22,7 @@ export type RepositoryManagementReadConfig = Readonly<{
     catalog: IntegrationRegistryCatalogSnapshotProvider;
     reports: IntegrationCompatibilityReportStore;
     recoveryDiagnostics?: () => readonly IntegrationRegistryRecoveryDiagnostic[];
+    operational?: RepositoryManagementOperationalReadSource;
 }>;
 
 export function mountRepositoryManagementReadRoutes(runner: Runner, config: RepositoryManagementReadConfig): void {
@@ -27,27 +32,45 @@ export function mountRepositoryManagementReadRoutes(runner: Runner, config: Repo
     runner.get(REPOSITORY_COMPATIBILITY_PATH, (request) => compatibilityResponse(request, config));
 }
 
-function statusResponse(config: RepositoryManagementReadConfig): Response {
+async function statusResponse(config: RepositoryManagementReadConfig): Promise<Response> {
     const snapshot = config.catalog.current();
     const versions = snapshot.summaries.reduce((total, summary) => total + summary.versions.length, 0);
-    return jsonResponse({
-        ready: true,
-        health: snapshot.health,
+    const snapshotMetric = {
         integrations: snapshot.summaries.length,
         versions,
         diagnostics: snapshot.diagnostics.length,
         quarantined: snapshot.quarantined.length,
         recoveryDiagnostics: config.recoveryDiagnostics?.().length ?? 0,
+    };
+    const operational = config.operational
+        ? await projectRepositoryOperationalRead(config.operational, snapshotMetric)
+        : undefined;
+    return jsonResponse({
+        ready: true,
+        health: snapshot.health,
+        ...snapshotMetric,
+        ...(operational ? { metrics: operational.metrics } : {}),
     });
 }
 
-function diagnosticsResponse(config: RepositoryManagementReadConfig): Response {
+async function diagnosticsResponse(config: RepositoryManagementReadConfig): Promise<Response> {
     const snapshot = config.catalog.current();
+    const recovery = config.recoveryDiagnostics?.() ?? [];
+    const operational = config.operational
+        ? await projectRepositoryOperationalRead(config.operational, {
+              integrations: snapshot.summaries.length,
+              versions: snapshot.summaries.reduce((total, summary) => total + summary.versions.length, 0),
+              diagnostics: snapshot.diagnostics.length,
+              quarantined: snapshot.quarantined.length,
+              recoveryDiagnostics: recovery.length,
+          })
+        : undefined;
     return jsonResponse({
         health: snapshot.health,
         diagnostics: snapshot.diagnostics.map(({ source: _source, ...diagnostic }) => diagnostic),
         quarantined: snapshot.quarantined.map(({ source: _source, ...entry }) => entry),
-        recovery: (config.recoveryDiagnostics?.() ?? []).map(({ source: _source, ...diagnostic }) => diagnostic),
+        recovery: recovery.map(({ source: _source, ...diagnostic }) => diagnostic),
+        ...(operational ? { metrics: operational.metrics, recentOperations: operational.recentOperations } : {}),
     });
 }
 
