@@ -65,6 +65,9 @@ export function parseStablePromotionRecord(value: unknown): IntegrationRegistryS
     }
     if (value.previousStable !== undefined) {
         assertIntegrationPackageVersion(value.previousStable);
+        if (isIntegrationPrerelease(value.previousStable)) {
+            throw new Error("Integration registry previous stable version cannot be a prerelease");
+        }
     }
     if (
         value.confirmation.version !== value.version ||

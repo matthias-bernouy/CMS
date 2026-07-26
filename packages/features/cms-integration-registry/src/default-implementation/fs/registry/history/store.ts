@@ -40,7 +40,7 @@ export class FsIntegrationCompatibilityReportStore implements IntegrationCompati
         if (!location) {
             return null;
         }
-        return (await loadHistory(location))?.collection ?? null;
+        return await readFsIntegrationCompatibilityReportCollection(location);
     }
 
     async list(
@@ -102,6 +102,12 @@ export class FsIntegrationCompatibilityReportStore implements IntegrationCompati
             return (await loadHistory(location))!.collection;
         });
     }
+}
+
+export async function readFsIntegrationCompatibilityReportCollection(
+    location: Parameters<typeof integrationCompatibilityHistoryPaths>[0],
+): Promise<IntegrationCompatibilityReportCollection | null> {
+    return (await loadHistory(location))?.collection ?? null;
 }
 
 async function loadHistory(location: Parameters<typeof integrationCompatibilityHistoryPaths>[0]) {

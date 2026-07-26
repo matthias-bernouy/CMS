@@ -14,6 +14,11 @@ export type FsIntegrationRegistryStablePromotionPaths = Readonly<{
     journal: string;
 }>;
 
+export type FsIntegrationRegistryStablePromotionStoragePaths = Pick<
+    FsIntegrationRegistryStablePromotionPaths,
+    "index" | "journals" | "records" | "root"
+>;
+
 export async function ensureStablePromotionPaths(
     layout: FsIntegrationRegistryLayout,
     location: IntegrationRegistryExactVersionLocation,
@@ -33,13 +38,34 @@ export async function ensureStablePromotionPaths(
     const root = await ensureVerifiedRegistryChildDirectory(metadata, "promotions");
     const records = await ensureVerifiedRegistryChildDirectory(root, "records");
     const journals = await ensureVerifiedRegistryChildDirectory(root, "journals");
+    return stablePromotionPaths(
+        { index: join(integrationRoot, "integration.json"), root, records, journals },
+        operationId,
+        promotionId,
+    );
+}
+
+export function stablePromotionStoragePaths(integrationRoot: string): FsIntegrationRegistryStablePromotionStoragePaths {
+    const root = join(integrationRoot, ".registry", "promotions");
     return {
         index: join(integrationRoot, "integration.json"),
         root,
-        records,
-        journals,
-        record: join(records, stablePromotionRecordFilename(promotionId)),
-        journal: join(journals, `${operationId}.json`),
+        records: join(root, "records"),
+        journals: join(root, "journals"),
+    };
+}
+
+export function stablePromotionPaths(
+    storage: FsIntegrationRegistryStablePromotionStoragePaths,
+    operationId: string,
+    promotionId: string,
+): FsIntegrationRegistryStablePromotionPaths {
+    assertPathSafeId(operationId, "operation");
+    assertPathSafeId(promotionId, "promotion");
+    return {
+        ...storage,
+        record: join(storage.records, stablePromotionRecordFilename(promotionId)),
+        journal: join(storage.journals, `${operationId}.json`),
     };
 }
 

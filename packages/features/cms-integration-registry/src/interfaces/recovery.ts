@@ -3,6 +3,8 @@ import type { IntegrationRegistryCatalogSnapshot } from "./catalog";
 export type IntegrationRegistryRecoveryDiagnosticCode =
     | "publication-replayed"
     | "publication-quarantined"
+    | "stable-promotion-replayed"
+    | "stable-promotion-quarantined"
     | "abandoned-staging-quarantined"
     | "orphan-version-quarantined";
 

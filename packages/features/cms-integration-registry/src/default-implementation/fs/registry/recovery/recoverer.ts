@@ -12,6 +12,7 @@ import { boundedDirectoryNames, publicationJournalInventory, stagingInventory } 
 import { ensureFsIntegrationRegistryLayout, type FsIntegrationRegistryLayout } from "../persistence/layout";
 import { quarantineRegistryPath } from "./quarantine";
 import { quarantineFailedPublication, replayPublicationJournal } from "./replay/index";
+import { recoverStablePromotions } from "../promotion/recovery/index";
 
 export type FsIntegrationRegistryRecovererConfig = Readonly<{
     root: string;
@@ -48,6 +49,15 @@ export async function recoverFsIntegrationRegistry(
         root: layout.root,
         packageLimits: config.packageLimits,
     });
+    config.snapshots.swap(snapshot);
+    diagnostics.push(
+        ...(await recoverStablePromotions({
+            layout,
+            snapshots: config.snapshots,
+            packageLimits: config.packageLimits,
+        })),
+    );
+    snapshot = config.snapshots.current();
     await quarantineOrphanVersions(layout, snapshot, diagnostics);
     snapshot = await buildFsIntegrationRegistryCatalogSnapshot({
         root: layout.root,

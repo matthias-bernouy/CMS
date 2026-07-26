@@ -92,6 +92,7 @@ export function parseStablePromotionJournal(value: unknown): FsIntegrationRegist
     const expectedNext = nextStableIntegrationRegistryIndex(previousIndex, record.version);
     if (
         value.operationId !== record.operationId ||
+        value.createdAt !== record.createdAt ||
         record.kind !== previousIndex.kind ||
         record.kind !== nextIndex.kind ||
         record.previousStable !== previousIndex.stable ||
