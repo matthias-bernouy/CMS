@@ -98,6 +98,28 @@ Management and catalog checkpoint at `a14ee3fb`:
   tests. Empty-volume official bootstrap, complete operational diagnostics,
   and final workspace validation remain open.
 
+Completion checkpoint at `6e282de6`:
+
+- a totally empty registry volume is seeded once with all 14 official packages;
+  every package is built and validated before the first write, an interrupted
+  seed leaves a durable fail-closed marker, and a non-empty volume is never
+  reconciled implicitly on an image upgrade;
+- the privileged bootstrap path is isolated from the normal publisher, so the
+  management API still rejects undeclared legacy SQL compatibility while future
+  official updates use the same authenticated publication workflow as third
+  parties;
+- bounded private diagnostics expose operation outcomes and durations, snapshot,
+  quarantine and recovery state, compatibility warnings, public package traffic,
+  generic read latency, and filesystem capacity without recording credentials,
+  package contents, actors, reasons, client addresses, or filesystem paths;
+- CMS package-cache observations cover hit, miss, corruption, repair, and
+  materialization while remaining best-effort and preserving runtime behavior if
+  an observer fails;
+- the final broad suites pass with 687 feature/surface tests, 139 runtime tests,
+  521 Control tests, and 185 CLI/image tests. The final `bun run check:all`
+  reports 4 passed and 2 failed: only the exact historical architecture and
+  directory-fanout errors recorded at baseline remain.
+
 ## Lot 0 — Complete Remote Consumption
 
 | ID | Requirement | Intended implementation evidence | Required verification | Status |
@@ -141,8 +163,8 @@ Management and catalog checkpoint at `a14ee3fb`:
 | L2.1 | `@bernouy/cms-repository-server` mounts separate anonymous read and authenticated management surfaces. | Production composition performs recovery and mounts `RepositoryCms` and `RepositoryManagementCms` on distinct runners with one snapshot reference. | 22 runtime tests cover real listeners, auth boundary, private publication, immediate public visibility, health, readiness, degradation, and shutdown. | Complete |
 | L2.2 | `infra/images/cms-repository` runs read-only with only bounded writable registry storage. | Dedicated Dockerfile, Compose service, registry bind, bounded noexec tmpfs, and runtime UID preparation. | 10 image/deployment tests, including a real runtime-filesystem permission probe. | Complete |
 | L2.3 | Repository is internal-only; CMS Delivery is the canonical public read gateway. | Dedicated internal network, no published repository ports, CMS Delivery public relay, and Control-only management gateway. | Deployment tests plus the real-process CMS/repository acceptance prove listener separation, anonymous public reads, and server-only private access. | Complete |
-| L2.4 | Empty-volume bootstrap uses normal validation and image upgrades never reconcile initialized data. | Runtime seed/import policy. | Empty/non-empty volume and image-upgrade tests. | Pending |
-| L2.5 | Valid snapshots remain ready while quarantine produces degraded health and metrics. | Snapshot-backed health/readiness and recovery diagnostics. | Ready/degraded/last-valid-snapshot tests pass; management diagnostics, filesystem-capacity metrics, and restart acceptance remain. | Partial |
+| L2.4 | Empty-volume bootstrap uses normal validation and image upgrades never reconcile initialized data. | Shared deterministic official-package builder, isolated privileged bootstrap publisher, prevalidation, durable in-progress marker, and production empty-root composition. | Real 14-package seed, legacy-SQL boundary, interrupted-seed fail-closed, non-empty root, image-upgrade, and 14-to-15 management-publication tests. | Complete |
+| L2.5 | Valid snapshots remain ready while quarantine produces degraded health and metrics. | Snapshot-backed health/readiness plus bounded private operation, recovery, traffic, read-latency, and filesystem-capacity projections. | Ready/degraded/last-valid-snapshot, management gateway/UI validation, capacity, operation telemetry, read latency, and restart tests. | Complete |
 
 ## Lot 3 — Public Catalog And Administration
 
@@ -162,10 +184,10 @@ Management and catalog checkpoint at `a14ee3fb`:
 | D3 | Install, rerun, and remote connector deployment are pinned to immutable content. | Exact version/snapshot/digest persistence, remote SQL and Function deployment, outage rerun, and corruption rollback are proven across process restart. | Complete |
 | D4 | Minor/patch incompatibility or contract uncertainty fails closed. | Compatibility evaluator and real publisher admission boundary. | Complete |
 | D5 | Publication is immutable, atomic, snapshot-based, recoverable, and fault-isolated. | Publication, concurrency, every crash boundary, quarantine, recovery, and immediate visibility tests. | Complete |
-| D6 | Dedicated internal repository image persists data and follows empty-volume seed policy. | Image and deployment evidence. | Pending |
-| D7 | Official updates use the publication API after bootstrap. | Deterministic CLI and credential-scoped CI workflow exist; empty-volume bootstrap evidence remains. | Partial |
+| D6 | Dedicated internal repository image persists data and follows empty-volume seed policy. | Image, deployment, real seed, interruption, non-empty-volume, and image-upgrade evidence. | Complete |
+| D7 | Official updates use the publication API after bootstrap. | Deterministic shared builder, one-time bootstrap, authenticated CLI command, credential-scoped CI workflow, and 14-to-15 publication acceptance. | Complete |
 | D8 | Delivery catalog and Control administration provide the complete public/private UX. | Catalog rendering, Control workflows, exact-owner authorization, and browser-boundary acceptance. | Complete |
-| D9 | Final workspace validation has no new task-introduced finding. | Baseline comparison plus final `bun run check:all`. | Pending |
+| D9 | Final workspace validation has no new task-introduced finding. | Final `bun run check:all` remains at 4 passed and 2 failed with only the exact historical errors; introduced file-size warnings were reviewed as cohesive responsibilities or scenario suites and no new blocking fanout exists. | Complete |
 
 ## Commit Log
 
@@ -461,20 +483,43 @@ evidence.
 - `3cb49bb9` — wrapped publication, promotion, and reevaluation with bounded
   private operation metrics and structured allowlisted logs; tests prove secrets,
   paths, package contents, actors, and free-form reasons are excluded.
+- `40def34b` — refreshed the management, catalog, and compatibility evidence in
+  this traceability matrix without changing runtime behavior.
+- `94f934dd`, `1638b706`, `54ebb0f8`, and `a36d5ee1` — exposed bounded private
+  operation, recovery, compatibility, public-traffic, and capacity metrics from
+  the repository runtime through the strict CMS gateway and Control console.
+- `520d991d`, `0e2b34a4`, and `075ff594` — moved the deterministic official
+  package builder into the resource package, exported it through a declared
+  subpath, and retained resolved package bytes for prevalidated publication.
+- `d7260aad`, `8a152829`, `541c9f71`, `935300a5`, and `8cef3934` — implemented
+  the isolated privileged seed publisher, durable fail-closed interruption
+  marker, production empty-volume seed, real 14-package verification, and the
+  end-to-end 14-to-15 publication scenario.
+- `05e5edaf`, `d44ac2ac`, and `1c890b7c` — made package-cache observers
+  non-blocking and emitted bounded cache and production operation telemetry.
+- `0722ee06` and `4fec73e5` — documented process-local observability limits,
+  separate registry/cache backup policy, recovery, and the one-time official
+  seed lifecycle.
+- `f980daf0` — proved that disk exhaustion during an explicit upgrade preserves
+  the installed version, snapshot, digest, and history exactly.
+- `b5c45376`, `bce9385d`, `b8a07d18`, `53a06b00`, and `6e282de6` — measured
+  generic public repository GET/HEAD latency, aggregated success, not-found,
+  rejection, and failure outcomes, displayed them through Control, handled
+  pre-metric runtimes, and documented the process-local metric scope.
 
-The post-Lot-0 `bun run check:all` at `fc6c4d42` reports 4 passed and 2 failed.
+The final `bun run check:all` at `6e282de6` reports 4 passed and 2 failed.
 TypeScript, style, architecture tooling, and CI tooling pass. Architecture still
 contains exactly the three recorded official-integration cross-package `src/`
 imports, and repository shape still contains exactly the recorded 18-entry and
-19-entry fanout errors. The new 198-line `Integration.ts` warning was reviewed:
-the file remains a cohesive declarative contract, while extracting a ninth
-immediate `interfaces/` entry would create a blocking fanout error.
+19-entry fanout errors. New file-size warnings were reviewed rather than split
+mechanically: the affected production files retain cohesive parsing,
+composition, snapshot, or telemetry responsibilities, and the larger tests are
+atomic adversarial or process-level scenario suites. No new directory exceeds
+the blocking eight-entry maximum.
 
-Lot 0 is proven end to end, including its remote-only and degraded process
-scenario. Lot 1 now includes immutable atomic publication, compatibility
-admission and reassessment, stable promotion, snapshot visibility, recovery,
-and quarantine. The runtime/image boundary, CMS gateway, public catalog,
-private Control console, and explicit installation upgrade are operational and
-covered through real listeners. Empty-volume official bootstrap, the remaining
-operational diagnostics, and final comparative workspace validation are still
-required before this initiative can be called complete.
+Lots 0 through 3 are implemented and proven end to end: remote immutable
+consumption, mutable atomic publication, compatibility admission and history,
+stable promotion, one-time official bootstrap, the isolated runtime/image,
+CMS-only management, public catalog, private Control administration, explicit
+upgrades, degraded/offline behavior, and bounded operational diagnostics all
+have direct verification evidence in this worktree.
