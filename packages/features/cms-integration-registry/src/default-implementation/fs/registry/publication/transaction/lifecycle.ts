@@ -1,9 +1,10 @@
-import { chmod, lstat, rename } from "node:fs/promises";
+import { lstat, rename } from "node:fs/promises";
 import { dirname } from "node:path";
 import type { IntegrationDefinitionIndex } from "@bernouy/cms-integrations";
 import { IntegrationRegistryVersionConflictError } from "../../../../../core/publication/errors";
 import { removeFileIfExists, replaceCanonicalJson, syncDirectory } from "../../persistence/canonicalFile";
 import type { FsIntegrationRegistryPublicationPaths } from "../../persistence/layout";
+import { assertVerifiedRegistryDirectory, chmodVerifiedRegistryDirectory } from "../../persistence/ownedDirectory";
 import { removeImmutableTreeIfExists } from "../../persistence/tree";
 
 const MAX_INDEX_DOCUMENT_BYTES = 2 * 1_024 * 1_024;
@@ -27,17 +28,18 @@ export async function moveVersionLive(
     if (stagingParent.dev !== versionsParent.dev) {
         throw new Error("Integration registry staging and live version directories must share a filesystem");
     }
-    await chmod(paths.stagingRoot, 0o750);
+    const stagingIdentity = await chmodVerifiedRegistryDirectory(paths.stagingRoot, 0o750);
     try {
         await rename(paths.stagingRoot, paths.versionRoot);
     } catch (error) {
-        await chmod(paths.stagingRoot, 0o550);
+        await chmodVerifiedRegistryDirectory(paths.stagingRoot, 0o550, stagingIdentity);
         if (isNodeError(error) && (error.code === "EEXIST" || error.code === "ENOTEMPTY")) {
             throw new IntegrationRegistryVersionConflictError(kind, version);
         }
         throw error;
     }
-    await chmod(paths.versionRoot, 0o550);
+    await assertVerifiedRegistryDirectory(paths.versionRoot, stagingIdentity);
+    await chmodVerifiedRegistryDirectory(paths.versionRoot, 0o550, stagingIdentity);
     await syncDirectory(paths.versionsRoot);
     await syncDirectory(dirname(paths.stagingRoot));
 }
