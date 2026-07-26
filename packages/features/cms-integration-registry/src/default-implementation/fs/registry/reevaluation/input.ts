@@ -8,6 +8,8 @@ import type {
     IntegrationCompatibilityEvaluationInput,
     IntegrationCompatibilityPackage,
 } from "../../../../interfaces/compatibility";
+import type { ReviewedSchemaBaselineStore } from "../../../../interfaces/reportStore";
+import { loadReviewedConnectorSchemaBaselines } from "../baselines/projection";
 import { SnapshotIntegrationPackageSource } from "../../snapshot/snapshotPackageSource";
 
 type LoadedCompatibilityPackage = Readonly<{
@@ -19,6 +21,7 @@ export async function buildFsCompatibilityReevaluationInput(
     snapshot: IntegrationRegistryCatalogSnapshot,
     admission: IntegrationCompatibilityAdmissionReport,
     limits?: Partial<IntegrationPackageLimits>,
+    reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
 ): Promise<IntegrationCompatibilityEvaluationInput> {
     const source = new SnapshotIntegrationPackageSource({ snapshots: { current: () => snapshot }, limits });
     const candidate = await loadPackage(
@@ -26,10 +29,17 @@ export async function buildFsCompatibilityReevaluationInput(
         source,
         { kind: admission.kind, version: admission.version, packageDigest: admission.packageDigest },
         "candidate",
+        reviewedSchemaBaselines,
     );
     assertAdmissionBaselineShape(admission);
     if (admission.baselines.length === 1) {
-        const baseline = await loadPackage(snapshot, source, admission.baselines[0]!, "enforcing baseline");
+        const baseline = await loadPackage(
+            snapshot,
+            source,
+            admission.baselines[0]!,
+            "enforcing baseline",
+            reviewedSchemaBaselines,
+        );
         return {
             baseline: baseline.compatibility,
             candidate: candidate.compatibility,
@@ -43,7 +53,13 @@ export async function buildFsCompatibilityReevaluationInput(
     if (!informational) {
         return { candidate: candidate.compatibility, noBaselineReason: "new-major" };
     }
-    const baseline = await loadPackage(snapshot, source, informational, "informational baseline");
+    const baseline = await loadPackage(
+        snapshot,
+        source,
+        informational,
+        "informational baseline",
+        reviewedSchemaBaselines,
+    );
     return {
         candidate: candidate.compatibility,
         noBaselineReason: "new-major",
@@ -70,6 +86,7 @@ async function loadPackage(
     source: SnapshotIntegrationPackageSource,
     reference: IntegrationCompatibilityBaselineReference,
     label: string,
+    reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
 ): Promise<LoadedCompatibilityPackage> {
     const location = snapshot.locateExactVersion(reference.kind, reference.version);
     if (!location || location.package.digest !== reference.packageDigest) {
@@ -82,8 +99,20 @@ async function loadPackage(
         if (!resolved || resolved.digest !== reference.packageDigest) {
             throw new Error("resolved package digest does not match the report reference");
         }
+        const reviewed = reviewedSchemaBaselines
+            ? await loadReviewedConnectorSchemaBaselines(
+                  reviewedSchemaBaselines,
+                  reference.kind,
+                  reference.version,
+                  reference.packageDigest,
+              )
+            : [];
         return {
-            compatibility: { definition: location.definitionSnapshot, packageDigest: resolved.digest },
+            compatibility: {
+                definition: location.definitionSnapshot,
+                packageDigest: resolved.digest,
+                ...(reviewed.length > 0 ? { reviewedSchemaBaselines: reviewed } : {}),
+            },
             envelope: resolved.envelope,
         };
     } catch (error) {

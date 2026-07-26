@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { chmodSync, writeFileSync } from "node:fs";
+import { chmodSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
     IntegrationCompatibilityReevaluationIntegrityError,
     IntegrationCompatibilityReevaluationStaleReportError,
 } from "@bernouy/cms-integration-registry";
-import { cleanupRegistryFixtures, registryFixture } from "../publication/fixtures";
+import { cleanupRegistryFixtures, publishReviewedSqlVersionPair, registryFixture } from "../publication/fixtures";
 import {
     publishVersionPair,
     reevaluationRequest,
@@ -70,5 +71,27 @@ describe("compatibility reevaluation integrity", () => {
         expect(rejected.reason).toBeInstanceOf(IntegrationCompatibilityReevaluationStaleReportError);
         expect(rejected.reason).toMatchObject({ status: 409 });
         expect((await reports.get("demo", "1.1.0"))?.reports).toHaveLength(2);
+    });
+
+    test("rejects a corrupt reviewed baseline instead of silently dropping it", async () => {
+        const fixture = registryFixture();
+        const { candidate } = await publishReviewedSqlVersionPair(fixture);
+        const baselineRoot = join(fixture.root, ".registry", "schema-baselines");
+        const history = readdirSync(baselineRoot)[0]!;
+        const revisionPath = join(baselineRoot, history, "revisions", "0000000001.json");
+        const document = JSON.parse(readFileSync(revisionPath, "utf8")) as {
+            baseline: { packageDigest: string };
+        };
+        document.baseline.packageDigest = "f".repeat(64);
+        chmodSync(revisionPath, 0o640);
+        writeFileSync(revisionPath, canonicalJsonBytes(document));
+        const { reevaluator } = reevaluationServices(fixture);
+
+        const reevaluation = reevaluator.reevaluate({
+            ...reevaluationRequest(candidate.report.id),
+            version: candidate.version,
+        });
+
+        await expect(reevaluation).rejects.toBeInstanceOf(IntegrationCompatibilityReevaluationIntegrityError);
     });
 });

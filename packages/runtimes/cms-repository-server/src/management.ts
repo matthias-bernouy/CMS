@@ -10,6 +10,7 @@ import {
     FsIntegrationRegistryPublisher,
     FsIntegrationRegistryRecoverer,
     FsIntegrationRegistryStablePromoter,
+    FsReviewedSchemaBaselineStore,
 } from "@bernouy/cms-integration-registry/fs";
 import { RepositoryManagementCms } from "@bernouy/cms-repository-management";
 import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
@@ -42,6 +43,7 @@ export async function createProductionRepositoryManagement(input: {
     const mutations = new InMemoryIntegrationRegistryMutationCoordinator();
     const recovery = await new FsIntegrationRegistryRecoverer({ root: input.root, snapshots }).recover();
     const reports = new FsIntegrationCompatibilityReportStore({ snapshots, mutations });
+    const reviewedSchemaBaselines = new FsReviewedSchemaBaselineStore({ root: input.root });
     const compatibility = new IntegrationCompatibilityEvaluator({
         identity: { name: "cms-repository-server", version: "1.0.0" },
         now: () => new Date().toISOString(),
@@ -53,6 +55,7 @@ export async function createProductionRepositoryManagement(input: {
             snapshots,
             compatibility,
             mutations,
+            reviewedSchemaBaselines,
         }),
         telemetry,
     );
@@ -70,6 +73,7 @@ export async function createProductionRepositoryManagement(input: {
             snapshots,
             reports,
             evaluator: compatibility,
+            reviewedSchemaBaselines,
         }),
         telemetry,
     );

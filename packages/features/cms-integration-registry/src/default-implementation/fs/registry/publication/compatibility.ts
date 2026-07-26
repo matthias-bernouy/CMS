@@ -12,6 +12,8 @@ import type {
     IntegrationCompatibilityPackage,
     TrustedSchemaDeclarationEvidence,
 } from "../../../../interfaces/compatibility";
+import type { ReviewedSchemaBaselineStore } from "../../../../interfaces/reportStore";
+import { loadReviewedConnectorSchemaBaselines } from "../baselines/projection";
 import type { PreparedFsIntegrationRegistryCandidate } from "./candidate";
 import { SnapshotIntegrationPackageSource } from "../../snapshot/snapshotPackageSource";
 
@@ -20,10 +22,20 @@ export async function evaluatePublicationCompatibility(
     candidate: PreparedFsIntegrationRegistryCandidate,
     evaluator: IntegrationCompatibilityEvaluator,
     schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
+    reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
 ): Promise<IntegrationCompatibilityAdmissionReport> {
+    const candidateReviewedSchemaBaselines = await loadPackageReviewedSchemaBaselines(
+        reviewedSchemaBaselines,
+        candidate.definition.kind,
+        candidate.definition.version!,
+        candidate.package.digest,
+    );
     const candidatePackage: IntegrationCompatibilityPackage = {
         definition: candidate.definition,
         packageDigest: candidate.package.digest,
+        ...(candidateReviewedSchemaBaselines.length > 0
+            ? { reviewedSchemaBaselines: candidateReviewedSchemaBaselines }
+            : {}),
         ...(schemaDeclarationEvidence ? { schemaDeclarationEvidence } : {}),
     };
     const index = snapshot.getIndex(candidate.definition.kind);
@@ -41,6 +53,7 @@ export async function evaluatePublicationCompatibility(
             candidate.limits,
             candidate.definition.kind,
             enforcingVersion,
+            reviewedSchemaBaselines,
         );
         return assertIntegrationCompatibilityAdmission(
             evaluator.evaluateAdmission({
@@ -52,7 +65,13 @@ export async function evaluatePublicationCompatibility(
     }
     const informationalVersion = index.stable ?? index.latest;
     const informationalBaseline = informationalVersion
-        ? await loadCompatibilityPackage(snapshot, candidate.limits, candidate.definition.kind, informationalVersion)
+        ? await loadCompatibilityPackage(
+              snapshot,
+              candidate.limits,
+              candidate.definition.kind,
+              informationalVersion,
+              reviewedSchemaBaselines,
+          )
         : undefined;
     const input: IntegrationCompatibilityEvaluationInput = {
         candidate: candidatePackage,
@@ -84,6 +103,7 @@ async function loadCompatibilityPackage(
     limits: Readonly<IntegrationPackageLimits>,
     kind: string,
     version: string,
+    reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
 ): Promise<IntegrationCompatibilityPackage> {
     const location = snapshot.locateExactVersion(kind, version);
     if (!location) {
@@ -93,7 +113,21 @@ async function loadCompatibilityPackage(
     if (!resolved || resolved.digest !== location.package.digest) {
         throw new Error(`Compatibility baseline ${kind}@${version} cannot be reproduced from its captured snapshot`);
     }
-    return { definition: location.definitionSnapshot, packageDigest: resolved.digest };
+    const reviewed = await loadPackageReviewedSchemaBaselines(reviewedSchemaBaselines, kind, version, resolved.digest);
+    return {
+        definition: location.definitionSnapshot,
+        packageDigest: resolved.digest,
+        ...(reviewed.length > 0 ? { reviewedSchemaBaselines: reviewed } : {}),
+    };
+}
+
+async function loadPackageReviewedSchemaBaselines(
+    store: ReviewedSchemaBaselineStore | undefined,
+    kind: string,
+    version: string,
+    packageDigest: string,
+) {
+    return store ? await loadReviewedConnectorSchemaBaselines(store, kind, version, packageDigest) : [];
 }
 
 function packageSource(snapshot: IntegrationRegistryCatalogSnapshot, limits: Readonly<IntegrationPackageLimits>) {

@@ -2,6 +2,7 @@ import type { IntegrationPackageLimits } from "@bernouy/cms-integration-packages
 import type { IntegrationRegistryCatalogSnapshotReference } from "../../../../core/catalog/reference";
 import type { IntegrationCompatibilityEvaluator } from "../../../../core/compatibility/evaluation";
 import type { IntegrationRegistryMutationCoordinator } from "../../../../interfaces/mutations";
+import type { ReviewedSchemaBaselineStore } from "../../../../interfaces/reportStore";
 import type { FsIntegrationRegistryPublicationPhase } from "../persistence/journal";
 
 export type FsIntegrationRegistryPublicationBoundary = Readonly<{
@@ -17,6 +18,7 @@ export type FsIntegrationRegistryPublisherConfig = Readonly<{
     snapshots: IntegrationRegistryCatalogSnapshotReference;
     compatibility: IntegrationCompatibilityEvaluator;
     mutations: IntegrationRegistryMutationCoordinator;
+    reviewedSchemaBaselines?: ReviewedSchemaBaselineStore;
     packageLimits?: Partial<IntegrationPackageLimits>;
     createOperationId?: () => string;
     now?: () => string;

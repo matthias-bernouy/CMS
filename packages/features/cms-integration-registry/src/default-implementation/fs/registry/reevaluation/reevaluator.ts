@@ -17,12 +17,14 @@ import type {
     IntegrationCompatibilityReevaluator,
 } from "../../../../interfaces/reevaluation";
 import type { IntegrationCompatibilityReportStore } from "../../../../interfaces/reportStore";
+import type { ReviewedSchemaBaselineStore } from "../../../../interfaces/reportStore";
 import { buildFsCompatibilityReevaluationInput } from "./input";
 
 export type FsIntegrationCompatibilityReevaluatorConfig = Readonly<{
     snapshots: IntegrationRegistryCatalogSnapshotProvider;
     reports: IntegrationCompatibilityReportStore;
     evaluator: IntegrationCompatibilityEvaluator;
+    reviewedSchemaBaselines?: ReviewedSchemaBaselineStore;
     packageLimits?: Partial<IntegrationPackageLimits>;
 }>;
 
@@ -44,6 +46,7 @@ export class FsIntegrationCompatibilityReevaluator implements IntegrationCompati
             snapshot,
             history.admission,
             this.config.packageLimits,
+            this.config.reviewedSchemaBaselines,
         );
         let revision;
         try {

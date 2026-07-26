@@ -10,7 +10,16 @@ import {
     readCompatibilityAdmissionReport,
     SnapshotIntegrationPackageSource,
 } from "@bernouy/cms-integration-registry/fs";
-import { cleanupRegistryFixtures, publicationPackage, registryFixture } from "./fixtures";
+import { reviewedBaseline } from "../baselines/fixtures";
+import {
+    cleanupRegistryFixtures,
+    publicationPackage,
+    publishReviewedSqlVersionPair,
+    registryFixture,
+    reviewedSchemaContract,
+    seedLegacySqlBaseline,
+    sqlPublicationPackage,
+} from "./fixtures";
 
 afterEach(cleanupRegistryFixtures);
 
@@ -91,6 +100,40 @@ describe("filesystem integration registry publication", () => {
 
         expect(readFileSync(join(fixture.root, "demo", "integration.json"))).toEqual(indexBefore);
         expect(readdirSync(join(fixture.root, ".staging"))).toEqual([]);
+    });
+
+    test("uses an exact digest-bound reviewed schema baseline for the first compatible patch", async () => {
+        const fixture = registryFixture();
+
+        const { candidate } = await publishReviewedSqlVersionPair(fixture);
+
+        expect(candidate.report).toMatchObject({ outcome: "compatible", releaseLevel: "patch", admissible: true });
+        expect(candidate.report.evidence).not.toContainEqual(
+            expect.objectContaining({ code: "legacy-schema-baseline-missing" }),
+        );
+    });
+
+    test("ignores a reviewed schema baseline bound to another package digest", async () => {
+        const fixture = registryFixture();
+        await seedLegacySqlBaseline(fixture);
+        await fixture.reviewedSchemaBaselines.append({
+            baseline: await reviewedBaseline("wrong-digest-baseline", {
+                kind: "demo",
+                packageDigest: "f".repeat(64),
+            }),
+            expectedCurrentRevisionId: null,
+        });
+
+        const publication = fixture.publisher.publish({
+            package: await sqlPublicationPackage("demo", "1.0.1", reviewedSchemaContract()),
+        });
+
+        await expect(publication).rejects.toMatchObject({
+            report: {
+                outcome: "unknown",
+                evidence: [expect.objectContaining({ code: "legacy-schema-baseline-missing" })],
+            },
+        });
     });
 });
 

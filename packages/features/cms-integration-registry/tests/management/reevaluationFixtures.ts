@@ -16,6 +16,7 @@ export function reevaluationServices(fixture: ReturnType<typeof registryFixture>
         snapshots: fixture.snapshots,
         reports,
         evaluator: fixture.compatibility,
+        reviewedSchemaBaselines: fixture.reviewedSchemaBaselines,
     });
     return { reports, reevaluator };
 }

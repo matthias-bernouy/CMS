@@ -4,7 +4,12 @@ import {
     IntegrationCompatibilityReevaluationStaleReportError,
     IntegrationCompatibilityReevaluationValidationError,
 } from "@bernouy/cms-integration-registry";
-import { cleanupRegistryFixtures, publicationPackage, registryFixture } from "../publication/fixtures";
+import {
+    cleanupRegistryFixtures,
+    publicationPackage,
+    publishReviewedSqlVersionPair,
+    registryFixture,
+} from "../publication/fixtures";
 import { publishVersionPair, reevaluationRequest, reevaluationServices } from "./reevaluationFixtures";
 
 afterEach(cleanupRegistryFixtures);
@@ -15,7 +20,10 @@ describe("compatibility reevaluation", () => {
         const { candidate } = await publishVersionPair(fixture);
         const { reevaluator, reports } = reevaluationServices(fixture);
 
-        const result = await reevaluator.reevaluate(reevaluationRequest(candidate.report.id));
+        const result = await reevaluator.reevaluate({
+            ...reevaluationRequest(candidate.report.id),
+            version: candidate.version,
+        });
 
         expect(result.revision).toMatchObject({
             reportType: "revision",
@@ -89,5 +97,25 @@ describe("compatibility reevaluation", () => {
 
         await expect(promise).rejects.toBeInstanceOf(IntegrationCompatibilityReevaluationValidationError);
         await expect(promise).rejects.toMatchObject({ status: 422 });
+    });
+
+    test("reuses the exact reviewed legacy schema baseline during reevaluation", async () => {
+        const fixture = registryFixture();
+        const { candidate } = await publishReviewedSqlVersionPair(fixture);
+        const { reevaluator } = reevaluationServices(fixture);
+
+        const result = await reevaluator.reevaluate({
+            ...reevaluationRequest(candidate.report.id),
+            version: candidate.version,
+        });
+
+        expect(result.revision).toMatchObject({
+            outcome: candidate.report.outcome,
+            requiredReleaseLevel: candidate.report.requiredReleaseLevel,
+            evidence: candidate.report.evidence,
+        });
+        expect(result.revision.evidence).not.toContainEqual(
+            expect.objectContaining({ code: "legacy-schema-baseline-missing" }),
+        );
     });
 });

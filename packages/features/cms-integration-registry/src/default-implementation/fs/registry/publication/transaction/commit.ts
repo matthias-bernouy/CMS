@@ -45,6 +45,7 @@ export async function commitFsIntegrationRegistryPublication(
             candidate,
             config.compatibility,
             input.schemaDeclarationEvidence,
+            config.reviewedSchemaBaselines,
         ));
     let journal: FsIntegrationRegistryPublicationJournal = {
         schema: "cms.integration.registry.publication-journal.v1",

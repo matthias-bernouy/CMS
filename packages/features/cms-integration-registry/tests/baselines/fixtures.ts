@@ -11,11 +11,17 @@ export async function reviewedBaseline(
     options: Readonly<{
         supersedes?: string;
         reason?: string;
+        kind?: string;
+        version?: string;
+        packageDigest?: string;
     }> = {},
 ): Promise<ReviewedSchemaBaselineV1> {
+    const kind = options.kind ?? "example";
+    const connectorKey = "primary";
+    const lineageId = `${kind}-supabase-v1`;
     const observedSchema = {
         schema: "cms.integration.observed-schema.v1",
-        owner: { connectorKey: "primary", lineageId: "example-supabase-v1" },
+        owner: { connectorKey, lineageId },
         namespaces: [{ name: "public", relations: [] }],
     } as const;
     return await parseReviewedSchemaBaseline({
@@ -25,11 +31,11 @@ export async function reviewedBaseline(
         origin: "legacy-backfill",
         createdAt: CREATED_AT,
         ...(options.supersedes ? { supersedes: options.supersedes } : {}),
-        kind: "example",
-        version: "1.0.0",
-        packageDigest: PACKAGE_DIGEST,
-        connectorKey: "primary",
-        lineageId: "example-supabase-v1",
+        kind,
+        version: options.version ?? "1.0.0",
+        packageDigest: options.packageDigest ?? PACKAGE_DIGEST,
+        connectorKey,
+        lineageId,
         legacySelector: { provider: "supabase", root: "connectors/supabase" },
         dependencies: [],
         observedSchema,
