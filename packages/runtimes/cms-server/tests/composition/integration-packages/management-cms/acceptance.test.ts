@@ -1,0 +1,127 @@
+import { afterEach, describe, expect, test } from "bun:test";
+import type { ManagementCmsSurfaces } from "./cmsSurfaces";
+import { startManagementCmsSurfaces } from "./cmsSurfaces";
+import { publicationDocument } from "./publication";
+import type { RepositoryProcess } from "./repositoryProcess";
+import { startRepositoryProcess } from "./repositoryProcess";
+
+let repository: RepositoryProcess | undefined;
+let cms: ManagementCmsSurfaces | undefined;
+
+afterEach(async () => {
+    await cms?.stop();
+    await repository?.dispose();
+    cms = undefined;
+    repository = undefined;
+});
+
+describe("management CMS process acceptance", () => {
+    test("keeps public delivery anonymous while the exact CMS owner publishes through the private listener", async () => {
+        repository = await startRepositoryProcess();
+        const privateBaseUrl = `${repository.managementOrigin}/.cms/repository-management`;
+        const publicBaseUrl = `${repository.publicOrigin}/.cms/repository`;
+        cms = await startManagementCmsSurfaces({
+            publicRepositoryBaseUrl: publicBaseUrl,
+            privateManagementBaseUrl: privateBaseUrl,
+            token: repository.token,
+        });
+
+        const anonymousCatalog = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations`);
+        expect(anonymousCatalog.status).toBe(200);
+        expect(await anonymousCatalog.json()).toEqual([]);
+        expect(anonymousCatalog.headers.get("access-control-allow-origin")).toBe("*");
+        expect((await fetch(`${cms.deliveryOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
+        expect((await fetch(`${repository.publicOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
+        expect((await fetch(`${repository.managementOrigin}/.cms/repository/api/integrations`)).status).toBe(404);
+
+        const denied = await controlRequest(cms.controlOrigin, "/api/repository/status", "other-admin");
+        expect(denied.status).toBe(403);
+        expect(cms.upstreamRequests).toHaveLength(0);
+        const anonymousControl = await fetch(`${cms.controlOrigin}/api/repository/status`, { redirect: "manual" });
+        expect(anonymousControl.status).toBe(302);
+
+        const publication = publicationDocument();
+        const published = await controlRequest(cms.controlOrigin, "/api/repository/publications", "owner", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: publication,
+        });
+        expect(published.status).toBe(201);
+        const publishedText = await published.text();
+        expect(JSON.parse(publishedText)).toMatchObject({ kind: "remote-demo", version: "1.0.0" });
+        expect(cms.upstreamRequests).toHaveLength(1);
+        expect(cms.upstreamRequests[0]).toMatchObject({
+            method: "POST",
+            authorization: `Bearer ${repository.token}`,
+        });
+        expect(cms.upstreamRequests[0]?.url).toBe(`${privateBaseUrl}/api/integrations/publications`);
+
+        const status = await controlRequest(cms.controlOrigin, "/api/repository/status", "owner");
+        expect(status.status).toBe(200);
+        const statusText = await status.text();
+        expect(JSON.parse(statusText)).toMatchObject({ ready: true, health: "healthy", integrations: 1, versions: 1 });
+        const adminPage = await controlRequest(cms.controlOrigin, "/admin/repository", "owner");
+        expect(adminPage.status).toBe(200);
+        const adminHtml = await adminPage.text();
+        expect(adminHtml).toContain("Integration repository");
+
+        const relayedCatalog = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations`);
+        expect(relayedCatalog.status).toBe(200);
+        expect(await relayedCatalog.json()).toEqual([
+            expect.objectContaining({ kind: "remote-demo", versions: ["1.0.0"] }),
+        ]);
+        const packageResponse = await fetch(
+            `${cms.deliveryOrigin}/.cms/repository/api/integrations/package?kind=remote-demo&version=1.0.0`,
+        );
+        expect(packageResponse.status).toBe(200);
+        const packageText = await packageResponse.text();
+        expect(JSON.parse(packageText)).toMatchObject({ kind: "remote-demo", version: "1.0.0" });
+        const catalogPage = await fetch(`${cms.deliveryOrigin}/integrations`);
+        expect(catalogPage.status).toBe(200);
+        const catalogHtml = await catalogPage.text();
+        expect(catalogHtml).toContain("Remote demo");
+        assertBrowserBoundary(cms, repository, privateBaseUrl, [
+            publishedText,
+            statusText,
+            adminHtml,
+            packageText,
+            catalogHtml,
+        ]);
+
+        await repository.stop();
+        const unavailable = await controlRequest(cms.controlOrigin, "/api/repository/status", "owner");
+        expect(unavailable.status).toBe(503);
+        const unavailableText = await unavailable.text();
+        expect(JSON.parse(unavailableText)).toEqual({
+            code: "repository_management_unavailable",
+            error: "Integration repository management is unavailable",
+        });
+        expect(unavailableText).not.toContain(repository.token);
+        expect(unavailableText).not.toContain(privateBaseUrl);
+        expect(unavailableText).not.toMatch(/ECONNREFUSED|fetch failed/iu);
+        expect((await fetch(`${cms.deliveryOrigin}/integrations`)).status).toBe(503);
+    }, 15_000);
+});
+
+function controlRequest(origin: string, path: string, session: string, init: RequestInit = {}): Promise<Response> {
+    const headers = new Headers(init.headers);
+    headers.set("cookie", `acceptance-session=${session}`);
+    headers.set("origin", origin);
+    return fetch(`${origin}${path}`, { ...init, headers, redirect: "manual" });
+}
+
+function assertBrowserBoundary(
+    surfaces: ManagementCmsSurfaces,
+    process: RepositoryProcess,
+    privateBaseUrl: string,
+    browserResponses: readonly string[],
+): void {
+    const browserTraffic = JSON.stringify(surfaces.browserRequests);
+    expect(browserTraffic).not.toContain(process.token);
+    expect(browserTraffic).not.toContain(privateBaseUrl);
+    expect(surfaces.browserRequests.every((request) => request.authorization === null)).toBeTrue();
+    for (const response of browserResponses) {
+        expect(response).not.toContain(process.token);
+        expect(response).not.toContain(privateBaseUrl);
+    }
+}
