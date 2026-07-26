@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { identifyObservedSchemaContract } from "@bernouy/cms-integrations";
-import { parseReviewedSchemaBaseline } from "../../src/exports/index";
+import { identifyReviewedSchemaBaseline, parseReviewedSchemaBaseline } from "../../src/exports/index";
 import { CREATED_AT, DIGEST_A, DIGEST_B, IMAGE_A, provenance } from "./fixtures";
 
 function observedSchema(connectorKey = "primary") {
@@ -45,6 +45,17 @@ describe("reviewed schema baseline contract", () => {
         expect(parsed.origin).toBe("legacy-backfill");
         expect(parsed.packageDigest).toBe(DIGEST_A);
         expect(parsed.generator.imageDigest).toBe(IMAGE_A);
+    });
+
+    test("identifies the complete canonical baseline document", async () => {
+        const value = await baseline();
+        const first = await identifyReviewedSchemaBaseline(value);
+        const second = await identifyReviewedSchemaBaseline({ ...value });
+
+        expect(first.baseline).toEqual(value);
+        expect(first.digest).toMatch(/^[a-f0-9]{64}$/);
+        expect(first.digest).toBe(second.digest);
+        expect(first.canonicalBytes).toEqual(second.canonicalBytes);
     });
 
     test("rejects schema content that does not match its digest", async () => {

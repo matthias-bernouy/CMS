@@ -11,6 +11,7 @@
     "include": ["src/**/*.ts"],
     "references": [
         { "path": "../cms-integration-packages" },
+        { "path": "../cms-integration-verification" },
         { "path": "../cms-integrations" }
     ]
 }

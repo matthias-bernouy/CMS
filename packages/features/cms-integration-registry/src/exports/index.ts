@@ -40,8 +40,16 @@ export type {
     IntegrationRegistryPublicationRequest,
     IntegrationRegistryPublicationResult,
     IntegrationRegistryPublisher,
+    OfficialBootstrapAnonymousConstraintFinding,
+    OfficialBootstrapAnonymousConstraintGrandfathering,
+    OfficialRepositoryBootstrapBaselineApproval,
+    OfficialRepositoryBootstrapPlan,
+    PreparedOfficialIntegrationPackage,
 } from "../interfaces/publication";
-export { INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA } from "../interfaces/publication";
+export {
+    INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA,
+    OFFICIAL_REPOSITORY_BOOTSTRAP_PLAN_SCHEMA,
+} from "../interfaces/publication";
 export type {
     IntegrationRegistryRecoverer,
     IntegrationRegistryRecoveryDiagnostic,

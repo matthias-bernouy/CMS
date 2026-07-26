@@ -1,5 +1,10 @@
 import type { ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
-import type { ValidatedIntegrationCandidateEnvelopeV1 } from "@bernouy/cms-integration-verification";
+import type {
+    PinnedVerificationRunnerIdentity,
+    ReviewedSchemaBaselineV1,
+    VerificationPolicyIdentity,
+    ValidatedIntegrationCandidateEnvelopeV1,
+} from "@bernouy/cms-integration-verification";
 import type { TrustedSchemaDeclarationEvidence } from "./compatibility";
 import type { IntegrationCompatibilityAdmissionReport } from "./compatibility";
 import type { IntegrationRegistryCatalogSnapshot } from "./catalog";
@@ -21,6 +26,39 @@ export type IntegrationRegistryPublicationResult = Readonly<{
 export interface IntegrationRegistryPublisher {
     publish(request: IntegrationRegistryPublicationRequest): Promise<IntegrationRegistryPublicationResult>;
 }
+
+export const OFFICIAL_REPOSITORY_BOOTSTRAP_PLAN_SCHEMA = "cms.integration.official-bootstrap-plan.v1" as const;
+
+export type OfficialBootstrapAnonymousConstraintFinding = Readonly<{
+    path: string;
+    line: number;
+    column: number;
+    kind: "anonymous-check" | "anonymous-unique";
+}>;
+
+export type OfficialBootstrapAnonymousConstraintGrandfathering = Readonly<{
+    packageDigest: string;
+    path: string;
+    findings: readonly OfficialBootstrapAnonymousConstraintFinding[];
+}>;
+
+export type PreparedOfficialIntegrationPackage = Readonly<{
+    package: ResolvedIntegrationPackage;
+    anonymousConstraintGrandfathering: readonly OfficialBootstrapAnonymousConstraintGrandfathering[];
+}>;
+
+export type OfficialRepositoryBootstrapPlan = Readonly<{
+    schema: typeof OFFICIAL_REPOSITORY_BOOTSTRAP_PLAN_SCHEMA;
+    packages: readonly PreparedOfficialIntegrationPackage[];
+    reviewedSchemaBaselines: readonly ReviewedSchemaBaselineV1[];
+}>;
+
+export type OfficialRepositoryBootstrapBaselineApproval = Readonly<{
+    generator: PinnedVerificationRunnerIdentity;
+    environmentDigests: readonly string[];
+    policy: VerificationPolicyIdentity;
+    provenanceActors: readonly string[];
+}>;
 
 export const INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA = "cms.integration.registry.candidate-record.v1" as const;
 

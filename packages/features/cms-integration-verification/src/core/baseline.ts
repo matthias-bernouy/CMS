@@ -1,3 +1,4 @@
+import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
 import { identifyObservedSchemaContract, parseObservedSchemaContractV1 } from "@bernouy/cms-integrations";
 import type { ReviewedSchemaBaselineV1 } from "../interfaces/baseline";
 import { REVIEWED_SCHEMA_BASELINE_SCHEMA } from "../interfaces/baseline";
@@ -84,6 +85,18 @@ export async function parseReviewedSchemaBaseline(value: unknown): Promise<Revie
         generatedAt: timestamp(input.generatedAt, "baseline.generatedAt"),
         provenance: parseReportProvenance(input.provenance, "baseline.provenance"),
     };
+}
+
+export async function identifyReviewedSchemaBaseline(value: unknown): Promise<
+    Readonly<{
+        baseline: ReviewedSchemaBaselineV1;
+        canonicalBytes: Uint8Array;
+        digest: string;
+    }>
+> {
+    const baseline = await parseReviewedSchemaBaseline(value);
+    const canonicalBytes = canonicalJsonBytes(baseline);
+    return { baseline, canonicalBytes, digest: await sha256Hex(canonicalBytes) };
 }
 
 function parseLegacySelector(value: unknown): ReviewedSchemaBaselineV1["legacySelector"] {

@@ -23,3 +23,9 @@ export {
     type ReadSupabaseObservedSchemaContractOptions,
     type SupabaseSchemaCatalogQueryClient,
 } from "../default-implementation/supabase/schema-observation";
+export {
+    ANONYMOUS_CONSTRAINT_LINT_LIMITS,
+    lintAnonymousConstraints,
+    type AnonymousConstraintFinding,
+    type AnonymousConstraintLintLimits,
+} from "../default-implementation/supabase/sql/anonymousConstraintLint";

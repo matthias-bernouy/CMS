@@ -33,10 +33,12 @@ export {
     RELEASE_ADMISSION_DECISION_SCHEMA,
     VERIFICATION_REPORT_SCHEMA,
     type CompatibilityReportV2,
+    type ComposeReleaseAdmissionDecisionInput,
     type DigestContractReference,
     type MigrationCheckResult,
     type MigrationReport,
     type ReleaseAdmissionDecision,
+    type RequiredMigrationEvidence,
     type ReportHistoryFields,
     type ReportOrigin,
     type ReportProvenance,
@@ -60,7 +62,7 @@ export {
     parseCompatibilityFinding,
     parseFindingResolutionProof,
 } from "../core/finding";
-export { parseReviewedSchemaBaseline } from "../core/baseline";
+export { identifyReviewedSchemaBaseline, parseReviewedSchemaBaseline } from "../core/baseline";
 export {
     parsePinnedVerificationRunnerIdentity,
     parseVerificationPolicyIdentity,
@@ -75,6 +77,7 @@ export {
     assertReleaseAdmissionDecisionHistory,
     parseReleaseAdmissionDecision,
 } from "../core/reports/decision";
+export { composeReleaseAdmissionDecision } from "../core/reports/decisionComposition";
 export { assertReportRevisionFollows } from "../core/reports/shared";
 export {
     IntegrationVerificationContractError,
