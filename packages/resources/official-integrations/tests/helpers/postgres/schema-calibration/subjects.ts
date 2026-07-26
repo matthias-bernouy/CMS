@@ -71,10 +71,11 @@ export async function loadOfficialSchemaCalibrationSubjects(
         const matches = packages
             .filter((entry) => entry.kind === kind)
             .sort((left, right) => compareVersions(right.version, left.version));
-        if (matches.length !== 1 || matches[0]?.version !== target.version) {
+        const selected = matches.filter((entry) => entry.version === target.version);
+        if (selected.length !== 1) {
             throw new Error(`Schema calibration requires the reviewed official ${kind}@${target.version} version`);
         }
-        const entry = matches[0]!;
+        const entry = selected[0]!;
         const definition = definitions.get(identity(entry.kind, entry.version))!;
         const connector = sqlConnector(definition);
         if (!connector) {

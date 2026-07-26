@@ -1,0 +1,14 @@
+[
+    {
+        "id": "prepare-photo-storage",
+        "steps": [
+            {
+                "id": "setup",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "setup"
+                }
+            }
+        ]
+    }
+]

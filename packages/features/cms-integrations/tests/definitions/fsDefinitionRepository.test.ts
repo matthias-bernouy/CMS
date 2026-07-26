@@ -43,6 +43,7 @@ describe("FsIntegrationDefinitionRepository", () => {
             description: "Patch release",
             inputs: [],
         });
+        writeFileSync(join(integrationRoot, "versions", "1.0.1", "release-notes.txt"), "Patch release.\n");
 
         const stableRepo = new FsIntegrationDefinitionRepository(root);
         const latestRepo = new FsIntegrationDefinitionRepository({ root, defaultChannel: "latest" });
@@ -71,7 +72,7 @@ describe("FsIntegrationDefinitionRepository", () => {
         expect(await stableRepo.locateExactVersion("demo", "1.0.1")).toEqual({
             root: join(integrationRoot, "versions", "1.0.1"),
             definition: "definition.json",
-            legacy: true,
+            releaseNotes: "release-notes.txt",
         });
         expect(await stableRepo.locateExactVersion("demo", "2.0.0")).toBeNull();
     });

@@ -1,0 +1,76 @@
+[
+    {
+        "endpointId": "albums",
+        "method": "GET",
+        "access": "public",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/public/albums",
+        "params": [
+            {
+                "name": "category",
+                "in": "query",
+                "type": "string",
+                "description": "Category slug."
+            },
+            {
+                "name": "limit",
+                "in": "query",
+                "type": "number"
+            },
+            {
+                "name": "offset",
+                "in": "query",
+                "type": "number"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../schemas/albums.json"
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "album",
+        "method": "GET",
+        "access": "public",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/public/album",
+        "params": [
+            {
+                "name": "slug",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../schemas/album.json"
+                }
+            }
+        ]
+    }
+]

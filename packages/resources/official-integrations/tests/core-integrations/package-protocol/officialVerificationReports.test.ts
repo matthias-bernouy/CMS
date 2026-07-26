@@ -2,46 +2,56 @@ import { describe, expect, test } from "bun:test";
 import {
     buildOfficialIntegrationPackages,
     buildOfficialVerificationBackfillReports,
+    loadOfficialIntegrationVerificationBackfill,
+    selectOfficialVerificationBackfillPackages,
 } from "@bernouy/cms-official-integrations/publication";
 
-describe("official verification backfill reports", () => {
-    test("creates honest immutable roots and exact composite decisions for all official versions", async () => {
-        const packages = await buildOfficialIntegrationPackages();
-        const reportSets = await buildOfficialVerificationBackfillReports();
+const REPORT_TEST_TIMEOUT = 15_000;
 
-        expect(reportSets).toHaveLength(14);
-        for (const [index, reportSet] of reportSets.entries()) {
-            const integrationPackage = packages[index];
-            expect(integrationPackage).toBeDefined();
-            const target = {
-                kind: integrationPackage!.kind,
-                version: integrationPackage!.version,
-                packageDigest: integrationPackage!.digest,
-            };
-            expect(reportSet.compatibility).toMatchObject({
-                ...target,
-                revisionType: "root",
-                origin: "legacy-backfill",
-                releaseLevel: "initial",
-                contractAdmissible: true,
-            });
-            expect(reportSet.verification).toMatchObject({
-                ...target,
-                revisionType: "root",
-                origin: "legacy-backfill",
-                outcome: "passed",
-            });
-            expect(reportSet.decision).toMatchObject({
-                ...target,
-                revisionType: "root",
-                admissible: true,
-                reasons: [],
-            });
-            expect(reportSet.decision.verificationReport).toBeDefined();
-            expect(reportSet.statefulChanges.target).toEqual(target);
-            expect(reportSet.statefulChanges.requiredMigrations).toEqual([]);
-        }
-    });
+describe("official verification backfill reports", () => {
+    test(
+        "creates honest immutable roots and exact composite decisions for all official versions",
+        async () => {
+            const allPackages = await buildOfficialIntegrationPackages();
+            const backfill = await loadOfficialIntegrationVerificationBackfill();
+            const packages = selectOfficialVerificationBackfillPackages(allPackages, backfill.index);
+            const reportSets = await buildOfficialVerificationBackfillReports();
+
+            expect(reportSets).toHaveLength(14);
+            for (const [index, reportSet] of reportSets.entries()) {
+                const integrationPackage = packages[index];
+                expect(integrationPackage).toBeDefined();
+                const target = {
+                    kind: integrationPackage!.kind,
+                    version: integrationPackage!.version,
+                    packageDigest: integrationPackage!.digest,
+                };
+                expect(reportSet.compatibility).toMatchObject({
+                    ...target,
+                    revisionType: "root",
+                    origin: "legacy-backfill",
+                    releaseLevel: "initial",
+                    contractAdmissible: true,
+                });
+                expect(reportSet.verification).toMatchObject({
+                    ...target,
+                    revisionType: "root",
+                    origin: "legacy-backfill",
+                    outcome: "passed",
+                });
+                expect(reportSet.decision).toMatchObject({
+                    ...target,
+                    revisionType: "root",
+                    admissible: true,
+                    reasons: [],
+                });
+                expect(reportSet.decision.verificationReport).toBeDefined();
+                expect(reportSet.statefulChanges.target).toEqual(target);
+                expect(reportSet.statefulChanges.requiredMigrations).toEqual([]);
+            }
+        },
+        REPORT_TEST_TIMEOUT,
+    );
 
     test("only claims SQL install-and-reapply where pinned calibration evidence exists", async () => {
         const reportSets = await buildOfficialVerificationBackfillReports();

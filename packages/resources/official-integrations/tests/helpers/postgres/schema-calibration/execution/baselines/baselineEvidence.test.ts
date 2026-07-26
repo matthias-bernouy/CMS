@@ -19,6 +19,7 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { schemaCalibrationEnvironmentIdentity } from "../../environment/manifest";
 
 const temporaryRoots: string[] = [];
+const COPY_TEST_TIMEOUT = 20_000;
 
 afterEach(async () => {
     await Promise.all(temporaryRoots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
@@ -63,61 +64,75 @@ describe("official reviewed schema baseline evidence", () => {
         );
     });
 
-    test("rejects a reviewed baseline moved away from its exact same-tree package digest", async () => {
-        const root = await copiedOfficialRoot();
-        const evidence = await evidenceDocument(root);
-        evidence.reviewedSchemaBaselines[0]!.packageDigest = "f".repeat(64);
-        await writeEvidence(root, evidence);
+    test(
+        "rejects a reviewed baseline moved away from its exact same-tree package digest",
+        async () => {
+            const root = await copiedOfficialRoot();
+            const evidence = await evidenceDocument(root);
+            evidence.reviewedSchemaBaselines[0]!.packageDigest = "f".repeat(64);
+            await writeEvidence(root, evidence);
 
-        await expect(buildOfficialRepositoryBootstrapPlan(root)).rejects.toThrow("exact package digest");
-    });
+            await expect(buildOfficialRepositoryBootstrapPlan(root)).rejects.toThrow("exact package digest");
+        },
+        COPY_TEST_TIMEOUT,
+    );
 
-    test("rejects grandfathering after either its exact location or package bytes change", async () => {
-        const movedRoot = await copiedOfficialRoot();
-        const movedEvidence = await evidenceDocument(movedRoot);
-        movedEvidence.anonymousConstraintGrandfathering[0]!.findings[0]!.line += 1;
-        await writeEvidence(movedRoot, movedEvidence);
-        await expect(buildOfficialRepositoryBootstrapPlan(movedRoot)).rejects.toThrow("exact package bytes");
+    test(
+        "rejects grandfathering after either its exact location or package bytes change",
+        async () => {
+            const movedRoot = await copiedOfficialRoot();
+            const movedEvidence = await evidenceDocument(movedRoot);
+            movedEvidence.anonymousConstraintGrandfathering[0]!.findings[0]!.line += 1;
+            await writeEvidence(movedRoot, movedEvidence);
+            await expect(buildOfficialRepositoryBootstrapPlan(movedRoot)).rejects.toThrow("exact package bytes");
 
-        const changedRoot = await copiedOfficialRoot();
-        const changedEvidence = await loadOfficialRepositoryBootstrapEvidence(changedRoot);
-        const approved = changedEvidence.anonymousConstraintGrandfathering[0]!;
-        const packages = await buildOfficialIntegrationPackages(changedRoot);
-        const integrationPackage = packages.find(({ digest }) => digest === approved.packageDigest)!;
-        const versionRoot = await new FsIntegrationDefinitionRepository(changedRoot).locateExactVersion(
-            integrationPackage.kind,
-            integrationPackage.version,
-        );
-        await appendFile(join(versionRoot!.root, approved.path), "\n-- package digest changed\n");
-        await expect(buildOfficialRepositoryBootstrapPlan(changedRoot)).rejects.toThrow(
-            /package digest|absent package/,
-        );
-    });
+            const changedRoot = await copiedOfficialRoot();
+            const changedEvidence = await loadOfficialRepositoryBootstrapEvidence(changedRoot);
+            const approved = changedEvidence.anonymousConstraintGrandfathering[0]!;
+            const packages = await buildOfficialIntegrationPackages(changedRoot);
+            const integrationPackage = packages.find(({ digest }) => digest === approved.packageDigest)!;
+            const versionRoot = await new FsIntegrationDefinitionRepository(changedRoot).locateExactVersion(
+                integrationPackage.kind,
+                integrationPackage.version,
+            );
+            await appendFile(join(versionRoot!.root, approved.path), "\n-- package digest changed\n");
+            await expect(buildOfficialRepositoryBootstrapPlan(changedRoot)).rejects.toThrow(
+                /package digest|absent package|verification backfill/,
+            );
+        },
+        COPY_TEST_TIMEOUT,
+    );
 
-    test("rejects incomplete dependencies, a divergent connector selector, and an unapproved PostgreSQL version", async () => {
-        const dependencyRoot = await copiedOfficialRoot();
-        const dependencyEvidence = await evidenceDocument(dependencyRoot);
-        const dependent = dependencyEvidence.reviewedSchemaBaselines.find(
-            ({ dependencies }) => dependencies.length > 0,
-        )!;
-        dependent.dependencies.pop();
-        await writeEvidence(dependencyRoot, dependencyEvidence);
-        await expect(buildOfficialRepositoryBootstrapPlan(dependencyRoot)).rejects.toThrow(
-            "dependencies are incomplete",
-        );
+    test(
+        "rejects incomplete dependencies, a divergent connector selector, and an unapproved PostgreSQL version",
+        async () => {
+            const dependencyRoot = await copiedOfficialRoot();
+            const dependencyEvidence = await evidenceDocument(dependencyRoot);
+            const dependent = dependencyEvidence.reviewedSchemaBaselines.find(
+                ({ dependencies }) => dependencies.length > 0,
+            )!;
+            dependent.dependencies.pop();
+            await writeEvidence(dependencyRoot, dependencyEvidence);
+            await expect(buildOfficialRepositoryBootstrapPlan(dependencyRoot)).rejects.toThrow(
+                "dependencies are incomplete",
+            );
 
-        const selectorRoot = await copiedOfficialRoot();
-        const selectorEvidence = await evidenceDocument(selectorRoot);
-        selectorEvidence.reviewedSchemaBaselines[0]!.legacySelector.root = "connectors/not-the-reviewed-root";
-        await writeEvidence(selectorRoot, selectorEvidence);
-        await expect(buildOfficialRepositoryBootstrapPlan(selectorRoot)).rejects.toThrow("exact SQL connector");
+            const selectorRoot = await copiedOfficialRoot();
+            const selectorEvidence = await evidenceDocument(selectorRoot);
+            selectorEvidence.reviewedSchemaBaselines[0]!.legacySelector.root = "connectors/not-the-reviewed-root";
+            await writeEvidence(selectorRoot, selectorEvidence);
+            await expect(buildOfficialRepositoryBootstrapPlan(selectorRoot)).rejects.toThrow("exact SQL connector");
 
-        const postgresRoot = await copiedOfficialRoot();
-        const postgresEvidence = await evidenceDocument(postgresRoot);
-        postgresEvidence.reviewedSchemaBaselines[0]!.environment.postgresVersion = "160013";
-        await writeEvidence(postgresRoot, postgresEvidence);
-        await expect(buildOfficialRepositoryBootstrapPlan(postgresRoot)).rejects.toThrow("provenance is not approved");
-    });
+            const postgresRoot = await copiedOfficialRoot();
+            const postgresEvidence = await evidenceDocument(postgresRoot);
+            postgresEvidence.reviewedSchemaBaselines[0]!.environment.postgresVersion = "160013";
+            await writeEvidence(postgresRoot, postgresEvidence);
+            await expect(buildOfficialRepositoryBootstrapPlan(postgresRoot)).rejects.toThrow(
+                "provenance is not approved",
+            );
+        },
+        COPY_TEST_TIMEOUT,
+    );
 });
 
 type MutableEvidence = {

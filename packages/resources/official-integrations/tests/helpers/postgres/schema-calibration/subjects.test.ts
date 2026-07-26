@@ -18,5 +18,6 @@ describe("official schema calibration subjects", () => {
             expect.objectContaining({ kind: "basic-blocs", version: "1.0.0" }),
         ]);
         expect(subjects.find((subject) => subject.kind === "commerce")?.sqlInstallationOrder).toEqual([]);
+        expect(subjects.find((subject) => subject.kind === "photo-albums")?.version).toBe("1.0.0");
     });
 });

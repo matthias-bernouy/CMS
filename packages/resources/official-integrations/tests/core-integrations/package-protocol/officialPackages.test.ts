@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readdir, readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
@@ -16,26 +16,27 @@ describe("official integration package protocol", () => {
             for (const entry of index.versions) {
                 const versionRoot = join(packageRoot, entry.path);
                 const definition = relative(versionRoot, join(packageRoot, entry.definition)).split(sep).join("/");
+                const releaseNotes = await releaseNotesPath(versionRoot);
                 const first = await readIntegrationPackageDirectory({
                     root: versionRoot,
                     kind: index.kind,
                     version: entry.version,
                     definition,
-                    releaseNotes: "README.md",
+                    releaseNotes,
                 });
                 const second = await readIntegrationPackageDirectory({
                     root: versionRoot,
                     kind: index.kind,
                     version: entry.version,
                     definition,
-                    releaseNotes: "README.md",
+                    releaseNotes,
                 });
 
                 expect(first.envelope).toMatchObject({
                     kind: index.kind,
                     version: entry.version,
                     definition,
-                    releaseNotes: "README.md",
+                    releaseNotes,
                 });
                 expect(first.digest).toBe(second.digest);
                 expect(first.canonicalBytes).toEqual(second.canonicalBytes);
@@ -45,8 +46,8 @@ describe("official integration package protocol", () => {
         }
 
         expect(indexPaths).toHaveLength(14);
-        expect(versions).toBe(14);
-        expect(digests.size).toBe(14);
+        expect(versions).toBe(15);
+        expect(digests.size).toBe(15);
     });
 });
 
@@ -70,6 +71,15 @@ async function findIndexes(directory: string): Promise<string[]> {
         }
     }
     return indexes;
+}
+
+async function releaseNotesPath(versionRoot: string): Promise<string> {
+    try {
+        await access(join(versionRoot, "release-notes.txt"));
+        return "release-notes.txt";
+    } catch {
+        return "README.md";
+    }
 }
 
 function compareEntries(left: { name: string }, right: { name: string }): number {

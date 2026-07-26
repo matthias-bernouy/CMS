@@ -43,7 +43,7 @@ export async function buildOfficialIntegrationPackages(
                 kind: index.kind,
                 version: entry.version,
                 definition: portableRelative(versionRoot, definitionPath),
-                releaseNotes: "README.md",
+                releaseNotes: await officialReleaseNotesPath(versionRoot),
             });
             const definition = await definitions.get(index.kind, entry.version);
             if (!definition) {
@@ -60,6 +60,23 @@ export async function buildOfficialIntegrationPackages(
         }
     }
     return Object.freeze(packages.sort(comparePackages));
+}
+
+async function officialReleaseNotesPath(versionRoot: string): Promise<string> {
+    const plainText = joinWithin(versionRoot, "release-notes.txt");
+    try {
+        await lstat(plainText);
+        return "release-notes.txt";
+    } catch (error) {
+        if (isNotFound(error)) {
+            return "README.md";
+        }
+        throw error;
+    }
+}
+
+function isNotFound(error: unknown): error is NodeJS.ErrnoException {
+    return error instanceof Error && "code" in error && error.code === "ENOENT";
 }
 
 async function discoverIntegrationIndexes(requestedRoot: string): Promise<readonly string[]> {

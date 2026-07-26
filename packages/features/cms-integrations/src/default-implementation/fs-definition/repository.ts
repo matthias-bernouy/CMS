@@ -126,17 +126,18 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
 async function releaseNotesLocation(
     versionRoot: string,
 ): Promise<Pick<FsIntegrationVersionLocation, "legacy" | "releaseNotes">> {
-    const releaseNotes = "README.md";
-    try {
-        const stats = await lstat(join(versionRoot, releaseNotes));
-        if (stats.isSymbolicLink() || !stats.isFile()) {
-            throw new Error(`Integration release notes must be a regular file: ${join(versionRoot, releaseNotes)}`);
+    for (const releaseNotes of ["release-notes.txt", "README.md"]) {
+        try {
+            const stats = await lstat(join(versionRoot, releaseNotes));
+            if (stats.isSymbolicLink() || !stats.isFile()) {
+                throw new Error(`Integration release notes must be a regular file: ${join(versionRoot, releaseNotes)}`);
+            }
+            return { releaseNotes };
+        } catch (error) {
+            if (!isNodeError(error) || error.code !== "ENOENT") {
+                throw error;
+            }
         }
-        return { releaseNotes };
-    } catch (error) {
-        if (isNodeError(error) && error.code === "ENOENT") {
-            return { legacy: true };
-        }
-        throw error;
     }
+    return { legacy: true };
 }

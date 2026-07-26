@@ -1,0 +1,82 @@
+[
+    {
+        "id": "albumState",
+        "title": "Publication",
+        "fields": [
+            {
+                "id": "status",
+                "label": "Status",
+                "path": "status",
+                "type": "select",
+                "required": true,
+                "options": [
+                    {
+                        "value": "draft",
+                        "label": "Draft"
+                    },
+                    {
+                        "value": "published",
+                        "label": "Published"
+                    },
+                    {
+                        "value": "archived",
+                        "label": "Archived"
+                    }
+                ]
+            },
+            {
+                "id": "categoryId",
+                "label": "Category",
+                "path": "categoryId",
+                "type": "combobox",
+                "lookup": {
+                    "endpoint": "manageCategories",
+                    "params": {
+                        "q": "$search",
+                        "limit": "20"
+                    },
+                    "itemsPath": "items",
+                    "valuePath": "id",
+                    "labelPath": "name",
+                    "subtitlePath": "slug",
+                    "selected": "$resource.category"
+                }
+            },
+            {
+                "id": "position",
+                "label": "Position",
+                "path": "position",
+                "type": "number",
+                "min": 0,
+                "step": 1
+            }
+        ]
+    },
+    {
+        "id": "albumMetadata",
+        "title": "Metadata",
+        "fields": [
+            {
+                "id": "id",
+                "label": "ID",
+                "path": "id",
+                "type": "readonly",
+                "visibleWhen": {
+                    "value": "$field.id",
+                    "notEquals": ""
+                }
+            },
+            {
+                "id": "publishedAt",
+                "label": "Published",
+                "path": "publishedAt",
+                "type": "readonly",
+                "format": "date",
+                "visibleWhen": {
+                    "value": "$field.status",
+                    "equals": "published"
+                }
+            }
+        ]
+    }
+]

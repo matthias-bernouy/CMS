@@ -1,0 +1,53 @@
+{
+    "install": {
+        "revision": 1,
+        "digest": "sha256:4b7a22b292dd2723f948f07425b011b1079ac1c2436d8dd8e016a0590127f870",
+        "coveredMigrations": [
+            {
+                "id": "add-photo-credit",
+                "checksum": "sha256:2a6a908885a39ba6ee60c3974b2fda1ba8723e79189cefc4db5f16d96b7c9f66",
+                "revision": 1,
+                "introducedIn": "1.1.0"
+            }
+        ]
+    },
+    "migrations": [
+        {
+            "id": "add-photo-credit",
+            "checksum": "sha256:2a6a908885a39ba6ee60c3974b2fda1ba8723e79189cefc4db5f16d96b7c9f66",
+            "fromRevision": 0,
+            "toRevision": 1,
+            "introducedIn": "1.1.0",
+            "transaction": "atomic",
+            "phase": "expand",
+            "path": "migrations/add-photo-credit.sql"
+        }
+    ],
+    "repeatables": [
+        {
+            "id": "function-privileges",
+            "checksum": "sha256:2c7534bd7a5b5bc0549e4489086d8952b67729c59cf2777a45602b341048d199",
+            "path": "repeatables/function-privileges.sql"
+        },
+        {
+            "id": "table-privileges",
+            "checksum": "sha256:96012605897e6704b8e46c38bb99a40f13df55ecd61247b5de1ab2e515b417ab",
+            "path": "repeatables/table-privileges.sql"
+        }
+    ],
+    "supportedSources": [
+        {
+            "range": "1.0.0",
+            "migrationRevision": 0,
+            "legacyAdoption": {
+                "definitionVersion": "1.0.0",
+                "packageDigest": "6482f865c6fe0302d1b5acda589f2ce20da828ddc228ee65d65d28b7907b9c3e",
+                "observedSchema": {
+                    "$include": "legacy-observed-schema.json"
+                },
+                "coveredMigrations": []
+            }
+        }
+    ],
+    "pointOfNoReturn": "before-contract"
+}

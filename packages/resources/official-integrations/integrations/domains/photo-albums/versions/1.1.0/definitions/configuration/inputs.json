@@ -1,0 +1,9 @@
+[
+    {
+        "name": "id",
+        "label": "Source id",
+        "type": "text",
+        "required": true,
+        "defaultValue": "photo-albums"
+    }
+]

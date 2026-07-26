@@ -1,0 +1,39 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "photo-albums",
+    "label": "Photo Albums",
+    "version": "1.1.0",
+    "category": "Media",
+    "description": "Publish categorized photo albums with managed originals, responsive Source images, and backoffice editing.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
+    "inputs": {
+        "$include": "configuration/inputs.json"
+    },
+    "dependencies": {
+        "$include": "configuration/dependencies.json"
+    },
+    "ui": {
+        "$include": "configuration/ui.json"
+    },
+    "generatedSecrets": {
+        "$include": "configuration/generated-secrets.json"
+    },
+    "connectors": {
+        "$include": "configuration/connectors.json"
+    },
+    "afterInstallation": {
+        "$include": "configuration/after-installation.json"
+    },
+    "artifacts": {
+        "$files": [
+            "artifacts/sources/primary/definition.json",
+            "artifacts/blocs/photo-album-list.json",
+            "artifacts/blocs/photo-album-gallery.json",
+            "artifacts/dashboards/albums/definition.json",
+            "artifacts/dashboards/categories/definition.json",
+            "artifacts/dashboards/settings.json"
+        ]
+    }
+}

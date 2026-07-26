@@ -22,7 +22,10 @@ describe("official verification backfill artifacts", () => {
         const generated = await buildOfficialIntegrationVerificationBackfill();
         const committed = await loadOfficialIntegrationVerificationBackfill();
         const after = await buildOfficialIntegrationPackages();
+        const historicalBefore = selectOfficialVerificationBackfillPackages(before, committed.index);
+        const historicalAfter = selectOfficialVerificationBackfillPackages(after, committed.index);
 
+        expect(before).toHaveLength(15);
         expect(generated.verifications).toHaveLength(14);
         expect(committed.verifications).toHaveLength(14);
         expect(committed.index.verificationPolicy).toEqual(OFFICIAL_INTEGRATION_VERIFICATION_POLICY);
@@ -32,8 +35,8 @@ describe("official verification backfill artifacts", () => {
         expect(committed.indexDigest).toBe(generated.indexDigest);
         expect(committed.verifications).toEqual(generated.verifications);
 
-        for (const [index, integrationPackage] of before.entries()) {
-            const rebuilt = after[index];
+        for (const [index, integrationPackage] of historicalBefore.entries()) {
+            const rebuilt = historicalAfter[index];
             const verification = committed.verifications[index];
             expect(rebuilt).toBeDefined();
             expect(verification).toMatchObject({
@@ -58,6 +61,9 @@ describe("official verification backfill artifacts", () => {
                 OFFICIAL_VERIFICATION_BACKFILL_INDEX_PATH,
             );
         }
+        expect(committed.index.entries).not.toContainEqual(
+            expect.objectContaining({ kind: "photo-albums", version: "1.1.0" }),
+        );
     });
 
     test("records Photo Albums legacy test ownership without claiming execution", async () => {
