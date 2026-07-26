@@ -6,22 +6,18 @@ import { BunRunner } from "@bernouy/http-runner";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { RepositoryCatalogRuntime } from "./core/catalogRuntime";
 import { readRepositoryManagementToken } from "./credentials";
+import { createProductionRepositoryManagement } from "./management";
 import {
     bootstrapRepositoryRegistryIfEmpty,
     type EmptyRegistryBootstrap,
     validateRepositoryRegistryRoot,
 } from "./registryRoot";
-import {
-    startRepositoryServer,
-    type RepositoryManagementSurfaceMount,
-    type RepositoryServer,
-} from "./core/repositoryServer";
+import { startRepositoryServer, type RepositoryServer } from "./core/repositoryServer";
 import { readRepositoryRuntimeEnv, type RepositoryRuntimeEnvSource } from "./runtimeEnv";
 
 export async function startProductionRepositoryServer(
     source: RepositoryRuntimeEnvSource,
     options: Readonly<{
-        mountManagement?: RepositoryManagementSurfaceMount;
         bootstrapEmptyRegistry?: EmptyRegistryBootstrap;
     }> = {},
 ): Promise<RepositoryServer> {
@@ -38,6 +34,10 @@ export async function startProductionRepositoryServer(
     if (!initial.applied) {
         throw new Error("Initial integration repository catalog snapshot could not be built");
     }
+    const repositoryManagement = await createProductionRepositoryManagement({
+        root: env.registryRoot,
+        catalog,
+    });
 
     const managementGuard = createRepositoryManagementGuard({
         serviceToken: token,
@@ -57,7 +57,7 @@ export async function startProductionRepositoryServer(
         loadCatalog,
         packageDownloadProtection,
         managementGuard,
-        ...(options.mountManagement ? { mountManagement: options.mountManagement } : {}),
+        mountManagement: repositoryManagement.mount,
         gracefulStopTimeoutMs: env.gracefulStopTimeoutMs,
     });
 }

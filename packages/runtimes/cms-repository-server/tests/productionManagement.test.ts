@@ -1,0 +1,118 @@
+import { afterEach, describe, expect, test } from "bun:test";
+import { chmod, lstat, mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
+import { BunRunner } from "@bernouy/http-runner";
+import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
+import { buildFsIntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry/fs";
+import { RepositoryCatalogRuntime } from "../src/core/catalogRuntime";
+import { startRepositoryServer, type RepositoryServer } from "../src/core/repositoryServer";
+import { createProductionRepositoryManagement } from "../src/management";
+
+const roots: string[] = [];
+const servers: RepositoryServer[] = [];
+
+afterEach(async () => {
+    await Promise.all(servers.splice(0).map((server) => server.stop()));
+    for (const root of roots.splice(0)) {
+        await makeWritable(root);
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
+describe("production repository management", () => {
+    test("publishes privately and exposes the new version through the shared public snapshot", async () => {
+        const root = await mkdtemp(join(tmpdir(), "cms-repository-production-"));
+        roots.push(root);
+        const catalog = new RepositoryCatalogRuntime();
+        const loadCatalog = () => buildFsIntegrationRegistryCatalogSnapshot({ root });
+        expect((await catalog.refresh(loadCatalog)).applied).toBe(true);
+        const management = await createProductionRepositoryManagement({ root, catalog });
+        const publicRunner = new BunRunner();
+        const managementRunner = new BunRunner();
+        const server = startRepositoryServer({
+            publicRunner,
+            managementRunner,
+            publicPort: 0,
+            managementPort: 0,
+            catalog,
+            loadCatalog,
+            packageDownloadProtection: { clientAddressPolicy: { mode: "disabled" } },
+            managementGuard: createRepositoryManagementGuard({
+                serviceToken: "management-secret",
+                servicePrincipal: "management-cms",
+                rateLimiter: new InMemoryRateLimiter({ limit: 10, windowSeconds: 60 }),
+            }),
+            mountManagement: management.mount,
+        });
+        servers.push(server);
+
+        const managementOrigin = origin(managementRunner);
+        const publicOrigin = origin(publicRunner);
+        const unauthorized = await fetch(
+            `${managementOrigin}/.cms/repository-management/api/integrations/publications`,
+            {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: publicationDocument(),
+            },
+        );
+        expect(unauthorized.status).toBe(401);
+
+        const published = await fetch(`${managementOrigin}/.cms/repository-management/api/integrations/publications`, {
+            method: "POST",
+            headers: { authorization: "Bearer management-secret", "content-type": "application/json" },
+            body: publicationDocument(),
+        });
+        expect(published.status).toBe(201);
+        expect(await published.json()).toMatchObject({ kind: "remote-demo", version: "1.0.0" });
+
+        const integrations = await fetch(`${publicOrigin}/.cms/repository/api/integrations`);
+        expect(integrations.status).toBe(200);
+        expect(await integrations.json()).toEqual([
+            expect.objectContaining({ kind: "remote-demo", versions: ["1.0.0"] }),
+        ]);
+        expect(catalog.current().getIndex("remote-demo")?.stable).toBe("1.0.0");
+        expect((await fetch(`${publicOrigin}/.cms/repository-management/api/integrations/publications`)).status).toBe(
+            404,
+        );
+    });
+});
+
+function publicationDocument(): string {
+    return JSON.stringify({
+        schema: "cms.integration.package.v1",
+        kind: "remote-demo",
+        version: "1.0.0",
+        definition: "definition.json",
+        releaseNotes: "README.md",
+        files: {
+            "README.md": { encoding: "utf8", content: "# Remote demo\n" },
+            "definition.json": {
+                encoding: "utf8",
+                content: JSON.stringify({ kind: "remote-demo", label: "Remote demo", version: "1.0.0", inputs: [] }),
+            },
+        },
+    });
+}
+
+function origin(runner: BunRunner): string {
+    if (!runner.port) {
+        throw new Error("Test runner did not start");
+    }
+    return `http://127.0.0.1:${runner.port}`;
+}
+
+async function makeWritable(path: string): Promise<void> {
+    const metadata = await lstat(path);
+    if (!metadata.isDirectory()) {
+        return;
+    }
+    await chmod(path, 0o750);
+    for (const entry of await readdir(path, { withFileTypes: true })) {
+        if (entry.isDirectory()) {
+            await makeWritable(join(path, entry.name));
+        }
+    }
+}

@@ -22,7 +22,7 @@ export type RepositoryServerConfig = Readonly<{
     loadCatalog: () => Promise<IntegrationRegistryCatalogSnapshot>;
     packageDownloadProtection: PublicPackageDownloadProtection;
     managementGuard: Middleware;
-    mountManagement?: RepositoryManagementSurfaceMount;
+    mountManagement: RepositoryManagementSurfaceMount;
     gracefulStopTimeoutMs?: number;
 }>;
 
@@ -48,11 +48,7 @@ export function startRepositoryServer(config: RepositoryServerConfig): Repositor
             packageDownloadProtection: config.packageDownloadProtection,
         });
     });
-    if (config.mountManagement) {
-        config.managementRunner.group(REPOSITORY_MANAGEMENT_BASE_PATH, config.mountManagement, [
-            config.managementGuard,
-        ]);
-    }
+    config.managementRunner.group(REPOSITORY_MANAGEMENT_BASE_PATH, config.mountManagement, [config.managementGuard]);
 
     let stopPromise: Promise<void> | undefined;
     try {
