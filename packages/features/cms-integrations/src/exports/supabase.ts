@@ -18,3 +18,8 @@ export {
     loadSupabaseSqlSchemas,
     type LoadedSupabaseSqlSchema,
 } from "../default-implementation/supabase/sql/schemaLoader";
+export {
+    readSupabaseObservedSchemaContract,
+    type ReadSupabaseObservedSchemaContractOptions,
+    type SupabaseSchemaCatalogQueryClient,
+} from "../default-implementation/supabase/schema-observation";
