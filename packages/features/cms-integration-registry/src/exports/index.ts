@@ -31,6 +31,11 @@ export type {
     ReviewedConnectorSchemaBaseline,
     TrustedSchemaDeclarationEvidence,
 } from "../interfaces/compatibility";
+export type {
+    IntegrationRegistryPublicationRequest,
+    IntegrationRegistryPublicationResult,
+    IntegrationRegistryPublisher,
+} from "../interfaces/publication";
 export { createIntegrationRegistryCatalogSnapshot } from "../core/catalog/snapshot";
 export { IntegrationRegistryCatalogSnapshotReference } from "../core/catalog/reference";
 export {
@@ -39,3 +44,8 @@ export {
     IntegrationCompatibilityEvaluator,
 } from "../core/compatibility/evaluation";
 export { InMemoryIntegrationCompatibilityReportHistory } from "../core/compatibility/history";
+export { changedIntegrationPackagePaths } from "../core/publication/changedPaths";
+export {
+    IntegrationRegistryVersionConflictError,
+    IntegrationRegistryVersionOrderError,
+} from "../core/publication/errors";
