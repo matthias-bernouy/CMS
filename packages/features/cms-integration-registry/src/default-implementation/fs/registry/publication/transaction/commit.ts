@@ -1,4 +1,5 @@
 import { manifestDocumentByteLimit } from "../../../manifest/contract";
+import type { IntegrationCompatibilityAdmissionReport } from "../../../../../interfaces/compatibility";
 import type { IntegrationRegistryPublicationResult } from "../../../../../interfaces/publication";
 import {
     createPublicationJournal,
@@ -30,18 +31,21 @@ export async function commitFsIntegrationRegistryPublication(
         operationId: string;
         candidate: PreparedFsIntegrationRegistryCandidate;
         schemaDeclarationEvidence?: Parameters<typeof evaluatePublicationCompatibility>[3];
+        admissionReport?: IntegrationCompatibilityAdmissionReport;
     }>,
 ): Promise<IntegrationRegistryPublicationResult> {
     const { config, layout, paths, operationId, candidate } = input;
     const capturedSnapshot = config.snapshots.current();
     const previousIndex = capturedSnapshot.getIndex(candidate.definition.kind);
     const nextIndex = nextIntegrationRegistryIndex(previousIndex, candidate.definition, candidate.package.envelope);
-    const report = await evaluatePublicationCompatibility(
-        capturedSnapshot,
-        candidate,
-        config.compatibility,
-        input.schemaDeclarationEvidence,
-    );
+    const report =
+        input.admissionReport ??
+        (await evaluatePublicationCompatibility(
+            capturedSnapshot,
+            candidate,
+            config.compatibility,
+            input.schemaDeclarationEvidence,
+        ));
     let journal: FsIntegrationRegistryPublicationJournal = {
         schema: "cms.integration.registry.publication-journal.v1",
         operationId,

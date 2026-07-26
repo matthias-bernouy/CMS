@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { writeImmutableIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
+import type { IntegrationCompatibilityAdmissionReport } from "../../../../interfaces/compatibility";
 import type {
     IntegrationRegistryPublicationRequest,
     IntegrationRegistryPublisher,
@@ -19,46 +20,54 @@ export class FsIntegrationRegistryPublisher implements IntegrationRegistryPublis
 
     async publish(request: IntegrationRegistryPublicationRequest) {
         const candidate = await prepareFsIntegrationRegistryCandidate(request.package, this.config.packageLimits);
-        const operationId = this.config.createOperationId?.() ?? randomUUID();
-        const layout = await ensureFsIntegrationRegistryLayout(this.config.root);
-        const paths = await ensurePublicationPaths(
-            layout,
+        return publishPreparedFsIntegrationRegistryCandidate(this.config, candidate, request.schemaDeclarationEvidence);
+    }
+}
+
+export async function publishPreparedFsIntegrationRegistryCandidate(
+    config: FsIntegrationRegistryPublisherConfig,
+    candidate: Awaited<ReturnType<typeof prepareFsIntegrationRegistryCandidate>>,
+    schemaDeclarationEvidence?: IntegrationRegistryPublicationRequest["schemaDeclarationEvidence"],
+    admissionReport?: IntegrationCompatibilityAdmissionReport,
+) {
+    const operationId = config.createOperationId?.() ?? randomUUID();
+    const layout = await ensureFsIntegrationRegistryLayout(config.root);
+    const paths = await ensurePublicationPaths(
+        layout,
+        candidate.definition.kind,
+        candidate.package.envelope.version,
+        operationId,
+    );
+    await writeImmutableIntegrationPackageDirectory(candidate.package, {
+        destination: paths.stagingRoot,
+        expected: {
+            kind: candidate.definition.kind,
+            version: candidate.package.envelope.version,
+            digest: candidate.package.digest,
+        },
+        limits: candidate.limits,
+    });
+    try {
+        return await config.mutations.runExclusive(
             candidate.definition.kind,
-            candidate.package.envelope.version,
-            operationId,
+            async () =>
+                await commitFsIntegrationRegistryPublication({
+                    config,
+                    layout,
+                    paths,
+                    operationId,
+                    candidate,
+                    ...(schemaDeclarationEvidence ? { schemaDeclarationEvidence } : {}),
+                    ...(admissionReport ? { admissionReport } : {}),
+                }),
         );
-        await writeImmutableIntegrationPackageDirectory(candidate.package, {
-            destination: paths.stagingRoot,
-            expected: {
-                kind: candidate.definition.kind,
-                version: candidate.package.envelope.version,
-                digest: candidate.package.digest,
-            },
-            limits: candidate.limits,
-        });
-        try {
-            return await this.config.mutations.runExclusive(
-                candidate.definition.kind,
-                async () =>
-                    await commitFsIntegrationRegistryPublication({
-                        config: this.config,
-                        layout,
-                        paths,
-                        operationId,
-                        candidate,
-                        ...(request.schemaDeclarationEvidence
-                            ? { schemaDeclarationEvidence: request.schemaDeclarationEvidence }
-                            : {}),
-                    }),
-            );
-        } catch (error) {
-            if (
-                !(error instanceof FsIntegrationRegistrySimulatedCrashError) &&
-                !(error instanceof FsIntegrationRegistryRecoveryRequiredError)
-            ) {
-                await removeImmutableTreeIfExists(paths.stagingRoot);
-            }
-            throw error;
+    } catch (error) {
+        if (
+            !(error instanceof FsIntegrationRegistrySimulatedCrashError) &&
+            !(error instanceof FsIntegrationRegistryRecoveryRequiredError)
+        ) {
+            await removeImmutableTreeIfExists(paths.stagingRoot);
         }
+        throw error;
     }
 }

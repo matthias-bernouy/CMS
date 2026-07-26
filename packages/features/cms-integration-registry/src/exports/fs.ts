@@ -38,6 +38,10 @@ export {
 } from "../default-implementation/fs/manifest/writer";
 export { FsIntegrationRegistryPublisher } from "../default-implementation/fs/registry/publication/publisher";
 export {
+    FsOfficialIntegrationRegistryBootstrapPublisher,
+    type PreparedFsOfficialIntegrationRegistryBootstrap,
+} from "../default-implementation/fs/registry/publication/officialBootstrapPublisher";
+export {
     FsIntegrationRegistryRecoveryRequiredError,
     FsIntegrationRegistrySimulatedCrashError,
     type FsIntegrationRegistryPublicationBoundary,

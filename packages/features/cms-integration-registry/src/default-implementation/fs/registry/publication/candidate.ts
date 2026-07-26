@@ -18,9 +18,26 @@ export async function prepareFsIntegrationRegistryCandidate(
     input: ResolvedIntegrationPackage,
     limitOverrides?: Partial<IntegrationPackageLimits>,
 ): Promise<PreparedFsIntegrationRegistryCandidate> {
+    return prepareCandidate(input, limitOverrides, true);
+}
+
+export async function prepareFsOfficialBootstrapCandidate(
+    input: ResolvedIntegrationPackage,
+    limitOverrides?: Partial<IntegrationPackageLimits>,
+): Promise<PreparedFsIntegrationRegistryCandidate> {
+    return prepareCandidate(input, limitOverrides, false);
+}
+
+async function prepareCandidate(
+    input: ResolvedIntegrationPackage,
+    limitOverrides: Partial<IntegrationPackageLimits> | undefined,
+    requireSqlSchemaContract: boolean,
+): Promise<PreparedFsIntegrationRegistryCandidate> {
     const limits = resolveIntegrationPackageLimits(limitOverrides);
     const manifest = await prepareIntegrationRegistryVersionManifest(input, limits);
     const definition = loadIntegrationDefinitionFromPackageEnvelope(manifest.package.envelope, limits);
-    assertSqlConnectorSchemaCompatibilityDeclared(definition);
+    if (requireSqlSchemaContract) {
+        assertSqlConnectorSchemaCompatibilityDeclared(definition);
+    }
     return { package: manifest.package, definition, manifest, limits };
 }
