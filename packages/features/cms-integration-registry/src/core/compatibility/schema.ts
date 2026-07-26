@@ -26,6 +26,17 @@ function compareRelation(
     path: string,
     add: CompatibilityChangeSink,
 ): void {
+    const baselineKind = baseline.kind ?? "table";
+    const candidateKind = candidate.kind ?? "table";
+    if (baselineKind !== candidateKind) {
+        add(
+            "breaking",
+            "schema",
+            "relation-kind-changed",
+            path,
+            `Relation kind changed from ${baselineKind} to ${candidateKind}`,
+        );
+    }
     compareNamed(baseline.columns, candidate.columns, `${path}.columns`, "column", add, (left, right, columnPath) =>
         compareColumn(left, right, columnPath, add),
     );
@@ -70,6 +81,46 @@ function compareColumn(
             baseline.default === undefined && candidate.default !== undefined ? "additive" : "breaking";
         add(classification, "schema", "column-default-changed", path, "Column default changed");
     }
+    compareColumnGeneration(baseline, candidate, path, add);
+}
+
+function compareColumnGeneration(
+    baseline: DeclarativeConnectorSchemaColumnContract,
+    candidate: DeclarativeConnectorSchemaColumnContract,
+    path: string,
+    add: CompatibilityChangeSink,
+): void {
+    if (baseline.identity !== candidate.identity) {
+        const relaxed = baseline.identity === "always" && candidate.identity === "by-default";
+        const newlyDefaulted = baseline.identity === undefined && candidate.identity === "by-default";
+        add(
+            relaxed || newlyDefaulted ? "additive" : "breaking",
+            "schema",
+            "column-identity-changed",
+            path,
+            `Column identity changed from ${baseline.identity ?? "none"} to ${candidate.identity ?? "none"}`,
+        );
+    }
+    if (baseline.generated !== candidate.generated) {
+        add(
+            "breaking",
+            "schema",
+            "column-generation-changed",
+            path,
+            `Column generation changed from ${baseline.generated ?? "none"} to ${candidate.generated ?? "none"}`,
+        );
+    }
+    const baselineSequence = baseline.identity ? "internal" : (baseline.sequenceDependency ?? "none");
+    const candidateSequence = candidate.identity ? "internal" : (candidate.sequenceDependency ?? "none");
+    if (baselineSequence !== candidateSequence) {
+        add(
+            "unknown",
+            "schema",
+            "column-sequence-ownership-changed",
+            path,
+            `Column sequence dependency changed from ${baselineSequence} to ${candidateSequence}`,
+        );
+    }
 }
 
 function classifyTypeChange(baseline: string, candidate: string): "additive" | "breaking" | "unknown" {
@@ -101,9 +152,19 @@ function compareConstraint(
     path: string,
     add: CompatibilityChangeSink,
 ): void {
-    if (!isDeepStrictEqual(baseline, candidate)) {
+    if (!isDeepStrictEqual(normalizeConstraint(baseline), normalizeConstraint(candidate))) {
         add("breaking", "schema", "constraint-changed", path, "Public constraint changed or became more restrictive");
     }
+}
+
+function normalizeConstraint(constraint: DeclarativeConnectorSchemaConstraintContract) {
+    return {
+        ...constraint,
+        deferrable: constraint.deferrable ?? false,
+        initiallyDeferred: constraint.initiallyDeferred ?? false,
+        validated: constraint.validated ?? true,
+        ...(constraint.kind === "foreign-key" ? { matchType: constraint.matchType ?? "simple" } : {}),
+    };
 }
 
 function compareNamed<T extends { name: string }>(

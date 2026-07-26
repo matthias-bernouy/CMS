@@ -28,8 +28,19 @@ export type {
     DeclarativeConnectorSchemaForeignKeyAction,
     DeclarativeConnectorSchemaNamespaceContract,
     DeclarativeConnectorSchemaRelationContract,
+    DeclarativeConnectorSchemaRelationKind,
     DeclarativeConnectorSchemaTemplate,
     DeclarativeConnectorTemplate,
+} from "./IntegrationConnectorDeployer";
+export {
+    OBSERVED_SCHEMA_CONTRACT_V1,
+    type ObservedSchemaColumnV1,
+    type ObservedSchemaConstraintV1,
+    type ObservedSchemaContractIdentity,
+    type ObservedSchemaContractV1,
+    type ObservedSchemaNamespaceV1,
+    type ObservedSchemaOwnerV1,
+    type ObservedSchemaRelationV1,
 } from "./IntegrationConnectorDeployer";
 
 export type IntegrationIcon = { path: string };

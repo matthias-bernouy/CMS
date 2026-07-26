@@ -31,10 +31,18 @@ describe("@bernouy/cms-integrations connector schema compatibility contract", ()
                     relations: [
                         {
                             name: "orders",
+                            kind: "partitioned-table",
                             columns: [
                                 { name: "account_id", type: "bigint", nullable: false },
                                 { name: "created_at", type: "timestamptz(3)[]", nullable: false, default: "now()" },
-                                { name: "id", type: "bigint", nullable: false },
+                                { name: "id", type: "bigint", nullable: false, identity: "by-default" },
+                                {
+                                    name: "legacy_id",
+                                    type: "bigint",
+                                    nullable: false,
+                                    default: "nextval('shop.orders_legacy_id_seq'::regclass)",
+                                    sequenceDependency: "auto",
+                                },
                             ],
                             constraints: [
                                 {
@@ -44,6 +52,10 @@ describe("@bernouy/cms-integrations connector schema compatibility contract", ()
                                     references: { namespace: "accounts", relation: "users", columns: ["id"] },
                                     onUpdate: "no-action",
                                     onDelete: "cascade",
+                                    matchType: "full",
+                                    deferrable: true,
+                                    initiallyDeferred: true,
+                                    validated: false,
                                 },
                                 { kind: "check", name: "orders_id_positive", expression: "id > 0" },
                                 { kind: "primary-key", name: "orders_pkey", columns: ["id"] },
@@ -75,9 +87,36 @@ describe("@bernouy/cms-integrations connector schema compatibility contract", ()
         ["empty type", contractWithColumn({ type: " " }), /type.*non-empty string/],
         ["SQL instead of type", contractWithColumn({ type: "text; drop table users" }), /normalized provider type/],
         ["non-boolean nullability", contractWithColumn({ nullable: "false" }), /nullable.*boolean/],
+        ["unknown relation kind", oneRelation({ kind: "sequence", columns: [], constraints: [] }), /kind/],
+        ["unknown identity mode", contractWithColumn({ identity: "sometimes" }), /identity/],
+        [
+            "identity with default",
+            contractWithColumn({ identity: "always", default: "1" }),
+            /both identity and default/,
+        ],
+        [
+            "identity with automatic sequence",
+            contractWithColumn({ identity: "always", sequenceDependency: "auto" }),
+            /internal sequence/,
+        ],
+        [
+            "automatic sequence without default",
+            contractWithColumn({ sequenceDependency: "auto" }),
+            /requires a default/,
+        ],
+        [
+            "internal sequence without identity",
+            contractWithColumn({ sequenceDependency: "internal" }),
+            /requires an identity/,
+        ],
+        ["unknown generated mode", contractWithColumn({ generated: "virtual", default: "id + 1" }), /stored/],
+        ["generated without expression", contractWithColumn({ generated: "stored" }), /generated expression/],
         ["unknown constraint kind", contractWithConstraint({ kind: "index" }), /constraint.*kind/],
         ["empty check", contractWithConstraint({ kind: "check", expression: "" }), /expression.*non-empty/],
         ["invalid FK action", contractWithConstraint({ kind: "foreign-key", onDelete: "delete" }), /onDelete/],
+        ["invalid FK match type", contractWithConstraint({ kind: "foreign-key", matchType: "outer" }), /matchType/],
+        ["deferred non-deferrable", contractWithConstraint({ initiallyDeferred: true }), /requires deferrable/],
+        ["deferrable check", contractWithConstraint({ kind: "check", deferrable: true }), /cannot be deferrable/],
         ["unknown local column", contractWithConstraint({ columns: ["missing"] }), /unknown column/],
         ["duplicate constraint column", contractWithConstraint({ columns: ["id", "id"] }), /duplicate column/],
         [
@@ -98,8 +137,9 @@ function unsortedContract() {
                 relations: [
                     {
                         name: "orders",
+                        kind: "partitioned-table",
                         columns: [
-                            { name: "id", type: "INT8", nullable: false },
+                            { name: "id", type: "INT8", nullable: false, identity: "by-default" },
                             {
                                 name: "created_at",
                                 type: " TIMESTAMP ( 3 ) WITH TIME ZONE [] ",
@@ -107,6 +147,13 @@ function unsortedContract() {
                                 default: "now()",
                             },
                             { name: "account_id", type: "bigint", nullable: false },
+                            {
+                                name: "legacy_id",
+                                type: "int8",
+                                nullable: false,
+                                default: "nextval('shop.orders_legacy_id_seq'::regclass)",
+                                sequenceDependency: "auto",
+                            },
                         ],
                         constraints: [
                             { kind: "primary-key", name: "orders_pkey", columns: ["id"] },
@@ -122,6 +169,10 @@ function unsortedContract() {
                                 columns: ["account_id"],
                                 references: { namespace: "accounts", relation: "users", columns: ["id"] },
                                 onDelete: "cascade",
+                                matchType: "full",
+                                deferrable: true,
+                                initiallyDeferred: true,
+                                validated: false,
                             },
                         ],
                     },

@@ -105,6 +105,36 @@ describe("integration SQL schema compatibility", () => {
         expect(decision.report.evidence).toEqual([]);
     });
 
+    test("classifies relation kinds and generated-column semantics", () => {
+        const baseline = schemaContract() as {
+            namespaces: Array<{ relations: Array<Record<string, unknown>> }>;
+        };
+        const changedKind = structuredClone(baseline);
+        changedKind.namespaces[0]!.relations[0]!.kind = "view";
+        expect(evaluateSchema(sqlPackage("1.0.0", baseline), "1.1.0", changedKind).report.evidence).toContainEqual(
+            expect.objectContaining({ code: "relation-kind-changed", classification: "breaking" }),
+        );
+
+        const alwaysIdentity = schemaWithIdGeneration({ identity: "always" });
+        const defaultIdentity = schemaWithIdGeneration({ identity: "by-default" });
+        const identityDecision = evaluateSchema(sqlPackage("1.0.0", alwaysIdentity), "1.1.0", defaultIdentity);
+        expect(identityDecision.accepted).toBeTrue();
+        expect(identityDecision.report.evidence).toContainEqual(
+            expect.objectContaining({ code: "column-identity-changed", classification: "additive" }),
+        );
+
+        const sequenceBaseline = schemaWithIdGeneration({ default: "nextval('orders_id_seq'::regclass)" });
+        const ownedSequence = schemaWithIdGeneration({
+            default: "nextval('orders_id_seq'::regclass)",
+            sequenceDependency: "auto",
+        });
+        expect(
+            evaluateSchema(sqlPackage("1.0.0", sequenceBaseline), "1.1.0", ownedSequence).report.evidence,
+        ).toContainEqual(
+            expect.objectContaining({ code: "column-sequence-ownership-changed", classification: "unknown" }),
+        );
+    });
+
     test("rejects trusted SQL/declaration contradictions for patch and major publications", () => {
         const patchCandidate = withDeclarationEvidence(sqlPackage("1.0.1", schemaContract()), "contradiction");
         const majorCandidate = withDeclarationEvidence(sqlPackage("2.0.0", schemaContract()), "contradiction");
@@ -163,6 +193,14 @@ function schemaWithExtraRelation() {
         columns: [{ name: "id", type: "bigint", nullable: false }],
         constraints: [],
     });
+    return schema;
+}
+
+function schemaWithIdGeneration(generation: Record<string, unknown>) {
+    const schema = schemaContract() as {
+        namespaces: Array<{ relations: Array<{ columns: Array<Record<string, unknown>> }> }>;
+    };
+    Object.assign(schema.namespaces[0]!.relations[0]!.columns[0]!, generation);
     return schema;
 }
 

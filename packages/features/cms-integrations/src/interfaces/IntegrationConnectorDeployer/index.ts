@@ -6,6 +6,7 @@ export type {
     DeclarativeConnectorSchemaForeignKeyAction,
     DeclarativeConnectorSchemaNamespaceContract,
     DeclarativeConnectorSchemaRelationContract,
+    DeclarativeConnectorSchemaRelationKind,
     DeclarativeConnectorSchemaTemplate,
     DeclarativeConnectorTemplate,
 } from "./declarations";
@@ -31,3 +32,13 @@ export type {
     DeclarativeConnectorFunctionHttpStringFormat,
     DeclarativeConnectorFunctionTemplate,
 } from "./httpCompatibility";
+export {
+    OBSERVED_SCHEMA_CONTRACT_V1,
+    type ObservedSchemaColumnV1,
+    type ObservedSchemaConstraintV1,
+    type ObservedSchemaContractIdentity,
+    type ObservedSchemaContractV1,
+    type ObservedSchemaNamespaceV1,
+    type ObservedSchemaOwnerV1,
+    type ObservedSchemaRelationV1,
+} from "./schemaObservation";

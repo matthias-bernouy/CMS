@@ -4,6 +4,13 @@ import { parseConnectorSchemaContract } from "./schema";
 
 export { parseConnectorSchemaContract } from "./schema";
 export { parseConnectorFunctionHttpDataShape } from "./http-shape";
+export {
+    canonicalObservedSchemaContractBytes,
+    identifyObservedSchemaContract,
+    parseObservedSchemaContractV1,
+    projectObservedSchemaContract,
+    sameObservedSchemaContract,
+} from "./observed-schema";
 
 export function parseConnectorCompatibility(
     value: unknown,

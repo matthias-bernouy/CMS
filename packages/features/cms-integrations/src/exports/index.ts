@@ -25,6 +25,7 @@ export type {
     DeclarativeConnectorSchemaForeignKeyAction,
     DeclarativeConnectorSchemaNamespaceContract,
     DeclarativeConnectorSchemaRelationContract,
+    DeclarativeConnectorSchemaRelationKind,
     DeclarativeConnectorSchemaTemplate,
     DeclarativeConnectorTemplate,
     DeclarativeProvisionOutputTemplate,
@@ -44,6 +45,16 @@ export type {
     IntegrationInput,
     IntegrationSecurityDefinition,
     IntegrationUiDefinition,
+} from "../interfaces/Integration";
+export {
+    OBSERVED_SCHEMA_CONTRACT_V1,
+    type ObservedSchemaColumnV1,
+    type ObservedSchemaConstraintV1,
+    type ObservedSchemaContractIdentity,
+    type ObservedSchemaContractV1,
+    type ObservedSchemaNamespaceV1,
+    type ObservedSchemaOwnerV1,
+    type ObservedSchemaRelationV1,
 } from "../interfaces/Integration";
 export type {
     IntegrationConnectorDeployer,
@@ -136,6 +147,11 @@ export { parseIntegrationDefinition } from "../core/parsing/definition/definitio
 export {
     parseConnectorFunctionHttpDataShape,
     parseConnectorSchemaContract,
+    canonicalObservedSchemaContractBytes,
+    identifyObservedSchemaContract,
+    parseObservedSchemaContractV1,
+    projectObservedSchemaContract,
+    sameObservedSchemaContract,
 } from "../core/parsing/templates/connector-compatibility";
 export { assertSqlConnectorSchemaCompatibilityDeclared } from "../core/definitions/connectorCompatibility";
 export { importIntegration } from "../core/importIntegration";
