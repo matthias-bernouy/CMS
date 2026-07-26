@@ -3,7 +3,11 @@ import {
     SnapshotIntegrationPackageSource,
 } from "@bernouy/cms-integration-registry/fs";
 import type { IntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry";
-import { RepositoryCms, type PublicPackageDownloadProtection } from "@bernouy/cms-repository";
+import {
+    RepositoryCms,
+    type PublicPackageDownloadProtection,
+    type RepositoryCompatibilityReader,
+} from "@bernouy/cms-repository";
 import type { Middleware, Runner } from "@bernouy/http-runner";
 import type { RepositoryCatalogRefreshResult, RepositoryCatalogRuntime } from "./catalogRuntime";
 import { mountRepositoryHealthRoutes } from "./healthRoutes";
@@ -21,6 +25,7 @@ export type RepositoryServerConfig = Readonly<{
     catalog: RepositoryCatalogRuntime;
     loadCatalog: () => Promise<IntegrationRegistryCatalogSnapshot>;
     packageDownloadProtection: PublicPackageDownloadProtection;
+    integrationCompatibility?: RepositoryCompatibilityReader;
     managementGuard: Middleware;
     mountManagement: RepositoryManagementSurfaceMount;
     gracefulStopTimeoutMs?: number;
@@ -44,6 +49,7 @@ export function startRepositoryServer(config: RepositoryServerConfig): Repositor
         new RepositoryCms({
             runner,
             integrationCatalog: definitions,
+            integrationCompatibility: config.integrationCompatibility,
             integrationPackages: packages,
             packageDownloadProtection: config.packageDownloadProtection,
         });

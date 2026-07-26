@@ -12,6 +12,7 @@ import {
     FsIntegrationRegistryStablePromoter,
 } from "@bernouy/cms-integration-registry/fs";
 import { RepositoryManagementCms } from "@bernouy/cms-repository-management";
+import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
 import type { Runner } from "@bernouy/http-runner";
 import type { RepositoryCatalogRuntime } from "./core/catalogRuntime";
 import type { RepositoryManagementSurfaceMount } from "./core/repositoryServer";
@@ -22,6 +23,7 @@ const MAX_MANAGEMENT_JSON_BYTES = 64 * 1_024;
 export type ProductionRepositoryManagement = Readonly<{
     mount: RepositoryManagementSurfaceMount;
     recovery: IntegrationRegistryRecoveryResult;
+    compatibility: RepositoryCompatibilityReader;
 }>;
 
 export async function createProductionRepositoryManagement(input: {
@@ -57,6 +59,7 @@ export async function createProductionRepositoryManagement(input: {
 
     return Object.freeze({
         recovery,
+        compatibility: reports,
         mount(runner: Runner) {
             new RepositoryManagementCms({
                 runner,

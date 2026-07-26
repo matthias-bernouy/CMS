@@ -56,6 +56,7 @@ export async function startProductionRepositoryServer(
         catalog,
         loadCatalog,
         packageDownloadProtection,
+        integrationCompatibility: repositoryManagement.compatibility,
         managementGuard,
         mountManagement: repositoryManagement.mount,
         gracefulStopTimeoutMs: env.gracefulStopTimeoutMs,

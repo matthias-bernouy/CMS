@@ -39,6 +39,7 @@ describe("production repository management", () => {
             catalog,
             loadCatalog,
             packageDownloadProtection: { clientAddressPolicy: { mode: "disabled" } },
+            integrationCompatibility: management.compatibility,
             managementGuard: createRepositoryManagementGuard({
                 serviceToken: "management-secret",
                 servicePrincipal: "management-cms",
@@ -154,6 +155,23 @@ describe("production repository management", () => {
             },
         });
         const reportRevisionId = reevaluation.currentReportRevisionId;
+        const publicCompatibility = await fetch(
+            `${publicOrigin}/.cms/repository/api/integrations/compatibility?kind=remote-demo&version=1.1.0`,
+        );
+        expect(publicCompatibility.status).toBe(200);
+        expect(publicCompatibility.headers.get("access-control-allow-origin")).toBe("*");
+        const publicEtag = publicCompatibility.headers.get("etag");
+        const publicHistoryText = await publicCompatibility.text();
+        expect(publicHistoryText).not.toContain("repository-owner");
+        expect(JSON.parse(publicHistoryText)).toMatchObject({
+            current: { id: reportRevisionId },
+            revisions: [{ id: reportRevisionId, provenance: { reason: "Evaluator rollout" } }],
+        });
+        const notModified = await fetch(
+            `${publicOrigin}/.cms/repository/api/integrations/compatibility?kind=remote-demo&version=1.1.0`,
+            { headers: { "if-none-match": publicEtag! } },
+        );
+        expect(notModified.status).toBe(304);
         const promoted = await authenticatedJson(
             `${managementOrigin}/.cms/repository-management/api/integrations/stable-promotions`,
             JSON.stringify({
