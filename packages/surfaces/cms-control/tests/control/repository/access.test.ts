@@ -1,12 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryAuthentication, type Authentication, type Subject } from "@bernouy/cms-auth";
+import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import type { Middleware } from "@bernouy/http-runner";
+import { ControlCms } from "cms-control/ControlCms";
 import { createControlAccessGuard } from "cms-control/core/admin/control/adminAccess";
 import {
     createRepositoryManagementAccessGuard,
     type RepositoryManagementAccess,
 } from "cms-control/core/admin/control/mountRoutes/repositoryAccess";
 import type { CMS_ROLES } from "types/roles";
+import { CaptureRunner } from "../access/authPublicSupport";
 
 const ACCESS: RepositoryManagementAccess = {
     administratorSubjectIdentifier: "repository-owner",
@@ -63,6 +66,24 @@ describe("repository management access", () => {
         const userAuth = authentication({ identifier: "repository-owner", role: "user" });
         const userGuards = repositoryGuards(userAuth, ACCESS);
         expect(await status(userGuards, "/cms/api/repository/status")).toBe(403);
+    });
+
+    test("mounts the exact-subject guard after authentication on static and API routes", async () => {
+        const runner = new CaptureRunner();
+        const cms = new ControlCms(
+            runner,
+            new InMemoryCmsRepository(),
+            authentication({ identifier: "another-admin", role: "admin" }),
+            { repositoryManagement: ACCESS },
+        );
+        await cms.ready;
+
+        for (const route of ["GET /admin/pages", "GET /api/system/settings"]) {
+            const chain = runner.middlewareChains.get(route);
+            expect(chain).toHaveLength(2);
+            expect(await status(chain!, "/admin/repository")).toBe(403);
+            expect(await status(chain!, "/api/repository/status")).toBe(403);
+        }
     });
 });
 

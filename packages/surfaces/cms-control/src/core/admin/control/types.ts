@@ -35,6 +35,7 @@ import type {
 import type { ScheduledTriggerRunResult, TriggerRepository } from "@bernouy/cms-triggers";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { CMS_ROLES } from "types/roles";
+import type { RepositoryManagementAccess } from "cms-control/core/admin/control/mountRoutes/repositoryAccess";
 
 type Configuration = {
     deliveryUrl?: string;
@@ -43,6 +44,7 @@ type Configuration = {
 };
 
 export type ControlCmsOptions = Configuration & {
+    repositoryManagement?: RepositoryManagementAccess;
     integrationCatalog?: IntegrationDefinitionRepository;
     integrationPackageResolver?: IntegrationPackageResolver;
     integrationInstallations?: IntegrationInstallationRepository;
