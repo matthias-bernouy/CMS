@@ -18,6 +18,11 @@ export const REPOSITORY_MANAGEMENT_BASE_PATH = "/.cms/repository-management";
 
 export type RepositoryManagementSurfaceMount = (runner: Runner) => void;
 
+export type RepositoryMaintenanceSurface = Readonly<{
+    guard: Middleware;
+    mount: RepositoryManagementSurfaceMount;
+}>;
+
 export type RepositoryServerConfig = Readonly<{
     publicRunner: Runner;
     managementRunner: Runner;
@@ -30,6 +35,7 @@ export type RepositoryServerConfig = Readonly<{
     observePublicRead?: PublicRepositoryReadObserver;
     managementGuard: Middleware;
     mountManagement: RepositoryManagementSurfaceMount;
+    maintenance?: RepositoryMaintenanceSurface;
     gracefulStopTimeoutMs?: number;
 }>;
 
@@ -58,6 +64,11 @@ export function startRepositoryServer(config: RepositoryServerConfig): Repositor
         });
     });
     config.managementRunner.group(REPOSITORY_MANAGEMENT_BASE_PATH, config.mountManagement, [config.managementGuard]);
+    if (config.maintenance) {
+        config.managementRunner.group(REPOSITORY_MANAGEMENT_BASE_PATH, config.maintenance.mount, [
+            config.maintenance.guard,
+        ]);
+    }
 
     let stopPromise: Promise<void> | undefined;
     try {

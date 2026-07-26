@@ -27,6 +27,7 @@ const MAX_MANAGEMENT_JSON_BYTES = 64 * 1_024;
 
 export type ProductionRepositoryManagement = Readonly<{
     mount: RepositoryManagementSurfaceMount;
+    mountMaintenance: RepositoryManagementSurfaceMount;
     recovery: IntegrationRegistryRecoveryResult;
     compatibility: RepositoryCompatibilityReader;
 }>;
@@ -76,6 +77,9 @@ export async function createProductionRepositoryManagement(input: {
     return Object.freeze({
         recovery,
         compatibility: reports,
+        mountMaintenance() {
+            return undefined;
+        },
         mount(runner: Runner) {
             new RepositoryManagementCms({
                 runner,

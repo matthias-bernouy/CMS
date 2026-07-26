@@ -8,6 +8,7 @@ describe("readRepositoryRuntimeEnv", () => {
             managementPort: 3000,
             registryRoot: "/var/lib/cms-repository/registry",
             managementTokenFile: "/run/secrets/cms-repository-management-token",
+            maintenanceTokenFile: "/run/secrets/cms-repository-maintenance-token",
             managementRateLimit: 30,
             managementRateLimitWindowSeconds: 60,
             clientAddressMode: "disabled",
@@ -36,6 +37,9 @@ describe("readRepositoryRuntimeEnv", () => {
             "must be an absolute path",
         );
         expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE: "management-token" })).toThrow(
+            "must be an absolute path",
+        );
+        expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE: "maintenance-token" })).toThrow(
             "must be an absolute path",
         );
     });

@@ -7,6 +7,7 @@ export type RepositoryRuntimeEnv = Readonly<{
     managementPort: number;
     registryRoot: string;
     managementTokenFile: string;
+    maintenanceTokenFile: string;
     managementRateLimit: number;
     managementRateLimitWindowSeconds: number;
     clientAddressMode: "direct" | "disabled" | "trusted-proxy";
@@ -33,6 +34,10 @@ export function readRepositoryRuntimeEnv(source: RepositoryRuntimeEnvSource): Re
         managementTokenFile: absolutePath(
             source.CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE ?? "/run/secrets/cms-repository-management-token",
             "CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE",
+        ),
+        maintenanceTokenFile: absolutePath(
+            source.CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE ?? "/run/secrets/cms-repository-maintenance-token",
+            "CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE",
         ),
         managementRateLimit: positiveInteger(
             source.CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT,

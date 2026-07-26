@@ -3,7 +3,7 @@ import {
     createIntegrationRegistryCatalogSnapshot,
     type IntegrationRegistryCatalogSnapshot,
 } from "@bernouy/cms-integration-registry";
-import { createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
+import { createRepositoryMaintenanceGuard, createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
 import { BunRunner } from "@bernouy/http-runner";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { RepositoryCatalogRuntime } from "../src/core/catalogRuntime";
@@ -39,6 +39,27 @@ describe("repository listener composition", () => {
         });
         expect(authorized.status).toBe(200);
         expect(await authorized.json()).toEqual({ managed: true });
+
+        expect(
+            (
+                await fetch(`${managementOrigin}/.cms/repository-management/ping`, {
+                    headers: { authorization: "Bearer maintenance-secret" },
+                })
+            ).status,
+        ).toBe(401);
+        expect(
+            (
+                await fetch(`${managementOrigin}/.cms/repository-management/maintenance-ping`, {
+                    headers: { authorization: "Bearer management-secret" },
+                })
+            ).status,
+        ).toBe(401);
+
+        const maintained = await fetch(`${managementOrigin}/.cms/repository-management/maintenance-ping`, {
+            headers: { authorization: "Bearer maintenance-secret" },
+        });
+        expect(maintained.status).toBe(200);
+        expect(await maintained.json()).toEqual({ maintained: true });
     });
 
     test("keeps readiness while a failed refresh degrades the last valid snapshot", async () => {
@@ -103,6 +124,16 @@ async function startFixture(loadCatalog: () => Promise<IntegrationRegistryCatalo
         }),
         mountManagement(runner) {
             runner.get("/ping", () => Response.json({ managed: true }));
+        },
+        maintenance: {
+            guard: createRepositoryMaintenanceGuard({
+                serviceToken: "maintenance-secret",
+                servicePrincipal: "official-maintenance",
+                rateLimiter: new InMemoryRateLimiter({ limit: 10, windowSeconds: 60 }),
+            }),
+            mount(runner) {
+                runner.get("/maintenance-ping", () => Response.json({ maintained: true }));
+            },
         },
         gracefulStopTimeoutMs: 1_000,
     });

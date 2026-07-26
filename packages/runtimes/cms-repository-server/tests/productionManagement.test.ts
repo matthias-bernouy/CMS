@@ -61,6 +61,22 @@ describe("production repository management", () => {
         );
         expect(unauthorized.status).toBe(401);
 
+        for (const path of [
+            "/api/integrations/publications",
+            "/api/integrations/stable-promotions",
+            "/api/integrations/compatibility/reevaluations",
+        ]) {
+            const rejectedMaintenanceCredential = await fetch(`${managementOrigin}/.cms/repository-management${path}`, {
+                method: "POST",
+                headers: {
+                    authorization: "Bearer maintenance-secret",
+                    "content-type": "application/json",
+                },
+                body: "{}",
+            });
+            expect(rejectedMaintenanceCredential.status).toBe(401);
+        }
+
         const published = await fetch(`${managementOrigin}/.cms/repository-management/api/integrations/publications`, {
             method: "POST",
             headers: { authorization: "Bearer management-secret", "content-type": "application/json" },

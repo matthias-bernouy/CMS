@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
+import { createRepositoryMaintenanceGuard, createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
 import { json, managementRequest, RecordingRateLimiter } from "./support";
 
 describe("repository management authentication", () => {
@@ -73,6 +73,32 @@ describe("repository management guard configuration", () => {
                 rateLimiter: new RecordingRateLimiter(),
             }),
         ).toThrow(TypeError);
+    });
+});
+
+describe("repository capability separation", () => {
+    it("uses independent credentials and accounting identities", async () => {
+        const managementLimiter = new RecordingRateLimiter();
+        const maintenanceLimiter = new RecordingRateLimiter();
+        const management = createGuard(managementLimiter);
+        const maintenance = createRepositoryMaintenanceGuard({
+            serviceToken: "maintenance-secret",
+            servicePrincipal: "official-maintenance",
+            rateLimiter: maintenanceLimiter,
+        });
+        const downstream = async () => new Response(null, { status: 204 });
+
+        expect(await management(managementRequest("Bearer maintenance-secret"), downstream)).toMatchObject({
+            status: 401,
+        });
+        expect(await maintenance(managementRequest("Bearer management-secret"), downstream)).toMatchObject({
+            status: 401,
+        });
+        expect(await maintenance(managementRequest("Bearer maintenance-secret"), downstream)).toMatchObject({
+            status: 204,
+        });
+        expect(managementLimiter.keys).toEqual([]);
+        expect(maintenanceLimiter.keys).toEqual(["repository-maintenance:official-maintenance"]);
     });
 });
 

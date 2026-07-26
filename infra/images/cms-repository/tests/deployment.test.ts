@@ -23,7 +23,7 @@ describe("repository image", () => {
         expect(dockerfileSource).toContain("--filter=@bernouy/cms-repository-server");
         expect(dockerfileSource).toContain("USER bun");
         expect(dockerfileSource).toContain("/var/lib/cms-repository/registry");
-        expect(dockerfileSource).not.toMatch(/CMS_REPOSITORY_(?:MANAGEMENT_)?TOKEN=/);
+        expect(dockerfileSource).not.toMatch(/CMS_REPOSITORY_(?:(?:MANAGEMENT|MAINTENANCE)_)?TOKEN=/);
     });
 
     test("checks readiness on the internal management listener", () => {
@@ -54,12 +54,18 @@ describe("repository Compose isolation", () => {
         expect(readmeSource).toContain("refuses to create `./registry`");
     });
 
-    test("loads only the management credential from a Docker secret file", () => {
+    test("loads distinct management and maintenance credentials from Docker secret files", () => {
         expect(composeSource).toContain("CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE: /run/secrets/");
+        expect(composeSource).toContain("CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE: /run/secrets/");
         expect(composeSource).toContain("CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE");
+        expect(composeSource).toContain("CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE");
         expect(composeSource).toContain("mode: 0400");
         expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_MANAGEMENT_TOKEN=/m);
+        expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_MAINTENANCE_TOKEN=/m);
         expect(`${composeSource}\n${envExampleSource}`).not.toMatch(/READ_TOKEN|REPOSITORY_TOKEN=/);
+        expect(readmeSource).toMatch(
+            /runtime refuses to start if management and\s+maintenance secret files contain the same token/,
+        );
     });
 
     test("does not reject standard internal CMS fetches that have no forwarding chain", () => {
@@ -73,6 +79,7 @@ describe("repository Compose isolation", () => {
 
     test("provides an explicit internal-network attachment for the management CMS", () => {
         expect(overrideSource).toContain("cms_repository_management_token");
+        expect(overrideSource).not.toContain("cms_repository_maintenance_token");
         expect(overrideSource).toContain("CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE");
         expect(overrideSource).toContain("P9R_INTEGRATION_REPOSITORY_URL: http://cms-repository:3001/.cms/repository");
         expect(overrideSource).toContain(
@@ -112,6 +119,7 @@ composeTest("Compose renders with one isolated service and no published ports", 
             PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin",
             CMS_REPOSITORY_IMAGE: "registry.example.test/bernouy/cms-repository:2026.07.26-1",
             CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-token",
+            CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-maintenance-token",
         },
         stdout: "pipe",
         stderr: "pipe",
@@ -123,9 +131,11 @@ composeTest("Compose renders with one isolated service and no published ports", 
         services: Record<
             string,
             {
+                environment?: Record<string, string>;
                 ports?: unknown;
                 read_only?: boolean;
                 networks?: Record<string, unknown>;
+                secrets?: Array<{ source?: string; target?: string }>;
                 tmpfs?: string[];
                 volumes?: Array<{ target?: string; bind?: { create_host_path?: boolean } }>;
             }
@@ -134,6 +144,22 @@ composeTest("Compose renders with one isolated service and no published ports", 
     };
     expect(Object.keys(config.services)).toEqual(["cms-repository"]);
     expect(config.services["cms-repository"]).toMatchObject({ read_only: true });
+    expect(config.services["cms-repository"]?.environment).toMatchObject({
+        CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE: "/run/secrets/cms-repository-management-token",
+        CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE: "/run/secrets/cms-repository-maintenance-token",
+    });
+    expect(config.services["cms-repository"]?.secrets).toEqual(
+        expect.arrayContaining([
+            expect.objectContaining({
+                source: "cms_repository_management_token",
+                target: "cms-repository-management-token",
+            }),
+            expect.objectContaining({
+                source: "cms_repository_maintenance_token",
+                target: "cms-repository-maintenance-token",
+            }),
+        ]),
+    );
     expect(config.services["cms-repository"]?.ports).toBeUndefined();
     expect(config.services["cms-repository"]?.tmpfs).toContain(
         "/tmp:rw,nosuid,nodev,noexec,size=64m,mode=1770,uid=1000,gid=1000",

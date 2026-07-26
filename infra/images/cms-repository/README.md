@@ -25,15 +25,16 @@ docker build --pull \
 ```
 
 Prepare the deployment directory for the container UID/GID 1000 and create the
-management token without putting it in `.env`:
+management and maintenance tokens without putting either value in `.env`:
 
 ```bash
 cd /opt/cms-repository
 umask 077
 install -d -m 0750 registry secrets
 openssl rand -hex 32 | tr -d '\n' > secrets/repository-management-token
-chmod 0600 secrets/repository-management-token
-sudo chown -R 1000:1000 registry secrets/repository-management-token
+openssl rand -hex 32 | tr -d '\n' > secrets/repository-maintenance-token
+chmod 0600 secrets/repository-management-token secrets/repository-maintenance-token
+sudo chown -R 1000:1000 registry secrets/repository-management-token secrets/repository-maintenance-token
 cp .env.example .env
 ```
 
@@ -64,6 +65,12 @@ consumption use the global catalog immediately. Delivery provides the canonical
 anonymous origin, while authenticated Control operations use the private
 `http://cms-repository:3000/.cms/repository-management` listener. The
 credential never enters Delivery responses or browser code.
+
+The separate maintenance credential is reserved for official operations
+automation such as reviewed schema-baseline import. It is deliberately absent
+from `management-cms.override.yml`, so neither the CMS nor its administrators
+can use maintenance-only routes. The runtime refuses to start if management and
+maintenance secret files contain the same token.
 
 Before applying the override, identify the one administrator by its stable
 opaque user `sub` (visible in the Control Users response and detail URL), not by

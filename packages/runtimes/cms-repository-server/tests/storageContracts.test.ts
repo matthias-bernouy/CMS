@@ -4,7 +4,11 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { buildFsIntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry/fs";
 import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
-import { readRepositoryManagementToken } from "../src/credentials";
+import {
+    assertDistinctRepositoryCredentials,
+    readRepositoryMaintenanceToken,
+    readRepositoryManagementToken,
+} from "../src/credentials";
 import { prepareOfficialRepositoryBootstrap } from "../src/production";
 import {
     bootstrapRepositoryRegistryIfEmpty,
@@ -122,6 +126,24 @@ describe("repository storage contracts", () => {
         await expect(readRepositoryManagementToken(tokenFile)).rejects.toThrow("one non-empty Bearer token");
         await writeFile(tokenFile, "x".repeat(8_193));
         await expect(readRepositoryManagementToken(tokenFile)).rejects.toThrow("bounded regular file");
+    });
+
+    test("reads an independent maintenance token and rejects credential reuse", async () => {
+        const root = await temporaryRoot();
+        const maintenanceTokenFile = join(root, "maintenance-token");
+        await writeFile(maintenanceTokenFile, "maintenance-secret\n", { mode: 0o600 });
+
+        const maintenanceToken = await readRepositoryMaintenanceToken(maintenanceTokenFile);
+        expect(maintenanceToken).toBe("maintenance-secret");
+        expect(() => assertDistinctRepositoryCredentials("management-secret", maintenanceToken)).not.toThrow();
+        expect(() => assertDistinctRepositoryCredentials("shared-secret", "shared-secret")).toThrow(
+            "management and maintenance tokens must be distinct",
+        );
+
+        await writeFile(maintenanceTokenFile, "two tokens");
+        await expect(readRepositoryMaintenanceToken(maintenanceTokenFile)).rejects.toThrow(
+            "maintenance token file must contain one non-empty Bearer token",
+        );
     });
 
     test("refuses symlinked and malformed management token files without exposing their paths", async () => {

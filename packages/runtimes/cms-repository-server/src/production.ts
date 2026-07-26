@@ -11,7 +11,7 @@ import {
     FsOfficialIntegrationRegistryBootstrapPublisher,
 } from "@bernouy/cms-integration-registry/fs";
 import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
-import { createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
+import { createRepositoryMaintenanceGuard, createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
 import type { PublicPackageDownloadProtection, PublicPackageReadObservation } from "@bernouy/cms-repository";
 import { BunRunner } from "@bernouy/http-runner";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
@@ -20,7 +20,11 @@ import {
     createConsoleRepositoryOperationLogSink,
     RepositoryOperationalTelemetry,
 } from "./core/observability/telemetry";
-import { readRepositoryManagementToken } from "./credentials";
+import {
+    assertDistinctRepositoryCredentials,
+    readRepositoryMaintenanceToken,
+    readRepositoryManagementToken,
+} from "./credentials";
 import { createProductionRepositoryManagement } from "./management";
 import {
     bootstrapRepositoryRegistryIfEmpty,
@@ -42,7 +46,11 @@ export async function startProductionRepositoryServer(
         env.registryRoot,
         options.bootstrapEmptyRegistry ?? prepareOfficialRepositoryBootstrap,
     );
-    const token = await readRepositoryManagementToken(env.managementTokenFile);
+    const [managementToken, maintenanceToken] = await Promise.all([
+        readRepositoryManagementToken(env.managementTokenFile),
+        readRepositoryMaintenanceToken(env.maintenanceTokenFile),
+    ]);
+    assertDistinctRepositoryCredentials(managementToken, maintenanceToken);
     const catalog = new RepositoryCatalogRuntime();
     const loadCatalog = (): Promise<IntegrationRegistryCatalogSnapshot> =>
         buildFsIntegrationRegistryCatalogSnapshot({ root: env.registryRoot });
@@ -58,8 +66,16 @@ export async function startProductionRepositoryServer(
     });
 
     const managementGuard = createRepositoryManagementGuard({
-        serviceToken: token,
+        serviceToken: managementToken,
         servicePrincipal: "management-cms",
+        rateLimiter: new InMemoryRateLimiter({
+            limit: env.managementRateLimit,
+            windowSeconds: env.managementRateLimitWindowSeconds,
+        }),
+    });
+    const maintenanceGuard = createRepositoryMaintenanceGuard({
+        serviceToken: maintenanceToken,
+        servicePrincipal: "official-maintenance",
         rateLimiter: new InMemoryRateLimiter({
             limit: env.managementRateLimit,
             windowSeconds: env.managementRateLimitWindowSeconds,
@@ -80,6 +96,7 @@ export async function startProductionRepositoryServer(
         integrationCompatibility: repositoryManagement.compatibility,
         managementGuard,
         mountManagement: repositoryManagement.mount,
+        maintenance: { guard: maintenanceGuard, mount: repositoryManagement.mountMaintenance },
         gracefulStopTimeoutMs: env.gracefulStopTimeoutMs,
     });
 }

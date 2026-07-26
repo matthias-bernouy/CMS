@@ -9,6 +9,7 @@ services:
             CMS_REPOSITORY_MANAGEMENT_PORT: "3000"
             CMS_REPOSITORY_REGISTRY_ROOT: /var/lib/cms-repository/registry
             CMS_REPOSITORY_MANAGEMENT_TOKEN_FILE: /run/secrets/cms-repository-management-token
+            CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE: /run/secrets/cms-repository-maintenance-token
             CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT: "${CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT:-30}"
             CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT_WINDOW_SECONDS: "${CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT_WINDOW_SECONDS:-60}"
 
@@ -21,6 +22,11 @@ services:
         secrets:
             - source: cms_repository_management_token
               target: cms-repository-management-token
+              uid: "1000"
+              gid: "1000"
+              mode: 0400
+            - source: cms_repository_maintenance_token
+              target: cms-repository-maintenance-token
               uid: "1000"
               gid: "1000"
               mode: 0400
@@ -64,6 +70,8 @@ services:
 secrets:
     cms_repository_management_token:
         file: ${CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE must reference a mode-0600 secret file}
+    cms_repository_maintenance_token:
+        file: ${CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MAINTENANCE_TOKEN_SECRET_FILE must reference a distinct mode-0600 secret file}
 
 networks:
     cms_repository:

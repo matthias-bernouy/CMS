@@ -4,6 +4,7 @@
  */
 
 export {
+    createRepositoryMaintenanceGuard,
     createRepositoryManagementGuard,
     type RepositoryManagementGuardConfig,
 } from "cms-repository-management/managementGuard";

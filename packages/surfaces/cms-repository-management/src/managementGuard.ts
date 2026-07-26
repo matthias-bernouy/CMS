@@ -8,6 +8,7 @@ import {
 } from "cms-repository-management/managementResponses";
 
 const DEFAULT_RATE_LIMIT_KEY_PREFIX = "repository-management:";
+const DEFAULT_MAINTENANCE_RATE_LIMIT_KEY_PREFIX = "repository-maintenance:";
 const BEARER_PATTERN = /^Bearer ([^\s]+)$/i;
 
 export type RepositoryManagementGuardConfig = {
@@ -18,9 +19,20 @@ export type RepositoryManagementGuardConfig = {
 };
 
 export function createRepositoryManagementGuard(config: RepositoryManagementGuardConfig): Middleware {
+    return createRepositoryCapabilityGuard(config, DEFAULT_RATE_LIMIT_KEY_PREFIX);
+}
+
+export function createRepositoryMaintenanceGuard(config: RepositoryManagementGuardConfig): Middleware {
+    return createRepositoryCapabilityGuard(config, DEFAULT_MAINTENANCE_RATE_LIMIT_KEY_PREFIX);
+}
+
+function createRepositoryCapabilityGuard(
+    config: RepositoryManagementGuardConfig,
+    defaultRateLimitKeyPrefix: string,
+): Middleware {
     assertConfig(config);
     const expectedTokenDigest = digest(config.serviceToken);
-    const rateLimitKey = `${config.rateLimitKeyPrefix ?? DEFAULT_RATE_LIMIT_KEY_PREFIX}${config.servicePrincipal}`;
+    const rateLimitKey = `${config.rateLimitKeyPrefix ?? defaultRateLimitKeyPrefix}${config.servicePrincipal}`;
 
     return async (request, next) => {
         const suppliedToken = readBearerToken(request);
