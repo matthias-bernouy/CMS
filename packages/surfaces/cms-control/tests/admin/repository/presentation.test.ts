@@ -20,6 +20,10 @@ describe("repository administration presentation", () => {
         expect(console.textContent).toContain("invalid-package");
         expect(console.textContent).toContain("broken");
         expect(console.textContent).toContain("Recovered safely");
+        expect(console.textContent).toContain("Registry capacity");
+        expect(console.textContent).toContain("4 downloads / 4.0 KiB");
+        expect(console.textContent).toContain("publication: succeeded");
+        expect(console.textContent).toContain("publication-operation");
         expect(console.textContent).toContain("A <script>alert(1)</script> package failed");
         expect(console.querySelector("script")).toBeNull();
 

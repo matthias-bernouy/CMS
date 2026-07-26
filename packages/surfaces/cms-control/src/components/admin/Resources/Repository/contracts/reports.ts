@@ -17,7 +17,7 @@ import {
     readRecord,
     readText,
     RepositoryUiContractError,
-} from "./read";
+} from "./parsing";
 
 export function parseRepositoryCompatibilityPage(value: unknown): RepositoryCompatibilityPageView {
     const object = readRecord(value);

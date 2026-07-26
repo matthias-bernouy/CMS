@@ -1,3 +1,5 @@
+import type { RepositoryMetricsView, RepositoryRecentOperationView } from "./observability";
+
 export type RepositoryStatusView = Readonly<{
     ready: boolean;
     health: string;
@@ -6,6 +8,7 @@ export type RepositoryStatusView = Readonly<{
     diagnostics: number;
     quarantined: number;
     recoveryDiagnostics: number;
+    metrics?: RepositoryMetricsView;
 }>;
 
 export type RepositoryDiagnosticView = Readonly<{
@@ -27,6 +30,8 @@ export type RepositoryDiagnosticsView = Readonly<{
     diagnostics: readonly RepositoryDiagnosticView[];
     quarantined: readonly RepositoryQuarantineView[];
     recovery: readonly RepositoryDiagnosticView[];
+    metrics?: RepositoryMetricsView;
+    recentOperations: readonly RepositoryRecentOperationView[];
 }>;
 
 export type RepositoryVersionCompatibilityView = Readonly<{

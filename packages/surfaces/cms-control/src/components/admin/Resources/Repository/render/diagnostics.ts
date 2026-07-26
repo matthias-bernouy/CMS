@@ -28,6 +28,25 @@ export function renderRepositoryDiagnostics(target: HTMLElement, view: Repositor
     } else {
         fragment.append(...view.recovery.map(diagnostic));
     }
+    fragment.append(element("h3", "Recent operations"));
+    if (view.recentOperations.length === 0) {
+        fragment.append(emptyMessage("No observed repository operation."));
+    } else {
+        for (const operation of view.recentOperations) {
+            const node = element("div", undefined, "diagnostic");
+            node.append(
+                element("strong", `${operation.operation}: ${operation.outcome}`),
+                metadata([
+                    operation.kind && operation.version ? `${operation.kind}@${operation.version}` : operation.kind,
+                    `${operation.durationMs} ms`,
+                    operation.operationId,
+                    operation.reportRevisionId ?? operation.reportId,
+                    operation.errorCode,
+                ]),
+            );
+            fragment.append(node);
+        }
+    }
     target.replaceChildren(fragment);
 }
 

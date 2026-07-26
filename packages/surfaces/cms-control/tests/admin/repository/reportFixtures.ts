@@ -1,3 +1,40 @@
+const operationCounter = {
+    attempted: 2,
+    inFlight: 0,
+    succeeded: 1,
+    rejected: 1,
+    failed: 0,
+    totalDurationMs: 12,
+    maximumDurationMs: 8,
+};
+
+const metricsFixture = {
+    operations: {
+        publication: operationCounter,
+        stablePromotion: operationCounter,
+        compatibilityReevaluation: operationCounter,
+    },
+    compatibility: { reevaluations: 1, warnings: 1 },
+    publicPackages: {
+        packagesServed: 4,
+        packageBytes: 4_096,
+        releaseNotesServed: 1,
+        releaseNotesBytes: 128,
+        rateLimitRejections: 2,
+        downloadRateLimitRejections: 1,
+    },
+    snapshot: { integrations: 14, versions: 18, diagnostics: 1, quarantined: 1, recoveryDiagnostics: 1 },
+    filesystem: {
+        status: "available",
+        checkedAt: "2026-07-26T12:00:00.000Z",
+        totalBytes: "10000",
+        freeBytes: "4000",
+        availableBytes: "3500",
+        usedBytes: "6000",
+        usedBasisPoints: 6000,
+    },
+};
+
 export const statusFixture = {
     ready: true,
     health: "healthy",
@@ -6,6 +43,7 @@ export const statusFixture = {
     diagnostics: 1,
     quarantined: 1,
     recoveryDiagnostics: 1,
+    metrics: metricsFixture,
 };
 
 export const diagnosticsFixture = {
@@ -20,6 +58,23 @@ export const diagnosticsFixture = {
     ],
     quarantined: [{ kind: "broken", diagnosticCodes: ["invalid-package"] }],
     recovery: [{ code: "publication-recovered", message: "Recovered safely", operationId: "operation-1" }],
+    metrics: metricsFixture,
+    recentOperations: [
+        {
+            timestamp: "2026-07-26T12:00:00.000Z",
+            operation: "publication",
+            operationId: "publication-operation",
+            outcome: "succeeded",
+            durationMs: 8,
+            kind: "commerce",
+            version: "1.1.0",
+            digest: "b".repeat(64),
+            reportId: "admission-1",
+            evaluatorName: "contract-evaluator",
+            evaluatorVersion: "2.0.0",
+            compatibilityOutcome: "compatible",
+        },
+    ],
 };
 
 export const versionsFixture = {

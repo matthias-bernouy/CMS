@@ -1,11 +1,6 @@
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
-import {
-    parseRepositoryDiagnostics,
-    parseRepositoryStatus,
-    parseRepositoryVersions,
-    readOptionalText,
-    readRecord,
-} from "./contracts/read";
+import { parseRepositoryDiagnostics, parseRepositoryStatus, parseRepositoryVersions } from "./contracts/read";
+import { readOptionalText, readRecord } from "./contracts/parsing";
 import {
     parseRepositoryActionErrorDetails,
     parseRepositoryCompatibilityPage,

@@ -30274,7 +30274,7 @@ cms-repository-admin .action-grid > form {
   var styles_default4 = `${layout_default3}
 ${controls_default3}`;
 
-  // src/components/admin/Resources/Repository/contracts/read.ts
+  // src/components/admin/Resources/Repository/contracts/parsing.ts
   var MAX_ITEMS = 4096;
   var MAX_TEXT = 16384;
 
@@ -30283,43 +30283,6 @@ ${controls_default3}`;
       super("Repository response is invalid");
       this.name = "RepositoryUiContractError";
     }
-  }
-  function parseRepositoryStatus(value3) {
-    const object = readRecord(value3);
-    return {
-      ready: readBoolean(object.ready),
-      health: readText(object.health),
-      integrations: readCount(object.integrations),
-      versions: readCount(object.versions),
-      diagnostics: readCount(object.diagnostics),
-      quarantined: readCount(object.quarantined),
-      recoveryDiagnostics: readCount(object.recoveryDiagnostics)
-    };
-  }
-  function parseRepositoryDiagnostics(value3) {
-    const object = readRecord(value3);
-    return {
-      health: readText(object.health),
-      diagnostics: readArray(object.diagnostics).map(parseDiagnostic),
-      quarantined: readArray(object.quarantined).map(parseQuarantine),
-      recovery: readArray(object.recovery).map(parseDiagnostic)
-    };
-  }
-  function parseRepositoryVersions(value3) {
-    const object = readRecord(value3);
-    return {
-      kind: readText(object.kind),
-      ...optionalProperty("stable", readOptionalText(object.stable)),
-      ...optionalProperty("latest", readOptionalText(object.latest)),
-      versions: readArray(object.versions).map((entry) => {
-        const version = readRecord(entry);
-        return {
-          version: readText(version.version),
-          ...optionalProperty("digest", readOptionalText(version.digest)),
-          ...version.compatibility === null || version.compatibility === undefined ? {} : { compatibility: parseVersionCompatibility(version.compatibility) }
-        };
-      })
-    };
   }
   function readRecord(value3) {
     if (!value3 || typeof value3 !== "object" || Array.isArray(value3)) {
@@ -30354,6 +30317,158 @@ ${controls_default3}`;
     }
     return value3;
   }
+  function optionalProperty(key, value3) {
+    return value3 === undefined ? {} : { [key]: value3 };
+  }
+
+  // src/components/admin/Resources/Repository/contracts/observability.ts
+  function parseRepositoryMetrics(value3) {
+    const metrics = readRecord(value3);
+    const operations = readRecord(metrics.operations);
+    const compatibility = readRecord(metrics.compatibility);
+    const publicPackages = readRecord(metrics.publicPackages);
+    const snapshot = readRecord(metrics.snapshot);
+    return {
+      operations: {
+        publication: operationCounter(operations.publication),
+        stablePromotion: operationCounter(operations.stablePromotion),
+        compatibilityReevaluation: operationCounter(operations.compatibilityReevaluation)
+      },
+      compatibility: {
+        reevaluations: readCount(compatibility.reevaluations),
+        warnings: readCount(compatibility.warnings)
+      },
+      publicPackages: {
+        packagesServed: readCount(publicPackages.packagesServed),
+        packageBytes: readCount(publicPackages.packageBytes),
+        releaseNotesServed: readCount(publicPackages.releaseNotesServed),
+        releaseNotesBytes: readCount(publicPackages.releaseNotesBytes),
+        rateLimitRejections: readCount(publicPackages.rateLimitRejections),
+        downloadRateLimitRejections: readCount(publicPackages.downloadRateLimitRejections)
+      },
+      snapshot: {
+        integrations: readCount(snapshot.integrations),
+        versions: readCount(snapshot.versions),
+        diagnostics: readCount(snapshot.diagnostics),
+        quarantined: readCount(snapshot.quarantined),
+        recoveryDiagnostics: readCount(snapshot.recoveryDiagnostics)
+      },
+      filesystem: filesystem(metrics.filesystem)
+    };
+  }
+  function parseRepositoryRecentOperations(value3) {
+    return readArray(value3, 100).map((item) => {
+      const operation = readRecord(item);
+      return {
+        timestamp: readText(operation.timestamp),
+        operation: readText(operation.operation),
+        operationId: readText(operation.operationId),
+        outcome: readText(operation.outcome),
+        durationMs: readCount(operation.durationMs),
+        ...optionalTextFields(operation, [
+          "kind",
+          "version",
+          "digest",
+          "reportId",
+          "reportRevisionId",
+          "evaluatorName",
+          "evaluatorVersion",
+          "compatibilityOutcome",
+          "errorCode"
+        ])
+      };
+    });
+  }
+  function operationCounter(value3) {
+    const counter = readRecord(value3);
+    return {
+      attempted: readCount(counter.attempted),
+      inFlight: readCount(counter.inFlight),
+      succeeded: readCount(counter.succeeded),
+      rejected: readCount(counter.rejected),
+      failed: readCount(counter.failed),
+      totalDurationMs: readCount(counter.totalDurationMs),
+      maximumDurationMs: readCount(counter.maximumDurationMs)
+    };
+  }
+  function filesystem(value3) {
+    const capacity = readRecord(value3);
+    const checkedAt = readOptionalText(capacity.checkedAt);
+    if (capacity.status === "unavailable") {
+      return { status: "unavailable", ...checkedAt ? { checkedAt } : {} };
+    }
+    if (capacity.status !== "available") {
+      throw new TypeError("Repository filesystem status is invalid");
+    }
+    return {
+      status: "available",
+      ...checkedAt ? { checkedAt } : {},
+      totalBytes: decimalBytes(capacity.totalBytes),
+      freeBytes: decimalBytes(capacity.freeBytes),
+      availableBytes: decimalBytes(capacity.availableBytes),
+      usedBytes: decimalBytes(capacity.usedBytes),
+      usedBasisPoints: readCount(capacity.usedBasisPoints)
+    };
+  }
+  function decimalBytes(value3) {
+    const text5 = readText(value3);
+    if (!/^(0|[1-9][0-9]{0,30})$/u.test(text5)) {
+      throw new TypeError("Repository capacity is invalid");
+    }
+    return text5;
+  }
+  function optionalTextFields(source2, keys) {
+    const result = {};
+    for (const key of keys) {
+      const value3 = readOptionalText(source2[key]);
+      if (value3) {
+        result[key] = value3;
+      }
+    }
+    return result;
+  }
+
+  // src/components/admin/Resources/Repository/contracts/read.ts
+  function parseRepositoryStatus(value3) {
+    const object = readRecord(value3);
+    return {
+      ready: readBoolean(object.ready),
+      health: readText(object.health),
+      integrations: readCount(object.integrations),
+      versions: readCount(object.versions),
+      diagnostics: readCount(object.diagnostics),
+      quarantined: readCount(object.quarantined),
+      recoveryDiagnostics: readCount(object.recoveryDiagnostics),
+      ...object.metrics === undefined ? {} : { metrics: parseRepositoryMetrics(object.metrics) }
+    };
+  }
+  function parseRepositoryDiagnostics(value3) {
+    const object = readRecord(value3);
+    return {
+      health: readText(object.health),
+      diagnostics: readArray(object.diagnostics).map(parseDiagnostic),
+      quarantined: readArray(object.quarantined).map(parseQuarantine),
+      recovery: readArray(object.recovery).map(parseDiagnostic),
+      ...object.metrics === undefined ? {} : { metrics: parseRepositoryMetrics(object.metrics) },
+      recentOperations: object.recentOperations === undefined ? [] : parseRepositoryRecentOperations(object.recentOperations)
+    };
+  }
+  function parseRepositoryVersions(value3) {
+    const object = readRecord(value3);
+    return {
+      kind: readText(object.kind),
+      ...optionalProperty("stable", readOptionalText(object.stable)),
+      ...optionalProperty("latest", readOptionalText(object.latest)),
+      versions: readArray(object.versions).map((entry) => {
+        const version = readRecord(entry);
+        return {
+          version: readText(version.version),
+          ...optionalProperty("digest", readOptionalText(version.digest)),
+          ...version.compatibility === null || version.compatibility === undefined ? {} : { compatibility: parseVersionCompatibility(version.compatibility) }
+        };
+      })
+    };
+  }
   function parseDiagnostic(value3) {
     const object = readRecord(value3);
     return {
@@ -30381,9 +30496,6 @@ ${controls_default3}`;
       admissible: readBoolean(object.admissible),
       warning: readBoolean(object.warning)
     };
-  }
-  function optionalProperty(key, value3) {
-    return value3 === undefined ? {} : { [key]: value3 };
   }
 
   // src/components/admin/Resources/Repository/contracts/reports.ts
@@ -30953,6 +31065,22 @@ ${controls_default3}`;
     } else {
       fragment.append(...view.recovery.map(diagnostic));
     }
+    fragment.append(element("h3", "Recent operations"));
+    if (view.recentOperations.length === 0) {
+      fragment.append(emptyMessage("No observed repository operation."));
+    } else {
+      for (const operation of view.recentOperations) {
+        const node = element("div", undefined, "diagnostic");
+        node.append(element("strong", `${operation.operation}: ${operation.outcome}`), metadata([
+          operation.kind && operation.version ? `${operation.kind}@${operation.version}` : operation.kind,
+          `${operation.durationMs} ms`,
+          operation.operationId,
+          operation.reportRevisionId ?? operation.reportId,
+          operation.errorCode
+        ]));
+        fragment.append(node);
+      }
+    }
     target2.replaceChildren(fragment);
   }
   function diagnostic(value3) {
@@ -30963,7 +31091,41 @@ ${controls_default3}`;
 
   // src/components/admin/Resources/Repository/render/status.ts
   function renderRepositoryStatus(target2, status) {
-    target2.replaceChildren(labelledValue("Health", status.health), labelledValue("Ready", status.ready ? "Yes" : "No"), labelledValue("Integrations", String(status.integrations)), labelledValue("Versions", String(status.versions)), labelledValue("Diagnostics", String(status.diagnostics)), labelledValue("Quarantined", String(status.quarantined)), labelledValue("Recovery events", String(status.recoveryDiagnostics)));
+    const values = [
+      labelledValue("Health", status.health),
+      labelledValue("Ready", status.ready ? "Yes" : "No"),
+      labelledValue("Integrations", String(status.integrations)),
+      labelledValue("Versions", String(status.versions)),
+      labelledValue("Diagnostics", String(status.diagnostics)),
+      labelledValue("Quarantined", String(status.quarantined)),
+      labelledValue("Recovery events", String(status.recoveryDiagnostics))
+    ];
+    if (status.metrics) {
+      const operations = status.metrics.operations;
+      values.push(labelledValue("Publications", operationSummary(operations.publication)), labelledValue("Stable promotions", operationSummary(operations.stablePromotion)), labelledValue("Compatibility reevaluations", operationSummary(operations.compatibilityReevaluation)), labelledValue("Compatibility warnings", String(status.metrics.compatibility.warnings)), labelledValue("Package traffic", `${status.metrics.publicPackages.packagesServed} downloads / ${formatBytes(String(status.metrics.publicPackages.packageBytes))}`), labelledValue("Rate-limit rejections", String(status.metrics.publicPackages.rateLimitRejections)), labelledValue("Registry capacity", filesystemSummary(status.metrics.filesystem)));
+    }
+    target2.replaceChildren(...values);
+  }
+  function operationSummary(value3) {
+    return `${value3.succeeded}/${value3.attempted} succeeded, ${value3.rejected} rejected, ${value3.failed} failed, max ${value3.maximumDurationMs} ms`;
+  }
+  function filesystemSummary(filesystem2) {
+    return filesystem2.status === "unavailable" ? "Unavailable" : `${formatBytes(filesystem2.availableBytes)} available / ${formatBytes(filesystem2.totalBytes)} (${(filesystem2.usedBasisPoints / 100).toFixed(2)}% used)`;
+  }
+  function formatBytes(decimal) {
+    const bytes = BigInt(decimal);
+    const units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB"];
+    let unit = 0;
+    let divisor = 1n;
+    while (unit < units.length - 1 && bytes >= divisor * 1024n) {
+      divisor *= 1024n;
+      unit += 1;
+    }
+    if (unit === 0) {
+      return `${bytes} B`;
+    }
+    const tenths = bytes * 10n / divisor;
+    return `${tenths / 10n}.${tenths % 10n} ${units[unit]}`;
   }
 
   // src/components/admin/Resources/Repository/component/overview.ts
