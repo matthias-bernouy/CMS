@@ -20,6 +20,7 @@ export function evaluateMigrationReportAgainstPolicy(
 ): MigrationReportPolicyEvaluation {
     if (releaseLevel === "initial" || !policy.requiredForReleaseLevels.includes(releaseLevel)) {
         return Object.freeze({
+            releaseLevel,
             applicable: false,
             satisfied: true,
             checks: Object.freeze([]),
@@ -48,7 +49,13 @@ export function evaluateMigrationReportAgainstPolicy(
     const reasons = Object.freeze(
         frozenChecks.flatMap((check) => (check.satisfied || !check.reason ? [] : [check.reason])),
     );
-    return Object.freeze({ applicable: true, satisfied: reasons.length === 0, checks: frozenChecks, reasons });
+    return Object.freeze({
+        releaseLevel,
+        applicable: true,
+        satisfied: reasons.length === 0,
+        checks: frozenChecks,
+        reasons,
+    });
 }
 
 export function assertMigrationReportAgainstPolicy(

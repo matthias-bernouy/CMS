@@ -1,11 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
     appendReleaseAdmissionDecision,
+    evaluateMigrationReportAgainstPolicy,
     identifyReleaseAdmissionDecision,
     parseMigrationReport,
     parseReleaseAdmissionDecision,
 } from "../../../src/exports/index";
-import { admissionDecision, migrationReport } from "../fixtures";
+import { admissionDecision, DIGEST_B, migrationReport } from "../fixtures";
 
 describe("migration report contract", () => {
     test("binds source, target, migration evidence, and both traffic regimes", () => {
@@ -45,6 +46,53 @@ describe("migration report contract", () => {
 
         expect(root.supersedes).toBeUndefined();
         expect(revision.supersedes).toBe(root.reportId);
+    });
+
+    test("reads legacy v1 reports and binds v2 reports to a durable policy evaluation", () => {
+        const legacy = parseMigrationReport(migrationReport());
+        const policyEvaluation = evaluateMigrationReportAgainstPolicy(
+            legacy,
+            {
+                requiredForReleaseLevels: ["minor"],
+                requiredChecks: ["fresh-install", "migrated-state", "equivalence"],
+                requireExactSourcePackageDigest: true,
+                requireExactTargetPackageDigest: true,
+                approvedEnvironmentDigests: [DIGEST_B],
+                requireCmsMediatedCutoverEvidence: true,
+                requireProviderDirectCutoverEvidence: true,
+                requireRollbackEvidence: false,
+                requireDelayedCleanupEvidence: false,
+            },
+            "minor",
+        );
+        const current = parseMigrationReport({
+            ...legacy,
+            schema: "cms.integration.migration-report.v2",
+            policyEvaluation,
+        });
+
+        expect(legacy.schema).toBe("cms.integration.migration-report.v1");
+        expect(current).toMatchObject({
+            schema: "cms.integration.migration-report.v2",
+            policyEvaluation: { releaseLevel: "minor", applicable: true, satisfied: true, reasons: [] },
+        });
+        expect(() =>
+            parseMigrationReport({
+                ...current,
+                policyEvaluation: { ...policyEvaluation, reasons: ["fabricated-denial"], satisfied: false },
+            }),
+        ).toThrow(/exact checks and reasons/);
+        expect(() =>
+            parseMigrationReport({
+                ...current,
+                policyEvaluation: {
+                    ...policyEvaluation,
+                    checks: policyEvaluation.checks.map((check) =>
+                        check.check === "environment" ? { ...check, observed: "f".repeat(64) } : check,
+                    ),
+                },
+            }),
+        ).toThrow(/execution outcome and environment/);
     });
 });
 

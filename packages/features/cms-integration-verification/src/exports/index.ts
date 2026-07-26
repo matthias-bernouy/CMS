@@ -59,6 +59,7 @@ export type {
 export {
     COMPATIBILITY_REPORT_V2_SCHEMA,
     MIGRATION_REPORT_SCHEMA,
+    MIGRATION_REPORT_V2_SCHEMA,
     RELEASE_ADMISSION_DECISION_SCHEMA,
     VERIFICATION_REPORT_SCHEMA,
     type CompatibilityNoBaselineReason,
@@ -73,6 +74,8 @@ export {
     type MigrationPolicyEvaluationCheck,
     type MigrationReport,
     type MigrationReportPolicyEvaluation,
+    type MigrationReportV2,
+    type LegacyMigrationReportV1,
     type MigrationReportRevisionDigestReference,
     type ReleaseAdmissionDecision,
     type RequiredMigrationEvidence,

@@ -1,5 +1,5 @@
-import type { MigrationReport } from "../../../interfaces/reports/migration";
-import { MIGRATION_REPORT_SCHEMA } from "../../../interfaces/reports/migration";
+import type { LegacyMigrationReportV1, MigrationReport } from "../../../interfaces/reports/migration";
+import { MIGRATION_REPORT_SCHEMA, MIGRATION_REPORT_V2_SCHEMA } from "../../../interfaces/reports/migration";
 import { pinnedRunner, parseVerificationPolicyIdentity } from "../../runner";
 import { IntegrationVerificationContractError } from "../../validation/errors";
 import { assertContractIJson, strictRecord } from "../../validation/structure";
@@ -14,10 +14,10 @@ import {
 } from "../../validation/values";
 import { identifyCanonicalVerificationContract } from "../../verification/shared";
 import { parseReportHistoryFields, parseReportProvenance, parseVersionDigestReference } from "../shared";
+import { assertMigrationPolicyEvaluationMatchesReport, parseMigrationPolicyEvaluation } from "./policyEvaluation";
 import { assertMigrationOutcome, parseMigrationChecks, parseMigrationCutover } from "./results";
 
-const FIELDS = [
-    "schema",
+const COMMON_FIELDS = [
     "reportId",
     "revisionType",
     "origin",
@@ -44,17 +44,37 @@ const FIELDS = [
     "outcome",
     "provenance",
 ] as const;
+const V1_FIELDS = ["schema", ...COMMON_FIELDS] as const;
+const V2_FIELDS = ["schema", ...COMMON_FIELDS, "policyEvaluation"] as const;
 
 export function parseMigrationReport(value: unknown): MigrationReport {
     assertContractIJson(value);
-    const input = strictRecord(value, "migrationReport", FIELDS);
-    if (input.schema !== MIGRATION_REPORT_SCHEMA) {
+    const schema = schemaOf(value);
+    if (schema !== MIGRATION_REPORT_SCHEMA && schema !== MIGRATION_REPORT_V2_SCHEMA) {
         throw new IntegrationVerificationContractError(
             "invalid_schema",
-            `migrationReport.schema must be ${MIGRATION_REPORT_SCHEMA}`,
+            `migrationReport.schema must be ${MIGRATION_REPORT_SCHEMA} or ${MIGRATION_REPORT_V2_SCHEMA}`,
             "migrationReport.schema",
         );
     }
+    const input = strictRecord(value, "migrationReport", schema === MIGRATION_REPORT_SCHEMA ? V1_FIELDS : V2_FIELDS);
+    const fields = parseMigrationReportFields(input);
+    const report: MigrationReport =
+        schema === MIGRATION_REPORT_SCHEMA
+            ? { schema: MIGRATION_REPORT_SCHEMA, ...fields }
+            : {
+                  schema: MIGRATION_REPORT_V2_SCHEMA,
+                  ...fields,
+                  policyEvaluation: parseMigrationPolicyEvaluation(input.policyEvaluation),
+              };
+    assertMigrationOutcome(report);
+    if (report.schema === MIGRATION_REPORT_V2_SCHEMA) {
+        assertMigrationPolicyEvaluationMatchesReport(report);
+    }
+    return report;
+}
+
+function parseMigrationReportFields(input: Record<string, unknown>): Omit<LegacyMigrationReportV1, "schema"> {
     const source = parseVersionDigestReference(input.source, "migrationReport.source");
     const target = parseVersionDigestReference(input.target, "migrationReport.target");
     const supportedSourceRange = supportedVersionRange(
@@ -65,8 +85,7 @@ export function parseMigrationReport(value: unknown): MigrationReport {
     if (source.kind !== target.kind || source.packageDigest === target.packageDigest) {
         throw invalid("migrationReport", "source and target must be different packages of the same kind");
     }
-    const report: MigrationReport = {
-        schema: MIGRATION_REPORT_SCHEMA,
+    return {
         ...parseReportHistoryFields(input, "migrationReport"),
         source,
         target,
@@ -103,8 +122,6 @@ export function parseMigrationReport(value: unknown): MigrationReport {
         ] as const),
         provenance: parseReportProvenance(input.provenance, "migrationReport.provenance"),
     };
-    assertMigrationOutcome(report);
-    return report;
 }
 
 export async function identifyMigrationReport(value: unknown) {
@@ -115,4 +132,10 @@ export async function identifyMigrationReport(value: unknown) {
 
 function invalid(field: string, message: string): IntegrationVerificationContractError {
     return new IntegrationVerificationContractError("invalid_contract", `${field} ${message}`, field);
+}
+
+function schemaOf(value: unknown): unknown {
+    return value && typeof value === "object" && !Array.isArray(value)
+        ? (value as Record<string, unknown>).schema
+        : undefined;
 }

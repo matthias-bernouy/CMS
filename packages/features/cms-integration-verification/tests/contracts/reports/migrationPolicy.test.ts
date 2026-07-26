@@ -17,7 +17,13 @@ describe("migration report policy checks", () => {
         const failed = reportWithCheck("freshInstall", "failed");
         const evaluation = evaluateMigrationReportAgainstPolicy(failed, policy(["fresh-install"]), "patch");
 
-        expect(evaluation).toEqual({ applicable: false, satisfied: true, checks: [], reasons: [] });
+        expect(evaluation).toEqual({
+            releaseLevel: "patch",
+            applicable: false,
+            satisfied: true,
+            checks: [],
+            reasons: [],
+        });
         expect(Object.isFrozen(evaluation)).toBeTrue();
     });
 

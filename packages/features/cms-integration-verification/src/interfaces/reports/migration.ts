@@ -2,6 +2,7 @@ import type { PinnedVerificationRunnerIdentity, VerificationPolicyIdentity } fro
 import type { ReportHistoryFields, ReportProvenance, VersionDigestReference } from "./common";
 
 export const MIGRATION_REPORT_SCHEMA = "cms.integration.migration-report.v1" as const;
+export const MIGRATION_REPORT_V2_SCHEMA = "cms.integration.migration-report.v2" as const;
 
 export type MigrationCheckResult = Readonly<{
     outcome: "passed" | "failed" | "not-supported" | "not-applicable" | "infrastructure-failure";
@@ -28,15 +29,15 @@ export type MigrationPolicyEvaluationCheck = Readonly<{
 }>;
 
 export type MigrationReportPolicyEvaluation = Readonly<{
+    releaseLevel: "initial" | "patch" | "minor" | "major";
     applicable: boolean;
     satisfied: boolean;
     checks: readonly MigrationPolicyEvaluationCheck[];
     reasons: readonly string[];
 }>;
 
-export type MigrationReport = ReportHistoryFields &
+type MigrationReportFields = ReportHistoryFields &
     Readonly<{
-        schema: typeof MIGRATION_REPORT_SCHEMA;
         source: VersionDigestReference;
         target: VersionDigestReference;
         connectorKey: string;
@@ -67,3 +68,16 @@ export type MigrationReport = ReportHistoryFields &
         outcome: "passed" | "failed" | "infrastructure-failure";
         provenance: ReportProvenance;
     }>;
+
+export type LegacyMigrationReportV1 = MigrationReportFields &
+    Readonly<{
+        schema: typeof MIGRATION_REPORT_SCHEMA;
+    }>;
+
+export type MigrationReportV2 = MigrationReportFields &
+    Readonly<{
+        schema: typeof MIGRATION_REPORT_V2_SCHEMA;
+        policyEvaluation: MigrationReportPolicyEvaluation;
+    }>;
+
+export type MigrationReport = LegacyMigrationReportV1 | MigrationReportV2;

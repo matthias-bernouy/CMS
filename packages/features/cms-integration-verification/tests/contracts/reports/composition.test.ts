@@ -8,6 +8,7 @@ import {
     identifyStatefulChangeSelection,
     type CompatibilityFindingClassification,
     type CompatibilityReportV2,
+    parseMigrationReport,
 } from "../../../src/exports/index";
 import { CREATED_AT, DIGEST_A, DIGEST_B, DIGEST_C, migrationReport, provenance, verificationReport } from "../fixtures";
 
@@ -66,6 +67,56 @@ describe("release admission decision composition", () => {
             admissible: false,
             reasons: ["verification-infrastructure-failure"],
         });
+    });
+
+    test("uses the persisted migration policy evaluation as part of the composite admission truth", async () => {
+        const compatibility = await compatibilityReport();
+        const input = await decisionInput(compatibility, [migrationRequirement()]);
+        const report = parseMigrationReport({
+            ...migrationReport(),
+            schema: "cms.integration.migration-report.v2",
+            statefulChangeSelectionDigest: input.statefulChanges.digest,
+            policyEvaluation: {
+                releaseLevel: "minor",
+                applicable: true,
+                satisfied: false,
+                checks: [
+                    {
+                        check: "report-outcome",
+                        applicable: true,
+                        satisfied: true,
+                        observed: "passed",
+                    },
+                    {
+                        check: "environment",
+                        applicable: true,
+                        satisfied: false,
+                        observed: DIGEST_B,
+                        reason: "migration-environment-not-approved",
+                    },
+                ],
+                reasons: ["migration-environment-not-approved"],
+            },
+        });
+        const decision = await composeReleaseAdmissionDecision({
+            ...input,
+            verification: verificationReport(),
+            migrations: [report],
+        });
+
+        expect(decision).toMatchObject({
+            admissible: false,
+            reasons: [
+                "migration-policy-failed:example@1.1.0:primary:example-supabase-v1:migration-environment-not-approved",
+            ],
+        });
+        await expect(
+            assertReleaseAdmissionDecisionMatchesReports(decision, {
+                compatibility,
+                verification: verificationReport(),
+                migrations: [report],
+            }),
+        ).resolves.toEqual(decision);
     });
 
     test("rejects report identity substitution and duplicate migration claims", async () => {

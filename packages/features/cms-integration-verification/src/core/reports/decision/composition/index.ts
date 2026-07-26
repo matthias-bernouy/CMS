@@ -3,6 +3,7 @@ import type {
     IdentifiedStatefulChangeSelectionV1,
     ReleaseAdmissionDecision,
 } from "../../../../interfaces/reports/decision";
+import { MIGRATION_REPORT_V2_SCHEMA } from "../../../../interfaces/reports/migration";
 import { identifyCompatibilityReportV2 } from "../../compatibility";
 import { identifyMigrationReport } from "../../migration";
 import { identifyVerificationReport } from "../../verification";
@@ -59,7 +60,20 @@ export async function composeReleaseAdmissionDecision(
             reasons.push(`migration-missing:${key}`);
         } else {
             selectedMigrations.push(report);
-            if (report.report.outcome !== "passed") {
+            if (report.report.schema === MIGRATION_REPORT_V2_SCHEMA) {
+                if (report.report.policyEvaluation.releaseLevel !== compatibility.report.releaseLevel) {
+                    invalid(`migration report ${report.report.reportId} evaluated a different release level`);
+                }
+                if (!report.report.policyEvaluation.applicable) {
+                    reasons.push(`migration-policy-not-applicable:${key}`);
+                } else {
+                    reasons.push(
+                        ...report.report.policyEvaluation.reasons.map(
+                            (reason) => `migration-policy-failed:${key}:${reason}`,
+                        ),
+                    );
+                }
+            } else if (report.report.outcome !== "passed") {
                 const reason =
                     report.report.outcome === "infrastructure-failure"
                         ? "migration-infrastructure-failure"
