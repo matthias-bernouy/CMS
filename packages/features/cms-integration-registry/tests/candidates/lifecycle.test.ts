@@ -7,6 +7,7 @@ import {
     completeIntegrationRegistryCandidateAttempt,
     createIntegrationRegistryCandidateRecord,
     IntegrationRegistryCandidateError,
+    recoverExpiredIntegrationRegistryCandidateLease,
     renewIntegrationRegistryCandidateLease,
 } from "@bernouy/cms-integration-registry";
 
@@ -154,6 +155,30 @@ describe("integration registry candidate lifecycle", () => {
         ).toThrow(IntegrationRegistryCandidateError);
         expectCandidateError(() => advance(uploaded, "queued", TIMES.queued), "invalid_transition");
         expect(() => advance(uploaded, "expired", TIMES.created)).toThrow(/before expiresAt/);
+    });
+
+    test("recovers an expired worker lease with a fenced infrastructure retry", async () => {
+        const queued = advance(advance(await candidate(), "validating", TIMES.validating), "queued", TIMES.queued);
+        const running = claim(queued);
+        expect(() =>
+            recoverExpiredIntegrationRegistryCandidateLease(running, {
+                expectedRevision: running.revision,
+                now: TIMES.renewed,
+            }),
+        ).toThrow(/has not expired/);
+
+        const recovered = recoverExpiredIntegrationRegistryCandidateLease(running, {
+            expectedRevision: running.revision,
+            now: "2026-07-26T10:05:01.000Z",
+        });
+
+        expect(recovered).toMatchObject({
+            revision: running.revision + 1,
+            status: "queued",
+            lastFailure: { kind: "infrastructure", code: "lease_expired" },
+        });
+        expect(recovered.lease).toBeUndefined();
+        expect(Object.isFrozen(recovered.lastFailure)).toBeTrue();
     });
 });
 

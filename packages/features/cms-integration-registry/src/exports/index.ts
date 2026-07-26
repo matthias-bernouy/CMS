@@ -116,4 +116,5 @@ export {
     createIntegrationRegistryCandidateRecord,
     renewIntegrationRegistryCandidateLease,
 } from "../core/publication/candidates/state";
+export { recoverExpiredIntegrationRegistryCandidateLease } from "../core/publication/candidates/recovery";
 export { IntegrationRegistryCandidateError } from "../core/publication/candidates/errors";
