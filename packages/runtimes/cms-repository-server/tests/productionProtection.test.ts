@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { resolveClientAddress, setRequestIP } from "@bernouy/http-runner";
-import { productionPackageDownloadProtection } from "../src/production";
+import { createProductionRepositoryOperationalTelemetry, productionPackageDownloadProtection } from "../src/production";
 import { readRepositoryRuntimeEnv } from "../src/runtimeEnv";
 
 describe("production package download protection", () => {
@@ -15,6 +15,7 @@ describe("production package download protection", () => {
     });
 
     test("uses the shared trusted-proxy policy and configured in-memory budget", async () => {
+        const observations: unknown[] = [];
         const protection = productionPackageDownloadProtection(
             readRepositoryRuntimeEnv({
                 CMS_HTTP_CLIENT_ADDRESS_MODE: "trusted-proxy",
@@ -22,11 +23,36 @@ describe("production package download protection", () => {
                 CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: "1",
                 CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: "45",
             }),
+            (observation) => observations.push(observation),
         );
 
         expect(protection.clientAddressPolicy).toEqual({ mode: "trusted-proxy", trustedProxyHops: 2 });
         expect((await protection.rateLimiter!.hit("repository-package-download:203.0.113.10")).allowed).toBe(true);
         expect((await protection.rateLimiter!.hit("repository-package-download:203.0.113.10")).allowed).toBe(false);
         expect((await protection.rateLimiter!.hit("repository-package-download:203.0.113.11")).allowed).toBe(true);
+        protection.observe?.({ outcome: "served", resource: "package", bytes: 4_096 });
+        expect(observations).toEqual([{ outcome: "served", resource: "package", bytes: 4_096 }]);
+    });
+
+    test("writes completed repository operations as structured JSON", () => {
+        const lines: string[] = [];
+        const telemetry = createProductionRepositoryOperationalTelemetry((line) => lines.push(line));
+        const span = telemetry.start("publication", {
+            kind: "demo",
+            version: "1.0.0",
+            digest: "a".repeat(64),
+        });
+
+        telemetry.finish(span, "succeeded", { operationId: "publication-operation" });
+
+        expect(JSON.parse(lines[0]!)).toMatchObject({
+            schema: "cms.repository.operation.v1",
+            operation: "publication",
+            operationId: "publication-operation",
+            kind: "demo",
+            version: "1.0.0",
+            digest: "a".repeat(64),
+            outcome: "succeeded",
+        });
     });
 });

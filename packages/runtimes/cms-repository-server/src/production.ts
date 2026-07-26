@@ -12,10 +12,14 @@ import {
 } from "@bernouy/cms-integration-registry/fs";
 import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
 import { createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
-import type { PublicPackageDownloadProtection } from "@bernouy/cms-repository";
+import type { PublicPackageDownloadProtection, PublicPackageReadObservation } from "@bernouy/cms-repository";
 import { BunRunner } from "@bernouy/http-runner";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { RepositoryCatalogRuntime } from "./core/catalogRuntime";
+import {
+    createConsoleRepositoryOperationLogSink,
+    RepositoryOperationalTelemetry,
+} from "./core/observability/telemetry";
 import { readRepositoryManagementToken } from "./credentials";
 import { createProductionRepositoryManagement } from "./management";
 import {
@@ -46,9 +50,11 @@ export async function startProductionRepositoryServer(
     if (!initial.applied) {
         throw new Error("Initial integration repository catalog snapshot could not be built");
     }
+    const telemetry = createProductionRepositoryOperationalTelemetry();
     const repositoryManagement = await createProductionRepositoryManagement({
         root: env.registryRoot,
         catalog,
+        telemetry,
     });
 
     const managementGuard = createRepositoryManagementGuard({
@@ -59,7 +65,9 @@ export async function startProductionRepositoryServer(
             windowSeconds: env.managementRateLimitWindowSeconds,
         }),
     });
-    const packageDownloadProtection = productionPackageDownloadProtection(env);
+    const packageDownloadProtection = productionPackageDownloadProtection(env, (observation) =>
+        telemetry.observePublicPackageRead(observation),
+    );
     return startRepositoryServer({
         publicRunner: new BunRunner(),
         managementRunner: new BunRunner(),
@@ -111,9 +119,10 @@ export const prepareOfficialRepositoryBootstrap: EmptyRegistryBootstrap = async 
 
 export function productionPackageDownloadProtection(
     env: ReturnType<typeof readRepositoryRuntimeEnv>,
+    observe?: (observation: PublicPackageReadObservation) => void,
 ): PublicPackageDownloadProtection {
     if (env.clientAddressMode === "disabled") {
-        return { clientAddressPolicy: { mode: "disabled" } };
+        return { clientAddressPolicy: { mode: "disabled" }, ...(observe ? { observe } : {}) };
     }
     const clientAddressPolicy =
         env.clientAddressMode === "trusted-proxy"
@@ -125,5 +134,14 @@ export function productionPackageDownloadProtection(
             limit: env.packageDownloadLimit,
             windowSeconds: env.packageDownloadWindowSeconds,
         }),
+        ...(observe ? { observe } : {}),
     };
+}
+
+export function createProductionRepositoryOperationalTelemetry(
+    write?: (line: string) => void,
+): RepositoryOperationalTelemetry {
+    return new RepositoryOperationalTelemetry({
+        log: createConsoleRepositoryOperationLogSink(write),
+    });
 }
