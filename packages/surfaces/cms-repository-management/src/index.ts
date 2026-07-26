@@ -22,3 +22,11 @@ export {
     type RepositoryManagementCmsConfig,
     REPOSITORY_PUBLICATION_PATH,
 } from "cms-repository-management/RepositoryManagementCms";
+export {
+    mountRepositoryManagementReadRoutes,
+    REPOSITORY_COMPATIBILITY_PATH,
+    REPOSITORY_DIAGNOSTICS_PATH,
+    REPOSITORY_STATUS_PATH,
+    REPOSITORY_VERSIONS_PATH,
+    type RepositoryManagementReadConfig,
+} from "cms-repository-management/operations/readRoutes";

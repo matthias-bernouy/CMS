@@ -9,6 +9,10 @@ import {
     readIntegrationPackageUpload,
     type IntegrationPackageUploadOptions,
 } from "cms-repository-management/packageUpload";
+import {
+    mountRepositoryManagementReadRoutes,
+    type RepositoryManagementReadConfig,
+} from "cms-repository-management/operations/readRoutes";
 
 export const REPOSITORY_PUBLICATION_PATH = "/api/integrations/publications";
 
@@ -16,12 +20,16 @@ export type RepositoryManagementCmsConfig = Readonly<{
     runner: Runner;
     publisher: IntegrationRegistryPublisher;
     upload: IntegrationPackageUploadOptions;
+    reads?: RepositoryManagementReadConfig;
     existingVersionDigest?: (kind: string, version: string) => string | null | Promise<string | null>;
 }>;
 
 export class RepositoryManagementCms {
     constructor(private readonly config: RepositoryManagementCmsConfig) {
         config.runner.post(REPOSITORY_PUBLICATION_PATH, (request) => this.publish(request));
+        if (config.reads) {
+            mountRepositoryManagementReadRoutes(config.runner, config.reads);
+        }
     }
 
     private async publish(request: Request): Promise<Response> {
