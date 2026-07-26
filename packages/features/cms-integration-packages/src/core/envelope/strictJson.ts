@@ -17,11 +17,18 @@ export function parseStrictPackageJson(
     input: string | Uint8Array,
     limits: Readonly<IntegrationPackageLimits>,
 ): unknown {
+    return parseStrictJsonDocument(input, limits.maxDocumentBytes);
+}
+
+export function parseStrictJsonDocument(input: string | Uint8Array, maxDocumentBytes: number): unknown {
+    if (!Number.isSafeInteger(maxDocumentBytes) || maxDocumentBytes <= 0) {
+        throw new TypeError("JSON document byte limit must be a positive safe integer");
+    }
     const bytes = typeof input === "string" ? utf8.encode(input) : input;
-    if (bytes.byteLength > limits.maxDocumentBytes) {
+    if (bytes.byteLength > maxDocumentBytes) {
         throw new IntegrationPackageValidationError(
             "body_limit_exceeded",
-            `JSON document exceeds ${limits.maxDocumentBytes} bytes`,
+            `JSON document exceeds ${maxDocumentBytes} bytes`,
         );
     }
     if (hasUtf8Bom(bytes)) {

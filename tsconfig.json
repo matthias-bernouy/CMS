@@ -20,6 +20,7 @@
         { "path": "packages/features/cms-relations" },
         { "path": "packages/features/cms-integrations" },
         { "path": "packages/features/cms-integration-packages" },
+        { "path": "packages/features/cms-integration-verification" },
         { "path": "packages/features/cms-integration-registry" },
         { "path": "packages/features/cms-notifications" },
         { "path": "packages/features/cms-analytics" },

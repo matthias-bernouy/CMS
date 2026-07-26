@@ -42,6 +42,7 @@ export {
     validateIntegrationPackageEnvelope,
 } from "../core/envelope/validate";
 export { canonicalFileSetBytes, validateCanonicalFileSet } from "../core/file-set/validate";
+export { parseStrictJsonDocument } from "../core/envelope/strictJson";
 export { assertIJsonValue, InvalidIJsonValueError } from "../core/canonical/assertIJson";
 export { canonicalJsonBytes, canonicalizeJson } from "../core/canonical/canonicalizeJson";
 export { computeIntegrationPackageDigest, sha256Hex } from "../core/digest";
