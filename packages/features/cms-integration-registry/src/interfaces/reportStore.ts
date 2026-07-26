@@ -3,6 +3,7 @@ import type {
     IntegrationCompatibilityReport,
     IntegrationCompatibilityReportRevision,
 } from "./compatibility";
+import type { ReviewedSchemaBaselineV1 } from "@bernouy/cms-integration-verification";
 
 export type IntegrationCompatibilityReportCollection = Readonly<{
     admission: IntegrationCompatibilityAdmissionReport;
@@ -31,4 +32,35 @@ export interface IntegrationCompatibilityReportStore {
         page?: IntegrationCompatibilityReportPageRequest,
     ): Promise<IntegrationCompatibilityReportPage | null>;
     appendRevision(revision: IntegrationCompatibilityReportRevision): Promise<IntegrationCompatibilityReportCollection>;
+}
+
+export type ReviewedSchemaBaselineLogicalKey = Readonly<{
+    kind: string;
+    version: string;
+    packageDigest: string;
+    connectorKey: string;
+    lineageId: string;
+}>;
+
+export type ReviewedSchemaBaselineHistory = Readonly<{
+    logicalKey: ReviewedSchemaBaselineLogicalKey;
+    currentRevisionId: string;
+    currentBaselineDigest: string;
+    current: ReviewedSchemaBaselineV1;
+    revisions: readonly ReviewedSchemaBaselineV1[];
+}>;
+
+export type AppendReviewedSchemaBaselineRequest = Readonly<{
+    baseline: ReviewedSchemaBaselineV1;
+    expectedCurrentRevisionId: string | null;
+}>;
+
+export interface ReviewedSchemaBaselineStore {
+    get(logicalKey: ReviewedSchemaBaselineLogicalKey): Promise<ReviewedSchemaBaselineHistory | null>;
+    listForPackage(
+        kind: string,
+        version: string,
+        packageDigest: string,
+    ): Promise<readonly ReviewedSchemaBaselineHistory[]>;
+    append(request: AppendReviewedSchemaBaselineRequest): Promise<ReviewedSchemaBaselineHistory>;
 }

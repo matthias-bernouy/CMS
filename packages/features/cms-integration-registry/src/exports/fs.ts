@@ -65,6 +65,10 @@ export {
     type FsIntegrationCompatibilityReportStoreConfig,
 } from "../default-implementation/fs/registry/history/store";
 export {
+    FsReviewedSchemaBaselineStore,
+    type FsReviewedSchemaBaselineStoreConfig,
+} from "../default-implementation/fs/registry/baselines/store";
+export {
     FsIntegrationCompatibilityReevaluator,
     type FsIntegrationCompatibilityReevaluatorConfig,
 } from "../default-implementation/fs/registry/reevaluation/reevaluator";

@@ -69,10 +69,14 @@ export type {
     IntegrationRegistryStablePromotionResult,
 } from "../interfaces/promotion";
 export type {
+    AppendReviewedSchemaBaselineRequest,
     IntegrationCompatibilityReportCollection,
     IntegrationCompatibilityReportPage,
     IntegrationCompatibilityReportPageRequest,
     IntegrationCompatibilityReportStore,
+    ReviewedSchemaBaselineHistory,
+    ReviewedSchemaBaselineLogicalKey,
+    ReviewedSchemaBaselineStore,
 } from "../interfaces/reportStore";
 export { createIntegrationRegistryCatalogSnapshot } from "../core/catalog/snapshot";
 export { InMemoryIntegrationRegistryMutationCoordinator } from "../core/catalog/mutationCoordinator";
@@ -96,6 +100,9 @@ export {
     IntegrationCompatibilityHistoryNotFoundError,
     IntegrationCompatibilityRevisionConflictError,
     IntegrationCompatibilityRevisionValidationError,
+    ReviewedSchemaBaselineConflictError,
+    ReviewedSchemaBaselineIntegrityError,
+    ReviewedSchemaBaselineValidationError,
 } from "../core/compatibility/reportStoreErrors";
 export {
     IntegrationCompatibilityReevaluationConflictError,
