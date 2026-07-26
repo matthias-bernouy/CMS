@@ -68,7 +68,7 @@ describe("explicit integration upgrade UI", () => {
                 });
             }
             return Response.json({ installation: { definitionVersion: "1.1.0" } });
-        }) as typeof fetch;
+        }) as unknown as typeof fetch;
 
         const choices = await integrationUpgradeVersions("commerce");
         await upgradeIntegrationInstallation("commerce", choices.stable!);
@@ -124,7 +124,7 @@ describe("explicit integration upgrade UI", () => {
         globalThis.fetch = (async () => {
             requests++;
             return Response.json({});
-        }) as typeof fetch;
+        }) as unknown as typeof fetch;
 
         panel.querySelector<HTMLInputElement>("[data-upgrade-confirmation]")!.value = "stable";
         await confirmIntegrationUpgrade(button);
