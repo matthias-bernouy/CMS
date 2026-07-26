@@ -1,15 +1,15 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { BindingRuntime } from "../../../../../../foundation/components/src/binding/runtime/BindingRuntime";
-import { tennisSchema } from "./offer-filter-panel.fixtures";
+import { tennisSchema } from "../support/offer-filter-panel.fixtures";
 import {
     captureSourceWrites,
+    createBindingCore,
     defineFilter,
     defineList,
     filterTag,
     listTag,
     settleLifecycle,
     settleUntil,
-} from "./offer-filter-panel.harness";
+} from "../support/offer-filter-panel.harness";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
 
@@ -58,10 +58,11 @@ describe("Commerce numeric range bookmark integration", () => {
         panel.setAttribute("source-prefix", "/range-bookmark-sources");
         list.append(category, panel);
         const sources = captureSourceWrites(list);
-        let runtime: BindingRuntime | null = null;
+        const core = createBindingCore(true);
+        core.append(list);
 
         try {
-            document.body.append(list);
+            document.body.append(core);
             await settleLifecycle();
             await settleUntil(() => sources.length > 0);
 
@@ -73,8 +74,7 @@ describe("Commerce numeric range bookmark integration", () => {
                 model_year: { gte: 2024 },
             });
 
-            runtime = new BindingRuntime(list);
-            runtime.start();
+            core.removeAttribute("cms-binding-disabled");
             await settleUntil(() => offerRequests.length > 0);
 
             expect(offerRequests).toHaveLength(1);
@@ -82,8 +82,7 @@ describe("Commerce numeric range bookmark integration", () => {
                 model_year: { gte: 2024 },
             });
         } finally {
-            runtime?.stop();
-            list.remove();
+            core.remove();
             globalThis.fetch = realFetch;
         }
     });
@@ -119,12 +118,11 @@ describe("Commerce numeric range bookmark integration", () => {
         const root = document.createElement("div");
         root.append(list);
         const sources = captureSourceWrites(list);
-        let runtime: BindingRuntime | null = null;
+        const core = createBindingCore();
+        core.append(root);
 
         try {
-            runtime = new BindingRuntime(root);
-            runtime.start();
-            document.body.append(root);
+            document.body.append(core);
             await settleUntil(() => offerRequests.length > 0);
             await settleUntil(() => list.querySelector(filterTag)?.getAttribute("data-schema-status") === "ready");
 
@@ -174,8 +172,7 @@ describe("Commerce numeric range bookmark integration", () => {
             expect(popstateSources.map(rangeMinimum)).toEqual(popstateSources.map(() => 2024));
             expect(popstateRequests.map(requestRangeMinimum)).toEqual(popstateRequests.map(() => 2024));
         } finally {
-            runtime?.stop();
-            root.remove();
+            core.remove();
             globalThis.fetch = realFetch;
         }
     });

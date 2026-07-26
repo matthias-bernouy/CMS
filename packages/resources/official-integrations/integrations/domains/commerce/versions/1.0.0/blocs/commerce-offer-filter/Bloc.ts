@@ -1,5 +1,5 @@
-import { SchemaOfferFilters } from "./schema";
-import { NumericRangeFilters } from "./range-controller";
+import { NumericRangeFilters } from "./range/range-controller";
+import { SchemaOfferFilters } from "./schema/schema";
 
 export class CommerceOfferFilter extends HTMLElement {
     static observedAttributes = [
@@ -15,7 +15,7 @@ export class CommerceOfferFilter extends HTMLElement {
         super();
         this.schemaFilters = null;
         this.numericRangeFilters = null;
-        this.authoredContent = null;
+        this.authoredTemplate = null;
         this.schemaModeActive = false;
     }
 
@@ -60,8 +60,15 @@ export class CommerceOfferFilter extends HTMLElement {
 
     activateSchemaMode() {
         if (!this.schemaModeActive) {
-            this.authoredContent = this.ownerDocument.createDocumentFragment();
-            this.authoredContent.append(...this.childNodes);
+            this.authoredTemplate =
+                [...this.children].find(
+                    (child) => child.localName === "template" && child.hasAttribute("data-authored-filter-content"),
+                ) || this.ownerDocument.createElement("template");
+            if (!this.authoredTemplate.hasAttribute("data-authored-filter-content")) {
+                this.authoredTemplate.setAttribute("data-authored-filter-content", "");
+                this.authoredTemplate.content.append(...this.childNodes);
+                this.append(this.authoredTemplate);
+            }
             this.schemaModeActive = true;
         }
         this.style.display = "block";
@@ -75,8 +82,13 @@ export class CommerceOfferFilter extends HTMLElement {
         this.removeAttribute("data-schema-category");
         this.removeAttribute("data-schema-status");
         if (this.schemaModeActive) {
-            this.replaceChildren(this.authoredContent);
-            this.authoredContent = null;
+            const authoredContent = this.authoredTemplate?.content;
+            if (authoredContent) {
+                this.replaceChildren(authoredContent);
+            } else {
+                this.replaceChildren();
+            }
+            this.authoredTemplate = null;
             this.schemaModeActive = false;
         }
         this.style.display = "contents";

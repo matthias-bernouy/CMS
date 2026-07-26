@@ -1,4 +1,4 @@
-import { element, filterWrapper } from "./render-elements";
+import { element, filterWrapper } from "../schema/render-elements";
 
 export function renderNumberRange(filterTag, field, controls, range) {
     const group = element(filterTag, {

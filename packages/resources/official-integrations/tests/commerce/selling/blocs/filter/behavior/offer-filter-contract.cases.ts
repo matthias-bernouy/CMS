@@ -3,13 +3,13 @@ import {
     filterControls,
     filterableFields,
     numericRange,
-} from "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-filter/schema-helpers";
+} from "../../../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-filter/schema/schema-helpers";
 import {
     formatRangeValue,
     isRangeValue,
     snapRangeValue,
-} from "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-filter/range-values";
-import { tennisSchema } from "./offer-filter-panel.fixtures";
+} from "../../../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-filter/range/range-values";
+import { tennisSchema } from "../support/offer-filter-panel.fixtures";
 
 describe("Commerce offer filter contracts", () => {
     test("keeps filter params injective and numeric ranges precise", () => {

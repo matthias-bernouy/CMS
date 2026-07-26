@@ -1,15 +1,15 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { ParamSync } from "../../../../../../foundation/components/src/binding/params/ParamSync";
-import { padelSchema, tennisSchema } from "./offer-filter-panel.fixtures";
+import { padelSchema, tennisSchema } from "../support/offer-filter-panel.fixtures";
 import {
     captureSourceWrites,
+    createBindingCore,
     defineFilter,
     defineList,
     filterTag,
     listTag,
     settleLifecycle,
     settleUntil,
-} from "./offer-filter-panel.harness";
+} from "../support/offer-filter-panel.harness";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
 
@@ -111,8 +111,9 @@ describe("Commerce filter and offer list integration", () => {
         const panel = document.createElement(filterTag);
         panel.setAttribute("schema-driven", "");
         panel.setAttribute("source-prefix", "/param-sync-sources");
-        list.append(category, panel);
-        const bindings: ParamSync[] = [];
+        const core = createBindingCore();
+        core.append(panel);
+        list.append(category, core);
 
         try {
             document.body.append(list);
@@ -121,11 +122,6 @@ describe("Commerce filter and offer list integration", () => {
             const range = panel.querySelector("[data-numeric-range]")!;
             const minimumSlider = range.querySelector('[data-range-slider="minimum"]') as HTMLInputElement;
             const minimumControl = range.querySelector('[data-range-control="minimum"]') as HTMLInputElement;
-            for (const proxy of range.querySelectorAll("[cms-param-sync]")) {
-                const binding = new ParamSync(proxy);
-                binding.start();
-                bindings.push(binding);
-            }
             document.dispatchEvent(new Event("cms-params:change"));
             await settleLifecycle();
 
@@ -151,7 +147,6 @@ describe("Commerce filter and offer list integration", () => {
             expect(new URLSearchParams(location.search).has("filter_model_year:gte")).toBe(false);
             expect(sourceParams(list).has("filters")).toBe(false);
         } finally {
-            bindings.forEach((binding) => binding.dispose());
             list.remove();
             globalThis.fetch = realFetch;
         }

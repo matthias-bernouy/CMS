@@ -1,6 +1,6 @@
 import { filterControls, filterableFields, numericRange, schemaBrands } from "./schema-helpers";
 import { basicOption, basicSelect, element, filterWrapper } from "./render-elements";
-import { renderNumberRange } from "./render-range";
+import { renderNumberRange } from "../range/render-range";
 import { schemaFilterStyle } from "./schema-style";
 
 export function renderSchema(host, schema) {
@@ -44,7 +44,7 @@ export function renderSchema(host, schema) {
         empty.textContent = host.getAttribute("empty-label") || "Aucun filtre supplémentaire pour cette catégorie.";
         stack.append(empty);
     }
-    host.replaceChildren(stack);
+    replaceSchemaContent(host, stack);
     setTimeout(() => {
         if (host.isConnected && host.contains(stack)) {
             publishSchemaState(host, "ready");
@@ -61,8 +61,15 @@ export function renderSchemaState(host, state, message = "") {
         (state === "loading"
             ? host.getAttribute("loading-label") || "Chargement des filtres…"
             : host.getAttribute("select-category-label") || "Choisis une catégorie pour afficher ses filtres.");
-    host.replaceChildren(status);
+    replaceSchemaContent(host, status);
     publishSchemaState(host, state);
+}
+
+function replaceSchemaContent(host, content) {
+    const authored = [...host.children].find(
+        (child) => child.localName === "template" && child.hasAttribute("data-authored-filter-content"),
+    );
+    host.replaceChildren(...(authored ? [authored] : []), content);
 }
 
 function publishSchemaState(host, state) {

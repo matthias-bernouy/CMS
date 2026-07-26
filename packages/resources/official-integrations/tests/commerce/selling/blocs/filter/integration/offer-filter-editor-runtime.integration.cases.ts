@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { BindingRuntime } from "../../../../../../foundation/components/src/binding/runtime/BindingRuntime";
-import { tennisSchema } from "./offer-filter-panel.fixtures";
+import { tennisSchema } from "../support/offer-filter-panel.fixtures";
 import {
+    createBindingCore,
     defineFilter,
     defineList,
     filterTag,
     listTag,
     settleLifecycle,
     settleUntil,
-} from "./offer-filter-panel.harness";
+} from "../support/offer-filter-panel.harness";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
 
@@ -47,12 +47,18 @@ describe("Commerce filter editor and Source runtime integration", () => {
         authored.textContent = "Original";
         panel.append(authored);
         list.append(category, panel);
-        const runtime = new BindingRuntime(list);
-        runtime.start();
+        const core = createBindingCore(true);
+        core.append(list);
 
         try {
-            document.body.append(list);
+            document.body.append(core);
             await settleLifecycle();
+            await settleUntil(() => panel.getAttribute("data-schema-status") === "ready");
+            core.removeAttribute("cms-binding-disabled");
+            const runtime = core.runtime;
+            if (!runtime) {
+                throw new Error("Binding runtime did not start");
+            }
             await settleUntil(() => runtime.size === 1);
 
             runtime.deactivate();
@@ -61,8 +67,7 @@ describe("Commerce filter editor and Source runtime integration", () => {
 
             expect(restoredPanel?.querySelector("[data-original-authored]")?.textContent).toBe("Original");
         } finally {
-            runtime.stop();
-            list.remove();
+            core.remove();
             globalThis.fetch = realFetch;
         }
     });

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { tennisSchema } from "./offer-filter-panel.fixtures";
-import { defineFilter, filterTag, settleLifecycle } from "./offer-filter-panel.harness";
+import { tennisSchema } from "../support/offer-filter-panel.fixtures";
+import { defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
 

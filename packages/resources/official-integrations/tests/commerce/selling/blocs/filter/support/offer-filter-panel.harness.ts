@@ -1,9 +1,21 @@
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { BINDING_CORE_TAG, BindingCore } from "@bernouy/components";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 export const filterTag = "test-commerce-schema-offer-filter";
 export const listTag = "test-commerce-schema-offer-list";
+
+export function createBindingCore(disabled = false): BindingCore {
+    if (!customElements.get(BINDING_CORE_TAG)) {
+        customElements.define(BINDING_CORE_TAG, BindingCore);
+    }
+    const core = document.createElement(BINDING_CORE_TAG) as BindingCore;
+    if (disabled) {
+        core.setAttribute("cms-binding-disabled", "");
+    }
+    return core;
+}
 
 export async function defineFilter(): Promise<void> {
     await defineCommerceBloc(filterTag, "commerce-offer-filter");

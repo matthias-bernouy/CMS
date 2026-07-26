@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { padelSchema, tennisSchema } from "./offer-filter-panel.fixtures";
-import { defineFilter, filterTag, settleLifecycle } from "./offer-filter-panel.harness";
-import { exerciseNumericRange } from "./offer-filter-range.assertions";
+import { padelSchema, tennisSchema } from "../support/offer-filter-panel.fixtures";
+import { defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
+import { exerciseNumericRange } from "../support/offer-filter-range.assertions";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
 

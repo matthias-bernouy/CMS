@@ -1,4 +1,4 @@
-import { numericRangeStyle } from "./range-style";
+import { numericRangeStyle } from "../range/range-style";
 
 export const schemaFilterStyle = `
     commerce-offer-filter[schema-driven] [data-schema-filters] {
