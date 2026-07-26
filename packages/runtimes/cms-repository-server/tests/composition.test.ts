@@ -3,7 +3,11 @@ import {
     createIntegrationRegistryCatalogSnapshot,
     type IntegrationRegistryCatalogSnapshot,
 } from "@bernouy/cms-integration-registry";
-import { createRepositoryMaintenanceGuard, createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
+import {
+    createRepositoryMaintenanceGuard,
+    createRepositoryManagementGuard,
+    createRepositoryWorkerGuard,
+} from "@bernouy/cms-repository-management";
 import { BunRunner } from "@bernouy/http-runner";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { RepositoryCatalogRuntime } from "../src/core/catalogRuntime";
@@ -60,6 +64,36 @@ describe("repository listener composition", () => {
         });
         expect(maintained.status).toBe(200);
         expect(await maintained.json()).toEqual({ maintained: true });
+
+        for (const token of ["management-secret", "maintenance-secret", "job-capability"]) {
+            expect(
+                (
+                    await fetch(`${managementOrigin}/.cms/repository-management/worker-ping`, {
+                        headers: { authorization: `Bearer ${token}` },
+                    })
+                ).status,
+            ).toBe(401);
+        }
+        const worker = await fetch(`${managementOrigin}/.cms/repository-management/worker-ping`, {
+            headers: { authorization: "Bearer worker-secret" },
+        });
+        expect(worker.status).toBe(200);
+        expect((await worker.json()).worker).toBeTrue();
+        expect(
+            (
+                await fetch(`${managementOrigin}/.cms/repository-management/capability-ping`, {
+                    headers: { authorization: "Bearer worker-secret" },
+                })
+            ).status,
+        ).toBe(401);
+        expect(
+            (
+                await fetch(`${managementOrigin}/.cms/repository-management/capability-ping`, {
+                    headers: { authorization: "Bearer job-capability" },
+                })
+            ).status,
+        ).toBe(200);
+        expect((await fetch(`${publicOrigin}/.cms/repository-management/worker-ping`)).status).toBe(404);
     });
 
     test("keeps readiness while a failed refresh degrades the last valid snapshot", async () => {
@@ -133,6 +167,23 @@ async function startFixture(loadCatalog: () => Promise<IntegrationRegistryCatalo
             }),
             mount(runner) {
                 runner.get("/maintenance-ping", () => Response.json({ maintained: true }));
+            },
+        },
+        worker: {
+            guard: createRepositoryWorkerGuard({
+                serviceToken: "worker-secret",
+                servicePrincipal: "integration-verifier-supervisor",
+                rateLimiter: new InMemoryRateLimiter({ limit: 10, windowSeconds: 60 }),
+            }),
+            mountAuthenticated(runner) {
+                runner.get("/worker-ping", () => Response.json({ worker: true }));
+            },
+            mountCapabilities(runner) {
+                runner.get("/capability-ping", (request) =>
+                    request.headers.get("authorization") === "Bearer job-capability"
+                        ? Response.json({ capability: true })
+                        : new Response("Unauthorized", { status: 401 }),
+                );
             },
         },
         gracefulStopTimeoutMs: 1_000,

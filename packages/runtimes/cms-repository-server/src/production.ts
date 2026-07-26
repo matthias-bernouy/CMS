@@ -14,19 +14,24 @@ import {
     loadOfficialRepositoryBootstrapEvidence,
     OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
 } from "@bernouy/cms-official-integrations/publication";
-import { createRepositoryMaintenanceGuard, createRepositoryManagementGuard } from "@bernouy/cms-repository-management";
-import type { PublicPackageDownloadProtection, PublicPackageReadObservation } from "@bernouy/cms-repository";
+import {
+    createRepositoryMaintenanceGuard,
+    createRepositoryManagementGuard,
+    createRepositoryWorkerGuard,
+} from "@bernouy/cms-repository-management";
 import { BunRunner } from "@bernouy/http-runner";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { RepositoryCatalogRuntime } from "./core/catalogRuntime";
 import {
-    createConsoleRepositoryOperationLogSink,
-    RepositoryOperationalTelemetry,
-} from "./core/observability/telemetry";
+    createProductionRepositoryOperationalTelemetry,
+    productionPackageDownloadProtection,
+} from "./core/productionSupport";
 import {
     assertDistinctRepositoryCredentials,
     readRepositoryMaintenanceToken,
     readRepositoryManagementToken,
+    readRepositoryWorkerCapabilitySigningKey,
+    readRepositoryWorkerToken,
 } from "./credentials";
 import { createProductionRepositoryManagement } from "./management";
 import {
@@ -49,11 +54,13 @@ export async function startProductionRepositoryServer(
         env.registryRoot,
         options.bootstrapEmptyRegistry ?? prepareOfficialRepositoryBootstrap,
     );
-    const [managementToken, maintenanceToken] = await Promise.all([
+    const [managementToken, maintenanceToken, workerToken, workerCapabilitySigningKey] = await Promise.all([
         readRepositoryManagementToken(env.managementTokenFile),
         readRepositoryMaintenanceToken(env.maintenanceTokenFile),
+        readRepositoryWorkerToken(env.workerTokenFile),
+        readRepositoryWorkerCapabilitySigningKey(env.workerCapabilityKeyFile),
     ]);
-    assertDistinctRepositoryCredentials(managementToken, maintenanceToken);
+    assertDistinctRepositoryCredentials(managementToken, maintenanceToken, workerToken, workerCapabilitySigningKey);
     const catalog = new RepositoryCatalogRuntime();
     const loadCatalog = (): Promise<IntegrationRegistryCatalogSnapshot> =>
         buildFsIntegrationRegistryCatalogSnapshot({ root: env.registryRoot });
@@ -79,6 +86,11 @@ export async function startProductionRepositoryServer(
                 }),
             ),
         },
+        candidateProtocol: {
+            capabilitySigningKey: workerCapabilitySigningKey,
+            candidateTtlMs: env.candidateTtlMs,
+            leaseDurationMs: env.workerLeaseDurationMs,
+        },
     });
 
     const managementGuard = createRepositoryManagementGuard({
@@ -97,6 +109,14 @@ export async function startProductionRepositoryServer(
             windowSeconds: env.managementRateLimitWindowSeconds,
         }),
     });
+    const workerGuard = createRepositoryWorkerGuard({
+        serviceToken: workerToken,
+        servicePrincipal: "integration-verifier-supervisor",
+        rateLimiter: new InMemoryRateLimiter({
+            limit: env.workerRateLimit,
+            windowSeconds: env.workerRateLimitWindowSeconds,
+        }),
+    });
     const packageDownloadProtection = productionPackageDownloadProtection(env, (observation) =>
         telemetry.observePublicPackageRead(observation),
     );
@@ -113,6 +133,11 @@ export async function startProductionRepositoryServer(
         managementGuard,
         mountManagement: repositoryManagement.mount,
         maintenance: { guard: maintenanceGuard, mount: repositoryManagement.mountMaintenance },
+        worker: {
+            guard: workerGuard,
+            mountAuthenticated: repositoryManagement.mountWorkerAuthenticated,
+            mountCapabilities: repositoryManagement.mountWorkerCapabilities,
+        },
         gracefulStopTimeoutMs: env.gracefulStopTimeoutMs,
     });
 }
@@ -142,31 +167,7 @@ export const prepareOfficialRepositoryBootstrap: EmptyRegistryBootstrap = async 
     };
 };
 
-export function productionPackageDownloadProtection(
-    env: ReturnType<typeof readRepositoryRuntimeEnv>,
-    observe?: (observation: PublicPackageReadObservation) => void,
-): PublicPackageDownloadProtection {
-    if (env.clientAddressMode === "disabled") {
-        return { clientAddressPolicy: { mode: "disabled" }, ...(observe ? { observe } : {}) };
-    }
-    const clientAddressPolicy =
-        env.clientAddressMode === "trusted-proxy"
-            ? ({ mode: "trusted-proxy", trustedProxyHops: env.trustedProxyHops } as const)
-            : ({ mode: "direct" } as const);
-    return {
-        clientAddressPolicy,
-        rateLimiter: new InMemoryRateLimiter({
-            limit: env.packageDownloadLimit,
-            windowSeconds: env.packageDownloadWindowSeconds,
-        }),
-        ...(observe ? { observe } : {}),
-    };
-}
-
-export function createProductionRepositoryOperationalTelemetry(
-    write?: (line: string) => void,
-): RepositoryOperationalTelemetry {
-    return new RepositoryOperationalTelemetry({
-        log: createConsoleRepositoryOperationLogSink(write),
-    });
-}
+export {
+    createProductionRepositoryOperationalTelemetry,
+    productionPackageDownloadProtection,
+} from "./core/productionSupport";

@@ -21,6 +21,10 @@ import { mountRepositorySchemaBaselineImportRoutes, RepositoryManagementCms } fr
 import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
 import type { Runner } from "@bernouy/http-runner";
 import type { RepositoryCatalogRuntime } from "./core/catalogRuntime";
+import {
+    createProductionRepositoryCandidateProtocol,
+    type ProductionRepositoryCandidateProtocolConfig,
+} from "./core/candidates/composition";
 import { readRepositoryFilesystemCapacity } from "./core/filesystemCapacity";
 import { ObservedIntegrationRegistryStablePromoter } from "./core/observability/promoter";
 import { ObservedIntegrationRegistryPublisher } from "./core/observability/publisher";
@@ -34,7 +38,10 @@ const MAX_MANAGEMENT_JSON_BYTES = 64 * 1_024;
 export type ProductionRepositoryManagement = Readonly<{
     mount: RepositoryManagementSurfaceMount;
     mountMaintenance: RepositoryManagementSurfaceMount;
+    mountWorkerAuthenticated: RepositoryManagementSurfaceMount;
+    mountWorkerCapabilities: RepositoryManagementSurfaceMount;
     recovery: IntegrationRegistryRecoveryResult;
+    candidateRecovery: Awaited<ReturnType<typeof createProductionRepositoryCandidateProtocol>>["recovery"];
     compatibility: RepositoryCompatibilityReader;
 }>;
 
@@ -46,6 +53,7 @@ export async function createProductionRepositoryManagement(input: {
         approval: OfficialRepositoryBootstrapBaselineApproval;
         approvedTargets: readonly ReviewedSchemaBaselineImportTarget[];
     }>;
+    candidateProtocol?: Omit<ProductionRepositoryCandidateProtocolConfig, "root">;
 }): Promise<ProductionRepositoryManagement> {
     const telemetry = input.telemetry ?? new RepositoryOperationalTelemetry();
     const snapshots = input.catalog.snapshotReference();
@@ -67,6 +75,10 @@ export async function createProductionRepositoryManagement(input: {
     const baselineImportDiagnostics = baselineImportConfig
         ? await recoverReviewedSchemaBaselineImports(baselineImportConfig)
         : [];
+    const candidateProtocol = await createProductionRepositoryCandidateProtocol({
+        root: input.root,
+        ...input.candidateProtocol,
+    });
     const recovery: IntegrationRegistryRecoveryResult = Object.freeze({
         snapshot: registryRecovery.snapshot,
         diagnostics: Object.freeze([...registryRecovery.diagnostics, ...baselineImportDiagnostics]),
@@ -106,9 +118,9 @@ export async function createProductionRepositoryManagement(input: {
         }),
         telemetry,
     );
-
     return Object.freeze({
         recovery,
+        candidateRecovery: candidateProtocol.recovery,
         compatibility: reports,
         mountMaintenance(runner: Runner) {
             if (baselineImporter) {
@@ -117,6 +129,12 @@ export async function createProductionRepositoryManagement(input: {
                     maxBodyBytes: MAX_REVIEWED_SCHEMA_BASELINE_IMPORT_DOCUMENT_BYTES,
                 });
             }
+        },
+        mountWorkerAuthenticated(runner: Runner) {
+            candidateProtocol.mountWorkerAuthenticated(runner);
+        },
+        mountWorkerCapabilities(runner: Runner) {
+            candidateProtocol.mountWorkerCapabilities(runner);
         },
         mount(runner: Runner) {
             new RepositoryManagementCms({
@@ -138,6 +156,7 @@ export async function createProductionRepositoryManagement(input: {
                     return input.catalog.current().locateExactVersion(kind, version)?.package.digest ?? null;
                 },
             });
+            candidateProtocol.mountManagement(runner);
         },
     });
 }

@@ -23,6 +23,12 @@ export type RepositoryMaintenanceSurface = Readonly<{
     mount: RepositoryManagementSurfaceMount;
 }>;
 
+export type RepositoryWorkerSurface = Readonly<{
+    guard: Middleware;
+    mountAuthenticated: RepositoryManagementSurfaceMount;
+    mountCapabilities: RepositoryManagementSurfaceMount;
+}>;
+
 export type RepositoryServerConfig = Readonly<{
     publicRunner: Runner;
     managementRunner: Runner;
@@ -36,6 +42,7 @@ export type RepositoryServerConfig = Readonly<{
     managementGuard: Middleware;
     mountManagement: RepositoryManagementSurfaceMount;
     maintenance?: RepositoryMaintenanceSurface;
+    worker?: RepositoryWorkerSurface;
     gracefulStopTimeoutMs?: number;
 }>;
 
@@ -68,6 +75,12 @@ export function startRepositoryServer(config: RepositoryServerConfig): Repositor
         config.managementRunner.group(REPOSITORY_MANAGEMENT_BASE_PATH, config.maintenance.mount, [
             config.maintenance.guard,
         ]);
+    }
+    if (config.worker) {
+        config.managementRunner.group(REPOSITORY_MANAGEMENT_BASE_PATH, config.worker.mountAuthenticated, [
+            config.worker.guard,
+        ]);
+        config.managementRunner.group(REPOSITORY_MANAGEMENT_BASE_PATH, config.worker.mountCapabilities);
     }
 
     let stopPromise: Promise<void> | undefined;

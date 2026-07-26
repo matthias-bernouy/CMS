@@ -13,17 +13,45 @@ export async function readRepositoryMaintenanceToken(path: string): Promise<stri
     return readRepositoryCredentialToken(path, "maintenance");
 }
 
-export function assertDistinctRepositoryCredentials(managementToken: string, maintenanceToken: string): void {
-    const managementDigest = createHash("sha256").update(managementToken, "utf8").digest();
-    const maintenanceDigest = createHash("sha256").update(maintenanceToken, "utf8").digest();
-    if (timingSafeEqual(managementDigest, maintenanceDigest)) {
-        throw new RepositoryCredentialTokenFileError("Repository management and maintenance tokens must be distinct");
+export async function readRepositoryWorkerToken(path: string): Promise<string> {
+    return readRepositoryCredentialToken(path, "worker");
+}
+
+export async function readRepositoryWorkerCapabilitySigningKey(path: string): Promise<string> {
+    const key = await readRepositoryCredentialToken(path, "worker capability");
+    if (key.length < 32) {
+        throw new RepositoryCredentialTokenFileError(
+            "Repository worker capability signing-key file must contain at least 32 non-space characters",
+        );
+    }
+    return key;
+}
+
+export function assertDistinctRepositoryCredentials(...credentials: readonly string[]): void {
+    const digests = credentials.map((credential) => createHash("sha256").update(credential, "utf8").digest());
+    for (let left = 0; left < digests.length; left += 1) {
+        for (let right = left + 1; right < digests.length; right += 1) {
+            if (timingSafeEqual(digests[left]!, digests[right]!)) {
+                const label =
+                    credentials.length === 2
+                        ? "management and maintenance tokens"
+                        : "management, maintenance, worker, and worker capability credentials";
+                throw new RepositoryCredentialTokenFileError(`Repository ${label} must be distinct`);
+            }
+        }
     }
 }
 
-async function readRepositoryCredentialToken(path: string, capability: "management" | "maintenance"): Promise<string> {
-    const fileError = `Repository ${capability} token file must be a bounded regular file`;
-    const contentError = `Repository ${capability} token file must contain one non-empty Bearer token`;
+async function readRepositoryCredentialToken(
+    path: string,
+    capability: "management" | "maintenance" | "worker" | "worker capability",
+): Promise<string> {
+    const label = capability === "worker capability" ? "worker capability signing-key" : `${capability} token`;
+    const fileError = `Repository ${label} file must be a bounded regular file`;
+    const contentError =
+        capability === "worker capability"
+            ? `Repository ${label} file must contain one non-empty credential`
+            : `Repository ${label} file must contain one non-empty Bearer token`;
     let handle: Awaited<ReturnType<typeof open>> | undefined;
     try {
         handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);

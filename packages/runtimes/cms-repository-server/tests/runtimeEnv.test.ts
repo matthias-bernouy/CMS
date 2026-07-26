@@ -9,8 +9,14 @@ describe("readRepositoryRuntimeEnv", () => {
             registryRoot: "/var/lib/cms-repository/registry",
             managementTokenFile: "/run/secrets/cms-repository-management-token",
             maintenanceTokenFile: "/run/secrets/cms-repository-maintenance-token",
+            workerTokenFile: "/run/secrets/cms-repository-worker-token",
+            workerCapabilityKeyFile: "/run/secrets/cms-repository-worker-capability-key",
             managementRateLimit: 30,
             managementRateLimitWindowSeconds: 60,
+            workerRateLimit: 120,
+            workerRateLimitWindowSeconds: 60,
+            candidateTtlMs: 86_400_000,
+            workerLeaseDurationMs: 300_000,
             clientAddressMode: "disabled",
             trustedProxyHops: 0,
             packageDownloadLimit: 60,
@@ -42,11 +48,19 @@ describe("readRepositoryRuntimeEnv", () => {
         expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE: "maintenance-token" })).toThrow(
             "must be an absolute path",
         );
+        expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_WORKER_TOKEN_FILE: "worker-token" })).toThrow(
+            "must be an absolute path",
+        );
+        expect(() =>
+            readRepositoryRuntimeEnv({ CMS_REPOSITORY_WORKER_CAPABILITY_KEY_FILE: "worker-capability-key" }),
+        ).toThrow("must be an absolute path");
     });
 
     test("bounds management and shutdown policies", () => {
         expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT: "0" })).toThrow();
         expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_GRACEFUL_STOP_TIMEOUT_MS: "60001" })).toThrow();
+        expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_CANDIDATE_TTL_MS: "59999" })).toThrow();
+        expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_WORKER_LEASE_DURATION_MS: "3600001" })).toThrow();
         expect(
             readRepositoryRuntimeEnv({
                 CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT: "7",

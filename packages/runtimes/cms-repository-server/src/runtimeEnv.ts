@@ -8,8 +8,14 @@ export type RepositoryRuntimeEnv = Readonly<{
     registryRoot: string;
     managementTokenFile: string;
     maintenanceTokenFile: string;
+    workerTokenFile: string;
+    workerCapabilityKeyFile: string;
     managementRateLimit: number;
     managementRateLimitWindowSeconds: number;
+    workerRateLimit: number;
+    workerRateLimitWindowSeconds: number;
+    candidateTtlMs: number;
+    workerLeaseDurationMs: number;
     clientAddressMode: "direct" | "disabled" | "trusted-proxy";
     trustedProxyHops: number;
     packageDownloadLimit: number;
@@ -39,6 +45,14 @@ export function readRepositoryRuntimeEnv(source: RepositoryRuntimeEnvSource): Re
             source.CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE ?? "/run/secrets/cms-repository-maintenance-token",
             "CMS_REPOSITORY_MAINTENANCE_TOKEN_FILE",
         ),
+        workerTokenFile: absolutePath(
+            source.CMS_REPOSITORY_WORKER_TOKEN_FILE ?? "/run/secrets/cms-repository-worker-token",
+            "CMS_REPOSITORY_WORKER_TOKEN_FILE",
+        ),
+        workerCapabilityKeyFile: absolutePath(
+            source.CMS_REPOSITORY_WORKER_CAPABILITY_KEY_FILE ?? "/run/secrets/cms-repository-worker-capability-key",
+            "CMS_REPOSITORY_WORKER_CAPABILITY_KEY_FILE",
+        ),
         managementRateLimit: positiveInteger(
             source.CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT,
             "CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT",
@@ -48,6 +62,30 @@ export function readRepositoryRuntimeEnv(source: RepositoryRuntimeEnvSource): Re
             source.CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT_WINDOW_SECONDS,
             "CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT_WINDOW_SECONDS",
             60,
+        ),
+        workerRateLimit: positiveInteger(
+            source.CMS_REPOSITORY_WORKER_RATE_LIMIT,
+            "CMS_REPOSITORY_WORKER_RATE_LIMIT",
+            120,
+        ),
+        workerRateLimitWindowSeconds: positiveInteger(
+            source.CMS_REPOSITORY_WORKER_RATE_LIMIT_WINDOW_SECONDS,
+            "CMS_REPOSITORY_WORKER_RATE_LIMIT_WINDOW_SECONDS",
+            60,
+        ),
+        candidateTtlMs: boundedInteger(
+            source.CMS_REPOSITORY_CANDIDATE_TTL_MS,
+            "CMS_REPOSITORY_CANDIDATE_TTL_MS",
+            86_400_000,
+            60_000,
+            30 * 86_400_000,
+        ),
+        workerLeaseDurationMs: boundedInteger(
+            source.CMS_REPOSITORY_WORKER_LEASE_DURATION_MS,
+            "CMS_REPOSITORY_WORKER_LEASE_DURATION_MS",
+            300_000,
+            10_000,
+            3_600_000,
         ),
         ...clientAddress,
         packageDownloadLimit: positiveInteger(

@@ -5,6 +5,8 @@ import {
     assertDistinctRepositoryCredentials,
     readRepositoryMaintenanceToken,
     readRepositoryManagementToken,
+    readRepositoryWorkerCapabilitySigningKey,
+    readRepositoryWorkerToken,
 } from "../../src/credentials";
 import { TemporaryRoots } from "./fixtures";
 
@@ -67,5 +69,29 @@ describe("repository secret storage contracts", () => {
         await mkdir(directory);
 
         await expect(readRepositoryManagementToken(directory)).rejects.toThrow("bounded regular file");
+    });
+
+    test("keeps worker polling and result-capability credentials independent", async () => {
+        const root = await roots.create();
+        const workerFile = join(root, "worker-token");
+        const capabilityFile = join(root, "worker-capability-key");
+        await writeFile(workerFile, "worker-secret", { mode: 0o600 });
+        await writeFile(capabilityFile, "c".repeat(64), { mode: 0o600 });
+
+        const worker = await readRepositoryWorkerToken(workerFile);
+        const capability = await readRepositoryWorkerCapabilitySigningKey(capabilityFile);
+        expect(worker).toBe("worker-secret");
+        expect(capability).toBe("c".repeat(64));
+        expect(() =>
+            assertDistinctRepositoryCredentials("management", "maintenance", worker, capability),
+        ).not.toThrow();
+        expect(() => assertDistinctRepositoryCredentials("management", "maintenance", worker, worker)).toThrow(
+            "worker capability credentials must be distinct",
+        );
+
+        await writeFile(capabilityFile, "too-short", { mode: 0o600 });
+        await expect(readRepositoryWorkerCapabilitySigningKey(capabilityFile)).rejects.toThrow(
+            "at least 32 non-space characters",
+        );
     });
 });
