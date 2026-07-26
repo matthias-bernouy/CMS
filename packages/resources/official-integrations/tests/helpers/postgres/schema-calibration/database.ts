@@ -46,21 +46,29 @@ export class DisposableSchemaCalibrationCluster {
         if (owned !== database) {
             throw new Error(`Disposable schema calibration database is not owned by this run: ${database.name}`);
         }
-        this.#databases.delete(database.name);
         await database.sql.close();
         await this.#drop(database.name);
+        this.#databases.delete(database.name);
     }
 
     async close(): Promise<void> {
         const databases = [...this.#databases.values()].reverse();
-        this.#databases.clear();
+        let firstError: unknown;
         try {
             for (const database of databases) {
-                await database.sql.close();
-                await this.#drop(database.name);
+                try {
+                    await database.sql.close();
+                    await this.#drop(database.name);
+                    this.#databases.delete(database.name);
+                } catch (error) {
+                    firstError ??= error;
+                }
             }
         } finally {
             await this.#admin.close();
+        }
+        if (firstError) {
+            throw firstError;
         }
     }
 
