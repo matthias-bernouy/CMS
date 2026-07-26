@@ -100,7 +100,7 @@ function validateSource(source: ThemeSource, sourceIds: Set<string>, integration
                 `source id is not derived for integration: ${owner.integrationId}`,
             );
         }
-    } else if (owner && owner.kind !== "core" && owner.kind !== "site") {
+    } else if (owner) {
         throw new ContentValidationError("theme", `invalid owner for source: ${source.id}`);
     } else if (source.id.startsWith("integration-")) {
         throw new ContentValidationError("theme", `reserved integration source id: ${source.id}`);

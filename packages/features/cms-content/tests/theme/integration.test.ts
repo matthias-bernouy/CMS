@@ -37,7 +37,7 @@ describe("integration theme contributions", () => {
         expect(css).toContain("--integration-photo-albums-accent: var(--secondary-base);");
     });
 
-    test("keeps site overrides while provider defaults evolve", () => {
+    test("keeps configured overrides while provider defaults evolve", () => {
         const initial = composeThemeSettings(defaultThemeSettings(), [photoTheme()]);
         const tokenId = integrationThemeTokenId("photo-albums", "accent");
         initial.themes[0]!.values.light[tokenId] = "#f0a000";

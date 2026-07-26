@@ -22,50 +22,35 @@ const CORE_TOKEN_TYPES: Readonly<Record<string, ThemeTokenType>> = {
 };
 
 const CORE_SOURCE_IDS = new Set(["colors", "typography", "spacing", "shape"]);
-const LEGACY_CUSTOM_TOKEN_ID = /^custom-\d+(?:-\d+)?$/;
+const LEGACY_THEME_SOURCE_ID = "site-tokens";
 
 export function normalizeThemeCatalog(settings: ThemeSettings): void {
-    const site = ensureSiteTokenSource(settings);
-    migrateLegacyCustomCatalog(settings, site);
+    normalizeLegacyOwners(settings);
+    normalizeLegacyThemeSource(settings);
     normalizeImportedCssSource(settings);
     assignSemanticTokenTypes(settings);
-    assignLegacySourceOwners(settings);
 }
 
-function ensureSiteTokenSource(settings: ThemeSettings): ThemeSource {
-    let source = settings.sources.find((item) => item.id === "site-tokens");
-    if (!source) {
-        source = {
-            id: "site-tokens",
-            label: "Site tokens",
-            supportsModes: true,
-            owner: { kind: "site" },
-            categories: [],
-        };
-        settings.sources.push(source);
-    }
-    source.label = "Site tokens";
-    source.supportsModes = true;
-    source.owner = { kind: "site" };
-    ensureGeneralCategory(source);
-    return source;
-}
-
-function migrateLegacyCustomCatalog(settings: ThemeSettings, site: ThemeSource): void {
+function normalizeLegacyOwners(settings: ThemeSettings): void {
     for (const source of settings.sources) {
-        if (source === site || source.owner?.kind === "integration" || source.id.startsWith("integration-")) {
-            continue;
+        const kind = (source.owner as { kind?: unknown } | undefined)?.kind;
+        if (kind === "core" || kind === "site") {
+            delete source.owner;
         }
-        const categoryPrefix = `${source.id}-category-`;
-        const customCategories = source.categories.filter((category) => category.id.startsWith(categoryPrefix));
-        source.categories = source.categories.filter((category) => !category.id.startsWith(categoryPrefix));
-        for (const category of customCategories) {
-            appendCategory(site, category);
-        }
-        for (const category of source.categories) {
-            const customTokens = category.tokens.filter((token) => LEGACY_CUSTOM_TOKEN_ID.test(token.id));
-            category.tokens = category.tokens.filter((token) => !LEGACY_CUSTOM_TOKEN_ID.test(token.id));
-            appendTokens(ensureGeneralCategory(site), customTokens);
+    }
+}
+
+function normalizeLegacyThemeSource(settings: ThemeSettings): void {
+    const source = settings.sources.find((item) => item.id === LEGACY_THEME_SOURCE_ID);
+    if (!source || source.owner?.kind === "integration") {
+        return;
+    }
+    if (source.label === "Site tokens") {
+        source.label = "Theme tokens";
+    }
+    for (const category of source.categories) {
+        if (category.description === "Design tokens created for this site.") {
+            category.description = "Theme design tokens.";
         }
     }
 }
@@ -87,7 +72,7 @@ function normalizeImportedCssSource(settings: ThemeSettings): void {
     }
     imported.label = "Imported CSS";
     imported.supportsModes = false;
-    imported.owner = { kind: "site" };
+    delete imported.owner;
     const general = imported.categories.find((category) => category.id === "general");
     if (general?.label === "General") {
         general.label = "Imported variables";
@@ -99,12 +84,6 @@ function assignSemanticTokenTypes(settings: ThemeSettings): void {
         for (const token of source.categories.flatMap((category) => category.tokens)) {
             token.type = CORE_TOKEN_TYPES[token.id] ?? token.type;
         }
-    }
-}
-
-function assignLegacySourceOwners(settings: ThemeSettings): void {
-    for (const source of settings.sources) {
-        source.owner ??= { kind: CORE_SOURCE_IDS.has(source.id) ? "core" : "site" };
     }
 }
 
@@ -123,13 +102,4 @@ function appendTokens(category: ThemeCategory, tokens: ThemeToken[]): void {
             category.tokens.push(token);
         }
     }
-}
-
-function ensureGeneralCategory(source: ThemeSource): ThemeCategory {
-    let category = source.categories.find((item) => item.id === "general");
-    if (!category) {
-        category = { id: "general", label: "General", description: "Design tokens created for this site.", tokens: [] };
-        source.categories.unshift(category);
-    }
-    return category;
 }

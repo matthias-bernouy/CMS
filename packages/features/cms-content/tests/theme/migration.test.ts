@@ -14,11 +14,12 @@ describe("theme migrations", () => {
         expect(theme.values.light["primary-base"]).toBe("rgb(206, 220, 80)");
         expect(theme.values.light["custom-gap"]).toBe("var(--space-md)");
         expect(customGap?.type).toBe("length");
-        expect(settings.sources.find((source) => source.id === "site-tokens")?.owner).toEqual({ kind: "site" });
+        expect(settings.sources.find((source) => source.id === "imported-css")?.owner).toBeUndefined();
+        expect(settings.sources.some((source) => source.id === "site-tokens")).toBeFalse();
         expect(settings.sources.some((source) => source.id === "existing-css")).toBeFalse();
     });
 
-    test("classifies only built-in controls by their editing semantics", () => {
+    test("classifies built-in controls without relocating independent tokens", () => {
         const settings = defaultThemeSettings();
         for (const token of settings.sources.flatMap((source) =>
             source.categories.flatMap((category) => category.tokens),
@@ -51,13 +52,13 @@ describe("theme migrations", () => {
         expect(tokens.get("custom-30")).toBe("number");
         expect(
             organized.sources
-                .find((source) => source.id === "site-tokens")
+                .find((source) => source.id === "spacing")
                 ?.categories.flatMap((category) => category.tokens)
                 .some((token) => token.id === "custom-30"),
         ).toBeTrue();
     });
 
-    test("preserves legacy custom categories as editable site tokens", () => {
+    test("keeps authored categories in their original independent catalog", () => {
         const settings = defaultThemeSettings();
         settings.sources
             .find((source) => source.id === "colors")!
@@ -78,7 +79,7 @@ describe("theme migrations", () => {
 
         const organized = organizeThemeSettings(settings);
         const migrated = organized.sources
-            .find((source) => source.id === "site-tokens")
+            .find((source) => source.id === "colors")
             ?.categories.find((category) => category.id === "colors-category-5");
 
         expect(migrated).toMatchObject({
@@ -86,11 +87,7 @@ describe("theme migrations", () => {
             description: "Renamed by the site author",
             tokens: [{ id: "custom-31", label: "Article accent", type: "color" }],
         });
-        expect(
-            organized.sources
-                .find((source) => source.id === "colors")
-                ?.categories.some((category) => category.id === "colors-category-5"),
-        ).toBeFalse();
+        expect(organized.sources.some((source) => source.id === "legacy-custom")).toBeFalse();
     });
 
     test("moves tokens from the former import bucket into semantic categories", () => {

@@ -53,7 +53,6 @@ describe("structured themes", () => {
             id: "specialized",
             label: "Specialized",
             supportsModes: true,
-            owner: { kind: "site" },
             categories: [
                 {
                     id: "effects",
@@ -91,6 +90,14 @@ describe("structured themes", () => {
         const token = settings.sources.at(-1)!.categories[0]!.tokens[0]!;
         (token as { type: string }).type = "gradient";
         expect(() => validateThemeSettings(settings)).toThrow("invalid token metadata");
+    });
+
+    test("treats ordinary catalogs as independent sources", () => {
+        const settings = defaultThemeSettings();
+
+        expect(settings.sources).toHaveLength(4);
+        expect(settings.sources.every((source) => source.owner === undefined)).toBeTrue();
+        expect(settings.sources.some((source) => source.id === "site-tokens")).toBeFalse();
     });
 
     test("rejects theme links between separately owned integrations", () => {

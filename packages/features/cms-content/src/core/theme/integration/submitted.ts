@@ -3,19 +3,14 @@ import type { IntegrationThemeContribution, ThemeSettings, ThemeSource } from "c
 
 /**
  * Restore provider-owned catalogs after an untrusted editor submission.
- * Site overrides for active integration tokens survive; stale names do not.
+ * Configured overrides for active integration tokens survive; stale names do not.
  */
 export function reconcileSubmittedThemeSettings(
-    current: ThemeSettings,
+    _current: ThemeSettings,
     submitted: ThemeSettings,
     contributions: readonly IntegrationThemeContribution[],
 ): ThemeSettings {
     const next = structuredClone(submitted);
-    const currentOwners = new Map(
-        current.sources
-            .filter((source) => source.owner?.kind !== "integration")
-            .map((source) => [source.id, source.owner]),
-    );
     const contributedTokenIds = new Set(
         contributions.flatMap((contribution) =>
             contribution.categories.flatMap((category) =>
@@ -28,7 +23,7 @@ export function reconcileSubmittedThemeSettings(
         if (isReservedIntegrationSource(source)) {
             return [];
         }
-        source.owner = currentOwners.get(source.id) ?? { kind: "site" };
+        delete source.owner;
         for (const category of source.categories) {
             category.tokens = category.tokens.filter(
                 (token) => !isIntegrationName(token.id) && !isIntegrationName(token.variable),

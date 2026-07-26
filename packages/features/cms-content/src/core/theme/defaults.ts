@@ -82,13 +82,6 @@ export function defaultThemeSettings(): ThemeSettings {
             ]),
             category("motion", "Motion", "Shared transition durations and easing values.", []),
         ]),
-        {
-            id: "site-tokens",
-            label: "Site tokens",
-            supportsModes: true,
-            owner: { kind: "site" },
-            categories: [category("general", "General", "Design tokens created for this site.", [])],
-        },
     ];
     const theme: ThemeDefinition = {
         id: "default",
@@ -99,7 +92,7 @@ export function defaultThemeSettings(): ThemeSettings {
 }
 
 function source(id: string, label: string, supportsModes: boolean, categories: ThemeSource["categories"]): ThemeSource {
-    return { id, label, supportsModes, categories, owner: { kind: "core" } };
+    return { id, label, supportsModes, categories };
 }
 
 function category(

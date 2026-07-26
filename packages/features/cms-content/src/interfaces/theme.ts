@@ -3,7 +3,7 @@ export type ThemeMode = "light" | "dark";
 
 export type ThemeTokenDefaults = Partial<Record<ThemeMode, string>>;
 
-export type ThemeSourceOwner = { kind: "core" } | { kind: "site" } | { kind: "integration"; integrationId: string };
+export type ThemeSourceOwner = { kind: "integration"; integrationId: string };
 
 export type ThemeToken = {
     /** Stable identifier used by persisted theme values. */
@@ -13,7 +13,7 @@ export type ThemeToken = {
     label: string;
     description: string;
     type: ThemeTokenType;
-    /** Provider-owned fallback values. Site theme values remain overrides. */
+    /** Provider-owned fallback values. Configured theme values remain overrides. */
     defaults?: ThemeTokenDefaults;
 };
 
@@ -29,7 +29,7 @@ export type ThemeSource = {
     label: string;
     supportsModes: boolean;
     categories: ThemeCategory[];
-    /** Omitted only by persisted settings written before source ownership. */
+    /** Provider ownership. Independent, author-managed sources omit this field. */
     owner?: ThemeSourceOwner;
 };
 
@@ -62,9 +62,9 @@ export type ThemeDefinition = {
 };
 
 /**
- * Site-wide token catalog plus interchangeable value sets. The catalog is
- * deliberately shared: a block can keep referring to the same CSS variable
- * when the active theme changes.
+ * Token catalogs plus interchangeable value sets. The catalog is deliberately
+ * shared: a block can keep referring to the same CSS variable when the active
+ * theme changes.
  */
 export type ThemeSettings = {
     activeThemeId: string;
