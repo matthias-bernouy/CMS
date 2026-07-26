@@ -114,7 +114,7 @@ function completeWithDerivedOutcome(
 ): IntegrationRegistryCandidateRecord {
     const outcome = result.results.some((entry) => entry.outcome === "infrastructure-failure")
         ? "infrastructure-failure"
-        : result.results.every((entry) => entry.outcome === "passed")
+        : result.results.every((entry) => entry.outcome === "passed" || entry.outcome === "not-applicable")
           ? "passed"
           : "rejected";
     const retryable =
