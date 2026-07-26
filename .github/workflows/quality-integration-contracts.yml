@@ -47,8 +47,8 @@ jobs:
           ALLOW_POSTGRES_CONTRACT_SCHEMA_RESET: cmscore-postgres-contracts
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cmscore_contracts
         run: |
-          bun run packages/resources/official-integrations/tests/helpers/runPostgresContracts.ts --filter commerce-media
-          bun run packages/resources/official-integrations/tests/helpers/runPostgresContracts.ts --filter commerce-negotiated-checkout
+          bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-media
+          bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-negotiated-checkout
 
   source-image-safety:
     name: Source image safety and Chromium smoke

@@ -9,9 +9,9 @@ import {
     type PostgresContract,
 } from "./postgresContractCases";
 import { requireDisposablePostgresContractTarget } from "./postgresContractTarget";
-import { loadSupabaseSchemaSql } from "./supabaseSql";
+import { loadSupabaseSchemaSql } from "../supabaseSql";
 
-const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
+const packageRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const configuration = postgresContractConfiguration(packageRoot);
 
 async function main(): Promise<void> {

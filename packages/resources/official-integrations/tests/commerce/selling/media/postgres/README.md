@@ -10,7 +10,7 @@ Run only this contract from the repository root:
 ```bash
 ALLOW_POSTGRES_CONTRACT_SCHEMA_RESET=cmscore-postgres-contracts \
 DATABASE_URL=postgres://postgres:...@127.0.0.1/cmscore_contracts \
-  bun run packages/resources/official-integrations/tests/helpers/runPostgresContracts.ts \
+  bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts \
   --filter commerce-media
 ```
 
