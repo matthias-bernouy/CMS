@@ -1,6 +1,8 @@
 import type { Runner } from "@bernouy/http-runner";
 import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import type { RepositoryCompatibilityReader } from "cms-repository/compatibility/contracts";
+import { integrationCompatibilityRouteHandler } from "cms-repository/compatibility/routes";
 import { integrationPackageRouteHandlers } from "cms-repository/integrationPackageRoutes";
 import {
     assertPackageDownloadProtection,
@@ -18,6 +20,7 @@ import {
 type RepositoryCmsBaseConfig = {
     runner: Runner;
     integrationCatalog: IntegrationDefinitionRepository;
+    integrationCompatibility?: RepositoryCompatibilityReader;
 };
 
 export type RepositoryCmsConfig = RepositoryCmsBaseConfig &
@@ -32,12 +35,14 @@ export type RepositoryCmsConfig = RepositoryCmsBaseConfig &
 export class RepositoryCms {
     private readonly runner: Runner;
     private readonly integrationCatalog: IntegrationDefinitionRepository;
+    private readonly integrationCompatibility?: RepositoryCompatibilityReader;
     private readonly integrationPackages?: IntegrationPackageSource;
     private readonly packageDownloadProtection?: PublicPackageDownloadProtection;
 
     constructor(config: RepositoryCmsConfig) {
         this.runner = config.runner;
         this.integrationCatalog = config.integrationCatalog;
+        this.integrationCompatibility = config.integrationCompatibility;
         this.integrationPackages = config.integrationPackages;
         this.packageDownloadProtection = config.packageDownloadProtection;
         if (this.packageDownloadProtection) {
@@ -92,6 +97,13 @@ export class RepositoryCms {
             }
             return publicBytesResponse(req, asset.bytes, version ? "immutable" : "catalog", asset.contentType);
         });
+
+        if (this.integrationCompatibility) {
+            this.registerPublicRead(
+                "/api/integrations/compatibility",
+                integrationCompatibilityRouteHandler(this.integrationCompatibility),
+            );
+        }
 
         if (this.integrationPackages && this.packageDownloadProtection) {
             const handlers = integrationPackageRouteHandlers(this.integrationPackages, this.packageDownloadProtection);

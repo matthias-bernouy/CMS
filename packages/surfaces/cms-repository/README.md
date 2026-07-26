@@ -27,6 +27,15 @@ unless protection is explicitly disabled. The guard executes before reading the
 package source; `HEAD`, release notes, and catalog metadata do not consume the
 download budget.
 
+When a `RepositoryCompatibilityReader` is injected, the surface also mounts
+anonymous `GET`, `HEAD`, and `OPTIONS`
+`/api/integrations/compatibility?kind=...&version=...`. Optional `after` and
+`limit` parameters page append-only revisions; `limit` defaults to 50 and is
+bounded to 100. Responses expose an allowlisted admission/current/history DTO,
+never the reassessment actor or internal source and path fields. They use the
+short public cache policy and a representation ETag that changes when history
+is appended.
+
 ## Public Catalog Provider
 
 `@bernouy/cms-repository/catalog` exports `RepositoryCatalogPageProvider`. A

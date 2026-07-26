@@ -5,3 +5,18 @@
 export { RepositoryCms } from "cms-repository/RepositoryCms";
 export type { RepositoryCmsConfig } from "cms-repository/RepositoryCms";
 export type { PublicPackageDownloadProtection } from "cms-repository/packageDownloadGuard";
+export type {
+    PublicRepositoryCompatibilityAdmission,
+    PublicRepositoryCompatibilityBaseline,
+    PublicRepositoryCompatibilityEvidence,
+    PublicRepositoryCompatibilityPage,
+    PublicRepositoryCompatibilityReport,
+    PublicRepositoryCompatibilityRevision,
+    RepositoryCompatibilityBaselineSource,
+    RepositoryCompatibilityEvidenceSource,
+    RepositoryCompatibilityOutcome,
+    RepositoryCompatibilityPageRequest,
+    RepositoryCompatibilityPageSource,
+    RepositoryCompatibilityReader,
+    RepositoryCompatibilityReportSource,
+} from "cms-repository/compatibility/contracts";

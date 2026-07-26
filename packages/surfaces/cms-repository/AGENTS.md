@@ -15,6 +15,9 @@ integration catalogues.
   whether a repository is backed by local resources, storage, or another API.
 - Do not import mutable-registry internals into the catalog provider. Map the
   public compatibility DTO at the injected reader boundary.
+- The optional public compatibility route receives a structural reader and
+  projects an explicit allowlist. Never expose report actors, filesystem paths,
+  evidence-source locations, or unknown upstream fields.
 
 ## Rules
 
