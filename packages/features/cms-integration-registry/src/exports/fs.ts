@@ -51,3 +51,8 @@ export {
     INTEGRATION_COMPATIBILITY_REPORT_DOCUMENT_SCHEMA,
     readCompatibilityAdmissionReport,
 } from "../default-implementation/fs/registry/persistence/report";
+export {
+    FsIntegrationRegistryRecoverer,
+    recoverFsIntegrationRegistry,
+    type FsIntegrationRegistryRecovererConfig,
+} from "../default-implementation/fs/registry/recovery/recoverer";

@@ -36,6 +36,12 @@ export type {
     IntegrationRegistryPublicationResult,
     IntegrationRegistryPublisher,
 } from "../interfaces/publication";
+export type {
+    IntegrationRegistryRecoverer,
+    IntegrationRegistryRecoveryDiagnostic,
+    IntegrationRegistryRecoveryDiagnosticCode,
+    IntegrationRegistryRecoveryResult,
+} from "../interfaces/recovery";
 export { createIntegrationRegistryCatalogSnapshot } from "../core/catalog/snapshot";
 export { IntegrationRegistryCatalogSnapshotReference } from "../core/catalog/reference";
 export {
