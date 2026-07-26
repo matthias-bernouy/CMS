@@ -5,6 +5,8 @@ export type IntegrationRegistryRecoveryDiagnosticCode =
     | "publication-quarantined"
     | "stable-promotion-replayed"
     | "stable-promotion-quarantined"
+    | "schema-baseline-import-replayed"
+    | "schema-baseline-import-quarantined"
     | "abandoned-staging-quarantined"
     | "orphan-version-quarantined";
 

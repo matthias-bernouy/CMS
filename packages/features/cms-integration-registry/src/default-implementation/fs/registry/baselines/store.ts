@@ -1,3 +1,4 @@
+import { lstat } from "node:fs/promises";
 import { join } from "node:path";
 import { assertReportRevisionFollows, identifyReviewedSchemaBaseline } from "@bernouy/cms-integration-verification";
 import {
@@ -31,6 +32,12 @@ export class FsReviewedSchemaBaselineStore implements ReviewedSchemaBaselineStor
     async get(logicalKey: ReviewedSchemaBaselineLogicalKey): Promise<ReviewedSchemaBaselineHistory | null> {
         const paths = await reviewedSchemaBaselinePaths(this.config.root, logicalKey);
         try {
+            const metadata = await lstat(paths.history);
+            if (metadata.isSymbolicLink() || !metadata.isDirectory()) {
+                throw new ReviewedSchemaBaselineValidationError(
+                    "Reviewed schema baseline history must be a real directory",
+                );
+            }
             return await loadReviewedSchemaBaselineHistory(paths.history, logicalKey);
         } catch (error) {
             if (isNodeError(error) && error.code === "ENOENT") {

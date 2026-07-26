@@ -40,9 +40,27 @@ export function assertApprovedBootstrapBaseline(
     candidate: PreparedFsIntegrationRegistryCandidate,
     approval: OfficialRepositoryBootstrapBaselineApproval,
 ): void {
+    assertApprovedReviewedSchemaBaseline(
+        baseline,
+        {
+            version: candidate.package.envelope.version,
+            packageDigest: candidate.package.digest,
+        },
+        approval,
+    );
+    if (baseline.revisionType !== "root" || baseline.supersedes !== undefined) {
+        throw new TypeError("Official bootstrap reviewed schema baseline must be an immutable root revision");
+    }
+}
+
+export function assertApprovedReviewedSchemaBaseline(
+    baseline: ReviewedSchemaBaselineV1,
+    target: Readonly<{ version: string; packageDigest: string }>,
+    approval: OfficialRepositoryBootstrapBaselineApproval,
+): void {
     if (
-        baseline.version !== candidate.package.envelope.version ||
-        baseline.packageDigest !== candidate.package.digest ||
+        baseline.version !== target.version ||
+        baseline.packageDigest !== target.packageDigest ||
         baseline.generator.name !== approval.generator.name ||
         baseline.generator.version !== approval.generator.version ||
         baseline.generator.imageDigest !== approval.generator.imageDigest ||
@@ -54,12 +72,8 @@ export function assertApprovedBootstrapBaseline(
         baseline.policy.name !== approval.policy.name ||
         baseline.policy.version !== approval.policy.version ||
         !approval.provenanceActors.includes(baseline.provenance.actor) ||
-        baseline.origin !== "legacy-backfill" ||
-        baseline.revisionType !== "root" ||
-        baseline.supersedes !== undefined
+        baseline.origin !== "legacy-backfill"
     ) {
-        throw new TypeError(
-            "Official bootstrap reviewed schema baseline provenance or package identity is not approved",
-        );
+        throw new TypeError("Reviewed schema baseline provenance or package identity is not approved");
     }
 }

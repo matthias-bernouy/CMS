@@ -73,14 +73,20 @@ export type {
 } from "../interfaces/promotion";
 export type {
     AppendReviewedSchemaBaselineRequest,
+    IdentifiedReviewedSchemaBaselineImportRequest,
     IntegrationCompatibilityReportCollection,
     IntegrationCompatibilityReportPage,
     IntegrationCompatibilityReportPageRequest,
     IntegrationCompatibilityReportStore,
     ReviewedSchemaBaselineHistory,
+    ReviewedSchemaBaselineImporter,
+    ReviewedSchemaBaselineImportCurrent,
+    ReviewedSchemaBaselineImportRequest,
+    ReviewedSchemaBaselineImportResult,
     ReviewedSchemaBaselineLogicalKey,
     ReviewedSchemaBaselineStore,
 } from "../interfaces/reportStore";
+export { REVIEWED_SCHEMA_BASELINE_IMPORT_SCHEMA } from "../interfaces/reportStore";
 export { createIntegrationRegistryCatalogSnapshot } from "../core/catalog/snapshot";
 export { InMemoryIntegrationRegistryMutationCoordinator } from "../core/catalog/mutationCoordinator";
 export { IntegrationRegistryCatalogSnapshotReference } from "../core/catalog/reference";
@@ -107,6 +113,14 @@ export {
     ReviewedSchemaBaselineIntegrityError,
     ReviewedSchemaBaselineValidationError,
 } from "../core/compatibility/reportStoreErrors";
+export {
+    ReviewedSchemaBaselineImportError,
+    type ReviewedSchemaBaselineImportErrorCode,
+} from "../core/baselines/errors";
+export {
+    identifyReviewedSchemaBaselineImportRequest,
+    parseReviewedSchemaBaselineImportRequest,
+} from "../core/baselines/request";
 export {
     IntegrationCompatibilityReevaluationConflictError,
     IntegrationCompatibilityReevaluationIntegrityError,

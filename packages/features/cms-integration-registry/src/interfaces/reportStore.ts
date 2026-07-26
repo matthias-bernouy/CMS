@@ -65,3 +65,37 @@ export interface ReviewedSchemaBaselineStore {
     ): Promise<readonly ReviewedSchemaBaselineHistory[]>;
     append(request: AppendReviewedSchemaBaselineRequest): Promise<ReviewedSchemaBaselineHistory>;
 }
+
+export const REVIEWED_SCHEMA_BASELINE_IMPORT_SCHEMA = "cms.integration.reviewed-schema-baseline-import.v1" as const;
+
+export type ReviewedSchemaBaselineImportCurrent = Readonly<{
+    revisionId: string;
+    baselineDigest: string;
+}>;
+
+export type ReviewedSchemaBaselineImportRequest = Readonly<{
+    schema: typeof REVIEWED_SCHEMA_BASELINE_IMPORT_SCHEMA;
+    baselineDigest: string;
+    baseline: ReviewedSchemaBaselineV1;
+    expectedCurrent: ReviewedSchemaBaselineImportCurrent | null;
+}>;
+
+export type IdentifiedReviewedSchemaBaselineImportRequest = Readonly<{
+    request: ReviewedSchemaBaselineImportRequest;
+    canonicalBytes: Uint8Array;
+    digest: string;
+}>;
+
+export type ReviewedSchemaBaselineImportResult = Readonly<{
+    operationId: string;
+    outcome: "imported" | "unchanged";
+    kind: string;
+    version: string;
+    packageDigest: string;
+    baselineDigest: string;
+    currentRevisionId: string;
+}>;
+
+export interface ReviewedSchemaBaselineImporter {
+    importBaseline(request: ReviewedSchemaBaselineImportRequest): Promise<ReviewedSchemaBaselineImportResult>;
+}

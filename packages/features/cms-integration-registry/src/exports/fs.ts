@@ -71,6 +71,19 @@ export {
 } from "../default-implementation/fs/registry/baselines/store";
 export { loadReviewedConnectorSchemaBaselines } from "../default-implementation/fs/registry/baselines/projection";
 export {
+    FS_REVIEWED_SCHEMA_BASELINE_IMPORT_PHASES,
+    FsReviewedSchemaBaselineImporter,
+    FsReviewedSchemaBaselineImportSimulatedCrashError,
+    MAX_REVIEWED_SCHEMA_BASELINE_IMPORT_DOCUMENT_BYTES,
+    recoverReviewedSchemaBaselineImports,
+    REVIEWED_SCHEMA_BASELINE_IMPORT_JOURNAL_SCHEMA,
+    type FsReviewedSchemaBaselineImportBoundary,
+    type FsReviewedSchemaBaselineImporterConfig,
+    type FsReviewedSchemaBaselineImportJournal,
+    type FsReviewedSchemaBaselineImportPhase,
+    type ReviewedSchemaBaselineImportTarget,
+} from "../default-implementation/fs/registry/baselines/import";
+export {
     FsIntegrationCompatibilityReevaluator,
     type FsIntegrationCompatibilityReevaluatorConfig,
 } from "../default-implementation/fs/registry/reevaluation/reevaluator";
