@@ -16,6 +16,7 @@ export async function projectRepositoryOperationalRead(
             operations: operationMetrics(operational.operations),
             compatibility: compatibilityMetrics(operational.compatibility),
             publicPackages: publicPackageMetrics(operational.publicPackages),
+            repositoryReads: repositoryReadMetrics(operational.repositoryReads),
             snapshot,
             filesystem,
         },
@@ -82,6 +83,19 @@ function publicPackageMetrics(value: unknown) {
         releaseNotesBytes: count(metrics.releaseNotesBytes),
         rateLimitRejections: count(metrics.rateLimitRejections),
         downloadRateLimitRejections: count(metrics.downloadRateLimitRejections),
+    };
+}
+
+function repositoryReadMetrics(value: unknown) {
+    const metrics = record(value);
+    return {
+        total: count(metrics.total),
+        succeeded: count(metrics.succeeded),
+        notFound: count(metrics.notFound),
+        rejected: count(metrics.rejected),
+        failed: count(metrics.failed),
+        totalDurationMs: count(metrics.totalDurationMs),
+        maximumDurationMs: count(metrics.maximumDurationMs),
     };
 }
 

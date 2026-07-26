@@ -97,6 +97,15 @@ export function validOperationalMetrics(): Readonly<Record<string, unknown>> {
             rateLimitRejections: 1,
             downloadRateLimitRejections: 1,
         },
+        repositoryReads: {
+            total: 4,
+            succeeded: 2,
+            notFound: 1,
+            rejected: 1,
+            failed: 0,
+            totalDurationMs: 25,
+            maximumDurationMs: 11,
+        },
         snapshot: { integrations: 1, versions: 1, diagnostics: 0, quarantined: 0, recoveryDiagnostics: 0 },
         filesystem: {
             status: "available",

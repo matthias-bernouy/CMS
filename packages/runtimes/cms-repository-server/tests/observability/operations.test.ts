@@ -176,6 +176,10 @@ describe("repository operation observability", () => {
         telemetry.observePublicPackageRead({ outcome: "served", resource: "release-notes", bytes: 120 });
         telemetry.observePublicPackageRead({ outcome: "rate-limited", budget: "download" });
         telemetry.observePublicPackageRead({ outcome: "rate-limited", budget: "metadata" });
+        telemetry.observePublicRead({ resource: "integrations", method: "GET", status: 200, durationMs: 3 });
+        telemetry.observePublicRead({ resource: "integration-index", method: "GET", status: 404, durationMs: 5 });
+        telemetry.observePublicRead({ resource: "integration-package", method: "GET", status: 429, durationMs: 7 });
+        telemetry.observePublicRead({ resource: "integration-package", method: "HEAD", status: 503, durationMs: 11 });
 
         expect(telemetry.snapshot().publicPackages).toEqual({
             packagesServed: 1,
@@ -184,6 +188,15 @@ describe("repository operation observability", () => {
             releaseNotesBytes: 120,
             rateLimitRejections: 2,
             downloadRateLimitRejections: 1,
+        });
+        expect(telemetry.snapshot().repositoryReads).toEqual({
+            total: 4,
+            succeeded: 1,
+            notFound: 1,
+            rejected: 1,
+            failed: 1,
+            totalDurationMs: 26,
+            maximumDurationMs: 11,
         });
     });
 });

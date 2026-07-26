@@ -7,6 +7,7 @@ import {
     RepositoryCms,
     type PublicPackageDownloadProtection,
     type RepositoryCompatibilityReader,
+    type PublicRepositoryReadObserver,
 } from "@bernouy/cms-repository";
 import type { Middleware, Runner } from "@bernouy/http-runner";
 import type { RepositoryCatalogRefreshResult, RepositoryCatalogRuntime } from "./catalogRuntime";
@@ -26,6 +27,7 @@ export type RepositoryServerConfig = Readonly<{
     loadCatalog: () => Promise<IntegrationRegistryCatalogSnapshot>;
     packageDownloadProtection: PublicPackageDownloadProtection;
     integrationCompatibility?: RepositoryCompatibilityReader;
+    observePublicRead?: PublicRepositoryReadObserver;
     managementGuard: Middleware;
     mountManagement: RepositoryManagementSurfaceMount;
     gracefulStopTimeoutMs?: number;
@@ -52,6 +54,7 @@ export function startRepositoryServer(config: RepositoryServerConfig): Repositor
             integrationCompatibility: config.integrationCompatibility,
             integrationPackages: packages,
             packageDownloadProtection: config.packageDownloadProtection,
+            observeRead: config.observePublicRead,
         });
     });
     config.managementRunner.group(REPOSITORY_MANAGEMENT_BASE_PATH, config.mountManagement, [config.managementGuard]);

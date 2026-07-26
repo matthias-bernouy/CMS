@@ -45,6 +45,15 @@ export type RepositoryOperationalSnapshot = Readonly<{
         rateLimitRejections: number;
         downloadRateLimitRejections: number;
     }>;
+    repositoryReads: Readonly<{
+        total: number;
+        succeeded: number;
+        notFound: number;
+        rejected: number;
+        failed: number;
+        totalDurationMs: number;
+        maximumDurationMs: number;
+    }>;
     recentOperations: readonly RepositoryOperationLogEntry[];
 }>;
 

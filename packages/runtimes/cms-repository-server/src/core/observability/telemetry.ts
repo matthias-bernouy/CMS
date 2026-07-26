@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { PublicPackageReadObservation } from "@bernouy/cms-repository";
+import type { PublicPackageReadObservation, PublicRepositoryReadObservation } from "@bernouy/cms-repository";
 import type { IntegrationCompatibilityReport } from "@bernouy/cms-integration-registry";
 import type {
     RepositoryOperationalSnapshot,
@@ -41,6 +41,15 @@ export class RepositoryOperationalTelemetry {
     private releaseNotesBytes = 0;
     private rateLimitRejections = 0;
     private downloadRateLimitRejections = 0;
+    private readonly repositoryReads = {
+        total: 0,
+        succeeded: 0,
+        notFound: 0,
+        rejected: 0,
+        failed: 0,
+        totalDurationMs: 0,
+        maximumDurationMs: 0,
+    };
 
     constructor(
         private readonly options: Readonly<{
@@ -115,6 +124,22 @@ export class RepositoryOperationalTelemetry {
         }
     }
 
+    observePublicRead(observation: PublicRepositoryReadObservation): void {
+        const durationMs = safeDuration(observation.durationMs);
+        this.repositoryReads.total = increment(this.repositoryReads.total);
+        this.repositoryReads.totalDurationMs = add(this.repositoryReads.totalDurationMs, durationMs);
+        this.repositoryReads.maximumDurationMs = Math.max(this.repositoryReads.maximumDurationMs, durationMs);
+        const outcome =
+            observation.status < 400
+                ? "succeeded"
+                : observation.status === 404
+                  ? "notFound"
+                  : observation.status < 500
+                    ? "rejected"
+                    : "failed";
+        this.repositoryReads[outcome] = increment(this.repositoryReads[outcome]);
+    }
+
     snapshot(): RepositoryOperationalSnapshot {
         return {
             operations: Object.fromEntries(
@@ -129,6 +154,7 @@ export class RepositoryOperationalTelemetry {
                 rateLimitRejections: this.rateLimitRejections,
                 downloadRateLimitRejections: this.downloadRateLimitRejections,
             },
+            repositoryReads: { ...this.repositoryReads },
             recentOperations: this.recentOperations.map((entry) => ({ ...entry })),
         };
     }

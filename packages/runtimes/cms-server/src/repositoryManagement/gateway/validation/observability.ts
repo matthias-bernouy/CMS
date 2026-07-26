@@ -15,7 +15,14 @@ const OPERATION_OUTCOMES = ["succeeded", "rejected", "failed"] as const;
 const COMPATIBILITY_OUTCOMES = ["compatible", "breaking", "unknown", "invalid", "not-applicable"] as const;
 
 export function validateOperationalMetrics(value: unknown): void {
-    const metrics = exactObject(value, ["operations", "compatibility", "publicPackages", "snapshot", "filesystem"]);
+    const metrics = exactObject(value, [
+        "operations",
+        "compatibility",
+        "publicPackages",
+        "repositoryReads",
+        "snapshot",
+        "filesystem",
+    ]);
     const operations = exactObject(metrics.operations, ["publication", "stablePromotion", "compatibilityReevaluation"]);
     validateOperationCounter(operations.publication);
     validateOperationCounter(operations.stablePromotion);
@@ -28,6 +35,15 @@ export function validateOperationalMetrics(value: unknown): void {
         "releaseNotesBytes",
         "rateLimitRejections",
         "downloadRateLimitRejections",
+    ]);
+    validateCounts(metrics.repositoryReads, [
+        "total",
+        "succeeded",
+        "notFound",
+        "rejected",
+        "failed",
+        "totalDurationMs",
+        "maximumDurationMs",
     ]);
     validateCounts(metrics.snapshot, ["integrations", "versions", "diagnostics", "quarantined", "recoveryDiagnostics"]);
     validateFilesystem(metrics.filesystem);

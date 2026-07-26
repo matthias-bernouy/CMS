@@ -26,6 +26,16 @@ describe("private repository operational reads", () => {
                     downloadRateLimitRejections: 1,
                     clientAddress: "198.51.100.1",
                 },
+                repositoryReads: {
+                    total: 5,
+                    succeeded: 3,
+                    notFound: 1,
+                    rejected: 1,
+                    failed: 0,
+                    totalDurationMs: 42,
+                    maximumDurationMs: 19,
+                    url: "https://repository.internal/private",
+                },
                 recentOperations: [
                     {
                         schema: "cms.repository.operation.v1",
@@ -69,6 +79,7 @@ describe("private repository operational reads", () => {
                 },
                 compatibility: { reevaluations: 1, warnings: 2 },
                 publicPackages: { packagesServed: 3, packageBytes: 4_096, rateLimitRejections: 2 },
+                repositoryReads: { total: 5, succeeded: 3, rejected: 1, maximumDurationMs: 19 },
                 snapshot: { integrations: 0, versions: 0, quarantined: 0 },
                 filesystem: { status: "available", totalBytes: "10000", usedBasisPoints: 6000 },
             },

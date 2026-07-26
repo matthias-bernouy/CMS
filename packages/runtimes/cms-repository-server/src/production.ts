@@ -76,6 +76,7 @@ export async function startProductionRepositoryServer(
         catalog,
         loadCatalog,
         packageDownloadProtection,
+        observePublicRead: (observation) => telemetry.observePublicRead(observation),
         integrationCompatibility: repositoryManagement.compatibility,
         managementGuard,
         mountManagement: repositoryManagement.mount,
