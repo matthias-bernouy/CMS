@@ -5,6 +5,7 @@ import {
     fetchRepositoryCompatibility,
     fetchRepositoryRelease,
     fetchRepositoryVersions,
+    RepositoryApiError,
 } from "../api";
 import type { RepositoryCandidateView } from "../contracts/candidates";
 import type { RepositoryReleaseView } from "../contracts/release/types";
@@ -25,6 +26,11 @@ import {
     submitRepositoryVersionBlock,
     type RepositoryActionContext,
 } from "./actions";
+import {
+    forgetRepositoryCandidate,
+    monitorRepositoryCandidate,
+    rememberedRepositoryCandidate,
+} from "./candidateMonitor";
 import { renderRepositoryFailure } from "./failure";
 import { reloadRepositoryOverview } from "./overview";
 import { renderRepositorySelection } from "./selection";
@@ -46,6 +52,7 @@ export class RepositoryAdmin extends HTMLElement {
         this.request?.abort();
         this.request = new AbortController();
         void reloadRepositoryOverview(this, this.signal());
+        void this.resumeCandidateMonitoring();
     }
 
     disconnectedCallback(): void {
@@ -208,15 +215,22 @@ export class RepositoryAdmin extends HTMLElement {
 
     private async monitorCandidate(initial: RepositoryCandidateView): Promise<void> {
         const feedback = this.query<HTMLElement>("[data-candidate-progress]");
-        let candidate = initial;
-        while (this.request && !terminalCandidateStatus(candidate.status)) {
-            showFeedback(
-                feedback,
-                `${candidate.kind}@${candidate.version}: ${candidate.status}, attempt ${candidate.attemptCount}.`,
-            );
-            await waitForPoll(this.signal());
-            candidate = await fetchRepositoryCandidateStatus(candidate.candidateId, this.signal());
-        }
+        const candidate = await monitorRepositoryCandidate(initial, {
+            signal: this.signal(),
+            fetchStatus: fetchRepositoryCandidateStatus,
+            onCandidate: (current) => {
+                showFeedback(
+                    feedback,
+                    `${current.kind}@${current.version}: ${current.status}, attempt ${current.attemptCount}.`,
+                );
+            },
+            onRetry: (current, retryInMs) => {
+                showFeedback(
+                    feedback,
+                    `${current.kind}@${current.version}: repository temporarily unavailable; retrying in ${Math.ceil(retryInMs / 1_000)}s.`,
+                );
+            },
+        });
         const successful = candidate.status === "published";
         showFeedback(
             feedback,
@@ -227,6 +241,24 @@ export class RepositoryAdmin extends HTMLElement {
         );
         if (successful) {
             await this.loadKind(candidate.kind);
+        }
+    }
+
+    private async resumeCandidateMonitoring(): Promise<void> {
+        const candidateId = rememberedRepositoryCandidate();
+        if (!candidateId) {
+            return;
+        }
+        try {
+            await this.monitorCandidate(await fetchRepositoryCandidateStatus(candidateId, this.signal()));
+        } catch (error) {
+            if (isAbortError(error)) {
+                return;
+            }
+            if (error instanceof RepositoryApiError && (error.status === 404 || error.status === 410)) {
+                forgetRepositoryCandidate(candidateId);
+            }
+            renderRepositoryFailure(this.query("[data-candidate-progress]"), error);
         }
     }
 
@@ -246,26 +278,8 @@ export class RepositoryAdmin extends HTMLElement {
     }
 }
 
-function terminalCandidateStatus(status: string): boolean {
-    return status === "published" || status === "rejected" || status === "expired";
-}
-
 function isAbortError(error: unknown): boolean {
     return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
-}
-
-async function waitForPoll(signal: AbortSignal): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-        const abort = () => {
-            clearTimeout(timeout);
-            reject(new DOMException("Candidate monitoring aborted", "AbortError"));
-        };
-        const timeout = setTimeout(() => {
-            signal.removeEventListener("abort", abort);
-            resolve();
-        }, 1_000);
-        signal.addEventListener("abort", abort, { once: true });
-    });
 }
 
 if (!customElements.get("cms-repository-admin")) {

@@ -31394,6 +31394,89 @@ ${controls_default3}`;
     return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
   }
 
+  // src/components/admin/Resources/Repository/component/candidateMonitor.ts
+  var STORAGE_KEY = "cms.repository.candidate-monitor.v1";
+  var CANDIDATE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
+  var DEFAULT_POLL_DELAY_MS = 1000;
+  var MAX_RETRY_DELAY_MS = 30000;
+  async function monitorRepositoryCandidate(initial, config) {
+    let candidate = initial;
+    let retryCount = 0;
+    let waitDelayMs = DEFAULT_POLL_DELAY_MS;
+    rememberRepositoryCandidate(candidate.candidateId);
+    config.onCandidate(candidate);
+    while (!terminalRepositoryCandidateStatus(candidate.status)) {
+      await (config.wait ?? waitForCandidatePoll)(waitDelayMs, config.signal);
+      try {
+        candidate = await config.fetchStatus(candidate.candidateId, config.signal);
+        retryCount = 0;
+        waitDelayMs = DEFAULT_POLL_DELAY_MS;
+        config.onCandidate(candidate);
+      } catch (error) {
+        if (!retryableCandidatePoll(error)) {
+          forgetRepositoryCandidate(candidate.candidateId);
+          throw error;
+        }
+        retryCount += 1;
+        waitDelayMs = retryAfterDelay(error) ?? retryDelay(retryCount);
+        config.onRetry(candidate, waitDelayMs);
+      }
+    }
+    forgetRepositoryCandidate(candidate.candidateId);
+    return candidate;
+  }
+  function rememberedRepositoryCandidate() {
+    try {
+      const candidateId = localStorage.getItem(STORAGE_KEY);
+      return candidateId && CANDIDATE_ID.test(candidateId) ? candidateId : null;
+    } catch {
+      return null;
+    }
+  }
+  function forgetRepositoryCandidate(candidateId) {
+    try {
+      if (!candidateId || localStorage.getItem(STORAGE_KEY) === candidateId) {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {}
+  }
+  function terminalRepositoryCandidateStatus(status) {
+    return status === "published" || status === "rejected" || status === "expired";
+  }
+  function rememberRepositoryCandidate(candidateId) {
+    if (!CANDIDATE_ID.test(candidateId)) {
+      throw new TypeError("Repository candidate identifier is invalid");
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, candidateId);
+    } catch {}
+  }
+  function retryableCandidatePoll(error) {
+    return error instanceof RepositoryApiError && (error.status === 429 || error.status === 503);
+  }
+  function retryAfterDelay(error) {
+    if (!error.retryAfter || !/^\d+$/u.test(error.retryAfter)) {
+      return;
+    }
+    return Math.min(Number(error.retryAfter) * 1000, MAX_RETRY_DELAY_MS);
+  }
+  function retryDelay(attempt) {
+    return Math.min(DEFAULT_POLL_DELAY_MS * 2 ** Math.min(attempt, 5), MAX_RETRY_DELAY_MS);
+  }
+  async function waitForCandidatePoll(delayMs, signal) {
+    await new Promise((resolve, reject) => {
+      const abort = () => {
+        clearTimeout(timeout);
+        reject(new DOMException("Candidate monitoring aborted", "AbortError"));
+      };
+      const timeout = setTimeout(() => {
+        signal.removeEventListener("abort", abort);
+        resolve();
+      }, delayMs);
+      signal.addEventListener("abort", abort, { once: true });
+    });
+  }
+
   // src/components/admin/Resources/Repository/component/failure.ts
   function renderRepositoryFailure(feedback, error) {
     if (!isAbortError5(error)) {
@@ -31569,6 +31652,7 @@ ${controls_default3}`;
       this.request?.abort();
       this.request = new AbortController;
       reloadRepositoryOverview(this, this.signal());
+      this.resumeCandidateMonitoring();
     }
     disconnectedCallback() {
       this.request?.abort();
@@ -31701,16 +31785,37 @@ ${controls_default3}`;
     }
     async monitorCandidate(initial) {
       const feedback = this.query("[data-candidate-progress]");
-      let candidate = initial;
-      while (this.request && !terminalCandidateStatus(candidate.status)) {
-        showFeedback(feedback, `${candidate.kind}@${candidate.version}: ${candidate.status}, attempt ${candidate.attemptCount}.`);
-        await waitForPoll(this.signal());
-        candidate = await fetchRepositoryCandidateStatus(candidate.candidateId, this.signal());
-      }
+      const candidate = await monitorRepositoryCandidate(initial, {
+        signal: this.signal(),
+        fetchStatus: fetchRepositoryCandidateStatus,
+        onCandidate: (current) => {
+          showFeedback(feedback, `${current.kind}@${current.version}: ${current.status}, attempt ${current.attemptCount}.`);
+        },
+        onRetry: (current, retryInMs) => {
+          showFeedback(feedback, `${current.kind}@${current.version}: repository temporarily unavailable; retrying in ${Math.ceil(retryInMs / 1000)}s.`);
+        }
+      });
       const successful = candidate.status === "published";
       showFeedback(feedback, successful ? `${candidate.kind}@${candidate.version} is published and eligible according to its composite decision.` : `${candidate.kind}@${candidate.version} stopped at ${candidate.status}${candidate.failureCode ? ` (${candidate.failureCode})` : ""}.`, successful ? "success" : "error");
       if (successful) {
         await this.loadKind(candidate.kind);
+      }
+    }
+    async resumeCandidateMonitoring() {
+      const candidateId = rememberedRepositoryCandidate();
+      if (!candidateId) {
+        return;
+      }
+      try {
+        await this.monitorCandidate(await fetchRepositoryCandidateStatus(candidateId, this.signal()));
+      } catch (error) {
+        if (isAbortError7(error)) {
+          return;
+        }
+        if (error instanceof RepositoryApiError && (error.status === 404 || error.status === 410)) {
+          forgetRepositoryCandidate(candidateId);
+        }
+        renderRepositoryFailure(this.query("[data-candidate-progress]"), error);
       }
     }
     signal() {
@@ -31727,24 +31832,8 @@ ${controls_default3}`;
       return node;
     }
   }
-  function terminalCandidateStatus(status) {
-    return status === "published" || status === "rejected" || status === "expired";
-  }
   function isAbortError7(error) {
     return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
-  }
-  async function waitForPoll(signal) {
-    await new Promise((resolve, reject) => {
-      const abort = () => {
-        clearTimeout(timeout);
-        reject(new DOMException("Candidate monitoring aborted", "AbortError"));
-      };
-      const timeout = setTimeout(() => {
-        signal.removeEventListener("abort", abort);
-        resolve();
-      }, 1000);
-      signal.addEventListener("abort", abort, { once: true });
-    });
   }
   if (!customElements.get("cms-repository-admin")) {
     customElements.define("cms-repository-admin", RepositoryAdmin);
