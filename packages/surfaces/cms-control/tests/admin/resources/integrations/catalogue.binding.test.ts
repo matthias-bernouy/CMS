@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import "../../../src/components/admin/Resources/Integrations/IntegrationBrowser";
+import "../../../../src/components/admin/Resources/Integrations/IntegrationBrowser";
 import { collectAnswers, renderFields } from "cms-control/components/admin/Resources/Integrations/fields";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 
