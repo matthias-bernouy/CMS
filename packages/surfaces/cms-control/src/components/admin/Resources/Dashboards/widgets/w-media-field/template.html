@@ -1,7 +1,50 @@
 <section class="media-field">
     <div class="label-row">
         <span data-label></span>
+        <button class="preview-trigger" data-preview-open type="button" hidden>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+                <circle cx="12" cy="12" r="2.75"></circle>
+            </svg>
+            <span>Preview</span>
+        </button>
     </div>
     <div class="media-grid" data-grid></div>
     <input data-file type="file" hidden>
+    <dialog class="media-preview" data-preview-dialog aria-labelledby="media-preview-title">
+        <div class="preview-shell">
+            <header class="preview-header">
+                <div>
+                    <p class="preview-title" id="media-preview-title">Image preview</p>
+                    <p class="preview-counter" data-preview-counter aria-live="polite"></p>
+                </div>
+                <button class="preview-close" data-preview-action="close" type="button">
+                    <span>Close</span>
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </header>
+            <div class="preview-stage">
+                <button
+                    class="preview-nav"
+                    data-preview-action="previous"
+                    type="button"
+                    aria-label="Previous image"
+                >&lsaquo;</button>
+                <figure class="preview-figure">
+                    <div class="preview-media">
+                        <img class="preview-image" data-preview-image decoding="async" alt="">
+                        <p class="preview-status" data-preview-status role="status" hidden></p>
+                    </div>
+                    <figcaption data-preview-caption></figcaption>
+                </figure>
+                <button
+                    class="preview-nav"
+                    data-preview-action="next"
+                    type="button"
+                    aria-label="Next image"
+                >&rsaquo;</button>
+            </div>
+            <div class="preview-strip" data-preview-strip role="group" aria-label="Choose an image"></div>
+        </div>
+    </dialog>
 </section>

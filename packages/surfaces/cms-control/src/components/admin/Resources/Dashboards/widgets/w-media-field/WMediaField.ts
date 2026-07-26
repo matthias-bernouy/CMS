@@ -1,7 +1,8 @@
 import { Component } from "@bernouy/components/base";
-import css from "./style.css" with { type: "text" };
+import css from "./styles";
 import template from "./template.html" with { type: "text" };
-import { MediaDragController } from "./drag";
+import { MediaDragController } from "./controllers/drag";
+import { MediaPreviewController } from "./controllers/preview";
 import { dispatchMediaChange, LocalMediaFiles } from "./mediaState";
 import { renderAddTile, renderMediaTile } from "./render";
 import { type DashboardMediaAction, type DashboardMediaActionDetail, type DashboardMediaItem } from "./types";
@@ -19,11 +20,13 @@ export class DashboardWMediaField extends Component {
         },
     );
     private readonly localFiles = new LocalMediaFiles();
+    private readonly preview: MediaPreviewController;
     private pendingPick: PendingPick = { action: "upload" };
     private suppressClick = false;
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
+        this.preview = new MediaPreviewController(this.shadowRoot!, () => this.currentItems);
     }
 
     static get observedAttributes(): string[] {
@@ -37,6 +40,7 @@ export class DashboardWMediaField extends Component {
         this.shadowRoot!.addEventListener("dragover", this.drag.over);
         this.shadowRoot!.addEventListener("drop", this.drag.drop);
         this.shadowRoot!.addEventListener("dragend", this.drag.end);
+        this.preview.connect();
         this.sync();
     }
 
@@ -47,6 +51,7 @@ export class DashboardWMediaField extends Component {
         this.shadowRoot?.removeEventListener("dragover", this.drag.over);
         this.shadowRoot?.removeEventListener("drop", this.drag.drop);
         this.shadowRoot?.removeEventListener("dragend", this.drag.end);
+        this.preview.disconnect();
     }
 
     attributeChangedCallback(): void {
@@ -68,6 +73,7 @@ export class DashboardWMediaField extends Component {
     private sync(): void {
         this.query<HTMLElement>("[data-label]").textContent = this.getAttribute("label") ?? "";
         this.renderGrid();
+        this.preview.sync();
     }
 
     private renderGrid(): void {
@@ -159,6 +165,7 @@ export class DashboardWMediaField extends Component {
 
     private changed(action: DashboardMediaAction, detail: Partial<DashboardMediaActionDetail>): void {
         this.renderGrid();
+        this.preview.sync();
         dispatchMediaChange(this, action, this.items, detail);
     }
 

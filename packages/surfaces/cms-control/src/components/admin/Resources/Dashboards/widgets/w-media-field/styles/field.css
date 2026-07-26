@@ -19,6 +19,36 @@
     text-transform: uppercase;
 }
 
+.preview-trigger {
+    background: var(--bg-surface, #fff);
+    color: var(--text-main, #17211e);
+    gap: 6px;
+    min-height: 30px;
+    padding: 5px 10px;
+    text-transform: none;
+}
+
+.preview-trigger:hover {
+    background: var(--bg-hover, #f3f6f5);
+    border-color: var(--border-strong, #aab6b2);
+}
+
+.preview-trigger:focus-visible {
+    border-color: var(--primary-base, #165f4b);
+    outline: 2px solid var(--primary-muted, #e3f2ed);
+    outline-offset: 2px;
+}
+
+.preview-trigger svg {
+    fill: none;
+    height: 15px;
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+    width: 15px;
+}
+
 .media-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));

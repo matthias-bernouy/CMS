@@ -1,4 +1,4 @@
-import { numberData, tileFromEvent } from "./utils";
+import { numberData, tileFromEvent } from "../utils";
 
 export class MediaDragController {
     private dragFrom: number | null = null;
