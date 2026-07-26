@@ -58,8 +58,40 @@ describe("GET integration installation versions", () => {
         });
     });
 
+    test("omits blocked, inadmissible, and unverified versions from upgrade choices and channels", async () => {
+        const { cms, integrationInstallations, integrationCatalog } = makeCms();
+        await createInstallation(integrationInstallations, "test-secret-source");
+        integrationCatalog.getIndex = async () => ({
+            ...INDEX,
+            stable: "1.1.0",
+            latest: "2.0.0-beta.1",
+            versions: [
+                INDEX.versions[0]!,
+                { ...INDEX.versions[1]!, status: "blocked" },
+                { ...INDEX.versions[2]!, status: "unverified" },
+                {
+                    version: "2.0.0",
+                    path: "versions/2.0.0",
+                    definition: "definition.json",
+                    status: "inadmissible",
+                },
+            ],
+        });
+
+        const response = await getIntegrationInstallationVersions(
+            new Request("http://control.test/api/integrations/installations/versions?id=test-secret-source"),
+            cms,
+        );
+
+        expect(await response.json()).toEqual({
+            id: "test-secret-source",
+            current: "1.0.0",
+            versions: [],
+        });
+    });
+
     test("distinguishes missing installations and unavailable repository history", async () => {
-        const { cms, integrationInstallations } = makeCms();
+        const { cms, integrationInstallations, integrationCatalog } = makeCms();
         const missing = await getIntegrationInstallationVersions(
             new Request("http://control.test/api/integrations/installations/versions?id=missing"),
             cms,
@@ -68,6 +100,7 @@ describe("GET integration installation versions", () => {
         expect(await missing.json()).toMatchObject({ code: "integration_installation_not_found" });
 
         await createInstallation(integrationInstallations, "test-secret-source");
+        integrationCatalog.getIndex = async () => null;
         const unavailable = await getIntegrationInstallationVersions(
             new Request("http://control.test/api/integrations/installations/versions?id=test-secret-source"),
             cms,

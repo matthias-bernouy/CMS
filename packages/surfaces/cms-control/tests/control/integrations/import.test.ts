@@ -9,6 +9,39 @@ import {
 } from "./support/helpers";
 
 describe("POST /api/integrations/import", () => {
+    for (const status of ["blocked", "inadmissible", "unverified"] as const) {
+        test(`rejects a forged exact install for a ${status} repository version`, async () => {
+            const { cms, integrationCatalog, integrationInstallations } = makeCms();
+            integrationCatalog.getIndex = async () => ({
+                kind: "test-secret-source",
+                label: "Test secret source",
+                stable: "1.0.0",
+                latest: "1.0.0",
+                versions: [
+                    {
+                        version: "1.0.0",
+                        path: "versions/1.0.0",
+                        definition: "integration.json",
+                        status,
+                    },
+                ],
+            });
+
+            await expect(
+                postIntegrationImport(
+                    postImport({
+                        kind: "test-secret-source",
+                        version: "1.0.0",
+                        answers: { id: "secret-source-main", apiKey: "sk_test" },
+                    }),
+                    cms,
+                ),
+            ).rejects.toThrow(`is ${status} and cannot be installed or upgraded`);
+
+            expect(await integrationInstallations.get("test-secret-source")).toBeNull();
+        });
+    }
+
     test("creates a tracked Test secret source installation without exposing the secret value", async () => {
         const { cms, secrets, sources, integrationInstallations } = makeCms();
 

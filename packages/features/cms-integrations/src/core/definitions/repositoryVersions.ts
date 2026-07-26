@@ -2,6 +2,7 @@ import type {
     IntegrationDefinitionIndex,
     IntegrationDefinitionVersion,
 } from "../../interfaces/IntegrationDefinitionRepository";
+import { IntegrationInputError } from "../errors";
 import { isIntegrationPrerelease } from "./versioning";
 
 export function resolveExactIntegrationDefinitionVersion(
@@ -43,4 +44,28 @@ export function isIntegrationDefinitionVersionBlocked(version: IntegrationDefini
 
 export function isIntegrationDefinitionVersionInstallable(version: IntegrationDefinitionVersion): boolean {
     return version.status === undefined;
+}
+
+export function assertIntegrationVersionInstallable(
+    index: IntegrationDefinitionIndex,
+    version: string,
+): IntegrationDefinitionVersion {
+    const entry = resolveExactIntegrationDefinitionVersion(index, version);
+    if (!entry) {
+        throw new IntegrationInputError("version", `unknown integration version "${index.kind}@${version}"`);
+    }
+    if (!isIntegrationDefinitionVersionInstallable(entry)) {
+        throw new IntegrationInputError(
+            "version",
+            `integration version "${index.kind}@${version}" is ${entry.status} and cannot be installed or upgraded`,
+        );
+    }
+    return entry;
+}
+
+export function assertUpgradeEligible(
+    index: IntegrationDefinitionIndex,
+    version: string,
+): IntegrationDefinitionVersion {
+    return assertIntegrationVersionInstallable(index, version);
 }

@@ -61,8 +61,39 @@ export function integrationDefinitionRepository(definitions: IntegrationDefiniti
                 ...(definition.version ? { stable: definition.version, latest: definition.version } : {}),
                 versions: definition.version ? [definition.version] : [],
             })),
-        getIndex: async () => null,
-        listVersions: async () => [],
+        getIndex: async (kind: string) => {
+            const matching = definitions.filter(
+                (definition): definition is IntegrationDefinition & { version: string } =>
+                    definition.kind === kind && Boolean(definition.version),
+            );
+            const first = matching[0];
+            if (!first) {
+                return null;
+            }
+            const versions = matching.map((definition) => ({
+                version: definition.version,
+                path: `versions/${definition.version}`,
+                definition: "integration.json",
+            }));
+            return {
+                kind,
+                label: first.label,
+                stable: versions[0]?.version,
+                latest: versions.at(-1)?.version,
+                versions,
+            };
+        },
+        listVersions: async (kind: string) =>
+            definitions
+                .filter(
+                    (definition): definition is IntegrationDefinition & { version: string } =>
+                        definition.kind === kind && Boolean(definition.version),
+                )
+                .map((definition) => ({
+                    version: definition.version,
+                    path: `versions/${definition.version}`,
+                    definition: "integration.json",
+                })),
         get: async (kind: string, version?: string) =>
             definitions.find(
                 (definition) => definition.kind === kind && (!version || definition.version === version),

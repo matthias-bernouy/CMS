@@ -117,6 +117,44 @@ describe("POST /api/integrations/installations/rerun", () => {
 });
 
 describe("POST /api/integrations/installations/upgrade", () => {
+    for (const status of ["blocked", "inadmissible", "unverified"] as const) {
+        test(`rejects a forged upgrade to a ${status} exact version`, async () => {
+            const target = {
+                ...TEST_SECRET_SOURCE_DEFINITION,
+                version: "1.1.0",
+                label: "Test secret source upgraded",
+            };
+            const { cms, integrationCatalog, integrationInstallations } = makeCms([
+                TEST_SECRET_SOURCE_DEFINITION,
+                target,
+            ]);
+            await postIntegrationImport(
+                postImport({
+                    kind: "test-secret-source",
+                    version: "1.0.0",
+                    answers: { id: "secret-source-main", apiKey: "sk_test" },
+                }),
+                cms,
+            );
+            integrationCatalog.getIndex = async () => ({
+                kind: "test-secret-source",
+                label: "Test secret source",
+                stable: "1.0.0",
+                latest: "1.1.0",
+                versions: [
+                    { version: "1.0.0", path: "versions/1.0.0", definition: "integration.json" },
+                    { version: "1.1.0", path: "versions/1.1.0", definition: "integration.json", status },
+                ],
+            });
+
+            await expect(
+                postIntegrationInstallationUpgrade(postUpgrade("test-secret-source", { version: "1.1.0" }), cms),
+            ).rejects.toThrow(`is ${status} and cannot be installed or upgraded`);
+
+            expect((await integrationInstallations.get("test-secret-source"))?.definitionVersion).toBe("1.0.0");
+        });
+    }
+
     test("resolves an explicit target and updates the pin after success", async () => {
         const target = {
             ...TEST_SECRET_SOURCE_DEFINITION,

@@ -1,9 +1,12 @@
 import {
+    assertIntegrationVersionInstallable,
     assertRerunVersion,
+    assertUpgradeEligible,
     IntegrationInputError,
     IntegrationRepositoryError,
     integrationRegistry,
     MissingIntegrationParam,
+    resolveInstallableIntegrationDefinitionVersion,
     type IntegrationDefinition,
     type IntegrationDefinitionRepository,
     type IntegrationInstallationRepository,
@@ -38,6 +41,11 @@ export async function definitionForUpgrade(
     if (!version) {
         throw new MissingIntegrationParam("version");
     }
+    const index = await repository.getIndex(integrationId);
+    if (!index) {
+        throw new IntegrationInputError("version", `unknown integration version "${integrationId}@${version}"`);
+    }
+    assertUpgradeEligible(index, version);
     const definition = await repository.get(integrationId, version);
     if (!definition) {
         throw new IntegrationInputError("version", `unknown integration version "${integrationId}@${version}"`);
@@ -53,7 +61,19 @@ export async function definitionsForImport(
     if (!kind) {
         return [];
     }
-    const definition = await repository.get(kind, text(body.version));
+    const requestedVersion = text(body.version);
+    const index = await repository.getIndex(kind);
+    if (!index) {
+        const legacyDefinition = await repository.get(kind, requestedVersion);
+        return legacyDefinition ? [legacyDefinition] : [];
+    }
+    const selected = requestedVersion
+        ? assertIntegrationVersionInstallable(index, requestedVersion)
+        : resolveInstallableIntegrationDefinitionVersion(index, undefined, "stable");
+    if (!selected) {
+        throw new IntegrationInputError("version", `integration "${kind}" has no installable version`);
+    }
+    const definition = await repository.get(kind, selected.version);
     return definition ? [definition] : [];
 }
 

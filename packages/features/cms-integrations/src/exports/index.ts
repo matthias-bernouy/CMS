@@ -128,6 +128,8 @@ export {
     integrationRegistry,
 } from "../core/definitions/catalog";
 export {
+    assertIntegrationVersionInstallable,
+    assertUpgradeEligible,
     isIntegrationDefinitionVersionBlocked,
     isIntegrationDefinitionVersionInstallable,
     resolveExactIntegrationDefinitionVersion,

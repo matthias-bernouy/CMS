@@ -1,6 +1,10 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
-import { integrationVersionReleaseLevel, isExactIntegrationVersion } from "@bernouy/cms-integrations";
+import {
+    integrationVersionReleaseLevel,
+    isExactIntegrationVersion,
+    isIntegrationDefinitionVersionInstallable,
+} from "@bernouy/cms-integrations";
 
 export default async function getIntegrationInstallationVersions(request: Request, cms: ControlCms): Promise<Response> {
     const id = new URL(request.url).searchParams.get("id")?.trim();
@@ -23,6 +27,7 @@ export default async function getIntegrationInstallationVersions(request: Reques
     }
     const current = installation.definitionVersion;
     const versions = index.versions
+        .filter(isIntegrationDefinitionVersionInstallable)
         .map(({ version }) => version)
         .filter((version) => !isExactIntegrationVersion(current) || integrationVersionReleaseLevel(current, version));
     return Response.json({
