@@ -117,6 +117,12 @@ export class ControlCms {
     get integrationConnectorDeployers() {
         return controlCmsAccessors.integrationConnectorDeployers(this.state);
     }
+    get integrationMigrationRuntime() {
+        return controlCmsAccessors.integrationMigrationRuntime(this.state);
+    }
+    get integrationConnectorBaselineAdopters() {
+        return controlCmsAccessors.integrationConnectorBaselineAdopters(this.state);
+    }
     get integrationProvisioners() {
         return controlCmsAccessors.integrationProvisioners(this.state);
     }

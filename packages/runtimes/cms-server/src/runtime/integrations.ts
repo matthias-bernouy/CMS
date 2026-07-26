@@ -1,7 +1,10 @@
 import type {
+    IntegrationConnectorBaselineAdopter,
     IntegrationConnectorDeployer,
+    IntegrationConnectorMigrationAdapter,
     IntegrationConnectorProviderRepository,
     IntegrationDefinitionRepository,
+    IntegrationMigrationExternalPhaseHandler,
     IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationPackageCache, FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
@@ -9,7 +12,12 @@ import type { IntegrationPackageCacheEvent } from "@bernouy/cms-integration-pack
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
 import { FsIntegrationDefinitionRepository, FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
-import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
+import {
+    ConfiguredSupabaseConnectorBaselineAdopter,
+    ConfiguredSupabaseConnectorDeployer,
+    ConfiguredSupabaseConnectorMigrationAdapter,
+    ConfiguredSupabaseFunctionMigrationHandler,
+} from "@bernouy/cms-integrations/supabase";
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
@@ -58,6 +66,18 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
             functionSecrets: readSupabaseFunctionSecrets(options.environment),
         }),
     ];
+    const supabaseMigrationConfig = {
+        providerRepository: options.providerRepository,
+        secrets: options.secrets,
+    };
+    const integrationConnectorMigrationAdapters: IntegrationConnectorMigrationAdapter[] = [
+        new ConfiguredSupabaseConnectorMigrationAdapter(supabaseMigrationConfig),
+    ];
+    const integrationFunctionMigrationHandler: IntegrationMigrationExternalPhaseHandler =
+        new ConfiguredSupabaseFunctionMigrationHandler(supabaseMigrationConfig);
+    const integrationConnectorBaselineAdopters: IntegrationConnectorBaselineAdopter[] = [
+        new ConfiguredSupabaseConnectorBaselineAdopter(supabaseMigrationConfig),
+    ];
     const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
     const publicRepositoryCatalog = repositoryReadMode === "global" ? integrationCatalog : integrationRepositoryCatalog;
     const publicRepositoryPackages =
@@ -81,6 +101,9 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
         integrationPackageCache,
         integrationPackageResolver,
         integrationConnectorDeployers,
+        integrationConnectorMigrationAdapters,
+        integrationFunctionMigrationHandler,
+        integrationConnectorBaselineAdopters,
         integrationProvisioners,
     };
 }

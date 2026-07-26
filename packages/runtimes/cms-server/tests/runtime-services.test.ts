@@ -6,7 +6,12 @@ import {
     InMemoryPatRepository,
     InMemoryUsersRepository,
 } from "@bernouy/cms-auth";
-import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
+import {
+    ConfiguredSupabaseConnectorBaselineAdopter,
+    ConfiguredSupabaseConnectorDeployer,
+    ConfiguredSupabaseConnectorMigrationAdapter,
+    ConfiguredSupabaseFunctionMigrationHandler,
+} from "@bernouy/cms-integrations/supabase";
 import { FsIntegrationPackageCache, FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
 import { FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
@@ -128,6 +133,13 @@ describe("production runtime services", () => {
         );
         const deployer = services.integrationConnectorDeployers[0];
         expect(deployer).toBeInstanceOf(ConfiguredSupabaseConnectorDeployer);
+        expect(services.integrationConnectorMigrationAdapters[0]).toBeInstanceOf(
+            ConfiguredSupabaseConnectorMigrationAdapter,
+        );
+        expect(services.integrationFunctionMigrationHandler).toBeInstanceOf(ConfiguredSupabaseFunctionMigrationHandler);
+        expect(services.integrationConnectorBaselineAdopters[0]).toBeInstanceOf(
+            ConfiguredSupabaseConnectorBaselineAdopter,
+        );
         expect(services.integrationProvisioners[0]).toBeInstanceOf(StripeWebhookProvisioner);
         expect(
             (

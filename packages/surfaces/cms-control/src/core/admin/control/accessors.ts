@@ -23,6 +23,9 @@ export const controlCmsAccessors = {
     sourceOverlays: (state: ControlCmsState) => state.sourceOverlays,
     configuredIntegrationInstallations: (state: ControlCmsState) => state.integrationInstallations,
     integrationConnectorDeployers: (state: ControlCmsState) => state.configuration.integrationConnectorDeployers,
+    integrationMigrationRuntime: (state: ControlCmsState) => state.configuration.integrationMigrationRuntime,
+    integrationConnectorBaselineAdopters: (state: ControlCmsState) =>
+        state.configuration.integrationConnectorBaselineAdopters ?? [],
     integrationProvisioners: (state: ControlCmsState) => state.configuration.integrationProvisioners,
     integrationConnectorProviders: (state: ControlCmsState) => state.integrationConnectorProviders,
     integrationBlocRepository: (state: ControlCmsState) => state.integrationBlocRepository,

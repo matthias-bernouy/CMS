@@ -1,5 +1,10 @@
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { ScheduledTriggerRunner } from "@bernouy/cms-triggers";
+import {
+    CmsSourceBindingMigrationHandler,
+    ConfirmedMigrationPhaseProbe,
+    ProductionIntegrationMigrationRuntime,
+} from "@bernouy/cms-integrations";
 import type { ProductionAuthentication } from "./auth";
 import type { ProductionIntegrationServices } from "./integrations";
 import type { CoreStores } from "./stores/core";
@@ -48,6 +53,30 @@ export async function mountProductionSurfaces(
         slowRequestThresholdMs: env.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
         reportDiagnostic: runtime.log,
     });
+    const cmsBindingMigration = new CmsSourceBindingMigrationHandler({
+        sources: features.sources,
+        functions: features.functions,
+        roles: core.roles,
+        secrets: core.secrets,
+        dashboards: features.dashboards,
+        relations: features.relations,
+        installations: features.integrationInstallations,
+        triggers: features.triggers,
+        sourceOverlays: features.sourceOverlays,
+        connectorDeployers: integrations.integrationConnectorDeployers,
+        provisioners: integrations.integrationProvisioners,
+        sourceExecutorDeps: { resolveSecret: features.resolveSecret, identities: features.identities },
+    });
+    const integrationMigrationRuntime = new ProductionIntegrationMigrationRuntime({
+        connectorAdapters: integrations.integrationConnectorMigrationAdapters,
+        functionDeployment: integrations.integrationFunctionMigrationHandler,
+        targetSmoke: new ConfirmedMigrationPhaseProbe(
+            "deploy-functions",
+            integrations.integrationFunctionMigrationHandler,
+        ),
+        cmsBinding: cmsBindingMigration,
+        cmsSmoke: new ConfirmedMigrationPhaseProbe("switch-cms-binding", cmsBindingMigration),
+    });
     const { sourceImageInterceptor, responsivePublicSourceImagesEnabled, responsivePrivateSourceImagesEnabled } =
         await createRuntimeSourceImageComposition({
             cache: core.sourceImageCache,
@@ -81,6 +110,8 @@ export async function mountProductionSurfaces(
             integrationInstallations: features.integrationInstallations,
             integrationConnectorProviders: features.integrationConnectorProviders,
             integrationConnectorDeployers: integrations.integrationConnectorDeployers,
+            integrationMigrationRuntime,
+            integrationConnectorBaselineAdopters: integrations.integrationConnectorBaselineAdopters,
             integrationProvisioners: integrations.integrationProvisioners,
             ...(repositoryManagement ? { repositoryManagement } : {}),
             dashboards: features.dashboards,

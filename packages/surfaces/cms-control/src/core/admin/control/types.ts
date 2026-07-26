@@ -15,12 +15,14 @@ import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms
 import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type {
+    IntegrationConnectorBaselineAdopter,
     IntegrationConnectorDeployer,
     IntegrationConnectorProviderRepository,
     IntegrationDefinitionRepository,
     IntegrationInstallationRepository,
     IntegrationPackageResolver,
     IntegrationProvisioner,
+    IntegrationMigrationRuntime,
 } from "@bernouy/cms-integrations";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { RelationRepository } from "@bernouy/cms-relations";
@@ -49,6 +51,8 @@ export type ControlCmsOptions = Configuration & {
     integrationPackageResolver?: IntegrationPackageResolver;
     integrationInstallations?: IntegrationInstallationRepository;
     integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
+    integrationMigrationRuntime?: IntegrationMigrationRuntime;
+    integrationConnectorBaselineAdopters?: IntegrationConnectorBaselineAdopter[];
     integrationProvisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
     integrationConnectorProviders?: IntegrationConnectorProviderRepository;
     dashboards?: DashboardRepository;

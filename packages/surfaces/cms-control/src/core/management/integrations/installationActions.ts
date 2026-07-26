@@ -20,6 +20,7 @@ export function integrationInstallationDeps(cms: ControlCms): IntegrationImportD
                 importBlocArtifact(cms, { ...artifact, force: options.force }, { repository: blocRepository }),
         },
         connectorDeployers: cms.integrationConnectorDeployers,
+        ...(cms.integrationMigrationRuntime ? { migrationRuntime: cms.integrationMigrationRuntime } : {}),
         provisioners: cms.integrationProvisioners,
         sourceExecutorDeps: cms.sourceExecutorDeps,
     };
