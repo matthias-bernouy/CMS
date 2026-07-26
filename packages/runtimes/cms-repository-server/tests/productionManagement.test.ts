@@ -66,7 +66,19 @@ describe("production repository management", () => {
             body: publicationDocument(),
         });
         expect(published.status).toBe(201);
-        expect(await published.json()).toMatchObject({ kind: "remote-demo", version: "1.0.0" });
+        const publication = (await published.json()) as { digest: string };
+
+        const duplicate = await fetch(`${managementOrigin}/.cms/repository-management/api/integrations/publications`, {
+            method: "POST",
+            headers: { authorization: "Bearer management-secret", "content-type": "application/json" },
+            body: publicationDocument(),
+        });
+        expect(duplicate.status).toBe(409);
+        expect(await duplicate.json()).toMatchObject({
+            kind: "remote-demo",
+            version: "1.0.0",
+            existingDigest: publication.digest,
+        });
 
         const integrations = await fetch(`${publicOrigin}/.cms/repository/api/integrations`);
         expect(integrations.status).toBe(200);

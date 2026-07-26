@@ -43,6 +43,9 @@ export async function createProductionRepositoryManagement(input: {
                 runner,
                 publisher,
                 upload: { maxBodyBytes: MAX_PUBLICATION_UPLOAD_BYTES },
+                existingVersionDigest(kind, version) {
+                    return input.catalog.current().locateExactVersion(kind, version)?.package.digest ?? null;
+                },
             });
         },
     });

@@ -24,7 +24,7 @@ export function publicationCreatedResponse(result: IntegrationRegistryPublicatio
     });
 }
 
-export function publicationErrorResponse(error: unknown): Response {
+export function publicationErrorResponse(error: unknown, existingDigest?: string): Response {
     if (error instanceof IntegrationPackageUploadError) {
         return integrationPackageUploadErrorResponse(error);
     }
@@ -34,6 +34,7 @@ export function publicationErrorResponse(error: unknown): Response {
             code: error.code,
             kind: error.kind,
             version: error.version,
+            ...(existingDigest ? { existingDigest } : {}),
         });
     }
     if (error instanceof IntegrationRegistryVersionOrderError) {

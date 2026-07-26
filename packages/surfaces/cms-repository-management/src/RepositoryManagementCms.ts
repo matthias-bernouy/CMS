@@ -1,5 +1,8 @@
 import { sha256Hex } from "@bernouy/cms-integration-packages";
-import type { IntegrationRegistryPublisher } from "@bernouy/cms-integration-registry";
+import {
+    IntegrationRegistryVersionConflictError,
+    type IntegrationRegistryPublisher,
+} from "@bernouy/cms-integration-registry";
 import type { Runner } from "@bernouy/http-runner";
 import { publicationCreatedResponse, publicationErrorResponse } from "cms-repository-management/publicationResponses";
 import {
@@ -13,6 +16,7 @@ export type RepositoryManagementCmsConfig = Readonly<{
     runner: Runner;
     publisher: IntegrationRegistryPublisher;
     upload: IntegrationPackageUploadOptions;
+    existingVersionDigest?: (kind: string, version: string) => string | null | Promise<string | null>;
 }>;
 
 export class RepositoryManagementCms {
@@ -33,7 +37,19 @@ export class RepositoryManagementCms {
             });
             return publicationCreatedResponse(result);
         } catch (error) {
-            return publicationErrorResponse(error);
+            return publicationErrorResponse(error, await this.resolveExistingDigest(error));
+        }
+    }
+
+    private async resolveExistingDigest(error: unknown): Promise<string | undefined> {
+        if (!(error instanceof IntegrationRegistryVersionConflictError) || !this.config.existingVersionDigest) {
+            return undefined;
+        }
+        try {
+            const digest = await this.config.existingVersionDigest(error.kind, error.version);
+            return digest && /^[a-f0-9]{64}$/u.test(digest) ? digest : undefined;
+        } catch {
+            return undefined;
         }
     }
 }
