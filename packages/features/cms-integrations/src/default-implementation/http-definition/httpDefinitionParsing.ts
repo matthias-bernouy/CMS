@@ -35,11 +35,12 @@ export function parseVersions(value: unknown): IntegrationDefinitionVersion[] {
         if (!isRecord(entry)) {
             throw new Error("integration version must be an object");
         }
+        const status = versionStatus(entry.status);
         return {
             version: requiredVersion(entry.version, "version"),
             path: requiredText(entry.path, "path"),
             definition: requiredText(entry.definition, "definition"),
-            ...(versionStatus(entry.status) ? { status: "blocked" as const } : {}),
+            ...(status ? { status } : {}),
         };
     });
     if (new Set(versions.map((entry) => entry.version)).size !== versions.length) {
@@ -48,12 +49,14 @@ export function parseVersions(value: unknown): IntegrationDefinitionVersion[] {
     return versions;
 }
 
-function versionStatus(value: unknown): "blocked" | undefined {
+function versionStatus(value: unknown): IntegrationDefinitionVersion["status"] {
     if (value === undefined) {
         return undefined;
     }
-    if (value !== "blocked") {
-        throw new Error("integration repository response version status must be blocked when present");
+    if (value !== "blocked" && value !== "inadmissible" && value !== "unverified") {
+        throw new Error(
+            "integration repository response version status must be blocked, inadmissible, or unverified when present",
+        );
     }
     return value;
 }

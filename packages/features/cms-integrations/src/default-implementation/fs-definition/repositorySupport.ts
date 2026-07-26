@@ -111,12 +111,12 @@ function parseVersion(value: unknown, source: string): IntegrationDefinitionVers
     };
 }
 
-function parseVersionStatus(value: unknown, source: string): "blocked" | undefined {
+function parseVersionStatus(value: unknown, source: string): IntegrationDefinitionVersion["status"] {
     if (value === undefined) {
         return undefined;
     }
-    if (value !== "blocked") {
-        throw new Error(`${source} must be blocked when present`);
+    if (value !== "blocked" && value !== "inadmissible" && value !== "unverified") {
+        throw new Error(`${source} must be blocked, inadmissible, or unverified when present`);
     }
     return value;
 }

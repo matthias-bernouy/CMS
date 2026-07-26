@@ -129,6 +129,7 @@ export {
 } from "../core/definitions/catalog";
 export {
     isIntegrationDefinitionVersionBlocked,
+    isIntegrationDefinitionVersionInstallable,
     resolveExactIntegrationDefinitionVersion,
     resolveInstallableIntegrationDefinitionVersion,
 } from "../core/definitions/repositoryVersions";

@@ -61,10 +61,10 @@ describe("integration repository SemVer", () => {
 
     test("keeps blocked versions exact but excludes them from installable resolution", async () => {
         const repository = filesystemRepository({
-            versions: ["2.0.0", "1.4.0", "1.3.0"],
+            versions: ["2.0.0", "1.5.0", "1.4.0", "1.3.0"],
             stable: "1.4.0",
             latest: "2.0.0",
-            blocked: ["2.0.0", "1.4.0"],
+            statuses: { "2.0.0": "blocked", "1.5.0": "unverified", "1.4.0": "inadmissible" },
         });
         const index = (await repository.getIndex("demo"))!;
 
@@ -140,13 +140,14 @@ function filesystemRepository(options: {
     stable?: string;
     latest?: string;
     definitionVersion?: string;
-    blocked?: readonly string[];
+    statuses?: Readonly<Record<string, "blocked" | "inadmissible" | "unverified">>;
 }): FsIntegrationDefinitionRepository {
     const root = mkdtempSync(join(tmpdir(), "cms-integration-semver-"));
     const packageRoot = join(root, "demo");
     mkdirSync(packageRoot, { recursive: true });
     const versions = options.versions.map((version) => {
         const versionRoot = join(packageRoot, "versions", version);
+        const status = options.statuses?.[version];
         mkdirSync(versionRoot, { recursive: true });
         writeFileSync(
             join(versionRoot, "definition.json"),
@@ -156,7 +157,7 @@ function filesystemRepository(options: {
             version,
             path: `versions/${version}`,
             definition: `versions/${version}/definition.json`,
-            ...(options.blocked?.includes(version) ? { status: "blocked" } : {}),
+            ...(status ? { status } : {}),
         };
     });
     writeFileSync(
