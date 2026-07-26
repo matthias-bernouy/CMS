@@ -30299,6 +30299,11 @@ button[slot="back"] svg {
     --p9r-modal-width: 720px;
 }
 
+.integration-reconfigure-modal::part(header),
+.integration-reconfigure-modal::part(footer) {
+    display: flex;
+}
+
 .integration-reconfigure-modal form {
     display: grid;
     gap: 16px;

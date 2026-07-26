@@ -12,6 +12,14 @@ afterEach(() => {
 });
 
 describe("integration reconfiguration lifecycle", () => {
+    test("exposes the modal title and actions without changing the shared modal primitive", () => {
+        const admin = createAdmin();
+        const styles = admin.querySelector<HTMLStyleElement>(":scope > style")?.textContent ?? "";
+
+        expect(styles).toContain(".integration-reconfigure-modal::part(header)");
+        expect(styles).toContain(".integration-reconfigure-modal::part(footer)");
+    });
+
     test("scrubs field controls on Cancel and recreates them on the next open", async () => {
         globalThis.fetch = (async (_input) => Response.json(detail())) as typeof fetch;
         const admin = createAdmin();
