@@ -37,9 +37,13 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
-        "@bernouy/rate-limiter": "workspace:*"
+        "@bernouy/rate-limiter": "workspace:*",
+        "semver": "^7.8.2"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"
+    },
+    "devDependencies": {
+        "@types/semver": "^7.7.1"
     }
 }

@@ -358,6 +358,10 @@
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
+        "semver": "^7.8.2",
+      },
+      "devDependencies": {
+        "@types/semver": "^7.7.1",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
