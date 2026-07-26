@@ -1,0 +1,11 @@
+{
+    "runtime": "native",
+    "default-tag": "ol",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Ordered list",
+        "description": "Native ordered list containing editable list items."
+    }
+}

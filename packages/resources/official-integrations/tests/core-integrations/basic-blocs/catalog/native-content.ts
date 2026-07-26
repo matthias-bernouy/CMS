@@ -36,6 +36,9 @@ const nativeContentCases = [
     { tag: "span", path: "blocs/content/text/basic-span", capability: headingCapability },
     { tag: "blockquote", path: "blocs/content/text/basic-blockquote", capability: headingCapability },
     { tag: "a", path: "blocs/content/links/basic-link", capability: linkCapability },
+    { tag: "li", path: "blocs/content/lists/basic-list-item", capability: paragraphCapability },
+    { tag: "ol", path: "blocs/content/lists/basic-ordered-list", capability: null },
+    { tag: "ul", path: "blocs/content/lists/basic-unordered-list", capability: null },
 ];
 
 export function registerNativeContentTest(): void {

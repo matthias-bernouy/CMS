@@ -38,8 +38,11 @@ export function registerBuildTest(): void {
             "h5",
             "h6",
             "img",
+            "li",
+            "ol",
             "p",
             "span",
+            "ul",
         ]);
 
         for (const artifact of artifacts) {

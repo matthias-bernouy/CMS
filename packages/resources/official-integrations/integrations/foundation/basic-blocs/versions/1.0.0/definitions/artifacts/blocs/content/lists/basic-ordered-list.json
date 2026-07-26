@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "ol",
+        "name": "Ordered list",
+        "group": "Text",
+        "description": "Native ordered list containing editable list items.",
+        "path": "blocs/content/lists/basic-ordered-list"
+    }
+}
