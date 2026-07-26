@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import {
     OFFICIAL_VERIFICATION_BACKFILL_INDEX_PATH,
     buildOfficialIntegrationVerificationBackfill,
@@ -84,6 +85,9 @@ function verificationPath(root: string, digest: string): string {
 async function temporaryRoot(label: string): Promise<string> {
     const root = await mkdtemp(join(tmpdir(), `cms-official-verification-${label}-`));
     temporaryRoots.push(root);
+    for (const group of ["domains", "extensions", "foundation", "providers"]) {
+        await cp(join(OFFICIAL_INTEGRATIONS_ROOT, group), join(root, group), { recursive: true });
+    }
     return root;
 }
 
