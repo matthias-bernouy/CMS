@@ -1,7 +1,7 @@
 import { parseIntegrationDefinition } from "@bernouy/cms-integrations";
 
 describe("integration theme definitions", () => {
-    test("parses local tokens, mode defaults, aliases, and font families", () => {
+    test("parses local tokens, mode defaults, aliases, and specialized control types", () => {
         const definition = parseIntegrationDefinition(
             themedDefinition({
                 categories: [
@@ -28,8 +28,20 @@ describe("integration theme definitions", () => {
                             {
                                 id: "item-gap",
                                 label: "Item gap",
-                                type: "value",
+                                type: "length",
                                 defaults: { light: "clamp(1rem, 3vw, 2rem)" },
+                            },
+                            {
+                                id: "media-opacity",
+                                label: "Media opacity",
+                                type: "number",
+                                defaults: { light: "0.85" },
+                            },
+                            {
+                                id: "card-shadow",
+                                label: "Card shadow",
+                                type: "shadow",
+                                defaults: { light: "0 1rem 2rem rgb(0 0 0 / 15%)" },
                             },
                         ],
                     },
@@ -62,8 +74,20 @@ describe("integration theme definitions", () => {
                         {
                             id: "item-gap",
                             label: "Item gap",
-                            type: "value",
+                            type: "length",
                             defaults: { light: "clamp(1rem, 3vw, 2rem)" },
+                        },
+                        {
+                            id: "media-opacity",
+                            label: "Media opacity",
+                            type: "number",
+                            defaults: { light: "0.85" },
+                        },
+                        {
+                            id: "card-shadow",
+                            label: "Card shadow",
+                            type: "shadow",
+                            defaults: { light: "0 1rem 2rem rgb(0 0 0 / 15%)" },
                         },
                     ],
                 },
@@ -105,7 +129,7 @@ describe("integration theme definitions", () => {
         [
             "unknown token types",
             oneToken({ ...validToken(), type: "gradient" }),
-            "must be color, value, or font-family",
+            "must be color, font-family, length, number, shadow, or value",
         ],
     ])("rejects invalid %s", (_case, theme, error) => {
         expect(() => parseIntegrationDefinition(themedDefinition(theme))).toThrow(error);

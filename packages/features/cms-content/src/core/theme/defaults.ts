@@ -57,31 +57,38 @@ export function defaultThemeSettings(): ThemeSettings {
                 token("font-body", "Body font", "Paragraphs and controls", "font-family"),
             ]),
             category("text-scale", "Text scale", "Shared text sizes used across the site.", [
-                token("font-size-body", "Body size", "Default text", "value"),
-                token("font-size-display", "Display size", "Large headings", "value"),
+                token("font-size-body", "Body size", "Default text", "length"),
+                token("font-size-display", "Display size", "Large headings", "length"),
             ]),
         ]),
         source("spacing", "Spacing", false, [
             category("spacing-scale", "Spacing scale", "Shared spacing steps.", [
-                token("space-sm", "Compact", "Inline gaps", "value"),
-                token("space-md", "Default", "Default block gap", "value"),
-                token("space-xl", "Generous", "Section spacing", "value"),
+                token("space-sm", "Compact", "Inline gaps", "length"),
+                token("space-md", "Default", "Default block gap", "length"),
+                token("space-xl", "Generous", "Section spacing", "length"),
             ]),
             category("layout", "Layout", "Widths and page rhythm.", [
-                token("content-width", "Content width", "Readable content", "value"),
-                token("wide-width", "Wide width", "Wide page sections", "value"),
+                token("content-width", "Content width", "Readable content", "length"),
+                token("wide-width", "Wide width", "Wide page sections", "length"),
             ]),
         ]),
         source("shape", "Shape & effects", false, [
             category("corners", "Corners", "Rounding applied to controls and cards.", [
-                token("radius-control", "Control radius", "Inputs and buttons", "value"),
-                token("radius-card", "Card radius", "Panels and cards", "value"),
+                token("radius-control", "Control radius", "Inputs and buttons", "length"),
+                token("radius-card", "Card radius", "Panels and cards", "length"),
             ]),
             category("elevation", "Elevation", "Shadows used to separate surfaces.", [
-                token("shadow-soft", "Soft shadow", "Subtle elevation", "value"),
+                token("shadow-soft", "Soft shadow", "Subtle elevation", "shadow"),
             ]),
             category("motion", "Motion", "Shared transition durations and easing values.", []),
         ]),
+        {
+            id: "site-tokens",
+            label: "Site tokens",
+            supportsModes: true,
+            owner: { kind: "site" },
+            categories: [category("general", "General", "Design tokens created for this site.", [])],
+        },
     ];
     const theme: ThemeDefinition = {
         id: "default",

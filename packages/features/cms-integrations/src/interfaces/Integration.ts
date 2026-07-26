@@ -58,7 +58,7 @@ export type IntegrationSecurityDefinition = {
     csp?: IntegrationCspPolicy;
 };
 
-export type IntegrationThemeTokenType = "color" | "value" | "font-family";
+export type IntegrationThemeTokenType = "color" | "font-family" | "length" | "number" | "shadow" | "value";
 
 export type IntegrationThemeTokenDefaults = {
     light: string;

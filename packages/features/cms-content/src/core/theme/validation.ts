@@ -2,7 +2,7 @@ import { ContentValidationError } from "cms-content/core/validation/errors";
 import type { ThemeSettings, ThemeSource, ThemeToken } from "cms-content/interfaces/theme";
 
 const IDENTIFIER = /^[a-z][a-z0-9-]*$/;
-const TOKEN_TYPES = new Set(["color", "font-family", "value"]);
+const TOKEN_TYPES = new Set(["color", "font-family", "length", "number", "shadow", "value"]);
 
 export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
     if (!settings || typeof settings !== "object") {
@@ -16,12 +16,23 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
     const variables = new Set<string>();
     const sourceIds = new Set<string>();
     const integrationOwners = new Set<string>();
+    const tokenSources = new Map<string, ThemeSource>();
+    const variableSources = new Map<string, ThemeSource>();
     for (const source of settings.sources) {
         validateSource(source, sourceIds, integrationOwners);
         for (const token of source.categories.flatMap((category) => category.tokens)) {
             validateToken(source, token);
             assertUnique(tokenIds, token.id, "token id");
             assertUnique(variables, token.variable, "CSS variable");
+            tokenSources.set(token.id, source);
+            variableSources.set(token.variable, source);
+        }
+    }
+    for (const source of settings.sources) {
+        for (const token of source.categories.flatMap((category) => category.tokens)) {
+            for (const value of Object.values(token.defaults ?? {})) {
+                assertIntegrationIsolation(source, value, variableSources);
+            }
         }
     }
 
@@ -43,6 +54,7 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
                     throw new ContentValidationError("theme", `unknown token: ${tokenId}`);
                 }
                 assertCssValue(tokenId, value);
+                assertIntegrationIsolation(tokenSources.get(tokenId), value, variableSources);
             }
         }
     }
@@ -50,6 +62,25 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
         throw new ContentValidationError("theme", "active theme does not exist.");
     }
     return structuredClone(settings);
+}
+
+function assertIntegrationIsolation(
+    source: ThemeSource | undefined,
+    value: string,
+    variableSources: Map<string, ThemeSource>,
+): void {
+    if (source?.owner?.kind !== "integration") {
+        return;
+    }
+    for (const match of value.matchAll(/var\s*\(\s*--([a-z][a-z0-9-]*)/gi)) {
+        const target = variableSources.get(match[1]!.toLowerCase());
+        if (target?.owner?.kind === "integration" && target.owner.integrationId !== source.owner.integrationId) {
+            throw new ContentValidationError(
+                "theme",
+                `integration token cannot reference another integration: ${source.owner.integrationId}`,
+            );
+        }
+    }
 }
 
 function validateSource(source: ThemeSource, sourceIds: Set<string>, integrationOwners: Set<string>): void {

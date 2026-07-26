@@ -102,7 +102,14 @@ function variableCategory(variable: string): CategoryTarget {
             "Shared transition durations and easing values.",
         );
     }
-    return target("other", "Other", false, "general", "General", "Site-specific design tokens.");
+    return target(
+        "imported-css",
+        "Imported CSS",
+        false,
+        "general",
+        "Imported variables",
+        "Variables preserved from the former free-form stylesheet.",
+    );
 }
 
 function target(

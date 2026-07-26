@@ -1,4 +1,4 @@
-export type ThemeTokenType = "color" | "font-family" | "value";
+export type ThemeTokenType = "color" | "font-family" | "length" | "number" | "shadow" | "value";
 export type ThemeMode = "light" | "dark";
 
 export type ThemeTokenDefaults = Partial<Record<ThemeMode, string>>;

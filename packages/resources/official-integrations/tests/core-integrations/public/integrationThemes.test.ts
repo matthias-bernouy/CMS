@@ -10,6 +10,7 @@ describe("official integration Theme contracts", () => {
         const tokens = definition?.theme?.categories.flatMap((category) => category.tokens) ?? [];
         const headingFont = tokens.find((token) => token.id === "offer-heading-font");
         const border = tokens.find((token) => token.id === "offer-border");
+        const radius = tokens.find((token) => token.id === "offer-radius");
         const css = await resource("domains/commerce/versions/1.0.0/blocs/commerce-offer-preview/style.css");
 
         expect(headingFont).toMatchObject({
@@ -17,6 +18,10 @@ describe("official integration Theme contracts", () => {
             defaults: { light: "var(--font-display, var(--font-heading))" },
         });
         expect(border?.defaults.light).toBe("var(--border-subtle, var(--border-default))");
+        expect(radius).toMatchObject({
+            type: "length",
+            defaults: { light: "var(--radius-lg, var(--radius-card))" },
+        });
         expect(css).toContain("var(--integration-commerce-offer-heading-font");
         expect(css).toContain("var(--integration-commerce-offer-border");
     });

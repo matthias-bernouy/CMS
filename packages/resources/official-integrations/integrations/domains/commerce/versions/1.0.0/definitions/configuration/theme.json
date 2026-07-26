@@ -56,7 +56,7 @@
                 {
                     "id": "offer-radius",
                     "label": "Offer radius",
-                    "type": "value",
+                    "type": "length",
                     "defaults": {
                         "light": "var(--radius-lg, var(--radius-card))"
                     }

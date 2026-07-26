@@ -97,10 +97,17 @@ function parseDefaults(value: unknown, name: string): IntegrationThemeTokenDefau
 }
 
 function parseTokenType(value: unknown, name: string): IntegrationThemeTokenType {
-    if (value === "color" || value === "value" || value === "font-family") {
+    if (
+        value === "color" ||
+        value === "font-family" ||
+        value === "length" ||
+        value === "number" ||
+        value === "shadow" ||
+        value === "value"
+    ) {
         return value;
     }
-    throw new IntegrationInputError(name, "must be color, value, or font-family");
+    throw new IntegrationInputError(name, "must be color, font-family, length, number, shadow, or value");
 }
 
 function assertLocalId(value: string, name: string): void {

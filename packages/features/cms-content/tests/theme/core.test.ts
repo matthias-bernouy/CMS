@@ -2,8 +2,6 @@ import {
     ContentValidationError,
     defaultThemeSettings,
     generateThemeCss,
-    organizeThemeSettings,
-    themeSettingsFromCss,
     validateThemeSettings,
 } from "@bernouy/cms-content";
 
@@ -49,70 +47,88 @@ describe("structured themes", () => {
         expect(() => validateThemeSettings(settings)).toThrow("unknown token");
     });
 
-    test("migrates existing CSS variables without changing their values", () => {
-        const settings = themeSettingsFromCss(":root { --primary-base: rgb(206, 220, 80); --custom-gap: 12px; }");
-        const theme = settings.themes[0]!;
-
-        expect(theme.values.light["primary-base"]).toBe("rgb(206, 220, 80)");
-        expect(theme.values.light["custom-gap"]).toBe("12px");
-        expect(settings.sources.find((source) => source.id === "other")?.categories[0]?.tokens[0]?.variable).toBe(
-            "custom-gap",
-        );
-        expect(settings.sources.some((source) => source.id === "existing-css")).toBeFalse();
-    });
-
-    test("moves tokens from the former import bucket into semantic categories", () => {
+    test("accepts specialized token types and rejects unknown metadata", () => {
         const settings = defaultThemeSettings();
         settings.sources.push({
-            id: "existing-css",
-            label: "Existing CSS",
-            supportsModes: false,
+            id: "specialized",
+            label: "Specialized",
+            supportsModes: true,
+            owner: { kind: "site" },
             categories: [
                 {
-                    id: "variables",
-                    label: "Variables",
-                    description: "Legacy",
+                    id: "effects",
+                    label: "Effects",
+                    description: "Site-specific presentation values",
                     tokens: [
                         {
-                            id: "info-muted",
-                            variable: "info-muted",
-                            label: "Info muted",
-                            description: "",
-                            type: "color",
+                            id: "specialized-length",
+                            variable: "specialized-length",
+                            label: "Content width",
+                            description: "Maximum content width",
+                            type: "length",
+                        },
+                        {
+                            id: "specialized-number",
+                            variable: "specialized-number",
+                            label: "Surface opacity",
+                            description: "Surface transparency",
+                            type: "number",
+                        },
+                        {
+                            id: "specialized-shadow",
+                            variable: "specialized-shadow",
+                            label: "Surface shadow",
+                            description: "Surface elevation",
+                            type: "shadow",
                         },
                     ],
                 },
             ],
         });
 
-        const organized = organizeThemeSettings(settings);
+        expect(validateThemeSettings(settings)).toEqual(settings);
 
-        expect(organized.sources.some((source) => source.id === "existing-css")).toBeFalse();
-        expect(
-            organized.sources
-                .find((source) => source.id === "colors")
-                ?.categories.find((category) => category.id === "feedback")
-                ?.tokens.some((token) => token.id === "info-muted"),
-        ).toBeTrue();
+        const token = settings.sources.at(-1)!.categories[0]!.tokens[0]!;
+        (token as { type: string }).type = "gradient";
+        expect(() => validateThemeSettings(settings)).toThrow("invalid token metadata");
     });
 
-    test("repairs the former text-body type when its persisted value is a color", () => {
+    test("rejects theme links between separately owned integrations", () => {
         const settings = defaultThemeSettings();
-        const body = settings.sources
-            .find((source) => source.id === "typography")!
-            .categories.find((category) => category.id === "text-scale")!.tokens[0]!;
-        body.id = "text-body";
-        body.variable = "text-body";
-        body.label = "Body size";
-        settings.themes[0]!.values.light["text-body"] = "#3a2a1c";
+        settings.sources.push(
+            integrationSource("gallery", "Gallery accent"),
+            integrationSource("commerce", "Commerce accent"),
+        );
+        settings.themes[0]!.values.light["integration-gallery-accent"] =
+            "var(--integration-commerce-accent, var(--primary-base))";
 
-        const organized = organizeThemeSettings(settings);
-
-        expect(
-            organized.sources
-                .find((source) => source.id === "colors")
-                ?.categories.find((category) => category.id === "text")
-                ?.tokens.find((token) => token.id === "text-body"),
-        ).toMatchObject({ label: "Body text", type: "color" });
+        expect(() => validateThemeSettings(settings)).toThrow("integration token cannot reference another integration");
     });
 });
+
+function integrationSource(integrationId: string, label: string) {
+    const id = `integration-${integrationId}-accent`;
+    return {
+        id: `integration-${integrationId}`,
+        label: integrationId,
+        supportsModes: true,
+        owner: { kind: "integration" as const, integrationId },
+        categories: [
+            {
+                id: "general",
+                label: "General",
+                description: `${integrationId} tokens`,
+                tokens: [
+                    {
+                        id,
+                        variable: id,
+                        label,
+                        description: "Accent color",
+                        type: "color" as const,
+                        defaults: { light: "#336699" },
+                    },
+                ],
+            },
+        ],
+    };
+}
