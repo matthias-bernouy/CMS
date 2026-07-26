@@ -19,6 +19,7 @@ export type {
     RepositoryManagementGateway,
     RepositoryReevaluationInput,
     RepositoryStablePromotionInput,
+    RepositoryVersionBlockInput,
 } from "./src/core/admin/control/mountRoutes/repositoryGateway";
 export type {
     IntegrationDefinition,

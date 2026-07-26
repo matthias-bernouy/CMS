@@ -1,8 +1,8 @@
 import type { RepositoryReevaluationInput } from "@bernouy/cms-control";
-import type { RepositoryManagementTransportResponse } from "../transport";
-import { rateLimitResult, simpleErrorResult, type SanitizedRepositoryManagementResult } from "./errors";
-import { array, assertEqual, canonicalText, exactObject } from "./helpers";
-import { validateRevisionReport } from "./reports";
+import type { RepositoryManagementTransportResponse } from "../../transport";
+import { rateLimitResult, simpleErrorResult, type SanitizedRepositoryManagementResult } from "../errors";
+import { array, assertEqual, canonicalText, exactObject } from "../helpers";
+import { validateRevisionReport } from "../reports";
 
 export type ReevaluationIdentity = Readonly<{
     input: RepositoryReevaluationInput;

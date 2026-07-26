@@ -1,21 +1,19 @@
 import type { RepositoryCompatibilityQuery } from "@bernouy/cms-control";
-import type { RepositoryManagementTransportResponse } from "../transport";
-import { rateLimitResult, simpleErrorResult, type SanitizedRepositoryManagementResult } from "./errors";
+import type { RepositoryManagementTransportResponse } from "../../transport";
+import { rateLimitResult, simpleErrorResult, type SanitizedRepositoryManagementResult } from "../errors";
 import {
     array,
     assertEqual,
     boolean,
     canonicalText,
-    digest,
     enumValue,
     exactObject,
     nonNegativeInteger,
     packageKind,
     packageVersion,
-    type JsonObject,
-} from "./helpers";
-import { validateCompatibilityPage } from "./reports";
-import { validateOperationalMetrics, validateRecentOperations } from "./observability";
+} from "../helpers";
+import { validateOperationalMetrics, validateRecentOperations } from "../observability";
+import { validateCompatibilityPage } from "../reports";
 
 const HEALTH_VALUES = ["healthy", "degraded"] as const;
 const DIAGNOSTIC_CODES = [
@@ -35,7 +33,8 @@ const RECOVERY_CODES = [
     "abandoned-staging-quarantined",
     "orphan-version-quarantined",
 ] as const;
-const COMPATIBILITY_OUTCOMES = ["compatible", "breaking", "unknown", "invalid", "not-applicable"] as const;
+export { validateReleaseResponse } from "./release";
+export { validateVersionsResponse } from "./versions";
 
 export function validateStatusResponse(
     response: RepositoryManagementTransportResponse,
@@ -83,32 +82,6 @@ export function validateDiagnosticsResponse(
     }
     if (body.recentOperations !== undefined) {
         validateRecentOperations(body.recentOperations);
-    }
-    return { status: 200, body };
-}
-
-export function validateVersionsResponse(
-    response: RepositoryManagementTransportResponse,
-    expectedKind: string,
-): SanitizedRepositoryManagementResult {
-    if (response.status === 429) {
-        return rateLimitResult(response);
-    }
-    if (response.status === 404) {
-        return simpleErrorResult(response, 404, "integration_not_found", "Integration was not found");
-    }
-    assertEqual(response.status, 200);
-    const body = exactObject(response.body, ["kind", "versions"], ["stable", "latest"]);
-    assertEqual(packageKind(body.kind), expectedKind);
-    const versions = array(body.versions).map(validateVersionSummary);
-    const versionNames = versions.map((entry) => entry.version as string);
-    if (new Set(versionNames).size !== versionNames.length) {
-        throw new TypeError("Repository versions are not unique");
-    }
-    for (const channel of [body.stable, body.latest]) {
-        if (channel !== undefined && !versionNames.includes(packageVersion(channel))) {
-            throw new TypeError("Repository channel is not present in versions");
-        }
     }
     return { status: 200, body };
 }
@@ -174,27 +147,4 @@ function validateRecoveryDiagnostic(value: unknown): void {
     if (diagnostic.version !== undefined) {
         packageVersion(diagnostic.version);
     }
-}
-
-function validateVersionSummary(value: unknown): JsonObject {
-    const summary = exactObject(value, ["version", "compatibility"], ["digest"]);
-    packageVersion(summary.version);
-    if (summary.digest !== undefined) {
-        digest(summary.digest);
-    }
-    if (summary.compatibility !== null) {
-        const compatibility = exactObject(summary.compatibility, [
-            "admissionReportId",
-            "currentReportRevisionId",
-            "outcome",
-            "admissible",
-            "warning",
-        ]);
-        canonicalText(compatibility.admissionReportId, 512);
-        canonicalText(compatibility.currentReportRevisionId, 512);
-        enumValue(compatibility.outcome, COMPATIBILITY_OUTCOMES);
-        boolean(compatibility.admissible);
-        boolean(compatibility.warning);
-    }
-    return summary;
 }

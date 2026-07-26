@@ -7,6 +7,7 @@ import {
 import {
     parseRepositoryPromotion,
     parseRepositoryReevaluation,
+    parseRepositoryVersionBlock,
     repositoryCompatibilityQuery,
     repositoryRequiredQuery,
 } from "cms-control/core/admin/control/mountRoutes/repositoryInputs";
@@ -25,6 +26,11 @@ export function mountRepositoryManagementRoutes(runner: Runner, access: Reposito
     runner.get("/repository/versions", (request) =>
         callGateway(access, (gateway) => gateway.versions(repositoryRequiredQuery(request, "kind"))),
     );
+    runner.get("/repository/release", (request) =>
+        callGateway(access, (gateway) =>
+            gateway.release(repositoryRequiredQuery(request, "kind"), repositoryRequiredQuery(request, "version")),
+        ),
+    );
     runner.get("/repository/compatibility", (request) =>
         callGateway(access, (gateway) => gateway.compatibility(repositoryCompatibilityQuery(request))),
     );
@@ -32,6 +38,14 @@ export function mountRepositoryManagementRoutes(runner: Runner, access: Reposito
         callGateway(access, async (gateway) =>
             gateway.publish(await readRepositoryControlBody(request, MAX_PACKAGE_BYTES)),
         ),
+    );
+    runner.post("/repository/candidates", async (request) =>
+        callGateway(access, async (gateway) =>
+            gateway.submitCandidate(await readRepositoryControlBody(request, MAX_PACKAGE_BYTES)),
+        ),
+    );
+    runner.get("/repository/candidates/status", (request) =>
+        callGateway(access, (gateway) => gateway.candidateStatus(repositoryRequiredQuery(request, "candidateId"))),
     );
     runner.post("/repository/reevaluations", async (request) =>
         callGateway(access, async (gateway) =>
@@ -41,6 +55,11 @@ export function mountRepositoryManagementRoutes(runner: Runner, access: Reposito
     runner.post("/repository/stable-promotions", async (request) =>
         callGateway(access, async (gateway) =>
             gateway.promoteStable(parseRepositoryPromotion(await readRepositoryControlJson(request, MAX_JSON_BYTES))),
+        ),
+    );
+    runner.post("/repository/version-blocks", async (request) =>
+        callGateway(access, async (gateway) =>
+            gateway.blockVersion(parseRepositoryVersionBlock(await readRepositoryControlJson(request, MAX_JSON_BYTES))),
         ),
     );
 }

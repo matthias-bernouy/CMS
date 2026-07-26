@@ -1,7 +1,7 @@
 import { RepositoryControlRequestError } from "cms-control/core/admin/control/mountRoutes/repositoryBody";
 
 const MAX_GATEWAY_RESPONSE_BYTES = 8 * 1_024 * 1_024;
-const ALLOWED_GATEWAY_STATUSES = new Set([200, 201, 400, 404, 409, 413, 422, 429, 503]);
+const ALLOWED_GATEWAY_STATUSES = new Set([200, 201, 202, 400, 404, 409, 410, 413, 422, 429, 503]);
 
 export async function repositoryGatewayResponse(response: Response): Promise<Response> {
     if (!ALLOWED_GATEWAY_STATUSES.has(response.status)) {

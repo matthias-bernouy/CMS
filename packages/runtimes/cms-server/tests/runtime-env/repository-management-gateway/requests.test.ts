@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import type { RepositoryReevaluationInput, RepositoryStablePromotionInput } from "@bernouy/cms-control";
+import type {
+    RepositoryReevaluationInput,
+    RepositoryStablePromotionInput,
+    RepositoryVersionBlockInput,
+} from "@bernouy/cms-control";
+import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
+import { validateIntegrationCandidateEnvelope } from "@bernouy/cms-integration-verification";
 import { gateway, jsonResponse, managementResponseFor, packageFixture, TEST_ACTOR, TEST_TOKEN } from "./fixtures";
 import { revisionReport, TEST_KIND, TEST_VERSION } from "./reports";
 
@@ -134,7 +140,132 @@ describe("HTTP repository management gateway requests", () => {
             server.stop(true);
         }
     });
+
+    test("submits candidates, polls progress, reads release evidence, and blocks with an injected actor", async () => {
+        const packageValue = await packageFixture();
+        const candidate = await validateIntegrationCandidateEnvelope({
+            schema: "cms.integration.candidate.v1",
+            package: packageValue.envelope,
+            verification: {
+                schema: "cms.integration.verification.v1",
+                target: { kind: TEST_KIND, version: TEST_VERSION, packageDigest: packageValue.digest },
+                manifest: {
+                    runnerRequirements: [{ name: "cms-postgres", versionRange: "^1.0.0" }],
+                    contracts: [],
+                    conformance: [],
+                    fixtures: [],
+                },
+                files: {},
+            },
+            submission: { requestedChannel: "latest" },
+        });
+        const candidateBytes = canonicalJsonBytes(candidate.envelope);
+        const block = versionBlockInput();
+        const captured: Array<{ url: URL; init: RequestInit }> = [];
+        const fetchImpl = (async (input, init = {}) => {
+            const url = new URL(String(input));
+            captured.push({ url, init });
+            if (url.pathname.endsWith("/release")) {
+                return jsonResponse(releaseEvidence());
+            }
+            if (url.pathname.endsWith("/candidates/status")) {
+                return jsonResponse({ candidate: candidateStatus(candidate) });
+            }
+            if (url.pathname.endsWith("/candidates")) {
+                return jsonResponse({ candidate: candidateStatus(candidate) }, 202);
+            }
+            if (url.pathname.endsWith("/version-blocks")) {
+                return jsonResponse({ operationId: "block-operation", record: blockRecord(block) }, 201);
+            }
+            return jsonResponse({ code: "unexpected", error: "Unexpected" }, 500);
+        }) as typeof fetch;
+        const client = gateway(fetchImpl);
+
+        const responses = [
+            await client.release(TEST_KIND, TEST_VERSION),
+            await client.submitCandidate(candidateBytes),
+            await client.candidateStatus("candidate-1"),
+            await client.blockVersion(block),
+        ];
+
+        expect(responses.map(({ status }) => status)).toEqual([200, 202, 200, 201]);
+        expect(captured.map(({ url }) => url.pathname)).toEqual([
+            "/.cms/repository-management/api/integrations/release",
+            "/.cms/repository-management/api/integrations/candidates",
+            "/.cms/repository-management/api/integrations/candidates/status",
+            "/.cms/repository-management/api/integrations/version-blocks",
+        ]);
+        expect(captured[0]!.url.searchParams.get("version")).toBe(TEST_VERSION);
+        expect(captured[2]!.url.searchParams.get("candidateId")).toBe("candidate-1");
+        expect(new Uint8Array(captured[1]!.init.body as ArrayBuffer)).toEqual(candidateBytes);
+        expect(await requestJson(captured[3]!.init)).toEqual({ ...block, actor: TEST_ACTOR });
+    });
 });
+
+function candidateStatus(candidate: Awaited<ReturnType<typeof validateIntegrationCandidateEnvelope>>) {
+    return {
+        candidateId: "candidate-1",
+        revision: 1,
+        status: "queued",
+        kind: TEST_KIND,
+        version: TEST_VERSION,
+        candidateDigest: candidate.candidateDigest,
+        packageDigest: candidate.packageDigest,
+        verificationDigest: candidate.verificationDigest,
+        createdAt: "2026-07-26T12:00:00.000Z",
+        updatedAt: "2026-07-26T12:00:00.000Z",
+        expiresAt: "2026-07-27T12:00:00.000Z",
+        attemptCount: 0,
+        requestedChannel: "latest",
+    };
+}
+
+function releaseEvidence() {
+    return {
+        kind: TEST_KIND,
+        version: TEST_VERSION,
+        packageDigest: "a".repeat(64),
+        status: "unverified",
+        installable: false,
+        freshInstallOnly: false,
+        migrations: [],
+    };
+}
+
+function versionBlockInput(): RepositoryVersionBlockInput {
+    return {
+        kind: TEST_KIND,
+        version: TEST_VERSION,
+        currentDecision: { revisionId: "decision-1", digest: "d".repeat(64) },
+        reason: "Production incident",
+        confirmation: {
+            action: "block",
+            kind: TEST_KIND,
+            version: TEST_VERSION,
+            decisionRevisionId: "decision-1",
+            decisionDigest: "d".repeat(64),
+        },
+    };
+}
+
+function blockRecord(input: RepositoryVersionBlockInput) {
+    return {
+        schema: "cms.integration.registry.version-eligibility.v1",
+        id: "block-1",
+        operationId: "block-operation",
+        action: "block",
+        kind: input.kind,
+        version: input.version,
+        packageDigest: "a".repeat(64),
+        decision: input.currentDecision,
+        nextStatus: "blocked",
+        previousChannels: { stable: input.version, latest: input.version },
+        nextChannels: {},
+        provenance: { actor: TEST_ACTOR, reason: input.reason },
+        confirmation: input.confirmation,
+        createdAt: "2026-07-26T12:00:00.000Z",
+    };
+}
 
 async function requestJson(init: RequestInit): Promise<unknown> {
     return await new Response(init.body).json();

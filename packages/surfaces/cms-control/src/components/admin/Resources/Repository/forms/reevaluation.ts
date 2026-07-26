@@ -13,7 +13,9 @@ export function readRepositoryReevaluation(
 }> {
     const evidenceIds = splitEvidenceIds(optionalField(form, "evidenceIds"));
     return {
-        ...selection,
+        kind: selection.kind,
+        version: selection.version,
+        currentReportRevisionId: selection.currentReportRevisionId,
         reason: requiredField(form, "reason", "Reevaluation reason"),
         ...(evidenceIds.length > 0 ? { evidenceIds } : {}),
     };

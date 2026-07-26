@@ -11,18 +11,23 @@ export function readRepositoryPromotion(
     confirmation: Readonly<{ version: string; reportRevisionId: string }>;
     reason?: string;
 }> {
+    if (!selection.decision) {
+        throw new RepositoryFormError("This version has no composite release decision to promote.");
+    }
     const version = requiredField(form, "confirmationVersion", "Version confirmation");
     const reportRevisionId = requiredField(form, "confirmationReportRevisionId", "Report confirmation");
     if (version !== selection.version) {
         throw new RepositoryFormError(`Type the exact version ${selection.version} to confirm promotion.`);
     }
-    if (reportRevisionId !== selection.currentReportRevisionId) {
+    if (reportRevisionId !== selection.decision.revisionId) {
         throw new RepositoryFormError(
-            `Type the exact current report revision ID ${selection.currentReportRevisionId} to confirm promotion.`,
+            `Type the exact current release decision ID ${selection.decision.revisionId} to confirm promotion.`,
         );
     }
     return {
-        ...selection,
+        kind: selection.kind,
+        version: selection.version,
+        currentReportRevisionId: selection.decision.revisionId,
         confirmation: { version, reportRevisionId },
         ...optionalReason(form),
     };

@@ -8,7 +8,7 @@ export function clearFeedback(target: HTMLElement): void {
     target.setAttribute("role", "status");
 }
 
-export function showFeedback(target: HTMLElement, message: string, tone: "info" | "success" = "info"): void {
+export function showFeedback(target: HTMLElement, message: string, tone: "error" | "info" | "success" = "info"): void {
     target.dataset.tone = tone;
     target.setAttribute("role", "status");
     target.replaceChildren(element("span", message));
@@ -29,17 +29,17 @@ function errorMessage(error: unknown): string {
     }
     if (isStale(error)) {
         const current = error.details.currentReportRevisionId;
-        return `The selected compatibility report is stale. Reload the current report${current ? ` (${current})` : ""} and confirm it again.`;
+        return `The selected release decision or report is stale. Reload the current evidence${current ? ` (${current})` : ""} and confirm it again.`;
     }
     if (error.status === 409) {
         return conflictMessage(error);
     }
     if (error.status === 413) {
-        return "The package is larger than the allowed upload size.";
+        return "The candidate is larger than the allowed upload size.";
     }
     if (error.status === 422) {
         const outcome = error.details.report?.outcome;
-        return `Compatibility validation rejected this release${outcome ? ` (${outcome})` : ""}. Review the report before publishing a new major version.`;
+        return `Release admission rejected this candidate${outcome ? ` (${outcome})` : ""}. Review compatibility, verification, and migration evidence.`;
     }
     if (error.status === 429) {
         return `Too many repository requests.${error.retryAfter ? ` Retry after ${error.retryAfter} seconds.` : " Retry later."}`;

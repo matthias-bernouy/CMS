@@ -1,8 +1,15 @@
-import { publishRepositoryPackage, requestRepositoryReevaluation, requestRepositoryStablePromotion } from "../api";
+import {
+    requestRepositoryReevaluation,
+    requestRepositoryStablePromotion,
+    requestRepositoryVersionBlock,
+    submitRepositoryCandidate as submitCandidate,
+} from "../api";
+import type { RepositoryCandidateView } from "../contracts/candidates";
 import type { RepositoryVersionSelection } from "../contracts/types";
+import { readRepositoryVersionBlock } from "../forms/block";
+import { readRepositoryCandidateFile } from "../forms/candidate";
 import { readRepositoryPromotion } from "../forms/promotion";
 import { readRepositoryReevaluation } from "../forms/reevaluation";
-import { readRepositoryPackageFile } from "../forms/upload";
 import { clearFeedback, showFeedback, showRepositoryError } from "../render/feedback";
 
 export type RepositoryActionContext = Readonly<{
@@ -11,22 +18,41 @@ export type RepositoryActionContext = Readonly<{
     updateSelection: (selection: RepositoryVersionSelection) => void;
     reloadKind: (kind: string) => Promise<void>;
     reloadCompatibility: () => Promise<void>;
+    monitorCandidate: (candidate: RepositoryCandidateView) => void;
 }>;
 
-export async function submitRepositoryPackage(
+export async function submitRepositoryCandidate(
     form: HTMLFormElement,
     feedback: HTMLElement,
     context: RepositoryActionContext,
 ): Promise<void> {
     await withBusy(form, feedback, async () => {
-        const result = await publishRepositoryPackage(await readRepositoryPackageFile(form), context.signal);
+        const candidate = await submitCandidate(await readRepositoryCandidateFile(form), context.signal);
         showFeedback(
             feedback,
-            `Published ${result.kind}@${result.version} as ${result.digest}. Compatibility: ${result.report.outcome}; report ${result.report.id}.`,
+            `Candidate ${candidate.candidateId} accepted for ${candidate.kind}@${candidate.version}; verification is ${candidate.status}.`,
+            "success",
+        );
+        form.reset();
+        context.monitorCandidate(candidate);
+    });
+}
+
+export async function submitRepositoryVersionBlock(
+    form: HTMLFormElement,
+    feedback: HTMLElement,
+    context: RepositoryActionContext,
+): Promise<void> {
+    await withSelection(form, feedback, context, async (selection) => {
+        const result = await requestRepositoryVersionBlock(readRepositoryVersionBlock(form, selection), context.signal);
+        showFeedback(
+            feedback,
+            `Blocked ${result.kind}@${result.version}. Channels repaired to stable ${result.nextChannels.stable ?? "unset"}, latest ${result.nextChannels.latest ?? "unset"}.`,
             "success",
         );
         form.reset();
         await context.reloadKind(result.kind);
+        await context.reloadCompatibility();
     });
 }
 

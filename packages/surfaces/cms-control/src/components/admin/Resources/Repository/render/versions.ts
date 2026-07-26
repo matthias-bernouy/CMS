@@ -19,7 +19,7 @@ export function renderRepositoryVersions(
     }
     const table = element("table", undefined, "version-table");
     const head = element("tr");
-    for (const label of ["Version", "Channel", "Digest", "Compatibility", "Action"]) {
+    for (const label of ["Version", "Channel", "Eligibility", "Verification", "Digest", "Compatibility", "Action"]) {
         head.append(element("th", label));
     }
     const body = element("tbody");
@@ -32,6 +32,8 @@ export function renderRepositoryVersions(
         row.append(
             tableCell(item.version),
             tableCell(channels(view, item.version)),
+            tableCell(eligibility(item)),
+            tableCell(verification(item)),
             tableCell(item.digest ?? "Unavailable", true),
             tableCell(compatibility(item)),
             tableNode(button),
@@ -42,6 +44,20 @@ export function renderRepositoryVersions(
     tableHead.append(head);
     table.append(tableHead, body);
     target.replaceChildren(summary, table);
+}
+
+function eligibility(item: RepositoryVersionsView["versions"][number]): string {
+    if (item.status) {
+        return item.status;
+    }
+    return item.release?.admissible ? "installable" : "unverified";
+}
+
+function verification(item: RepositoryVersionsView["versions"][number]): string {
+    if (!item.release?.verificationOutcome) {
+        return "No report";
+    }
+    return `${item.release.verificationOutcome} · ${item.release.verificationOrigin ?? "unknown origin"}`;
 }
 
 function tableCell(value: string, code = false): HTMLTableCellElement {

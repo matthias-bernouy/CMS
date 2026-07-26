@@ -4,6 +4,7 @@ import type {
     RepositoryManagementGateway,
     RepositoryReevaluationInput,
     RepositoryStablePromotionInput,
+    RepositoryVersionBlockInput,
 } from "@bernouy/cms-control";
 import type { RouteHandler, Runner } from "@bernouy/http-runner";
 import { mountRepositoryManagementRoutes } from "cms-control/core/admin/control/mountRoutes/repositoryManagement";
@@ -13,21 +14,29 @@ describe("Control repository management routes", () => {
         const gateway = new RecordingGateway();
         const runner = configuredRunner(gateway);
         expect([...runner.routes.keys()].sort()).toEqual([
+            "GET /repository/candidates/status",
             "GET /repository/compatibility",
             "GET /repository/diagnostics",
+            "GET /repository/release",
             "GET /repository/status",
             "GET /repository/versions",
+            "POST /repository/candidates",
             "POST /repository/publications",
             "POST /repository/reevaluations",
             "POST /repository/stable-promotions",
+            "POST /repository/version-blocks",
         ]);
 
         expect((await runner.request("GET", "/repository/status")).status).toBe(200);
         await runner.request("GET", "/repository/versions?kind=commerce");
+        await runner.request("GET", "/repository/release?kind=commerce&version=1.1.0");
+        await runner.request("GET", "/repository/candidates/status?candidateId=candidate-1");
         await runner.request("GET", "/repository/compatibility?kind=commerce&version=1.1.0&after=report-1&limit=25");
         expect(gateway.calls).toEqual([
             ["status"],
             ["versions", "commerce"],
+            ["release", "commerce", "1.1.0"],
+            ["candidateStatus", "candidate-1"],
             ["compatibility", { kind: "commerce", version: "1.1.0", after: "report-1", limit: 25 }],
         ]);
     });
@@ -36,6 +45,7 @@ describe("Control repository management routes", () => {
         const gateway = new RecordingGateway();
         const runner = configuredRunner(gateway);
         await runner.request("POST", "/repository/publications", '{"schema":"v1"}');
+        await runner.request("POST", "/repository/candidates", '{"schema":"candidate-v1"}');
         await runner.request("POST", "/repository/reevaluations", {
             kind: "commerce",
             version: "1.1.0",
@@ -49,8 +59,22 @@ describe("Control repository management routes", () => {
             currentReportRevisionId: "report-2",
             confirmation: { version: "1.1.0", reportRevisionId: "report-2" },
         });
+        await runner.request("POST", "/repository/version-blocks", {
+            kind: "commerce",
+            version: "1.1.0",
+            currentDecision: { revisionId: "decision-1", digest: "a".repeat(64) },
+            reason: "Incident",
+            confirmation: {
+                action: "block",
+                kind: "commerce",
+                version: "1.1.0",
+                decisionRevisionId: "decision-1",
+                decisionDigest: "a".repeat(64),
+            },
+        });
 
         expect(new TextDecoder().decode(gateway.published)).toBe('{"schema":"v1"}');
+        expect(new TextDecoder().decode(gateway.candidate)).toBe('{"schema":"candidate-v1"}');
         expect(gateway.reevaluation).toEqual({
             kind: "commerce",
             version: "1.1.0",
@@ -59,6 +83,7 @@ describe("Control repository management routes", () => {
             evidenceIds: ["ci-1"],
         });
         expect(gateway.promotion?.confirmation).toEqual({ version: "1.1.0", reportRevisionId: "report-2" });
+        expect(gateway.block?.reason).toBe("Incident");
 
         const rejected = await runner.request("POST", "/repository/reevaluations", {
             kind: "commerce",
@@ -146,8 +171,10 @@ class RecordingGateway implements RepositoryManagementGateway {
     response = Response.json({ ok: true });
     failure?: Error;
     published?: Uint8Array;
+    candidate?: Uint8Array;
     reevaluation?: RepositoryReevaluationInput;
     promotion?: RepositoryStablePromotionInput;
+    block?: RepositoryVersionBlockInput;
 
     status() {
         return this.respond("status");
@@ -158,12 +185,22 @@ class RecordingGateway implements RepositoryManagementGateway {
     versions(kind: string) {
         return this.respond("versions", kind);
     }
+    release(kind: string, version: string) {
+        return this.respond("release", kind, version);
+    }
     compatibility(query: RepositoryCompatibilityQuery) {
         return this.respond("compatibility", query);
     }
     publish(document: Uint8Array) {
         this.published = document;
         return this.respond("publish");
+    }
+    submitCandidate(document: Uint8Array) {
+        this.candidate = document;
+        return this.respond("submitCandidate");
+    }
+    candidateStatus(candidateId: string) {
+        return this.respond("candidateStatus", candidateId);
     }
     reevaluate(input: RepositoryReevaluationInput) {
         this.reevaluation = input;
@@ -172,6 +209,10 @@ class RecordingGateway implements RepositoryManagementGateway {
     promoteStable(input: RepositoryStablePromotionInput) {
         this.promotion = input;
         return this.respond("promoteStable");
+    }
+    blockVersion(input: RepositoryVersionBlockInput) {
+        this.block = input;
+        return this.respond("blockVersion");
     }
 
     private async respond(...call: unknown[]): Promise<Response> {

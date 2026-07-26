@@ -1,7 +1,7 @@
-import type { RepositoryManagementTransportResponse } from "../transport";
-import { rateLimitResult, simpleErrorResult, type SanitizedRepositoryManagementResult } from "./errors";
-import { assertEqual, canonicalText, digest, exactObject, packageKind, packageVersion } from "./helpers";
-import { validateAdmissionReport } from "./reports";
+import type { RepositoryManagementTransportResponse } from "../../transport";
+import { rateLimitResult, simpleErrorResult, type SanitizedRepositoryManagementResult } from "../errors";
+import { assertEqual, canonicalText, digest, exactObject, packageKind, packageVersion } from "../helpers";
+import { validateAdmissionReport } from "../reports";
 
 export type PublicationIdentity = Readonly<{ kind: string; version: string; digest: string }>;
 

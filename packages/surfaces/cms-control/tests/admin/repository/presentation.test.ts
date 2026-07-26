@@ -35,6 +35,13 @@ describe("repository administration presentation", () => {
         expect(console.textContent).toContain("b".repeat(64));
 
         await selectCurrentVersion(console);
+        expect(console.textContent).toContain("Composite decision: admissible");
+        expect(console.textContent).toContain("legacy-backfill");
+        expect(console.textContent).toContain("Runner cms-postgres 1.0.0");
+        expect(console.textContent).toContain("sql-install-and-reapply");
+        expect(console.textContent).toContain("Verification bundle digest");
+        expect(console.textContent).toContain("No tested in-place source range");
+        expect(console.textContent).toContain("Exact downloads and pinned reruns remain available");
         expect(console.textContent).toContain("Revision history (1)");
         expect(console.textContent).toContain("ci-schema-42");
         expect(console.textContent).toContain("Reviewed <script>unsafe()</script> evidence");

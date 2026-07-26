@@ -47,11 +47,41 @@ export function parseRepositoryVersions(value: unknown): RepositoryVersionsView 
             return {
                 version: readText(version.version),
                 ...optionalProperty("digest", readOptionalText(version.digest)),
+                ...optionalProperty("status", readOptionalText(version.status)),
+                ...(version.blockPreview === undefined
+                    ? {}
+                    : { blockPreview: parseChannelPreview(version.blockPreview) }),
+                ...(version.release === undefined ? {} : { release: parseVersionRelease(version.release) }),
                 ...(version.compatibility === null || version.compatibility === undefined
                     ? {}
                     : { compatibility: parseVersionCompatibility(version.compatibility) }),
             };
         }),
+    };
+}
+
+function parseChannelPreview(value: unknown) {
+    const source = readRecord(value);
+    return { current: parseChannels(source.current), next: parseChannels(source.next) };
+}
+
+function parseChannels(value: unknown) {
+    const source = readRecord(value);
+    return {
+        ...optionalProperty("stable", readOptionalText(source.stable)),
+        ...optionalProperty("latest", readOptionalText(source.latest)),
+    };
+}
+
+function parseVersionRelease(value: unknown) {
+    const source = readRecord(value);
+    return {
+        ...optionalProperty("verificationDigest", readOptionalText(source.verificationDigest)),
+        ...optionalProperty("verificationOrigin", readOptionalText(source.verificationOrigin)),
+        ...optionalProperty("verificationOutcome", readOptionalText(source.verificationOutcome)),
+        ...optionalProperty("decisionRevisionId", readOptionalText(source.decisionRevisionId)),
+        ...optionalProperty("decisionDigest", readOptionalText(source.decisionDigest)),
+        admissible: readBoolean(source.admissible),
     };
 }
 

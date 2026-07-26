@@ -3,6 +3,7 @@ import type {
     RepositoryManagementGateway,
     RepositoryReevaluationInput,
     RepositoryStablePromotionInput,
+    RepositoryVersionBlockInput,
 } from "@bernouy/cms-control";
 import {
     normalizeCompatibilityQuery,
@@ -13,6 +14,8 @@ import {
     preparePublication,
     prepareReevaluation,
 } from "./inputs";
+import { prepareRepositoryCandidate, repositoryCandidateId } from "./requests/candidate";
+import { prepareRepositoryVersionBlock } from "./requests/eligibility";
 import {
     repositoryManagementJsonResponse,
     repositoryManagementUnavailableResponse,
@@ -24,13 +27,19 @@ import {
     type RepositoryManagementTransportResponse,
 } from "./transport";
 import type { SanitizedRepositoryManagementResult } from "./validation/errors";
-import { canonicalText, packageKind } from "./validation/helpers";
-import { validatePromotionResponse } from "./validation/promotion";
-import { validatePublicationResponse } from "./validation/publication";
-import { validateReevaluationResponse } from "./validation/reevaluation";
+import { canonicalText, packageKind, packageVersion } from "./validation/helpers";
+import { validateVersionBlockResponse } from "./validation/mutations/eligibility";
+import { validatePromotionResponse } from "./validation/mutations/promotion";
+import {
+    validateCandidateStatusResponse,
+    validateCandidateSubmissionResponse,
+} from "./validation/mutations/candidates";
+import { validatePublicationResponse } from "./validation/mutations/publication";
+import { validateReevaluationResponse } from "./validation/mutations/reevaluation";
 import {
     validateCompatibilityResponse,
     validateDiagnosticsResponse,
+    validateReleaseResponse,
     validateStatusResponse,
     validateVersionsResponse,
 } from "./validation/reads";
@@ -41,8 +50,12 @@ const PATHS = {
     versions: "/api/integrations/versions",
     compatibility: "/api/integrations/compatibility",
     publications: "/api/integrations/publications",
+    candidates: "/api/integrations/candidates",
+    candidateStatus: "/api/integrations/candidates/status",
+    release: "/api/integrations/release",
     reevaluations: "/api/integrations/compatibility/reevaluations",
     stablePromotions: "/api/integrations/stable-promotions",
+    versionBlocks: "/api/integrations/version-blocks",
 } as const;
 
 export type HttpRepositoryManagementGatewayConfig = Readonly<{
@@ -90,6 +103,18 @@ export class HttpRepositoryManagementGateway implements RepositoryManagementGate
         }
     }
 
+    async release(kind: string, version: string): Promise<Response> {
+        try {
+            const expected = { kind: packageKind(kind), version: packageVersion(version) };
+            const url = this.endpoint(PATHS.release);
+            url.searchParams.set("kind", expected.kind);
+            url.searchParams.set("version", expected.version);
+            return this.sanitized(validateReleaseResponse(await this.request(url, "GET"), expected));
+        } catch {
+            return repositoryManagementUnavailableResponse();
+        }
+    }
+
     async compatibility(query: RepositoryCompatibilityQuery): Promise<Response> {
         try {
             const normalized = normalizeCompatibilityQuery(query);
@@ -124,6 +149,33 @@ export class HttpRepositoryManagementGateway implements RepositoryManagementGate
         }
     }
 
+    async submitCandidate(candidateDocument: Uint8Array): Promise<Response> {
+        if (!(candidateDocument instanceof Uint8Array)) {
+            return repositoryManagementUnavailableResponse();
+        }
+        if (candidateDocument.byteLength > REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES) {
+            return repositoryManagementUploadTooLargeResponse();
+        }
+        try {
+            const candidate = await prepareRepositoryCandidate(candidateDocument);
+            const response = await this.request(this.endpoint(PATHS.candidates), "POST", candidate.bytes);
+            return this.sanitized(validateCandidateSubmissionResponse(response, candidate));
+        } catch {
+            return repositoryManagementUnavailableResponse();
+        }
+    }
+
+    async candidateStatus(candidateId: string): Promise<Response> {
+        try {
+            const expected = repositoryCandidateId(candidateId);
+            const url = this.endpoint(PATHS.candidateStatus);
+            url.searchParams.set("candidateId", expected);
+            return this.sanitized(validateCandidateStatusResponse(await this.request(url, "GET"), expected));
+        } catch {
+            return repositoryManagementUnavailableResponse();
+        }
+    }
+
     async reevaluate(input: RepositoryReevaluationInput): Promise<Response> {
         try {
             const prepared = prepareReevaluation(input, this.actor);
@@ -145,6 +197,16 @@ export class HttpRepositoryManagementGateway implements RepositoryManagementGate
             const prepared = preparePromotion(input, this.actor);
             const response = await this.request(this.endpoint(PATHS.stablePromotions), "POST", prepared.bytes);
             return this.sanitized(validatePromotionResponse(response, { input: prepared.input, actor: this.actor }));
+        } catch {
+            return repositoryManagementUnavailableResponse();
+        }
+    }
+
+    async blockVersion(input: RepositoryVersionBlockInput): Promise<Response> {
+        try {
+            const prepared = prepareRepositoryVersionBlock(input, this.actor);
+            const response = await this.request(this.endpoint(PATHS.versionBlocks), "POST", prepared.bytes);
+            return this.sanitized(validateVersionBlockResponse(response, { input: prepared.input, actor: this.actor }));
         } catch {
             return repositoryManagementUnavailableResponse();
         }

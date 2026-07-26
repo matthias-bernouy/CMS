@@ -29990,11 +29990,13 @@ button[slot="back"]:disabled {
     <section class="panel" aria-labelledby="repository-compatibility-title" data-compatibility-panel hidden>
         <div class="section-heading">
             <div>
-                <p class="eyebrow">Compatibility history</p>
+                <p class="eyebrow">Release evidence</p>
                 <h2 id="repository-compatibility-title" data-selection-title>Selected version</h2>
             </div>
         </div>
         <div class="feedback" data-compatibility-feedback role="status" aria-live="polite"></div>
+        <div data-release></div>
+        <h3>Legacy compatibility history</h3>
         <div data-compatibility></div>
         <button type="button" class="secondary" data-load-more hidden>Load older revisions</button>
     </section>
@@ -30002,19 +30004,20 @@ button[slot="back"]:disabled {
     <section class="panel" aria-labelledby="repository-publish-title">
         <div class="section-heading">
             <div>
-                <p class="eyebrow">Immutable publication</p>
-                <h2 id="repository-publish-title">Publish a package</h2>
+                <p class="eyebrow">Verified publication</p>
+                <h2 id="repository-publish-title">Submit a release candidate</h2>
             </div>
         </div>
-        <p>Upload a canonical package JSON document. Existing versions cannot be replaced.</p>
-        <form data-upload-form>
+        <p>Upload a canonical candidate containing the immutable runtime package and its separate verification bundle.</p>
+        <form data-candidate-form>
             <label>
-                <span>Package JSON</span>
-                <input type="file" name="package" accept="application/json,.json" required>
+                <span>Candidate JSON</span>
+                <input type="file" name="candidate" accept="application/json,.json" required>
             </label>
-            <button type="submit">Validate and publish</button>
+            <button type="submit">Submit for verification</button>
         </form>
-        <div class="feedback" data-upload-feedback role="status" aria-live="polite"></div>
+        <div class="feedback" data-candidate-feedback role="status" aria-live="polite"></div>
+        <div class="feedback" data-candidate-progress role="status" aria-live="polite"></div>
     </section>
 
     <section class="panel" aria-labelledby="repository-actions-title" data-actions-panel hidden>
@@ -30045,13 +30048,13 @@ button[slot="back"]:disabled {
             <form data-promotion-form>
                 <fieldset>
                     <legend>Promote to stable</legend>
-                    <p>This action requires both exact confirmations from the currently loaded report.</p>
+                    <p>This action uses the current admissible composite release decision, never compatibility alone.</p>
                     <label>
                         <span>Type version <code data-confirm-version></code></span>
                         <input name="confirmationVersion" autocomplete="off" required>
                     </label>
                     <label>
-                        <span>Type report revision ID <code data-confirm-report></code></span>
+                        <span>Type release decision ID <code data-confirm-report></code></span>
                         <input name="confirmationReportRevisionId" autocomplete="off" required>
                     </label>
                     <label>
@@ -30061,6 +30064,27 @@ button[slot="back"]:disabled {
                     <button type="submit" class="danger">Promote exact version</button>
                 </fieldset>
                 <div class="feedback" data-promotion-feedback role="status" aria-live="polite"></div>
+            </form>
+
+            <form data-block-form>
+                <fieldset>
+                    <legend>Block this version</legend>
+                    <p data-block-preview>Channel repair preview unavailable.</p>
+                    <label>
+                        <span>Type version <code data-block-confirm-version></code></span>
+                        <input name="blockVersion" autocomplete="off" required>
+                    </label>
+                    <label>
+                        <span>Type decision digest <code data-block-confirm-digest></code></span>
+                        <input name="blockDecisionDigest" autocomplete="off" required>
+                    </label>
+                    <label>
+                        <span>Blocking reason</span>
+                        <textarea name="reason" rows="3" required></textarea>
+                    </label>
+                    <button type="submit" class="danger">Block and repair channels</button>
+                </fieldset>
+                <div class="feedback" data-block-feedback role="status" aria-live="polite"></div>
             </form>
         </div>
     </section>
@@ -30474,9 +30498,34 @@ ${controls_default3}`;
         return {
           version: readText(version.version),
           ...optionalProperty("digest", readOptionalText(version.digest)),
+          ...optionalProperty("status", readOptionalText(version.status)),
+          ...version.blockPreview === undefined ? {} : { blockPreview: parseChannelPreview(version.blockPreview) },
+          ...version.release === undefined ? {} : { release: parseVersionRelease(version.release) },
           ...version.compatibility === null || version.compatibility === undefined ? {} : { compatibility: parseVersionCompatibility(version.compatibility) }
         };
       })
+    };
+  }
+  function parseChannelPreview(value3) {
+    const source2 = readRecord(value3);
+    return { current: parseChannels(source2.current), next: parseChannels(source2.next) };
+  }
+  function parseChannels(value3) {
+    const source2 = readRecord(value3);
+    return {
+      ...optionalProperty("stable", readOptionalText(source2.stable)),
+      ...optionalProperty("latest", readOptionalText(source2.latest))
+    };
+  }
+  function parseVersionRelease(value3) {
+    const source2 = readRecord(value3);
+    return {
+      ...optionalProperty("verificationDigest", readOptionalText(source2.verificationDigest)),
+      ...optionalProperty("verificationOrigin", readOptionalText(source2.verificationOrigin)),
+      ...optionalProperty("verificationOutcome", readOptionalText(source2.verificationOutcome)),
+      ...optionalProperty("decisionRevisionId", readOptionalText(source2.decisionRevisionId)),
+      ...optionalProperty("decisionDigest", readOptionalText(source2.decisionDigest)),
+      admissible: readBoolean(source2.admissible)
     };
   }
   function parseDiagnostic(value3) {
@@ -30506,6 +30555,141 @@ ${controls_default3}`;
       admissible: readBoolean(object.admissible),
       warning: readBoolean(object.warning)
     };
+  }
+
+  // src/components/admin/Resources/Repository/contracts/candidates.ts
+  function parseRepositoryCandidateResponse(value3) {
+    const source2 = readRecord(readRecord(value3).candidate);
+    const failure = source2.lastFailure === undefined ? undefined : readRecord(source2.lastFailure);
+    return {
+      candidateId: readText(source2.candidateId),
+      revision: readCount(source2.revision),
+      status: readText(source2.status),
+      kind: readText(source2.kind),
+      version: readText(source2.version),
+      candidateDigest: readText(source2.candidateDigest),
+      packageDigest: readText(source2.packageDigest),
+      verificationDigest: readText(source2.verificationDigest),
+      createdAt: readText(source2.createdAt),
+      updatedAt: readText(source2.updatedAt),
+      expiresAt: readText(source2.expiresAt),
+      attemptCount: readCount(source2.attemptCount),
+      ...readOptionalText(failure?.code) ? { failureCode: readText(failure?.code) } : {}
+    };
+  }
+
+  // src/components/admin/Resources/Repository/contracts/release/parsing.ts
+  function parseRepositoryRelease(value3) {
+    const source2 = readRecord(value3);
+    return {
+      kind: readText(source2.kind),
+      version: readText(source2.version),
+      packageDigest: readText(source2.packageDigest),
+      ...readOptionalText(source2.verificationDigest) ? { verificationDigest: readText(source2.verificationDigest) } : {},
+      status: readText(source2.status),
+      installable: readBoolean(source2.installable),
+      freshInstallOnly: readBoolean(source2.freshInstallOnly),
+      ...source2.compatibility === undefined ? {} : { compatibility: compatibility(source2.compatibility) },
+      ...source2.verification === undefined ? {} : { verification: verification(source2.verification) },
+      migrations: readArray(source2.migrations, 256).map(migration),
+      ...source2.decision === undefined ? {} : { decision: decision(source2.decision) }
+    };
+  }
+  function compatibility(value3) {
+    const source2 = readRecord(value3);
+    return {
+      reportId: readText(source2.reportId),
+      reportDigest: readText(source2.reportDigest),
+      origin: readText(source2.origin),
+      outcome: readText(source2.outcome),
+      contractAdmissible: readBoolean(source2.contractAdmissible),
+      releaseLevel: readText(source2.releaseLevel),
+      requiredReleaseLevel: readText(source2.requiredReleaseLevel),
+      findings: readArray(source2.findings).map((value4) => {
+        const finding = readRecord(value4);
+        return {
+          findingId: readText(finding.findingId),
+          classification: readText(finding.classification),
+          surface: readText(finding.surface),
+          path: readText(finding.path),
+          code: readText(finding.code),
+          message: readText(finding.message)
+        };
+      })
+    };
+  }
+  function verification(value3) {
+    const source2 = readRecord(value3);
+    const runner = readRecord(source2.runner);
+    const environment = readRecord(source2.environment);
+    return {
+      reportId: readText(source2.reportId),
+      reportDigest: readText(source2.reportDigest),
+      origin: readText(source2.origin),
+      outcome: readText(source2.outcome),
+      runner: {
+        name: readText(runner.name),
+        version: readText(runner.version),
+        imageDigest: readText(runner.imageDigest)
+      },
+      environment: { digest: readText(environment.digest), versions: textRecord(environment.versions) },
+      results: readArray(source2.results).map((value4) => {
+        const result = readRecord(value4);
+        return {
+          suiteId: readText(result.suiteId),
+          source: readText(result.source),
+          required: readBoolean(result.required),
+          outcome: readText(result.outcome),
+          attempts: readCount(result.attempts),
+          cacheHit: readBoolean(result.cacheHit),
+          diagnostics: readArray(result.diagnostics).map((value5) => {
+            const diagnostic = readRecord(value5);
+            return { code: readText(diagnostic.code), message: readText(diagnostic.message) };
+          })
+        };
+      })
+    };
+  }
+  function migration(value3) {
+    const source2 = readRecord(value3);
+    const identity = readRecord(source2.source);
+    const cutover = readRecord(source2.cutover);
+    return {
+      reportId: readText(source2.reportId),
+      reportDigest: readText(source2.reportDigest),
+      origin: readText(source2.origin),
+      source: {
+        kind: readText(identity.kind),
+        version: readText(identity.version),
+        packageDigest: readText(identity.packageDigest)
+      },
+      supportedSourceRange: readText(source2.supportedSourceRange),
+      connectorKey: readText(source2.connectorKey),
+      lineageId: readText(source2.lineageId),
+      migrationRevision: readCount(source2.migrationRevision),
+      outcome: readText(source2.outcome),
+      cutover: {
+        cmsMediated: readText(cutover.cmsMediated),
+        providerDirect: readText(cutover.providerDirect)
+      },
+      rollback: readText(source2.rollback),
+      pointOfNoReturn: readText(source2.pointOfNoReturn),
+      delayedCleanupVerified: readBoolean(source2.delayedCleanupVerified)
+    };
+  }
+  function decision(value3) {
+    const source2 = readRecord(value3);
+    return {
+      decisionId: readText(source2.decisionId),
+      decisionDigest: readText(source2.decisionDigest),
+      admissible: readBoolean(source2.admissible),
+      reasons: readArray(source2.reasons, 256).map(readText),
+      createdAt: readText(source2.createdAt)
+    };
+  }
+  function textRecord(value3) {
+    const source2 = readRecord(value3);
+    return Object.fromEntries(Object.entries(source2).slice(0, 64).map(([key, entry]) => [key, readText(entry)]));
   }
 
   // src/components/admin/Resources/Repository/contracts/reports.ts
@@ -30548,16 +30732,6 @@ ${controls_default3}`;
       ...provenance ? { provenance } : {}
     };
   }
-  function parseRepositoryPublicationResult(value3) {
-    const object = readRecord(value3);
-    return {
-      operationId: readText(object.operationId),
-      kind: readText(object.kind),
-      version: readText(object.version),
-      digest: readText(object.digest),
-      report: parseRepositoryCompatibilityReport(object.report, "admission")
-    };
-  }
   function parseRepositoryReevaluationResult(value3) {
     const object = readRecord(value3);
     return {
@@ -30574,6 +30748,20 @@ ${controls_default3}`;
       version: readText(record3.version),
       reportRevisionId: readText(record3.reportRevisionId),
       ...optionalProperty("previousStable", readOptionalText(record3.previousStable))
+    };
+  }
+  function parseRepositoryVersionBlockResult(value3) {
+    const object = readRecord(value3);
+    const record3 = readRecord(object.record);
+    const channels = readRecord(record3.nextChannels);
+    return {
+      operationId: readText(object.operationId),
+      kind: readText(record3.kind),
+      version: readText(record3.version),
+      nextChannels: {
+        ...optionalProperty("stable", readOptionalText(channels.stable)),
+        ...optionalProperty("latest", readOptionalText(channels.latest))
+      }
     };
   }
   function parseRepositoryActionErrorDetails(value3) {
@@ -30636,22 +30824,31 @@ ${controls_default3}`;
   function fetchRepositoryVersions(kind, signal) {
     return get("/versions", parseRepositoryVersions, { kind }, signal);
   }
+  function fetchRepositoryRelease(kind, version, signal) {
+    return get("/release", parseRepositoryRelease, { kind, version }, signal);
+  }
   function fetchRepositoryCompatibility(kind, version, after, signal) {
     return get("/compatibility", parseRepositoryCompatibilityPage, { kind, version, limit: "100", ...after ? { after } : {} }, signal);
   }
-  function publishRepositoryPackage(file, signal) {
-    return request("/publications", parseRepositoryPublicationResult, {
+  function submitRepositoryCandidate(file, signal) {
+    return request("/candidates", parseRepositoryCandidateResponse, {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: file,
       signal
     });
   }
+  function fetchRepositoryCandidateStatus(candidateId, signal) {
+    return get("/candidates/status", parseRepositoryCandidateResponse, { candidateId }, signal);
+  }
   function requestRepositoryReevaluation(input2, signal) {
     return postJson2("/reevaluations", input2, parseRepositoryReevaluationResult, signal);
   }
   function requestRepositoryStablePromotion(input2, signal) {
     return postJson2("/stable-promotions", input2, parseRepositoryPromotionResult, signal);
+  }
+  function requestRepositoryVersionBlock(input2, signal) {
+    return postJson2("/version-blocks", input2, parseRepositoryVersionBlockResult, signal);
   }
   function get(path, parse, query7, signal) {
     const search = new URLSearchParams(query7).toString();
@@ -30829,17 +31026,17 @@ ${controls_default3}`;
     }
     if (isStale(error)) {
       const current = error.details.currentReportRevisionId;
-      return `The selected compatibility report is stale. Reload the current report${current ? ` (${current})` : ""} and confirm it again.`;
+      return `The selected release decision or report is stale. Reload the current evidence${current ? ` (${current})` : ""} and confirm it again.`;
     }
     if (error.status === 409) {
       return conflictMessage(error);
     }
     if (error.status === 413) {
-      return "The package is larger than the allowed upload size.";
+      return "The candidate is larger than the allowed upload size.";
     }
     if (error.status === 422) {
       const outcome = error.details.report?.outcome;
-      return `Compatibility validation rejected this release${outcome ? ` (${outcome})` : ""}. Review the report before publishing a new major version.`;
+      return `Release admission rejected this candidate${outcome ? ` (${outcome})` : ""}. Review compatibility, verification, and migration evidence.`;
     }
     if (error.status === 429) {
       return `Too many repository requests.${error.retryAfter ? ` Retry after ${error.retryAfter} seconds.` : " Retry later."}`;
@@ -30876,7 +31073,7 @@ ${controls_default3}`;
     }
     const table = element("table", undefined, "version-table");
     const head = element("tr");
-    for (const label3 of ["Version", "Channel", "Digest", "Compatibility", "Action"]) {
+    for (const label3 of ["Version", "Channel", "Eligibility", "Verification", "Digest", "Compatibility", "Action"]) {
       head.append(element("th", label3));
     }
     const body = element("tbody");
@@ -30886,13 +31083,25 @@ ${controls_default3}`;
       button2.type = "button";
       button2.dataset.version = item.version;
       button2.addEventListener("click", () => select4(item.version));
-      row.append(tableCell(item.version), tableCell(channels(view, item.version)), tableCell(item.digest ?? "Unavailable", true), tableCell(compatibility(item)), tableNode(button2));
+      row.append(tableCell(item.version), tableCell(channels(view, item.version)), tableCell(eligibility(item)), tableCell(verification2(item)), tableCell(item.digest ?? "Unavailable", true), tableCell(compatibility2(item)), tableNode(button2));
       body.append(row);
     }
     const tableHead = element("thead");
     tableHead.append(head);
     table.append(tableHead, body);
     target2.replaceChildren(summary2, table);
+  }
+  function eligibility(item) {
+    if (item.status) {
+      return item.status;
+    }
+    return item.release?.admissible ? "installable" : "unverified";
+  }
+  function verification2(item) {
+    if (!item.release?.verificationOutcome) {
+      return "No report";
+    }
+    return `${item.release.verificationOutcome} · ${item.release.verificationOrigin ?? "unknown origin"}`;
   }
   function tableCell(value3, code = false) {
     const cell = element("td");
@@ -30907,25 +31116,187 @@ ${controls_default3}`;
   function channels(view, version) {
     return [view.stable === version ? "stable" : undefined, view.latest === version ? "latest" : undefined].filter(Boolean).join(", ") || "—";
   }
-  function compatibility(item) {
+  function compatibility2(item) {
     if (!item.compatibility) {
       return "No report";
     }
     return `${item.compatibility.outcome}${item.compatibility.warning ? " · warning" : ""}`;
   }
 
+  // src/components/admin/Resources/Repository/render/release.ts
+  function renderRepositoryRelease(target2, release) {
+    const fragment = document.createDocumentFragment();
+    fragment.append(section("Release admission", [
+      `Status ${release.status}`,
+      `Installable ${release.installable ? "yes" : "no"}`,
+      `Fresh-install-only ${release.freshInstallOnly ? "yes" : "no"}`
+    ]), codeLine2("Package digest", release.packageDigest));
+    if (release.verificationDigest) {
+      fragment.append(codeLine2("Verification bundle digest", release.verificationDigest));
+    }
+    appendDecision(fragment, release);
+    appendVerification(fragment, release);
+    appendCompatibility(fragment, release);
+    appendMigrations(fragment, release);
+    target2.replaceChildren(fragment);
+  }
+  function appendDecision(target2, release) {
+    if (!release.decision) {
+      target2.append(emptyMessage("No composite release decision is available."));
+      return;
+    }
+    const decision2 = element("article", undefined, "report");
+    decision2.dataset.outcome = release.decision.admissible ? "compatible" : "breaking";
+    decision2.append(element("h4", `Composite decision: ${release.decision.admissible ? "admissible" : "rejected"}`), metadata([`ID ${release.decision.decisionId}`, `Created ${release.decision.createdAt}`]), codeLine2("Decision digest", release.decision.decisionDigest));
+    if (release.decision.reasons.length > 0) {
+      decision2.append(list("Decision reasons", release.decision.reasons));
+    }
+    target2.append(decision2);
+  }
+  function appendVerification(target2, release) {
+    const report = release.verification;
+    if (!report) {
+      target2.append(emptyMessage("No executable verification report is available."));
+      return;
+    }
+    const section = element("article", undefined, "report");
+    section.dataset.outcome = report.outcome;
+    section.append(element("h4", `Executable verification: ${report.outcome}`), metadata([
+      `Origin ${report.origin}`,
+      `Runner ${report.runner.name} ${report.runner.version}`,
+      `Environment ${report.environment.digest}`
+    ]), codeLine2("Runner image", report.runner.imageDigest));
+    const suites = element("ul", undefined, "evidence-list");
+    for (const result of report.results) {
+      suites.append(element("li", `${result.suiteId} · ${result.source} · ${result.outcome} · ${result.attempts} attempt(s)${result.cacheHit ? " · cache" : ""}`));
+    }
+    section.append(element("h5", "Suites"), suites);
+    target2.append(section);
+  }
+  function appendCompatibility(target2, release) {
+    const report = release.compatibility;
+    if (!report) {
+      target2.append(emptyMessage("No static compatibility report is available."));
+      return;
+    }
+    const section = element("article", undefined, "report");
+    section.dataset.outcome = report.outcome;
+    section.append(element("h4", `Static compatibility: ${report.outcome}`), metadata([
+      `Origin ${report.origin}`,
+      `Release ${report.releaseLevel}`,
+      `Required ${report.requiredReleaseLevel}`
+    ]), codeLine2("Report digest", report.reportDigest));
+    if (report.findings.length > 0) {
+      section.append(list("Findings", report.findings.map((finding) => `${finding.classification} · ${finding.surface}:${finding.path} · ${finding.code} — ${finding.message}`)));
+    }
+    target2.append(section);
+  }
+  function appendMigrations(target2, release) {
+    target2.append(element("h4", "Migration support"));
+    if (release.migrations.length === 0) {
+      target2.append(emptyMessage("No tested in-place source range; treat this release as fresh-install-only when required."));
+      return;
+    }
+    for (const migration2 of release.migrations) {
+      target2.append(section(`${migration2.source.kind}@${migration2.source.version} (${migration2.supportedSourceRange}) → ${release.version}`, [
+        `Outcome ${migration2.outcome}`,
+        `Origin ${migration2.origin}`,
+        `CMS cutover ${migration2.cutover.cmsMediated}`,
+        `Provider-direct ${migration2.cutover.providerDirect}`,
+        `Rollback ${migration2.rollback}`,
+        `PONR ${migration2.pointOfNoReturn}`,
+        `Delayed cleanup ${migration2.delayedCleanupVerified ? "verified" : "not verified"}`
+      ]));
+    }
+  }
+  function section(title2, parts) {
+    const node = element("article", undefined, "report");
+    node.append(element("h4", title2), metadata(parts));
+    return node;
+  }
+  function codeLine2(label3, value3) {
+    const line3 = element("p", undefined, "metadata");
+    line3.append(document.createTextNode(`${label3}: `), element("code", value3));
+    return line3;
+  }
+  function list(title2, entries) {
+    const container = element("div");
+    const values = element("ul", undefined, "evidence-list");
+    values.append(...entries.map((value3) => element("li", value3)));
+    container.append(element("h5", title2), values);
+    return container;
+  }
+
+  // src/components/admin/Resources/Repository/forms/block.ts
+  function readRepositoryVersionBlock(form, selection) {
+    if (!selection.decision) {
+      throw new RepositoryFormError("This version has no composite release decision to block.");
+    }
+    const version = requiredField(form, "blockVersion", "Version confirmation");
+    const decisionDigest = requiredField(form, "blockDecisionDigest", "Decision digest confirmation");
+    if (version !== selection.version || decisionDigest !== selection.decision.digest) {
+      throw new RepositoryFormError("Type the exact version and release decision digest to confirm blocking.");
+    }
+    return {
+      kind: selection.kind,
+      version: selection.version,
+      currentDecision: {
+        revisionId: selection.decision.revisionId,
+        digest: selection.decision.digest
+      },
+      reason: requiredField(form, "reason", "Blocking reason"),
+      confirmation: {
+        action: "block",
+        kind: selection.kind,
+        version: selection.version,
+        decisionRevisionId: selection.decision.revisionId,
+        decisionDigest: selection.decision.digest
+      }
+    };
+  }
+
+  // src/components/admin/Resources/Repository/forms/candidate.ts
+  var MAX_CANDIDATE_BYTES = 32 * 1024 * 1024;
+  async function readRepositoryCandidateFile(form) {
+    const input2 = field3(form, "candidate");
+    if (!(input2 instanceof HTMLInputElement) || input2.type !== "file") {
+      throw new RepositoryFormError("The candidate upload field is unavailable.");
+    }
+    const file = input2.files?.[0];
+    if (!file) {
+      throw new RepositoryFormError("Select a candidate JSON file.");
+    }
+    if (file.size < 1 || file.size > MAX_CANDIDATE_BYTES) {
+      throw new RepositoryFormError("The candidate JSON file must be between 1 byte and 32 MiB.");
+    }
+    try {
+      const value3 = JSON.parse(await file.text());
+      if (!value3 || typeof value3 !== "object" || Array.isArray(value3)) {
+        throw new TypeError("Candidate document must be an object");
+      }
+    } catch {
+      throw new RepositoryFormError("Select a valid candidate JSON document.");
+    }
+    return file;
+  }
+
   // src/components/admin/Resources/Repository/forms/promotion.ts
   function readRepositoryPromotion(form, selection) {
+    if (!selection.decision) {
+      throw new RepositoryFormError("This version has no composite release decision to promote.");
+    }
     const version = requiredField(form, "confirmationVersion", "Version confirmation");
     const reportRevisionId = requiredField(form, "confirmationReportRevisionId", "Report confirmation");
     if (version !== selection.version) {
       throw new RepositoryFormError(`Type the exact version ${selection.version} to confirm promotion.`);
     }
-    if (reportRevisionId !== selection.currentReportRevisionId) {
-      throw new RepositoryFormError(`Type the exact current report revision ID ${selection.currentReportRevisionId} to confirm promotion.`);
+    if (reportRevisionId !== selection.decision.revisionId) {
+      throw new RepositoryFormError(`Type the exact current release decision ID ${selection.decision.revisionId} to confirm promotion.`);
     }
     return {
-      ...selection,
+      kind: selection.kind,
+      version: selection.version,
+      currentReportRevisionId: selection.decision.revisionId,
       confirmation: { version, reportRevisionId },
       ...optionalReason(form)
     };
@@ -30939,7 +31310,9 @@ ${controls_default3}`;
   function readRepositoryReevaluation(form, selection) {
     const evidenceIds = splitEvidenceIds(optionalField(form, "evidenceIds"));
     return {
-      ...selection,
+      kind: selection.kind,
+      version: selection.version,
+      currentReportRevisionId: selection.currentReportRevisionId,
       reason: requiredField(form, "reason", "Reevaluation reason"),
       ...evidenceIds.length > 0 ? { evidenceIds } : {}
     };
@@ -30953,41 +31326,22 @@ ${controls_default3}`;
     ].slice(0, 256);
   }
 
-  // src/components/admin/Resources/Repository/forms/upload.ts
-  var MAX_PACKAGE_BYTES = 32 * 1024 * 1024;
-  async function readRepositoryPackageFile(form) {
-    const input2 = field3(form, "package");
-    if (!(input2 instanceof HTMLInputElement) || input2.type !== "file") {
-      throw new RepositoryFormError("The package upload field is unavailable.");
-    }
-    const file = input2.files?.[0];
-    if (!file) {
-      throw new RepositoryFormError("Select a package JSON file.");
-    }
-    if (file.size < 1) {
-      throw new RepositoryFormError("The package JSON file is empty.");
-    }
-    if (file.size > MAX_PACKAGE_BYTES) {
-      throw new RepositoryFormError("The package JSON file exceeds the 32 MiB upload limit.");
-    }
-    try {
-      const value3 = JSON.parse(await file.text());
-      if (!value3 || typeof value3 !== "object" || Array.isArray(value3)) {
-        throw new TypeError("Package document must be an object");
-      }
-    } catch {
-      throw new RepositoryFormError("Select a valid package JSON document.");
-    }
-    return file;
-  }
-
   // src/components/admin/Resources/Repository/component/actions.ts
-  async function submitRepositoryPackage(form, feedback, context) {
+  async function submitRepositoryCandidate2(form, feedback, context) {
     await withBusy(form, feedback, async () => {
-      const result = await publishRepositoryPackage(await readRepositoryPackageFile(form), context.signal);
-      showFeedback(feedback, `Published ${result.kind}@${result.version} as ${result.digest}. Compatibility: ${result.report.outcome}; report ${result.report.id}.`, "success");
+      const candidate = await submitRepositoryCandidate(await readRepositoryCandidateFile(form), context.signal);
+      showFeedback(feedback, `Candidate ${candidate.candidateId} accepted for ${candidate.kind}@${candidate.version}; verification is ${candidate.status}.`, "success");
+      form.reset();
+      context.monitorCandidate(candidate);
+    });
+  }
+  async function submitRepositoryVersionBlock(form, feedback, context) {
+    await withSelection(form, feedback, context, async (selection) => {
+      const result = await requestRepositoryVersionBlock(readRepositoryVersionBlock(form, selection), context.signal);
+      showFeedback(feedback, `Blocked ${result.kind}@${result.version}. Channels repaired to stable ${result.nextChannels.stable ?? "unset"}, latest ${result.nextChannels.latest ?? "unset"}.`, "success");
       form.reset();
       await context.reloadKind(result.kind);
+      await context.reloadCompatibility();
     });
   }
   async function submitRepositoryReevaluation(form, feedback, context) {
@@ -31171,10 +31525,24 @@ ${controls_default3}`;
   function renderRepositorySelection(host, selection) {
     query8(host, "[data-actions-panel]").hidden = false;
     query8(host, "[data-selection-title]").textContent = `${selection.kind}@${selection.version}`;
-    query8(host, "[data-action-selection]").textContent = `${selection.kind}@${selection.version} · current report ${selection.currentReportRevisionId}`;
+    query8(host, "[data-action-selection]").textContent = `${selection.kind}@${selection.version} · compatibility ${selection.currentReportRevisionId} · decision ${selection.decision?.revisionId ?? "unavailable"}`;
     query8(host, "[data-confirm-version]").textContent = selection.version;
-    query8(host, "[data-confirm-report]").textContent = selection.currentReportRevisionId;
+    query8(host, "[data-confirm-report]").textContent = selection.decision?.revisionId ?? "unavailable";
+    query8(host, "[data-block-confirm-version]").textContent = selection.version;
+    query8(host, "[data-block-confirm-digest]").textContent = selection.decision?.digest ?? "unavailable";
+    query8(host, "[data-block-preview]").textContent = blockPreview(selection);
+    query8(host, "[data-promotion-form] fieldset").disabled = !selection.decision?.admissible || selection.status !== "installable";
+    query8(host, "[data-block-form] fieldset").disabled = !selection.decision || selection.status === "blocked";
     query8(host, "[data-promotion-form]").reset();
+    query8(host, "[data-block-form]").reset();
+  }
+  function blockPreview(selection) {
+    if (!selection.blockPreview) {
+      return "Channel repair preview unavailable.";
+    }
+    const current = selection.blockPreview.current;
+    const next = selection.blockPreview.next;
+    return `Blocking repairs stable ${current.stable ?? "unset"} → ${next.stable ?? "unset"} and latest ${current.latest ?? "unset"} → ${next.latest ?? "unset"}. Exact downloads and pinned reruns remain available.`;
   }
   function query8(root, selector) {
     const node = root.querySelector(selector);
@@ -31190,6 +31558,8 @@ ${controls_default3}`;
     request;
     selected;
     compatibility;
+    release;
+    versions;
     connectedCallback() {
       if (!this.initialized) {
         this.mount();
@@ -31220,9 +31590,10 @@ ${controls_default3}`;
         const form = event.currentTarget;
         this.loadKind(field3(form, "kind").value.trim());
       });
-      this.bindAction("[data-upload-form]", "[data-upload-feedback]", submitRepositoryPackage);
+      this.bindAction("[data-candidate-form]", "[data-candidate-feedback]", submitRepositoryCandidate2);
       this.bindAction("[data-reevaluation-form]", "[data-reevaluation-feedback]", submitRepositoryReevaluation);
       this.bindAction("[data-promotion-form]", "[data-promotion-feedback]", submitRepositoryPromotion);
+      this.bindAction("[data-block-form]", "[data-block-feedback]", submitRepositoryVersionBlock);
       this.query("[data-load-more]").addEventListener("click", () => void this.loadMore());
     }
     bindAction(formSelector, feedbackSelector, action) {
@@ -31240,7 +31611,14 @@ ${controls_default3}`;
         selection: () => this.selected,
         updateSelection: (selection) => this.setSelection(selection),
         reloadKind: (kind) => this.loadKind(kind),
-        reloadCompatibility: () => this.reloadCompatibility()
+        reloadCompatibility: () => this.reloadCompatibility(),
+        monitorCandidate: (candidate) => {
+          this.monitorCandidate(candidate).catch((error) => {
+            if (!isAbortError7(error)) {
+              renderRepositoryFailure(this.query("[data-candidate-progress]"), error);
+            }
+          });
+        }
       };
     }
     async loadKind(kind) {
@@ -31252,6 +31630,7 @@ ${controls_default3}`;
       }
       try {
         const versions = await fetchRepositoryVersions(kind, this.signal());
+        this.versions = versions;
         renderRepositoryVersions(this.query("[data-versions]"), versions, (version) => void this.selectVersion(versions.kind, version));
         showFeedback(feedback, `Loaded ${versions.versions.length} version(s) for ${versions.kind}.`, "success");
       } catch (error) {
@@ -31263,8 +31642,25 @@ ${controls_default3}`;
       clearFeedback(feedback);
       this.query("[data-compatibility-panel]").hidden = false;
       try {
-        this.compatibility = await fetchRepositoryCompatibility(kind, version, undefined, this.signal());
-        this.setSelection({ kind, version, currentReportRevisionId: this.compatibility.current.id });
+        [this.compatibility, this.release] = await Promise.all([
+          fetchRepositoryCompatibility(kind, version, undefined, this.signal()),
+          fetchRepositoryRelease(kind, version, this.signal())
+        ]);
+        const summary2 = this.versions?.kind === kind ? this.versions.versions.find((entry) => entry.version === version) : undefined;
+        this.setSelection({
+          kind,
+          version,
+          currentReportRevisionId: this.compatibility.current.id,
+          status: this.release.status,
+          ...this.release.decision ? {
+            decision: {
+              revisionId: this.release.decision.decisionId,
+              digest: this.release.decision.decisionDigest,
+              admissible: this.release.decision.admissible
+            }
+          } : {},
+          ...summary2?.blockPreview ? { blockPreview: summary2.blockPreview } : {}
+        });
         this.renderCompatibility();
       } catch (error) {
         renderRepositoryFailure(feedback, error);
@@ -31294,11 +31690,28 @@ ${controls_default3}`;
         return;
       }
       renderRepositoryCompatibility(this.query("[data-compatibility]"), this.compatibility);
+      if (this.release) {
+        renderRepositoryRelease(this.query("[data-release]"), this.release);
+      }
       this.query("[data-load-more]").hidden = !this.compatibility.nextCursor;
     }
     setSelection(selection) {
       this.selected = selection;
       renderRepositorySelection(this, selection);
+    }
+    async monitorCandidate(initial) {
+      const feedback = this.query("[data-candidate-progress]");
+      let candidate = initial;
+      while (this.request && !terminalCandidateStatus(candidate.status)) {
+        showFeedback(feedback, `${candidate.kind}@${candidate.version}: ${candidate.status}, attempt ${candidate.attemptCount}.`);
+        await waitForPoll(this.signal());
+        candidate = await fetchRepositoryCandidateStatus(candidate.candidateId, this.signal());
+      }
+      const successful = candidate.status === "published";
+      showFeedback(feedback, successful ? `${candidate.kind}@${candidate.version} is published and eligible according to its composite decision.` : `${candidate.kind}@${candidate.version} stopped at ${candidate.status}${candidate.failureCode ? ` (${candidate.failureCode})` : ""}.`, successful ? "success" : "error");
+      if (successful) {
+        await this.loadKind(candidate.kind);
+      }
     }
     signal() {
       if (!this.request) {
@@ -31313,6 +31726,25 @@ ${controls_default3}`;
       }
       return node;
     }
+  }
+  function terminalCandidateStatus(status) {
+    return status === "published" || status === "rejected" || status === "expired";
+  }
+  function isAbortError7(error) {
+    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
+  }
+  async function waitForPoll(signal) {
+    await new Promise((resolve, reject) => {
+      const abort = () => {
+        clearTimeout(timeout);
+        reject(new DOMException("Candidate monitoring aborted", "AbortError"));
+      };
+      const timeout = setTimeout(() => {
+        signal.removeEventListener("abort", abort);
+        resolve();
+      }, 1000);
+      signal.addEventListener("abort", abort, { once: true });
+    });
   }
   if (!customElements.get("cms-repository-admin")) {
     customElements.define("cms-repository-admin", RepositoryAdmin);
@@ -33563,12 +33995,12 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBindingRenderer.ts
   function renderBindingConfig(source2, initialBinding) {
-    const section = document.createElement("section");
-    section.className = "binding-config";
-    section.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source2)));
-    renderRequestParams(section, source2, initialBinding);
-    renderRequestBody(section, source2, initialBinding);
-    return section;
+    const section2 = document.createElement("section");
+    section2.className = "binding-config";
+    section2.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source2)));
+    renderRequestParams(section2, source2, initialBinding);
+    renderRequestBody(section2, source2, initialBinding);
+    return section2;
   }
   function renderAliasInput(value3) {
     const aliasLabel = document.createElement("label");
@@ -33593,15 +34025,15 @@ button:hover {
   function defaultTrigger(source2) {
     return (source2.method ?? "GET") === "GET" ? "auto" : "submit";
   }
-  function renderRequestParams(section, source2, initialBinding) {
+  function renderRequestParams(section2, source2, initialBinding) {
     const params = source2.params ?? [];
     if (params.length === 0) {
       return;
     }
-    section.append(renderBindingHeading("Request params"));
+    section2.append(renderBindingHeading("Request params"));
     const initialParams = paramsForBinding(source2, initialBinding);
     for (const param of params) {
-      section.append(renderBindingRow({
+      section2.append(renderBindingRow({
         kind: "param",
         name: param.name,
         location: param.in,
@@ -33611,14 +34043,14 @@ button:hover {
       }, initialParams[param.name]));
     }
   }
-  function renderRequestBody(section, source2, initialBinding) {
+  function renderRequestBody(section2, source2, initialBinding) {
     const fields = bodyBindingFields(source2.body?.fields ?? []);
     if (fields.length === 0) {
       return;
     }
-    section.append(renderBindingHeading("Request body"));
+    section2.append(renderBindingHeading("Request body"));
     for (const field4 of fields) {
-      section.append(renderBindingRow({
+      section2.append(renderBindingRow({
         kind: "body",
         name: field4.name,
         location: "body",
@@ -33648,18 +34080,18 @@ button:hover {
     return renderFieldList(fields, "No request body declared.");
   }
   function renderFieldList(fields, emptyMessage2) {
-    const list = document.createElement("ul");
-    list.className = "fields";
+    const list2 = document.createElement("ul");
+    list2.className = "fields";
     for (const field4 of fields) {
-      list.append(renderField(field4, 0));
+      list2.append(renderField(field4, 0));
     }
-    if (list.children.length === 0) {
+    if (list2.children.length === 0) {
       const empty3 = document.createElement("p");
       empty3.className = "details-empty";
       empty3.textContent = emptyMessage2;
       return empty3;
     }
-    return list;
+    return list2;
   }
   function renderField(field4, depth) {
     const item = document.createElement("li");
@@ -34827,19 +35259,19 @@ textarea { min-height: 92px; resize: vertical; }
     return conditions2;
   }
   function renderSource(source2, options2) {
-    const section = document.createElement("section");
-    section.className = "source";
-    section.append(textBlock2("source-title", source2.label));
+    const section2 = document.createElement("section");
+    section2.className = "source";
+    section2.append(textBlock2("source-title", source2.label));
     if (source2.sourceName) {
-      section.append(textBlock2("source-name", `Source: ${source2.sourceName}`));
+      section2.append(textBlock2("source-name", `Source: ${source2.sourceName}`));
     }
     const states2 = document.createElement("div");
     states2.className = "states";
     for (const state2 of STATES) {
       states2.append(renderState2(source2, state2, options2));
     }
-    section.append(states2);
-    return section;
+    section2.append(states2);
+    return section2;
   }
   function renderState2(source2, state2, options2) {
     const key = sourceStateKey(options2.sources, source2.editor, state2);
@@ -38309,13 +38741,13 @@ input:disabled {
     const normalized = query9.trim().toLowerCase();
     return normalized ? options2.filter((option6) => `${option6.label} ${option6.path}`.toLowerCase().includes(normalized)) : options2;
   }
-  function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
-    list.replaceChildren();
+  function renderDynamicDataOptions(list2, options2, totalOptions, onSelect) {
+    list2.replaceChildren();
     if (options2.length === 0) {
       const empty4 = document.createElement("p");
       empty4.className = "data-empty";
       empty4.textContent = totalOptions === 0 ? "No data available here." : "No matching data.";
-      list.append(empty4);
+      list2.append(empty4);
       return;
     }
     for (const option6 of options2) {
@@ -38330,7 +38762,7 @@ input:disabled {
       path.textContent = option6.path;
       button2.append(label3, path);
       button2.addEventListener("click", () => onSelect(option6.path));
-      list.append(button2);
+      list2.append(button2);
     }
   }
 
@@ -41944,8 +42376,8 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts
   function renderSettingsStates(states2, onToggle) {
-    const section = document.createElement("cms-editor-v2-section");
-    section.setAttribute("label", "States");
+    const section2 = document.createElement("cms-editor-v2-section");
+    section2.setAttribute("label", "States");
     for (const state2 of states2) {
       const button2 = document.createElement("button");
       button2.className = "state-button";
@@ -41959,14 +42391,14 @@ input {
       description.textContent = state2.description ?? (state2.isActive() ? "Active" : "Inactive");
       button2.append(label3, description);
       button2.addEventListener("click", () => onToggle(state2));
-      section.append(button2);
+      section2.append(button2);
     }
-    return section;
+    return section2;
   }
-  function renderSettingSection(section, controls) {
+  function renderSettingSection(section2, controls) {
     const element2 = document.createElement("cms-editor-v2-section");
-    element2.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
-    const settings = visibleSettings(section.settings);
+    element2.setAttribute("label", section2.kind === "surcharge" ? `${section2.label} override` : section2.label);
+    const settings = visibleSettings(section2.settings);
     if (settings.length === 0) {
       const empty4 = document.createElement("div");
       empty4.className = "section-empty";
@@ -41982,8 +42414,8 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/textCapability.ts
   function renderTextCapability(capability, value3, dataScopes2, emitContentChange) {
-    const section = document.createElement("cms-editor-v2-section");
-    section.setAttribute("label", "Content");
+    const section2 = document.createElement("cms-editor-v2-section");
+    section2.setAttribute("label", "Content");
     const setting = {
       type: "text",
       label: capability.format === "richtext" ? "Rich text" : "Text",
@@ -42002,8 +42434,8 @@ input {
       }
       wireContentControl(control3, "input", (content) => emitContentChange(content, "text"));
     }
-    section.append(control3);
-    return section;
+    section2.append(control3);
+    return section2;
   }
   function formatTextCapability(capability) {
     const options2 = [
@@ -42324,7 +42756,7 @@ cms-editor-v2-segmented-control button svg:only-child {
       this._dataScopes = dataScopes2;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
-      const visibleSections = sections2.filter((section) => mode === "settings" ? section.kind === "self" : section.kind === "surcharge");
+      const visibleSections = sections2.filter((section2) => mode === "settings" ? section2.kind === "self" : section2.kind === "surcharge");
       const shouldRenderText = mode === "settings" && textCapability;
       const shouldRenderStates = mode === "settings" && states2.length > 0;
       if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
@@ -42340,8 +42772,8 @@ cms-editor-v2-segmented-control button svg:only-child {
       if (shouldRenderStates) {
         view.append(renderSettingsStates(states2, (state2) => this._emitStateToggle(state2)));
       }
-      for (const section of visibleSections) {
-        view.append(renderSettingSection(section, this._settingControls));
+      for (const section2 of visibleSections) {
+        view.append(renderSettingSection(section2, this._settingControls));
       }
     }
     _emitStateToggle(state2) {
@@ -42799,18 +43231,18 @@ label {
     container.append(scroll, footer);
   }
   function renderFields2(fields) {
-    const list = document.createElement("ul");
-    list.className = "fields";
+    const list2 = document.createElement("ul");
+    list2.className = "fields";
     for (const field4 of fields) {
-      list.append(renderField2(field4, 0));
+      list2.append(renderField2(field4, 0));
     }
-    if (list.children.length === 0) {
+    if (list2.children.length === 0) {
       const empty4 = document.createElement("p");
       empty4.className = "details-empty";
       empty4.textContent = "No item fields declared.";
       return empty4;
     }
-    return list;
+    return list2;
   }
   function renderField2(field4, depth) {
     const item = document.createElement("li");
@@ -44352,8 +44784,8 @@ label {
     return true;
   }
   function settingsWithParamSync(editor, sections2) {
-    const section = paramSyncSettings(editor);
-    return section ? [...sections2, section] : sections2;
+    const section2 = paramSyncSettings(editor);
+    return section2 ? [...sections2, section2] : sections2;
   }
   function paramSyncSettings(editor) {
     const target2 = editor.target;
@@ -44442,8 +44874,8 @@ label {
     return true;
   }
   function settingsWithPageState(editor, sections2) {
-    const section = pageStateSettings(editor);
-    return section ? [...sections2, section] : sections2;
+    const section2 = pageStateSettings(editor);
+    return section2 ? [...sections2, section2] : sections2;
   }
   function pageStateSettings(editor) {
     const target2 = editor.target;
@@ -44492,9 +44924,9 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingsValues.ts
   function resolveSettingsValues(editor, sections2) {
-    return sections2.map((section) => ({
-      ...section,
-      settings: section.settings.map((setting) => resolveSetting(editor, setting))
+    return sections2.map((section2) => ({
+      ...section2,
+      settings: section2.settings.map((setting) => resolveSetting(editor, setting))
     }));
   }
   function getTextValue(editor, format) {

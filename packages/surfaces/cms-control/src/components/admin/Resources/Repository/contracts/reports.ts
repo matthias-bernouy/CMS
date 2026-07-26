@@ -7,6 +7,7 @@ import type {
     RepositoryPromotionResultView,
     RepositoryPublicationResultView,
     RepositoryReevaluationResultView,
+    RepositoryVersionBlockResultView,
 } from "./types";
 import {
     optionalProperty,
@@ -93,6 +94,21 @@ export function parseRepositoryPromotionResult(value: unknown): RepositoryPromot
         version: readText(record.version),
         reportRevisionId: readText(record.reportRevisionId),
         ...optionalProperty("previousStable", readOptionalText(record.previousStable)),
+    };
+}
+
+export function parseRepositoryVersionBlockResult(value: unknown): RepositoryVersionBlockResultView {
+    const object = readRecord(value);
+    const record = readRecord(object.record);
+    const channels = readRecord(record.nextChannels);
+    return {
+        operationId: readText(object.operationId),
+        kind: readText(record.kind),
+        version: readText(record.version),
+        nextChannels: {
+            ...optionalProperty("stable", readOptionalText(channels.stable)),
+            ...optionalProperty("latest", readOptionalText(channels.latest)),
+        },
     };
 }
 

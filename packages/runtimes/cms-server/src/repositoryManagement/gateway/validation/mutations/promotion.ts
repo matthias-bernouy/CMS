@@ -1,6 +1,6 @@
 import type { RepositoryStablePromotionInput } from "@bernouy/cms-control";
-import type { RepositoryManagementTransportResponse } from "../transport";
-import { rateLimitResult, simpleErrorResult, type SanitizedRepositoryManagementResult } from "./errors";
+import type { RepositoryManagementTransportResponse } from "../../transport";
+import { rateLimitResult, simpleErrorResult, type SanitizedRepositoryManagementResult } from "../errors";
 import {
     assertEqual,
     canonicalText,
@@ -10,7 +10,7 @@ import {
     packageKind,
     packageVersion,
     type JsonObject,
-} from "./helpers";
+} from "../helpers";
 
 export type PromotionIdentity = Readonly<{ input: RepositoryStablePromotionInput; actor: string }>;
 
@@ -94,6 +94,12 @@ function validatePromotionError(
 }
 
 function validatePromotionRecord(value: unknown, expected: PromotionIdentity): JsonObject {
+    const schema =
+        value && typeof value === "object" && !Array.isArray(value) ? (value as JsonObject).schema : undefined;
+    const v2 = schema === "cms.integration.registry.stable-promotion.v2";
+    if (!v2) {
+        assertEqual(schema, "cms.integration.registry.stable-promotion.v1");
+    }
     const record = exactObject(
         value,
         [
@@ -104,19 +110,23 @@ function validatePromotionRecord(value: unknown, expected: PromotionIdentity): J
             "version",
             "packageDigest",
             "reportRevisionId",
+            ...(v2 ? ["reportDigest", "reportType"] : []),
             "actor",
             "confirmation",
             "createdAt",
         ],
         ["previousStable", "reason"],
     );
-    assertEqual(record.schema, "cms.integration.registry.stable-promotion.v1");
     canonicalText(record.id, 512);
     canonicalText(record.operationId, 512);
     assertEqual(packageKind(record.kind), expected.input.kind);
     assertEqual(packageVersion(record.version), expected.input.version);
     digest(record.packageDigest);
     assertEqual(canonicalText(record.reportRevisionId, 512), expected.input.currentReportRevisionId);
+    if (v2) {
+        digest(record.reportDigest);
+        assertEqual(record.reportType, "release-admission-decision");
+    }
     assertEqual(canonicalText(record.actor, 512), expected.actor);
     const confirmation = exactObject(record.confirmation, ["version", "reportRevisionId"]);
     assertEqual(packageVersion(confirmation.version), expected.input.confirmation.version);

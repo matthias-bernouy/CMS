@@ -21,6 +21,7 @@
         { "path": "../../features/cms-relations" },
         { "path": "../../features/cms-integrations" },
         { "path": "../../features/cms-integration-packages" },
+        { "path": "../../features/cms-integration-verification" },
         { "path": "../../features/cms-notifications" },
         { "path": "../../features/cms-analytics" },
         { "path": "../../features/cms-permissions" },

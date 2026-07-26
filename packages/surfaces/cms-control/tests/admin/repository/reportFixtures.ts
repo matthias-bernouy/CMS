@@ -91,10 +91,22 @@ export const versionsFixture = {
     stable: "1.0.0",
     latest: "1.1.0",
     versions: [
-        { version: "1.0.0", digest: "a".repeat(64), compatibility: null },
+        { version: "1.0.0", digest: "a".repeat(64), status: "unverified", compatibility: null },
         {
             version: "1.1.0",
             digest: "b".repeat(64),
+            blockPreview: {
+                current: { stable: "1.0.0", latest: "1.1.0" },
+                next: { stable: "1.0.0", latest: "1.0.0" },
+            },
+            release: {
+                verificationDigest: "c".repeat(64),
+                verificationOrigin: "legacy-backfill",
+                verificationOutcome: "passed",
+                decisionRevisionId: "decision-1",
+                decisionDigest: "d".repeat(64),
+                admissible: true,
+            },
             compatibility: {
                 admissionReportId: "admission-1",
                 currentReportRevisionId: "revision-1",
@@ -105,6 +117,66 @@ export const versionsFixture = {
         },
     ],
 };
+
+export function releaseFixture() {
+    return {
+        kind: "commerce",
+        version: "1.1.0",
+        packageDigest: "b".repeat(64),
+        verificationDigest: "c".repeat(64),
+        status: "installable",
+        installable: true,
+        freshInstallOnly: false,
+        compatibility: {
+            reportId: "compatibility-v2-1",
+            reportDigest: "e".repeat(64),
+            origin: "admission",
+            outcome: "compatible",
+            contractAdmissible: true,
+            releaseLevel: "minor",
+            requiredReleaseLevel: "minor",
+            findings: [
+                {
+                    findingId: "finding-1",
+                    classification: "additive",
+                    surface: "schema",
+                    path: "relations.orders.columns.reference",
+                    code: "column-added",
+                    message: "A nullable reference column was added",
+                },
+            ],
+        },
+        verification: {
+            reportId: "verification-1",
+            reportDigest: "f".repeat(64),
+            origin: "legacy-backfill",
+            outcome: "passed",
+            runner: { name: "cms-postgres", version: "1.0.0", imageDigest: `sha256:${"1".repeat(64)}` },
+            environment: { digest: "2".repeat(64), versions: { postgres: "16.4" } },
+            policy: { name: "verification", version: "1.0.0", snapshotDigest: "3".repeat(64) },
+            results: [
+                {
+                    suiteId: "sql-install-and-reapply",
+                    source: "platform",
+                    required: true,
+                    outcome: "passed",
+                    attempts: 1,
+                    cacheHit: false,
+                    diagnostics: [],
+                },
+            ],
+        },
+        migrations: [],
+        decision: {
+            decisionId: "decision-1",
+            decisionDigest: "d".repeat(64),
+            admissible: true,
+            reasons: [],
+            createdAt: "2026-07-26T12:00:00.000Z",
+            policy: { name: "admission", version: "1.0.0", snapshotDigest: "4".repeat(64) },
+        },
+    };
+}
 
 export function compatibilityFixture() {
     const admission = admissionReport();

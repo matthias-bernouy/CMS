@@ -45,7 +45,22 @@ export type RepositoryVersionCompatibilityView = Readonly<{
 export type RepositoryVersionView = Readonly<{
     version: string;
     digest?: string;
+    status?: string;
+    blockPreview?: RepositoryChannelRepairPreview;
+    release?: Readonly<{
+        verificationDigest?: string;
+        verificationOrigin?: string;
+        verificationOutcome?: string;
+        decisionRevisionId?: string;
+        decisionDigest?: string;
+        admissible: boolean;
+    }>;
     compatibility?: RepositoryVersionCompatibilityView;
+}>;
+
+export type RepositoryChannelRepairPreview = Readonly<{
+    current: Readonly<{ stable?: string; latest?: string }>;
+    next: Readonly<{ stable?: string; latest?: string }>;
 }>;
 
 export type RepositoryVersionsView = Readonly<{
@@ -100,6 +115,9 @@ export type RepositoryVersionSelection = Readonly<{
     kind: string;
     version: string;
     currentReportRevisionId: string;
+    status: string;
+    decision?: Readonly<{ revisionId: string; digest: string; admissible: boolean }>;
+    blockPreview?: RepositoryChannelRepairPreview;
 }>;
 
 export type RepositoryPublicationResultView = Readonly<{
@@ -121,6 +139,13 @@ export type RepositoryPromotionResultView = Readonly<{
     version: string;
     reportRevisionId: string;
     previousStable?: string;
+}>;
+
+export type RepositoryVersionBlockResultView = Readonly<{
+    operationId: string;
+    kind: string;
+    version: string;
+    nextChannels: Readonly<{ stable?: string; latest?: string }>;
 }>;
 
 export type RepositoryActionErrorDetails = Readonly<{

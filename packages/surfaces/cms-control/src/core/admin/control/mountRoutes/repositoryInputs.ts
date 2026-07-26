@@ -3,6 +3,7 @@ import type {
     RepositoryCompatibilityQuery,
     RepositoryReevaluationInput,
     RepositoryStablePromotionInput,
+    RepositoryVersionBlockInput,
 } from "cms-control/core/admin/control/mountRoutes/repositoryGateway";
 
 export function repositoryRequiredQuery(request: Request, name: string): string {
@@ -56,6 +57,46 @@ export function parseRepositoryPromotion(value: unknown): RepositoryStablePromot
         },
         ...(object.reason === undefined ? {} : { reason: requiredBodyText(object.reason) }),
     };
+}
+
+export function parseRepositoryVersionBlock(value: unknown): RepositoryVersionBlockInput {
+    const object = exactObject(value, ["kind", "version", "currentDecision", "reason", "confirmation"]);
+    const currentDecision = exactObject(object.currentDecision, ["revisionId", "digest"]);
+    const confirmation = exactObject(object.confirmation, [
+        "action",
+        "kind",
+        "version",
+        "decisionRevisionId",
+        "decisionDigest",
+    ]);
+    if (confirmation.action !== "block") {
+        throw new RepositoryControlRequestError(400);
+    }
+    const result: RepositoryVersionBlockInput = {
+        kind: requiredBodyText(object.kind),
+        version: requiredBodyText(object.version),
+        currentDecision: {
+            revisionId: requiredBodyText(currentDecision.revisionId),
+            digest: requiredBodyText(currentDecision.digest),
+        },
+        reason: requiredBodyText(object.reason),
+        confirmation: {
+            action: "block",
+            kind: requiredBodyText(confirmation.kind),
+            version: requiredBodyText(confirmation.version),
+            decisionRevisionId: requiredBodyText(confirmation.decisionRevisionId),
+            decisionDigest: requiredBodyText(confirmation.decisionDigest),
+        },
+    };
+    if (
+        result.confirmation.kind !== result.kind ||
+        result.confirmation.version !== result.version ||
+        result.confirmation.decisionRevisionId !== result.currentDecision.revisionId ||
+        result.confirmation.decisionDigest !== result.currentDecision.digest
+    ) {
+        throw new RepositoryControlRequestError(400);
+    }
+    return result;
 }
 
 function exactObject(value: unknown, allowed: readonly string[]): Record<string, unknown> {

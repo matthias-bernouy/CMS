@@ -4,6 +4,7 @@ import {
     compatibilityFixture,
     diagnosticsFixture,
     revisionReport,
+    releaseFixture,
     statusFixture,
     versionsFixture,
 } from "./reportFixtures";
@@ -21,6 +22,30 @@ export function defaultRepositoryResponse(call: RepositoryFetchCall): Response {
     }
     if (path === "GET /cms/api/repository/compatibility") {
         return Response.json(compatibilityFixture());
+    }
+    if (path === "GET /cms/api/repository/release") {
+        return Response.json(releaseFixture());
+    }
+    if (path === "POST /cms/api/repository/candidates" || path === "GET /cms/api/repository/candidates/status") {
+        return Response.json(
+            {
+                candidate: {
+                    candidateId: "candidate-1",
+                    revision: 4,
+                    status: "published",
+                    kind: "commerce",
+                    version: "1.2.0",
+                    candidateDigest: "5".repeat(64),
+                    packageDigest: "c".repeat(64),
+                    verificationDigest: "6".repeat(64),
+                    createdAt: "2026-07-26T12:00:00.000Z",
+                    updatedAt: "2026-07-26T12:01:00.000Z",
+                    expiresAt: "2026-07-27T12:00:00.000Z",
+                    attemptCount: 1,
+                },
+            },
+            { status: path.startsWith("POST") ? 202 : 200 },
+        );
     }
     if (path === "POST /cms/api/repository/publications") {
         return Response.json(
@@ -50,9 +75,22 @@ export function defaultRepositoryResponse(call: RepositoryFetchCall): Response {
                 record: {
                     kind: "commerce",
                     version: "1.1.0",
-                    reportRevisionId: "revision-1",
+                    reportRevisionId: "decision-1",
                     previousStable: "1.0.0",
                     actor: "repository-owner@example.test",
+                },
+            },
+            { status: 201 },
+        );
+    }
+    if (path === "POST /cms/api/repository/version-blocks") {
+        return Response.json(
+            {
+                operationId: "block-1",
+                record: {
+                    kind: "commerce",
+                    version: "1.1.0",
+                    nextChannels: { stable: "1.0.0", latest: "1.0.0" },
                 },
             },
             { status: 201 },

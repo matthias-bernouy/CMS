@@ -1,5 +1,8 @@
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import { parseRepositoryDiagnostics, parseRepositoryStatus, parseRepositoryVersions } from "./contracts/read";
+import { parseRepositoryCandidateResponse, type RepositoryCandidateView } from "./contracts/candidates";
+import { parseRepositoryRelease } from "./contracts/release/parsing";
+import type { RepositoryReleaseView } from "./contracts/release/types";
 import { readOptionalText, readRecord } from "./contracts/parsing";
 import {
     parseRepositoryActionErrorDetails,
@@ -7,6 +10,7 @@ import {
     parseRepositoryPromotionResult,
     parseRepositoryPublicationResult,
     parseRepositoryReevaluationResult,
+    parseRepositoryVersionBlockResult,
 } from "./contracts/reports";
 import type {
     RepositoryActionErrorDetails,
@@ -17,6 +21,7 @@ import type {
     RepositoryReevaluationResultView,
     RepositoryStatusView,
     RepositoryVersionsView,
+    RepositoryVersionBlockResultView,
 } from "./contracts/types";
 
 export class RepositoryApiError extends Error {
@@ -43,6 +48,14 @@ export function fetchRepositoryVersions(kind: string, signal?: AbortSignal): Pro
     return get("/versions", parseRepositoryVersions, { kind }, signal);
 }
 
+export function fetchRepositoryRelease(
+    kind: string,
+    version: string,
+    signal?: AbortSignal,
+): Promise<RepositoryReleaseView> {
+    return get("/release", parseRepositoryRelease, { kind, version }, signal);
+}
+
 export function fetchRepositoryCompatibility(
     kind: string,
     version: string,
@@ -64,6 +77,22 @@ export function publishRepositoryPackage(file: Blob, signal?: AbortSignal): Prom
         body: file,
         signal,
     });
+}
+
+export function submitRepositoryCandidate(file: Blob, signal?: AbortSignal): Promise<RepositoryCandidateView> {
+    return request("/candidates", parseRepositoryCandidateResponse, {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: file,
+        signal,
+    });
+}
+
+export function fetchRepositoryCandidateStatus(
+    candidateId: string,
+    signal?: AbortSignal,
+): Promise<RepositoryCandidateView> {
+    return get("/candidates/status", parseRepositoryCandidateResponse, { candidateId }, signal);
 }
 
 export function requestRepositoryReevaluation(
@@ -90,6 +119,25 @@ export function requestRepositoryStablePromotion(
     signal?: AbortSignal,
 ): Promise<RepositoryPromotionResultView> {
     return postJson("/stable-promotions", input, parseRepositoryPromotionResult, signal);
+}
+
+export function requestRepositoryVersionBlock(
+    input: Readonly<{
+        kind: string;
+        version: string;
+        currentDecision: Readonly<{ revisionId: string; digest: string }>;
+        reason: string;
+        confirmation: Readonly<{
+            action: "block";
+            kind: string;
+            version: string;
+            decisionRevisionId: string;
+            decisionDigest: string;
+        }>;
+    }>,
+    signal?: AbortSignal,
+): Promise<RepositoryVersionBlockResultView> {
+    return postJson("/version-blocks", input, parseRepositoryVersionBlockResult, signal);
 }
 
 function get<T>(
