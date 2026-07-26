@@ -1,5 +1,6 @@
 import { constants, type Stats } from "node:fs";
-import { lstat, open } from "node:fs/promises";
+import { lstat, mkdir, open } from "node:fs/promises";
+import { join } from "node:path";
 
 export type FsRegistryDirectoryIdentity = Pick<Stats, "dev" | "ino">;
 
@@ -27,6 +28,37 @@ export async function chmodVerifiedRegistryDirectory(
     } finally {
         await handle.close();
     }
+}
+
+export async function readVerifiedRegistryDirectory(path: string): Promise<FsRegistryDirectoryIdentity> {
+    const metadata = await lstat(path);
+    assertRealDirectory(metadata, path);
+    const handle = await open(path, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+    try {
+        const handleMetadata = await handle.stat();
+        assertRealDirectory(handleMetadata, path);
+        assertSameEntry(metadata, handleMetadata, path);
+        return { dev: handleMetadata.dev, ino: handleMetadata.ino };
+    } finally {
+        await handle.close();
+    }
+}
+
+export async function ensureVerifiedRegistryChildDirectory(parent: string, name: string): Promise<string> {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u.test(name)) {
+        throw new TypeError("Integration registry directory name must be a path-safe identifier");
+    }
+    await readVerifiedRegistryDirectory(parent);
+    const path = join(parent, name);
+    try {
+        await mkdir(path, { mode: 0o750 });
+    } catch (error) {
+        if (!isNodeError(error) || error.code !== "EEXIST") {
+            throw error;
+        }
+    }
+    await readVerifiedRegistryDirectory(path);
+    return path;
 }
 
 export async function assertVerifiedRegistryDirectory(
@@ -58,4 +90,8 @@ function assertSameEntry(
     if (expected.dev !== actual.dev || expected.ino !== actual.ino) {
         throw new Error(`Integration registry directory changed during a privileged operation: ${path}`);
     }
+}
+
+function isNodeError(value: unknown): value is NodeJS.ErrnoException {
+    return value instanceof Error && "code" in value;
 }

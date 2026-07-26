@@ -43,6 +43,12 @@ export type {
     IntegrationRegistryRecoveryResult,
 } from "../interfaces/recovery";
 export type { IntegrationRegistryMutationCoordinator } from "../interfaces/mutations";
+export type {
+    IntegrationCompatibilityReportCollection,
+    IntegrationCompatibilityReportPage,
+    IntegrationCompatibilityReportPageRequest,
+    IntegrationCompatibilityReportStore,
+} from "../interfaces/reportStore";
 export { createIntegrationRegistryCatalogSnapshot } from "../core/catalog/snapshot";
 export { InMemoryIntegrationRegistryMutationCoordinator } from "../core/catalog/mutationCoordinator";
 export { IntegrationRegistryCatalogSnapshotReference } from "../core/catalog/reference";
@@ -52,6 +58,12 @@ export {
     IntegrationCompatibilityEvaluator,
 } from "../core/compatibility/evaluation";
 export { InMemoryIntegrationCompatibilityReportHistory } from "../core/compatibility/history";
+export {
+    IntegrationCompatibilityHistoryCursorError,
+    IntegrationCompatibilityHistoryNotFoundError,
+    IntegrationCompatibilityRevisionConflictError,
+    IntegrationCompatibilityRevisionValidationError,
+} from "../core/compatibility/reportStoreErrors";
 export { changedIntegrationPackagePaths } from "../core/publication/changedPaths";
 export {
     IntegrationRegistryVersionConflictError,

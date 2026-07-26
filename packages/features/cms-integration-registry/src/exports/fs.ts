@@ -56,3 +56,11 @@ export {
     recoverFsIntegrationRegistry,
     type FsIntegrationRegistryRecovererConfig,
 } from "../default-implementation/fs/registry/recovery/recoverer";
+export {
+    FsIntegrationCompatibilityReportStore,
+    type FsIntegrationCompatibilityReportStoreConfig,
+} from "../default-implementation/fs/registry/history/store";
+export {
+    INTEGRATION_COMPATIBILITY_REVISION_DOCUMENT_SCHEMA,
+    readCompatibilityRevision,
+} from "../default-implementation/fs/registry/history/revisionDocument";
