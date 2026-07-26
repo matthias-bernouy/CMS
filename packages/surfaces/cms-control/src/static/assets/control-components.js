@@ -28554,6 +28554,27 @@ details[open] > summary > .chevron {
 
     <section class="integration-detail" data-detail-view hidden></section>
 
+    <p9r-modal class="integration-reconfigure-modal" data-reconfigure-modal aria-label="Reconfigure integration">
+        <span slot="title" data-reconfigure-title>Reconfigure integration</span>
+        <form id="integration-reconfigure-form" data-reconfigure-form>
+            <p class="reconfigure-note">
+                Review the installation values, then save to update its resources and connectors in one sync.
+            </p>
+            <div class="fields reconfigure-fields" data-reconfigure-fields></div>
+            <p class="action-status" role="status" aria-live="polite" data-reconfigure-status></p>
+        </form>
+        <div slot="footer" class="reconfigure-actions">
+            <p9r-button type="button" variant="outlined" data-reconfigure-cancel>Cancel</p9r-button>
+            <p9r-button
+                type="submit"
+                form="integration-reconfigure-form"
+                color="primary"
+                data-reconfigure-submit
+                disabled
+            >Save and sync</p9r-button>
+        </div>
+    </p9r-modal>
+
     <template data-field-template>
         <label class="field">
             <span data-label></span>
@@ -28607,8 +28628,16 @@ details[open] > summary > .chevron {
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     return result;
   }
-  async function rerunIntegrationInstallation(id) {
-    await postJson(`${route3("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id)}`, {});
+  async function getIntegrationInstallation(id) {
+    const response = await fetch(`${route3("/api/integrations/installations")}?id=${encodeURIComponent(id)}`);
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    return response.json();
+  }
+  async function rerunIntegrationInstallation(id, answers) {
+    const body = answers ? { answers } : {};
+    await postJson(`${route3("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id)}`, body);
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
   }
@@ -28774,6 +28803,85 @@ details[open] > summary > .chevron {
     return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
   }
 
+  // src/components/admin/Resources/Integrations/fields/reconfigure.ts
+  function isSecretInput(input2, secretInputs) {
+    return secretInputs.includes(input2.name) || input2.type !== "object-list" && (input2.type === "password" || input2.secret === true);
+  }
+  function hasStoredSecret(input2, secretInputs) {
+    return secretInputs.includes(input2.name);
+  }
+  function reconfigureAnswer(input2, answer, secretInputs) {
+    return isSecretInput(input2, secretInputs) ? undefined : answer;
+  }
+  function configureReconfigureField(row, input2, secretInputs) {
+    if (input2.name === "id") {
+      for (const control2 of Array.from(row.querySelectorAll("input, textarea, select"))) {
+        control2.disabled = true;
+        control2.setAttribute("aria-disabled", "true");
+      }
+      for (const button2 of Array.from(row.querySelectorAll("button"))) {
+        button2.disabled = true;
+      }
+    }
+    if (!isSecretInput(input2, secretInputs)) {
+      return;
+    }
+    const control = row.querySelector("input, textarea");
+    if (!control) {
+      return;
+    }
+    if (control instanceof HTMLInputElement) {
+      control.type = "password";
+      control.autocomplete = "new-password";
+    }
+    control.value = "";
+    if (hasStoredSecret(input2, secretInputs)) {
+      control.required = false;
+      control.placeholder = "Leave blank to keep the current secret";
+    } else {
+      control.placeholder = input2.required ? "Enter the required secret" : "Enter a secret (optional)";
+    }
+  }
+  function filterReconfigureAnswers(answers, definition, secretInputs, savedAnswers) {
+    const overrides = {};
+    for (const input2 of definition.inputs) {
+      if (input2.name === "id" || !(input2.name in answers)) {
+        continue;
+      }
+      const answer = answers[input2.name];
+      if (answer === undefined) {
+        continue;
+      }
+      if (isSecretInput(input2, secretInputs)) {
+        if (typeof answer === "string" && answer !== "") {
+          overrides[input2.name] = answer;
+        }
+        continue;
+      }
+      if (!answersEqual(answer, savedAnswers[input2.name])) {
+        overrides[input2.name] = answer;
+      }
+    }
+    return overrides;
+  }
+  function answersEqual(left, right) {
+    if (Object.is(left, right)) {
+      return true;
+    }
+    if (Array.isArray(left) || Array.isArray(right)) {
+      return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value3, index) => answersEqual(value3, right[index]));
+    }
+    if (!isObject(left) || !isObject(right)) {
+      return false;
+    }
+    const leftKeys = Object.keys(left);
+    const rightKeys = Object.keys(right);
+    return leftKeys.length === rightKeys.length && leftKeys.every((key) => Object.hasOwn(right, key) && answersEqual(left[key], right[key]));
+  }
+  function isObject(value3) {
+    return typeof value3 === "object" && value3 !== null;
+  }
+
   // src/components/admin/Resources/Integrations/fields/value.ts
   function valueControl(input2, answer) {
     if (input2.type === "json") {
@@ -28834,7 +28942,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/fields/index.ts
-  function renderFields(root, template4, definition, answers = {}) {
+  function renderFields(root, template4, definition, answers = {}, options2 = {}) {
     root.replaceChildren();
     if (!definition.inputs.length) {
       const empty = document.createElement("p");
@@ -28846,8 +28954,11 @@ details[open] > summary > .chevron {
     let pageLinks;
     const loadPageLinks = definition.inputs.some((input2) => input2.type === "object-list" && input2.fields.some((field3) => field3.type === "page-link")) ? () => pageLinks ??= getPageLinks() : undefined;
     for (const input2 of definition.inputs) {
-      root.append(inputRow(template4, input2, answers[input2.name], loadPageLinks));
+      root.append(inputRow(template4, input2, answers[input2.name], loadPageLinks, options2));
     }
+  }
+  function collectReconfigureAnswers(root, definition, secretInputs, savedAnswers) {
+    return filterReconfigureAnswers(collectAnswers(root, definition), definition, secretInputs, savedAnswers);
   }
   function collectAnswers(root, definition) {
     const answers = {};
@@ -28859,24 +28970,40 @@ details[open] > summary > .chevron {
     }
     return answers;
   }
-  function inputRow(template4, input2, answer, loadPageLinks) {
+  function inputRow(template4, input2, answer, loadPageLinks, options2 = {}) {
+    const displayedAnswer = options2.mode === "reconfigure" ? reconfigureAnswer(input2, answer, options2.secretInputs ?? []) : answer;
     if (input2.type === "object-list") {
       const row2 = document.createElement("section");
       row2.className = "field object-list-fieldset";
       const label3 = document.createElement("strong");
       label3.className = "object-list-label";
       label3.textContent = input2.label;
-      row2.append(label3, objectListControl(input2, answer, loadPageLinks));
+      row2.append(label3, objectListControl(input2, displayedAnswer, loadPageLinks));
+      if (options2.mode === "reconfigure") {
+        configureReconfigureField(row2, input2, options2.secretInputs ?? []);
+      }
       return row2;
     }
     const row = template4.content.firstElementChild.cloneNode(true);
     row.querySelector("[data-label]").textContent = input2.label;
-    row.querySelector("[data-hint]").textContent = hint(input2);
-    row.querySelector("[data-control]").append(valueControl(input2, answer));
+    row.querySelector("[data-hint]").textContent = hint(input2, options2);
+    row.querySelector("[data-control]").append(valueControl(input2, displayedAnswer));
+    if (options2.mode === "reconfigure") {
+      configureReconfigureField(row, input2, options2.secretInputs ?? []);
+    }
     return row;
   }
-  function hint(input2) {
-    if (input2.type !== "object-list" && (input2.secret || input2.type === "password")) {
+  function hint(input2, options2) {
+    if (options2.mode === "reconfigure" && input2.name === "id") {
+      return "The identifier cannot be changed after installation.";
+    }
+    if (options2.mode === "reconfigure" && isSecretInput(input2, options2.secretInputs ?? [])) {
+      if (hasStoredSecret(input2, options2.secretInputs ?? [])) {
+        return "Leave blank to keep the current secret.";
+      }
+      return input2.required ? "Required. Enter a value for this new secret." : "Optional. No secret is currently stored.";
+    }
+    if (isSecretInput(input2, [])) {
       return "Stored as a secret.";
     }
     return input2.required ? "Required." : "";
@@ -28930,13 +29057,13 @@ details[open] > summary > .chevron {
                     <p9r-button type="button" color="primary" data-run-sync>Run sync</p9r-button>
                     <p9r-action-menu label="More actions">
                         <p9r-action-menu-section label="Configuration">
-                            <p9r-action-menu-item disabled title="No reconfigure endpoint is available yet.">Reconfigure</p9r-action-menu-item>
+                            <p9r-action-menu-item data-reconfigure>Reconfigure</p9r-action-menu-item>
                         </p9r-action-menu-section>
                         <p9r-action-menu-section label="Danger zone">
                             <p9r-action-menu-item color="danger" disabled title="No uninstall endpoint is available yet.">Uninstall</p9r-action-menu-item>
                         </p9r-action-menu-section>
                     </p9r-action-menu>
-                    <span class="action-status" data-action-status></span>
+                    <span class="action-status" role="status" aria-live="polite" data-action-status></span>
                 </div>
 
                 <cms-detail-section slot="main" heading="Created resources">
@@ -29417,6 +29544,157 @@ details[open] > summary > .chevron {
     renderPlaceholder(root, "Coming soon", "Compatibility data will be displayed here when integrations declare their relationships.");
   }
 
+  // src/components/admin/Resources/Integrations/reconfigure/state.ts
+  var states2 = new WeakMap;
+  function stateFor(host) {
+    let state2 = states2.get(host);
+    if (!state2) {
+      state2 = { detail: null, definition: null, loadToken: 0, pending: false, disabledControls: [] };
+      states2.set(host, state2);
+    }
+    return state2;
+  }
+
+  // src/components/admin/Resources/Integrations/reconfigure/view.ts
+  function modal(host) {
+    return host.query("[data-reconfigure-modal]");
+  }
+  function fields(host) {
+    return host.query("[data-reconfigure-fields]");
+  }
+  function submitButton(host) {
+    return host.query("[data-reconfigure-submit]");
+  }
+  function setLoadingContent(host) {
+    const loading = document.createElement("p");
+    loading.className = "empty";
+    loading.textContent = "Loading saved configuration…";
+    fields(host).replaceChildren(loading);
+  }
+  function setStatus(host, value3, error = false) {
+    const status2 = host.query("[data-reconfigure-status]");
+    status2.textContent = value3;
+    status2.classList.toggle("is-error", error);
+  }
+  function errorMessage2(error, fallback) {
+    return error instanceof Error && error.message.trim() ? error.message : fallback;
+  }
+
+  // src/components/admin/Resources/Integrations/reconfigure/index.ts
+  async function openIntegrationReconfigure(host) {
+    const installation = host.installations.find((item) => item.id === host.selectedIntegrationId);
+    if (!installation) {
+      return;
+    }
+    const state2 = stateFor(host);
+    const token = ++state2.loadToken;
+    state2.detail = null;
+    state2.definition = null;
+    setStatus(host, "Loading saved configuration…");
+    setLoadingContent(host);
+    setActionPending(host, false);
+    submitButton(host).disabled = true;
+    host.query("[data-reconfigure-title]").textContent = `Reconfigure ${installation.label}`;
+    modal(host).setAttribute("open", "");
+    try {
+      const detail = await getIntegrationInstallation(installation.id);
+      if (token !== state2.loadToken || !modal(host).hasAttribute("open")) {
+        return;
+      }
+      const definition = definitionFor(host, installation) ?? detail.definition;
+      if (!definition) {
+        throw new Error("The installed integration definition is unavailable.");
+      }
+      state2.detail = detail;
+      state2.definition = definition;
+      renderFields(fields(host), host.query("[data-field-template]"), definition, detail.answers, {
+        mode: "reconfigure",
+        secretInputs: detail.secretInputs
+      });
+      setStatus(host, "Existing secrets can stay blank. Any newly required secret must be provided.");
+      submitButton(host).disabled = false;
+      queueMicrotask(() => fields(host).querySelector("input:not(:disabled), select:not(:disabled)")?.focus());
+    } catch (error) {
+      if (token !== state2.loadToken) {
+        return;
+      }
+      setStatus(host, errorMessage2(error, "Configuration could not be loaded."), true);
+    }
+  }
+  async function submitIntegrationReconfigure(host, event) {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-reconfigure-form]")) {
+      return;
+    }
+    event.preventDefault();
+    const state2 = stateFor(host);
+    if (state2.pending || !state2.detail || !state2.definition || !form.reportValidity()) {
+      return;
+    }
+    const token = state2.loadToken;
+    try {
+      const answers = collectReconfigureAnswers(fields(host), state2.definition, state2.detail.secretInputs, state2.detail.answers);
+      setActionPending(host, true);
+      setStatus(host, "Saving configuration and syncing resources…");
+      await rerunIntegrationInstallation(state2.detail.id, answers);
+      document.dispatchEvent(new Event("integration:reconfigured", { bubbles: true }));
+      if (token !== state2.loadToken) {
+        return;
+      }
+      closeIntegrationReconfigure(host);
+      renderDetail(host);
+    } catch (error) {
+      if (token !== state2.loadToken) {
+        return;
+      }
+      setActionPending(host, false);
+      setStatus(host, errorMessage2(error, "Reconfiguration failed."), true);
+    }
+  }
+  function closeIntegrationReconfigure(host) {
+    clearReconfigure(host);
+    modal(host).removeAttribute("open");
+  }
+  function handleReconfigureModalClose(host, event) {
+    if (event.target !== modal(host)) {
+      return;
+    }
+    if (stateFor(host).pending) {
+      modal(host).setAttribute("open", "");
+      return;
+    }
+    clearReconfigure(host);
+  }
+  function setActionPending(host, pending) {
+    const state2 = stateFor(host);
+    state2.pending = pending;
+    const controls = Array.from(fields(host).querySelectorAll("input, select, textarea, button"));
+    if (pending) {
+      state2.disabledControls = controls.map((control) => [control, control.disabled]);
+      for (const control of controls) {
+        control.disabled = true;
+      }
+    } else {
+      for (const [control, disabled] of state2.disabledControls) {
+        control.disabled = disabled;
+      }
+      state2.disabledControls = [];
+    }
+    submitButton(host).disabled = pending || !state2.detail;
+    submitButton(host).toggleAttribute("aria-busy", pending);
+    host.query("[data-reconfigure-cancel]").toggleAttribute("disabled", pending);
+    modal(host).toggleAttribute("no-close", pending);
+  }
+  function clearReconfigure(host) {
+    const state2 = stateFor(host);
+    state2.loadToken++;
+    state2.detail = null;
+    state2.definition = null;
+    setActionPending(host, false);
+    fields(host).replaceChildren();
+    setStatus(host, "");
+  }
+
   // src/components/admin/Resources/Integrations/ui/setup.ts
   function renderSetup(host, definition, options2 = {}) {
     const shell = cloneElement("setup-shell");
@@ -29467,6 +29745,13 @@ details[open] > summary > .chevron {
     }
     if (target2.closest("[data-import-setup]")) {
       return importActive(host);
+    }
+    if (target2.closest("[data-reconfigure-cancel]")) {
+      closeIntegrationReconfigure(host);
+      return;
+    }
+    if (target2.closest("[data-reconfigure]")) {
+      return openIntegrationReconfigure(host);
     }
     const runSync = target2.closest("[data-run-sync]");
     if (runSync) {
@@ -30009,6 +30294,45 @@ button[slot="back"] svg {
 }
 `;
 
+  // src/components/admin/Resources/Integrations/ui/styles/reconfigure.css
+  var reconfigure_default = `.integration-reconfigure-modal {
+    --p9r-modal-width: 720px;
+}
+
+.integration-reconfigure-modal form {
+    display: grid;
+    gap: 16px;
+}
+
+.reconfigure-note {
+    margin: 0;
+    color: #66736f;
+    line-height: 1.5;
+}
+
+.reconfigure-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.reconfigure-fields .empty,
+.reconfigure-fields .field:has(textarea),
+.reconfigure-fields .object-list-fieldset {
+    grid-column: 1 / -1;
+}
+
+.reconfigure-fields :disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.reconfigure-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+`;
+
   // src/components/admin/Resources/Integrations/ui/styles/setup.css
   var setup_default2 = `.resource-row {
     display: grid;
@@ -30245,6 +30569,7 @@ button[slot="back"]:disabled {
 
     .filters,
     .setup-fields,
+    .reconfigure-fields,
     .object-list-item-fields {
         grid-template-columns: 1fr;
     }
@@ -30257,7 +30582,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Integrations/ui/styles/index.ts
-  var styles_default3 = [base_default4, browser_default2, detail_default2, setup_default2, responsive_default].join(`
+  var styles_default3 = [base_default4, browser_default2, detail_default2, reconfigure_default, setup_default2, responsive_default].join(`
 `);
 
   // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
@@ -30327,6 +30652,8 @@ button[slot="back"]:disabled {
     }
     bind() {
       this.addEventListener("click", (event) => void handleClick(this, event));
+      this.addEventListener("submit", (event) => void submitIntegrationReconfigure(this, event));
+      this.addEventListener("close", (event) => handleReconfigureModalClose(this, event));
     }
     renderRoute() {
       const route4 = currentIntegrationRoute();
@@ -32520,9 +32847,9 @@ button:hover {
     heading4.textContent = text5;
     return heading4;
   }
-  function bodyBindingFields(fields) {
+  function bodyBindingFields(fields2) {
     const rows = [];
-    for (const field3 of fields) {
+    for (const field3 of fields2) {
       if (field3.path !== "." && field3.type !== "object" && field3.type !== "array") {
         rows.push({ name: field3.path, type: field3.type, required: field3.required });
       }
@@ -32613,8 +32940,8 @@ button:hover {
       fields: [...source2.fields]
     }));
   }
-  function cloneBodyFields(fields) {
-    return fields.map((field3) => ({
+  function cloneBodyFields(fields2) {
+    return fields2.map((field3) => ({
       ...field3,
       children: field3.children ? cloneBodyFields(field3.children) : undefined
     }));
@@ -32680,12 +33007,12 @@ button:hover {
     }
   }
   function renderRequestBody(section, source2, initialBinding) {
-    const fields = bodyBindingFields(source2.body?.fields ?? []);
-    if (fields.length === 0) {
+    const fields2 = bodyBindingFields(source2.body?.fields ?? []);
+    if (fields2.length === 0) {
       return;
     }
     section.append(renderBindingHeading("Request body"));
-    for (const field3 of fields) {
+    for (const field3 of fields2) {
       section.append(renderBindingRow({
         kind: "body",
         name: field3.name,
@@ -32709,16 +33036,16 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Renderers/dataSourceFieldRenderer.ts
-  function renderDataSourceFields(fields) {
-    return renderFieldList(fields, "No schema fields declared.");
+  function renderDataSourceFields(fields2) {
+    return renderFieldList(fields2, "No schema fields declared.");
   }
-  function renderDataSourceBodyFields(fields) {
-    return renderFieldList(fields, "No request body declared.");
+  function renderDataSourceBodyFields(fields2) {
+    return renderFieldList(fields2, "No request body declared.");
   }
-  function renderFieldList(fields, emptyMessage) {
+  function renderFieldList(fields2, emptyMessage) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field3 of fields) {
+    for (const field3 of fields2) {
       list.append(renderField(field3, 0));
     }
     if (list.children.length === 0) {
@@ -33767,14 +34094,14 @@ textarea { min-height: 92px; resize: vertical; }
     { value: "empty", label: "is empty", needsValue: false },
     { value: "notEmpty", label: "is not empty", needsValue: false }
   ];
-  function renderFieldMode(fields, draft, onChange) {
+  function renderFieldMode(fields2, draft, onChange) {
     const root = document.createElement("div");
     root.className = "mode-panel form-grid";
-    if (fields.length === 0) {
+    if (fields2.length === 0) {
       root.append(empty3("No data field available."));
       return root;
     }
-    root.append(fieldSelect(fields, draft, onChange), operatorSelect(draft, onChange));
+    root.append(fieldSelect(fields2, draft, onChange), operatorSelect(draft, onChange));
     if (operatorNeedsValue(draft.operator)) {
       root.append(valueInput2(draft, onChange));
     }
@@ -33783,19 +34110,19 @@ textarea { min-height: 92px; resize: vertical; }
   function fieldExpression(draft) {
     return asFieldCondition(draft.path, draft.operator, parseValue(draft.value));
   }
-  function defaultFieldDraft(fields) {
-    return { path: fields[0]?.path ?? "", operator: "truthy", value: "" };
+  function defaultFieldDraft(fields2) {
+    return { path: fields2[0]?.path ?? "", operator: "truthy", value: "" };
   }
-  function fieldSelect(fields, draft, onChange) {
+  function fieldSelect(fields2, draft, onChange) {
     const select5 = document.createElement("select");
     select5.className = "field-path";
-    for (const field3 of fields) {
+    for (const field3 of fields2) {
       const option7 = document.createElement("option");
       option7.value = field3.path;
       option7.textContent = `${field3.scopeLabel}: ${field3.path}`;
       select5.append(option7);
     }
-    select5.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
+    select5.selectedIndex = Math.max(0, fields2.findIndex((field3) => field3.path === draft.path));
     select5.addEventListener("change", () => {
       draft.path = select5.options.item(select5.selectedIndex)?.value ?? "";
       onChange(false);
@@ -33901,12 +34228,12 @@ textarea { min-height: 92px; resize: vertical; }
     if (source2.sourceName) {
       section.append(textBlock2("source-name", `Source: ${source2.sourceName}`));
     }
-    const states2 = document.createElement("div");
-    states2.className = "states";
+    const states3 = document.createElement("div");
+    states3.className = "states";
     for (const state2 of STATES) {
-      states2.append(renderState2(source2, state2, options2));
+      states3.append(renderState2(source2, state2, options2));
     }
-    section.append(states2);
+    section.append(states3);
     return section;
   }
   function renderState2(source2, state2, options2) {
@@ -35881,9 +36208,9 @@ dd {
     }
     return [...byPath.values()];
   }
-  function fieldOptions(fields, scopeName, scopeLabel, prefix = "") {
+  function fieldOptions(fields2, scopeName, scopeLabel, prefix = "") {
     const options2 = [];
-    for (const field3 of fields) {
+    for (const field3 of fields2) {
       const relative = relativePath(field3.path, prefix);
       const path = relative ? `${scopeName}.${relative}` : scopeName;
       options2.push({
@@ -37415,8 +37742,8 @@ input:disabled {
     }
     return [...byPath.values()];
   }
-  function fieldOptions2(fields, scopeName, scopeLabel, prefix = "") {
-    return fields.flatMap((field3) => {
+  function fieldOptions2(fields2, scopeName, scopeLabel, prefix = "") {
+    return fields2.flatMap((field3) => {
       const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
       const path = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
       if (field3.type === "array") {
@@ -41011,10 +41338,10 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts
-  function renderSettingsStates(states2, onToggle) {
+  function renderSettingsStates(states3, onToggle) {
     const section = document.createElement("cms-editor-v2-section");
     section.setAttribute("label", "States");
-    for (const state2 of states2) {
+    for (const state2 of states3) {
       const button2 = document.createElement("button");
       button2.className = "state-button";
       button2.type = "button";
@@ -41387,14 +41714,14 @@ cms-editor-v2-segmented-control button svg:only-child {
     setThemeTokens(tokens) {
       this._themeTokens = tokens.filter((token) => token.label && /^[a-z][a-z0-9-]*$/.test(token.variable));
     }
-    setSettings(sections2, textCapability = null, textValue6 = "", mode = "settings", states2 = [], dataScopes2 = [], dataSources = []) {
+    setSettings(sections2, textCapability = null, textValue6 = "", mode = "settings", states3 = [], dataScopes2 = [], dataSources = []) {
       this._endpointSettings.setDataSources(dataSources);
       this._dataScopes = dataScopes2;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
       const visibleSections = sections2.filter((section) => mode === "settings" ? section.kind === "self" : section.kind === "surcharge");
       const shouldRenderText = mode === "settings" && textCapability;
-      const shouldRenderStates = mode === "settings" && states2.length > 0;
+      const shouldRenderStates = mode === "settings" && states3.length > 0;
       if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
         const empty4 = document.createElement("div");
         empty4.className = "empty";
@@ -41406,7 +41733,7 @@ cms-editor-v2-segmented-control button svg:only-child {
         view.append(renderTextCapability(textCapability, textValue6, dataScopes2, (value3, format) => this._emitContentChange(value3, format)));
       }
       if (shouldRenderStates) {
-        view.append(renderSettingsStates(states2, (state2) => this._emitStateToggle(state2)));
+        view.append(renderSettingsStates(states3, (state2) => this._emitStateToggle(state2)));
       }
       for (const section of visibleSections) {
         view.append(renderSettingSection(section, this._settingControls));
@@ -41780,8 +42107,8 @@ label {
     }
     return [...byPath.values()];
   }
-  function repeatArrayFields(fields, scopeName, scopeLabel, prefix = "") {
-    return fields.flatMap((field3) => {
+  function repeatArrayFields(fields2, scopeName, scopeLabel, prefix = "") {
+    return fields2.flatMap((field3) => {
       const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
       const fullPath = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
       if (field3.type !== "array") {
@@ -41866,10 +42193,10 @@ label {
     footer.append(insert);
     container.append(scroll, footer);
   }
-  function renderFields2(fields) {
+  function renderFields2(fields2) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field3 of fields) {
+    for (const field3 of fields2) {
       list.append(renderField2(field3, 0));
     }
     if (list.children.length === 0) {
@@ -43827,12 +44154,12 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellPageSettings.ts
-  function openPageSettingsModal(modal) {
-    modal.hidden = false;
-    modal.querySelector("input")?.focus();
+  function openPageSettingsModal(modal2) {
+    modal2.hidden = false;
+    modal2.querySelector("input")?.focus();
   }
-  function closePageSettingsModal(modal) {
-    modal.hidden = true;
+  function closePageSettingsModal(modal2) {
+    modal2.hidden = true;
   }
   function syncPageSettingsForm(config, pageField) {
     if (!config) {
@@ -43961,8 +44288,8 @@ label {
   function hasArrayFields(scopes) {
     return scopes.some((scope) => fieldsContainArray(scope.fields));
   }
-  function fieldsContainArray(fields) {
-    return fields.some((field3) => field3.type === "array" || fieldsContainArray(field3.children ?? []));
+  function fieldsContainArray(fields2) {
+    return fields2.some((field3) => field3.type === "array" || fieldsContainArray(field3.children ?? []));
   }
   function flattenStructure2(nodes) {
     return nodes.flatMap((node) => [node, ...flattenStructure2(node.children)]);
@@ -44366,8 +44693,8 @@ label {
       getStates() {
         return [...super.getStates(), ...this._addedStates];
       }
-      addStates(states2) {
-        this._addedStates.push(...toList(states2));
+      addStates(states3) {
+        this._addedStates.push(...toList(states3));
         this._emit(CMS_EDITOR_STATES_CHANGE_EVENT, {
           editor: this,
           states: this.getStates()
@@ -44452,8 +44779,8 @@ label {
     }
     return;
   }
-  function findDataFieldInList(fields, path) {
-    for (const field3 of fields) {
+  function findDataFieldInList(fields2, path) {
+    for (const field3 of fields2) {
       if (field3.path === path) {
         return field3;
       }
@@ -47693,8 +48020,8 @@ label {
         if (preview) {
           detail.appendChild(preview);
         }
-        const fields = buildFields(item);
-        detail.appendChild(fields);
+        const fields2 = buildFields(item);
+        detail.appendChild(fields2);
         const actions = buildActions(item);
         detail.appendChild(actions);
         actions.querySelector("#btn-save").addEventListener("click", () => {
@@ -47709,7 +48036,7 @@ label {
         actions.querySelector("#btn-delete").addEventListener("click", () => {
           callbacks.onDelete(item.id);
         });
-        fields.addEventListener("keydown", (e) => {
+        fields2.addEventListener("keydown", (e) => {
           if (e.key === "Enter") {
             e.preventDefault();
             callbacks.onSave(item.id, readFields(detail));

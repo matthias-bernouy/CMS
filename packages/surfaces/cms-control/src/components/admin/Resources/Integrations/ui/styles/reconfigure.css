@@ -1,0 +1,36 @@
+.integration-reconfigure-modal {
+    --p9r-modal-width: 720px;
+}
+
+.integration-reconfigure-modal form {
+    display: grid;
+    gap: 16px;
+}
+
+.reconfigure-note {
+    margin: 0;
+    color: #66736f;
+    line-height: 1.5;
+}
+
+.reconfigure-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.reconfigure-fields .empty,
+.reconfigure-fields .field:has(textarea),
+.reconfigure-fields .object-list-fieldset {
+    grid-column: 1 / -1;
+}
+
+.reconfigure-fields :disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.reconfigure-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
