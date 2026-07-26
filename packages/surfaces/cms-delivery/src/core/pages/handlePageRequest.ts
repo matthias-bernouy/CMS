@@ -1,16 +1,17 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import type { TPage } from "@bernouy/cms-content";
-import { cachedResponseAsync } from "@bernouy/http-runner";
+import { cachedResponseAsync, sendCompressed } from "@bernouy/http-runner";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
 import { renderRef } from "cms-delivery/core/pages/renderRef";
 import { P9R_CACHE } from "@bernouy/cms-content";
 import { preflightPageSourceAccess } from "cms-delivery/core/pages/preflightPageSourceAccess";
+import { publicPageCacheKey, resolvePublicPage } from "cms-delivery/core/pages/resolvePublicPage";
 
 /**
- * Shared entry point for every dynamic page GET registered by Delivery.
- * Looks the page up by URL path, renders through the cache, and falls back
- * to `site.notFound` / `site.serverError` on miss or render failure.
+ * Shared entry point for every public page GET registered by Delivery.
+ * Injected page providers are consulted before ContentReader. The selected
+ * page renders through the same pipeline and system fallbacks as stored pages.
  *
  * Image optimization does NOT block the response. The first render serves the
  * page with original `<img>` sources and fire-and-forget enqueues variant
@@ -40,6 +41,25 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
         return { response: new Response("Not Found", { status: 404 }) };
     }
 
+    let dynamicPage;
+    try {
+        dynamicPage = await resolvePublicPage(pathname, delivery);
+    } catch (err) {
+        reportPageFailure("resolve", pathname, err);
+        return { response: await renderRef(req, delivery, "serverError", 500, "Internal server error") };
+    }
+
+    if (dynamicPage) {
+        const sourceAccess = await preflightPageSourceAccess(req, dynamicPage.page, delivery);
+        if (sourceAccess) {
+            return { response: sourceAccess, pageId: dynamicPage.page.id };
+        }
+        return {
+            response: await renderWithFallbacks(req, dynamicPage.page, pathname, delivery, dynamicPage.cacheIdentity),
+            pageId: dynamicPage.page.id,
+        };
+    }
+
     const page = await delivery.repository.getPublishedPage(pathname);
     if (!page) {
         return { response: await renderRef(req, delivery, "notFound", 404, "Page not found") };
@@ -50,7 +70,7 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
         return { response: sourceAccess, pageId: page.id };
     }
 
-    return { response: await renderWithFallbacks(req, page, pathname, delivery), pageId: page.id };
+    return { response: await renderWithFallbacks(req, page, pathname, delivery, null), pageId: page.id };
 }
 
 async function renderWithFallbacks(
@@ -58,20 +78,36 @@ async function renderWithFallbacks(
     page: TPage,
     cachePath: string,
     delivery: DeliveryCms,
+    publicCacheIdentity: string | undefined | null,
 ): Promise<Response> {
-    const cacheKey = P9R_CACHE.page(cachePath);
-
     try {
+        if (publicCacheIdentity === undefined) {
+            return sendCompressed(req, await renderPage(page, makeRuntimeRenderContext(delivery)), "no-store", {
+                skipCspHeader: true,
+            });
+        }
+        const cacheKey =
+            publicCacheIdentity === null
+                ? P9R_CACHE.page(cachePath)
+                : publicPageCacheKey(cachePath, publicCacheIdentity);
         return await cachedResponseAsync(
             req,
             cacheKey,
             delivery.cache,
             () => renderPage(page, makeRuntimeRenderContext(delivery)),
-            undefined,
+            publicCacheIdentity === null ? undefined : "public, no-cache",
             { skipCspHeader: true },
         );
     } catch (err) {
-        console.error(`Failed to render page ${cachePath}:`, err);
+        reportPageFailure("render", cachePath, err);
         return renderRef(req, delivery, "serverError", 500, "Internal server error");
     }
+}
+
+function reportPageFailure(operation: "render" | "resolve", pathname: string, err: unknown): void {
+    console.error("Delivery public page failure", {
+        operation,
+        pathname,
+        errorType: err instanceof Error ? err.name : "UnknownError",
+    });
 }

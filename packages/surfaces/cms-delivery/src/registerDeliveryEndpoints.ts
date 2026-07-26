@@ -18,6 +18,7 @@ import {
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
+import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 import { registerDeliverySourceProxy } from "cms-delivery/core/sources/registerSourceProxy";
 import {
     PRIVACY_ANALYTICS_ROUTES,
@@ -112,4 +113,13 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     }
 
     runner.setDefaultEndpoint("GET", (req) => recordPageView(req, delivery));
+    runner.setDefaultEndpoint("HEAD", async (req) => withoutBody(await handlePageRequest(req, delivery)));
+}
+
+function withoutBody(response: Response): Response {
+    return new Response(null, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+    });
 }
