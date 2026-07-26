@@ -8,7 +8,11 @@ import {
     type ResolvedIntegrationPackageMetadata,
 } from "@bernouy/cms-integration-packages";
 import { publicBytesResponse, publicMetadataResponse, publicNotFound } from "cms-repository/publicReadResponse";
-import { guardPackageDownload, type PublicPackageDownloadProtection } from "cms-repository/packageDownloadGuard";
+import {
+    guardPackageDownload,
+    observePackageRead,
+    type PublicPackageDownloadProtection,
+} from "cms-repository/packageDownloadGuard";
 
 export type IntegrationPackageRouteHandlers = {
     package(request: Request): Promise<Response>;
@@ -50,7 +54,7 @@ export function integrationPackageRouteHandlers(
             if (resolved instanceof Response) {
                 return resolved;
             }
-            return publicBytesResponse(
+            const response = publicBytesResponse(
                 request,
                 resolved.canonicalBytes,
                 "immutable",
@@ -60,6 +64,8 @@ export function integrationPackageRouteHandlers(
                     headers: { [INTEGRATION_PACKAGE_DIGEST_HEADER]: resolved.digest },
                 },
             );
+            observeServedBytes(request, response, protection, "package", resolved.canonicalBytes.byteLength);
+            return response;
         },
         releaseNotes: async (request) => {
             const identity = exactIdentity(request);
@@ -79,14 +85,24 @@ export function integrationPackageRouteHandlers(
             if (!notes || notes.encoding !== "utf8") {
                 throw sourceContractError("Integration package release notes are invalid");
             }
-            return publicBytesResponse(
-                request,
-                new TextEncoder().encode(notes.content),
-                "immutable",
-                "text/markdown; charset=utf-8",
-            );
+            const bytes = new TextEncoder().encode(notes.content);
+            const response = publicBytesResponse(request, bytes, "immutable", "text/markdown; charset=utf-8");
+            observeServedBytes(request, response, protection, "release-notes", bytes.byteLength);
+            return response;
         },
     };
+}
+
+function observeServedBytes(
+    request: Request,
+    response: Response,
+    protection: PublicPackageDownloadProtection,
+    resource: "package" | "release-notes",
+    bytes: number,
+): void {
+    if (request.method === "GET" && response.status === 200) {
+        observePackageRead(protection, { outcome: "served", resource, bytes });
+    }
 }
 
 async function resolveExactPackageMetadata(

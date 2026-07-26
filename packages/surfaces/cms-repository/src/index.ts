@@ -4,7 +4,11 @@
 
 export { RepositoryCms } from "cms-repository/RepositoryCms";
 export type { RepositoryCmsConfig } from "cms-repository/RepositoryCms";
-export type { PublicPackageDownloadProtection } from "cms-repository/packageDownloadGuard";
+export type {
+    PublicPackageDownloadProtection,
+    PublicPackageReadBudget,
+    PublicPackageReadObservation,
+} from "cms-repository/packageDownloadGuard";
 export type {
     PublicRepositoryCompatibilityAdmission,
     PublicRepositoryCompatibilityBaseline,

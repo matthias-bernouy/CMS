@@ -9,11 +9,23 @@ const DEFAULT_KEY_PREFIXES = {
 
 export type PublicPackageReadBudget = keyof typeof DEFAULT_KEY_PREFIXES;
 
+export type PublicPackageReadObservation =
+    | Readonly<{
+          outcome: "served";
+          resource: "package" | "release-notes";
+          bytes: number;
+      }>
+    | Readonly<{
+          outcome: "rate-limited";
+          budget: PublicPackageReadBudget;
+      }>;
+
 export type PublicPackageDownloadProtection = {
     clientAddressPolicy: ClientAddressPolicy;
     rateLimiter?: RateLimiter;
     keyPrefix?: string;
     metadataKeyPrefix?: string;
+    observe?: (observation: PublicPackageReadObservation) => void;
 };
 
 export function assertPackageDownloadProtection(config: PublicPackageDownloadProtection): void {
@@ -57,5 +69,20 @@ export async function guardPackageDownload(
             publicCode: "package_download_protection_unavailable",
         });
     }
-    return result.allowed ? null : publicRateLimited(result.retryAfterSeconds ?? 1);
+    if (result.allowed) {
+        return null;
+    }
+    observePackageRead(config, { outcome: "rate-limited", budget });
+    return publicRateLimited(result.retryAfterSeconds ?? 1);
+}
+
+export function observePackageRead(
+    config: PublicPackageDownloadProtection,
+    observation: PublicPackageReadObservation,
+): void {
+    try {
+        config.observe?.(observation);
+    } catch {
+        // Metrics must never change anonymous repository availability.
+    }
 }

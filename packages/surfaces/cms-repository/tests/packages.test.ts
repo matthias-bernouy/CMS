@@ -14,7 +14,8 @@ import { json, TestRunner } from "./testRunner";
 describe("@bernouy/cms-repository exact package routes", () => {
     test("serves canonical package bytes with immutable digest metadata", async () => {
         const document = await packageDocument();
-        const runner = mounted(packageSource(document));
+        const observations: unknown[] = [];
+        const runner = mounted(packageSource(document), observations);
         const path = "/api/integrations/package?kind=demo&version=1.0.0";
 
         const get = await runner.handle(path);
@@ -36,6 +37,9 @@ describe("@bernouy/cms-repository exact package routes", () => {
         expect(await head.text()).toBe("");
         expect(notModified.status).toBe(304);
         expect(notModified.headers.get(INTEGRATION_PACKAGE_DIGEST_HEADER)).toBe(document.digest);
+        expect(observations).toEqual([
+            { outcome: "served", resource: "package", bytes: document.canonicalBytes.byteLength },
+        ]);
     });
 
     test("serves exact UTF-8 release notes and returns 404 for legacy packages", async () => {
@@ -139,13 +143,16 @@ describe("@bernouy/cms-repository exact package routes", () => {
     });
 });
 
-function mounted(integrationPackages: IntegrationPackageSource): TestRunner {
+function mounted(integrationPackages: IntegrationPackageSource, observations: unknown[] = []): TestRunner {
     const runner = new TestRunner();
     new RepositoryCms({
         runner,
         integrationCatalog: emptyCatalog(),
         integrationPackages,
-        packageDownloadProtection: { clientAddressPolicy: { mode: "disabled" } },
+        packageDownloadProtection: {
+            clientAddressPolicy: { mode: "disabled" },
+            observe: (observation) => observations.push(observation),
+        },
     });
     return runner;
 }

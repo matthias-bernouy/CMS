@@ -22,9 +22,11 @@ describe("public integration package download protection", () => {
     });
 
     test("returns 429 before consulting the package source", async () => {
+        const observations: unknown[] = [];
         const fixture = setup({
             clientAddressPolicy: { mode: "direct" },
             rateLimiter: limiter({ allowed: false, retryAfterSeconds: 17 }),
+            observe: (observation) => observations.push(observation),
         });
 
         const response = await fixture.runner.handle(PACKAGE_PATH, {}, "198.51.100.4");
@@ -35,6 +37,7 @@ describe("public integration package download protection", () => {
         expect(await json(response)).toMatchObject({ code: "rate_limited" });
         expect(fixture.keys).toEqual(["repository-package-download:198.51.100.4"]);
         expect(fixture.sourceCalls).toHaveLength(0);
+        expect(observations).toEqual([{ outcome: "rate-limited", budget: "download" }]);
     });
 
     test("rejects malformed forwarding chains before limiter and source work", async () => {
@@ -116,6 +119,18 @@ describe("public integration package download protection", () => {
         expect(await json(response)).toMatchObject({ code: "client_address_unavailable" });
         expect(fixture.keys).toHaveLength(0);
         expect(fixture.sourceCalls).toHaveLength(0);
+    });
+
+    test("keeps observation failures outside the public request path", async () => {
+        const fixture = setup({
+            clientAddressPolicy: { mode: "direct" },
+            rateLimiter: limiter({ allowed: false, retryAfterSeconds: 1 }),
+            observe: () => {
+                throw new Error("metrics unavailable");
+            },
+        });
+
+        expect((await fixture.runner.handle(PACKAGE_PATH, {}, "198.51.100.4")).status).toBe(429);
     });
 });
 
