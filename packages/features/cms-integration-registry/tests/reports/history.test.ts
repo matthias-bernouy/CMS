@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { identifyVerificationReport } from "@bernouy/cms-integration-verification";
 import { ReleaseReportConflictError } from "@bernouy/cms-integration-registry";
 import { FsIntegrationCompatibilityReportStore } from "@bernouy/cms-integration-registry/fs";
-import { cleanupRegistryFixtures } from "../publication/fixtures";
+import { cleanupRegistryFixtures, publicationPackage } from "../publication/fixtures";
 import { completeDecisionEvidence, publishedReleaseFixture, releaseStores, verificationReport } from "./fixtures";
 
 afterEach(cleanupRegistryFixtures);
@@ -131,5 +131,25 @@ describe("filesystem release report histories", () => {
         ).rejects.toThrow(/must be a root/);
 
         expect(existsSync(join(fixture.root, ".registry", "release-reports"))).toBeFalse();
+    });
+
+    test("serializes the stream-wide history capacity across different integration kinds", async () => {
+        const { fixture, target } = await publishedReleaseFixture();
+        const other = await publicationPackage("other", "1.0.0");
+        await fixture.publisher.publish({ package: other });
+        const stores = releaseStores(fixture, { historiesPerStream: 1 });
+
+        const results = await Promise.allSettled([
+            stores.verificationReports.append({ report: verificationReport(target.digest), expectedCurrent: null }),
+            stores.verificationReports.append({
+                report: verificationReport(other.digest, { reportId: "other-1", kind: "other", version: "1.0.0" }),
+                expectedCurrent: null,
+            }),
+        ]);
+
+        expect(results.filter(({ status }) => status === "fulfilled")).toHaveLength(1);
+        expect(results.filter(({ status }) => status === "rejected")).toHaveLength(1);
+        const streamRoot = join(fixture.root, ".registry", "release-reports", "verification");
+        expect(readdirSync(streamRoot)).toHaveLength(1);
     });
 });

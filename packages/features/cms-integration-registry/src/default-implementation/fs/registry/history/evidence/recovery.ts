@@ -4,11 +4,12 @@ import type {
     FsReleaseReportRecoveryDiagnostic,
     FsReleaseReportRecoveryResult,
 } from "../../../../../interfaces/reportStore";
+import { removeFileIfExists } from "../../persistence/canonicalFile";
 import { ensureFsIntegrationRegistryLayout } from "../../persistence/layout";
 import { readVerifiedRegistryDirectory, withVerifiedRegistryDirectory } from "../../persistence/ownedDirectory";
 import { quarantineRegistryPath } from "../../recovery/quarantine";
 import { readReleaseReportIdentity } from "./document";
-import { cleanupReleaseReportTemporaryFiles, loadReleaseReportHistory } from "./history";
+import { isReleaseReportTemporaryFile, loadReleaseReportHistory, MAX_RELEASE_REPORT_TEMPORARIES } from "./history";
 import {
     MAX_RELEASE_REPORT_HISTORIES_PER_STREAM,
     releaseReportHistoryPaths,
@@ -61,6 +62,7 @@ async function recoverStream<T, K>(
             if (!/^[a-f0-9]{64}$/u.test(name)) {
                 throw new Error("Release report history name is not a canonical key digest");
             }
+            await readVerifiedRegistryDirectory(history);
             const key = await readReleaseReportIdentity(
                 join(history, "identity.json"),
                 adapter.stream,
@@ -92,6 +94,48 @@ async function recoverStream<T, K>(
             });
         }
     }
+}
+
+async function cleanupReleaseReportTemporaryFiles(historyRoot: string): Promise<void> {
+    const rootFiles = await temporaryFiles(historyRoot, true, 0);
+    const revisionsRoot = join(historyRoot, "revisions");
+    const revisionFiles = await temporaryFiles(revisionsRoot, false, rootFiles.length);
+    await removeTemporaryFiles(historyRoot, rootFiles);
+    await removeTemporaryFiles(revisionsRoot, revisionFiles);
+}
+
+async function temporaryFiles(path: string, validateHistoryRoot: boolean, existing: number): Promise<string[]> {
+    return await withVerifiedRegistryDirectory(path, async (descriptorPath) => {
+        const handle = await opendir(descriptorPath);
+        const names: string[] = [];
+        for await (const entry of handle) {
+            if (validateHistoryRoot && (entry.name === "identity.json" || entry.name === "revisions")) {
+                continue;
+            }
+            if (!isReleaseReportTemporaryFile(entry.name)) {
+                if (validateHistoryRoot) {
+                    throw new Error(`Invalid release report history entry: ${entry.name}`);
+                }
+                continue;
+            }
+            if (entry.isSymbolicLink() || !entry.isFile()) {
+                throw new Error(`Invalid release report temporary entry: ${entry.name}`);
+            }
+            names.push(entry.name);
+            if (existing + names.length > MAX_RELEASE_REPORT_TEMPORARIES) {
+                throw new Error(`Release report history exceeds ${MAX_RELEASE_REPORT_TEMPORARIES} temporary files`);
+            }
+        }
+        return names;
+    });
+}
+
+async function removeTemporaryFiles(path: string, names: readonly string[]): Promise<void> {
+    await withVerifiedRegistryDirectory(path, async (descriptorPath) => {
+        for (const name of names) {
+            await removeFileIfExists(join(descriptorPath, name));
+        }
+    });
 }
 
 async function historyEntries(streamRoot: string): Promise<readonly string[]> {

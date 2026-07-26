@@ -3,7 +3,6 @@ import { join } from "node:path";
 import { ReleaseReportIntegrityError } from "../../../../../core/compatibility/reportStoreErrors";
 import type { ReleaseReportHistory } from "../../../../../interfaces/reportStore";
 import { withVerifiedRegistryDirectory } from "../../persistence/ownedDirectory";
-import { removeFileIfExists } from "../../persistence/canonicalFile";
 import {
     readReleaseReportIdentity,
     readReleaseReportRevision,
@@ -14,7 +13,7 @@ import { releaseReportRevisionFilename } from "./layout";
 import type { FsReleaseReportHistoryAdapter, FsReleaseReportRevisionDocument } from "./types";
 
 export const MAX_RELEASE_REPORT_REVISIONS = 4_096;
-const MAX_RELEASE_REPORT_TEMPORARIES = 64;
+export const MAX_RELEASE_REPORT_TEMPORARIES = 64;
 const CANONICAL_TEMPORARY_FILE = /^\.[0-9a-f-]{36}\.tmp$/u;
 
 export async function ensureReleaseReportIdentity<T, K>(
@@ -112,7 +111,7 @@ async function readRevisionDocuments<T, K>(
         const documents: FsReleaseReportRevisionDocument<T>[] = [];
         let temporaryCount = 0;
         for await (const entry of handle) {
-            if (entry.isFile() && CANONICAL_TEMPORARY_FILE.test(entry.name)) {
+            if (entry.isFile() && isReleaseReportTemporaryFile(entry.name)) {
                 temporaryCount += 1;
                 if (temporaryCount > MAX_RELEASE_REPORT_TEMPORARIES) {
                     throw new ReleaseReportIntegrityError(
@@ -141,26 +140,8 @@ async function readRevisionDocuments<T, K>(
     });
 }
 
-export async function cleanupReleaseReportTemporaryFiles(historyRoot: string): Promise<number> {
-    const revisionsRoot = join(historyRoot, "revisions");
-    return await withVerifiedRegistryDirectory(revisionsRoot, async (descriptorPath) => {
-        const handle = await opendir(descriptorPath);
-        const temporaryFiles: string[] = [];
-        for await (const entry of handle) {
-            if (entry.isFile() && !entry.isSymbolicLink() && CANONICAL_TEMPORARY_FILE.test(entry.name)) {
-                temporaryFiles.push(entry.name);
-                if (temporaryFiles.length > MAX_RELEASE_REPORT_TEMPORARIES) {
-                    throw new ReleaseReportIntegrityError(
-                        `Release report history exceeds ${MAX_RELEASE_REPORT_TEMPORARIES} temporary files`,
-                    );
-                }
-            }
-        }
-        for (const name of temporaryFiles) {
-            await removeFileIfExists(join(revisionsRoot, name));
-        }
-        return temporaryFiles.length;
-    });
+export function isReleaseReportTemporaryFile(name: string): boolean {
+    return CANONICAL_TEMPORARY_FILE.test(name);
 }
 
 function isNodeError(value: unknown): value is NodeJS.ErrnoException {

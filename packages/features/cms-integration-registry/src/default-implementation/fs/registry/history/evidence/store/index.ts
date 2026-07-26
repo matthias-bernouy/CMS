@@ -81,13 +81,18 @@ export class FsReleaseReportHistoryStore<T, K> {
                 assertExpectedCurrent(null, request.expectedCurrent, this.adapter.stream);
                 assertAppendShape(null, identified.report, this.adapter);
             }
-            await assertReleaseReportHistoryCapacity(
-                this.config.root,
-                this.adapter.stream,
-                key,
-                limits.historiesPerStream,
+            const paths = await this.config.mutations.runExclusive(
+                capacityMutationKey(this.adapter.stream),
+                async () => {
+                    await assertReleaseReportHistoryCapacity(
+                        this.config.root,
+                        this.adapter.stream,
+                        key,
+                        limits.historiesPerStream,
+                    );
+                    return await ensureReleaseReportHistoryPaths(this.config.root, this.adapter.stream, key);
+                },
             );
-            const paths = await ensureReleaseReportHistoryPaths(this.config.root, this.adapter.stream, key);
             await verifyReleaseReportHistoryPaths(paths);
             await ensureReleaseReportIdentity(paths.identity, key, this.adapter);
             const before = await loadReleaseReportHistory(paths.historyRoot, this.adapter, key, true);
@@ -146,4 +151,8 @@ async function pathExists(path: string): Promise<boolean> {
         }
         throw error;
     }
+}
+
+function capacityMutationKey(stream: string): string {
+    return `__release_report_capacity__:${stream}`;
 }

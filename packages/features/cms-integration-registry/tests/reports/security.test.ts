@@ -60,6 +60,23 @@ describe("filesystem release report integrity and recovery", () => {
         expect(recovered.diagnostics[0]?.stream).toBe("verification");
     });
 
+    test("quarantines a history-root symlink before following its identity", async () => {
+        const { fixture, target, stores } = await publishedReleaseFixture();
+        await stores.verificationReports.append({ report: verificationReport(target.digest), expectedCurrent: null });
+        const history = onlyHistory(fixture.root, "verification");
+        const moved = join(fixture.root, "external-report-history");
+        renameSync(history, moved);
+        chmodSync(join(moved, "identity.json"), 0o640);
+        writeFileSync(join(moved, "identity.json"), "{}", { mode: 0o640 });
+        symlinkSync(moved, history);
+
+        const recovered = await recoverFsReleaseReportHistories(fixture.root);
+
+        expect(recovered.diagnostics).toHaveLength(1);
+        expect(recovered.diagnostics[0]?.message).toContain("symlink");
+        expect(existsSync(moved)).toBeTrue();
+    });
+
     test("quarantines a moved logical history whose directory digest no longer matches", async () => {
         const { fixture, target, stores } = await publishedReleaseFixture();
         await stores.verificationReports.append({ report: verificationReport(target.digest), expectedCurrent: null });
@@ -78,22 +95,30 @@ describe("filesystem release report integrity and recovery", () => {
     test("removes bounded crash temporaries without changing the immutable history", async () => {
         const { fixture, target, stores } = await publishedReleaseFixture();
         await stores.verificationReports.append({ report: verificationReport(target.digest), expectedCurrent: null });
-        const revisions = join(onlyHistory(fixture.root, "verification"), "revisions");
-        const temporary = join(revisions, ".00000000-0000-4000-8000-000000000000.tmp");
-        writeFileSync(temporary, "partial", { mode: 0o640 });
+        const history = onlyHistory(fixture.root, "verification");
+        const rootTemporary = join(history, ".00000000-0000-4000-8000-000000000000.tmp");
+        const revisionTemporary = join(history, "revisions", ".00000000-0000-4000-8000-000000000001.tmp");
+        writeFileSync(rootTemporary, "partial", { mode: 0o640 });
+        writeFileSync(revisionTemporary, "partial", { mode: 0o640 });
 
         const recovered = await recoverFsReleaseReportHistories(fixture.root);
 
         expect(recovered.diagnostics).toEqual([]);
-        expect(existsSync(temporary)).toBeFalse();
+        expect(existsSync(rootTemporary)).toBeFalse();
+        expect(existsSync(revisionTemporary)).toBeFalse();
         expect((await stores.verificationReports.get("demo", "1.1.0"))?.current.reportId).toBe("verification-1");
     });
 
     test("quarantines a history whose crash-temporary inventory exceeds its hard bound", async () => {
         const { fixture, target, stores } = await publishedReleaseFixture();
         await stores.verificationReports.append({ report: verificationReport(target.digest), expectedCurrent: null });
-        const revisions = join(onlyHistory(fixture.root, "verification"), "revisions");
-        for (let index = 0; index < 65; index += 1) {
+        const history = onlyHistory(fixture.root, "verification");
+        const revisions = join(history, "revisions");
+        for (let index = 0; index < 33; index += 1) {
+            const suffix = index.toString(16).padStart(12, "0");
+            writeFileSync(join(history, `.00000000-0000-4000-8000-${suffix}.tmp`), "partial", { mode: 0o640 });
+        }
+        for (let index = 33; index < 65; index += 1) {
             const suffix = index.toString(16).padStart(12, "0");
             writeFileSync(join(revisions, `.00000000-0000-4000-8000-${suffix}.tmp`), "partial", { mode: 0o640 });
         }
