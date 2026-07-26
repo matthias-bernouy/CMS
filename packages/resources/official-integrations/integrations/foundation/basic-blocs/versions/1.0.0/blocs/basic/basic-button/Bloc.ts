@@ -103,10 +103,10 @@ export class BasicButton extends HTMLElement {
                     gap: var(--cms-button-gap, .5rem);
                     min-height: var(--cms-button-min-height, 2.5rem);
                     padding: var(--cms-button-padding, .625rem 1rem);
-                    border: var(--cms-button-border, 1px solid var(--cms-button-border-color, var(--primary-base, CanvasText)));
-                    border-radius: var(--cms-button-radius, .375rem);
-                    background: var(--cms-button-background, var(--primary-base, CanvasText));
-                    color: var(--cms-button-color, var(--primary-foreground, var(--primary-contrasted, Canvas)));
+                    border: var(--cms-button-border, 1px solid var(--cms-button-border-color, var(--integration-basic-blocs-action-background, var(--primary-base, CanvasText))));
+                    border-radius: var(--cms-button-radius, var(--integration-basic-blocs-action-radius, .375rem));
+                    background: var(--cms-button-background, var(--integration-basic-blocs-action-background, var(--primary-base, CanvasText)));
+                    color: var(--cms-button-color, var(--integration-basic-blocs-action-text, var(--primary-foreground, var(--primary-contrasted, Canvas))));
                     font: inherit;
                     font-weight: var(--cms-button-font-weight, 700);
                     line-height: 1.2;
@@ -123,7 +123,7 @@ export class BasicButton extends HTMLElement {
                 [part="button"]:active:not([disabled]):not([aria-disabled="true"]) { transform: translateY(1px); }
 
                 [part="button"]:focus-visible {
-                    outline: 2px solid var(--cms-focus-color, var(--primary-base, CanvasText));
+                    outline: 2px solid var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--primary-base, CanvasText)));
                     outline-offset: 2px;
                 }
 

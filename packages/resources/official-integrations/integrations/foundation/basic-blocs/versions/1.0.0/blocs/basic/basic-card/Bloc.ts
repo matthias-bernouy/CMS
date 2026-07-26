@@ -38,10 +38,10 @@ export class BasicCard extends HTMLElement {
                     display: grid;
                     gap: var(--cms-card-section-gap, 1.25rem);
                     padding: var(--cms-card-padding, 1.5rem);
-                    border: var(--cms-card-border, 1px solid var(--cms-card-border-color, var(--border-subtle, var(--border-default, color-mix(in srgb, currentColor 16%, transparent)))));
-                    border-radius: var(--cms-card-radius, var(--radius-lg, var(--radius-card, 1rem)));
-                    background: var(--cms-card-background, var(--bg-surface, Canvas));
-                    color: var(--cms-card-color, var(--text-main, inherit));
+                    border: var(--cms-card-border, 1px solid var(--cms-card-border-color, var(--integration-basic-blocs-surface-border, var(--border-subtle, var(--border-default, color-mix(in srgb, currentColor 16%, transparent))))));
+                    border-radius: var(--cms-card-radius, var(--integration-basic-blocs-surface-radius, var(--radius-lg, var(--radius-card, 1rem))));
+                    background: var(--cms-card-background, var(--integration-basic-blocs-surface-background, var(--bg-surface, Canvas)));
+                    color: var(--cms-card-color, var(--integration-basic-blocs-surface-text, var(--text-main, inherit)));
                     box-shadow: var(--cms-card-shadow, none);
                 }
 
@@ -80,7 +80,7 @@ export class BasicCard extends HTMLElement {
 
                 ::slotted([slot="description"]) {
                     margin: 0;
-                    color: var(--cms-card-muted-color, var(--text-muted, color-mix(in srgb, currentColor 68%, transparent)));
+                    color: var(--cms-card-muted-color, var(--integration-basic-blocs-surface-muted-text, var(--text-muted, color-mix(in srgb, currentColor 68%, transparent))));
                 }
 
                 :host(:not(:has([slot="media"]))) [part="media"],
@@ -95,7 +95,7 @@ export class BasicCard extends HTMLElement {
 
                 :host([appearance="elevated"]) [part="card"] {
                     border-color: var(--cms-card-border-color, transparent);
-                    box-shadow: var(--cms-card-shadow, var(--ctx-shadow-rest, var(--shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent))));
+                    box-shadow: var(--cms-card-shadow, var(--ctx-shadow-rest, var(--integration-basic-blocs-elevated-shadow, var(--shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent)))));
                 }
 
                 :host([density="compact"]) [part="card"] {

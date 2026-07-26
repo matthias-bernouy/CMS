@@ -36,7 +36,7 @@ class BasicFileInput extends HTMLElement {
                     height: var(--cms-file-preview-size, 5rem);
                     margin-block-end: .375rem;
                     overflow: hidden;
-                    border: 1px solid var(--border-default, color-mix(in srgb, currentColor 20%, transparent));
+                    border: 1px solid var(--integration-basic-blocs-field-border, var(--border-default, color-mix(in srgb, currentColor 20%, transparent)));
                     border-radius: var(--cms-file-preview-radius, .75rem);
                     background: var(--bg-subtle, Canvas);
                 }
@@ -62,16 +62,16 @@ class BasicFileInput extends HTMLElement {
                     justify-content: center;
                     min-height: 2.5rem;
                     padding: .5rem .8rem;
-                    border: 1px solid var(--cms-file-border-color, var(--primary-base, CanvasText));
-                    border-radius: var(--cms-input-radius, .5rem);
-                    background: var(--cms-file-background, var(--primary-base, CanvasText));
-                    color: var(--cms-file-color, var(--primary-foreground, var(--primary-contrasted, Canvas)));
+                    border: 1px solid var(--cms-file-border-color, var(--integration-basic-blocs-action-background, var(--primary-base, CanvasText)));
+                    border-radius: var(--cms-input-radius, var(--integration-basic-blocs-action-radius, .5rem));
+                    background: var(--cms-file-background, var(--integration-basic-blocs-action-background, var(--primary-base, CanvasText)));
+                    color: var(--cms-file-color, var(--integration-basic-blocs-action-text, var(--primary-foreground, var(--primary-contrasted, Canvas))));
                     font-weight: 700;
                     white-space: nowrap;
                 }
                 .file-name {
                     overflow: hidden;
-                    color: var(--text-muted, color-mix(in srgb, currentColor 65%, transparent));
+                    color: var(--integration-basic-blocs-muted-text, var(--text-muted, color-mix(in srgb, currentColor 65%, transparent)));
                     text-overflow: ellipsis;
                     white-space: nowrap;
                 }
@@ -87,13 +87,13 @@ class BasicFileInput extends HTMLElement {
                     border: 0;
                 }
                 .picker:has(input:focus-visible) .picker-button {
-                    outline: 2px solid var(--cms-focus-color, var(--primary-base, CanvasText));
+                    outline: 2px solid var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--primary-base, CanvasText)));
                     outline-offset: 2px;
                 }
                 :host([disabled]) { opacity: .6; }
                 :host([disabled]) .picker { cursor: not-allowed; }
-                .hint { color: var(--cms-muted-color, color-mix(in srgb, currentColor 65%, transparent)); }
-                .error { color: var(--cms-error-color, #b42318); }
+                .hint { color: var(--cms-muted-color, var(--integration-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
+                .error { color: var(--cms-error-color, var(--integration-basic-blocs-error-text, #b42318)); }
                 [hidden] { display: none; }
             </style>
             <div class="field" part="field">

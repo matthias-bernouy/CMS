@@ -41,11 +41,11 @@ class BasicInput extends HTMLElement {
                 :host([hidden]) { display: none !important; }
                 .field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; min-inline-size: 0; gap: var(--cms-field-gap, .375rem); }
                 label { font: inherit; font-weight: var(--cms-label-weight, 650); }
-                input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch; min-height: var(--cms-input-height, 2.75rem); padding: var(--cms-input-padding, .65rem .75rem); border: var(--cms-input-border, 1px solid var(--cms-input-border-color, color-mix(in srgb, currentColor 25%, transparent))); border-radius: var(--cms-input-radius, .5rem); background: var(--cms-input-background, Canvas); color: var(--cms-input-color, inherit); font: inherit; }
-                input:focus-visible { outline: 2px solid var(--cms-focus-color, var(--primary-base, currentColor)); outline-offset: 2px; }
+                input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch; min-height: var(--cms-input-height, 2.75rem); padding: var(--cms-input-padding, .65rem .75rem); border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--integration-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent)))); border-radius: var(--cms-input-radius, var(--integration-basic-blocs-field-radius, .5rem)); background: var(--cms-input-background, var(--integration-basic-blocs-field-background, Canvas)); color: var(--cms-input-color, var(--integration-basic-blocs-field-text, inherit)); font: inherit; }
+                input:focus-visible { outline: 2px solid var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--primary-base, currentColor))); outline-offset: 2px; }
                 :host([disabled]) { opacity: .6; }
-                .hint { color: var(--cms-muted-color, color-mix(in srgb, currentColor 65%, transparent)); }
-                .error { color: var(--cms-error-color, #b42318); }
+                .hint { color: var(--cms-muted-color, var(--integration-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
+                .error { color: var(--cms-error-color, var(--integration-basic-blocs-error-text, #b42318)); }
                 [hidden] { display: none; }
             </style>
             <div class="field" part="field">

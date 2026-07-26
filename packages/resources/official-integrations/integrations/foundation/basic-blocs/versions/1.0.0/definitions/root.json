@@ -12,6 +12,9 @@
     "ui": {
         "$include": "configuration/ui.json"
     },
+    "theme": {
+        "$include": "configuration/theme.json"
+    },
     "artifacts": {
         "$files": [
             "artifacts/blocs/basic/basic-button.json",

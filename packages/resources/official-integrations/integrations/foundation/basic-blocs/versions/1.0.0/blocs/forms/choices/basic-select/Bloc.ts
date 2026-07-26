@@ -62,10 +62,10 @@ class BasicSelect extends HTMLElement {
                     width: 100%;
                     min-height: var(--cms-input-height, 2.75rem);
                     padding: var(--cms-input-padding, .65rem .75rem);
-                    border: var(--cms-input-border, 1px solid var(--cms-input-border-color, color-mix(in srgb, currentColor 25%, transparent)));
-                    border-radius: var(--cms-input-radius, .5rem);
-                    background: var(--cms-input-background, Canvas);
-                    color: var(--cms-input-color, inherit);
+                    border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--integration-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent))));
+                    border-radius: var(--cms-input-radius, var(--integration-basic-blocs-field-radius, .5rem));
+                    background: var(--cms-input-background, var(--integration-basic-blocs-field-background, Canvas));
+                    color: var(--cms-input-color, var(--integration-basic-blocs-field-text, inherit));
                     font: inherit;
                     text-align: left;
                     cursor: pointer;
@@ -89,7 +89,7 @@ class BasicSelect extends HTMLElement {
 
                 .control:focus-visible,
                 .native-control:focus-visible {
-                    outline: 2px solid var(--cms-focus-color, var(--secondary-base, currentColor));
+                    outline: 2px solid var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--secondary-base, currentColor)));
                     outline-offset: 2px;
                 }
 
@@ -101,7 +101,7 @@ class BasicSelect extends HTMLElement {
                 }
 
                 .value[data-placeholder="true"] {
-                    color: var(--cms-muted-color, color-mix(in srgb, currentColor 65%, transparent));
+                    color: var(--cms-muted-color, var(--integration-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent)));
                 }
 
                 .chevron {
@@ -139,10 +139,10 @@ class BasicSelect extends HTMLElement {
                     max-height: var(--cms-select-max-height, 17rem);
                     padding: .3rem;
                     overflow-y: auto;
-                    border: 1px solid var(--cms-input-border-color, color-mix(in srgb, currentColor 25%, transparent));
-                    border-radius: var(--cms-input-radius, .5rem);
-                    background: var(--cms-input-background, Canvas);
-                    color: var(--cms-input-color, inherit);
+                    border: 1px solid var(--cms-input-border-color, var(--integration-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent)));
+                    border-radius: var(--cms-input-radius, var(--integration-basic-blocs-field-radius, .5rem));
+                    background: var(--cms-input-background, var(--integration-basic-blocs-field-background, Canvas));
+                    color: var(--cms-input-color, var(--integration-basic-blocs-field-text, inherit));
                     box-shadow: var(--cms-select-shadow, 0 .75rem 2rem color-mix(in srgb, currentColor 14%, transparent));
                 }
 
@@ -155,7 +155,7 @@ class BasicSelect extends HTMLElement {
                     min-height: 2.5rem;
                     padding: .55rem .65rem;
                     border: 0;
-                    border-radius: calc(var(--cms-input-radius, .5rem) - .15rem);
+                    border-radius: calc(var(--cms-input-radius, var(--integration-basic-blocs-field-radius, .5rem)) - .15rem);
                     background: transparent;
                     color: inherit;
                     font: inherit;
@@ -166,17 +166,17 @@ class BasicSelect extends HTMLElement {
                 .option:hover:not(:disabled),
                 .option:focus-visible {
                     outline: none;
-                    background: color-mix(in srgb, var(--cms-focus-color, var(--secondary-base, currentColor)) 12%, transparent);
+                    background: color-mix(in srgb, var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--secondary-base, currentColor))) 12%, transparent);
                 }
 
                 .option[aria-selected="true"] {
-                    background: color-mix(in srgb, var(--cms-focus-color, var(--secondary-base, currentColor)) 18%, transparent);
+                    background: color-mix(in srgb, var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--secondary-base, currentColor))) 18%, transparent);
                     font-weight: 650;
                 }
 
                 .option[aria-selected="true"]::after {
                     content: "✓";
-                    color: var(--cms-focus-color, var(--secondary-base, currentColor));
+                    color: var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--secondary-base, currentColor)));
                     font-weight: 800;
                 }
 
@@ -184,8 +184,8 @@ class BasicSelect extends HTMLElement {
                 :host([disabled]) { opacity: .6; }
                 :host([disabled]) .control,
                 :host([disabled]) .native-control { cursor: not-allowed; }
-                .hint { color: var(--cms-muted-color, color-mix(in srgb, currentColor 65%, transparent)); }
-                .error { color: var(--cms-error-color, #b42318); }
+                .hint { color: var(--cms-muted-color, var(--integration-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
+                .error { color: var(--cms-error-color, var(--integration-basic-blocs-error-text, #b42318)); }
                 .source { display: none; }
                 [hidden] { display: none; }
 

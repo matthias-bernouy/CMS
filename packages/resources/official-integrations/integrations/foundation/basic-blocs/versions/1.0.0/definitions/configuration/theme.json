@@ -1,0 +1,153 @@
+{
+    "categories": [
+        {
+            "id": "actions",
+            "label": "Actions",
+            "description": "Shared presentation for buttons and selected choices.",
+            "tokens": [
+                {
+                    "id": "action-background",
+                    "label": "Action background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--primary-base, CanvasText)"
+                    }
+                },
+                {
+                    "id": "action-text",
+                    "label": "Action text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--primary-foreground, var(--primary-contrasted, Canvas))"
+                    }
+                },
+                {
+                    "id": "action-radius",
+                    "label": "Action radius",
+                    "type": "length",
+                    "defaults": {
+                        "light": "var(--radius-control, .375rem)"
+                    }
+                },
+                {
+                    "id": "focus-color",
+                    "label": "Focus color",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--primary-base, CanvasText)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "form-controls",
+            "label": "Form controls",
+            "description": "Shared fields, validation and supporting text.",
+            "tokens": [
+                {
+                    "id": "field-background",
+                    "label": "Field background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--bg-surface, Canvas)"
+                    }
+                },
+                {
+                    "id": "field-text",
+                    "label": "Field text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-main, CanvasText)"
+                    }
+                },
+                {
+                    "id": "field-border",
+                    "label": "Field border",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--border-default, color-mix(in srgb, currentColor 25%, transparent))"
+                    }
+                },
+                {
+                    "id": "field-radius",
+                    "label": "Field radius",
+                    "type": "length",
+                    "defaults": {
+                        "light": "var(--radius-control, .5rem)"
+                    }
+                },
+                {
+                    "id": "muted-text",
+                    "label": "Muted text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-muted, color-mix(in srgb, currentColor 65%, transparent))"
+                    }
+                },
+                {
+                    "id": "error-text",
+                    "label": "Error text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--danger-base, #b42318)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "surfaces",
+            "label": "Surfaces",
+            "description": "Cards and neutral floating surfaces provided by Basic Blocs.",
+            "tokens": [
+                {
+                    "id": "surface-background",
+                    "label": "Surface background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--bg-surface, Canvas)"
+                    }
+                },
+                {
+                    "id": "surface-text",
+                    "label": "Surface text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-main, CanvasText)"
+                    }
+                },
+                {
+                    "id": "surface-muted-text",
+                    "label": "Surface muted text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-muted, color-mix(in srgb, currentColor 68%, transparent))"
+                    }
+                },
+                {
+                    "id": "surface-border",
+                    "label": "Surface border",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--border-default, color-mix(in srgb, currentColor 16%, transparent))"
+                    }
+                },
+                {
+                    "id": "surface-radius",
+                    "label": "Surface radius",
+                    "type": "length",
+                    "defaults": {
+                        "light": "var(--radius-card, .5rem)"
+                    }
+                },
+                {
+                    "id": "elevated-shadow",
+                    "label": "Elevated shadow",
+                    "type": "shadow",
+                    "defaults": {
+                        "light": "var(--shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent))"
+                    }
+                }
+            ]
+        }
+    ]
+}

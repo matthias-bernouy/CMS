@@ -26,7 +26,7 @@ class BasicCheckbox extends HTMLElement {
             <style>
                 :host {
                     display: inline-block;
-                    color: var(--cms-input-color, inherit);
+                    color: var(--cms-input-color, var(--integration-basic-blocs-field-text, inherit));
                     font: inherit;
                 }
 
@@ -47,10 +47,10 @@ class BasicCheckbox extends HTMLElement {
                     flex: 0 0 auto;
                     place-content: center;
                     margin: .15rem 0 0;
-                    border: 1px solid var(--cms-checkbox-border, var(--border-default, color-mix(in srgb, currentColor 30%, transparent)));
+                    border: 1px solid var(--cms-checkbox-border, var(--integration-basic-blocs-field-border, var(--border-default, color-mix(in srgb, currentColor 30%, transparent))));
                     border-radius: .25rem;
-                    background: var(--cms-checkbox-background, var(--bg-surface, Canvas));
-                    color: var(--cms-checkbox-check-color, var(--secondary-contrasted, Canvas));
+                    background: var(--cms-checkbox-background, var(--integration-basic-blocs-field-background, var(--bg-surface, Canvas)));
+                    color: var(--cms-checkbox-check-color, var(--integration-basic-blocs-action-text, var(--secondary-contrasted, Canvas)));
                     cursor: pointer;
                     transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
                 }
@@ -67,8 +67,8 @@ class BasicCheckbox extends HTMLElement {
                 }
 
                 input:checked {
-                    border-color: var(--cms-accent-color, var(--secondary-base, currentColor));
-                    background: var(--cms-accent-color, var(--secondary-base, currentColor));
+                    border-color: var(--cms-accent-color, var(--integration-basic-blocs-action-background, var(--secondary-base, currentColor)));
+                    background: var(--cms-accent-color, var(--integration-basic-blocs-action-background, var(--secondary-base, currentColor)));
                 }
 
                 input:checked::after {
@@ -77,7 +77,7 @@ class BasicCheckbox extends HTMLElement {
                 }
 
                 input:focus-visible {
-                    outline: 2px solid var(--cms-accent-color, var(--secondary-base, currentColor));
+                    outline: 2px solid var(--cms-accent-color, var(--integration-basic-blocs-focus-color, var(--secondary-base, currentColor)));
                     outline-offset: 2px;
                 }
 
@@ -98,7 +98,7 @@ class BasicCheckbox extends HTMLElement {
                     height: .9rem;
                     border: 0;
                     border-radius: 50%;
-                    background: var(--cms-checkbox-check-color, var(--secondary-contrasted, Canvas));
+                    background: var(--cms-checkbox-check-color, var(--integration-basic-blocs-action-text, var(--secondary-contrasted, Canvas)));
                     opacity: 1;
                     transform: none;
                     transition: transform 120ms ease;
@@ -110,7 +110,7 @@ class BasicCheckbox extends HTMLElement {
 
                 .error {
                     display: block;
-                    color: var(--cms-error-color, #b42318);
+                    color: var(--cms-error-color, var(--integration-basic-blocs-error-text, #b42318));
                 }
 
                 [hidden] { display: none; }

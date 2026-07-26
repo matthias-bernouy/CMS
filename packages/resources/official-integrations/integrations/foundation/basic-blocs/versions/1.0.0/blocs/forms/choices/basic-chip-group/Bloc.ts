@@ -42,7 +42,7 @@ class BasicChipGroup extends HTMLElement {
                 }
 
                 :host([disabled]) .choices { opacity: .6; }
-                .error { color: var(--cms-error-color, #b42318); }
+                .error { color: var(--cms-error-color, var(--integration-basic-blocs-error-text, #b42318)); }
                 [hidden] { display: none; }
             </style>
             <span class="label" part="label"></span>

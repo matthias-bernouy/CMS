@@ -1,10 +1,10 @@
 :host {
-    --basic-toast-background: var(--bg-surface, Canvas);
-    --basic-toast-border: var(--border-default, color-mix(in srgb, currentColor 16%, transparent));
-    --basic-toast-color: var(--text-main, CanvasText);
+    --basic-toast-background: var(--integration-basic-blocs-surface-background, var(--bg-surface, Canvas));
+    --basic-toast-border: var(--integration-basic-blocs-surface-border, var(--border-default, color-mix(in srgb, currentColor 16%, transparent)));
+    --basic-toast-color: var(--integration-basic-blocs-surface-text, var(--text-main, CanvasText));
     --basic-toast-close-color: var(--basic-toast-color);
     --basic-toast-padding: .75rem .875rem;
-    --basic-toast-radius: var(--radius-md, .5rem);
+    --basic-toast-radius: var(--integration-basic-blocs-surface-radius, var(--radius-md, .5rem));
     --basic-toast-shadow: none;
     --basic-toast-width: max-content;
 
@@ -66,7 +66,7 @@
 :host([radius="pill"]) { --basic-toast-radius: 999px; }
 
 :host([shadow="sm"]) { --basic-toast-shadow: var(--shadow-sm, 0 .25rem .75rem color-mix(in srgb, CanvasText 10%, transparent)); }
-:host([shadow="md"]) { --basic-toast-shadow: var(--shadow-md, 0 .5rem 1.25rem color-mix(in srgb, CanvasText 14%, transparent)); }
+:host([shadow="md"]) { --basic-toast-shadow: var(--integration-basic-blocs-elevated-shadow, var(--shadow-md, 0 .5rem 1.25rem color-mix(in srgb, CanvasText 14%, transparent))); }
 :host([shadow="lg"]) { --basic-toast-shadow: var(--shadow-lg, 0 .75rem 2rem color-mix(in srgb, CanvasText 18%, transparent)); }
 
 .icon {
@@ -106,7 +106,7 @@ button {
 
 button:hover { opacity: 1; }
 button:focus-visible {
-    outline: 2px solid currentColor;
+    outline: 2px solid var(--integration-basic-blocs-focus-color, currentColor);
     outline-offset: 2px;
 }
 

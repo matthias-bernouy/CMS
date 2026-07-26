@@ -41,7 +41,7 @@
     padding: var(--space-md, 1rem);
     border: 1px solid var(--basic-alert-border);
     border-inline-start-width: .25rem;
-    border-radius: var(--radius-card, .5rem);
+    border-radius: var(--integration-basic-blocs-surface-radius, var(--radius-card, .5rem));
     background: var(--basic-alert-background);
     color: inherit;
     line-height: 1.45;

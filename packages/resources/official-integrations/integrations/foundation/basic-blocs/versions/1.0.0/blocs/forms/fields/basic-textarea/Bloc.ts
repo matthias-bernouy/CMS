@@ -45,22 +45,22 @@ class BasicTextarea extends HTMLElement {
                     box-sizing: border-box;
                     width: 100%;
                     padding: var(--cms-input-padding, .65rem .75rem);
-                    border: var(--cms-input-border, 1px solid var(--cms-input-border-color, color-mix(in srgb, currentColor 25%, transparent)));
-                    border-radius: var(--cms-input-radius, .5rem);
-                    background: var(--cms-input-background, Canvas);
-                    color: var(--cms-input-color, inherit);
+                    border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--integration-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent))));
+                    border-radius: var(--cms-input-radius, var(--integration-basic-blocs-field-radius, .5rem));
+                    background: var(--cms-input-background, var(--integration-basic-blocs-field-background, Canvas));
+                    color: var(--cms-input-color, var(--integration-basic-blocs-field-text, inherit));
                     font: inherit;
                     resize: vertical;
                 }
 
                 textarea:focus-visible {
-                    outline: 2px solid var(--cms-focus-color, var(--primary-base, currentColor));
+                    outline: 2px solid var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--primary-base, currentColor)));
                     outline-offset: 2px;
                 }
 
                 :host([disabled]) { opacity: .6; }
-                .hint { color: var(--cms-muted-color, color-mix(in srgb, currentColor 65%, transparent)); }
-                .error { color: var(--cms-error-color, #b42318); }
+                .hint { color: var(--cms-muted-color, var(--integration-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
+                .error { color: var(--cms-error-color, var(--integration-basic-blocs-error-text, #b42318)); }
                 [hidden] { display: none; }
             </style>
             <div class="field" part="field">
