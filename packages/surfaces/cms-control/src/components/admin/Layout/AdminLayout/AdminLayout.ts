@@ -1,6 +1,7 @@
 import { Component } from "@bernouy/components/base";
 
 import template from "./template.html" with { type: "text" };
+import { discoverRepositoryNavigation } from "./repositoryNavigation";
 
 const DEFAULT_BRAND_NAME = "CmsCore";
 
@@ -25,6 +26,7 @@ type SiteSettingsResponse = {
  */
 export class FixedAdminLayout extends Component {
     private _brandRequest: AbortController | null = null;
+    private _repositoryRequest: AbortController | null = null;
     private _titleSlot: HTMLSlotElement | null = null;
     private _actionSlot: HTMLSlotElement | null = null;
     private _pageHeader: HTMLElement | null = null;
@@ -49,6 +51,8 @@ export class FixedAdminLayout extends Component {
         this._pageHeader = root.querySelector(".admin-page-header");
 
         this._syncRoutes(root, basePath);
+        this._repositoryRequest?.abort();
+        this._repositoryRequest = discoverRepositoryNavigation(root, basePath);
         this._setBrandName(root, DEFAULT_BRAND_NAME);
         this._syncPageHeader();
         void this._syncSiteName(root, basePath);
@@ -61,6 +65,8 @@ export class FixedAdminLayout extends Component {
     disconnectedCallback() {
         this._brandRequest?.abort();
         this._brandRequest = null;
+        this._repositoryRequest?.abort();
+        this._repositoryRequest = null;
         document.removeEventListener("settings:saved", this._onSettingsSaved);
         this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
         this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
@@ -155,7 +161,9 @@ export class FixedAdminLayout extends Component {
     private _onPageHeaderSlotChange = (): void => this._syncPageHeader();
 }
 
-customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
+if (!customElements.get("w13c-fixed-admin-layout")) {
+    customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
+}
 
 function isAbortError(error: unknown): boolean {
     return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";

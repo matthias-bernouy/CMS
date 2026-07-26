@@ -11152,7 +11152,6 @@ p {
 
   // src/components/admin/Layout/AdminLayout/template.html
   var template_default = `<w13c-left-menu-layout>
-
     <w13c-lateral-menu slot="sidebar" aria-label="Admin navigation" style="--menu-brand-mark: 'C'; --menu-brand-mark-display: grid; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;">
         <h2 slot="header" data-admin-brand>CmsCore</h2>
 
@@ -11266,6 +11265,16 @@ p {
             Integrations
         </w13c-lateral-menu-item>
 
+        <w13c-lateral-menu-item data-route="repository" data-repository-route hidden>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="8" ry="3" />
+                <path d="M4 5v7c0 1.66 3.58 3 8 3s8-1.34 8-3V5" />
+                <path d="M4 12v7c0 1.66 3.58 3 8 3s8-1.34 8-3v-7" />
+            </svg>
+            Repository
+        </w13c-lateral-menu-item>
+
         <w13c-lateral-menu-item data-route="users">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -11309,30 +11318,47 @@ p {
     </w13c-lateral-menu>
 
     <slot name="secondary-lateral-nav" slot="secondary-sidebar"></slot>
-
     <div>
-
         <div class="admin-page-header" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
             <h1 style="margin: 0; line-height: 1;">
                 <slot name="title"></slot>
             </h1>
-
             <div style="display: flex; align-items: center; gap: 0.75rem; padding-top: 4px;">
                 <slot name="action"></slot>
             </div>
         </div>
         <slot></slot>
-
     </div>
-
 </w13c-left-menu-layout>
 `;
+
+  // src/components/admin/Layout/AdminLayout/repositoryNavigation.ts
+  function discoverRepositoryNavigation(root, basePath) {
+    const request = new AbortController;
+    const item = root.querySelector("[data-repository-route]");
+    if (!item) {
+      return request;
+    }
+    item.hidden = true;
+    fetch(`${basePath}/api/repository/status`, {
+      headers: { Accept: "application/json" },
+      signal: request.signal
+    }).then((response) => {
+      if (!request.signal.aborted) {
+        item.hidden = response.status !== 200 && response.status !== 503;
+      }
+    }).catch(() => {
+      item.hidden = true;
+    });
+    return request;
+  }
 
   // src/components/admin/Layout/AdminLayout/AdminLayout.ts
   var DEFAULT_BRAND_NAME = "CmsCore";
 
   class FixedAdminLayout extends U2 {
     _brandRequest = null;
+    _repositoryRequest = null;
     _titleSlot = null;
     _actionSlot = null;
     _pageHeader = null;
@@ -11353,6 +11379,8 @@ p {
       this._actionSlot = root.querySelector('slot[name="action"]');
       this._pageHeader = root.querySelector(".admin-page-header");
       this._syncRoutes(root, basePath);
+      this._repositoryRequest?.abort();
+      this._repositoryRequest = discoverRepositoryNavigation(root, basePath);
       this._setBrandName(root, DEFAULT_BRAND_NAME);
       this._syncPageHeader();
       this._syncSiteName(root, basePath);
@@ -11363,6 +11391,8 @@ p {
     disconnectedCallback() {
       this._brandRequest?.abort();
       this._brandRequest = null;
+      this._repositoryRequest?.abort();
+      this._repositoryRequest = null;
       document.removeEventListener("settings:saved", this._onSettingsSaved);
       this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
       this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
@@ -11444,7 +11474,9 @@ p {
     };
     _onPageHeaderSlotChange = () => this._syncPageHeader();
   }
-  customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
+  if (!customElements.get("w13c-fixed-admin-layout")) {
+    customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
+  }
   function isAbortError(error) {
     return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
   }
@@ -28082,6 +28114,30 @@ details[open] > summary > .chevron {
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
   }
+  async function integrationUpgradeVersions(id) {
+    return getJson2(`${route3("/api/integrations/installations/versions")}?id=${encodeURIComponent(id)}`);
+  }
+  async function upgradeIntegrationInstallation(id, version) {
+    await postJson(`${route3("/api/integrations/installations/upgrade")}?id=${encodeURIComponent(id)}`, { version });
+    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
+    document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
+  }
+
+  class IntegrationApiError extends Error {
+    status;
+    constructor(status, message) {
+      super(message);
+      this.status = status;
+      this.name = "IntegrationApiError";
+    }
+  }
+  async function getJson2(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw await responseError(response);
+    }
+    return response.json();
+  }
   async function postJson(url, body) {
     const response = await fetch(url, {
       method: "POST",
@@ -28089,9 +28145,20 @@ details[open] > summary > .chevron {
       body: JSON.stringify(body)
     });
     if (!response.ok) {
-      throw new Error(await response.text());
+      throw await responseError(response);
     }
     return response.json();
+  }
+  async function responseError(response) {
+    const fallback = `Request failed (HTTP ${response.status})`;
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      const body = await response.json().catch(() => null);
+      const message = typeof body?.error === "string" ? body.error : typeof body?.message === "string" ? body.message : null;
+      return new IntegrationApiError(response.status, message?.slice(0, 500) || fallback);
+    }
+    const text4 = (await response.text()).trim();
+    return new IntegrationApiError(response.status, text4 && !text4.startsWith("<") ? text4.slice(0, 500) : fallback);
   }
 
   // src/components/admin/Resources/Integrations/fields.ts
@@ -28356,6 +28423,28 @@ details[open] > summary > .chevron {
                         <div><dt>Version</dt><dd>{{ integration.definitionVersion }}</dd></div>
                         <div><dt>Last sync</dt><dd>{{ integration.updatedAtLabel }}</dd></div>
                     </dl>
+                </cms-detail-section>
+
+                <cms-detail-section slot="aside" heading="Version upgrade">
+                    <div class="upgrade-panel" data-upgrade-panel>
+                        <p>Upgrades are explicit. Syncing never changes the installed version.</p>
+                        <p9r-button type="button" data-upgrade-open>Check for upgrades</p9r-button>
+                        <div class="upgrade-form" data-upgrade-form hidden>
+                            <label>
+                                Target version
+                                <select data-upgrade-target aria-label="Target integration version"></select>
+                            </label>
+                            <label>
+                                Type the exact target version to confirm
+                                <input data-upgrade-confirmation type="text" autocomplete="off" spellcheck="false" />
+                            </label>
+                            <div class="upgrade-actions">
+                                <p9r-button type="button" color="primary" data-upgrade-confirm>Upgrade</p9r-button>
+                                <button type="button" class="secondary-action" data-upgrade-cancel>Cancel</button>
+                            </div>
+                        </div>
+                        <p class="upgrade-status" data-upgrade-status role="status" aria-live="polite"></p>
+                    </div>
                 </cms-detail-section>
 
                 <cms-detail-section slot="aside" heading="Linked integrations">
@@ -28792,6 +28881,9 @@ details[open] > summary > .chevron {
     text4(content, "[data-title]", installation.label);
     text4(content, "[data-description]", definition?.description ?? "No description.");
     content.querySelector("[data-run-sync]").dataset.integrationId = installation.id;
+    const upgrade = content.querySelector("[data-upgrade-panel]");
+    upgrade.dataset.integrationId = installation.id;
+    upgrade.dataset.currentVersion = installation.definitionVersion;
     fillIcon(content, "[data-back-icon]", "table");
     fillIcon(content, "[data-grid-icon]", "grid");
     renderLinkedPlaceholder(content.querySelector("[data-linked]"));
@@ -28852,7 +28944,128 @@ details[open] > summary > .chevron {
     return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
   }
 
-  // src/components/admin/Resources/Integrations/ui/actions.ts
+  // src/components/admin/Resources/Integrations/ui/actions/installation.ts
+  async function runIntegrationSync(host, button2) {
+    const id = button2.dataset.integrationId;
+    if (!id) {
+      return;
+    }
+    const status = host.querySelector("[data-action-status]");
+    setBusy(button2, true, "Syncing");
+    setStatus(status, "");
+    try {
+      await rerunIntegrationInstallation(id);
+      setBusy(button2, false, "Run sync");
+      setStatus(status, "Synced");
+    } catch (error) {
+      setBusy(button2, false, "Run sync");
+      setStatus(status, error instanceof Error ? error.message : "Sync failed", true);
+    }
+  }
+  async function openIntegrationUpgrade(button2) {
+    const panel = upgradePanel(button2);
+    const id = panel?.dataset.integrationId;
+    if (!panel || !id) {
+      return;
+    }
+    setBusy(button2, true, "Checking");
+    setStatus(statusElement(panel), "Checking available versions...");
+    try {
+      const choices = await integrationUpgradeVersions(id);
+      renderUpgradeChoices(panel, choices);
+      button2.hidden = choices.versions.length > 0;
+      setBusy(button2, false, choices.versions.length ? "Check again" : "Up to date");
+    } catch (error) {
+      setBusy(button2, false, "Try again");
+      setStatus(statusElement(panel), integrationUpgradeErrorMessage(error), true);
+    }
+  }
+  function cancelIntegrationUpgrade(button2) {
+    const panel = upgradePanel(button2);
+    if (!panel) {
+      return;
+    }
+    panel.querySelector("[data-upgrade-form]").hidden = true;
+    panel.querySelector("[data-upgrade-open]").hidden = false;
+    setStatus(statusElement(panel), "Upgrade cancelled.");
+  }
+  async function confirmIntegrationUpgrade(button2) {
+    const panel = upgradePanel(button2);
+    const id = panel?.dataset.integrationId;
+    const select4 = panel?.querySelector("[data-upgrade-target]");
+    const confirmation = panel?.querySelector("[data-upgrade-confirmation]");
+    if (!panel || !id || !select4 || !confirmation) {
+      return;
+    }
+    const target2 = select4.value;
+    if (!target2 || confirmation.value.trim() !== target2) {
+      setStatus(statusElement(panel), `Type ${target2 || "the target version"} exactly to confirm.`, true);
+      return;
+    }
+    setBusy(button2, true, "Upgrading");
+    setStatus(statusElement(panel), `Upgrading to ${target2}...`);
+    try {
+      await upgradeIntegrationInstallation(id, target2);
+      setBusy(button2, false, "Upgrade complete");
+      setStatus(statusElement(panel), `Upgraded to ${target2}. Installation data is refreshing.`);
+    } catch (error) {
+      setBusy(button2, false, "Upgrade");
+      setStatus(statusElement(panel), integrationUpgradeErrorMessage(error), true);
+    }
+  }
+  function renderUpgradeChoices(panel, choices) {
+    const form = panel.querySelector("[data-upgrade-form]");
+    const select4 = panel.querySelector("[data-upgrade-target]");
+    const confirmation = panel.querySelector("[data-upgrade-confirmation]");
+    select4.replaceChildren(...choices.versions.map((version) => versionOption(version, choices)));
+    const preferred = choices.stable ?? choices.latest ?? choices.versions[0] ?? "";
+    select4.value = preferred;
+    confirmation.value = "";
+    confirmation.placeholder = preferred;
+    form.hidden = choices.versions.length === 0;
+    setStatus(statusElement(panel), choices.versions.length ? `Installed: ${choices.current}. Select and confirm an exact target version.` : `Version ${choices.current} is up to date.`);
+  }
+  function integrationUpgradeErrorMessage(error) {
+    if (!(error instanceof IntegrationApiError)) {
+      return error instanceof Error ? error.message : "Upgrade failed.";
+    }
+    if (error.status === 409) {
+      return "The repository state changed. Reload the available versions before trying again.";
+    }
+    if (error.status === 422) {
+      return `The upgrade was rejected: ${error.message}`;
+    }
+    if (error.status === 503) {
+      return "The integration repository is unavailable. The installed version remains unchanged.";
+    }
+    return error.message;
+  }
+  function versionOption(version, choices) {
+    const option3 = document.createElement("option");
+    option3.value = version;
+    const channels = [choices.stable === version ? "stable" : "", choices.latest === version ? "latest" : ""].filter(Boolean);
+    option3.textContent = channels.length ? `${version} (${channels.join(", ")})` : version;
+    return option3;
+  }
+  function upgradePanel(element) {
+    return element.closest("[data-upgrade-panel]");
+  }
+  function statusElement(panel) {
+    return panel.querySelector("[data-upgrade-status]");
+  }
+  function setBusy(element, busy, label3) {
+    element.toggleAttribute("aria-busy", busy);
+    element.textContent = label3;
+  }
+  function setStatus(element, message, error = false) {
+    if (!element) {
+      return;
+    }
+    element.textContent = message;
+    element.classList.toggle("is-error", error);
+  }
+
+  // src/components/admin/Resources/Integrations/ui/actions/index.ts
   async function handleClick(host, event) {
     const target2 = event.target instanceof Element ? event.target : null;
     if (!target2) {
@@ -28874,6 +29087,19 @@ details[open] > summary > .chevron {
     }
     if (target2.closest("[data-import-setup]")) {
       return importActive(host);
+    }
+    const upgradeOpen = target2.closest("[data-upgrade-open]");
+    if (upgradeOpen) {
+      return openIntegrationUpgrade(upgradeOpen);
+    }
+    const upgradeCancel = target2.closest("[data-upgrade-cancel]");
+    if (upgradeCancel) {
+      cancelIntegrationUpgrade(upgradeCancel);
+      return;
+    }
+    const upgradeConfirm = target2.closest("[data-upgrade-confirm]");
+    if (upgradeConfirm) {
+      return confirmIntegrationUpgrade(upgradeConfirm);
     }
     const runSync = target2.closest("[data-run-sync]");
     if (runSync) {
@@ -28922,33 +29148,6 @@ details[open] > summary > .chevron {
       host.openDetail(id || host.installations.find((installation) => installation.id === definition.kind)?.id || "");
     } catch (error) {
       openSetup(host, definition, { answers, error: error instanceof Error ? error.message : "Import failed" });
-    }
-  }
-  async function runIntegrationSync(host, button2) {
-    const id = button2.dataset.integrationId;
-    if (!id) {
-      return;
-    }
-    const status = host.querySelector("[data-action-status]");
-    button2.setAttribute("aria-busy", "true");
-    button2.textContent = "Syncing";
-    if (status) {
-      status.textContent = "";
-    }
-    try {
-      await rerunIntegrationInstallation(id);
-      await host.waitForBoundData(() => true);
-      button2.removeAttribute("aria-busy");
-      button2.textContent = "Run sync";
-      if (status) {
-        status.textContent = "Synced";
-      }
-    } catch (error) {
-      button2.removeAttribute("aria-busy");
-      button2.textContent = "Run sync";
-      if (status) {
-        status.textContent = error instanceof Error ? error.message : "Sync failed";
-      }
     }
   }
   function closeAndSetTab(host, tab) {
@@ -29310,6 +29509,65 @@ button[slot="back"] svg {
 }
 
 .action-status.is-error {
+    color: #9b2a1a;
+}
+
+.upgrade-panel,
+.upgrade-form,
+.upgrade-panel label {
+    display: grid;
+    gap: 8px;
+}
+
+.upgrade-panel > p {
+    margin: 0;
+    color: #66736f;
+    font-size: 13px;
+}
+
+.upgrade-form {
+    border-top: 1px solid #dfe5e2;
+    padding-top: 12px;
+}
+
+.upgrade-panel label {
+    color: #42504b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.upgrade-panel select,
+.upgrade-panel input {
+    width: 100%;
+    border: 1px solid #bdc9c4;
+    border-radius: 6px;
+    background: #fff;
+    padding: 8px 10px;
+    color: #1e2925;
+    font: inherit;
+}
+
+.upgrade-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.secondary-action {
+    border: 0;
+    background: transparent;
+    padding: 8px;
+    color: #42504b;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.upgrade-status {
+    min-height: 18px;
+}
+
+.upgrade-status.is-error {
     color: #9b2a1a;
 }
 
@@ -29696,8 +29954,1200 @@ button[slot="back"]:disabled {
     customElements.define("cms-integrations-admin", IntegrationBrowser);
   }
 
+  // src/components/admin/Resources/Repository/template.html
+  var template_default16 = `<div class="repository-console">
+    <section class="panel" aria-labelledby="repository-overview-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Repository health</p>
+                <h2 id="repository-overview-title">Operational overview</h2>
+            </div>
+            <button type="button" class="secondary" data-refresh>Refresh</button>
+        </div>
+        <div class="feedback" data-overview-feedback role="status" aria-live="polite"></div>
+        <div class="status-grid" data-status aria-live="polite"></div>
+        <div data-diagnostics></div>
+    </section>
+
+    <section class="panel" aria-labelledby="repository-versions-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Version catalogue</p>
+                <h2 id="repository-versions-title">Inspect an integration</h2>
+            </div>
+        </div>
+        <form class="lookup" data-versions-form>
+            <label>
+                <span>Integration kind</span>
+                <input name="kind" autocomplete="off" required placeholder="commerce">
+            </label>
+            <button type="submit">Load versions</button>
+        </form>
+        <div class="feedback" data-versions-feedback role="status" aria-live="polite"></div>
+        <div data-versions></div>
+    </section>
+
+    <section class="panel" aria-labelledby="repository-compatibility-title" data-compatibility-panel hidden>
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Compatibility history</p>
+                <h2 id="repository-compatibility-title" data-selection-title>Selected version</h2>
+            </div>
+        </div>
+        <div class="feedback" data-compatibility-feedback role="status" aria-live="polite"></div>
+        <div data-compatibility></div>
+        <button type="button" class="secondary" data-load-more hidden>Load older revisions</button>
+    </section>
+
+    <section class="panel" aria-labelledby="repository-publish-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Immutable publication</p>
+                <h2 id="repository-publish-title">Publish a package</h2>
+            </div>
+        </div>
+        <p>Upload a canonical package JSON document. Existing versions cannot be replaced.</p>
+        <form data-upload-form>
+            <label>
+                <span>Package JSON</span>
+                <input type="file" name="package" accept="application/json,.json" required>
+            </label>
+            <button type="submit">Validate and publish</button>
+        </form>
+        <div class="feedback" data-upload-feedback role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="repository-actions-title" data-actions-panel hidden>
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Controlled changes</p>
+                <h2 id="repository-actions-title">Manage the selected version</h2>
+            </div>
+        </div>
+        <p class="selection-summary" data-action-selection></p>
+        <div class="action-grid">
+            <form data-reevaluation-form>
+                <fieldset>
+                    <legend>Reevaluate compatibility</legend>
+                    <label>
+                        <span>Reason</span>
+                        <textarea name="reason" rows="3" required></textarea>
+                    </label>
+                    <label>
+                        <span>Evidence IDs <small>(comma or line separated)</small></span>
+                        <textarea name="evidenceIds" rows="3"></textarea>
+                    </label>
+                    <button type="submit">Create report revision</button>
+                </fieldset>
+                <div class="feedback" data-reevaluation-feedback role="status" aria-live="polite"></div>
+            </form>
+
+            <form data-promotion-form>
+                <fieldset>
+                    <legend>Promote to stable</legend>
+                    <p>This action requires both exact confirmations from the currently loaded report.</p>
+                    <label>
+                        <span>Type version <code data-confirm-version></code></span>
+                        <input name="confirmationVersion" autocomplete="off" required>
+                    </label>
+                    <label>
+                        <span>Type report revision ID <code data-confirm-report></code></span>
+                        <input name="confirmationReportRevisionId" autocomplete="off" required>
+                    </label>
+                    <label>
+                        <span>Reason <small>(optional)</small></span>
+                        <textarea name="reason" rows="2"></textarea>
+                    </label>
+                    <button type="submit" class="danger">Promote exact version</button>
+                </fieldset>
+                <div class="feedback" data-promotion-feedback role="status" aria-live="polite"></div>
+            </form>
+        </div>
+    </section>
+</div>
+`;
+
+  // src/components/admin/Resources/Repository/styles/controls.css
+  var controls_default3 = `cms-repository-admin form label,
+cms-repository-admin fieldset {
+    display: grid;
+    gap: 0.35rem;
+}
+
+cms-repository-admin form label {
+    font-weight: 600;
+}
+
+cms-repository-admin input,
+cms-repository-admin textarea,
+cms-repository-admin button {
+    font: inherit;
+}
+
+cms-repository-admin input,
+cms-repository-admin textarea {
+    border: 1px solid #b8c1cf;
+    border-radius: 0.4rem;
+    box-sizing: border-box;
+    padding: 0.6rem;
+    width: 100%;
+}
+
+cms-repository-admin button {
+    align-self: end;
+    background: #2257d6;
+    border: 0;
+    border-radius: 0.4rem;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.65rem 0.9rem;
+}
+
+cms-repository-admin button.secondary {
+    background: #e8edf5;
+    color: #162035;
+}
+
+cms-repository-admin button.danger {
+    background: #a5192e;
+}
+
+cms-repository-admin button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+cms-repository-admin .feedback:not(:empty) {
+    border-radius: 0.4rem;
+    margin: 0.8rem 0;
+    padding: 0.65rem 0.8rem;
+}
+
+cms-repository-admin .feedback[data-tone="error"] {
+    background: #fff0f1;
+    color: #821326;
+}
+
+cms-repository-admin .feedback[data-tone="success"] {
+    background: #eaf8ef;
+    color: #176332;
+}
+
+cms-repository-admin .feedback[data-tone="info"] {
+    background: #eef4ff;
+    color: #173c91;
+}
+
+cms-repository-admin .version-table {
+    border-collapse: collapse;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+cms-repository-admin .version-table th,
+cms-repository-admin .version-table td {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.65rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+cms-repository-admin code {
+    overflow-wrap: anywhere;
+}
+
+cms-repository-admin fieldset {
+    border: 1px solid #dfe4ec;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+cms-repository-admin fieldset > * + * {
+    margin-top: 0.8rem;
+}
+
+@media (max-width: 42rem) {
+    cms-repository-admin .version-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+`;
+
+  // src/components/admin/Resources/Repository/styles/layout.css
+  var layout_default3 = `cms-repository-admin .repository-console {
+    color: #162035;
+    display: grid;
+    gap: 1.25rem;
+}
+
+cms-repository-admin .panel {
+    background: #fff;
+    border: 1px solid #dfe4ec;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+}
+
+cms-repository-admin .section-heading,
+cms-repository-admin .lookup,
+cms-repository-admin .status-grid,
+cms-repository-admin .action-grid {
+    display: flex;
+    gap: 1rem;
+}
+
+cms-repository-admin .section-heading {
+    align-items: start;
+    justify-content: space-between;
+}
+
+cms-repository-admin .section-heading h2,
+cms-repository-admin fieldset,
+cms-repository-admin .panel p {
+    margin-top: 0;
+}
+
+cms-repository-admin .eyebrow {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+}
+
+cms-repository-admin .status-grid,
+cms-repository-admin .action-grid {
+    flex-wrap: wrap;
+}
+
+cms-repository-admin .metric {
+    background: #f7f9fc;
+    border-radius: 0.5rem;
+    flex: 1 1 8rem;
+    padding: 0.85rem;
+}
+
+cms-repository-admin .metric strong,
+cms-repository-admin .metric span {
+    display: block;
+}
+
+cms-repository-admin .metric strong {
+    font-size: 1.25rem;
+}
+
+cms-repository-admin .lookup {
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+cms-repository-admin .lookup label {
+    flex: 1 1 16rem;
+}
+
+cms-repository-admin .diagnostic,
+cms-repository-admin .report,
+cms-repository-admin .quarantine {
+    border-left: 3px solid #cbd5e1;
+    margin: 0.65rem 0;
+    padding: 0.45rem 0.75rem;
+}
+
+cms-repository-admin .report[data-outcome="breaking"],
+cms-repository-admin .quarantine {
+    border-color: #a5192e;
+}
+
+cms-repository-admin .metadata,
+cms-repository-admin .evidence-list {
+    color: #475569;
+    font-size: 0.875rem;
+}
+
+cms-repository-admin .action-grid > form {
+    flex: 1 1 22rem;
+}
+`;
+
+  // src/components/admin/Resources/Repository/styles/index.ts
+  var styles_default4 = `${layout_default3}
+${controls_default3}`;
+
+  // src/components/admin/Resources/Repository/contracts/read.ts
+  var MAX_ITEMS = 4096;
+  var MAX_TEXT = 16384;
+
+  class RepositoryUiContractError extends Error {
+    constructor() {
+      super("Repository response is invalid");
+      this.name = "RepositoryUiContractError";
+    }
+  }
+  function parseRepositoryStatus(value3) {
+    const object = readRecord(value3);
+    return {
+      ready: readBoolean(object.ready),
+      health: readText(object.health),
+      integrations: readCount(object.integrations),
+      versions: readCount(object.versions),
+      diagnostics: readCount(object.diagnostics),
+      quarantined: readCount(object.quarantined),
+      recoveryDiagnostics: readCount(object.recoveryDiagnostics)
+    };
+  }
+  function parseRepositoryDiagnostics(value3) {
+    const object = readRecord(value3);
+    return {
+      health: readText(object.health),
+      diagnostics: readArray(object.diagnostics).map(parseDiagnostic),
+      quarantined: readArray(object.quarantined).map(parseQuarantine),
+      recovery: readArray(object.recovery).map(parseDiagnostic)
+    };
+  }
+  function parseRepositoryVersions(value3) {
+    const object = readRecord(value3);
+    return {
+      kind: readText(object.kind),
+      ...optionalProperty("stable", readOptionalText(object.stable)),
+      ...optionalProperty("latest", readOptionalText(object.latest)),
+      versions: readArray(object.versions).map((entry) => {
+        const version = readRecord(entry);
+        return {
+          version: readText(version.version),
+          ...optionalProperty("digest", readOptionalText(version.digest)),
+          ...version.compatibility === null || version.compatibility === undefined ? {} : { compatibility: parseVersionCompatibility(version.compatibility) }
+        };
+      })
+    };
+  }
+  function readRecord(value3) {
+    if (!value3 || typeof value3 !== "object" || Array.isArray(value3)) {
+      throw new RepositoryUiContractError;
+    }
+    return value3;
+  }
+  function readArray(value3, maximum = MAX_ITEMS) {
+    if (!Array.isArray(value3) || value3.length > maximum) {
+      throw new RepositoryUiContractError;
+    }
+    return value3;
+  }
+  function readText(value3) {
+    if (typeof value3 !== "string" || value3.length === 0 || value3.length > MAX_TEXT) {
+      throw new RepositoryUiContractError;
+    }
+    return value3;
+  }
+  function readOptionalText(value3) {
+    return value3 === undefined || value3 === null ? undefined : readText(value3);
+  }
+  function readBoolean(value3) {
+    if (typeof value3 !== "boolean") {
+      throw new RepositoryUiContractError;
+    }
+    return value3;
+  }
+  function readCount(value3) {
+    if (!Number.isSafeInteger(value3) || value3 < 0) {
+      throw new RepositoryUiContractError;
+    }
+    return value3;
+  }
+  function parseDiagnostic(value3) {
+    const object = readRecord(value3);
+    return {
+      code: readText(object.code),
+      message: readText(object.message),
+      ...optionalProperty("stage", readOptionalText(object.stage)),
+      ...optionalProperty("kind", readOptionalText(object.kind)),
+      ...optionalProperty("version", readOptionalText(object.version)),
+      ...optionalProperty("operationId", readOptionalText(object.operationId))
+    };
+  }
+  function parseQuarantine(value3) {
+    const object = readRecord(value3);
+    return {
+      ...optionalProperty("kind", readOptionalText(object.kind)),
+      diagnosticCodes: readArray(object.diagnosticCodes, 256).map(readText)
+    };
+  }
+  function parseVersionCompatibility(value3) {
+    const object = readRecord(value3);
+    return {
+      admissionReportId: readText(object.admissionReportId),
+      currentReportRevisionId: readText(object.currentReportRevisionId),
+      outcome: readText(object.outcome),
+      admissible: readBoolean(object.admissible),
+      warning: readBoolean(object.warning)
+    };
+  }
+  function optionalProperty(key, value3) {
+    return value3 === undefined ? {} : { [key]: value3 };
+  }
+
+  // src/components/admin/Resources/Repository/contracts/reports.ts
+  function parseRepositoryCompatibilityPage(value3) {
+    const object = readRecord(value3);
+    return {
+      admission: parseRepositoryCompatibilityReport(object.admission, "admission"),
+      current: parseRepositoryCompatibilityReport(object.current),
+      revisions: readArray(object.revisions, 100).map((report) => parseRepositoryCompatibilityReport(report, "revision")),
+      totalRevisions: readCount(object.totalRevisions),
+      ...optionalProperty("nextCursor", readOptionalText(object.nextCursor))
+    };
+  }
+  function parseRepositoryCompatibilityReport(value3, expectedType) {
+    const object = readRecord(value3);
+    const reportType = object.reportType;
+    if (reportType !== "admission" && reportType !== "revision" || expectedType && reportType !== expectedType) {
+      throw new RepositoryUiContractError;
+    }
+    const evaluator = readRecord(object.evaluator);
+    const supersedes = reportType === "revision" ? readText(object.supersedes) : undefined;
+    const provenance = reportType === "revision" ? parseProvenance(object.provenance) : undefined;
+    return {
+      id: readText(object.id),
+      reportType,
+      kind: readText(object.kind),
+      version: readText(object.version),
+      packageDigest: readText(object.packageDigest),
+      outcome: readText(object.outcome),
+      admissible: readBoolean(object.admissible),
+      evaluator: { name: readText(evaluator.name), version: readText(evaluator.version) },
+      createdAt: readText(object.createdAt),
+      releaseLevel: readText(object.releaseLevel),
+      requiredReleaseLevel: readText(object.requiredReleaseLevel),
+      baselines: readArray(object.baselines, 16).map(parseBaseline),
+      informationalBaselines: readArray(object.informationalBaselines, 16).map(parseBaseline),
+      evidence: readArray(object.evidence, 4096).map(parseEvidence),
+      ...optionalProperty("noBaselineReason", readOptionalText(object.noBaselineReason)),
+      ...supersedes ? { supersedes } : {},
+      ...provenance ? { provenance } : {}
+    };
+  }
+  function parseRepositoryPublicationResult(value3) {
+    const object = readRecord(value3);
+    return {
+      operationId: readText(object.operationId),
+      kind: readText(object.kind),
+      version: readText(object.version),
+      digest: readText(object.digest),
+      report: parseRepositoryCompatibilityReport(object.report, "admission")
+    };
+  }
+  function parseRepositoryReevaluationResult(value3) {
+    const object = readRecord(value3);
+    return {
+      revision: parseRepositoryCompatibilityReport(object.revision, "revision"),
+      currentReportRevisionId: readText(object.currentReportRevisionId)
+    };
+  }
+  function parseRepositoryPromotionResult(value3) {
+    const object = readRecord(value3);
+    const record3 = readRecord(object.record);
+    return {
+      operationId: readText(object.operationId),
+      kind: readText(record3.kind),
+      version: readText(record3.version),
+      reportRevisionId: readText(record3.reportRevisionId),
+      ...optionalProperty("previousStable", readOptionalText(record3.previousStable))
+    };
+  }
+  function parseRepositoryActionErrorDetails(value3) {
+    const object = readRecord(value3);
+    const report = object.report === undefined ? undefined : parseRepositoryCompatibilityReport(object.report);
+    return {
+      ...optionalProperty("currentReportRevisionId", readOptionalText(object.currentReportRevisionId)),
+      ...optionalProperty("existingDigest", readOptionalText(object.existingDigest)),
+      ...optionalProperty("latest", readOptionalText(object.latest)),
+      ...optionalProperty("reportRevisionId", readOptionalText(object.reportRevisionId)),
+      ...report ? { report } : {}
+    };
+  }
+  function parseBaseline(value3) {
+    const object = readRecord(value3);
+    return {
+      kind: readText(object.kind),
+      version: readText(object.version),
+      packageDigest: readText(object.packageDigest)
+    };
+  }
+  function parseEvidence(value3) {
+    const object = readRecord(value3);
+    return {
+      classification: readText(object.classification),
+      surface: readText(object.surface),
+      code: readText(object.code),
+      message: readText(object.message)
+    };
+  }
+  function parseProvenance(value3) {
+    const object = readRecord(value3);
+    return {
+      reason: readText(object.reason),
+      evidenceIds: readArray(object.evidenceIds ?? [], 256).map(readText)
+    };
+  }
+
+  // src/components/admin/Resources/Repository/api.ts
+  class RepositoryApiError extends Error {
+    status;
+    code;
+    retryAfter;
+    details;
+    constructor(status, code, retryAfter, details) {
+      super(`Repository request failed with status ${status}`);
+      this.status = status;
+      this.code = code;
+      this.retryAfter = retryAfter;
+      this.details = details;
+      this.name = "RepositoryApiError";
+    }
+  }
+  function fetchRepositoryStatus(signal) {
+    return get("/status", parseRepositoryStatus, undefined, signal);
+  }
+  function fetchRepositoryDiagnostics(signal) {
+    return get("/diagnostics", parseRepositoryDiagnostics, undefined, signal);
+  }
+  function fetchRepositoryVersions(kind, signal) {
+    return get("/versions", parseRepositoryVersions, { kind }, signal);
+  }
+  function fetchRepositoryCompatibility(kind, version, after, signal) {
+    return get("/compatibility", parseRepositoryCompatibilityPage, { kind, version, limit: "100", ...after ? { after } : {} }, signal);
+  }
+  function publishRepositoryPackage(file, signal) {
+    return request("/publications", parseRepositoryPublicationResult, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: file,
+      signal
+    });
+  }
+  function requestRepositoryReevaluation(input2, signal) {
+    return postJson2("/reevaluations", input2, parseRepositoryReevaluationResult, signal);
+  }
+  function requestRepositoryStablePromotion(input2, signal) {
+    return postJson2("/stable-promotions", input2, parseRepositoryPromotionResult, signal);
+  }
+  function get(path, parse, query7, signal) {
+    const search = new URLSearchParams(query7).toString();
+    return request(`${path}${search ? `?${search}` : ""}`, parse, {
+      headers: { Accept: "application/json" },
+      signal
+    });
+  }
+  function postJson2(path, body, parse, signal) {
+    return request(path, parse, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal
+    });
+  }
+  async function request(path, parse, init) {
+    const response = await fetch(`${getMetaBasePath()}/api/repository${path}`, init);
+    const body = await response.json().catch(() => {
+      return;
+    });
+    if (!response.ok) {
+      throw repositoryApiError(response, body);
+    }
+    return parse(body);
+  }
+  function repositoryApiError(response, body) {
+    let code;
+    let details = {};
+    try {
+      const object = readRecord(body);
+      code = readOptionalText(object.code);
+      details = parseRepositoryActionErrorDetails(object);
+    } catch {}
+    const retryAfter = response.status === 429 ? normalizedRetryAfter(response.headers.get("retry-after")) : undefined;
+    return new RepositoryApiError(response.status, code, retryAfter, details);
+  }
+  function normalizedRetryAfter(value3) {
+    return value3 && /^[1-9][0-9]*$/u.test(value3) ? value3 : undefined;
+  }
+
+  // src/components/admin/Resources/Repository/forms/fields.ts
+  class RepositoryFormError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = "RepositoryFormError";
+    }
+  }
+  function requiredField(form, name, label3) {
+    const value3 = field3(form, name).value.trim();
+    if (!value3) {
+      throw new RepositoryFormError(`${label3} is required.`);
+    }
+    return value3;
+  }
+  function optionalField(form, name) {
+    return field3(form, name).value.trim() || undefined;
+  }
+  function field3(form, name) {
+    const element = form.querySelector(`[name="${name}"]`);
+    if (!element) {
+      throw new RepositoryFormError(`Missing form field ${name}.`);
+    }
+    return element;
+  }
+
+  // src/components/admin/Resources/Repository/render/dom.ts
+  function element(tag, text5, className) {
+    const node = document.createElement(tag);
+    if (text5 !== undefined) {
+      node.textContent = text5;
+    }
+    if (className) {
+      node.className = className;
+    }
+    return node;
+  }
+  function labelledValue(label3, value3) {
+    const node = element("div", undefined, "metric");
+    node.append(element("span", label3), element("strong", value3));
+    return node;
+  }
+  function metadata(parts) {
+    return element("p", parts.filter(Boolean).join(" · "), "metadata");
+  }
+  function emptyMessage(message) {
+    return element("p", message, "metadata");
+  }
+
+  // src/components/admin/Resources/Repository/render/compatibility.ts
+  function renderRepositoryCompatibility(target2, page) {
+    const fragment = document.createDocumentFragment();
+    fragment.append(reportSection("Current report", page.current), reportSection("Admission report", page.admission), element("h3", `Revision history (${page.totalRevisions})`));
+    if (page.revisions.length === 0) {
+      fragment.append(emptyMessage("No compatibility reevaluation has been recorded."));
+    } else {
+      fragment.append(...page.revisions.map((report) => reportSection("Revision", report)));
+    }
+    target2.replaceChildren(fragment);
+  }
+  function reportSection(title2, report) {
+    const section = element("article", undefined, "report");
+    section.dataset.outcome = report.outcome;
+    section.append(element("h4", `${title2}: ${report.outcome}`), metadata([
+      `ID ${report.id}`,
+      `Created ${report.createdAt}`,
+      `Release ${report.releaseLevel}`,
+      `Required ${report.requiredReleaseLevel}`,
+      `Evaluator ${report.evaluator.name} ${report.evaluator.version}`
+    ]), codeLine("Package digest", report.packageDigest));
+    if (report.supersedes) {
+      section.append(codeLine("Supersedes", report.supersedes));
+    }
+    if (report.noBaselineReason) {
+      section.append(element("p", `No baseline: ${report.noBaselineReason}`));
+    }
+    appendBaselines(section, "Baselines", report.baselines);
+    appendBaselines(section, "Informational baselines", report.informationalBaselines);
+    section.append(element("h5", "Evidence"));
+    if (report.evidence.length === 0) {
+      section.append(emptyMessage("No compatibility evidence."));
+    } else {
+      const list = element("ul", undefined, "evidence-list");
+      for (const evidence of report.evidence) {
+        const item = element("li");
+        item.append(element("strong", `${evidence.classification} · ${evidence.surface} · ${evidence.code}`), document.createTextNode(` — ${evidence.message}`));
+        list.append(item);
+      }
+      section.append(list);
+    }
+    if (report.provenance) {
+      section.append(element("h5", "Reevaluation provenance"), element("p", report.provenance.reason), codeLine("Evidence IDs", report.provenance.evidenceIds.join(", ") || "None"));
+    }
+    return section;
+  }
+  function appendBaselines(target2, title2, baselines) {
+    if (baselines.length === 0) {
+      return;
+    }
+    target2.append(element("h5", title2));
+    const list = element("ul", undefined, "metadata");
+    for (const baseline of baselines) {
+      list.append(element("li", `${baseline.kind}@${baseline.version} · ${baseline.packageDigest}`));
+    }
+    target2.append(list);
+  }
+  function codeLine(label3, value3) {
+    const line3 = element("p", undefined, "metadata");
+    line3.append(document.createTextNode(`${label3}: `), element("code", value3));
+    return line3;
+  }
+
+  // src/components/admin/Resources/Repository/render/feedback.ts
+  function clearFeedback(target2) {
+    target2.replaceChildren();
+    target2.removeAttribute("data-tone");
+    target2.setAttribute("role", "status");
+  }
+  function showFeedback(target2, message, tone = "info") {
+    target2.dataset.tone = tone;
+    target2.setAttribute("role", "status");
+    target2.replaceChildren(element("span", message));
+  }
+  function showRepositoryError(target2, error) {
+    target2.dataset.tone = "error";
+    target2.setAttribute("role", "alert");
+    target2.replaceChildren(element("strong", errorMessage2(error)));
+  }
+  function errorMessage2(error) {
+    if (error instanceof RepositoryFormError) {
+      return error.message;
+    }
+    if (!(error instanceof RepositoryApiError)) {
+      return "The repository returned an invalid response. Reload before retrying.";
+    }
+    if (isStale(error)) {
+      const current = error.details.currentReportRevisionId;
+      return `The selected compatibility report is stale. Reload the current report${current ? ` (${current})` : ""} and confirm it again.`;
+    }
+    if (error.status === 409) {
+      return conflictMessage(error);
+    }
+    if (error.status === 413) {
+      return "The package is larger than the allowed upload size.";
+    }
+    if (error.status === 422) {
+      const outcome = error.details.report?.outcome;
+      return `Compatibility validation rejected this release${outcome ? ` (${outcome})` : ""}. Review the report before publishing a new major version.`;
+    }
+    if (error.status === 429) {
+      return `Too many repository requests.${error.retryAfter ? ` Retry after ${error.retryAfter} seconds.` : " Retry later."}`;
+    }
+    if (error.status === 503) {
+      return "Repository management is temporarily unavailable. Cached public delivery remains unaffected.";
+    }
+    if (error.status === 404) {
+      return "Repository management is not configured for this CMS or the requested item does not exist.";
+    }
+    if (error.status === 400) {
+      return "The repository rejected the request as invalid. Check the entered values.";
+    }
+    return "The repository request failed. Reload before retrying.";
+  }
+  function isStale(error) {
+    return Boolean(error.details.currentReportRevisionId || error.code?.includes("stale"));
+  }
+  function conflictMessage(error) {
+    const values = [
+      error.details.existingDigest ? `Existing digest: ${error.details.existingDigest}.` : "",
+      error.details.latest ? ` Latest version: ${error.details.latest}.` : ""
+    ].join("");
+    return `The version already exists or repository state changed. Reload before retrying.${values}`;
+  }
+
+  // src/components/admin/Resources/Repository/render/versions.ts
+  function renderRepositoryVersions(target2, view, select4) {
+    const summary2 = element("p");
+    summary2.append(document.createTextNode(`${view.kind} — stable `), element("strong", view.stable ?? "not set"), document.createTextNode(" · latest "), element("strong", view.latest ?? "not set"));
+    if (view.versions.length === 0) {
+      target2.replaceChildren(summary2, emptyMessage("No published version."));
+      return;
+    }
+    const table = element("table", undefined, "version-table");
+    const head = element("tr");
+    for (const label3 of ["Version", "Channel", "Digest", "Compatibility", "Action"]) {
+      head.append(element("th", label3));
+    }
+    const body = element("tbody");
+    for (const item of view.versions) {
+      const row = element("tr");
+      const button2 = element("button", "Inspect", "secondary");
+      button2.type = "button";
+      button2.dataset.version = item.version;
+      button2.addEventListener("click", () => select4(item.version));
+      row.append(tableCell(item.version), tableCell(channels(view, item.version)), tableCell(item.digest ?? "Unavailable", true), tableCell(compatibility(item)), tableNode(button2));
+      body.append(row);
+    }
+    const tableHead = element("thead");
+    tableHead.append(head);
+    table.append(tableHead, body);
+    target2.replaceChildren(summary2, table);
+  }
+  function tableCell(value3, code = false) {
+    const cell = element("td");
+    cell.append(code ? element("code", value3) : document.createTextNode(value3));
+    return cell;
+  }
+  function tableNode(node) {
+    const cell = element("td");
+    cell.append(node);
+    return cell;
+  }
+  function channels(view, version) {
+    return [view.stable === version ? "stable" : undefined, view.latest === version ? "latest" : undefined].filter(Boolean).join(", ") || "—";
+  }
+  function compatibility(item) {
+    if (!item.compatibility) {
+      return "No report";
+    }
+    return `${item.compatibility.outcome}${item.compatibility.warning ? " · warning" : ""}`;
+  }
+
+  // src/components/admin/Resources/Repository/forms/promotion.ts
+  function readRepositoryPromotion(form, selection) {
+    const version = requiredField(form, "confirmationVersion", "Version confirmation");
+    const reportRevisionId = requiredField(form, "confirmationReportRevisionId", "Report confirmation");
+    if (version !== selection.version) {
+      throw new RepositoryFormError(`Type the exact version ${selection.version} to confirm promotion.`);
+    }
+    if (reportRevisionId !== selection.currentReportRevisionId) {
+      throw new RepositoryFormError(`Type the exact current report revision ID ${selection.currentReportRevisionId} to confirm promotion.`);
+    }
+    return {
+      ...selection,
+      confirmation: { version, reportRevisionId },
+      ...optionalReason(form)
+    };
+  }
+  function optionalReason(form) {
+    const reason = optionalField(form, "reason");
+    return reason ? { reason } : {};
+  }
+
+  // src/components/admin/Resources/Repository/forms/reevaluation.ts
+  function readRepositoryReevaluation(form, selection) {
+    const evidenceIds = splitEvidenceIds(optionalField(form, "evidenceIds"));
+    return {
+      ...selection,
+      reason: requiredField(form, "reason", "Reevaluation reason"),
+      ...evidenceIds.length > 0 ? { evidenceIds } : {}
+    };
+  }
+  function splitEvidenceIds(value3) {
+    if (!value3) {
+      return [];
+    }
+    return [
+      ...new Set(value3.split(/[\n,]/u).map((entry) => entry.trim()).filter(Boolean))
+    ].slice(0, 256);
+  }
+
+  // src/components/admin/Resources/Repository/forms/upload.ts
+  var MAX_PACKAGE_BYTES = 32 * 1024 * 1024;
+  async function readRepositoryPackageFile(form) {
+    const input2 = field3(form, "package");
+    if (!(input2 instanceof HTMLInputElement) || input2.type !== "file") {
+      throw new RepositoryFormError("The package upload field is unavailable.");
+    }
+    const file = input2.files?.[0];
+    if (!file) {
+      throw new RepositoryFormError("Select a package JSON file.");
+    }
+    if (file.size < 1) {
+      throw new RepositoryFormError("The package JSON file is empty.");
+    }
+    if (file.size > MAX_PACKAGE_BYTES) {
+      throw new RepositoryFormError("The package JSON file exceeds the 32 MiB upload limit.");
+    }
+    try {
+      const value3 = JSON.parse(await file.text());
+      if (!value3 || typeof value3 !== "object" || Array.isArray(value3)) {
+        throw new TypeError("Package document must be an object");
+      }
+    } catch {
+      throw new RepositoryFormError("Select a valid package JSON document.");
+    }
+    return file;
+  }
+
+  // src/components/admin/Resources/Repository/component/actions.ts
+  async function submitRepositoryPackage(form, feedback, context) {
+    await withBusy(form, feedback, async () => {
+      const result = await publishRepositoryPackage(await readRepositoryPackageFile(form), context.signal);
+      showFeedback(feedback, `Published ${result.kind}@${result.version} as ${result.digest}. Compatibility: ${result.report.outcome}; report ${result.report.id}.`, "success");
+      form.reset();
+      await context.reloadKind(result.kind);
+    });
+  }
+  async function submitRepositoryReevaluation(form, feedback, context) {
+    await withSelection(form, feedback, context, async (selection) => {
+      const result = await requestRepositoryReevaluation(readRepositoryReevaluation(form, selection), context.signal);
+      context.updateSelection({ ...selection, currentReportRevisionId: result.currentReportRevisionId });
+      showFeedback(feedback, `Created compatibility revision ${result.currentReportRevisionId}: ${result.revision.outcome}.`, "success");
+      form.reset();
+      await context.reloadCompatibility();
+    });
+  }
+  async function submitRepositoryPromotion(form, feedback, context) {
+    await withSelection(form, feedback, context, async (selection) => {
+      const result = await requestRepositoryStablePromotion(readRepositoryPromotion(form, selection), context.signal);
+      showFeedback(feedback, `Promoted ${result.kind}@${result.version} to stable using report ${result.reportRevisionId}.`, "success");
+      form.reset();
+      await context.reloadKind(result.kind);
+    });
+  }
+  async function withSelection(form, feedback, context, operation) {
+    await withBusy(form, feedback, async () => {
+      const selection = context.selection();
+      if (!selection) {
+        throw new Error("Repository version selection is unavailable");
+      }
+      await operation(selection);
+    });
+  }
+  async function withBusy(form, feedback, operation) {
+    clearFeedback(feedback);
+    const controls = Array.from(form.querySelectorAll("button"));
+    controls.forEach((control2) => {
+      control2.disabled = true;
+    });
+    form.setAttribute("aria-busy", "true");
+    try {
+      await operation();
+    } catch (error) {
+      if (!isAbortError4(error)) {
+        showRepositoryError(feedback, error);
+      }
+    } finally {
+      form.removeAttribute("aria-busy");
+      controls.forEach((control2) => {
+        control2.disabled = false;
+      });
+    }
+  }
+  function isAbortError4(error) {
+    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
+  }
+
+  // src/components/admin/Resources/Repository/component/failure.ts
+  function renderRepositoryFailure(feedback, error) {
+    if (!isAbortError5(error)) {
+      showRepositoryError(feedback, error);
+    }
+  }
+  function isAbortError5(error) {
+    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
+  }
+
+  // src/components/admin/Resources/Repository/render/diagnostics.ts
+  function renderRepositoryDiagnostics(target2, view) {
+    const fragment = document.createDocumentFragment();
+    fragment.append(element("h3", "Diagnostics"));
+    if (view.diagnostics.length === 0) {
+      fragment.append(emptyMessage("No active diagnostics."));
+    } else {
+      fragment.append(...view.diagnostics.map(diagnostic));
+    }
+    fragment.append(element("h3", "Quarantine"));
+    if (view.quarantined.length === 0) {
+      fragment.append(emptyMessage("No quarantined integration."));
+    } else {
+      for (const entry of view.quarantined) {
+        const node = element("div", undefined, "quarantine");
+        node.append(element("strong", entry.kind ?? "Unknown integration"), metadata([entry.diagnosticCodes.join(", ")]));
+        fragment.append(node);
+      }
+    }
+    fragment.append(element("h3", "Recovery"));
+    if (view.recovery.length === 0) {
+      fragment.append(emptyMessage("No recovery event."));
+    } else {
+      fragment.append(...view.recovery.map(diagnostic));
+    }
+    target2.replaceChildren(fragment);
+  }
+  function diagnostic(value3) {
+    const node = element("div", undefined, "diagnostic");
+    node.append(element("strong", value3.code), element("p", value3.message), metadata([value3.stage, value3.kind, value3.version, value3.operationId]));
+    return node;
+  }
+
+  // src/components/admin/Resources/Repository/render/status.ts
+  function renderRepositoryStatus(target2, status) {
+    target2.replaceChildren(labelledValue("Health", status.health), labelledValue("Ready", status.ready ? "Yes" : "No"), labelledValue("Integrations", String(status.integrations)), labelledValue("Versions", String(status.versions)), labelledValue("Diagnostics", String(status.diagnostics)), labelledValue("Quarantined", String(status.quarantined)), labelledValue("Recovery events", String(status.recoveryDiagnostics)));
+  }
+
+  // src/components/admin/Resources/Repository/component/overview.ts
+  async function reloadRepositoryOverview(host, signal) {
+    const feedback = query7(host, "[data-overview-feedback]");
+    clearFeedback(feedback);
+    try {
+      const [status, diagnostics] = await Promise.all([
+        fetchRepositoryStatus(signal),
+        fetchRepositoryDiagnostics(signal)
+      ]);
+      renderRepositoryStatus(query7(host, "[data-status]"), status);
+      renderRepositoryDiagnostics(query7(host, "[data-diagnostics]"), diagnostics);
+      showFeedback(feedback, `Repository health: ${status.health}.`, status.ready ? "success" : "info");
+    } catch (error) {
+      if (!isAbortError6(error)) {
+        showRepositoryError(feedback, error);
+      }
+    }
+  }
+  function query7(root, selector) {
+    const node = root.querySelector(selector);
+    if (!node) {
+      throw new Error(`Missing repository overview element ${selector}`);
+    }
+    return node;
+  }
+  function isAbortError6(error) {
+    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
+  }
+
+  // src/components/admin/Resources/Repository/component/selection.ts
+  function renderRepositorySelection(host, selection) {
+    query8(host, "[data-actions-panel]").hidden = false;
+    query8(host, "[data-selection-title]").textContent = `${selection.kind}@${selection.version}`;
+    query8(host, "[data-action-selection]").textContent = `${selection.kind}@${selection.version} · current report ${selection.currentReportRevisionId}`;
+    query8(host, "[data-confirm-version]").textContent = selection.version;
+    query8(host, "[data-confirm-report]").textContent = selection.currentReportRevisionId;
+    query8(host, "[data-promotion-form]").reset();
+  }
+  function query8(root, selector) {
+    const node = root.querySelector(selector);
+    if (!node) {
+      throw new Error(`Missing repository selection element ${selector}`);
+    }
+    return node;
+  }
+
+  // src/components/admin/Resources/Repository/component/RepositoryAdmin.ts
+  class RepositoryAdmin extends HTMLElement {
+    initialized = false;
+    request;
+    selected;
+    compatibility;
+    connectedCallback() {
+      if (!this.initialized) {
+        this.mount();
+        this.bind();
+        this.initialized = true;
+      }
+      this.request?.abort();
+      this.request = new AbortController;
+      reloadRepositoryOverview(this, this.signal());
+    }
+    disconnectedCallback() {
+      this.request?.abort();
+      this.request = undefined;
+    }
+    mount() {
+      const style = document.createElement("style");
+      style.textContent = styles_default4;
+      const body = document.createElement("template");
+      body.innerHTML = template_default16;
+      this.replaceChildren(style, body.content.cloneNode(true));
+    }
+    bind() {
+      this.query("[data-refresh]").addEventListener("click", () => {
+        reloadRepositoryOverview(this, this.signal());
+      });
+      this.query("[data-versions-form]").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        this.loadKind(field3(form, "kind").value.trim());
+      });
+      this.bindAction("[data-upload-form]", "[data-upload-feedback]", submitRepositoryPackage);
+      this.bindAction("[data-reevaluation-form]", "[data-reevaluation-feedback]", submitRepositoryReevaluation);
+      this.bindAction("[data-promotion-form]", "[data-promotion-feedback]", submitRepositoryPromotion);
+      this.query("[data-load-more]").addEventListener("click", () => void this.loadMore());
+    }
+    bindAction(formSelector, feedbackSelector, action) {
+      this.query(formSelector).addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!this.request) {
+          return;
+        }
+        action(event.currentTarget, this.query(feedbackSelector), this.actionContext());
+      });
+    }
+    actionContext() {
+      return {
+        signal: this.signal(),
+        selection: () => this.selected,
+        updateSelection: (selection) => this.setSelection(selection),
+        reloadKind: (kind) => this.loadKind(kind),
+        reloadCompatibility: () => this.reloadCompatibility()
+      };
+    }
+    async loadKind(kind) {
+      const feedback = this.query("[data-versions-feedback]");
+      clearFeedback(feedback);
+      if (!kind) {
+        showFeedback(feedback, "Enter an integration kind.");
+        return;
+      }
+      try {
+        const versions = await fetchRepositoryVersions(kind, this.signal());
+        renderRepositoryVersions(this.query("[data-versions]"), versions, (version) => void this.selectVersion(versions.kind, version));
+        showFeedback(feedback, `Loaded ${versions.versions.length} version(s) for ${versions.kind}.`, "success");
+      } catch (error) {
+        renderRepositoryFailure(feedback, error);
+      }
+    }
+    async selectVersion(kind, version) {
+      const feedback = this.query("[data-compatibility-feedback]");
+      clearFeedback(feedback);
+      this.query("[data-compatibility-panel]").hidden = false;
+      try {
+        this.compatibility = await fetchRepositoryCompatibility(kind, version, undefined, this.signal());
+        this.setSelection({ kind, version, currentReportRevisionId: this.compatibility.current.id });
+        this.renderCompatibility();
+      } catch (error) {
+        renderRepositoryFailure(feedback, error);
+      }
+    }
+    async reloadCompatibility() {
+      if (this.selected) {
+        await this.selectVersion(this.selected.kind, this.selected.version);
+      }
+    }
+    async loadMore() {
+      if (!this.selected || !this.compatibility?.nextCursor) {
+        return;
+      }
+      const feedback = this.query("[data-compatibility-feedback]");
+      clearFeedback(feedback);
+      try {
+        const page = await fetchRepositoryCompatibility(this.selected.kind, this.selected.version, this.compatibility.nextCursor, this.signal());
+        this.compatibility = { ...page, revisions: [...this.compatibility.revisions, ...page.revisions] };
+        this.renderCompatibility();
+      } catch (error) {
+        renderRepositoryFailure(feedback, error);
+      }
+    }
+    renderCompatibility() {
+      if (!this.compatibility) {
+        return;
+      }
+      renderRepositoryCompatibility(this.query("[data-compatibility]"), this.compatibility);
+      this.query("[data-load-more]").hidden = !this.compatibility.nextCursor;
+    }
+    setSelection(selection) {
+      this.selected = selection;
+      renderRepositorySelection(this, selection);
+    }
+    signal() {
+      if (!this.request) {
+        throw new DOMException("Repository console is disconnected", "AbortError");
+      }
+      return this.request.signal;
+    }
+    query(selector) {
+      const node = this.querySelector(selector);
+      if (!node) {
+        throw new Error(`Missing repository console element ${selector}`);
+      }
+      return node;
+    }
+  }
+  if (!customElements.get("cms-repository-admin")) {
+    customElements.define("cms-repository-admin", RepositoryAdmin);
+  }
+
   // src/components/admin/Resources/Triggers/template.html
-  var template_default16 = `<section class="triggers-surface">
+  var template_default17 = `<section class="triggers-surface">
     <div data-state="loading" class="state">Loading triggers...</div>
     <div data-state="error" class="state" hidden>Failed to load triggers.</div>
     <div data-state="empty" class="state" hidden>No triggers installed.</div>
@@ -29956,7 +31406,7 @@ button.run:disabled {
       const style = document.createElement("style");
       style.textContent = style_default13;
       const body = document.createElement("template");
-      body.innerHTML = template_default16;
+      body.innerHTML = template_default17;
       this.replaceChildren(style, body.content.cloneNode(true));
       this.rows = this.querySelector("[data-role='rows']");
     }
@@ -30037,10 +31487,10 @@ button.run:disabled {
     return input2(root, name);
   }
   function option3(value3, label3) {
-    const element = document.createElement("option");
-    element.value = value3;
-    element.textContent = label3;
-    return element;
+    const element2 = document.createElement("option");
+    element2.value = value3;
+    element2.textContent = label3;
+    return element2;
   }
   function parseOptionalObject(raw, label3) {
     if (!raw.trim()) {
@@ -30191,7 +31641,7 @@ button.run:disabled {
   }
 
   // src/components/admin/Resources/Triggers/create/styles/controls.css
-  var controls_default3 = `.narrow-field {
+  var controls_default4 = `.narrow-field {
     max-width: 320px;
 }
 
@@ -30322,7 +31772,7 @@ textarea {
 `;
 
   // src/components/admin/Resources/Triggers/create/styles/layout.css
-  var layout_default3 = `:host {
+  var layout_default4 = `:host {
     display: block;
 }
 
@@ -30518,7 +31968,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Triggers/create/styles/index.ts
-  var styles_default4 = [layout_default3, mapping_default2, controls_default3, feedback_default].join(`
+  var styles_default5 = [layout_default4, mapping_default2, controls_default4, feedback_default].join(`
 `);
 
   // src/components/admin/Resources/Triggers/create/templates/aside.html
@@ -30759,7 +32209,7 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Triggers/create/view.ts
   function renderState(host, text5) {
     const style = document.createElement("style");
-    style.textContent = styles_default4;
+    style.textContent = styles_default5;
     const state2 = document.createElement("div");
     state2.className = "state";
     state2.textContent = text5;
@@ -30767,7 +32217,7 @@ details[open] > summary > .chevron {
   }
   function renderShell(host) {
     const style = document.createElement("style");
-    style.textContent = styles_default4;
+    style.textContent = styles_default5;
     const shell = document.createElement("cms-shell-detail");
     shell.className = "create-shell";
     appendCreateTemplate2(shell);
@@ -30963,7 +32413,7 @@ details[open] > summary > .chevron {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default17 = `<header class="topbar">
+  var template_default18 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -31274,7 +32724,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/index.ts
-  var styles_default5 = [String(part_1_default), String(part_2_default)].join(`
+  var styles_default6 = [String(part_1_default), String(part_2_default)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/topBarEvents.ts
@@ -31335,7 +32785,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default17)}`;
+  template4.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default18)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -31461,7 +32911,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default18 = `<aside class="panel">
+  var template_default19 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -31577,7 +33027,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default14)}</style>${String(template_default18)}`;
+  template5.innerHTML = `<style>${String(style_default14)}</style>${String(template_default19)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -31617,12 +33067,12 @@ button:hover {
     if (binding.params) {
       return binding.params;
     }
-    const query7 = bindingQuery(source2.url, binding.url);
-    if (!query7) {
+    const query9 = bindingQuery(source2.url, binding.url);
+    if (!query9) {
       return {};
     }
     const params = {};
-    for (const [name, value3] of new URLSearchParams(query7).entries()) {
+    for (const [name, value3] of new URLSearchParams(query9).entries()) {
       params[name] = paramValue(value3);
     }
     return params;
@@ -31806,10 +33256,10 @@ button:hover {
     }
   }
   function empty2(message) {
-    const element = document.createElement("div");
-    element.className = "empty";
-    element.textContent = message;
-    return element;
+    const element2 = document.createElement("div");
+    element2.className = "empty";
+    element2.textContent = message;
+    return element2;
   }
   function escapeHtml2(value3) {
     return value3.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
@@ -31832,9 +33282,9 @@ button:hover {
   }
   function bodyBindingFields(fields) {
     const rows = [];
-    for (const field3 of fields) {
-      if (field3.path !== "." && field3.type !== "object" && field3.type !== "array") {
-        rows.push({ name: field3.path, type: field3.type, required: field3.required });
+    for (const field4 of fields) {
+      if (field4.path !== "." && field4.type !== "object" && field4.type !== "array") {
+        rows.push({ name: field4.path, type: field4.type, required: field4.required });
       }
     }
     return rows;
@@ -31874,15 +33324,15 @@ button:hover {
     return controls;
   }
   function option4(value3, label3) {
-    const element = document.createElement("option");
-    element.value = value3;
-    element.textContent = label3;
-    return element;
+    const element2 = document.createElement("option");
+    element2.value = value3;
+    element2.textContent = label3;
+    return element2;
   }
   function textSpan(value3) {
-    const element = document.createElement("span");
-    element.textContent = value3;
-    return element;
+    const element2 = document.createElement("span");
+    element2.textContent = value3;
+    return element2;
   }
   function selectOption(select5, value3) {
     const index = Array.from(select5.options).findIndex((option5) => option5.value === value3);
@@ -31892,8 +33342,8 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourceGroups.ts
-  function filteredSources(sources, query7) {
-    const normalized = query7.trim().toLowerCase();
+  function filteredSources(sources, query9) {
+    const normalized = query9.trim().toLowerCase();
     if (!normalized) {
       return sources;
     }
@@ -31924,16 +33374,16 @@ button:hover {
     }));
   }
   function cloneBodyFields(fields) {
-    return fields.map((field3) => ({
-      ...field3,
-      children: field3.children ? cloneBodyFields(field3.children) : undefined
+    return fields.map((field4) => ({
+      ...field4,
+      children: field4.children ? cloneBodyFields(field4.children) : undefined
     }));
   }
-  function firstProviderKey(sources, query7) {
-    return providerGroups(filteredSources(sources, query7))[0]?.key ?? "";
+  function firstProviderKey(sources, query9) {
+    return providerGroups(filteredSources(sources, query9))[0]?.key ?? "";
   }
-  function visibleSources(sources, query7, activeProvider) {
-    return filteredSources(sources, query7).filter((source2) => (source2.provider ?? "default") === activeProvider);
+  function visibleSources(sources, query9, activeProvider) {
+    return filteredSources(sources, query9).filter((source2) => (source2.provider ?? "default") === activeProvider);
   }
   function initialAlias(binding) {
     return binding?.alias ?? "data";
@@ -31995,21 +33445,21 @@ button:hover {
       return;
     }
     section.append(renderBindingHeading("Request body"));
-    for (const field3 of fields) {
+    for (const field4 of fields) {
       section.append(renderBindingRow({
         kind: "body",
-        name: field3.name,
+        name: field4.name,
         location: "body",
-        type: field3.type,
-        required: field3.required
-      }, initialBinding?.body?.[field3.name]));
+        type: field4.type,
+        required: field4.required
+      }, initialBinding?.body?.[field4.name]));
     }
   }
   function option5(value3, label3) {
-    const element = document.createElement("option");
-    element.value = value3;
-    element.textContent = label3;
-    return element;
+    const element2 = document.createElement("option");
+    element2.value = value3;
+    element2.textContent = label3;
+    return element2;
   }
   function selectOption2(select5, value3) {
     const index = Array.from(select5.options).findIndex((option6) => option6.value === value3);
@@ -32025,41 +33475,41 @@ button:hover {
   function renderDataSourceBodyFields(fields) {
     return renderFieldList(fields, "No request body declared.");
   }
-  function renderFieldList(fields, emptyMessage) {
+  function renderFieldList(fields, emptyMessage2) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field3 of fields) {
-      list.append(renderField(field3, 0));
+    for (const field4 of fields) {
+      list.append(renderField(field4, 0));
     }
     if (list.children.length === 0) {
       const empty3 = document.createElement("p");
       empty3.className = "details-empty";
-      empty3.textContent = emptyMessage;
+      empty3.textContent = emptyMessage2;
       return empty3;
     }
     return list;
   }
-  function renderField(field3, depth) {
+  function renderField(field4, depth) {
     const item = document.createElement("li");
     item.className = "field";
     item.style.setProperty("--field-depth", String(depth));
     const path = document.createElement("span");
     path.className = "field-path";
-    path.textContent = field3.path;
+    path.textContent = field4.path;
     const type = document.createElement("span");
     type.className = "field-type";
-    type.textContent = field3.type ?? "unknown";
+    type.textContent = field4.type ?? "unknown";
     item.append(path, type);
-    if (field3.required) {
+    if (field4.required) {
       const required = document.createElement("span");
       required.className = "field-required";
       required.textContent = "required";
       item.append(required);
     }
-    if (field3.children?.length) {
+    if (field4.children?.length) {
       const children = document.createElement("ul");
       children.className = "field-children";
-      for (const child of field3.children) {
+      for (const child of field4.children) {
         children.append(renderField(child, depth + 1));
       }
       item.append(children);
@@ -32156,11 +33606,11 @@ button:hover {
   function methodSources(sources, activeMethod) {
     return sources.filter((source2) => activeMethod === "all" || dataSourceMethod(source2) === activeMethod);
   }
-  function pickerProviderGroups(sources, activeMethod, query7) {
-    return providerGroups(filteredSources(methodSources(sources, activeMethod), query7));
+  function pickerProviderGroups(sources, activeMethod, query9) {
+    return providerGroups(filteredSources(methodSources(sources, activeMethod), query9));
   }
-  function pickerVisibleSources(sources, activeMethod, query7, activeProvider) {
-    return visibleSources(methodSources(sources, activeMethod), query7, activeProvider);
+  function pickerVisibleSources(sources, activeMethod, query9, activeProvider) {
+    return visibleSources(methodSources(sources, activeMethod), query9, activeProvider);
   }
   function selectMethodFilter(filter, value3) {
     const options2 = Array.from(filter.options);
@@ -32188,22 +33638,22 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerElements.ts
   function queryDataSourcePickerElements(root) {
-    const query7 = (selector) => root.querySelector(selector);
+    const query9 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query7(".backdrop"),
-      binding: query7(".binding"),
-      closeButton: query7(".close"),
-      details: query7(".details"),
-      methodFilter: query7(".method-filter"),
-      providers: query7(".providers"),
-      search: query7(".search"),
-      sourcesList: query7(".sources"),
-      subtitle: query7(".subtitle")
+      backdrop: query9(".backdrop"),
+      binding: query9(".binding"),
+      closeButton: query9(".close"),
+      details: query9(".details"),
+      methodFilter: query9(".method-filter"),
+      providers: query9(".providers"),
+      search: query9(".search"),
+      sourcesList: query9(".sources"),
+      subtitle: query9(".subtitle")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/template.html
-  var template_default19 = `<div class="backdrop" hidden>
+  var template_default20 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -32741,12 +34191,12 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/index.ts
-  var styles_default6 = [String(part_1_default2), String(part_2_default2), String(part_3_default), String(part_4_default)].join(`
+  var styles_default7 = [String(part_1_default2), String(part_2_default2), String(part_3_default), String(part_4_default)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default19)}`;
+  template6.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default20)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -32870,7 +34320,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/template.html
-  var template_default20 = `<div class="backdrop" hidden>
+  var template_default21 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -33099,13 +34549,13 @@ textarea { min-height: 92px; resize: vertical; }
   function fieldSelect(fields, draft, onChange) {
     const select5 = document.createElement("select");
     select5.className = "field-path";
-    for (const field3 of fields) {
+    for (const field4 of fields) {
       const option6 = document.createElement("option");
-      option6.value = field3.path;
-      option6.textContent = `${field3.scopeLabel}: ${field3.path}`;
+      option6.value = field4.path;
+      option6.textContent = `${field4.scopeLabel}: ${field4.path}`;
       select5.append(option6);
     }
-    select5.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
+    select5.selectedIndex = Math.max(0, fields.findIndex((field4) => field4.path === draft.path));
     select5.addEventListener("change", () => {
       draft.path = select5.options.item(select5.selectedIndex)?.value ?? "";
       onChange(false);
@@ -33167,10 +34617,10 @@ textarea { min-height: 92px; resize: vertical; }
     return trimmed;
   }
   function empty3(text5) {
-    const element = document.createElement("div");
-    element.className = "empty";
-    element.textContent = text5;
-    return element;
+    const element2 = document.createElement("div");
+    element2.className = "empty";
+    element2.textContent = text5;
+    return element2;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/sourceStateMode.ts
@@ -33235,22 +34685,22 @@ textarea { min-height: 92px; resize: vertical; }
     return label3;
   }
   function textBlock2(className, text5) {
-    const element = document.createElement("div");
-    element.className = className;
-    element.textContent = text5;
-    return element;
+    const element2 = document.createElement("div");
+    element2.className = className;
+    element2.textContent = text5;
+    return element2;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/conditionPickerView.ts
   function queryConditionPickerElements(root) {
-    const query7 = (selector) => root.querySelector(selector);
+    const query9 = (selector) => root.querySelector(selector);
     return {
-      applyButton: query7(".apply"),
-      backdrop: query7(".backdrop"),
-      body: query7(".body"),
-      closeButton: query7(".close"),
-      removeButton: query7(".remove"),
-      subtitle: query7(".subtitle")
+      applyButton: query9(".apply"),
+      backdrop: query9(".backdrop"),
+      body: query9(".body"),
+      closeButton: query9(".close"),
+      removeButton: query9(".remove"),
+      subtitle: query9(".subtitle")
     };
   }
   function conditionExpression(input3) {
@@ -33293,7 +34743,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default15)}</style>${String(template_default20)}`;
+  template7.innerHTML = `<style>${String(style_default15)}</style>${String(template_default21)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -33483,7 +34933,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/template.html
-  var template_default21 = `<div class="backdrop" hidden>
+  var template_default22 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -33911,7 +35361,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/index.ts
-  var styles_default7 = [String(part_1_default3), String(part_2_default3), String(part_3_default2)].join(`
+  var styles_default8 = [String(part_1_default3), String(part_2_default3), String(part_3_default2)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
@@ -33991,8 +35441,8 @@ dd {
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option6, query7) {
-    if (!query7) {
+  function blockPickerOptionMatches(option6, query9) {
+    if (!query9) {
       return true;
     }
     const item = blockPickerOptionItem(option6);
@@ -34003,11 +35453,11 @@ dd {
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
       option6.slotLabel
-    ].some((value3) => value3?.toLowerCase().includes(query7));
+    ].some((value3) => value3?.toLowerCase().includes(query9));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
-  function blockPickerVisibleOptions(group, source2, category, query7) {
+  function blockPickerVisibleOptions(group, source2, category, query9) {
     return group?.options.filter((option6) => {
       const item = blockPickerOptionItem(option6);
       if (item.kind !== source2) {
@@ -34016,7 +35466,7 @@ dd {
       if (category && blockPickerCategoryLabel(option6) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option6, query7);
+      return blockPickerOptionMatches(option6, query9);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
@@ -34198,23 +35648,23 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerElements.ts
   function queryBlockPickerElements(root) {
-    const query7 = (selector) => root.querySelector(selector);
+    const query9 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query7(".backdrop"),
-      categories: query7(".categories"),
-      closeButton: query7(".close"),
-      details: query7(".details"),
-      results: query7(".results"),
-      search: query7(".search"),
-      sources: query7(".sources"),
-      subtitle: query7(".subtitle"),
-      tabs: query7(".slot-tabs")
+      backdrop: query9(".backdrop"),
+      categories: query9(".categories"),
+      closeButton: query9(".close"),
+      details: query9(".details"),
+      results: query9(".results"),
+      search: query9(".search"),
+      sources: query9(".sources"),
+      subtitle: query9(".subtitle"),
+      tabs: query9(".slot-tabs")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
   var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default21)}`;
+  template8.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default22)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -35193,16 +36643,16 @@ dd {
   }
   function fieldOptions(fields, scopeName, scopeLabel, prefix = "") {
     const options2 = [];
-    for (const field3 of fields) {
-      const relative = relativePath(field3.path, prefix);
+    for (const field4 of fields) {
+      const relative = relativePath(field4.path, prefix);
       const path = relative ? `${scopeName}.${relative}` : scopeName;
       options2.push({
         path,
-        label: field3.label ?? field3.path,
+        label: field4.label ?? field4.path,
         scopeLabel,
-        type: field3.type
+        type: field4.type
       });
-      options2.push(...fieldOptions(field3.children ?? [], scopeName, scopeLabel, relative));
+      options2.push(...fieldOptions(field4.children ?? [], scopeName, scopeLabel, relative));
     }
     return options2;
   }
@@ -35507,7 +36957,7 @@ dd {
     constructor(tree) {
       this.tree = tree;
     }
-    render(request = {}) {
+    render(request2 = {}) {
       this.tree.state.scrollRequestId += 1;
       const treeEl = this.tree.refs.tree;
       const scrollContainer = this.tree.refs.scrollContainer;
@@ -35526,8 +36976,8 @@ dd {
       for (const node of this.tree.nodes.visibleNodes()) {
         treeEl.append(this.renderNode(node.item, node.depth));
       }
-      if (request.anchor) {
-        this.restoreScrollAnchor(request.anchor);
+      if (request2.anchor) {
+        this.restoreScrollAnchor(request2.anchor);
       } else if (this.tree.state.scrollSelectedIntoViewOnRender) {
         this.scrollSelectedIntoView();
       } else {
@@ -35853,7 +37303,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default22 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default23 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
@@ -36001,7 +37451,7 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template9 = document.createElement("template");
   template9.innerHTML = `<style>${[style_default16, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default22)}`;
+`)}</style>${String(template_default23)}`;
 
   class StructureTree extends HTMLElement {
     controller;
@@ -36043,7 +37493,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default23 = `<main class="canvas">
+  var template_default24 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -36163,7 +37613,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(style_default17)}</style>${String(template_default23)}`;
+  template10.innerHTML = `<style>${String(style_default17)}</style>${String(template_default24)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -36304,7 +37754,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default24 = `<section class="section">
+  var template_default25 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -36405,7 +37855,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template11 = createFieldTemplate(template_default24, style_default18);
+  var template11 = createFieldTemplate(template_default25, style_default18);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -36429,7 +37879,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default25 = `<div class="field">
+  var template_default26 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -36683,8 +38133,8 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
-  function matchingDynamicDataOptions(options2, query7) {
-    const normalized = query7.trim().toLowerCase();
+  function matchingDynamicDataOptions(options2, query9) {
+    const normalized = query9.trim().toLowerCase();
     return normalized ? options2.filter((option6) => `${option6.label} ${option6.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
@@ -36726,17 +38176,17 @@ input:disabled {
     return [...byPath.values()];
   }
   function fieldOptions2(fields, scopeName, scopeLabel, prefix = "") {
-    return fields.flatMap((field3) => {
-      const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
+    return fields.flatMap((field4) => {
+      const relativePath2 = prefix && field4.path !== "." ? `${prefix}.${field4.path}` : field4.path === "." ? prefix : field4.path;
       const path = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
-      if (field3.type === "array") {
+      if (field4.type === "array") {
         return [];
       }
-      const children = fieldOptions2(field3.children ?? [], scopeName, scopeLabel, relativePath2);
-      if (field3.type === "object" || field3.children?.length) {
+      const children = fieldOptions2(field4.children ?? [], scopeName, scopeLabel, relativePath2);
+      if (field4.type === "object" || field4.children?.length) {
         return children;
       }
-      const label3 = field3.label ? `${scopeLabel} / ${field3.label}` : `${scopeLabel} / ${relativePath2}`;
+      const label3 = field4.label ? `${scopeLabel} / ${field4.label}` : `${scopeLabel} / ${relativePath2}`;
       return [{ label: label3, path }, ...children];
     });
   }
@@ -36887,7 +38337,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template12 = createFieldTemplate(template_default25, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default26, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -36947,7 +38397,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default26 = `<div class="field">
+  var template_default27 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -37040,7 +38490,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template13 = createFieldTemplate(template_default26, `${String(style_default20)}${String(dynamicDataPicker_default)}`);
+  var template13 = createFieldTemplate(template_default27, `${String(style_default20)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -37232,14 +38682,14 @@ textarea:disabled {
     const end = closestWrapper(editor, range.endContainer, tagName, predicate);
     return start === end ? start : null;
   }
-  function unwrapElement(editor, element) {
+  function unwrapElement(editor, element2) {
     const fragment = document.createDocumentFragment();
-    const firstChild = element.firstChild;
-    const lastChild = element.lastChild;
-    while (element.firstChild) {
-      fragment.append(element.firstChild);
+    const firstChild = element2.firstChild;
+    const lastChild = element2.lastChild;
+    while (element2.firstChild) {
+      fragment.append(element2.firstChild);
     }
-    element.replaceWith(fragment);
+    element2.replaceWith(fragment);
     const nextRange = document.createRange();
     if (firstChild && lastChild) {
       nextRange.setStartBefore(firstChild);
@@ -37349,7 +38799,7 @@ textarea:disabled {
       if (!range) {
         return false;
       }
-      const wrapper = findRangeWrapper(this._editor(), range, "span", (element) => element.style.fontSize !== "");
+      const wrapper = findRangeWrapper(this._editor(), range, "span", (element2) => element2.style.fontSize !== "");
       const currentIndex = wrapper ? TEXT_SIZE_STEPS.indexOf(wrapper.style.fontSize) : 1;
       const fallbackIndex = currentIndex >= 0 ? currentIndex : 1;
       const nextIndex = direction === "increase" ? Math.min(TEXT_SIZE_STEPS.length - 1, fallbackIndex + 1) : Math.max(0, fallbackIndex - 1);
@@ -37469,7 +38919,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default27 = `<div class="field">
+  var template_default28 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -37720,12 +39170,12 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/index.ts
-  var styles_default8 = [String(part_1_default4), String(part_2_default4)].join(`
+  var styles_default9 = [String(part_1_default4), String(part_2_default4)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template14 = document.createElement("template");
-  template14.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default27)}`;
+  template14.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default28)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -37858,7 +39308,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default28 = `<label class="field">
+  var template_default29 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -37970,7 +39420,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template15 = createFieldTemplate(template_default28, style_default21);
+  var template15 = createFieldTemplate(template_default29, style_default21);
 
   class Select extends HTMLElement {
     constructor() {
@@ -37982,11 +39432,11 @@ select:disabled {
       const current = this.getAttribute("value");
       const options2 = this._parseOptions();
       this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option6) => {
-        const element = document.createElement("option");
-        element.textContent = option6.label;
-        element.value = option6.value;
-        element.selected = option6.value === current;
-        return element;
+        const element2 = document.createElement("option");
+        element2.textContent = option6.label;
+        element2.value = option6.value;
+        element2.selected = option6.value === current;
+        return element2;
       }));
     }
     _parseOptions() {
@@ -38007,7 +39457,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default29 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default30 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -38130,7 +39580,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template16 = createFieldTemplate(template_default29, style_default22);
+  var template16 = createFieldTemplate(template_default30, style_default22);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -38147,7 +39597,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default30 = `<div class="segmented">
+  var template_default31 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
@@ -38199,7 +39649,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template17 = createFieldTemplate(template_default30, style_default23);
+  var template17 = createFieldTemplate(template_default31, style_default23);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -38212,7 +39662,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
-  var template_default31 = `<div class="page-link">
+  var template_default32 = `<div class="page-link">
     <div class="head">
         <span class="label"></span>
         <span class="hint"></span>
@@ -38554,7 +40004,7 @@ code {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts
-  var styles_default9 = [String(part_1_default5), String(part_2_default5), String(part_3_default3)].join("");
+  var styles_default10 = [String(part_1_default5), String(part_2_default5), String(part_3_default3)].join("");
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
   function allowedLinkModes(options2) {
@@ -38675,8 +40125,8 @@ code {
   function renderPageLinkPages(input3) {
     input3.elements.pageList.replaceChildren();
     input3.elements.picker.hidden = !input3.pickerOpen || input3.elements.pagePanel.hidden;
-    const query7 = input3.query.trim().toLowerCase();
-    const pages = input3.pages.filter((page) => !query7 || page.title.toLowerCase().includes(query7) || page.path.toLowerCase().includes(query7));
+    const query9 = input3.query.trim().toLowerCase();
+    const pages = input3.pages.filter((page) => !query9 || page.title.toLowerCase().includes(query9) || page.path.toLowerCase().includes(query9));
     input3.elements.empty.hidden = !input3.pickerOpen || pages.length > 0;
     for (const page of pages) {
       const button2 = document.createElement("button");
@@ -38722,32 +40172,32 @@ code {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
   function queryPageLinkElements(root) {
-    const query7 = (selector) => root.querySelector(selector);
+    const query9 = (selector) => root.querySelector(selector);
     return {
-      empty: query7(".empty"),
-      externalInput: query7(".external-input"),
-      externalPanel: query7(".external-panel"),
-      fileAction: query7(".file-action"),
-      fileButton: query7(".file-button"),
-      filePreview: query7(".file-preview"),
-      fileTitle: query7(".file-title"),
-      fileValue: query7(".file-value"),
-      hint: query7(".hint"),
-      label: query7(".label"),
-      mediaPanel: query7(".media-panel"),
-      pageList: query7(".page-list"),
-      pagePanel: query7(".page-panel"),
-      picker: query7(".picker"),
-      searchInput: query7(".search"),
-      summaryTitle: query7(".target strong"),
-      summaryValue: query7(".target code"),
-      tabs: query7(".tabs"),
-      target: query7(".target")
+      empty: query9(".empty"),
+      externalInput: query9(".external-input"),
+      externalPanel: query9(".external-panel"),
+      fileAction: query9(".file-action"),
+      fileButton: query9(".file-button"),
+      filePreview: query9(".file-preview"),
+      fileTitle: query9(".file-title"),
+      fileValue: query9(".file-value"),
+      hint: query9(".hint"),
+      label: query9(".label"),
+      mediaPanel: query9(".media-panel"),
+      pageList: query9(".page-list"),
+      pagePanel: query9(".page-panel"),
+      picker: query9(".picker"),
+      searchInput: query9(".search"),
+      summaryTitle: query9(".target strong"),
+      summaryValue: query9(".target code"),
+      tabs: query9(".tabs"),
+      target: query9(".target")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
-  var template_default32 = `<div class="backdrop" hidden>
+  var template_default33 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
         <header class="top">
             <div>
@@ -39079,7 +40529,7 @@ input {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts
-  var styles_default10 = [String(part_1_default6), String(part_2_default6), String(part_3_default4)].join(`
+  var styles_default11 = [String(part_1_default6), String(part_2_default6), String(part_3_default4)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
@@ -39161,18 +40611,18 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
   function queryFilesCenterElements(root) {
-    const query7 = (selector) => root.querySelector(selector);
+    const query9 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query7(".backdrop"),
-      breadcrumb: query7(".breadcrumb"),
-      cancelButton: query7(".cancel"),
-      closeButton: query7(".close"),
-      empty: query7(".empty"),
-      grid: query7(".grid"),
-      searchInput: query7(".search"),
-      selectButton: query7(".select"),
-      selectionTitle: query7(".selection strong"),
-      selectionValue: query7(".selection code")
+      backdrop: query9(".backdrop"),
+      breadcrumb: query9(".breadcrumb"),
+      cancelButton: query9(".cancel"),
+      closeButton: query9(".close"),
+      empty: query9(".empty"),
+      grid: query9(".grid"),
+      searchInput: query9(".search"),
+      selectButton: query9(".select"),
+      selectionTitle: query9(".selection strong"),
+      selectionValue: query9(".selection code")
     };
   }
   function wireFilesCenterElements(elements, callbacks) {
@@ -39201,12 +40651,12 @@ input {
   }
   function renderFilesList(input3) {
     input3.grid.replaceChildren();
-    const query7 = input3.query.trim().toLowerCase();
+    const query9 = input3.query.trim().toLowerCase();
     const items = input3.items.filter((item) => {
       if (item.type === "file" && !matchesFileAccept(item, input3.fileAccept)) {
         return false;
       }
-      return !query7 || item.name.toLowerCase().includes(query7);
+      return !query9 || item.name.toLowerCase().includes(query9);
     });
     input3.empty.hidden = items.length > 0;
     for (const item of items) {
@@ -39319,7 +40769,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
   var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default32)}`;
+  template18.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default33)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -39689,7 +41139,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
   var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default31)}`;
+  template19.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default32)}`;
 
   class PageLink extends PageLinkController {
     constructor() {
@@ -40136,9 +41586,9 @@ input {
       controls.className = "setting-row-controls";
       controls.style.setProperty("--setting-row-count", String(Math.max(1, setting.settings.length)));
       for (const child of setting.settings) {
-        const element = this.renderControl(child);
-        element.classList.add("setting-row-control");
-        controls.append(element);
+        const element2 = this.renderControl(child);
+        element2.classList.add("setting-row-control");
+        controls.append(element2);
       }
       wrapper.append(controls);
       return wrapper;
@@ -40241,10 +41691,10 @@ input {
     if (display === "hidden") {
       return null;
     }
-    const element = document.createElement("div");
-    element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
-    element.textContent = label3;
-    return element;
+    const element2 = document.createElement("div");
+    element2.className = display === "sr-only" ? "field-label sr-only" : "field-label";
+    element2.textContent = label3;
+    return element2;
   }
   function renderOptionContent(settingDisplay, optionDisplay, iconName, label3) {
     const display = optionDisplay ?? settingDisplay ?? (iconName ? "icon-label" : "label");
@@ -40342,20 +41792,20 @@ input {
     return section;
   }
   function renderSettingSection(section, controls) {
-    const element = document.createElement("cms-editor-v2-section");
-    element.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
+    const element2 = document.createElement("cms-editor-v2-section");
+    element2.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
     const settings = visibleSettings(section.settings);
     if (settings.length === 0) {
       const empty4 = document.createElement("div");
       empty4.className = "section-empty";
       empty4.textContent = "No settings";
-      element.append(empty4);
-      return element;
+      element2.append(empty4);
+      return element2;
     }
     for (const setting of settings) {
-      element.append(controls.render(setting));
+      element2.append(controls.render(setting));
     }
-    return element;
+    return element2;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/textCapability.ts
@@ -40395,7 +41845,7 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default33 = `<div class="settings-view">
+  var template_default34 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
@@ -40672,12 +42122,12 @@ cms-editor-v2-segmented-control button svg:only-child {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/styles/index.ts
-  var styles_default11 = [String(part_1_default7), String(part_2_default7)].join(`
+  var styles_default12 = [String(part_1_default7), String(part_2_default7)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default33)}`;
+  template20.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default34)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -40750,7 +42200,7 @@ cms-editor-v2-segmented-control button svg:only-child {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/template.html
-  var template_default34 = `<div class="backdrop" hidden>
+  var template_default35 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -41077,7 +42527,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/index.ts
-  var styles_default12 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
+  var styles_default13 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
@@ -41091,24 +42541,24 @@ label {
     return [...byPath.values()];
   }
   function repeatArrayFields(fields, scopeName, scopeLabel, prefix = "") {
-    return fields.flatMap((field3) => {
-      const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
+    return fields.flatMap((field4) => {
+      const relativePath2 = prefix && field4.path !== "." ? `${prefix}.${field4.path}` : field4.path === "." ? prefix : field4.path;
       const fullPath = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
-      if (field3.type !== "array") {
-        return repeatArrayFields(field3.children ?? [], scopeName, scopeLabel, relativePath2);
+      if (field4.type !== "array") {
+        return repeatArrayFields(field4.children ?? [], scopeName, scopeLabel, relativePath2);
       }
       return [
         {
           path: fullPath,
-          label: field3.path,
+          label: field4.path,
           scopeLabel,
-          fields: field3.children ?? []
+          fields: field4.children ?? []
         }
       ];
     });
   }
-  function visibleRepeatOptions(options2, query7) {
-    const normalizedQuery = query7.trim().toLowerCase();
+  function visibleRepeatOptions(options2, query9) {
+    const normalizedQuery = query9.trim().toLowerCase();
     if (!normalizedQuery) {
       return options2;
     }
@@ -41179,8 +42629,8 @@ label {
   function renderFields2(fields) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field3 of fields) {
-      list.append(renderField2(field3, 0));
+    for (const field4 of fields) {
+      list.append(renderField2(field4, 0));
     }
     if (list.children.length === 0) {
       const empty4 = document.createElement("p");
@@ -41190,21 +42640,21 @@ label {
     }
     return list;
   }
-  function renderField2(field3, depth) {
+  function renderField2(field4, depth) {
     const item = document.createElement("li");
     item.className = "field";
     item.style.setProperty("--field-depth", String(depth));
     const path = document.createElement("span");
     path.className = "field-path";
-    path.textContent = field3.path;
+    path.textContent = field4.path;
     const type = document.createElement("span");
     type.className = "field-type";
-    type.textContent = field3.type ?? "unknown";
+    type.textContent = field4.type ?? "unknown";
     item.append(path, type);
-    if (field3.children?.length) {
+    if (field4.children?.length) {
       const children = document.createElement("ul");
       children.className = "field-children";
-      for (const child of field3.children) {
+      for (const child of field4.children) {
         children.append(renderField2(child, depth + 1));
       }
       item.append(children);
@@ -41214,7 +42664,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
   var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default34)}`;
+  template21.innerHTML = `<style>${String(styles_default13)}</style>${String(template_default35)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -41384,11 +42834,11 @@ label {
     pageField(name) {
       return this.host.shadowRoot.querySelector(`[data-page-field="${name}"]`);
     }
-    upgrade(element) {
-      if (element) {
-        customElements.upgrade(element);
+    upgrade(element2) {
+      if (element2) {
+        customElements.upgrade(element2);
       }
-      return element;
+      return element2;
     }
     defineElement(tagName, constructor) {
       if (customElements.get(tagName)) {
@@ -41469,8 +42919,8 @@ label {
       if (!t(target2)) {
         return [target2];
       }
-      const output = Array.from(target2.children).find((element) => element.hasAttribute(_2));
-      const children = output ? Array.from(output.children).flatMap((element) => visibleBoxes(element)) : [];
+      const output = Array.from(target2.children).find((element2) => element2.hasAttribute(_2));
+      const children = output ? Array.from(output.children).flatMap((element2) => visibleBoxes(element2)) : [];
       return children.length > 0 ? children : [target2];
     }
     _ensureStyle(doc) {
@@ -41493,15 +42943,15 @@ label {
       doc.head.append(style);
     }
   }
-  function visibleBoxes(element) {
-    const rect = element.getBoundingClientRect();
+  function visibleBoxes(element2) {
+    const rect = element2.getBoundingClientRect();
     if (rect.width > 0 || rect.height > 0) {
-      return [element];
+      return [element2];
     }
-    return Array.from(element.children).flatMap((child) => visibleBoxes(child));
+    return Array.from(element2.children).flatMap((child) => visibleBoxes(child));
   }
   function unionRect(elements) {
-    const rects = elements.map((element) => element.getBoundingClientRect());
+    const rects = elements.map((element2) => element2.getBoundingClientRect());
     const left = Math.min(...rects.map((rect) => rect.left));
     const top = Math.min(...rects.map((rect) => rect.top));
     const right = Math.max(...rects.map((rect) => rect.right));
@@ -41528,11 +42978,11 @@ label {
     if (node.nodeType !== Node.ELEMENT_NODE) {
       return false;
     }
-    const element = node;
-    if (element.tagName.toLowerCase() !== "p" || element.attributes.length > 0) {
+    const element2 = node;
+    if (element2.tagName.toLowerCase() !== "p" || element2.attributes.length > 0) {
       return false;
     }
-    return Array.from(element.childNodes).every((child) => {
+    return Array.from(element2.childNodes).every((child) => {
       if (child.nodeType === Node.TEXT_NODE) {
         return (child.textContent ?? "").trim() === "";
       }
@@ -41771,16 +43221,16 @@ label {
       slotElements
     };
   }
-  function applySlot(element, slotName) {
+  function applySlot(element2, slotName) {
     if (slotName) {
-      element.setAttribute("slot", slotName);
+      element2.setAttribute("slot", slotName);
     } else {
-      element.removeAttribute("slot");
+      element2.removeAttribute("slot");
     }
   }
-  function applyCondition(element, sourceStatusConditions2) {
+  function applyCondition(element2, sourceStatusConditions2) {
     if (sourceStatusConditions2?.length) {
-      applySourceStatusConditions(element, sourceStatusConditions2);
+      applySourceStatusConditions(element2, sourceStatusConditions2);
     }
   }
   function createBlockFragment(document2, entry) {
@@ -41901,15 +43351,15 @@ label {
     center.addEventListener("close", cleanup, { once: true });
     center.addEventListener("select-file", (event) => {
       const detail = event.detail;
-      const element = createMediaElement(frameDocument, detail);
-      if (!element) {
+      const element2 = createMediaElement(frameDocument, detail);
+      if (!element2) {
         return;
       }
-      onSelect([element]);
+      onSelect([element2]);
     }, { once: true });
     center.addEventListener("select-files", (event) => {
       const detail = event.detail;
-      const elements = detail.files.map((file) => createMediaElement(frameDocument, file)).filter((element) => Boolean(element));
+      const elements = detail.files.map((file) => createMediaElement(frameDocument, file)).filter((element2) => Boolean(element2));
       onSelect(elements);
     }, { once: true });
     document.body.append(center);
@@ -42058,10 +43508,10 @@ label {
       if (elements.length === 0 || !canInsertNodeCount(parent, slot, elements)) {
         return;
       }
-      for (const element of elements) {
-        applySlot(element, slotName);
+      for (const element2 of elements) {
+        applySlot(element2, slotName);
         if (sourceStatusConditions2?.length) {
-          applySourceStatusConditions(element, sourceStatusConditions2);
+          applySourceStatusConditions(element2, sourceStatusConditions2);
         }
       }
       parent.target.append(...elements);
@@ -42072,16 +43522,16 @@ label {
         return;
       }
       openMediaPicker(this.context.frameDocument(), item.accept, { multiple: false }, (elements) => {
-        const element = elements[0];
-        if (!element) {
+        const element2 = elements[0];
+        if (!element2) {
           return;
         }
-        applySlot(element, slotName);
+        applySlot(element2, slotName);
         if (sourceStatusConditions2?.length) {
-          applySourceStatusConditions(element, sourceStatusConditions2);
+          applySourceStatusConditions(element2, sourceStatusConditions2);
         }
-        editor.target.replaceWith(element);
-        this.reloadFrameDocument(element);
+        editor.target.replaceWith(element2);
+        this.reloadFrameDocument(element2);
       });
     }
   }
@@ -42125,9 +43575,9 @@ label {
         this.content.reloadFrameDocument(clone);
         return;
       }
-      if (!canInsertSibling(this.context.runtime(), editor, clone, (element, state2) => {
+      if (!canInsertSibling(this.context.runtime(), editor, clone, (element2, state2) => {
         if (state2.length) {
-          applySourceStatusConditions(element, state2);
+          applySourceStatusConditions(element2, state2);
         }
       }, (reference) => sourceStatusConditionsFromElement(reference.target))) {
         return;
@@ -42249,33 +43699,33 @@ label {
       if (child.nodeType !== Node.ELEMENT_NODE) {
         continue;
       }
-      const element = child;
-      const scope = collectElementDependencies(element, inheritedScope, usages);
-      if (isBindingBoundary(element)) {
+      const element2 = child;
+      const scope = collectElementDependencies(element2, inheritedScope, usages);
+      if (isBindingBoundary(element2)) {
         continue;
       }
-      collectBindingDependencies(element, scope, usages);
+      collectBindingDependencies(element2, scope, usages);
     }
   }
-  function collectElementDependencies(element, inheritedScope, usages, options2 = {}) {
+  function collectElementDependencies(element2, inheritedScope, usages, options2 = {}) {
     const scope = {
       aliases: new Set(inheritedScope.aliases),
       sourceId: inheritedScope.sourceId,
       sourceLocal: inheritedScope.sourceLocal
     };
-    if (!options2.isRoot && isBindingBoundary(element)) {
+    if (!options2.isRoot && isBindingBoundary(element2)) {
       return scope;
     }
-    const repeat = element.getAttribute(CMS_BINDING_ATTRIBUTES.repeat);
+    const repeat = element2.getAttribute(CMS_BINDING_ATTRIBUTES.repeat);
     if (repeat && (inheritedScope.sourceLocal || bindingTextDependsOn(repeat, inheritedScope))) {
-      usages.push({ target: element, attribute: CMS_BINDING_ATTRIBUTES.repeat });
+      usages.push({ target: element2, attribute: CMS_BINDING_ATTRIBUTES.repeat });
       const parsed = parseRepeat(repeat);
       const repeatAlias = parsed?.alias?.trim();
       if (repeatAlias) {
         scope.aliases.add(repeatAlias);
       }
     }
-    for (const attribute of Array.from(element.attributes)) {
+    for (const attribute of Array.from(element2.attributes)) {
       if (attribute.name === CMS_BINDING_ATTRIBUTES.source) {
         continue;
       }
@@ -42283,7 +43733,7 @@ label {
         continue;
       }
       if (bindingTextDependsOn(attribute.value, scope)) {
-        usages.push({ target: element, attribute: attribute.name });
+        usages.push({ target: element2, attribute: attribute.name });
       }
     }
     return scope;
@@ -42298,8 +43748,8 @@ label {
       collectEditorBindingDependencies(child, scope, usages);
     }
   }
-  function isBindingBoundary(element) {
-    return element.hasAttribute(CMS_BINDING_ATTRIBUTES.source) || element.localName === CMS_BINDING_CORE_TAG;
+  function isBindingBoundary(element2) {
+    return element2.hasAttribute(CMS_BINDING_ATTRIBUTES.source) || element2.localName === CMS_BINDING_CORE_TAG;
   }
   function dedupeDependencyUsages(usages) {
     const seen = new Set;
@@ -42416,8 +43866,8 @@ label {
   }
   function sourceIdExists(source2, id) {
     const root = source2.getRootNode();
-    for (const element of Array.from(root.querySelectorAll?.(`[${CMS_BINDING_ATTRIBUTES.sourceId}]`) ?? [])) {
-      if (element !== source2 && element.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === id) {
+    for (const element2 of Array.from(root.querySelectorAll?.(`[${CMS_BINDING_ATTRIBUTES.sourceId}]`) ?? [])) {
+      if (element2 !== source2 && element2.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === id) {
         return true;
       }
     }
@@ -42933,8 +44383,8 @@ label {
     }
     return resolved;
   }
-  function readSettingAttribute(element, name) {
-    return isNetworkBindingAttribute(name) ? $2(element, name) : element.getAttribute(name);
+  function readSettingAttribute(element2, name) {
+    return isNetworkBindingAttribute(name) ? $2(element2, name) : element2.getAttribute(name);
   }
   function isNetworkBindingAttribute(name) {
     return Y2.includes(name);
@@ -43084,15 +44534,15 @@ label {
       exitAllStateSessions(this.context.stateSessions(), runtime2.getStructure());
     }
   }
-  function writeSettingAttribute(element, name, value3) {
+  function writeSettingAttribute(element2, name, value3) {
     if (isNetworkBindingAttribute2(name)) {
-      p(element, name, value3);
+      p(element2, name, value3);
       return;
     }
     if (value3 === null) {
-      element.removeAttribute(name);
+      element2.removeAttribute(name);
     } else {
-      element.setAttribute(name, value3);
+      element2.setAttribute(name, value3);
     }
   }
   function isNetworkBindingAttribute2(name) {
@@ -43272,7 +44722,7 @@ label {
     return scopes.some((scope) => fieldsContainArray(scope.fields));
   }
   function fieldsContainArray(fields) {
-    return fields.some((field3) => field3.type === "array" || fieldsContainArray(field3.children ?? []));
+    return fields.some((field4) => field4.type === "array" || fieldsContainArray(field4.children ?? []));
   }
   function flattenStructure2(nodes) {
     return nodes.flatMap((node) => [node, ...flattenStructure2(node.children)]);
@@ -43745,17 +45195,17 @@ label {
     if (!repeat?.alias) {
       return;
     }
-    const field3 = findDataField(registry2.collectDataScopes(editor.target), repeat.path);
+    const field4 = findDataField(registry2.collectDataScopes(editor.target), repeat.path);
     editor.declareDataScope({
       name: repeat.alias,
       label: repeat.alias,
-      fields: field3?.children ?? []
+      fields: field4?.children ?? []
     });
   }
   function findDataField(scopes, path) {
     for (const scope of scopes) {
-      const field3 = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
-      const match = field3 ?? findDataFieldInList(scope.fields, path) ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
+      const field4 = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
+      const match = field4 ?? findDataFieldInList(scope.fields, path) ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
       if (match) {
         return match;
       }
@@ -43763,11 +45213,11 @@ label {
     return;
   }
   function findDataFieldInList(fields, path) {
-    for (const field3 of fields) {
-      if (field3.path === path) {
-        return field3;
+    for (const field4 of fields) {
+      if (field4.path === path) {
+        return field4;
       }
-      const child = field3.children ? findDataFieldInList(field3.children, path) : undefined;
+      const child = field4.children ? findDataFieldInList(field4.children, path) : undefined;
       if (child) {
         return child;
       }
@@ -43781,7 +45231,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/structure.ts
   function runtimeElements(root) {
-    return [root, ...Array.from(root.querySelectorAll("*"))].filter((element) => !hasCompositionAncestor(element));
+    return [root, ...Array.from(root.querySelectorAll("*"))].filter((element2) => !hasCompositionAncestor(element2));
   }
   function findClosestRuntimeEditor(context, target2) {
     const { document: document2, registry: registry2 } = context;
@@ -43881,8 +45331,8 @@ label {
     }
     return stopAt;
   }
-  function hasCompositionAncestor(element) {
-    for (let parent = element.parentElement;parent; parent = parent.parentElement) {
+  function hasCompositionAncestor(element2) {
+    for (let parent = element2.parentElement;parent; parent = parent.parentElement) {
       if (t(parent)) {
         return true;
       }
@@ -43909,12 +45359,12 @@ label {
       this.dispose();
       this._assertDocument(document2);
       this._document = document2;
-      for (const element of runtimeElements(document2.root)) {
-        const entry = this._catalogByTag.get(element.localName);
+      for (const element2 of runtimeElements(document2.root)) {
+        const entry = this._catalogByTag.get(element2.localName);
         if (!entry) {
           continue;
         }
-        const editor = createRuntimeEditor(entry, element, this.registry);
+        const editor = createRuntimeEditor(entry, element2, this.registry);
         this._editors.push(editor);
         this._entriesByEditor.set(editor, entry);
       }
@@ -44555,7 +46005,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default35 = `<div class="shell">
+  var template_default36 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -44746,7 +46196,7 @@ label {
   function createShellTemplate() {
     const template22 = document.createElement("template");
     template22.innerHTML = `<style>${[style_default24, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default35)}`;
+`)}</style>${String(template_default36)}`;
     return template22;
   }
 
@@ -45259,7 +46709,7 @@ label {
   }
 
   // src/components/media/CardMedia/template.html
-  var template_default36 = `<div class="card">
+  var template_default37 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -45407,7 +46857,7 @@ label {
     constructor() {
       super({
         css: style_default25,
-        template: template_default36
+        template: template_default37
       });
     }
   }
@@ -45416,7 +46866,7 @@ label {
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default37 = `<div class="backdrop" id="backdrop">
+  var template_default38 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -45455,7 +46905,7 @@ label {
 `;
 
   // src/components/media/CropSystem/styles/controls.css
-  var controls_default4 = `.ratio-buttons {
+  var controls_default5 = `.ratio-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
@@ -45529,7 +46979,7 @@ label {
 `;
 
   // src/components/media/CropSystem/styles/layout.css
-  var layout_default4 = `:host {
+  var layout_default5 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -45659,9 +47109,9 @@ label {
   class CropSystem extends U2 {
     constructor() {
       super({
-        css: [layout_default4, controls_default4].join(`
+        css: [layout_default5, controls_default5].join(`
 `),
-        template: template_default37
+        template: template_default38
       });
     }
     connectedCallback() {
@@ -45699,7 +47149,7 @@ label {
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default38 = `<div class="backdrop" id="backdrop">
+  var template_default39 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -45741,7 +47191,7 @@ label {
 `;
 
   // src/components/media/DetailMedia/styles/layout.css
-  var layout_default5 = `:host {
+  var layout_default6 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -45956,9 +47406,9 @@ label {
   class DetailMedia extends U2 {
     constructor() {
       super({
-        css: [layout_default5, tools_default].join(`
+        css: [layout_default6, tools_default].join(`
 `),
-        template: template_default38
+        template: template_default39
       });
     }
     connectedCallback() {
@@ -45992,7 +47442,7 @@ label {
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default39 = `<div class="toolbar">
+  var template_default40 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -47108,7 +48558,7 @@ label {
       super({
         css: [navigation_default, interactions_default, detail_default3].join(`
 `),
-        template: template_default39
+        template: template_default40
       });
     }
     get detail() {
@@ -47260,7 +48710,7 @@ label {
   }
 
   // src/components/media/MediaCenter/template.html
-  var template_default40 = `<dialog>
+  var template_default41 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -47846,7 +49296,7 @@ dialog::backdrop {
       super({
         css: [chrome_default, content_default2, folder_default].join(`
 `),
-        template: template_default40
+        template: template_default41
       });
     }
     connectedCallback() {

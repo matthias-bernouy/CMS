@@ -1,0 +1,104 @@
+cms-repository-admin form label,
+cms-repository-admin fieldset {
+    display: grid;
+    gap: 0.35rem;
+}
+
+cms-repository-admin form label {
+    font-weight: 600;
+}
+
+cms-repository-admin input,
+cms-repository-admin textarea,
+cms-repository-admin button {
+    font: inherit;
+}
+
+cms-repository-admin input,
+cms-repository-admin textarea {
+    border: 1px solid #b8c1cf;
+    border-radius: 0.4rem;
+    box-sizing: border-box;
+    padding: 0.6rem;
+    width: 100%;
+}
+
+cms-repository-admin button {
+    align-self: end;
+    background: #2257d6;
+    border: 0;
+    border-radius: 0.4rem;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.65rem 0.9rem;
+}
+
+cms-repository-admin button.secondary {
+    background: #e8edf5;
+    color: #162035;
+}
+
+cms-repository-admin button.danger {
+    background: #a5192e;
+}
+
+cms-repository-admin button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+cms-repository-admin .feedback:not(:empty) {
+    border-radius: 0.4rem;
+    margin: 0.8rem 0;
+    padding: 0.65rem 0.8rem;
+}
+
+cms-repository-admin .feedback[data-tone="error"] {
+    background: #fff0f1;
+    color: #821326;
+}
+
+cms-repository-admin .feedback[data-tone="success"] {
+    background: #eaf8ef;
+    color: #176332;
+}
+
+cms-repository-admin .feedback[data-tone="info"] {
+    background: #eef4ff;
+    color: #173c91;
+}
+
+cms-repository-admin .version-table {
+    border-collapse: collapse;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+cms-repository-admin .version-table th,
+cms-repository-admin .version-table td {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.65rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+cms-repository-admin code {
+    overflow-wrap: anywhere;
+}
+
+cms-repository-admin fieldset {
+    border: 1px solid #dfe4ec;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+cms-repository-admin fieldset > * + * {
+    margin-top: 0.8rem;
+}
+
+@media (max-width: 42rem) {
+    cms-repository-admin .version-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
