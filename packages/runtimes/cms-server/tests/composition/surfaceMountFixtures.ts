@@ -22,6 +22,14 @@ export function surfaceMountFixtures() {
             CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: true,
             CMS_HTTP_CLIENT_ADDRESS_MODE: "trusted-proxy",
             CMS_HTTP_TRUSTED_PROXY_HOPS: 1,
+            repositoryManagement: undefined as
+                | undefined
+                | {
+                      url: string;
+                      tokenFile: string;
+                      administratorSubjectIdentifier: string;
+                      timeoutMs: number;
+                  },
         },
         analyticsVisitorSecret: "analytics-secret",
         core: {
@@ -60,6 +68,8 @@ export function surfaceMountFixtures() {
             resolveSecret: token("resolve-secret"),
         },
         integrations: {
+            repositoryReadMode: "embedded" as "embedded" | "global",
+            repositoryUrl: "http://127.0.0.1:3101/.cms/repository",
             integrationRepositoryCatalog: token("repository-catalog"),
             integrationRepositoryPackages: token("repository-packages"),
             publicRepositoryCatalog: token("public-repository-catalog"),

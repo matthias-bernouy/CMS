@@ -8,6 +8,8 @@ import { productionRepositoryReadConfig } from "./repositoryReads";
 import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
+import { createProductionRepositoryManagementAccess } from "../repositoryManagement/composition";
+import { createProductionRepositoryCatalogProvider } from "../repositoryCatalog";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
 
@@ -25,6 +27,10 @@ export async function mountProductionSurfaces(
     runtime: ProductionSurfaceRuntime = PRODUCTION_SURFACE_RUNTIME,
 ): Promise<ScheduledTriggerRunner> {
     const { env, core, features, integrations, authentication } = options;
+    const repositoryManagement = await createProductionRepositoryManagementAccess(env.repositoryManagement);
+    const repositoryCatalogProvider = repositoryManagement
+        ? createProductionRepositoryCatalogProvider(integrations)
+        : undefined;
     const scheduledTriggers = runtime.startWorkers({
         functions: features.functions,
         sources: features.deliverySources,
@@ -76,6 +82,7 @@ export async function mountProductionSurfaces(
             integrationConnectorProviders: features.integrationConnectorProviders,
             integrationConnectorDeployers: integrations.integrationConnectorDeployers,
             integrationProvisioners: integrations.integrationProvisioners,
+            ...(repositoryManagement ? { repositoryManagement } : {}),
             dashboards: features.dashboards,
             relations: features.relations,
             functions: features.functions,
@@ -145,6 +152,7 @@ export async function mountProductionSurfaces(
         filesMetadata: core.filesMetadata,
         filesBlob: core.filesBlob,
         variantStore: core.variantStore,
+        ...(repositoryCatalogProvider ? { publicPageProviders: [repositoryCatalogProvider] } : {}),
         auth: {
             ...authentication.publicAuthBase,
             emailVerificationUrl: env.CMS_AUTH_EMAIL_VERIFICATION_URL,

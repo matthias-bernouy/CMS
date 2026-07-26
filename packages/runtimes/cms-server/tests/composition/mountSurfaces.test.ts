@@ -126,6 +126,7 @@ describe("production surface mounting", () => {
             sourceTrustedConnectorTarget: expect.any(Function),
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
+        expect(controlConfig.repositoryManagement).toBeUndefined();
         expect(repositoryConfig?.runner).toEqual({ basePath: "/.cms/repository", owner: "delivery" });
         expect(repositoryConfig?.integrationCatalog).toBe(options.integrations.publicRepositoryCatalog);
         expect(repositoryConfig?.integrationPackages).toBe(options.integrations.publicRepositoryPackages);
@@ -147,6 +148,7 @@ describe("production surface mounting", () => {
                 passwordResetUrl: options.env.CMS_AUTH_PASSWORD_RESET_URL,
             },
         });
+        expect(deliveryConfig?.publicPageProviders).toBeUndefined();
         expect(workerOptions).toEqual({
             functions: options.features.functions,
             sources: options.features.deliverySources,

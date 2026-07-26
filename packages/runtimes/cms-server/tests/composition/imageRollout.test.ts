@@ -1,4 +1,8 @@
 import { describe, expect, mock, test } from "bun:test";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { RepositoryCatalogPageProvider } from "@bernouy/cms-repository/catalog";
 import type { SourceEndpoint, SourceEndpointInterceptor } from "@bernouy/cms-sources";
 import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../src/runtime/mountSurfaces";
 import { surfaceMountFixtures } from "./surfaceMountFixtures";
@@ -52,6 +56,35 @@ function capturingRuntime(captured: CapturedSurfaces): ProductionSurfaceRuntime 
 }
 
 describe("production image rollout composition", () => {
+    test("enables private management and the public catalog only for the configured management CMS", async () => {
+        const root = await mkdtemp(join(tmpdir(), "cms-management-surface-"));
+        try {
+            const tokenFile = join(root, "token");
+            await writeFile(tokenFile, "private-service-token", { mode: 0o600 });
+            const options = surfaceMountFixtures();
+            options.env.repositoryManagement = {
+                url: "http://cms-repository:3000/.cms/repository-management",
+                tokenFile,
+                administratorSubjectIdentifier: "opaque-admin-subject",
+                timeoutMs: 5_000,
+            };
+            options.integrations.repositoryReadMode = "global";
+            options.integrations.repositoryUrl = "http://cms-repository:3001/.cms/repository";
+            const captured: CapturedSurfaces = {};
+
+            const mounted = await mountProductionSurfaces(options as never, capturingRuntime(captured));
+
+            expect(captured.control?.repositoryManagement).toMatchObject({
+                administratorSubjectIdentifier: "opaque-admin-subject",
+                gateway: expect.any(Object),
+            });
+            expect(captured.delivery?.publicPageProviders).toEqual([expect.any(RepositoryCatalogPageProvider)]);
+            await mounted.stop();
+        } finally {
+            await rm(root, { recursive: true, force: true });
+        }
+    });
+
     test.each([
         ["dark", false, false, false, false, false],
         ["transform only", true, false, false, false, false],
