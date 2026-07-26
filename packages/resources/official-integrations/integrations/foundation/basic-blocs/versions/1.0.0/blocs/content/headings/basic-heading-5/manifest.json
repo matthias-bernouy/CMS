@@ -1,0 +1,11 @@
+{
+    "runtime": "native",
+    "default-tag": "h5",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Heading 5",
+        "description": "Native level 5 heading with rich-text authoring."
+    }
+}

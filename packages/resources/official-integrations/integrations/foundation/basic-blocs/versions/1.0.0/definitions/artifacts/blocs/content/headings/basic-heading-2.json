@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "h2",
+        "name": "Heading 2",
+        "group": "Text",
+        "description": "Native level 2 heading with rich-text authoring.",
+        "path": "blocs/content/headings/basic-heading-2"
+    }
+}

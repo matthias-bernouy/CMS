@@ -29,6 +29,12 @@ export function registerBuildTest(): void {
             "basic-textarea",
             "basic-toast",
             "form",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
             "img",
         ]);
 
@@ -57,7 +63,9 @@ export function registerBuildTest(): void {
 
             expect(built.id).toBe(bloc.tag);
             expect(built.editorJS).toContain("registerEditor");
-            if (!isNativeBlocTag(bloc.tag)) {
+            if (isNativeBlocTag(bloc.tag)) {
+                expect(built.viewJS).toBe("");
+            } else {
                 expect(built.viewJS).toContain(bloc.tag);
             }
         }

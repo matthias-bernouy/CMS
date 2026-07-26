@@ -16,6 +16,12 @@
         "$files": [
             "artifacts/blocs/basic/basic-button.json",
             "artifacts/blocs/basic/basic-card.json",
+            "artifacts/blocs/content/headings/basic-heading-1.json",
+            "artifacts/blocs/content/headings/basic-heading-2.json",
+            "artifacts/blocs/content/headings/basic-heading-3.json",
+            "artifacts/blocs/content/headings/basic-heading-4.json",
+            "artifacts/blocs/content/headings/basic-heading-5.json",
+            "artifacts/blocs/content/headings/basic-heading-6.json",
             "artifacts/blocs/feedback/basic-skeleton.json",
             "artifacts/blocs/layout/basic-grid.json",
             "artifacts/blocs/layout/basic-stack.json",
