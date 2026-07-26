@@ -14,4 +14,8 @@ export { default as DeliveryCms } from "cms-delivery/DeliveryCms";
 export type { DeliveryCmsConfig } from "cms-delivery/interfaces/DeliveryCmsConfig";
 export type { ContentReader } from "@bernouy/cms-content";
 export type { HeadInjector, HeadInjectorContext } from "cms-delivery/interfaces/HeadInjector";
-export type { PublicPageProvider, PublicPageResolution } from "cms-delivery/interfaces/PublicPageProvider";
+export type {
+    PublicPageProvider,
+    PublicPageRequestContext,
+    PublicPageResolution,
+} from "cms-delivery/interfaces/PublicPageProvider";

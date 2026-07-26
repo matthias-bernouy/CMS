@@ -7,6 +7,7 @@ import { renderRef } from "cms-delivery/core/pages/renderRef";
 import { P9R_CACHE } from "@bernouy/cms-content";
 import { preflightPageSourceAccess } from "cms-delivery/core/pages/preflightPageSourceAccess";
 import { publicPageCacheKey, resolvePublicPage } from "cms-delivery/core/pages/resolvePublicPage";
+import { InvalidPublicPageRequestError } from "cms-delivery/core/pages/publicPageRequest";
 
 /**
  * Shared entry point for every public page GET registered by Delivery.
@@ -31,7 +32,8 @@ export type PageRequestResult = {
 
 /** Internal variant used by analytics so stable page identity is not reconstructed from a path. */
 export async function handlePageRequestWithResult(req: Request, delivery: DeliveryCms): Promise<PageRequestResult> {
-    const pathname = new URL(req.url).pathname;
+    const url = new URL(req.url);
+    const pathname = url.pathname;
 
     // Short-circuit unknown asset URLs under Delivery's own prefix: they
     // reach the default handler because no specific route matched, and a
@@ -43,8 +45,16 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
 
     let dynamicPage;
     try {
-        dynamicPage = await resolvePublicPage(pathname, delivery);
+        dynamicPage = await resolvePublicPage(pathname, delivery, url.search);
     } catch (err) {
+        if (err instanceof InvalidPublicPageRequestError) {
+            return {
+                response: new Response("Bad Request", {
+                    status: err.status,
+                    headers: { "cache-control": "no-store", "content-type": "text/plain; charset=utf-8" },
+                }),
+            };
+        }
         reportPageFailure("resolve", pathname, err);
         return { response: await renderRef(req, delivery, "serverError", 500, "Internal server error") };
     }
@@ -54,8 +64,16 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
         if (sourceAccess) {
             return { response: sourceAccess, pageId: dynamicPage.page.id };
         }
+        const status = dynamicPage.status ?? 200;
         return {
-            response: await renderWithFallbacks(req, dynamicPage.page, pathname, delivery, dynamicPage.cacheIdentity),
+            response: await renderWithFallbacks(
+                req,
+                dynamicPage.page,
+                pathname,
+                delivery,
+                status === 200 && !url.search ? dynamicPage.cacheIdentity : undefined,
+                status,
+            ),
             pageId: dynamicPage.page.id,
         };
     }
@@ -70,7 +88,7 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
         return { response: sourceAccess, pageId: page.id };
     }
 
-    return { response: await renderWithFallbacks(req, page, pathname, delivery, null), pageId: page.id };
+    return { response: await renderWithFallbacks(req, page, pathname, delivery, null, 200), pageId: page.id };
 }
 
 async function renderWithFallbacks(
@@ -79,29 +97,43 @@ async function renderWithFallbacks(
     cachePath: string,
     delivery: DeliveryCms,
     publicCacheIdentity: string | undefined | null,
+    status: number,
 ): Promise<Response> {
     try {
         if (publicCacheIdentity === undefined) {
-            return sendCompressed(req, await renderPage(page, makeRuntimeRenderContext(delivery)), "no-store", {
-                skipCspHeader: true,
-            });
+            return withStatus(
+                sendCompressed(req, await renderPage(page, makeRuntimeRenderContext(delivery)), "no-store", {
+                    skipCspHeader: true,
+                }),
+                status,
+            );
         }
         const cacheKey =
             publicCacheIdentity === null
                 ? P9R_CACHE.page(cachePath)
                 : publicPageCacheKey(cachePath, publicCacheIdentity);
-        return await cachedResponseAsync(
-            req,
-            cacheKey,
-            delivery.cache,
-            () => renderPage(page, makeRuntimeRenderContext(delivery)),
-            publicCacheIdentity === null ? undefined : "public, no-cache",
-            { skipCspHeader: true },
+        return withStatus(
+            await cachedResponseAsync(
+                req,
+                cacheKey,
+                delivery.cache,
+                () => renderPage(page, makeRuntimeRenderContext(delivery)),
+                publicCacheIdentity === null ? undefined : "public, no-cache",
+                { skipCspHeader: true },
+            ),
+            status,
         );
     } catch (err) {
         reportPageFailure("render", cachePath, err);
         return renderRef(req, delivery, "serverError", 500, "Internal server error");
     }
+}
+
+function withStatus(response: Response, status: number): Response {
+    if (status === 200) {
+        return response;
+    }
+    return new Response(response.body, { status, headers: response.headers });
 }
 
 function reportPageFailure(operation: "render" | "resolve", pathname: string, err: unknown): void {

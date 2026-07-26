@@ -75,7 +75,7 @@ async function resolvePreviousPageId(req: Request, delivery: DeliveryCms): Promi
         ) {
             return;
         }
-        const publicPage = await resolvePublicPage(referrerUrl.pathname, delivery);
+        const publicPage = await resolvePublicPage(referrerUrl.pathname, delivery, referrerUrl.search);
         if (publicPage) {
             return publicPage.page.id;
         }

@@ -3,11 +3,13 @@ import type { PublicPageProvider } from "@bernouy/cms-delivery";
 import { mountPublicPages, publicPage } from "./publicPage.fixture";
 
 describe("Delivery public page providers", () => {
-    test("renders a provider page before the stored-page fallback using only the pathname", async () => {
+    test("renders a provider page before the stored-page fallback with bounded query values", async () => {
         const paths: string[] = [];
+        const queries: Array<Readonly<Record<string, readonly string[]>>> = [];
         const provider: PublicPageProvider = {
-            resolvePage: async (path) => {
+            resolvePage: async (path, context) => {
                 paths.push(path);
+                queries.push(context.searchParams);
                 return {
                     page: publicPage("catalog", path, "<main>REMOTE_CATALOG</main>"),
                     cacheIdentity: "catalog-v1",
@@ -23,10 +25,13 @@ describe("Delivery public page providers", () => {
         const html = await response.text();
 
         expect(response.status).toBe(200);
-        expect(response.headers.get("cache-control")).toBe("public, no-cache");
+        expect(response.headers.get("cache-control")).toBe("no-store");
         expect(html).toContain("REMOTE_CATALOG");
         expect(html).not.toContain("STORED_PAGE");
         expect(paths).toEqual(["/integrations"]);
+        expect(queries).toEqual([{ q: ["commerce"] }]);
+        expect(Object.isFrozen(queries[0])).toBe(true);
+        expect(Object.isFrozen(queries[0]?.q)).toBe(true);
         expect(mounted.storedLookups).toEqual([]);
     });
 
@@ -101,6 +106,19 @@ describe("Delivery public page providers", () => {
                 resolvePage: async (path: string) => ({
                     page: publicPage("non-string-cache", path),
                     cacheIdentity: 123 as never,
+                }),
+            },
+            {
+                resolvePage: async (path: string) => ({
+                    page: publicPage("invalid-status", path),
+                    status: 302,
+                }),
+            },
+            {
+                resolvePage: async (path: string) => ({
+                    page: publicPage("cached-error", path),
+                    status: 503,
+                    cacheIdentity: "invalid-error-cache",
                 }),
             },
         ] satisfies PublicPageProvider[]) {
