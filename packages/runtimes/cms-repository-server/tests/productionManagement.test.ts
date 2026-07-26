@@ -80,6 +80,37 @@ describe("production repository management", () => {
             existingDigest: publication.digest,
         });
 
+        const status = await authenticatedFetch(`${managementOrigin}/.cms/repository-management/api/status`);
+        expect(status.status).toBe(200);
+        expect(await status.json()).toMatchObject({
+            ready: true,
+            health: "healthy",
+            integrations: 1,
+            versions: 1,
+        });
+        const versions = await authenticatedFetch(
+            `${managementOrigin}/.cms/repository-management/api/integrations/versions?kind=remote-demo`,
+        );
+        expect(versions.status).toBe(200);
+        expect(await versions.json()).toEqual({
+            kind: "remote-demo",
+            stable: "1.0.0",
+            latest: "1.0.0",
+            versions: [
+                {
+                    version: "1.0.0",
+                    digest: publication.digest,
+                    compatibility: {
+                        admissionReportId: expect.any(String),
+                        currentReportRevisionId: expect.any(String),
+                        outcome: "not-applicable",
+                        admissible: true,
+                        warning: false,
+                    },
+                },
+            ],
+        });
+
         const integrations = await fetch(`${publicOrigin}/.cms/repository/api/integrations`);
         expect(integrations.status).toBe(200);
         expect(await integrations.json()).toEqual([
@@ -91,6 +122,10 @@ describe("production repository management", () => {
         );
     });
 });
+
+function authenticatedFetch(url: string): Promise<Response> {
+    return fetch(url, { headers: { authorization: "Bearer management-secret" } });
+}
 
 function publicationDocument(): string {
     return JSON.stringify({

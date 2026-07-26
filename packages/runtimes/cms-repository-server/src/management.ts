@@ -4,7 +4,11 @@ import {
     IntegrationCompatibilityEvaluator,
     type IntegrationRegistryRecoveryResult,
 } from "@bernouy/cms-integration-registry";
-import { FsIntegrationRegistryPublisher, FsIntegrationRegistryRecoverer } from "@bernouy/cms-integration-registry/fs";
+import {
+    FsIntegrationCompatibilityReportStore,
+    FsIntegrationRegistryPublisher,
+    FsIntegrationRegistryRecoverer,
+} from "@bernouy/cms-integration-registry/fs";
 import { RepositoryManagementCms } from "@bernouy/cms-repository-management";
 import type { Runner } from "@bernouy/http-runner";
 import type { RepositoryCatalogRuntime } from "./core/catalogRuntime";
@@ -24,6 +28,7 @@ export async function createProductionRepositoryManagement(input: {
     const snapshots = input.catalog.snapshotReference();
     const mutations = new InMemoryIntegrationRegistryMutationCoordinator();
     const recovery = await new FsIntegrationRegistryRecoverer({ root: input.root, snapshots }).recover();
+    const reports = new FsIntegrationCompatibilityReportStore({ snapshots, mutations });
     const compatibility = new IntegrationCompatibilityEvaluator({
         identity: { name: "cms-repository-server", version: "1.0.0" },
         now: () => new Date().toISOString(),
@@ -43,6 +48,11 @@ export async function createProductionRepositoryManagement(input: {
                 runner,
                 publisher,
                 upload: { maxBodyBytes: MAX_PUBLICATION_UPLOAD_BYTES },
+                reads: {
+                    catalog: snapshots,
+                    reports,
+                    recoveryDiagnostics: () => recovery.diagnostics,
+                },
                 existingVersionDigest(kind, version) {
                     return input.catalog.current().locateExactVersion(kind, version)?.package.digest ?? null;
                 },
