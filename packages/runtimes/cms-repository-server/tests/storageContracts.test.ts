@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
-import { mkdir, mkdtemp, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, mkdtemp, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { buildFsIntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry/fs";
+import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
 import { readRepositoryManagementToken } from "../src/credentials";
+import { prepareOfficialRepositoryBootstrap } from "../src/production";
 import {
     bootstrapRepositoryRegistryIfEmpty,
     REPOSITORY_BOOTSTRAP_MARKER,
@@ -13,7 +16,12 @@ import {
 const roots: string[] = [];
 
 afterEach(async () => {
-    await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
+    await Promise.all(
+        roots.splice(0).map(async (root) => {
+            await makeWritable(root);
+            await rm(root, { recursive: true, force: true });
+        }),
+    );
 });
 
 describe("repository storage contracts", () => {
@@ -68,6 +76,31 @@ describe("repository storage contracts", () => {
         expect(bootstrap).toHaveBeenCalledTimes(1);
     });
 
+    test("the production bootstrap publishes all official packages in deterministic order", async () => {
+        const root = await temporaryRoot();
+        const expected = await buildOfficialIntegrationPackages();
+
+        expect(await bootstrapRepositoryRegistryIfEmpty(root, prepareOfficialRepositoryBootstrap)).toBe("bootstrapped");
+
+        const snapshot = await buildFsIntegrationRegistryCatalogSnapshot({ root });
+        expect(snapshot.health).toBe("healthy");
+        expect(snapshot.summaries.map(({ kind }) => kind)).toEqual(expected.map(({ kind }) => kind));
+        expect(snapshot.summaries).toHaveLength(14);
+        for (const integrationPackage of expected) {
+            expect(
+                snapshot.locateExactVersion(integrationPackage.kind, integrationPackage.version)?.package.digest,
+            ).toBe(integrationPackage.digest);
+        }
+        const legacySqlPackages = snapshot.summaries.filter(({ kind, versions }) => {
+            const definition = snapshot.locateExactVersion(kind, versions[0]!)?.definitionSnapshot;
+            return definition?.connectors?.some(
+                (connector) => connector.schemas?.length && !connector.compatibility?.schema,
+            );
+        });
+        expect(legacySqlPackages).toHaveLength(9);
+        expect(await readdir(root)).not.toContain(REPOSITORY_BOOTSTRAP_MARKER);
+    }, 30_000);
+
     test("rejects a symlink registry root", async () => {
         const parent = await temporaryRoot();
         const actual = join(parent, "actual");
@@ -113,4 +146,17 @@ async function temporaryRoot(): Promise<string> {
     const root = await mkdtemp(join(tmpdir(), "cms-repository-server-"));
     roots.push(root);
     return root;
+}
+
+async function makeWritable(path: string): Promise<void> {
+    const metadata = await lstat(path);
+    if (!metadata.isDirectory()) {
+        return;
+    }
+    await chmod(path, 0o750);
+    for (const entry of await readdir(path, { withFileTypes: true })) {
+        if (entry.isDirectory()) {
+            await makeWritable(join(path, entry.name));
+        }
+    }
 }
