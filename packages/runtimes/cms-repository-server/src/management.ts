@@ -8,6 +8,7 @@ import {
     FsIntegrationCompatibilityReportStore,
     FsIntegrationRegistryPublisher,
     FsIntegrationRegistryRecoverer,
+    FsIntegrationRegistryStablePromoter,
 } from "@bernouy/cms-integration-registry/fs";
 import { RepositoryManagementCms } from "@bernouy/cms-repository-management";
 import type { Runner } from "@bernouy/http-runner";
@@ -15,6 +16,7 @@ import type { RepositoryCatalogRuntime } from "./core/catalogRuntime";
 import type { RepositoryManagementSurfaceMount } from "./core/repositoryServer";
 
 const MAX_PUBLICATION_UPLOAD_BYTES = 32 * 1_024 * 1_024;
+const MAX_MANAGEMENT_JSON_BYTES = 64 * 1_024;
 
 export type ProductionRepositoryManagement = Readonly<{
     mount: RepositoryManagementSurfaceMount;
@@ -40,6 +42,12 @@ export async function createProductionRepositoryManagement(input: {
         compatibility,
         mutations,
     });
+    const promoter = new FsIntegrationRegistryStablePromoter({
+        root: input.root,
+        snapshots,
+        reports,
+        mutations,
+    });
 
     return Object.freeze({
         recovery,
@@ -53,6 +61,7 @@ export async function createProductionRepositoryManagement(input: {
                     reports,
                     recoveryDiagnostics: () => recovery.diagnostics,
                 },
+                stablePromotions: { promoter, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
                 existingVersionDigest(kind, version) {
                     return input.catalog.current().locateExactVersion(kind, version)?.package.digest ?? null;
                 },

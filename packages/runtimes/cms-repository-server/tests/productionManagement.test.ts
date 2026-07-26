@@ -55,7 +55,7 @@ describe("production repository management", () => {
             {
                 method: "POST",
                 headers: { "content-type": "application/json" },
-                body: publicationDocument(),
+                body: publicationDocument("1.0.0"),
             },
         );
         expect(unauthorized.status).toBe(401);
@@ -63,7 +63,7 @@ describe("production repository management", () => {
         const published = await fetch(`${managementOrigin}/.cms/repository-management/api/integrations/publications`, {
             method: "POST",
             headers: { authorization: "Bearer management-secret", "content-type": "application/json" },
-            body: publicationDocument(),
+            body: publicationDocument("1.0.0"),
         });
         expect(published.status).toBe(201);
         const publication = (await published.json()) as { digest: string };
@@ -71,7 +71,7 @@ describe("production repository management", () => {
         const duplicate = await fetch(`${managementOrigin}/.cms/repository-management/api/integrations/publications`, {
             method: "POST",
             headers: { authorization: "Bearer management-secret", "content-type": "application/json" },
-            body: publicationDocument(),
+            body: publicationDocument("1.0.0"),
         });
         expect(duplicate.status).toBe(409);
         expect(await duplicate.json()).toMatchObject({
@@ -111,12 +111,51 @@ describe("production repository management", () => {
             ],
         });
 
+        const secondPublication = await authenticatedJson(
+            `${managementOrigin}/.cms/repository-management/api/integrations/publications`,
+            publicationDocument("1.1.0"),
+        );
+        expect(secondPublication.status).toBe(201);
+        const versionHistory = await authenticatedFetch(
+            `${managementOrigin}/.cms/repository-management/api/integrations/versions?kind=remote-demo`,
+        );
+        const history = (await versionHistory.json()) as {
+            stable: string;
+            latest: string;
+            versions: Array<{ version: string; compatibility: { currentReportRevisionId: string } }>;
+        };
+        expect(history).toMatchObject({ stable: "1.0.0", latest: "1.1.0" });
+        const reportRevisionId = history.versions.find((item) => item.version === "1.1.0")?.compatibility
+            .currentReportRevisionId;
+        expect(reportRevisionId).toBeString();
+        const promoted = await authenticatedJson(
+            `${managementOrigin}/.cms/repository-management/api/integrations/stable-promotions`,
+            JSON.stringify({
+                kind: "remote-demo",
+                version: "1.1.0",
+                currentReportRevisionId: reportRevisionId,
+                actor: "repository-owner",
+                confirmation: { version: "1.1.0", reportRevisionId },
+                reason: "Production rollout",
+            }),
+        );
+        expect(promoted.status).toBe(201);
+        expect(await promoted.json()).toMatchObject({
+            operationId: expect.any(String),
+            record: {
+                version: "1.1.0",
+                previousStable: "1.0.0",
+                actor: "repository-owner",
+                reportRevisionId,
+            },
+        });
+
         const integrations = await fetch(`${publicOrigin}/.cms/repository/api/integrations`);
         expect(integrations.status).toBe(200);
         expect(await integrations.json()).toEqual([
-            expect.objectContaining({ kind: "remote-demo", versions: ["1.0.0"] }),
+            expect.objectContaining({ kind: "remote-demo", versions: ["1.0.0", "1.1.0"] }),
         ]);
-        expect(catalog.current().getIndex("remote-demo")?.stable).toBe("1.0.0");
+        expect(catalog.current().getIndex("remote-demo")?.stable).toBe("1.1.0");
         expect((await fetch(`${publicOrigin}/.cms/repository-management/api/integrations/publications`)).status).toBe(
             404,
         );
@@ -127,18 +166,26 @@ function authenticatedFetch(url: string): Promise<Response> {
     return fetch(url, { headers: { authorization: "Bearer management-secret" } });
 }
 
-function publicationDocument(): string {
+function authenticatedJson(url: string, body: string): Promise<Response> {
+    return fetch(url, {
+        method: "POST",
+        headers: { authorization: "Bearer management-secret", "content-type": "application/json" },
+        body,
+    });
+}
+
+function publicationDocument(version: string): string {
     return JSON.stringify({
         schema: "cms.integration.package.v1",
         kind: "remote-demo",
-        version: "1.0.0",
+        version,
         definition: "definition.json",
         releaseNotes: "README.md",
         files: {
             "README.md": { encoding: "utf8", content: "# Remote demo\n" },
             "definition.json": {
                 encoding: "utf8",
-                content: JSON.stringify({ kind: "remote-demo", label: "Remote demo", version: "1.0.0", inputs: [] }),
+                content: JSON.stringify({ kind: "remote-demo", label: "Remote demo", version, inputs: [] }),
             },
         },
     });
