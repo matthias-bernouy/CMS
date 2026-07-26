@@ -490,6 +490,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integration-registry": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
       },

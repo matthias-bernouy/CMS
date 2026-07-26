@@ -17,3 +17,8 @@ export {
     type IntegrationPackageUploadErrorCode,
     integrationPackageUploadErrorResponse,
 } from "cms-repository-management/packageUploadError";
+export {
+    RepositoryManagementCms,
+    type RepositoryManagementCmsConfig,
+    REPOSITORY_PUBLICATION_PATH,
+} from "cms-repository-management/RepositoryManagementCms";
