@@ -17,6 +17,10 @@ import {
     mountRepositoryStablePromotionRoutes,
     type RepositoryStablePromotionRoutesConfig,
 } from "cms-repository-management/operations/promotionRoutes";
+import {
+    mountRepositoryCompatibilityReevaluationRoutes,
+    type RepositoryCompatibilityReevaluationRoutesConfig,
+} from "cms-repository-management/operations/reevaluationRoutes";
 
 export const REPOSITORY_PUBLICATION_PATH = "/api/integrations/publications";
 
@@ -26,6 +30,7 @@ export type RepositoryManagementCmsConfig = Readonly<{
     upload: IntegrationPackageUploadOptions;
     reads?: RepositoryManagementReadConfig;
     stablePromotions?: RepositoryStablePromotionRoutesConfig;
+    compatibilityReevaluations?: RepositoryCompatibilityReevaluationRoutesConfig;
     existingVersionDigest?: (kind: string, version: string) => string | null | Promise<string | null>;
 }>;
 
@@ -37,6 +42,9 @@ export class RepositoryManagementCms {
         }
         if (config.stablePromotions) {
             mountRepositoryStablePromotionRoutes(config.runner, config.stablePromotions);
+        }
+        if (config.compatibilityReevaluations) {
+            mountRepositoryCompatibilityReevaluationRoutes(config.runner, config.compatibilityReevaluations);
         }
     }
 

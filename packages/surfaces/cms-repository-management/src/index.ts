@@ -35,3 +35,8 @@ export {
     REPOSITORY_STABLE_PROMOTIONS_PATH,
     type RepositoryStablePromotionRoutesConfig,
 } from "cms-repository-management/operations/promotionRoutes";
+export {
+    mountRepositoryCompatibilityReevaluationRoutes,
+    REPOSITORY_COMPATIBILITY_REEVALUATIONS_PATH,
+    type RepositoryCompatibilityReevaluationRoutesConfig,
+} from "cms-repository-management/operations/reevaluationRoutes";
