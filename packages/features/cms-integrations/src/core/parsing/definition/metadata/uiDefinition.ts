@@ -1,5 +1,5 @@
-import { IntegrationInputError } from "../../errors";
-import type { IntegrationUiDefinition } from "../../../interfaces/Integration";
+import { IntegrationInputError } from "../../../errors";
+import type { IntegrationUiDefinition } from "../../../../interfaces/Integration";
 
 type UiReadMode = "throw" | "drop";
 

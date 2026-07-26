@@ -157,6 +157,7 @@
       "name": "@bernouy/cms-integrations",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-functions": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",

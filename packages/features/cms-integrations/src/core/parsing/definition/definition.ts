@@ -15,7 +15,8 @@ import {
     validateGeneratedSecretDefinition,
 } from "../templates/secretTemplates";
 import { parseSecurityDefinition, validateSecurityDefinition } from "./securityDefinition";
-import { parseUiDefinition } from "./uiDefinition";
+import { parseThemeDefinition, validateThemeDefinition } from "./metadata/themeDefinition";
+import { parseUiDefinition } from "./metadata/uiDefinition";
 import { isRecord, parseJsonAnswer, text } from "./values";
 
 export function assertDefinitionUsable(definition: IntegrationDefinition): void {
@@ -44,6 +45,9 @@ export function assertDefinitionUsable(definition: IntegrationDefinition): void 
     validateAfterInstallationTemplates(definition.afterInstallation ?? [], definition.dependencies ?? []);
     if (definition.security) {
         validateSecurityDefinition(definition.security);
+    }
+    if (definition.theme) {
+        validateThemeDefinition(definition.theme, definition.kind);
     }
 }
 
@@ -90,6 +94,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     validateAfterInstallationTemplates(afterInstallation, dependencies);
     const icon = parseIntegrationIcon(value.icon);
     const ui = parseUiDefinition(value.ui);
+    const theme = parseThemeDefinition(value.theme, kind);
     const security = parseSecurityDefinition(value.security);
 
     return {
@@ -107,6 +112,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
         ...(afterInstallation.length ? { afterInstallation } : {}),
         ...(artifacts.length ? { artifacts } : {}),
         ...(ui ? { ui } : {}),
+        ...(theme ? { theme } : {}),
         ...(security ? { security } : {}),
         ...(dependencies.length ? { dependencies } : {}),
     };

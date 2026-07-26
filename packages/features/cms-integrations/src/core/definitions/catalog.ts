@@ -1,5 +1,5 @@
 import type { IntegrationDefinition } from "../../interfaces/Integration";
-import { sanitizeUiDefinition } from "../parsing/definition/uiDefinition";
+import { sanitizeUiDefinition } from "../parsing/definition/metadata/uiDefinition";
 
 export function integrationRegistry(siteIntegrations: IntegrationDefinition[] = []): IntegrationDefinition[] {
     return siteIntegrations.map(sanitizeRegistryDefinition);

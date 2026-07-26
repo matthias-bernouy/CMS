@@ -58,6 +58,33 @@ export type IntegrationSecurityDefinition = {
     csp?: IntegrationCspPolicy;
 };
 
+export type IntegrationThemeTokenType = "color" | "value" | "font-family";
+
+export type IntegrationThemeTokenDefaults = {
+    light: string;
+    dark?: string;
+};
+
+export type IntegrationThemeToken = {
+    /** Integration-local identifier. The CMS derives the final namespaced CSS variable. */
+    id: string;
+    label: string;
+    description?: string;
+    type: IntegrationThemeTokenType;
+    defaults: IntegrationThemeTokenDefaults;
+};
+
+export type IntegrationThemeCategory = {
+    id: string;
+    label: string;
+    description?: string;
+    tokens: IntegrationThemeToken[];
+};
+
+export type IntegrationThemeDefinition = {
+    categories: IntegrationThemeCategory[];
+};
+
 export type IntegrationDependency = {
     name: string;
     kind: string;
@@ -122,6 +149,7 @@ export type IntegrationDefinition = {
     icon?: IntegrationIcon;
     inputs: IntegrationInput[];
     ui?: IntegrationUiDefinition;
+    theme?: IntegrationThemeDefinition;
     security?: IntegrationSecurityDefinition;
     dependencies?: IntegrationDependency[];
     secrets?: DeclarativeSecretTemplate[];

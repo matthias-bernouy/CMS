@@ -10,6 +10,7 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
+        { "path": "../cms-content" },
         { "path": "../cms-dashboards" },
         { "path": "../cms-functions" },
         { "path": "../cms-triggers" },

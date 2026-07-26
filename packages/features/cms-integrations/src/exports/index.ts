@@ -30,6 +30,11 @@ export type {
     IntegrationIcon,
     IntegrationInput,
     IntegrationSecurityDefinition,
+    IntegrationThemeCategory,
+    IntegrationThemeDefinition,
+    IntegrationThemeToken,
+    IntegrationThemeTokenDefaults,
+    IntegrationThemeTokenType,
     IntegrationUiDefinition,
 } from "../interfaces/Integration";
 export type {
@@ -95,6 +100,7 @@ export {
     findIntegration,
     integrationRegistry,
 } from "../core/definitions/catalog";
+export { collectIntegrationInstallationThemeContributions } from "../core/definitions/themeContributions";
 export {
     parseIntegrationImportRequest,
     parseIntegrationImportDto,
