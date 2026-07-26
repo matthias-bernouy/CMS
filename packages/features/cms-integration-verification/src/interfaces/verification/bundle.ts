@@ -1,5 +1,5 @@
 import type { CanonicalFileSet, CanonicalFileSetValidationOptions } from "@bernouy/cms-integration-packages";
-import type { VerificationRunnerRequirement } from "./runner";
+import type { VerificationRunnerRequirement } from "../runner";
 
 export const INTEGRATION_VERIFICATION_SCHEMA = "cms.integration.verification.v1" as const;
 

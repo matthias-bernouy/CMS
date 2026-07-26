@@ -9,12 +9,12 @@ import type {
     IntegrationVerificationEnvelopeV1,
     IntegrationVerificationManifestV1,
     IntegrationVerificationValidationOptions,
-} from "../interfaces/verification";
-import { INTEGRATION_VERIFICATION_SCHEMA } from "../interfaces/verification";
-import { parseVerificationRunnerRequirement } from "./runner";
-import { IntegrationVerificationContractError, wrapPackageValidation } from "./validation/errors";
-import { parseVerificationJsonDocument } from "./validation/document";
-import { assertContractIJson, assertUnique, boundedArray, strictRecord } from "./validation/structure";
+} from "../../interfaces/verification";
+import { INTEGRATION_VERIFICATION_SCHEMA } from "../../interfaces/verification";
+import { parseVerificationRunnerRequirement } from "../runner";
+import { IntegrationVerificationContractError, wrapPackageValidation } from "../validation/errors";
+import { parseVerificationJsonDocument } from "../validation/document";
+import { assertContractIJson, assertUnique, boundedArray, strictRecord } from "../validation/structure";
 import {
     assertVersionInRange,
     exactVersion,
@@ -24,7 +24,7 @@ import {
     sha256Digest,
     stableIdentifier,
     supportedVersionRange,
-} from "./validation/values";
+} from "../validation/values";
 
 export function parseIntegrationVerificationEnvelope(
     input: string | Uint8Array,
