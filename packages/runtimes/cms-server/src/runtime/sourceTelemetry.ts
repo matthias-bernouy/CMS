@@ -1,4 +1,5 @@
 import type { EndpointPerformanceRecorder, EndpointPerformanceSurface } from "@bernouy/cms-analytics";
+import type { IntegrationPackageCacheEvent } from "@bernouy/cms-integration-packages/fs";
 import type { IntegrationConnectorDeployer } from "@bernouy/cms-integrations";
 import type { ExecutorDeps, SourceRequestDiagnostic, SourceRequestTelemetryOptions } from "@bernouy/cms-sources";
 
@@ -39,6 +40,24 @@ export function createSurfaceSourceTelemetry(
     return {
         control: createSourceTelemetryOptions("control", recorder, config),
         delivery: createSourceTelemetryOptions("delivery", recorder, config),
+    };
+}
+
+export function createIntegrationPackageCacheObserver(
+    reportDiagnostic: (message: string) => void = (message) => console.info(message),
+): (event: IntegrationPackageCacheEvent) => void {
+    return (event) => {
+        reportDiagnostic(
+            JSON.stringify({
+                event: "cms_integration_package_cache",
+                outcome: event.type,
+                digest: event.digest,
+                ...(event.kind ? { kind: event.kind } : {}),
+                ...(event.version ? { version: event.version } : {}),
+                ...(event.bytes !== undefined ? { bytes: event.bytes } : {}),
+                durationMs: event.durationMs,
+            }),
+        );
     };
 }
 

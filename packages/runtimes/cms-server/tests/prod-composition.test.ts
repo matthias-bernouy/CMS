@@ -51,6 +51,7 @@ describe("production CMS composition", () => {
 
         expect(cacheReady).toBeGreaterThan(-1);
         expect(surfaces).toBeGreaterThan(cacheReady);
+        expect(entrypoint).toContain("packageCacheObserve: createIntegrationPackageCacheObserver()");
     });
 
     test("wires durable functions and triggers into Control and Delivery", async () => {

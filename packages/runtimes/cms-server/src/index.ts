@@ -1,6 +1,7 @@
 import { createProductionAuth } from "./runtime/auth";
 import { createProductionIntegrationServices } from "./runtime/integrations";
 import { mountProductionSurfaces } from "./runtime/mountSurfaces";
+import { createIntegrationPackageCacheObserver } from "./runtime/sourceTelemetry";
 import { createCoreStores } from "./runtime/stores/core";
 import { createFeatureStores } from "./runtime/stores/features";
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
@@ -18,6 +19,7 @@ const integrations = createProductionIntegrationServices({
     secrets: core.secrets,
     localRepositoryUrl: `http://127.0.0.1:${env.DELIVERY_PORT}/.cms/repository`,
     packageCacheDir: env.CMS_INTEGRATION_PACKAGE_CACHE_DIR,
+    packageCacheObserve: createIntegrationPackageCacheObserver(),
     environment: process.env,
 });
 await integrations.integrationPackageCache.init();

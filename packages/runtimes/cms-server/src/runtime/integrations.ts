@@ -5,6 +5,7 @@ import type {
     IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationPackageCache, FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
+import type { IntegrationPackageCacheEvent } from "@bernouy/cms-integration-packages/fs";
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
 import { FsIntegrationDefinitionRepository, FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
@@ -22,6 +23,7 @@ type IntegrationServiceOptions = {
     definitionFetch?: typeof fetch;
     packageFetch?: typeof fetch;
     environment: Record<string, string | undefined>;
+    packageCacheObserve?: (event: IntegrationPackageCacheEvent) => void;
 };
 
 export function createProductionIntegrationServices(options: IntegrationServiceOptions) {
@@ -40,7 +42,10 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
         baseUrl: repositoryUrl,
         ...(options.packageFetch ? { fetch: options.packageFetch } : {}),
     });
-    const integrationPackageCache = new FsIntegrationPackageCache({ root: options.packageCacheDir });
+    const integrationPackageCache = new FsIntegrationPackageCache({
+        root: options.packageCacheDir,
+        ...(options.packageCacheObserve ? { observe: options.packageCacheObserve } : {}),
+    });
     const integrationPackageResolver = new FsIntegrationPackageResolver({
         cache: integrationPackageCache,
         source: integrationPackageSource,
