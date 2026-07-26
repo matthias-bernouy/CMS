@@ -63,6 +63,7 @@ test("quality workflow keeps every G0 check visible", async () => {
         "docker compose version",
         "bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-media",
         "bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-negotiated-checkout",
+        "bun run packages/resources/official-integrations/tests/helpers/postgres/schema-calibration/execution/run.ts",
         "bun test packages/features/cms-source-images/tests",
         "packages/features/cms-sources/tests/http/interceptors",
         "packages/features/cms-sources/tests/http/observability/sourceImageTelemetry.test.ts",
@@ -105,6 +106,8 @@ test("quality workflow keeps every G0 check visible", async () => {
     expect(integrationWorkflow).toContain(
         "DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cmscore_contracts",
     );
+    expect(integrationWorkflow).toContain("name: Calibrate all official PostgreSQL schemas");
+    expect(integrationWorkflow).not.toContain("schema-calibration/execution/run.ts --filter");
     expect(integrationWorkflow).toMatch(/postgres-contracts:[\s\S]*fetch-depth: 0/);
     expect(integrationWorkflow).toContain("name: Source image safety and Chromium smoke");
     expect(integrationWorkflow).toContain("PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright");

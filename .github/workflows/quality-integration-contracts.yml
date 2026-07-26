@@ -50,6 +50,12 @@ jobs:
           bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-media
           bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-negotiated-checkout
 
+      - name: Calibrate all official PostgreSQL schemas
+        env:
+          ALLOW_POSTGRES_CONTRACT_SCHEMA_RESET: cmscore-postgres-contracts
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cmscore_contracts
+        run: bun run packages/resources/official-integrations/tests/helpers/postgres/schema-calibration/execution/run.ts
+
   source-image-safety:
     name: Source image safety and Chromium smoke
     runs-on: ubuntu-24.04
