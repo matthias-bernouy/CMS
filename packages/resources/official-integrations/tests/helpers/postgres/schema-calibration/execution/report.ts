@@ -13,6 +13,22 @@ export type SchemaCalibrationSubjectReport = Readonly<{
     identicalCompatibilityFindings: 0;
 }>;
 
+export type SchemaCalibrationDialectReport = Readonly<{
+    contractDigest: string;
+    freshDeterministic: true;
+    identities: Readonly<
+        Record<
+            string,
+            Readonly<{
+                identity: "none" | "always" | "by-default";
+                sequenceDependency: "none" | "auto" | "internal";
+                default?: string;
+            }>
+        >
+    >;
+    checkExpression: string;
+}>;
+
 export type SchemaCalibrationReport = Readonly<{
     schema: "cms.integration.schema-calibration-report.v1";
     generatedAt: string;
@@ -21,5 +37,6 @@ export type SchemaCalibrationReport = Readonly<{
         image: string;
         postgresVersion: string;
     }>;
+    dialect: SchemaCalibrationDialectReport;
     subjects: readonly SchemaCalibrationSubjectReport[];
 }>;

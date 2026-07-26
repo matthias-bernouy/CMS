@@ -9,14 +9,12 @@ import {
     type DeclarativeConnectorSchemaContract,
     type ObservedSchemaContractV1,
 } from "@bernouy/cms-integrations";
-import {
-    loadSupabaseSqlSchemas,
-    readSupabaseObservedSchemaContract,
-    type SupabaseSchemaCatalogQueryClient,
-} from "@bernouy/cms-integrations/supabase";
+import { loadSupabaseSqlSchemas, readSupabaseObservedSchemaContract } from "@bernouy/cms-integrations/supabase";
 import { DisposableSchemaCalibrationCluster, type SchemaCalibrationDatabase } from "../database";
 import { schemaCalibrationEnvironmentIdentity } from "../environment/manifest";
 import { loadOfficialSchemaCalibrationSubjects, type OfficialSchemaCalibrationSubject } from "../subjects";
+import { schemaCatalogClient } from "./catalogClient";
+import { calibratePostgresDialect } from "./dialect";
 import type { SchemaCalibrationReport, SchemaCalibrationSubjectReport } from "./report";
 
 export async function calibrateOfficialIntegrationSchemas(options: {
@@ -34,6 +32,7 @@ export async function calibrateOfficialIntegrationSchemas(options: {
     const subjectByKind = new Map(allSubjects.map((subject) => [subject.kind, subject]));
     const cluster = new DisposableSchemaCalibrationCluster(options.env);
     try {
+        const dialect = await calibratePostgresDialect(cluster, environment);
         const reports: SchemaCalibrationSubjectReport[] = [];
         let postgresVersion = "";
         for (const subject of subjects) {
@@ -48,6 +47,7 @@ export async function calibrateOfficialIntegrationSchemas(options: {
             schema: "cms.integration.schema-calibration-report.v1",
             generatedAt: (options.now ?? (() => new Date().toISOString()))(),
             environment: { digest: environment.digest, image: environment.image, postgresVersion },
+            dialect,
             subjects: reports,
         };
     } finally {
@@ -62,8 +62,8 @@ async function calibrateSubject(
     subjectByKind: ReadonlyMap<string, OfficialSchemaCalibrationSubject>,
 ): Promise<{ postgresVersion: string; report: SchemaCalibrationSubjectReport }> {
     const baseName = `cmscore_contracts_${subject.kind.replaceAll("-", "_")}`;
-        const databaseA = await cluster.create(`${baseName}_a`, environment);
-        const databaseB = await cluster.create(`${baseName}_b`, environment);
+    const databaseA = await cluster.create(`${baseName}_a`, environment);
+    const databaseB = await cluster.create(`${baseName}_b`, environment);
     try {
         await installSubject(databaseA.sql, subject, subjectByKind);
         await installSubject(databaseB.sql, subject, subjectByKind);
@@ -136,16 +136,8 @@ async function observe(
     database: SchemaCalibrationDatabase,
     subject: OfficialSchemaCalibrationSubject,
 ): Promise<ObservedSchemaContractV1> {
-    const client: SupabaseSchemaCatalogQueryClient = {
-        query: async (statement, parameters) => {
-            const values = parameters.map((parameter) =>
-                Array.isArray(parameter) ? database.sql.array(parameter, "TEXT") : parameter,
-            );
-            return (await database.sql.unsafe(statement, values)) as readonly Record<string, unknown>[];
-        },
-    };
     return readSupabaseObservedSchemaContract({
-        client,
+        client: schemaCatalogClient(database.sql),
         owner: { connectorKey: subject.connectorKey, lineageId: subject.lineageId },
         ownedNamespaces: subject.namespaces,
     });
