@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "p",
+        "name": "Paragraph",
+        "group": "Text",
+        "description": "Native paragraph with rich-text authoring.",
+        "path": "blocs/content/text/basic-paragraph"
+    }
+}

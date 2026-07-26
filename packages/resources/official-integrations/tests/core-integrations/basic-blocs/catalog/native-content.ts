@@ -1,15 +1,11 @@
 import { expect, test } from "bun:test";
 import { File } from "node:buffer";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
-import {
-    Editor,
-    type EditorCatalogRegistration,
-    type EditorCatalogRuntime,
-    type TextCapability,
-} from "@bernouy/cms-content/editor";
+import { type TextCapability } from "@bernouy/cms-content/editor";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { decodeDefaultContent, decodeSource } from "../source";
+import { defaultRoot, executeEditorBundle } from "./support";
 
 const headingCapability: TextCapability = {
     format: "richtext",
@@ -20,11 +16,27 @@ const headingCapability: TextCapability = {
     dynamic: true,
 };
 
-const nativeContentCases = [1, 2, 3, 4, 5, 6].map((level) => ({
-    tag: `h${level}`,
-    path: `blocs/content/headings/basic-heading-${level}`,
-    capability: headingCapability,
-}));
+const paragraphCapability: TextCapability = { ...headingCapability, size: true };
+
+const linkCapability: TextCapability = {
+    format: "richtext",
+    bold: true,
+    italic: true,
+    underline: true,
+    dynamic: true,
+};
+
+const nativeContentCases = [
+    ...[1, 2, 3, 4, 5, 6].map((level) => ({
+        tag: `h${level}`,
+        path: `blocs/content/headings/basic-heading-${level}`,
+        capability: headingCapability,
+    })),
+    { tag: "p", path: "blocs/content/text/basic-paragraph", capability: paragraphCapability },
+    { tag: "span", path: "blocs/content/text/basic-span", capability: headingCapability },
+    { tag: "blockquote", path: "blocs/content/text/basic-blockquote", capability: headingCapability },
+    { tag: "a", path: "blocs/content/links/basic-link", capability: linkCapability },
+];
 
 export function registerNativeContentTest(): void {
     test("hydrates native text artifacts as editable catalog entries", async () => {
@@ -69,38 +81,4 @@ export function registerNativeContentTest(): void {
             expect(editor.getTextCapability()).toEqual(testCase.capability);
         }
     });
-}
-
-function defaultRoot(content: string | undefined): string | undefined {
-    const template = document.createElement("template");
-    template.innerHTML = content ?? "";
-    return template.content.firstElementChild?.localName;
-}
-
-function executeEditorBundle(editorJS: string): EditorCatalogRegistration & { editor: NonNullable<EditorCatalogRegistration["editor"]> } {
-    const editorWindow = window as typeof window & { p9rEditor?: EditorCatalogRuntime };
-    const previous = editorWindow.p9rEditor;
-    let registration: EditorCatalogRegistration | undefined;
-    editorWindow.p9rEditor = {
-        Editor,
-        registerEditor: (entry) => {
-            registration = entry;
-        },
-        getCatalog: () => [],
-    };
-    try {
-        new Function(editorJS)();
-    } finally {
-        if (previous) {
-            editorWindow.p9rEditor = previous;
-        } else {
-            delete editorWindow.p9rEditor;
-        }
-    }
-    if (!registration?.editor) {
-        throw new Error("editor bundle did not register an editor constructor");
-    }
-    return registration as EditorCatalogRegistration & {
-        editor: NonNullable<EditorCatalogRegistration["editor"]>;
-    };
 }

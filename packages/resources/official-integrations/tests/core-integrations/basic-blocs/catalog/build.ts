@@ -12,6 +12,7 @@ export function registerBuildTest(): void {
         const artifacts = definition?.artifacts?.filter((artifact) => artifact.type === "bloc") ?? [];
 
         expect(artifacts.map((artifact) => artifact.bloc.tag).sort()).toEqual([
+            "a",
             "basic-button",
             "basic-card",
             "basic-checkbox",
@@ -28,6 +29,7 @@ export function registerBuildTest(): void {
             "basic-stack",
             "basic-textarea",
             "basic-toast",
+            "blockquote",
             "form",
             "h1",
             "h2",
@@ -36,6 +38,8 @@ export function registerBuildTest(): void {
             "h5",
             "h6",
             "img",
+            "p",
+            "span",
         ]);
 
         for (const artifact of artifacts) {
