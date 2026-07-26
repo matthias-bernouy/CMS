@@ -7,12 +7,21 @@ import type {
 export type IntegrationInstallationRow = {
     id: string;
     label: string;
+    definitionVersion: string;
     packageDigest?: string;
     status: IntegrationInstallationStatus;
     runCount: number;
     artifactCount: number;
     missingArtifactCount: number;
     updatedAt: string;
+};
+
+export type IntegrationUpgradeVersions = {
+    id: string;
+    current: string;
+    stable?: string;
+    latest?: string;
+    versions: string[];
 };
 
 export type IntegrationImportPayload = Omit<IntegrationImportDto, "options"> & {

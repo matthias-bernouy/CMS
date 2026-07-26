@@ -20,6 +20,9 @@ export function renderDetail(host: IntegrationBrowserHost): void {
     text(content, "[data-title]", installation.label);
     text(content, "[data-description]", definition?.description ?? "No description.");
     content.querySelector<HTMLElement>("[data-run-sync]")!.dataset.integrationId = installation.id;
+    const upgrade = content.querySelector<HTMLElement>("[data-upgrade-panel]")!;
+    upgrade.dataset.integrationId = installation.id;
+    upgrade.dataset.currentVersion = installation.definitionVersion;
     fillIcon(content, "[data-back-icon]", "table");
     fillIcon(content, "[data-grid-icon]", "grid");
     renderLinkedPlaceholder(content.querySelector<HTMLElement>("[data-linked]")!);

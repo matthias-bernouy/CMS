@@ -54,6 +54,28 @@
                     </dl>
                 </cms-detail-section>
 
+                <cms-detail-section slot="aside" heading="Version upgrade">
+                    <div class="upgrade-panel" data-upgrade-panel>
+                        <p>Upgrades are explicit. Syncing never changes the installed version.</p>
+                        <p9r-button type="button" data-upgrade-open>Check for upgrades</p9r-button>
+                        <div class="upgrade-form" data-upgrade-form hidden>
+                            <label>
+                                Target version
+                                <select data-upgrade-target aria-label="Target integration version"></select>
+                            </label>
+                            <label>
+                                Type the exact target version to confirm
+                                <input data-upgrade-confirmation type="text" autocomplete="off" spellcheck="false" />
+                            </label>
+                            <div class="upgrade-actions">
+                                <p9r-button type="button" color="primary" data-upgrade-confirm>Upgrade</p9r-button>
+                                <button type="button" class="secondary-action" data-upgrade-cancel>Cancel</button>
+                            </div>
+                        </div>
+                        <p class="upgrade-status" data-upgrade-status role="status" aria-live="polite"></p>
+                    </div>
+                </cms-detail-section>
+
                 <cms-detail-section slot="aside" heading="Linked integrations">
                     <div data-linked></div>
                 </cms-detail-section>

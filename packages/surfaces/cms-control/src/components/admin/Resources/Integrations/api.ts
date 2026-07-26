@@ -1,4 +1,4 @@
-import type { IntegrationImportPayload, BrowserTab } from "./model";
+import type { BrowserTab, IntegrationImportPayload, IntegrationUpgradeVersions } from "./model";
 
 export type IntegrationImportResponse = {
     installation?: {
@@ -72,6 +72,34 @@ export async function rerunIntegrationInstallation(id: string): Promise<void> {
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
 }
 
+export async function integrationUpgradeVersions(id: string): Promise<IntegrationUpgradeVersions> {
+    return getJson(`${route("/api/integrations/installations/versions")}?id=${encodeURIComponent(id)}`);
+}
+
+export async function upgradeIntegrationInstallation(id: string, version: string): Promise<void> {
+    await postJson(`${route("/api/integrations/installations/upgrade")}?id=${encodeURIComponent(id)}`, { version });
+    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
+    document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
+}
+
+export class IntegrationApiError extends Error {
+    constructor(
+        readonly status: number,
+        message: string,
+    ) {
+        super(message);
+        this.name = "IntegrationApiError";
+    }
+}
+
+async function getJson<T>(url: string): Promise<T> {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw await responseError(response);
+    }
+    return response.json() as Promise<T>;
+}
+
 async function postJson<T = unknown>(url: string, body: unknown): Promise<T> {
     const response = await fetch(url, {
         method: "POST",
@@ -79,7 +107,20 @@ async function postJson<T = unknown>(url: string, body: unknown): Promise<T> {
         body: JSON.stringify(body),
     });
     if (!response.ok) {
-        throw new Error(await response.text());
+        throw await responseError(response);
     }
     return response.json() as Promise<T>;
+}
+
+async function responseError(response: Response): Promise<IntegrationApiError> {
+    const fallback = `Request failed (HTTP ${response.status})`;
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+        const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+        const message =
+            typeof body?.error === "string" ? body.error : typeof body?.message === "string" ? body.message : null;
+        return new IntegrationApiError(response.status, message?.slice(0, 500) || fallback);
+    }
+    const text = (await response.text()).trim();
+    return new IntegrationApiError(response.status, text && !text.startsWith("<") ? text.slice(0, 500) : fallback);
 }

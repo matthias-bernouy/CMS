@@ -65,6 +65,65 @@
     color: #9b2a1a;
 }
 
+.upgrade-panel,
+.upgrade-form,
+.upgrade-panel label {
+    display: grid;
+    gap: 8px;
+}
+
+.upgrade-panel > p {
+    margin: 0;
+    color: #66736f;
+    font-size: 13px;
+}
+
+.upgrade-form {
+    border-top: 1px solid #dfe5e2;
+    padding-top: 12px;
+}
+
+.upgrade-panel label {
+    color: #42504b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.upgrade-panel select,
+.upgrade-panel input {
+    width: 100%;
+    border: 1px solid #bdc9c4;
+    border-radius: 6px;
+    background: #fff;
+    padding: 8px 10px;
+    color: #1e2925;
+    font: inherit;
+}
+
+.upgrade-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.secondary-action {
+    border: 0;
+    background: transparent;
+    padding: 8px;
+    color: #42504b;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.upgrade-status {
+    min-height: 18px;
+}
+
+.upgrade-status.is-error {
+    color: #9b2a1a;
+}
+
 .resource-list,
 .activity-list,
 .summary-grid,

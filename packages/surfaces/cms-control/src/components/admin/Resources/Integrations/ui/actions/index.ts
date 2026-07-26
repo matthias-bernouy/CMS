@@ -1,8 +1,14 @@
-import { importIntegration, pushIntegrationRoute, rerunIntegrationInstallation } from "../api";
-import { collectAnswers } from "../fields";
-import type { BrowserTab, IntegrationBrowserHost, IntegrationDefinition } from "../model";
-import { retryBoundSources } from "./data";
-import { renderImporting, renderSetup } from "./setup";
+import { importIntegration, pushIntegrationRoute } from "../../api";
+import { collectAnswers } from "../../fields";
+import type { BrowserTab, IntegrationBrowserHost, IntegrationDefinition } from "../../model";
+import { retryBoundSources } from "../data";
+import { renderImporting, renderSetup } from "../setup";
+import {
+    cancelIntegrationUpgrade,
+    confirmIntegrationUpgrade,
+    openIntegrationUpgrade,
+    runIntegrationSync,
+} from "./installation";
 
 export async function handleClick(host: IntegrationBrowserHost, event: Event): Promise<void> {
     const target = event.target instanceof Element ? event.target : null;
@@ -26,7 +32,19 @@ export async function handleClick(host: IntegrationBrowserHost, event: Event): P
     if (target.closest("[data-import-setup]")) {
         return importActive(host);
     }
-
+    const upgradeOpen = target.closest("[data-upgrade-open]") as HTMLElement | null;
+    if (upgradeOpen) {
+        return openIntegrationUpgrade(upgradeOpen);
+    }
+    const upgradeCancel = target.closest("[data-upgrade-cancel]") as HTMLElement | null;
+    if (upgradeCancel) {
+        cancelIntegrationUpgrade(upgradeCancel);
+        return;
+    }
+    const upgradeConfirm = target.closest("[data-upgrade-confirm]") as HTMLElement | null;
+    if (upgradeConfirm) {
+        return confirmIntegrationUpgrade(upgradeConfirm);
+    }
     const runSync = target.closest("[data-run-sync]") as HTMLElement | null;
     if (runSync) {
         return runIntegrationSync(host, runSync);
@@ -84,34 +102,6 @@ async function importActive(host: IntegrationBrowserHost): Promise<void> {
         host.openDetail(id || host.installations.find((installation) => installation.id === definition.kind)?.id || "");
     } catch (error) {
         openSetup(host, definition, { answers, error: error instanceof Error ? error.message : "Import failed" });
-    }
-}
-
-async function runIntegrationSync(host: IntegrationBrowserHost, button: HTMLElement): Promise<void> {
-    const id = button.dataset.integrationId;
-    if (!id) {
-        return;
-    }
-    const status = host.querySelector<HTMLElement>("[data-action-status]");
-    button.setAttribute("aria-busy", "true");
-    button.textContent = "Syncing";
-    if (status) {
-        status.textContent = "";
-    }
-    try {
-        await rerunIntegrationInstallation(id);
-        await host.waitForBoundData(() => true);
-        button.removeAttribute("aria-busy");
-        button.textContent = "Run sync";
-        if (status) {
-            status.textContent = "Synced";
-        }
-    } catch (error) {
-        button.removeAttribute("aria-busy");
-        button.textContent = "Run sync";
-        if (status) {
-            status.textContent = error instanceof Error ? error.message : "Sync failed";
-        }
     }
 }
 
