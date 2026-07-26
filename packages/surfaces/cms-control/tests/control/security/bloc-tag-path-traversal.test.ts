@@ -27,7 +27,7 @@ describe("bloc.post tag validation", () => {
         "foo/bar",
         "bloc with space",
         "bloc;rm -rf /",
-        "a", // too short / no dash — not a valid custom element name
+        "script", // native HTML tag, but not allowlisted for blocs
         "BLOC-UP", // uppercase
         "1-bloc", // starts with digit
     ])("rejects dangerous tag %p with 400", async (tag) => {
@@ -35,8 +35,8 @@ describe("bloc.post tag validation", () => {
         expect(res.status).toBe(400);
     });
 
-    test("accepts a valid custom-element tag", async () => {
-        const res = await importBloc(makeReq("my-card"), makeSystem());
+    test.each(["my-card", "a"])("accepts supported bloc tag %p", async (tag) => {
+        const res = await importBloc(makeReq(tag), makeSystem());
         expect(res.status).toBe(200);
     });
 });
