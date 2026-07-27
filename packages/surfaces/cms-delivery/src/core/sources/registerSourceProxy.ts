@@ -2,6 +2,7 @@ import {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
     attachTriggerResponseBody,
+    attachTriggerResponseFinalizer,
     createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
     sourcesPrefix,
@@ -26,7 +27,10 @@ export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
             const prefix = sourcesPrefix(runner.basePath);
             for (const method of SOURCE_PROXY_METHODS) {
                 proxyRunner.setDefaultEndpoint(method, (request) =>
-                    handleDeliverySourceRequest(delivery, request, { prefix, schemaCache }),
+                    handleDeliverySourceRequest(delivery, request, {
+                        prefix,
+                        schemaCache,
+                    }),
                 );
             }
         },
@@ -80,7 +84,10 @@ async function executeSystemEndpoint(
         });
     }
     if (delivery.auth) {
-        return executeAuthSystemSourceEndpoint(delivery.auth, endpoint, request, { attachTriggerResponseBody });
+        return executeAuthSystemSourceEndpoint(delivery.auth, endpoint, request, {
+            attachTriggerResponseBody,
+            ...(scope.deferSystemResponseFinalization ? { attachTriggerResponseFinalizer } : {}),
+        });
     }
     return new Response("system source executor not configured", { status: 501 });
 }

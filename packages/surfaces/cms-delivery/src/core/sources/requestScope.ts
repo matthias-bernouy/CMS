@@ -27,6 +27,7 @@ export type DeliverySourceRequestScope = {
     proxiedSources: SourceRepository | undefined;
     functions: FunctionRepository | undefined;
     deps: ExecutorDeps;
+    deferSystemResponseFinalization: boolean;
     interceptEndpoint?: SourceEndpointInterceptor;
 };
 
@@ -92,6 +93,7 @@ export function createDeliverySourceRequestScope(
         proxiedSources,
         functions,
         deps,
+        deferSystemResponseFinalization: Boolean(triggerInterceptor),
         ...(interceptEndpoint ? { interceptEndpoint } : {}),
     };
 }

@@ -4,7 +4,7 @@ import {
     confirmPasswordReset,
     requestEmailVerification,
     requestPasswordReset,
-    signupLocalUser,
+    prepareSignupLocalUser,
 } from "cms-auth/core/public-auth/flows";
 import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
@@ -19,6 +19,8 @@ type SystemSourceEndpoint = {
 export type AuthSystemSourceHooks = {
     /** Keeps integration-only response data in-process and out of the public HTTP body. */
     attachTriggerResponseBody?: (response: Response, body: unknown) => void;
+    /** Defers activation until synchronous response policies have succeeded. */
+    attachTriggerResponseFinalizer?: (response: Response, finalizer: () => Promise<void>) => void;
 };
 
 export async function executeAuthSystemSourceEndpoint<Role extends string>(
@@ -30,7 +32,9 @@ export async function executeAuthSystemSourceEndpoint<Role extends string>(
     const target = parseSystemAuthTarget(endpoint);
     switch (target) {
         case "/me":
-            return privateAuthJsonResponse({ subject: await resolveRequestSubject(cfg.local, req) });
+            return privateAuthJsonResponse({
+                subject: await resolveRequestSubject(cfg.local, req),
+            });
         case "/login":
             return cfg.local.loginJson(req);
         case "/logout":
@@ -40,22 +44,36 @@ export async function executeAuthSystemSourceEndpoint<Role extends string>(
                 return privateAuthResponse("not_found", { status: 404 });
             }
             const body = await readJsonObject(req);
-            const result = await signupLocalUser(cfg, {
+            const prepared = await prepareSignupLocalUser(cfg, {
                 email: requiredString(body, "email"),
                 password: requiredString(body, "password"),
             });
             const response = ok();
-            hooks.attachTriggerResponseBody?.(response, { ok: true, cmsUserId: result.cmsUserId });
+            hooks.attachTriggerResponseBody?.(response, {
+                ok: true,
+                cmsUserId: prepared.cmsUserId,
+            });
+            if (hooks.attachTriggerResponseFinalizer) {
+                hooks.attachTriggerResponseFinalizer(response, async () => {
+                    await prepared.finalize();
+                });
+            } else {
+                await prepared.finalize();
+            }
             return response;
         }
         case "/email/verification/request": {
             const body = await readJsonObject(req);
-            await requestEmailVerification(cfg, { email: requiredString(body, "email") });
+            await requestEmailVerification(cfg, {
+                email: requiredString(body, "email"),
+            });
             return ok();
         }
         case "/email/verification/confirm": {
             const body = await readJsonObject(req);
-            await confirmEmailVerification(cfg, { token: requiredString(body, "token") });
+            await confirmEmailVerification(cfg, {
+                token: requiredString(body, "token"),
+            });
             return ok();
         }
         case "/password/reset/request": {

@@ -46,3 +46,10 @@ export type SignupLocalUserResult = PublicAuthSendResult & {
      * the submitted password did not authenticate the existing credential. */
     cmsUserId: string | null;
 };
+
+export type PreparedSignupLocalUser = {
+    /** Subject reserved by the credential store before membership activation. */
+    cmsUserId: string | null;
+    /** Idempotent continuation that activates membership and delivers verification. */
+    finalize(): Promise<SignupLocalUserResult>;
+};

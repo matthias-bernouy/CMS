@@ -7,10 +7,29 @@ import {
     signupLocalUser,
     type PublicAuthFlowConfig,
 } from "@bernouy/cms-auth";
+import { prepareSignupLocalUser } from "cms-auth/core/public-auth/flows";
 
 type Role = "user";
 
 describe("signup activation", () => {
+    test("keeps a new credential pending until the prepared signup is finalized", async () => {
+        const cfg = flowConfig();
+        const prepared = await prepareSignupLocalUser(cfg, input("prepared@x.com", "password-1"));
+        const credential = await cfg.credentials.getByEmail("prepared@x.com");
+
+        expect(credential).not.toBeNull();
+        expect(prepared.cmsUserId).toBe(`local:${credential!.sub}`);
+        expect((await cfg.users.list()).users).toEqual([]);
+        expect((cfg.emailer as InMemoryEmailer).sent).toEqual([]);
+
+        const first = await prepared.finalize();
+        const second = await prepared.finalize();
+
+        expect(second).toEqual(first);
+        expect((await cfg.users.list()).users).toHaveLength(1);
+        expect((cfg.emailer as InMemoryEmailer).sent).toHaveLength(1);
+    });
+
     test("resumes a credential after membership activation failed", async () => {
         const cfg = flowConfig();
         const upsert = cfg.users.upsert.bind(cfg.users);
@@ -73,6 +92,15 @@ describe("signup activation", () => {
     test("keeps legacy credential stores compatible and fails closed for pending credentials", async () => {
         const cfg = flowConfig();
         const credentials = cfg.credentials;
+        const activeIdentity = await credentials.create({
+            email: "legacy-active@x.com",
+            password: "password-1",
+            emailVerified: true,
+        });
+        await cfg.users.upsert(
+            { ...activeIdentity, sub: `local:${activeIdentity.sub}`, provider: "local" },
+            cfg.defaultRole,
+        );
         await credentials.create({
             email: "legacy-store@x.com",
             password: "password-1",
@@ -92,13 +120,17 @@ describe("signup activation", () => {
             list: credentials.list.bind(credentials),
         };
 
+        await expect(signupLocalUser(cfg, input("legacy-active@x.com", "password-1"))).resolves.toMatchObject({
+            created: false,
+            cmsUserId: `local:${activeIdentity.sub}`,
+        });
         await expect(signupLocalUser(cfg, input("legacy-store@x.com", "password-1"))).resolves.toEqual({
             created: false,
             sent: false,
             cmsUserId: null,
         });
-        expect(fallbackVerifyCalls).toBe(1);
-        expect((await cfg.users.list()).users).toEqual([]);
+        expect(fallbackVerifyCalls).toBe(2);
+        expect((await cfg.users.list()).users).toHaveLength(1);
     });
 });
 

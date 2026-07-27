@@ -33,13 +33,22 @@ synchronous request and response triggers to `system-auth/signup`. Additional
 form fields remain opaque to Auth while the trigger pipeline can map them
 explicitly; integrations must never map the password into another function.
 
-The request trigger runs before credential mutation and can block signup. A
-successful signup also exposes `cmsUserId` to response triggers through the
-server-only `$trigger` projection. This field is never serialized into the
-public response. It is `null` for an existing credential whose password could
-not be verified, preventing the endpoint from disclosing another user's id.
-Response triggers that persist user-owned records must require a non-null
-`$response.body.cmsUserId`.
+The request trigger runs before credential mutation and can block signup. Once
+request gates succeed, Auth prepares a credential and exposes its `cmsUserId`
+to response triggers through the server-only `$trigger` projection. This field
+is never serialized into the public response. It is `null` for an existing
+credential whose password could not be verified, preventing the endpoint from
+disclosing another user's id. Response triggers that persist user-owned
+records must require a non-null `$response.body.cmsUserId`.
+
+Membership activation and verification delivery are response finalizers. They
+run only after every synchronous blocking response trigger has succeeded and
+before asynchronous response triggers are scheduled. A blocked response can
+therefore leave a pending, non-login-ready credential, but never an activated
+membership without its required integration records. Retrying signup with the
+same email and password resumes that pending credential. When no trigger
+runtime is configured, Auth finalizes directly and retains its standalone
+behavior.
 
 The direct `POST /.cms/auth/signup` route is kept for compatibility. When the
 source gateway is configured, Delivery dispatches it internally through the

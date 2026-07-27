@@ -6,8 +6,9 @@ import {
     sendVerificationForCredential,
 } from "cms-auth/core/public-auth/emailDelivery";
 import { normalizeEmail, requireToken, validateEmail } from "cms-auth/core/public-auth/input";
-import { activateOrResumeLocalSignup } from "cms-auth/core/public-auth/signupActivation";
+import { prepareOrResumeLocalSignup } from "cms-auth/core/public-auth/signupActivation";
 import type {
+    PreparedSignupLocalUser,
     PublicAuthFlowConfig,
     PublicAuthSendResult,
     SignupLocalUserInput,
@@ -17,6 +18,7 @@ import type {
 export type {
     PublicAuthFlowConfig,
     PublicAuthSendResult,
+    PreparedSignupLocalUser,
     SignupLocalUserInput,
     SignupLocalUserResult,
 } from "cms-auth/core/public-auth/types";
@@ -25,11 +27,18 @@ export async function signupLocalUser<Role extends string>(
     cfg: PublicAuthFlowConfig<Role>,
     input: SignupLocalUserInput,
 ): Promise<SignupLocalUserResult> {
+    return (await prepareSignupLocalUser(cfg, input)).finalize();
+}
+
+export async function prepareSignupLocalUser<Role extends string>(
+    cfg: PublicAuthFlowConfig<Role>,
+    input: SignupLocalUserInput,
+): Promise<PreparedSignupLocalUser> {
     const email = normalizeEmail(input.email);
     validateEmail(email);
     validatePassword(input.password);
 
-    return activateOrResumeLocalSignup(cfg, {
+    return prepareOrResumeLocalSignup(cfg, {
         email,
         password: input.password,
         emailDeliveryEnabled: await isEmailDeliveryEnabled(cfg),

@@ -36,7 +36,10 @@ export {
     isSystemSourceUrn,
     systemSourceUrnOf,
 } from "../core/system/systemSources";
-export { SourceValidationError, DuplicateSourceError } from "../core/model/errors";
+export {
+    SourceValidationError,
+    DuplicateSourceError,
+} from "../core/model/errors";
 export {
     DEFAULT_SOURCE_ENDPOINT_ACCESS_MODE,
     isSourceEndpointAccessMode,
@@ -85,7 +88,10 @@ export {
     type CanonicalSourceEndpointDto,
     type CanonicalSourceDto,
 } from "../core/overlays/sourceDto";
-export { resolveEndpoint, type ResolveResult } from "../core/execution/resolveEndpoint";
+export {
+    resolveEndpoint,
+    type ResolveResult,
+} from "../core/execution/resolveEndpoint";
 export {
     activeSourceObservability,
     createSourceRequestTelemetryMiddleware,
@@ -100,7 +106,11 @@ export {
     type BuildUpstream,
     type SourceComputedContext,
 } from "../core/upstream/buildUpstreamUrl";
-export { executeEndpoint, type ExecutorDeps, type SourceSecretResolver } from "../core/execution/executeEndpoint";
+export {
+    executeEndpoint,
+    type ExecutorDeps,
+    type SourceSecretResolver,
+} from "../core/execution/executeEndpoint";
 export {
     MAX_PROJECTED_JSON_BYTES,
     RESPONSE_PROJECTION_MODES,
@@ -118,7 +128,10 @@ export {
 } from "../core/response-projection/projectDataShape";
 export {
     attachTriggerResponseBody,
+    attachTriggerResponseFinalizer,
+    runTriggerResponseFinalizers,
     triggerResponseProjection,
+    type TriggerResponseFinalizer,
     type TriggerResponseProjection,
 } from "../core/response-projection/triggerResponseBody";
 export {

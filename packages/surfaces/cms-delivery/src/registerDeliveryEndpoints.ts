@@ -22,7 +22,14 @@ import {
     PUBLISHED_PAGE_SNAPSHOT_ROUTE,
     servePublishedPageSnapshot,
 } from "@bernouy/cms-content";
-import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
+import {
+    CMS_CORRELATION_HEADER,
+    cachedResponseAsync,
+    getRequestIP,
+    publicAssetCacheControl,
+    requestCorrelationId,
+    setRequestIP,
+} from "@bernouy/http-runner";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
 import {
     handleDeliverySourceRequest,
@@ -150,5 +157,11 @@ function canonicalSignupSourceRequest(request: Request, basePath: string): Reque
     const url = new URL(request.url);
     url.pathname = `${sourcesPrefix(basePath)}${SYSTEM_AUTH_SOURCE_ID}/signup`;
     url.search = "";
-    return new Request(url, request);
+    const canonical = new Request(url, request);
+    canonical.headers.set(CMS_CORRELATION_HEADER, requestCorrelationId(request));
+    const requestIP = getRequestIP(request);
+    if (requestIP) {
+        setRequestIP(canonical, requestIP);
+    }
+    return canonical;
 }

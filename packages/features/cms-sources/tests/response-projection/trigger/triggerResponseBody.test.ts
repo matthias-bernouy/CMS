@@ -3,7 +3,11 @@ import {
     projectEndpointResponse,
     type ResponseProjectionEvent,
 } from "cms-sources/core/response-projection/projectEndpointResponse";
-import { triggerResponseProjection } from "cms-sources/core/response-projection/triggerResponseBody";
+import {
+    attachTriggerResponseFinalizer,
+    runTriggerResponseFinalizers,
+    triggerResponseProjection,
+} from "cms-sources/core/response-projection/triggerResponseBody";
 import type { SourceEndpoint } from "cms-sources/interfaces/Source";
 
 const endpoint: SourceEndpoint = {
@@ -34,6 +38,36 @@ const endpoint: SourceEndpoint = {
 };
 
 describe("trigger response body projection", () => {
+    test("runs server-only response finalizers once in registration order", async () => {
+        const response = Response.json({ ok: true });
+        const calls: string[] = [];
+        attachTriggerResponseFinalizer(response, () => {
+            calls.push("first");
+        });
+        attachTriggerResponseFinalizer(response, async () => {
+            await Promise.resolve();
+            calls.push("second");
+        });
+
+        await runTriggerResponseFinalizers(response);
+        await runTriggerResponseFinalizers(response);
+
+        expect(calls).toEqual(["first", "second"]);
+    });
+
+    test("does not expose finalizers through response clones", async () => {
+        const response = Response.json({ ok: true });
+        let calls = 0;
+        attachTriggerResponseFinalizer(response, () => {
+            calls++;
+        });
+
+        await runTriggerResponseFinalizers(response.clone());
+        expect(calls).toBe(0);
+        await runTriggerResponseFinalizers(response);
+        expect(calls).toBe(1);
+    });
+
     test("merges strict trigger fields in-process without exposing them or copying them to clones", async () => {
         const response = await projectEndpointResponse(
             endpoint,

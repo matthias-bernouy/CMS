@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { projectEndpointResponse } from "@bernouy/cms-sources";
+import { attachTriggerResponseFinalizer, projectEndpointResponse } from "@bernouy/cms-sources";
 import { createTriggerInterceptor } from "@bernouy/cms-triggers";
 import { endpoint, fixture, jsonRequest, tick, trigger } from "./helpers/triggerFixtures";
 
@@ -18,6 +18,84 @@ const projectedEndpoint = {
 };
 
 describe("cms-triggers private response projection", () => {
+    test("finalizes responses even when no response trigger is installed", async () => {
+        const { triggers, functions, sources } = await fixture();
+        const interceptEndpoint = createTriggerInterceptor({ triggers, functions, sources });
+        let finalized = 0;
+
+        const response = await interceptEndpoint(projectedEndpoint, jsonRequest({ ok: true }), async () => {
+            const candidate = Response.json({ id: "order-1" }, { status: 201 });
+            attachTriggerResponseFinalizer(candidate, () => {
+                finalized++;
+            });
+            return candidate;
+        });
+
+        expect(response.status).toBe(201);
+        expect(finalized).toBe(1);
+    });
+
+    test("does not finalize a response blocked by a synchronous response trigger", async () => {
+        const { triggers, functions, sources } = await fixture();
+        await triggers.createTrigger(
+            trigger({
+                id: "blocking-response-policy",
+                event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "response" },
+                mode: "sync",
+                failureMode: "block",
+                function: { id: "missing-response-policy" },
+            }),
+        );
+        const interceptEndpoint = createTriggerInterceptor({ triggers, functions, sources });
+        let finalized = 0;
+
+        const response = await interceptEndpoint(projectedEndpoint, jsonRequest({ ok: true }), async () => {
+            const candidate = Response.json({ id: "order-1" }, { status: 201 });
+            attachTriggerResponseFinalizer(candidate, () => {
+                finalized++;
+            });
+            return candidate;
+        });
+
+        expect(response.status).toBe(502);
+        expect(finalized).toBe(0);
+    });
+
+    test("finalizes before scheduling asynchronous response triggers", async () => {
+        const { triggers, functions, sources } = await fixture();
+        const calls: string[] = [];
+        await triggers.createTrigger(
+            trigger({
+                id: "async-after-finalization",
+                event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "response" },
+                mode: "async",
+                function: { id: "notifyOrder" },
+            }),
+        );
+        const interceptEndpoint = createTriggerInterceptor({
+            triggers,
+            functions,
+            sources,
+            deps: {
+                fetchImpl: async () => {
+                    calls.push("trigger");
+                    return Response.json({ ok: true });
+                },
+            },
+        });
+
+        await interceptEndpoint(projectedEndpoint, jsonRequest({ ok: true }), async () => {
+            const candidate = Response.json({ id: "order-1" }, { status: 201 });
+            attachTriggerResponseFinalizer(candidate, () => {
+                calls.push("finalizer");
+            });
+            return candidate;
+        });
+        await tick();
+
+        expect(calls).toEqual(["finalizer", "trigger"]);
+    });
+
     test("uses server-only response data without returning it to the caller", async () => {
         const { response, calls } = await runPrivateResponseTrigger("sync");
 

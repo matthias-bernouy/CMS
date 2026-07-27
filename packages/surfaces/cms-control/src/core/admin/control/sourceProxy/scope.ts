@@ -29,6 +29,7 @@ export type ControlSourceRequestScope = {
     functions: FunctionRepository | undefined;
     overlaySources: SourceRepository | null;
     proxiedSources: SourceRepository | null;
+    deferSystemResponseFinalization: boolean;
     interceptEndpoint: SourceEndpointInterceptor | undefined;
 };
 
@@ -89,5 +90,12 @@ export function createControlSourceRequestScope(
         configuration.sourceImageInterceptor,
     );
 
-    return { deps, functions, overlaySources, proxiedSources, interceptEndpoint };
+    return {
+        deps,
+        functions,
+        overlaySources,
+        proxiedSources,
+        deferSystemResponseFinalization: Boolean(triggerInterceptor),
+        interceptEndpoint,
+    };
 }
