@@ -1,6 +1,5 @@
 import { Component } from "@bernouy/components/base";
 import type { ThemeSource } from "@bernouy/cms-content";
-import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
 import {
     THEME_CATEGORY_ADDED_EVENT,
@@ -15,6 +14,7 @@ import {
 import css from "./nav/ThemeNav.css" with { type: "text" };
 import template from "./nav/ThemeNav.html" with { type: "text" };
 import { renderThemeNav, selectionFromUrl } from "./nav/view";
+import { themePageStore } from "./store";
 
 export class CmsThemeNav extends Component {
     private sources: ThemeSource[] = [];
@@ -46,14 +46,8 @@ export class CmsThemeNav extends Component {
 
     private async load(): Promise<void> {
         try {
-            const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
-                headers: { Accept: "application/json" },
-            });
-            if (!response.ok) {
-                return;
-            }
-            const data = (await response.json()) as { theme?: { sources?: ThemeSource[] } };
-            this.sources = structuredClone(data.theme?.sources ?? []);
+            const page = await themePageStore.load();
+            this.sources = structuredClone(page.settings.sources);
             this.selection = selectionFromUrl(this.sources);
             this.render();
         } catch {
@@ -135,6 +129,7 @@ export class CmsThemeNav extends Component {
     };
 
     private onSettingsChanged = (): void => {
+        themePageStore.invalidate();
         void this.load();
     };
 }
