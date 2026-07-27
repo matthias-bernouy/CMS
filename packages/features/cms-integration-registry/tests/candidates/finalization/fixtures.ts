@@ -26,6 +26,7 @@ import {
 } from "../planning/fixtures";
 import { passedSuiteResult } from "./platformResult";
 import { passedMigrationResult } from "./migration";
+import { verificationContractCatalog } from "./contractCatalog";
 
 export async function passedCandidate(fixture: ReturnType<typeof registryFixture>, candidateId: string) {
     const candidate = await verificationCandidate(await publicationPackage("demo", "1.0.0"));
@@ -51,6 +52,7 @@ export async function completePassedCandidate(
         reviewedSchemaBaselines: fixture.reviewedSchemaBaselines,
         policy: migration.policy,
         migrationEnvironment: migration.environment,
+        inheritedContracts: verificationContractCatalog(fixture),
     });
     const plan = await planner.plan({ candidateId, candidate });
     const queued = await store.queue(candidateId, {
@@ -109,6 +111,7 @@ export function finalizerConfig(
     policy: ReleaseAdmissionPolicySnapshotV1,
     stores: ReturnType<typeof releaseStores>,
 ) {
+    const verificationBundles = new FsIntegrationVerificationBundleStore(fixture.root);
     return {
         root: fixture.root,
         snapshots: fixture.snapshots,
@@ -118,7 +121,8 @@ export function finalizerConfig(
         candidates,
         policy,
         ...stores,
-        verificationBundles: new FsIntegrationVerificationBundleStore(fixture.root),
+        verificationBundles,
+        inheritedContracts: verificationContractCatalog(fixture, verificationBundles),
         now: () => "2026-07-26T10:00:05.000Z",
     };
 }

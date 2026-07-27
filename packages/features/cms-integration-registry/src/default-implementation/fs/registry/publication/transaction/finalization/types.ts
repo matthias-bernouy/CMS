@@ -9,7 +9,7 @@ import type {
     ReviewedSchemaBaselineStore,
 } from "cms-integration-registry/interfaces/reportStore";
 import type { FsIntegrationRegistryPublicationConfig } from "../../types";
-import type { IntegrationVerificationContractCatalog } from "../planning";
+import type { IntegrationVerificationContractLineageStore } from "../contracts";
 
 export type FsIntegrationRegistryCandidateFinalizerConfig = FsIntegrationRegistryPublicationConfig &
     Readonly<{
@@ -21,7 +21,7 @@ export type FsIntegrationRegistryCandidateFinalizerConfig = FsIntegrationRegistr
         migrationReports: IntegrationMigrationReportStore;
         releaseDecisions: ReleaseAdmissionDecisionStore;
         verificationBundles: IntegrationVerificationBundleStore;
-        inheritedContracts?: IntegrationVerificationContractCatalog;
+        inheritedContracts?: IntegrationVerificationContractLineageStore;
         createDecisionId?: (candidateId: string) => string;
         afterActivationPhase?: (
             phase: "prepared" | "index-written" | "snapshot-swapped" | "candidate-published",

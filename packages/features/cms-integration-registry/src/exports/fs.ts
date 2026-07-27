@@ -190,6 +190,15 @@ export {
     type PlanFsIntegrationRegistryCandidateInput,
 } from "../default-implementation/fs/registry/publication/transaction/planning";
 export {
+    FsIntegrationVerificationContractCatalog,
+    integrationVerificationContractLineageId,
+    type IntegrationVerificationContractLineageKey,
+    type IntegrationVerificationContractLineageRevision,
+    type IntegrationVerificationContractLineageStore,
+    type PersistedInheritedVerificationContract,
+    type RegisterIntegrationVerificationContractsRequest,
+} from "../default-implementation/fs/registry/publication/transaction/contracts";
+export {
     activateVerifiedCandidate,
     FsIntegrationRegistryCandidateFinalizationError,
     FsIntegrationRegistryCandidateFinalizer,

@@ -18,6 +18,7 @@ import {
     writeCandidateActivationJournal,
 } from "./journal";
 import type { FsIntegrationRegistryCandidateFinalizerConfig } from "./types";
+import { assertCandidateFinalizationInputs } from "./validation";
 
 const MAX_ACTIVATION_BYTES = 4 * 1_024 * 1_024;
 
@@ -108,6 +109,8 @@ async function replayActivation(
         throw new Error("Candidate activation index diverged from both journal states");
     }
     if (sameIndex(diskIndex, journal.previousIndex)) {
+        const objects = await config.candidates.objects(candidate.candidateId);
+        await assertCandidateFinalizationInputs(config, candidate, objects, "before-activation");
         await replaceCanonicalJson(indexPath, journal.nextIndex, MAX_ACTIVATION_BYTES);
     }
     journal = await advanceCandidateActivationJournal(journalPath, journal, "index-written");

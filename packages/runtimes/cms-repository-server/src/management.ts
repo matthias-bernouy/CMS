@@ -32,6 +32,7 @@ import {
     SnapshotIntegrationPackageSource,
     FsIntegrationVerificationReportStore,
     FsIntegrationVerificationBundleStore,
+    FsIntegrationVerificationContractCatalog,
     FsIntegrationVerificationBackfiller,
     FsReleaseAdmissionReconciler,
     FsReleaseAdmissionDecisionStore,
@@ -101,6 +102,12 @@ export async function createProductionRepositoryManagement(input: {
     const compatibilityReports = new FsIntegrationCompatibilityV2ReportStore(releaseReportConfig);
     const verificationReports = new FsIntegrationVerificationReportStore(releaseReportConfig);
     const verificationBundleStore = new FsIntegrationVerificationBundleStore(input.root);
+    const verificationContracts = new FsIntegrationVerificationContractCatalog({
+        root: input.root,
+        snapshots,
+        mutations,
+        bundles: verificationBundleStore,
+    });
     const verificationBundles = new PublishedIntegrationVerificationBundleReader({
         catalog: snapshots,
         bundles: verificationBundleStore,
@@ -201,6 +208,7 @@ export async function createProductionRepositoryManagement(input: {
               candidates: candidateStore,
               reviewedSchemaBaselines,
               policy: input.candidateAdmissionPolicy,
+              inheritedContracts: verificationContracts,
               ...(input.candidateMigrationEnvironment
                   ? { migrationEnvironment: input.candidateMigrationEnvironment }
                   : {}),
@@ -220,6 +228,7 @@ export async function createProductionRepositoryManagement(input: {
               migrationReports,
               releaseDecisions,
               verificationBundles: verificationBundleStore,
+              inheritedContracts: verificationContracts,
           }
         : undefined;
     const candidateFinalizer = candidateFinalizerConfig

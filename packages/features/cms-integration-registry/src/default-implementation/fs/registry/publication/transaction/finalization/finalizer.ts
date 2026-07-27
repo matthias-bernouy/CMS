@@ -216,6 +216,20 @@ export class FsIntegrationRegistryCandidateFinalizer {
             expectedCurrent: null,
         });
         const identifiedDecision = await identifyReleaseAdmissionDecision(decisions.current);
+        await this.config.inheritedContracts?.register({
+            kind: record.kind,
+            version: record.version,
+            packageDigest: record.packageDigest,
+            verificationDigest: record.verificationDigest,
+            verification: objects.verification,
+            activeContracts: objects.admission.activeContracts,
+            createdAt: record.updatedAt,
+            provenance: {
+                candidateId: record.candidateId,
+                decisionRevisionId: decisions.currentRevisionId,
+                decisionDigest: identifiedDecision.digest,
+            },
+        });
         await assertCandidateFinalizationInputs(this.config, record, objects, "before-activation");
         const published = await activateVerifiedCandidate(this.config, record, {
             revisionId: decisions.currentRevisionId,

@@ -2,6 +2,7 @@ import type {
     AdmissionActiveContractReferenceV1,
     AdmissionInputSnapshotV1,
     AdmissionSuitePlanEntryV1,
+    IntegrationVerificationSuiteContentV2,
     ReleaseAdmissionPolicySnapshotV1,
     MigrationVerificationEnvironmentV1,
     MigrationVerificationInputV1,
@@ -17,6 +18,9 @@ import type { FsIntegrationRegistryCandidateStore } from "../../../candidates";
 export type InheritedVerificationContract = Readonly<{
     reference: AdmissionActiveContractReferenceV1;
     suite: AdmissionSuitePlanEntryV1 & Readonly<{ source: "author-contract" }>;
+    ownerPackageDigest: string;
+    ownerVerificationDigest: string;
+    content: IntegrationVerificationSuiteContentV2;
 }>;
 
 export interface IntegrationVerificationContractCatalog {

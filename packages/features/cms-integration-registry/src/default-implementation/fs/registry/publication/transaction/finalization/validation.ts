@@ -153,11 +153,13 @@ async function assertInheritedContracts(
             ownerVersion: contract.ownerVersion,
             digest: contract.contractDigest,
         }));
-    const actual = current.map(({ reference }) => ({
-        contractId: reference.contractId,
-        ownerVersion: reference.ownerVersion,
-        digest: reference.contractDigest,
-    }));
+    const actual = current
+        .filter(({ reference }) => reference.ownerVersion !== record.version)
+        .map(({ reference }) => ({
+            contractId: reference.contractId,
+            ownerVersion: reference.ownerVersion,
+            digest: reference.contractDigest,
+        }));
     if (!sameCanonical(expected, actual)) {
         stale("Inherited verification contract set changed after candidate verification");
     }

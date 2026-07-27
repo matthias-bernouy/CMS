@@ -1,4 +1,3 @@
-import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
 import {
     computeIntegrationVerificationSuiteContentDigest,
     runnerSatisfiesRequirement,
@@ -14,6 +13,7 @@ import {
     FsIntegrationRegistryCandidateAdmissionPlanningError,
     type IntegrationVerificationContractCatalog,
 } from "./types";
+import { integrationVerificationContractLineageId } from "../contracts";
 
 export type CandidateSuiteSelection = Readonly<{
     runner: PinnedVerificationRunnerIdentity;
@@ -53,7 +53,7 @@ export async function selectCandidateSuites(input: {
         );
         activeContracts.push({
             contractId: contract.contractId,
-            lineageId: await contractLineageId(input.kind, contract.contractId),
+            lineageId: await integrationVerificationContractLineageId(input.kind, contract.contractId),
             ownerVersion: input.version,
             contractDigest: digest,
         });
@@ -125,11 +125,6 @@ function selectRunner(
         );
     }
     return runner;
-}
-
-async function contractLineageId(kind: string, contractId: string): Promise<string> {
-    const digest = await sha256Hex(canonicalJsonBytes({ kind, contractId }));
-    return `contract-${digest.slice(0, 32)}`;
 }
 
 function assertUnique(values: readonly string[], label: string): void {
