@@ -6,14 +6,6 @@ export function authenticatedFetch(url: string): Promise<Response> {
     return fetch(url, { headers: { authorization: "Bearer management-secret" } });
 }
 
-export function authenticatedJson(url: string, body: string): Promise<Response> {
-    return fetch(url, {
-        method: "POST",
-        headers: { authorization: "Bearer management-secret", "content-type": "application/json" },
-        body,
-    });
-}
-
 export function managementGuard() {
     return createRepositoryManagementGuard({
         serviceToken: "management-secret",

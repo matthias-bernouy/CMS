@@ -36,7 +36,6 @@ export {
     readCandidateCompatibilityReport,
     readCandidateStatefulSelection,
 } from "./planning";
-export { readCandidatePackage as readPackage, readCandidateVerification as readVerification } from "./package";
 export { assertCandidateObjectCapacity } from "./shared";
 export type FsIntegrationRegistryCandidateObjects = IntegrationRegistryCandidateObjects;
 
