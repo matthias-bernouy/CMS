@@ -1,10 +1,9 @@
 import type { IntegrationPackageEnvelopeV1, IntegrationPackageLimits } from "@bernouy/cms-integration-packages";
+import type { CompatibilityReportV2, VersionDigestReference } from "@bernouy/cms-integration-verification";
 import { changedIntegrationPackagePaths } from "../../../../core/publication/changedPaths";
 import { IntegrationCompatibilityReevaluationIntegrityError } from "../../../../core/compatibility/reevaluation/errors";
 import type { IntegrationRegistryCatalogSnapshot } from "../../../../interfaces/catalog";
 import type {
-    IntegrationCompatibilityAdmissionReport,
-    IntegrationCompatibilityBaselineReference,
     IntegrationCompatibilityEvaluationInput,
     IntegrationCompatibilityPackage,
 } from "../../../../interfaces/compatibility";
@@ -19,7 +18,7 @@ type LoadedCompatibilityPackage = Readonly<{
 
 export async function buildFsCompatibilityReevaluationInput(
     snapshot: IntegrationRegistryCatalogSnapshot,
-    admission: IntegrationCompatibilityAdmissionReport,
+    root: CompatibilityReportV2,
     limits?: Partial<IntegrationPackageLimits>,
     reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
 ): Promise<IntegrationCompatibilityEvaluationInput> {
@@ -27,16 +26,16 @@ export async function buildFsCompatibilityReevaluationInput(
     const candidate = await loadPackage(
         snapshot,
         source,
-        { kind: admission.kind, version: admission.version, packageDigest: admission.packageDigest },
+        { kind: root.kind, version: root.version, packageDigest: root.packageDigest },
         "candidate",
         reviewedSchemaBaselines,
     );
-    assertAdmissionBaselineShape(admission);
-    if (admission.baselines.length === 1) {
+    assertRootBaselineShape(root);
+    if (root.baselines.length === 1) {
         const baseline = await loadPackage(
             snapshot,
             source,
-            admission.baselines[0]!,
+            root.baselines[0]!,
             "enforcing baseline",
             reviewedSchemaBaselines,
         );
@@ -46,10 +45,10 @@ export async function buildFsCompatibilityReevaluationInput(
             changedPaths: changedIntegrationPackagePaths(baseline.envelope, candidate.envelope),
         };
     }
-    if (admission.noBaselineReason === "new-kind") {
+    if (root.noBaselineReason === "new-kind") {
         return { candidate: candidate.compatibility, noBaselineReason: "new-kind" };
     }
-    const informational = admission.informationalBaselines[0];
+    const informational = root.informationalBaselines[0];
     if (!informational) {
         return { candidate: candidate.compatibility, noBaselineReason: "new-major" };
     }
@@ -68,15 +67,15 @@ export async function buildFsCompatibilityReevaluationInput(
     };
 }
 
-function assertAdmissionBaselineShape(admission: IntegrationCompatibilityAdmissionReport): void {
-    const enforcing = admission.baselines.length;
-    const informational = admission.informationalBaselines.length;
-    const validEnforcing = enforcing === 1 && informational === 0 && admission.noBaselineReason === undefined;
-    const validNewKind = enforcing === 0 && informational === 0 && admission.noBaselineReason === "new-kind";
-    const validNewMajor = enforcing === 0 && informational <= 1 && admission.noBaselineReason === "new-major";
+function assertRootBaselineShape(root: CompatibilityReportV2): void {
+    const enforcing = root.baselines.length;
+    const informational = root.informationalBaselines.length;
+    const validEnforcing = enforcing === 1 && informational === 0 && root.noBaselineReason === undefined;
+    const validNewKind = enforcing === 0 && informational === 0 && root.noBaselineReason === "new-kind";
+    const validNewMajor = enforcing === 0 && informational <= 1 && root.noBaselineReason === "new-major";
     if (!validEnforcing && !validNewKind && !validNewMajor) {
         throw new IntegrationCompatibilityReevaluationIntegrityError(
-            `Admission report ${admission.id} has an invalid immutable baseline shape`,
+            `Compatibility root ${root.reportId} has an invalid immutable baseline shape`,
         );
     }
 }
@@ -84,7 +83,7 @@ function assertAdmissionBaselineShape(admission: IntegrationCompatibilityAdmissi
 async function loadPackage(
     snapshot: IntegrationRegistryCatalogSnapshot,
     source: SnapshotIntegrationPackageSource,
-    reference: IntegrationCompatibilityBaselineReference,
+    reference: VersionDigestReference,
     label: string,
     reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
 ): Promise<LoadedCompatibilityPackage> {

@@ -32,28 +32,31 @@ export async function appendDecision(
     const id = options.id ?? `decision-${version.replaceAll(".", "-")}`;
     const policy = decisionPolicySnapshot();
     const policyDigest = (await identifyReleaseAdmissionPolicySnapshot(policy)).digest;
-    const compatibility = {
-        schema: "cms.integration.compatibility-report.v2" as const,
-        reportId: `compatibility-${id}`,
-        revisionType: "root" as const,
-        origin: "admission" as const,
-        createdAt: CREATED_AT,
-        kind: "demo",
-        version,
-        packageDigest: location.package.digest,
-        evaluator: { name: "static-compatibility", version: "2.0.0" },
-        baselines: [],
-        informationalBaselines: [],
-        findings: [],
-        ...deriveCompatibilityReportAssessment({
-            effectiveFindings: [],
-            releaseLevel: "initial",
-            noBaselineReason: "new-kind",
-        }),
-        releaseLevel: "initial" as const,
-        noBaselineReason: "new-kind" as const,
-        provenance: releaseProvenance(),
-    };
+    const existingCompatibility = await stores.compatibilityReports.get("demo", version);
+    const compatibility =
+        existingCompatibility?.current ??
+        ({
+            schema: "cms.integration.compatibility-report.v2" as const,
+            reportId: `compatibility-${id}`,
+            revisionType: "root" as const,
+            origin: "admission" as const,
+            createdAt: CREATED_AT,
+            kind: "demo",
+            version,
+            packageDigest: location.package.digest,
+            evaluator: { name: "static-compatibility", version: "2.0.0" },
+            baselines: [],
+            informationalBaselines: [],
+            findings: [],
+            ...deriveCompatibilityReportAssessment({
+                effectiveFindings: [],
+                releaseLevel: "initial",
+                noBaselineReason: "new-kind",
+            }),
+            releaseLevel: "initial" as const,
+            noBaselineReason: "new-kind" as const,
+            provenance: releaseProvenance(),
+        } as const);
     const compatibilityIdentity = await identifyCompatibilityReportV2(compatibility);
     const statefulChanges = await identifyStatefulChangeSelection({
         schema: "cms.integration.stateful-change-selection.v1",
@@ -83,7 +86,9 @@ export async function appendDecision(
         createdAt: CREATED_AT,
         provenance: releaseProvenance(),
     });
-    await stores.compatibilityReports.append({ report: compatibility, expectedCurrent: null });
+    if (!existingCompatibility) {
+        await stores.compatibilityReports.append({ report: compatibility, expectedCurrent: null });
+    }
     if (options.admissible !== false) {
         await stores.verificationReports.append({ report: verification, expectedCurrent: null });
     }

@@ -7,7 +7,6 @@ import {
     IntegrationRegistryVersionEligibilityStaleDecisionError,
 } from "../../../../../core/promotion/eligibilityErrors";
 import { admissionInputsAreCurrent, composeCurrentAdmissionDecision, currentAdmissionInputs } from "./reports";
-import { recoverCurrentCompatibilityProjection } from "./compatibility";
 import type {
     FsReleaseAdmissionReconcilerConfig,
     ReleaseAdmissionReconciliationProvenance,
@@ -27,14 +26,6 @@ export class FsReleaseAdmissionReconciler {
         const initial = await this.config.decisions.getHistory(kind, version);
         if (!initial) {
             return null;
-        }
-        if (this.config.legacyCompatibility) {
-            await recoverCurrentCompatibilityProjection({
-                kind,
-                version,
-                legacy: this.config.legacyCompatibility,
-                projected: this.config.compatibility,
-            });
         }
         const snapshot = this.config.snapshots.current();
         const reports = await currentAdmissionInputs({

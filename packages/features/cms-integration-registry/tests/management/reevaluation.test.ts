@@ -19,6 +19,7 @@ import {
     publishVersionPair,
     reevaluationRequest,
     reevaluationServices,
+    seedCompatibilityRoot,
 } from "./reevaluationFixtures";
 
 afterEach(cleanupRegistryFixtures);
@@ -26,21 +27,21 @@ afterEach(cleanupRegistryFixtures);
 describe("compatibility reevaluation", () => {
     test("rebuilds the exact admission comparison and appends provenance", async () => {
         const fixture = registryFixture();
-        const { candidate } = await publishVersionPair(fixture);
+        const { candidate, compatibility } = await publishVersionPair(fixture);
         const { reevaluator, reports } = reevaluationServices(fixture);
 
         const result = await reevaluator.reevaluate({
-            ...reevaluationRequest(candidate.report.id),
+            ...reevaluationRequest(compatibility),
             version: candidate.version,
         });
 
         expect(result.revision).toMatchObject({
-            reportType: "revision",
-            supersedes: candidate.report.id,
+            revisionType: "revision",
+            supersedes: compatibility.current.reportId,
             kind: "demo",
             version: "1.1.0",
             packageDigest: candidate.digest,
-            baselines: candidate.report.baselines,
+            baselines: compatibility.current.baselines,
             informationalBaselines: [],
             provenance: {
                 actor: "admin:user-1",
@@ -48,26 +49,27 @@ describe("compatibility reevaluation", () => {
                 evidenceIds: ["schema-ci-1", "schema-ci-2"],
             },
         });
-        expect(result.history.current.id).toBe(result.revision.id);
-        expect((await reports.get("demo", "1.1.0"))?.reports.map(({ id }) => id)).toEqual([
-            candidate.report.id,
-            result.revision.id,
+        expect(result.history.current.reportId).toBe(result.revision.reportId);
+        expect((await reports.get("demo", "1.1.0"))?.revisions.map(({ reportId }) => reportId)).toEqual([
+            compatibility.current.reportId,
+            result.revision.reportId,
         ]);
     });
 
     test("preserves the explicit no-baseline semantics for a first version", async () => {
         const fixture = registryFixture();
         const published = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const compatibility = await seedCompatibilityRoot(fixture, published.version);
         const { reevaluator } = reevaluationServices(fixture);
 
         const result = await reevaluator.reevaluate({
-            ...reevaluationRequest(published.report.id),
+            ...reevaluationRequest(compatibility),
             version: "1.0.0",
             evidenceIds: undefined,
         });
 
         expect(result.revision).toMatchObject({
-            supersedes: published.report.id,
+            supersedes: compatibility.current.reportId,
             baselines: [],
             informationalBaselines: [],
             noBaselineReason: "new-kind",
@@ -81,18 +83,18 @@ describe("compatibility reevaluation", () => {
         const fixture = registryFixture();
         const { reevaluator } = reevaluationServices(fixture);
 
-        await expect(reevaluator.reevaluate(reevaluationRequest("missing-report"))).rejects.toBeInstanceOf(
-            IntegrationCompatibilityReevaluationNotFoundError,
-        );
+        await expect(
+            reevaluator.reevaluate(reevaluationRequest({ revisionId: "missing-report", reportDigest: "f".repeat(64) })),
+        ).rejects.toBeInstanceOf(IntegrationCompatibilityReevaluationNotFoundError);
 
-        const { candidate } = await publishVersionPair(fixture);
-        const first = await reevaluator.reevaluate(reevaluationRequest(candidate.report.id));
-        const stale = reevaluator.reevaluate(reevaluationRequest(candidate.report.id));
+        const { compatibility } = await publishVersionPair(fixture);
+        const first = await reevaluator.reevaluate(reevaluationRequest(compatibility));
+        const stale = reevaluator.reevaluate(reevaluationRequest(compatibility));
 
         await expect(stale).rejects.toMatchObject({
             status: 409,
-            requestedReportRevisionId: candidate.report.id,
-            currentReportRevisionId: first.revision.id,
+            requestedReportRevisionId: compatibility.current.reportId,
+            currentReportRevisionId: first.revision.reportId,
         });
         await expect(stale).rejects.toBeInstanceOf(IntegrationCompatibilityReevaluationStaleReportError);
     });
@@ -100,7 +102,10 @@ describe("compatibility reevaluation", () => {
     test("validates a closed request shape before reading registry state", async () => {
         const fixture = registryFixture();
         const { reevaluator } = reevaluationServices(fixture);
-        const invalid = { ...reevaluationRequest("report-1"), unexpected: true };
+        const invalid = {
+            ...reevaluationRequest({ revisionId: "report-1", reportDigest: "f".repeat(64) }),
+            unexpected: true,
+        };
 
         const promise = reevaluator.reevaluate(invalid);
 
@@ -110,55 +115,61 @@ describe("compatibility reevaluation", () => {
 
     test("reuses the exact reviewed legacy schema baseline during reevaluation", async () => {
         const fixture = registryFixture();
-        const { candidate } = await publishReviewedSqlVersionPair(fixture);
+        const { baselinePackage, candidate } = await publishReviewedSqlVersionPair(fixture);
+        const compatibility = await seedCompatibilityRoot(fixture, candidate.version, baselinePackage.envelope.version);
         const { reevaluator } = reevaluationServices(fixture);
 
         const result = await reevaluator.reevaluate({
-            ...reevaluationRequest(candidate.report.id),
+            ...reevaluationRequest(compatibility),
             version: candidate.version,
         });
 
         expect(result.revision).toMatchObject({
-            outcome: candidate.report.outcome,
-            requiredReleaseLevel: candidate.report.requiredReleaseLevel,
-            evidence: candidate.report.evidence,
+            outcome: compatibility.current.outcome,
+            requiredReleaseLevel: compatibility.current.requiredReleaseLevel,
+            findings: compatibility.current.findings,
         });
-        expect(result.revision.evidence).not.toContainEqual(
+        expect(result.revision.findings).not.toContainEqual(
             expect.objectContaining({ code: "legacy-schema-baseline-missing" }),
         );
     });
 
     test("appends a composite decision revision from the same compatibility revision", async () => {
         const fixture = registryFixture();
-        const { candidate } = await publishVersionPair(fixture);
+        const { candidate, compatibility } = await publishVersionPair(fixture);
         const admission = await appendDecision(fixture, candidate.version);
         const { reevaluator } = compositeReevaluationServices(fixture, admission.stores, admission.policy);
 
         const result = await reevaluator.reevaluate({
-            ...reevaluationRequest(candidate.report.id),
+            ...reevaluationRequest(compatibility),
             version: candidate.version,
             currentDecision: admission.reference,
         });
 
         expect(result.release).toMatchObject({
-            compatibilityReportRevisionId: `compat-${result.revision.id}`,
+            compatibilityReportRevisionId: result.revision.reportId,
             admissible: true,
             eligibilityChanged: false,
         });
         const decisions = await admission.stores.decisions.get("demo", candidate.version);
         expect(decisions?.revisions).toHaveLength(2);
-        expect(decisions?.current.compatibilityReport.revisionId).toBe(`compat-${result.revision.id}`);
+        expect(decisions?.current.compatibilityReport.revisionId).toBe(result.revision.reportId);
         expect(decisions?.current.decisionId).toBe(result.release?.decision.revisionId);
     });
 
     test("reselects stateful migration evidence when schema findings change", async () => {
         const fixture = registryFixture();
-        const { candidate } = await publishReviewedSqlVersionPair(fixture, additiveSchemaContract(), "1.1.0");
+        const { baselinePackage, candidate } = await publishReviewedSqlVersionPair(
+            fixture,
+            additiveSchemaContract(),
+            "1.1.0",
+        );
+        const compatibility = await seedCompatibilityRoot(fixture, candidate.version, baselinePackage.envelope.version);
         const admission = await appendDecision(fixture, candidate.version);
         const { reevaluator } = compositeReevaluationServices(fixture, admission.stores, admission.policy);
 
         const result = await reevaluator.reevaluate({
-            ...reevaluationRequest(candidate.report.id),
+            ...reevaluationRequest(compatibility),
             version: candidate.version,
             currentDecision: admission.reference,
         });
@@ -179,12 +190,15 @@ describe("compatibility reevaluation", () => {
 
     test("discovers newly appended migration evidence from the current stateful selection", async () => {
         const fixture = registryFixture();
-        const { source, candidate } = await publishMigrationAwareVersionPair(fixture, additiveSchemaContract());
+        const { source, candidate, compatibility } = await publishMigrationAwareVersionPair(
+            fixture,
+            additiveSchemaContract(),
+        );
         const admission = await appendDecision(fixture, candidate.version);
         const services = compositeReevaluationServices(fixture, admission.stores, admission.policy);
 
         const reevaluated = await services.reevaluator.reevaluate({
-            ...reevaluationRequest(candidate.report.id),
+            ...reevaluationRequest(compatibility),
             version: candidate.version,
             currentDecision: admission.reference,
         });
@@ -246,12 +260,12 @@ describe("compatibility reevaluation", () => {
 
     test("requires an exact current composite decision CAS", async () => {
         const fixture = registryFixture();
-        const { candidate } = await publishVersionPair(fixture);
+        const { candidate, compatibility } = await publishVersionPair(fixture);
         const admission = await appendDecision(fixture, candidate.version);
         const { reevaluator } = compositeReevaluationServices(fixture, admission.stores, admission.policy);
 
         const promise = reevaluator.reevaluate({
-            ...reevaluationRequest(candidate.report.id),
+            ...reevaluationRequest(compatibility),
             currentDecision: { ...admission.reference, digest: "f".repeat(64) },
         });
 

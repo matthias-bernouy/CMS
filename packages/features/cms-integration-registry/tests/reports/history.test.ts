@@ -3,9 +3,8 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { identifyVerificationReport } from "@bernouy/cms-integration-verification";
 import { ReleaseReportConflictError } from "@bernouy/cms-integration-registry";
-import { FsIntegrationCompatibilityReportStore } from "@bernouy/cms-integration-registry/fs";
 import { cleanupRegistryFixtures, publicationPackage } from "../publication/fixtures";
-import { completeDecisionEvidence, publishedReleaseFixture, releaseStores, verificationReport } from "./fixtures";
+import { publishedReleaseFixture, releaseStores, verificationReport } from "./fixtures";
 
 afterEach(cleanupRegistryFixtures);
 
@@ -56,21 +55,6 @@ describe("filesystem release report histories", () => {
         const rejected = results.find((result) => result.status === "rejected") as PromiseRejectedResult;
         expect(rejected.reason).toBeInstanceOf(ReleaseReportConflictError);
         expect((await stores.verificationReports.get("demo", "1.1.0"))?.revisions).toHaveLength(2);
-    });
-
-    test("keeps compatibility v1 readable while v2 is stored independently", async () => {
-        const { fixture, source, target, stores } = await publishedReleaseFixture();
-        const evidence = await completeDecisionEvidence(source.digest, target.digest);
-        const legacy = new FsIntegrationCompatibilityReportStore({
-            snapshots: fixture.snapshots,
-            mutations: fixture.mutations,
-        });
-        const legacyBefore = await legacy.get("demo", "1.1.0");
-        await stores.compatibilityReports.append({ report: evidence.compatibility, expectedCurrent: null });
-
-        expect(legacyBefore?.current).toHaveProperty("admissible");
-        expect((await legacy.get("demo", "1.1.0"))?.current).toEqual(legacyBefore?.current);
-        expect((await stores.compatibilityReports.get("demo", "1.1.0"))?.current).toHaveProperty("contractAdmissible");
     });
 
     test("fails before writing histories or revisions beyond configured hard caps", async () => {

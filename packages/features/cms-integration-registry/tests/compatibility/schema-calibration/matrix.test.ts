@@ -59,21 +59,19 @@ describe("SQL schema compatibility calibration matrix", () => {
             ["breaking", "constraint-changed"],
         ],
     ] satisfies readonly [string, SchemaMutation, ExpectedChange][])("%s", (_label, mutate, [classification, code]) => {
-        expect(evaluateMutation(mutate).report.evidence).toContainEqual(
-            expect.objectContaining({ classification, code }),
-        );
+        expect(evaluateMutation(mutate).evidence).toContainEqual(expect.objectContaining({ classification, code }));
     });
 
     test("classifies a primary key addition as breaking", () => {
         const decision = evaluateSchemaPair(removeConstraint("items_pkey"), addPrimaryKey());
-        expect(decision.report.evidence).toContainEqual(
+        expect(decision.evidence).toContainEqual(
             expect.objectContaining({ classification: "breaking", code: "constraint-added" }),
         );
     });
 
     test("ignores declaration ordering but fails closed on generated-name renumbering", () => {
         const reordered = evaluateMutation((schema) => items(schema).constraints.reverse());
-        expect(reordered.report.evidence).toEqual([]);
+        expect(reordered.evidence).toEqual([]);
 
         const legacyAnonymousChecks: SchemaMutation = (schema) => {
             constraint(schema, "items_quantity_check").name = "items_check";
@@ -88,10 +86,10 @@ describe("SQL schema compatibility calibration matrix", () => {
                 expression: "(quantity < 1000)",
             });
         });
-        expect(renumbered.report.evidence).toContainEqual(
+        expect(renumbered.evidence).toContainEqual(
             expect.objectContaining({ classification: "breaking", code: "constraint-changed" }),
         );
-        expect(renumbered.report.evidence).toContainEqual(
+        expect(renumbered.evidence).toContainEqual(
             expect.objectContaining({ classification: "breaking", code: "constraint-added" }),
         );
     });
@@ -117,7 +115,7 @@ describe("SQL schema compatibility calibration matrix", () => {
                 }
             };
         const decision = evaluateSchemaPair(setGeneration(previous), setGeneration(next));
-        expect(decision.report.evidence).toContainEqual(expect.objectContaining({ classification, code }));
+        expect(decision.evidence).toContainEqual(expect.objectContaining({ classification, code }));
     });
 });
 

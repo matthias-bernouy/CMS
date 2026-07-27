@@ -11,13 +11,11 @@ describe("integration function response constraints", () => {
             enum: ["archived", "draft", "published"],
         });
 
-        expect(narrowedPatch).toMatchObject({ accepted: false, report: { requiredReleaseLevel: "minor" } });
-        expect(narrowedMinor.accepted).toBeTrue();
-        expect(narrowedMinor.report.evidence).toContainEqual(
-            expect.objectContaining({ code: "response-enum-narrowed" }),
-        );
-        expect(widened).toMatchObject({ accepted: false, report: { outcome: "breaking" } });
-        expect(widened.report.evidence).toContainEqual(expect.objectContaining({ code: "response-enum-widened" }));
+        expect(narrowedPatch).toMatchObject({ contractAdmissible: false, requiredReleaseLevel: "minor" });
+        expect(narrowedMinor.contractAdmissible).toBeTrue();
+        expect(narrowedMinor.evidence).toContainEqual(expect.objectContaining({ code: "response-enum-narrowed" }));
+        expect(widened).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+        expect(widened.evidence).toContainEqual(expect.objectContaining({ code: "response-enum-widened" }));
     });
 
     test("compares scalar bounds using response covariance", () => {
@@ -37,12 +35,12 @@ describe("integration function response constraints", () => {
             maxLength: 30,
         });
 
-        expect(strengthened.accepted).toBeTrue();
-        expect(strengthened.report.evidence.map((entry) => entry.code)).toEqual(
+        expect(strengthened.contractAdmissible).toBeTrue();
+        expect(strengthened.evidence.map((entry) => entry.code)).toEqual(
             expect.arrayContaining(["response-min-length-strengthened", "response-max-length-strengthened"]),
         );
-        expect(weakened).toMatchObject({ accepted: false, report: { outcome: "breaking" } });
-        expect(weakened.report.evidence.map((entry) => entry.code)).toEqual(
+        expect(weakened).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+        expect(weakened.evidence.map((entry) => entry.code)).toEqual(
             expect.arrayContaining(["response-min-length-weakened", "response-max-length-weakened"]),
         );
     });
@@ -51,8 +49,8 @@ describe("integration function response constraints", () => {
         const baseline = responsePackage("1.0.0", { type: "string", pattern: "^[a-z]+$" });
         const changed = evaluate(baseline, "1.1.0", { type: "string", pattern: "^[a-z0-9]+$" });
 
-        expect(changed).toMatchObject({ accepted: false, report: { outcome: "unknown" } });
-        expect(changed.report.evidence).toContainEqual(expect.objectContaining({ code: "response-pattern-changed" }));
+        expect(changed).toMatchObject({ contractAdmissible: false, outcome: "unknown" });
+        expect(changed.evidence).toContainEqual(expect.objectContaining({ code: "response-pattern-changed" }));
     });
 
     test("classifies numeric and array bounds", () => {
@@ -67,13 +65,13 @@ describe("integration function response constraints", () => {
             maxItems: 20,
         });
 
-        expect(number.accepted).toBeTrue();
-        expect(array).toMatchObject({ accepted: false, report: { outcome: "breaking" } });
+        expect(number.contractAdmissible).toBeTrue();
+        expect(array).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
     });
 });
 
 function evaluate(baseline: ReturnType<typeof responsePackage>, version: string, body: Record<string, unknown>) {
-    return evaluator().evaluateAdmission({ baseline, candidate: responsePackage(version, body) });
+    return evaluator().evaluate({ baseline, candidate: responsePackage(version, body) });
 }
 
 function responsePackage(version: string, body: Record<string, unknown>) {

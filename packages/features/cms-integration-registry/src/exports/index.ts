@@ -14,9 +14,8 @@ export type {
     IntegrationRegistryValidatedCatalogEntry,
 } from "../interfaces/catalog";
 export type {
-    IntegrationCompatibilityAdmissionDecision,
-    IntegrationCompatibilityAdmissionReport,
     IntegrationCompatibilityBaselineReference,
+    IntegrationCompatibilityEvaluation,
     IntegrationCompatibilityEvaluationInput,
     IntegrationCompatibilityEvaluatorIdentity,
     IntegrationCompatibilityEvaluatorOptions,
@@ -26,10 +25,6 @@ export type {
     IntegrationCompatibilityOutcome,
     IntegrationCompatibilityPackage,
     IntegrationCompatibilityReleaseLevel,
-    IntegrationCompatibilityReport,
-    IntegrationCompatibilityReportHistory,
-    IntegrationCompatibilityReportProvenance,
-    IntegrationCompatibilityReportRevision,
     ReviewedConnectorSchemaBaseline,
     TrustedSchemaDeclarationEvidence,
 } from "../interfaces/compatibility";
@@ -103,10 +98,8 @@ export type {
     FsReleaseReportRecoveryResult,
     IntegrationCompatibilityV2ReportStore,
     IdentifiedReviewedSchemaBaselineImportRequest,
-    IntegrationCompatibilityReportCollection,
     IntegrationCompatibilityReportPage,
     IntegrationCompatibilityReportPageRequest,
-    IntegrationCompatibilityReportStore,
     ReviewedSchemaBaselineHistory,
     ReviewedSchemaBaselineImporter,
     ReviewedSchemaBaselineImportCurrent,
@@ -135,12 +128,7 @@ export {
     PublishedIntegrationVerificationBundleReader,
     type PublishedIntegrationVerificationBundleReaderConfig,
 } from "../core/catalog/publicVerificationBundles";
-export {
-    assertIntegrationCompatibilityAdmission,
-    IntegrationCompatibilityAdmissionError,
-    IntegrationCompatibilityEvaluator,
-} from "../core/compatibility/evaluation";
-export { InMemoryIntegrationCompatibilityReportHistory } from "../core/compatibility/history";
+export { IntegrationCompatibilityEvaluator } from "../core/compatibility/evaluation";
 export {
     IntegrationRegistryStablePromotionConfirmationError,
     IntegrationRegistryStablePromotionConflictError,
@@ -159,9 +147,6 @@ export {
 } from "../core/promotion/eligibilityErrors";
 export {
     IntegrationCompatibilityHistoryCursorError,
-    IntegrationCompatibilityHistoryNotFoundError,
-    IntegrationCompatibilityRevisionConflictError,
-    IntegrationCompatibilityRevisionValidationError,
     ReviewedSchemaBaselineConflictError,
     ReviewedSchemaBaselineIntegrityError,
     ReviewedSchemaBaselineValidationError,

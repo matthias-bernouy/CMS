@@ -2,7 +2,6 @@ import type { ReleaseAdmissionPolicySnapshotV1, ReportProvenance } from "@bernou
 import type { IntegrationRegistryCatalogSnapshotProvider } from "../../../../../interfaces/catalog";
 import type { IntegrationRegistryVersionEligibilityManager } from "../../../../../interfaces/promotion";
 import type {
-    IntegrationCompatibilityReportStore,
     IntegrationCompatibilityV2ReportStore,
     IntegrationMigrationReportStore,
     IntegrationVerificationReportStore,
@@ -15,7 +14,6 @@ import type { ReleaseAdmissionDecision } from "@bernouy/cms-integration-verifica
 export type FsReleaseAdmissionReconcilerConfig = Readonly<{
     snapshots: IntegrationRegistryCatalogSnapshotProvider;
     compatibility: IntegrationCompatibilityV2ReportStore;
-    legacyCompatibility?: IntegrationCompatibilityReportStore;
     verification: IntegrationVerificationReportStore;
     migrations: IntegrationMigrationReportStore;
     decisions: ReleaseAdmissionDecisionStore;

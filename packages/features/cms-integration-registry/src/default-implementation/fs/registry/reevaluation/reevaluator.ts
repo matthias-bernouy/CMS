@@ -1,8 +1,8 @@
 import type { IntegrationPackageLimits } from "@bernouy/cms-integration-packages";
 import type { IntegrationCompatibilityEvaluator } from "../../../../core/compatibility/evaluation";
 import {
-    IntegrationCompatibilityHistoryNotFoundError,
-    IntegrationCompatibilityRevisionConflictError,
+    ReleaseReportConflictError,
+    ReleaseReportIntegrityError,
 } from "../../../../core/compatibility/reportStoreErrors";
 import {
     IntegrationCompatibilityReevaluationConflictError,
@@ -16,18 +16,20 @@ import type {
     IntegrationCompatibilityReevaluationRequest,
     IntegrationCompatibilityReevaluator,
 } from "../../../../interfaces/reevaluation";
-import type { IntegrationCompatibilityReportStore } from "../../../../interfaces/reportStore";
-import type { ReviewedSchemaBaselineStore } from "../../../../interfaces/reportStore";
+import type {
+    IntegrationCompatibilityV2ReportStore,
+    ReviewedSchemaBaselineStore,
+} from "../../../../interfaces/reportStore";
 import { buildFsCompatibilityReevaluationInput } from "./input";
 import {
-    appendReleaseReevaluationRevision,
     captureReleaseReevaluationContext,
+    reconcileReevaluatedRelease,
     type ReleaseReevaluationConfig,
 } from "./release";
 
 export type FsIntegrationCompatibilityReevaluatorConfig = Readonly<{
     snapshots: IntegrationRegistryCatalogSnapshotProvider;
-    reports: IntegrationCompatibilityReportStore;
+    reports: IntegrationCompatibilityV2ReportStore;
     evaluator: IntegrationCompatibilityEvaluator;
     reviewedSchemaBaselines?: ReviewedSchemaBaselineStore;
     packageLimits?: Partial<IntegrationPackageLimits>;
@@ -43,27 +45,46 @@ export class FsIntegrationCompatibilityReevaluator implements IntegrationCompati
         if (!snapshot.locateExactVersion(validated.kind, validated.version)) {
             throw new IntegrationCompatibilityReevaluationNotFoundError(validated.kind, validated.version);
         }
-        const history = await this.config.reports.get(validated.kind, validated.version);
+        let history;
+        try {
+            history = await this.config.reports.get(validated.kind, validated.version);
+        } catch (error) {
+            if (error instanceof ReleaseReportIntegrityError) {
+                throw new IntegrationCompatibilityReevaluationIntegrityError(
+                    "Compatibility history cannot be read from immutable registry state",
+                    { cause: error },
+                );
+            }
+            throw error;
+        }
         if (!history) {
             throw new IntegrationCompatibilityReevaluationNotFoundError(validated.kind, validated.version);
         }
-        assertCurrentReport(validated.currentReportRevisionId, history.current.id);
+        assertCurrentReport(validated.currentReport, history);
         const release = this.config.release
-            ? await captureReleaseReevaluationContext(this.config.release, validated)
+            ? await captureReleaseReevaluationContext(this.config.release, validated, history)
             : null;
+        const root = history.revisions[0];
+        if (!root || root.revisionType !== "root") {
+            throw new IntegrationCompatibilityReevaluationIntegrityError(
+                "Compatibility history has no immutable root revision",
+            );
+        }
         const input = await buildFsCompatibilityReevaluationInput(
             snapshot,
-            history.admission,
+            root,
             this.config.packageLimits,
             this.config.reviewedSchemaBaselines,
         );
         let revision;
         try {
-            revision = this.config.evaluator.evaluateRevision(input, history.current.id, {
-                actor: validated.actor,
-                reason: validated.reason,
-                ...(validated.evidenceIds ? { evidenceIds: validated.evidenceIds } : {}),
-            });
+            revision = (
+                await this.config.evaluator.buildRevision(input, history.current, {
+                    actor: validated.actor,
+                    reason: validated.reason,
+                    ...(validated.evidenceIds ? { evidenceIds: validated.evidenceIds } : {}),
+                })
+            ).report;
         } catch (error) {
             throw new IntegrationCompatibilityReevaluationIntegrityError(
                 "Compatibility reevaluation input cannot be evaluated from immutable registry state",
@@ -71,21 +92,20 @@ export class FsIntegrationCompatibilityReevaluator implements IntegrationCompati
             );
         }
         try {
-            const appended = await this.config.reports.appendRevision(revision);
+            const appended = await this.config.reports.append({
+                report: revision,
+                expectedCurrent: validated.currentReport,
+            });
             const releaseResult =
                 release && this.config.release
-                    ? await appendReleaseReevaluationRevision({
+                    ? await reconcileReevaluatedRelease({
                           release: this.config.release,
                           revision,
-                          context: release,
                       })
                     : undefined;
             return Object.freeze({ revision, history: appended, ...(releaseResult ? { release: releaseResult } : {}) });
         } catch (error) {
-            if (error instanceof IntegrationCompatibilityHistoryNotFoundError) {
-                throw new IntegrationCompatibilityReevaluationNotFoundError(validated.kind, validated.version);
-            }
-            if (error instanceof IntegrationCompatibilityRevisionConflictError) {
+            if (error instanceof ReleaseReportConflictError) {
                 await this.throwConcurrentConflict(validated, error);
             }
             throw error;
@@ -94,16 +114,19 @@ export class FsIntegrationCompatibilityReevaluator implements IntegrationCompati
 
     private async throwConcurrentConflict(
         request: IntegrationCompatibilityReevaluationRequest,
-        cause: IntegrationCompatibilityRevisionConflictError,
+        cause: ReleaseReportConflictError,
     ): Promise<never> {
         const current = await this.config.reports.get(request.kind, request.version);
         if (!current) {
             throw new IntegrationCompatibilityReevaluationNotFoundError(request.kind, request.version);
         }
-        if (current.current.id !== request.currentReportRevisionId) {
+        if (
+            current.currentRevisionId !== request.currentReport.revisionId ||
+            current.currentReportDigest !== request.currentReport.reportDigest
+        ) {
             throw new IntegrationCompatibilityReevaluationStaleReportError(
-                request.currentReportRevisionId,
-                current.current.id,
+                request.currentReport.revisionId,
+                current.currentRevisionId,
             );
         }
         throw new IntegrationCompatibilityReevaluationConflictError(
@@ -113,8 +136,11 @@ export class FsIntegrationCompatibilityReevaluator implements IntegrationCompati
     }
 }
 
-function assertCurrentReport(requested: string, current: string): void {
-    if (requested !== current) {
-        throw new IntegrationCompatibilityReevaluationStaleReportError(requested, current);
+function assertCurrentReport(
+    requested: Readonly<{ revisionId: string; reportDigest: string }>,
+    current: Readonly<{ currentRevisionId: string; currentReportDigest: string }>,
+): void {
+    if (requested.revisionId !== current.currentRevisionId || requested.reportDigest !== current.currentReportDigest) {
+        throw new IntegrationCompatibilityReevaluationStaleReportError(requested.revisionId, current.currentRevisionId);
     }
 }

@@ -52,18 +52,10 @@ export {
     type FsIntegrationRegistryPublicationPhase,
 } from "../default-implementation/fs/registry/persistence/journal";
 export {
-    INTEGRATION_COMPATIBILITY_REPORT_DOCUMENT_SCHEMA,
-    readCompatibilityAdmissionReport,
-} from "../default-implementation/fs/registry/persistence/report";
-export {
     FsIntegrationRegistryRecoverer,
     recoverFsIntegrationRegistry,
     type FsIntegrationRegistryRecovererConfig,
 } from "../default-implementation/fs/registry/recovery/recoverer";
-export {
-    FsIntegrationCompatibilityReportStore,
-    type FsIntegrationCompatibilityReportStoreConfig,
-} from "../default-implementation/fs/registry/history/store";
 export {
     FsIntegrationCompatibilityV2ReportStore,
     FsIntegrationMigrationReportStore,
@@ -115,10 +107,6 @@ export {
     FsIntegrationCompatibilityReevaluator,
     type FsIntegrationCompatibilityReevaluatorConfig,
 } from "../default-implementation/fs/registry/reevaluation/reevaluator";
-export {
-    INTEGRATION_COMPATIBILITY_REVISION_DOCUMENT_SCHEMA,
-    readCompatibilityRevision,
-} from "../default-implementation/fs/registry/history/revisionDocument";
 export {
     FsIntegrationRegistryStablePromoter,
     type FsIntegrationRegistryStablePromoterConfig,

@@ -4,7 +4,6 @@ import {
     type ReleaseAdmissionPolicySnapshotV1,
 } from "@bernouy/cms-integration-verification";
 import { IntegrationCompatibilityEvaluator } from "cms-integration-registry/core/compatibility/evaluation";
-import { buildCompatibilityReportV2 } from "cms-integration-registry/core/compatibility/evaluation/reportBuilder";
 import type { IntegrationRegistryCatalogSnapshot } from "cms-integration-registry/interfaces/catalog";
 import { buildPublicationCompatibilityInput } from "../../compatibility";
 import type { PreparedFsIntegrationRegistryCandidate } from "../../candidate";
@@ -31,20 +30,12 @@ export async function planCandidateCompatibility(input: {
         now: () => input.createdAt,
         createReportId: () => `compat-${input.candidateDigest.slice(0, 32)}`,
     });
-    const evaluation = evaluator.evaluate(
+    const report = await evaluator.buildRoot(
         await buildPublicationCompatibilityInput(input.snapshot, input.candidate, undefined, input.baselines),
+        "admission",
+        { actor: "repository-admission", reason: "candidate-static-evaluation" },
     );
-    const report = await buildCompatibilityReportV2({
-        evaluation,
-        evaluator: input.policy.staticEvaluator,
-        history: {
-            reportId: `compat-${input.candidateDigest.slice(0, 32)}`,
-            revisionType: "root",
-            origin: "admission",
-            createdAt: input.createdAt,
-        },
-        provenance: { actor: "repository-admission", reason: "candidate-static-evaluation" },
-    });
+    const evaluation = report.report;
     const evaluatorInputDigest = await sha256Hex(
         canonicalJsonBytes({
             schema: "cms.integration.compatibility-evaluator-input.v1",

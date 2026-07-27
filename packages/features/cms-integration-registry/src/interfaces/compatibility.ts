@@ -33,45 +33,6 @@ export type IntegrationCompatibilityEvaluatorIdentity = Readonly<{
     version: string;
 }>;
 
-export type IntegrationCompatibilityReportProvenance = Readonly<{
-    actor: string;
-    reason: string;
-    evidenceIds?: readonly string[];
-}>;
-
-type IntegrationCompatibilityReportBase = Readonly<{
-    id: string;
-    kind: string;
-    version: string;
-    packageDigest: string;
-    evaluator: IntegrationCompatibilityEvaluatorIdentity;
-    createdAt: string;
-    baselines: readonly IntegrationCompatibilityBaselineReference[];
-    informationalBaselines: readonly IntegrationCompatibilityBaselineReference[];
-    evidence: readonly IntegrationCompatibilityEvidence[];
-    outcome: IntegrationCompatibilityOutcome;
-    requiredReleaseLevel: IntegrationVersionReleaseLevel | "none";
-    releaseLevel: IntegrationCompatibilityReleaseLevel;
-    admissible: boolean;
-    noBaselineReason?: IntegrationCompatibilityNoBaselineReason;
-}>;
-
-export type IntegrationCompatibilityAdmissionReport = IntegrationCompatibilityReportBase &
-    Readonly<{
-        reportType: "admission";
-    }>;
-
-export type IntegrationCompatibilityReportRevision = IntegrationCompatibilityReportBase &
-    Readonly<{
-        reportType: "revision";
-        supersedes: string;
-        provenance: IntegrationCompatibilityReportProvenance;
-    }>;
-
-export type IntegrationCompatibilityReport =
-    | IntegrationCompatibilityAdmissionReport
-    | IntegrationCompatibilityReportRevision;
-
 export type ReviewedConnectorSchemaBaseline = Readonly<{
     connector: Readonly<{ provider: string; root?: string }>;
     packageDigest: string;
@@ -143,20 +104,4 @@ export type IntegrationCompatibilityEvaluation = Readonly<{
     releaseLevel: IntegrationCompatibilityReleaseLevel;
     contractAdmissible: boolean;
     noBaselineReason?: IntegrationCompatibilityNoBaselineReason;
-}>;
-
-export type IntegrationCompatibilityAdmissionDecision =
-    | Readonly<{ accepted: true; report: IntegrationCompatibilityAdmissionReport }>
-    | Readonly<{
-          accepted: false;
-          status: 422;
-          code: "integration_compatibility_rejected";
-          report: IntegrationCompatibilityAdmissionReport;
-      }>;
-
-export type IntegrationCompatibilityReportHistory = Readonly<{
-    admission(): IntegrationCompatibilityAdmissionReport;
-    current(): IntegrationCompatibilityReport;
-    list(): readonly IntegrationCompatibilityReport[];
-    append(revision: IntegrationCompatibilityReportRevision): void;
 }>;

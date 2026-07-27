@@ -2,7 +2,7 @@ import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@
 import type { IntegrationCompatibilityReevaluationRequest } from "../../../interfaces/reevaluation";
 import { IntegrationCompatibilityReevaluationValidationError } from "./errors";
 
-const REQUIRED_KEYS = ["actor", "currentReportRevisionId", "kind", "reason", "version"];
+const REQUIRED_KEYS = ["actor", "currentReport", "kind", "reason", "version"];
 const OPTIONAL_KEYS = ["currentDecision", "evidenceIds"];
 const MAX_EVIDENCE_IDS = 128;
 
@@ -23,7 +23,7 @@ export function validateCompatibilityReevaluationRequest(
             { cause: error },
         );
     }
-    assertBoundedText(request.currentReportRevisionId, "report revision ID", 512);
+    const currentReport = validateCurrentReport(request.currentReport);
     const currentDecision = validateCurrentDecision(request.currentDecision);
     assertBoundedText(request.actor, "actor", 512);
     assertBoundedText(request.reason, "reason", 4_096);
@@ -31,12 +31,27 @@ export function validateCompatibilityReevaluationRequest(
     return Object.freeze({
         kind: request.kind,
         version: request.version,
-        currentReportRevisionId: request.currentReportRevisionId,
+        currentReport,
         ...(currentDecision ? { currentDecision } : {}),
         actor: request.actor,
         reason: request.reason,
         ...(evidenceIds ? { evidenceIds } : {}),
     });
+}
+
+function validateCurrentReport(value: unknown): IntegrationCompatibilityReevaluationRequest["currentReport"] {
+    if (!isRecord(value) || !hasAllowedKeys(value, ["reportDigest", "revisionId"], [])) {
+        throw new IntegrationCompatibilityReevaluationValidationError(
+            "Compatibility reevaluation current report has an invalid shape",
+        );
+    }
+    assertBoundedText(value.revisionId, "report revision ID", 512);
+    if (typeof value.reportDigest !== "string" || !/^[a-f0-9]{64}$/u.test(value.reportDigest)) {
+        throw new IntegrationCompatibilityReevaluationValidationError(
+            "Compatibility reevaluation report digest must be lowercase SHA-256",
+        );
+    }
+    return Object.freeze({ revisionId: value.revisionId, reportDigest: value.reportDigest });
 }
 
 function validateCurrentDecision(

@@ -14,7 +14,7 @@ export function evaluateSchemaPair(mutateBaseline: SchemaMutation, mutateCandida
     mutateBaseline(baselineSchema);
     const candidateSchema = structuredClone(baselineSchema);
     mutateCandidate(candidateSchema);
-    return evaluator().evaluateAdmission({
+    return evaluator().evaluate({
         baseline: sqlPackage("1.0.0", baselineSchema),
         candidate: sqlPackage("1.1.0", candidateSchema),
     });

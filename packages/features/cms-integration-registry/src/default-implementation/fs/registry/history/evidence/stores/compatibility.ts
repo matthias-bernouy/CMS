@@ -2,9 +2,12 @@ import type { CompatibilityReportV2 } from "@bernouy/cms-integration-verificatio
 import { assertReportRevisionFollows, identifyCompatibilityReportV2 } from "@bernouy/cms-integration-verification";
 import type {
     AppendReleaseReportRequest,
+    IntegrationCompatibilityReportPage,
+    IntegrationCompatibilityReportPageRequest,
     IntegrationCompatibilityV2ReportStore,
     ReleaseReportHistory,
 } from "../../../../../../interfaces/reportStore";
+import { compatibilityReportPage } from "../../../../../../core/compatibility/reportPage";
 import { FsReleaseReportHistoryStore, type FsReleaseReportHistoryStoreConfig } from "../store";
 import type { FsReleaseReportHistoryAdapter, FsReleaseVersionKey } from "../types";
 import { assertCatalogVersion, parseVersionKey, versionKey } from "./shared";
@@ -31,6 +34,15 @@ export class FsIntegrationCompatibilityV2ReportStore implements IntegrationCompa
     async get(kind: string, version: string): Promise<ReleaseReportHistory<CompatibilityReportV2> | null> {
         const key = this.configuredKey(kind, version);
         return key ? await this.store.get(key) : null;
+    }
+
+    async list(
+        kind: string,
+        version: string,
+        page: IntegrationCompatibilityReportPageRequest = {},
+    ): Promise<IntegrationCompatibilityReportPage | null> {
+        const history = await this.get(kind, version);
+        return history ? compatibilityReportPage(history, page) : null;
     }
 
     async append(

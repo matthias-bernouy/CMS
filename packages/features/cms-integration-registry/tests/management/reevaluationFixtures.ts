@@ -1,25 +1,29 @@
-import { chmodSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
-import { IntegrationCompatibilityEvaluator } from "@bernouy/cms-integration-registry";
+import { identifyCompatibilityReportV2 } from "@bernouy/cms-integration-verification";
+import {
+    IntegrationCompatibilityEvaluator,
+    type IntegrationCompatibilityPackage,
+    type ReleaseReportCurrentReference,
+    type ReleaseReportHistory,
+} from "@bernouy/cms-integration-registry";
+import type { CompatibilityReportV2 } from "@bernouy/cms-integration-verification";
 import {
     FsIntegrationCompatibilityReevaluator,
-    FsIntegrationCompatibilityReportStore,
     FsIntegrationRegistryVersionEligibilityManager,
     FsReleaseAdmissionReconciler,
+    loadReviewedConnectorSchemaBaselines,
 } from "@bernouy/cms-integration-registry/fs";
 import { reviewedBaseline } from "../baselines/fixtures";
 import { publicationPackage, registryFixture, seedLegacySqlBaseline } from "../publication/fixtures";
-import type { releaseStores } from "../reports/fixtures/stores";
+import { releaseStores } from "../reports/fixtures/stores";
 
 export function reevaluationServices(
     fixture: ReturnType<typeof registryFixture>,
     evaluator: IntegrationCompatibilityEvaluator = fixture.compatibility,
 ) {
-    const reports = new FsIntegrationCompatibilityReportStore({
-        snapshots: fixture.snapshots,
-        mutations: fixture.mutations,
-    });
+    const reports = releaseStores(fixture).compatibilityReports;
     const reevaluator = new FsIntegrationCompatibilityReevaluator({
         snapshots: fixture.snapshots,
         reports,
@@ -34,10 +38,7 @@ export function compositeReevaluationServices(
     stores: ReturnType<typeof releaseStores>,
     policy: Awaited<ReturnType<typeof import("./eligibility/decisionFixtures").appendDecision>>["policy"],
 ) {
-    const reports = new FsIntegrationCompatibilityReportStore({
-        snapshots: fixture.snapshots,
-        mutations: fixture.mutations,
-    });
+    const reports = stores.compatibilityReports;
     const eligibility = new FsIntegrationRegistryVersionEligibilityManager({
         root: fixture.root,
         snapshots: fixture.snapshots,
@@ -47,7 +48,6 @@ export function compositeReevaluationServices(
     const reconciler = new FsReleaseAdmissionReconciler({
         snapshots: fixture.snapshots,
         compatibility: stores.compatibilityReports,
-        legacyCompatibility: reports,
         verification: stores.verificationReports,
         migrations: stores.migrationReports,
         decisions: stores.decisions,
@@ -64,7 +64,7 @@ export function compositeReevaluationServices(
         reports,
         evaluator,
         reviewedSchemaBaselines: fixture.reviewedSchemaBaselines,
-        release: { compatibility: stores.compatibilityReports, decisions: stores.decisions, reconciler },
+        release: { decisions: stores.decisions, reconciler },
     });
     return { eligibility, reconciler, reevaluator, reports };
 }
@@ -72,7 +72,8 @@ export function compositeReevaluationServices(
 export async function publishVersionPair(fixture: ReturnType<typeof registryFixture>) {
     const baseline = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
     const candidate = await fixture.publisher.publish({ package: await publicationPackage("demo", "1.1.0") });
-    return { baseline, candidate };
+    const compatibility = await seedCompatibilityRoot(fixture, candidate.version, baseline.version);
+    return { baseline, candidate, compatibility };
 }
 
 export async function publishMigrationAwareVersionPair(
@@ -139,29 +140,92 @@ export async function publishMigrationAwareVersionPair(
             },
         ),
     });
-    return { source, candidate };
+    const compatibility = await seedCompatibilityRoot(fixture, candidate.version, source.envelope.version);
+    return { source, candidate, compatibility };
 }
 
-export function reevaluationRequest(currentReportRevisionId: string) {
+export async function seedCompatibilityRoot(
+    fixture: ReturnType<typeof registryFixture>,
+    version: string,
+    baselineVersion?: string,
+) {
+    const candidate = await compatibilityPackage(fixture, version);
+    const input = baselineVersion
+        ? { baseline: await compatibilityPackage(fixture, baselineVersion), candidate }
+        : { candidate, noBaselineReason: "new-kind" as const };
+    const root = await fixture.compatibility.buildRoot(input, "admission", {
+        actor: "repository-admission",
+        reason: "candidate-static-evaluation",
+    });
+    return await releaseStores(fixture).compatibilityReports.append({ report: root.report, expectedCurrent: null });
+}
+
+export function reevaluationRequest(
+    current: ReleaseReportCurrentReference | ReleaseReportHistory<CompatibilityReportV2>,
+) {
+    const currentReport =
+        "currentRevisionId" in current
+            ? { revisionId: current.currentRevisionId, reportDigest: current.currentReportDigest }
+            : current;
     return {
         kind: "demo",
         version: "1.1.0",
-        currentReportRevisionId,
+        currentReport,
         actor: "admin:user-1",
         reason: "Run the current compatibility evaluator",
         evidenceIds: ["schema-ci-2", "schema-ci-1"],
     };
 }
 
-export function rewriteAdmission(
+export async function rewriteCompatibilityRoot(
     root: string,
     version: string,
     transform: (report: Record<string, unknown>) => void,
-): void {
-    const path = join(root, "demo", ".registry", "reports", version, "admission.json");
-    const document = JSON.parse(readFileSync(path, "utf8")) as { report: Record<string, unknown> };
+    identify = true,
+): Promise<void> {
+    const streamRoot = join(root, ".registry", "release-reports", "compatibility");
+    const history = readdirSync(streamRoot).find((entry) => {
+        const identity = JSON.parse(readFileSync(join(streamRoot, entry, "identity.json"), "utf8")) as {
+            key?: { kind?: string; version?: string };
+        };
+        return identity.key?.kind === "demo" && identity.key.version === version;
+    });
+    if (!history) {
+        throw new Error(`Compatibility history was not found for demo@${version}`);
+    }
+    const path = join(streamRoot, history, "revisions", "0000000001.json");
+    const document = JSON.parse(readFileSync(path, "utf8")) as {
+        report: Record<string, unknown>;
+        reportDigest: string;
+    };
     transform(document.report);
+    if (identify) {
+        const identified = await identifyCompatibilityReportV2(document.report);
+        document.report = identified.report;
+        document.reportDigest = identified.digest;
+    }
     chmodSync(path, 0o640);
     writeFileSync(path, canonicalJsonBytes(document));
     chmodSync(path, 0o440);
+}
+
+async function compatibilityPackage(
+    fixture: ReturnType<typeof registryFixture>,
+    version: string,
+): Promise<IntegrationCompatibilityPackage> {
+    const location = fixture.snapshots.current().locateExactVersion("demo", version);
+    if (!location) {
+        throw new Error(`Published integration demo@${version} was not found`);
+    }
+    const reviewedSchemaBaselines = await loadReviewedConnectorSchemaBaselines(
+        fixture.reviewedSchemaBaselines,
+        "demo",
+        version,
+        location.package.digest,
+    );
+    return {
+        definition: location.definitionSnapshot,
+        packageDigest: location.package.digest,
+        ...(reviewedSchemaBaselines.length > 0 ? { reviewedSchemaBaselines } : {}),
+    };
 }

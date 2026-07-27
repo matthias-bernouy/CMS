@@ -17,68 +17,64 @@ describe("integration definition compatibility", () => {
             ],
         });
 
-        const decision = evaluator().evaluateAdmission({ baseline, candidate });
-        expect(decision).toMatchObject({ accepted: false, report: { outcome: "breaking" } });
-        expect(decision.report.evidence).toContainEqual(expect.objectContaining({ code: "input-narrowed" }));
+        const decision = evaluator().evaluate({ baseline, candidate });
+        expect(decision).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+        expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "input-narrowed" }));
     });
 
     test("detects dependency range narrowing in the maintained SemVer direction", () => {
         const baseline = dependencyPackage("1.0.0", "^1.2.0");
-        const narrowed = evaluator().evaluateAdmission({ baseline, candidate: dependencyPackage("1.0.1", "~1.2.0") });
-        const widened = evaluator().evaluateAdmission({
+        const narrowed = evaluator().evaluate({ baseline, candidate: dependencyPackage("1.0.1", "~1.2.0") });
+        const widened = evaluator().evaluate({
             baseline,
             candidate: dependencyPackage("1.1.0", ">=1.0.0 <2.0.0"),
         });
 
-        expect(narrowed).toMatchObject({ accepted: false, report: { outcome: "breaking" } });
-        expect(narrowed.report.evidence).toContainEqual(expect.objectContaining({ code: "dependency-range-narrowed" }));
-        expect(widened.accepted).toBeTrue();
-        expect(widened.report.evidence).toContainEqual(expect.objectContaining({ code: "dependency-range-widened" }));
+        expect(narrowed).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+        expect(narrowed.evidence).toContainEqual(expect.objectContaining({ code: "dependency-range-narrowed" }));
+        expect(widened.contractAdmissible).toBeTrue();
+        expect(widened.evidence).toContainEqual(expect.objectContaining({ code: "dependency-range-widened" }));
     });
 
     test("bounds a legacy dependency range only from every exact reviewed baseline pin", () => {
-        const covered = evaluator().evaluateAdmission({
+        const covered = evaluator().evaluate({
             baseline: reviewedLegacyDependencyPackage([["1.0.0"]]),
             candidate: dependencyPackage("1.1.0", "^1.0.0"),
         });
-        expect(covered.accepted).toBeTrue();
-        expect(covered.report.evidence).toContainEqual(
+        expect(covered.contractAdmissible).toBeTrue();
+        expect(covered.evidence).toContainEqual(
             expect.objectContaining({
                 classification: "additive",
                 code: "dependency-range-declared-from-reviewed-baseline",
             }),
         );
 
-        const oneExcluded = evaluator().evaluateAdmission({
+        const oneExcluded = evaluator().evaluate({
             baseline: reviewedLegacyDependencyPackage([["1.0.0"], ["2.0.0"]]),
             candidate: dependencyPackage("1.1.0", "^1.0.0"),
         });
-        expect(oneExcluded).toMatchObject({ accepted: false, report: { outcome: "breaking" } });
-        expect(oneExcluded.report.evidence).toContainEqual(
-            expect.objectContaining({ code: "dependency-range-narrowed" }),
-        );
+        expect(oneExcluded).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+        expect(oneExcluded.evidence).toContainEqual(expect.objectContaining({ code: "dependency-range-narrowed" }));
     });
 
     test("keeps an unreviewed or inapplicable legacy dependency range breaking", () => {
         const candidate = dependencyPackage("1.1.0", "^1.0.0");
-        const absent = evaluator().evaluateAdmission({
+        const absent = evaluator().evaluate({
             baseline: dependencyPackage("1.0.0"),
             candidate,
         });
-        const noPin = evaluator().evaluateAdmission({
+        const noPin = evaluator().evaluate({
             baseline: reviewedLegacyDependencyPackage([[]]),
             candidate,
         });
-        const wrongConnector = evaluator().evaluateAdmission({
+        const wrongConnector = evaluator().evaluate({
             baseline: reviewedLegacyDependencyPackage([["1.0.0"]], "connectors/other"),
             candidate,
         });
 
         for (const decision of [absent, noPin, wrongConnector]) {
-            expect(decision).toMatchObject({ accepted: false, report: { outcome: "breaking" } });
-            expect(decision.report.evidence).toContainEqual(
-                expect.objectContaining({ code: "dependency-range-narrowed" }),
-            );
+            expect(decision).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+            expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "dependency-range-narrowed" }));
         }
     });
 
@@ -86,18 +82,18 @@ describe("integration definition compatibility", () => {
         const baseline = packageState("1.0.0", { artifacts: [sourceArtifact([sourceEndpoint()])] });
         const candidate = packageState("1.0.1", { artifacts: [sourceArtifact([sourceEndpoint()], "renamed")] });
 
-        const decision = evaluator().evaluateAdmission({ baseline, candidate });
-        expect(decision).toMatchObject({ accepted: false, report: { outcome: "breaking" } });
-        expect(decision.report.evidence).toContainEqual(expect.objectContaining({ code: "artifact-removed" }));
+        const decision = evaluator().evaluate({ baseline, candidate });
+        expect(decision).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+        expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "artifact-removed" }));
     });
 
     test("compares source endpoint identities, required parameters, and access permissions", () => {
         const baseline = packageState("1.0.0", { artifacts: [sourceArtifact([sourceEndpoint()])] });
-        const removed = evaluator().evaluateAdmission({
+        const removed = evaluator().evaluate({
             baseline,
             candidate: packageState("1.0.1", { artifacts: [sourceArtifact([])] }),
         });
-        const narrowed = evaluator().evaluateAdmission({
+        const narrowed = evaluator().evaluate({
             baseline,
             candidate: packageState("1.0.1", {
                 artifacts: [
@@ -111,11 +107,11 @@ describe("integration definition compatibility", () => {
             }),
         });
 
-        expect(removed.report.evidence).toContainEqual(expect.objectContaining({ code: "source-endpoint-removed" }));
-        expect(narrowed.report.evidence.map((entry) => entry.code)).toEqual(
+        expect(removed.evidence).toContainEqual(expect.objectContaining({ code: "source-endpoint-removed" }));
+        expect(narrowed.evidence.map((entry) => entry.code)).toEqual(
             expect.arrayContaining(["endpoint-access-tightened", "required-endpoint-parameter-added"]),
         );
-        expect(narrowed.accepted).toBeFalse();
+        expect(narrowed.contractAdmissible).toBeFalse();
     });
 
     test("marks unstructured public endpoint contract changes unknown", () => {
@@ -128,11 +124,9 @@ describe("integration definition compatibility", () => {
             ],
         });
 
-        const decision = evaluator().evaluateAdmission({ baseline, candidate });
-        expect(decision).toMatchObject({ accepted: false, report: { outcome: "unknown" } });
-        expect(decision.report.evidence).toContainEqual(
-            expect.objectContaining({ code: "endpoint-contract-unproven" }),
-        );
+        const decision = evaluator().evaluate({ baseline, candidate });
+        expect(decision).toMatchObject({ contractAdmissible: false, outcome: "unknown" });
+        expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "endpoint-contract-unproven" }));
     });
 
     test("ignores implementation-only workflow steps when the declared function contract is stable", () => {
@@ -141,9 +135,9 @@ describe("integration definition compatibility", () => {
         });
         const candidate = packageState("1.0.1", { artifacts: [functionArtifact([])] });
 
-        const decision = evaluator().evaluateAdmission({ baseline, candidate });
-        expect(decision.accepted).toBeTrue();
-        expect(decision.report.evidence).toEqual([]);
+        const decision = evaluator().evaluate({ baseline, candidate });
+        expect(decision.contractAdmissible).toBeTrue();
+        expect(decision.evidence).toEqual([]);
     });
 });
 

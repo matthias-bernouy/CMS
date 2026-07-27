@@ -1,18 +1,13 @@
-import type { IntegrationCompatibilityEvaluator } from "../../../../core/compatibility/evaluation";
-import { projectCompatibilityReportV2 } from "../../../../core/compatibility/evaluation/v2Projection";
 import {
     IntegrationCompatibilityReevaluationIntegrityError,
     IntegrationCompatibilityReevaluationStaleDecisionError,
 } from "../../../../core/compatibility/reevaluation/errors";
 import type { IntegrationCompatibilityReevaluationRequest } from "../../../../interfaces/reevaluation";
-import type {
-    IntegrationCompatibilityV2ReportStore,
-    ReleaseAdmissionDecisionStore,
-} from "../../../../interfaces/reportStore";
+import type { ReleaseAdmissionDecisionStore, ReleaseReportHistory } from "../../../../interfaces/reportStore";
+import type { CompatibilityReportV2 } from "@bernouy/cms-integration-verification";
 import type { FsReleaseAdmissionReconciler } from "../history/admission";
 
 export type ReleaseReevaluationConfig = Readonly<{
-    compatibility: IntegrationCompatibilityV2ReportStore;
     decisions: ReleaseAdmissionDecisionStore;
     reconciler: Pick<FsReleaseAdmissionReconciler, "reconcile">;
 }>;
@@ -20,10 +15,10 @@ export type ReleaseReevaluationConfig = Readonly<{
 export async function captureReleaseReevaluationContext(
     release: ReleaseReevaluationConfig,
     request: IntegrationCompatibilityReevaluationRequest,
+    compatibility: ReleaseReportHistory<CompatibilityReportV2>,
 ) {
     const history = await release.decisions.get(request.kind, request.version);
-    const compatibility = await release.compatibility.get(request.kind, request.version);
-    if (!history || !compatibility) {
+    if (!history) {
         throw new IntegrationCompatibilityReevaluationIntegrityError(
             "Compatibility reevaluation requires current composite release evidence",
         );
@@ -49,29 +44,10 @@ export async function captureReleaseReevaluationContext(
     return { compatibility };
 }
 
-export async function appendReleaseReevaluationRevision(input: {
+export async function reconcileReevaluatedRelease(input: {
     release: ReleaseReevaluationConfig;
-    revision: Awaited<ReturnType<IntegrationCompatibilityEvaluator["evaluateRevision"]>>;
-    context: Awaited<ReturnType<typeof captureReleaseReevaluationContext>>;
+    revision: CompatibilityReportV2;
 }) {
-    const projected = await projectCompatibilityReportV2({
-        report: input.revision,
-        history: {
-            reportId: `compat-${input.revision.id}`,
-            revisionType: "revision",
-            origin: input.context.compatibility.current.origin,
-            createdAt: input.revision.createdAt,
-            supersedes: input.context.compatibility.currentRevisionId,
-        },
-        provenance: input.revision.provenance,
-    });
-    const compatibility = await input.release.compatibility.append({
-        report: projected.report,
-        expectedCurrent: {
-            revisionId: input.context.compatibility.currentRevisionId,
-            reportDigest: input.context.compatibility.currentReportDigest,
-        },
-    });
     const reconciled = await input.release.reconciler.reconcile(input.revision.kind, input.revision.version, {
         actor: input.revision.provenance.actor,
         reason: input.revision.provenance.reason,
@@ -83,7 +59,7 @@ export async function appendReleaseReevaluationRevision(input: {
         );
     }
     return Object.freeze({
-        compatibilityReportRevisionId: compatibility.currentRevisionId,
+        compatibilityReportRevisionId: input.revision.reportId,
         decision: {
             revisionId: reconciled.decision.currentRevisionId,
             digest: reconciled.decision.currentReportDigest,

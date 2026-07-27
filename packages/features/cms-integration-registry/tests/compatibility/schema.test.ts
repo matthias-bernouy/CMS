@@ -9,10 +9,10 @@ describe("integration SQL schema compatibility", () => {
         const defaulted = evaluateSchema(baseline, "1.1.0", schemaWithExtraColumn({ nullable: false, default: "0" }));
         const required = evaluateSchema(baseline, "1.1.0", schemaWithExtraColumn({ nullable: false }));
 
-        expect(nullable.accepted).toBeTrue();
-        expect(defaulted.accepted).toBeTrue();
-        expect(required).toMatchObject({ accepted: false, status: 422, report: { outcome: "breaking" } });
-        expect(required.report.evidence).toContainEqual(expect.objectContaining({ code: "required-column-added" }));
+        expect(nullable.contractAdmissible).toBeTrue();
+        expect(defaulted.contractAdmissible).toBeTrue();
+        expect(required).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+        expect(required.evidence).toContainEqual(expect.objectContaining({ code: "required-column-added" }));
     });
 
     test("requires a minor release for an added relation", () => {
@@ -20,9 +20,9 @@ describe("integration SQL schema compatibility", () => {
         const patch = evaluateSchema(baseline, "1.0.1", schemaWithExtraRelation());
         const minor = evaluateSchema(baseline, "1.1.0", schemaWithExtraRelation());
 
-        expect(patch).toMatchObject({ accepted: false, status: 422, report: { requiredReleaseLevel: "minor" } });
-        expect(minor.accepted).toBeTrue();
-        expect(minor.report.evidence).toContainEqual(expect.objectContaining({ code: "relation-added" }));
+        expect(patch).toMatchObject({ contractAdmissible: false, requiredReleaseLevel: "minor" });
+        expect(minor.contractAdmissible).toBeTrue();
+        expect(minor.evidence).toContainEqual(expect.objectContaining({ code: "relation-added" }));
     });
 
     test.each([
@@ -37,10 +37,10 @@ describe("integration SQL schema compatibility", () => {
             schemaContract({ type: next }),
         );
 
-        expect(decision.accepted).toBe(accepted);
-        expect(decision.report.evidence).toContainEqual(expect.objectContaining({ code }));
+        expect(decision.contractAdmissible).toBe(accepted);
+        expect(decision.evidence).toContainEqual(expect.objectContaining({ code }));
         if (code === "column-type-unproven") {
-            expect(decision.report.outcome).toBe("unknown");
+            expect(decision.outcome).toBe("unknown");
         }
     });
 
@@ -50,10 +50,8 @@ describe("integration SQL schema compatibility", () => {
         });
         const decision = evaluateSchema(baseline, "1.0.1", schemaContract());
 
-        expect(decision).toMatchObject({ accepted: false, status: 422, report: { outcome: "unknown" } });
-        expect(decision.report.evidence).toContainEqual(
-            expect.objectContaining({ code: "legacy-schema-baseline-missing" }),
-        );
+        expect(decision).toMatchObject({ contractAdmissible: false, outcome: "unknown" });
+        expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "legacy-schema-baseline-missing" }));
     });
 
     test("uses only a reviewed legacy baseline bound to the immutable package digest", () => {
@@ -77,7 +75,7 @@ describe("integration SQL schema compatibility", () => {
             ],
         };
 
-        expect(evaluateSchema(baseline, "1.0.1", schemaContract()).accepted).toBeTrue();
+        expect(evaluateSchema(baseline, "1.0.1", schemaContract()).contractAdmissible).toBeTrue();
         expect(() =>
             evaluateSchema(
                 {
@@ -95,15 +93,15 @@ describe("integration SQL schema compatibility", () => {
     test("treats changed SQL bytes as implementation-only when the declaration is unchanged", () => {
         const baseline = sqlPackage("1.0.0", schemaContract());
         const candidate = sqlPackage("1.0.1", schemaContract());
-        const decision = evaluator().evaluateAdmission({
+        const decision = evaluator().evaluate({
             baseline,
             candidate,
             changedPaths: ["connectors/supabase/sql/schema.sql"],
         });
 
-        expect(decision.accepted).toBeTrue();
-        expect(decision.report.outcome).toBe("compatible");
-        expect(decision.report.evidence).toEqual([]);
+        expect(decision.contractAdmissible).toBeTrue();
+        expect(decision.outcome).toBe("compatible");
+        expect(decision.evidence).toEqual([]);
     });
 
     test("classifies relation kinds and generated-column semantics", () => {
@@ -112,15 +110,15 @@ describe("integration SQL schema compatibility", () => {
         };
         const changedKind = structuredClone(baseline);
         changedKind.namespaces[0]!.relations[0]!.kind = "view";
-        expect(evaluateSchema(sqlPackage("1.0.0", baseline), "1.1.0", changedKind).report.evidence).toContainEqual(
+        expect(evaluateSchema(sqlPackage("1.0.0", baseline), "1.1.0", changedKind).evidence).toContainEqual(
             expect.objectContaining({ code: "relation-kind-changed", classification: "breaking" }),
         );
 
         const alwaysIdentity = schemaWithIdGeneration({ identity: "always" });
         const defaultIdentity = schemaWithIdGeneration({ identity: "by-default" });
         const identityDecision = evaluateSchema(sqlPackage("1.0.0", alwaysIdentity), "1.1.0", defaultIdentity);
-        expect(identityDecision.accepted).toBeTrue();
-        expect(identityDecision.report.evidence).toContainEqual(
+        expect(identityDecision.contractAdmissible).toBeTrue();
+        expect(identityDecision.evidence).toContainEqual(
             expect.objectContaining({ code: "column-identity-changed", classification: "additive" }),
         );
 
@@ -129,9 +127,7 @@ describe("integration SQL schema compatibility", () => {
             default: "nextval('orders_id_seq'::regclass)",
             sequenceDependency: "auto",
         });
-        expect(
-            evaluateSchema(sqlPackage("1.0.0", sequenceBaseline), "1.1.0", ownedSequence).report.evidence,
-        ).toContainEqual(
+        expect(evaluateSchema(sqlPackage("1.0.0", sequenceBaseline), "1.1.0", ownedSequence).evidence).toContainEqual(
             expect.objectContaining({ code: "column-sequence-ownership-changed", classification: "unknown" }),
         );
     });
@@ -139,11 +135,11 @@ describe("integration SQL schema compatibility", () => {
     test("rejects trusted SQL/declaration contradictions for patch and major publications", () => {
         const patchCandidate = withDeclarationEvidence(sqlPackage("1.0.1", schemaContract()), "contradiction");
         const majorCandidate = withDeclarationEvidence(sqlPackage("2.0.0", schemaContract()), "contradiction");
-        const patch = evaluator().evaluateAdmission({
+        const patch = evaluator().evaluate({
             baseline: sqlPackage("1.0.0", schemaContract()),
             candidate: patchCandidate,
         });
-        const major = evaluator().evaluateAdmission({
+        const major = evaluator().evaluate({
             candidate: majorCandidate,
             noBaselineReason: "new-major",
             informationalBaseline: sqlPackage("1.0.0", schemaContract()),
@@ -151,11 +147,11 @@ describe("integration SQL schema compatibility", () => {
 
         for (const decision of [patch, major]) {
             expect(decision).toMatchObject({
-                accepted: false,
-                status: 422,
-                report: { outcome: "invalid", requiredReleaseLevel: "none", admissible: false },
+                outcome: "invalid",
+                requiredReleaseLevel: "none",
+                contractAdmissible: false,
             });
-            expect(decision.report.evidence).toContainEqual(
+            expect(decision.evidence).toContainEqual(
                 expect.objectContaining({ classification: "invalid", code: "schema-declaration-contradiction" }),
             );
         }
@@ -163,7 +159,7 @@ describe("integration SQL schema compatibility", () => {
 });
 
 function evaluateSchema(baseline: ReturnType<typeof packageState>, version: string, schema: unknown) {
-    return evaluator().evaluateAdmission({ baseline, candidate: sqlPackage(version, schema) });
+    return evaluator().evaluate({ baseline, candidate: sqlPackage(version, schema) });
 }
 
 function sqlPackage(version: string, schema: unknown) {
