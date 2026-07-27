@@ -15,8 +15,8 @@ the production listener startup.
 
 ## Operational visibility
 
-Completed publication, stable-promotion, and compatibility-reevaluation
-operations emit one JSON log record on standard output. The allowlisted schema
+Completed stable-promotion and compatibility-reevaluation operations emit one
+JSON log record on standard output. The allowlisted schema
 contains operation and report identifiers, kind, version, digest, evaluator,
 outcome, and duration when available. It never contains the management token,
 request headers, actors, reasons, package contents, or filesystem paths.
