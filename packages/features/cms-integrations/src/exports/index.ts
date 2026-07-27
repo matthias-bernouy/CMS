@@ -163,6 +163,7 @@ export {
     findIntegration,
     integrationRegistry,
 } from "../core/definitions/catalog";
+export { sameConnectorMigrationReferences } from "../core/definitions/migrationReferences";
 export {
     assertIntegrationVersionInstallable,
     assertUpgradeEligible,

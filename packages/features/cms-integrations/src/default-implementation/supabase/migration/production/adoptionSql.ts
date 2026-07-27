@@ -1,4 +1,5 @@
 import type { IntegrationConnectorBaselineAdoptionContext } from "../../../../interfaces/IntegrationConnectorDeployer";
+import { sameConnectorMigrationReferences } from "cms-integrations/core/definitions/migrationReferences";
 import {
     advisoryLock,
     assertAdoptedLedgerEntryCompatible,
@@ -167,31 +168,13 @@ function assertAdoptionContext(context: IntegrationConnectorBaselineAdoptionCont
     if (
         context.baseline.definitionVersion !== context.sourceVersion ||
         context.baseline.packageDigest !== context.sourcePackageDigest ||
-        !sameMigrationReferences(context.coveredMigrations, context.baseline.coveredMigrations)
+        !sameConnectorMigrationReferences(context.coveredMigrations, context.baseline.coveredMigrations)
     ) {
         throw new Error("Supabase legacy adoption baseline must bind the exact source package");
     }
     if (context.coveredMigrations.some((migration) => migration.revision > context.migrationRevision)) {
         throw new Error("Supabase legacy adoption ledger must not advance beyond the source revision");
     }
-}
-
-function sameMigrationReferences(
-    actual: IntegrationConnectorBaselineAdoptionContext["coveredMigrations"],
-    expected: IntegrationConnectorBaselineAdoptionContext["coveredMigrations"],
-): boolean {
-    return (
-        actual.length === expected.length &&
-        actual.every((entry, index) => {
-            const reference = expected[index];
-            return (
-                entry.id === reference?.id &&
-                entry.checksum === reference.checksum &&
-                entry.revision === reference.revision &&
-                entry.introducedIn === reference.introducedIn
-            );
-        })
-    );
 }
 
 function assertionBlock(condition: string, message: string): string {

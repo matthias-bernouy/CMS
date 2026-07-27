@@ -2,6 +2,7 @@ import type {
     DeclarativeConnectorCompatibility,
     DeclarativeConnectorMigrationPlan,
 } from "../../../../interfaces/IntegrationConnectorDeployer";
+import { sameConnectorMigrationReferences } from "../../../definitions/migrationReferences";
 import { integrationVersionSatisfies } from "../../../definitions/versioning";
 import { assertMigrationLayoutPath, assertStableMigrationId, invalidMigrationValue } from "./values";
 
@@ -72,7 +73,7 @@ export function validateMigrationAwareConnectorLayout(
         const expectedCoveredMigrations = connector.migration.install.coveredMigrations
             .filter((migration) => migration.revision <= source.migrationRevision)
             .sort(compareMigrationReference);
-        if (!sameMigrationReferences(adoption.coveredMigrations, expectedCoveredMigrations)) {
+        if (!sameConnectorMigrationReferences(adoption.coveredMigrations, expectedCoveredMigrations)) {
             invalidMigrationValue(
                 `${name}.migration.supportedSources`,
                 "legacy adoption coveredMigrations must exactly match the install prefix at its source revision",
@@ -140,22 +141,4 @@ function compareMigrationReference(
         return left.revision - right.revision;
     }
     return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
-}
-
-function sameMigrationReferences(
-    actual: DeclarativeConnectorMigrationPlan["install"]["coveredMigrations"],
-    expected: DeclarativeConnectorMigrationPlan["install"]["coveredMigrations"],
-): boolean {
-    return (
-        actual.length === expected.length &&
-        actual.every((entry, index) => {
-            const reference = expected[index];
-            return (
-                entry.id === reference?.id &&
-                entry.checksum === reference.checksum &&
-                entry.revision === reference.revision &&
-                entry.introducedIn === reference.introducedIn
-            );
-        })
-    );
 }

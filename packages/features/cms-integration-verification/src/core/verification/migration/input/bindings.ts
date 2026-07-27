@@ -1,4 +1,4 @@
-import { integrationVersionSatisfies } from "@bernouy/cms-integrations";
+import { integrationVersionSatisfies, sameConnectorMigrationReferences } from "@bernouy/cms-integrations";
 import type { MigrationVerificationInputV1 } from "../../../../interfaces/verification/migration";
 import { identifyStatefulChangeSelection } from "../../../reports/decision/selection";
 import { pinnedRunner } from "../../../runner";
@@ -130,31 +130,13 @@ export function assertSelectedSource(
         const expected = plan.install.coveredMigrations.filter(
             (migration) => migration.revision <= sourceMigrationRevision,
         );
-        if (!sameMigrationReferences(adoption.coveredMigrations, expected)) {
+        if (!sameConnectorMigrationReferences(adoption.coveredMigrations, expected)) {
             invalid(
                 "migrationVerificationInput.migrationPlan.plan.supportedSources",
                 "legacy adoption coveredMigrations must exactly match the source ledger prefix",
             );
         }
     }
-}
-
-function sameMigrationReferences(
-    actual: MigrationVerificationInputV1["migrationPlan"]["plan"]["install"]["coveredMigrations"],
-    expected: MigrationVerificationInputV1["migrationPlan"]["plan"]["install"]["coveredMigrations"],
-): boolean {
-    return (
-        actual.length === expected.length &&
-        actual.every((entry, index) => {
-            const reference = expected[index];
-            return (
-                entry.id === reference?.id &&
-                entry.checksum === reference.checksum &&
-                entry.revision === reference.revision &&
-                entry.introducedIn === reference.introducedIn
-            );
-        })
-    );
 }
 
 export function assertPolicyIdentity(
