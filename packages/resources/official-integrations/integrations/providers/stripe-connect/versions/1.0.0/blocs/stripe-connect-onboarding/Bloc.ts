@@ -232,7 +232,7 @@ class StripeConnectOnboarding extends HTMLElement {
                     <p class="muted" data-copy></p>
                 </div>
                 <p class="status" data-status hidden aria-live="polite"></p>
-                <div class="loading" data-loading hidden role="status" aria-label="Chargement du portefeuille">
+                <div class="loading" data-loading hidden role="status" aria-label="Chargement du compte vendeur">
                     <basic-skeleton class="loading-label" animation="none" aria-hidden="true"></basic-skeleton>
                     <basic-skeleton class="loading-amount" animation="none" aria-hidden="true"></basic-skeleton>
                     <basic-skeleton class="loading-pending" animation="none" aria-hidden="true"></basic-skeleton>
@@ -263,7 +263,7 @@ class StripeConnectOnboarding extends HTMLElement {
                         <span aria-hidden="true">🔒</span>
                         <span data-security-copy></span>
                     </div>
-                    <button type="submit" data-submit>Activer mes versements</button>
+                    <button type="submit" data-submit>Configurer mon compte vendeur</button>
                 </form>
                 <div class="wallet" data-wallet hidden>
                     <div class="balances" data-balances></div>
@@ -285,17 +285,21 @@ class StripeConnectOnboarding extends HTMLElement {
         } else {
             this.style.removeProperty("--wallet-accent-text");
         }
-        this.setText("[data-title]", "title", "Mon portefeuille");
-        this.setText("[data-eyebrow]", "eyebrow", "Portefeuille");
-        this.setText("[data-copy]", "copy", "Consulte ici le solde de tes ventes et l’état de tes versements.");
-        this.setText("[data-activation-title]", "activation-title", "Recevoir le produit de mes ventes");
+        this.setText("[data-title]", "title", "Compte vendeur");
+        this.setText("[data-eyebrow]", "eyebrow", "Versements");
+        this.setText(
+            "[data-copy]",
+            "copy",
+            "Active et suis ton compte vendeur pour recevoir les versements de tes ventes.",
+        );
+        this.setText("[data-activation-title]", "activation-title", "Activer mon compte vendeur");
         this.setText(
             "[data-activation-copy]",
             "activation-copy",
-            "Active ton portefeuille en quelques étapes pour recevoir tes prochains versements.",
+            "Configure ton compte vendeur en quelques étapes pour recevoir tes prochains versements.",
         );
-        this.setText("[data-activate]", "button-label", "Activer mes versements");
-        this.setText("[data-submit]", "button-label", "Activer mes versements");
+        this.setText("[data-activate]", "button-label", "Configurer mon compte vendeur");
+        this.setText("[data-submit]", "button-label", "Configurer mon compte vendeur");
         this.setText("[data-missing-title]", "missing-title", "Ton profil est incomplet");
         this.setText("[data-profile-link]", "profile-link-label", "Compléter mon profil");
         this.setText("[data-marketplace-terms]", "marketplace-terms-label", "conditions générales de la plateforme");
@@ -303,19 +307,15 @@ class StripeConnectOnboarding extends HTMLElement {
         this.setText(
             "[data-ready-copy]",
             "ready-copy",
-            "Ton profil est complet. Ajoute le compte bancaire sur lequel tu souhaites recevoir tes versements.",
+            "Ton profil est complet. Renseigne le compte bancaire sur lequel recevoir tes versements.",
         );
         this.setText("[data-iban-label]", "iban-label", "IBAN du compte de versement");
         this.setText(
             "[data-privacy-copy]",
             "privacy-copy",
-            "Nous ne conservons pas ton IBAN. Il est transmis de manière sécurisée à notre prestataire de paiement.",
+            "Nous ne conservons pas ton IBAN. Il est transmis de manière sécurisée pour configurer tes versements.",
         );
-        this.setText(
-            "[data-security-copy]",
-            "security-copy",
-            "Notre prestataire de paiement vérifie tes informations de manière sécurisée.",
-        );
+        this.setText("[data-security-copy]", "security-copy", "Tes informations sont vérifiées de manière sécurisée.");
         const profileLink = this.root.querySelector("[data-profile-link]");
         const termsLink = this.root.querySelector("[data-marketplace-terms]");
         if (profileLink) {
@@ -329,7 +329,7 @@ class StripeConnectOnboarding extends HTMLElement {
     setText(selector, attribute, fallback) {
         const element = this.root.querySelector(selector);
         if (element) {
-            element.textContent = this.getAttribute(attribute)?.trim() || fallback;
+            element.textContent = providerNeutralCopy(this.getAttribute(attribute)) || fallback;
         }
     }
 
@@ -753,6 +753,18 @@ function headersObject(headers) {
 
 function text(value) {
     return typeof value === "string" ? value.trim() : "";
+}
+
+function providerNeutralCopy(value) {
+    return text(value)
+        .replace(/Compte vendeur Stripe/gi, "Compte vendeur")
+        .replace(/Ajoute dans Stripe Connect le compte bancaire/gi, "Renseigne le compte bancaire")
+        .replace(/compte Stripe Connect/gi, "compte vendeur")
+        .replace(/compte Stripe connecté/gi, "compte vendeur")
+        .replace(/compte Stripe/gi, "compte vendeur")
+        .replace(/conditions Stripe/gi, "conditions du service de paiement")
+        .replace(/Stripe Connect/gi, "service de paiement")
+        .replace(/Stripe/gi, "service de paiement");
 }
 
 function publicErrorMessage(error) {

@@ -6,7 +6,16 @@ type ImportedBloc = {
 };
 
 export function expectWalletBlocContract(bloc: ImportedBloc | undefined): void {
-    expect(bloc?.viewJS).toContain("Activer mes versements");
+    expect(bloc?.viewJS).toContain("Compte vendeur");
+    expect(bloc?.viewJS).toContain("Active et suis ton compte vendeur pour recevoir les versements de tes ventes.");
+    expect(bloc?.viewJS).toContain("Configurer mon compte vendeur");
+    expect(bloc?.viewJS).toContain("Renseigne le compte bancaire sur lequel recevoir tes versements.");
+    expect(bloc?.viewJS).not.toContain('"Compte vendeur Stripe"');
+    expect(bloc?.viewJS).not.toContain('"compte Stripe Connect"');
+    expect(bloc?.viewJS).not.toContain('"vers ton compte Stripe');
+    expect(bloc?.viewJS).toContain("providerNeutralCopy(this.getAttribute(attribute))");
+    expect(bloc?.viewJS).toContain('.replace(/Compte vendeur Stripe/gi, "Compte vendeur")');
+    expect(bloc?.viewJS).toContain('.replace(/compte Stripe Connect/gi, "compte vendeur")');
     expect(bloc?.viewJS).toContain("submitConnectVerification");
     expect(bloc?.viewJS).toContain('requestAccountSource("getAccount")');
     expect(bloc?.viewJS).toContain('requestAuthSource("me")');
