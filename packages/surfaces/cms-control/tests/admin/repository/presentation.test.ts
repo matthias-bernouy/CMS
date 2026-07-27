@@ -42,6 +42,8 @@ describe("repository administration presentation", () => {
         expect(console.textContent).toContain("postgres 16.4");
         expect(console.textContent).toContain("public-api@1.0.0");
         expect(console.textContent).toContain("sql-install-and-reapply");
+        expect(console.textContent).toContain("sql-reapply-drift");
+        expect(console.textContent).toContain("Second install changed <script>protected_schema</script>");
         expect(console.textContent).toContain("8 ms");
         expect(console.textContent).toContain("Verification bundle digest");
         expect(console.textContent).toContain("cms-postgres-migration");

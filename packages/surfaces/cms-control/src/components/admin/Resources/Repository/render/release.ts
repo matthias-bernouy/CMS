@@ -74,12 +74,19 @@ function appendVerification(target: DocumentFragment, release: RepositoryRelease
     }
     const suites = element("ul", undefined, "evidence-list");
     for (const result of report.results) {
-        suites.append(
-            element(
-                "li",
-                `${result.suiteId} · ${result.source} · ${result.outcome} · ${result.durationMs} ms · ${result.attempts} attempt(s)${result.cacheHit ? " · cache" : ""}`,
-            ),
+        const suite = element(
+            "li",
+            `${result.suiteId} · ${result.source} · ${result.required ? "required" : "optional"} · ${result.outcome} · ${result.durationMs} ms · ${result.attempts} attempt(s)${result.cacheHit ? " · cache" : ""}`,
         );
+        if (result.diagnostics.length > 0) {
+            suite.append(
+                list(
+                    "Diagnostics",
+                    result.diagnostics.map(({ code, message }) => `${code} — ${message}`),
+                ),
+            );
+        }
+        suites.append(suite);
     }
     section.append(element("h5", "Suites"), suites);
     target.append(section);

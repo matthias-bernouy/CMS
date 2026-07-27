@@ -114,6 +114,20 @@ describe("explicit integration upgrade UI", () => {
                             providerDirectCutover: "expand-in-code",
                             cmsDrainSeconds: 30,
                         },
+                        {
+                            connectorKey: "audit",
+                            lineageId: "commerce-audit-v1",
+                            supportedSourceRange: ">=1.0.0 <1.1.0",
+                            rollback: "unavailable-after-ponr",
+                            pointOfNoReturn: "contract",
+                            cmsMediatedCutover: "binding-revision",
+                            providerDirectCutover: "provider-journal",
+                            providerDrainSeconds: 60,
+                            downtimeStatus: "zero-downtime",
+                            observedDowntimeSeconds: 0,
+                            rollbackVerified: true,
+                            pointOfNoReturnObservation: "not-crossed",
+                        },
                     ],
                 },
                 {
@@ -132,18 +146,25 @@ describe("explicit integration upgrade UI", () => {
         expect(Array.from(select.options).map(({ value, textContent }) => ({ value, textContent }))).toEqual([
             {
                 value: "1.1.0",
-                textContent: "1.1.0 (stable, migration from ^1.0.0, rollback available)",
+                textContent:
+                    "1.1.0 (stable, primary from ^1.0.0; rollback available, audit from >=1.0.0 <1.1.0; rollback unavailable-after-ponr)",
             },
         ]);
         expect(select.value).toBe("1.1.0");
         expect(panel.querySelector<HTMLInputElement>("[data-upgrade-confirmation]")?.placeholder).toBe("1.1.0");
         expect(panel.textContent).toContain("Select and confirm an exact target version");
         expect(panel.textContent).toContain("tested migration ^1.0.0");
+        expect(panel.textContent).toContain("tested migration >=1.0.0 <1.1.0");
+        expect(panel.textContent).toContain("CMS-mediated binding-revision");
+        expect(panel.textContent).toContain("provider-direct expand-in-code");
+        expect(panel.textContent).toContain("provider-direct provider-journal");
         expect(panel.textContent).toContain("PONR cleanup");
+        expect(panel.textContent).toContain("PONR contract (not-crossed)");
         expect(panel.textContent).toContain("PONR cleanup (not recorded)");
         expect(panel.textContent).toContain("drain 30s");
         expect(panel.textContent).toContain("rollback (not verified)");
         expect(panel.textContent).toContain("downtime evidence not recorded");
+        expect(panel.textContent).toContain("downtime zero-downtime 0s");
         expect(panel.textContent).toContain("2.0.0-beta.1: The release is fresh-install-only");
     });
 

@@ -117,10 +117,12 @@ function versionOption(version: string, choices: IntegrationUpgradeVersions): HT
         Boolean,
     );
     const target = choices.targets?.find((candidate) => candidate.version === version);
-    const migration = target?.migrations[0];
     const labels = [
         ...channels,
-        ...(migration ? [`migration from ${migration.supportedSourceRange}`, `rollback ${migration.rollback}`] : []),
+        ...(target?.migrations.map(
+            (migration) =>
+                `${migration.connectorKey} from ${migration.supportedSourceRange}; rollback ${migration.rollback}`,
+        ) ?? []),
     ];
     option.textContent = labels.length ? `${version} (${labels.join(", ")})` : version;
     return option;
@@ -128,31 +130,35 @@ function versionOption(version: string, choices: IntegrationUpgradeVersions): HT
 
 function upgradeSummary(choices: IntegrationUpgradeVersions): string {
     const unavailable = choices.targets?.filter((target) => !target.eligible) ?? [];
-    const eligible = choices.versions
-        .map((version) => choices.targets?.find((target) => target.version === version))
-        .filter((target) => target?.migrations.length)
-        .map((target) => {
-            const migration = target!.migrations[0]!;
-            const drains = [migration.cmsDrainSeconds, migration.providerDrainSeconds].filter(
-                (value): value is number => value !== undefined,
-            );
-            const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; drain not declared";
-            const downtime =
-                migration.downtimeStatus === undefined
-                    ? "; downtime evidence not recorded"
-                    : migration.downtimeStatus === "not-measured"
-                      ? "; downtime not measured"
-                      : migration.observedDowntimeSeconds === undefined
-                        ? `; downtime ${migration.downtimeStatus}`
-                        : `; downtime ${migration.downtimeStatus} ${migration.observedDowntimeSeconds}s`;
-            const pointObservation = migration.pointOfNoReturnObservation ?? "not recorded";
-            return `${target!.version}: tested migration ${migration.supportedSourceRange}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
-        });
+    const eligible = choices.versions.flatMap((version) => {
+        const target = choices.targets?.find((candidate) => candidate.version === version);
+        return target?.migrations.map((migration) => migrationSummary(target.version, migration)) ?? [];
+    });
     return [
         `Installed: ${choices.current}. Select and confirm an exact target version.`,
         ...eligible,
         ...unavailable.map((target) => `${target.version}: ${target.reasons.join(" ")}`),
     ].join(" ");
+}
+
+function migrationSummary(
+    version: string,
+    migration: NonNullable<IntegrationUpgradeVersions["targets"]>[number]["migrations"][number],
+): string {
+    const drains = [migration.cmsDrainSeconds, migration.providerDrainSeconds].filter(
+        (value): value is number => value !== undefined,
+    );
+    const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; drain not declared";
+    const downtime =
+        migration.downtimeStatus === undefined
+            ? "; downtime evidence not recorded"
+            : migration.downtimeStatus === "not-measured"
+              ? "; downtime not measured"
+              : migration.observedDowntimeSeconds === undefined
+                ? `; downtime ${migration.downtimeStatus}`
+                : `; downtime ${migration.downtimeStatus} ${migration.observedDowntimeSeconds}s`;
+    const pointObservation = migration.pointOfNoReturnObservation ?? "not recorded";
+    return `${version} / ${migration.connectorKey}: tested migration ${migration.supportedSourceRange}; CMS-mediated ${migration.cmsMediatedCutover}; provider-direct ${migration.providerDirectCutover}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
 }
 
 function unavailableUpgradeSummary(choices: IntegrationUpgradeVersions): string {

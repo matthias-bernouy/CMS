@@ -165,7 +165,12 @@ export function releaseFixture() {
                     durationMs: 8,
                     attempts: 1,
                     cacheHit: false,
-                    diagnostics: [],
+                    diagnostics: [
+                        {
+                            code: "sql-reapply-drift",
+                            message: "Second install changed <script>protected_schema</script>",
+                        },
+                    ],
                 },
             ],
         },

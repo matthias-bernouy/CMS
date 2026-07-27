@@ -29045,29 +29045,31 @@ details[open] > summary > .chevron {
     option3.value = version;
     const channels = [choices.stable === version ? "stable" : "", choices.latest === version ? "latest" : ""].filter(Boolean);
     const target2 = choices.targets?.find((candidate) => candidate.version === version);
-    const migration = target2?.migrations[0];
     const labels = [
       ...channels,
-      ...migration ? [`migration from ${migration.supportedSourceRange}`, `rollback ${migration.rollback}`] : []
+      ...target2?.migrations.map((migration) => `${migration.connectorKey} from ${migration.supportedSourceRange}; rollback ${migration.rollback}`) ?? []
     ];
     option3.textContent = labels.length ? `${version} (${labels.join(", ")})` : version;
     return option3;
   }
   function upgradeSummary(choices) {
     const unavailable = choices.targets?.filter((target2) => !target2.eligible) ?? [];
-    const eligible = choices.versions.map((version) => choices.targets?.find((target2) => target2.version === version)).filter((target2) => target2?.migrations.length).map((target2) => {
-      const migration = target2.migrations[0];
-      const drains = [migration.cmsDrainSeconds, migration.providerDrainSeconds].filter((value3) => value3 !== undefined);
-      const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; drain not declared";
-      const downtime = migration.downtimeStatus === undefined ? "; downtime evidence not recorded" : migration.downtimeStatus === "not-measured" ? "; downtime not measured" : migration.observedDowntimeSeconds === undefined ? `; downtime ${migration.downtimeStatus}` : `; downtime ${migration.downtimeStatus} ${migration.observedDowntimeSeconds}s`;
-      const pointObservation = migration.pointOfNoReturnObservation ?? "not recorded";
-      return `${target2.version}: tested migration ${migration.supportedSourceRange}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
+    const eligible = choices.versions.flatMap((version) => {
+      const target2 = choices.targets?.find((candidate) => candidate.version === version);
+      return target2?.migrations.map((migration) => migrationSummary(target2.version, migration)) ?? [];
     });
     return [
       `Installed: ${choices.current}. Select and confirm an exact target version.`,
       ...eligible,
       ...unavailable.map((target2) => `${target2.version}: ${target2.reasons.join(" ")}`)
     ].join(" ");
+  }
+  function migrationSummary(version, migration) {
+    const drains = [migration.cmsDrainSeconds, migration.providerDrainSeconds].filter((value3) => value3 !== undefined);
+    const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; drain not declared";
+    const downtime = migration.downtimeStatus === undefined ? "; downtime evidence not recorded" : migration.downtimeStatus === "not-measured" ? "; downtime not measured" : migration.observedDowntimeSeconds === undefined ? `; downtime ${migration.downtimeStatus}` : `; downtime ${migration.downtimeStatus} ${migration.observedDowntimeSeconds}s`;
+    const pointObservation = migration.pointOfNoReturnObservation ?? "not recorded";
+    return `${version} / ${migration.connectorKey}: tested migration ${migration.supportedSourceRange}; CMS-mediated ${migration.cmsMediatedCutover}; provider-direct ${migration.providerDirectCutover}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
   }
   function unavailableUpgradeSummary(choices) {
     const reasons = choices.targets?.flatMap((target2) => target2.reasons.map((reason) => `${target2.version}: ${reason}`));
@@ -30652,6 +30654,7 @@ ${controls_default3}`;
       reportId: readText(source2.reportId),
       reportDigest: readText(source2.reportDigest),
       origin: readText(source2.origin),
+      createdAt: readText(source2.createdAt),
       outcome: readText(source2.outcome),
       runner: {
         name: readText(runner.name),
@@ -30659,6 +30662,14 @@ ${controls_default3}`;
         imageDigest: readText(runner.imageDigest)
       },
       environment: { digest: readText(environment.digest), versions: textRecord(environment.versions) },
+      activeContracts: readArray(source2.activeContracts).map((value4) => {
+        const contract = readRecord(value4);
+        return {
+          contractId: readText(contract.contractId),
+          ownerVersion: readText(contract.ownerVersion),
+          digest: readText(contract.digest)
+        };
+      }),
       results: readArray(source2.results).map((value4) => {
         const result = readRecord(value4);
         return {
@@ -30666,6 +30677,7 @@ ${controls_default3}`;
           source: readText(result.source),
           required: readBoolean(result.required),
           outcome: readText(result.outcome),
+          durationMs: readCount(result.durationMs),
           attempts: readCount(result.attempts),
           cacheHit: readBoolean(result.cacheHit),
           diagnostics: readArray(result.diagnostics).map((value5) => {
@@ -31267,14 +31279,24 @@ ${controls_default3}`;
     }
     const section = element("article", undefined, "report");
     section.dataset.outcome = report.outcome;
+    const environmentVersions = Object.entries(report.environment.versions).map(([name, version]) => `${name} ${version}`);
     section.append(element("h4", `Executable verification: ${report.outcome}`), metadata([
       `Origin ${report.origin}`,
+      `Created ${report.createdAt}`,
       `Runner ${report.runner.name} ${report.runner.version}`,
-      `Environment ${report.environment.digest}`
-    ]), codeLine2("Runner image", report.runner.imageDigest));
+      `Environment ${report.environment.digest}`,
+      ...environmentVersions
+    ]), codeLine2("Report digest", report.reportDigest), codeLine2("Runner image", report.runner.imageDigest));
+    if (report.activeContracts.length > 0) {
+      section.append(list("Active contracts", report.activeContracts.map(({ contractId, ownerVersion, digest }) => `${contractId}@${ownerVersion} · ${digest}`)));
+    }
     const suites = element("ul", undefined, "evidence-list");
     for (const result of report.results) {
-      suites.append(element("li", `${result.suiteId} · ${result.source} · ${result.outcome} · ${result.attempts} attempt(s)${result.cacheHit ? " · cache" : ""}`));
+      const suite = element("li", `${result.suiteId} · ${result.source} · ${result.required ? "required" : "optional"} · ${result.outcome} · ${result.durationMs} ms · ${result.attempts} attempt(s)${result.cacheHit ? " · cache" : ""}`);
+      if (result.diagnostics.length > 0) {
+        suite.append(list("Diagnostics", result.diagnostics.map(({ code, message }) => `${code} — ${message}`)));
+      }
+      suites.append(suite);
     }
     section.append(element("h5", "Suites"), suites);
     target2.append(section);
