@@ -40,13 +40,37 @@ export function defineSuite(input: Readonly<{ tests: readonly VerificationTest[]
 }
 
 export function test(name: string, execute: VerificationTest["execute"]): VerificationTest {
-    if (typeof name !== "string" || name.length === 0 || new TextEncoder().encode(name).byteLength > 256) {
+    if (typeof name !== "string" || name.length === 0 || utf8ByteLength(name) > 256) {
         throw new TypeError("Verification test name must be non-empty and bounded");
     }
     if (typeof execute !== "function") {
         throw new TypeError("Verification test body must be a function");
     }
     return Object.freeze({ name, execute });
+}
+
+function utf8ByteLength(value: string): number {
+    let bytes = 0;
+    for (let index = 0; index < value.length; index += 1) {
+        const first = value.charCodeAt(index);
+        if (first <= 0x7f) {
+            bytes += 1;
+        } else if (first <= 0x7ff) {
+            bytes += 2;
+        } else if (first >= 0xd800 && first <= 0xdbff) {
+            const second = value.charCodeAt(index + 1);
+            if (second < 0xdc00 || second > 0xdfff) {
+                throw new TypeError("Verification test names must contain valid Unicode");
+            }
+            bytes += 4;
+            index += 1;
+        } else if (first >= 0xdc00 && first <= 0xdfff) {
+            throw new TypeError("Verification test names must contain valid Unicode");
+        } else {
+            bytes += 3;
+        }
+    }
+    return bytes;
 }
 
 export function assert(condition: unknown, message = "Verification assertion failed"): asserts condition {

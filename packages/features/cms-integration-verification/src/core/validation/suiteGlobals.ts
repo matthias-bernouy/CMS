@@ -6,6 +6,7 @@ const FORBIDDEN_GLOBALS = new Set([
     "Deno",
     "EventSource",
     "Function",
+    "Reflect",
     "WebSocket",
     "Worker",
     "XMLHttpRequest",
@@ -17,6 +18,19 @@ const FORBIDDEN_GLOBALS = new Set([
     "navigator",
     "process",
     "window",
+]);
+
+const FORBIDDEN_RUNTIME_PROPERTIES = new Set([
+    "__proto__",
+    "arguments",
+    "callee",
+    "caller",
+    "constructor",
+    "getOwnPropertyDescriptor",
+    "getOwnPropertyDescriptors",
+    "getPrototypeOf",
+    "prototype",
+    "setPrototypeOf",
 ]);
 
 export function assertVerificationSourceGlobals(
@@ -35,21 +49,33 @@ export function assertVerificationSourceGlobals(
                 `uses forbidden runtime global ${JSON.stringify(node.text)}`,
             );
         }
-        if (isConstructorEscape(compiler, node)) {
-            throw invalidVerificationSourceReference(path, "must not access an object constructor as executable code");
+        if (isRuntimeReflectionEscape(compiler, node)) {
+            throw invalidVerificationSourceReference(path, "must not access reflective runtime capabilities");
+        }
+        if (
+            compiler.isElementAccessExpression(node) &&
+            !compiler.isStringLiteralLike(node.argumentExpression) &&
+            !compiler.isNumericLiteral(node.argumentExpression)
+        ) {
+            throw invalidVerificationSourceReference(path, "must use an exact literal property access");
         }
         compiler.forEachChild(node, visit);
     };
     visit(sourceFile);
 }
 
-function isConstructorEscape(compiler: typeof TypeScript, node: TypeScript.Node): boolean {
-    return (
-        (compiler.isPropertyAccessExpression(node) && node.name.text === "constructor") ||
-        (compiler.isElementAccessExpression(node) &&
-            compiler.isStringLiteralLike(node.argumentExpression) &&
-            node.argumentExpression.text === "constructor")
-    );
+function isRuntimeReflectionEscape(compiler: typeof TypeScript, node: TypeScript.Node): boolean {
+    if (compiler.isPropertyAccessExpression(node)) {
+        return FORBIDDEN_RUNTIME_PROPERTIES.has(node.name.text);
+    }
+    if (compiler.isElementAccessExpression(node) && compiler.isStringLiteralLike(node.argumentExpression)) {
+        return FORBIDDEN_RUNTIME_PROPERTIES.has(node.argumentExpression.text);
+    }
+    if (compiler.isBindingElement(node)) {
+        const property = node.propertyName ?? node.name;
+        return compiler.isIdentifier(property) && FORBIDDEN_RUNTIME_PROPERTIES.has(property.text);
+    }
+    return false;
 }
 
 function isNonReferenceIdentifier(compiler: typeof TypeScript, node: TypeScript.Identifier): boolean {

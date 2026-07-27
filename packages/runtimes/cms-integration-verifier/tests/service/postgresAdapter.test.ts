@@ -1,3 +1,4 @@
+import { SQL } from "bun";
 import { expect, test } from "bun:test";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -5,6 +6,9 @@ import { join } from "node:path";
 import { canonicalJsonBytes, type IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
 import {
     POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
+    buildIntegrationVerificationSuiteContent,
+    computeIntegrationVerificationDigest,
+    identifyIntegrationVerificationSuiteContent,
     parseCandidateAdmissionJobResult,
 } from "@bernouy/cms-integration-verification";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../src/runtime/providers/postgres";
@@ -45,7 +49,16 @@ postgresTest(
                 expect(
                     result.results.find((entry) => entry.suiteId === "platform-postgres-schema-contract")?.outcome,
                 ).toBe("passed");
-                expect(result.results.find((entry) => entry.suiteId === "implementation")?.outcome).toBe("skipped");
+                expect(result.results.find((entry) => entry.suiteId === "implementation")?.outcome).toBe("passed");
+                const database = new SQL(lease.credential.connectionUri, { max: 1 });
+                try {
+                    const rows = (await database.unsafe(
+                        "select count(*)::integer as count from verifier_probe.items",
+                    )) as Array<{ count: number }>;
+                    expect(rows[0]?.count).toBe(0);
+                } finally {
+                    await database.close();
+                }
                 expect(await readdir(root)).toEqual([]);
             } finally {
                 await lease.release();
@@ -85,7 +98,49 @@ async function runAdapter(input: VerificationSandboxInput, cwd: string) {
 }
 
 async function productionInput(database: VerificationSandboxInput["database"]): Promise<VerificationSandboxInput> {
-    return { ...(await postgresPlatformInputFixture(sqlPackage())), database };
+    const input = await postgresPlatformInputFixture(sqlPackage());
+    const verification = {
+        ...input.workload.verification,
+        files: {
+            ...input.workload.verification.files,
+            "tests/implementation.ts": {
+                encoding: "utf8" as const,
+                content:
+                    'import { defineSuite, expect, test } from "@bernouy/cms-integration-verification/sdk/v1"; ' +
+                    'export default defineSuite({ tests: [test("rollback", async ({ query }) => { ' +
+                    'await query("insert into verifier_probe.items(name) values ($1)", ["temporary"]); ' +
+                    'const rows = await query("select count(*)::integer as count from verifier_probe.items"); ' +
+                    "expect(rows).toEqual([{ count: 1 }]); })] });",
+            },
+        },
+    };
+    const identified = await identifyIntegrationVerificationSuiteContent(
+        await buildIntegrationVerificationSuiteContent(verification, "conformance", "implementation"),
+    );
+    const verificationDigest = await computeIntegrationVerificationDigest(verification);
+    return {
+        ...input,
+        database,
+        workload: {
+            ...input.workload,
+            verification,
+            admission: {
+                ...input.workload.admission,
+                candidate: { ...input.workload.admission.candidate, verificationDigest },
+                suites: input.workload.admission.suites.map((suite) =>
+                    suite.suiteId === "implementation" ? { ...suite, contentDigest: identified.digest } : suite,
+                ),
+            },
+            authorSuites: [
+                {
+                    suiteId: "implementation",
+                    source: "author-conformance",
+                    contentDigest: identified.digest,
+                    content: identified.content,
+                },
+            ],
+        },
+    };
 }
 
 function sqlPackage(): IntegrationPackageEnvelopeV1 {

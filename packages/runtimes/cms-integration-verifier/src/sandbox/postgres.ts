@@ -14,6 +14,15 @@ export type PostgresPlatformVerificationEvidence = Readonly<{
     suites: readonly PlatformVerificationEvidenceV1[];
 }>;
 
+export type PostgresAuthorVerificationEvidence = Readonly<{
+    suiteId: string;
+    suiteDigest: string;
+    outcome: "passed" | "failed" | "infrastructure-failure";
+    durationMs: number;
+    evidenceDigest?: string;
+    diagnosticCode?: string;
+}>;
+
 export interface PostgresPlatformVerificationAdapter {
     environmentVersions(signal: AbortSignal): Promise<readonly Readonly<{ name: string; version: string }>[]>;
     verifyPackage(
@@ -29,6 +38,13 @@ export interface PostgresPlatformVerificationAdapter {
         }>,
         signal: AbortSignal,
     ): Promise<PostgresPlatformVerificationEvidence>;
+    verifyAuthorSuites?(
+        input: Readonly<{
+            suites: VerificationSandboxInput["workload"]["authorSuites"];
+            database: VerificationSandboxInput["database"];
+        }>,
+        signal: AbortSignal,
+    ): Promise<readonly PostgresAuthorVerificationEvidence[]>;
     verifyMigrations?(
         input: Readonly<{
             package: VerificationSandboxInput["workload"]["package"];
@@ -72,6 +88,17 @@ export async function runPostgresPlatformVerification(
     if (evidence.size !== execution.suites.length || evidence.size !== plannedPlatform.length) {
         throw new TypeError("PostgreSQL verification adapter did not return every and only planned platform suite");
     }
+    const plannedAuthor = input.workload.authorSuites;
+    if (plannedAuthor.length > 0 && !adapter.verifyAuthorSuites) {
+        throw new TypeError("PostgreSQL verification adapter cannot execute required author suites");
+    }
+    const authorExecution = adapter.verifyAuthorSuites
+        ? await adapter.verifyAuthorSuites({ suites: plannedAuthor, database: input.database }, signal)
+        : [];
+    const authorEvidence = new Map(authorExecution.map((entry) => [entry.suiteId, entry] as const));
+    if (authorEvidence.size !== authorExecution.length || authorEvidence.size !== plannedAuthor.length) {
+        throw new TypeError("PostgreSQL verification adapter did not return every and only planned author suite");
+    }
     const environmentVersions = [...(await adapter.environmentVersions(signal))].toSorted((left, right) =>
         left.name.localeCompare(right.name),
     );
@@ -89,7 +116,26 @@ export async function runPostgresPlatformVerification(
         results: await Promise.all(
             input.workload.admission.suites.map(async (planned) => {
                 if (planned.source !== "platform") {
-                    return unsupportedAuthorSuite(planned.suiteId);
+                    const proof = authorEvidence.get(planned.suiteId);
+                    if (
+                        !proof ||
+                        proof.suiteDigest !== planned.contentDigest ||
+                        ((proof.outcome === "passed" || proof.outcome === "failed") && !proof.evidenceDigest) ||
+                        (proof.outcome === "infrastructure-failure" && !proof.diagnosticCode)
+                    ) {
+                        throw new TypeError(
+                            `PostgreSQL author verification evidence does not match ${planned.suiteId}`,
+                        );
+                    }
+                    return {
+                        suiteId: planned.suiteId,
+                        outcome: proof.outcome,
+                        durationMs: proof.durationMs,
+                        attempts: 1,
+                        cacheHit: false,
+                        evidenceDigests: proof.evidenceDigest ? [proof.evidenceDigest] : [],
+                        diagnostics: authorDiagnostics(proof),
+                    };
                 }
                 const proof = evidence.get(planned.suiteId);
                 if (
@@ -137,24 +183,6 @@ export async function runPostgresPlatformVerification(
     };
 }
 
-function unsupportedAuthorSuite(suiteId: string): VerificationJobResultV1["results"][number] {
-    return {
-        suiteId,
-        outcome: "skipped",
-        durationMs: 0,
-        attempts: 1,
-        cacheHit: false,
-        evidenceDigests: [],
-        diagnostics: [
-            {
-                code: "author-suite-runner-unavailable",
-                message: "The PostgreSQL platform runner does not execute author-provided code",
-                redacted: true,
-            },
-        ],
-    };
-}
-
 function diagnostics(
     evidence: PlatformVerificationEvidenceV1,
 ): VerificationJobResultV1["results"][number]["diagnostics"] {
@@ -175,6 +203,24 @@ function diagnostics(
             message: `${check.checkId} rejected ${finding.path}`,
             redacted: true as const,
         }));
+}
+
+function authorDiagnostics(
+    evidence: PostgresAuthorVerificationEvidence,
+): VerificationJobResultV1["results"][number]["diagnostics"] {
+    if (evidence.outcome === "passed") {
+        return [];
+    }
+    return [
+        {
+            code: evidence.diagnosticCode ?? "author-suite-failed",
+            message:
+                evidence.outcome === "infrastructure-failure"
+                    ? "The isolated author suite runtime did not complete"
+                    : "One or more isolated author verification tests failed",
+            redacted: true,
+        },
+    ];
 }
 
 function resultBindings(input: VerificationSandboxInput, admissionDigest: string): VerificationJobResultV1["bindings"] {

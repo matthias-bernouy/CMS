@@ -32,14 +32,14 @@ describe("PostgreSQL platform verification sandbox program", () => {
                 result.verification.results.find((suite) => suite.suiteId === "platform-postgres-rls-shape")?.outcome,
             ).toBe("not-applicable");
             expect(result.verification.results.find((suite) => suite.suiteId === "implementation")?.outcome).toBe(
-                "skipped",
+                "passed",
             );
         } finally {
             await fixture.cleanup();
         }
     });
 
-    test("executes every exact platform suite and never treats author code as platform evidence", async () => {
+    test("executes every exact platform and author suite without conflating their evidence", async () => {
         const input = await postgresPlatformInputFixture();
         const calls: VerificationSandboxInput["database"][] = [];
         const result = await runPostgresPlatformVerification(
@@ -62,7 +62,7 @@ describe("PostgreSQL platform verification sandbox program", () => {
             POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.length,
         );
         const author = result.verification.results.find((suite) => suite.suiteId === "implementation")!;
-        expect(author.outcome).toBe("skipped");
+        expect(author.outcome).toBe("passed");
         expect(author.platformEvidence).toBeUndefined();
     });
 
@@ -82,6 +82,33 @@ describe("PostgreSQL platform verification sandbox program", () => {
             outcome: "failed",
             findings: [{ code: "probe-failed", path: "package" }],
         });
+    });
+
+    test("fails closed when author execution is absent or substitutes a content digest", async () => {
+        const input = await postgresPlatformInputFixture();
+        const complete = adapter();
+        const { verifyAuthorSuites: _verifyAuthorSuites, ...withoutAuthor } = complete;
+        await expect(
+            runPostgresPlatformVerification(input, withoutAuthor, new AbortController().signal),
+        ).rejects.toThrow("cannot execute required author suites");
+        await expect(
+            runPostgresPlatformVerification(
+                input,
+                {
+                    ...complete,
+                    async verifyAuthorSuites({ suites }) {
+                        return suites.map((suite) => ({
+                            suiteId: suite.suiteId,
+                            suiteDigest: DIGEST_A,
+                            outcome: "passed" as const,
+                            durationMs: 1,
+                            evidenceDigest: suite.contentDigest,
+                        }));
+                    },
+                },
+                new AbortController().signal,
+            ),
+        ).rejects.toThrow("author verification evidence does not match");
     });
 
     test("propagates provisioning failures instead of fabricating a verification result", async () => {
@@ -136,6 +163,15 @@ function adapter(
                     };
                 }),
             };
+        },
+        async verifyAuthorSuites({ suites }) {
+            return suites.map((suite) => ({
+                suiteId: suite.suiteId,
+                suiteDigest: suite.contentDigest,
+                outcome: "passed" as const,
+                durationMs: 1,
+                evidenceDigest: suite.contentDigest,
+            }));
         },
     };
 }

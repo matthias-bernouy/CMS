@@ -9,6 +9,7 @@ import {
     readViewObservation,
 } from "./catalog";
 import { buildPlatformEvidence } from "./checks";
+import { createPostgresAuthorSuiteVerifier } from "./suites/author";
 import { createPostgresMigrationVerifier } from "./migrations";
 
 const POSTGRES_IMAGE = "postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777";
@@ -23,11 +24,13 @@ export function createPostgresPlatformVerificationAdapter(
 ): PostgresPlatformVerificationAdapter {
     const packages = createSqlPackageLoader(config);
     const migrations = createPostgresMigrationVerifier(config);
+    const author = createPostgresAuthorSuiteVerifier({ tempRoot: config.packageTempRoot ?? process.cwd() });
     return Object.freeze({
         async environmentVersions(signal: AbortSignal) {
             signal.throwIfAborted();
             return [
                 { name: "bun", version: Bun.version },
+                { name: "author-suite-runtime", version: "bun-vm-ipc-v1" },
                 { name: "postgres-image", version: POSTGRES_IMAGE },
                 { name: "platform-policy", version: "postgres-platform-v1.2.0" },
             ];
@@ -106,6 +109,12 @@ export function createPostgresPlatformVerificationAdapter(
                 },
                 signal,
             );
+        },
+        async verifyAuthorSuites(
+            input: Parameters<NonNullable<PostgresPlatformVerificationAdapter["verifyAuthorSuites"]>>[0],
+            signal: AbortSignal,
+        ) {
+            return await author.verify(input.suites, input.database.connectionUri, signal);
         },
         async dispose() {
             await Promise.all([packages.dispose(), migrations.dispose()]);
