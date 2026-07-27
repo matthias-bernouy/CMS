@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { createCompatibilityFinding } from "@bernouy/cms-integration-verification";
 import { gateway, jsonResponse, TEST_ACTOR, validOperationalMetrics, validStatus, validVersions } from "./fixtures";
 import {
     admissionReport,
@@ -80,6 +81,23 @@ describe("HTTP repository management gateway DTO validation", () => {
                         {
                             revision: invalidActorRevision,
                             currentReport: invalidActorReference,
+                        },
+                        201,
+                    ),
+                ).reevaluate({
+                    kind: TEST_KIND,
+                    version: TEST_VERSION,
+                    currentReport: rootReference,
+                    currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
+                    reason: "Manual evidence review",
+                }),
+            () =>
+                gateway(
+                    oneResponse(
+                        {
+                            revision,
+                            currentReport: revisionReference,
+                            release: reevaluationRelease("substituted-report"),
                         },
                         201,
                     ),
@@ -179,15 +197,39 @@ describe("HTTP repository management gateway DTO validation", () => {
     });
 
     test("removes private compatibility provenance before returning it to Control", async () => {
-        const response = await gateway(oneResponse(await compatibilityPage())).compatibility({
+        const finding = await createCompatibilityFinding({
+            surface: "schema",
+            path: "private.connector.tables.orders",
+            code: "column-added",
+            baselineDigest: "b".repeat(64),
+            candidateDigest: "a".repeat(64),
+            classification: "additive",
+            message: "A nullable column was added",
+        });
+        const report = {
+            ...admissionReport(),
+            baselines: [{ kind: TEST_KIND, version: "1.1.0", packageDigest: "b".repeat(64) }],
+            findings: [finding],
+            outcome: "compatible",
+            requiredReleaseLevel: "minor",
+            releaseLevel: "minor",
+        } as Record<string, unknown>;
+        delete report.noBaselineReason;
+        const page = await compatibilityPage({ root: report, current: report });
+        const response = await gateway(oneResponse(page)).compatibility({
             kind: TEST_KIND,
             version: TEST_VERSION,
         });
         const body = await response.json();
+        const serialized = JSON.stringify(body);
 
         expect(response.status).toBe(200);
         expect(body.current.reportId).toBe("report-admission");
-        expect(JSON.stringify(body)).not.toContain('"actor"');
+        expect(body.current.findings[0].findingId).toBe(finding.findingId);
+        expect(serialized).not.toContain('"actor"');
+        expect(serialized).not.toContain('"path"');
+        expect(serialized).not.toContain('"baselineDigest"');
+        expect(serialized).not.toContain('"candidateDigest"');
     });
 
     test("never forwards upstream response headers", async () => {
@@ -215,6 +257,15 @@ function promotionInput() {
         version: TEST_VERSION,
         currentReportRevisionId: "report-admission",
         confirmation: { version: TEST_VERSION, reportRevisionId: "report-admission" },
+    };
+}
+
+function reevaluationRelease(compatibilityReportRevisionId: string) {
+    return {
+        compatibilityReportRevisionId,
+        decision: { revisionId: "decision-revision", digest: "e".repeat(64) },
+        admissible: true,
+        eligibilityChanged: false,
     };
 }
 

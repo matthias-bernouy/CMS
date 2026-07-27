@@ -60,7 +60,7 @@ export async function validateReevaluationResponse(
     assertEqual(currentReport.reportDigest, revision.reportDigest);
     validateExpectedProvenance(revision.report.provenance, expected);
     if (body.release !== undefined) {
-        validateRelease(body.release);
+        validateRelease(body.release, revision.report.reportId);
     }
     return {
         status: 201,
@@ -75,14 +75,14 @@ export async function validateReevaluationResponse(
     };
 }
 
-function validateRelease(value: unknown): void {
+function validateRelease(value: unknown, expectedReportId: string): void {
     const release = exactObject(value, [
         "compatibilityReportRevisionId",
         "decision",
         "admissible",
         "eligibilityChanged",
     ]);
-    canonicalText(release.compatibilityReportRevisionId, 512);
+    assertEqual(canonicalText(release.compatibilityReportRevisionId, 512), expectedReportId);
     const decision = exactObject(release.decision, ["revisionId", "digest"]);
     canonicalText(decision.revisionId, 512);
     digest(decision.digest);
