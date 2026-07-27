@@ -17740,7 +17740,6 @@ circle.endpoint-timeline__errors {
     const catalogEditable = isThemeCatalogEditable(source2);
     if (input.matches("[data-category-label-input]") && category && source2 && catalogEditable) {
       category.label = input.value;
-      query3(context.root, "[data-category-title]").textContent = category.label;
       query3(context.root, "[data-category-section]").setAttribute("heading", category.label);
       dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
       return;
@@ -18239,7 +18238,7 @@ circle.endpoint-timeline__errors {
     value: "CSS values"
   };
   function renderTokenExplorer(root, state) {
-    const categories = isIntegrationSource(state.source) ? state.source.categories : [state.category];
+    const categories = [state.category];
     const allTokens = categories.flatMap((category) => category.tokens);
     const availableFilters = new Set(allTokens.map((token) => token.type));
     const activeFilter = state.filter === "all" || availableFilters.has(state.filter) ? state.filter : "all";
@@ -18253,22 +18252,12 @@ circle.endpoint-timeline__errors {
       category,
       tokens: category.tokens.filter((token) => (activeFilter === "all" || token.type === activeFilter) && matchesSearch(state.source, category, token, state.search))
     })).filter((entry) => entry.tokens.length > 0);
-    const groups = visible.map(({ category, tokens }) => tokenGroup(category, tokens, state, isIntegrationSource(state.source)));
+    const groups = visible.map(({ category, tokens }) => tokenGroup(category, tokens, state));
     root.querySelector("[data-groups]").replaceChildren(...groups.length ? groups : [emptyResults()]);
   }
-  function tokenGroup(category, tokens, state, showHeading) {
+  function tokenGroup(category, tokens, state) {
     const group = document.createElement("section");
     group.className = "group";
-    if (showHeading) {
-      const heading4 = document.createElement("div");
-      heading4.className = "group-heading";
-      const title = document.createElement("h4");
-      title.textContent = category.label;
-      const description = document.createElement("p");
-      description.textContent = category.description;
-      heading4.append(title, description);
-      group.append(heading4);
-    }
     const list = document.createElement("div");
     list.className = "element-list";
     list.append(...tokens.map((token) => renderToken(token, state.settings, state.theme, state.mode, state.catalogEditable)));
@@ -18302,17 +18291,16 @@ circle.endpoint-timeline__errors {
     if (!source2 || !category || !theme) {
       return state.mode;
     }
-    const integration = isIntegrationSource(source2);
     const catalogEditable = isThemeCatalogEditable(source2);
     const mode = source2.supportsModes ? state.mode : "light";
-    renderHeader(root, state, source2, category.label, theme, integration);
+    renderHeader(root, state, source2, theme);
     renderOwnership(root, source2);
     renderCategoryFields(root, category, catalogEditable);
     renderActions(root, state, source2, theme, catalogEditable);
     renderModes(root, source2, mode);
     const section = query4(root, "[data-category-section]");
-    section.setAttribute("heading", integration ? source2.label : category.label);
-    section.setAttribute("description", integration ? integrationDescription(source2) : category.description);
+    section.setAttribute("heading", category.label);
+    section.setAttribute("description", category.description);
     renderTokenExplorer(root, {
       settings: state.settings,
       source: source2,
@@ -18332,8 +18320,8 @@ circle.endpoint-timeline__errors {
       element.toggleAttribute("data-error", error);
     }
   }
-  function renderHeader(root, state, source2, categoryLabel, theme, integration) {
-    query4(root, "[data-category-title]").textContent = integration ? source2.label : categoryLabel;
+  function renderHeader(root, state, source2, theme) {
+    query4(root, "[data-category-title]").textContent = source2.label;
     query4(root, "[data-theme-name-input]").value = theme.name;
     query4(root, "[data-site-name]").textContent = state.siteName || "Current site";
     const select = query4(root, "[data-theme-switch]");
@@ -18366,8 +18354,9 @@ circle.endpoint-timeline__errors {
     const label2 = query4(root, "[data-source-owner-label]");
     const note = query4(root, "[data-source-owner-note]");
     kind.textContent = "Integration";
-    label2.textContent = `${source2.label} · ${integrationId}`;
-    note.textContent = "The integration defines this catalogue; this theme can override its values.";
+    label2.textContent = source2.label;
+    label2.title = integrationId;
+    note.textContent = "Structure managed by the integration; token values remain editable.";
   }
   function renderCategoryFields(root, category, editable) {
     query4(root, "[data-category-fields]").hidden = !editable;
@@ -18380,10 +18369,6 @@ circle.endpoint-timeline__errors {
     for (const button of Array.from(modeSwitch.querySelectorAll("[data-mode]"))) {
       button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
     }
-  }
-  function integrationDescription(source2) {
-    const tokenCount = source2.categories.reduce((sum, category) => sum + category.tokens.length, 0);
-    return `${source2.categories.length} categories · ${tokenCount} tokens · filter or search without changing ownership.`;
   }
   function themeOption(theme) {
     const option2 = document.createElement("option");
@@ -18743,58 +18728,202 @@ circle.endpoint-timeline__errors {
     }
   }
 
+  // src/components/admin/Theme/editor/styles/category.css
+  var category_default = `.category-fields {
+    margin: 0 0 14px;
+    border-bottom: 1px solid var(--border-light, var(--border-default));
+}
+
+.category-fields[hidden] {
+    display: none;
+}
+
+.category-fields > summary {
+    width: max-content;
+    padding: 7px 0 9px;
+    color: var(--theme-text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.category-fields[open] > summary {
+    color: var(--text-main);
+}
+
+.category-fields-grid {
+    display: grid;
+    grid-template-columns: minmax(150px, .65fr) minmax(230px, 1.35fr) auto;
+    gap: 10px;
+    padding: 2px 0 13px;
+}
+
+.category-fields label {
+    display: grid;
+    gap: 4px;
+}
+
+.category-fields label > span {
+    color: var(--text-label, var(--theme-text-muted));
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.category-fields input {
+    width: 100%;
+    min-width: 0;
+    min-height: 32px;
+    box-sizing: border-box;
+    padding: 0 8px;
+    border: 1px solid var(--border-light, var(--border-default));
+    border-radius: 5px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 12px;
+}
+
+.category-fields input:focus {
+    border-color: var(--primary-base);
+    outline: 0;
+}
+
+.delete-category,
+.delete-token {
+    min-height: 30px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--theme-text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.delete-category:hover,
+.delete-token:hover {
+    border-color: color-mix(in srgb, var(--danger-base, #c4473d) 24%, transparent);
+    background: var(--danger-muted, color-mix(in srgb, var(--danger-base, #c4473d) 8%, transparent));
+    color: var(--danger-contrasted, var(--danger-base, #c4473d));
+}
+
+.delete-category {
+    align-self: end;
+}
+
+.delete-category:disabled {
+    color: var(--theme-text-muted);
+    cursor: not-allowed;
+    opacity: .4;
+}
+
+.empty-category {
+    padding: 24px 12px;
+    border-block: 1px solid var(--border-light, var(--border-default));
+    color: var(--theme-text-muted);
+    font-size: 11px;
+    text-align: center;
+}
+
+[data-add-theme],
+[data-add-theme-category],
+[data-add-element] {
+    --_accent-base: var(--text-body, var(--theme-text-muted));
+    --_accent-muted: var(--bg-hover, var(--bg-base));
+}
+
+@media (max-width: 720px) {
+    .category-fields-grid {
+        grid-template-columns: 1fr;
+    }
+}
+`;
+
   // src/components/admin/Theme/editor/styles/editor.css
-  var editor_default = `.theme-overview {
+  var editor_default = `.theme-actions {
     display: flex;
-    align-items: end;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.theme-overview-panel {
+    display: block;
+    padding: 2px 2px 13px;
+    border-bottom: 1px solid var(--border-light, var(--border-default));
+}
+
+.theme-overview {
+    display: flex;
+    align-items: center;
     justify-content: space-between;
-    gap: 18px;
+    gap: 20px;
 }
 
 .theme-name-field {
     display: grid;
-    width: min(360px, 100%);
-    gap: 5px;
-}
-
-.theme-name-field > span,
-.category-fields label > span {
-    color: var(--text-muted);
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.theme-name,
-.category-fields input {
-    width: 100%;
+    grid-template-columns: auto minmax(180px, 320px);
+    align-items: center;
+    gap: 10px;
     min-width: 0;
-    min-height: 34px;
-    box-sizing: border-box;
-    padding: 0 9px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    background: var(--bg-base);
-    color: var(--text-main);
-    font: inherit;
+}
+
+.theme-name-field > span {
+    color: var(--text-label, var(--theme-text-muted));
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .04em;
+    text-transform: uppercase;
 }
 
 .theme-name {
+    width: 100%;
+    min-width: 0;
+    min-height: 32px;
+    box-sizing: border-box;
+    padding: 0 8px;
+    border: 1px solid var(--border-light, var(--border-default));
+    border-radius: 5px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 12px;
+}
+
+.theme-name {
+    padding-inline: 2px;
+    border-color: transparent;
+    border-bottom-color: var(--border-default);
+    border-radius: 0;
+    background: transparent;
+    font-size: 14px;
     font-weight: 700;
+}
+
+.theme-name:hover,
+.theme-name:focus {
+    border-color: var(--primary-base);
+    outline: 0;
 }
 
 .theme-context {
     display: flex;
     align-items: center;
-    gap: 9px;
-    color: var(--text-muted);
-    font-size: 12px;
+    gap: 8px;
+    color: var(--theme-text-muted);
+    font-size: 11px;
+    white-space: nowrap;
 }
 
 .theme-message {
     min-height: 0;
-    margin: 8px 0 0;
+    margin: 7px 0 0;
     color: var(--success-base, #21865f);
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .theme-message:empty {
@@ -18803,58 +18932,6 @@ circle.endpoint-timeline__errors {
 
 .theme-message[data-error] {
     color: var(--danger-base, #c4473d);
-}
-
-.category-fields {
-    display: grid;
-    grid-template-columns: minmax(160px, .65fr) minmax(240px, 1.35fr) auto;
-    gap: 10px;
-    margin-bottom: 14px;
-    padding: 12px;
-    border: 1px dashed var(--border-default);
-    border-radius: 7px;
-    background: var(--bg-base);
-}
-
-.category-fields[hidden] {
-    display: none;
-}
-
-.category-fields label {
-    display: grid;
-    gap: 5px;
-}
-
-.delete-category,
-.delete-token {
-    min-height: 34px;
-    padding: 0 10px;
-    border: 1px solid var(--danger-base, #c4473d);
-    border-radius: 6px;
-    background: transparent;
-    color: var(--danger-base, #c4473d);
-    font: inherit;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.delete-category {
-    align-self: end;
-}
-
-.delete-category:disabled {
-    opacity: .45;
-    cursor: not-allowed;
-}
-
-.empty-category {
-    padding: 28px 18px;
-    border: 1px dashed var(--border-default);
-    border-radius: 7px;
-    color: var(--text-muted);
-    font-size: 12px;
-    text-align: center;
 }
 
 .visually-hidden {
@@ -18868,13 +18945,27 @@ circle.endpoint-timeline__errors {
 }
 
 @media (max-width: 720px) {
-    .theme-overview,
-    .theme-context {
+    .theme-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .theme-actions [data-theme-switch] {
+        width: 100%;
+        flex-basis: 100%;
+    }
+
+    .theme-overview {
         align-items: stretch;
         flex-direction: column;
     }
 
-    .category-fields {
+    .theme-context {
+        flex-wrap: wrap;
+    }
+
+    .theme-name-field {
         grid-template-columns: 1fr;
     }
 }
@@ -18883,12 +18974,18 @@ circle.endpoint-timeline__errors {
   // src/components/admin/Theme/editor/styles/explorer.css
   var explorer_default = `:host {
     display: block;
+    --theme-text-muted: color-mix(in srgb, var(--text-main) 62%, var(--bg-surface));
 }
 
 cms-shell-detail {
-    --w-detail-main-width: min(900px, 100%);
+    --w-detail-main-width: min(980px, 100%);
     --w-detail-aside-width: 0px;
     --w-detail-gap: 0px;
+}
+
+[data-category-section] {
+    --detail-section-body-start: 10px;
+    --detail-section-padding: 14px;
 }
 
 [data-add-theme-category][hidden],
@@ -18896,13 +18993,24 @@ cms-shell-detail {
     display: none;
 }
 
+.editor-context-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.editor-context-bar:not(:has(> :not([hidden]))) {
+    display: none;
+}
+
 .mode-switch {
     display: inline-flex;
+    flex: 0 0 auto;
     gap: 2px;
-    margin-bottom: 14px;
-    padding: 3px;
-    border: 1px solid var(--border-default);
-    border-radius: 7px;
+    padding: 2px;
+    border-radius: 6px;
     background: var(--bg-base);
 }
 
@@ -18912,22 +19020,33 @@ cms-shell-detail {
 
 .mode-switch button,
 .token-filters button {
-    min-height: 30px;
-    padding: 0 10px;
+    min-height: 28px;
+    padding: 0 9px;
     border: 0;
-    border-radius: 5px;
+    border-radius: 4px;
     background: transparent;
-    color: var(--text-muted);
+    color: var(--theme-text-muted);
     cursor: pointer;
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
+}
+
+.mode-switch button:hover,
+.token-filters button:hover {
+    color: var(--text-main);
+}
+
+.mode-switch button:focus-visible,
+.token-filters button:focus-visible {
+    outline: 2px solid var(--primary-base);
+    outline-offset: 1px;
 }
 
 .mode-switch button[aria-pressed="true"],
 .token-filters button[aria-pressed="true"] {
     background: var(--bg-surface);
     color: var(--text-main);
-    box-shadow: 0 1px 2px rgb(15 31 26 / 12%);
+    box-shadow: 0 1px 2px rgb(15 31 26 / 10%);
     font-weight: 700;
 }
 
@@ -18935,47 +19054,68 @@ cms-shell-detail {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light, var(--border-default));
 }
 
 .token-search {
-    min-width: min(280px, 100%);
+    min-width: min(320px, 100%);
 }
 
 .token-search input,
 .reference-search input {
     width: 100%;
-    min-height: 34px;
+    min-height: 32px;
     box-sizing: border-box;
     padding: 0 10px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    background: var(--bg-base);
+    border: 1px solid var(--border-light, var(--border-default));
+    border-radius: 5px;
+    background: var(--bg-surface);
     color: var(--text-main);
     font: inherit;
     font-size: 12px;
+}
+
+.token-search input:hover,
+.reference-search input:hover {
+    border-color: var(--border-default);
+}
+
+.token-search input:focus,
+.reference-search input:focus {
+    border-color: var(--primary-base);
+    outline: 0;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-base) 12%, transparent);
 }
 
 .token-filters {
     display: flex;
     flex-wrap: wrap;
     gap: 2px;
-    padding: 3px;
-    border: 1px solid var(--border-default);
-    border-radius: 7px;
+    padding: 2px;
+    border-radius: 6px;
     background: var(--bg-base);
 }
 
 .groups,
 .group {
     display: grid;
-    gap: 16px;
+}
+
+.groups {
+    gap: 20px;
+}
+
+.group {
+    gap: 8px;
 }
 
 .group-heading {
     display: grid;
-    gap: 3px;
+    gap: 2px;
+    padding-inline: 2px;
 }
 
 .group h4,
@@ -18985,68 +19125,101 @@ cms-shell-detail {
 
 .group h4 {
     color: var(--text-main);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 750;
 }
 
 .group-heading p {
-    color: var(--text-muted);
-    font-size: 12px;
+    color: var(--theme-text-muted);
+    font-size: 11px;
 }
 
 @media (max-width: 760px) {
+    .editor-context-bar,
     .token-tools {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .mode-switch,
+    .token-filters {
+        width: fit-content;
     }
 }
 `;
 
   // src/components/admin/Theme/editor/styles/integration.css
   var integration_default = `.source-provenance {
-    display: grid;
-    grid-template-columns: auto max-content 1fr;
-    gap: 8px;
+    display: flex;
+    min-width: 0;
     align-items: center;
-    margin-bottom: 14px;
-    color: var(--text-muted);
-    font-size: 11px;
+    gap: 7px;
+    padding: 5px 8px;
+    border-left: 2px solid var(--primary-base);
+    background: var(--bg-base);
+    color: var(--theme-text-muted);
+    font-size: 10px;
+}
+
+[data-source-provenance][hidden] {
+    display: none;
 }
 
 .source-provenance strong {
+    overflow: hidden;
     color: var(--text-main);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.source-provenance span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .token-controls {
     display: grid;
-    gap: 5px;
+    gap: 4px;
     min-width: 0;
 }
 
 .token-value-line {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 7px;
-    align-items: start;
+    gap: 6px;
+    align-items: center;
 }
 
 .reference-button {
-    min-height: 34px;
-    padding: 0 9px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    background: var(--bg-surface);
+    min-height: 32px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: transparent;
     color: var(--primary-base);
     cursor: pointer;
     font: inherit;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     white-space: nowrap;
 }
 
+.reference-button:hover {
+    border-color: color-mix(in srgb, var(--primary-base) 20%, transparent);
+    background: color-mix(in srgb, var(--primary-base) 6%, transparent);
+}
+
+.reference-button:focus-visible,
+.token-default button:focus-visible {
+    outline: 2px solid var(--primary-base);
+    outline-offset: 1px;
+}
+
 .reference-status {
     margin: 0;
-    color: var(--text-muted);
+    color: var(--theme-text-muted);
     font-size: 10px;
 }
 
@@ -19056,11 +19229,11 @@ cms-shell-detail {
 
 .token-default {
     display: flex;
-    gap: 8px;
+    min-width: 0;
     align-items: center;
     justify-content: space-between;
-    min-width: 0;
-    color: var(--text-muted);
+    gap: 8px;
+    color: var(--theme-text-muted);
     font-size: 10px;
 }
 
@@ -19077,22 +19250,29 @@ cms-shell-detail {
     color: var(--primary-base);
     cursor: pointer;
     font: inherit;
+    font-size: 10px;
     font-weight: 700;
 }
 
 .token-default button:disabled {
-    color: var(--text-muted);
+    color: var(--theme-text-muted);
     cursor: default;
-    opacity: .55;
+    opacity: .45;
 }
 
 @media (max-width: 600px) {
     .source-provenance {
-        grid-template-columns: 1fr;
+        align-items: flex-start;
+        flex-direction: column;
     }
 
     .source-provenance p9r-tag {
         width: max-content;
+    }
+
+    .source-provenance strong,
+    .source-provenance span {
+        white-space: normal;
     }
 }
 `;
@@ -19105,8 +19285,8 @@ cms-shell-detail {
     display: grid;
     place-items: center;
     padding: 20px;
-    background: rgb(15 31 26 / 38%);
-    backdrop-filter: blur(2px);
+    background: rgb(15 31 26 / 34%);
+    backdrop-filter: blur(3px);
 }
 
 .reference-picker-backdrop[hidden] {
@@ -19115,13 +19295,13 @@ cms-shell-detail {
 
 .reference-picker {
     display: grid;
-    width: min(620px, 100%);
-    max-height: min(720px, calc(100vh - 40px));
+    width: min(600px, 100%);
+    max-height: min(700px, calc(100vh - 40px));
     overflow: hidden;
-    border: 1px solid var(--border-default);
-    border-radius: 10px;
+    border: 1px solid var(--border-light, var(--border-default));
+    border-radius: 12px;
     background: var(--bg-surface);
-    box-shadow: 0 24px 60px rgb(15 31 26 / 26%);
+    box-shadow: 0 24px 64px rgb(15 31 26 / 22%);
 }
 
 .reference-picker > header {
@@ -19129,7 +19309,7 @@ cms-shell-detail {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 17px 18px 12px;
+    padding: 15px 16px 10px;
 }
 
 .reference-picker h4,
@@ -19139,47 +19319,59 @@ cms-shell-detail {
 }
 
 .reference-picker h4 {
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .eyebrow {
-    color: var(--text-muted);
-    font-size: 10px;
+    color: var(--theme-text-muted);
+    font-size: 9px;
     font-weight: 750;
-    letter-spacing: .07em;
+    letter-spacing: .08em;
     text-transform: uppercase;
 }
 
 .reference-close {
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    border: 1px solid transparent;
+    border-radius: 5px;
     background: transparent;
-    color: var(--text-main);
+    color: var(--theme-text-muted);
     cursor: pointer;
-    font-size: 20px;
+    font-size: 18px;
+}
+
+.reference-close:hover {
+    background: var(--bg-base);
+    color: var(--text-main);
+}
+
+.reference-close:focus-visible,
+.reference-option:focus-visible {
+    outline: 2px solid var(--primary-base);
+    outline-offset: 1px;
 }
 
 .reference-search {
-    padding: 0 18px 12px;
+    padding: 0 16px 12px;
 }
 
 .reference-results {
     display: grid;
-    gap: 15px;
+    gap: 14px;
     overflow: auto;
-    padding: 0 18px 18px;
+    padding: 0 16px 16px;
 }
 
 .reference-group {
     display: grid;
-    gap: 5px;
 }
 
 .reference-group h5 {
-    padding: 5px 2px;
-    font-size: 11px;
+    padding: 7px 2px 5px;
+    border-bottom: 1px solid var(--border-light, var(--border-default));
+    font-size: 10px;
+    letter-spacing: .03em;
     text-transform: uppercase;
 }
 
@@ -19189,10 +19381,10 @@ cms-shell-detail {
     gap: 12px;
     align-items: center;
     width: 100%;
-    padding: 9px 10px;
-    border: 1px solid var(--border-default);
-    border-radius: 7px;
-    background: var(--bg-surface);
+    padding: 9px 5px;
+    border: 0;
+    border-bottom: 1px solid var(--border-light, var(--border-default));
+    background: transparent;
     color: var(--text-main);
     cursor: pointer;
     text-align: left;
@@ -19200,13 +19392,12 @@ cms-shell-detail {
 
 .reference-option:hover,
 .reference-option[aria-pressed="true"] {
-    border-color: var(--primary-base);
-    background: color-mix(in srgb, var(--primary-base) 7%, var(--bg-surface));
+    background: color-mix(in srgb, var(--primary-base) 6%, var(--bg-surface));
 }
 
 .reference-option:disabled {
     cursor: not-allowed;
-    opacity: .55;
+    opacity: .5;
 }
 
 .reference-option-identity {
@@ -19218,7 +19409,7 @@ cms-shell-detail {
 .reference-option code,
 .reference-option-value {
     overflow: hidden;
-    color: var(--text-muted);
+    color: var(--theme-text-muted);
     font-size: 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -19231,8 +19422,8 @@ cms-shell-detail {
 .reference-empty {
     margin: 0;
     padding: 24px;
-    color: var(--text-muted);
-    font-size: 12px;
+    color: var(--theme-text-muted);
+    font-size: 11px;
     text-align: center;
 }
 
@@ -19249,37 +19440,37 @@ cms-shell-detail {
 
   // src/components/admin/Theme/editor/styles/tokens.css
   var tokens_default = `.element-list {
-    overflow: hidden;
-    border: 1px solid var(--border-default);
-    border-radius: 7px;
+    border-block: 1px solid var(--border-light, var(--border-default));
 }
 
 .element-row {
     display: grid;
-    grid-template-columns: minmax(190px, .8fr) minmax(330px, 1.2fr);
+    grid-template-columns: minmax(190px, .78fr) minmax(300px, 1.22fr);
     gap: 18px;
     align-items: center;
-    min-height: 62px;
-    padding: 11px 13px;
-    border-top: 1px solid var(--border-default);
-}
-
-.element-row[data-catalog-editable] {
-    grid-template-columns: minmax(190px, .8fr) minmax(330px, 1.2fr) auto;
-}
-
-.delete-token {
-    align-self: center;
+    min-height: 56px;
+    padding: 9px 4px;
+    border-top: 1px solid var(--border-light, var(--border-default));
+    transition: background-color 120ms ease;
 }
 
 .element-row:first-child {
     border-top: 0;
 }
 
+.element-row:hover,
+.element-row:focus-within {
+    background: color-mix(in srgb, var(--bg-base) 70%, transparent);
+}
+
+.element-row[data-catalog-editable] {
+    grid-template-columns: minmax(190px, .78fr) minmax(300px, 1.22fr) auto;
+}
+
 .element-label {
     display: grid;
     min-width: 0;
-    gap: 3px;
+    gap: 2px;
 }
 
 .token-label-input,
@@ -19295,35 +19486,42 @@ cms-shell-detail {
 .token-description-input {
     width: 100%;
     padding: 0;
-    color: var(--text-muted);
-    font-size: 11px;
+    color: var(--theme-text-muted);
+    font-size: 10px;
 }
 
 .token-label-input {
     width: 100%;
     padding: 0;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
 }
 
 .token-type-select {
     width: max-content;
     padding: 0;
-    color: var(--text-muted);
-    font-size: 11px;
+    color: var(--theme-text-muted);
+    font-size: 10px;
+}
+
+.token-label-input:focus,
+.token-description-input:focus,
+.token-type-select:focus {
+    outline: 1px solid var(--primary-base);
+    outline-offset: 2px;
 }
 
 .token-label-text {
     color: var(--text-main);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
 }
 
 .element-label span,
 .element-label code {
     overflow: hidden;
-    color: var(--text-muted);
-    font-size: 11px;
+    color: var(--theme-text-muted);
+    font-size: 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -19331,26 +19529,23 @@ cms-shell-detail {
 .element-label code {
     width: max-content;
     max-width: 100%;
-    padding: 1px 4px;
-    border-radius: 3px;
-    background: var(--bg-base);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .color-control {
     display: flex;
-    align-items: center;
-    gap: 7px;
     min-width: 0;
+    align-items: center;
+    gap: 6px;
 }
 
 .color-control input[type="color"] {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     flex: 0 0 auto;
     padding: 0;
     border: 1px solid var(--border-default);
-    border-radius: 6px;
+    border-radius: 5px;
     background: transparent;
     cursor: pointer;
 }
@@ -19358,15 +19553,25 @@ cms-shell-detail {
 .value-control {
     width: 100%;
     min-width: 0;
-    min-height: 34px;
+    min-height: 32px;
     box-sizing: border-box;
     padding: 0 8px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    background: var(--bg-base);
+    border: 1px solid var(--border-light, var(--border-default));
+    border-radius: 5px;
+    background: var(--bg-surface);
     color: var(--text-main);
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
+}
+
+.value-control:hover {
+    border-color: var(--border-default);
+}
+
+.value-control:focus {
+    border-color: var(--primary-base);
+    outline: 0;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-base) 12%, transparent);
 }
 
 .font-family-control,
@@ -19374,34 +19579,54 @@ cms-shell-detail {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+.delete-token {
+    align-self: center;
+    opacity: .42;
+}
+
+.element-row:hover .delete-token,
+.element-row:focus-within .delete-token,
+.delete-token:focus-visible {
+    opacity: 1;
+}
+
+.delete-token:focus-visible {
+    outline: 2px solid var(--primary-base);
+    outline-offset: 1px;
+}
+
 @media (max-width: 760px) {
     .element-row,
     .element-row[data-catalog-editable] {
         grid-template-columns: 1fr;
-        gap: 9px;
+        gap: 8px;
+        padding-block: 12px;
     }
 
     .delete-token {
         justify-self: start;
+        opacity: 1;
     }
 }
 `;
 
   // src/components/admin/Theme/editor/styles/index.ts
-  var styles_default = [editor_default, explorer_default, tokens_default, integration_default, reference_default].join(`
+  var styles_default = [editor_default, category_default, explorer_default, tokens_default, integration_default, reference_default].join(`
 `);
 
   // src/components/admin/Theme/editor/ThemeEditor.html
   var ThemeEditor_default = `<cms-shell-detail>
     <span slot="title" data-category-title>Theme</span>
-    <p9r-select slot="actions" data-theme-switch aria-label="Select theme"></p9r-select>
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-theme>+ Theme</p9r-button>
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-theme-category hidden>+ Category</p9r-button>
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-element hidden>+ Token</p9r-button>
-    <p9r-button slot="actions" type="button" color="primary" data-save-theme>Save</p9r-button>
-    <p9r-button slot="actions" type="button" color="primary" data-activate-theme>Activate</p9r-button>
+    <div slot="actions" class="theme-actions">
+        <p9r-select data-theme-switch aria-label="Select theme"></p9r-select>
+        <p9r-button type="button" variant="ghost" data-add-theme>+ Theme</p9r-button>
+        <p9r-button type="button" variant="ghost" data-add-theme-category hidden>+ Category</p9r-button>
+        <p9r-button type="button" variant="ghost" data-add-element hidden>+ Token</p9r-button>
+        <p9r-button type="button" color="primary" data-save-theme>Save</p9r-button>
+        <p9r-button type="button" color="primary" variant="outlined" data-activate-theme>Activate</p9r-button>
+    </div>
 
-    <cms-detail-section slot="main" density="compact" data-theme-overview>
+    <section slot="main" class="theme-overview-panel" data-theme-overview>
         <div class="theme-overview">
             <label class="theme-name-field">
                 <span>Theme name</span>
@@ -19413,17 +19638,19 @@ cms-shell-detail {
             </div>
         </div>
         <p class="theme-message" data-message aria-live="polite"></p>
-    </cms-detail-section>
+    </section>
 
-    <cms-detail-section slot="main" data-category-section>
-        <div class="source-provenance" data-source-provenance>
-            <p9r-tag data-source-owner-kind>Integration</p9r-tag>
-            <strong data-source-owner-label></strong>
-            <span data-source-owner-note></span>
-        </div>
-        <div class="mode-switch" data-mode-switch hidden>
-            <button type="button" data-mode="light">Light mode</button>
-            <button type="button" data-mode="dark">Dark mode</button>
+    <cms-detail-section slot="main" density="compact" data-category-section>
+        <div class="editor-context-bar">
+            <div class="source-provenance" data-source-provenance>
+                <p9r-tag data-source-owner-kind>Integration</p9r-tag>
+                <strong data-source-owner-label></strong>
+                <span data-source-owner-note></span>
+            </div>
+            <div class="mode-switch" data-mode-switch hidden>
+                <button type="button" data-mode="light">Light mode</button>
+                <button type="button" data-mode="dark">Dark mode</button>
+            </div>
         </div>
         <div class="token-tools">
             <label class="token-search">
@@ -19432,17 +19659,20 @@ cms-shell-detail {
             </label>
             <div class="token-filters" data-token-filters aria-label="Filter token types"></div>
         </div>
-        <div class="category-fields" data-category-fields hidden>
-            <label>
-                <span>Category name</span>
-                <input type="text" data-category-label-input>
-            </label>
-            <label>
-                <span>Description</span>
-                <input type="text" data-category-description-input>
-            </label>
-            <button type="button" class="delete-category" data-delete-category>Delete category</button>
-        </div>
+        <details class="category-fields" data-category-fields hidden>
+            <summary>Category settings</summary>
+            <div class="category-fields-grid">
+                <label>
+                    <span>Category name</span>
+                    <input type="text" data-category-label-input>
+                </label>
+                <label>
+                    <span>Description</span>
+                    <input type="text" data-category-description-input>
+                </label>
+                <button type="button" class="delete-category" data-delete-category>Delete category</button>
+            </div>
+        </details>
         <div class="groups" data-groups></div>
     </cms-detail-section>
 
@@ -19637,8 +19867,16 @@ w13c-lateral-menu-item.category-item {
     --item-font-size: .8125rem;
 }
 
-.theme-group[data-theme-group="integrations"] {
-    margin-top: 6px;
+w13c-lateral-menu-item.integration-item {
+    margin-top: 8px;
+}
+
+w13c-lateral-menu-item.integration-item::part(label) {
+    font-weight: 650;
+}
+
+w13c-lateral-menu-item.integration-category {
+    margin-left: 22px;
 }
 `;
 
@@ -19693,38 +19931,35 @@ w13c-lateral-menu-item.category-item {
       return;
     }
     menu.querySelectorAll("[data-generated]").forEach((item) => item.remove());
-    renderSources(menu, sources.filter((source2) => !isIntegrationSource(source2)), selection);
-    renderSourceGroup(menu, "integrations", "Integrations", sources.filter(isIntegrationSource), selection);
-  }
-  function renderSourceGroup(menu, groupId, groupLabel, sources, selection) {
-    if (sources.length === 0) {
-      return;
-    }
-    const heading4 = document.createElement("span");
-    heading4.className = "menu-section theme-group";
-    heading4.dataset.generated = "true";
-    heading4.dataset.themeGroup = groupId;
-    heading4.textContent = groupLabel;
-    menu.append(heading4);
-    renderSources(menu, sources, selection);
+    renderSources(menu, [...sources.filter((source2) => !isIntegrationSource(source2)), ...sources.filter(isIntegrationSource)], selection);
   }
   function renderSources(menu, sources, selection) {
     for (const source2 of sources) {
+      const integration = isIntegrationSource(source2);
+      const hasChildren = integration ? source2.categories.length > 0 : source2.categories.length > 1;
+      const expanded = hasChildren && source2.id === selection.sourceId;
       const sourceItem = document.createElement("w13c-lateral-menu-item");
       sourceItem.dataset.generated = "true";
       sourceItem.dataset.source = source2.id;
+      sourceItem.setAttribute("aria-level", "1");
+      sourceItem.classList.toggle("integration-item", integration);
       sourceItem.toggleAttribute("active", source2.id === selection.sourceId);
+      if (hasChildren) {
+        sourceItem.setAttribute("aria-expanded", String(expanded));
+      }
       sourceItem.append(createSourceIcon(source2.id), document.createTextNode(sourceNavigationLabel(source2)));
       menu.append(sourceItem);
-      if (source2.id !== selection.sourceId || isIntegrationSource(source2) || source2.categories.length < 2) {
+      if (!expanded) {
         continue;
       }
       for (const category of source2.categories) {
         const categoryItem = document.createElement("w13c-lateral-menu-item");
         categoryItem.classList.add("category-item");
+        categoryItem.classList.toggle("integration-category", integration);
         categoryItem.dataset.generated = "true";
         categoryItem.dataset.source = source2.id;
         categoryItem.dataset.category = category.id;
+        categoryItem.setAttribute("aria-level", "2");
         categoryItem.toggleAttribute("active", category.id === selection.categoryId);
         categoryItem.append(createCategoryIcon(), document.createTextNode(category.label));
         menu.append(categoryItem);

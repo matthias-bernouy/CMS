@@ -1,13 +1,15 @@
 <cms-shell-detail>
     <span slot="title" data-category-title>Theme</span>
-    <p9r-select slot="actions" data-theme-switch aria-label="Select theme"></p9r-select>
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-theme>+ Theme</p9r-button>
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-theme-category hidden>+ Category</p9r-button>
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-element hidden>+ Token</p9r-button>
-    <p9r-button slot="actions" type="button" color="primary" data-save-theme>Save</p9r-button>
-    <p9r-button slot="actions" type="button" color="primary" data-activate-theme>Activate</p9r-button>
+    <div slot="actions" class="theme-actions">
+        <p9r-select data-theme-switch aria-label="Select theme"></p9r-select>
+        <p9r-button type="button" variant="ghost" data-add-theme>+ Theme</p9r-button>
+        <p9r-button type="button" variant="ghost" data-add-theme-category hidden>+ Category</p9r-button>
+        <p9r-button type="button" variant="ghost" data-add-element hidden>+ Token</p9r-button>
+        <p9r-button type="button" color="primary" data-save-theme>Save</p9r-button>
+        <p9r-button type="button" color="primary" variant="outlined" data-activate-theme>Activate</p9r-button>
+    </div>
 
-    <cms-detail-section slot="main" density="compact" data-theme-overview>
+    <section slot="main" class="theme-overview-panel" data-theme-overview>
         <div class="theme-overview">
             <label class="theme-name-field">
                 <span>Theme name</span>
@@ -19,17 +21,19 @@
             </div>
         </div>
         <p class="theme-message" data-message aria-live="polite"></p>
-    </cms-detail-section>
+    </section>
 
-    <cms-detail-section slot="main" data-category-section>
-        <div class="source-provenance" data-source-provenance>
-            <p9r-tag data-source-owner-kind>Integration</p9r-tag>
-            <strong data-source-owner-label></strong>
-            <span data-source-owner-note></span>
-        </div>
-        <div class="mode-switch" data-mode-switch hidden>
-            <button type="button" data-mode="light">Light mode</button>
-            <button type="button" data-mode="dark">Dark mode</button>
+    <cms-detail-section slot="main" density="compact" data-category-section>
+        <div class="editor-context-bar">
+            <div class="source-provenance" data-source-provenance>
+                <p9r-tag data-source-owner-kind>Integration</p9r-tag>
+                <strong data-source-owner-label></strong>
+                <span data-source-owner-note></span>
+            </div>
+            <div class="mode-switch" data-mode-switch hidden>
+                <button type="button" data-mode="light">Light mode</button>
+                <button type="button" data-mode="dark">Dark mode</button>
+            </div>
         </div>
         <div class="token-tools">
             <label class="token-search">
@@ -38,17 +42,20 @@
             </label>
             <div class="token-filters" data-token-filters aria-label="Filter token types"></div>
         </div>
-        <div class="category-fields" data-category-fields hidden>
-            <label>
-                <span>Category name</span>
-                <input type="text" data-category-label-input>
-            </label>
-            <label>
-                <span>Description</span>
-                <input type="text" data-category-description-input>
-            </label>
-            <button type="button" class="delete-category" data-delete-category>Delete category</button>
-        </div>
+        <details class="category-fields" data-category-fields hidden>
+            <summary>Category settings</summary>
+            <div class="category-fields-grid">
+                <label>
+                    <span>Category name</span>
+                    <input type="text" data-category-label-input>
+                </label>
+                <label>
+                    <span>Description</span>
+                    <input type="text" data-category-description-input>
+                </label>
+                <button type="button" class="delete-category" data-delete-category>Delete category</button>
+            </div>
+        </details>
         <div class="groups" data-groups></div>
     </cms-detail-section>
 

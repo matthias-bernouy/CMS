@@ -5,8 +5,8 @@
     display: grid;
     place-items: center;
     padding: 20px;
-    background: rgb(15 31 26 / 38%);
-    backdrop-filter: blur(2px);
+    background: rgb(15 31 26 / 34%);
+    backdrop-filter: blur(3px);
 }
 
 .reference-picker-backdrop[hidden] {
@@ -15,13 +15,13 @@
 
 .reference-picker {
     display: grid;
-    width: min(620px, 100%);
-    max-height: min(720px, calc(100vh - 40px));
+    width: min(600px, 100%);
+    max-height: min(700px, calc(100vh - 40px));
     overflow: hidden;
-    border: 1px solid var(--border-default);
-    border-radius: 10px;
+    border: 1px solid var(--border-light, var(--border-default));
+    border-radius: 12px;
     background: var(--bg-surface);
-    box-shadow: 0 24px 60px rgb(15 31 26 / 26%);
+    box-shadow: 0 24px 64px rgb(15 31 26 / 22%);
 }
 
 .reference-picker > header {
@@ -29,7 +29,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 17px 18px 12px;
+    padding: 15px 16px 10px;
 }
 
 .reference-picker h4,
@@ -39,47 +39,59 @@
 }
 
 .reference-picker h4 {
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .eyebrow {
-    color: var(--text-muted);
-    font-size: 10px;
+    color: var(--theme-text-muted);
+    font-size: 9px;
     font-weight: 750;
-    letter-spacing: .07em;
+    letter-spacing: .08em;
     text-transform: uppercase;
 }
 
 .reference-close {
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    border: 1px solid transparent;
+    border-radius: 5px;
     background: transparent;
-    color: var(--text-main);
+    color: var(--theme-text-muted);
     cursor: pointer;
-    font-size: 20px;
+    font-size: 18px;
+}
+
+.reference-close:hover {
+    background: var(--bg-base);
+    color: var(--text-main);
+}
+
+.reference-close:focus-visible,
+.reference-option:focus-visible {
+    outline: 2px solid var(--primary-base);
+    outline-offset: 1px;
 }
 
 .reference-search {
-    padding: 0 18px 12px;
+    padding: 0 16px 12px;
 }
 
 .reference-results {
     display: grid;
-    gap: 15px;
+    gap: 14px;
     overflow: auto;
-    padding: 0 18px 18px;
+    padding: 0 16px 16px;
 }
 
 .reference-group {
     display: grid;
-    gap: 5px;
 }
 
 .reference-group h5 {
-    padding: 5px 2px;
-    font-size: 11px;
+    padding: 7px 2px 5px;
+    border-bottom: 1px solid var(--border-light, var(--border-default));
+    font-size: 10px;
+    letter-spacing: .03em;
     text-transform: uppercase;
 }
 
@@ -89,10 +101,10 @@
     gap: 12px;
     align-items: center;
     width: 100%;
-    padding: 9px 10px;
-    border: 1px solid var(--border-default);
-    border-radius: 7px;
-    background: var(--bg-surface);
+    padding: 9px 5px;
+    border: 0;
+    border-bottom: 1px solid var(--border-light, var(--border-default));
+    background: transparent;
     color: var(--text-main);
     cursor: pointer;
     text-align: left;
@@ -100,13 +112,12 @@
 
 .reference-option:hover,
 .reference-option[aria-pressed="true"] {
-    border-color: var(--primary-base);
-    background: color-mix(in srgb, var(--primary-base) 7%, var(--bg-surface));
+    background: color-mix(in srgb, var(--primary-base) 6%, var(--bg-surface));
 }
 
 .reference-option:disabled {
     cursor: not-allowed;
-    opacity: .55;
+    opacity: .5;
 }
 
 .reference-option-identity {
@@ -118,7 +129,7 @@
 .reference-option code,
 .reference-option-value {
     overflow: hidden;
-    color: var(--text-muted);
+    color: var(--theme-text-muted);
     font-size: 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -131,8 +142,8 @@
 .reference-empty {
     margin: 0;
     padding: 24px;
-    color: var(--text-muted);
-    font-size: 12px;
+    color: var(--theme-text-muted);
+    font-size: 11px;
     text-align: center;
 }
 

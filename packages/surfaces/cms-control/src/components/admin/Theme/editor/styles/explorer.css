@@ -1,11 +1,17 @@
 :host {
     display: block;
+    --theme-text-muted: color-mix(in srgb, var(--text-main) 62%, var(--bg-surface));
 }
 
 cms-shell-detail {
-    --w-detail-main-width: min(900px, 100%);
+    --w-detail-main-width: min(980px, 100%);
     --w-detail-aside-width: 0px;
     --w-detail-gap: 0px;
+}
+
+[data-category-section] {
+    --detail-section-body-start: 10px;
+    --detail-section-padding: 14px;
 }
 
 [data-add-theme-category][hidden],
@@ -13,13 +19,24 @@ cms-shell-detail {
     display: none;
 }
 
+.editor-context-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.editor-context-bar:not(:has(> :not([hidden]))) {
+    display: none;
+}
+
 .mode-switch {
     display: inline-flex;
+    flex: 0 0 auto;
     gap: 2px;
-    margin-bottom: 14px;
-    padding: 3px;
-    border: 1px solid var(--border-default);
-    border-radius: 7px;
+    padding: 2px;
+    border-radius: 6px;
     background: var(--bg-base);
 }
 
@@ -29,22 +46,33 @@ cms-shell-detail {
 
 .mode-switch button,
 .token-filters button {
-    min-height: 30px;
-    padding: 0 10px;
+    min-height: 28px;
+    padding: 0 9px;
     border: 0;
-    border-radius: 5px;
+    border-radius: 4px;
     background: transparent;
-    color: var(--text-muted);
+    color: var(--theme-text-muted);
     cursor: pointer;
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
+}
+
+.mode-switch button:hover,
+.token-filters button:hover {
+    color: var(--text-main);
+}
+
+.mode-switch button:focus-visible,
+.token-filters button:focus-visible {
+    outline: 2px solid var(--primary-base);
+    outline-offset: 1px;
 }
 
 .mode-switch button[aria-pressed="true"],
 .token-filters button[aria-pressed="true"] {
     background: var(--bg-surface);
     color: var(--text-main);
-    box-shadow: 0 1px 2px rgb(15 31 26 / 12%);
+    box-shadow: 0 1px 2px rgb(15 31 26 / 10%);
     font-weight: 700;
 }
 
@@ -52,47 +80,68 @@ cms-shell-detail {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light, var(--border-default));
 }
 
 .token-search {
-    min-width: min(280px, 100%);
+    min-width: min(320px, 100%);
 }
 
 .token-search input,
 .reference-search input {
     width: 100%;
-    min-height: 34px;
+    min-height: 32px;
     box-sizing: border-box;
     padding: 0 10px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    background: var(--bg-base);
+    border: 1px solid var(--border-light, var(--border-default));
+    border-radius: 5px;
+    background: var(--bg-surface);
     color: var(--text-main);
     font: inherit;
     font-size: 12px;
+}
+
+.token-search input:hover,
+.reference-search input:hover {
+    border-color: var(--border-default);
+}
+
+.token-search input:focus,
+.reference-search input:focus {
+    border-color: var(--primary-base);
+    outline: 0;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-base) 12%, transparent);
 }
 
 .token-filters {
     display: flex;
     flex-wrap: wrap;
     gap: 2px;
-    padding: 3px;
-    border: 1px solid var(--border-default);
-    border-radius: 7px;
+    padding: 2px;
+    border-radius: 6px;
     background: var(--bg-base);
 }
 
 .groups,
 .group {
     display: grid;
-    gap: 16px;
+}
+
+.groups {
+    gap: 20px;
+}
+
+.group {
+    gap: 8px;
 }
 
 .group-heading {
     display: grid;
-    gap: 3px;
+    gap: 2px;
+    padding-inline: 2px;
 }
 
 .group h4,
@@ -102,18 +151,24 @@ cms-shell-detail {
 
 .group h4 {
     color: var(--text-main);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 750;
 }
 
 .group-heading p {
-    color: var(--text-muted);
-    font-size: 12px;
+    color: var(--theme-text-muted);
+    font-size: 11px;
 }
 
 @media (max-width: 760px) {
+    .editor-context-bar,
     .token-tools {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .mode-switch,
+    .token-filters {
+        width: fit-content;
     }
 }

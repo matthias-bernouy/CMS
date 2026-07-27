@@ -1,35 +1,35 @@
 .element-list {
-    overflow: hidden;
-    border: 1px solid var(--border-default);
-    border-radius: 7px;
+    border-block: 1px solid var(--border-light, var(--border-default));
 }
 
 .element-row {
     display: grid;
-    grid-template-columns: minmax(190px, .8fr) minmax(330px, 1.2fr);
+    grid-template-columns: minmax(190px, .78fr) minmax(300px, 1.22fr);
     gap: 18px;
     align-items: center;
-    min-height: 62px;
-    padding: 11px 13px;
-    border-top: 1px solid var(--border-default);
-}
-
-.element-row[data-catalog-editable] {
-    grid-template-columns: minmax(190px, .8fr) minmax(330px, 1.2fr) auto;
-}
-
-.delete-token {
-    align-self: center;
+    min-height: 56px;
+    padding: 9px 4px;
+    border-top: 1px solid var(--border-light, var(--border-default));
+    transition: background-color 120ms ease;
 }
 
 .element-row:first-child {
     border-top: 0;
 }
 
+.element-row:hover,
+.element-row:focus-within {
+    background: color-mix(in srgb, var(--bg-base) 70%, transparent);
+}
+
+.element-row[data-catalog-editable] {
+    grid-template-columns: minmax(190px, .78fr) minmax(300px, 1.22fr) auto;
+}
+
 .element-label {
     display: grid;
     min-width: 0;
-    gap: 3px;
+    gap: 2px;
 }
 
 .token-label-input,
@@ -45,35 +45,42 @@
 .token-description-input {
     width: 100%;
     padding: 0;
-    color: var(--text-muted);
-    font-size: 11px;
+    color: var(--theme-text-muted);
+    font-size: 10px;
 }
 
 .token-label-input {
     width: 100%;
     padding: 0;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
 }
 
 .token-type-select {
     width: max-content;
     padding: 0;
-    color: var(--text-muted);
-    font-size: 11px;
+    color: var(--theme-text-muted);
+    font-size: 10px;
+}
+
+.token-label-input:focus,
+.token-description-input:focus,
+.token-type-select:focus {
+    outline: 1px solid var(--primary-base);
+    outline-offset: 2px;
 }
 
 .token-label-text {
     color: var(--text-main);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
 }
 
 .element-label span,
 .element-label code {
     overflow: hidden;
-    color: var(--text-muted);
-    font-size: 11px;
+    color: var(--theme-text-muted);
+    font-size: 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -81,26 +88,23 @@
 .element-label code {
     width: max-content;
     max-width: 100%;
-    padding: 1px 4px;
-    border-radius: 3px;
-    background: var(--bg-base);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .color-control {
     display: flex;
-    align-items: center;
-    gap: 7px;
     min-width: 0;
+    align-items: center;
+    gap: 6px;
 }
 
 .color-control input[type="color"] {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     flex: 0 0 auto;
     padding: 0;
     border: 1px solid var(--border-default);
-    border-radius: 6px;
+    border-radius: 5px;
     background: transparent;
     cursor: pointer;
 }
@@ -108,15 +112,25 @@
 .value-control {
     width: 100%;
     min-width: 0;
-    min-height: 34px;
+    min-height: 32px;
     box-sizing: border-box;
     padding: 0 8px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    background: var(--bg-base);
+    border: 1px solid var(--border-light, var(--border-default));
+    border-radius: 5px;
+    background: var(--bg-surface);
     color: var(--text-main);
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
+}
+
+.value-control:hover {
+    border-color: var(--border-default);
+}
+
+.value-control:focus {
+    border-color: var(--primary-base);
+    outline: 0;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-base) 12%, transparent);
 }
 
 .font-family-control,
@@ -124,14 +138,32 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+.delete-token {
+    align-self: center;
+    opacity: .42;
+}
+
+.element-row:hover .delete-token,
+.element-row:focus-within .delete-token,
+.delete-token:focus-visible {
+    opacity: 1;
+}
+
+.delete-token:focus-visible {
+    outline: 2px solid var(--primary-base);
+    outline-offset: 1px;
+}
+
 @media (max-width: 760px) {
     .element-row,
     .element-row[data-catalog-editable] {
         grid-template-columns: 1fr;
-        gap: 9px;
+        gap: 8px;
+        padding-block: 12px;
     }
 
     .delete-token {
         justify-self: start;
+        opacity: 1;
     }
 }
