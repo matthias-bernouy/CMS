@@ -1,5 +1,9 @@
 import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@bernouy/cms-integration-packages";
-import type { RepositoryReleaseReader, RepositoryVerificationBundleReader } from "./releaseContracts";
+import type {
+    RepositoryProjectedReleaseReader,
+    RepositoryReleaseReader,
+    RepositoryVerificationBundleReader,
+} from "./releaseContracts";
 import { projectPublicRepositoryRelease } from "./releaseProjection";
 import { publicBytesResponse, publicJsonResponse, publicNotFound } from "../publicReadResponse";
 
@@ -11,6 +15,18 @@ export function integrationReleaseRouteHandler(reader: RepositoryReleaseReader) 
         const release = await reader.get(kind, version);
         return release
             ? publicJsonResponse(request, projectPublicRepositoryRelease(release), "catalog")
+            : publicNotFound("integration release evidence not found");
+    };
+}
+
+export function integrationProjectedReleaseRouteHandler(reader: RepositoryProjectedReleaseReader) {
+    return async (request: Request): Promise<Response> => {
+        const url = new URL(request.url);
+        const kind = requiredValue(url, "kind", assertIntegrationPackageKind);
+        const version = requiredValue(url, "version", assertIntegrationPackageVersion);
+        const release = await reader.get(kind, version);
+        return release
+            ? publicJsonResponse(request, release, "catalog")
             : publicNotFound("integration release evidence not found");
     };
 }

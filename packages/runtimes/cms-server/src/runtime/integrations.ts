@@ -1,3 +1,4 @@
+import { DEFAULT_INTEGRATION_PACKAGE_LIMITS } from "@bernouy/cms-integration-packages";
 import type {
     IntegrationConnectorBaselineAdopter,
     IntegrationConnectorDeployer,
@@ -24,6 +25,7 @@ import type { SecretStore } from "@bernouy/cms-secrets";
 import { HttpRepositoryCompatibilityReader } from "../repositoryCatalog/compatibility/reader";
 import { DEFAULT_REPOSITORY_CATALOG_READER_LIMITS } from "../repositoryCatalog/limits";
 import { HttpRepositoryReleaseReader } from "../repositoryCatalog/release/reader";
+import { HttpRepositoryVerificationBundleReader } from "../repositoryCatalog/release/bundleReader";
 
 type IntegrationServiceOptions = {
     providerRepository: IntegrationConnectorProviderRepository;
@@ -98,6 +100,14 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
               maxResponseBytes: DEFAULT_REPOSITORY_CATALOG_READER_LIMITS.releaseEvidenceBytes,
           })
         : undefined;
+    const publicRepositoryVerificationBundles = globalRepositoryUrl
+        ? new HttpRepositoryVerificationBundleReader({
+              baseUrl: globalRepositoryUrl,
+              ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
+              timeoutMs: 10_000,
+              maxResponseBytes: DEFAULT_INTEGRATION_PACKAGE_LIMITS.maxDocumentBytes,
+          })
+        : undefined;
     const integrationUpgradeReleases = upgradeReleaseReader
         ? {
               get: async (kind: string, version: string) =>
@@ -112,6 +122,8 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
         publicRepositoryCatalog,
         publicRepositoryPackages,
         publicRepositoryCompatibility,
+        publicRepositoryReleases: upgradeReleaseReader,
+        publicRepositoryVerificationBundles,
         integrationUpgradeReleases,
         integrationCatalog,
         integrationPackageSource,

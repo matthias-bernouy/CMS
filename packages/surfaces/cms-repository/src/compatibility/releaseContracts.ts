@@ -5,6 +5,9 @@ import type {
 
 export type RepositoryReleaseReader = IntegrationRegistryReleaseEvidenceReader;
 export type RepositoryVerificationBundleReader = Pick<IntegrationVerificationBundleStore, "get">;
+export type RepositoryProjectedReleaseReader = Readonly<{
+    get(kind: string, version: string): Promise<PublicRepositoryRelease | null>;
+}>;
 
 export type PublicRepositoryRelease = Readonly<{
     kind: string;

@@ -32,6 +32,27 @@ describe("management CMS process acceptance", () => {
         expect(initialCatalog).toHaveLength(14);
         expect(initialCatalog).toContainEqual(expect.objectContaining({ kind: "commerce", versions: ["1.0.0"] }));
         expect(anonymousCatalog.headers.get("access-control-allow-origin")).toBe("*");
+        const releaseResponse = await fetch(
+            `${cms.deliveryOrigin}/.cms/repository/api/integrations/release?kind=commerce&version=1.0.0`,
+        );
+        expect(releaseResponse.status).toBe(200);
+        expect(releaseResponse.headers.get("access-control-allow-origin")).toBe("*");
+        const releaseText = await releaseResponse.text();
+        const release = JSON.parse(releaseText) as { verificationDigest: string; verification: { origin: string } };
+        expect(release.verification).toMatchObject({ origin: "legacy-backfill" });
+        expect(release.verificationDigest).toMatch(/^[a-f0-9]{64}$/);
+        const verificationResponse = await fetch(
+            `${cms.deliveryOrigin}/.cms/repository/api/integrations/verification-bundle?digest=${release.verificationDigest}`,
+        );
+        expect(verificationResponse.status).toBe(200);
+        expect(verificationResponse.headers.get("etag")).toBe(`"${release.verificationDigest}"`);
+        expect(verificationResponse.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+        expect(verificationResponse.headers.get("access-control-allow-origin")).toBe("*");
+        const verificationText = await verificationResponse.text();
+        expect(JSON.parse(verificationText)).toMatchObject({
+            schema: "cms.integration.verification.v1",
+            target: { kind: "commerce", version: "1.0.0" },
+        });
         expect((await fetch(`${cms.deliveryOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
         expect((await fetch(`${repository.publicOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
         expect((await fetch(`${repository.managementOrigin}/.cms/repository/api/integrations`)).status).toBe(404);
@@ -101,6 +122,8 @@ describe("management CMS process acceptance", () => {
             candidateStatusText,
             statusText,
             adminHtml,
+            releaseText,
+            verificationText,
             packageText,
             catalogHtml,
         ]);

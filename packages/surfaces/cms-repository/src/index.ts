@@ -32,6 +32,7 @@ export type {
 export type {
     PublicRepositoryMigrationEvidence,
     PublicRepositoryRelease,
+    RepositoryProjectedReleaseReader,
     RepositoryReleaseReader,
     RepositoryVerificationBundleReader,
 } from "cms-repository/compatibility/releaseContracts";

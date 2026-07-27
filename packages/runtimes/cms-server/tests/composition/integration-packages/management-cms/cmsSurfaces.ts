@@ -3,11 +3,18 @@ import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
+import { DEFAULT_INTEGRATION_PACKAGE_LIMITS } from "@bernouy/cms-integration-packages";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { RepositoryCms } from "@bernouy/cms-repository";
 import { RepositoryCatalogPageProvider } from "@bernouy/cms-repository/catalog";
 import { BunRunner } from "@bernouy/http-runner";
-import { HttpRepositoryCatalogReader, HttpRepositoryCompatibilityReader } from "../../../../src/repositoryCatalog";
+import {
+    DEFAULT_REPOSITORY_CATALOG_READER_LIMITS,
+    HttpRepositoryCatalogReader,
+    HttpRepositoryCompatibilityReader,
+    HttpRepositoryReleaseReader,
+    HttpRepositoryVerificationBundleReader,
+} from "../../../../src/repositoryCatalog";
 import { HttpRepositoryManagementGateway } from "../../../../src/repositoryManagement/gateway";
 
 export type CapturedRequest = Readonly<{
@@ -69,11 +76,23 @@ export async function startManagementCmsSurfaces(origins: SurfaceOrigins): Promi
     const publicCatalog = new HttpIntegrationDefinitionRepository({ baseUrl: origins.publicRepositoryBaseUrl });
     const publicPackages = new HttpIntegrationPackageSource({ baseUrl: origins.publicRepositoryBaseUrl });
     const publicCompatibility = new HttpRepositoryCompatibilityReader({ baseUrl: origins.publicRepositoryBaseUrl });
+    const publicReleases = new HttpRepositoryReleaseReader({
+        baseUrl: origins.publicRepositoryBaseUrl,
+        timeoutMs: 10_000,
+        maxResponseBytes: DEFAULT_REPOSITORY_CATALOG_READER_LIMITS.releaseEvidenceBytes,
+    });
+    const publicVerificationBundles = new HttpRepositoryVerificationBundleReader({
+        baseUrl: origins.publicRepositoryBaseUrl,
+        timeoutMs: 10_000,
+        maxResponseBytes: DEFAULT_INTEGRATION_PACKAGE_LIMITS.maxDocumentBytes,
+    });
     deliveryRunner.group("/.cms/repository", (runner) => {
         new RepositoryCms({
             runner,
             integrationCatalog: publicCatalog,
             integrationCompatibility: publicCompatibility,
+            integrationProjectedReleases: publicReleases,
+            integrationVerificationBundles: publicVerificationBundles,
             integrationPackages: publicPackages,
             packageDownloadProtection: { clientAddressPolicy: { mode: "disabled" } },
         });

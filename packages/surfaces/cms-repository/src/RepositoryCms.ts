@@ -4,10 +4,12 @@ import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations"
 import type { RepositoryCompatibilityReader } from "cms-repository/compatibility/contracts";
 import { integrationCompatibilityRouteHandler } from "cms-repository/compatibility/routes";
 import type {
+    RepositoryProjectedReleaseReader,
     RepositoryReleaseReader,
     RepositoryVerificationBundleReader,
 } from "cms-repository/compatibility/releaseContracts";
 import {
+    integrationProjectedReleaseRouteHandler,
     integrationReleaseRouteHandler,
     integrationVerificationBundleRouteHandler,
 } from "cms-repository/compatibility/releaseRoutes";
@@ -35,6 +37,7 @@ type RepositoryCmsBaseConfig = {
     integrationCatalog: IntegrationDefinitionRepository;
     integrationCompatibility?: RepositoryCompatibilityReader;
     integrationReleases?: RepositoryReleaseReader;
+    integrationProjectedReleases?: RepositoryProjectedReleaseReader;
     integrationVerificationBundles?: RepositoryVerificationBundleReader;
     observeRead?: PublicRepositoryReadObserver;
 };
@@ -53,6 +56,7 @@ export class RepositoryCms {
     private readonly integrationCatalog: IntegrationDefinitionRepository;
     private readonly integrationCompatibility?: RepositoryCompatibilityReader;
     private readonly integrationReleases?: RepositoryReleaseReader;
+    private readonly integrationProjectedReleases?: RepositoryProjectedReleaseReader;
     private readonly integrationVerificationBundles?: RepositoryVerificationBundleReader;
     private readonly integrationPackages?: IntegrationPackageSource;
     private readonly packageDownloadProtection?: PublicPackageDownloadProtection;
@@ -63,10 +67,14 @@ export class RepositoryCms {
         this.integrationCatalog = config.integrationCatalog;
         this.integrationCompatibility = config.integrationCompatibility;
         this.integrationReleases = config.integrationReleases;
+        this.integrationProjectedReleases = config.integrationProjectedReleases;
         this.integrationVerificationBundles = config.integrationVerificationBundles;
         this.integrationPackages = config.integrationPackages;
         this.packageDownloadProtection = config.packageDownloadProtection;
         this.observeRead = config.observeRead;
+        if (this.integrationReleases && this.integrationProjectedReleases) {
+            throw new TypeError("Repository release readers are mutually exclusive");
+        }
         if (this.packageDownloadProtection) {
             assertPackageDownloadProtection(this.packageDownloadProtection);
         }
@@ -133,6 +141,14 @@ export class RepositoryCms {
                 "/api/integrations/release",
                 "integration-release",
                 integrationReleaseRouteHandler(this.integrationReleases),
+            );
+        }
+
+        if (this.integrationProjectedReleases) {
+            this.registerPublicRead(
+                "/api/integrations/release",
+                "integration-release",
+                integrationProjectedReleaseRouteHandler(this.integrationProjectedReleases),
             );
         }
 

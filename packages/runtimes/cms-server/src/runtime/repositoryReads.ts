@@ -1,8 +1,12 @@
 import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 import type { ClientAddressPolicy } from "@bernouy/http-runner";
-import type { PublicPackageDownloadProtection } from "@bernouy/cms-repository";
-import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
+import type {
+    PublicPackageDownloadProtection,
+    RepositoryCompatibilityReader,
+    RepositoryProjectedReleaseReader,
+    RepositoryVerificationBundleReader,
+} from "@bernouy/cms-repository";
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { ProductionIntegrationServices } from "./integrations";
 import type { CoreStores } from "./stores/core";
@@ -13,7 +17,11 @@ export function productionRepositoryReadConfig(
     env: RepositoryReadEnv,
     integrations: Pick<
         ProductionIntegrationServices,
-        "publicRepositoryCatalog" | "publicRepositoryPackages" | "publicRepositoryCompatibility"
+        | "publicRepositoryCatalog"
+        | "publicRepositoryPackages"
+        | "publicRepositoryCompatibility"
+        | "publicRepositoryReleases"
+        | "publicRepositoryVerificationBundles"
     >,
     core: Pick<CoreStores, "repositoryPackageDownloadRateLimit">,
     report: (message: string) => void,
@@ -21,6 +29,8 @@ export function productionRepositoryReadConfig(
     integrationCatalog: IntegrationDefinitionRepository;
     integrationPackages: IntegrationPackageSource;
     integrationCompatibility?: RepositoryCompatibilityReader;
+    integrationProjectedReleases?: RepositoryProjectedReleaseReader;
+    integrationVerificationBundles?: RepositoryVerificationBundleReader;
     packageDownloadProtection: PublicPackageDownloadProtection;
 } {
     const clientAddressPolicy = policyFromEnv(env);
@@ -32,6 +42,12 @@ export function productionRepositoryReadConfig(
             ...(integrations.publicRepositoryCompatibility
                 ? { integrationCompatibility: integrations.publicRepositoryCompatibility }
                 : {}),
+            ...(integrations.publicRepositoryReleases
+                ? { integrationProjectedReleases: integrations.publicRepositoryReleases }
+                : {}),
+            ...(integrations.publicRepositoryVerificationBundles
+                ? { integrationVerificationBundles: integrations.publicRepositoryVerificationBundles }
+                : {}),
             packageDownloadProtection: { clientAddressPolicy },
         };
     }
@@ -40,6 +56,12 @@ export function productionRepositoryReadConfig(
         integrationPackages: integrations.publicRepositoryPackages,
         ...(integrations.publicRepositoryCompatibility
             ? { integrationCompatibility: integrations.publicRepositoryCompatibility }
+            : {}),
+        ...(integrations.publicRepositoryReleases
+            ? { integrationProjectedReleases: integrations.publicRepositoryReleases }
+            : {}),
+        ...(integrations.publicRepositoryVerificationBundles
+            ? { integrationVerificationBundles: integrations.publicRepositoryVerificationBundles }
             : {}),
         packageDownloadProtection: { clientAddressPolicy, rateLimiter: core.repositoryPackageDownloadRateLimit },
     };

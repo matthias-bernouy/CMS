@@ -29,4 +29,8 @@ export class HttpRepositoryReleaseReader {
         );
         return document ? { value: parsePublicRepositoryRelease(document.value, identity), etag: document.etag } : null;
     }
+
+    async get(kind: string, version: string): Promise<PublicRepositoryRelease | null> {
+        return (await this.getDocument(kind, version))?.value ?? null;
+    }
 }
