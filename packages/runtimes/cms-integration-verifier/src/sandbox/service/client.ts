@@ -91,15 +91,44 @@ function assertConfig(config: HttpVerificationSandboxConfig): void {
 
 async function readBounded(response: Response, limit: number): Promise<Uint8Array> {
     const declared = response.headers.get("content-length");
-    if (!declared || !/^[0-9]+$/u.test(declared) || Number(declared) > limit || !response.body) {
+    const declaredLength = declared === null ? Number.NaN : Number(declared);
+    if (
+        !declared ||
+        !/^[0-9]+$/u.test(declared) ||
+        !Number.isSafeInteger(declaredLength) ||
+        declaredLength > limit ||
+        !response.body
+    ) {
         await response.body?.cancel();
         throw new Error("Remote verification sandbox response has an invalid length");
     }
-    const bytes = new Uint8Array(await response.arrayBuffer());
-    if (bytes.byteLength !== Number(declared) || bytes.byteLength > limit) {
-        throw new Error("Remote verification sandbox response exceeds its byte limit");
+    const reader = response.body.getReader();
+    const bytes = new Uint8Array(declaredLength);
+    let offset = 0;
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+            if (!(value instanceof Uint8Array) || value.byteLength > declaredLength - offset) {
+                await reader.cancel().catch(() => undefined);
+                throw new Error("Remote verification sandbox response exceeds its byte limit");
+            }
+            bytes.set(value, offset);
+            offset += value.byteLength;
+        }
+        if (offset !== declaredLength) {
+            await reader.cancel().catch(() => undefined);
+            throw new Error("Remote verification sandbox response has an invalid length");
+        }
+        return bytes;
+    } catch (error) {
+        await reader.cancel().catch(() => undefined);
+        throw error;
+    } finally {
+        reader.releaseLock();
     }
-    return bytes;
 }
 
 function sameBytes(left: Uint8Array, right: Uint8Array): boolean {

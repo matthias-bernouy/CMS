@@ -134,6 +134,61 @@ describe("fixed sandbox service", () => {
     });
 });
 
+describe("remote sandbox response limits", () => {
+    test("cancels a response that streams beyond its declared bounded length", async () => {
+        let cancelled = false;
+        const response = new Response(
+            new ReadableStream<Uint8Array>({
+                start(controller) {
+                    controller.enqueue(new Uint8Array(33));
+                },
+                cancel() {
+                    cancelled = true;
+                },
+            }),
+            { headers: { "content-length": "32", "content-type": "application/json" } },
+        );
+        const remote = remoteSandbox(async () => response, 32);
+
+        await expect(remote.run(await sandboxInputFixture(), new AbortController().signal)).rejects.toThrow(
+            /exceeds its byte limit/,
+        );
+        expect(cancelled).toBe(true);
+    });
+
+    test("rejects a response truncated before its declared length", async () => {
+        const response = new Response(new Uint8Array([123, 125]), {
+            headers: { "content-length": "4", "content-type": "application/json" },
+        });
+        const remote = remoteSandbox(async () => response, 32);
+
+        await expect(remote.run(await sandboxInputFixture(), new AbortController().signal)).rejects.toThrow(
+            /invalid length/,
+        );
+    });
+
+    test("cancels a response with a malformed declared length before reading it", async () => {
+        let cancelled = false;
+        const response = new Response(
+            new ReadableStream<Uint8Array>({
+                start(controller) {
+                    controller.enqueue(new Uint8Array([123, 125]));
+                },
+                cancel() {
+                    cancelled = true;
+                },
+            }),
+            { headers: { "content-length": "invalid", "content-type": "application/json" } },
+        );
+        const remote = remoteSandbox(async () => response, 32);
+
+        await expect(remote.run(await sandboxInputFixture(), new AbortController().signal)).rejects.toThrow(
+            /invalid length/,
+        );
+        expect(cancelled).toBe(true);
+    });
+});
+
 function keyPair(): Readonly<{ privateKey: string; publicKey: string }> {
     const pair = generateKeyPairSync("ed25519");
     return {
@@ -151,5 +206,18 @@ async function exactRequest(server: Bun.Server<unknown>, body: Uint8Array, capab
             "content-length": String(body.byteLength),
         },
         body: Buffer.from(body),
+    });
+}
+
+function remoteSandbox(fetchImpl: typeof fetch, maxOutputBytes: number): VerificationSandbox {
+    const keys = keyPair();
+    return createHttpVerificationSandbox({
+        identity: runnerFixture(),
+        origin: "https://sandbox.internal",
+        signer: createSandboxCapabilitySigner(keys.privateKey),
+        timeoutMs: 5_000,
+        maxInputBytes: 4 * 1_048_576,
+        maxOutputBytes,
+        fetch: fetchImpl,
     });
 }
