@@ -99,4 +99,38 @@ describe("integration compatibility evaluation", () => {
         expect(report.digest).toMatch(/^[a-f0-9]{64}$/u);
         expect(IntegrationCompatibilityEvaluator).toBeFunction();
     });
+
+    test.each([
+        ["new-kind", "1.0.0", "consistent", true],
+        ["new-kind", "1.0.0", "contradiction", false],
+        ["new-major", "2.0.0", "consistent", true],
+        ["new-major", "2.0.0", "contradiction", false],
+    ] as const)(
+        "builds a %s V2 root with trusted %s schema evidence",
+        async (noBaselineReason, version, verdict, contractAdmissible) => {
+            const candidatePackage = packageState(version);
+            const candidate = {
+                ...candidatePackage,
+                schemaDeclarationEvidence: [
+                    {
+                        evidenceId: `schema-${verdict}`,
+                        packageDigest: candidatePackage.packageDigest,
+                        connector: { provider: "supabase", root: "connectors/supabase" },
+                        producer: { name: "schema-introspection", version: "1.0.0" },
+                        createdAt: "2026-07-26T10:00:00.000Z",
+                        verdict,
+                    },
+                ],
+            };
+            const report = await evaluator().buildRoot({ candidate, noBaselineReason }, "admission", {
+                actor: "registry",
+                reason: "Initial evaluation",
+            });
+
+            expect(report.report).toMatchObject({ noBaselineReason, contractAdmissible });
+            expect(report.report.findings).toContainEqual(
+                expect.objectContaining({ classification: verdict === "consistent" ? "compatible" : "invalid" }),
+            );
+        },
+    );
 });

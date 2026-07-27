@@ -19,7 +19,7 @@ const adapter: FsReleaseReportHistoryAdapter<CompatibilityReportV2, FsReleaseVer
     key: versionKey,
     revisionId: (report) => report.reportId,
     historyFields: (report) => report,
-    assertFollows: assertReportRevisionFollows,
+    assertFollows: assertCompatibilityRevisionFollows,
     assertCatalog: (snapshot, report) => assertCatalogVersion(snapshot, versionKey(report)),
     mutationKind: (key) => key.kind,
 };
@@ -58,3 +58,29 @@ export class FsIntegrationCompatibilityV2ReportStore implements IntegrationCompa
 }
 
 export const fsCompatibilityV2ReportAdapter = adapter;
+
+function assertCompatibilityRevisionFollows(previous: CompatibilityReportV2, next: CompatibilityReportV2): void {
+    assertReportRevisionFollows(previous, next);
+    if (
+        next.releaseLevel !== previous.releaseLevel ||
+        next.noBaselineReason !== previous.noBaselineReason ||
+        !sameBaselines(next.baselines, previous.baselines) ||
+        !sameBaselines(next.informationalBaselines, previous.informationalBaselines)
+    ) {
+        throw new TypeError(
+            "Compatibility report revisions must preserve immutable baseline selection and release level",
+        );
+    }
+}
+
+function sameBaselines(left: CompatibilityReportV2["baselines"], right: CompatibilityReportV2["baselines"]): boolean {
+    return (
+        left.length === right.length &&
+        left.every(
+            (entry, index) =>
+                entry.kind === right[index]?.kind &&
+                entry.version === right[index]?.version &&
+                entry.packageDigest === right[index]?.packageDigest,
+        )
+    );
+}

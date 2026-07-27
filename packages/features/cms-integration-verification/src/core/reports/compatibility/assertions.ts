@@ -14,13 +14,11 @@ export function assertFindingReferences(
     noBaselineReason?: CompatibilityNoBaselineReason,
 ): void {
     for (const finding of findings) {
-        const candidateOnlyInvalid =
-            noBaselineReason === "new-kind" &&
-            finding.classification === "invalid" &&
-            finding.baselineDigest === packageDigest;
+        const candidateOnlyFinding =
+            noBaselineReason !== undefined && baselineDigests.length === 0 && finding.baselineDigest === packageDigest;
         if (
             finding.candidateDigest !== packageDigest ||
-            (!baselineDigests.includes(finding.baselineDigest) && !candidateOnlyInvalid)
+            (!baselineDigests.includes(finding.baselineDigest) && !candidateOnlyFinding)
         ) {
             throw new IntegrationVerificationContractError(
                 "invalid_reference",

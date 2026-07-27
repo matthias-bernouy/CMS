@@ -65,7 +65,7 @@ describe("compatibility report assessment", () => {
         });
     });
 
-    test("represents a candidate-only invalid finding for an initial kind without inventing a baseline", async () => {
+    test("represents candidate-only findings without inventing a baseline", async () => {
         const invalid = await report("invalid", "major");
         const finding = await createCompatibilityFinding({
             surface: "schema",
@@ -110,7 +110,30 @@ describe("compatibility report assessment", () => {
                     contractAdmissible: true,
                 }),
             ),
-        ).rejects.toMatchObject({ code: "invalid_reference" });
+        ).resolves.toMatchObject({ outcome: "not-applicable", contractAdmissible: true });
+
+        const major = await createCompatibilityFinding({
+            surface: finding.surface,
+            path: finding.path,
+            code: "candidate-schema-consistent",
+            baselineDigest: finding.baselineDigest,
+            candidateDigest: finding.candidateDigest,
+            classification: "compatible",
+            message: finding.message,
+        });
+        await expect(
+            parseCompatibilityReportV2({
+                ...initial,
+                reportId: "compatibility-new-major",
+                version: "2.0.0",
+                findings: [major],
+                releaseLevel: "major",
+                noBaselineReason: "new-major",
+                outcome: "not-applicable",
+                requiredReleaseLevel: "major",
+                contractAdmissible: true,
+            }),
+        ).resolves.toMatchObject({ noBaselineReason: "new-major", outcome: "not-applicable" });
     });
 
     test("rejects ambiguous enforcing and informational baseline shapes", async () => {

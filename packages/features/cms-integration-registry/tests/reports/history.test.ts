@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { identifyVerificationReport } from "@bernouy/cms-integration-verification";
+import { createCompatibilityFinding, identifyVerificationReport } from "@bernouy/cms-integration-verification";
 import { ReleaseReportConflictError } from "@bernouy/cms-integration-registry";
 import { cleanupRegistryFixtures, publicationPackage } from "../publication/fixtures";
-import { publishedReleaseFixture, releaseStores, verificationReport } from "./fixtures";
+import { compatibilityReport, publishedReleaseFixture, releaseStores, verificationReport } from "./fixtures";
 
 afterEach(cleanupRegistryFixtures);
 
@@ -55,6 +55,47 @@ describe("filesystem release report histories", () => {
         const rejected = results.find((result) => result.status === "rejected") as PromiseRejectedResult;
         expect(rejected.reason).toBeInstanceOf(ReleaseReportConflictError);
         expect((await stores.verificationReports.get("demo", "1.1.0"))?.revisions).toHaveLength(2);
+    });
+
+    test("keeps compatibility baseline selection and release level immutable across revisions", async () => {
+        const { fixture, source, target, stores } = await publishedReleaseFixture();
+        const root = await compatibilityReport(source.digest, target.digest);
+        const history = await stores.compatibilityReports.append({ report: root, expectedCurrent: null });
+        const other = await publicationPackage("other", "1.0.0");
+        await fixture.publisher.publish({ package: other });
+        const rootFinding = root.findings[0]!;
+        const finding = await createCompatibilityFinding({
+            surface: rootFinding.surface,
+            path: rootFinding.path,
+            code: rootFinding.code,
+            baselineDigest: other.digest,
+            candidateDigest: rootFinding.candidateDigest,
+            classification: rootFinding.classification,
+            message: rootFinding.message,
+        });
+        const revision = {
+            ...root,
+            reportId: "compatibility-2",
+            revisionType: "revision" as const,
+            supersedes: root.reportId,
+            createdAt: "2026-07-26T12:01:00.000Z",
+            baselines: [{ kind: "other", version: "1.0.0", packageDigest: other.digest }],
+            findings: [finding],
+        };
+
+        const append = stores.compatibilityReports.append({
+            report: revision,
+            expectedCurrent: {
+                revisionId: history.currentRevisionId,
+                reportDigest: history.currentReportDigest,
+            },
+        });
+        await expect(append).rejects.toMatchObject({
+            cause: expect.objectContaining({
+                message: expect.stringMatching(/preserve immutable baseline selection/),
+            }),
+        });
+        expect((await stores.compatibilityReports.get("demo", "1.1.0"))?.current.reportId).toBe(root.reportId);
     });
 
     test("fails before writing histories or revisions beyond configured hard caps", async () => {
