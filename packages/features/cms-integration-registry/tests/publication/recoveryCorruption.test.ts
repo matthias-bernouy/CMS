@@ -8,7 +8,7 @@ import { cleanupRegistryFixtures, publicationPackage, registryFixture } from "./
 afterEach(cleanupRegistryFixtures);
 
 describe("filesystem integration registry corruption recovery", () => {
-    test("replays an interrupted legacy v1 journal through the current recovery contract", async () => {
+    test("quarantines an interrupted journal written with an unsupported schema", async () => {
         const fixture = registryFixture({
             createOperationId: () => "legacy-journal",
             afterBoundary: ({ phase }) => {
@@ -28,8 +28,10 @@ describe("filesystem integration registry corruption recovery", () => {
 
         const result = await recover(fixture);
 
-        expect(result.snapshot.locateExactVersion("legacy-demo", "1.0.0")?.package.digest).toBe(input.digest);
-        expect(result.snapshot.getIndex("legacy-demo")).toMatchObject({ stable: "1.0.0", latest: "1.0.0" });
+        expect(result.snapshot.locateExactVersion("legacy-demo", "1.0.0")).toBeNull();
+        expect(result.diagnostics).toEqual([
+            expect.objectContaining({ code: "publication-quarantined", operationId: "legacy-journal" }),
+        ]);
     });
 
     test("quarantines a journal whose explicit disposition contradicts its next index", async () => {

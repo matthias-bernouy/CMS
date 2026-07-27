@@ -5,8 +5,6 @@ import type { IntegrationCompatibilityAdmissionReport } from "../../../../interf
 
 export const INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_SCHEMA =
     "cms.integration.registry.publication-journal.v2" as const;
-const LEGACY_INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_SCHEMA =
-    "cms.integration.registry.publication-journal.v1" as const;
 
 export const FS_INTEGRATION_REGISTRY_PUBLICATION_PHASES = Object.freeze([
     "staged",
@@ -60,12 +58,10 @@ export function parsePublicationJournalDocument(
     if (!isRecord(value)) {
         return null;
     }
-    const legacy = value.schema === LEGACY_INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_SCHEMA;
-    const current = value.schema === INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_SCHEMA;
-    if (!legacy && !current) {
+    if (value.schema !== INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_SCHEMA) {
         return null;
     }
-    if (!hasExactKeys(value, current ? [...COMMON_KEYS, "publication"] : COMMON_KEYS)) {
+    if (!hasExactKeys(value, [...COMMON_KEYS, "publication"])) {
         return null;
     }
     if (
@@ -89,9 +85,7 @@ export function parsePublicationJournalDocument(
         ? parseIntegrationDefinitionIndex(value.previousIndex, `${source}:previousIndex`)
         : null;
     const nextIndex = parseIntegrationDefinitionIndex(value.nextIndex, `${source}:nextIndex`);
-    const publication = current
-        ? parsePublicationDisposition(value.publication)
-        : legacyPublicationDisposition(nextIndex, value.version);
+    const publication = parsePublicationDisposition(value.publication);
     if (!publication) {
         return null;
     }
@@ -131,24 +125,6 @@ function parsePublicationDisposition(value: unknown): FsIntegrationRegistryPubli
     return {
         disposition: value.disposition,
         ...(typeof value.verificationDigest === "string" ? { verificationDigest: value.verificationDigest } : {}),
-    };
-}
-
-function legacyPublicationDisposition(
-    nextIndex: IntegrationDefinitionIndex,
-    version: string,
-): FsIntegrationRegistryPublicationDisposition | null {
-    const entries = nextIndex.versions.filter((entry) => entry.version === version);
-    if (entries.length !== 1) {
-        return null;
-    }
-    const entry = entries[0]!;
-    if (entry.status === "blocked" || entry.status === "inadmissible") {
-        return null;
-    }
-    return {
-        disposition: entry.status === "unverified" ? "unverified" : "installable",
-        ...(entry.verificationDigest ? { verificationDigest: entry.verificationDigest } : {}),
     };
 }
 
