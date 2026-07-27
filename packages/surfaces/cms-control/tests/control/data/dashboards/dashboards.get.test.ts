@@ -4,6 +4,7 @@ import { InMemoryFunctionRepository, withFunctionsSource } from "@bernouy/cms-fu
 import {
     CompositeSourceRepository,
     InMemorySourceRepository,
+    SYSTEM_AUTH_SOURCE,
     SYSTEM_AUTH_SOURCE_URN,
     SYSTEM_SOURCES,
 } from "@bernouy/cms-sources";
@@ -66,7 +67,7 @@ describe("GET /api/dashboards", () => {
             urn: SYSTEM_AUTH_SOURCE_URN,
             id: "system-auth",
             name: "Authentication",
-            endpointCount: 8,
+            endpointCount: SYSTEM_AUTH_SOURCE.endpoints.length,
             dashboardCount: 0,
             readonly: true,
         });

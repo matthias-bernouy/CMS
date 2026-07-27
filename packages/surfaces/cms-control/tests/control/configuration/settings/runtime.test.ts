@@ -23,6 +23,7 @@ describe("settings runtime", () => {
         expect(settings).toEqual({
             site: system.site,
             editor: system.editor,
+            auth: system.auth!,
             theme: system.theme,
             security: system.security,
             email: system.email,

@@ -39,6 +39,12 @@
             },
             "marketplaceTermsHash": {
                 "type": "string"
+            },
+            "expectedMarketplaceTermsVersion": {
+                "type": "string"
+            },
+            "expectedMarketplaceTermsHash": {
+                "type": "string"
             }
         }
     },

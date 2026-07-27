@@ -54,13 +54,12 @@
                                     ":",
                                     "$item.sellerRequiredMinimumBalanceAmount",
                                     ":",
-                                    "$item.payoutDelayDays"
+                                    "$item.payoutDelayDays",
+                                    ":",
+                                    "{{answers.sellerPayoutSchedule}}"
                                 ]
                             },
-                            "interval": "weekly",
-                            "weeklyPayoutDays": [
-                                "monday"
-                            ],
+                            "payoutSchedule": "{{answers.sellerPayoutSchedule}}",
                             "minimumBalanceEur": "$item.sellerRequiredMinimumBalanceAmount",
                             "delayDaysOverride": "$item.payoutDelayDays",
                             "reason": "Commerce authorized settlement release"

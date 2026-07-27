@@ -3,7 +3,12 @@ import { functionsBaseUrl } from "../../../runtime/constants";
 import { activeEnv } from "../../../runtime/environment";
 import type { StripeConnectHarness } from "../../../runtime/harness";
 import { okJson } from "../../../runtime/http";
-import { sourceJson, sourceRequestWithRole, sourceRequestWithUser } from "../../../runtime/source-requests";
+import {
+    sourceJson,
+    sourceJsonWithUser,
+    sourceRequestWithRole,
+    sourceRequestWithUser,
+} from "../../../runtime/source-requests";
 
 type CreateHarness = () => Promise<StripeConnectHarness>;
 
@@ -48,6 +53,8 @@ export function registerAccountContractSourceScenarios(createHarness: CreateHarn
             "marketplaceTermsAccepted",
             "marketplaceTermsVersion",
             "marketplaceTermsHash",
+            "expectedMarketplaceTermsVersion",
+            "expectedMarketplaceTermsHash",
         ]);
         expect(endpoint("getConnectStatus")?.input?.params?.map((param) => param.name)).toEqual([
             "marketplaceTermsVersion",
@@ -56,6 +63,11 @@ export function registerAccountContractSourceScenarios(createHarness: CreateHarn
         expect(endpoint("getConnectStatus")?.output?.[0]?.body?.properties?.marketplaceTermsAcceptedAt).toEqual({
             type: "string",
             nullable: true,
+        });
+        expect(endpoint("getConnectStatus")?.output?.[0]?.body?.properties?.marketplaceTermsRequirement).toMatchObject({
+            type: "object",
+            nullable: true,
+            required: ["mode", "version", "hash"],
         });
         expect(endpoint("getConnectStatus")?.output?.[0]?.body?.properties?.stripeAccountId).toEqual({
             type: "string",
@@ -94,6 +106,8 @@ export function registerAccountContractSourceScenarios(createHarness: CreateHarn
             required: ["readySellerCmsUserIds", "snapshot", "snapshotAt"],
         });
         expect(sellerRisk?.output?.map((candidate) => candidate.status)).toEqual(["200", "403", "404", "502"]);
+        expect(sellerPayout?.input?.body?.properties?.payoutSchedule).toEqual({ type: "string" });
+        expect(sellerPayout?.input?.body?.required).toEqual(["userId", "payoutScheduleChangeId"]);
 
         const anonymousSourceLookup = await sourceRequestWithRole(harness, "", undefined, "getConnectAccount", {
             userId: "seller-1",
@@ -202,6 +216,52 @@ export function registerAccountContractSourceScenarios(createHarness: CreateHarn
             snapshot: "persisted_provider_projection",
             snapshotAt: expect.any(String),
         });
+    });
+
+    test("derives the bulk seller capability snapshot from immutable acceptances after a terms rollback", async () => {
+        const harness = await createHarness();
+        const firstVersion = "seller-terms-v1";
+        const firstHash = "a".repeat(64);
+        const secondVersion = "seller-terms-v2";
+        const secondHash = "b".repeat(64);
+        await okJson(
+            await sourceJsonWithUser(harness, "seller-1", "enrollConnectSeller", {
+                accountToken: "accttok_test_identity_123",
+                marketplaceTermsAccepted: true,
+                marketplaceTermsVersion: firstVersion,
+                marketplaceTermsHash: firstHash,
+            }),
+        );
+        await okJson(
+            await sourceJsonWithUser(harness, "seller-1", "enrollConnectSeller", {
+                marketplaceTermsAccepted: true,
+                marketplaceTermsVersion: secondVersion,
+                marketplaceTermsHash: secondHash,
+            }),
+        );
+        harness.rest.setCurrentMarketplaceTermsConfiguration({
+            mode: "legacy",
+            version: firstVersion,
+            hash: firstHash,
+            updatedAt: "2026-07-25T12:00:00.000Z",
+        });
+
+        const response = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/payments/seller-capabilities`, {
+                method: "POST",
+                headers: {
+                    authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    marketplaceTermsVersion: secondVersion,
+                    marketplaceTermsHash: secondHash,
+                }),
+            }),
+        );
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({ readySellerCmsUserIds: ["seller-1"] });
     });
 
     test("projects nullable status fields for an existing seller account", async () => {

@@ -1,6 +1,7 @@
 {
     "$files": [
         "endpoints/health/health.json",
+        "endpoints/configuration/sync-marketplace-terms.json",
         "endpoints/accounts/account-configuration-and-status/root.json",
         "endpoints/accounts/seller-onboarding/root.json",
         "endpoints/accounts/create-onboarding-session.json",

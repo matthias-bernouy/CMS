@@ -13,6 +13,7 @@ describe("protected C2C claim window", () => {
             "get_order_fulfillment_authorization",
         );
         const claim = functionSql(schema, "open_marketplace_claim", "respond_marketplace_claim");
+        const sellerResponse = functionSql(schema, "respond_marketplace_claim", "attach_marketplace_claim_evidence");
         const release = functionSql(schema, "authorize_order_release", "authorize_order_reserve_release");
         const returnProjection = functionSql(schema, "record_claim_return_delivery", "resolve_marketplace_claim");
 
@@ -25,6 +26,11 @@ describe("protected C2C claim window", () => {
         expect(claim.indexOf("select * into v_settlement")).toBeLessThan(claim.indexOf("select * into v_fulfillment"));
         expect(release.indexOf("select * into v_settlement")).toBeLessThan(
             release.indexOf("select * into v_fulfillment"),
+        );
+        expect(sellerResponse).toContain("if clock_timestamp() >= v_claim.seller_response_by_at then");
+        expect(sellerResponse).toContain("conflict: seller response deadline elapsed");
+        expect(sellerResponse.indexOf("for update of claim")).toBeLessThan(
+            sellerResponse.indexOf("clock_timestamp() >= v_claim.seller_response_by_at"),
         );
         expect(claim).toContain("now() >= v_fulfillment.claim_by_at");
         expect(release).toContain("now() < v_fulfillment.release_eligible_at");

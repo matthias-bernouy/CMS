@@ -4,27 +4,21 @@ import { functionSql, loadCommerceSchemaSql } from "../paths";
 export function registerRefundBoundariesTest(): void {
     test("bounds platform-funded claim refunds and only terminalizes confirmed provider outcomes", async () => {
         const schema = await loadCommerceSchemaSql();
-        const createRefund = functionSql(schema, "create_refund_request", "refund_authorization_payload");
-        const resolver = functionSql(schema, "resolve_marketplace_claim", "request_order_refund");
+        const createRefund = functionSql(schema, "create_allocated_refund_request", "refund_authorization_payload");
+        const resolver = functionSql(schema, "resolve_allocated_marketplace_claim", "resolve_marketplace_claim");
         const projection = functionSql(
             schema,
             "record_order_settlement_projection",
             "record_order_stripe_dispute_projection",
         );
 
-        for (const financialBoundary of [createRefund, resolver]) {
-            expect(financialBoundary).toContain(
-                "v_terms.platform_retained_amount - v_terms.buyer_protection_fee_amount",
-            );
-            expect(financialBoundary).toContain(
-                "requested_amount - protection_fee_refund_amount - seller_recovery_amount",
-            );
-            expect(financialBoundary).toContain("status not in ('rejected', 'cancelled', 'failed')");
-        }
+        expect(createRefund).toContain("v_terms.platform_retained_amount - v_terms.buyer_protection_fee_amount");
+        expect(createRefund).toContain("requested_amount - protection_fee_refund_amount - seller_recovery_amount");
+        expect(createRefund).toContain("status not in ('rejected', 'cancelled', 'failed')");
+        expect(createRefund).toContain("cumulative platform-funded refund exceeds immutable platform contribution");
         expect(resolver).toContain(
-            "p_buyer_refund_amount\n            - v_seller_recovery - p_protection_fee_refund_amount",
+            "(v_refund->>'requested_amount')::bigint\n                - (v_refund->>'protection_fee_refund_amount')::bigint",
         );
-        expect(resolver).toContain("claim refund exceeds immutable platform contribution");
         expect(resolver).toContain("'platformContributionAmount', coalesce(v_platform_contribution, 0)");
         expect(projection).toContain(
             "when total_refunded_amount + p_amount = v_terms.buyer_total_amount then 'refunded'",

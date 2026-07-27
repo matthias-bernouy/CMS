@@ -12,6 +12,10 @@
             "A minimal Stripe account with accepted terms can accept held marketplace payments. Bank accounts, Transfers, payouts, and Commerce review remain independent states."
         ],
         [
+            "Choose the seller bank payout schedule",
+            "Use daily, weekly:monday,thursday, or monthly:1,15. Reserve manual for a monitored temporary finance/risk hold. Commerce release timing, settlement delay, and risk reserves remain separate controls."
+        ],
+        [
             "Process provider operations",
             "Install the asynchronous release/refund triggers and configure recurring reconciliation."
         ]
@@ -21,6 +25,7 @@
         "Commerce locks the complete financial terms before payment.",
         "CmsCore resolves the opaque seller identity before calling Stripe.",
         "Release and refund operations require immutable Commerce authorization ids.",
+        "Seller bank payouts default to daily and never authorize the Commerce Transfer.",
         "Marketplace claims and Stripe disputes remain separate."
     ],
     "resources": [

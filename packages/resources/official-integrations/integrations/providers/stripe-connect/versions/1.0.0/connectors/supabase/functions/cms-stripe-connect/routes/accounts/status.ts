@@ -1,4 +1,9 @@
 import { getAccountRow, getMarketplaceTermsAcceptance } from "../../db/repositories/accounts.ts";
+import {
+    effectiveMarketplaceTermsExpectation,
+    getCurrentMarketplaceTermsConfiguration,
+    marketplaceTermsRequirement,
+} from "./marketplace-terms/repository.ts";
 import { publicAccountStatus } from "../../domain/accounts/presentation.ts";
 import { publicSellerProviderRisk, publicWalletBalances } from "../../domain/accounts/risk-presentation.ts";
 import { requireCmsRequest, requireDashboardAdmin } from "../../http/auth.ts";
@@ -11,14 +16,21 @@ import { syncAccountForUser } from "./sync.ts";
 
 export async function connectStatus(request: Request): Promise<Response> {
     const { userId } = requireCmsRequest(request);
-    const expectedTerms = marketplaceTermsExpectationFromRequest(request);
+    const explicitTerms = marketplaceTermsExpectationFromRequest(request);
+    const configuredTerms = await getCurrentMarketplaceTermsConfiguration();
+    const expectedTerms = effectiveMarketplaceTermsExpectation(explicitTerms, configuredTerms);
     const account = await syncAccountForUser(userId);
     const currentTermsAccepted = Boolean(
         account &&
             expectedTerms &&
             (await getMarketplaceTermsAcceptance(userId, expectedTerms.version, expectedTerms.hash)),
     );
-    return json(publicAccountStatus(account, userId, { currentTermsAccepted }));
+    return json(
+        publicAccountStatus(account, userId, {
+            currentTermsAccepted,
+            marketplaceTermsRequirement: marketplaceTermsRequirement(configuredTerms),
+        }),
+    );
 }
 
 export async function connectWallet(request: Request): Promise<Response> {

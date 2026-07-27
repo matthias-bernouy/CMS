@@ -1,13 +1,17 @@
 import { createHash } from "node:crypto";
 import { IntegrationInputError } from "../errors";
+import type { IntegrationAnswerValue } from "../../interfaces/Integration";
 import type { TemplateContext } from "./templates";
 
-export function resolveExpression(expression: string, context: TemplateContext): string | boolean {
+export function resolveExpression(expression: string, context: TemplateContext): IntegrationAnswerValue {
     if (expression.startsWith("env ")) {
         return envSegment(String(resolveExpression(expression.slice(4).trim(), context)));
     }
     if (expression.startsWith("answers.")) {
         return resolveAnswer(expression.slice("answers.".length), context);
+    }
+    if (expression.startsWith("resolved.")) {
+        return resolveValue(context.resolved, expression.slice("resolved.".length), "resolved input");
     }
     if (expression.startsWith("dependencies.")) {
         return resolveDependencyExpression(expression, context);
@@ -103,6 +107,17 @@ function requiredContextValue(values: Record<string, string> | undefined, key: s
         throw new IntegrationInputError("template", `unknown ${label} "${key}"`);
     }
     return value;
+}
+
+function resolveValue(
+    values: Record<string, IntegrationAnswerValue> | undefined,
+    key: string,
+    label: string,
+): IntegrationAnswerValue {
+    if (!values || !(key in values)) {
+        throw new IntegrationInputError("template", `unknown ${label} "${key}"`);
+    }
+    return values[key]!;
 }
 
 function envSegment(value: string): string {

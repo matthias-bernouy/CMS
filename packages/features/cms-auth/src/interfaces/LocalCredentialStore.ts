@@ -36,6 +36,12 @@ export interface LocalCredentialStore {
      *  (constant-ish: same outcome either way, no email enumeration signal). */
     verify(email: string, password: string): Promise<Identity | null>;
 
+    /**
+     * Verify the password without requiring prior email confirmation. This is
+     * reserved for resuming a pending signup before CMS membership activation.
+     */
+    verifyPassword?(email: string, password: string): Promise<Identity | null>;
+
     /** Replace the password for an existing `sub`. `false` when unknown. */
     setPassword(sub: string, password: string): Promise<boolean>;
 

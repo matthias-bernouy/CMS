@@ -15,11 +15,17 @@ export function registerProviderAbsentCancellationTest(): void {
             schema.indexOf("create or replace function commerce.authorize_platform_payout_liability_decrease("),
         );
 
+        expect(absent).toContain("v_attempt.status = 'created'");
+        expect(absent).toContain("v_attempt.provider_payment_id is not null");
+        expect(absent).toContain("v_attempt.provider_payment_intent_id is not null");
+        expect(absent).toContain("v_attempt.provider_charge_id is not null");
+        expect(absent).toContain("'cancelledBeforeProviderCreation', true");
+        expect(absent).toContain("payment_attempt_cancelled_before_provider_creation");
         expect(absent).toContain("absent provider truth cannot finalize an order with a payment attempt");
         expect(absent).toContain("payment_cancellation_provider_absent");
         expect(absent).toContain("v_idempotent_replay := v_event_id is null");
         expect(absent).not.toContain("if v_event_id is null then\n        return");
-        expect(absent).toContain("Re-apply terminal invariants even when an older deployment already marked");
+        expect(absent).toContain("Re-apply terminal invariants for legacy partially completed cancellations");
         expect(absent).toContain("perform commerce.restore_order_inventory(v_order.id)");
         expect(absent).not.toContain("insert into commerce.order_payment_attempts");
         expect(prepare).toContain("v_order.id, 'provisional', null");

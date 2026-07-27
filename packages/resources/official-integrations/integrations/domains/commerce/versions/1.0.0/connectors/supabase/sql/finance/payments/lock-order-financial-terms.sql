@@ -246,6 +246,9 @@ begin
         v_fee.configured_minimum_margin_amount, v_expected_margin, v_subsidy.id,
         lower(p_currency), v_hash, now(), now() + make_interval(mins => v_protection.payment_window_minutes)
     ) returning * into v_terms;
+    -- These pre-payment values preserve the legacy non-null read contract but
+    -- remain inert while payment_confirmed_at is null. The successful payment
+    -- projection atomically replaces and arms both deadlines.
     insert into commerce.order_fulfillments (
         order_id, seller_handoff_deadline, scan_grace_deadline
     ) values (

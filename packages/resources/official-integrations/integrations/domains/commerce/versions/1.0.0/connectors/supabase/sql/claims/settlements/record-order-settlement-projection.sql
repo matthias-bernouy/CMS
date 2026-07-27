@@ -40,7 +40,10 @@ begin
     if p_provider_operation_id is null or p_provider_operation_id <= 0 then
         raise exception 'validation: provider operation id is required';
     end if;
-    select * into v_order from commerce.orders where public_id = p_order_public_id;
+    select * into v_order
+    from commerce.orders
+    where public_id = p_order_public_id
+    for update;
     if not found then raise exception 'not_found: order'; end if;
     select * into v_settlement from commerce.order_settlements
     where order_id = v_order.id for update;
@@ -262,7 +265,9 @@ begin
                 status = case
                     when total_refunded_amount + p_amount = v_terms.buyer_total_amount then 'refunded'
                     else 'held' end,
-                manual_review_reason = null
+                manual_review_reason = null,
+                version = version + 1,
+                updated_at = now()
             where order_id = v_order.id returning * into v_settlement;
             if v_refund.seller_reserve_offset_amount > 0 then
                 update commerce.seller_financial_exposures set
@@ -276,7 +281,9 @@ begin
             end if;
             update commerce.marketplace_claims set
                 status = case resolution_outcome when 'buyer' then 'resolved_buyer' else 'resolved_split' end,
-                resolved_at = now()
+                resolved_at = now(),
+                version = version + 1,
+                updated_at = now()
             where id = v_refund.claim_id and status = 'resolution_pending';
             if v_refund.claim_id is not null then
                 update commerce.orders set status = 'completed'
@@ -345,6 +352,40 @@ begin
                           or blocking_reason is distinct from 'order_cancelled_after_full_refund'
                       );
                 end if;
+            end if;
+            if v_settlement.status = 'refunded'
+                and v_refund.reason = 'carrier_confirmed_lost'
+                and v_refund.business_key like 'fulfillment:lost:%' then
+                update commerce.orders set
+                    status = 'cancelled',
+                    version = version + 1,
+                    updated_at = now()
+                where id = v_order.id
+                  and status in ('active', 'completed', 'cancellation_pending');
+                update commerce.financial_exceptions set
+                    status = 'resolved',
+                    resolved_at = now(),
+                    resolved_by = 'carrier-loss-full-refund'
+                where deduplication_key =
+                    'fulfillment:lost-refund:' || v_order.id
+                  and status <> 'resolved';
+                perform commerce.append_financial_event(
+                    v_order.id,
+                    'refund_request',
+                    v_refund.id::text,
+                    'carrier_loss_full_refund_terminalized',
+                    'provider',
+                    'stripe',
+                    'Full carrier-loss refund terminalized the order without restoring lost inventory',
+                    jsonb_build_object(
+                        'providerEventId', p_provider_event_id,
+                        'providerOperationId', p_provider_operation_id,
+                        'refundRequestId', v_refund.id,
+                        'inventoryRestored', false
+                    ),
+                    'commerce.order.carrier_loss_refunded',
+                    'refund:' || v_refund.id || ':carrier-loss-terminalized'
+                );
             end if;
         elsif p_status in ('failed', 'cancelled', 'manual_review') then
             update commerce.order_settlements set

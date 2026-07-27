@@ -11,11 +11,31 @@
                 "format": "money"
             },
             {
+                "id": "merchandiseRefundAmount",
+                "label": "Merchandise refund",
+                "path": "merchandiseRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "shippingRefundAmount",
+                "label": "Shipping refund",
+                "path": "shippingRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
                 "id": "protectionFeeRefundAmount",
                 "label": "Protection fee refund",
                 "path": "protectionFeeRefundAmount",
                 "type": "readonly",
                 "format": "money"
+            },
+            {
+                "id": "allocationVersion",
+                "label": "Allocation version",
+                "path": "allocationVersion",
+                "type": "readonly"
             },
             {
                 "id": "reason",

@@ -35,6 +35,7 @@ export type AccountHandlerHarness = {
         pauseNextSellerBalanceSettingsUpdate(): { entered: Promise<void>; resume: () => void };
         seedActiveLegacyAccount(userId: string): void;
         seedPayoutScheduleAccount(userId: string, connected: boolean): void;
+        setCurrentMarketplaceTermsConfiguration(configuration: JsonRecord | null): void;
         setConnectedPayoutSettings(interval: string, minimumBalanceEur: number): void;
     };
     edgeRequest(request: Request): Promise<Response>;

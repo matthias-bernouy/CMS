@@ -22,6 +22,11 @@ Commerce locks financial terms
   -> the connected account payout schedule moves available funds to the bank
 ```
 
+This flow is not a wallet, escrow account, or legal sequestration service.
+Before Commerce authorizes release, the captured money remains in the Stripe
+platform balance and is not a segregated per-order balance. The integration
+does not use Stripe's private-preview Funds Segregation API.
+
 The PaymentIntent deliberately omits:
 
 - `transfer_data[destination]`;
@@ -57,6 +62,9 @@ The `stripe_connect` schema is revoked from `public`, `anon`, and
 `service_role`. It stores independent facts in:
 
 - `accounts`;
+- immutable `marketplace_terms_versions` and
+  `marketplace_terms_acceptances`, plus the current
+  `marketplace_terms_configuration` pointer;
 - `payments` and append-only `payment_events`;
 - `financial_operations`;
 - `transfers` and `transfer_reversals`;
@@ -76,6 +84,21 @@ No database lock is held across an HTTP request.
 An ambiguous result creates a critical provider exception and moves the
 payment to `manual_review`. There is no immediate-settlement or unprotected
 fallback.
+
+Seller marketplace terms can be synchronized from one published CMS page by
+the system-only installation endpoint. The CMS page resolver supplies the
+published snapshot; this provider does not fetch a caller-selected remote URL.
+The provider hashes and archives the exact page, label, and consent statement
+as an immutable revision. Status and enrollment expose a minimal public
+requirement without the archived content. Both seller UIs must submit the exact
+displayed version and content hash, and the recording RPC compares them with
+the locked current configuration before accepting. A stale display fails with
+`MARKETPLACE_TERMS_VERSION_CHANGED`.
+
+The older explicit version/hash pair remains supported when no synchronized
+configuration exists and as the linking integration's no-page fallback. A
+page-backed configuration is server-authoritative and requires compare-and-set
+evidence, so an old client fails closed instead of accepting unseen terms.
 
 Succeeded Charges and Refunds also persist their Stripe Balance Transaction
 ids, currency, fee details, signed fee, and net amounts. The original Charge
@@ -235,6 +258,9 @@ The connector reuses the snapshotted destination and Charge. It refuses an
 unconfirmed payment, amount overflow, currency mismatch, refund, or open Stripe
 dispute. Stripe receives a separate Transfer with `source_transaction`,
 `transfer_group`, and a stable `settlement:{paymentId}:{authorization}` key.
+`source_transaction` gates the Transfer on the source Charge becoming
+available; `transfer_group` is correlation only and provides no funds
+protection by itself.
 
 ### `requestTransferReversal`
 
@@ -281,7 +307,13 @@ recovery request has been acknowledged; unrelated poison rows do not block the
 rest of the queue.
 
 Stripe does not reverse separate Transfers when a Charge is refunded. The
-connector therefore never interprets a Refund response as seller recovery.
+platform remains responsible for the Refund, dispute, Stripe fees, and any
+negative platform balance. The connector therefore never interprets a Refund
+response as seller recovery: Commerce must authorize the recovery amount and
+the connector must confirm a Transfer Reversal separately. A reversal can
+still fail when the connected account has insufficient available balance and
+no applicable connected-account reserve; that outcome remains in finance
+review rather than being presented as recovered money.
 
 ## Stripe disputes
 
@@ -319,10 +351,11 @@ only from Stripe webhook or retrieval truth.
 
 ## Payout and seller risk
 
-The seller wallet is read-only. The previous seller-controlled "pay out all
-available funds" command was removed. Available and pending connected-account
-balances remain visible, while payout scheduling and risk restrictions stay
-provider/finance controls.
+The seller balance view is read-only and is not presented as a wallet or
+escrow balance. The previous seller-controlled "pay out all available funds"
+command was removed. Available and pending connected-account balances remain
+visible, while payout scheduling and risk restrictions stay provider/finance
+controls.
 
 `getSellerProviderRisk` retrieves the connected Stripe balance and current
 Balance Settings. `configureSellerPayoutSchedule` applies a specific,
@@ -331,7 +364,22 @@ versioned Commerce risk-policy decision with a stable
 `monthly` schedules plus optional EUR minimum balance, settlement delay, and
 negative-balance debit control. The command is replay-safe, verifies current
 provider state after a lost response, and moves ambiguity to finance review.
-The connector never selects a risk policy itself.
+The connector never selects a risk policy itself. Callers may send the
+individual `interval`, `weeklyPayoutDays`, and `monthlyPayoutDays` fields, or
+the mutually exclusive compact `payoutSchedule` form used by linking
+integrations:
+
+```text
+daily
+manual
+weekly:monday,thursday
+monthly:1,15,31
+```
+
+Weekly automatic payout days follow Stripe's Monday-to-Friday contract.
+`manual` is intended only for a monitored temporary finance/risk hold; it does
+not remove Stripe's jurisdiction-specific limit on how long funds may remain
+unpaid.
 
 Protected payment creation fails closed unless the Stripe **platform** Balance
 Settings use the controlled automatic daily schedule and an EUR minimum balance
@@ -345,6 +393,9 @@ concurrent higher aggregate before finalization, and never lowers a confirmed
 minimum automatically. An ambiguous update enters `manual_review`. There is no
 connector endpoint that manually pays out the platform balance. A privileged
 out-of-band manual or instant payout is a critical trust-boundary exception.
+Concurrent commands briefly wait for the active lease and then re-evaluate
+provider truth; persistent contention returns a retryable `409` before payment
+creation can call Stripe.
 
 The required platform amount remains an exact, revisioned Commerce aggregate.
 The provider minimum may safely overcover it: without a decrease authorization,

@@ -6,6 +6,7 @@ import {
     resolveDeclarativeSecretRefs,
 } from "../import/declarative";
 import { integrationInstallationId } from "./ids";
+import { reconcileChangedInstallation } from "./execution/afterInstallation";
 import { successRun } from "./execution/runs";
 import { assertSecretKeysAvailable } from "./secretRefs";
 import { installationLabel, sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "./snapshots";
@@ -53,7 +54,9 @@ export async function runCreate(
                 secretInputs,
                 runs: [run],
             };
-            return { installation: await request.installations.create(base), run };
+            const committed = { installation: await request.installations.create(base), run };
+            await reconcileChangedInstallation(deps, request.installations, committed.installation.id);
+            return committed;
         },
     );
 

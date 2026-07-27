@@ -62,11 +62,29 @@
                 "type": "textarea"
             },
             {
-                "id": "refundAmount",
-                "label": "Buyer refund amount (minor units)",
-                "path": "refundAmount",
+                "id": "merchandiseRefundAmount",
+                "label": "Merchandise refund (minor units)",
+                "path": "merchandiseRefundAmount",
                 "type": "number",
-                "min": 1,
+                "min": 0,
+                "step": 1,
+                "required": true
+            },
+            {
+                "id": "shippingRefundAmount",
+                "label": "Shipping refund (minor units)",
+                "path": "shippingRefundAmount",
+                "type": "number",
+                "min": 0,
+                "step": 1,
+                "required": true
+            },
+            {
+                "id": "protectionFeeRefundAmount",
+                "label": "Protection fee refund (minor units)",
+                "path": "protectionFeeRefundAmount",
+                "type": "number",
+                "min": 0,
                 "step": 1,
                 "required": true
             }

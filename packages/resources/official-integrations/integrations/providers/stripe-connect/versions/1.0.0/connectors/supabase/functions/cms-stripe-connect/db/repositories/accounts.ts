@@ -73,6 +73,35 @@ export async function getMarketplaceTermsAcceptance(
     return rows[0] ?? null;
 }
 
+export async function listMarketplaceTermsAcceptedUserIds(version: string, hash: string): Promise<Set<string>> {
+    const userIds = new Set<string>();
+    const pageSize = 1000;
+    for (let offset = 0; ; offset += pageSize) {
+        const query = new URLSearchParams({
+            terms_version: `eq.${version}`,
+            terms_hash: `eq.${hash}`,
+            select: "cms_user_id",
+            order: "cms_user_id.asc",
+            limit: String(pageSize),
+            offset: String(offset),
+        });
+        const response = await rest(`marketplace_terms_acceptances?${query.toString()}`, { method: "GET" });
+        if (!response.ok) {
+            throw await restError(response);
+        }
+        const page = (await response.json()) as Array<{ cms_user_id: string }>;
+        for (const row of page) {
+            userIds.add(row.cms_user_id);
+        }
+        if (page.length < pageSize) {
+            return userIds;
+        }
+        if (userIds.size >= 10000) {
+            throw new HttpError(409, "seller capability reconciliation exceeds 10000 terms acceptances");
+        }
+    }
+}
+
 export async function recordMarketplaceTermsAcceptance(
     userId: string,
     version: string,

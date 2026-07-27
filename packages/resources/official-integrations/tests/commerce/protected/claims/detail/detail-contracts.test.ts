@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { installCommerceTestEnvironment, requestCommerce } from "../../../harness";
-import { claimRow, useClaimDetailResponder } from "./fixtures";
+import { claimResolutionRefund, claimRow, useClaimDetailResponder } from "./fixtures";
 import { expectedClaimDetail } from "./expected";
 
 installCommerceTestEnvironment();
@@ -63,5 +63,35 @@ describe("commerce administrator claim detail contracts", () => {
         expect(serialized).not.toContain("providerEvidence");
         expect(body.evidence.map((item: { id: number }) => item.id)).toEqual([81, 82]);
         expect(body.returnEvents.map((item: { id: number }) => item.id)).toEqual([91, 92]);
+    });
+
+    test("projects the exact persisted resolution allocation and approval facts", async () => {
+        useClaimDetailResponder({ resolutionRefund: claimResolutionRefund });
+
+        const body = await (await requestCommerce("/admin/claim?id=7")).json();
+
+        expect(body.resolutionRefund).toEqual({
+            id: 19,
+            status: "requested",
+            requestedAmount: 5_500,
+            merchandiseRefundAmount: 5_000,
+            shippingRefundAmount: 250,
+            protectionFeeRefundAmount: 250,
+            allocationVersion: 1,
+            sellerRecoveryAmount: 5_000,
+            sellerReserveOffsetAmount: 1_000,
+            platformContributionAmount: 250,
+            requiresFinanceApproval: true,
+            dualApprovalRequired: false,
+            firstApprovedBy: null,
+            firstApprovedAt: null,
+            secondApprovedBy: null,
+            secondApprovedAt: null,
+            decisionReason: null,
+            version: 1,
+            createdAt: "2026-07-20T09:00:00.000Z",
+            updatedAt: "2026-07-20T09:00:00.000Z",
+        });
+        expect(JSON.stringify(body)).not.toContain("futurePrivateRefundField");
     });
 });

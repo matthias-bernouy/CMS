@@ -4,6 +4,10 @@ comment on schema commerce is
     'Private catalogue, marketplace offer, price review, and ordering data owned by cms-commerce.';
 comment on table commerce.settings is
     'Typed policy settings. Security and workflow rules must not be stored as arbitrary metadata.';
+comment on table commerce.buyer_legal_document_versions is
+    'Immutable server-materialized CMS page snapshots and SHA-256 revisions used for buyer consent.';
+comment on table commerce.order_buyer_legal_acceptances is
+    'Immutable buyer consent evidence tied to an order, checkout group, and payment attempt.';
 comment on table commerce.brands is
     'Canonical catalogue brands referenced by Products; brand names are not free-form Product metadata.';
 comment on table commerce.categories is

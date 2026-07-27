@@ -21,9 +21,11 @@ import { cancelMyOrder, cancelMySale } from "../routes/order/cancellations.ts";
 import { openMyOrderClaim, respondToMySaleClaim } from "../routes/order/claims/index.ts";
 import { getClaimEvidenceFile, uploadMyClaimEvidence } from "../routes/order/claims/evidence.ts";
 import { prepareProtectedPayment } from "../routes/order/payment/financials.ts";
+import { getBuyerLegalRequirements, getMyBuyerLegalAcceptanceAudit } from "../routes/order/payment/legal.ts";
 import { getMyOrder, getMySale } from "../routes/order/read-model/details.ts";
 import { listMyOrders, listMySales } from "../routes/order/read-model/lists.ts";
 import { getMySeller, registerMySeller, updateMySeller } from "../routes/seller/index.ts";
+import { handleMarketplaceServiceWithdrawalRoute } from "./service-withdrawals.ts";
 
 export async function handleMarketplaceRoute(route: string, request: Request): Promise<Response | null> {
     if (route === "/offers") {
@@ -134,6 +136,12 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
     if (route === "/me/order/payment/prepare") {
         return request.method === "POST" ? await prepareProtectedPayment(request) : methodNotAllowed("POST");
     }
+    if (route === "/me/order/legal-requirements") {
+        return request.method === "GET" ? await getBuyerLegalRequirements(request) : methodNotAllowed("GET");
+    }
+    if (route === "/me/order/legal-acceptances") {
+        return request.method === "GET" ? await getMyBuyerLegalAcceptanceAudit(request) : methodNotAllowed("GET");
+    }
     if (route === "/me/order/claim") {
         return request.method === "POST" ? await openMyOrderClaim(request) : methodNotAllowed("POST");
     }
@@ -164,5 +172,5 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
     if (route === "/me/sale/cancel") {
         return request.method === "POST" ? await cancelMySale(request) : methodNotAllowed("POST");
     }
-    return null;
+    return await handleMarketplaceServiceWithdrawalRoute(route, request);
 }

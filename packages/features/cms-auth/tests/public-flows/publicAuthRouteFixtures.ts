@@ -11,12 +11,19 @@ import {
     registerPublicAuthRoutes,
     SignedCookieCodec,
     SubjectResolver,
+    type SignupLegalAcceptancePolicy,
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
 
 type Role = "user" | "admin";
 
-export function setupPublicAuthRoutes(opts: { authEmailCooldownSeconds?: number; emailer?: Emailer } = {}) {
+export function setupPublicAuthRoutes(
+    opts: {
+        authEmailCooldownSeconds?: number;
+        emailer?: Emailer;
+        signupLegalAcceptance?: SignupLegalAcceptancePolicy;
+    } = {},
+) {
     const runner = new BunRunner();
     const users = new InMemoryUsersRepository<Role>();
     const credentials = new InMemoryLocalCredentialStore();
@@ -47,7 +54,7 @@ export function setupPublicAuthRoutes(opts: { authEmailCooldownSeconds?: number;
     };
     registerPublicAuthRoutes(runner, config);
     const server = serveForTest(runner);
-    return { server, credentials, emailer: captureEmailer };
+    return { server, credentials, users, emailer: captureEmailer };
 }
 
 export function post(server: TestServer, path: string, body: unknown): Promise<Response> {

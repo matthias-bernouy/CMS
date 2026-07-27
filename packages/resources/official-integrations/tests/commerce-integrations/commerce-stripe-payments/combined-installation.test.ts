@@ -83,7 +83,13 @@ describe("Commerce protected Stripe combined installation", () => {
         };
 
         await install("basic-blocs", {}, definitions, deps, installations);
-        await install("commerce", { id: "commerce" }, definitions, deps, installations);
+        await install(
+            "commerce",
+            { id: "commerce", buyerLegalEnabled: false, buyerLegalDocuments: [] },
+            definitions,
+            deps,
+            installations,
+        );
         await install(
             "stripe-connect",
             {
@@ -103,6 +109,7 @@ describe("Commerce protected Stripe combined installation", () => {
             {
                 sellerTermsVersion: SELLER_TERMS_VERSION,
                 sellerTermsHash: SELLER_TERMS_HASH,
+                sellerPayoutSchedule: "daily",
             },
             definitions,
             deps,
@@ -132,7 +139,7 @@ describe("Commerce protected Stripe combined installation", () => {
         ]);
         expect(linkingResult.installation.status).toBe("success");
         expect(linkingResult.artifacts.map((artifact) => artifact.type)).toEqual([
-            ...Array(16).fill("function"),
+            ...Array(17).fill("function"),
             ...Array(15).fill("trigger"),
             "dashboard",
             "bloc",
@@ -183,6 +190,7 @@ describe("Commerce protected Stripe combined installation", () => {
             "executeAuthorizedSettlementRelease",
             "executeProviderPaymentCancellation",
             "getPaymentForOrder",
+            "getPaymentLegalRequirements",
             "getSellerSaleEnrollment",
             "getStripePaymentClientConfig",
             "processDueOrderDeadlines",
@@ -355,6 +363,13 @@ describe("Commerce protected Stripe combined installation", () => {
 });
 
 function afterInstallationResponse(request: Request): Response {
+    if (request.url.includes("/cms-stripe-connect/configuration/marketplace-terms")) {
+        return Response.json({
+            mode: "legacy",
+            version: SELLER_TERMS_VERSION,
+            hash: SELLER_TERMS_HASH,
+        });
+    }
     if (request.url.includes("/cms-stripe-connect/payments/seller-capabilities")) {
         return Response.json({
             readySellerCmsUserIds: [],
@@ -370,6 +385,9 @@ function afterInstallationResponse(request: Request): Response {
             readyCount: 0,
             notReadyCount: 0,
         });
+    }
+    if (request.url.includes("/cms-commerce/system/buyer-legal-documents/sync")) {
+        return Response.json({ enabled: false, documents: [] });
     }
     return Response.json({ error: `unexpected after-installation request: ${request.url}` }, { status: 500 });
 }

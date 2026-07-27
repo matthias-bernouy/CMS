@@ -78,6 +78,8 @@ function enrollSeller(): SourceEndpoint {
                 marketplaceTermsAccepted: boolean(),
                 marketplaceTermsVersion: text(),
                 marketplaceTermsHash: text(),
+                expectedMarketplaceTermsVersion: text(),
+                expectedMarketplaceTermsHash: text(),
             }),
         },
         output: [

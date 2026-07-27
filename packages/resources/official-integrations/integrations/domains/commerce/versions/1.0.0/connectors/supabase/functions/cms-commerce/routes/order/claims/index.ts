@@ -149,16 +149,30 @@ export async function recordClaimReturnDelivery(request: Request): Promise<Respo
 
 export async function resolveOrderClaim(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
-    const result = await rpc("resolve_marketplace_claim", {
+    const common = {
         p_claim_id: integer(body.claimId, "claimId", true),
         p_outcome: requiredText(body.outcome, "outcome"),
-        p_buyer_refund_amount: integer(body.buyerRefundAmount, "buyerRefundAmount", true),
         p_seller_transfer_amount: integer(body.sellerTransferAmount, "sellerTransferAmount", true),
         p_protection_fee_refund_amount: integer(body.protectionFeeRefundAmount, "protectionFeeRefundAmount", true),
         p_decision_reason: requiredText(body.decisionReason, "decisionReason"),
         p_actor_kind: "admin",
         p_actor_id: cmsUserId(request),
         p_expected_version: integer(body.expectedVersion, "expectedVersion", true),
-    });
+    };
+    const hasLegacyAmount = body.buyerRefundAmount !== undefined;
+    const hasAnyAllocation = body.merchandiseRefundAmount !== undefined || body.shippingRefundAmount !== undefined;
+    if (hasLegacyAmount === hasAnyAllocation) {
+        throw new HttpError(400, "exactly one claim refund amount form is required");
+    }
+    const result = hasAnyAllocation
+        ? await rpc("resolve_allocated_marketplace_claim", {
+              ...common,
+              p_merchandise_refund_amount: integer(body.merchandiseRefundAmount, "merchandiseRefundAmount", true),
+              p_shipping_refund_amount: integer(body.shippingRefundAmount, "shippingRefundAmount", true),
+          })
+        : await rpc("resolve_marketplace_claim", {
+              ...common,
+              p_buyer_refund_amount: integer(body.buyerRefundAmount, "buyerRefundAmount", true),
+          });
     return json(camelize(result));
 }

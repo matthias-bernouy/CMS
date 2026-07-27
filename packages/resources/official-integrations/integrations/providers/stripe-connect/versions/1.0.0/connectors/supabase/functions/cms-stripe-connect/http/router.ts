@@ -13,6 +13,7 @@ export type StripeConnectRouteHandlers = {
     connectWallet: RouteHandler;
     connectEnrollment: RouteHandler;
     connectVerification: RouteHandler;
+    configureMarketplaceTerms: RouteHandler;
     connectOnboarding: RouteHandler;
     connectOnboardingSession: RouteHandler;
     checkSellerHeldPaymentEligibility: RouteHandler;
@@ -64,6 +65,7 @@ const routes: Readonly<Record<string, RouteDefinition>> = {
     "/connect/wallet": ["GET", "connectWallet"],
     "/connect/enrollment": ["POST", "connectEnrollment"],
     "/connect/verification": ["POST", "connectVerification"],
+    "/configuration/marketplace-terms": ["POST", "configureMarketplaceTerms"],
     "/connect/onboarding": ["POST", "connectOnboarding"],
     "/connect/onboarding/session": ["POST", "connectOnboardingSession"],
     "/payments/seller-eligibility": ["POST", "checkSellerHeldPaymentEligibility"],

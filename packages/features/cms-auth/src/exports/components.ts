@@ -1,2 +1,2 @@
-export { isBuiltinProvider } from "cms-auth/core/validation";
-export * from "cms-auth/components/index";
+export { isBuiltinProvider } from "../core/validation";
+export * from "../components/index";

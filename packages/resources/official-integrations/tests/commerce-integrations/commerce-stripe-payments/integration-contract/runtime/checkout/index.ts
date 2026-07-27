@@ -5,6 +5,8 @@ import { assertProtectedOrderCreation } from "./protected-order";
 import { assertProtectedOrderErrorContracts } from "./protected-order-errors";
 import { assertCheckoutReplay } from "./replay";
 import { assertNegotiatedPaymentCreation } from "./negotiated-payment";
+import { assertBuyerLegalContracts } from "./buyer-legal";
+import { assertPlatformPayoutLeaseConflict } from "./payout-lease";
 
 export type PaymentCreationState = Awaited<ReturnType<typeof assertPaymentCreation>>;
 
@@ -13,9 +15,11 @@ export async function assertCheckoutContracts(
     identities: InMemoryIdentityService,
 ): Promise<PaymentCreationState> {
     const paymentState = await assertPaymentCreation(context, identities);
+    await assertBuyerLegalContracts(context, identities);
     await assertProtectedOrderCreation(context, identities);
     await assertProtectedOrderErrorContracts(context, identities);
     await assertNegotiatedPaymentCreation(context, identities);
+    await assertPlatformPayoutLeaseConflict(context, identities);
     await assertCheckoutReplay(context, identities, paymentState);
     return paymentState;
 }

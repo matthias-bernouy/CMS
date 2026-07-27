@@ -14,6 +14,7 @@ const inconsistentConsentCases: Array<{
     body: JsonRecord;
     error: string;
     accountReads: number;
+    configurationReads: number;
 }> = [
     {
         name: "rejects an explicitly false marketplace consent",
@@ -23,25 +24,29 @@ const inconsistentConsentCases: Array<{
             marketplaceTermsHash,
         },
         error: "marketplaceTermsAccepted must be true when provided",
-        accountReads: 1,
+        accountReads: 0,
+        configurationReads: 0,
     },
     {
         name: "rejects marketplace consent without its document identity",
         body: { marketplaceTermsAccepted: true },
         error: "marketplaceTermsVersion and marketplaceTermsHash are required with marketplaceTermsAccepted",
-        accountReads: 1,
+        accountReads: 0,
+        configurationReads: 1,
     },
     {
         name: "rejects a marketplace terms version without its hash",
         body: { marketplaceTermsVersion: termsVersion },
         error: "marketplaceTermsVersion and marketplaceTermsHash must be provided together",
         accountReads: 0,
+        configurationReads: 0,
     },
     {
         name: "rejects a marketplace terms hash without its version",
         body: { marketplaceTermsHash },
         error: "marketplaceTermsVersion and marketplaceTermsHash must be provided together",
         accountReads: 0,
+        configurationReads: 0,
     },
 ];
 
@@ -54,14 +59,27 @@ export function registerAccountEnrollmentContracts(createHarness: CreateAccountH
 
                 expect(response.status).toBe(400);
                 expect(await responseBody(response)).toEqual({ error: contract.error });
-                expect(harness.rest.postgrestRequests).toEqual(
-                    contract.accountReads
+                expect(harness.rest.postgrestRequests).toEqual([
+                    ...(contract.configurationReads
+                        ? [
+                              {
+                                  method: "POST",
+                                  table: "rpc/get_current_marketplace_terms_configuration",
+                                  searchParams: [],
+                                  body: {},
+                              },
+                          ]
+                        : []),
+                    ...(contract.accountReads
                         ? [{ method: "GET", table: "accounts", searchParams: accountQuery("user-123"), body: null }]
-                        : [],
-                );
-                expect(harness.rest.externalRequestOrder).toEqual(
-                    contract.accountReads ? ["postgrest:GET:accounts"] : [],
-                );
+                        : []),
+                ]);
+                expect(harness.rest.externalRequestOrder).toEqual([
+                    ...(contract.configurationReads
+                        ? ["postgrest:POST:rpc/get_current_marketplace_terms_configuration"]
+                        : []),
+                    ...(contract.accountReads ? ["postgrest:GET:accounts"] : []),
+                ]);
                 expect(harness.rest.stripeRequests).toEqual([]);
                 expect(harness.rest.rows("accounts")).toEqual([]);
                 expect(harness.rest.rows("marketplace_terms_acceptances")).toEqual([]);
@@ -89,6 +107,7 @@ export function registerAccountEnrollmentContracts(createHarness: CreateAccountH
             expect(response.status).toBe(502);
             expect(await responseBody(response)).toEqual({ error: "could not reload the enrolled seller account" });
             expect(harness.rest.externalRequestOrder).toEqual([
+                "postgrest:POST:rpc/get_current_marketplace_terms_configuration",
                 "postgrest:GET:accounts",
                 "stripe:GET:/v2/core/accounts/acct_custom_identity_123",
                 "postgrest:PATCH:accounts",

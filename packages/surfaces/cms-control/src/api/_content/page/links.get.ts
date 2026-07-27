@@ -1,9 +1,12 @@
 import type { ControlCms } from "cms-control/ControlCms";
 
-export default async function getLinks(_req: Request, cms: ControlCms) {
-    const links = await cms.repository.getLinks();
+export default async function getLinks(req: Request, cms: ControlCms) {
+    const publishedOnly = new URL(req.url).searchParams.get("visible") === "published";
+    const links = publishedOnly
+        ? (await cms.repository.getPagesMetadata({ visible: "published", sortBy: "title", sortOrder: "asc" })).map(
+              ({ path, title }) => ({ path, title }),
+          )
+        : await cms.repository.getLinks();
 
-    return new Response(JSON.stringify(links), {
-        headers: { "Content-Type": "application/json" },
-    });
+    return Response.json(links);
 }

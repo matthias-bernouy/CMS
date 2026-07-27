@@ -10,6 +10,63 @@ export async function handlePaymentReservationRoutes(
     method: string,
     table: string,
 ): Promise<Response | null> {
+    if (table === "rpc/get_current_marketplace_terms_configuration" && method === "POST") {
+        return jsonResponse(mock.currentMarketplaceTermsConfiguration);
+    }
+    if (table === "rpc/record_current_marketplace_terms_acceptance" && method === "POST") {
+        const body = JSON.parse(await request.text()) as JsonRecord;
+        const userId = String(body.p_cms_user_id);
+        const configuration = mock.currentMarketplaceTermsConfiguration;
+        const account = mock.tables.accounts.find((row) => row.cms_user_id === userId);
+        if (!account) {
+            return jsonResponse({ message: "not_found: Stripe Connect account" }, 400);
+        }
+        if (!configuration || typeof configuration.version !== "string" || typeof configuration.hash !== "string") {
+            return jsonResponse({ message: "not_found: marketplace terms configuration" }, 400);
+        }
+        const expectedVersion = body.p_expected_version;
+        const expectedHash = body.p_expected_hash;
+        if (
+            (expectedVersion === null) !== (expectedHash === null) ||
+            (configuration.mode === "published_page" && (expectedVersion === null || expectedHash === null)) ||
+            (expectedVersion !== null &&
+                (expectedVersion !== configuration.version || expectedHash !== configuration.hash))
+        ) {
+            return jsonResponse({ message: "conflict: MARKETPLACE_TERMS_VERSION_CHANGED" }, 400);
+        }
+        let acceptance = mock.tables.marketplace_terms_acceptances.find(
+            (row) => row.cms_user_id === userId && row.terms_version === configuration.version,
+        );
+        if (!acceptance) {
+            acceptance = {
+                cms_user_id: userId,
+                terms_version: configuration.version,
+                terms_hash: configuration.hash,
+                terms_version_id: configuration.termsVersionId ?? null,
+                accepted_at: "2026-07-06T12:03:00.000Z",
+            };
+            mock.tables.marketplace_terms_acceptances.push(acceptance);
+        }
+        if (
+            acceptance.terms_hash !== configuration.hash ||
+            acceptance.terms_version_id !== (configuration.termsVersionId ?? null)
+        ) {
+            return jsonResponse(
+                { message: "conflict: marketplace terms acceptance evidence does not match the configured revision" },
+                400,
+            );
+        }
+        const previousAcceptedAt = Date.parse(String(account.marketplace_terms_accepted_at ?? ""));
+        const acceptedAt = Date.parse(String(acceptance.accepted_at));
+        if (!Number.isFinite(previousAcceptedAt) || acceptedAt >= previousAcceptedAt) {
+            mock.update(account, {
+                marketplace_terms_version: acceptance.terms_version,
+                marketplace_terms_hash: acceptance.terms_hash,
+                marketplace_terms_accepted_at: acceptance.accepted_at,
+            });
+        }
+        return jsonResponse(acceptance);
+    }
     if (table === "rpc/reserve_protected_payment" && method === "POST") {
         const body = JSON.parse(await request.text()) as JsonRecord;
         const payment = asRecord(body.p_payment);

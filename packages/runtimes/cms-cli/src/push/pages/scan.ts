@@ -42,14 +42,17 @@ export async function scanPages(siteDir: string): Promise<LocalPage[]> {
     for (const file of files) {
         const raw = await readFile(file, "utf-8");
         const { frontmatter, content } = parseFrontmatter(raw);
+        const path = fileToUrlPath(relative(root, file));
         const fm: PageFrontmatter = {
-            title: frontmatter.title ?? "",
+            // The page API uses the path when no title is supplied. Keep the
+            // local canonical projection aligned with that wire payload.
+            title: frontmatter.title || path,
             description: frontmatter.description ?? "",
             visible: frontmatter.visible ?? true,
             tags: frontmatter.tags ?? [],
         };
         pages.push({
-            path: fileToUrlPath(relative(root, file)),
+            path,
             file: relative(siteDir, file),
             frontmatter: fm,
             content,

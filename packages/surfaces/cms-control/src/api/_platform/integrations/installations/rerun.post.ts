@@ -1,6 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { importBlocArtifact } from "cms-control/core/content/bloc/importBlocArtifact";
 import { definitionsForRerun } from "cms-control/core/management/integrations/definitions";
+import { publishedPageResolver } from "cms-control/core/management/integrations/publishedPageResolver";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import { runIntegrationInstallation, type IntegrationImportDeps } from "@bernouy/cms-integrations";
@@ -31,6 +32,7 @@ export default async function postIntegrationInstallationRerun(req: Request, cms
         connectorDeployers: cms.integrationConnectorDeployers,
         provisioners: cms.integrationProvisioners,
         sourceExecutorDeps: cms.sourceExecutorDeps,
+        resolvePublishedPage: publishedPageResolver(cms.repository, cms.config?.deliveryUrl),
     };
     try {
         const result = await runIntegrationInstallation({

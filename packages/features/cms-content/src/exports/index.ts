@@ -12,7 +12,7 @@
 export type { TBloc } from "cms-content/interfaces/blocs";
 export type { TPage, TPageRef } from "cms-content/interfaces/pages";
 export type { TTemplate } from "cms-content/interfaces/templates";
-export type { TSystem } from "cms-content/interfaces/settings";
+export type { AuthSettings, SignupLegalDocumentSettings, TSystem } from "cms-content/interfaces/settings";
 export type {
     IntegrationThemeContribution,
     ThemeCategoryContribution,
@@ -59,7 +59,12 @@ export {
     validateThemeSettings,
 } from "cms-content/core/theme";
 export { countValues, normalizeTags } from "cms-content/core/queries/counts";
-export { isPublishedPage } from "cms-content/core/lifecycle/publication";
+export {
+    isPublishedPage,
+    publishedPageSnapshot,
+    serializePublishedPageSnapshot,
+    type PublishedPageSnapshot,
+} from "cms-content/core/lifecycle/publication";
 export {
     ContentValidationError,
     ContentConflictError,
@@ -89,10 +94,17 @@ export {
     validateTemplatePatch,
 } from "cms-content/core/validation/documents/templates";
 export { validateSettingsPatch } from "cms-content/core/validation/settings";
+export { validateSignupLegalDocuments } from "cms-content/core/validation/signupLegalSettings";
 export { coercePageRef, pageRefToString } from "cms-content/core/validation/documents/pageRef";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export { generateStyleEntry } from "cms-content/http/generateStyleEntry";
+export {
+    PUBLISHED_PAGE_SNAPSHOT_ROUTE,
+    PUBLISHED_PAGE_SNAPSHOT_SCHEMA,
+    publishedPageSnapshotUrl,
+    servePublishedPageSnapshot,
+} from "cms-content/http/publishedPageSnapshot";
 
 // ── Constants & utils ──────────────────────────────────────────────────
 export * from "cms-content/core/constants/p9r-constants";

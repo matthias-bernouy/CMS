@@ -19,10 +19,7 @@ export function renderSetup(
     renderLinkedPlaceholder(shell.querySelector<HTMLElement>("[data-linked]")!);
     renderSummary(shell.querySelector<HTMLElement>("[data-summary]")!, summaryRows(definition));
     host.query<HTMLElement>("[data-detail-view]").replaceChildren(shell);
-    renderFields(host.query("[data-fields]"), host.query("[data-field-template]"), definition);
-    if (options.answers) {
-        applyAnswers(host.query("[data-fields]"), options.answers);
-    }
+    renderFields(host.query("[data-fields]"), host.query("[data-field-template]"), definition, options.answers);
 }
 
 export function renderImporting(
@@ -46,26 +43,4 @@ function summaryRows(definition: IntegrationDefinition): Array<{ label: string; 
         { label: "Secrets", value: rows.filter((row) => row.type === "Secret").length },
         { label: "Connectors", value: rows.filter((row) => row.type === "Connector").length },
     ];
-}
-
-function applyAnswers(root: ParentNode, answers: Record<string, unknown>): void {
-    for (const [name, value] of Object.entries(answers)) {
-        const element = root.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-            `[name="${cssEscape(name)}"]`,
-        );
-        if (!element) {
-            continue;
-        }
-        if (element instanceof HTMLInputElement && element.type === "checkbox") {
-            element.checked = value === true;
-        } else {
-            element.value = value == null ? "" : typeof value === "string" ? value : JSON.stringify(value);
-        }
-    }
-}
-
-function cssEscape(value: string): string {
-    return typeof CSS !== "undefined" && typeof CSS.escape === "function"
-        ? CSS.escape(value)
-        : value.replaceAll('"', '\\"');
 }

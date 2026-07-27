@@ -4,7 +4,7 @@ import { executeFunction } from "@bernouy/cms-functions";
 import type { IntegrationContractContext } from "../../harness";
 
 export async function assertSettlementWorker(
-    { releaseWorker, sources }: IntegrationContractContext,
+    { releaseWorker, sources, sellerPayoutSchedule }: IntegrationContractContext,
     identities: InMemoryIdentityService,
 ): Promise<void> {
     const releaseWorkerCalls: string[] = [];
@@ -39,7 +39,7 @@ export async function assertSettlementWorker(
                                     releaseKind: "initial",
                                     sellerId: "seller-subject",
                                     sellerRequiredMinimumBalanceAmount: 0,
-                                    payoutDelayDays: 14,
+                                    payoutDelayDays: 0,
                                     amount: 2050,
                                     currency: "EUR",
                                     financialTermsHash: "terms_hash_42",
@@ -49,7 +49,7 @@ export async function assertSettlementWorker(
                     }
                     if (request.url.includes("/payout/seller")) {
                         releaseWorkerPayoutBodies.push(await request.json());
-                        return Response.json({ payoutControl: { interval: "weekly" } });
+                        return Response.json({ payoutControl: { interval: "daily" } });
                     }
                     if (request.url.includes("/settlement/release")) {
                         return Response.json({
@@ -81,11 +81,10 @@ export async function assertSettlementWorker(
     expect(releaseWorkerPayoutBodies).toEqual([
         {
             userId: "seller-subject",
-            payoutScheduleChangeId: "settlement-release:release-42:0:14",
-            interval: "weekly",
-            weeklyPayoutDays: ["monday"],
+            payoutScheduleChangeId: `settlement-release:release-42:0:0:${sellerPayoutSchedule}`,
+            payoutSchedule: sellerPayoutSchedule,
             minimumBalanceEur: 0,
-            delayDaysOverride: 14,
+            delayDaysOverride: 0,
             reason: "Commerce authorized settlement release",
         },
     ]);

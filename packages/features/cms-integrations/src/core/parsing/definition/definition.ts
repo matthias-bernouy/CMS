@@ -1,5 +1,9 @@
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
-import { assertPasswordInputsDeclareSecrets, sensitiveInputNames } from "../../shared/inputSensitivity";
+import {
+    assertPasswordInputsDeclareSecrets,
+    assertSecretInputsUseStringValues,
+    sensitiveInputNames,
+} from "../../shared/inputSensitivity";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
 import { parseArtifactTemplates } from "../templates/sourceTemplates";
 import { parseAfterInstallationTemplates, validateAfterInstallationTemplates } from "./afterInstallation";
@@ -21,6 +25,7 @@ import { isRecord, parseJsonAnswer, text } from "./values";
 
 export function assertDefinitionUsable(definition: IntegrationDefinition): void {
     assertUniqueInputs(definition.inputs);
+    assertSecretInputsUseStringValues(definition);
     assertPasswordInputsDeclareSecrets(definition);
     validateDependencies(definition);
     for (const input of definition.inputs) {
@@ -82,6 +87,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     const inputs = value.inputs.map((input, index) => parseInput(input, `definition.inputs.${index}`));
     assertUniqueInputs(inputs);
     const parsedDefinition = { kind, label, inputs } satisfies Pick<IntegrationDefinition, "kind" | "label" | "inputs">;
+    assertSecretInputsUseStringValues(parsedDefinition);
     assertPasswordInputsDeclareSecrets(parsedDefinition);
     const secrets = parseSecretTemplates(value.secrets, new Set(sensitiveInputNames(parsedDefinition)));
     const generatedSecrets = parseGeneratedSecretTemplates(value.generatedSecrets);

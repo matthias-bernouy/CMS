@@ -99,6 +99,7 @@ export { InMemoryLocalCredentialStore } from "cms-auth/default-implementation/me
 export { InMemoryPatRepository } from "cms-auth/default-implementation/memory/InMemoryPatRepository";
 export { InMemoryAuthTokenStore } from "cms-auth/default-implementation/memory/InMemoryAuthTokenStore";
 export { InMemoryEmailer } from "cms-auth/default-implementation/memory/InMemoryEmailer";
+export { InMemorySignupLegalAcceptanceStore } from "cms-auth/signup-legal/InMemorySignupLegalAcceptanceStore";
 export { ConsoleEmailer } from "cms-auth/default-implementation/ConsoleEmailer";
 export {
     SmtpEmailer,
@@ -127,6 +128,22 @@ export {
     InMemoryAuthentication,
     type InMemoryAuthConfig,
 } from "cms-auth/default-implementation/memory/InMemoryAuthentication";
+export {
+    PageBackedSignupLegalAcceptancePolicy,
+    type PageBackedSignupLegalAcceptanceConfig,
+} from "cms-auth/signup-legal/PageBackedSignupLegalAcceptancePolicy";
+export type {
+    PreparedSignupLegalAcceptance,
+    ResolvedSignupLegalPage,
+    SignupLegalAcceptance,
+    SignupLegalAcceptancePolicy,
+    SignupLegalAcceptanceStore,
+    SignupLegalDocumentDefinition,
+    SignupLegalDocumentEvidence,
+    SignupLegalPageSnapshot,
+    SignupLegalRequirement,
+    SignupLegalRequirements,
+} from "cms-auth/signup-legal/contracts";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export {

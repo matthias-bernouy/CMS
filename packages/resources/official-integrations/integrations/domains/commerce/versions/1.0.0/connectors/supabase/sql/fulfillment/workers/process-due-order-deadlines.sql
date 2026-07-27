@@ -111,9 +111,10 @@ begin
         exit when v_processed >= v_limit;
     end loop;
 
-    -- A buyer cancellation after label creation may be auto-approved only
-    -- after the scan grace period and only while both seller handoff and
-    -- trusted carrier acceptance are still absent under the same row locks.
+    -- A buyer cancellation while shipment creation is in flight or after
+    -- label creation may be auto-approved only after the scan grace period
+    -- and only while both seller handoff and trusted carrier acceptance are
+    -- still absent under the same row locks.
     if v_processed < v_limit then
         for v_candidate in
             select request.id, request.order_id
@@ -122,7 +123,10 @@ begin
             join commerce.order_fulfillments fulfillment on fulfillment.order_id = request.order_id
             where request.status = 'requested'
               and request.requested_by_kind = 'buyer'
-              and fulfillment.status in ('awaiting_shipment', 'label_created')
+              and fulfillment.status in (
+                  'awaiting_shipment', 'shipment_creating', 'label_created'
+              )
+              and fulfillment.payment_confirmed_at is not null
               and fulfillment.scan_grace_deadline <= now()
               and fulfillment.seller_handoff_declared_at is null
               and fulfillment.carrier_accepted_at is null
@@ -144,6 +148,85 @@ begin
         end loop;
     end if;
 
+    -- The seller handoff deadline and carrier scan grace are separate facts.
+    -- Missing seller declaration at the first deadline blocks new shipment
+    -- work, but keeps the settlement held and permits a trusted carrier scan
+    -- to recover the order during the remaining grace period.
+    if v_processed < v_limit then
+        for v_candidate in
+            select order_row.id, order_row.public_id,
+                   fulfillment.seller_handoff_deadline,
+                   fulfillment.scan_grace_deadline
+            from commerce.orders order_row
+            join commerce.order_fulfillments fulfillment on fulfillment.order_id = order_row.id
+            join commerce.order_settlements settlement on settlement.order_id = order_row.id
+            where order_row.status = 'active'
+              and fulfillment.payment_confirmed_at is not null
+              and fulfillment.status in (
+                  'awaiting_shipment', 'shipment_creating', 'label_created'
+              )
+              and fulfillment.seller_handoff_deadline <= now()
+              and fulfillment.scan_grace_deadline > now()
+              and fulfillment.seller_handoff_declared_at is null
+              and fulfillment.carrier_accepted_at is null
+              and fulfillment.blocking_reason is null
+              and settlement.status = 'held'
+              and not exists (
+                  select 1 from commerce.order_cancellation_requests request
+                  where request.order_id = order_row.id
+                    and request.status in (
+                        'requested', 'approved', 'provider_cancellation_pending',
+                        'refund_pending', 'manual_review'
+                    )
+              )
+              and not exists (
+                  select 1 from commerce.financial_exceptions financial_exception
+                  where financial_exception.deduplication_key =
+                      'deadline:seller-handoff:' || order_row.id
+              )
+            order by fulfillment.seller_handoff_deadline, order_row.id
+            limit v_limit - v_processed
+            for update of order_row, fulfillment, settlement skip locked
+        loop
+            update commerce.order_fulfillments set
+                blocking_reason = 'seller_handoff_deadline_elapsed_without_declaration',
+                version = version + 1,
+                updated_at = now()
+            where order_id = v_candidate.id;
+            insert into commerce.financial_exceptions (
+                deduplication_key, order_id, kind, severity, reason, details
+            ) values (
+                'deadline:seller-handoff:' || v_candidate.id,
+                v_candidate.id, 'fulfillment_ambiguity', 'medium',
+                'Seller handoff deadline elapsed without declaration or trusted carrier acceptance',
+                jsonb_build_object(
+                    'runKey', p_run_key,
+                    'sellerHandoffDeadline', v_candidate.seller_handoff_deadline,
+                    'scanGraceDeadline', v_candidate.scan_grace_deadline
+                )
+            ) on conflict (deduplication_key) where deduplication_key is not null do nothing;
+            perform commerce.append_financial_event(
+                v_candidate.id, 'fulfillment', v_candidate.id::text,
+                'seller_handoff_deadline_elapsed', 'system',
+                'deadline-worker:' || p_run_key, null,
+                jsonb_build_object(
+                    'sellerHandoffDeadline', v_candidate.seller_handoff_deadline,
+                    'scanGraceDeadline', v_candidate.scan_grace_deadline
+                ),
+                'commerce.order.seller_handoff_deadline_elapsed',
+                'deadline:seller-handoff:' || v_candidate.id
+            );
+            v_events := v_events || jsonb_build_array(jsonb_build_object(
+                'kind', 'fulfillment_seller_handoff',
+                'orderId', v_candidate.id,
+                'orderPublicId', v_candidate.public_id,
+                'outcome', 'blocked_until_carrier_scan'
+            ));
+            v_processed := v_processed + 1;
+            exit when v_processed >= v_limit;
+        end loop;
+    end if;
+
     -- Missing scans without an eligible cancellation never imply a refund.
     -- They block release and enter the exception queue for carrier recovery.
     if v_processed < v_limit then
@@ -153,14 +236,21 @@ begin
             join commerce.order_fulfillments fulfillment on fulfillment.order_id = order_row.id
             join commerce.order_settlements settlement on settlement.order_id = order_row.id
             where order_row.status = 'active'
-              and fulfillment.status in ('awaiting_shipment', 'label_created', 'seller_handoff_declared')
+              and fulfillment.payment_confirmed_at is not null
+              and fulfillment.status in (
+                  'awaiting_shipment', 'shipment_creating', 'label_created',
+                  'seller_handoff_declared'
+              )
               and fulfillment.scan_grace_deadline <= now()
               and fulfillment.carrier_accepted_at is null
               and settlement.status not in ('manual_review', 'refunded', 'reversed')
               and not exists (
                   select 1 from commerce.order_cancellation_requests request
                   where request.order_id = order_row.id
-                    and request.status in ('requested', 'approved', 'refund_pending', 'manual_review')
+                    and request.status in (
+                        'requested', 'approved', 'provider_cancellation_pending',
+                        'refund_pending', 'manual_review'
+                    )
               )
             order by fulfillment.scan_grace_deadline, order_row.id
             limit v_limit - v_processed
@@ -174,6 +264,15 @@ begin
                 status = 'manual_review', manual_review_reason = 'fulfillment_reconciliation_required',
                 version = version + 1, updated_at = now()
             where order_id = v_candidate.id;
+            update commerce.financial_exceptions set
+                status = 'resolved',
+                resolved_at = now(),
+                resolved_by = 'deadline-worker:' || p_run_key,
+                details = details || jsonb_build_object(
+                    'escalatedTo', 'scan_grace_elapsed_without_carrier_acceptance'
+                )
+            where deduplication_key = 'deadline:seller-handoff:' || v_candidate.id
+              and status <> 'resolved';
             insert into commerce.financial_exceptions (
                 deduplication_key, order_id, kind, severity, reason, details
             ) values (

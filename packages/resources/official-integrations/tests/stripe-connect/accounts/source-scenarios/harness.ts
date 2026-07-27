@@ -8,6 +8,7 @@ export type AccountSourceScenarioHarness = SourceRequestHarness & {
         seedActiveLegacyAccount(userId: string): void;
         seedHostedV2AccountWithRequirements(userId: string): void;
         seedLegacyRecipientAccount(userId: string): void;
+        setCurrentMarketplaceTermsConfiguration(configuration: JsonRecord | null): void;
         setPaymentIntentSucceeded(paymentIntentId: string): void;
         setStripeAccountState(userId: string, patch: JsonRecord): void;
     };

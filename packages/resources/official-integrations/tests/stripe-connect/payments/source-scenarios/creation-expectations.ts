@@ -22,7 +22,30 @@ export function expectWalletBlocContract(bloc: ImportedBloc | undefined): void {
     expect(bloc?.viewJS).toContain('status?.bankAccountStatus === "attached"');
     expect(bloc?.viewJS).toContain('["requirements_due", "rejected"].includes');
     expect(bloc?.viewJS).toContain("this.showPendingVerification();");
-    expect(bloc?.viewJS).not.toContain("await this.refresh();");
+    expect(bloc?.viewJS).toContain('requestStripeSource("getConnectStatus")');
+    expect(bloc?.viewJS).toContain(
+        "this.marketplaceTermsRequirement = marketplaceTermsRequirement(status?.marketplaceTermsRequirement)",
+    );
+    expect(bloc?.viewJS).toContain("publishedMarketplaceTermsRequirement(this.marketplaceTermsRequirement)");
+    expect(bloc?.viewJS).toContain("publishedRequirement?.consentText");
+    expect(bloc?.viewJS).toContain("publishedRequirement?.label");
+    expect(bloc?.viewJS).toContain("publishedRequirement?.page.path");
+    expect(bloc?.viewJS).toContain('name="marketplaceTermsAccepted" autocomplete="off" required');
+    expect(bloc?.viewJS).toContain('name="paymentTermsAccepted" autocomplete="off" required');
+    expect(bloc?.viewJS).toContain("shown_and_accepted: paymentTermsAccepted");
+    expect(bloc?.viewJS).toContain("marketplaceTermsAccepted,");
+    expect(bloc?.viewJS).toMatch(/expectedMarketplaceTermsVersion:\s*marketplaceTerms\.version/);
+    expect(bloc?.viewJS).toMatch(/expectedMarketplaceTermsHash:\s*marketplaceTerms\.hash/);
+    expect(bloc?.viewJS).toContain('requestStripeSource("enrollConnectSeller"');
+    expect(bloc?.viewJS).toContain("status?.marketplaceTermsCurrentVersionAccepted !== true");
+    expect(bloc?.viewJS).toContain("submitMarketplaceTermsAcceptance");
+    expect(bloc?.viewJS).toContain("showMarketplaceTermsUnavailable");
+    expect(bloc?.viewJS).toContain("renderLinkedConsent");
+    expect(bloc?.viewJS).toContain('error.message === "MARKETPLACE_TERMS_VERSION_CHANGED"');
+    expect(bloc?.viewJS).toContain("this.activationMarketplaceTermsInput.checked = false");
+    expect(bloc?.viewJS).toContain("this.termsAcceptanceInput.checked = false");
+    expect(bloc?.viewJS).toContain("await this.refresh()");
+    expect(bloc?.viewJS).toContain("Les conditions vendeur ont changé. Relis la nouvelle version avant de continuer.");
     expect(bloc?.viewJS).toContain('requestAccountSource("getAccount")');
     expect(bloc?.viewJS).toContain('requestAuthSource("me")');
     expect(bloc?.viewJS).toContain("currentAccount?.subject?.email");

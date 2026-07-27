@@ -53,7 +53,9 @@
                 "body": {
                     "orderId": "$resource.orderId",
                     "reason": "$field.refundReason",
-                    "amount": "$field.refundAmount"
+                    "merchandiseRefundAmount": "$field.merchandiseRefundAmount",
+                    "shippingRefundAmount": "$field.shippingRefundAmount",
+                    "protectionFeeRefundAmount": "$field.protectionFeeRefundAmount"
                 }
             }
         }

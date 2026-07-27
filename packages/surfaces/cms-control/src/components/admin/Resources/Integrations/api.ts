@@ -1,4 +1,9 @@
-import type { IntegrationImportPayload, BrowserTab } from "./model";
+import type {
+    BrowserTab,
+    IntegrationAnswerValue,
+    IntegrationImportPayload,
+    IntegrationInstallationDetail,
+} from "./model";
 
 export type IntegrationImportResponse = {
     installation?: {
@@ -10,6 +15,11 @@ export type IntegrationImportResponse = {
         runNumber: number;
         status: string;
     };
+};
+
+export type IntegrationPageLink = {
+    path: string;
+    title: string;
 };
 
 export function basePath(): string {
@@ -66,10 +76,30 @@ export async function importIntegration(payload: IntegrationImportPayload): Prom
     return result;
 }
 
-export async function rerunIntegrationInstallation(id: string): Promise<void> {
-    await postJson(`${route("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id)}`, {});
+export async function getIntegrationInstallation(id: string): Promise<IntegrationInstallationDetail> {
+    const response = await fetch(`${route("/api/integrations/installations")}?id=${encodeURIComponent(id)}`);
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+    return response.json() as Promise<IntegrationInstallationDetail>;
+}
+
+export async function rerunIntegrationInstallation(
+    id: string,
+    answers?: Record<string, IntegrationAnswerValue>,
+): Promise<void> {
+    const body = answers ? { answers } : {};
+    await postJson(`${route("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id)}`, body);
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
+}
+
+export async function getPageLinks(): Promise<IntegrationPageLink[]> {
+    const response = await fetch(route("/api/page/links?visible=published"));
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+    return response.json() as Promise<IntegrationPageLink[]>;
 }
 
 async function postJson<T = unknown>(url: string, body: unknown): Promise<T> {

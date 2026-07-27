@@ -1,3 +1,15 @@
+import {
+    acceptedLegalDocumentVersionIds,
+    errorCode,
+    isLegalRequirementsRefreshError,
+    LEGAL_ACCEPTANCE_REQUIRED,
+    LEGAL_DOCUMENT_NOT_AVAILABLE,
+    LEGAL_DOCUMENT_VERSION_CHANGED,
+    normalizeLegalRequirements,
+    renderLegalRequirements,
+} from "./legal-consent";
+import legalStyle from "./legal-style.css" with { type: "text" };
+
 const STRIPE_JS_URL = "https://js.stripe.com/v3/";
 const PAYMENT_ELEMENT_SLOT = "stripe-payment-element";
 const PAYMENT_RECONCILIATION_POLL_TIMEOUT_MS = 60_000;
@@ -21,6 +33,7 @@ class CommerceStripePayment extends HTMLElement {
             "border-color",
             "text-color",
             "appearance",
+            "legal-appearance",
         ];
     }
 
@@ -36,6 +49,8 @@ class CommerceStripePayment extends HTMLElement {
         this.payment = null;
         this.paymentMountElement = null;
         this.paymentSubmissionLocked = false;
+        this.legalRequirements = null;
+        this.legalRequirementsSignature = null;
     }
 
     connectedCallback() {
@@ -72,6 +87,7 @@ class CommerceStripePayment extends HTMLElement {
         }
         if (name === "order-id") {
             this.paymentSubmissionLocked = false;
+            this.resetLegalRequirements();
         }
         this.syncPresentation();
         if (
@@ -87,6 +103,10 @@ class CommerceStripePayment extends HTMLElement {
             this.paymentElement?.update({ layout: { type: this.paymentLayout() } });
             return;
         }
+        if (name === "legal-appearance") {
+            this.renderLegalRequirements();
+            return;
+        }
         if (paymentAttributes().includes(name) && !isFramed()) {
             this.initializedSignature = null;
             this.submitButton.disabled = true;
@@ -97,6 +117,8 @@ class CommerceStripePayment extends HTMLElement {
     render() {
         this.root.innerHTML = `
             <style>
+                ${legalStyle}
+
                 :host {
                     --payment-accent: var(--primary-base, #16634d);
                     --payment-accent-contrasted: var(--primary-contrasted, #ffffff);
@@ -243,6 +265,10 @@ class CommerceStripePayment extends HTMLElement {
                     <strong class="amount" data-amount></strong>
                 </div>
                 <form data-form novalidate>
+                    <fieldset class="legal" data-legal-region hidden>
+                        <legend>Conditions contractuelles</legend>
+                        <div class="legal-documents" data-legal-documents></div>
+                    </fieldset>
                     <div data-payment-region>
                         <slot name="stripe-payment-element"></slot>
                     </div>
@@ -266,7 +292,7 @@ class CommerceStripePayment extends HTMLElement {
         `;
         this.form.addEventListener("submit", (event) => {
             event.preventDefault();
-            this.confirm().catch((error) => this.fail(error));
+            this.submitPayment().catch((error) => this.handlePaymentError(error));
         });
     }
 
@@ -288,9 +314,7 @@ class CommerceStripePayment extends HTMLElement {
             this.getAttribute("copy") || "Choisissez un moyen de paiement et confirmez la commande.";
         this.descriptionElement.textContent = this.getAttribute("summary-label") || "Total de la commande";
         this.amountElement.textContent = amount ? formatAmount(amount.amountTotal, amount.currency) : "—";
-        this.submitButton.textContent =
-            this.getAttribute("button-label") ||
-            (amount ? `Payer ${formatAmount(amount.amountTotal, amount.currency)}` : "Payer");
+        this.syncSubmitLabel(amount);
         for (const [attribute, property] of [
             ["accent-color", "--payment-accent"],
             ["background-color", "--payment-background"],
@@ -309,8 +333,52 @@ class CommerceStripePayment extends HTMLElement {
     scheduleInitialize() {
         clearTimeout(this.initializeTimer);
         this.initializeTimer = setTimeout(() => {
-            this.initialize().catch((error) => this.fail(error));
+            this.initialize().catch((error) => this.handlePaymentError(error));
         }, 25);
+    }
+
+    syncSubmitLabel(amount = trustedPaymentAmount(this.payment)) {
+        if (this.legalRequirements?.enabled && !this.elements && !this.paymentSubmissionLocked) {
+            this.submitButton.textContent = "Continuer vers le paiement";
+            return;
+        }
+        this.submitButton.textContent =
+            this.getAttribute("button-label") ||
+            (amount ? `Payer ${formatAmount(amount.amountTotal, amount.currency)}` : "Payer");
+    }
+
+    renderLegalRequirements() {
+        const requirements = this.legalRequirements || { enabled: false, documents: [] };
+        renderLegalRequirements(
+            this.legalDocuments,
+            requirements,
+            () => {
+                if (this.status.dataset.errorCode === LEGAL_ACCEPTANCE_REQUIRED) {
+                    this.setStatus("", "idle");
+                    delete this.status.dataset.errorCode;
+                }
+            },
+            this.legalAppearance(),
+        );
+        this.legalRegion.hidden = !requirements.enabled;
+    }
+
+    resetLegalRequirements() {
+        this.legalRequirements = null;
+        this.legalRequirementsSignature = null;
+        this.initializedSignature = null;
+        this.paymentElement?.destroy();
+        this.paymentElement = null;
+        this.elements = null;
+        this.stripe = null;
+        this.payment = null;
+        this.legalDocuments?.replaceChildren();
+        if (this.legalRegion) {
+            this.legalRegion.hidden = true;
+        }
+        if (this.paymentRegion) {
+            this.paymentRegion.hidden = false;
+        }
     }
 
     async initialize() {
@@ -321,15 +389,39 @@ class CommerceStripePayment extends HTMLElement {
         }
 
         this.submitButton.disabled = true;
-        this.setStatus("Préparation du paiement sécurisé…", "idle");
-        const [Stripe, config, payment] = await Promise.all([
-            loadStripeJs(),
-            this.clientConfig(),
-            this.requestFunction("createPaymentForOrder", {
-                method: "POST",
-                body: JSON.stringify(input),
+        this.setStatus("Vérification des conditions contractuelles…", "idle");
+        const requirements = normalizeLegalRequirements(
+            await this.requestFunction("getPaymentLegalRequirements", {
+                query: { orderId: input.orderId },
             }),
-        ]);
+        );
+        if (JSON.stringify(this.readPaymentInput(false)) !== signature) {
+            this.scheduleInitialize();
+            return;
+        }
+        this.legalRequirements = requirements;
+        this.legalRequirementsSignature = signature;
+        this.renderLegalRequirements();
+        if (requirements.enabled) {
+            this.paymentRegion.hidden = true;
+            this.submitButton.disabled = false;
+            this.syncSubmitLabel();
+            this.setStatus("", "idle");
+            return;
+        }
+        await this.initializePayment(input, signature, []);
+    }
+
+    async initializePayment(input, signature, acceptedVersionIds) {
+        this.submitButton.disabled = true;
+        this.setStatus("Préparation du paiement sécurisé…", "idle");
+        const payment = await this.requestFunction("createPaymentForOrder", {
+            method: "POST",
+            body: JSON.stringify({
+                ...input,
+                acceptedLegalDocumentVersionIds: acceptedVersionIds,
+            }),
+        });
         if (JSON.stringify(this.readPaymentInput(false)) !== signature) {
             this.scheduleInitialize();
             return;
@@ -345,8 +437,10 @@ class CommerceStripePayment extends HTMLElement {
             throw new Error("Le service de paiement n’a pas renvoyé de session valide.");
         }
 
+        this.paymentRegion.hidden = false;
         await waitUntilVisible(this);
 
+        const [Stripe, config] = await Promise.all([loadStripeJs(), this.clientConfig()]);
         this.paymentElement?.destroy();
         this.stripe = Stripe(config.publishableKey);
         this.elements = this.stripe.elements({
@@ -365,9 +459,42 @@ class CommerceStripePayment extends HTMLElement {
         await ready;
         this.initializedSignature = signature;
         this.submitButton.disabled = false;
+        this.syncSubmitLabel();
         this.setStatus("", "idle");
         this.dispatch("ready", { paymentId: payment.paymentId });
         await this.applyRedirectResult(payment.clientSecret);
+    }
+
+    async submitPayment() {
+        if (!this.elements) {
+            const input = this.readPaymentInput(true);
+            const signature = JSON.stringify(input);
+            if (!this.legalRequirements || this.legalRequirementsSignature !== signature) {
+                await this.initialize();
+                return;
+            }
+            const acceptedVersionIds = acceptedLegalDocumentVersionIds(this.legalDocuments, this.legalRequirements);
+            await this.initializePayment(input, signature, acceptedVersionIds);
+            return;
+        }
+        await this.confirm();
+    }
+
+    async handlePaymentError(error) {
+        if (!isLegalRequirementsRefreshError(error)) {
+            this.fail(error);
+            return;
+        }
+        this.resetLegalRequirements();
+        try {
+            await this.initialize();
+            this.setStatus(
+                "Les conditions contractuelles ont changé. Relisez-les et acceptez leur nouvelle version.",
+                "error",
+            );
+        } catch (refreshError) {
+            this.fail(refreshError);
+        }
     }
 
     async confirm() {
@@ -509,11 +636,11 @@ class CommerceStripePayment extends HTMLElement {
         });
         const body = await response.json().catch(() => null);
         if (!response.ok) {
-            const message =
+            const code =
                 body && typeof body === "object" && "error" in body
                     ? String(body.error)
                     : `${response.status} ${response.statusText}`;
-            throw new Error(message);
+            throw new CmsFunctionRequestError(code, response.status);
         }
         if (!body || typeof body !== "object" || Array.isArray(body)) {
             throw new Error("Réponse de paiement invalide.");
@@ -570,6 +697,10 @@ class CommerceStripePayment extends HTMLElement {
         return this.getAttribute("link-wallet") === "auto" ? "auto" : "never";
     }
 
+    legalAppearance() {
+        return this.getAttribute("legal-appearance") === "compact" ? "compact" : "detailed";
+    }
+
     returnUrl(paymentId) {
         const value = this.getAttribute("return-url")?.trim() || window.location.href;
         const url = new URL(value, window.location.href);
@@ -598,7 +729,12 @@ class CommerceStripePayment extends HTMLElement {
         const currentFormIsUsable = Boolean(
             input && this.elements && JSON.stringify(input) === this.initializedSignature,
         );
-        this.submitButton.disabled = this.paymentSubmissionLocked || !currentFormIsUsable;
+        const legalAcceptanceCanRetry = Boolean(
+            input && this.legalRequirements?.enabled && JSON.stringify(input) === this.legalRequirementsSignature,
+        );
+        this.submitButton.disabled = this.paymentSubmissionLocked || (!currentFormIsUsable && !legalAcceptanceCanRetry);
+        this.syncSubmitLabel();
+        this.status.dataset.errorCode = errorCode(error);
         this.setStatus(errorMessage(error), "error");
         this.dispatch("error", { message: errorMessage(error) });
     }
@@ -633,6 +769,12 @@ class CommerceStripePayment extends HTMLElement {
     }
     get paymentRegion() {
         return this.root.querySelector("[data-payment-region]");
+    }
+    get legalRegion() {
+        return this.root.querySelector("[data-legal-region]");
+    }
+    get legalDocuments() {
+        return this.root.querySelector("[data-legal-documents]");
     }
     get preview() {
         return this.root.querySelector("[data-preview]");
@@ -830,8 +972,26 @@ function headersObject(headers) {
     return headers ? Object.fromEntries(new Headers(headers).entries()) : {};
 }
 
+class CmsFunctionRequestError extends Error {
+    constructor(code, status) {
+        super(code);
+        this.name = "CmsFunctionRequestError";
+        this.code = code;
+        this.status = status;
+    }
+}
+
 function errorMessage(error) {
-    const message = error instanceof Error ? error.message.trim() : "";
+    const message = errorCode(error);
+    if (message === LEGAL_ACCEPTANCE_REQUIRED) {
+        return "Vous devez accepter toutes les conditions contractuelles pour continuer.";
+    }
+    if (message === LEGAL_DOCUMENT_VERSION_CHANGED) {
+        return "Les conditions contractuelles ont changé. Relisez-les avant de continuer.";
+    }
+    if (message === LEGAL_DOCUMENT_NOT_AVAILABLE) {
+        return "Les conditions contractuelles sont temporairement indisponibles. Le paiement ne peut pas démarrer.";
+    }
     if (message === "SELLER_PROTECTED_PAYMENT_NOT_READY") {
         return "Cette annonce n’est pas disponible à l’achat pour le moment. Le vendeur doit finaliser l’activation de ses paiements.";
     }

@@ -36,6 +36,16 @@ export class CommerceStripePaymentEditor extends Editor {
                     { type: "page-link", label: "Return page", attribute: "return-url" },
                     {
                         type: "segmented",
+                        label: "Legal agreements",
+                        attribute: "legal-appearance",
+                        defaultValue: "detailed",
+                        options: [
+                            { label: "Detailed", value: "detailed" },
+                            { label: "Compact", value: "compact" },
+                        ],
+                    },
+                    {
+                        type: "segmented",
                         label: "Payment methods layout",
                         attribute: "layout",
                         defaultValue: "tabs",

@@ -6,6 +6,12 @@ import { type IntegrationContractContext, SELLER_TERMS_HASH, SELLER_TERMS_VERSIO
 const agreementId = "11111111-1111-4111-8111-111111111111";
 const listingAmount = 11_000;
 const agreedAmount = 12_000;
+const acceptedLegalDocumentVersionId = "018f72b8-1f90-7c31-a933-592c90c8178a";
+const paymentInput = {
+    orderId: 84,
+    acceptedLegalDocumentVersionIds: [acceptedLegalDocumentVersionId],
+};
+const preparedPaymentInput = { ...paymentInput, paymentProvider: "stripe" };
 
 export async function assertNegotiatedPaymentCreation(
     { fn, protectedOrderFn, sources }: IntegrationContractContext,
@@ -57,7 +63,7 @@ export async function assertNegotiatedPaymentCreation(
 
     let stripePaymentBody: Record<string, unknown> | undefined;
     let recordedPaymentBody: Record<string, unknown> | undefined;
-    const paymentResponse = await executeFunction(fn, jsonRequest("createPaymentForOrder", { orderId: 84 }), {
+    const paymentResponse = await executeFunction(fn, jsonRequest("createPaymentForOrder", paymentInput), {
         sources,
         identities,
         user: { id: "negotiated-buyer", role: "user" },
@@ -81,7 +87,7 @@ export async function assertNegotiatedPaymentCreation(
                     return saleCapability();
                 }
                 if (request.url.startsWith("https://commerce.test/payment/prepare")) {
-                    expect(await request.json()).toEqual({ orderId: 84 });
+                    expect(await request.json()).toEqual(preparedPaymentInput);
                     return Response.json(negotiatedFinancialTerms());
                 }
                 if (request.url.startsWith("https://stripe.test/payout/platform")) {

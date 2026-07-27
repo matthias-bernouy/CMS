@@ -57,6 +57,7 @@ export class CommerceOfferPriceForm extends Composition {
         "range-message",
         "required-message",
         "seller-terms-label",
+        "seller-terms-changed-message",
         "seller-terms-consent-required-message",
         "seller-terms-url",
         "source-id",
@@ -91,6 +92,7 @@ export class CommerceOfferPriceForm extends Composition {
         super({ template });
         this.offer = null;
         this.enrollment = null;
+        this.sellerTermsRequirement = null;
         this.profile = null;
         this.enrollmentRequired = false;
         this.termsConsentRequired = false;
@@ -175,6 +177,7 @@ export class CommerceOfferPriceForm extends Composition {
 
             this.enrollment = await this.requestFunction(this.enrollmentFunctionId);
             const connect = this.enrollment?.connect || this.enrollment;
+            this.sellerTermsRequirement = marketplaceTermsRequirement(connect?.marketplaceTermsRequirement);
             this.enrollmentRequired = !stripeEnrollmentComplete(connect);
             this.termsConsentRequired =
                 this.enrollmentRequired || connect?.marketplaceTermsCurrentVersionAccepted !== true;
@@ -184,6 +187,7 @@ export class CommerceOfferPriceForm extends Composition {
             } else {
                 this.profile = null;
             }
+            this.syncPresentation();
             this.renderActivationState();
 
             this.renderOffer();
@@ -318,7 +322,7 @@ export class CommerceOfferPriceForm extends Composition {
                 const message = this.enrollmentRequired
                     ? this.text(
                           "first-enrollment-consent-required-message",
-                          "Tu dois accepter les conditions vendeur Courtside et l’accord Stripe pour continuer.",
+                          "Tu dois accepter les conditions vendeur Courtside et les conditions du service de paiement pour continuer.",
                       )
                     : this.text(
                           "seller-terms-consent-required-message",
@@ -347,6 +351,10 @@ export class CommerceOfferPriceForm extends Composition {
             }
             if (this.termsConsentRequired) {
                 payload.sellerTermsAccepted = true;
+                if (this.sellerTermsRequirement) {
+                    payload.sellerTermsVersion = this.sellerTermsRequirement.version;
+                    payload.sellerTermsHash = this.sellerTermsRequirement.hash;
+                }
             }
             await this.requestFunction(this.submitFunctionId, {
                 method: "POST",
@@ -362,6 +370,16 @@ export class CommerceOfferPriceForm extends Composition {
                 }),
             );
         } catch (error) {
+            if (error instanceof Error && error.message === "MARKETPLACE_TERMS_VERSION_CHANGED") {
+                await this.load();
+                this.showInlineError(
+                    this.text(
+                        "seller-terms-changed-message",
+                        "Les conditions vendeur ont changé. Relis la nouvelle version avant de continuer.",
+                    ),
+                );
+                return;
+            }
             this.showInlineError(
                 error instanceof PublicError
                     ? error.message
@@ -569,11 +587,17 @@ export class CommerceOfferPriceForm extends Composition {
         this.setProfileLabel("postalCode", "postal-code-label", "Code postal");
         this.setProfileLabel("city", "city-label", "Ville");
         this.setProfileLabel("countryCode", "country-label", "Pays");
-        this.consentPrefix.textContent = this.text("consent-prefix", "J’accepte les");
-        this.sellerTermsLink.textContent = this.text("seller-terms-label", "conditions vendeur Courtside");
-        this.sellerTermsLink.setAttribute("href", this.getAttribute("seller-terms-url") || "/cgu-cgv");
-        this.stripeConsentPrefix.textContent = this.text("stripe-consent-prefix", "et l’");
-        this.stripeTermsLink.textContent = this.text("stripe-terms-label", "accord de compte connecté Stripe");
+        const publishedTerms = publishedMarketplaceTermsRequirement(this.sellerTermsRequirement);
+        const sellerTermsLabel =
+            publishedTerms?.label || this.text("seller-terms-label", "conditions vendeur Courtside");
+        renderLinkedConsent(
+            this.sellerConsent,
+            publishedTerms?.consentText || `${this.text("consent-prefix", "J’accepte les")} ${sellerTermsLabel}.`,
+            sellerTermsLabel,
+            publishedTerms?.page.path || this.getAttribute("seller-terms-url") || "/cgu-cgv",
+        );
+        this.stripeConsentPrefix.textContent = this.text("stripe-consent-prefix", "J’accepte les");
+        this.stripeTermsLink.textContent = this.text("stripe-terms-label", "conditions du service de paiement");
         this.stripeTermsLink.setAttribute(
             "href",
             this.getAttribute("stripe-terms-url") || "https://stripe.com/connect-account/legal",
@@ -827,11 +851,8 @@ export class CommerceOfferPriceForm extends Composition {
     get consentValidation() {
         return this.querySelector("[data-consent-validation]");
     }
-    get consentPrefix() {
-        return this.querySelector("[data-consent-prefix]");
-    }
-    get sellerTermsLink() {
-        return this.querySelector("[data-seller-terms-link]");
+    get sellerConsent() {
+        return this.querySelector("[data-seller-consent]");
     }
     get stripeConsentFragment() {
         return this.querySelector("[data-stripe-consent-fragment]");
@@ -900,6 +921,53 @@ export class CommerceOfferPriceForm extends Composition {
 
 function headersObject(headers) {
     return headers ? Object.fromEntries(new Headers(headers).entries()) : {};
+}
+
+function renderLinkedConsent(container, consentText, documentLabel, documentUrl) {
+    const link = document.createElement("a");
+    link.setAttribute("data-seller-terms-link", "");
+    link.href = documentUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = documentLabel;
+    const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
+    container.replaceChildren();
+    if (start < 0) {
+        container.append(consentText, " ", link);
+        return;
+    }
+    container.append(consentText.slice(0, start), link, consentText.slice(start + documentLabel.length));
+}
+
+function marketplaceTermsRequirement(value) {
+    const version = textValue(value?.version);
+    const hash = textValue(value?.hash).toLowerCase();
+    if (!version || version.length > 200 || !/^[a-f0-9]{64}$/.test(hash)) {
+        return null;
+    }
+    const published = publishedMarketplaceTermsRequirement(value);
+    if (value?.mode === "published_page") {
+        return published ? { version, hash, ...published } : null;
+    }
+    if (value?.mode !== "legacy") {
+        return null;
+    }
+    return { version, hash };
+}
+
+function publishedMarketplaceTermsRequirement(value) {
+    const pagePath = textValue(value?.page?.path);
+    const label = textValue(value?.label);
+    const consentText = textValue(value?.consentText);
+    if (value?.mode !== "published_page" || !pagePath.startsWith("/") || !label || !consentText) {
+        return null;
+    }
+    return {
+        mode: "published_page",
+        label,
+        consentText,
+        page: { path: pagePath },
+    };
 }
 
 function copyColors(source, target, prefix) {

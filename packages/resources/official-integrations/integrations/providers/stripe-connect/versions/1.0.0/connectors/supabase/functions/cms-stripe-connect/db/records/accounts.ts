@@ -49,6 +49,7 @@ export type MarketplaceTermsAcceptanceRow = {
     cms_user_id: string;
     terms_version: string;
     terms_hash: string;
+    terms_version_id?: string | null;
     accepted_at: string;
 };
 

@@ -72,7 +72,17 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
 
         await install("basic-blocs", {}, definitions, deps, installations);
         await install("user-account", { id: "accounts" }, definitions, deps, installations);
-        await install("commerce", { id: "commerce" }, definitions, deps, installations);
+        await install(
+            "commerce",
+            {
+                id: "commerce",
+                buyerLegalEnabled: false,
+                buyerLegalDocuments: [],
+            },
+            definitions,
+            deps,
+            installations,
+        );
         await install("mondial-relay", mondialRelayAnswers(), definitions, deps, installations);
         await install("stripe-connect", stripeAnswers(), definitions, deps, installations);
         await install("commerce-mondial-relay-delivery", {}, definitions, deps, installations);
@@ -82,6 +92,7 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
             {
                 sellerTermsVersion: "seller-terms-2026-07-13",
                 sellerTermsHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                sellerPayoutSchedule: "daily",
             },
             definitions,
             deps,
@@ -172,12 +183,22 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
 });
 
 function afterInstallationResponse(request: Request): Response {
+    if (request.url.includes("/cms-stripe-connect/configuration/marketplace-terms")) {
+        return Response.json({
+            mode: "legacy",
+            version: "seller-terms-2026-07-13",
+            hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        });
+    }
     if (request.url.includes("/cms-stripe-connect/payments/seller-capabilities")) {
         return Response.json({
             readySellerCmsUserIds: [],
             snapshot: "seller-capabilities:test-empty",
             snapshotAt: "2026-07-23T12:00:00.000Z",
         });
+    }
+    if (request.url.includes("/cms-commerce/system/buyer-legal-documents/sync")) {
+        return Response.json({ enabled: false, documents: [] });
     }
     if (request.url.includes("/cms-commerce/system/seller/sale-capability/activate")) {
         return Response.json({

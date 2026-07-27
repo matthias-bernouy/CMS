@@ -1,0 +1,139 @@
+{
+    "endpointId": "syncMarketplaceTermsConfiguration",
+    "method": "POST",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/configuration/marketplace-terms",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "documents": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "key": {
+                            "type": "string"
+                        },
+                        "label": {
+                            "type": "string"
+                        },
+                        "consentText": {
+                            "type": "string"
+                        },
+                        "page": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "path": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "content": {
+                                    "type": "string"
+                                },
+                                "publishedSnapshotUrl": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "path",
+                                "title",
+                                "description",
+                                "content",
+                                "publishedSnapshotUrl"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "key",
+                        "label",
+                        "consentText",
+                        "page"
+                    ]
+                }
+            },
+            "legacyVersion": {
+                "type": "string"
+            },
+            "legacyHash": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "documents",
+            "legacyVersion",
+            "legacyHash"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "mode": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
+                    },
+                    "hash": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "mode",
+                    "version",
+                    "hash"
+                ]
+            }
+        },
+        {
+            "status": "400",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "409",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        }
+    ]
+}

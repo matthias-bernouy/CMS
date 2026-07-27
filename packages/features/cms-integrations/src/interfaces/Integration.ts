@@ -23,15 +23,49 @@ export type IntegrationAnswerValue =
     | IntegrationAnswerValue[]
     | { [key: string]: IntegrationAnswerValue };
 
-export type IntegrationInput = {
+export type IntegrationInputOption = {
+    label: string;
+    value: string;
+};
+
+type IntegrationInputBase = {
     name: string;
     label: string;
-    type: "text" | "url" | "password" | "select" | "boolean" | "json";
     required?: boolean;
+};
+
+export type IntegrationValueInput = IntegrationInputBase & {
+    type: "text" | "url" | "password" | "select" | "boolean" | "json";
     defaultValue?: string | boolean;
-    options?: Array<{ label: string; value: string }>;
+    options?: IntegrationInputOption[];
     secret?: boolean;
 };
+
+type IntegrationObjectListFieldBase = {
+    name: string;
+    label: string;
+    required?: boolean;
+};
+
+export type IntegrationObjectListField =
+    | (IntegrationObjectListFieldBase & {
+          type: "text" | "textarea" | "boolean" | "page-link";
+      })
+    | (IntegrationObjectListFieldBase & {
+          type: "select";
+          options: IntegrationInputOption[];
+          multiple?: boolean;
+      });
+
+export type IntegrationObjectListInput = IntegrationInputBase & {
+    type: "object-list";
+    fields: IntegrationObjectListField[];
+    addLabel?: string;
+    minItems?: number;
+    maxItems?: number;
+};
+
+export type IntegrationInput = IntegrationValueInput | IntegrationObjectListInput;
 
 export type IntegrationUiDefinition = {
     mark?: string;

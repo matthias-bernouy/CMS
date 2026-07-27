@@ -17,7 +17,7 @@ export const SELLER_TERMS_VERSION = "seller-terms-2026-07-13";
 export const SELLER_TERMS_HASH = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 export const resolveCmsApiKey = async () => "commerce-cms-api-key";
 
-export async function loadIntegrationContract() {
+export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
     const sources = new InMemorySourceRepository();
     const functions = new InMemoryFunctionRepository();
     const installations = new InMemoryIntegrationInstallationRepository();
@@ -58,12 +58,14 @@ export async function loadIntegrationContract() {
             answers: {
                 sellerTermsVersion: SELLER_TERMS_VERSION,
                 sellerTermsHash: SELLER_TERMS_HASH,
+                sellerPayoutSchedule,
             },
             options: {},
         },
         [definition],
     );
     const fn = await functions.getFunction("createPaymentForOrder");
+    const legalFn = await functions.getFunction("getPaymentLegalRequirements");
     const configFn = await functions.getFunction("getStripePaymentClientConfig");
     const statusFn = await functions.getFunction("getPaymentForOrder");
     const refreshFn = await functions.getFunction("refreshPaymentForOrder");
@@ -81,6 +83,9 @@ export async function loadIntegrationContract() {
     const protectedOrderFn = await functions.getFunction("createProtectedOrder");
     if (!fn) {
         throw new Error("createPaymentForOrder function not imported");
+    }
+    if (!legalFn) {
+        throw new Error("getPaymentLegalRequirements function not imported");
     }
     if (!configFn) {
         throw new Error("getStripePaymentClientConfig function not imported");
@@ -116,6 +121,7 @@ export async function loadIntegrationContract() {
         importedBlocs,
         result,
         fn,
+        legalFn,
         configFn,
         statusFn,
         refreshFn,
@@ -131,6 +137,7 @@ export async function loadIntegrationContract() {
         platformDecreaseFn,
         submitPriceFn,
         protectedOrderFn,
+        sellerPayoutSchedule,
     };
 }
 

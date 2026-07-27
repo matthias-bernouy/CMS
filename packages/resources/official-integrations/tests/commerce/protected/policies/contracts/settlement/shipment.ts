@@ -10,6 +10,11 @@ export function registerShipmentReservationTest(): void {
             "get_order_label_authorization",
         );
         const reservation = functionSql(schema, "reserve_order_shipment_creation", "claim_pending_shipment_creations");
+        const projection = functionSql(
+            schema,
+            "record_order_fulfillment_projection",
+            "get_order_fulfillment_authorization",
+        );
 
         for (const boundary of [authorization, reservation]) {
             expect(boundary).toContain("('awaiting_shipment', 'shipment_creating', 'label_created')");
@@ -17,5 +22,12 @@ export function registerShipmentReservationTest(): void {
         expect(reservation).toContain("v_operation.status in ('failed', 'requested')");
         expect(reservation).toContain("v_operation.claimed_at < now() - interval '5 minutes'");
         expect(reservation).toContain("v_operation.status in ('unknown', 'manual_review', 'cancelled')");
+        expect(projection).toContain("p_normalized_status = 'lost'");
+        expect(projection).toContain("commerce.create_cancellation_refund_request");
+        expect(projection).toContain("'carrier_confirmed_lost'");
+        expect(projection).toContain("p_normalized_status = 'returned_to_sender'");
+        expect(projection).toContain("Returned shipment requires an allocated refund decision");
+        expect(projection).toContain("'merchandiseRefundAmount'");
+        expect(projection).toContain("'shippingRefundAmount'");
     });
 }

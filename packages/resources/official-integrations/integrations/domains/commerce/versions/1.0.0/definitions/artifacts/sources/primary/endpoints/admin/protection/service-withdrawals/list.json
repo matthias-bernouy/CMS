@@ -1,0 +1,61 @@
+{
+    "endpointId": "marketplaceServiceWithdrawalRequests",
+    "method": "GET",
+    "access": {
+        "mode": "admin"
+    },
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/service-withdrawal-requests",
+    "params": [
+        { "name": "requestPublicId", "in": "query", "type": "string" },
+        { "name": "orderId", "in": "query", "type": "number" },
+        { "name": "buyerCmsUserId", "in": "query", "type": "string" },
+        { "name": "status", "in": "query", "type": "string" },
+        { "name": "serviceScope", "in": "query", "type": "string" },
+        { "name": "limit", "in": "query", "type": "number" },
+        { "name": "offset", "in": "query", "type": "number" }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        },
+        {
+            "name": "x-cms-user-role",
+            "source": {
+                "from": "computed",
+                "ref": "userRole"
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$include": "../../../shared/marketplace-service-withdrawal-request.json"
+                        }
+                    },
+                    "total": { "type": "number" },
+                    "limit": { "type": "number" },
+                    "offset": { "type": "number" }
+                },
+                "required": ["items", "total", "limit", "offset"]
+            }
+        }
+    ]
+}

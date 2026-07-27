@@ -1,4 +1,5 @@
 import type {
+    IntegrationAnswerValue,
     IntegrationDefinition,
     IntegrationImportDto,
     IntegrationInstallationStatus,
@@ -12,6 +13,12 @@ export type IntegrationInstallationRow = {
     artifactCount: number;
     missingArtifactCount: number;
     updatedAt: string;
+};
+
+export type IntegrationInstallationDetail = IntegrationInstallationRow & {
+    answers: Record<string, IntegrationAnswerValue>;
+    definition?: IntegrationDefinition;
+    secretInputs: string[];
 };
 
 export type IntegrationImportPayload = Omit<IntegrationImportDto, "options"> & {
@@ -57,4 +64,6 @@ export type {
     IntegrationAnswerValue,
     IntegrationDefinition,
     IntegrationInput,
+    IntegrationObjectListField,
+    IntegrationObjectListInput,
 } from "@bernouy/cms-integrations";
