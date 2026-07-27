@@ -37,8 +37,12 @@ describe("repository administration presentation", () => {
         await selectCurrentVersion(console);
         expect(console.textContent).toContain("Composite decision: admissible");
         expect(console.textContent).toContain("legacy-backfill");
+        expect(console.textContent).toContain("Created 2026-07-26T10:00:00.000Z");
         expect(console.textContent).toContain("Runner cms-postgres 1.0.0");
+        expect(console.textContent).toContain("postgres 16.4");
+        expect(console.textContent).toContain("public-api@1.0.0");
         expect(console.textContent).toContain("sql-install-and-reapply");
+        expect(console.textContent).toContain("8 ms");
         expect(console.textContent).toContain("Verification bundle digest");
         expect(console.textContent).toContain("cms-postgres-migration");
         expect(console.textContent).toContain("freshInstall · passed");

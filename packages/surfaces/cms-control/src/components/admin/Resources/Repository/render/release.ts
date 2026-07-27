@@ -47,21 +47,37 @@ function appendVerification(target: DocumentFragment, release: RepositoryRelease
     }
     const section = element("article", undefined, "report");
     section.dataset.outcome = report.outcome;
+    const environmentVersions = Object.entries(report.environment.versions).map(
+        ([name, version]) => `${name} ${version}`,
+    );
     section.append(
         element("h4", `Executable verification: ${report.outcome}`),
         metadata([
             `Origin ${report.origin}`,
+            `Created ${report.createdAt}`,
             `Runner ${report.runner.name} ${report.runner.version}`,
             `Environment ${report.environment.digest}`,
+            ...environmentVersions,
         ]),
+        codeLine("Report digest", report.reportDigest),
         codeLine("Runner image", report.runner.imageDigest),
     );
+    if (report.activeContracts.length > 0) {
+        section.append(
+            list(
+                "Active contracts",
+                report.activeContracts.map(
+                    ({ contractId, ownerVersion, digest }) => `${contractId}@${ownerVersion} · ${digest}`,
+                ),
+            ),
+        );
+    }
     const suites = element("ul", undefined, "evidence-list");
     for (const result of report.results) {
         suites.append(
             element(
                 "li",
-                `${result.suiteId} · ${result.source} · ${result.outcome} · ${result.attempts} attempt(s)${result.cacheHit ? " · cache" : ""}`,
+                `${result.suiteId} · ${result.source} · ${result.outcome} · ${result.durationMs} ms · ${result.attempts} attempt(s)${result.cacheHit ? " · cache" : ""}`,
             ),
         );
     }

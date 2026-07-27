@@ -52,6 +52,7 @@ function verification(value: unknown): RepositoryReleaseVerificationView {
         reportId: readText(source.reportId),
         reportDigest: readText(source.reportDigest),
         origin: readText(source.origin),
+        createdAt: readText(source.createdAt),
         outcome: readText(source.outcome),
         runner: {
             name: readText(runner.name),
@@ -59,6 +60,14 @@ function verification(value: unknown): RepositoryReleaseVerificationView {
             imageDigest: readText(runner.imageDigest),
         },
         environment: { digest: readText(environment.digest), versions: textRecord(environment.versions) },
+        activeContracts: readArray(source.activeContracts).map((value) => {
+            const contract = readRecord(value);
+            return {
+                contractId: readText(contract.contractId),
+                ownerVersion: readText(contract.ownerVersion),
+                digest: readText(contract.digest),
+            };
+        }),
         results: readArray(source.results).map((value) => {
             const result = readRecord(value);
             return {
@@ -66,6 +75,7 @@ function verification(value: unknown): RepositoryReleaseVerificationView {
                 source: readText(result.source),
                 required: readBoolean(result.required),
                 outcome: readText(result.outcome),
+                durationMs: readCount(result.durationMs),
                 attempts: readCount(result.attempts),
                 cacheHit: readBoolean(result.cacheHit),
                 diagnostics: readArray(result.diagnostics).map((value) => {
