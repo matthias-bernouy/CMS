@@ -31,10 +31,13 @@ When a `RepositoryCompatibilityReader` is injected, the surface also mounts
 anonymous `GET`, `HEAD`, and `OPTIONS`
 `/api/integrations/compatibility?kind=...&version=...`. Optional `after` and
 `limit` parameters page append-only revisions; `limit` defaults to 50 and is
-bounded to 100. Responses expose an allowlisted admission/current/history DTO,
-never the reassessment actor or internal source and path fields. They use the
-short public cache policy and a representation ETag that changes when history
-is appended.
+bounded to 100. Responses expose an allowlisted projection of the compatibility
+V2 `root`, `current`, and `revisions`, with `totalRevisions` and an optional
+`nextCursor`. Report provenance retains its bounded reason and evidence IDs but
+omits the actor. Findings omit paths and baseline/candidate digests, and the
+projection drops internal source or filesystem locations and unknown upstream
+fields. Responses use the short public cache policy and a representation ETag
+that changes when history is appended.
 
 ## Public Catalog Provider
 

@@ -66,9 +66,10 @@ Continuation checkpoint at `85f472d2`:
 - filesystem publication is immutable and ordered, uses one shared per-kind
   mutation coordinator, swaps one catalog reference, and has deterministic
   crash recovery and quarantine coverage;
-- compatibility admission is persisted canonically and report reassessments
-  form a bounded, paginated append-only chain whose directory reads are anchored
-  against symlink and TOCTOU substitution;
+- at this historical checkpoint, compatibility admission was persisted as one
+  canonical report plus a bounded, paginated reassessment chain whose directory
+  reads were anchored against symlink and TOCTOU substitution; the current V2
+  root and composite-decision contract below supersedes that legacy shape;
 - the production repository runtime now performs recovery and mounts the real
   authenticated publisher; a real two-listener test proves a private
   publication is immediately visible through the public snapshot;
@@ -80,9 +81,10 @@ Continuation checkpoint at `85f472d2`:
 
 Management and catalog checkpoint at `a14ee3fb`:
 
-- stable promotion and append-only compatibility reevaluation are available
-  through the private runtime, CMS gateway, and exact-owner Control console,
-  while compatibility admission and revision history remain public;
+- at this historical checkpoint, stable promotion and append-only compatibility
+  reevaluation were available through the private runtime, CMS gateway, and
+  exact-owner Control console, while the then-current admission/revision shape
+  remained public; the current public contract is the redacted V2 projection;
 - CMS Delivery renders the searchable catalog, integration and exact-version
   pages with status channels, dependency ranges, artifact summaries, release
   notes, compatibility evidence, and same-origin immutable downloads;
@@ -153,8 +155,8 @@ Completion checkpoint at `6e282de6`:
 | L1.3 | Readers use an immutable memory snapshot; corrupt integrations are quarantined independently. | Snapshot builder, diagnostics, quarantine, atomic reference, and snapshot-backed read adapters. | Old-reader continuity, one-corrupt-entry isolation, duplicate quarantine, and zero-rescan tests. | Complete |
 | L1.4 | Recovery deterministically handles staging, orphans, interrupted indexes, corruption, and duplicates. | Journal replay, abandoned/orphan quarantine, bounded inventory, and snapshot rebuild under `cms-integration-registry/fs`. | Recovery and corruption fixtures cover every committed publication boundary and hostile registry state. | Complete |
 | L1.5 | Declarative schema and HTTP contracts classify compatible, breaking, and unknown changes. | Strict schema/HTTP declarations and `IntegrationCompatibilityEvaluator`. | Admission tests cover patch/minor/major, new kind/major, schema evidence contradictions, implementation-only changes, and lossy HTTP shapes. | Complete |
-| L1.6 | Admission reports are immutable; reevaluations append provenance-bearing revisions. | Canonical admission report, `FsIntegrationCompatibilityReportStore`, management reevaluation route, runtime operation, and public compatibility projection. | Immutable supersedes-chain, pagination, concurrent branch rejection, reload, symlink/directory substitution, management authorization, runtime persistence, and changing collection-ETag tests. | Complete |
-| L1.7 | Stable promotion records the newest completed report revision and never auto-demotes. | Filesystem promotion journal/recovery, management operation, runtime route, and exact-confirmation Control workflow. | Promotion, crash recovery, stale-revision rejection, adverse reassessment warning, channel preservation, and authorization tests. | Complete |
+| L1.6 | Compatibility V2 roots are immutable; reevaluations append provenance-bearing report and composite-decision revisions. | `FsIntegrationCompatibilityV2ReportStore`, `FsReleaseAdmissionDecisionStore`, management reevaluation, admission reconciliation, and the redacted public compatibility projection. | Immutable supersedes chains, exact report-digest composition, pagination, concurrent branch rejection, reload, substitution hardening, authorization, persistence, and changing collection-ETag tests. | Complete |
+| L1.7 | Stable promotion confirms the current composite decision ID; later inadmissibility performs explicit eligibility repair. | Composite-decision lookup, filesystem promotion and eligibility journals/recovery, management operations, and exact-confirmation Control workflow. | Promotion and eligibility recovery, stale-decision rejection, adverse reassessment, deterministic channel repair, and authorization tests. | Complete |
 
 ## Lot 2 — Repository Runtime And Image
 
@@ -182,7 +184,7 @@ Completion checkpoint at `6e282de6`:
 | D1 | Public metadata, definitions, assets, notes, and exact packages need no credential. | Anonymous API, compatibility history, CORS/cache/HEAD, public catalog, and real Delivery proxy evidence. | Complete |
 | D2 | Management is reachable only through authenticated Control with a server-only token. | Deployment topology, exact-owner guard, strict gateway projections, listener separation, and real secret-inspection acceptance. | Complete |
 | D3 | Install, rerun, and remote connector deployment are pinned to immutable content. | Exact version/snapshot/digest persistence, remote SQL and Function deployment, outage rerun, and corruption rollback are proven across process restart. | Complete |
-| D4 | Minor/patch incompatibility or contract uncertainty fails closed. | Compatibility evaluator and real publisher admission boundary. | Complete |
+| D4 | Minor/patch incompatibility or contract uncertainty fails closed. | Compatibility V2 assessment and composite candidate-finalization boundary. | Complete |
 | D5 | Publication is immutable, atomic, snapshot-based, recoverable, and fault-isolated. | Publication, concurrency, every crash boundary, quarantine, recovery, and immediate visibility tests. | Complete |
 | D6 | Dedicated internal repository image persists data and follows empty-volume seed policy. | Image, deployment, real seed, interruption, non-empty-volume, and image-upgrade evidence. | Complete |
 | D7 | Official updates use the publication API after bootstrap. | Deterministic shared builder, one-time bootstrap, authenticated CLI command, credential-scoped CI workflow, and 14-to-15 publication acceptance. | Complete |
@@ -413,8 +415,10 @@ evidence.
   and added immutable publication operation IDs.
 - `b0291a46` — exposed the operation ID in the allowlisted `201` management DTO.
   All 39 management-surface tests pass.
-- `659ac327` — persisted bounded compatibility history as an immutable admission
-  plus append-only, paginated supersedes revisions with branch rejection.
+- `659ac327` — at that historical point, persisted bounded compatibility history
+  as an immutable admission plus append-only, paginated supersedes revisions
+  with branch rejection. Later compatibility V2 and composite-decision work
+  replaced this legacy storage contract.
 - `d097cda5` — anchored compatibility-history directory iteration and reads on
   an `O_DIRECTORY | O_NOFOLLOW` descriptor and added a substitution regression
   test.
@@ -456,8 +460,10 @@ evidence.
   reevaluation in the registry, private management surface, and runtime.
 - `1c0aa2eb` — added the Control allowlist for private repository operations
   without exposing arbitrary upstream paths or bodies.
-- `9cd9369d` and `82ec9925` — exposed bounded public compatibility admission and
-  reassessment history with collection ETags through the surface and runtime.
+- `9cd9369d` and `82ec9925` — at that historical point, exposed bounded public
+  compatibility admission and reassessment history with collection ETags through
+  the surface and runtime. The current route projects redacted V2
+  root/current/revision reports instead.
 - `7836bd78` — configured the management CMS as the sole server-side owner of
   repository management URL, token file, and administrator subject.
 - `526641f0`, `8fb5c0ae`, `76bd3295`, `dd8c2d1e`, `caad4057`, and `4c1bffcf` —
@@ -517,9 +523,11 @@ composition, snapshot, or telemetry responsibilities, and the larger tests are
 atomic adversarial or process-level scenario suites. No new directory exceeds
 the blocking eight-entry maximum.
 
-Lots 0 through 3 are implemented and proven end to end: remote immutable
-consumption, mutable atomic publication, compatibility admission and history,
-stable promotion, one-time official bootstrap, the isolated runtime/image,
-CMS-only management, public catalog, private Control administration, explicit
-upgrades, degraded/offline behavior, and bounded operational diagnostics all
-have direct verification evidence in this worktree.
+Lots 0 through 3 remain implemented end to end. After the later compatibility
+migration through `c48ee9c9`, the current evidence model uses immutable V2
+compatibility roots and revisions, digest-bound composite release-admission
+decisions, decision-ID-based promotion, and explicit eligibility repair. Remote
+immutable consumption, atomic candidate publication, one-time official
+bootstrap, the isolated runtime/image, CMS-only management, public catalog,
+private Control administration, explicit upgrades, degraded/offline behavior,
+and bounded operational diagnostics retain direct verification evidence.

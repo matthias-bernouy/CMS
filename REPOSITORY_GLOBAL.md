@@ -315,9 +315,10 @@ enforced.
 ## Backwards Compatibility Gate
 
 SemVer syntax alone does not prove that a release uses the correct increment.
-Before accepting a package, the registry compares it with the relevant
-published baselines in the same major line and produces a persisted
-compatibility report.
+Candidate planning compares the package with the relevant published baselines
+in the same major line and produces an immutable compatibility V2 root. Final
+activation is governed by the composite release-admission decision that
+references that exact report and the other required evidence.
 
 The release rules are:
 
@@ -325,8 +326,9 @@ The release rules are:
   behavior;
 - minor: additive and optional public contract changes only;
 - major: breaking or otherwise unproven changes are allowed;
-- breaking or `unknown` compatibility in a minor or patch publication:
-  reject with `422 Unprocessable Entity` and require a major increment;
+- breaking or `unknown` compatibility in a minor or patch candidate produces
+  `contractAdmissible: false`; the composite decision refuses activation and a
+  major increment is required;
 - no administrator override may publish a known breaking or contract-unknown
   change under a minor or patch number.
 
@@ -404,25 +406,33 @@ and required release level. It is visible in the public catalog and in the
 administrator publication workflow. Only a successfully validated publication
 may advance `latest`; promotion to `stable` is a separate administrator action.
 
-The admission report created during publication is immutable. It records a
-stable report ID, evaluator name and version, creation time, package digest,
-baseline digests, normalized evidence, and outcome. Comparator improvements
-never rewrite that report.
+Compatibility evidence starts with an immutable
+`cms.integration.compatibility-report.v2` root. It records a stable report ID,
+`revisionType: "root"`, origin, evaluator name and version, creation time,
+package digest, baseline digests, normalized findings, assessment, and
+provenance. Comparator improvements never rewrite that root.
 
-A later evaluation creates an append-only report revision with its own
-provenance and an explicit `supersedes` reference. The public API and catalog
-retain the complete history and identify the newest revision without hiding the
-admission verdict. Stable promotion records the exact report revision used and
-requires the newest completed revision to satisfy the release-level rules. A
-later adverse reassessment does not silently demote an already stable version;
-it raises a public and administrative warning and blocks a new promotion until
-resolved by another version or evidence revision.
+A later evaluation appends a V2 revision with its own provenance and an explicit
+`supersedes` reference. The authoritative admission verdict is a separate,
+append-only composite `ReleaseAdmissionDecision`: it digest-binds the exact
+current compatibility, verification, required migration, stateful-change, and
+policy evidence. Neither history rewrites an earlier root or revision.
 
-The first version of a kind has no comparison baseline. Its report persists
+Stable promotion supplies the current composite decision revision ID as its
+evidence reference. The registry loads and digest-validates that exact current
+decision, requires it to be admissible, and records its ID and digest in the
+promotion record. A later adverse reassessment appends both the compatibility
+and reconciled composite-decision revisions; a durable eligibility operation
+then marks the version inadmissible and repairs `stable` and `latest` to the
+newest remaining installable versions. The channel change is therefore explicit
+and recoverable rather than a silent demotion.
+
+The first version of a kind has no comparison baseline. Its V2 root persists
 `baselines: []`, a `not-applicable` outcome, and a `new-kind` reason. The first
 version of a new major line similarly has no enforcing same-major baseline and
-uses a `new-major` reason; it may compare against the previous `stable` version
-for information, but that comparison never blocks the major publication.
+uses a `new-major` reason; it may retain the previous `stable` version as an
+informational baseline, but that comparison does not make the new-major
+compatibility assessment inadmissible.
 
 ## Public Repository Read Contract
 
@@ -852,28 +862,33 @@ restart and persistent bind mount.
 Create `@bernouy/cms-integration-registry` and
 `@bernouy/cms-repository-management`.
 
-The management API:
+The management candidate API:
 
 - requires a management-scoped service token;
 - applies the existing `@bernouy/rate-limiter` contract after authentication and
   before reading the package body, keyed by the authenticated service principal;
 - returns `429 Too Many Requests` with retry metadata when the publication
   policy is exceeded;
-- accepts a v1 package envelope;
-- applies request and decoded-content limits before publication;
+- accepts a canonical validated candidate envelope and returns `202 Accepted`
+  with its immutable candidate identity and lifecycle status;
+- applies request and decoded-content limits before candidate planning;
 - validates definition identity, SemVer, dependencies, package structure, and
   digest;
 - requires and validates the UTF-8 release-notes reference outside legacy
   bootstrap;
 - requires a validated declarative schema compatibility manifest for every new
   SQL-owning connector;
-- computes and persists the immutable backwards-compatibility admission report;
-- appends provenance-bearing reevaluation revisions without rewriting prior
-  reports;
-- rejects incompatible or contract-unknown minor and patch releases with
-  `422`;
-- publishes a new kind or a new immutable version;
-- returns `201 Created` with the computed digest;
+- plans a canonical compatibility V2 root and digest-binds the exact evaluator
+  inputs before verification;
+- persists compatibility, verification, migration, and composite release
+  admission evidence only during validated finalization;
+- refuses activation when the composite decision is inadmissible; a
+  `422 admission_rejected` belongs to candidate finalization, not to the retired
+  synchronous package-publisher response;
+- publishes and activates a new kind or immutable version only from that exact
+  current admissible composite decision;
+- exposes candidate status and report reads throughout the asynchronous
+  lifecycle;
 - returns `409 Conflict` for every existing `(kind, version)`;
 - never exposes force or overwrite.
 
@@ -896,12 +911,12 @@ registry request path, not a prerequisite hidden inside publication.
 Bootstrap additionally supports the one-time digest-bound baseline contracts
 needed by legacy official SQL packages; normal publication cannot mutate them.
 
-For a new integration, the first version initializes `stable` and `latest`.
-For a subsequent version, publication advances `latest` and leaves `stable`
-unchanged. The management API includes explicit stable promotion with the
-newest completed compatibility-report revision and administrator confirmation;
-the promotion record stores that revision ID. Yank and arbitrary channels
-remain deferred.
+For a new integration, the first admissible version initializes `stable` and
+`latest`. For a subsequent version, activation advances `latest` and leaves
+`stable` unchanged. Explicit stable promotion confirms the current composite
+decision revision ID; the registry resolves and digest-validates that decision,
+then stores its ID and digest in the promotion record. Yank and arbitrary
+channels remain deferred.
 
 ### Atomic Publication
 
@@ -1008,8 +1023,8 @@ The public catalog supports:
 - `stable` and `latest` status;
 - dependencies and supported version ranges;
 - public compatibility reports and release notes;
-- immutable admission verdicts and append-only compatibility reassessment
-  history;
+- immutable compatibility V2 roots, append-only reassessment history, and the
+  current composite admission summary;
 - blocs, connectors, and other artifact summaries;
 - documentation and exact package downloads.
 
@@ -1060,18 +1075,23 @@ Read surface, relative to the public `/.cms/repository` mount:
 
 These routes are anonymous. Exact immutable resources also expose `HEAD`, digest
 ETags, long-lived public caching, and public CORS.
-The compatibility response returns the immutable admission report, append-only
-revision history, and the current revision ID. Its collection ETag changes when
-a revision is appended; it does not use the immutable package cache policy.
+The compatibility response returns an allowlisted projection of the V2
+compatibility `root`, `current`, and paginated `revisions`, plus bounded count
+and cursor metadata. It omits actors, finding paths and finding
+baseline/candidate digests, filesystem or source locations, and unknown upstream
+fields. Its collection ETag changes when a revision is appended; it does not use
+the immutable package cache policy.
 
 Management surface:
 
 - publish a package for a new kind or version;
-- inspect publication validation and complete compatibility history;
-- request an append-only compatibility reevaluation;
+- inspect candidate validation and the compatibility, verification, migration,
+  and composite-decision evidence;
+- request an append-only compatibility reevaluation that also reconciles the
+  composite decision;
 - inspect degraded and quarantined entries;
-- promote stable through an explicit operation that records the current report
-  revision.
+- promote stable through an explicit operation that confirms the current
+  composite decision revision ID and records its resolved ID and digest.
 
 Exact management paths are finalized with the surface implementation, but read
 and management surfaces must remain independently mountable. Only management is
@@ -1092,7 +1112,8 @@ authenticated and reachable exclusively from the CMS Control gateway.
 - exact versions and supported ranges follow SemVer behavior, including
   prerelease boundaries;
 - patch and minor compatibility checks accept additive compatible changes and
-  reject breaking or public-contract-unknown changes with `422`;
+  produce `contractAdmissible: false` for breaking or public-contract-unknown
+  changes; candidate finalization refuses an inadmissible composite decision;
 - implementation-only SQL and Edge Function changes remain eligible for patch
   releases when their extracted or declared contracts are unchanged;
 - SQL schema and HTTP function contract fixtures cover additive, breaking, and
@@ -1103,13 +1124,16 @@ authenticated and reachable exclusively from the CMS Control gateway.
   level;
 - legacy SQL baselines accept only bootstrap-time, digest-bound reviewed
   contracts and remain `unknown` when that evidence is absent;
-- first-kind and new-major reports persist explicit no-baseline reasons;
-- admission reports are immutable and reevaluation appends provenance-bearing
-  revisions without deleting history;
+- first-kind and new-major V2 roots persist explicit no-baseline reasons;
+- compatibility V2 roots are immutable and reevaluation appends
+  provenance-bearing revisions without deleting history;
+- composite admission decisions bind the exact current compatibility,
+  verification, migration, stateful-change, and policy evidence;
 - compatibility-history ETags change on append while immutable package ETags do
   not;
-- stable promotion records the newest completed report revision, while a later
-  adverse revision warns without silently changing the channel;
+- stable promotion resolves the confirmed current composite decision ID and
+  records its digest, while a later inadmissible decision performs a journaled
+  eligibility and channel repair;
 - major compatibility reports permit breaking changes without silently
   promoting them to stable;
 - repository client errors map to stable `502` and `503` contracts;
@@ -1151,12 +1175,13 @@ authenticated and reachable exclusively from the CMS Control gateway.
 - one invalid package does not poison valid packages;
 - recovery handles each crash boundary;
 - bootstrap only mutates an empty volume;
-- compatibility reports persist with published versions and remain publicly
-  readable;
-- compatibility reevaluation is append-only and cannot mutate the admission
-  report or older revisions;
-- `latest` advances only after successful validation and `stable` changes only
-  through explicit promotion tied to a report revision;
+- compatibility V2 roots and composite release decisions persist with published
+  versions, while the public compatibility-history route exposes only the
+  redacted V2 projection;
+- compatibility reevaluation is append-only, cannot mutate the V2 root or older
+  revisions, and appends a reconciled composite decision when its inputs change;
+- initial `latest` activation requires the exact current admissible composite
+  decision, and `stable` promotion confirms that decision's revision ID;
 - management rate limiting runs before package-body parsing and returns retry
   metadata.
 
