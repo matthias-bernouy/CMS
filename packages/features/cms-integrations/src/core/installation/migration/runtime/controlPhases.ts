@@ -30,50 +30,6 @@ export class ProbeMigrationHandler implements IntegrationMigrationExternalPhaseH
     }
 }
 
-/**
- * Turns the confirmation contract of a durable side-effect into the following
- * smoke phase. Production composition uses this to prove that the exact
- * Function deployment and CMS Source binding recorded in the journal remain
- * observable before advancing the saga.
- */
-export class ConfirmedMigrationPhaseProbe implements IntegrationMigrationProbe {
-    constructor(
-        private readonly precedingPhase: "deploy-functions" | "switch-cms-binding",
-        private readonly handler: IntegrationMigrationExternalPhaseHandler,
-    ) {}
-
-    async run(context: IntegrationMigrationStepContext) {
-        const expectedSmoke = this.precedingPhase === "deploy-functions" ? "smoke-target" : "smoke-cms";
-        if (context.phase !== expectedSmoke) {
-            throw new IntegrationRuntimeError(
-                `confirmation probe for "${this.precedingPhase}" cannot execute phase "${context.phase}"`,
-            );
-        }
-        const entry = context.operation.journal.find((candidate) => candidate.phase === this.precedingPhase);
-        if (entry?.status !== "succeeded" || entry.confirmationDigest !== entry.targetDigest) {
-            throw new IntegrationRuntimeError(
-                `migration phase "${this.precedingPhase}" has no confirmed receipt for the target package`,
-            );
-        }
-        const confirmed = await this.handler.confirm(
-            { ...context, phase: this.precedingPhase },
-            {
-                ...(entry.externalOperationId ? { externalOperationId: entry.externalOperationId } : {}),
-                ...(entry.confirmationDigest ? { confirmationDigest: entry.confirmationDigest } : {}),
-            },
-        );
-        if (!confirmed.confirmed) {
-            throw new IntegrationRuntimeError(
-                `migration phase "${this.precedingPhase}" is no longer confirmed by its target`,
-                409,
-            );
-        }
-        return {
-            ...(confirmed.externalOperationId ? { externalOperationId: confirmed.externalOperationId } : {}),
-        };
-    }
-}
-
 export class DrainMigrationHandler implements IntegrationMigrationExternalPhaseHandler {
     constructor(private readonly clock: { now(): Date }) {}
 

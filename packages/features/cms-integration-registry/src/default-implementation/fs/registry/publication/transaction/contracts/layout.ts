@@ -17,15 +17,6 @@ export type ContractLineagePaths = Readonly<{
     revisions: string;
 }>;
 
-export async function contractLineagePaths(
-    registryRoot: string,
-    key: IntegrationVerificationContractLineageKey,
-): Promise<ContractLineagePaths> {
-    const root = join(registryRoot, key.kind, ".registry", "verification-contract-lineages");
-    const history = join(root, await keyDigest(key));
-    return { root, history, identity: join(history, "identity.json"), revisions: join(history, "revisions") };
-}
-
 export async function ensureContractLineagePaths(
     registryRoot: string,
     key: IntegrationVerificationContractLineageKey,

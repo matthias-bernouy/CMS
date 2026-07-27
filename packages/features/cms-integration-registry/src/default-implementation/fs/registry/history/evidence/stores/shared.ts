@@ -1,8 +1,4 @@
-import {
-    assertIntegrationPackageKind,
-    assertIntegrationPackageVersion,
-    canonicalJsonBytes,
-} from "@bernouy/cms-integration-packages";
+import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@bernouy/cms-integration-packages";
 import type { IntegrationRegistryCatalogSnapshot } from "../../../../../../interfaces/catalog";
 import type { IntegrationMigrationReportLogicalKey } from "../../../../../../interfaces/reportStore";
 import type { MigrationReport, VersionDigestReference } from "@bernouy/cms-integration-verification";
@@ -86,14 +82,6 @@ export function assertCatalogVersion(snapshot: IntegrationRegistryCatalogSnapsho
     if (!location || location.package.digest !== key.packageDigest) {
         throw new Error(`Release report package is not published exactly: ${key.kind}@${key.version}`);
     }
-}
-
-export function sameKey(left: unknown, right: unknown): boolean {
-    const leftBytes = canonicalJsonBytes(left);
-    const rightBytes = canonicalJsonBytes(right);
-    return (
-        leftBytes.byteLength === rightBytes.byteLength && leftBytes.every((byte, index) => byte === rightBytes[index])
-    );
 }
 
 function exactRecord(value: unknown, keys: readonly string[]): Record<string, unknown> {

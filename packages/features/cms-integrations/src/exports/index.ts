@@ -218,12 +218,9 @@ export {
     type AdoptLegacyConnectorBaselineRequest,
 } from "../core/installation/migration/adoption/service";
 export {
-    ConfiguredIntegrationMigrationRuntime,
     ProductionIntegrationMigrationRuntime,
-    type ConfiguredIntegrationMigrationRuntimeOptions,
     type ProductionIntegrationMigrationRuntimeOptions,
 } from "../core/installation/migration/runtime";
-export { ConfirmedMigrationPhaseProbe } from "../core/installation/migration/runtime/controlPhases";
 export { CmsSourceBindingMigrationHandler } from "../core/installation/migration/runtime/cmsBinding";
 export { CmsSourceFunctionalMigrationProbe } from "../core/installation/migration/runtime/functionalSmoke";
 export { ProviderDirectMigrationHandler } from "../core/installation/migration/runtime/providerDirect";

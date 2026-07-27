@@ -13,10 +13,6 @@ export function safeJoin(root: string, ...parts: string[]): string {
     return target;
 }
 
-export async function resolveExistingSupabasePath(root: string, ...parts: string[]): Promise<string> {
-    return await resolveExistingSupabaseEntry(root, "entry", parts);
-}
-
 export async function resolveExistingSupabaseDirectory(root: string, ...parts: string[]): Promise<string> {
     return await resolveExistingSupabaseEntry(root, "directory", parts);
 }
@@ -33,7 +29,7 @@ export function requiredText(value: string, name: string): string {
     return text;
 }
 
-type SupabaseEntryKind = "directory" | "entry" | "file";
+type SupabaseEntryKind = "directory" | "file";
 
 async function resolveExistingSupabaseEntry(
     requestedRoot: string,

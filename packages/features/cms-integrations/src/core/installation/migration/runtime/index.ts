@@ -12,7 +12,7 @@ import type {
 import { DrainMigrationHandler, PointOfNoReturnMigrationHandler, ProbeMigrationHandler } from "./controlPhases";
 import { ProviderDirectMigrationHandler } from "./providerDirect";
 
-export type ConfiguredIntegrationMigrationRuntimeOptions = {
+type ConfiguredIntegrationMigrationRuntimeOptions = {
     connectorAdapters: IntegrationConnectorMigrationAdapter[];
     phases: Partial<
         Record<Exclude<IntegrationMigrationPhase, "expand" | "contract">, IntegrationMigrationExternalPhaseHandler>
@@ -29,7 +29,7 @@ export type ProductionIntegrationMigrationRuntimeOptions = {
     clock?: { now(): Date };
 };
 
-export class ConfiguredIntegrationMigrationRuntime implements IntegrationMigrationRuntime {
+class ConfiguredIntegrationMigrationRuntime implements IntegrationMigrationRuntime {
     private readonly adapters: Map<string, IntegrationConnectorMigrationAdapter>;
 
     constructor(private readonly options: ConfiguredIntegrationMigrationRuntimeOptions) {
