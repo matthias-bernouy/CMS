@@ -28,7 +28,7 @@ export function evaluateCompatibilityInput(input: IntegrationCompatibilityEvalua
             outcome: invalid ? ("invalid" as const) : ("not-applicable" as const),
             requiredReleaseLevel: "none" as const,
             releaseLevel: "initial" as const,
-            admissible: !invalid,
+            contractAdmissible: !invalid,
             noBaselineReason: "new-kind" as const,
         };
     }
@@ -45,7 +45,8 @@ export function evaluateCompatibilityInput(input: IntegrationCompatibilityEvalua
     const outcome = compatibilityOutcome(evidence);
     const invalid = outcome === "invalid";
     const requiredReleaseLevel = invalid ? ("none" as const) : compatibilityRequiredReleaseLevel(evidence);
-    const admissible = requiredReleaseLevel !== "none" && releaseLevelSatisfies(releaseLevel, requiredReleaseLevel);
+    const contractAdmissible =
+        requiredReleaseLevel !== "none" && releaseLevelSatisfies(releaseLevel, requiredReleaseLevel);
     return {
         kind: candidate.kind,
         version,
@@ -56,7 +57,7 @@ export function evaluateCompatibilityInput(input: IntegrationCompatibilityEvalua
         outcome,
         requiredReleaseLevel,
         releaseLevel,
-        admissible,
+        contractAdmissible,
     };
 }
 
@@ -93,7 +94,7 @@ function newMajorEvaluation(
         outcome: invalid ? ("invalid" as const) : ("not-applicable" as const),
         requiredReleaseLevel: invalid ? ("none" as const) : ("major" as const),
         releaseLevel: "major" as const,
-        admissible: !invalid,
+        contractAdmissible: !invalid,
         noBaselineReason: "new-major" as const,
     };
 }

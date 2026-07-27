@@ -1,72 +1,32 @@
-import {
-    createCompatibilityFinding,
-    deriveCompatibilityReportAssessment,
-    identifyCompatibilityReportV2,
-    type CompatibilityReportV2,
-    type ReportHistoryFields,
-    type ReportProvenance,
-} from "@bernouy/cms-integration-verification";
 import type {
-    IntegrationCompatibilityEvidence,
-    IntegrationCompatibilityReport,
-} from "../../../interfaces/compatibility";
+    CompatibilityReportV2,
+    ReportHistoryFields,
+    ReportProvenance,
+} from "@bernouy/cms-integration-verification";
+import type { IntegrationCompatibilityReport } from "../../../interfaces/compatibility";
+import { buildCompatibilityReportV2 } from "./reportBuilder";
 
 export async function projectCompatibilityReportV2(input: {
     report: IntegrationCompatibilityReport;
     history: ReportHistoryFields;
     provenance: ReportProvenance;
 }): Promise<Readonly<{ report: CompatibilityReportV2; digest: string }>> {
-    const findings = await compatibilityFindings(input.report);
-    const assessment = deriveCompatibilityReportAssessment({
-        effectiveFindings: findings,
-        releaseLevel: input.report.releaseLevel,
-        ...(input.report.noBaselineReason ? { noBaselineReason: input.report.noBaselineReason } : {}),
-    });
-    const identified = await identifyCompatibilityReportV2({
-        schema: "cms.integration.compatibility-report.v2",
-        ...input.history,
-        kind: input.report.kind,
-        version: input.report.version,
-        packageDigest: input.report.packageDigest,
+    return await buildCompatibilityReportV2({
+        evaluation: {
+            kind: input.report.kind,
+            version: input.report.version,
+            packageDigest: input.report.packageDigest,
+            baselines: input.report.baselines,
+            informationalBaselines: input.report.informationalBaselines,
+            evidence: input.report.evidence,
+            outcome: input.report.outcome,
+            requiredReleaseLevel: input.report.requiredReleaseLevel,
+            releaseLevel: input.report.releaseLevel,
+            contractAdmissible: input.report.admissible,
+            ...(input.report.noBaselineReason ? { noBaselineReason: input.report.noBaselineReason } : {}),
+        },
         evaluator: input.report.evaluator,
-        baselines: input.report.baselines,
-        informationalBaselines: input.report.informationalBaselines,
-        findings,
-        ...assessment,
-        releaseLevel: input.report.releaseLevel,
-        ...(input.report.noBaselineReason ? { noBaselineReason: input.report.noBaselineReason } : {}),
+        history: input.history,
         provenance: input.provenance,
     });
-    return Object.freeze({ report: identified.report, digest: identified.digest });
-}
-
-async function compatibilityFindings(report: IntegrationCompatibilityReport) {
-    const baselineDigest =
-        report.baselines[0]?.packageDigest ?? report.informationalBaselines[0]?.packageDigest ?? report.packageDigest;
-    const grouped = new Map<string, IntegrationCompatibilityEvidence>();
-    for (const entry of report.evidence) {
-        const key = `${entry.surface}\0${entry.path}\0${entry.code}`;
-        const previous = grouped.get(key);
-        if (!previous || compareEvidenceSeverity(entry, previous) > 0) {
-            grouped.set(key, entry);
-        }
-    }
-    return await Promise.all(
-        [...grouped.values()].map((entry) =>
-            createCompatibilityFinding({
-                surface: entry.surface,
-                path: entry.path,
-                code: entry.code,
-                baselineDigest,
-                candidateDigest: report.packageDigest,
-                classification: entry.classification,
-                message: entry.message,
-            }),
-        ),
-    );
-}
-
-function compareEvidenceSeverity(left: IntegrationCompatibilityEvidence, right: IntegrationCompatibilityEvidence) {
-    const rank = { compatible: 0, additive: 1, breaking: 2, unknown: 3, invalid: 4 } as const;
-    return rank[left.classification] - rank[right.classification] || (left.message < right.message ? 1 : -1);
 }

@@ -131,6 +131,20 @@ export type IntegrationCompatibilityEvaluatorOptions = Readonly<{
     createReportId: () => string;
 }>;
 
+export type IntegrationCompatibilityEvaluation = Readonly<{
+    kind: string;
+    version: string;
+    packageDigest: string;
+    baselines: readonly IntegrationCompatibilityBaselineReference[];
+    informationalBaselines: readonly IntegrationCompatibilityBaselineReference[];
+    evidence: readonly IntegrationCompatibilityEvidence[];
+    outcome: IntegrationCompatibilityOutcome;
+    requiredReleaseLevel: IntegrationVersionReleaseLevel | "none";
+    releaseLevel: IntegrationCompatibilityReleaseLevel;
+    contractAdmissible: boolean;
+    noBaselineReason?: IntegrationCompatibilityNoBaselineReason;
+}>;
+
 export type IntegrationCompatibilityAdmissionDecision =
     | Readonly<{ accepted: true; report: IntegrationCompatibilityAdmissionReport }>
     | Readonly<{

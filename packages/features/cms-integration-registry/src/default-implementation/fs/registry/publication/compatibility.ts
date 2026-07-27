@@ -43,6 +43,22 @@ export async function evaluatePublicationCompatibilityDecision(
     schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
     reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
 ): Promise<IntegrationCompatibilityAdmissionDecision> {
+    return evaluator.evaluateAdmission(
+        await buildPublicationCompatibilityInput(
+            snapshot,
+            candidate,
+            schemaDeclarationEvidence,
+            reviewedSchemaBaselines,
+        ),
+    );
+}
+
+export async function buildPublicationCompatibilityInput(
+    snapshot: IntegrationRegistryCatalogSnapshot,
+    candidate: PreparedFsIntegrationRegistryCandidate,
+    schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
+    reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
+): Promise<IntegrationCompatibilityEvaluationInput> {
     const candidateReviewedSchemaBaselines = await loadPackageReviewedSchemaBaselines(
         reviewedSchemaBaselines,
         candidate.definition.kind,
@@ -59,7 +75,7 @@ export async function evaluatePublicationCompatibilityDecision(
     };
     const index = snapshot.getIndex(candidate.definition.kind);
     if (!index) {
-        return evaluator.evaluateAdmission({ candidate: candidatePackage, noBaselineReason: "new-kind" });
+        return { candidate: candidatePackage, noBaselineReason: "new-kind" };
     }
     const enforcingVersion = [...index.versions]
         .reverse()
@@ -72,11 +88,11 @@ export async function evaluatePublicationCompatibilityDecision(
             enforcingVersion,
             reviewedSchemaBaselines,
         );
-        return evaluator.evaluateAdmission({
+        return {
             baseline,
             candidate: candidatePackage,
             changedPaths: await changedPaths(snapshot, candidate.limits, baseline, candidate),
-        });
+        };
     }
     const informationalVersion = index.stable ?? index.latest;
     const informationalBaseline = informationalVersion
@@ -96,7 +112,7 @@ export async function evaluatePublicationCompatibilityDecision(
             ? { changedPaths: await changedPaths(snapshot, candidate.limits, informationalBaseline, candidate) }
             : {}),
     };
-    return evaluator.evaluateAdmission(input);
+    return input;
 }
 
 async function changedPaths(

@@ -1,6 +1,7 @@
 import type {
     IntegrationCompatibilityAdmissionDecision,
     IntegrationCompatibilityAdmissionReport,
+    IntegrationCompatibilityEvaluation,
     IntegrationCompatibilityEvaluationInput,
     IntegrationCompatibilityEvaluatorOptions,
     IntegrationCompatibilityReportProvenance,
@@ -30,9 +31,19 @@ export class IntegrationCompatibilityEvaluator {
         assertCompatibilityText(options.identity.version, "evaluator version");
     }
 
+    evaluate(input: IntegrationCompatibilityEvaluationInput): IntegrationCompatibilityEvaluation {
+        return immutableClone(evaluateCompatibilityInput(input));
+    }
+
     evaluateAdmission(input: IntegrationCompatibilityEvaluationInput): IntegrationCompatibilityAdmissionDecision {
-        const evaluation = evaluateCompatibilityInput(input);
-        const report = immutableClone({ reportType: "admission" as const, ...this.reportMetadata(), ...evaluation });
+        const evaluation = this.evaluate(input);
+        const { contractAdmissible, ...fields } = evaluation;
+        const report = immutableClone({
+            reportType: "admission" as const,
+            ...this.reportMetadata(),
+            ...fields,
+            admissible: contractAdmissible,
+        });
         return report.admissible
             ? { accepted: true, report }
             : { accepted: false, status: 422, code: "integration_compatibility_rejected", report };
@@ -46,10 +57,13 @@ export class IntegrationCompatibilityEvaluator {
         assertCompatibilityText(supersedes, "superseded report ID");
         assertCompatibilityText(provenance.actor, "revision actor");
         assertCompatibilityText(provenance.reason, "revision reason");
+        const evaluation = this.evaluate(input);
+        const { contractAdmissible, ...fields } = evaluation;
         return immutableClone({
             reportType: "revision" as const,
             ...this.reportMetadata(),
-            ...evaluateCompatibilityInput(input),
+            ...fields,
+            admissible: contractAdmissible,
             supersedes,
             provenance,
         });

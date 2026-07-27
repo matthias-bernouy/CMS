@@ -4,9 +4,9 @@ import {
     type ReleaseAdmissionPolicySnapshotV1,
 } from "@bernouy/cms-integration-verification";
 import { IntegrationCompatibilityEvaluator } from "cms-integration-registry/core/compatibility/evaluation";
-import { projectCompatibilityReportV2 } from "cms-integration-registry/core/compatibility/evaluation/v2Projection";
+import { buildCompatibilityReportV2 } from "cms-integration-registry/core/compatibility/evaluation/reportBuilder";
 import type { IntegrationRegistryCatalogSnapshot } from "cms-integration-registry/interfaces/catalog";
-import { evaluatePublicationCompatibilityDecision } from "../../compatibility";
+import { buildPublicationCompatibilityInput } from "../../compatibility";
 import type { PreparedFsIntegrationRegistryCandidate } from "../../candidate";
 import type { CapturedReviewedSchemaBaselineStore } from "./baselines";
 import type { IdentifiedCatalogRevision } from "./catalog";
@@ -29,19 +29,14 @@ export async function planCandidateCompatibility(input: {
     const evaluator = new IntegrationCompatibilityEvaluator({
         identity: input.policy.staticEvaluator,
         now: () => input.createdAt,
-        createReportId: () => `legacy-${input.candidateDigest.slice(0, 32)}`,
+        createReportId: () => `compat-${input.candidateDigest.slice(0, 32)}`,
     });
-    const legacy = (
-        await evaluatePublicationCompatibilityDecision(
-            input.snapshot,
-            input.candidate,
-            evaluator,
-            undefined,
-            input.baselines,
-        )
-    ).report;
-    const report = await projectCompatibilityReportV2({
-        report: legacy,
+    const evaluation = evaluator.evaluate(
+        await buildPublicationCompatibilityInput(input.snapshot, input.candidate, undefined, input.baselines),
+    );
+    const report = await buildCompatibilityReportV2({
+        evaluation,
+        evaluator: input.policy.staticEvaluator,
         history: {
             reportId: `compat-${input.candidateDigest.slice(0, 32)}`,
             revisionType: "root",
@@ -55,12 +50,12 @@ export async function planCandidateCompatibility(input: {
             schema: "cms.integration.compatibility-evaluator-input.v1",
             catalogDigest: input.catalog.digest,
             candidate: {
-                kind: legacy.kind,
-                version: legacy.version,
-                packageDigest: legacy.packageDigest,
+                kind: evaluation.kind,
+                version: evaluation.version,
+                packageDigest: evaluation.packageDigest,
             },
-            baselines: legacy.baselines,
-            informationalBaselines: legacy.informationalBaselines,
+            baselines: evaluation.baselines,
+            informationalBaselines: evaluation.informationalBaselines,
             reviewedBaselines: input.baselines.references(),
             evaluator: input.policy.staticEvaluator,
         }),
