@@ -1,0 +1,35 @@
+[
+    {
+        "endpointId": "stageAcceptance",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-consent/acceptances/stage",
+        "meta": {
+            "name": "Stage consent acceptance",
+            "description": "Validate current versions and preserve an unassociated acceptance intent."
+        },
+        "params": [],
+        "headers": {
+            "$include": "../../shared/service-header.json"
+        },
+        "body": { "type": "object" },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "staged": { "type": "boolean" },
+                        "attemptId": { "type": "string" },
+                        "requiredCount": { "type": "number" }
+                    },
+                    "required": ["staged", "attemptId", "requiredCount"]
+                }
+            },
+            {
+                "status": "default",
+                "body": { "$include": "../../shared/error.json" }
+            }
+        ]
+    }
+]

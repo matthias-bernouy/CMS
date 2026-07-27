@@ -1,0 +1,36 @@
+[
+    {
+        "endpointId": "commitAcceptance",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-consent/acceptances/commit",
+        "meta": {
+            "name": "Commit consent acceptance",
+            "description": "Associate one staged intent with a verified CMS subject."
+        },
+        "params": [],
+        "headers": {
+            "$include": "../../shared/service-header.json"
+        },
+        "body": { "type": "object" },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "committed": { "type": "boolean" },
+                        "acceptanceId": { "type": "string", "nullable": true },
+                        "cmsUserId": { "type": "string" },
+                        "acceptedAt": { "type": "string", "nullable": true }
+                    },
+                    "required": ["committed", "acceptanceId", "cmsUserId", "acceptedAt"]
+                }
+            },
+            {
+                "status": "default",
+                "body": { "$include": "../../shared/error.json" }
+            }
+        ]
+    }
+]

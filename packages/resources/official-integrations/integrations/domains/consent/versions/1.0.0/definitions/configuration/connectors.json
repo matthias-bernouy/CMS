@@ -1,0 +1,22 @@
+[
+    {
+        "provider": "supabase",
+        "root": "connectors/supabase",
+        "dataApiSchemas": ["consent"],
+        "schemas": [
+            {
+                "manifest": "sql/schema.manifest.json"
+            }
+        ],
+        "functions": [
+            {
+                "name": "cms-consent",
+                "directory": "functions/cms-consent",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_CONSENT_API_KEY": "{{generated.cmsApiKey}}"
+                }
+            }
+        ]
+    }
+]

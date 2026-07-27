@@ -1,0 +1,4 @@
+{
+    "schema": "cms.integration.definition.bundle.v1",
+    "root": "definitions/root.json"
+}

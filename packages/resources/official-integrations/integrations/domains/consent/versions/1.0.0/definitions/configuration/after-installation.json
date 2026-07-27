@@ -1,0 +1,17 @@
+[
+    {
+        "id": "sync-consent-context",
+        "steps": [
+            {
+                "id": "configuration",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "syncContext",
+                    "body": {
+                        "configuration": "{\"enabled\":{{answers.enabled}},\"contextKey\":{{json answers.contextKey}},\"documents\":{{json resolved.documents}}}"
+                    }
+                }
+            }
+        ]
+    }
+]

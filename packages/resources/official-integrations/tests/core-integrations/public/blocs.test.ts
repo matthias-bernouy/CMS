@@ -58,6 +58,7 @@ const expectedBlocs = new Map([
         ],
     ],
     ["commerce-negotiation", ["commerce-negotiation-form", "commerce-negotiation-list"]],
+    ["consent", ["cms-consent-field"]],
     [
         "sales-configurator",
         [

@@ -6,6 +6,7 @@ import {
     type IntegrationConnectorDeployer,
     type IntegrationConnectorDeployment,
     type IntegrationDefinition,
+    type IntegrationAnswerValue,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
@@ -13,11 +14,34 @@ import { InMemoryDashboardRepository, validateDashboard } from "@bernouy/cms-das
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
+import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository, validateSource } from "@bernouy/cms-sources";
 import { stripeWebhookProvisioner } from "../../helpers/stripeWebhookProvisioner";
 
 describe("public integrations 1.0.0", () => {
     test.each([
+        {
+            kind: "consent",
+            sourceId: "consent",
+            dashboardId: "consent-acceptances",
+            blocTags: ["cms-consent-field"],
+            answers: {
+                id: "consent",
+                enabled: false,
+                contextKey: "signup",
+                documents: [],
+            },
+            functionName: "cms-consent",
+            schemas: ["consent"],
+            expectedEndpoints: [
+                "getRequirements",
+                "syncContext",
+                "stageAcceptance",
+                "commitAcceptance",
+                "listAcceptances",
+                "health",
+            ],
+        },
         {
             kind: "newsletter",
             sourceId: "newsletter",
@@ -167,6 +191,24 @@ describe("public integrations 1.0.0", () => {
             expect(dashboardJson).toContain("exportSubscriptions");
             expect(dashboardJson).toContain("newsletter-subscriptions.csv");
         }
+        if (scenario.kind === "consent") {
+            expect(await harness.triggers.getAllTriggers()).toEqual([
+                expect.objectContaining({
+                    id: "consent-stage-target",
+                    critical: true,
+                    mode: "sync",
+                    failureMode: "block",
+                    event: expect.objectContaining({ source: "system-auth", endpoint: "signup", phase: "request" }),
+                }),
+                expect.objectContaining({
+                    id: "consent-commit-target",
+                    critical: true,
+                    mode: "sync",
+                    failureMode: "block",
+                    event: expect.objectContaining({ source: "system-auth", endpoint: "signup", phase: "response" }),
+                }),
+            ]);
+        }
         if (scenario.kind === "emailer") {
             const settingsDashboard = await harness.dashboards.getDashboard("emailer-settings");
             expect(settingsDashboard).toBeTruthy();
@@ -208,7 +250,7 @@ describe("public integrations 1.0.0", () => {
     });
 });
 
-export async function importScenario(kind: string, answers: Record<string, string | boolean>) {
+export async function importScenario(kind: string, answers: Record<string, IntegrationAnswerValue>) {
     const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
     const definition = await repo.get(kind);
     if (!definition) {
@@ -221,6 +263,7 @@ export async function importScenario(kind: string, answers: Record<string, strin
     const dashboards = new InMemoryDashboardRepository();
     const sourceOverlays = new InMemorySourceOverlayRepository();
     const functions = new InMemoryFunctionRepository();
+    const triggers = new InMemoryTriggerRepository();
     const installations = new InMemoryIntegrationInstallationRepository();
     await installations.create({
         id: "basic-blocs",
@@ -279,6 +322,7 @@ export async function importScenario(kind: string, answers: Record<string, strin
             roles,
             dashboards,
             functions,
+            triggers,
             sourceOverlays,
             installations,
             connectorDeployers: [deployer],
@@ -294,7 +338,7 @@ export async function importScenario(kind: string, answers: Record<string, strin
         [definition as IntegrationDefinition],
     );
 
-    return { result, sources, sourceOverlays, secrets, dashboards, importedBlocs, deployment };
+    return { result, sources, sourceOverlays, secrets, dashboards, triggers, importedBlocs, deployment };
 }
 
 function newsletterDependencySource() {
