@@ -8,10 +8,6 @@ export {
     type PostgresPlatformVerificationAdapter,
     type PostgresPlatformVerificationEvidence,
 } from "./postgres";
-export {
-    loadPostgresPlatformVerificationAdapter,
-    type PostgresPlatformVerificationAdapterFactory,
-} from "./postgresAdapter";
 export { runPostgresVerificationSandboxExecutable } from "./postgresMain";
 export {
     createProcessVerificationSandbox,

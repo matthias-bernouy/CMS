@@ -221,7 +221,7 @@ services:
             CMS_INTEGRATION_VERIFIER_SANDBOX_PORT: "3101"
             CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: /run/configs/cms-integration-verifier-sandbox-verification-key
             CMS_INTEGRATION_VERIFIER_SANDBOX_EXECUTABLE: /usr/local/bin/bun
-            CMS_INTEGRATION_VERIFIER_SANDBOX_ARGUMENTS_JSON: '["run","packages/runtimes/cms-integration-verifier/src/sandbox/postgresMain.ts","/app/packages/runtimes/cms-integration-verifier/src/sandbox/service/postgres/index.ts"]'
+            CMS_INTEGRATION_VERIFIER_SANDBOX_ARGUMENTS_JSON: '["run","packages/runtimes/cms-integration-verifier/src/sandbox/postgresMain.ts"]'
             CMS_INTEGRATION_VERIFIER_SANDBOX_TMP_ROOT: /tmp/cms-integration-verifier
             CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS: "${CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS:-600000}"
             CMS_INTEGRATION_VERIFIER_SANDBOX_TERMINATION_GRACE_MS: "${CMS_INTEGRATION_VERIFIER_SANDBOX_TERMINATION_GRACE_MS:-2000}"

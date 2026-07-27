@@ -94,7 +94,6 @@ async function runAdapter(input: VerificationSandboxInput, cwd: string) {
         [
             process.execPath,
             join(import.meta.dir, "../../src/sandbox/postgresMain.ts"),
-            join(import.meta.dir, "../../src/sandbox/service/postgres/index.ts"),
         ],
         {
             cwd,

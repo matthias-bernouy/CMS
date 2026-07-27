@@ -15,10 +15,9 @@ import { postgresPlatformInputFixture } from "../fixtures/postgresAdapter";
 import { processSandboxFixture } from "./support";
 
 describe("PostgreSQL platform verification sandbox program", () => {
-    test("runs through the canonical child-process executable with a prebuilt adapter module", async () => {
-        const executable = join(import.meta.dir, "../../src/sandbox/postgresMain.ts");
-        const adapterModule = join(import.meta.dir, "../fixtures/postgresAdapter.ts");
-        const fixture = await processSandboxFixture("unused", { arguments: [executable, adapterModule] });
+    test("runs through the canonical child-process executable with an injected test adapter", async () => {
+        const executable = join(import.meta.dir, "../fixtures/postgresSandbox.ts");
+        const fixture = await processSandboxFixture("unused", { arguments: [executable] });
         try {
             const result = await fixture.sandbox.run(
                 await postgresPlatformInputFixture(),
