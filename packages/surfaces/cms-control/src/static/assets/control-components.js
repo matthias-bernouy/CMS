@@ -2619,9 +2619,11 @@ input:disabled {
   function Et(t) {
     return Array.from(t.querySelectorAll("option")).map((e) => ({ value: e.value, label: e.textContent ?? e.value, disabled: e.disabled }));
   }
-  function At(t, e) {
-    let r = e.toLowerCase();
-    return (r ? t.filter((o) => o.label.toLowerCase().includes(r)) : t).slice(0, 8).map((o) => ({ ...o, kind: "option" }));
+  function At(t, e, r = false) {
+    let i = e.toLowerCase(), n = (i ? t.filter((l) => l.label.toLowerCase().includes(i)) : t).slice(0, 8).map((l) => ({ ...l, kind: "option" })), a = t.some((l) => l.value === e || l.label.toLowerCase() === i);
+    if (r && e && !a)
+      n.unshift({ kind: "create", value: e, label: `Add "${e}"`, disabled: false }), n.length = Math.min(n.length, 8);
+    return n;
   }
   function St(t, e, r, i, o) {
     let n = document.createElement("div");
@@ -2674,7 +2676,7 @@ input:disabled {
         this.label.textContent = r, this.label.hidden = r === "";
       }
       if (this.input)
-        this.input.placeholder = t.getAttribute("placeholder") ?? "", this.input.disabled = e, this.input.required = t.hasAttribute("required"), Pi(this.input, "aria-required", t.hasAttribute("required")), Pi(this.input, "aria-invalid", t.hasAttribute("invalid"));
+        this.input.placeholder = t.getAttribute("placeholder") ?? "", Rd(this.input, "aria-label", t.getAttribute("aria-label")), this.input.disabled = e, this.input.required = t.hasAttribute("required"), Pi(this.input, "aria-required", t.hasAttribute("required")), Pi(this.input, "aria-invalid", t.hasAttribute("invalid"));
       if (this.hint) {
         let r = t.getAttribute("hint") ?? "";
         if (this.hint.textContent = r, this.hint.dataset.level = t.getAttribute("hint-level") ?? "info", this.hint.hidden = r === "", this.input)
@@ -2712,6 +2714,12 @@ input:disabled {
       return this.listbox?.hidden ?? true;
     }
   }
+  function Rd(t, e, r) {
+    if (r)
+      t.setAttribute(e, r);
+    else
+      t.removeAttribute(e);
+  }
   function Pi(t, e, r) {
     if (r)
       t.setAttribute(e, "true");
@@ -2721,9 +2729,7 @@ input:disabled {
 
   class Ri extends s {
     static formAssociated = true;
-    static get observedAttributes() {
-      return ["value", "label", "placeholder", "disabled", "required", "invalid", "hint", "hint-level", "creatable"];
-    }
+    static observedAttributes = ["value", "label", "aria-label", "placeholder", "disabled", "required", "invalid", "hint", "hint-level", "creatable"];
     view;
     options = [];
     items = [];
@@ -2769,7 +2775,9 @@ input:disabled {
     focus() {
       this.view.input?.focus();
     }
-    handlers = { focus: () => this.renderList(this.query), input: () => {
+    handlers = { focus: () => {
+      this.view.input?.select(), this.renderList("");
+    }, input: () => {
       this.view.syncClearButtonForInput(), this.activeIndex = -1, this.renderList(this.query);
     }, keydown: (t) => this.onKeydown(t), blur: () => window.setTimeout(() => {
       this.hideList(), this.syncDisplay();
@@ -2786,9 +2794,7 @@ input:disabled {
       this.view.syncDisplay(this.selectedValue, this.selectedLabel);
     }
     renderList(t) {
-      if (this.items = At(this.options, t), this.items.length === 0 && t && this.hasAttribute("creatable"))
-        this.items = [{ kind: "create", value: t, label: `Add "${t}"`, disabled: false }];
-      this.view.renderList(this.items, this.activeIndex, this.selectedValue, this.selectItem);
+      this.items = At(this.options, t, this.hasAttribute("creatable")), this.view.renderList(this.items, this.activeIndex, this.selectedValue, this.selectItem);
     }
     selectItem = (t) => {
       if (this.selectedValue = t.value, this.selectedLabel = t.kind === "create" ? t.value : t.label, this.view.input)
@@ -2799,9 +2805,9 @@ input:disabled {
       if (t.key === "ArrowDown" || t.key === "ArrowUp")
         this.moveActive(t);
       else if (t.key === "Enter") {
-        let e = this.items[this.activeIndex];
-        if (e)
-          t.preventDefault(), this.selectItem(e);
+        let e = this.items[0], r = this.items[this.activeIndex] ?? (e?.kind === "create" ? e : undefined);
+        if (r)
+          t.preventDefault(), this.selectItem(r);
       } else if (t.key === "Escape")
         t.preventDefault(), this.hideList(), this.syncDisplay();
     }
@@ -3129,15 +3135,15 @@ input:disabled {
     let i = (t.textContent ?? "").length > 0, o = !e.hidden;
     r.hidden = !i && !o;
   };
-  var Ud = 0;
-  var eo = () => `p9r-input-label-${++Ud}`;
+  var Kd = 0;
+  var eo = () => `p9r-input-label-${++Kd}`;
   var oe = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("label") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var Kd = (t, e) => {
+  var Xd = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("placeholder");
@@ -3146,12 +3152,12 @@ input:disabled {
     else
       e.setAttribute("placeholder", r);
   };
-  var Xd = (t, e) => {
+  var Yd = (t, e) => {
     if (!e)
       return;
     e.setAttribute("type", t.getAttribute("type") ?? "text");
   };
-  var Yd = (t, e) => {
+  var Zd = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("inputmode");
@@ -3160,7 +3166,7 @@ input:disabled {
     else
       e.setAttribute("inputmode", r);
   };
-  var Zd = (t, e) => {
+  var Gd = (t, e) => {
     if (!e)
       return;
     for (let r of ["min", "max", "step"]) {
@@ -3171,11 +3177,11 @@ input:disabled {
         e.setAttribute(r, i);
     }
   };
-  var Gd = (t, e) => {
+  var Qd = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var Qd = (t, e) => {
+  var Jd = (t, e) => {
     if (!e)
       return;
     let r = t.hasAttribute("required");
@@ -3184,17 +3190,17 @@ input:disabled {
     else
       e.removeAttribute("aria-required");
   };
-  var Jd = (t, e, r, i) => {
+  var Wd = (t, e, r, i) => {
     if (!e)
       return;
     e.textContent = t.getAttribute("hint") ?? "", ie(e, r, i);
   };
-  var Wd = (t, e) => {
+  var tc = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var tc = (t, e) => {
+  var ec = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -3213,7 +3219,7 @@ input:disabled {
     ie(i, e, o);
   };
   var ae = (t, e, r, i, o, n, a) => {
-    oe(t, r), Kd(t, e), Xd(t, e), Yd(t, e), Zd(t, e), Gd(t, e), Qd(t, e), Jd(t, i, n, o), Wd(t, i), tc(t, e), ne(t, n, a, i, o);
+    oe(t, r), Xd(t, e), Yd(t, e), Zd(t, e), Gd(t, e), Qd(t, e), Jd(t, e), Wd(t, i, n, o), tc(t, i), ec(t, e), ne(t, n, a, i, o);
   };
   var ro = (t, e, r, i, o) => {
     if (!e)
@@ -3225,7 +3231,7 @@ input:disabled {
       return;
     r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
-  var ec = Ji + Wi + to;
+  var rc = Ji + Wi + to;
 
   class oo extends s {
     static formAssociated = true;
@@ -3243,7 +3249,7 @@ input:disabled {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: ec, template: Qi });
+      super({ css: rc, template: Qi });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._labelEl = t.querySelector(".label"), this._input = t.querySelector(".input"), this._hintEl = t.querySelector(".hint"), this._metaEl = t.querySelector(".meta"), this._counterEl = t.querySelector(".counter"), this._countEl = t.querySelector(".count"), this._maxEl = t.querySelector(".max");
@@ -3476,7 +3482,7 @@ input:disabled {
     .slider::-webkit-slider-thumb { transition: transform 0.1s; }
 }
 `;
-  var ac = ao + so + lo;
+  var sc = ao + so + lo;
   var fo = `<div class="field">
     <span class="label"></span>
     <button class="trigger" type="button" tabindex="0"
@@ -3637,7 +3643,7 @@ input:disabled {
       e.textContent = i;
     xo(t, r);
   };
-  var cc = vo + go;
+  var uc = vo + go;
 
   class ko extends s {
     static formAssociated = true;
@@ -3650,7 +3656,7 @@ input:disabled {
     _value = "";
     _isOpen = false;
     constructor() {
-      super({ css: cc, template: fo });
+      super({ css: uc, template: fo });
       this._internals = this.attachInternals(), this._trigger = this.shadowRoot.querySelector(".trigger"), this._display = this.shadowRoot.querySelector(".value"), this._list = this.shadowRoot.querySelector(".list"), this._panel = this.shadowRoot.querySelector(".panel");
     }
     connectedCallback() {
@@ -4326,7 +4332,7 @@ p9r-tag:hover {
         it(t, n);
     }
   };
-  var kc = Uo + Ko;
+  var Ec = Uo + Ko;
 
   class an extends s {
     static formAssociated = true;
@@ -4347,7 +4353,7 @@ p9r-tag:hover {
     _defaultsCaptured = false;
     _silent = false;
     constructor() {
-      super({ css: kc, template: $o });
+      super({ css: Ec, template: $o });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       if (this._input = t.querySelector("#main-input"), this._display = t.querySelector("#tags-display"), this._suggestionsEl = t.querySelector("#suggestions"), this._liveRegion = t.querySelector("#live-region"), this._uid = `ts-${Math.random().toString(36).slice(2, 9)}`, this._suggestionsEl)
@@ -4586,13 +4592,13 @@ p9r-tag:hover {
       return;
     e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
   };
-  var Lc = (t, e) => {
+  var Cc = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("label") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var Cc = (t, e) => {
+  var Tc = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("placeholder");
@@ -4601,14 +4607,14 @@ p9r-tag:hover {
     else
       e.setAttribute("placeholder", r);
   };
-  var Tc = (t, e) => {
+  var Mc = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("rows");
     if (r)
       e.rows = Number(r) || 3;
   };
-  var Mc = (t, e) => {
+  var Hc = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("maxlength");
@@ -4617,11 +4623,11 @@ p9r-tag:hover {
     else
       e.setAttribute("maxlength", r);
   };
-  var Hc = (t, e) => {
+  var zc = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var zc = (t, e) => {
+  var Ic = (t, e) => {
     if (!e)
       return;
     let r = t.hasAttribute("required");
@@ -4630,17 +4636,17 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-required");
   };
-  var Ic = (t, e, r, i) => {
+  var Pc = (t, e, r, i) => {
     if (!e)
       return;
     e.textContent = t.getAttribute("hint") ?? "", _e(e, r, i);
   };
-  var Pc = (t, e) => {
+  var Rc = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var Rc = (t, e) => {
+  var Fc = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -4659,7 +4665,7 @@ p9r-tag:hover {
     _e(i, e, o);
   };
   var ke = (t, e, r, i, o, n, a) => {
-    Lc(t, r), Cc(t, e), Tc(t, e), Mc(t, e), Hc(t, e), zc(t, e), Ic(t, i, n, o), Pc(t, i), Rc(t, e), we(t, n, a, i, o);
+    Cc(t, r), Tc(t, e), Mc(t, e), Hc(t, e), zc(t, e), Ic(t, e), Pc(t, i, n, o), Rc(t, i), Fc(t, e), we(t, n, a, i, o);
   };
   var cn = (t, e, r, i, o) => {
     if (!e)
@@ -4671,7 +4677,7 @@ p9r-tag:hover {
       return;
     e.setFormValue(t.value);
   };
-  var Fc = ln + dn;
+  var Bc = ln + dn;
 
   class pn extends s {
     static formAssociated = true;
@@ -4689,7 +4695,7 @@ p9r-tag:hover {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: Fc, template: sn });
+      super({ css: Bc, template: sn });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._textarea = t.querySelector("textarea"), this._label = t.querySelector(".label"), this._hint = t.querySelector(".hint"), this._meta = t.querySelector(".meta"), this._counter = t.querySelector(".counter"), this._count = t.querySelector(".count"), this._max = t.querySelector(".max");
@@ -5522,7 +5528,7 @@ input:hover:not(:disabled) {
     }
 }
 `;
-  var Xc = "(max-width: 720px)";
+  var Yc = "(max-width: 720px)";
 
   class zn extends s {
     _sidebar;
@@ -5543,7 +5549,7 @@ input:hover:not(:disabled) {
     connectedCallback() {
       for (let t of ["collapsed"])
         c(this, t);
-      this._syncAriaState(), this._syncSecondarySidebar(), this._mobileMedia = window.matchMedia(Xc), this._syncMobileNavigation(), this._secondarySlot?.addEventListener("slotchange", this._onSecondarySlotChange), this._primaryMobileToggle?.addEventListener("click", this._onPrimaryMobileToggle), this._secondaryMobileToggle?.addEventListener("click", this._onSecondaryMobileToggle), this._mobileBackdrop?.addEventListener("click", this._onMobileBackdropClick), this.addEventListener("click", this._onNavigationClick), this.shadowRoot?.addEventListener("keydown", this._onKeyDown), this._mobileMedia.addEventListener("change", this._onMobileMediaChange);
+      this._syncAriaState(), this._syncSecondarySidebar(), this._mobileMedia = window.matchMedia(Yc), this._syncMobileNavigation(), this._secondarySlot?.addEventListener("slotchange", this._onSecondarySlotChange), this._primaryMobileToggle?.addEventListener("click", this._onPrimaryMobileToggle), this._secondaryMobileToggle?.addEventListener("click", this._onSecondaryMobileToggle), this._mobileBackdrop?.addEventListener("click", this._onMobileBackdropClick), this.addEventListener("click", this._onNavigationClick), this.shadowRoot?.addEventListener("keydown", this._onKeyDown), this._mobileMedia.addEventListener("change", this._onMobileMediaChange);
     }
     disconnectedCallback() {
       this._secondarySlot?.removeEventListener("slotchange", this._onSecondarySlotChange), this._primaryMobileToggle?.removeEventListener("click", this._onPrimaryMobileToggle), this._secondaryMobileToggle?.removeEventListener("click", this._onSecondaryMobileToggle), this._mobileBackdrop?.removeEventListener("click", this._onMobileBackdropClick), this.removeEventListener("click", this._onNavigationClick), this.shadowRoot?.removeEventListener("keydown", this._onKeyDown), this._mobileMedia?.removeEventListener("change", this._onMobileMediaChange), this._mobileMedia = null;
@@ -5584,7 +5590,7 @@ input:hover:not(:disabled) {
     _onMobileBackdropClick = () => this._closeMobileNavigation(true);
     _onNavigationClick = (t) => {
       let e = t.composedPath(), r = this.hasAttribute("mobile-primary-open") || this.hasAttribute("mobile-secondary-open"), i = [this._primaryMobileToggle, this._secondaryMobileToggle, this._mobileBackdrop].some((o) => o !== null && e.includes(o));
-      if (!this._mobileMedia?.matches || !r || i || !this._isNavigationPath(t, e) || !Yc(e))
+      if (!this._mobileMedia?.matches || !r || i || !this._isNavigationPath(t, e) || !Zc(e))
         return;
       this._closeMobileNavigation(false), this._content?.focus();
     };
@@ -5649,7 +5655,7 @@ input:hover:not(:disabled) {
       this._content?.focus();
     }
   }
-  function Yc(t) {
+  function Zc(t) {
     return t.some((e) => {
       if (!(e instanceof Element))
         return false;
@@ -6102,7 +6108,7 @@ input:hover:not(:disabled) {
       return this.slot.assignedElements({ flatten: true }).filter((t) => t instanceof HTMLImageElement);
     }
     syncAlbum(t, e) {
-      this.album.hidden = e, this.legendAlbum.hidden = !e, this.legendAlbum.replaceChildren(...e ? t.map(eu) : []);
+      this.album.hidden = e, this.legendAlbum.hidden = !e, this.legendAlbum.replaceChildren(...e ? t.map(ru) : []);
     }
     showActive(t, e, r) {
       let i = t[e];
@@ -6118,7 +6124,7 @@ input:hover:not(:disabled) {
       this.strip.replaceChildren(...r), this.strip.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest", inline: "center" });
     }
   }
-  function eu(t, e) {
+  function ru(t, e) {
     let r = document.createElement("figure");
     r.className = "figure", r.setAttribute("part", "figure");
     let i = document.createElement("button");
@@ -6131,7 +6137,7 @@ input:hover:not(:disabled) {
     let n = document.createElement("figcaption");
     return n.setAttribute("part", "legend"), n.textContent = t.alt, n.hidden = t.alt.trim() === "", i.append(o), r.append(i, n), r;
   }
-  var ru = [Bn, Dn, On].join(`
+  var iu = [Bn, Dn, On].join(`
 `);
 
   class Vn extends s {
@@ -6142,7 +6148,7 @@ input:hover:not(:disabled) {
       return ["view-legend"];
     }
     constructor() {
-      super({ css: ru, template: Fn });
+      super({ css: iu, template: Fn });
       this.view = new Se(this.shadowRoot);
     }
     connectedCallback() {
@@ -6348,7 +6354,7 @@ input:hover:not(:disabled) {
         this.open = !this.open;
     };
     _onMenuClick = (t) => {
-      let e = t.composedPath().find(nu);
+      let e = t.composedPath().find(au);
       if (e && !e.hasAttribute("disabled"))
         this.open = false;
     };
@@ -6363,7 +6369,7 @@ input:hover:not(:disabled) {
       this.open = false, this._trigger?.focus();
     };
   }
-  function nu(t) {
+  function au(t) {
     return t instanceof HTMLElement && t.tagName.toLowerCase() === "p9r-action-menu-item";
   }
   var Kn = `<button class="item" type="button" role="menuitem" part="item">
@@ -6968,13 +6974,13 @@ p {
       return;
     r.preventDefault(), e?.click();
   };
-  var bu = oa + na;
+  var fu = oa + na;
 
   class sa extends s {
     _anchor;
     _badgeEl;
     constructor() {
-      super({ css: bu, template: ia });
+      super({ css: fu, template: ia });
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
     }
     static get observedAttributes() {
@@ -7196,7 +7202,7 @@ p {
   margin-top: 0.4rem;
 }
 `;
-  var Tu = Ta + Ma;
+  var Mu = Ta + Ma;
   var za = `<div class="table-container">
   <div class="p9r-table">
     <slot name="header"></slot>
@@ -7431,7 +7437,7 @@ p {
   background: var(--bg-base, #eee);
 }
 `;
-  var Bu = (t) => {
+  var Du = (t) => {
     let e = t.getAttribute("filter-name");
     if (!e)
       return "";
@@ -7446,7 +7452,7 @@ p {
       return;
     }
     e.removeAttribute("hidden");
-    let o = Bu(t);
+    let o = Du(t);
     if (r)
       r.value = o;
     if (o)
@@ -7493,7 +7499,7 @@ p {
   var Ka = (t, e) => {
     e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
   };
-  var Du = Oa + qa;
+  var Ou = Oa + qa;
 
   class Xa extends s {
     _sortTrigger;
@@ -7504,7 +7510,7 @@ p {
       return ["sort", "filter-name"];
     }
     constructor() {
-      super({ css: Du, template: Da });
+      super({ css: Ou, template: Da });
       this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
     }
     connectedCallback() {
@@ -7750,8 +7756,8 @@ p {
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
   };
-  var $u = 0;
-  var rs = () => `tabpanel-${$u++}`;
+  var Uu = 0;
+  var rs = () => `tabpanel-${Uu++}`;
   var is = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
   };
@@ -7818,7 +7824,7 @@ p {
       $(t, e, r, d);
     u.focus();
   };
-  var Uu = ts + es;
+  var Ku = ts + es;
 
   class as extends s {
     _tablist;
@@ -7827,7 +7833,7 @@ p {
       return ["active"];
     }
     constructor() {
-      super({ css: Uu, template: Wa });
+      super({ css: Ku, template: Wa });
       this._tablist = this.shadowRoot?.querySelector(".tablist") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
@@ -7983,7 +7989,7 @@ p {
     --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
 }
 `;
-  var Qu = us + ps;
+  var Ju = us + ps;
 
   class hs extends s {
     _removeBtn;
@@ -7991,7 +7997,7 @@ p {
       return ["removable"];
     }
     constructor() {
-      super({ css: Qu, template: cs });
+      super({ css: Ju, template: cs });
       this._removeBtn = this.shadowRoot?.querySelector(".remove") ?? null;
     }
     connectedCallback() {
@@ -8157,12 +8163,12 @@ p {
     to   { opacity: 0; transform: translateX(-20px); }
 }
 `;
-  var ep = bs + fs;
+  var rp = bs + fs;
 
   class vs extends s {
     _timer = null;
     constructor() {
-      super({ css: ep, template: ms });
+      super({ css: rp, template: ms });
     }
     connectedCallback() {
       this.shadowRoot?.querySelector(".close")?.addEventListener("click", () => this.dismiss());
@@ -8255,15 +8261,15 @@ p {
     }
   }
   var w = null;
-  function op() {
+  function np() {
     if (w && w.isConnected)
       return w;
     if (w = document.querySelector("p9r-toast-stack"), w)
       return w;
     return w = document.createElement("p9r-toast-stack"), document.body.appendChild(w), w;
   }
-  function np(t, e = {}) {
-    return op().push(t, e);
+  function ap(t, e = {}) {
+    return np().push(t, e);
   }
   var ws = `:host {
   display: inline-block;
@@ -8383,7 +8389,7 @@ p {
   border-right-color: var(--_bg);
 }
 `;
-  var dp = ws + ks;
+  var cp = ws + ks;
   function As(t) {
     let e = new URL(t, window.location.href);
     for (let [r, i] of new URLSearchParams(window.location.search))
@@ -8398,20 +8404,20 @@ p {
       return null;
     }
   }
-  var cp = new Intl.NumberFormat("fr-FR");
-  var up = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
+  var up = new Intl.NumberFormat("fr-FR");
+  var pp = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
   var k = (t) => t.replace(/[&<>"]/g, (e) => e === "&" ? "&amp;" : e === "<" ? "&lt;" : e === ">" ? "&gt;" : "&quot;");
-  var pp = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
+  var hp = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
   function Pe(t, e) {
     if (e === "ms")
       return `${Math.round(t)} ms`;
     if (e === "pct")
       return `${(t * 100).toFixed(1).replace(".", ",")} %`;
-    return cp.format(Math.round(t));
+    return up.format(Math.round(t));
   }
   var Ss = (t) => {
     let e = new Date(t);
-    return Number.isNaN(e.getTime()) ? t : up.format(e);
+    return Number.isNaN(e.getTime()) ? t : pp.format(e);
   };
   function Dt(t, e) {
     return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${k(t)}</p>${e ? `<p class="empty-hint">${k(e)}</p>` : ""}</div>`;
@@ -8420,7 +8426,7 @@ p {
     if (t.length === 0)
       return "";
     let e = 320, r = 140, i = 32, o = 8, n = 10, a = 22, l = e - i - o, u = r - n - a, d = n + u, p = Math.max(...t.map((z) => z.value), 1), m = t.length, b = t.map((z, Q) => [i + (m === 1 ? l / 2 : Q / (m - 1) * l), n + (1 - z.value / p) * u]), A = b.map(([z, Q]) => `${z.toFixed(1)},${Q.toFixed(1)}`).join(" "), Nl = `${b[0][0].toFixed(1)},${d} ${A} ${b[m - 1][0].toFixed(1)},${d}`, Vl = b.map(([z, Q]) => `<circle class="dot" cx="${z.toFixed(1)}" cy="${Q.toFixed(1)}" r="2.5"/>`).join("");
-    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${n}" x2="${i}" y2="${d}"/><line class="axis" x1="${i}" y1="${d}" x2="${e - o}" y2="${d}"/><text class="tick" x="${i - 4}" y="${n + 3}" text-anchor="end">${pp(p)}</text><text class="tick" x="${i - 4}" y="${d}" text-anchor="end">0</text><polygon class="area" points="${Nl}" fill="url(#lc-grad)"/><polyline class="stroke" points="${A}"/>${Vl}<text class="tick" x="${i}" y="${r - 6}">${k(t[0].label)}</text><text class="tick" x="${e - o}" y="${r - 6}" text-anchor="end">${k(t[m - 1].label)}</text></svg>`;
+    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${n}" x2="${i}" y2="${d}"/><line class="axis" x1="${i}" y1="${d}" x2="${e - o}" y2="${d}"/><text class="tick" x="${i - 4}" y="${n + 3}" text-anchor="end">${hp(p)}</text><text class="tick" x="${i - 4}" y="${d}" text-anchor="end">0</text><polygon class="area" points="${Nl}" fill="url(#lc-grad)"/><polyline class="stroke" points="${A}"/>${Vl}<text class="tick" x="${i}" y="${r - 6}">${k(t[0].label)}</text><text class="tick" x="${e - o}" y="${r - 6}" text-anchor="end">${k(t[m - 1].label)}</text></svg>`;
   }
   function Cs(t, e) {
     if (t.length === 0)
@@ -8756,24 +8762,24 @@ p {
   var lt = "cms-repeat";
   var L = "cms-condition";
   var v = "cms-page-state";
-  var _p = ["loaded", "loading", "empty", "error"];
-  var wp = ["auto", "submit", "change"];
+  var wp = ["loaded", "loading", "empty", "error"];
+  var kp = ["auto", "submit", "change"];
   var x = "cms-bind-stop";
   var f = "cms-ready";
   function Us(t) {
-    return _p.includes(t ?? "");
+    return wp.includes(t ?? "");
   }
   function Ks(t) {
-    return wp.includes(t ?? "");
+    return kp.includes(t ?? "");
   }
   var I = "cms-params:change";
   var C = "cms-state:change";
-  var kp = new RegExp("#\\{\\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\\s*\\}", "g");
-  var Ep = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
-  var Ap = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
+  var Ep = new RegExp("#\\{\\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\\s*\\}", "g");
+  var Ap = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
+  var Sp = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
   var Xs = new WeakMap;
   function Ys(t) {
-    return Ep.test(t);
+    return Ap.test(t);
   }
   function Zs(t) {
     return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
@@ -8782,11 +8788,11 @@ p {
     return new URLSearchParams(typeof location > "u" ? "" : location.search);
   }
   function Gs(t, e = K()) {
-    return t.replace(kp, (r, i) => encodeURIComponent(e.get(i) ?? ""));
+    return t.replace(Ep, (r, i) => encodeURIComponent(e.get(i) ?? ""));
   }
   function Qs(t, e = document) {
     let r = Be(e);
-    return t.replace(Ap, (i, o) => encodeURIComponent(r.get(o) ?? ""));
+    return t.replace(Sp, (i, o) => encodeURIComponent(r.get(o) ?? ""));
   }
   function Fe(t, e) {
     let r = K();
@@ -8818,7 +8824,7 @@ p {
       e = new Map, Xs.set(t, e);
     return e;
   }
-  var Sp = 300;
+  var Lp = 300;
 
   class De {
     el;
@@ -8889,7 +8895,7 @@ p {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), Sp);
+      this.timer = setTimeout(() => this.write(), Lp);
     }
     write() {
       if (this.reflecting)
@@ -8903,7 +8909,7 @@ p {
     }
   }
   var y = "cms-param-sync";
-  var Lp = 300;
+  var Cp = 300;
 
   class Oe {
     el;
@@ -8972,7 +8978,7 @@ p {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), Lp);
+      this.timer = setTimeout(() => this.write(), Cp);
     }
     write() {
       if (this.reflecting)
@@ -9104,12 +9110,12 @@ p {
         e.removeEventListener(C, r);
     };
   }
-  var Cp = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var Tp = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   function Vt(t) {
     return T(t).url;
   }
   function T(t) {
-    let e = Cp.exec(t);
+    let e = Tp.exec(t);
     if (!e)
       return { url: t.trim() };
     return { url: e[1].trim(), alias: e[2] };
@@ -9121,12 +9127,12 @@ p {
     return Ks(e) ? e : "auto";
   }
   function ul(t, e) {
-    let r = t.ownerDocument, i = [cl, ...Mp(t)];
+    let r = t.ownerDocument, i = [cl, ...Hp(t)];
     for (let a of i)
       r.addEventListener(a, e.onReload);
     let o = jt(t);
     if (o === "submit" || o === "change") {
-      let a = Tp(t) ?? t.closest("form"), l = o === "submit" ? "submit" : "change", u = o === "submit" ? e.onSubmit : e.onChange;
+      let a = Mp(t) ?? t.closest("form"), l = o === "submit" ? "submit" : "change", u = o === "submit" ? e.onSubmit : e.onChange;
       return a?.addEventListener(l, u), () => {
         for (let d of i)
           r.removeEventListener(d, e.onReload);
@@ -9140,11 +9146,11 @@ p {
       n();
     };
   }
-  function Tp(t) {
+  function Mp(t) {
     let e = t.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
     return typeof e === "function" && t instanceof e ? t : null;
   }
-  function Mp(t) {
+  function Hp(t) {
     return (t.getAttribute(dl) ?? "").split(/\s+/).filter(Boolean);
   }
   var dt = ["src", "srcset", "sizes", "media", "width", "height"];
@@ -9167,9 +9173,9 @@ p {
   function hl(t) {
     return t.matches("img,picture,source");
   }
-  var Hp = ["src", "srcset"];
-  var zp = ["sizes", "media"];
-  var Ip = "template";
+  var zp = ["src", "srcset"];
+  var Ip = ["sizes", "media"];
+  var Pp = "template";
   function Y(t) {
     let e = fl(t, pl), r = new Set;
     for (let i of e.filter((o) => o.localName === "picture")) {
@@ -9180,7 +9186,7 @@ p {
     for (let i of e)
       if (!r.has(i) && bl(i))
         ml(i);
-    for (let i of fl(t, Ip))
+    for (let i of fl(t, Pp))
       Y(i.content);
   }
   function ml(t) {
@@ -9194,12 +9200,12 @@ p {
     }
   }
   function bl(t) {
-    return t.hasAttribute($t) || Pp(t) || Hp.some((e) => Rp(ct(t, e))) || zp.some((e) => qe(ct(t, e)));
-  }
-  function Pp(t) {
-    return dt.some((e) => t.hasAttribute(Ut(e)));
+    return t.hasAttribute($t) || Rp(t) || zp.some((e) => Fp(ct(t, e))) || Ip.some((e) => qe(ct(t, e)));
   }
   function Rp(t) {
+    return dt.some((e) => t.hasAttribute(Ut(e)));
+  }
+  function Fp(t) {
     return t !== null && (!t.trim() || qe(t));
   }
   function fl(t, e) {
@@ -9222,7 +9228,7 @@ p {
     unmount() {
       for (let t of this.sites)
         t.unmount?.();
-      Fp(this.start, this.end);
+      Bp(this.start, this.end);
     }
   }
 
@@ -9247,7 +9253,7 @@ p {
       r.parentNode?.removeChild(r), r = i;
     }
   }
-  function Fp(t, e) {
+  function Bp(t, e) {
     let r = t.parentNode;
     if (!r)
       return;
@@ -9257,12 +9263,12 @@ p {
       r.removeChild(i), i = o;
     }
   }
-  var Bp = { found: false, value: undefined };
+  var Dp = { found: false, value: undefined };
   function R(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
-      return { found: true, value: Dp(t) };
+      return { found: true, value: Op(t) };
     let r = e.indexOf("."), i = r === -1 ? e : e.slice(0, r), o = r === -1 ? "" : e.slice(r + 1);
     for (let n = t;n; n = n.parent) {
       if (n.vars && i in n.vars)
@@ -9271,9 +9277,9 @@ p {
       if (gl(a) && i in a)
         return { found: true, value: vl(a[i], o) };
     }
-    return Bp;
+    return Dp;
   }
-  function Dp(t) {
+  function Op(t) {
     let e = t.value;
     if (gl(e) && "value" in e)
       return e.value;
@@ -9297,7 +9303,7 @@ p {
     if (t.kind === "literal")
       return t.value;
     if (t.kind === "path")
-      return Op(t.path, e);
+      return qp(t.path, e);
     if (t.kind === "not")
       return !pt(E(t.node, e));
     if (t.kind === "and")
@@ -9305,17 +9311,17 @@ p {
     if (t.kind === "or")
       return pt(E(t.left, e)) || pt(E(t.right, e));
     if (t.kind === "compare")
-      return qp(E(t.left, e), E(t.right, e), t.operator);
+      return Np(E(t.left, e), E(t.right, e), t.operator);
     return false;
   }
-  function Op(t, e) {
+  function qp(t, e) {
     let r = R(e, t.trim());
     return r.found ? r.value : undefined;
   }
   function pt(t) {
     return Boolean(t);
   }
-  function qp(t, e, r) {
+  function Np(t, e, r) {
     if (r === "==")
       return Object.is(t, e);
     if (r === "!=")
@@ -9360,16 +9366,16 @@ p {
       if (i === "(" || i === ")")
         throw Error("parentheses are not supported yet");
       if (i === "'" || i === '"') {
-        let a = Np(t, r, i);
+        let a = Vp(t, r, i);
         e.push({ kind: "literal", value: a.value }), r = a.next;
         continue;
       }
       if (i === "-" && /\d/.test(t[r + 1] ?? "") || /\d/.test(i)) {
-        let a = jp(t, r);
+        let a = $p(t, r);
         e.push({ kind: "literal", value: a.value }), r = a.next;
         continue;
       }
-      let n = $p(t, r);
+      let n = Up(t, r);
       if (n.value === "true")
         e.push({ kind: "literal", value: true });
       else if (n.value === "false")
@@ -9382,7 +9388,7 @@ p {
     }
     return e.push({ kind: "end" }), e;
   }
-  function Np(t, e, r) {
+  function Vp(t, e, r) {
     let i = "";
     for (let o = e + 1;o < t.length; o += 1) {
       let n = t[o];
@@ -9392,14 +9398,14 @@ p {
         let a = t[o + 1];
         if (a == null)
           throw Error("unterminated string literal");
-        i += Vp(a), o += 1;
+        i += jp(a), o += 1;
         continue;
       }
       i += n;
     }
     throw Error("unterminated string literal");
   }
-  function Vp(t) {
+  function jp(t) {
     if (t === "n")
       return `
 `;
@@ -9409,7 +9415,7 @@ p {
       return "\t";
     return t;
   }
-  function jp(t, e) {
+  function $p(t, e) {
     let r = e;
     if (t[r] === "-")
       r += 1;
@@ -9425,18 +9431,18 @@ p {
       throw Error(`invalid number literal "${i}"`);
     return { value: o, next: r };
   }
-  function $p(t, e) {
+  function Up(t, e) {
     let r = e;
     while (r < t.length && !/\s/.test(t[r]) && !`!&|=<>"'()`.includes(t[r]))
       r += 1;
     let i = t.slice(e, r);
     if (!i)
       throw Error(`unexpected token "${t[e] ?? ""}"`);
-    if (!Up(i))
+    if (!Kp(i))
       throw Error(`invalid path "${i}"`);
     return { value: i, next: r };
   }
-  function Up(t) {
+  function Kp(t) {
     if (t === ".")
       return true;
     return /^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(t);
@@ -9535,7 +9541,7 @@ p {
       let i = false;
       return { expression: t, valid: false, evaluate: () => {
         if (!i)
-          i = true, console.warn(`Invalid cms-condition "${t}": ${Kp(r)}`);
+          i = true, console.warn(`Invalid cms-condition "${t}": ${Xp(r)}`);
         return false;
       } };
     }
@@ -9543,7 +9549,7 @@ p {
   function _l(t, e) {
     return { expression: t, valid: true, evaluate: (r) => Boolean(E(e, r)) };
   }
-  function Kp(t) {
+  function Xp(t) {
     return t instanceof Error ? t.message : String(t);
   }
   var wl = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
@@ -9575,16 +9581,16 @@ p {
       if (o.value.includes("{{") && !Xt(o.value, i))
         r.attributes.push({ path: e, name: o.name, template: o.value });
   }
-  var Xp = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
+  var Yp = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
   function El(t) {
     let e = t.childNodes.length === 1 ? t.firstChild : null;
     if (!e || e.nodeType !== Node.TEXT_NODE)
       return null;
-    return (e.nodeValue ?? "").trim().match(Xp)?.[1] ?? null;
+    return (e.nodeValue ?? "").trim().match(Yp)?.[1] ?? null;
   }
-  var Yp = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var Zp = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   function Al(t) {
-    let e = t.match(Yp);
+    let e = t.match(Zp);
     if (e)
       return { path: e[1], name: e[2] };
     return { path: t.trim() };
@@ -9654,14 +9660,14 @@ p {
       Ml(a, [...e, l], { skipCondition: false, skipRepeat: false, submitBoundary: n }, r, i, o);
     });
   }
-  var Zp = { urlencode: (t) => encodeURIComponent(t == null ? "" : String(t)) };
-  var Gp = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+  var Gp = { urlencode: (t) => encodeURIComponent(t == null ? "" : String(t)) };
+  var Qp = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
   function ht(t, e, r = {}) {
-    return t.replace(Gp, (i, o, n) => {
+    return t.replace(Qp, (i, o, n) => {
       let a = R(e, o);
       if (!a.found)
         return "";
-      let l = n ? r[n] ?? Zp[n] : undefined, u = l ? l(a.value) : a.value;
+      let l = n ? r[n] ?? Gp[n] : undefined, u = l ? l(a.value) : a.value;
       return u == null ? "" : String(u);
     });
   }
@@ -9909,7 +9915,7 @@ p {
   function zl(t) {
     let e = new Set, r = Array.from(t.children), i = Array.from(t.querySelectorAll(`[${L}]`));
     for (let o of [...r, ...i])
-      for (let n of Qp(o.getAttribute(L)))
+      for (let n of Jp(o.getAttribute(L)))
         e.add(n);
     return e;
   }
@@ -9920,12 +9926,12 @@ p {
     r.setSourceStatus?.(t, e);
   }
   function Il(t, e, r, i, o) {
-    let n = o.sourceStatusesFor?.(t, r) ?? Jp(t, r), a = { $source: r, $sources: n };
+    let n = o.sourceStatusesFor?.(t, r) ?? Wp(t, r), a = { $source: r, $sources: n };
     if (e)
       a[e] = i;
     return { value: i, vars: a };
   }
-  function Qp(t) {
+  function Jp(t) {
     let e = [];
     for (let r of (t ?? "").matchAll(/(?:\$source|\$sources\.[A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)/g))
       e.push(r[1]);
@@ -9934,7 +9940,7 @@ p {
   function Hl(t) {
     return typeof t === "object" && t !== null && (("status" in t) || ("message" in t));
   }
-  function Jp(t, e) {
+  function Wp(t, e) {
     let r = t.getAttribute(at)?.trim();
     return r ? { [r]: e } : {};
   }
@@ -9988,7 +9994,7 @@ p {
     }
   }
   function Pl(t, e) {
-    let r = Wp(t);
+    let r = th(t);
     if (!r)
       return;
     let i = {}, o = K();
@@ -10001,7 +10007,7 @@ p {
         i[n] = a.value;
     return Object.keys(i).length ? i : undefined;
   }
-  function Wp(t) {
+  function th(t) {
     let e = t?.trim() ?? "";
     if (!e)
       return null;
@@ -10015,13 +10021,13 @@ p {
       return null;
     let i = {};
     for (let [o, n] of Object.entries(r)) {
-      let a = th(n);
+      let a = eh(n);
       if (o.trim() && a)
         i[o] = a;
     }
     return Object.keys(i).length ? i : null;
   }
-  function th(t) {
+  function eh(t) {
     if (!Rl(t) || typeof t.from !== "string")
       return null;
     if (t.from === "queryParam" || t.from === "state")
@@ -10043,14 +10049,14 @@ p {
     let e = new FormData(t);
     if (Array.from(e.keys()).length > 0)
       return e;
-    for (let r of eh(t))
-      rh(e, r);
+    for (let r of rh(t))
+      ih(e, r);
     return e;
   }
-  function eh(t) {
+  function rh(t) {
     return Array.from(t.querySelectorAll("input, select, textarea, [name]"));
   }
-  function rh(t, e) {
+  function ih(t, e) {
     let r = e.name?.trim();
     if (!r || e.disabled)
       return;
@@ -10088,7 +10094,7 @@ p {
     }
     t.append(r, String(o));
   }
-  var ih = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+  var oh = new Set(["POST", "PUT", "PATCH", "DELETE"]);
   function ir(t, e) {
     let r = (t ?? "").trim().toUpperCase();
     if (r === "GET" || r === "POST" || r === "PUT" || r === "PATCH" || r === "DELETE" || r === "HEAD")
@@ -10098,9 +10104,9 @@ p {
   function or(t, e) {
     let r = e.formData ?? bt(t);
     if (e.method === "GET" || e.method === "HEAD")
-      return { kind: "query", url: oh(e.url, r), formData: r, data: rr(r) };
-    let i = nh(rr(r), r, e.bodyFields);
-    if (ih.has(e.method) && ah(r))
+      return { kind: "query", url: nh(e.url, r), formData: r, data: rr(r) };
+    let i = ah(rr(r), r, e.bodyFields);
+    if (oh.has(e.method) && sh(r))
       return { kind: "formData", url: e.url, formData: r, data: i, body: r };
     return { kind: "json", url: e.url, formData: r, data: i, body: JSON.stringify(i) };
   }
@@ -10119,14 +10125,14 @@ p {
     }
     return e;
   }
-  function oh(t, e) {
+  function nh(t, e) {
     let r = new URL(t, location.href);
     for (let [i, o] of e.entries())
       if (!nr(o))
         r.searchParams.append(i, ar(o) ? o.name : o);
     return r.toString();
   }
-  function nh(t, e, r) {
+  function ah(t, e, r) {
     if (!r)
       return t;
     let i = t;
@@ -10140,7 +10146,7 @@ p {
     }
     return i;
   }
-  function ah(t) {
+  function sh(t) {
     return Array.from(t.values()).some((e) => !nr(e) && ar(e));
   }
   function nr(t) {
@@ -10156,15 +10162,15 @@ p {
     else if (r.kind === "formData")
       o.body = r.body;
     try {
-      let n = await fetch(r.url, o), a = await sh(n);
-      return { ok: n.ok, status: n.status, statusText: n.statusText, body: a, message: n.ok ? "" : lh(n, a), form: t };
+      let n = await fetch(r.url, o), a = await lh(n);
+      return { ok: n.ok, status: n.status, statusText: n.statusText, body: a, message: n.ok ? "" : dh(n, a), form: t };
     } catch (n) {
       if (n?.name === "AbortError")
         return { ok: false, status: 0, statusText: "Aborted", body: null, message: "Aborted", form: t };
       return { ok: false, status: 0, statusText: "Network Error", body: null, message: n instanceof Error ? n.message : String(n), form: t };
     }
   }
-  async function sh(t) {
+  async function lh(t) {
     if (t.status === 204)
       return null;
     let e = await t.clone().text().catch(() => "");
@@ -10176,17 +10182,17 @@ p {
       return t.headers.get("content-type")?.includes("application/json") ? null : e;
     }
   }
-  function lh(t, e) {
+  function dh(t, e) {
     if (e && typeof e === "object" && "error" in e && typeof e.error === "string")
       return e.error;
     if (e && typeof e === "object" && "message" in e && typeof e.message === "string")
       return e.message;
     return t.statusText || `Request failed (${t.status})`;
   }
-  var dh = "cms-source:success";
-  var ch = "cms-source:failed";
-  var uh = "form:success";
-  var ph = "form:failed";
+  var ch = "cms-source:success";
+  var uh = "cms-source:failed";
+  var ph = "form:success";
+  var hh = "form:failed";
 
   class lr {
     element;
@@ -10224,7 +10230,7 @@ p {
       return e.toString();
     }
     dispatchResult(t) {
-      let e = t.ok ? dh : ch, r = t.ok ? uh : ph, i = { bubbles: true, composed: true, detail: t };
+      let e = t.ok ? ch : uh, r = t.ok ? ph : hh, i = { bubbles: true, composed: true, detail: t };
       this.element.dispatchEvent(new CustomEvent(e, i)), this.element.dispatchEvent(new CustomEvent(r, i));
     }
     publish(t) {
@@ -10361,7 +10367,7 @@ p {
   }
   function Fl(t, e, r, i) {
     let o = {};
-    for (let n of hh(t, r)) {
+    for (let n of mh(t, r)) {
       if (!n.hasAttribute(h))
         continue;
       let a = n.getAttribute(at)?.trim();
@@ -10373,7 +10379,7 @@ p {
     }
     return o;
   }
-  function hh(t, e) {
+  function mh(t, e) {
     let r = [];
     for (let i = e;i && i !== t.parentElement; i = i.parentElement)
       if (r.push(i), i === t)
@@ -10554,15 +10560,15 @@ p {
     }
   }
   var Bl = "cms-binding-cloak";
-  var mh = `${g}{display:contents}[${h}]:not([${f}]){visibility:hidden}`;
+  var bh = `${g}{display:contents}[${h}]:not([${f}]){visibility:hidden}`;
   function Dl(t) {
     if (t.getElementById(Bl))
       return;
     let e = t.createElement("style");
-    e.id = Bl, e.textContent = mh, (t.head ?? t.documentElement).appendChild(e);
+    e.id = Bl, e.textContent = bh, (t.head ?? t.documentElement).appendChild(e);
   }
   var Ol = {};
-  function bh(t) {
+  function fh(t) {
     Ol = t;
   }
 
@@ -11195,6 +11201,67 @@ p {
     ...createResponsiveSourceImageBrowserApi({ public: false, private: false })
   };
 
+  // src/core/dom/meta/getMetaBasePath.ts
+  function getMetaBasePath() {
+    const meta = document.querySelector('meta[name="basePath"]');
+    const content = meta?.getAttribute("content") ?? "";
+    if (!content || content === "/") {
+      return "";
+    }
+    return content.replace(/\/+$/, "");
+  }
+
+  // src/components/admin/Common/SystemSettings/store.ts
+  class AdminSystemSettingsStore {
+    snapshot;
+    pending;
+    revision = 0;
+    load() {
+      if (this.snapshot) {
+        return Promise.resolve(this.snapshot);
+      }
+      this.pending ??= this.fetchSnapshot(this.revision);
+      return this.pending;
+    }
+    invalidate() {
+      this.revision += 1;
+      this.snapshot = undefined;
+      this.pending = undefined;
+    }
+    async fetchSnapshot(revision) {
+      try {
+        const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
+          headers: { Accept: "application/json" }
+        });
+        if (revision !== this.revision) {
+          return this.load();
+        }
+        if (!response.ok) {
+          throw new Error(`Request failed (${response.status})`);
+        }
+        const data = await response.json();
+        if (revision !== this.revision) {
+          return this.load();
+        }
+        if (!data?.site || typeof data.site.name !== "string" || !data.theme || typeof data.theme.activeThemeId !== "string" || !Array.isArray(data.theme.sources) || !Array.isArray(data.theme.themes)) {
+          throw new Error("System settings are unavailable.");
+        }
+        this.snapshot = { site: data.site, theme: data.theme };
+        return this.snapshot;
+      } catch (error) {
+        if (revision !== this.revision) {
+          return this.load();
+        }
+        throw error;
+      } finally {
+        if (revision === this.revision) {
+          this.pending = undefined;
+        }
+      }
+    }
+  }
+  var adminSystemSettingsStore = new AdminSystemSettingsStore;
+
   // src/components/admin/Layout/AdminLayout/template.html
   var template_default = `<w13c-left-menu-layout>
 
@@ -11377,7 +11444,6 @@ p {
   var DEFAULT_BRAND_NAME = "CmsCore";
 
   class FixedAdminLayout extends U2 {
-    _brandRequest = null;
     _titleSlot = null;
     _actionSlot = null;
     _pageHeader = null;
@@ -11400,14 +11466,12 @@ p {
       this._syncRoutes(root, basePath);
       this._setBrandName(root, DEFAULT_BRAND_NAME);
       this._syncPageHeader();
-      this._syncSiteName(root, basePath);
+      this._syncSiteName(root);
       document.addEventListener("settings:saved", this._onSettingsSaved);
       this._titleSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
       this._actionSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
     }
     disconnectedCallback() {
-      this._brandRequest?.abort();
-      this._brandRequest = null;
       document.removeEventListener("settings:saved", this._onSettingsSaved);
       this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
       this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
@@ -11426,30 +11490,12 @@ p {
         item.setAttribute("href", `${basePath}/admin/${route}`);
       }
     }
-    async _syncSiteName(root, basePath) {
-      this._brandRequest?.abort();
-      const request = new AbortController;
-      this._brandRequest = request;
+    async _syncSiteName(root) {
       try {
-        const response = await fetch(`${basePath}/api/system/settings`, {
-          headers: { Accept: "application/json" },
-          signal: request.signal
-        });
-        if (!response.ok) {
-          return;
-        }
-        const data = await response.json();
-        const name = typeof data.site?.name === "string" ? data.site.name.trim() : "";
+        const data = await adminSystemSettingsStore.load();
+        const name = data.site.name.trim();
         this._setBrandName(root, name || DEFAULT_BRAND_NAME);
-      } catch (error) {
-        if (!isAbortError(error)) {
-          return;
-        }
-      } finally {
-        if (this._brandRequest === request) {
-          this._brandRequest = null;
-        }
-      }
+      } catch {}
     }
     _setBrandName(root, name) {
       const brandName = name.trim() || DEFAULT_BRAND_NAME;
@@ -11485,14 +11531,12 @@ p {
       if (!root) {
         return;
       }
-      this._syncSiteName(root, this._basePath());
+      adminSystemSettingsStore.invalidate();
+      this._syncSiteName(root);
     };
     _onPageHeaderSlotChange = () => this._syncPageHeader();
   }
   customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
-  function isAbortError(error) {
-    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
-  }
 
   // src/core/dom/BubblesEvent.ts
   class BubblesEvent extends Event {
@@ -11538,7 +11582,7 @@ p {
       const target = this.getAttribute("target");
       const method = this.getAttribute("method") || "POST";
       if (!target) {
-        np("cms-confirm-form: missing target", { type: "error" });
+        ap("cms-confirm-form: missing target", { type: "error" });
         return;
       }
       const url = force ? withForce(target) : target;
@@ -11546,7 +11590,7 @@ p {
       try {
         res = await fetch(url, { method });
       } catch (e) {
-        np(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
+        ap(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
         return;
       }
       if (res.ok) {
@@ -11574,7 +11618,7 @@ ${followMessage}`)) {
           message = body.error;
         }
       } catch {}
-      np(message || `HTTP ${res.status}`, { type: "error" });
+      ap(message || `HTTP ${res.status}`, { type: "error" });
     }
     _onSuccess() {
       const emit = this.getAttribute("emit");
@@ -11828,7 +11872,7 @@ ${followMessage}`)) {
   async function fetchKeys(api) {
     const res = await fetch(`${api}/keys`, { headers: { Accept: "application/json" } });
     if (!res.ok) {
-      np("Failed to load credentials", { type: "error" });
+      ap("Failed to load credentials", { type: "error" });
       return [];
     }
     return res.json();
@@ -11969,19 +12013,19 @@ ${followMessage}`)) {
       keyInput.setAttribute("invalid", "");
       keyInput.setAttribute("hint", keyError);
       keyInput.setAttribute("hint-level", "error");
-      np(`Invalid key: ${keyError}`, { type: "error" });
+      ap(`Invalid key: ${keyError}`, { type: "error" });
       return;
     }
     if (host._keys.includes(key)) {
-      np(`Credential ${key} already exists`, { type: "warning" });
+      ap(`Credential ${key} already exists`, { type: "warning" });
       return;
     }
     const r = await createCredential(host._api, key, value);
     if (!r.ok) {
-      np(`Create failed: ${r.error}`, { type: "error" });
+      ap(`Create failed: ${r.error}`, { type: "error" });
       return;
     }
-    np(`Credential ${key} created`, { type: "success" });
+    ap(`Credential ${key} created`, { type: "success" });
     m.removeAttribute("open");
     await refreshList(host);
     setValue(host, keyToRef(key));
@@ -13485,7 +13529,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
       const message = this.getAttribute("message") ?? "";
       const type = this.getAttribute("type") ?? "success";
       if (message) {
-        np(message, { type });
+        ap(message, { type });
       }
     };
     connectedCallback() {
@@ -13606,7 +13650,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
       const next = !this._enabled;
       if (await this._send("PATCH", { id: this._id, enabled: next })) {
         this.setAttribute("enabled", String(next));
-        np(next ? "Provider enabled" : "Provider disabled", { type: "success" });
+        ap(next ? "Provider enabled" : "Provider disabled", { type: "success" });
         this._fire();
       }
     }
@@ -13615,7 +13659,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
         return;
       }
       if (await this._send("DELETE", { id: this._id })) {
-        np("Provider removed", { type: "success" });
+        ap("Provider removed", { type: "success" });
         this._fire();
       }
     }
@@ -13627,12 +13671,12 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
           body: JSON.stringify(body)
         });
         if (!res.ok) {
-          np("Action failed", { type: "error" });
+          ap("Action failed", { type: "error" });
           return false;
         }
         return true;
       } catch {
-        np("Network error", { type: "error" });
+        ap("Network error", { type: "error" });
         return false;
       }
     }
@@ -13720,15 +13764,15 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
           body: JSON.stringify({ sub: this._sub, role })
         });
         if (res.ok) {
-          np("Role updated", { type: "success" });
+          ap("Role updated", { type: "success" });
           if (this._emit) {
             document.dispatchEvent(new Event(this._emit, { bubbles: true }));
           }
         } else {
-          np("Failed to update role", { type: "error" });
+          ap("Failed to update role", { type: "error" });
         }
       } catch {
-        np("Network error", { type: "error" });
+        ap("Network error", { type: "error" });
       }
     }
     get name() {
@@ -13843,13 +13887,13 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
           body: JSON.stringify({ id: this.data.role.id, label: this.data.role.label, grants })
         });
         if (res.ok) {
-          np("Role permissions saved", { type: "success" });
+          ap("Role permissions saved", { type: "success" });
           location.href = this._back;
         } else {
-          np("Failed to save permissions", { type: "error" });
+          ap("Failed to save permissions", { type: "error" });
         }
       } catch {
-        np("Network error", { type: "error" });
+        ap("Network error", { type: "error" });
       }
     }
   }
@@ -13922,10 +13966,10 @@ p9r-action-menu {
       }
       const res = await fetch(this.url(action), this.request(action, sub)).catch(() => null);
       if (!res?.ok) {
-        np(await errorMessage(res), { type: "error" });
+        ap(await errorMessage(res), { type: "error" });
         return;
       }
-      np(ACTIONS[action].label, { type: "success" });
+      ap(ACTIONS[action].label, { type: "success" });
       if (action === "delete") {
         window.location.href = `${this.basePath}/admin/users`;
       } else {
@@ -14016,7 +14060,7 @@ p9r-action-menu {
           body: JSON.stringify({ name })
         });
         if (!res.ok) {
-          np("Could not create token", { type: "error" });
+          ap("Could not create token", { type: "error" });
           return;
         }
         const { token } = await res.json();
@@ -14026,14 +14070,14 @@ p9r-action-menu {
         this._q('[data-role="reveal"]').hidden = false;
         document.dispatchEvent(new Event(this._emit, { bubbles: true }));
       } catch {
-        np("Network error", { type: "error" });
+        ap("Network error", { type: "error" });
       } finally {
         btn.removeAttribute("disabled");
       }
     }
     _copy() {
       navigator.clipboard?.writeText(this._token);
-      np("Token copied", { type: "success" });
+      ap("Token copied", { type: "success" });
     }
     _reset() {
       this._token = "";
@@ -14242,9 +14286,9 @@ p9r-action-menu {
   async function opSaveRow(api, key, value) {
     const r = await postSecret(api, key, value);
     if (r.ok) {
-      np(`Secret ${key} updated`, { type: "success" });
+      ap(`Secret ${key} updated`, { type: "success" });
     } else {
-      np(`Update failed: ${r.error}`, { type: "error" });
+      ap(`Update failed: ${r.error}`, { type: "error" });
     }
   }
   async function opDeleteSecret(api, key) {
@@ -14253,9 +14297,9 @@ p9r-action-menu {
     }
     const r = await deleteSecret(api, key);
     if (r.ok) {
-      np(`Secret ${key} deleted`, { type: "success" });
+      ap(`Secret ${key} deleted`, { type: "success" });
     } else {
-      np(`Delete failed: ${r.error}`, { type: "error" });
+      ap(`Delete failed: ${r.error}`, { type: "error" });
     }
   }
 
@@ -14478,16 +14522,6 @@ w13c-lateral-menu-item {
   }
   function isSettingsSection(value) {
     return SETTINGS_SECTIONS.includes(value);
-  }
-
-  // src/core/dom/meta/getMetaBasePath.ts
-  function getMetaBasePath() {
-    const meta = document.querySelector('meta[name="basePath"]');
-    const content = meta?.getAttribute("content") ?? "";
-    if (!content || content === "/") {
-      return "";
-    }
-    return content.replace(/\/+$/, "");
   }
 
   // src/components/admin/Layout/AnalyticsPrivacySettings/api.ts
@@ -16372,7 +16406,7 @@ w13c-lateral-menu-item {
         renderAnalyticsDashboard(this, data, currentAnalyticsRange());
         this.show("ready");
       } catch (error) {
-        if (this.request === request && !isAbortError2(error)) {
+        if (this.request === request && !isAbortError(error)) {
           this.show("error");
         }
       } finally {
@@ -16402,7 +16436,7 @@ w13c-lateral-menu-item {
   if (!customElements.get("cms-analytics-dashboard")) {
     customElements.define("cms-analytics-dashboard", CmsAnalyticsDashboard);
   }
-  function isAbortError2(error) {
+  function isAbortError(error) {
     return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
   }
 
@@ -17492,7 +17526,7 @@ circle.endpoint-timeline__errors {
         });
         this.show("ready");
       } catch (error) {
-        if (this.request === request && !isAbortError3(error)) {
+        if (this.request === request && !isAbortError2(error)) {
           this.show("unavailable");
         }
       } finally {
@@ -17552,7 +17586,7 @@ circle.endpoint-timeline__errors {
   if (!customElements.get("cms-endpoint-performance")) {
     customElements.define("cms-endpoint-performance", CmsEndpointPerformance);
   }
-  function isAbortError3(error) {
+  function isAbortError2(error) {
     return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
   }
 
@@ -17561,7 +17595,15 @@ circle.endpoint-timeline__errors {
   var THEME_CATEGORY_ADDED_EVENT = "cms:theme-category-added";
   var THEME_CATEGORY_DELETED_EVENT = "cms:theme-category-deleted";
   var THEME_CATEGORY_UPDATED_EVENT = "cms:theme-category-updated";
-  var THEME_SETTINGS_CHANGED_EVENT = "cms:theme-settings-changed";
+  var THEME_SETTINGS_REFRESHED_EVENT = "cms:theme-settings-refreshed";
+  function themeSelectionFromUrl(sources) {
+    const url = new URL(window.location.href);
+    const sourceId = url.searchParams.get("type") ?? "";
+    const categoryId = url.searchParams.get("category") ?? "";
+    const source2 = sources.find((item) => item.id === sourceId) ?? sources.find((item) => item.categories.some((category2) => category2.id === categoryId)) ?? sources[0];
+    const category = source2?.categories.find((item) => item.id === categoryId) ?? source2?.categories[0];
+    return { sourceId: source2?.id ?? "", categoryId: category?.id ?? "" };
+  }
   function dispatchThemeCategorySelected(selection) {
     window.dispatchEvent(new CustomEvent(THEME_CATEGORY_SELECTED_EVENT, { detail: selection }));
   }
@@ -17574,17 +17616,13 @@ circle.endpoint-timeline__errors {
   function dispatchThemeCategoryUpdated(detail) {
     window.dispatchEvent(new CustomEvent(THEME_CATEGORY_UPDATED_EVENT, { detail }));
   }
-  function dispatchThemeSettingsChanged() {
-    window.dispatchEvent(new CustomEvent(THEME_SETTINGS_CHANGED_EVENT));
+  function dispatchThemeSettingsRefreshed() {
+    window.dispatchEvent(new Event(THEME_SETTINGS_REFRESHED_EVENT));
   }
 
   // src/components/admin/Theme/ownership.ts
-  function integrationOwnerId(source2) {
-    const owner = source2?.owner;
-    return owner?.kind === "integration" ? owner.integrationId : undefined;
-  }
   function isIntegrationSource(source2) {
-    return integrationOwnerId(source2) !== undefined;
+    return source2?.owner?.kind === "integration";
   }
   function isThemeCatalogEditable(source2) {
     return Boolean(source2) && !isIntegrationSource(source2);
@@ -17600,15 +17638,6 @@ circle.endpoint-timeline__errors {
   }
   function currentTheme(settings, selectedThemeId) {
     return settings?.themes.find((item) => item.id === selectedThemeId) ?? settings?.themes[0];
-  }
-  function selectionFromUrl(settings) {
-    const sources = settings?.sources ?? [];
-    const url = new URL(window.location.href);
-    const sourceId = url.searchParams.get("type") ?? "";
-    const categoryId = url.searchParams.get("category") ?? "";
-    const source2 = sources.find((item) => item.id === sourceId) ?? sources.find((item) => item.categories.some((category2) => category2.id === categoryId)) ?? sources[0];
-    const category = source2?.categories.find((item) => item.id === categoryId) ?? source2?.categories[0];
-    return { sourceId: source2?.id ?? "", categoryId: category?.id ?? "" };
   }
   function addTheme(settings) {
     const number = settings.themes.length + 1;
@@ -17693,11 +17722,11 @@ circle.endpoint-timeline__errors {
       selection: { sourceId: nextSource.id, categoryId: nextCategory.id }
     };
   }
-  function resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) {
+  function resetTokenValue(settings, selection, selectedThemeId, mode, tokenId) {
     const source2 = currentSource(settings, selection);
     const token = source2?.categories.flatMap((category) => category.tokens).find((item) => item.id === tokenId);
     const theme = currentTheme(settings, selectedThemeId);
-    if (!isIntegrationSource(source2) || !token || !theme) {
+    if (!source2 || !token || !theme) {
       return false;
     }
     if (!token.defaults || !Object.hasOwn(theme.values[mode] ?? {}, token.id)) {
@@ -17768,7 +17797,11 @@ circle.endpoint-timeline__errors {
       });
       return;
     }
-    if (!input.matches("[data-value-control]")) {
+    const tokenValueControl = input.matches("[data-token-value-control]");
+    if (!input.matches("[data-value-control]") && !tokenValueControl) {
+      return;
+    }
+    if (tokenValueControl && event.type !== "change") {
       return;
     }
     const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
@@ -17778,15 +17811,16 @@ circle.endpoint-timeline__errors {
     theme.values[context.mode] ??= {};
     theme.values[context.mode][tokenId] = input.value;
     if (input.type === "color") {
-      const text3 = input.closest("[data-token-id]")?.querySelector('input.value-control[type="text"]');
+      const text3 = input.closest("[data-token-id]")?.querySelector("[data-token-value-control]");
       if (text3) {
         text3.value = input.value;
+        text3.setAttribute("value", input.value);
       }
     }
   }
   function resetThemeToken(event, settings, selection, selectedThemeId, mode) {
     const tokenId = event.target?.closest("[data-reset-token]")?.dataset.resetToken;
-    return tokenId ? resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
+    return tokenId ? resetTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
   }
   function clickAction(event) {
     const target2 = event.target;
@@ -17817,117 +17851,7 @@ circle.endpoint-timeline__errors {
     return root.querySelector(selector);
   }
 
-  // src/components/admin/Theme/editor/controller/lifecycle.ts
-  function addThemeEditorListeners(root, selectionEvent, handlers) {
-    root?.addEventListener("click", handlers.click);
-    root?.addEventListener("change", handlers.change);
-    root?.addEventListener("input", handlers.input);
-    root?.addEventListener("keydown", handlers.keydown);
-    window.addEventListener(selectionEvent, handlers.selection);
-  }
-  function removeThemeEditorListeners(root, selectionEvent, handlers) {
-    root?.removeEventListener("click", handlers.click);
-    root?.removeEventListener("change", handlers.change);
-    root?.removeEventListener("input", handlers.input);
-    root?.removeEventListener("keydown", handlers.keydown);
-    window.removeEventListener(selectionEvent, handlers.selection);
-  }
-
-  // src/components/admin/Theme/editor/importCss.ts
-  function themeSettingsFromCss(css) {
-    const values = {};
-    const tokens = [];
-    const seen = new Set;
-    for (const match of css.matchAll(/--([a-z][a-z0-9-]*)\s*:\s*([^;{}]+)\s*;/gi)) {
-      const variable = match[1].toLowerCase();
-      if (seen.has(variable)) {
-        continue;
-      }
-      seen.add(variable);
-      const value2 = match[2].trim();
-      tokens.push({
-        id: variable,
-        variable,
-        label: variable.split("-").map(capitalize).join(" "),
-        description: `Existing --${variable} variable`,
-        type: inferredTokenType(variable, value2)
-      });
-      values[variable] = value2;
-    }
-    assignReferencedTokenTypes(tokens, values);
-    return {
-      activeThemeId: "imported",
-      sources: [importedCssSource(tokens)],
-      themes: [{ id: "imported", name: "Imported theme", values: { light: values, dark: {} } }]
-    };
-  }
-  function assignReferencedTokenTypes(tokens, values) {
-    const byVariable = new Map(tokens.map((token) => [token.variable, token]));
-    const resolving = new Set;
-    const resolve = (token) => {
-      if (resolving.has(token.id)) {
-        return;
-      }
-      resolving.add(token.id);
-      const reference = /^\s*var\(\s*--([a-z][a-z0-9-]*)/i.exec(values[token.id] ?? "")?.[1]?.toLowerCase();
-      const target2 = reference ? byVariable.get(reference) : undefined;
-      if (target2 && target2.id !== token.id) {
-        resolve(target2);
-        token.type = target2.type;
-      }
-      resolving.delete(token.id);
-    };
-    tokens.forEach(resolve);
-  }
-  function importedCssSource(tokens) {
-    return {
-      id: "imported-css",
-      label: "Imported CSS",
-      supportsModes: false,
-      categories: [
-        {
-          id: "general",
-          label: "Imported variables",
-          description: "Variables preserved from the former free-form stylesheet.",
-          tokens
-        }
-      ]
-    };
-  }
-  function inferredTokenType(variable, value2) {
-    if (/^(font-family|font-(heading|body))(-|$)/.test(variable)) {
-      return "font-family";
-    }
-    if (/^(shadow|ctx-shadow)(-|$)/.test(variable)) {
-      return "shadow";
-    }
-    if (/^(font-size|space|gap|padding|margin|radius|width|height|size)(-|$)/.test(variable)) {
-      return "length";
-    }
-    return looksLikeColor(value2) ? "color" : "value";
-  }
-  function capitalize(value2) {
-    return value2 ? value2[0].toUpperCase() + value2.slice(1) : value2;
-  }
-  function looksLikeColor(value2) {
-    return /^(#|rgb\(|rgba\(|hsl\(|hsla\(|oklch\(|oklab\(|lab\(|lch\(|color\(|transparent$|currentcolor$)/i.test(value2);
-  }
-
   // src/components/admin/Theme/editor/api.ts
-  async function loadThemeSettings() {
-    const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
-      headers: { Accept: "application/json" }
-    });
-    if (!response.ok) {
-      throw new Error(`Request failed (${response.status})`);
-    }
-    const data = await response.json();
-    return {
-      canPersist: Boolean(data.theme),
-      settings: structuredClone(data.theme ?? themeSettingsFromCss(data.site?.theme ?? "")),
-      siteName: data.site?.name ?? ""
-    };
-  }
   async function saveThemeSettings(settings) {
     const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
       method: "POST",
@@ -18005,18 +17929,6 @@ circle.endpoint-timeline__errors {
     const targetOwner = target2.source.owner;
     return currentOwner?.kind !== "integration" || targetOwner?.kind !== "integration" || currentOwner.integrationId === targetOwner.integrationId;
   }
-  function setThemeTokenReference(settings, theme, mode, tokenId, targetId) {
-    if (!canReferenceThemeToken(settings, theme, mode, tokenId, targetId)) {
-      return false;
-    }
-    const target2 = themeTokenEntries(settings).find((entry) => entry.token.id === targetId);
-    if (!target2) {
-      return false;
-    }
-    theme.values[mode] ??= {};
-    theme.values[mode][tokenId] = `var(--${target2.token.variable})`;
-    return true;
-  }
   function themeReferenceCycles(settings, theme, mode) {
     return themeTokenEntries(settings).filter((entry) => resolveThemeTokenValue(settings, theme, mode, entry.token.id).state === "cycle").map((entry) => entry.token.label);
   }
@@ -18051,82 +17963,73 @@ circle.endpoint-timeline__errors {
     group.className = "token-controls";
     const valueLine = document.createElement("div");
     valueLine.className = "token-value-line";
-    valueLine.append(renderControl(token, settings, theme, value2, mode), referenceButton(token, value2));
-    group.append(valueLine, referenceStatus(token, settings, theme, mode));
-    if (token.defaults) {
-      group.append(renderDefault(token, mode, Object.hasOwn(theme.values[mode] ?? {}, token.id)));
+    const resolved = resolveThemeTokenValue(settings, theme, mode, token.id);
+    valueLine.append(renderControl(token, settings, theme, value2, mode, resolved));
+    group.append(valueLine);
+    if (token.defaults && Object.hasOwn(theme.values[mode] ?? {}, token.id)) {
+      group.append(renderReset(token, mode));
     }
     return group;
   }
-  function renderControl(token, settings, theme, value2, mode) {
+  function renderControl(token, settings, theme, value2, mode, resolved) {
     if (token.type !== "color") {
-      return valueInput(token, value2);
+      return valueCombobox(token, settings, theme, mode, value2, resolved);
     }
     const control = document.createElement("div");
     control.className = "color-control";
     const picker = document.createElement("input");
-    const resolved = resolveThemeTokenValue(settings, theme, mode, token.id).value;
-    const hasPreview = /^#[0-9a-f]{6}$/i.test(resolved);
+    const hasPreview = /^#[0-9a-f]{6}$/i.test(resolved.value);
     picker.type = "color";
-    picker.value = hasPreview ? resolved : "#000000";
+    picker.value = hasPreview ? resolved.value : "#000000";
     picker.hidden = !hasPreview;
     picker.dataset.valueControl = "true";
     picker.ariaLabel = `${token.label} color picker`;
-    control.append(picker, valueInput(token, value2));
+    control.append(picker, valueCombobox(token, settings, theme, mode, value2, resolved));
     return control;
   }
-  function valueInput(token, value2) {
-    const input = document.createElement("input");
+  function valueCombobox(token, settings, theme, mode, value2, resolved) {
+    const input = document.createElement("p9r-combobox");
     input.className = `value-control ${token.type}-control`;
-    input.type = "text";
+    input.dataset.tokenValueControl = "true";
+    input.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
+    input.setAttribute("creatable", "");
+    input.setAttribute("placeholder", placeholderFor(token.type));
+    input.replaceChildren(...referenceOptions(token, settings, theme, mode));
+    input.setAttribute("value", value2);
     input.value = value2;
-    input.dataset.valueControl = "true";
-    input.ariaLabel = `${token.label} ${controlLabel(token.type)}`;
-    input.autocomplete = "off";
-    input.spellcheck = false;
-    input.inputMode = token.type === "number" ? "decimal" : "text";
-    input.placeholder = placeholderFor(token.type);
+    const error = referenceError(resolved);
+    if (error) {
+      input.setAttribute("invalid", "");
+      input.setAttribute("hint", error);
+      input.setAttribute("hint-level", "error");
+    }
     return input;
   }
-  function referenceButton(token, value2) {
-    const button = document.createElement("button");
-    button.className = "reference-button";
-    button.type = "button";
-    button.dataset.openTokenReference = token.id;
-    button.textContent = directTokenReference(value2) ? "Change link" : "Link token";
-    button.ariaLabel = `Link ${token.label} to another token`;
-    return button;
+  function referenceOptions(token, settings, theme, mode) {
+    return themeTokenEntries(settings).filter((entry) => canReferenceThemeToken(settings, theme, mode, token.id, entry.token.id)).map((entry) => {
+      const option = document.createElement("option");
+      option.value = `var(--${entry.token.variable})`;
+      option.textContent = `${entry.source.label} · ${entry.category.label} · ${entry.token.label} · --${entry.token.variable}`;
+      return option;
+    });
   }
-  function referenceStatus(token, settings, theme, mode) {
-    const status = document.createElement("p");
-    status.className = "reference-status";
-    const resolved = resolveThemeTokenValue(settings, theme, mode, token.id);
-    if (resolved.state === "resolved" && resolved.reference) {
-      status.textContent = `Linked to ${resolved.reference.token.label} · resolves to ${resolved.value}`;
-    } else if (resolved.state === "cycle") {
-      status.dataset.error = "true";
-      status.textContent = "Circular token reference. Choose a different token before saving.";
-    } else if (resolved.state === "missing") {
-      status.dataset.error = "true";
-      status.textContent = "This value references a token that is not available.";
-    } else {
-      status.hidden = true;
+  function referenceError(resolved) {
+    if (resolved.state === "cycle") {
+      return "Circular token reference. Choose a different token before saving.";
     }
-    return status;
+    return resolved.state === "missing" ? "This value references a token that is not available." : undefined;
   }
-  function renderDefault(token, mode, overridden) {
+  function renderReset(token, mode) {
     const line3 = document.createElement("div");
     line3.className = "token-default";
     const expected = token.defaults?.[mode];
-    const text3 = document.createElement("span");
-    text3.textContent = expected === undefined ? "Default: inherits the light value" : `Default: ${expected}`;
     const reset = document.createElement("button");
     reset.type = "button";
     reset.dataset.resetToken = token.id;
-    reset.textContent = "Reset";
-    reset.disabled = !overridden;
-    reset.ariaLabel = `Reset ${token.label} to its integration default`;
-    line3.append(text3, reset);
+    reset.textContent = "Reset to default";
+    reset.title = expected === undefined ? "Inherits the light value" : expected;
+    reset.ariaLabel = `Reset ${token.label} to its default`;
+    line3.append(reset);
     return line3;
   }
   function controlLabel(type) {
@@ -18157,10 +18060,6 @@ circle.endpoint-timeline__errors {
     row.dataset.tokenId = token.id;
     row.dataset.tokenType = token.type;
     row.append(renderLabel(token, catalogEditable), renderTokenControls(token, settings, theme, mode));
-    if (catalogEditable) {
-      row.dataset.catalogEditable = "true";
-      row.append(deleteTokenButton(token));
-    }
     return row;
   }
   function deleteTokenButton(token) {
@@ -18168,7 +18067,7 @@ circle.endpoint-timeline__errors {
     button.type = "button";
     button.className = "delete-token";
     button.dataset.deleteToken = "true";
-    button.textContent = "Delete";
+    button.textContent = "Delete token";
     button.ariaLabel = `Delete ${token.label}`;
     return button;
   }
@@ -18177,10 +18076,26 @@ circle.endpoint-timeline__errors {
     label2.className = "element-label";
     label2.append(catalogEditable ? editableLabel(token) : fixedLabel(token));
     const detail = catalogEditable ? editableDescription(token) : fixedDescription(token);
+    label2.append(detail, technicalDetails(token, catalogEditable));
+    return label2;
+  }
+  function technicalDetails(token, catalogEditable) {
+    const details = document.createElement("details");
+    details.className = "token-details";
+    const summary = document.createElement("summary");
+    summary.textContent = "Details";
     const variable = document.createElement("code");
     variable.textContent = `var(--${token.variable})`;
-    label2.append(detail, variable);
-    return label2;
+    details.append(summary, variable);
+    if (token.defaults?.light !== undefined) {
+      const defaultValue = document.createElement("span");
+      defaultValue.textContent = `Default: ${token.defaults.light}`;
+      details.append(defaultValue);
+    }
+    if (catalogEditable) {
+      details.append(deleteTokenButton(token));
+    }
+    return details;
   }
   function editableDescription(token) {
     const input = document.createElement("input");
@@ -18228,34 +18143,14 @@ circle.endpoint-timeline__errors {
   }
 
   // src/components/admin/Theme/editor/tokens/explorer.ts
-  var FILTER_LABELS = {
-    all: "All",
-    color: "Colors",
-    "font-family": "Typography",
-    length: "Lengths",
-    number: "Numbers",
-    shadow: "Shadows",
-    value: "CSS values"
-  };
   function renderTokenExplorer(root, state) {
-    const categories = [state.category];
-    const allTokens = categories.flatMap((category) => category.tokens);
-    const availableFilters = new Set(allTokens.map((token) => token.type));
-    const activeFilter = state.filter === "all" || availableFilters.has(state.filter) ? state.filter : "all";
-    const filters = root.querySelector("[data-token-filters]");
-    filters.replaceChildren(...["all", ...availableFilters].map((filter) => filterButton(filter, activeFilter)));
-    const search = root.querySelector("[data-token-search]");
-    if (search.value !== state.search) {
-      search.value = state.search;
+    const groups = root.querySelector("[data-groups]");
+    if (!groups) {
+      return;
     }
-    const visible = categories.map((category) => ({
-      category,
-      tokens: category.tokens.filter((token) => (activeFilter === "all" || token.type === activeFilter) && matchesSearch(state.source, category, token, state.search))
-    })).filter((entry) => entry.tokens.length > 0);
-    const groups = visible.map(({ category, tokens }) => tokenGroup(category, tokens, state));
-    root.querySelector("[data-groups]").replaceChildren(...groups.length ? groups : [emptyResults()]);
+    groups.replaceChildren(state.category.tokens.length > 0 ? tokenGroup(state.category.tokens, state) : emptyCategory());
   }
-  function tokenGroup(category, tokens, state) {
+  function tokenGroup(tokens, state) {
     const group = document.createElement("section");
     group.className = "group";
     const list = document.createElement("div");
@@ -18264,22 +18159,10 @@ circle.endpoint-timeline__errors {
     group.append(list);
     return group;
   }
-  function matchesSearch(source2, category, token, search) {
-    const query4 = search.trim().toLowerCase();
-    return !query4 || [source2.label, category.label, token.label, token.description, token.variable, token.type].join(" ").toLowerCase().includes(query4);
-  }
-  function filterButton(filter, active) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.dataset.tokenFilter = filter;
-    button.textContent = FILTER_LABELS[filter];
-    button.setAttribute("aria-pressed", String(filter === active));
-    return button;
-  }
-  function emptyResults() {
+  function emptyCategory() {
     const empty = document.createElement("div");
     empty.className = "empty-category";
-    empty.textContent = "No token matches this search and filter.";
+    empty.textContent = "This group does not declare any token yet.";
     return empty;
   }
 
@@ -18294,22 +18177,18 @@ circle.endpoint-timeline__errors {
     const catalogEditable = isThemeCatalogEditable(source2);
     const mode = source2.supportsModes ? state.mode : "light";
     renderHeader(root, state, source2, theme);
-    renderOwnership(root, source2);
-    renderCategoryFields(root, category, catalogEditable);
     renderActions(root, state, source2, theme, catalogEditable);
     renderModes(root, source2, mode);
+    renderCategoryFields(root, category, catalogEditable);
     const section = query4(root, "[data-category-section]");
     section.setAttribute("heading", category.label);
     section.setAttribute("description", category.description);
     renderTokenExplorer(root, {
       settings: state.settings,
-      source: source2,
       category,
       theme,
       mode,
-      catalogEditable,
-      filter: state.tokenFilter,
-      search: state.tokenSearch
+      catalogEditable
     });
     return mode;
   }
@@ -18321,42 +18200,26 @@ circle.endpoint-timeline__errors {
     }
   }
   function renderHeader(root, state, source2, theme) {
-    query4(root, "[data-category-title]").textContent = source2.label;
+    query4(root, "[data-source-title]").textContent = source2.label;
     query4(root, "[data-theme-name-input]").value = theme.name;
-    query4(root, "[data-site-name]").textContent = state.siteName || "Current site";
     const select = query4(root, "[data-theme-switch]");
+    select.setAttribute("value", theme.id);
     select.replaceChildren(...state.settings.themes.map(themeOption));
     select.value = theme.id;
+    select.hidden = state.settings.themes.length < 2;
   }
   function renderActions(root, state, source2, theme, catalogEditable) {
     const active = theme.id === state.settings.activeThemeId;
     const status = query4(root, "[data-theme-status]");
     status.textContent = active ? "Active" : "Draft";
     status.setAttribute("color", active ? "success" : "warning");
-    query4(root, "[data-save-theme]").toggleAttribute("disabled", !state.canPersist);
-    query4(root, "[data-activate-theme]").toggleAttribute("disabled", active || !state.canPersist);
-    query4(root, "[data-add-theme-category]").hidden = !catalogEditable;
-    query4(root, "[data-add-element]").hidden = !catalogEditable;
+    query4(root, "[data-activate-theme]").toggleAttribute("disabled", active);
+    query4(root, "[data-category-actions]").hidden = !catalogEditable;
+    query4(root, "[data-editor-context]").hidden = !catalogEditable && !source2.supportsModes;
     const hasDeletionDestination = source2.categories.length > 1 || state.settings.sources.some((item) => item !== source2 && isThemeCatalogEditable(item) && item.categories.length > 0);
     const deleteCategory = query4(root, "[data-delete-category]");
-    deleteCategory.hidden = !catalogEditable;
-    deleteCategory.disabled = !catalogEditable || !hasDeletionDestination;
-    deleteCategory.title = catalogEditable && !hasDeletionDestination ? "Keep at least one editable category." : "";
-  }
-  function renderOwnership(root, source2) {
-    const integrationId = integrationOwnerId(source2);
-    const provenance = query4(root, "[data-source-provenance]");
-    provenance.hidden = !integrationId;
-    if (!integrationId) {
-      return;
-    }
-    const kind = query4(root, "[data-source-owner-kind]");
-    const label2 = query4(root, "[data-source-owner-label]");
-    const note = query4(root, "[data-source-owner-note]");
-    kind.textContent = "Integration";
-    label2.textContent = source2.label;
-    label2.title = integrationId;
-    note.textContent = "Structure managed by the integration; token values remain editable.";
+    deleteCategory.toggleAttribute("disabled", !hasDeletionDestination);
+    deleteCategory.title = hasDeletionDestination ? "" : "Keep at least one editable group.";
   }
   function renderCategoryFields(root, category, editable) {
     query4(root, "[data-category-fields]").hidden = !editable;
@@ -18366,8 +18229,8 @@ circle.endpoint-timeline__errors {
   function renderModes(root, source2, mode) {
     const modeSwitch = query4(root, "[data-mode-switch]");
     modeSwitch.hidden = !source2.supportsModes;
-    for (const button of Array.from(modeSwitch.querySelectorAll("[data-mode]"))) {
-      button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
+    if (source2.supportsModes && modeSwitch.value !== mode) {
+      modeSwitch.value = mode;
     }
   }
   function themeOption(theme) {
@@ -18380,264 +18243,41 @@ circle.endpoint-timeline__errors {
     return root.querySelector(selector);
   }
 
-  // src/components/admin/Theme/editor/controller/load.ts
-  async function loadThemeEditor(root, state, render, afterLoad) {
-    setThemeMessage(root, "Loading theme…");
-    try {
-      state.applyLoaded(await loadThemeSettings());
-      render();
-      setThemeMessage(root, state.canPersist ? "" : "Restart the Control server to enable theme persistence.", !state.canPersist);
-      afterLoad();
-    } catch (error) {
-      setThemeMessage(root, error instanceof Error ? error.message : "Unable to load theme", true);
-    }
-  }
-
   // src/components/admin/Theme/editor/controller/persistence.ts
   async function persistTheme(root, state, activate, afterSave) {
     const settings = state.settings;
-    if (!settings || !state.canPersist) {
+    if (!settings) {
       return;
     }
-    const theme = settings.themes.find((item) => item.id === state.selectedThemeId);
-    const cycles = theme ? new Set([...themeReferenceCycles(settings, theme, "light"), ...themeReferenceCycles(settings, theme, "dark")]) : new Set;
+    const cycles = new Set(settings.themes.flatMap((theme) => [
+      ...themeReferenceCycles(settings, theme, "light"),
+      ...themeReferenceCycles(settings, theme, "dark")
+    ]));
     if (cycles.size > 0) {
       setThemeMessage(root, `Circular token references: ${[...cycles].join(", ")}.`, true);
       return;
     }
-    if (activate) {
-      settings.activeThemeId = state.selectedThemeId;
-    }
+    const submitted = activate ? { ...settings, activeThemeId: state.selectedThemeId } : settings;
     setThemeMessage(root, "Saving…");
+    root?.host.toggleAttribute("inert", true);
+    root?.host.setAttribute("aria-busy", "true");
     try {
-      await saveThemeSettings(settings);
-      setThemeMessage(root, activate ? "Theme activated." : "Theme saved.");
-      afterSave();
-    } catch (error) {
-      setThemeMessage(root, error instanceof Error ? error.message : "Unable to save theme", true);
-    }
-  }
-
-  // src/components/admin/Theme/editor/tokens/referencePicker.ts
-  function renderTokenReferencePicker(root, state) {
-    const panel = root.querySelector("[data-reference-picker]");
-    if (!panel) {
-      return;
-    }
-    panel.hidden = !state.tokenId;
-    setBackgroundInert(root, Boolean(state.tokenId));
-    if (!state.tokenId) {
-      return;
-    }
-    const entries = themeTokenEntries(state.settings);
-    const current = entries.find((entry) => entry.token.id === state.tokenId);
-    if (!current) {
-      panel.hidden = true;
-      return;
-    }
-    root.querySelector("[data-reference-picker-title]").textContent = `Link ${current.token.label}`;
-    const search = root.querySelector("[data-reference-search]");
-    if (search.value !== state.search) {
-      search.value = state.search;
-    }
-    const query5 = state.search.trim().toLowerCase();
-    const candidates = entries.filter((entry) => {
-      const haystack = [
-        entry.token.label,
-        entry.token.variable,
-        entry.token.description,
-        entry.category.label,
-        entry.source.label
-      ].join(" ").toLowerCase();
-      return entry.token.id !== current.token.id && compatibleTokenTypes(current.token, entry.token) && compatibleTokenOwners(current, entry) && (!query5 || haystack.includes(query5));
-    });
-    const groups = groupBySource(candidates);
-    const list = root.querySelector("[data-reference-results]");
-    list.replaceChildren(...groups.map(([sourceId, sourceEntries]) => sourceGroup(sourceId, sourceEntries, state)));
-    root.querySelector("[data-reference-empty]").hidden = candidates.length > 0;
-  }
-  function setBackgroundInert(root, inert) {
-    for (const element of Array.from(root.querySelectorAll("cms-shell-detail > :not([data-reference-picker])"))) {
-      element.inert = inert;
-    }
-  }
-  function groupBySource(entries) {
-    const groups = new Map;
-    for (const entry of entries) {
-      const group = groups.get(entry.source.id) ?? [];
-      group.push(entry);
-      groups.set(entry.source.id, group);
-    }
-    return [...groups.entries()];
-  }
-  function sourceGroup(sourceId, entries, state) {
-    const group = document.createElement("section");
-    group.className = "reference-group";
-    group.dataset.referenceSource = sourceId;
-    const heading4 = document.createElement("h5");
-    const source2 = entries[0].source;
-    heading4.textContent = isIntegrationSource(source2) ? `${source2.label} · Integration` : source2.label;
-    group.append(heading4, ...entries.map((entry) => referenceOption(entry, state)));
-    return group;
-  }
-  function referenceOption(entry, state) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "reference-option";
-    button.dataset.referenceTarget = entry.token.id;
-    const allowed = canReferenceThemeToken(state.settings, state.theme, state.mode, state.tokenId, entry.token.id);
-    button.disabled = !allowed;
-    const current = themeTokenEntries(state.settings).find((item) => item.token.id === state.tokenId);
-    const selected2 = directTokenReference(effectiveTokenValue(current.token, state.theme, state.mode));
-    button.toggleAttribute("aria-pressed", selected2 === entry.token.variable);
-    const identity = document.createElement("span");
-    identity.className = "reference-option-identity";
-    const name = document.createElement("strong");
-    name.textContent = entry.token.label;
-    const variable = document.createElement("code");
-    variable.textContent = `--${entry.token.variable}`;
-    identity.append(name, variable);
-    const preview = document.createElement("span");
-    preview.className = "reference-option-value";
-    preview.textContent = allowed ? resolveThemeTokenValue(state.settings, state.theme, state.mode, entry.token.id).value || "No value" : "Would create a circular reference";
-    button.append(identity, preview);
-    return button;
-  }
-
-  // src/components/admin/Theme/editor/controller/explorerController.ts
-  class ThemeExplorerController {
-    tokenFilter = "all";
-    tokenSearch = "";
-    referenceTokenId;
-    referenceSearch = "";
-    handleClick(event, context) {
-      const target2 = event.target;
-      const referenceToken = target2?.closest("[data-open-token-reference]")?.dataset.openTokenReference;
-      if (referenceToken) {
-        this.referenceTokenId = referenceToken;
-        this.referenceSearch = "";
-        this.renderReferencePicker(context);
-        context.root.querySelector("[data-reference-search]")?.focus();
-        return true;
-      }
-      if (target2?.closest("[data-close-token-reference]") || target2?.matches("[data-reference-picker]")) {
-        this.closeReferencePicker(context);
-        return true;
-      }
-      const referenceTarget = target2?.closest("[data-reference-target]")?.dataset.referenceTarget;
-      if (referenceTarget) {
-        this.selectReference(referenceTarget, context);
-        return true;
-      }
-      const filter = target2?.closest("[data-token-filter]")?.dataset.tokenFilter;
-      if (isTokenFilter(filter)) {
-        this.tokenFilter = filter;
-        context.render();
-        return true;
-      }
-      return false;
-    }
-    handleInput(event, context) {
-      const input = event.target;
-      if (input?.matches("[data-token-search]")) {
-        this.tokenSearch = input.value;
-        context.render();
-        restoreSearch(context.root, "[data-token-search]");
-        return true;
-      }
-      if (input?.matches("[data-reference-search]")) {
-        this.referenceSearch = input.value;
-        this.renderReferencePicker(context);
-        return true;
-      }
-      return false;
-    }
-    handleKeyDown(event, context) {
-      if (!(event instanceof KeyboardEvent) || !this.referenceTokenId) {
-        return false;
-      }
-      if (event.key === "Escape") {
-        event.preventDefault();
-        this.closeReferencePicker(context);
-        return true;
-      }
-      return event.key === "Tab" ? trapReferenceFocus(event, context.root) : false;
-    }
-    reset(context) {
-      this.tokenFilter = "all";
-      this.tokenSearch = "";
-      this.referenceTokenId = undefined;
-      this.referenceSearch = "";
-      if (context) {
-        this.renderReferencePicker(context);
-      }
-    }
-    renderReferencePicker(context) {
-      const theme = context.settings.themes.find((item) => item.id === context.selectedThemeId);
-      if (!theme) {
+      try {
+        await saveThemeSettings(submitted);
+      } catch (error) {
+        setThemeMessage(root, error instanceof Error ? error.message : "Unable to save theme", true);
         return;
       }
-      renderTokenReferencePicker(context.root, {
-        settings: context.settings,
-        theme,
-        mode: context.mode,
-        tokenId: this.referenceTokenId,
-        search: this.referenceSearch
-      });
-    }
-    selectReference(targetId, context) {
-      const theme = context.settings.themes.find((item) => item.id === context.selectedThemeId);
-      if (!theme || !this.referenceTokenId) {
-        return;
+      try {
+        await afterSave();
+        setThemeMessage(root, activate ? "Theme activated." : "Theme saved.");
+      } catch {
+        setThemeMessage(root, "Theme saved, but the editor could not refresh. Reload this page.", true);
       }
-      if (!setThemeTokenReference(context.settings, theme, context.mode, this.referenceTokenId, targetId)) {
-        context.showError("This link would create a circular token reference.");
-        return;
-      }
-      const tokenId = this.referenceTokenId;
-      this.closeReferencePicker(context, false);
-      context.render();
-      restoreReferenceFocus(context.root, tokenId);
+    } finally {
+      root?.host.removeAttribute("inert");
+      root?.host.removeAttribute("aria-busy");
     }
-    closeReferencePicker(context, restoreFocus = true) {
-      const tokenId = this.referenceTokenId;
-      this.referenceTokenId = undefined;
-      this.referenceSearch = "";
-      this.renderReferencePicker(context);
-      if (restoreFocus && tokenId) {
-        restoreReferenceFocus(context.root, tokenId);
-      }
-    }
-  }
-  function trapReferenceFocus(event, root) {
-    const panel = root.querySelector("[data-reference-picker]");
-    const focusable = Array.from(panel?.querySelectorAll("button:not([disabled]), input:not([disabled]), select:not([disabled])") ?? []).filter((element) => !element.hidden);
-    if (focusable.length === 0) {
-      event.preventDefault();
-      return true;
-    }
-    const first = focusable[0];
-    const last = focusable.at(-1);
-    const active = root.activeElement;
-    if (event.shiftKey && (active === first || !panel?.contains(active))) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first.focus();
-    }
-    return true;
-  }
-  function restoreReferenceFocus(root, tokenId) {
-    root.querySelector(`[data-open-token-reference="${tokenId}"]`)?.focus();
-  }
-  function restoreSearch(root, selector) {
-    const search = root.querySelector(selector);
-    search?.focus();
-    search?.setSelectionRange(search.value.length, search.value.length);
-  }
-  function isTokenFilter(value2) {
-    return ["all", "color", "font-family", "length", "number", "shadow", "value"].includes(value2 ?? "");
   }
 
   // src/components/admin/Theme/editor/controller/state.ts
@@ -18646,15 +18286,10 @@ circle.endpoint-timeline__errors {
     mode = "light";
     settings = null;
     selectedThemeId = "";
-    siteName = "";
-    canPersist = true;
-    explorer = new ThemeExplorerController;
-    applyLoaded(loaded) {
-      this.canPersist = loaded.canPersist;
-      this.settings = loaded.settings;
-      this.siteName = loaded.siteName;
+    applyLoaded(settings) {
+      this.settings = structuredClone(settings);
       this.selectedThemeId = this.settings.activeThemeId || this.settings.themes[0]?.id || "";
-      this.selection = selectionFromUrl(this.settings);
+      this.selection = themeSelectionFromUrl(this.settings.sources);
     }
     viewState() {
       if (!this.settings) {
@@ -18664,11 +18299,7 @@ circle.endpoint-timeline__errors {
         settings: this.settings,
         selection: this.selection,
         selectedThemeId: this.selectedThemeId,
-        mode: this.mode,
-        siteName: this.siteName,
-        canPersist: this.canPersist,
-        tokenFilter: this.explorer.tokenFilter,
-        tokenSearch: this.explorer.tokenSearch
+        mode: this.mode
       };
     }
     createTheme() {
@@ -18685,7 +18316,6 @@ circle.endpoint-timeline__errors {
       const added = addCategory(this.settings, this.selection);
       if (added) {
         this.selection = { sourceId: added.sourceId, categoryId: added.category.id };
-        this.explorer.reset();
       }
       return added;
     }
@@ -18693,11 +18323,7 @@ circle.endpoint-timeline__errors {
       if (!this.settings) {
         return false;
       }
-      if (!addToken(this.settings, this.selection)) {
-        return false;
-      }
-      this.explorer.reset();
-      return true;
+      return addToken(this.settings, this.selection);
     }
     deleteCategory() {
       if (!this.settings) {
@@ -18706,16 +18332,11 @@ circle.endpoint-timeline__errors {
       const removed = removeCategory(this.settings, this.selection);
       if (removed) {
         this.selection = removed.selection;
-        this.explorer.reset();
       }
       return removed;
     }
     deleteToken(tokenId) {
-      if (!this.settings || !removeToken(this.settings, this.selection, tokenId)) {
-        return false;
-      }
-      this.explorer.reset();
-      return true;
+      return Boolean(this.settings && removeToken(this.settings, this.selection, tokenId));
     }
     selectCategory(selection) {
       const source2 = this.settings?.sources.find((item) => item.id === selection.sourceId);
@@ -18723,7 +18344,6 @@ circle.endpoint-timeline__errors {
         return false;
       }
       this.selection = selection;
-      this.explorer.reset();
       return true;
     }
   }
@@ -18740,33 +18360,29 @@ circle.endpoint-timeline__errors {
 
 .category-fields > summary {
     width: max-content;
-    padding: 7px 0 9px;
+    padding: 0 0 11px;
     color: var(--theme-text-muted);
     cursor: pointer;
     font-size: 11px;
     font-weight: 650;
 }
 
-.category-fields[open] > summary {
-    color: var(--text-main);
-}
-
 .category-fields-grid {
     display: grid;
-    grid-template-columns: minmax(150px, .65fr) minmax(230px, 1.35fr) auto;
+    grid-template-columns: minmax(160px, .7fr) minmax(240px, 1.3fr);
     gap: 10px;
-    padding: 2px 0 13px;
+    padding-bottom: 14px;
 }
 
 .category-fields label {
     display: grid;
-    gap: 4px;
+    gap: 5px;
 }
 
 .category-fields label > span {
-    color: var(--text-label, var(--theme-text-muted));
+    color: var(--theme-text-muted);
     font-size: 10px;
-    font-weight: 750;
+    font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
 }
@@ -18774,11 +18390,11 @@ circle.endpoint-timeline__errors {
 .category-fields input {
     width: 100%;
     min-width: 0;
-    min-height: 32px;
+    min-height: 34px;
     box-sizing: border-box;
-    padding: 0 8px;
+    padding: 0 9px;
     border: 1px solid var(--border-light, var(--border-default));
-    border-radius: 5px;
+    border-radius: 6px;
     background: var(--bg-surface);
     color: var(--text-main);
     font: inherit;
@@ -18790,52 +18406,6 @@ circle.endpoint-timeline__errors {
     outline: 0;
 }
 
-.delete-category,
-.delete-token {
-    min-height: 30px;
-    padding: 0 8px;
-    border: 1px solid transparent;
-    border-radius: 5px;
-    background: transparent;
-    color: var(--theme-text-muted);
-    cursor: pointer;
-    font: inherit;
-    font-size: 11px;
-    font-weight: 650;
-}
-
-.delete-category:hover,
-.delete-token:hover {
-    border-color: color-mix(in srgb, var(--danger-base, #c4473d) 24%, transparent);
-    background: var(--danger-muted, color-mix(in srgb, var(--danger-base, #c4473d) 8%, transparent));
-    color: var(--danger-contrasted, var(--danger-base, #c4473d));
-}
-
-.delete-category {
-    align-self: end;
-}
-
-.delete-category:disabled {
-    color: var(--theme-text-muted);
-    cursor: not-allowed;
-    opacity: .4;
-}
-
-.empty-category {
-    padding: 24px 12px;
-    border-block: 1px solid var(--border-light, var(--border-default));
-    color: var(--theme-text-muted);
-    font-size: 11px;
-    text-align: center;
-}
-
-[data-add-theme],
-[data-add-theme-category],
-[data-add-element] {
-    --_accent-base: var(--text-body, var(--theme-text-muted));
-    --_accent-muted: var(--bg-hover, var(--bg-base));
-}
-
 @media (max-width: 720px) {
     .category-fields-grid {
         grid-template-columns: 1fr;
@@ -18844,86 +18414,71 @@ circle.endpoint-timeline__errors {
 `;
 
   // src/components/admin/Theme/editor/styles/editor.css
-  var editor_default = `.theme-actions {
+  var editor_default = `:host {
+    display: block;
+    min-width: 0;
+    container: theme-editor / inline-size;
+    --theme-text-muted: color-mix(in srgb, var(--text-main) 62%, var(--bg-surface));
+}
+
+cms-shell-detail,
+cms-detail-section {
+    min-width: 0;
+}
+
+cms-shell-detail {
+    --w-detail-main-width: min(940px, 100%);
+    --w-detail-aside-width: 0px;
+    --w-detail-gap: 0px;
+}
+
+.theme-actions,
+.category-actions,
+.context-controls,
+.editor-context-bar {
     display: flex;
     align-items: center;
+}
+
+.theme-actions {
     justify-content: flex-end;
     gap: 8px;
 }
 
-.theme-overview-panel {
-    display: block;
-    padding: 2px 2px 13px;
-    border-bottom: 1px solid var(--border-light, var(--border-default));
+.theme-actions [data-theme-switch][hidden],
+.category-actions[hidden],
+[data-mode-switch][hidden] {
+    display: none;
 }
 
-.theme-overview {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
+.category-actions {
+    gap: 6px;
 }
 
-.theme-name-field {
-    display: grid;
-    grid-template-columns: auto minmax(180px, 320px);
-    align-items: center;
+.context-controls {
+    flex: 0 0 auto;
     gap: 10px;
-    min-width: 0;
 }
 
-.theme-name-field > span {
-    color: var(--text-label, var(--theme-text-muted));
-    font-size: 10px;
-    font-weight: 750;
-    letter-spacing: .04em;
-    text-transform: uppercase;
+.editor-context-bar {
+    justify-content: flex-end;
+    gap: 16px;
+    margin-bottom: 14px;
 }
 
-.theme-name {
-    width: 100%;
-    min-width: 0;
-    min-height: 32px;
-    box-sizing: border-box;
-    padding: 0 8px;
-    border: 1px solid var(--border-light, var(--border-default));
-    border-radius: 5px;
-    background: var(--bg-surface);
-    color: var(--text-main);
-    font: inherit;
-    font-size: 12px;
+.editor-context-bar[hidden] {
+    display: none;
 }
 
-.theme-name {
-    padding-inline: 2px;
-    border-color: transparent;
-    border-bottom-color: var(--border-default);
-    border-radius: 0;
-    background: transparent;
-    font-size: 14px;
-    font-weight: 700;
-}
-
-.theme-name:hover,
-.theme-name:focus {
-    border-color: var(--primary-base);
-    outline: 0;
-}
-
-.theme-context {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--theme-text-muted);
-    font-size: 11px;
-    white-space: nowrap;
+[data-mode-switch] {
+    width: 150px;
+    flex: 0 0 auto;
 }
 
 .theme-message {
-    min-height: 0;
-    margin: 7px 0 0;
+    margin: 0;
     color: var(--success-base, #21865f);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .theme-message:empty {
@@ -18934,17 +18489,47 @@ circle.endpoint-timeline__errors {
     color: var(--danger-base, #c4473d);
 }
 
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    clip-path: inset(50%);
+.theme-settings {
+    margin-top: 14px;
+    border-top: 1px solid var(--border-light, var(--border-default));
 }
 
-@media (max-width: 720px) {
+.theme-settings summary {
+    width: max-content;
+    padding-top: 12px;
+    color: var(--theme-text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.theme-name-field {
+    display: grid;
+    max-width: 360px;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.theme-name-field span {
+    color: var(--theme-text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.theme-name-field input {
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 0 9px;
+    border: 1px solid var(--border-light, var(--border-default));
+    border-radius: 6px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font: inherit;
+}
+
+@container theme-editor (max-width: 700px) {
     .theme-actions {
         width: 100%;
         flex-wrap: wrap;
@@ -18953,150 +18538,30 @@ circle.endpoint-timeline__errors {
 
     .theme-actions [data-theme-switch] {
         width: 100%;
-        flex-basis: 100%;
     }
 
-    .theme-overview {
-        align-items: stretch;
+    .editor-context-bar {
+        align-items: flex-start;
         flex-direction: column;
     }
 
-    .theme-context {
-        flex-wrap: wrap;
+    .context-controls {
+        width: 100%;
+        align-items: flex-start;
+        flex-direction: column;
     }
 
-    .theme-name-field {
-        grid-template-columns: 1fr;
+    .category-actions {
+        width: 100%;
+        justify-content: flex-start;
     }
 }
 `;
 
   // src/components/admin/Theme/editor/styles/explorer.css
-  var explorer_default = `:host {
-    display: block;
-    --theme-text-muted: color-mix(in srgb, var(--text-main) 62%, var(--bg-surface));
-}
-
-cms-shell-detail {
-    --w-detail-main-width: min(980px, 100%);
-    --w-detail-aside-width: 0px;
-    --w-detail-gap: 0px;
-}
-
-[data-category-section] {
-    --detail-section-body-start: 10px;
-    --detail-section-padding: 14px;
-}
-
-[data-add-theme-category][hidden],
-[data-add-element][hidden] {
-    display: none;
-}
-
-.editor-context-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
-}
-
-.editor-context-bar:not(:has(> :not([hidden]))) {
-    display: none;
-}
-
-.mode-switch {
-    display: inline-flex;
-    flex: 0 0 auto;
-    gap: 2px;
-    padding: 2px;
-    border-radius: 6px;
-    background: var(--bg-base);
-}
-
-.mode-switch[hidden] {
-    display: none;
-}
-
-.mode-switch button,
-.token-filters button {
-    min-height: 28px;
-    padding: 0 9px;
-    border: 0;
-    border-radius: 4px;
-    background: transparent;
-    color: var(--theme-text-muted);
-    cursor: pointer;
-    font: inherit;
-    font-size: 11px;
-}
-
-.mode-switch button:hover,
-.token-filters button:hover {
-    color: var(--text-main);
-}
-
-.mode-switch button:focus-visible,
-.token-filters button:focus-visible {
-    outline: 2px solid var(--primary-base);
-    outline-offset: 1px;
-}
-
-.mode-switch button[aria-pressed="true"],
-.token-filters button[aria-pressed="true"] {
-    background: var(--bg-surface);
-    color: var(--text-main);
-    box-shadow: 0 1px 2px rgb(15 31 26 / 10%);
-    font-weight: 700;
-}
-
-.token-tools {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-light, var(--border-default));
-}
-
-.token-search {
-    min-width: min(320px, 100%);
-}
-
-.token-search input,
-.reference-search input {
-    width: 100%;
-    min-height: 32px;
-    box-sizing: border-box;
-    padding: 0 10px;
-    border: 1px solid var(--border-light, var(--border-default));
-    border-radius: 5px;
-    background: var(--bg-surface);
-    color: var(--text-main);
-    font: inherit;
-    font-size: 12px;
-}
-
-.token-search input:hover,
-.reference-search input:hover {
-    border-color: var(--border-default);
-}
-
-.token-search input:focus,
-.reference-search input:focus {
-    border-color: var(--primary-base);
-    outline: 0;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-base) 12%, transparent);
-}
-
-.token-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-    padding: 2px;
-    border-radius: 6px;
-    background: var(--bg-base);
+  var explorer_default = `[data-category-section] {
+    --detail-section-body-start: 14px;
+    --detail-section-padding: 16px;
 }
 
 .groups,
@@ -19105,372 +18570,55 @@ cms-shell-detail {
 }
 
 .groups {
-    gap: 20px;
+    gap: 18px;
 }
 
 .group {
     gap: 8px;
 }
 
-.group-heading {
-    display: grid;
-    gap: 2px;
-    padding-inline: 2px;
-}
-
-.group h4,
-.group p {
-    margin: 0;
-}
-
-.group h4 {
-    color: var(--text-main);
+.empty-category {
+    padding: 32px 16px;
+    border: 1px dashed var(--border-default);
+    border-radius: 7px;
+    color: var(--theme-text-muted);
     font-size: 12px;
-    font-weight: 750;
-}
-
-.group-heading p {
-    color: var(--theme-text-muted);
-    font-size: 11px;
-}
-
-@media (max-width: 760px) {
-    .editor-context-bar,
-    .token-tools {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .mode-switch,
-    .token-filters {
-        width: fit-content;
-    }
-}
-`;
-
-  // src/components/admin/Theme/editor/styles/integration.css
-  var integration_default = `.source-provenance {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 8px;
-    border-left: 2px solid var(--primary-base);
-    background: var(--bg-base);
-    color: var(--theme-text-muted);
-    font-size: 10px;
-}
-
-[data-source-provenance][hidden] {
-    display: none;
-}
-
-.source-provenance strong {
-    overflow: hidden;
-    color: var(--text-main);
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.source-provenance span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.token-controls {
-    display: grid;
-    gap: 4px;
-    min-width: 0;
-}
-
-.token-value-line {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 6px;
-    align-items: center;
-}
-
-.reference-button {
-    min-height: 32px;
-    padding: 0 8px;
-    border: 1px solid transparent;
-    border-radius: 5px;
-    background: transparent;
-    color: var(--primary-base);
-    cursor: pointer;
-    font: inherit;
-    font-size: 10px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.reference-button:hover {
-    border-color: color-mix(in srgb, var(--primary-base) 20%, transparent);
-    background: color-mix(in srgb, var(--primary-base) 6%, transparent);
-}
-
-.reference-button:focus-visible,
-.token-default button:focus-visible {
-    outline: 2px solid var(--primary-base);
-    outline-offset: 1px;
-}
-
-.reference-status {
-    margin: 0;
-    color: var(--theme-text-muted);
-    font-size: 10px;
-}
-
-.reference-status[data-error] {
-    color: var(--danger-base, #c4473d);
-}
-
-.token-default {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    color: var(--theme-text-muted);
-    font-size: 10px;
-}
-
-.token-default span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.token-default button {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--primary-base);
-    cursor: pointer;
-    font: inherit;
-    font-size: 10px;
-    font-weight: 700;
-}
-
-.token-default button:disabled {
-    color: var(--theme-text-muted);
-    cursor: default;
-    opacity: .45;
-}
-
-@media (max-width: 600px) {
-    .source-provenance {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .source-provenance p9r-tag {
-        width: max-content;
-    }
-
-    .source-provenance strong,
-    .source-provenance span {
-        white-space: normal;
-    }
-}
-`;
-
-  // src/components/admin/Theme/editor/styles/reference.css
-  var reference_default = `.reference-picker-backdrop {
-    position: fixed;
-    z-index: 1000;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    padding: 20px;
-    background: rgb(15 31 26 / 34%);
-    backdrop-filter: blur(3px);
-}
-
-.reference-picker-backdrop[hidden] {
-    display: none;
-}
-
-.reference-picker {
-    display: grid;
-    width: min(600px, 100%);
-    max-height: min(700px, calc(100vh - 40px));
-    overflow: hidden;
-    border: 1px solid var(--border-light, var(--border-default));
-    border-radius: 12px;
-    background: var(--bg-surface);
-    box-shadow: 0 24px 64px rgb(15 31 26 / 22%);
-}
-
-.reference-picker > header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 15px 16px 10px;
-}
-
-.reference-picker h4,
-.reference-group h5 {
-    margin: 0;
-    color: var(--text-main);
-}
-
-.reference-picker h4 {
-    font-size: 15px;
-}
-
-.eyebrow {
-    color: var(--theme-text-muted);
-    font-size: 9px;
-    font-weight: 750;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-}
-
-.reference-close {
-    width: 30px;
-    height: 30px;
-    border: 1px solid transparent;
-    border-radius: 5px;
-    background: transparent;
-    color: var(--theme-text-muted);
-    cursor: pointer;
-    font-size: 18px;
-}
-
-.reference-close:hover {
-    background: var(--bg-base);
-    color: var(--text-main);
-}
-
-.reference-close:focus-visible,
-.reference-option:focus-visible {
-    outline: 2px solid var(--primary-base);
-    outline-offset: 1px;
-}
-
-.reference-search {
-    padding: 0 16px 12px;
-}
-
-.reference-results {
-    display: grid;
-    gap: 14px;
-    overflow: auto;
-    padding: 0 16px 16px;
-}
-
-.reference-group {
-    display: grid;
-}
-
-.reference-group h5 {
-    padding: 7px 2px 5px;
-    border-bottom: 1px solid var(--border-light, var(--border-default));
-    font-size: 10px;
-    letter-spacing: .03em;
-    text-transform: uppercase;
-}
-
-.reference-option {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(110px, .55fr);
-    gap: 12px;
-    align-items: center;
-    width: 100%;
-    padding: 9px 5px;
-    border: 0;
-    border-bottom: 1px solid var(--border-light, var(--border-default));
-    background: transparent;
-    color: var(--text-main);
-    cursor: pointer;
-    text-align: left;
-}
-
-.reference-option:hover,
-.reference-option[aria-pressed="true"] {
-    background: color-mix(in srgb, var(--primary-base) 6%, var(--bg-surface));
-}
-
-.reference-option:disabled {
-    cursor: not-allowed;
-    opacity: .5;
-}
-
-.reference-option-identity {
-    display: grid;
-    min-width: 0;
-    gap: 2px;
-}
-
-.reference-option code,
-.reference-option-value {
-    overflow: hidden;
-    color: var(--theme-text-muted);
-    font-size: 10px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.reference-option-value {
-    text-align: right;
-}
-
-.reference-empty {
-    margin: 0;
-    padding: 24px;
-    color: var(--theme-text-muted);
-    font-size: 11px;
     text-align: center;
-}
-
-@media (max-width: 600px) {
-    .reference-option {
-        grid-template-columns: 1fr;
-    }
-
-    .reference-option-value {
-        text-align: left;
-    }
 }
 `;
 
   // src/components/admin/Theme/editor/styles/tokens.css
   var tokens_default = `.element-list {
-    border-block: 1px solid var(--border-light, var(--border-default));
+    border-top: 1px solid var(--border-light, var(--border-default));
 }
 
 .element-row {
     display: grid;
-    grid-template-columns: minmax(190px, .78fr) minmax(300px, 1.22fr);
-    gap: 18px;
+    grid-template-columns: minmax(190px, .75fr) minmax(300px, 1.25fr);
+    gap: 22px;
     align-items: center;
-    min-height: 56px;
-    padding: 9px 4px;
-    border-top: 1px solid var(--border-light, var(--border-default));
-    transition: background-color 120ms ease;
-}
-
-.element-row:first-child {
-    border-top: 0;
+    min-height: 60px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--border-light, var(--border-default));
 }
 
 .element-row:hover,
 .element-row:focus-within {
-    background: color-mix(in srgb, var(--bg-base) 70%, transparent);
+    background: color-mix(in srgb, var(--bg-base) 68%, transparent);
 }
 
-.element-row[data-catalog-editable] {
-    grid-template-columns: minmax(190px, .78fr) minmax(300px, 1.22fr) auto;
-}
-
-.element-label {
+.element-label,
+.token-controls {
     display: grid;
     min-width: 0;
-    gap: 2px;
+    gap: 3px;
+}
+
+.token-label-text,
+.token-label-input {
+    color: var(--text-main);
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .token-label-input,
@@ -19483,25 +18631,23 @@ cms-shell-detail {
     font: inherit;
 }
 
+.token-label-input,
 .token-description-input {
     width: 100%;
     padding: 0;
-    color: var(--theme-text-muted);
-    font-size: 10px;
 }
 
-.token-label-input {
-    width: 100%;
-    padding: 0;
-    font-size: 12px;
-    font-weight: 700;
+.token-description-input,
+.element-label > span,
+.token-type-select,
+.token-details {
+    color: var(--theme-text-muted);
+    font-size: 10px;
 }
 
 .token-type-select {
     width: max-content;
     padding: 0;
-    color: var(--theme-text-muted);
-    font-size: 10px;
 }
 
 .token-label-input:focus,
@@ -19511,188 +18657,151 @@ cms-shell-detail {
     outline-offset: 2px;
 }
 
-.token-label-text {
-    color: var(--text-main);
-    font-size: 12px;
-    font-weight: 700;
+.token-details summary {
+    width: max-content;
+    cursor: pointer;
 }
 
-.element-label span,
-.element-label code {
+.token-details code,
+.token-details span,
+.token-details .delete-token {
+    display: block;
     overflow: hidden;
-    color: var(--theme-text-muted);
-    font-size: 10px;
+    margin-top: 3px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.element-label code {
-    width: max-content;
-    max-width: 100%;
+.token-details code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+.token-details .delete-token {
+    color: var(--danger-base, #c4473d);
+}
+
+.token-value-line,
 .color-control {
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: 6px;
-}
-
-.color-control input[type="color"] {
-    width: 30px;
-    height: 30px;
-    flex: 0 0 auto;
-    padding: 0;
-    border: 1px solid var(--border-default);
-    border-radius: 5px;
-    background: transparent;
-    cursor: pointer;
+    gap: 7px;
 }
 
 .value-control {
     width: 100%;
     min-width: 0;
-    min-height: 32px;
-    box-sizing: border-box;
-    padding: 0 8px;
-    border: 1px solid var(--border-light, var(--border-default));
-    border-radius: 5px;
+}
+
+.color-control {
+    flex: 1;
+}
+
+.color-control input[type="color"] {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    padding: 2px;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
     background: var(--bg-surface);
-    color: var(--text-main);
-    font: inherit;
-    font-size: 11px;
+    cursor: pointer;
 }
 
-.value-control:hover {
-    border-color: var(--border-default);
+.token-default {
+    display: flex;
+    justify-content: flex-end;
 }
 
-.value-control:focus {
-    border-color: var(--primary-base);
-    outline: 0;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-base) 12%, transparent);
-}
-
-.font-family-control,
-.shadow-control {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
+.token-default button,
 .delete-token {
-    align-self: center;
-    opacity: .42;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--primary-base);
+    cursor: pointer;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 700;
 }
 
-.element-row:hover .delete-token,
-.element-row:focus-within .delete-token,
-.delete-token:focus-visible {
-    opacity: 1;
+.delete-token:hover {
+    color: var(--danger-base, #c4473d);
 }
 
-.delete-token:focus-visible {
-    outline: 2px solid var(--primary-base);
-    outline-offset: 1px;
-}
-
-@media (max-width: 760px) {
-    .element-row,
-    .element-row[data-catalog-editable] {
+@container theme-editor (max-width: 700px) {
+    .element-row {
         grid-template-columns: 1fr;
-        gap: 8px;
-        padding-block: 12px;
-    }
-
-    .delete-token {
-        justify-self: start;
-        opacity: 1;
+        gap: 9px;
+        padding-block: 14px;
     }
 }
 `;
 
   // src/components/admin/Theme/editor/styles/index.ts
-  var styles_default = [editor_default, category_default, explorer_default, tokens_default, integration_default, reference_default].join(`
+  var styles_default = [editor_default, category_default, explorer_default, tokens_default].join(`
 `);
 
   // src/components/admin/Theme/editor/ThemeEditor.html
   var ThemeEditor_default = `<cms-shell-detail>
-    <span slot="title" data-category-title>Theme</span>
+    <span slot="title" data-source-title>Theme</span>
     <div slot="actions" class="theme-actions">
         <p9r-select data-theme-switch aria-label="Select theme"></p9r-select>
-        <p9r-button type="button" variant="ghost" data-add-theme>+ Theme</p9r-button>
-        <p9r-button type="button" variant="ghost" data-add-theme-category hidden>+ Category</p9r-button>
-        <p9r-button type="button" variant="ghost" data-add-element hidden>+ Token</p9r-button>
+        <p9r-tag color="success" data-theme-status>Active</p9r-tag>
         <p9r-button type="button" color="primary" data-save-theme>Save</p9r-button>
-        <p9r-button type="button" color="primary" variant="outlined" data-activate-theme>Activate</p9r-button>
+        <p9r-action-menu label="Theme actions">
+            <p9r-action-menu-section label="Theme">
+                <p9r-action-menu-item data-add-theme>New theme</p9r-action-menu-item>
+                <p9r-action-menu-item data-activate-theme>Activate theme</p9r-action-menu-item>
+            </p9r-action-menu-section>
+        </p9r-action-menu>
     </div>
 
-    <section slot="main" class="theme-overview-panel" data-theme-overview>
-        <div class="theme-overview">
-            <label class="theme-name-field">
-                <span>Theme name</span>
-                <input class="theme-name" type="text" aria-label="Theme name" data-theme-name-input>
-            </label>
-            <div class="theme-context">
-                <p9r-tag color="success" data-theme-status>Active</p9r-tag>
-                <span data-site-name></span>
-            </div>
-        </div>
-        <p class="theme-message" data-message aria-live="polite"></p>
-    </section>
+    <p class="theme-message" slot="main" data-message aria-live="polite"></p>
 
     <cms-detail-section slot="main" density="compact" data-category-section>
-        <div class="editor-context-bar">
-            <div class="source-provenance" data-source-provenance>
-                <p9r-tag data-source-owner-kind>Integration</p9r-tag>
-                <strong data-source-owner-label></strong>
-                <span data-source-owner-note></span>
-            </div>
-            <div class="mode-switch" data-mode-switch hidden>
-                <button type="button" data-mode="light">Light mode</button>
-                <button type="button" data-mode="dark">Dark mode</button>
+        <div class="editor-context-bar" data-editor-context>
+            <div class="context-controls">
+                <p9r-segmented-switch data-mode-switch value="light" label="Mode" hidden>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </p9r-segmented-switch>
+                <div class="category-actions" data-category-actions hidden>
+                    <p9r-button type="button" variant="ghost" data-add-element>Add token</p9r-button>
+                    <p9r-action-menu label="Group actions">
+                        <p9r-action-menu-section label="Group">
+                            <p9r-action-menu-item data-add-theme-category>New group</p9r-action-menu-item>
+                            <p9r-action-menu-item color="danger" data-delete-category>Delete group</p9r-action-menu-item>
+                        </p9r-action-menu-section>
+                    </p9r-action-menu>
+                </div>
             </div>
         </div>
-        <div class="token-tools">
-            <label class="token-search">
-                <span class="visually-hidden">Search tokens</span>
-                <input type="search" placeholder="Search tokens, variables or categories…" data-token-search>
-            </label>
-            <div class="token-filters" data-token-filters aria-label="Filter token types"></div>
-        </div>
+
         <details class="category-fields" data-category-fields hidden>
-            <summary>Category settings</summary>
+            <summary>Group details</summary>
             <div class="category-fields-grid">
                 <label>
-                    <span>Category name</span>
+                    <span>Name</span>
                     <input type="text" data-category-label-input>
                 </label>
                 <label>
                     <span>Description</span>
                     <input type="text" data-category-description-input>
                 </label>
-                <button type="button" class="delete-category" data-delete-category>Delete category</button>
             </div>
         </details>
-        <div class="groups" data-groups></div>
-    </cms-detail-section>
 
-    <div slot="main" class="reference-picker-backdrop" data-reference-picker hidden>
-        <section class="reference-picker" role="dialog" aria-modal="true" aria-labelledby="reference-picker-title">
-            <header>
-                <div>
-                    <span class="eyebrow">Token reference</span>
-                    <h4 id="reference-picker-title" data-reference-picker-title>Link token</h4>
-                </div>
-                <button type="button" class="reference-close" data-close-token-reference aria-label="Close token picker">×</button>
-            </header>
-            <label class="reference-search">
-                <span class="visually-hidden">Search available tokens</span>
-                <input type="search" placeholder="Search by name, variable or integration…" data-reference-search>
+        <div class="groups" data-groups></div>
+
+        <details class="theme-settings">
+            <summary>Theme details</summary>
+            <label class="theme-name-field">
+                <span>Name</span>
+                <input type="text" data-theme-name-input>
             </label>
-            <div class="reference-results" data-reference-results></div>
-            <p class="reference-empty" data-reference-empty hidden>No matching token.</p>
-        </section>
-    </div>
+        </details>
+    </cms-detail-section>
 </cms-shell-detail>
 `;
 
@@ -19704,28 +18813,35 @@ cms-shell-detail {
     }
     connectedCallback() {
       super.connectedCallback();
-      addThemeEditorListeners(this.shadowRoot, THEME_CATEGORY_SELECTED_EVENT, this.eventHandlers());
-      loadThemeEditor(this.shadowRoot, this.state, () => this.render(), dispatchThemeSettingsChanged);
+      this.shadowRoot?.addEventListener("click", this.onClick);
+      this.shadowRoot?.addEventListener("change", this.onChange);
+      this.shadowRoot?.addEventListener("input", this.onInput);
+      window.addEventListener(THEME_CATEGORY_SELECTED_EVENT, this.onCategorySelected);
+      this.load();
     }
     disconnectedCallback() {
-      removeThemeEditorListeners(this.shadowRoot, THEME_CATEGORY_SELECTED_EVENT, this.eventHandlers());
+      this.shadowRoot?.removeEventListener("click", this.onClick);
+      this.shadowRoot?.removeEventListener("change", this.onChange);
+      this.shadowRoot?.removeEventListener("input", this.onInput);
+      window.removeEventListener(THEME_CATEGORY_SELECTED_EVENT, this.onCategorySelected);
+    }
+    async load() {
+      setThemeMessage(this.shadowRoot, "Loading theme…");
+      try {
+        this.state.applyLoaded((await adminSystemSettingsStore.load()).theme);
+        this.render();
+        setThemeMessage(this.shadowRoot, "");
+      } catch (error) {
+        setThemeMessage(this.shadowRoot, error instanceof Error ? error.message : "Unable to load theme", true);
+      }
     }
     render() {
       const viewState = this.state.viewState();
-      if (!viewState || !this.shadowRoot) {
-        return;
-      }
-      this.state.mode = renderThemeEditor(this.shadowRoot, viewState);
-      const context = this.explorerContext();
-      if (context) {
-        this.state.explorer.renderReferencePicker(context);
+      if (viewState && this.shadowRoot) {
+        this.state.mode = renderThemeEditor(this.shadowRoot, viewState);
       }
     }
     onClick = (event) => {
-      const context = this.explorerContext();
-      if (context && this.state.explorer.handleClick(event, context)) {
-        return;
-      }
       if (this.state.settings && resetThemeToken(event, this.state.settings, this.state.selection, this.state.selectedThemeId, this.state.mode)) {
         this.render();
         return;
@@ -19746,62 +18862,32 @@ cms-shell-detail {
           this.render();
         }
       } else if (action === "delete-category") {
-        if (!window.confirm("Delete this category and all of its tokens?")) {
-          return;
-        }
-        const removed = this.state.deleteCategory();
-        if (removed) {
-          this.render();
-          dispatchThemeCategoryDeleted(removed);
-        }
+        this.deleteCategory();
       } else if (action === "delete-token") {
-        const tokenId = event.target?.closest("[data-token-id]")?.dataset.tokenId;
-        if (tokenId && window.confirm("Delete this token from every theme?") && this.state.deleteToken(tokenId)) {
-          this.render();
-        }
+        this.deleteToken(event);
       } else if (action === "save" || action === "activate") {
-        persistTheme(this.shadowRoot, this.state, action === "activate", () => {
-          this.render();
-          dispatchThemeSettingsChanged();
-        });
-      }
-      const mode = event.target?.closest("[data-mode]")?.dataset.mode;
-      if (mode === "light" || mode === "dark") {
-        this.state.mode = mode;
-        this.render();
+        persistTheme(this.shadowRoot, this.state, action === "activate", () => this.refreshAfterSave());
       }
     };
     onInput = (event) => {
-      const context = this.explorerContext();
-      if (context && this.state.explorer.handleInput(event, context)) {
-        return;
-      }
-      if (this.state.settings && this.shadowRoot) {
-        handleThemeInput(event, {
-          root: this.shadowRoot,
-          settings: this.state.settings,
-          selection: this.state.selection,
-          selectedThemeId: this.state.selectedThemeId,
-          mode: this.state.mode
-        });
-      }
+      this.handleInput(event);
     };
     onChange = (event) => {
       const target2 = event.target;
       if (target2.matches?.("[data-theme-switch]") && target2.value) {
         this.state.selectedThemeId = target2.value;
-        this.state.explorer.reset(this.explorerContext());
         this.render();
         return;
       }
-      if (target2.matches?.("[data-token-type-control]") && this.state.settings && this.shadowRoot) {
-        handleThemeInput(event, {
-          root: this.shadowRoot,
-          settings: this.state.settings,
-          selection: this.state.selection,
-          selectedThemeId: this.state.selectedThemeId,
-          mode: this.state.mode
-        });
+      if (target2.matches?.("[data-mode-switch]") && (target2.value === "light" || target2.value === "dark")) {
+        if (this.state.mode !== target2.value) {
+          this.state.mode = target2.value;
+          this.render();
+        }
+        return;
+      }
+      if (target2.matches?.("[data-token-type-control], [data-token-value-control], input[type='color']")) {
+        this.handleInput(event);
         this.render();
       }
     };
@@ -19810,33 +18896,43 @@ cms-shell-detail {
         this.render();
       }
     };
-    onKeyDown = (event) => {
-      const context = this.explorerContext();
-      if (context) {
-        this.state.explorer.handleKeyDown(event, context);
-      }
-    };
-    explorerContext() {
-      if (!this.shadowRoot || !this.state.settings) {
+    handleInput(event) {
+      if (!this.state.settings || !this.shadowRoot) {
         return;
       }
-      return {
+      handleThemeInput(event, {
         root: this.shadowRoot,
         settings: this.state.settings,
+        selection: this.state.selection,
         selectedThemeId: this.state.selectedThemeId,
-        mode: this.state.mode,
-        render: () => this.render(),
-        showError: (message) => setThemeMessage(this.shadowRoot, message, true)
-      };
+        mode: this.state.mode
+      });
     }
-    eventHandlers() {
-      return {
-        click: this.onClick,
-        change: this.onChange,
-        input: this.onInput,
-        keydown: this.onKeyDown,
-        selection: this.onCategorySelected
-      };
+    async refreshAfterSave() {
+      const selectedThemeId = this.state.selectedThemeId;
+      adminSystemSettingsStore.invalidate();
+      this.state.applyLoaded((await adminSystemSettingsStore.load()).theme);
+      if (this.state.settings?.themes.some((theme) => theme.id === selectedThemeId)) {
+        this.state.selectedThemeId = selectedThemeId;
+      }
+      this.render();
+      dispatchThemeSettingsRefreshed();
+    }
+    deleteCategory() {
+      if (!window.confirm("Delete this group and all of its tokens?")) {
+        return;
+      }
+      const removed = this.state.deleteCategory();
+      if (removed) {
+        this.render();
+        dispatchThemeCategoryDeleted(removed);
+      }
+    }
+    deleteToken(event) {
+      const tokenId = event.target?.closest("[data-token-id]")?.dataset.tokenId;
+      if (tokenId && window.confirm("Delete this token from every theme?") && this.state.deleteToken(tokenId)) {
+        this.render();
+      }
     }
   }
   if (!customElements.get("cms-theme-editor")) {
@@ -19938,16 +19034,20 @@ w13c-lateral-menu-item.integration-category {
       const integration = isIntegrationSource(source2);
       const hasChildren = integration ? source2.categories.length > 0 : source2.categories.length > 1;
       const expanded = hasChildren && source2.id === selection.sourceId;
+      const label2 = sourceNavigationLabel(source2);
       const sourceItem = document.createElement("w13c-lateral-menu-item");
       sourceItem.dataset.generated = "true";
       sourceItem.dataset.source = source2.id;
-      sourceItem.setAttribute("aria-level", "1");
+      sourceItem.ariaLabel = label2;
       sourceItem.classList.toggle("integration-item", integration);
-      sourceItem.toggleAttribute("active", source2.id === selection.sourceId);
+      sourceItem.toggleAttribute("active", !hasChildren && source2.id === selection.sourceId);
       if (hasChildren) {
+        sourceItem.setAttribute("role", "button");
         sourceItem.setAttribute("aria-expanded", String(expanded));
+      } else {
+        sourceItem.setAttribute("aria-level", "1");
       }
-      sourceItem.append(createSourceIcon(source2.id), document.createTextNode(sourceNavigationLabel(source2)));
+      sourceItem.append(createSourceIcon(source2.id), document.createTextNode(label2));
       menu.append(sourceItem);
       if (!expanded) {
         continue;
@@ -19959,6 +19059,7 @@ w13c-lateral-menu-item.integration-category {
         categoryItem.dataset.generated = "true";
         categoryItem.dataset.source = source2.id;
         categoryItem.dataset.category = category.id;
+        categoryItem.ariaLabel = category.label;
         categoryItem.setAttribute("aria-level", "2");
         categoryItem.toggleAttribute("active", category.id === selection.categoryId);
         categoryItem.append(createCategoryIcon(), document.createTextNode(category.label));
@@ -19968,15 +19069,6 @@ w13c-lateral-menu-item.integration-category {
   }
   function sourceNavigationLabel(source2) {
     return CORE_SOURCE_LABELS[source2.id] ?? source2.label;
-  }
-  function selectionFromUrl2(sources) {
-    const url = new URL(window.location.href);
-    const sourceId = url.searchParams.get("type") ?? "";
-    const categoryId = url.searchParams.get("category") ?? "";
-    const explicitSource = sources.find((source3) => source3.id === sourceId);
-    const source2 = explicitSource ?? sources.find((item) => item.categories.some((category2) => category2.id === categoryId)) ?? sources[0];
-    const category = source2?.categories.find((item) => item.id === categoryId) ?? source2?.categories[0];
-    return { sourceId: source2?.id ?? "", categoryId: category?.id ?? "" };
   }
 
   // src/components/admin/Theme/ThemeNav.ts
@@ -19994,7 +19086,7 @@ w13c-lateral-menu-item.integration-category {
       window.addEventListener(THEME_CATEGORY_ADDED_EVENT, this.onCategoryAdded);
       window.addEventListener(THEME_CATEGORY_DELETED_EVENT, this.onCategoryDeleted);
       window.addEventListener(THEME_CATEGORY_UPDATED_EVENT, this.onCategoryUpdated);
-      window.addEventListener(THEME_SETTINGS_CHANGED_EVENT, this.onSettingsChanged);
+      window.addEventListener(THEME_SETTINGS_REFRESHED_EVENT, this.onSettingsRefreshed);
     }
     disconnectedCallback() {
       this.shadowRoot?.removeEventListener("click", this.onClick);
@@ -20002,19 +19094,13 @@ w13c-lateral-menu-item.integration-category {
       window.removeEventListener(THEME_CATEGORY_ADDED_EVENT, this.onCategoryAdded);
       window.removeEventListener(THEME_CATEGORY_DELETED_EVENT, this.onCategoryDeleted);
       window.removeEventListener(THEME_CATEGORY_UPDATED_EVENT, this.onCategoryUpdated);
-      window.removeEventListener(THEME_SETTINGS_CHANGED_EVENT, this.onSettingsChanged);
+      window.removeEventListener(THEME_SETTINGS_REFRESHED_EVENT, this.onSettingsRefreshed);
     }
     async load() {
       try {
-        const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
-          headers: { Accept: "application/json" }
-        });
-        if (!response.ok) {
-          return;
-        }
-        const data = await response.json();
-        this.sources = structuredClone(data.theme?.sources ?? []);
-        this.selection = selectionFromUrl2(this.sources);
+        const page = await adminSystemSettingsStore.load();
+        this.sources = structuredClone(page.theme.sources);
+        this.selection = themeSelectionFromUrl(this.sources);
         this.render();
       } catch {}
     }
@@ -20048,7 +19134,7 @@ w13c-lateral-menu-item.integration-category {
       }
     };
     onPopState = () => {
-      this.selection = selectionFromUrl2(this.sources);
+      this.selection = themeSelectionFromUrl(this.sources);
       this.render();
       dispatchThemeCategorySelected(this.selection);
     };
@@ -20082,7 +19168,7 @@ w13c-lateral-menu-item.integration-category {
       }
       this.select(detail.selection.sourceId, detail.selection.categoryId);
     };
-    onSettingsChanged = () => {
+    onSettingsRefreshed = () => {
       this.load();
     };
   }
@@ -20186,7 +19272,7 @@ w13c-lateral-menu-item.integration-category {
       return;
     }
     configured = true;
-    bh({
+    fh({
       json: (value2) => value2 === undefined ? undefined : JSON.stringify(value2)
     });
   }
@@ -26653,8 +25739,8 @@ slot {
   }
   function endpointMethod(group, groups, ref) {
     const sourceId = ref.sourceId ?? group.source.id;
-    const sourceGroup2 = groups.find((candidate) => candidate.source.id === sourceId);
-    const endpoint = sourceGroup2?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
+    const sourceGroup = groups.find((candidate) => candidate.source.id === sourceId);
+    const endpoint = sourceGroup?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
     if (!endpoint) {
       throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
     }
@@ -26910,10 +25996,10 @@ slot {
     try {
       await executeDashboardMediaAction(group, dashboard, detail, media2, context.drafts.get(key) ?? {}, context.groups ?? [group]);
       removeDraftField(context.drafts, key, media2.field);
-      np(`Media ${media2.action} completed`, { type: "success" });
+      ap(`Media ${media2.action} completed`, { type: "success" });
       context.reload(detail.collection, detail.row);
     } catch (error) {
-      np(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
+      ap(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
     }
   }
   function removeDraftField(drafts, key, field2) {
@@ -26945,19 +26031,19 @@ slot {
           await context.reloadDefinitions();
           definitionsReloaded = true;
         } catch {
-          np(`${action.action} completed, but CMS definitions could not be reloaded`, { type: "warning" });
+          ap(`${action.action} completed, but CMS definitions could not be reloaded`, { type: "warning" });
         }
       }
       const completion = finishAction();
       if (result.kind === "download") {
         downloadBlob(result.blob, result.filename);
-        np(`${action.action} downloaded`, { type: "success" });
+        ap(`${action.action} downloaded`, { type: "success" });
         if (definitionsReloaded) {
           context.render();
         }
         return;
       }
-      np(`${action.action} completed`, { type: "success" });
+      ap(`${action.action} completed`, { type: "success" });
       const after = afterTarget(result.after, result.value, actionDetail);
       const resource = postActionResource(result.after, result.value);
       if (completion === "stale") {
@@ -26984,7 +26070,7 @@ slot {
       runPostActionFallback(context, after, detail, action.action, result.value, resource);
     } catch (error) {
       finishAction();
-      np(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
+      ap(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
     }
   }
   function downloadBlob(blob, filename) {
@@ -28032,9 +27118,9 @@ slot { display: contents; }
       }
       context.drafts.set(key, { ...nextDraft, [change.field]: result.value });
       applyLookupCreate(target2, change.field, result.value, result.option);
-      np("Item created", { type: "success" });
+      ap("Item created", { type: "success" });
     } catch (error) {
-      np(error instanceof Error ? error.message : "Lookup creation failed", { type: "error" });
+      ap(error instanceof Error ? error.message : "Lookup creation failed", { type: "error" });
     }
   }
   function applyLookupCreate(target2, field2, value2, option2) {
@@ -28326,7 +27412,7 @@ p {
     };
     onWidgetAction = (event) => {
       if (this.isExampleMode()) {
-        np(`${event.detail.action} clicked`, { type: "success" });
+        ap(`${event.detail.action} clicked`, { type: "success" });
         return;
       }
       if (event.detail.target) {
@@ -28340,14 +27426,14 @@ p {
     };
     onWidgetMediaAction = (event) => {
       if (this.isExampleMode()) {
-        np(`Media ${event.detail.action} event captured`, { type: "success" });
+        ap(`Media ${event.detail.action} event captured`, { type: "success" });
         return;
       }
       runDashboardMediaAction(this.actionContext(), event.detail);
     };
     onWidgetFilterChange = (event) => {
       if (this.isExampleMode()) {
-        np("Filters applied", { type: "success" });
+        ap("Filters applied", { type: "success" });
         return;
       }
       this.setDashboardFilters(event.detail.widget, event.detail.filters);
@@ -35595,7 +34681,7 @@ textarea { min-height: 92px; resize: vertical; }
     }
     root.append(fieldSelect(fields, draft, onChange), operatorSelect(draft, onChange));
     if (operatorNeedsValue(draft.operator)) {
-      root.append(valueInput2(draft, onChange));
+      root.append(valueInput(draft, onChange));
     }
     return root;
   }
@@ -35637,7 +34723,7 @@ textarea { min-height: 92px; resize: vertical; }
     });
     return control2("Operator", select5);
   }
-  function valueInput2(draft, onChange) {
+  function valueInput(draft, onChange) {
     const input3 = document.createElement("input");
     input3.className = "field-value";
     input3.placeholder = "Value";
@@ -36671,21 +35757,21 @@ dd {
     input3.sources.replaceChildren();
     input3.categories.replaceChildren();
     input3.sources.append(sourceButton("Blocks", "block", input3), sourceButton("Templates", "template", input3), sourceButton("Media", "media", input3));
-    input3.categories.append(filterButton2("All", input3.activeCategory === "", () => input3.onCategory(""), blockPickerSourceCount(input3.group, input3.activeSource)));
+    input3.categories.append(filterButton("All", input3.activeCategory === "", () => input3.onCategory(""), blockPickerSourceCount(input3.group, input3.activeSource)));
     for (const category of blockPickerCategories(input3.group, input3.activeSource)) {
-      input3.categories.append(filterButton2(category, input3.activeCategory === category, () => input3.onCategory(category), blockPickerCategoryCount(input3.group, input3.activeSource, category)));
+      input3.categories.append(filterButton(category, input3.activeCategory === category, () => input3.onCategory(category), blockPickerCategoryCount(input3.group, input3.activeSource, category)));
     }
   }
   function sourceButton(label3, source2, input3) {
     const count = blockPickerSourceCount(input3.group, source2);
-    return filterButton2(label3, input3.activeSource === source2, () => {
+    return filterButton(label3, input3.activeSource === source2, () => {
       if (source2 === "media" && input3.onSingleMedia()) {
         return;
       }
       input3.onSource(source2);
     }, count, source2 !== "block" && count === 0);
   }
-  function filterButton2(label3, active, onClick, count, disabled = false) {
+  function filterButton(label3, active, onClick, count, disabled = false) {
     const button2 = document.createElement("button");
     button2.className = "filter";
     button2.type = "button";
@@ -50631,7 +49717,7 @@ dialog::backdrop {
     }
   }
   define(CMS_BINDING_CORE_TAG, ql);
-  bh({
+  fh({
     json: (value3) => value3 === undefined ? undefined : JSON.stringify(value3)
   });
   define("p9r-accordion", vr);

@@ -23,10 +23,6 @@ export function renderToken(
     row.dataset.tokenId = token.id;
     row.dataset.tokenType = token.type;
     row.append(renderLabel(token, catalogEditable), renderTokenControls(token, settings, theme, mode));
-    if (catalogEditable) {
-        row.dataset.catalogEditable = "true";
-        row.append(deleteTokenButton(token));
-    }
     return row;
 }
 
@@ -35,7 +31,7 @@ function deleteTokenButton(token: ThemeToken): HTMLButtonElement {
     button.type = "button";
     button.className = "delete-token";
     button.dataset.deleteToken = "true";
-    button.textContent = "Delete";
+    button.textContent = "Delete token";
     button.ariaLabel = `Delete ${token.label}`;
     return button;
 }
@@ -45,10 +41,27 @@ function renderLabel(token: ThemeToken, catalogEditable: boolean): HTMLElement {
     label.className = "element-label";
     label.append(catalogEditable ? editableLabel(token) : fixedLabel(token));
     const detail = catalogEditable ? editableDescription(token) : fixedDescription(token);
+    label.append(detail, technicalDetails(token, catalogEditable));
+    return label;
+}
+
+function technicalDetails(token: ThemeToken, catalogEditable: boolean): HTMLDetailsElement {
+    const details = document.createElement("details");
+    details.className = "token-details";
+    const summary = document.createElement("summary");
+    summary.textContent = "Details";
     const variable = document.createElement("code");
     variable.textContent = `var(--${token.variable})`;
-    label.append(detail, variable);
-    return label;
+    details.append(summary, variable);
+    if (token.defaults?.light !== undefined) {
+        const defaultValue = document.createElement("span");
+        defaultValue.textContent = `Default: ${token.defaults.light}`;
+        details.append(defaultValue);
+    }
+    if (catalogEditable) {
+        details.append(deleteTokenButton(token));
+    }
+    return details;
 }
 
 function editableDescription(token: ThemeToken): HTMLInputElement {

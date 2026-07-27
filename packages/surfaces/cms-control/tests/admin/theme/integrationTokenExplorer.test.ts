@@ -10,13 +10,10 @@ describe("integration token explorer", () => {
 
         renderTokenExplorer(root, {
             settings,
-            source,
             category: source.categories[0]!,
             theme: settings.themes[0]!,
             mode: "light",
             catalogEditable: false,
-            filter: "all",
-            search: "",
         });
 
         expect(root.querySelector(".group-heading")).toBeNull();
@@ -33,7 +30,6 @@ describe("integration token explorer", () => {
 
         renderTokenExplorer(root, {
             settings,
-            source,
             category: source.categories[1]!,
             theme: settings.themes[0]!,
             mode: "light",
@@ -49,7 +45,7 @@ describe("integration token explorer", () => {
 
 function explorerRoot(): ShadowRoot {
     const root = document.createElement("div").attachShadow({ mode: "open" });
-    root.innerHTML = "<input data-token-search><div data-token-filters></div><div data-groups></div>";
+    root.innerHTML = "<div data-groups></div>";
     return root;
 }
 

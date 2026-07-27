@@ -1,11 +1,17 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import type { ThemeSettings, ThemeSource } from "@bernouy/cms-content";
+import { persistTheme } from "cms-control/components/admin/Theme/editor/controller/persistence";
+import { ThemeEditorState } from "cms-control/components/admin/Theme/editor/controller/state";
 import { renderToken } from "cms-control/components/admin/Theme/editor/tokens/view";
 import {
+    canReferenceThemeToken,
     resolveThemeTokenValue,
-    setThemeTokenReference,
 } from "cms-control/components/admin/Theme/editor/tokens/values";
 
+const originalFetch = globalThis.fetch;
+afterEach(() => {
+    globalThis.fetch = originalFetch;
+});
 describe("theme token references", () => {
     test("offers compatible references inline with searchable ownership labels", () => {
         const settings = fixture();
@@ -44,21 +50,18 @@ describe("theme token references", () => {
         expect(values).toContain("var(--commerce-accent)");
         expect(values).not.toContain("var(--album-accent)");
         expect(
-            setThemeTokenReference(settings, settings.themes[0]!, "light", "brand-color", "commerce-accent"),
+            canReferenceThemeToken(settings, settings.themes[0]!, "light", "brand-color", "commerce-accent"),
         ).toBeTrue();
-        expect(settings.themes[0]!.values.light["brand-color"]).toBe("var(--commerce-accent)");
     });
 
-    test("writes exact var references and rejects cycles", () => {
+    test("rejects cyclic and incompatible references", () => {
         const settings = fixture();
         const theme = settings.themes[0]!;
 
-        expect(setThemeTokenReference(settings, theme, "light", "album-accent", "brand-color")).toBeTrue();
-        expect(theme.values.light["album-accent"]).toBe("var(--brand-color)");
-        expect(setThemeTokenReference(settings, theme, "light", "brand-color", "album-accent")).toBeFalse();
-        expect(setThemeTokenReference(settings, theme, "light", "album-accent", "space-md")).toBeFalse();
-        expect(setThemeTokenReference(settings, theme, "light", "album-accent", "commerce-accent")).toBeFalse();
-        expect(theme.values.light["brand-color"]).toBeUndefined();
+        expect(canReferenceThemeToken(settings, theme, "light", "album-accent", "brand-color")).toBeTrue();
+        expect(canReferenceThemeToken(settings, theme, "light", "brand-color", "album-accent")).toBeFalse();
+        expect(canReferenceThemeToken(settings, theme, "light", "album-accent", "space-md")).toBeFalse();
+        expect(canReferenceThemeToken(settings, theme, "light", "album-accent", "commerce-accent")).toBeFalse();
     });
 
     test("resolves a linked integration color to its final value", () => {
@@ -82,10 +85,61 @@ describe("theme token references", () => {
         expect(resolved.reference?.token.id).toBe("brand-color");
         expect(resolved.value).toBe("#336699");
     });
+
+    test("does not activate a theme locally when persistence fails", async () => {
+        const state = editorStateWithAlternate();
+        const root = messageRoot();
+        let refreshed = false;
+        globalThis.fetch = (async () => new Response("Rejected", { status: 500 })) as unknown as typeof fetch;
+
+        await persistTheme(root, state, true, () => {
+            refreshed = true;
+        });
+
+        expect(state.settings?.activeThemeId).toBe("default");
+        expect(refreshed).toBeFalse();
+        expect(root.querySelector("[data-message]")?.textContent).toBe("Rejected");
+        expect(root.host.hasAttribute("inert")).toBeFalse();
+    });
+
+    test("rejects cycles from an unselected theme before persistence", async () => {
+        const state = editorStateWithAlternate();
+        const alternate = state.settings!.themes[1]!;
+        alternate.values.light = {
+            "brand-color": "var(--album-accent)",
+            "album-accent": "var(--brand-color)",
+        };
+        let calls = 0;
+        globalThis.fetch = (async () => {
+            calls += 1;
+            return new Response();
+        }) as unknown as typeof fetch;
+        const root = messageRoot();
+
+        await persistTheme(root, state, false, () => {});
+
+        expect(calls).toBe(0);
+        expect(root.querySelector("[data-message]")?.textContent).toContain("Circular token references");
+    });
 });
 
 function valueControl(root: ParentNode): HTMLElement & { value: string } {
     return root.querySelector("[data-token-value-control]") as HTMLElement & { value: string };
+}
+
+function editorStateWithAlternate(): ThemeEditorState {
+    const settings = fixture();
+    settings.themes.push({ id: "alternate", name: "Alternate", values: { light: {}, dark: {} } });
+    const state = new ThemeEditorState();
+    state.applyLoaded(settings);
+    state.selectedThemeId = "alternate";
+    return state;
+}
+
+function messageRoot(): ShadowRoot {
+    const root = document.createElement("div").attachShadow({ mode: "open" });
+    root.innerHTML = `<p data-message></p>`;
+    return root;
 }
 
 function fixture(): ThemeSettings {

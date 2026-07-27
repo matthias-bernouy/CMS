@@ -1,26 +1,19 @@
 import type { ThemeSettings } from "@bernouy/cms-content";
 
-import type { ThemeSelection } from "../../events";
-import type { LoadedThemeSettings } from "../api";
-import { addCategory, addTheme, addToken, removeCategory, removeToken, selectionFromUrl } from "../model";
+import { themeSelectionFromUrl, type ThemeSelection } from "../../events";
+import { addCategory, addTheme, addToken, removeCategory, removeToken } from "../model";
 import type { ThemeEditorViewState } from "../view";
-import { ThemeExplorerController } from "./explorerController";
 
 export class ThemeEditorState {
     selection: ThemeSelection = { sourceId: "", categoryId: "" };
     mode: "light" | "dark" = "light";
     settings: ThemeSettings | null = null;
     selectedThemeId = "";
-    siteName = "";
-    canPersist = true;
-    readonly explorer = new ThemeExplorerController();
 
-    applyLoaded(loaded: LoadedThemeSettings): void {
-        this.canPersist = loaded.canPersist;
-        this.settings = loaded.settings;
-        this.siteName = loaded.siteName;
+    applyLoaded(settings: ThemeSettings): void {
+        this.settings = structuredClone(settings);
         this.selectedThemeId = this.settings.activeThemeId || this.settings.themes[0]?.id || "";
-        this.selection = selectionFromUrl(this.settings);
+        this.selection = themeSelectionFromUrl(this.settings.sources);
     }
 
     viewState(): ThemeEditorViewState | undefined {
@@ -32,10 +25,6 @@ export class ThemeEditorState {
             selection: this.selection,
             selectedThemeId: this.selectedThemeId,
             mode: this.mode,
-            siteName: this.siteName,
-            canPersist: this.canPersist,
-            tokenFilter: this.explorer.tokenFilter,
-            tokenSearch: this.explorer.tokenSearch,
         };
     }
 
@@ -54,7 +43,6 @@ export class ThemeEditorState {
         const added = addCategory(this.settings, this.selection);
         if (added) {
             this.selection = { sourceId: added.sourceId, categoryId: added.category.id };
-            this.explorer.reset();
         }
         return added;
     }
@@ -63,11 +51,7 @@ export class ThemeEditorState {
         if (!this.settings) {
             return false;
         }
-        if (!addToken(this.settings, this.selection)) {
-            return false;
-        }
-        this.explorer.reset();
-        return true;
+        return addToken(this.settings, this.selection);
     }
 
     deleteCategory(): ReturnType<typeof removeCategory> {
@@ -77,17 +61,12 @@ export class ThemeEditorState {
         const removed = removeCategory(this.settings, this.selection);
         if (removed) {
             this.selection = removed.selection;
-            this.explorer.reset();
         }
         return removed;
     }
 
     deleteToken(tokenId: string): boolean {
-        if (!this.settings || !removeToken(this.settings, this.selection, tokenId)) {
-            return false;
-        }
-        this.explorer.reset();
-        return true;
+        return Boolean(this.settings && removeToken(this.settings, this.selection, tokenId));
     }
 
     selectCategory(selection: ThemeSelection): boolean {
@@ -96,7 +75,6 @@ export class ThemeEditorState {
             return false;
         }
         this.selection = selection;
-        this.explorer.reset();
         return true;
     }
 }

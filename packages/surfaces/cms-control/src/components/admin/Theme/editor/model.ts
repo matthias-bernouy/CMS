@@ -1,7 +1,7 @@
 import type { ThemeCategory, ThemeDefinition, ThemeSettings, ThemeSource } from "@bernouy/cms-content";
 
 import type { ThemeSelection } from "../events";
-import { isIntegrationSource, isThemeCatalogEditable } from "../ownership";
+import { isThemeCatalogEditable } from "../ownership";
 
 export type RemovedThemeCategory = {
     sourceId: string;
@@ -21,19 +21,6 @@ export function currentCategory(settings: ThemeSettings | null, selection: Theme
 
 export function currentTheme(settings: ThemeSettings | null, selectedThemeId: string): ThemeDefinition | undefined {
     return settings?.themes.find((item) => item.id === selectedThemeId) ?? settings?.themes[0];
-}
-
-export function selectionFromUrl(settings: ThemeSettings | null): ThemeSelection {
-    const sources = settings?.sources ?? [];
-    const url = new URL(window.location.href);
-    const sourceId = url.searchParams.get("type") ?? "";
-    const categoryId = url.searchParams.get("category") ?? "";
-    const source =
-        sources.find((item) => item.id === sourceId) ??
-        sources.find((item) => item.categories.some((category) => category.id === categoryId)) ??
-        sources[0];
-    const category = source?.categories.find((item) => item.id === categoryId) ?? source?.categories[0];
-    return { sourceId: source?.id ?? "", categoryId: category?.id ?? "" };
 }
 
 export function addTheme(settings: ThemeSettings): string {
@@ -141,7 +128,7 @@ export function removeCategory(settings: ThemeSettings, selection: ThemeSelectio
     };
 }
 
-export function resetIntegrationTokenValue(
+export function resetTokenValue(
     settings: ThemeSettings,
     selection: ThemeSelection,
     selectedThemeId: string,
@@ -151,7 +138,7 @@ export function resetIntegrationTokenValue(
     const source = currentSource(settings, selection);
     const token = source?.categories.flatMap((category) => category.tokens).find((item) => item.id === tokenId);
     const theme = currentTheme(settings, selectedThemeId);
-    if (!isIntegrationSource(source) || !token || !theme) {
+    if (!source || !token || !theme) {
         return false;
     }
     if (!token.defaults || !Object.hasOwn(theme.values[mode] ?? {}, token.id)) {

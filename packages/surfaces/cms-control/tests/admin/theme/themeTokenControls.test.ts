@@ -10,7 +10,7 @@ describe("theme token controls", () => {
 
         expect(row.querySelector<HTMLInputElement>('input[type="color"]')?.value).toBe("#336699");
         expect(valueControl(row).value).toBe("var(--brand-color)");
-        expect(row.querySelector(".reference-status")?.textContent).toContain("Uses Brand · #336699");
+        expect(valueControl(row).hasAttribute("invalid")).toBeFalse();
     });
 
     test("uses a known fallback for calculated integration colors", () => {
@@ -28,8 +28,12 @@ describe("theme token controls", () => {
         const accent = settings.sources[0]!.categories[0]!.tokens[1]!;
         accent.defaults!.light = "var(--external-accent)";
         const row = renderToken(accent, settings, settings.themes[0]!, "light", false);
+        const control = valueControl(row);
 
         expect(row.querySelector<HTMLInputElement>('input[type="color"]')?.hidden).toBeTrue();
+        expect(control.hasAttribute("invalid")).toBeTrue();
+        expect(control.getAttribute("hint-level")).toBe("error");
+        expect(control.getAttribute("hint")).toBe("This value references a token that is not available.");
     });
 
     test("renders dedicated length, number and shadow controls", () => {

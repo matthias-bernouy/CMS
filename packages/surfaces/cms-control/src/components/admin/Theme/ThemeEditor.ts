@@ -1,16 +1,14 @@
 import { Component } from "@bernouy/components/base";
+import { adminSystemSettingsStore } from "../Common/SystemSettings/store";
 
 import {
     THEME_CATEGORY_SELECTED_EVENT,
     dispatchThemeCategoryAdded,
     dispatchThemeCategoryDeleted,
-    dispatchThemeSettingsChanged,
+    dispatchThemeSettingsRefreshed,
     type ThemeSelection,
 } from "./events";
-import type { ThemeExplorerContext } from "./editor/controller/explorerController";
 import { clickAction, handleThemeInput, resetThemeToken } from "./editor/controller/inputEvents";
-import { addThemeEditorListeners, removeThemeEditorListeners } from "./editor/controller/lifecycle";
-import { loadThemeEditor } from "./editor/controller/load";
 import { persistTheme } from "./editor/controller/persistence";
 import { ThemeEditorState } from "./editor/controller/state";
 import css from "./editor/styles";
@@ -26,31 +24,39 @@ export class CmsThemeEditor extends Component {
 
     override connectedCallback(): void {
         super.connectedCallback();
-        addThemeEditorListeners(this.shadowRoot, THEME_CATEGORY_SELECTED_EVENT, this.eventHandlers());
-        void loadThemeEditor(this.shadowRoot, this.state, () => this.render(), dispatchThemeSettingsChanged);
+        this.shadowRoot?.addEventListener("click", this.onClick);
+        this.shadowRoot?.addEventListener("change", this.onChange);
+        this.shadowRoot?.addEventListener("input", this.onInput);
+        window.addEventListener(THEME_CATEGORY_SELECTED_EVENT, this.onCategorySelected as EventListener);
+        void this.load();
     }
 
     disconnectedCallback(): void {
-        removeThemeEditorListeners(this.shadowRoot, THEME_CATEGORY_SELECTED_EVENT, this.eventHandlers());
+        this.shadowRoot?.removeEventListener("click", this.onClick);
+        this.shadowRoot?.removeEventListener("change", this.onChange);
+        this.shadowRoot?.removeEventListener("input", this.onInput);
+        window.removeEventListener(THEME_CATEGORY_SELECTED_EVENT, this.onCategorySelected as EventListener);
+    }
+
+    private async load(): Promise<void> {
+        setThemeMessage(this.shadowRoot, "Loading theme…");
+        try {
+            this.state.applyLoaded((await adminSystemSettingsStore.load()).theme);
+            this.render();
+            setThemeMessage(this.shadowRoot, "");
+        } catch (error) {
+            setThemeMessage(this.shadowRoot, error instanceof Error ? error.message : "Unable to load theme", true);
+        }
     }
 
     private render(): void {
         const viewState = this.state.viewState();
-        if (!viewState || !this.shadowRoot) {
-            return;
-        }
-        this.state.mode = renderThemeEditor(this.shadowRoot, viewState);
-        const context = this.explorerContext();
-        if (context) {
-            this.state.explorer.renderReferencePicker(context);
+        if (viewState && this.shadowRoot) {
+            this.state.mode = renderThemeEditor(this.shadowRoot, viewState);
         }
     }
 
     private onClick = (event: Event): void => {
-        const context = this.explorerContext();
-        if (context && this.state.explorer.handleClick(event, context)) {
-            return;
-        }
         if (
             this.state.settings &&
             resetThemeToken(
@@ -80,65 +86,34 @@ export class CmsThemeEditor extends Component {
                 this.render();
             }
         } else if (action === "delete-category") {
-            if (!window.confirm("Delete this category and all of its tokens?")) {
-                return;
-            }
-            const removed = this.state.deleteCategory();
-            if (removed) {
-                this.render();
-                dispatchThemeCategoryDeleted(removed);
-            }
+            this.deleteCategory();
         } else if (action === "delete-token") {
-            const tokenId = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-token-id]")?.dataset
-                .tokenId;
-            if (tokenId && window.confirm("Delete this token from every theme?") && this.state.deleteToken(tokenId)) {
-                this.render();
-            }
+            this.deleteToken(event);
         } else if (action === "save" || action === "activate") {
-            void persistTheme(this.shadowRoot, this.state, action === "activate", () => {
-                this.render();
-                dispatchThemeSettingsChanged();
-            });
-        }
-        const mode = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>("[data-mode]")?.dataset.mode;
-        if (mode === "light" || mode === "dark") {
-            this.state.mode = mode;
-            this.render();
+            void persistTheme(this.shadowRoot, this.state, action === "activate", () => this.refreshAfterSave());
         }
     };
 
     private onInput = (event: Event): void => {
-        const context = this.explorerContext();
-        if (context && this.state.explorer.handleInput(event, context)) {
-            return;
-        }
-        if (this.state.settings && this.shadowRoot) {
-            handleThemeInput(event, {
-                root: this.shadowRoot,
-                settings: this.state.settings,
-                selection: this.state.selection,
-                selectedThemeId: this.state.selectedThemeId,
-                mode: this.state.mode,
-            });
-        }
+        this.handleInput(event);
     };
 
     private onChange = (event: Event): void => {
         const target = event.target as HTMLElement & { value?: string };
         if (target.matches?.("[data-theme-switch]") && target.value) {
             this.state.selectedThemeId = target.value;
-            this.state.explorer.reset(this.explorerContext());
             this.render();
             return;
         }
-        if (target.matches?.("[data-token-type-control]") && this.state.settings && this.shadowRoot) {
-            handleThemeInput(event, {
-                root: this.shadowRoot,
-                settings: this.state.settings,
-                selection: this.state.selection,
-                selectedThemeId: this.state.selectedThemeId,
-                mode: this.state.mode,
-            });
+        if (target.matches?.("[data-mode-switch]") && (target.value === "light" || target.value === "dark")) {
+            if (this.state.mode !== target.value) {
+                this.state.mode = target.value;
+                this.render();
+            }
+            return;
+        }
+        if (target.matches?.("[data-token-type-control], [data-token-value-control], input[type='color']")) {
+            this.handleInput(event);
             this.render();
         }
     };
@@ -149,35 +124,46 @@ export class CmsThemeEditor extends Component {
         }
     };
 
-    private onKeyDown = (event: Event): void => {
-        const context = this.explorerContext();
-        if (context) {
-            this.state.explorer.handleKeyDown(event, context);
+    private handleInput(event: Event): void {
+        if (!this.state.settings || !this.shadowRoot) {
+            return;
         }
-    };
-
-    private explorerContext(): ThemeExplorerContext | undefined {
-        if (!this.shadowRoot || !this.state.settings) {
-            return undefined;
-        }
-        return {
+        handleThemeInput(event, {
             root: this.shadowRoot,
             settings: this.state.settings,
+            selection: this.state.selection,
             selectedThemeId: this.state.selectedThemeId,
             mode: this.state.mode,
-            render: () => this.render(),
-            showError: (message) => setThemeMessage(this.shadowRoot, message, true),
-        };
+        });
     }
 
-    private eventHandlers() {
-        return {
-            click: this.onClick,
-            change: this.onChange,
-            input: this.onInput,
-            keydown: this.onKeyDown,
-            selection: this.onCategorySelected as EventListener,
-        };
+    private async refreshAfterSave(): Promise<void> {
+        const selectedThemeId = this.state.selectedThemeId;
+        adminSystemSettingsStore.invalidate();
+        this.state.applyLoaded((await adminSystemSettingsStore.load()).theme);
+        if (this.state.settings?.themes.some((theme) => theme.id === selectedThemeId)) {
+            this.state.selectedThemeId = selectedThemeId;
+        }
+        this.render();
+        dispatchThemeSettingsRefreshed();
+    }
+
+    private deleteCategory(): void {
+        if (!window.confirm("Delete this group and all of its tokens?")) {
+            return;
+        }
+        const removed = this.state.deleteCategory();
+        if (removed) {
+            this.render();
+            dispatchThemeCategoryDeleted(removed);
+        }
+    }
+
+    private deleteToken(event: Event): void {
+        const tokenId = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-token-id]")?.dataset.tokenId;
+        if (tokenId && window.confirm("Delete this token from every theme?") && this.state.deleteToken(tokenId)) {
+            this.render();
+        }
     }
 }
 

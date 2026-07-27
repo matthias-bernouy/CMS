@@ -6,7 +6,7 @@ import {
     addToken,
     removeCategory,
     removeToken,
-    resetIntegrationTokenValue,
+    resetTokenValue,
 } from "cms-control/components/admin/Theme/editor/model";
 
 describe("integration theme editor actions", () => {
@@ -38,13 +38,20 @@ describe("integration theme editor actions", () => {
         const settings = fixture();
         const selection = { sourceId: "integration-demo", categoryId: "surface" };
 
-        expect(
-            resetIntegrationTokenValue(settings, selection, "default", "light", "integration-demo-accent"),
-        ).toBeTrue();
+        expect(resetTokenValue(settings, selection, "default", "light", "integration-demo-accent")).toBeTrue();
         expect(settings.themes[0]!.values.light).not.toHaveProperty("integration-demo-accent");
+        expect(resetTokenValue(settings, selection, "default", "light", "integration-demo-accent")).toBeFalse();
+    });
+
+    test("resets a site token when its catalogue declares a default", () => {
+        const settings = defaultThemeSettings();
+        settings.sources[0]!.categories[0]!.tokens[0]!.defaults = { light: "#000000" };
+        settings.themes[0]!.values.light["primary-base"] = "#123456";
+
         expect(
-            resetIntegrationTokenValue(settings, selection, "default", "light", "integration-demo-accent"),
-        ).toBeFalse();
+            resetTokenValue(settings, { sourceId: "colors", categoryId: "brand" }, "default", "light", "primary-base"),
+        ).toBeTrue();
+        expect(settings.themes[0]!.values.light).not.toHaveProperty("primary-base");
     });
 
     test("allows catalogue creation in every ordinary source", () => {
@@ -122,12 +129,8 @@ describe("integration theme editor actions", () => {
 function eventRoot(): ShadowRoot {
     const host = document.createElement("div");
     const root = host.attachShadow({ mode: "open" });
-    root.innerHTML = `
-        <span data-category-title></span><section data-category-section></section><span data-category-description></span>
-        <div data-token-id="integration-demo-accent">
-            <input data-token-label><input data-value-control>
-        </div>
-    `;
+    root.innerHTML = `<section data-category-section></section>
+        <div data-token-id="integration-demo-accent"><input data-token-label><input data-value-control></div>`;
     return root;
 }
 

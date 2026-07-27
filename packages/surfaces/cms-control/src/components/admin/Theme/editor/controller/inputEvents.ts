@@ -2,7 +2,7 @@ import type { ThemeSettings, ThemeTokenType } from "@bernouy/cms-content";
 
 import { dispatchThemeCategoryUpdated, type ThemeSelection } from "../../events";
 import { isThemeCatalogEditable } from "../../ownership";
-import { currentCategory, currentSource, currentTheme, resetIntegrationTokenValue } from "../model";
+import { currentCategory, currentSource, currentTheme, resetTokenValue } from "../model";
 
 export type ThemeInputContext = {
     root: ShadowRoot;
@@ -90,7 +90,7 @@ export function resetThemeToken(
 ): boolean {
     const tokenId = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-reset-token]")?.dataset
         .resetToken;
-    return tokenId ? resetIntegrationTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
+    return tokenId ? resetTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
 }
 
 export function clickAction(

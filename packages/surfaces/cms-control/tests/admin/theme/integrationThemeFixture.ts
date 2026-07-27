@@ -4,16 +4,14 @@ export function integrationThemeEditorRoot(): ShadowRoot {
     const host = document.createElement("div");
     const root = host.attachShadow({ mode: "open" });
     root.innerHTML = `
-        <span data-category-title></span>
+        <span data-source-title></span>
         <div data-theme-switch></div>
-        <button data-add-theme-category></button><button data-add-element></button>
-        <button data-save-theme></button><button data-activate-theme></button>
-        <input data-theme-name-input><span data-theme-status></span><span data-site-name></span>
-        <div data-source-provenance><span data-source-owner-kind></span><span data-source-owner-label></span><span data-source-owner-note></span></div>
-        <div data-mode-switch><button data-mode="light"></button><button data-mode="dark"></button></div>
+        <div data-editor-context><div data-category-actions><button data-add-theme-category></button><button data-add-element></button><button data-delete-category></button></div></div>
+        <button data-save-theme></button><button data-activate-theme></button><span data-theme-status></span>
+        <input data-theme-name-input><div data-mode-switch></div>
         <section data-category-section></section>
-        <input data-token-search><div data-token-filters></div><div data-groups></div>
-        <div data-category-fields><input data-category-label-input><input data-category-description-input><button data-delete-category></button></div>
+        <div data-groups></div>
+        <div data-category-fields><input data-category-label-input><input data-category-description-input></div>
     `;
     return root;
 }

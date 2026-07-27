@@ -1,79 +1,60 @@
 <cms-shell-detail>
-    <span slot="title" data-category-title>Theme</span>
+    <span slot="title" data-source-title>Theme</span>
     <div slot="actions" class="theme-actions">
         <p9r-select data-theme-switch aria-label="Select theme"></p9r-select>
-        <p9r-button type="button" variant="ghost" data-add-theme>+ Theme</p9r-button>
-        <p9r-button type="button" variant="ghost" data-add-theme-category hidden>+ Category</p9r-button>
-        <p9r-button type="button" variant="ghost" data-add-element hidden>+ Token</p9r-button>
+        <p9r-tag color="success" data-theme-status>Active</p9r-tag>
         <p9r-button type="button" color="primary" data-save-theme>Save</p9r-button>
-        <p9r-button type="button" color="primary" variant="outlined" data-activate-theme>Activate</p9r-button>
+        <p9r-action-menu label="Theme actions">
+            <p9r-action-menu-section label="Theme">
+                <p9r-action-menu-item data-add-theme>New theme</p9r-action-menu-item>
+                <p9r-action-menu-item data-activate-theme>Activate theme</p9r-action-menu-item>
+            </p9r-action-menu-section>
+        </p9r-action-menu>
     </div>
 
-    <section slot="main" class="theme-overview-panel" data-theme-overview>
-        <div class="theme-overview">
-            <label class="theme-name-field">
-                <span>Theme name</span>
-                <input class="theme-name" type="text" aria-label="Theme name" data-theme-name-input>
-            </label>
-            <div class="theme-context">
-                <p9r-tag color="success" data-theme-status>Active</p9r-tag>
-                <span data-site-name></span>
-            </div>
-        </div>
-        <p class="theme-message" data-message aria-live="polite"></p>
-    </section>
+    <p class="theme-message" slot="main" data-message aria-live="polite"></p>
 
     <cms-detail-section slot="main" density="compact" data-category-section>
-        <div class="editor-context-bar">
-            <div class="source-provenance" data-source-provenance>
-                <p9r-tag data-source-owner-kind>Integration</p9r-tag>
-                <strong data-source-owner-label></strong>
-                <span data-source-owner-note></span>
-            </div>
-            <div class="mode-switch" data-mode-switch hidden>
-                <button type="button" data-mode="light">Light mode</button>
-                <button type="button" data-mode="dark">Dark mode</button>
+        <div class="editor-context-bar" data-editor-context>
+            <div class="context-controls">
+                <p9r-segmented-switch data-mode-switch value="light" label="Mode" hidden>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </p9r-segmented-switch>
+                <div class="category-actions" data-category-actions hidden>
+                    <p9r-button type="button" variant="ghost" data-add-element>Add token</p9r-button>
+                    <p9r-action-menu label="Group actions">
+                        <p9r-action-menu-section label="Group">
+                            <p9r-action-menu-item data-add-theme-category>New group</p9r-action-menu-item>
+                            <p9r-action-menu-item color="danger" data-delete-category>Delete group</p9r-action-menu-item>
+                        </p9r-action-menu-section>
+                    </p9r-action-menu>
+                </div>
             </div>
         </div>
-        <div class="token-tools">
-            <label class="token-search">
-                <span class="visually-hidden">Search tokens</span>
-                <input type="search" placeholder="Search tokens, variables or categories…" data-token-search>
-            </label>
-            <div class="token-filters" data-token-filters aria-label="Filter token types"></div>
-        </div>
+
         <details class="category-fields" data-category-fields hidden>
-            <summary>Category settings</summary>
+            <summary>Group details</summary>
             <div class="category-fields-grid">
                 <label>
-                    <span>Category name</span>
+                    <span>Name</span>
                     <input type="text" data-category-label-input>
                 </label>
                 <label>
                     <span>Description</span>
                     <input type="text" data-category-description-input>
                 </label>
-                <button type="button" class="delete-category" data-delete-category>Delete category</button>
             </div>
         </details>
-        <div class="groups" data-groups></div>
-    </cms-detail-section>
 
-    <div slot="main" class="reference-picker-backdrop" data-reference-picker hidden>
-        <section class="reference-picker" role="dialog" aria-modal="true" aria-labelledby="reference-picker-title">
-            <header>
-                <div>
-                    <span class="eyebrow">Token reference</span>
-                    <h4 id="reference-picker-title" data-reference-picker-title>Link token</h4>
-                </div>
-                <button type="button" class="reference-close" data-close-token-reference aria-label="Close token picker">×</button>
-            </header>
-            <label class="reference-search">
-                <span class="visually-hidden">Search available tokens</span>
-                <input type="search" placeholder="Search by name, variable or integration…" data-reference-search>
+        <div class="groups" data-groups></div>
+
+        <details class="theme-settings">
+            <summary>Theme details</summary>
+            <label class="theme-name-field">
+                <span>Name</span>
+                <input type="text" data-theme-name-input>
             </label>
-            <div class="reference-results" data-reference-results></div>
-            <p class="reference-empty" data-reference-empty hidden>No matching token.</p>
-        </section>
-    </div>
+        </details>
+    </cms-detail-section>
 </cms-shell-detail>

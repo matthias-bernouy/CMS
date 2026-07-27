@@ -2,8 +2,6 @@ import type { ThemeDefinition, ThemeMode, ThemeSettings, ThemeSource, ThemeToken
 
 import { directTokenReference, parseDirectTokenReference } from "./cssReference";
 
-export { directTokenReference } from "./cssReference";
-
 export type ThemeTokenEntry = {
     source: ThemeSource;
     category: ThemeSource["categories"][number];
@@ -81,11 +79,11 @@ export function canReferenceThemeToken(
     return true;
 }
 
-export function compatibleTokenTypes(current: ThemeToken, target: ThemeToken): boolean {
+function compatibleTokenTypes(current: ThemeToken, target: ThemeToken): boolean {
     return current.type === "value" || current.type === target.type;
 }
 
-export function compatibleTokenOwners(current: ThemeTokenEntry, target: ThemeTokenEntry): boolean {
+function compatibleTokenOwners(current: ThemeTokenEntry, target: ThemeTokenEntry): boolean {
     const currentOwner = current.source.owner;
     const targetOwner = target.source.owner;
     return (
@@ -93,25 +91,6 @@ export function compatibleTokenOwners(current: ThemeTokenEntry, target: ThemeTok
         targetOwner?.kind !== "integration" ||
         currentOwner.integrationId === targetOwner.integrationId
     );
-}
-
-export function setThemeTokenReference(
-    settings: ThemeSettings,
-    theme: ThemeDefinition,
-    mode: ThemeMode,
-    tokenId: string,
-    targetId: string,
-): boolean {
-    if (!canReferenceThemeToken(settings, theme, mode, tokenId, targetId)) {
-        return false;
-    }
-    const target = themeTokenEntries(settings).find((entry) => entry.token.id === targetId);
-    if (!target) {
-        return false;
-    }
-    theme.values[mode] ??= {};
-    theme.values[mode][tokenId] = `var(--${target.token.variable})`;
-    return true;
 }
 
 export function themeReferenceCycles(settings: ThemeSettings, theme: ThemeDefinition, mode: ThemeMode): string[] {
