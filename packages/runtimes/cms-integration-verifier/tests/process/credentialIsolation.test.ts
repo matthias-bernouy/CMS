@@ -96,6 +96,9 @@ function recursivelyInspect(input: VerificationSandboxInput): string {
 
 function disposableDatabase() {
     return {
+        async probe(signal: AbortSignal) {
+            signal.throwIfAborted();
+        },
         async acquire() {
             return {
                 credential: {

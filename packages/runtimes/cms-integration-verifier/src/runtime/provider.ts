@@ -20,7 +20,7 @@ export async function loadDisposableVerificationDatabaseProvider(
         throw new Error("Disposable verification database provider module has no factory");
     }
     const provider = await (factory as DisposableVerificationDatabaseProviderFactory)();
-    if (!provider || typeof provider.acquire !== "function") {
+    if (!provider || typeof provider.probe !== "function" || typeof provider.acquire !== "function") {
         throw new Error("Disposable verification database provider is invalid");
     }
     return provider;

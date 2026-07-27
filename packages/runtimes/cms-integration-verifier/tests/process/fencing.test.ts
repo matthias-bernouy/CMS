@@ -15,6 +15,9 @@ describe("process sandbox fencing", () => {
                 jobListLimit: 1,
                 leaseRenewalIntervalMs: 30_000,
                 databases: {
+                    async probe(signal) {
+                        signal.throwIfAborted();
+                    },
                     async acquire() {
                         return {
                             credential: {

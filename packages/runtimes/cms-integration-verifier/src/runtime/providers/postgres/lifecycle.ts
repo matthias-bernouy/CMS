@@ -23,6 +23,42 @@ begin
     if not exists (select 1 from pg_catalog.pg_roles where rolname = 'service_role') then create role service_role nologin bypassrls; end if;
 end
 $$`);
+    await assertSharedRoles(admin);
+}
+
+export async function assertSharedRoles(admin: SQL): Promise<void> {
+    const rows = (await admin.unsafe(`select rolname::text as name, rolcanlogin as login,
+      rolbypassrls as "bypassRls", rolsuper, rolcreatedb, rolcreaterole, rolreplication
+      from pg_catalog.pg_roles where rolname = any(array['anon', 'authenticated', 'service_role']::text[])
+      order by rolname collate "C"`)) as Array<{
+        name: string;
+        login: boolean;
+        bypassRls: boolean;
+        rolsuper: boolean;
+        rolcreatedb: boolean;
+        rolcreaterole: boolean;
+        rolreplication: boolean;
+    }>;
+    const expected = [
+        { name: "anon", bypassRls: false },
+        { name: "authenticated", bypassRls: false },
+        { name: "service_role", bypassRls: true },
+    ];
+    if (
+        rows.length !== expected.length ||
+        rows.some(
+            (row, index) =>
+                row.name !== expected[index]?.name ||
+                row.bypassRls !== expected[index]?.bypassRls ||
+                row.login ||
+                row.rolsuper ||
+                row.rolcreatedb ||
+                row.rolcreaterole ||
+                row.rolreplication,
+        )
+    ) {
+        throw new Error("Disposable PostgreSQL shared roles do not match the verification contract");
+    }
 }
 
 export async function bootstrapDatabase(config: PostgresProviderConfig, database: string, role: string): Promise<void> {
@@ -45,20 +81,5 @@ export async function bootstrapDatabase(config: PostgresProviderConfig, database
         await sql.unsafe("reset role");
     } finally {
         await sql.close();
-    }
-}
-
-export async function cleanupDatabase(
-    admin: SQL,
-    role: string,
-    database: string,
-    createdDatabase: boolean,
-    createdRole: boolean,
-): Promise<void> {
-    if (createdDatabase) {
-        await admin.unsafe(`drop database if exists ${identifier(database)} with (force)`);
-    }
-    if (createdRole) {
-        await admin.unsafe(`drop role if exists ${identifier(role)}`);
     }
 }

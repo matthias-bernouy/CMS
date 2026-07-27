@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test";
 import { SQL } from "bun";
-import { createDisposableVerificationDatabaseProviderFromEnv } from "../../src/runtime/providers/postgres";
-import { DIGEST_A, DIGEST_B } from "../fixtures/contracts";
-import { disposablePostgresAvailable, startDisposablePostgres } from "./postgresFixture";
+import { createDisposableVerificationDatabaseProviderFromEnv } from "../../../src/runtime/providers/postgres";
+import { POSTGRES_DEDICATED_CLUSTER_CONTRACT } from "../../../src/runtime/providers/postgres/fingerprint";
+import { DIGEST_A, DIGEST_B } from "../../fixtures/contracts";
+import { disposablePostgresAvailable, startDisposablePostgres } from "../postgresFixture";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
 
@@ -11,6 +12,7 @@ postgresTest(
     async () => {
         const fixture = await startDisposablePostgres();
         try {
+            await provisionDedicatedCluster(fixture);
             const provider = await createDisposableVerificationDatabaseProviderFromEnv({
                 CMS_INTEGRATION_VERIFIER_POSTGRES_HOST: fixture.host,
                 CMS_INTEGRATION_VERIFIER_POSTGRES_PORT: String(fixture.port),
@@ -67,6 +69,7 @@ postgresTest(
                     fixture.executeAs(lease.credential.connectionUri, "select pg_catalog.pg_read_file('/etc/passwd')")
                         .exitCode,
                 ).toBeGreaterThan(0);
+                expect(fixture.executeAs(lease.credential.connectionUri, "set role anon").exitCode).toBeGreaterThan(0);
                 const extension = fixture.executeAs(lease.credential.connectionUri, "create extension hstore");
                 expect(extension.exitCode).toBeGreaterThan(0);
                 expect(extension.stderr).toContain("not allowlisted");
@@ -86,10 +89,11 @@ postgresTest(
 );
 
 postgresTest(
-    "recovers orphaned databases and roles before accepting work after a restart",
+    "preserves another provider's active lease and recovers it only after expiry",
     async () => {
         const fixture = await startDisposablePostgres();
         try {
+            await provisionDedicatedCluster(fixture);
             const source = {
                 CMS_INTEGRATION_VERIFIER_POSTGRES_HOST: fixture.host,
                 CMS_INTEGRATION_VERIFIER_POSTGRES_PORT: String(fixture.port),
@@ -104,13 +108,26 @@ postgresTest(
             );
             const role = decodeURIComponent(new URL(orphan.credential.connectionUri).username);
 
-            await createDisposableVerificationDatabaseProviderFromEnv(source);
-
             const admin = new SQL(
                 `postgresql://postgres:${fixture.password}@${fixture.host}:${fixture.port}/postgres?sslmode=disable`,
                 { max: 1 },
             );
             try {
+                await createDisposableVerificationDatabaseProviderFromEnv(source);
+                expect(await databaseCount(admin, orphan.credential.databaseId)).toBe(1);
+                const stillActive = new SQL(orphan.credential.connectionUri, { max: 1 });
+                try {
+                    expect((await stillActive.unsafe("select 1 as value"))[0]?.value).toBe(1);
+                } finally {
+                    await stillActive.close();
+                }
+                await admin.unsafe(
+                    `update cms_verifier_provider.owned_leases
+                      set lease_expires_at = clock_timestamp() - interval '1 second'
+                      where database_name = $1`,
+                    [orphan.credential.databaseId],
+                );
+                await createDisposableVerificationDatabaseProviderFromEnv(source);
                 const remaining = (await admin.unsafe(
                     "select (select count(*)::int from pg_catalog.pg_database where datname = $1) as databases, (select count(*)::int from pg_catalog.pg_roles where rolname = $2) as roles",
                     [orphan.credential.databaseId, role],
@@ -126,3 +143,22 @@ postgresTest(
     },
     30_000,
 );
+
+async function provisionDedicatedCluster(fixture: Awaited<ReturnType<typeof startDisposablePostgres>>): Promise<void> {
+    const admin = new SQL(
+        `postgresql://postgres:${fixture.password}@${fixture.host}:${fixture.port}/postgres?sslmode=disable`,
+        { max: 1 },
+    );
+    try {
+        await admin.unsafe(`comment on database postgres is '${POSTGRES_DEDICATED_CLUSTER_CONTRACT}'`);
+    } finally {
+        await admin.close();
+    }
+}
+
+async function databaseCount(admin: SQL, database: string): Promise<number> {
+    const rows = (await admin.unsafe("select count(*)::int as count from pg_catalog.pg_database where datname = $1", [
+        database,
+    ])) as Array<{ count: number }>;
+    return rows[0]?.count ?? -1;
+}

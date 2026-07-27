@@ -21,6 +21,9 @@ describe("verification supervisor credential boundary", () => {
             jobListLimit: 1,
             leaseRenewalIntervalMs: 30_000,
             databases: {
+                async probe(signal) {
+                    signal.throwIfAborted();
+                },
                 async acquire() {
                     return {
                         credential: { databaseId: "database-1", connectionUri: DATABASE_URI },
@@ -118,6 +121,9 @@ describe("verification supervisor credential boundary", () => {
             jobListLimit: 1,
             leaseRenewalIntervalMs: 30_000,
             databases: {
+                async probe(signal) {
+                    signal.throwIfAborted();
+                },
                 async acquire() {
                     acquired = true;
                     throw new Error("must not run");
@@ -138,6 +144,9 @@ describe("verification supervisor credential boundary", () => {
 
 function disposableDatabase() {
     return {
+        async probe(signal: AbortSignal) {
+            signal.throwIfAborted();
+        },
         async acquire() {
             return {
                 credential: { databaseId: "database-1", connectionUri: DATABASE_URI },

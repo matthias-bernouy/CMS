@@ -36,6 +36,7 @@ export function createVerificationSupervisor(config: VerificationSupervisorConfi
             }
             active = true;
             try {
+                await assertDatabaseAvailable(config, signal);
                 const candidates = await config.client.listClaimable(config.jobListLimit);
                 if (candidates.length === 0) {
                     return { outcome: "idle" };
@@ -57,6 +58,7 @@ async function executeClaim(
     signal: AbortSignal,
 ): Promise<VerificationSupervisorRunResult> {
     assertSandboxRunner(config, claimed);
+    await assertDatabaseAvailable(config, signal);
     let database: DisposableVerificationDatabaseLease;
     try {
         database = await config.databases.acquire(
@@ -116,6 +118,21 @@ async function executeClaim(
                 );
             }
         }
+    }
+}
+
+async function assertDatabaseAvailable(config: VerificationSupervisorConfig, signal: AbortSignal): Promise<void> {
+    try {
+        await config.databases.probe(signal);
+    } catch {
+        if (signal.aborted) {
+            throw new VerificationSupervisorError("aborted", "Verification supervisor was stopped", true);
+        }
+        throw new VerificationSupervisorError(
+            "database-unavailable",
+            "Disposable verification database is unavailable",
+            true,
+        );
     }
 }
 

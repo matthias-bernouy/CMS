@@ -31,6 +31,7 @@ export interface DisposableVerificationDatabaseLease {
 }
 
 export interface DisposableVerificationDatabaseProvider {
+    probe(signal: AbortSignal): Promise<void>;
     acquire(
         identity: Readonly<{
             candidateId: string;

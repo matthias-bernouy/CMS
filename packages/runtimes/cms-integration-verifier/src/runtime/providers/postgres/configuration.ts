@@ -12,7 +12,17 @@ export type PostgresProviderConfig = Readonly<{
     password: string;
     database: string;
     statementTimeoutMs: number;
+    leaseDurationMs: number;
+    heartbeatIntervalMs: number;
 }>;
+
+export const DISPOSABLE_POSTGRES_ROLE_SETTINGS = Object.freeze({
+    lockTimeout: "10s",
+    idleInTransactionSessionTimeout: "30s",
+    searchPath: "public,extensions",
+    workMem: "16MB",
+    tempFileLimit: "256MB",
+});
 
 export async function readPostgresProviderConfig(
     source: Record<string, string | undefined>,
@@ -28,6 +38,16 @@ export async function readPostgresProviderConfig(
     if (password.length < 24 || /\s/u.test(password)) {
         throw new Error("Disposable PostgreSQL provider password must be a strong single-line secret");
     }
+    const leaseDurationMs = integer(source.CMS_INTEGRATION_VERIFIER_POSTGRES_LEASE_DURATION_MS, 30_000, 5_000, 600_000);
+    const heartbeatIntervalMs = integer(
+        source.CMS_INTEGRATION_VERIFIER_POSTGRES_HEARTBEAT_INTERVAL_MS,
+        5_000,
+        500,
+        60_000,
+    );
+    if (heartbeatIntervalMs * 3 > leaseDurationMs) {
+        throw new Error("Disposable PostgreSQL heartbeat interval must leave a three-attempt lease margin");
+    }
     return Object.freeze({
         host,
         user,
@@ -40,6 +60,8 @@ export async function readPostgresProviderConfig(
             1_000,
             600_000,
         ),
+        leaseDurationMs,
+        heartbeatIntervalMs,
     });
 }
 
@@ -56,7 +78,33 @@ export function databaseUri(config: PostgresProviderConfig, database: string, us
     url.pathname = `/${database}`;
     url.searchParams.set("sslmode", "disable");
     url.searchParams.set("application_name", "cms-integration-verifier");
+    if (isDisposablePostgresRole(user)) {
+        url.searchParams.set("options", disposablePostgresStartupOptions(config));
+    }
     return url.toString();
+}
+
+export function disposablePostgresStartupOptions(config: PostgresProviderConfig): string {
+    return [
+        `-cstatement_timeout=${config.statementTimeoutMs}ms`,
+        `-clock_timeout=${DISPOSABLE_POSTGRES_ROLE_SETTINGS.lockTimeout}`,
+        `-cidle_in_transaction_session_timeout=${DISPOSABLE_POSTGRES_ROLE_SETTINGS.idleInTransactionSessionTimeout}`,
+        `-csearch_path=${DISPOSABLE_POSTGRES_ROLE_SETTINGS.searchPath}`,
+        `-cwork_mem=${DISPOSABLE_POSTGRES_ROLE_SETTINGS.workMem}`,
+    ].join(" ");
+}
+
+export function disposablePostgresStoredRoleSettings(config: PostgresProviderConfig): readonly string[] {
+    return Object.freeze(
+        [
+            `idle_in_transaction_session_timeout=${DISPOSABLE_POSTGRES_ROLE_SETTINGS.idleInTransactionSessionTimeout}`,
+            `lock_timeout=${DISPOSABLE_POSTGRES_ROLE_SETTINGS.lockTimeout}`,
+            `search_path=${DISPOSABLE_POSTGRES_ROLE_SETTINGS.searchPath.replace(",", ", ")}`,
+            `statement_timeout=${config.statementTimeoutMs}ms`,
+            `temp_file_limit=${DISPOSABLE_POSTGRES_ROLE_SETTINGS.tempFileLimit}`,
+            `work_mem=${DISPOSABLE_POSTGRES_ROLE_SETTINGS.workMem}`,
+        ].sort((left, right) => left.localeCompare(right, "en")),
+    );
 }
 
 export function postgresIdentifier(value: string): string {

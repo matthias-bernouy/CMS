@@ -125,6 +125,9 @@ function supervisorFor(fake: Awaited<ReturnType<typeof createFakeWorkerClient>>)
 
 function disposableDatabase() {
     return {
+        async probe(signal: AbortSignal) {
+            signal.throwIfAborted();
+        },
         async acquire() {
             return {
                 credential: {

@@ -2,6 +2,9 @@ import type { DisposableVerificationDatabaseProvider } from "../../src";
 
 export function createDisposableVerificationDatabaseProvider(): DisposableVerificationDatabaseProvider {
     return {
+        async probe(signal) {
+            signal.throwIfAborted();
+        },
         async acquire(identity, signal) {
             signal.throwIfAborted();
             return {
