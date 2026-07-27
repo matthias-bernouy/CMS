@@ -11313,7 +11313,7 @@ p {
             Theme
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item disabled>
+        <w13c-lateral-menu-item data-route="blocs">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10 3H3v7h7V3Z" />
@@ -35610,6 +35610,9 @@ textarea { min-height: 92px; resize: vertical; }
     closeContextMenu() {
       this.refs.contextMenu.remove();
     }
+    moveEditor(source2, target2, position) {
+      this.emitAction(position === "before" ? "move-before" : "move-after", target2, undefined, undefined, undefined, source2);
+    }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureKeyboard.ts
@@ -36714,6 +36717,7 @@ dd {
   function contextMenuButton(label3, action, closeContextMenu, variant, disabled = false) {
     const button2 = document.createElement("button");
     button2.className = variant ? `context-item ${variant}` : "context-item";
+    button2.role = "menuitem";
     button2.type = "button";
     button2.disabled = disabled;
     button2.textContent = label3;
@@ -36742,20 +36746,61 @@ dd {
     menu.style.top = `${Math.min(Math.max(clientY, margin), maxTop)}px`;
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureContextMenuSections.ts
+  function dynamicContextMenuItems(node, context) {
+    const policy = context.editingPolicy;
+    if (!policy.bindings) {
+      return [];
+    }
+    const items = [
+      contextMenuButton(context.sourceActionLabel(node), () => context.openSourcePicker(node), context.closeContextMenu, undefined, context.sourceDataSourceCount() === 0)
+    ];
+    if (policy.repeats) {
+      items.push(repeatItem(node, context));
+    }
+    if (policy.conditions) {
+      items.push(contextMenuButton("Add condition", () => context.openConditionPicker(node), context.closeContextMenu));
+    }
+    return items;
+  }
+  function moveContextMenuItems(node, context) {
+    const previous = context.sibling(node, -1);
+    const next = context.sibling(node, 1);
+    return [
+      contextMenuButton("Move up", () => moveNode(node, previous, "before", context), context.closeContextMenu, undefined, !previous),
+      contextMenuButton("Move down", () => moveNode(node, next, "after", context), context.closeContextMenu, undefined, !next)
+    ];
+  }
+  function openChildPicker(node, context) {
+    context.openPickerOrEmitSingleMedia({ action: "add-child", editor: node.editor }, context.childGroups(node), node.label);
+  }
+  function openReplacePicker(node, context) {
+    context.openPickerOrEmitSingleMedia({ action: "replace", editor: node.editor }, context.replaceGroups(node), node.label);
+  }
+  function repeatItem(node, context) {
+    return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat) ? contextMenuButton("Remove repeat", () => context.emitAction("remove-repeat", node.editor), context.closeContextMenu) : contextMenuButton("Add repeat", () => context.emitAction("configure-repeat", node.editor), context.closeContextMenu, undefined, !context.repeatableTargets.has(node.target));
+  }
+  function moveNode(source2, target2, position, context) {
+    if (!target2) {
+      return;
+    }
+    context.requestFocusRestore();
+    context.moveNode(source2, target2, position);
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureContextMenus.ts
-  function openStructureContextMenu(node, clientX, clientY, menu, context) {
+  function openStructureContextMenu(node, clientX, clientY, menu, context, focusMenu = false) {
     context.closeContextMenu();
-    menu.replaceChildren();
-    const sourceAction = contextMenuButton(context.sourceActionLabel(node), () => {
-      context.openSourcePicker(node);
-    }, context.closeContextMenu, undefined, context.sourceDataSourceCount() === 0);
-    const repeatAction = node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat) ? contextMenuButton("Remove repeat", () => context.emitAction("remove-repeat", node.editor), context.closeContextMenu) : contextMenuButton("Add repeat", () => context.emitAction("configure-repeat", node.editor), context.closeContextMenu, undefined, !context.repeatableTargets.has(node.target));
-    menu.append(contextMenuButton("Add child", () => {
-      context.openPickerOrEmitSingleMedia({ action: "add-child", editor: node.editor }, context.childGroups(node), node.label);
-    }, context.closeContextMenu, undefined, !context.hasEnabledGroup(context.childGroups(node))), contextMenuButton("Copy", () => context.emitAction("copy", node.editor), context.closeContextMenu), contextMenuButton("Paste after", () => context.emitAction("paste-after", node.editor), context.closeContextMenu), contextMenuButton("Duplicate", () => context.emitAction("duplicate", node.editor), context.closeContextMenu, undefined, !context.canDuplicate(node)), contextSeparator(), sourceAction, repeatAction, contextMenuButton("Add condition", () => context.openConditionPicker(node), context.closeContextMenu), contextSeparator(), contextMenuButton("Replace", () => {
-      context.openPickerOrEmitSingleMedia({ action: "replace", editor: node.editor }, context.replaceGroups(node), node.label);
-    }, context.closeContextMenu, undefined, !context.hasEnabledGroup(context.replaceGroups(node))), contextMenuButton("Delete", () => context.emitAction("delete", node.editor), context.closeContextMenu, "danger", !context.canDelete(node)));
+    menu.replaceChildren(contextMenuButton("Add child", () => openChildPicker(node, context), context.closeContextMenu, undefined, !context.hasEnabledGroup(context.childGroups(node))), contextMenuButton("Copy", () => context.emitAction("copy", node.editor), context.closeContextMenu), contextMenuButton("Paste after", () => context.emitAction("paste-after", node.editor), context.closeContextMenu), contextMenuButton("Duplicate", () => context.emitAction("duplicate", node.editor), context.closeContextMenu, undefined, !context.canDuplicate(node)), ...moveContextMenuItems(node, context));
+    const bindingItems = dynamicContextMenuItems(node, context);
+    if (bindingItems.length > 0) {
+      menu.append(contextSeparator(), ...bindingItems);
+    }
+    menu.append(contextSeparator(), contextMenuButton("Replace", () => openReplacePicker(node, context), context.closeContextMenu, undefined, !context.hasEnabledGroup(context.replaceGroups(node))), contextMenuButton("Delete", () => context.emitAction("delete", node.editor), context.closeContextMenu, "danger", !context.canDelete(node)));
     appendPositionedMenu(menu, clientX, clientY, context);
+    if (focusMenu) {
+      menu.querySelector("button:not([disabled])")?.focus();
+    }
   }
   function openRootContextMenu(clientX, clientY, menu, context) {
     context.closeContextMenu();
@@ -36826,8 +36871,8 @@ dd {
     constructor(tree) {
       this.tree = tree;
     }
-    openContextMenu(node, clientX, clientY) {
-      openStructureContextMenu(node, clientX, clientY, this.tree.refs.contextMenu, this.context());
+    openContextMenu(node, clientX, clientY, focusMenu = false) {
+      openStructureContextMenu(node, clientX, clientY, this.tree.refs.contextMenu, this.context(), focusMenu);
     }
     openRootContextMenu(clientX, clientY) {
       openRootContextMenu(clientX, clientY, this.tree.refs.contextMenu, this.context());
@@ -36839,17 +36884,23 @@ dd {
         canDuplicate: (node) => this.tree.nodes.canDuplicate(node),
         childGroups: (node) => this.tree.pickers.childGroups(node),
         closeContextMenu: () => this.tree.emitter.closeContextMenu(),
+        editingPolicy: this.tree.state.editingPolicy,
         emitAction: (action, editor) => this.tree.emitter.emitAction(action, editor),
         hasEnabledGroup: (groups) => this.tree.pickers.hasEnabledGroup(groups),
         openPickerOrEmitSingleMedia: (action, groups, contextLabel) => this.tree.pickers.openPickerOrEmitSingleMedia(action, groups, contextLabel),
         openConditionPicker: (node) => this.tree.pickers.openConditionPicker(node),
         openRootPicker: () => this.tree.pickers.openRootPicker(),
         openSourcePicker: (node) => this.tree.pickers.openSourcePicker(node),
+        moveNode: (source2, target2, position) => this.tree.emitter.moveEditor(source2.editor, target2.editor, position),
         repeatableTargets: this.tree.state.repeatableTargets,
         replaceGroups: (node) => this.tree.pickers.replaceGroups(node),
         rootGroups: () => this.tree.pickers.rootGroups(),
+        requestFocusRestore: () => {
+          this.tree.state.restoreSelectedFocusOnRender = true;
+        },
         sourceActionLabel: (node) => this.sourceActionLabel(node),
-        sourceDataSourceCount: () => this.tree.nodes.sourceDataSources().length
+        sourceDataSourceCount: () => this.tree.nodes.sourceDataSources().length,
+        sibling: (node, offset) => this.tree.nodes.sibling(node, offset)
       };
     }
     sourceActionLabel(node) {
@@ -36904,6 +36955,13 @@ dd {
   }
   function nodeForEditor(nodes, editor) {
     return nodes.flatMap((node) => [node, ...nodeForEditorChildren(node)]).find((node) => node.editor === editor) ?? null;
+  }
+  function siblingStructureNode(nodes, node, offset) {
+    const parent = parentStructureNode(nodes, node);
+    const slotName = node.target.getAttribute("slot") ?? undefined;
+    const siblings = (parent?.children ?? nodes).filter((candidate) => (candidate.target.getAttribute("slot") ?? undefined) === slotName);
+    const index = siblings.indexOf(node);
+    return index >= 0 ? siblings[index + offset] ?? null : null;
   }
   function nodeForEditorChildren(node) {
     return node.children.flatMap((child) => [child, ...nodeForEditorChildren(child)]);
@@ -37026,10 +37084,17 @@ dd {
       return editorChildrenOf(parent);
     }
     parentNode(child) {
-      return parentStructureNode(this.state.nodes, child);
+      const parent = parentStructureNode(this.state.nodes, child);
+      if (parent || !this.state.rootNode) {
+        return parent;
+      }
+      return this.state.nodes.includes(child) ? this.state.rootNode : null;
     }
     nodeForEditor(editor) {
       return nodeForEditor(this.state.nodes, editor);
+    }
+    sibling(node, offset) {
+      return siblingStructureNode(this.state.nodes, node, offset);
     }
     isDescendantNode(candidate, parent) {
       return isDescendantStructureNode(candidate, parent);
@@ -37060,11 +37125,11 @@ dd {
       return this.areBadgesExpanded(node) ? node.badges : node.badges.slice(0, 2);
     }
     toggleBadges(node) {
-      const key = this.nodeBadgeKey(node);
+      const key = this.nodeCollapseKey(node);
       this.areBadgesExpanded(node) ? this.state.expandedBadgeTargets.delete(key) : this.state.expandedBadgeTargets.add(key);
     }
     areBadgesExpanded(node) {
-      return this.state.expandedBadgeTargets.has(this.nodeBadgeKey(node));
+      return this.state.expandedBadgeTargets.has(this.nodeCollapseKey(node));
     }
     setRepeatableTargets(targets) {
       for (const node of flattenStructureNodes(this.state.nodes)) {
@@ -37079,14 +37144,8 @@ dd {
     sourceDataSources() {
       return this.state.dataSources;
     }
-    flattenNodes(nodes) {
-      return flattenStructureNodes(nodes);
-    }
     nodeCollapseKey(node) {
       return node.target;
-    }
-    nodeBadgeKey(node) {
-      return this.nodeCollapseKey(node);
     }
     nearestSourceNode(node) {
       return this.sourceAncestorNodes(node)[0] ?? null;
@@ -37162,62 +37221,66 @@ dd {
     } : null;
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Pickers/structurePickerOptions.ts
-  function slotOptions(context, slot, parent, replaced) {
-    const blockOptions = context.catalog.filter((entry) => {
-      if (entry.category === "Runtime") {
-        return false;
-      }
-      return slot.accepts.some((accept) => acceptsEntry(accept, entry));
-    }).map((entry) => ({
-      item: {
-        kind: "block",
-        entry
-      },
-      entry,
-      slot: slot.slot,
-      slotLabel: slot.label
-    }));
-    const externalOptions = context.insertItems.filter((item) => slot.accepts.some((accept) => acceptsItem(accept, item))).filter((item) => canFitItem(context, parent, slot, item, replaced)).map((item) => ({
-      item,
-      slot: slot.slot,
-      slotLabel: slot.label
-    }));
-    const mediaAccept = mediaAcceptForSlot(slot);
-    const mediaOptions = mediaAccept ? [
-      {
-        item: {
-          kind: "media",
-          label: "Media",
-          description: "Choose a file from the CMS library.",
-          category: "Media",
-          subCategory: mediaAccept.join(", "),
-          icon: "M",
-          accept: mediaAccept
-        },
-        slot: slot.slot,
-        slotLabel: slot.label
-      }
-    ] : [];
-    return [
-      ...blockOptions.filter((option8) => canFitItem(context, parent, slot, option8.item, replaced)),
-      ...externalOptions,
-      ...mediaOptions.filter((option8) => option8.item && canFitItem(context, parent, slot, option8.item, replaced))
-    ];
+  // ../../features/cms-editor-system-v2/src/policy/editorInteractionPolicy.ts
+  var DEFAULT_EDITOR_INTERACTION_POLICY = {
+    bindings: true,
+    conditions: true,
+    repeats: true,
+    templates: true,
+    looseMedia: true
+  };
+  function resolveEditorInteractionPolicy(policy = {}) {
+    return {
+      ...DEFAULT_EDITOR_INTERACTION_POLICY,
+      ...policy
+    };
   }
-  function mediaAcceptForSlot(slot) {
-    const explicit = slot.accepts.find((accept) => accept.kind === "media");
-    if (explicit?.kind === "media") {
-      return explicit.accept ?? ["image"];
+  function isCatalogEntryInsertable(policy, entry) {
+    if (entry.insertable === false) {
+      return false;
     }
-    if (slot.accepts.some((accept) => accept.kind === "component" && accept.tag.toLowerCase() === "img")) {
-      return ["image"];
-    }
-    if (slot.accepts.some((accept) => accept.kind === "any-component")) {
-      return ["image"];
-    }
-    return null;
+    return policy.canInsertTag?.(entry.tag, entry) ?? true;
   }
+  function isInsertionItemAllowed(policy, item) {
+    if (item.kind === "template") {
+      return policy.templates;
+    }
+    if (item.kind === "media") {
+      return policy.looseMedia;
+    }
+    return isCatalogEntryInsertable(policy, item.entry);
+  }
+  function isSettingAllowed(policy, setting) {
+    return isAttributeAllowed(policy, setting.attribute);
+  }
+  function isAttributeAllowed(policy, attribute) {
+    if (attribute === CMS_BINDING_ATTRIBUTES.condition) {
+      return policy.bindings && policy.conditions;
+    }
+    if (attribute === CMS_BINDING_ATTRIBUTES.repeat) {
+      return policy.bindings && policy.repeats;
+    }
+    if (BINDING_ATTRIBUTES.has(attribute)) {
+      return policy.bindings;
+    }
+    return true;
+  }
+  function filterSettingSections(policy, sections2) {
+    return sections2.flatMap((section) => {
+      const settings = section.settings.flatMap((setting) => filterSetting(policy, setting));
+      return settings.length > 0 ? [{ ...section, settings }] : [];
+    });
+  }
+  function filterSetting(policy, setting) {
+    if (setting.type !== "row") {
+      return isSettingAllowed(policy, setting) ? [setting] : [];
+    }
+    const settings = setting.settings.filter((child) => isSettingAllowed(policy, child));
+    return settings.length > 0 ? [{ ...setting, settings }] : [];
+  }
+  var BINDING_ATTRIBUTES = new Set(Object.values(CMS_BINDING_ATTRIBUTES));
+
+  // ../../features/cms-editor-system-v2/src/policy/contentSlotAcceptance.ts
   function acceptsEntry(accept, entry) {
     if (accept.kind === "media") {
       return false;
@@ -37237,10 +37300,86 @@ dd {
     if (accept.kind === "media") {
       return false;
     }
-    if (accept.kind === "any-component") {
-      return true;
+    return accept.kind === "any-component";
+  }
+  function acceptsElement(slot, element, catalog) {
+    const tag = element.localName.toLowerCase();
+    const entry = catalog.find((candidate) => candidate.tag.toLowerCase() === tag);
+    return slot.accepts.some((accept) => {
+      if (accept.kind === "component") {
+        return accept.tag.toLowerCase() === tag;
+      }
+      if (accept.kind === "any-component") {
+        return entry !== undefined || mediaTag("image", tag);
+      }
+      return (accept.accept ?? ["image"]).some((type) => mediaTag(type, tag));
+    });
+  }
+  function mediaAcceptForSlot(slot) {
+    const explicit = slot.accepts.find((accept) => accept.kind === "media");
+    if (explicit?.kind === "media") {
+      return explicit.accept ?? ["image"];
     }
-    return false;
+    if (slot.accepts.some((accept) => accept.kind === "component" && accept.tag.toLowerCase() === "img")) {
+      return ["image"];
+    }
+    return slot.accepts.some((accept) => accept.kind === "any-component") ? ["image"] : null;
+  }
+  function mediaTag(type, tag) {
+    if (type === "image" || type === "bitmap") {
+      return tag === "img" || tag === "picture";
+    }
+    if (type === "svg") {
+      return tag === "svg";
+    }
+    if (type === "video" || type === "audio") {
+      return tag === type;
+    }
+    return tag === "a" || tag === "object" || tag === "embed";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Pickers/structurePickerOptions.ts
+  function slotOptions(context, slot, parent, replaced) {
+    const blockOptions = context.catalog.filter((entry) => {
+      if (entry.category === "Runtime") {
+        return false;
+      }
+      return isCatalogEntryInsertable(context.editingPolicy, entry) && slot.accepts.some((accept) => acceptsEntry(accept, entry));
+    }).map((entry) => ({
+      item: {
+        kind: "block",
+        entry
+      },
+      entry,
+      slot: slot.slot,
+      slotLabel: slot.label
+    }));
+    const externalOptions = context.insertItems.filter((item) => isInsertionItemAllowed(context.editingPolicy, item)).filter((item) => slot.accepts.some((accept) => acceptsItem(accept, item))).filter((item) => canFitItem(context, parent, slot, item, replaced)).map((item) => ({
+      item,
+      slot: slot.slot,
+      slotLabel: slot.label
+    }));
+    const mediaAccept = mediaAcceptForSlot(slot);
+    const mediaOptions = mediaAccept && context.editingPolicy.looseMedia ? [
+      {
+        item: {
+          kind: "media",
+          label: "Media",
+          description: "Choose a file from the CMS library.",
+          category: "Media",
+          subCategory: mediaAccept.join(", "),
+          icon: "M",
+          accept: mediaAccept
+        },
+        slot: slot.slot,
+        slotLabel: slot.label
+      }
+    ] : [];
+    return [
+      ...blockOptions.filter((option8) => canFitItem(context, parent, slot, option8.item, replaced)),
+      ...externalOptions,
+      ...mediaOptions.filter((option8) => option8.item && canFitItem(context, parent, slot, option8.item, replaced))
+    ];
   }
   function canFitItem(context, parent, slot, item, replaced) {
     if (typeof slot.max !== "number") {
@@ -37265,8 +37404,11 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Pickers/structurePickerGroups.ts
   function rootGroups(context) {
+    if (context.rootNode) {
+      return childGroups(context, context.rootNode);
+    }
     const options2 = [
-      ...context.catalog.filter((entry) => entry.category !== "Runtime").map((entry) => ({
+      ...context.catalog.filter((entry) => entry.category !== "Runtime" && isCatalogEntryInsertable(context.editingPolicy, entry)).map((entry) => ({
         item: {
           kind: "block",
           entry
@@ -37274,7 +37416,7 @@ dd {
         entry,
         slotLabel: "Page"
       })),
-      ...context.insertItems.filter((item) => item.kind !== "media").map((item) => ({
+      ...context.insertItems.filter((item) => item.kind !== "media" && isInsertionItemAllowed(context.editingPolicy, item)).map((item) => ({
         item,
         slotLabel: "Page"
       }))
@@ -37334,7 +37476,7 @@ dd {
     return groups.some((group) => !group.disabledReason && group.options.length > 0);
   }
   function defaultTemplateItems(context) {
-    const templates = context.insertItems.filter((item) => item.kind === "template");
+    const templates = context.insertItems.filter((item) => item.kind === "template" && isInsertionItemAllowed(context.editingPolicy, item));
     if (context.defaultTemplateSelection.category) {
       return templates.filter((item) => item.category === context.defaultTemplateSelection.category);
     }
@@ -37440,7 +37582,7 @@ dd {
       return rootGroups(this.groupContext());
     }
     defaultTemplateGroups(templates) {
-      return defaultTemplateGroups(templates);
+      return defaultTemplateGroups(templates.filter((item) => item.kind === "template" ? this.tree.state.editingPolicy.templates : true));
     }
     childGroups(node) {
       return childGroups(this.groupContext(), node);
@@ -37462,6 +37604,9 @@ dd {
       openPickerOrEmitSingleMedia(action, groups, contextLabel, this.blockPickerContext(action.editor));
     }
     openSourcePicker(node) {
+      if (!this.tree.state.editingPolicy.bindings) {
+        return;
+      }
       openStructureSourcePicker(node, {
         dataSources: this.tree.nodes.sourceDataSources(),
         onRemove: this.tree.events.onDataSourceRemove,
@@ -37473,6 +37618,10 @@ dd {
       });
     }
     openConditionPicker(node) {
+      const policy = this.tree.state.editingPolicy;
+      if (!policy.bindings || !policy.conditions) {
+        return;
+      }
       this.tree.state.pendingConditionEditor = node.editor;
       const picker = this.tree.refs.conditionPicker;
       picker.removeEventListener(CONDITION_PICKER_APPLY_EVENT, this.tree.events.onConditionApply);
@@ -37501,6 +37650,8 @@ dd {
         catalog: this.tree.state.catalog,
         insertItems: this.tree.state.insertItems,
         defaultTemplateSelection: this.tree.state.defaultTemplateSelection,
+        editingPolicy: this.tree.state.editingPolicy,
+        rootNode: this.tree.state.rootNode,
         editorChildrenOf: (parent) => this.tree.nodes.editorChildrenOf(parent),
         nodeForEditor: (editor) => this.tree.nodes.nodeForEditor(editor),
         parentNode: (child) => this.tree.nodes.parentNode(child),
@@ -37603,6 +37754,14 @@ dd {
       event.stopPropagation();
       context.openContextMenu(node, mouseEvent.clientX, mouseEvent.clientY);
     });
+    item.addEventListener("keydown", (event) => {
+      if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) {
+        return;
+      }
+      event.preventDefault();
+      const bounds = item.getBoundingClientRect();
+      context.openContextMenu(node, bounds.left, bounds.bottom, true);
+    });
     item.addEventListener("dragstart", (event) => context.onDragStart(node, event));
     item.addEventListener("dragover", (event) => context.onDragOver(node, row, event));
     item.addEventListener("dragleave", () => context.clearDropRow());
@@ -37618,8 +37777,22 @@ dd {
     badges.className = "badges";
     appendBadges2(badges, node, context);
     item.append(icon, label3, badges);
-    row.append(item);
+    row.append(item, actionsButton(node, context));
     return row;
+  }
+  function actionsButton(node, context) {
+    const button2 = document.createElement("button");
+    button2.className = "row-actions";
+    button2.type = "button";
+    button2.textContent = "⋯";
+    button2.setAttribute("aria-label", `Actions for ${context.nodeLabel(node)}`);
+    button2.setAttribute("aria-haspopup", "menu");
+    button2.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const bounds = button2.getBoundingClientRect();
+      context.openContextMenu(node, bounds.left, bounds.bottom, true);
+    });
+    return button2;
   }
   function appendToggle(row, node, context) {
     if (node.children.length > 0) {
@@ -37686,6 +37859,7 @@ dd {
           openRootPicker: () => this.tree.pickers.openRootPicker(),
           useDefaultTemplate: (templates) => this.tree.pickers.useDefaultTemplate(templates)
         }));
+        this.restoreSelectedFocus();
         return;
       }
       for (const node of this.tree.nodes.visibleNodes()) {
@@ -37698,6 +37872,7 @@ dd {
       } else {
         scrollContainer.scrollTop = previousScrollTop;
       }
+      this.restoreSelectedFocus();
     }
     renderNode(node, depth) {
       return renderStructureTreeRow(node, depth, {
@@ -37712,7 +37887,7 @@ dd {
         onDragOver: (value3, row, event) => this.tree.events.onDragOver(value3, row, event),
         onDragStart: (value3, event) => this.tree.events.onDragStart(value3, event),
         onDrop: (value3, event) => this.tree.events.onDrop(value3, event),
-        openContextMenu: (value3, clientX, clientY) => this.tree.menus.openContextMenu(value3, clientX, clientY),
+        openContextMenu: (value3, clientX, clientY, focusMenu) => this.tree.menus.openContextMenu(value3, clientX, clientY, focusMenu),
         renderBadge: (value3) => renderStructureBadge(value3),
         rowClass: structureRowClass,
         selectEditor: (editor) => this.tree.emitter.selectEditor(editor),
@@ -37768,17 +37943,32 @@ dd {
       const top = Math.max(0, selected2.offsetTop - scrollContainer.clientHeight * 0.2 + selected2.offsetHeight / 2);
       typeof scrollContainer.scrollTo === "function" ? scrollContainer.scrollTo({ top, behavior: "smooth" }) : scrollContainer.scrollTop = top;
     }
+    restoreSelectedFocus() {
+      if (!this.tree.state.restoreSelectedFocusOnRender) {
+        return;
+      }
+      this.tree.state.restoreSelectedFocusOnRender = false;
+      const requestId = this.tree.state.scrollRequestId;
+      requestAnimationFrame(() => {
+        if (requestId === this.tree.state.scrollRequestId) {
+          this.tree.host.shadowRoot.querySelector(".item.selected")?.focus();
+        }
+      });
+    }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/structureTreeState.ts
   class StructureTreeState {
     nodes = [];
+    rootNode = null;
     selectedEditor = null;
     catalog = [];
     dataSources = [];
     defaultTemplateSelection = {};
     insertItems = [];
+    editingPolicy = resolveEditorInteractionPolicy();
     scrollSelectedIntoViewOnRender = false;
+    restoreSelectedFocusOnRender = false;
     repeatableTargets = new WeakSet;
     pendingPickerAction = null;
     pendingSourceEditor = null;
@@ -37834,6 +38024,10 @@ dd {
     setDataSources(sources) {
       this.state.dataSources = sources.map((source2) => ({ ...source2, fields: [...source2.fields] }));
     }
+    setEditingPolicy(policy) {
+      this.state.editingPolicy = resolveEditorInteractionPolicy(policy);
+      this.renderer.render();
+    }
     get catalog() {
       return this.state.catalog;
     }
@@ -37842,6 +38036,7 @@ dd {
     }
     setStructure(nodes, selectedEditor = null, catalog = this.state.catalog, options2 = {}) {
       this.state.nodes = nodes;
+      this.state.rootNode = options2.rootNode ?? null;
       this.state.selectedEditor = selectedEditor;
       this.state.catalog = [...catalog];
       this.state.scrollSelectedIntoViewOnRender = options2.scrollSelectedIntoView === true;
@@ -38044,7 +38239,7 @@ dd {
 
 .row {
     display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
+    grid-template-columns: 18px minmax(0, 1fr) 26px;
     align-items: center;
     min-height: 30px;
     padding-left: calc(6px + (var(--structure-depth, 0) * 12px));
@@ -38069,6 +38264,25 @@ dd {
 }
 
 .toggle:hover {
+    color: var(--editor-v2-text);
+}
+
+.row-actions {
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--editor-v2-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.row-actions:hover,
+.row-actions:focus-visible {
+    background: var(--editor-v2-surface);
     color: var(--editor-v2-text);
 }
 
@@ -38192,6 +38406,9 @@ dd {
     }
     setDataSources(sources) {
       this.controller.setDataSources(sources);
+    }
+    setEditingPolicy(policy) {
+      this.controller.setEditingPolicy(policy);
     }
     get catalog() {
       return this.controller.catalog;
@@ -43836,9 +44053,11 @@ label {
       document2.addEventListener("click", onFrameClick, true);
       this.injectBindingPreviewStyle(document2);
     }
-    bindViewFrameDocument(document2) {
+    bindViewFrameDocument(document2, previewMode = "mirrored") {
       this.viewFrameDocument = document2;
-      this.injectBindingPreviewStyle(document2);
+      if (previewMode === "mirrored") {
+        this.injectBindingPreviewStyle(document2);
+      }
     }
     unbindFrameDocument(onFrameClick) {
       this.frameDocument?.removeEventListener("click", onFrameClick, true);
@@ -43847,10 +44066,14 @@ label {
     unbindViewFrameDocument() {
       this.viewFrameDocument = null;
     }
-    syncBindingPreviewCore(sourceStateForce, viewActive) {
-      syncBindingPreviewCore(this.frameDocument, this.viewFrameDocument, sourceStateForce, viewActive);
+    syncBindingPreviewCore(sourceStateForce, viewActive, previewMode = "mirrored") {
+      const viewDocument = previewMode === "mirrored" ? this.viewFrameDocument : null;
+      syncBindingPreviewCore(this.frameDocument, viewDocument, sourceStateForce, viewActive);
     }
-    syncViewFrameContent(sourceStateForce, viewActive) {
+    syncViewFrameContent(sourceStateForce, viewActive, previewMode = "mirrored") {
+      if (previewMode === "external") {
+        return;
+      }
       syncViewFrameContent(this.frameDocument, this.viewFrameDocument, sourceStateForce, viewActive);
     }
     contentHtml() {
@@ -43979,7 +44202,7 @@ label {
     const replacedCount = (replaced.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined) ? 1 : 0;
     return slotChildCount2(parent, slot) - replacedCount + insertedElements.length <= slot.max;
   }
-  function canDuplicate(runtime2, editor) {
+  function canDuplicate(runtime2, editor, catalog) {
     const parent = parentEditor(runtime2, editor);
     if (!parent) {
       return true;
@@ -43988,7 +44211,7 @@ label {
     if (!slot) {
       return true;
     }
-    return !isSlotFull2(parent, slot);
+    return acceptsElement(slot, editor.target, catalog) && !isSlotFull2(parent, slot);
   }
   function canDelete(runtime2, editor) {
     const parent = parentEditor(runtime2, editor);
@@ -44001,7 +44224,7 @@ label {
     }
     return slotChildCount2(parent, slot) > slot.min;
   }
-  function canInsertSibling(runtime2, reference, insertedElement, applySourceConditions, sourceConditionsForSibling) {
+  function canInsertSibling(runtime2, reference, insertedElement, catalog, applySourceConditions, sourceConditionsForSibling) {
     const parent = parentEditor(runtime2, reference);
     if (!parent) {
       applySlot(insertedElement, undefined);
@@ -44010,28 +44233,28 @@ label {
     }
     const slotName = reference.target.getAttribute("slot") ?? undefined;
     const slot = findSlot(parent, slotName);
-    if (!slot || !canInsertNodeCount(parent, slot, [insertedElement])) {
+    if (!slot || !acceptsElement(slot, insertedElement, catalog) || !canInsertNodeCount(parent, slot, [insertedElement])) {
       return false;
     }
     applySlot(insertedElement, slotName);
     applySourceConditions(insertedElement, sourceConditionsForSibling(reference));
     return true;
   }
-  function canMoveEditor(runtime2, source2, target2) {
-    if (!canDelete(runtime2, source2)) {
+  function canMoveEditor(runtime2, source2, target2, catalog) {
+    const sourceParent = parentEditor(runtime2, source2);
+    const targetParent = parentEditor(runtime2, target2);
+    const targetSlotName = target2.target.getAttribute("slot") ?? undefined;
+    const isSameSlot = sourceParent === targetParent && (source2.target.getAttribute("slot") ?? undefined) === targetSlotName;
+    if (!isSameSlot && !canDelete(runtime2, source2)) {
       return false;
     }
-    const targetParent = parentEditor(runtime2, target2);
     if (!targetParent) {
       return true;
     }
-    const targetSlotName = target2.target.getAttribute("slot") ?? undefined;
     const targetSlot = findSlot(targetParent, targetSlotName);
-    if (!targetSlot) {
+    if (!targetSlot || !acceptsElement(targetSlot, source2.target, catalog)) {
       return false;
     }
-    const sourceParent = parentEditor(runtime2, source2);
-    const isSameSlot = sourceParent === targetParent && (source2.target.getAttribute("slot") ?? undefined) === targetSlotName;
     if (isSameSlot) {
       return true;
     }
@@ -44155,9 +44378,14 @@ label {
         return;
       }
       parent.target.append(insertion.fragment);
-      this.reloadFrameDocument(insertion.selectionTarget);
+      reloadFrameDocument(this.context, insertion.selectionTarget);
     }
-    addRoot(item) {
+    addRoot(item, slotName) {
+      const rootEditor = this.context.rootEditor?.();
+      if (rootEditor?.getContentSlots().length) {
+        this.addChild(rootEditor, item, slotName);
+        return;
+      }
       const document2 = this.context.editorDocument();
       if (!document2 || item.kind === "media") {
         return;
@@ -44170,7 +44398,7 @@ label {
         document2.contentRoot.replaceChildren();
       }
       document2.contentRoot.append(insertion.fragment);
-      this.reloadFrameDocument(insertion.selectionTarget);
+      reloadFrameDocument(this.context, insertion.selectionTarget);
     }
     replaceEditor(editor, item, slotName) {
       const parent = parentEditor(this.context.runtime(), editor);
@@ -44190,10 +44418,7 @@ label {
         return;
       }
       editor.target.replaceWith(insertion.fragment);
-      this.reloadFrameDocument(insertion.selectionTarget);
-    }
-    reloadFrameDocument(selectedTarget = null) {
-      reloadFrameDocument(this.context, selectedTarget);
+      reloadFrameDocument(this.context, insertion.selectionTarget);
     }
     replaceRootEditor(editor, item) {
       if (item.kind === "media") {
@@ -44204,7 +44429,7 @@ label {
         return;
       }
       editor.target.replaceWith(insertion.fragment);
-      this.reloadFrameDocument(insertion.selectionTarget);
+      reloadFrameDocument(this.context, insertion.selectionTarget);
     }
     createInsertion(item, slotName, sourceStatusConditions2) {
       return createInsertion(this.context.frameDocument(), item, slotName, sourceStatusConditions2);
@@ -44230,7 +44455,7 @@ label {
         }
       }
       parent.target.append(...elements);
-      this.reloadFrameDocument(elements[0] ?? null);
+      reloadFrameDocument(this.context, elements[0] ?? null);
     }
     replaceWithMedia(editor, parent, item, slot, slotName, sourceStatusConditions2) {
       if (!canReplaceNodeCount(parent, editor, slot, [editor.target])) {
@@ -44246,7 +44471,7 @@ label {
           applySourceStatusConditions(element, sourceStatusConditions2);
         }
         editor.target.replaceWith(element);
-        this.reloadFrameDocument(element);
+        reloadFrameDocument(this.context, element);
       });
     }
   }
@@ -44254,19 +44479,17 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/shellEditorMutations.ts
   class ShellEditorMutations {
     context;
-    content;
     _clipboardElement = null;
-    constructor(context, content) {
+    constructor(context) {
       this.context = context;
-      this.content = content;
     }
     duplicateEditor(editor) {
-      if (!canDuplicate(this.context.runtime(), editor)) {
+      if (!canDuplicate(this.context.runtime(), editor, this.context.catalog())) {
         return;
       }
       const clone = editor.target.cloneNode(true);
       editor.target.after(clone);
-      this.content.reloadFrameDocument(clone);
+      reloadFrameDocument(this.context, clone);
     }
     deleteEditor(editor) {
       if (!canDelete(this.context.runtime(), editor)) {
@@ -44274,7 +44497,7 @@ label {
       }
       const nextSelectionTarget = this.findNextSelectionTargetAfterDelete(editor);
       editor.target.remove();
-      this.content.reloadFrameDocument(nextSelectionTarget);
+      reloadFrameDocument(this.context, nextSelectionTarget);
     }
     copyEditor(editor) {
       this._clipboardElement = editor.target.cloneNode(true);
@@ -44287,10 +44510,10 @@ label {
       const clone = this._clipboardElement.cloneNode(true);
       if (!editor) {
         document2.contentRoot.append(clone);
-        this.content.reloadFrameDocument(clone);
+        reloadFrameDocument(this.context, clone);
         return;
       }
-      if (!canInsertSibling(this.context.runtime(), editor, clone, (element, state2) => {
+      if (!canInsertSibling(this.context.runtime(), editor, clone, this.context.catalog(), (element, state2) => {
         if (state2.length) {
           applySourceStatusConditions(element, state2);
         }
@@ -44298,13 +44521,13 @@ label {
         return;
       }
       editor.target.after(clone);
-      this.content.reloadFrameDocument(clone);
+      reloadFrameDocument(this.context, clone);
     }
     moveEditor(source2, target2, position) {
       if (source2 === target2 || source2.target.contains(target2.target)) {
         return;
       }
-      if (!canMoveEditor(this.context.runtime(), source2, target2)) {
+      if (!canMoveEditor(this.context.runtime(), source2, target2, this.context.catalog())) {
         return;
       }
       applySlot(source2.target, target2.target.getAttribute("slot") ?? undefined);
@@ -44314,7 +44537,7 @@ label {
       } else {
         target2.target.after(source2.target);
       }
-      this.content.reloadFrameDocument(source2.target);
+      reloadFrameDocument(this.context, source2.target);
     }
     findNextSelectionTargetAfterDelete(editor) {
       const parent = editor.target.parentElement;
@@ -44754,17 +44977,22 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/shellMutations.ts
   class ShellMutations {
+    context;
     content;
     editor;
     bindings;
     constructor(context) {
+      this.context = context;
       this.content = new ShellContentMutations(context);
-      this.editor = new ShellEditorMutations(context, this.content);
+      this.editor = new ShellEditorMutations(context);
       this.bindings = new ShellBindingMutations(context);
     }
     handleStructureAction(detail) {
       const { action, editor, entry, item, sourceEditor, sourceState } = detail;
       const blockItem = item ?? (entry ? { kind: "block", entry } : null);
+      if (blockItem && !isInsertionItemAllowed(this.context.editingPolicy(), blockItem)) {
+        return;
+      }
       if (action === "duplicate" && editor) {
         this.editor.duplicateEditor(editor);
       } else if (action === "delete" && editor) {
@@ -44773,64 +45001,97 @@ label {
         this.editor.copyEditor(editor);
       } else if (action === "paste-after") {
         this.editor.pasteAfter(editor ?? null);
-      } else if (action === "set-source" && editor && detail.dataSource) {
+      } else if (action === "set-source" && editor && detail.dataSource && this.canUseBindings()) {
         this.bindings.setSource(editor, detail.dataSource, detail.sourceBinding);
-      } else if (action === "remove-source" && editor) {
+      } else if (action === "remove-source" && editor && this.canUseBindings()) {
         this.bindings.removeSource(editor);
-      } else if (action === "configure-repeat" && editor) {
+      } else if (action === "configure-repeat" && editor && this.canUseRepeats()) {
         this.bindings.openRepeatPicker(editor);
-      } else if (action === "remove-repeat" && editor) {
+      } else if (action === "remove-repeat" && editor && this.canUseRepeats()) {
         this.bindings.removeRepeat(editor);
-      } else if (action === "set-condition" && editor && detail.conditionExpression) {
+      } else if (action === "set-condition" && editor && detail.conditionExpression && this.canUseConditions()) {
         this.bindings.setCondition(editor, detail.conditionExpression);
-      } else if (action === "set-source-status-condition" && editor && sourceEditor && sourceState) {
+      } else if (action === "set-source-status-condition" && editor && sourceEditor && sourceState && this.canUseConditions()) {
         this.bindings.setSourceStatusCondition(editor, sourceEditor, sourceState);
-      } else if (action === "set-source-status-conditions" && editor && detail.sourceConditions) {
+      } else if (action === "set-source-status-conditions" && editor && detail.sourceConditions && this.canUseConditions()) {
         this.bindings.setSourceStatusConditions(editor, detail.sourceConditions);
-      } else if (action === "remove-source-status-condition" && editor) {
+      } else if (action === "remove-source-status-condition" && editor && this.canUseConditions()) {
         this.bindings.removeSourceStatusCondition(editor);
       } else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
         this.editor.moveEditor(sourceEditor, editor, action === "move-before" ? "before" : "after");
       } else if (action === "replace" && editor && blockItem) {
         this.content.replaceEditor(editor, blockItem, detail.slot);
       } else if (action === "add-root" && blockItem) {
-        this.content.addRoot(blockItem);
+        this.content.addRoot(blockItem, detail.slot);
       } else if (editor && blockItem) {
         this.content.addChild(editor, blockItem, detail.slot);
       }
     }
     applyRepeatSelection(path, alias) {
-      this.bindings.applyRepeatSelection(path, alias);
+      if (this.canUseRepeats()) {
+        this.bindings.applyRepeatSelection(path, alias);
+      }
     }
     addChild(parent, item, slotName) {
-      this.content.addChild(parent, item, slotName);
+      if (isInsertionItemAllowed(this.context.editingPolicy(), item)) {
+        this.content.addChild(parent, item, slotName);
+      }
     }
-    addRoot(item) {
-      this.content.addRoot(item);
+    addRoot(item, slotName) {
+      if (isInsertionItemAllowed(this.context.editingPolicy(), item)) {
+        this.content.addRoot(item, slotName);
+      }
     }
     replaceEditor(editor, item, slotName) {
-      this.content.replaceEditor(editor, item, slotName);
+      if (isInsertionItemAllowed(this.context.editingPolicy(), item)) {
+        this.content.replaceEditor(editor, item, slotName);
+      }
     }
     setRepeat(editor, path, alias) {
-      this.bindings.setRepeat(editor, path, alias);
+      if (this.canUseRepeats()) {
+        this.bindings.setRepeat(editor, path, alias);
+      }
     }
     setSource(editor, source2, binding = { url: source2.url }) {
-      this.bindings.setSource(editor, source2, binding);
+      if (this.canUseBindings()) {
+        this.bindings.setSource(editor, source2, binding);
+      }
     }
     removeSource(editor) {
-      this.bindings.removeSource(editor);
+      if (this.canUseBindings()) {
+        this.bindings.removeSource(editor);
+      }
     }
     setSourceStatusCondition(editor, sourceEditor, state2) {
-      this.bindings.setSourceStatusCondition(editor, sourceEditor, state2);
+      if (this.canUseConditions()) {
+        this.bindings.setSourceStatusCondition(editor, sourceEditor, state2);
+      }
     }
     setCondition(editor, expression) {
-      this.bindings.setCondition(editor, expression);
+      if (this.canUseConditions()) {
+        this.bindings.setCondition(editor, expression);
+      }
     }
     setSourceStatusConditions(editor, conditions2) {
-      this.bindings.setSourceStatusConditions(editor, conditions2);
+      if (this.canUseConditions()) {
+        this.bindings.setSourceStatusConditions(editor, conditions2);
+      }
     }
     removeSourceStatusCondition(editor) {
-      this.bindings.removeSourceStatusCondition(editor);
+      if (this.canUseConditions()) {
+        this.bindings.removeSourceStatusCondition(editor);
+      }
+    }
+    canUseBindings() {
+      return this.context.editingPolicy().bindings;
+    }
+    canUseRepeats() {
+      const policy = this.context.editingPolicy();
+      return policy.bindings && policy.repeats;
+    }
+    canUseConditions() {
+      const policy = this.context.editingPolicy();
+      return policy.bindings && policy.conditions;
     }
   }
 
@@ -45172,6 +45433,22 @@ label {
     return nodes.flatMap((node) => [node, ...flattenStructure(node.children)]);
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingAttributes.ts
+  function writeSettingAttribute(element, name, value3) {
+    if (isNetworkBindingAttribute2(name)) {
+      p(element, name, value3);
+      return;
+    }
+    if (value3 === null) {
+      element.removeAttribute(name);
+    } else {
+      element.setAttribute(name, value3);
+    }
+  }
+  function isNetworkBindingAttribute2(name) {
+    return Y2.includes(name);
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellSelection.ts
   class ShellSelection {
     context;
@@ -45205,11 +45482,17 @@ label {
         this.context.settings().setSettings([]);
         return;
       }
-      this.context.settings().setSettings(resolveSettingsValues(selection.editor, settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings))), selection.textCapability, selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "", this.context.settingsMode(), selection.states, runtime2.getSelectedDataScopes(), this.context.dataSources());
+      const policy = this.editingPolicy();
+      const settings = filterSettingSections(policy, resolveSettingsValues(selection.editor, settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings))));
+      this.context.settings().setSettings(settings, selection.textCapability, selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "", this.context.settingsMode(), selection.states, policy.bindings ? runtime2.getSelectedDataScopes() : [], policy.bindings ? this.context.dataSources() : []);
     }
     applySetting(editor, setting, value3, attributes) {
+      const policy = this.editingPolicy();
+      if (!isSettingAllowed(policy, setting)) {
+        return;
+      }
       if (attributes) {
-        this.applyAttributes(editor, attributes);
+        this.applyAttributes(editor, attributes, policy);
         return;
       }
       if (applyParamSyncSetting(editor, setting, value3) || applyPageStateSetting(editor, setting, value3)) {
@@ -45228,8 +45511,11 @@ label {
         this.renderSettings();
       }
     }
-    applyAttributes(editor, attributes) {
+    applyAttributes(editor, attributes, policy) {
       for (const [attribute, value3] of Object.entries(attributes)) {
+        if (!isAttributeAllowed(policy, attribute)) {
+          continue;
+        }
         if (typeof value3 === "boolean") {
           editor.target.toggleAttribute(attribute, value3);
         } else {
@@ -45248,20 +45534,9 @@ label {
       }
       exitAllStateSessions(this.context.stateSessions(), runtime2.getStructure());
     }
-  }
-  function writeSettingAttribute(element, name, value3) {
-    if (isNetworkBindingAttribute2(name)) {
-      p(element, name, value3);
-      return;
+    editingPolicy() {
+      return this.context.editingPolicy?.() ?? DEFAULT_EDITOR_INTERACTION_POLICY;
     }
-    if (value3 === null) {
-      element.removeAttribute(name);
-    } else {
-      element.setAttribute(name, value3);
-    }
-  }
-  function isNetworkBindingAttribute2(name) {
-    return Y2.includes(name);
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellChrome.ts
@@ -45345,7 +45620,10 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellStructureTreeSync.ts
   function isStructureTree(value3) {
-    return Boolean(value3 && "catalog" in value3 && "setStructure" in value3 && "setInsertItems" in value3 && "setDefaultTemplateSelection" in value3);
+    return Boolean(value3 && "catalog" in value3 && "setStructure" in value3 && "setInsertItems" in value3 && "setDefaultTemplateSelection" in value3 && "setEditingPolicy" in value3);
+  }
+  function syncStructureTreeEditingPolicy(root, policy) {
+    withStructureTree(root, (tree) => tree.setEditingPolicy(policy));
   }
   function syncStructureTreeCatalog(root, catalog, insertItems, defaultTemplateSelection) {
     withStructureTree(root, (tree) => {
@@ -45395,16 +45673,35 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureRender.ts
-  function renderStructure(tree, runtime2, catalog, _insertItems, isEmptyDocumentContent2, options2 = {}) {
+  function renderStructure(tree, runtime2, contentRoot, catalog, _insertItems, isEmptyDocumentContent2, options2 = {}) {
+    const rootNode = runtime2 && contentRoot ? editorRootNode(runtime2, contentRoot, catalog) : null;
     if (!runtime2 || isEmptyDocumentContent2()) {
-      tree.setStructure([], null, catalog);
+      tree.setStructure([], null, catalog, { rootNode });
       return;
     }
     const structure = decorateStructure(runtime2.getStructure());
     tree.setStructure(structure, runtime2.getSelection()?.editor ?? null, catalog, {
       scrollSelectedIntoView: options2.scrollStructureIntoView === true,
-      repeatableTargets: repeatableTargets(runtime2, structure)
+      repeatableTargets: repeatableTargets(runtime2, structure),
+      rootNode
     });
+  }
+  function editorRootNode(runtime2, contentRoot, catalog) {
+    const editor = runtime2.getEditor(contentRoot);
+    const entry = catalog.find((candidate) => candidate.tag.toLowerCase() === contentRoot.localName);
+    if (!editor || !entry || editor.getContentSlots().length === 0) {
+      return null;
+    }
+    return {
+      kind: "editor",
+      editor,
+      target: contentRoot,
+      tag: entry.tag,
+      label: entry.label,
+      icon: entry.icon,
+      badges: [],
+      children: decorateStructure(runtime2.getStructure())
+    };
   }
   function decorateStructure(nodes) {
     return nodes.map((node) => decorateEditorStructureNode(node));
@@ -45487,6 +45784,9 @@ label {
     }
     syncStructureTreeDataSources() {
       syncStructureTreeDataSources(this.context.host.shadowRoot, this.context.state.dataSources, isStructureTree);
+    }
+    syncStructureTreeEditingPolicy() {
+      syncStructureTreeEditingPolicy(this.context.host.shadowRoot, this.context.state.editingPolicy);
     }
     findStructureNodeLabel(editor) {
       return findStructureNodeLabel(this.context.state.runtime, editor);
@@ -46194,6 +46494,41 @@ label {
       }));
       this.context.renderSync.syncStructureTreeDataSources();
     }
+    setEditingPolicy(policy) {
+      this.context.state.editingPolicy = resolveEditorInteractionPolicy(policy);
+      this.context.renderSync.syncStructureTreeEditingPolicy();
+      if (this.context.state.runtime) {
+        this.context.commands.renderStructure();
+        this.context.commands.renderSettings();
+      }
+    }
+    setPreviewMode(mode) {
+      this.context.state.previewMode = mode === "external" ? "external" : "mirrored";
+      this.context.renderSync.syncBindingPreviewCore();
+      this.context.renderSync.syncViewFrameContent();
+    }
+    setFrameUrls(urls) {
+      this.setFrameUrl("editor-frame-url", urls.editor);
+      this.setFrameUrl("view-frame-url", urls.view);
+    }
+    reloadPreview(url) {
+      if (url === undefined) {
+        this.context.refs.canvas.reloadViewFrame();
+        return;
+      }
+      const currentUrl = this.context.refs.canvas.getAttribute("view-frame-url");
+      this.context.refs.canvas.setAttribute("view-frame-url", url);
+      if (currentUrl === url) {
+        this.context.refs.canvas.reloadViewFrame();
+      }
+    }
+    setEditorMode(mode) {
+      this.context.state.editorMode = mode === "view" ? "view" : "edit";
+      this.context.renderSync.syncEditorMode();
+    }
+    requestSave() {
+      this.context.commands.saveDocument();
+    }
     setPageConfig(config) {
       this.context.state.pageConfig = {
         ...config,
@@ -46214,6 +46549,16 @@ label {
       runtime2.load(document2);
       this.context.commands.renderStructure();
       this.context.commands.select(selectedTarget ? runtime2.getEditor(selectedTarget) ?? runtime2.getClosestEditor(selectedTarget) ?? null : null, { scrollStructureIntoView: true });
+    }
+    setFrameUrl(attribute, url) {
+      if (url === undefined) {
+        return;
+      }
+      if (url === null) {
+        this.context.refs.canvas.removeAttribute(attribute);
+      } else {
+        this.context.refs.canvas.setAttribute(attribute, url);
+      }
     }
   }
 
@@ -46309,7 +46654,7 @@ label {
       this.context.frames.bindFrameDocument(document2, this.context.frameClickHandler());
     }
     bindViewFrameDocument(document2) {
-      this.context.frames.bindViewFrameDocument(document2);
+      this.context.frames.bindViewFrameDocument(document2, this.context.state.previewMode);
     }
     unbindFrameDocument() {
       this.context.frames.unbindFrameDocument(this.context.frameClickHandler());
@@ -46405,7 +46750,7 @@ label {
       this.context = context;
     }
     renderStructure(options2 = {}) {
-      renderStructure(this.context.refs.structureTree, this.context.state.runtime, this.context.state.catalog, this.context.state.insertItems, () => this.isEmptyDocumentContent(), options2);
+      renderStructure(this.context.refs.structureTree, this.context.state.runtime, this.context.state.editorDocument?.contentRoot, this.context.state.catalog, this.context.state.insertItems, () => this.isEmptyDocumentContent(), options2);
     }
     isEmptyDocumentContent() {
       return isEmptyDocumentContent(this.context.state.editorDocument?.contentRoot);
@@ -46429,10 +46774,10 @@ label {
       this.syncBindingPreviewCore();
     }
     syncBindingPreviewCore() {
-      this.context.frames.syncBindingPreviewCore(this.context.state.sourceStateForce, this.context.state.editorMode === "view");
+      this.context.frames.syncBindingPreviewCore(this.context.state.sourceStateForce, this.context.state.editorMode === "view", this.context.state.previewMode);
     }
     syncViewFrameContent() {
-      this.context.frames.syncViewFrameContent(this.context.state.sourceStateForce, this.context.state.editorMode === "view");
+      this.context.frames.syncViewFrameContent(this.context.state.sourceStateForce, this.context.state.editorMode === "view", this.context.state.previewMode);
     }
     syncChromeLabels() {
       this.context.sync.syncChromeLabels();
@@ -46467,6 +46812,9 @@ label {
     syncStructureTreeDataSources() {
       this.context.sync.syncStructureTreeDataSources();
     }
+    syncStructureTreeEditingPolicy() {
+      this.context.sync.syncStructureTreeEditingPolicy();
+    }
     findStructureNodeLabel(editor) {
       return this.context.sync.findStructureNodeLabel(editor);
     }
@@ -46482,7 +46830,13 @@ label {
       frameDocument: () => frames.frameDocument,
       editorDocument: () => state2.editorDocument,
       runtime: () => state2.runtime,
+      catalog: () => state2.catalog,
+      rootEditor: () => {
+        const contentRoot = state2.editorDocument?.contentRoot;
+        return contentRoot && state2.runtime ? state2.runtime.getEditor(contentRoot) ?? null : null;
+      },
       insertItems: () => state2.insertItems,
+      editingPolicy: () => state2.editingPolicy,
       repeatPicker: () => refs.repeatPicker,
       findStructureNodeLabel: (editor) => renderSync.findStructureNodeLabel(editor),
       isEmptyDocumentContent: () => renderSync.isEmptyDocumentContent(),
@@ -46493,6 +46847,7 @@ label {
       runtime: () => state2.runtime,
       settings: () => refs.settings,
       dataSources: () => state2.dataSources,
+      editingPolicy: () => state2.editingPolicy,
       settingsMode: () => state2.settingsMode,
       stateSessions: () => stateSessions,
       highlight: () => highlight,
@@ -46555,6 +46910,8 @@ label {
       editorMode: "edit",
       sourceStateForce: "loading",
       pageConfig: null,
+      editingPolicy: resolveEditorInteractionPolicy(),
+      previewMode: "mirrored",
       chromeSyncPending: false
     };
   }
@@ -46987,6 +47344,7 @@ label {
     bindShellLifecycle(lifecycleTargetsFor(context), lifecycleHandlersFor(context));
     context.renderSync.syncStructureTreeCatalog();
     context.renderSync.syncStructureTreeDataSources();
+    context.renderSync.syncStructureTreeEditingPolicy();
     context.renderSync.syncViewport();
     context.renderSync.syncEditorMode();
     context.renderSync.syncChromeLabels();
@@ -47072,6 +47430,36 @@ label {
     setDataSources(sources) {
       this._parts.api.setDataSources(sources);
     }
+    get editingPolicy() {
+      return { ...this._parts.state.editingPolicy };
+    }
+    set editingPolicy(policy) {
+      this.setEditingPolicy(policy);
+    }
+    setEditingPolicy(policy) {
+      this._parts.api.setEditingPolicy(policy);
+    }
+    get previewMode() {
+      return this._parts.state.previewMode;
+    }
+    set previewMode(mode) {
+      this.setPreviewMode(mode);
+    }
+    setPreviewMode(mode) {
+      this._parts.api.setPreviewMode(mode);
+    }
+    setFrameUrls(urls) {
+      this._parts.api.setFrameUrls(urls);
+    }
+    reloadPreview(url) {
+      this._parts.api.reloadPreview(url);
+    }
+    setEditorMode(mode) {
+      this._parts.api.setEditorMode(mode);
+    }
+    requestSave() {
+      this._parts.api.requestSave();
+    }
     setPageConfig(config) {
       this._parts.api.setPageConfig(config);
     }
@@ -47088,6 +47476,174 @@ label {
   if (!customElements.get("cms-editor-shell")) {
     customElements.define("cms-editor-shell", Shell);
   }
+  // src/core/editorSystemV2/builtInEditors/BindingCoreEditor.ts
+  class BindingCoreEditor extends Editor {
+  }
+  // src/core/editorSystemV2/builtInEditors/SiteSlotPlaceholderEditor.ts
+  var SITE_SLOT_PLACEHOLDER_TAG = "cms-site-slot-placeholder";
+
+  class SiteSlotPlaceholderEditor extends Editor {
+    settings() {
+      const published = this.target.hasAttribute("data-published-slot");
+      return [
+        {
+          kind: "self",
+          label: "Slot contract",
+          settings: [
+            {
+              type: "text",
+              label: "Label",
+              attribute: "data-slot-label",
+              required: true,
+              placeholder: "Main content"
+            },
+            {
+              type: "text",
+              label: "Public name",
+              attribute: "data-slot-name",
+              placeholder: "Leave empty for the default slot",
+              disabled: published,
+              help: published ? "Published slot names are immutable in V1." : "Use lowercase kebab-case."
+            },
+            {
+              type: "select",
+              label: "Accepts",
+              attribute: "data-slot-kind",
+              defaultValue: "any-component",
+              options: [
+                { label: "Any bloc", value: "any-component" },
+                { label: "Selected blocs", value: "components" },
+                { label: "Media", value: "media" }
+              ]
+            },
+            {
+              type: "text",
+              label: "Accepted bloc tags",
+              attribute: "data-slot-tags",
+              placeholder: "basic-heading, basic-button",
+              help: "Comma-separated; used when Accepts is Selected blocs."
+            },
+            {
+              type: "text",
+              label: "Accepted media",
+              attribute: "data-slot-media",
+              placeholder: "image, svg, video",
+              help: "image, bitmap, svg, video, audio or document."
+            },
+            {
+              type: "text",
+              label: "Minimum items",
+              attribute: "data-slot-min",
+              placeholder: "0"
+            },
+            {
+              type: "text",
+              label: "Maximum items",
+              attribute: "data-slot-max",
+              placeholder: "No limit"
+            }
+          ]
+        }
+      ];
+    }
+  }
+  function siteSlotPlaceholderCatalogEntry() {
+    return {
+      tag: SITE_SLOT_PLACEHOLDER_TAG,
+      label: "Slot",
+      description: "Editable Light DOM content exposed by each bloc instance.",
+      icon: "add",
+      category: "Builder",
+      subCategory: "Projection",
+      defaultContent: `<${SITE_SLOT_PLACEHOLDER_TAG} data-slot-label="New slot" data-slot-kind="any-component"></${SITE_SLOT_PLACEHOLDER_TAG}>`,
+      bloc: HTMLElement,
+      editor: SiteSlotPlaceholderEditor
+    };
+  }
+  // src/core/editorSystemV2/editorCatalog.ts
+  function createControlEditorCatalog() {
+    return [
+      {
+        tag: CMS_BINDING_CORE_TAG,
+        label: "Binding core",
+        description: "Provides global data scopes to editable content.",
+        icon: "database",
+        category: "Runtime",
+        bloc: ql,
+        editor: BindingCoreEditor
+      }
+    ];
+  }
+
+  // src/components/editorSystemV2/catalog.ts
+  var catalogPromise = null;
+  async function loadEditorCatalog() {
+    catalogPromise ??= loadEditorCatalogOnce();
+    return catalogPromise;
+  }
+  async function loadEditorCatalogOnce() {
+    const runtime2 = installEditorCatalogRuntime();
+    try {
+      await loadScript(`${getMetaBasePath()}/api/editor/script.js`);
+    } catch (error) {
+      console.error("[editor] editor catalog script failed", error);
+    }
+    const catalog = mergeEditorCatalogs(createControlEditorCatalog(), runtime2.getCatalog());
+    return applyBlocCatalogueInsertionState(catalog, await loadBlocLifecycle());
+  }
+  function applyBlocCatalogueInsertionState(catalog, lifecycle) {
+    const archived = new Set(lifecycle.filter((item) => item.state === "archived").map((item) => item.tag.toLowerCase()));
+    return catalog.map((entry) => archived.has(entry.tag.toLowerCase()) ? { ...entry, insertable: false } : { ...entry });
+  }
+  async function loadBlocLifecycle() {
+    try {
+      const response = await fetch(`${getMetaBasePath()}/api/bloc/catalogue`);
+      return response.ok ? await response.json() : [];
+    } catch (error) {
+      console.error("[editor] bloc lifecycle catalogue failed", error);
+      return [];
+    }
+  }
+  function installEditorCatalogRuntime() {
+    const entries = [];
+    const runtime2 = {
+      Editor,
+      registerEditor(entry) {
+        try {
+          entries.push(createEditorCatalogEntry(entry, {
+            tag: entry.tag ?? "unknown-bloc",
+            label: entry.label ?? entry.tag ?? "Unknown bloc",
+            description: entry.description,
+            category: entry.category,
+            defaultContent: entry.defaultContent,
+            bloc: entry.bloc
+          }));
+        } catch (error) {
+          console.error("[editor] invalid editor catalog entry", entry, error);
+        }
+      },
+      getCatalog: () => [...entries]
+    };
+    window.p9rEditor = runtime2;
+    return runtime2;
+  }
+  async function loadScript(src) {
+    await new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[data-editor-catalog-script="${src}"]`);
+      if (existing) {
+        resolve();
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.dataset.editorCatalogScript = src;
+      script.addEventListener("load", () => resolve(), { once: true });
+      script.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)), { once: true });
+      document.head.append(script);
+    });
+  }
+
   // src/components/editorSystemV2/resource.ts
   function currentPageIdentifier() {
     return new URL(window.location.href).searchParams.get("id");
@@ -47100,6 +47656,993 @@ label {
   }
   function resourceLabel(resource) {
     return resource[0].toUpperCase() + resource.slice(1);
+  }
+
+  // src/components/editorSystemV2/shellSetup.ts
+  async function configureShellCatalogAndFrame(shell, options2 = {}) {
+    const [catalog, insertItems, dataSources, settings] = await Promise.all([
+      loadEditorCatalog(),
+      loadTemplateItems(),
+      fetchJson("editor/sources", []),
+      fetchJson("system/settings", {})
+    ]);
+    shell.setCatalog(catalog);
+    shell.setInsertItems(insertItems);
+    shell.setDataSources(dataSources);
+    shell.setDefaultTemplateSelection({ category: settings.editor?.layoutCategory || undefined });
+    setThemeTokens(shell, settings);
+    if (options2.frame === false) {
+      return;
+    }
+    const documentId = currentPageIdentifier();
+    const resource = shellResource(shell);
+    const frameUrl = documentId ? `${getMetaBasePath()}/api/editor/frame?type=${resource}&id=${encodeURIComponent(documentId)}` : `${getMetaBasePath()}/api/editor/frame?type=${resource}`;
+    shell.shadowRoot?.querySelector("cms-editor-v2-canvas")?.setAttribute("frame-url", frameUrl);
+  }
+  function setThemeTokens(shell, settings) {
+    const themeTokens = (settings.theme?.sources ?? []).flatMap((source2) => source2.categories.flatMap((category) => category.tokens.filter((token) => token.type === "color").map((token) => ({
+      label: token.label,
+      variable: token.variable,
+      category: `${source2.label} · ${category.label}`
+    }))));
+    const settingsView = shell.shadowRoot?.querySelector("cms-editor-v2-settings-view");
+    settingsView?.setThemeTokens(themeTokens);
+  }
+  async function loadTemplateItems() {
+    const templates = await fetchJson("template/list", []);
+    const details = await Promise.all(templates.map((template22) => fetchJson(`template?id=${encodeURIComponent(template22.id)}`, {
+      ...template22,
+      content: ""
+    })));
+    return details.filter((template22) => template22.content).map((template22) => ({
+      kind: "template",
+      id: template22.id,
+      label: template22.name,
+      description: template22.description,
+      category: template22.category || "Templates",
+      icon: "T",
+      content: template22.content ?? ""
+    }));
+  }
+  async function fetchJson(path, fallback) {
+    try {
+      const response = await fetch(`${getMetaBasePath()}/api/${path}`);
+      return response.ok ? await response.json() : fallback;
+    } catch (error) {
+      console.error("[editor] failed to load picker source", path, error);
+      return fallback;
+    }
+  }
+
+  // src/components/editorSystemV2/siteBloc/siteBlocApi.ts
+  async function loadSiteBloc(tag) {
+    return requestJson2(siteBlocUrl("site-bloc", tag));
+  }
+  async function loadBlocCatalogue() {
+    return requestJson2(`${getMetaBasePath()}/api/bloc/catalogue`);
+  }
+  async function saveSiteBloc(definition, mode, metadata, content) {
+    const body = mode === "structure" ? {
+      expectedDraftRevision: definition.draftRevision,
+      ...metadata,
+      defaultContent: definition.draft.defaultContent,
+      structureHtml: content
+    } : {
+      expectedDraftRevision: definition.draftRevision,
+      snapshot: {
+        ...definition.draft,
+        ...metadata,
+        defaultContent: content
+      }
+    };
+    return requestJson2(siteBlocUrl("site-bloc", definition.tag), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+  }
+  async function publishSiteBloc(definition) {
+    return requestJson2(siteBlocUrl("site-bloc/publish", definition.tag), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ expectedDraftRevision: definition.draftRevision })
+    });
+  }
+  async function setSiteBlocArchived(definition, archived) {
+    return requestJson2(siteBlocUrl("site-bloc", definition.tag), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ archived, expectedDraftRevision: definition.draftRevision })
+    });
+  }
+  function siteBlocFrameUrl(tag, mode, revision, nonce) {
+    const query8 = new URLSearchParams({ id: tag, mode, revision: String(revision), nonce: String(nonce) });
+    return `${getMetaBasePath()}/api/site-bloc/frame?${query8}`;
+  }
+  function siteBlocUrl(path, tag) {
+    return `${getMetaBasePath()}/api/${path}?id=${encodeURIComponent(tag)}`;
+  }
+  async function requestJson2(url, init) {
+    const response = await fetch(url, init);
+    if (response.redirected) {
+      window.location.href = response.url;
+      throw new Error("Authentication is required.");
+    }
+    if (!response.ok) {
+      throw new Error(await responseMessage(response));
+    }
+    return response.json();
+  }
+  async function responseMessage(response) {
+    const fallback = `Request failed with ${response.status}`;
+    try {
+      const body = await response.json();
+      const message = body.message ?? body.error;
+      return typeof message === "string" && message.trim() ? message : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  // src/components/editorSystemV2/siteBloc/siteBlocView.ts
+  class SiteBlocView {
+    root;
+    shell;
+    detailsButton;
+    constructor(root) {
+      this.root = root;
+      this.shell = this.require("cms-editor-shell");
+      this.detailsButton = this.require('[data-action="details"]');
+      this.require("[data-back]").href = `${getMetaBasePath()}/admin/blocs`;
+    }
+    metadata() {
+      return {
+        name: this.field("name").value.trim(),
+        group: this.field("group").value.trim(),
+        description: this.field("description").value.trim()
+      };
+    }
+    setDefinition(definition) {
+      const { draft } = definition;
+      this.require("[data-name]").textContent = draft.name;
+      this.require("[data-tag]").textContent = definition.tag;
+      this.require("[data-dialog-tag]").textContent = definition.tag;
+      this.field("name").value = draft.name;
+      this.field("group").value = draft.group;
+      this.field("description").value = draft.description;
+      const state2 = this.require("[data-state]");
+      const unpublished = definition.publishedRevision !== definition.draftRevision;
+      state2.textContent = definition.lifecycle === "archived" ? "Archived" : unpublished ? "Draft changes" : "Published";
+      state2.dataset.tone = definition.lifecycle === "archived" ? "archived" : unpublished ? "warning" : "published";
+      const archive = this.require('[data-action="archive"]');
+      archive.textContent = definition.lifecycle === "archived" ? "Restore" : "Archive";
+    }
+    setMode(mode) {
+      for (const button2 of Array.from(this.root.querySelectorAll("[data-mode]"))) {
+        button2.ariaPressed = String(button2.dataset.mode === mode);
+      }
+    }
+    setControls(input3) {
+      this.require(".builder").setAttribute("aria-busy", String(input3.busy));
+      const disabled = input3.busy || !input3.ready || !input3.definition;
+      const archived = input3.definition?.lifecycle === "archived";
+      for (const button2 of Array.from(this.root.querySelectorAll("[data-mode], [data-action]"))) {
+        if (button2.dataset.action === "close-details" || button2.dataset.action === "details") {
+          button2.disabled = input3.busy || !input3.definition;
+          continue;
+        }
+        button2.disabled = disabled;
+      }
+      if (archived) {
+        for (const button2 of Array.from(this.root.querySelectorAll('[data-mode], [data-action="save"], [data-action="preview"], [data-action="publish"]'))) {
+          button2.disabled = true;
+        }
+        this.require('[data-action="archive"]').disabled = input3.busy;
+      }
+      const publish = this.require('[data-action="publish"]');
+      if (input3.definition) {
+        const unpublished = input3.definition.publishedRevision !== input3.definition.draftRevision;
+        publish.disabled = disabled || input3.definition.lifecycle === "archived" || !input3.dirty && !unpublished;
+      }
+    }
+    setStatus(message) {
+      this.require("[data-status]").textContent = message;
+    }
+    showError(message) {
+      const error = this.require("[data-error]");
+      error.hidden = !message;
+      error.textContent = message ?? "";
+    }
+    showAccessibilityReport(issues) {
+      const total = issues.reduce((sum, issue) => sum + issue.count, 0);
+      this.require("[data-a11y-summary]").textContent = total === 0 ? "No issues found in the loaded preview." : `${total} potential issue${total === 1 ? "" : "s"}.`;
+      const list = this.require("[data-a11y-list]");
+      list.replaceChildren(...issues.map((issue) => {
+        const item = document.createElement("li");
+        item.textContent = `${issue.count} ${issue.message}`;
+        return item;
+      }));
+      list.hidden = issues.length === 0;
+    }
+    openDetails() {
+      this.require("[data-details-dialog]").hidden = false;
+      this.field("name").focus();
+    }
+    closeDetails() {
+      this.require("[data-details-dialog]").hidden = true;
+      this.detailsButton.focus();
+    }
+    detailsOpen() {
+      return !this.require("[data-details-dialog]").hidden;
+    }
+    async simplifyShellChrome() {
+      await customElements.whenDefined("cms-editor-v2-topbar");
+      const topBar = this.shell.shadowRoot?.querySelector("cms-editor-v2-topbar");
+      const chrome = topBar?.shadowRoot;
+      chrome?.querySelector(".start")?.setAttribute("hidden", "");
+      chrome?.querySelector(".end")?.setAttribute("hidden", "");
+      const bar = chrome?.querySelector(".topbar");
+      if (bar) {
+        bar.style.gridTemplateColumns = "1fr";
+      }
+    }
+    setReadOnly(readOnly) {
+      const topBar = this.shell.shadowRoot?.querySelector("cms-editor-v2-topbar");
+      const edit = topBar?.shadowRoot?.querySelector('[data-editor-mode="edit"]');
+      if (edit) {
+        edit.disabled = readOnly;
+      }
+      this.shell.toggleAttribute("data-builder-read-only", readOnly);
+    }
+    field(name) {
+      return this.require(`[data-field="${name}"]`);
+    }
+    require(selector) {
+      const element = this.root.querySelector(selector);
+      if (!element) {
+        throw new Error(`Site bloc builder is missing ${selector}`);
+      }
+      return element;
+    }
+  }
+
+  // src/components/editorSystemV2/siteBloc/Controller/siteBlocActions.ts
+  class SiteBlocActions {
+    context;
+    pending = null;
+    constructor(context) {
+      this.context = context;
+    }
+    queue(action) {
+      const definition = this.context.definition();
+      if (this.context.busy() || !definition) {
+        return;
+      }
+      const archived = definition.lifecycle === "archived";
+      if (archived && action.kind !== "archive") {
+        return;
+      }
+      if (!this.context.frames.ready && !(archived && action.kind === "archive")) {
+        return;
+      }
+      const mustSave = action.kind === "save" || action.kind === "preview" || action.kind === "publish" || this.context.dirty();
+      this.begin();
+      if (!mustSave) {
+        this.afterSave(action);
+        return;
+      }
+      this.pending = action;
+      this.context.view.setStatus("Saving draft…");
+      this.context.view.shell.requestSave();
+    }
+    onSaveDocument(content) {
+      const action = this.pending ?? { kind: "save" };
+      this.pending = null;
+      this.persist(content, action);
+    }
+    begin() {
+      this.context.setBusy(true);
+      this.context.view.showError(null);
+      this.context.renderControls();
+    }
+    async persist(content, action) {
+      const definition = this.context.definition();
+      if (!definition) {
+        return;
+      }
+      try {
+        const saved = await saveSiteBloc(definition, this.context.frames.mode, this.context.view.metadata(), content);
+        this.context.frames.dirty = false;
+        this.context.setDefinition(saved);
+        await this.afterSave(action);
+      } catch (error) {
+        this.pending = null;
+        this.context.fail(error);
+      }
+    }
+    async afterSave(action) {
+      try {
+        if (action.kind === "publish") {
+          const published = await publishSiteBloc(this.context.definition());
+          this.context.setDefinition(published);
+          this.context.configureMode(this.context.frames.mode);
+          this.context.view.setStatus(`Published revision ${published.publishedRevision}.`);
+        } else if (action.kind === "archive") {
+          const archived = this.context.definition().lifecycle !== "archived";
+          const updated = await setSiteBlocArchived(this.context.definition(), archived);
+          this.context.setDefinition(updated);
+          this.context.configureMode(this.context.frames.mode);
+        } else if (action.kind === "switch") {
+          this.context.configureMode(action.mode);
+        } else if (action.kind === "preview") {
+          const definition = this.context.definition();
+          this.context.configureMode(this.context.frames.mode);
+          this.context.frames.preview(definition);
+          this.context.view.setStatus(`Previewing draft revision ${definition.draftRevision}.`);
+        } else {
+          const revision = this.context.definition().draftRevision;
+          this.context.configureMode(this.context.frames.mode);
+          this.context.view.setStatus(`Draft revision ${revision} saved.`);
+        }
+        this.context.setBusy(false);
+        this.context.renderControls();
+      } catch (error) {
+        this.context.fail(error);
+      }
+    }
+  }
+
+  // src/components/editorSystemV2/siteBloc/siteBlocCatalog.ts
+  function createSiteBlocCatalogs(baseCatalog, catalogue, definition) {
+    const structureTags = eligibleStructureTags(catalogue, definition.tag);
+    const structure = baseCatalog.filter((entry) => structureTags.has(entry.tag.toLowerCase())).map(structureEntry);
+    structure.push(siteSlotPlaceholderCatalogEntry());
+    const defaults = baseCatalog.filter((entry) => entry.tag.toLowerCase() !== definition.tag);
+    defaults.push(siteBlocHostCatalogEntry(definition));
+    return { structure, defaults, structureTags };
+  }
+  function structureEntry(entry) {
+    return { ...entry, defaultContent: undefined };
+  }
+  function eligibleStructureTags(catalogue, ownerTag) {
+    const normalizedOwner = ownerTag.toLowerCase();
+    return new Set(catalogue.filter((item) => item.tag.toLowerCase() !== normalizedOwner).filter((item) => item.state !== "archived").filter((item) => item.origin.kind !== "site-builder" || item.publishedRevision !== null).filter((item) => !item.publishedTransitiveDependencies.some((tag) => tag.toLowerCase() === normalizedOwner)).map((item) => item.tag.toLowerCase()));
+  }
+  function siteBlocHostCatalogEntry(definition) {
+    const slots = cloneSlots(definition.draft.slots);
+
+    class SiteBlocHostEditor extends Editor {
+      contentSlots() {
+        return cloneSlots(slots);
+      }
+    }
+    return {
+      tag: definition.tag,
+      label: definition.draft.name,
+      description: "Current site bloc instance",
+      category: "Site builder",
+      bloc: HTMLElement,
+      editor: SiteBlocHostEditor,
+      insertable: false
+    };
+  }
+  function cloneSlots(slots) {
+    return slots.map((slot) => ({
+      ...slot,
+      accepts: slot.accepts.map((accept) => ({
+        ...accept,
+        ...accept.kind === "media" && accept.accept ? { accept: [...accept.accept] } : {}
+      }))
+    }));
+  }
+  function isTagInsertable(tags, tag, _entry) {
+    return tags.has(tag.toLowerCase());
+  }
+
+  // src/components/editorSystemV2/siteBloc/previewAccessibility.ts
+  function scanPreviewAccessibility(document2) {
+    const issues = [];
+    const roots = accessibilityRoots(document2);
+    addIssue(issues, "image-alt", sum(roots, (root) => root.querySelectorAll("img:not([alt])").length), "images are missing an alt attribute");
+    addIssue(issues, "interactive-name", sum(roots, (root) => Array.from(root.querySelectorAll("button, a[href]")).filter((element) => !accessibleName(root, element)).length), "buttons or links have no accessible name");
+    addIssue(issues, "control-label", sum(roots, (root) => Array.from(root.querySelectorAll("input, select, textarea")).filter((element) => needsControlLabel(element) && !hasControlLabel(root, element)).length), "form controls have no label");
+    addIssue(issues, "duplicate-id", roots.reduce((total, root) => total + duplicateIdCount(root), 0), "elements use a duplicated id");
+    return issues;
+  }
+  function accessibilityRoots(document2) {
+    const roots = [document2];
+    for (let index = 0;index < roots.length; index += 1) {
+      const root = roots[index];
+      for (const element of Array.from(root.querySelectorAll("*"))) {
+        if (element.shadowRoot?.mode === "open") {
+          roots.push(element.shadowRoot);
+        }
+      }
+    }
+    return roots;
+  }
+  function sum(roots, count) {
+    return roots.reduce((total, root) => total + count(root), 0);
+  }
+  function addIssue(issues, kind, count, message) {
+    if (count > 0) {
+      issues.push({ kind, count, message });
+    }
+  }
+  function accessibleName(root, element) {
+    const direct = element.getAttribute("aria-label")?.trim() || element.getAttribute("title")?.trim();
+    if (direct) {
+      return direct;
+    }
+    const labelledBy = element.getAttribute("aria-labelledby")?.trim().split(/\s+/).filter(Boolean) ?? [];
+    const referenced = labelledBy.map((id) => root.getElementById(id)?.textContent?.trim() ?? "").filter(Boolean).join(" ");
+    if (referenced) {
+      return referenced;
+    }
+    const imageAlt = Array.from(element.querySelectorAll("img[alt]")).map((image2) => image2.getAttribute("alt")?.trim() ?? "").filter(Boolean).join(" ");
+    return element.textContent?.trim() || imageAlt;
+  }
+  function hasControlLabel(root, element) {
+    if (accessibleName(root, element) || element.closest("label")) {
+      return true;
+    }
+    const id = element.id;
+    return Boolean(id && Array.from(root.querySelectorAll("label[for]")).some((label3) => label3.getAttribute("for") === id));
+  }
+  function needsControlLabel(element) {
+    if (element.localName !== "input") {
+      return true;
+    }
+    return !new Set(["hidden", "button", "submit", "reset", "image"]).has((element.getAttribute("type") ?? "text").toLowerCase());
+  }
+  function duplicateIdCount(root) {
+    const counts = new Map;
+    for (const element of Array.from(root.querySelectorAll("[id]"))) {
+      if (element.id) {
+        counts.set(element.id, (counts.get(element.id) ?? 0) + 1);
+      }
+    }
+    return [...counts.values()].reduce((total, count) => total + Math.max(0, count - 1), 0);
+  }
+
+  // src/components/editorSystemV2/siteBloc/Controller/siteBlocFrames.ts
+  class SiteBlocFrames {
+    view;
+    onStateChange;
+    mode = "structure";
+    ready = false;
+    dirty = false;
+    frameNonce = 0;
+    editorUrl = "";
+    previewUrl = "";
+    observer = null;
+    constructor(view, onStateChange) {
+      this.view = view;
+      this.onStateChange = onStateChange;
+    }
+    configure(mode, definition, catalogue, baseCatalog) {
+      this.mode = mode;
+      this.ready = false;
+      this.dirty = false;
+      this.observer?.disconnect();
+      const catalogs = createSiteBlocCatalogs(baseCatalog, catalogue, definition);
+      if (mode === "structure") {
+        this.view.shell.setCatalog(catalogs.structure);
+        this.view.shell.setEditingPolicy({
+          bindings: false,
+          conditions: false,
+          repeats: false,
+          templates: false,
+          looseMedia: false,
+          canInsertTag: (tag, entry) => this.canInsertStructureTag(catalogs.structureTags, tag, entry)
+        });
+      } else {
+        this.view.shell.setCatalog(catalogs.defaults);
+        this.view.shell.setEditingPolicy({
+          bindings: true,
+          canInsertTag: (tag) => tag.toLowerCase() !== definition.tag.toLowerCase()
+        });
+      }
+      this.editorUrl = this.nextUrl(definition, mode);
+      this.previewUrl = this.nextUrl(definition, "preview");
+      this.view.shell.setPreviewMode("external");
+      this.view.shell.setFrameUrls({ editor: this.editorUrl, view: this.previewUrl });
+      const archived = definition.lifecycle === "archived";
+      this.view.setReadOnly(archived);
+      this.view.shell.setEditorMode(archived ? "view" : "edit");
+      this.view.setMode(mode);
+      this.view.setStatus(this.loadingStatus(definition, mode));
+      this.onStateChange();
+    }
+    preview(definition) {
+      this.previewUrl = this.nextUrl(definition, "preview");
+      this.view.shell.reloadPreview(this.previewUrl);
+      this.view.shell.setEditorMode("view");
+    }
+    handleReady(detail, definition) {
+      if (!this.isCurrent(detail, definition)) {
+        return;
+      }
+      if (detail.kind === "view") {
+        this.view.showAccessibilityReport(scanPreviewAccessibility(detail.document));
+        return;
+      }
+      this.ready = true;
+      if (definition.lifecycle === "archived") {
+        this.view.setStatus("Archived bloc · read-only preview. Restore it to continue editing.");
+      } else {
+        this.observe(detail.document);
+        this.view.setStatus(this.mode === "structure" ? "Structure ready." : "Default content ready.");
+      }
+      this.onStateChange();
+    }
+    dispose() {
+      this.observer?.disconnect();
+    }
+    canInsertStructureTag(tags, tag, entry) {
+      return tag === "cms-site-slot-placeholder" || isTagInsertable(tags, tag, entry);
+    }
+    observe(document2) {
+      this.observer?.disconnect();
+      const root = document2.querySelector("[data-cms-content]");
+      if (!root) {
+        return;
+      }
+      this.observer = new MutationObserver(() => {
+        this.dirty = true;
+        this.view.setStatus("Unsaved editor changes");
+        this.onStateChange();
+      });
+      this.observer.observe(root, { attributes: true, childList: true, characterData: true, subtree: true });
+    }
+    isCurrent(detail, definition) {
+      if (!detail.url.includes("/api/site-bloc/frame")) {
+        return false;
+      }
+      const url = new URL(detail.url, window.location.href);
+      const expected = detail.kind === "view" ? this.previewUrl : this.editorUrl;
+      return url.href === new URL(expected, window.location.href).href && url.searchParams.get("id") === definition.tag && url.searchParams.get("revision") === String(definition.draftRevision);
+    }
+    nextUrl(definition, mode) {
+      this.frameNonce += 1;
+      return siteBlocFrameUrl(definition.tag, mode, definition.draftRevision, this.frameNonce);
+    }
+    loadingStatus(definition, mode) {
+      if (definition.lifecycle === "archived") {
+        return "Archived bloc · read-only preview. Restore it to continue editing.";
+      }
+      return mode === "structure" ? "Loading private structure…" : "Loading default slot content…";
+    }
+  }
+
+  // src/components/editorSystemV2/siteBloc/Controller/SiteBlocBuilderController.ts
+  class SiteBlocBuilderController {
+    host;
+    root;
+    view;
+    frames;
+    actions;
+    definition = null;
+    catalogue = [];
+    baseCatalog = [];
+    busy = true;
+    initialized = false;
+    constructor(host, root) {
+      this.host = host;
+      this.root = root;
+      this.view = new SiteBlocView(root);
+      this.frames = new SiteBlocFrames(this.view, () => this.renderControls());
+      this.actions = new SiteBlocActions({
+        view: this.view,
+        frames: this.frames,
+        definition: () => this.definition,
+        setDefinition: (definition) => this.setDefinition(definition),
+        dirty: () => this.dirty(),
+        busy: () => this.busy,
+        setBusy: (busy) => {
+          this.busy = busy;
+        },
+        configureMode: (mode) => this.configureMode(mode),
+        renderControls: () => this.renderControls(),
+        fail: (error) => this.fail(error, false)
+      });
+      root.addEventListener("click", this.onClick);
+      root.addEventListener("input", this.onInput);
+      root.addEventListener("keydown", this.onKeyDown);
+      this.view.shell.addEventListener(EDITOR_V2_SAVE_DOCUMENT_EVENT, this.onSaveDocument);
+      this.view.shell.addEventListener("editor-v2:frame-ready", this.onFrameReady);
+      this.renderControls();
+    }
+    connect() {
+      if (!this.initialized) {
+        this.initialized = true;
+        this.initialize();
+      }
+    }
+    disconnect() {
+      this.frames.dispose();
+    }
+    async initialize() {
+      const tag = this.host.getAttribute("bloc-id")?.trim() || new URL(window.location.href).searchParams.get("id")?.trim();
+      if (!tag) {
+        this.fail(new Error("Missing site bloc id."));
+        return;
+      }
+      try {
+        await this.view.simplifyShellChrome();
+        const [definition, catalogue] = await Promise.all([
+          loadSiteBloc(tag),
+          loadBlocCatalogue(),
+          configureShellCatalogAndFrame(this.view.shell, { frame: false })
+        ]);
+        this.catalogue = catalogue;
+        this.baseCatalog = [...this.view.shell.catalog];
+        this.setDefinition(definition);
+        this.busy = false;
+        this.configureMode("structure");
+      } catch (error) {
+        this.fail(error);
+      }
+    }
+    configureMode(mode) {
+      if (this.definition) {
+        this.frames.configure(mode, this.definition, this.catalogue, this.baseCatalog);
+      }
+    }
+    onClick = (event) => {
+      const button2 = event.target?.closest("button");
+      if (!button2) {
+        return;
+      }
+      const mode = button2.dataset.mode;
+      if (mode === "structure" || mode === "default") {
+        this.actions.queue({ kind: "switch", mode });
+        return;
+      }
+      const action = button2.dataset.action;
+      if (action === "details") {
+        this.view.openDetails();
+      } else if (action === "close-details") {
+        this.view.closeDetails();
+      } else if (action === "save" || action === "preview" || action === "publish" || action === "archive") {
+        this.actions.queue({ kind: action });
+      }
+    };
+    onInput = (event) => {
+      if (!event.target?.closest("[data-field]")) {
+        return;
+      }
+      this.view.setStatus("Unsaved metadata changes");
+      this.renderControls();
+    };
+    onKeyDown = (event) => {
+      if (event.key === "Escape" && this.view.detailsOpen()) {
+        this.view.closeDetails();
+      }
+    };
+    onSaveDocument = (event) => {
+      const detail = event.detail;
+      this.actions.onSaveDocument(detail.content);
+    };
+    onFrameReady = (event) => {
+      if (this.definition) {
+        this.frames.handleReady(event.detail, this.definition);
+      }
+    };
+    setDefinition(definition) {
+      this.definition = definition;
+      this.view.setDefinition(definition);
+      this.view.shell.setPageConfig({
+        id: definition.id,
+        title: definition.draft.name,
+        path: definition.tag,
+        description: definition.draft.description,
+        tags: definition.draft.group ? [definition.draft.group] : [],
+        published: definition.publishedRevision === definition.draftRevision
+      });
+    }
+    dirty() {
+      const draft = this.definition?.draft;
+      const metadata = this.view.metadata();
+      return Boolean(this.frames.dirty || !draft || metadata.name !== draft.name || metadata.group !== draft.group || metadata.description !== draft.description);
+    }
+    renderControls() {
+      this.view.setControls({
+        busy: this.busy,
+        ready: this.frames.ready,
+        dirty: this.dirty(),
+        definition: this.definition
+      });
+    }
+    fail(error, initial = true) {
+      this.busy = false;
+      const message = error instanceof Error ? error.message : String(error);
+      this.view.showError(message);
+      this.view.setStatus(initial ? "Bloc failed to load." : "Action failed; draft remains open.");
+      this.renderControls();
+    }
+  }
+
+  // src/components/editorSystemV2/siteBloc/template.html
+  var template_default36 = `<div class="builder" aria-busy="true">
+    <header class="lifecycle-bar">
+        <div class="identity">
+            <a class="back" data-back href="#" aria-label="Back to blocs">‹</a>
+            <div>
+                <div class="eyebrow">Site bloc</div>
+                <div class="title-line">
+                    <strong data-name>Loading…</strong>
+                    <code data-tag></code>
+                    <span class="state" data-state>Loading</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mode-switch" role="group" aria-label="Bloc authoring mode">
+            <button type="button" data-mode="structure" aria-pressed="true">
+                <span>Structure</span>
+                <small>Private composition</small>
+            </button>
+            <button type="button" data-mode="default" aria-pressed="false">
+                <span>Default</span>
+                <small>Editable slot content</small>
+            </button>
+        </div>
+
+        <div class="actions">
+            <button type="button" data-action="details">Details</button>
+            <button type="button" data-action="save" class="primary">Save draft</button>
+            <button type="button" data-action="preview">Preview</button>
+            <button type="button" data-action="publish">Publish</button>
+            <button type="button" data-action="archive" class="quiet-danger">Archive</button>
+        </div>
+    </header>
+
+    <div class="feedback">
+        <p class="status" data-status role="status" aria-live="polite">Loading bloc…</p>
+        <p class="error" data-error role="alert" hidden></p>
+        <section class="a11y" data-a11y aria-label="Preview accessibility report" aria-live="polite">
+            <strong>Preview checks</strong>
+            <span data-a11y-summary>Waiting for preview…</span>
+            <ul data-a11y-list hidden></ul>
+        </section>
+    </div>
+
+    <cms-editor-shell
+        resource="site-bloc"
+        back-label="Blocs"
+        settings-label="Bloc details"
+    ></cms-editor-shell>
+
+    <div class="dialog-layer" data-details-dialog hidden>
+        <button class="dialog-backdrop" type="button" data-action="close-details" aria-label="Close bloc details"></button>
+        <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="site-bloc-details-title">
+            <header>
+                <div>
+                    <div class="eyebrow">Metadata</div>
+                    <h2 id="site-bloc-details-title">Bloc details</h2>
+                </div>
+                <button type="button" data-action="close-details" aria-label="Close bloc details">×</button>
+            </header>
+            <div class="fields">
+                <label>
+                    <span>Name</span>
+                    <input data-field="name" required autocomplete="off">
+                </label>
+                <label>
+                    <span>Group</span>
+                    <input data-field="group" autocomplete="off">
+                </label>
+                <label>
+                    <span>Description</span>
+                    <textarea data-field="description" rows="5"></textarea>
+                </label>
+                <div class="immutable">
+                    <span>Immutable custom-element tag</span>
+                    <code data-dialog-tag></code>
+                </div>
+            </div>
+            <footer>
+                <button type="button" data-action="close-details">Done</button>
+            </footer>
+        </section>
+    </div>
+</div>
+`;
+
+  // src/components/editorSystemV2/siteBloc/style.css
+  var style_default24 = `:host {
+    --builder-accent: #165f4b;
+    --builder-border: #dfe5e2;
+    --builder-muted: #697873;
+    --builder-surface: #fff;
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: #151b19;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+.builder {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    background: #f5f7f6;
+}
+
+.lifecycle-bar {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) auto minmax(360px, 1fr);
+    align-items: center;
+    gap: 20px;
+    min-height: 68px;
+    border-bottom: 1px solid var(--builder-border);
+    background: var(--builder-surface);
+    padding: 9px 16px;
+}
+
+.identity,
+.title-line,
+.actions,
+.a11y { display: flex; align-items: center; }
+.identity { gap: 10px; min-width: 0; }
+.title-line { gap: 8px; min-width: 0; }
+.title-line strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.title-line code { color: var(--builder-muted); font-size: 11px; }
+
+.eyebrow {
+    color: var(--builder-muted);
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.back {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    border-radius: 7px;
+    color: var(--builder-muted);
+    font-size: 25px;
+    text-decoration: none;
+}
+.back:hover { background: #f0f3f2; color: #151b19; }
+
+.state {
+    border-radius: 999px;
+    background: #e9f4ef;
+    color: #166044;
+    padding: 3px 7px;
+    font-size: 10px;
+    font-weight: 700;
+}
+.state[data-tone="warning"] { background: #fff3d6; color: #805500; }
+.state[data-tone="archived"] { background: #eef0ef; color: #59635f; }
+
+.mode-switch {
+    display: flex;
+    gap: 3px;
+    border: 1px solid var(--builder-border);
+    border-radius: 9px;
+    background: #f4f6f5;
+    padding: 3px;
+}
+.mode-switch button { min-width: 126px; text-align: left; }
+.mode-switch span,
+.mode-switch small { display: block; }
+.mode-switch small { margin-top: 1px; color: var(--builder-muted); font-size: 9px; font-weight: 500; }
+.mode-switch button[aria-pressed="true"] { background: #fff; color: #151b19; box-shadow: 0 1px 3px #1c2b2514; }
+
+button {
+    min-height: 32px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #31413b;
+    padding: 0 10px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 680;
+    cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--builder-border); background: #f6f8f7; }
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible { outline: 3px solid #68a79266; outline-offset: 2px; }
+button:disabled { cursor: not-allowed; opacity: .45; }
+.actions { justify-content: flex-end; gap: 5px; }
+.primary { background: var(--builder-accent); color: #fff; }
+.primary:hover:not(:disabled) { border-color: var(--builder-accent); background: #0f513f; }
+.quiet-danger { color: #a1342a; }
+
+.feedback {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 34px;
+    border-bottom: 1px solid var(--builder-border);
+    background: #fbfcfb;
+    padding: 5px 16px;
+    font-size: 11px;
+}
+.status,
+.error { margin: 0; }
+.status { color: var(--builder-muted); }
+.error { color: #a12820; font-weight: 650; }
+.a11y { margin-left: auto; gap: 7px; color: var(--builder-muted); }
+.a11y strong { color: #34443e; }
+.a11y ul { display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.a11y li { color: #855400; }
+
+cms-editor-shell { display: block; min-height: 0; height: 100%; }
+
+.dialog-layer { position: fixed; z-index: 20; inset: 0; }
+.dialog-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; background: #0d18144d; }
+.dialog {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: min(440px, 100%);
+    height: 100%;
+    border-left: 1px solid var(--builder-border);
+    background: #fff;
+    box-shadow: -20px 0 48px #0a17121a;
+    padding: 22px;
+}
+.dialog header,
+.dialog footer { display: flex; align-items: center; justify-content: space-between; }
+.dialog h2 { margin: 3px 0 0; font-size: 21px; }
+.fields { display: grid; gap: 18px; margin-top: 28px; }
+.fields label { display: grid; gap: 7px; font-size: 12px; font-weight: 700; }
+.fields input,
+.fields textarea {
+    width: 100%;
+    border: 1px solid #ccd5d1;
+    border-radius: 7px;
+    background: #fbfcfb;
+    padding: 10px 11px;
+    color: inherit;
+    font: inherit;
+}
+.fields textarea { resize: vertical; }
+.immutable { display: grid; gap: 5px; border-top: 1px solid var(--builder-border); padding-top: 16px; color: var(--builder-muted); font-size: 11px; }
+.immutable code { color: #273630; font-size: 12px; }
+.dialog footer { margin-top: 26px; }
+
+@media (max-width: 1080px) {
+    .lifecycle-bar { grid-template-columns: minmax(200px, 1fr) auto; }
+    .mode-switch { grid-row: 2; grid-column: 1 / -1; justify-self: center; }
+    .actions { grid-column: 2; grid-row: 1; }
+}
+`;
+
+  // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
+  var template22 = document.createElement("template");
+  template22.innerHTML = `<style>${String(style_default24)}</style>${String(template_default36)}`;
+
+  class SiteBlocBuilder extends HTMLElement {
+    controller;
+    constructor() {
+      super();
+      const root = this.attachShadow({ mode: "open" });
+      root.append(template22.content.cloneNode(true));
+      this.controller = new SiteBlocBuilderController(this, root);
+    }
+    connectedCallback() {
+      this.controller.connect();
+    }
+    disconnectedCallback() {
+      this.controller.disconnect();
+    }
+  }
+  if (!customElements.get("cms-site-bloc-builder")) {
+    customElements.define("cms-site-bloc-builder", SiteBlocBuilder);
   }
 
   // src/components/editorSystemV2/documentLoad.ts
@@ -47207,132 +48750,6 @@ label {
     }
   }
 
-  // src/core/editorSystemV2/builtInEditors/BindingCoreEditor.ts
-  class BindingCoreEditor extends Editor {
-  }
-  // src/core/editorSystemV2/editorCatalog.ts
-  function createControlEditorCatalog() {
-    return [
-      {
-        tag: CMS_BINDING_CORE_TAG,
-        label: "Binding core",
-        description: "Provides global data scopes to editable content.",
-        icon: "database",
-        category: "Runtime",
-        bloc: ql,
-        editor: BindingCoreEditor
-      }
-    ];
-  }
-
-  // src/components/editorSystemV2/catalog.ts
-  var catalogPromise = null;
-  async function loadEditorCatalog() {
-    catalogPromise ??= loadEditorCatalogOnce();
-    return catalogPromise;
-  }
-  async function loadEditorCatalogOnce() {
-    const runtime2 = installEditorCatalogRuntime();
-    try {
-      await loadScript(`${getMetaBasePath()}/api/editor/script.js`);
-    } catch (error) {
-      console.error("[editor] editor catalog script failed", error);
-    }
-    return mergeEditorCatalogs(createControlEditorCatalog(), runtime2.getCatalog());
-  }
-  function installEditorCatalogRuntime() {
-    const entries = [];
-    const runtime2 = {
-      Editor,
-      registerEditor(entry) {
-        try {
-          entries.push(createEditorCatalogEntry(entry, {
-            tag: entry.tag ?? "unknown-bloc",
-            label: entry.label ?? entry.tag ?? "Unknown bloc",
-            description: entry.description,
-            category: entry.category,
-            defaultContent: entry.defaultContent,
-            bloc: entry.bloc
-          }));
-        } catch (error) {
-          console.error("[editor] invalid editor catalog entry", entry, error);
-        }
-      },
-      getCatalog: () => [...entries]
-    };
-    window.p9rEditor = runtime2;
-    return runtime2;
-  }
-  async function loadScript(src) {
-    await new Promise((resolve, reject) => {
-      const existing = document.querySelector(`script[data-editor-catalog-script="${src}"]`);
-      if (existing) {
-        resolve();
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = src;
-      script.async = true;
-      script.dataset.editorCatalogScript = src;
-      script.addEventListener("load", () => resolve(), { once: true });
-      script.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)), { once: true });
-      document.head.append(script);
-    });
-  }
-
-  // src/components/editorSystemV2/shellSetup.ts
-  async function configureShellCatalogAndFrame(shell) {
-    const [catalog, insertItems, dataSources, settings] = await Promise.all([
-      loadEditorCatalog(),
-      loadTemplateItems(),
-      fetchJson("editor/sources", []),
-      fetchJson("system/settings", {})
-    ]);
-    shell.setCatalog(catalog);
-    shell.setInsertItems(insertItems);
-    shell.setDataSources(dataSources);
-    shell.setDefaultTemplateSelection({ category: settings.editor?.layoutCategory || undefined });
-    setThemeTokens(shell, settings);
-    const documentId = currentPageIdentifier();
-    const resource = shellResource(shell);
-    const frameUrl = documentId ? `${getMetaBasePath()}/api/editor/frame?type=${resource}&id=${encodeURIComponent(documentId)}` : `${getMetaBasePath()}/api/editor/frame?type=${resource}`;
-    shell.shadowRoot?.querySelector("cms-editor-v2-canvas")?.setAttribute("frame-url", frameUrl);
-  }
-  function setThemeTokens(shell, settings) {
-    const themeTokens = (settings.theme?.sources ?? []).flatMap((source2) => source2.categories.flatMap((category) => category.tokens.filter((token) => token.type === "color").map((token) => ({
-      label: token.label,
-      variable: token.variable,
-      category: `${source2.label} · ${category.label}`
-    }))));
-    const settingsView = shell.shadowRoot?.querySelector("cms-editor-v2-settings-view");
-    settingsView?.setThemeTokens(themeTokens);
-  }
-  async function loadTemplateItems() {
-    const templates = await fetchJson("template/list", []);
-    const details = await Promise.all(templates.map((template22) => fetchJson(`template?id=${encodeURIComponent(template22.id)}`, {
-      ...template22,
-      content: ""
-    })));
-    return details.filter((template22) => template22.content).map((template22) => ({
-      kind: "template",
-      id: template22.id,
-      label: template22.name,
-      description: template22.description,
-      category: template22.category || "Templates",
-      icon: "T",
-      content: template22.content ?? ""
-    }));
-  }
-  async function fetchJson(path, fallback) {
-    try {
-      const response = await fetch(`${getMetaBasePath()}/api/${path}`);
-      return response.ok ? await response.json() : fallback;
-    } catch (error) {
-      console.error("[editor] failed to load picker source", path, error);
-      return fallback;
-    }
-  }
-
   // src/components/editorSystemV2/bootstrap.ts
   var configuredShells = new WeakSet;
   var saveDocumentListener = (event) => {
@@ -47342,7 +48759,7 @@ label {
     onDeleteDocument(event);
   };
   function configureShell(shell) {
-    if (!(shell instanceof Shell) || configuredShells.has(shell)) {
+    if (!(shell instanceof Shell) || !isDocumentEditorShell(shell) || configuredShells.has(shell)) {
       return;
     }
     configuredShells.add(shell);
@@ -47353,6 +48770,9 @@ label {
     if (documentId) {
       loadDocumentConfig(shell, shellResource(shell), documentId);
     }
+  }
+  function isDocumentEditorShell(shell) {
+    return shell.getAttribute("resource") !== "site-bloc";
   }
   async function onSaveDocument(event) {
     const shell = event.currentTarget;
@@ -47424,7 +48844,7 @@ label {
   }
 
   // src/components/media/CardMedia/template.html
-  var template_default36 = `<div class="card">
+  var template_default37 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -47446,7 +48866,7 @@ label {
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default24 = `:host {
+  var style_default25 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -47571,8 +48991,8 @@ label {
   class CardMedia extends U2 {
     constructor() {
       super({
-        css: style_default24,
-        template: template_default36
+        css: style_default25,
+        template: template_default37
       });
     }
   }
@@ -47581,7 +49001,7 @@ label {
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default37 = `<div class="backdrop" id="backdrop">
+  var template_default38 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -47826,7 +49246,7 @@ label {
       super({
         css: [layout_default4, controls_default4].join(`
 `),
-        template: template_default37
+        template: template_default38
       });
     }
     connectedCallback() {
@@ -47864,7 +49284,7 @@ label {
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default38 = `<div class="backdrop" id="backdrop">
+  var template_default39 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -48123,7 +49543,7 @@ label {
       super({
         css: [layout_default5, tools_default].join(`
 `),
-        template: template_default38
+        template: template_default39
       });
     }
     connectedCallback() {
@@ -48157,7 +49577,7 @@ label {
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default39 = `<div class="toolbar">
+  var template_default40 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -49273,7 +50693,7 @@ label {
       super({
         css: [navigation_default, interactions_default, detail_default3].join(`
 `),
-        template: template_default39
+        template: template_default40
       });
     }
     get detail() {
@@ -49425,7 +50845,7 @@ label {
   }
 
   // src/components/media/MediaCenter/template.html
-  var template_default40 = `<dialog>
+  var template_default41 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -50011,7 +51431,7 @@ dialog::backdrop {
       super({
         css: [chrome_default, content_default2, folder_default].join(`
 `),
-        template: template_default40
+        template: template_default41
       });
     }
     connectedCallback() {

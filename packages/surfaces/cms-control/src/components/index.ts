@@ -132,6 +132,7 @@ import "./admin/Resources/Triggers/TriggersAdmin";
 import "./admin/Resources/Triggers/TriggerCreate";
 
 // Editor
+import "./editorSystemV2/siteBloc/SiteBlocBuilder";
 import "./editorSystemV2/bootstrap";
 
 // Medias

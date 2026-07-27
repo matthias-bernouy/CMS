@@ -15,21 +15,47 @@ declare global {
     }
 }
 
-let catalogPromise: Promise<EditorCatalog> | null = null;
+type BlocCatalogueLifecycle = { tag: string; state: "published" | "draft" | "archived" };
+type InsertableCatalogEntry = EditorCatalog[number] & { insertable?: boolean };
 
-export async function loadEditorCatalog(): Promise<EditorCatalog> {
+let catalogPromise: Promise<InsertableCatalogEntry[]> | null = null;
+
+export async function loadEditorCatalog(): Promise<InsertableCatalogEntry[]> {
     catalogPromise ??= loadEditorCatalogOnce();
     return catalogPromise;
 }
 
-async function loadEditorCatalogOnce(): Promise<EditorCatalog> {
+async function loadEditorCatalogOnce(): Promise<InsertableCatalogEntry[]> {
     const runtime = installEditorCatalogRuntime();
     try {
         await loadScript(`${getMetaBasePath()}/api/editor/script.js`);
     } catch (error) {
         console.error("[editor] editor catalog script failed", error);
     }
-    return mergeEditorCatalogs(createControlEditorCatalog(), runtime.getCatalog());
+    const catalog = mergeEditorCatalogs(createControlEditorCatalog(), runtime.getCatalog());
+    return applyBlocCatalogueInsertionState(catalog, await loadBlocLifecycle());
+}
+
+export function applyBlocCatalogueInsertionState(
+    catalog: EditorCatalog,
+    lifecycle: BlocCatalogueLifecycle[],
+): InsertableCatalogEntry[] {
+    const archived = new Set(
+        lifecycle.filter((item) => item.state === "archived").map((item) => item.tag.toLowerCase()),
+    );
+    return catalog.map((entry) =>
+        archived.has(entry.tag.toLowerCase()) ? { ...entry, insertable: false } : { ...entry },
+    );
+}
+
+async function loadBlocLifecycle(): Promise<BlocCatalogueLifecycle[]> {
+    try {
+        const response = await fetch(`${getMetaBasePath()}/api/bloc/catalogue`);
+        return response.ok ? ((await response.json()) as BlocCatalogueLifecycle[]) : [];
+    } catch (error) {
+        console.error("[editor] bloc lifecycle catalogue failed", error);
+        return [];
+    }
 }
 
 function installEditorCatalogRuntime(): EditorCatalogRuntime {

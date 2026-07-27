@@ -4,7 +4,7 @@ import { loadEditorCatalog } from "./catalog";
 import type { EditorSettingsResponse, TemplateDetail, TemplateListItem } from "./editorResources";
 import { currentPageIdentifier, shellResource } from "./resource";
 
-export async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
+export async function configureShellCatalogAndFrame(shell: Shell, options: { frame?: boolean } = {}): Promise<void> {
     const [catalog, insertItems, dataSources, settings] = await Promise.all([
         loadEditorCatalog(),
         loadTemplateItems(),
@@ -17,6 +17,10 @@ export async function configureShellCatalogAndFrame(shell: Shell): Promise<void>
     shell.setDataSources(dataSources);
     shell.setDefaultTemplateSelection({ category: settings.editor?.layoutCategory || undefined });
     setThemeTokens(shell, settings);
+
+    if (options.frame === false) {
+        return;
+    }
 
     const documentId = currentPageIdentifier();
     const resource = shellResource(shell);

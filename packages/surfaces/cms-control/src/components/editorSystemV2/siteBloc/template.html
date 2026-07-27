@@ -1,0 +1,84 @@
+<div class="builder" aria-busy="true">
+    <header class="lifecycle-bar">
+        <div class="identity">
+            <a class="back" data-back href="#" aria-label="Back to blocs">‹</a>
+            <div>
+                <div class="eyebrow">Site bloc</div>
+                <div class="title-line">
+                    <strong data-name>Loading…</strong>
+                    <code data-tag></code>
+                    <span class="state" data-state>Loading</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mode-switch" role="group" aria-label="Bloc authoring mode">
+            <button type="button" data-mode="structure" aria-pressed="true">
+                <span>Structure</span>
+                <small>Private composition</small>
+            </button>
+            <button type="button" data-mode="default" aria-pressed="false">
+                <span>Default</span>
+                <small>Editable slot content</small>
+            </button>
+        </div>
+
+        <div class="actions">
+            <button type="button" data-action="details">Details</button>
+            <button type="button" data-action="save" class="primary">Save draft</button>
+            <button type="button" data-action="preview">Preview</button>
+            <button type="button" data-action="publish">Publish</button>
+            <button type="button" data-action="archive" class="quiet-danger">Archive</button>
+        </div>
+    </header>
+
+    <div class="feedback">
+        <p class="status" data-status role="status" aria-live="polite">Loading bloc…</p>
+        <p class="error" data-error role="alert" hidden></p>
+        <section class="a11y" data-a11y aria-label="Preview accessibility report" aria-live="polite">
+            <strong>Preview checks</strong>
+            <span data-a11y-summary>Waiting for preview…</span>
+            <ul data-a11y-list hidden></ul>
+        </section>
+    </div>
+
+    <cms-editor-shell
+        resource="site-bloc"
+        back-label="Blocs"
+        settings-label="Bloc details"
+    ></cms-editor-shell>
+
+    <div class="dialog-layer" data-details-dialog hidden>
+        <button class="dialog-backdrop" type="button" data-action="close-details" aria-label="Close bloc details"></button>
+        <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="site-bloc-details-title">
+            <header>
+                <div>
+                    <div class="eyebrow">Metadata</div>
+                    <h2 id="site-bloc-details-title">Bloc details</h2>
+                </div>
+                <button type="button" data-action="close-details" aria-label="Close bloc details">×</button>
+            </header>
+            <div class="fields">
+                <label>
+                    <span>Name</span>
+                    <input data-field="name" required autocomplete="off">
+                </label>
+                <label>
+                    <span>Group</span>
+                    <input data-field="group" autocomplete="off">
+                </label>
+                <label>
+                    <span>Description</span>
+                    <textarea data-field="description" rows="5"></textarea>
+                </label>
+                <div class="immutable">
+                    <span>Immutable custom-element tag</span>
+                    <code data-dialog-tag></code>
+                </div>
+            </div>
+            <footer>
+                <button type="button" data-action="close-details">Done</button>
+            </footer>
+        </section>
+    </div>
+</div>

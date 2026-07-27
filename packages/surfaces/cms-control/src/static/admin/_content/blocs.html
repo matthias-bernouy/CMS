@@ -1,0 +1,120 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Blocs</span>
+    <p9r-open-modal modal-target="create-site-bloc-modal" slot="action">
+        <p9r-button color="primary">+ New bloc</p9r-button>
+    </p9r-open-modal>
+
+    <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.25rem;">
+        <div style="flex: 1 1 280px; min-width: 220px;">
+            <p9r-input cms-param-sync="search" label="Search" placeholder="Name, tag, group or description…"></p9r-input>
+        </div>
+        <div style="flex: 0 0 180px;">
+            <p9r-select cms-param-sync="origin" label="Origin" value="">
+                <option value="">All origins</option>
+                <option value="site-builder">Site builder</option>
+                <option value="integration">Integration</option>
+                <option value="code-managed">Code managed</option>
+            </p9r-select>
+        </div>
+        <div style="flex: 0 0 200px;">
+            <p9r-select cms-param-sync="group" label="Group" value="" cms-source="{{BASE_PATH}}/api/bloc/catalogue?view=groups">
+                <option value="">All groups</option>
+                <option cms-repeat="." value="{{ value }}">{{ value }}</option>
+            </p9r-select>
+        </div>
+    </div>
+
+    <p9r-table cms-source="{{BASE_PATH}}/api/bloc/catalogue?search=#{search}&origin=#{origin}&group=#{group}" cms-reload-on="site-bloc:changed">
+        <p9r-row slot="header" cms-condition="$source.loaded">
+            <p9r-cell><strong>Bloc</strong></p9r-cell>
+            <p9r-cell><strong>Origin</strong></p9r-cell>
+            <p9r-cell><strong>State</strong></p9r-cell>
+            <p9r-cell><strong>Dependencies</strong></p9r-cell>
+            <p9r-cell><strong>Usage</strong></p9r-cell>
+            <p9r-cell><strong>Published revision</strong></p9r-cell>
+        </p9r-row>
+
+        <p9r-row cms-repeat="." cms-condition="editable" href="{{BASE_PATH}}{{ editPath }}">
+            <p9r-cell>
+                <strong>{{ name }}</strong><br>
+                <code>{{ tag }}</code><br>
+                <small>{{ group }} · {{ description }}</small>
+            </p9r-cell>
+            <p9r-cell><p9r-tag color="primary">{{ origin.label }}</p9r-tag><br><small>{{ origin.detail }}</small></p9r-cell>
+            <p9r-cell><p9r-tag color="{{ stateColor }}">{{ stateLabel }}</p9r-tag></p9r-cell>
+            <p9r-cell>
+                <strong>{{ directDependencyCount }} direct</strong>
+                <div><p9r-tag cms-repeat="directDependencies">{{ value }}</p9r-tag></div>
+                <small>{{ transitiveDependencyCount }} transitive</small>
+                <div><code cms-repeat="transitiveDependencies">{{ value }} </code></div>
+            </p9r-cell>
+            <p9r-cell>
+                <details cms-condition="usageCount">
+                    <summary>{{ usageLabel }}</summary>
+                    <a cms-repeat="usages.pages" href="{{BASE_PATH}}/editor/page?id={{ id }}">Page · {{ label }}</a><br>
+                    <a cms-repeat="usages.templates" href="{{BASE_PATH}}/editor/template?id={{ id }}">Template · {{ label }}</a><br>
+                    <a cms-repeat="usages.blocs" href="{{BASE_PATH}}/admin/blocs?search={{ tag }}">Bloc · {{ label }}</a>
+                </details>
+                <span cms-condition="!usageCount">No usage</span>
+            </p9r-cell>
+            <p9r-cell>{{ publishedRevision }}</p9r-cell>
+        </p9r-row>
+
+        <p9r-row cms-repeat="." cms-condition="!editable">
+            <p9r-cell>
+                <strong>{{ name }}</strong><br>
+                <code>{{ tag }}</code><br>
+                <small>{{ group }} · {{ description }}</small>
+            </p9r-cell>
+            <p9r-cell><p9r-tag color="secondary">{{ origin.label }}</p9r-tag><br><small>{{ origin.detail }}</small></p9r-cell>
+            <p9r-cell><p9r-tag color="{{ stateColor }}">{{ stateLabel }}</p9r-tag></p9r-cell>
+            <p9r-cell>
+                <strong>{{ directDependencyCount }} direct</strong>
+                <div><p9r-tag cms-repeat="directDependencies">{{ value }}</p9r-tag></div>
+                <small>{{ transitiveDependencyCount }} transitive</small>
+                <div><code cms-repeat="transitiveDependencies">{{ value }} </code></div>
+            </p9r-cell>
+            <p9r-cell>
+                <details cms-condition="usageCount">
+                    <summary>{{ usageLabel }}</summary>
+                    <a cms-repeat="usages.pages" href="{{BASE_PATH}}/editor/page?id={{ id }}">Page · {{ label }}</a><br>
+                    <a cms-repeat="usages.templates" href="{{BASE_PATH}}/editor/template?id={{ id }}">Template · {{ label }}</a><br>
+                    <a cms-repeat="usages.blocs" href="{{BASE_PATH}}/admin/blocs?search={{ tag }}">Bloc · {{ label }}</a>
+                </details>
+                <span cms-condition="!usageCount">No usage</span>
+            </p9r-cell>
+            <p9r-cell>—</p9r-cell>
+        </p9r-row>
+
+        <cms-empty-state cms-condition="$source.empty">
+            <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            <p slot="title">No blocs found</p>
+            <p slot="hint">Adjust the filters or create a site composite bloc.</p>
+        </cms-empty-state>
+    </p9r-table>
+</w13c-fixed-admin-layout>
+
+<p9r-modal id="create-site-bloc-modal" aria-label="Create a site composite bloc">
+    <span slot="title">New site bloc</span>
+    <form
+        cms-source="{{BASE_PATH}}/api/site-bloc as result"
+        cms-source-trigger="submit"
+        cms-source-method="POST"
+        cms-source-publish="site-bloc:changed"
+        cms-source-success-redirect="{{BASE_PATH}}/editor/bloc?id={{ result.body.tag }}"
+    >
+        <p9r-stack gap="m">
+            <p9r-input name="name" label="Name" placeholder="Marketing hero"></p9r-input>
+            <p9r-input name="tag" label="Immutable tag" placeholder="site-marketing-hero"
+                hint="Must start with site- and cannot be changed later."></p9r-input>
+            <p9r-input name="group" label="Group" placeholder="Marketing"></p9r-input>
+            <p9r-input name="description" label="Description" placeholder="Reusable hero with editable content slots."></p9r-input>
+            <p9r-button color="primary" fullWidth type="submit">Create bloc</p9r-button>
+        </p9r-stack>
+    </form>
+</p9r-modal>

@@ -18,7 +18,7 @@ const deleteDocumentListener: EventListener = (event) => {
 };
 
 function configureShell(shell: Element): void {
-    if (!(shell instanceof Shell) || configuredShells.has(shell)) {
+    if (!(shell instanceof Shell) || !isDocumentEditorShell(shell) || configuredShells.has(shell)) {
         return;
     }
 
@@ -31,6 +31,10 @@ function configureShell(shell: Element): void {
     if (documentId) {
         void loadDocumentConfig(shell, shellResource(shell), documentId);
     }
+}
+
+export function isDocumentEditorShell(shell: Element): boolean {
+    return shell.getAttribute("resource") !== "site-bloc";
 }
 
 async function onSaveDocument(event: CustomEvent<EditorV2SaveDocumentDetail>): Promise<void> {
