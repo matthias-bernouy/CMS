@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { canonicalJsonBytes, type IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
 import {
     POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
+    buildBehavioralRlsPlan,
     buildIntegrationVerificationSuiteContent,
     computeIntegrationVerificationDigest,
     identifyIntegrationVerificationSuiteContent,
@@ -50,6 +51,18 @@ postgresTest(
                     outcome: "passed",
                     attempts: 1,
                     cacheHit: false,
+                });
+                expect(
+                    result.results.find((entry) => entry.suiteId === "platform-postgres-rls-behavior"),
+                ).toMatchObject({
+                    outcome: "passed",
+                    platformEvidence: {
+                        checks: [
+                            { checkId: "supabase-rls-runtime", outcome: "passed" },
+                            { checkId: "tenant-read-isolation", outcome: "passed", subjectCount: 0 },
+                            { checkId: "tenant-write-isolation", outcome: "passed", subjectCount: 0 },
+                        ],
+                    },
                 });
                 expect(
                     result.results.find((entry) => entry.suiteId === "platform-postgres-schema-contract")?.outcome,
@@ -123,15 +136,24 @@ async function productionInput(database: VerificationSandboxInput["database"]): 
         await buildIntegrationVerificationSuiteContent(verification, "conformance", "implementation"),
     );
     const verificationDigest = await computeIntegrationVerificationDigest(verification);
+    const candidate = { ...input.workload.admission.candidate, verificationDigest };
+    const { candidateId: _candidateId, ...behavioralRlsTarget } = candidate;
+    const behavioralRlsPlan = await buildBehavioralRlsPlan({
+        verification,
+        target: behavioralRlsTarget,
+        policyDigest: input.workload.admission.policyDigest,
+    });
     return {
         ...input,
         database,
         workload: {
             ...input.workload,
             verification,
+            behavioralRlsPlan: { digest: behavioralRlsPlan.digest, plan: behavioralRlsPlan.plan },
             admission: {
                 ...input.workload.admission,
-                candidate: { ...input.workload.admission.candidate, verificationDigest },
+                candidate,
+                behavioralRlsPlan: { digest: behavioralRlsPlan.digest, plan: behavioralRlsPlan.plan },
                 suites: input.workload.admission.suites.map((suite) =>
                     suite.suiteId === "implementation" ? { ...suite, contentDigest: identified.digest } : suite,
                 ),

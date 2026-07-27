@@ -1,8 +1,8 @@
 import { SQL } from "bun";
+import { randomUUID } from "node:crypto";
 import type { PlatformVerificationFindingV1 } from "@bernouy/cms-integration-verification";
 import { finding } from "../../evidence";
-import { BEHAVIORAL_RLS_IDENTITIES } from "./constants";
-import type { BehavioralRlsActor } from "./types";
+import type { BehavioralRlsActor, BehavioralRlsActors, BehavioralRlsAuthenticatedActor } from "./types";
 
 export type SupabaseActorResult<T> =
     | Readonly<{ status: "success"; value: T }>
@@ -10,20 +10,22 @@ export type SupabaseActorResult<T> =
 
 type ActorContext =
     | Readonly<{ actor: "anon"; role: "anon"; subject: null }>
-    | Readonly<{ actor: "first" | "second"; role: "authenticated"; subject: string }>;
+    | (Readonly<{ actor: "first" | "second"; role: "authenticated" }> & BehavioralRlsAuthenticatedActor);
 
-export async function inspectSupabaseActorSessions(database: SQL, signal: AbortSignal) {
+export function createBehavioralRlsActors(): BehavioralRlsActors {
+    return Object.freeze({ first: authenticatedActor(), second: authenticatedActor() });
+}
+
+export async function inspectSupabaseActorSessions(database: SQL, actors: BehavioralRlsActors, signal: AbortSignal) {
     const observations = [];
     const findings: PlatformVerificationFindingV1[] = [];
-    for (const actor of [actorContext("anon"), actorContext("first"), actorContext("second")]) {
-        const result = await executeAsSupabaseActor(database, actor.actor, signal, async () => {
+    for (const actor of [actorContext("anon", actors), actorContext("first", actors), actorContext("second", actors)]) {
+        const result = await executeAsSupabaseActor(database, actors, actor.actor, signal, async () => {
             const rows = (await database.unsafe(`select current_user::text as role,
-              nullif(current_setting('request.jwt.claim.sub', true), '')::text as "legacySub",
               nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub' as "claimsSub",
               auth.uid()::text as "authUid", auth.jwt() ->> 'sub' as "jwtSub",
               auth.jwt() ->> 'role' as "jwtRole"`)) as Array<{
                 role: string;
-                legacySub: string | null;
                 claimsSub: string | null;
                 authUid: string | null;
                 jwtSub: string | null;
@@ -36,7 +38,6 @@ export async function inspectSupabaseActorSessions(database: SQL, signal: AbortS
         const observation = {
             actor: actor.actor,
             roleMatched: row?.role === actor.role,
-            legacySubjectMatched: (row?.legacySub ?? null) === expectedSubject,
             claimsSubjectMatched: (row?.claimsSub ?? null) === expectedSubject,
             authUidMatched: (row?.authUid ?? null) === expectedSubject,
             jwtSubjectMatched: (row?.jwtSub ?? null) === expectedSubject,
@@ -52,19 +53,23 @@ export async function inspectSupabaseActorSessions(database: SQL, signal: AbortS
 
 export async function executeAsSupabaseActor<T>(
     database: SQL,
+    actors: BehavioralRlsActors,
     actor: BehavioralRlsActor,
     signal: AbortSignal,
     operation: () => Promise<T>,
+    options: Readonly<{ preserveSuccess?: boolean }> = {},
 ): Promise<SupabaseActorResult<T>> {
     signal.throwIfAborted();
-    const context = actorContext(actor);
+    const context = actorContext(actor, actors);
     await database.unsafe("savepoint cms_behavioral_actor");
     let result: SupabaseActorResult<T>;
+    let preserve = false;
     try {
         await database.unsafe(`set local role ${context.role}`);
         await installClaims(database, context);
         signal.throwIfAborted();
         result = { status: "success", value: await operation() };
+        preserve = options.preserveSuccess === true;
     } catch (error) {
         if (signal.aborted) {
             throw signal.reason;
@@ -72,17 +77,19 @@ export async function executeAsSupabaseActor<T>(
         const code = postgresErrorCode(error);
         result = { status: code === "42501" ? "denied" : "error", code };
     } finally {
-        await database.unsafe("rollback to savepoint cms_behavioral_actor");
+        if (!preserve) {
+            await database.unsafe("rollback to savepoint cms_behavioral_actor");
+        }
         await database.unsafe("release savepoint cms_behavioral_actor");
     }
     return result;
 }
 
-function actorContext(actor: BehavioralRlsActor): ActorContext {
+function actorContext(actor: BehavioralRlsActor, actors: BehavioralRlsActors): ActorContext {
     if (actor === "anon") {
         return { actor, role: "anon", subject: null };
     }
-    return { actor, role: "authenticated", subject: BEHAVIORAL_RLS_IDENTITIES[actor] };
+    return { actor, role: "authenticated", ...actors[actor] };
 }
 
 async function installClaims(database: SQL, context: ActorContext): Promise<void> {
@@ -96,30 +103,33 @@ async function installClaims(database: SQL, context: ActorContext): Promise<void
                   iat: 2_000_000_000,
                   exp: 2_100_000_000,
               }
-            : authenticatedClaims(context.actor, context.subject);
-    await database.unsafe(
-        `select set_config('request.jwt.claims', $1, true),
-          set_config('request.jwt.claim.sub', $2, true),
-          set_config('request.jwt.claim.role', $3, true)`,
-        [JSON.stringify(claims), context.subject ?? "", context.role],
-    );
+            : authenticatedClaims(context);
+    await database.unsafe("select set_config('request.jwt.claims', $1, true)", [JSON.stringify(claims)]);
 }
 
-function authenticatedClaims(actor: "first" | "second", subject: string) {
+function authenticatedClaims(context: Extract<ActorContext, { role: "authenticated" }>) {
     return {
         iss: "https://cms-verifier.invalid/auth/v1",
         aud: "authenticated",
         exp: 2_100_000_000,
         iat: 2_000_000_000,
-        sub: subject,
+        sub: context.subject,
         role: "authenticated",
         aal: "aal1",
-        session_id: actor === "first" ? "0194df39-2b9e-7d9e-9803-81ca737dd9e1" : "0194df39-2b9e-7d9e-9803-81ca737dd9e2",
-        email: `${actor}@cms-verifier.invalid`,
+        session_id: context.sessionId,
+        email: context.email,
         phone: "",
         is_anonymous: false,
         app_metadata: { provider: "email", providers: ["email"] },
     };
+}
+
+function authenticatedActor(): BehavioralRlsAuthenticatedActor {
+    return Object.freeze({
+        subject: randomUUID(),
+        sessionId: randomUUID(),
+        email: `${randomUUID()}@cms-verifier.invalid`,
+    });
 }
 
 function postgresErrorCode(error: unknown): string {

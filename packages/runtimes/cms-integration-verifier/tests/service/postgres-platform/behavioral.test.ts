@@ -8,7 +8,13 @@ import {
     markDisposablePostgresDedicated,
     startDisposablePostgres,
 } from "../postgresFixture";
-import { BEHAVIORAL_PROBE, installTenantTable, makePoliciesLeaky } from "./behavioralFixture";
+import {
+    BEHAVIORAL_SURFACE,
+    behavioralPlan,
+    installTenantTable,
+    makePoliciesDenyAll,
+    makePoliciesLeaky,
+} from "./behavioralFixture";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
 
@@ -37,23 +43,42 @@ postgresTest(
         try {
             const unavailable = await proveBehavioralRlsIsolation(
                 database,
-                [BEHAVIORAL_PROBE],
+                behavioralPlan(),
+                BEHAVIORAL_SURFACE,
                 new AbortController().signal,
             );
-            expect(unavailable.environment.outcome).toBe("failed");
-            expect(codes(unavailable.environment)).toEqual(["postgres-rls-behavior-target-unexecutable"]);
+            expect(unavailable.environment.outcome).toBe("passed");
+            expect(unavailable.reads.outcome).toBe("failed");
+            expect(unavailable.writes.outcome).toBe("failed");
+            expect(codes(unavailable.reads)).toEqual([
+                "postgres-rls-behavior-execution-error",
+                "postgres-rls-behavior-execution-error",
+                "postgres-rls-behavior-execution-error",
+            ]);
 
             await installTenantTable(database);
-            const safe = await proveBehavioralRlsIsolation(database, [BEHAVIORAL_PROBE], new AbortController().signal);
+            const safe = await proveBehavioralRlsIsolation(
+                database,
+                behavioralPlan(),
+                BEHAVIORAL_SURFACE,
+                new AbortController().signal,
+            );
             expect(safe.environment.outcome).toBe("passed");
             expect(codes(safe.reads)).toEqual([]);
             expect(codes(safe.writes)).toEqual([]);
             expect(safe.reads.outcome).toBe("passed");
             expect(safe.writes.outcome).toBe("passed");
+            expect(JSON.stringify(safe)).not.toMatch(/[0-9a-f]{8}-[0-9a-f-]{27,}/iu);
+            expect(JSON.stringify(safe)).not.toContain("@cms-verifier.invalid");
             expect(await rowCount(database)).toBe(0);
 
             await makePoliciesLeaky(database);
-            const leaky = await proveBehavioralRlsIsolation(database, [BEHAVIORAL_PROBE], new AbortController().signal);
+            const leaky = await proveBehavioralRlsIsolation(
+                database,
+                behavioralPlan(),
+                BEHAVIORAL_SURFACE,
+                new AbortController().signal,
+            );
             expect(leaky.environment.outcome).toBe("passed");
             expect(leaky.reads.outcome).toBe("failed");
             expect(codes(leaky.reads)).toEqual(
@@ -66,6 +91,28 @@ postgresTest(
                     "postgres-rls-cross-tenant-insert",
                     "postgres-rls-cross-tenant-update",
                     "postgres-rls-owner-reassignment",
+                    "postgres-rls-anon-delete",
+                    "postgres-rls-anon-insert",
+                    "postgres-rls-anon-update",
+                ]),
+            );
+            expect(await rowCount(database)).toBe(0);
+
+            await makePoliciesDenyAll(database);
+            const denyAll = await proveBehavioralRlsIsolation(
+                database,
+                behavioralPlan(),
+                BEHAVIORAL_SURFACE,
+                new AbortController().signal,
+            );
+            expect(denyAll.reads.outcome).toBe("failed");
+            expect(codes(denyAll.reads)).toContain("postgres-rls-owner-row-hidden");
+            expect(denyAll.writes.outcome).toBe("failed");
+            expect(codes(denyAll.writes)).toEqual(
+                expect.arrayContaining([
+                    "postgres-rls-owner-delete-denied",
+                    "postgres-rls-owner-insert-denied",
+                    "postgres-rls-owner-update-denied",
                 ]),
             );
             expect(await rowCount(database)).toBe(0);

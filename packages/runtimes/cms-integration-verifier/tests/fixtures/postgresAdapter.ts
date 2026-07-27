@@ -1,4 +1,6 @@
 import {
+    BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
+    buildBehavioralRlsPlan,
     computeIntegrationVerificationDigest,
     identifyReleaseAdmissionPolicySnapshot,
     identifyPlatformVerificationSuiteDefinition,
@@ -66,6 +68,15 @@ export async function postgresPlatformInputFixture(
     const policyDigest = (await identifyReleaseAdmissionPolicySnapshot(policy)).digest;
     const hasSql = packageValue.files[packageValue.definition]?.content.includes('"schemas"') ?? false;
     const hasDataApi = packageValue.files[packageValue.definition]?.content.includes('"dataApiSchemas"') ?? false;
+    const candidate = {
+        ...base.workload.admission.candidate,
+        packageDigest,
+        verificationDigest,
+    };
+    const { candidateId: _candidateId, ...behavioralRlsTarget } = candidate;
+    const behavioralRlsPlan = platformRequiredSuites.some(({ suiteId }) => suiteId === BEHAVIORAL_RLS_PLATFORM_SUITE_ID)
+        ? await buildBehavioralRlsPlan({ verification, target: behavioralRlsTarget, policyDigest })
+        : undefined;
     return {
         ...base,
         workload: {
@@ -73,14 +84,16 @@ export async function postgresPlatformInputFixture(
             package: packageValue,
             verification,
             policy,
+            ...(behavioralRlsPlan
+                ? { behavioralRlsPlan: { digest: behavioralRlsPlan.digest, plan: behavioralRlsPlan.plan } }
+                : {}),
             admission: {
                 ...base.workload.admission,
-                candidate: {
-                    ...base.workload.admission.candidate,
-                    packageDigest,
-                    verificationDigest,
-                },
+                candidate,
                 policyDigest,
+                ...(behavioralRlsPlan
+                    ? { behavioralRlsPlan: { digest: behavioralRlsPlan.digest, plan: behavioralRlsPlan.plan } }
+                    : {}),
                 suites: [
                     ...base.workload.admission.suites.filter((suite) => suite.source !== "platform"),
                     ...platformRequiredSuites.map((suite) => ({

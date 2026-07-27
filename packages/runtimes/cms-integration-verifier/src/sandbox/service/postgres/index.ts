@@ -11,6 +11,7 @@ import {
     readViewObservation,
 } from "./catalog";
 import { buildPlatformEvidence } from "./checks";
+import { proveBehavioralRlsIsolation } from "./checks/behavioral";
 import { createPostgresAuthorSuiteVerifier } from "./suites/author";
 import { executeExactDependencyMatrices } from "./suites/dependencies";
 import { createPostgresMigrationVerifier } from "./migrations";
@@ -35,14 +36,21 @@ export function createPostgresPlatformVerificationAdapter(
                 { name: "bun", version: Bun.version },
                 { name: "author-suite-runtime", version: "bun-vm-ipc-v1" },
                 { name: "postgres-image", version: POSTGRES_IMAGE },
-                { name: "platform-policy", version: "postgres-platform-v1.3.0" },
+                { name: "platform-policy", version: "postgres-platform-v1.4.0" },
             ];
         },
         async verifyPackage(
             input: Parameters<PostgresPlatformVerificationAdapter["verifyPackage"]>[0],
             signal: AbortSignal,
         ) {
-            const { package: envelope, dependencies = [], dependencyPackages = [], database, platformSuites } = input;
+            const {
+                package: envelope,
+                dependencies = [],
+                dependencyPackages = [],
+                behavioralRlsPlan,
+                database,
+                platformSuites,
+            } = input;
             const started = performance.now();
             const loaded = await packages.load(envelope);
             const sql = new SQL(database.connectionUri, { max: 1 });
@@ -86,6 +94,16 @@ export function createPostgresPlatformVerificationAdapter(
                     const unknownSurfaces = await readUnknownSurfaceObservation(sql, dataApiSchemas);
                     const views = await readViewObservation(sql, dataApiSchemas);
                     const routines = await readRoutineObservation(sql, ownedNamespaces);
+                    const behavioralRls = behavioralRlsPlan
+                        ? await proveBehavioralRlsIsolation(
+                              sql,
+                              behavioralRlsPlan,
+                              rls.relations
+                                  .filter((relation) => relation.exposedRoles.length > 0)
+                                  .map(({ namespace, relation }) => ({ namespace, relation })),
+                              signal,
+                          )
+                        : undefined;
                     return {
                         durationMs: elapsed(started),
                         suites: await buildPlatformEvidence(
@@ -105,6 +123,7 @@ export function createPostgresPlatformVerificationAdapter(
                                 unknownSurfaces,
                                 views,
                                 routines,
+                                behavioralRls,
                             },
                             dependencyExecutions,
                         ),

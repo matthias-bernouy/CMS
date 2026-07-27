@@ -1,23 +1,13 @@
-import type { PlatformVerificationCheckEvidenceV1 } from "@bernouy/cms-integration-verification";
+import type {
+    BehavioralRlsFixtureV1,
+    BehavioralRlsProbeV1,
+    BehavioralRlsScalarV1,
+    PlatformVerificationCheckEvidenceV1,
+} from "@bernouy/cms-integration-verification";
 
-export type BehavioralRlsScalar = string | number | boolean | null;
-
-export type BehavioralRlsFixture = Readonly<{
-    key: BehavioralRlsScalar;
-    values: Readonly<Record<string, BehavioralRlsScalar>>;
-}>;
-
-export type BehavioralRlsProbe = Readonly<{
-    probeId: string;
-    namespace: string;
-    relation: string;
-    keyColumn: string;
-    subjectColumn: string;
-    first: BehavioralRlsFixture;
-    second: BehavioralRlsFixture;
-    firstCrossInsert: BehavioralRlsFixture;
-    secondCrossInsert: BehavioralRlsFixture;
-}>;
+export type BehavioralRlsScalar = BehavioralRlsScalarV1;
+export type BehavioralRlsFixture = BehavioralRlsFixtureV1;
+export type BehavioralRlsProbe = BehavioralRlsProbeV1;
 
 export type BehavioralRlsProof = Readonly<{
     environment: PlatformVerificationCheckEvidenceV1;
@@ -26,6 +16,22 @@ export type BehavioralRlsProof = Readonly<{
 }>;
 
 export type BehavioralRlsActor = "anon" | "first" | "second";
+
+export type BehavioralRlsAuthenticatedActor = Readonly<{
+    subject: string;
+    sessionId: string;
+    email: string;
+}>;
+
+export type BehavioralRlsActors = Readonly<{
+    first: BehavioralRlsAuthenticatedActor;
+    second: BehavioralRlsAuthenticatedActor;
+}>;
+
+export type BehavioralRlsExposedRelation = Readonly<{
+    namespace: string;
+    relation: string;
+}>;
 
 export type BehavioralRlsObservation = Readonly<{
     probeId: string;

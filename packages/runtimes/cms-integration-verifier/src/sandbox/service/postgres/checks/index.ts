@@ -1,4 +1,5 @@
 import {
+    BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
     POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
     type PlatformVerificationEvidenceV1,
     type PlatformVerificationSuiteDefinitionV1,
@@ -20,6 +21,7 @@ import { grantChecks, rlsChecks, routineChecks, viewChecks } from "./security";
 import { dependencyMatrixCheck, httpContractChecks } from "./contracts";
 import type { AdmissionDependencyReferenceV1 } from "@bernouy/cms-integration-verification";
 import type { DependencyMatrixExecution } from "../suites/dependencies";
+import type { BehavioralRlsProof } from "./behavioral";
 
 export type PostgresAuditContext = Readonly<{
     loaded: LoadedSqlPackage;
@@ -34,6 +36,7 @@ export type PostgresAuditContext = Readonly<{
     unknownSurfaces: readonly UnknownSurfaceObservation[];
     views: readonly ViewObservation[];
     routines: readonly RoutineObservation[];
+    behavioralRls?: BehavioralRlsProof;
 }>;
 
 export type PlannedPlatformSuite = Readonly<{
@@ -124,6 +127,16 @@ async function applicableEvidence(
     }
     if (definition.suiteId === "platform-postgres-rls-shape") {
         return suiteEvidence(definition, suiteDigest, await rlsChecks(context.rls));
+    }
+    if (definition.suiteId === BEHAVIORAL_RLS_PLATFORM_SUITE_ID) {
+        if (!context.behavioralRls) {
+            throw new TypeError("Applicable behavioral RLS suite has no digest-bound execution plan");
+        }
+        return suiteEvidence(definition, suiteDigest, [
+            context.behavioralRls.environment,
+            context.behavioralRls.reads,
+            context.behavioralRls.writes,
+        ]);
     }
     if (definition.suiteId === "platform-postgres-grants") {
         return suiteEvidence(

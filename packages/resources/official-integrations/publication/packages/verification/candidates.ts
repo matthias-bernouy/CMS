@@ -10,7 +10,7 @@ import { buildOfficialIntegrationPackages } from "../runtime";
 
 export const OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT = Object.freeze({
     name: "cms-postgres",
-    versionRange: "1.0.0",
+    versionRange: "^1.0.0",
 });
 
 const BEHAVIORAL_RLS_INPUT_PATH = "platform/behavioral-rls.json";

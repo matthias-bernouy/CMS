@@ -3,6 +3,7 @@ import {
     PLATFORM_VERIFICATION_SUITE_DEFINITION_SCHEMA,
     type PlatformVerificationSuiteDefinitionV1,
 } from "../../../interfaces/verification";
+import { BEHAVIORAL_RLS_PLATFORM_SUITE_ID } from "./rls-plan";
 
 export const POSTGRES_PLATFORM_VERIFICATION_SUITES_V1 = Object.freeze([
     suite(
@@ -58,6 +59,19 @@ export const POSTGRES_PLATFORM_VERIFICATION_SUITES_V1 = Object.freeze([
             "Effectively exposed tables in declared Data API schemas enable and force RLS, and their policies have structurally safe clauses.",
         ],
         ["behavioral tenant isolation", "PostgREST request execution", "JWT authorization semantics"],
+    ),
+    suite(
+        BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
+        "data-api-schemas",
+        ["supabase-rls-runtime", "tenant-read-isolation", "tenant-write-isolation"],
+        [
+            "Every effectively exposed table has exactly one policy-owned behavioral probe.",
+            "Anonymous and cross-tenant reads and writes are denied while each authenticated actor can read, insert, update, and delete its own rows.",
+        ],
+        [
+            "application-specific authorization beyond the immutable behavioral probe plan",
+            "PostgREST transport behavior",
+        ],
     ),
     suite(
         "platform-postgres-grants",

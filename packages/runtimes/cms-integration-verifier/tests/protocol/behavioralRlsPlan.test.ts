@@ -1,11 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
-import {
-    BEHAVIORAL_RLS_PLAN_SCHEMA,
-    BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
-    identifyBehavioralRlsPlan,
-    identifyReleaseAdmissionPolicySnapshot,
-} from "@bernouy/cms-integration-verification";
 import { parseCanonicalVerificationSandboxInput } from "../../src/sandbox/childProtocol";
 import { parseExactWorkload } from "../../src/protocol";
 import type { CandidateStatusProjection } from "../../src";
@@ -52,56 +46,10 @@ describe("behavioral RLS plan transport", () => {
 
 async function behavioralInput() {
     const input = await postgresPlatformInputFixture();
-    const suiteDigest = "e".repeat(64);
-    const policy = {
-        ...input.workload.policy,
-        platformRequiredSuites: [
-            ...input.workload.policy.platformRequiredSuites,
-            {
-                suiteId: BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
-                suiteDigest,
-                runner: input.workload.admission.selectedRunner,
-                applicability: "data-api-schemas" as const,
-            },
-        ].toSorted((left, right) => left.suiteId.localeCompare(right.suiteId)),
-    };
-    const policyDigest = (await identifyReleaseAdmissionPolicySnapshot(policy)).digest;
-    const candidate = input.workload.admission.candidate;
-    const identified = await identifyBehavioralRlsPlan({
-        schema: BEHAVIORAL_RLS_PLAN_SCHEMA,
-        target: {
-            kind: candidate.kind,
-            version: candidate.version,
-            candidateDigest: candidate.candidateDigest,
-            packageDigest: candidate.packageDigest,
-            verificationDigest: candidate.verificationDigest,
-        },
-        policyDigest,
-        probes: [],
-    });
-    const binding = { digest: identified.digest, plan: identified.plan };
-    return {
-        ...input,
-        workload: {
-            ...input.workload,
-            policy,
-            behavioralRlsPlan: binding,
-            admission: {
-                ...input.workload.admission,
-                policyDigest,
-                suites: [
-                    ...input.workload.admission.suites,
-                    {
-                        suiteId: BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
-                        source: "platform" as const,
-                        contentDigest: suiteDigest,
-                        applicable: false,
-                    },
-                ].toSorted((left, right) => left.suiteId.localeCompare(right.suiteId)),
-                behavioralRlsPlan: binding,
-            },
-        },
-    };
+    if (!input.workload.behavioralRlsPlan) {
+        throw new Error("Production platform fixture did not bind its behavioral RLS plan");
+    }
+    return input;
 }
 
 function status(input: Awaited<ReturnType<typeof postgresPlatformInputFixture>>): CandidateStatusProjection {

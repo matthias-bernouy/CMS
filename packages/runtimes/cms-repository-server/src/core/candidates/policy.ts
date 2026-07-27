@@ -25,9 +25,9 @@ export async function productionReleaseAdmissionPolicy(
     );
     return Object.freeze({
         schema: "cms.integration.release-admission-policy.v1",
-        identity: { name: "repository-admission", version: "1.4.0" },
+        identity: { name: "repository-admission", version: "1.5.0" },
         staticEvaluator: { name: "repository-static-compatibility", version: "1.0.0" },
-        verificationPolicy: { name: "repository-verification", version: "1.3.0" },
+        verificationPolicy: { name: "repository-verification", version: "1.4.0" },
         migrationPolicy: { name: "repository-migration", version: "1.1.0" },
         approvedRunners: [runner],
         platformRequiredSuites,

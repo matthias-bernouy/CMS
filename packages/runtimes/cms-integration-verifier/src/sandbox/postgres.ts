@@ -2,6 +2,7 @@ import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages
 import {
     identifyAdmissionInputSnapshot,
     parsePlatformVerificationEvidence,
+    type BehavioralRlsPlanV1,
     type CandidateAdmissionJobResultV1,
     type MigrationJobResultV1,
     type PlatformVerificationEvidenceV1,
@@ -30,6 +31,7 @@ export interface PostgresPlatformVerificationAdapter {
             package: VerificationSandboxInput["workload"]["package"];
             dependencies: VerificationSandboxInput["workload"]["admission"]["dependencies"];
             dependencyPackages: VerificationSandboxInput["workload"]["dependencyPackages"];
+            behavioralRlsPlan?: BehavioralRlsPlanV1;
             database: VerificationSandboxInput["database"];
             platformSuites: readonly Readonly<{
                 suiteId: string;
@@ -76,6 +78,7 @@ export async function runPostgresPlatformVerification(
             package: input.workload.package,
             dependencies: input.workload.admission.dependencies,
             dependencyPackages: input.workload.dependencyPackages,
+            ...(input.workload.behavioralRlsPlan ? { behavioralRlsPlan: input.workload.behavioralRlsPlan.plan } : {}),
             database: input.database,
             platformSuites: plannedPlatform,
         },

@@ -2,19 +2,20 @@ import { SQL } from "bun";
 import type { PlatformVerificationFindingV1 } from "@bernouy/cms-integration-verification";
 import { finding } from "../../../evidence";
 import { executeAsSupabaseActor } from "../session";
-import type { BehavioralRlsActor, BehavioralRlsObservation, BehavioralRlsProbe } from "../types";
+import type { BehavioralRlsActor, BehavioralRlsActors, BehavioralRlsObservation, BehavioralRlsProbe } from "../types";
 import { identifier, target } from "./statements";
 
 export async function inspectBehavioralRlsReads(
     database: SQL,
     probes: readonly BehavioralRlsProbe[],
+    actors: BehavioralRlsActors,
     signal: AbortSignal,
 ) {
     const observations: BehavioralRlsObservation[] = [];
     const findings: PlatformVerificationFindingV1[] = [];
     for (const probe of probes) {
         for (const actor of ["anon", "first", "second"] as const) {
-            const result = await executeAsSupabaseActor(database, actor, signal, async () => {
+            const result = await executeAsSupabaseActor(database, actors, actor, signal, async () => {
                 return (await database.unsafe(
                     `select ${identifier(probe.keyColumn)}::text as "visibleKey" from ${target(probe)}
                      where ${identifier(probe.keyColumn)}::text in ($1::text, $2::text)

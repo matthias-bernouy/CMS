@@ -31,6 +31,6 @@ test("keeps explicit non-applicable platform suites successful in final release 
     expect(finalization).toMatchObject({ status: "published" });
     const history = await releaseStores(fixture).verificationReports.get("demo", "1.0.0");
     expect(history?.current.outcome).toBe("passed");
-    expect(history?.current.results.filter((suite) => suite.outcome === "not-applicable")).toHaveLength(7);
+    expect(history?.current.results.filter((suite) => suite.outcome === "not-applicable")).toHaveLength(8);
     expect(history?.current.results.find((suite) => suite.outcome === "not-applicable")?.applicable).toBeFalse();
 });

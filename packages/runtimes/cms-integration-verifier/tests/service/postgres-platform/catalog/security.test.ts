@@ -39,7 +39,9 @@ postgresTest(
                         package: unsafePostgresPackage(),
                         dependencyPackages: [],
                         database: lease.credential,
-                        platformSuites: await applicablePlatformSuites(),
+                        platformSuites: (await applicablePlatformSuites()).filter(
+                            ({ suiteId }) => suiteId !== "platform-postgres-rls-behavior",
+                        ),
                     },
                     new AbortController().signal,
                 );
