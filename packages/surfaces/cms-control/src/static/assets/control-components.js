@@ -13561,7 +13561,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
   }
   customElements.define("cms-event-toast", CmsEventToast);
 
-  // src/components/admin/Auth/LoginMethods/LoginMethods.ts
+  // src/components/admin/Resources/Auth/LoginMethods/LoginMethods.ts
   class CmsLoginMethods extends HTMLElement {
     async connectedCallback() {
       const base = this.getAttribute("base") ?? "";
