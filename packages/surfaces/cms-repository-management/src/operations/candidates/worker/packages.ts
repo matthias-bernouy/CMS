@@ -1,8 +1,44 @@
 import { computeIntegrationPackageDigest } from "@bernouy/cms-integration-packages";
-import type { MigrationVerificationInputV1 } from "@bernouy/cms-integration-verification";
-import type { RepositoryCandidateExactMigrationPackage, RepositoryCandidateWorkerRoutesConfig } from "../contracts";
+import type {
+    AdmissionDependencyReferenceV1,
+    MigrationVerificationInputV1,
+} from "@bernouy/cms-integration-verification";
+import type {
+    RepositoryCandidateExactDependencyPackage,
+    RepositoryCandidateExactMigrationPackage,
+    RepositoryCandidateWorkerRoutesConfig,
+} from "../contracts";
 
 type PackageReference = MigrationVerificationInputV1["source"];
+
+export async function resolveExactDependencyPackages(
+    source: RepositoryCandidateWorkerRoutesConfig["packageSource"],
+    references: readonly AdmissionDependencyReferenceV1[],
+): Promise<readonly RepositoryCandidateExactDependencyPackage[]> {
+    if (references.length === 0) {
+        return Object.freeze([]);
+    }
+    if (!source) {
+        throw new Error("Candidate dependency package source is unavailable");
+    }
+    return Object.freeze(
+        await Promise.all(
+            references.map(async (reference) => {
+                if (!reference.selection) {
+                    throw new Error("Candidate dependency reference has no exact matrix selection");
+                }
+                const resolved = await resolveExactPackage(source, reference, "dependency");
+                return Object.freeze({
+                    selection: reference.selection,
+                    kind: reference.kind,
+                    version: reference.version,
+                    packageDigest: reference.packageDigest,
+                    envelope: resolved.envelope,
+                });
+            }),
+        ),
+    );
+}
 
 export async function resolveExactMigrationPackages(
     source: RepositoryCandidateWorkerRoutesConfig["packageSource"],
@@ -18,20 +54,29 @@ export async function resolveExactMigrationPackages(
     }
     const packages = await Promise.all(
         references.map(async (reference) => {
-            const resolved = await source.getPackage(reference.kind, reference.version);
-            if (
-                !resolved ||
-                resolved.digest !== reference.packageDigest ||
-                resolved.envelope.kind !== reference.kind ||
-                resolved.envelope.version !== reference.version ||
-                (await computeIntegrationPackageDigest(resolved.envelope)) !== reference.packageDigest
-            ) {
-                throw new Error(`Exact migration package ${reference.kind}@${reference.version} is unavailable`);
-            }
+            const resolved = await resolveExactPackage(source, reference, "migration");
             return Object.freeze({ digest: reference.packageDigest, envelope: resolved.envelope });
         }),
     );
     return Object.freeze(packages);
+}
+
+async function resolveExactPackage(
+    source: NonNullable<RepositoryCandidateWorkerRoutesConfig["packageSource"]>,
+    reference: PackageReference,
+    purpose: "dependency" | "migration",
+) {
+    const resolved = await source.getPackage(reference.kind, reference.version);
+    if (
+        !resolved ||
+        resolved.digest !== reference.packageDigest ||
+        resolved.envelope.kind !== reference.kind ||
+        resolved.envelope.version !== reference.version ||
+        (await computeIntegrationPackageDigest(resolved.envelope)) !== reference.packageDigest
+    ) {
+        throw new Error(`Exact ${purpose} package ${reference.kind}@${reference.version} is unavailable`);
+    }
+    return resolved;
 }
 
 function exactPackageReferences(

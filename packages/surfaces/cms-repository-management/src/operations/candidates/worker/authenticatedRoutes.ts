@@ -22,7 +22,7 @@ import {
     resultCapabilityIdentity,
     sameCandidateLease,
 } from "./shared";
-import { resolveExactMigrationPackages } from "./packages";
+import { resolveExactDependencyPackages, resolveExactMigrationPackages } from "./packages";
 
 export function mountAuthenticatedWorkerRoutes(runner: Runner, config: RepositoryCandidateWorkerRoutesConfig): void {
     runner.get(REPOSITORY_VERIFICATION_JOBS_PATH, (request) => listJobs(request, config));
@@ -62,6 +62,10 @@ async function claimJob(request: Request, config: RepositoryCandidateWorkerRoute
             version: current.version,
             packageDigest: current.packageDigest,
         });
+        const dependencyPackages = await resolveExactDependencyPackages(
+            config.packageSource,
+            objects.admission.dependencies,
+        );
         const authorSuites = await validateBoundIntegrationVerificationAuthorSuites(
             config.authorSuites
                 ? await config.authorSuites.resolve({
@@ -89,6 +93,7 @@ async function claimJob(request: Request, config: RepositoryCandidateWorkerRoute
                 policy: objects.policy,
                 admission: objects.admission,
                 authorSuites,
+                ...(dependencyPackages.length > 0 ? { dependencyPackages } : {}),
                 migrationInputs: objects.migrationInputs,
                 ...(migrationPackages.length > 0 ? { migrationPackages } : {}),
             },

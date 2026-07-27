@@ -4,6 +4,7 @@ import type {
 } from "@bernouy/cms-integration-registry";
 import type { IntegrationPackageEnvelopeV1, IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import type {
+    AdmissionDependencyReferenceV1,
     AdmissionInputSnapshotV1,
     BoundIntegrationVerificationAuthorSuiteV1,
     IntegrationVerificationEnvelopeV1,
@@ -102,6 +103,13 @@ export type RepositoryCandidateExactMigrationPackage = Readonly<{
     digest: string;
     envelope: IntegrationPackageEnvelopeV1;
 }>;
+
+export type RepositoryCandidateExactDependencyPackage = Readonly<
+    Required<Pick<AdmissionDependencyReferenceV1, "selection">> &
+        Pick<AdmissionDependencyReferenceV1, "kind" | "version" | "packageDigest"> & {
+            envelope: IntegrationPackageEnvelopeV1;
+        }
+>;
 
 export type RepositoryCandidateWorkerSurfaceMount = Readonly<{
     mountAuthenticated(runner: Runner): void;

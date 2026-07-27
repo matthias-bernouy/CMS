@@ -31,7 +31,13 @@ export async function workloadFixture(): Promise<ClaimedVerificationJob["workloa
             conformance: [{ suiteId: "implementation", entrypoint: "tests/implementation.ts" }],
             fixtures: [],
         },
-        files: { "tests/implementation.ts": { encoding: "utf8", content: "export default true;" } },
+        files: {
+            "tests/implementation.ts": {
+                encoding: "utf8",
+                content:
+                    'import { defineSuite, test } from "@bernouy/cms-integration-verification/sdk/v1"; export default defineSuite({ tests: [test("implementation", () => undefined)] });',
+            },
+        },
     };
     const verificationDigest = await computeIntegrationVerificationDigest(verification);
     const implementation = await identifyIntegrationVerificationSuiteContent(
@@ -78,6 +84,7 @@ export async function workloadFixture(): Promise<ClaimedVerificationJob["workloa
                 content: implementation.content,
             },
         ],
+        dependencyPackages: [],
         migrationInputs: [],
         migrationPackages: [],
     };

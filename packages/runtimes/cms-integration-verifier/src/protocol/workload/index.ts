@@ -10,8 +10,10 @@ import {
 import { VerificationProtocolError } from "../error";
 import { record } from "../status";
 import type { CandidateStatusProjection, ExactVerificationWorkload } from "../types";
+import { parseExactDependencyPackages } from "./dependencyPackages";
 import { parseExactMigrationPackages } from "./migrationPackages";
 
+export { parseExactDependencyPackages } from "./dependencyPackages";
 export { parseExactMigrationPackages } from "./migrationPackages";
 
 export async function parseExactWorkload(
@@ -35,6 +37,10 @@ export async function parseExactWorkload(
         const authorSuites = await validateBoundIntegrationVerificationAuthorSuites(
             input.authorSuites,
             admission.snapshot,
+        );
+        const dependencyPackages = await parseExactDependencyPackages(
+            input.dependencyPackages ?? [],
+            admission.snapshot.dependencies,
         );
         const rawMigrationInputs = input.migrationInputs ?? [];
         if (!Array.isArray(rawMigrationInputs)) {
@@ -74,6 +80,7 @@ export async function parseExactWorkload(
             policy: policy.snapshot,
             admission: admission.snapshot,
             authorSuites,
+            dependencyPackages,
             migrationInputs,
             migrationPackages,
         });
@@ -97,6 +104,7 @@ function optionalWorkloadFields(value: unknown): string[] {
     return [
         ...(Object.hasOwn(input, "migrationInputs") ? ["migrationInputs"] : []),
         ...(Object.hasOwn(input, "migrationPackages") ? ["migrationPackages"] : []),
+        ...(Object.hasOwn(input, "dependencyPackages") ? ["dependencyPackages"] : []),
     ];
 }
 

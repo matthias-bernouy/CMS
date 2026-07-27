@@ -54,8 +54,17 @@ export type ExactVerificationWorkload = Readonly<{
     policy: ReleaseAdmissionPolicySnapshotV1;
     admission: AdmissionInputSnapshotV1;
     authorSuites: readonly BoundIntegrationVerificationAuthorSuiteV1[];
+    dependencyPackages: readonly ExactDependencyPackage[];
     migrationInputs: readonly MigrationVerificationInputV1[];
     migrationPackages: readonly ExactMigrationPackage[];
+}>;
+
+export type ExactDependencyPackage = Readonly<{
+    selection: "minimum" | "stable";
+    kind: string;
+    version: string;
+    packageDigest: string;
+    envelope: IntegrationPackageEnvelopeV1;
 }>;
 
 export type ExactMigrationPackage = Readonly<{

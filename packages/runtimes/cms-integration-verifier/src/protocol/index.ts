@@ -1,5 +1,5 @@
 export { createHttpCandidateWorkerClient, type HttpCandidateWorkerClientConfig } from "./client";
-export { parseExactMigrationPackages, parseExactWorkload } from "./workload";
+export { parseExactDependencyPackages, parseExactMigrationPackages, parseExactWorkload } from "./workload";
 export {
     VerificationProtocolError,
     type VerificationProtocolErrorKind,
@@ -9,6 +9,7 @@ export type {
     CandidateStatusProjection,
     CandidateWorkerClient,
     ClaimedVerificationJob,
+    ExactDependencyPackage,
     ExactMigrationPackage,
     ExactVerificationWorkload,
     ResultCapability,

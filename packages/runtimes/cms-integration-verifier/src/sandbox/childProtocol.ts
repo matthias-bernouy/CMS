@@ -13,7 +13,7 @@ import {
 } from "@bernouy/cms-integration-verification";
 import { validateIntegrationPackageEnvelope } from "@bernouy/cms-integration-packages";
 import type { VerificationSandboxInput } from "../supervisor";
-import { parseExactMigrationPackages } from "../protocol/workload";
+import { parseExactDependencyPackages, parseExactMigrationPackages } from "../protocol/workload";
 import { validateDisposableDatabaseCredential } from "../supervisor/execution/credential";
 
 const IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
@@ -40,12 +40,19 @@ export async function parseCanonicalVerificationSandboxInput(
             !Array.isArray(rawWorkload) &&
             "migrationPackages" in rawWorkload,
     );
+    const hasDependencyPackages = Boolean(
+        rawWorkload &&
+            typeof rawWorkload === "object" &&
+            !Array.isArray(rawWorkload) &&
+            "dependencyPackages" in rawWorkload,
+    );
     const workload = strictRecord(rawWorkload, [
         "package",
         "verification",
         "policy",
         "admission",
         "authorSuites",
+        ...(hasDependencyPackages ? ["dependencyPackages"] : []),
         ...(hasMigrationInputs ? ["migrationInputs"] : []),
         ...(hasMigrationPackages ? ["migrationPackages"] : []),
         "attempt",
@@ -57,6 +64,10 @@ export async function parseCanonicalVerificationSandboxInput(
     const authorSuites = await validateBoundIntegrationVerificationAuthorSuites(
         workload.authorSuites,
         admission.snapshot,
+    );
+    const dependencyPackages = await parseExactDependencyPackages(
+        workload.dependencyPackages ?? [],
+        admission.snapshot.dependencies,
     );
     const attempt = parseAttempt(workload.attempt);
     const rawMigrationInputs = workload.migrationInputs ?? [];
@@ -92,6 +103,7 @@ export async function parseCanonicalVerificationSandboxInput(
             policy,
             admission: admission.snapshot,
             authorSuites,
+            dependencyPackages,
             migrationInputs,
             migrationPackages,
             attempt,
