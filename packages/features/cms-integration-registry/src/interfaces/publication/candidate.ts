@@ -9,11 +9,7 @@ import type {
     VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 
-export const LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V1_SCHEMA =
-    "cms.integration.registry.candidate-record.v1" as const;
-export const LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V2_SCHEMA =
-    "cms.integration.registry.candidate-record.v2" as const;
-export const INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA = "cms.integration.registry.candidate-record.v3" as const;
+export const INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA = "cms.integration.registry.candidate-record.v1" as const;
 
 export type IntegrationRegistryCandidateStatus =
     | "uploaded"
@@ -59,18 +55,6 @@ type IntegrationRegistryCandidateRecordShared = Readonly<{
     lastFailure?: IntegrationRegistryCandidateFailure;
 }>;
 
-export type LegacyIntegrationRegistryCandidateRecordV1 = IntegrationRegistryCandidateRecordShared &
-    Readonly<{ schema: typeof LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V1_SCHEMA }>;
-
-export type LegacyIntegrationRegistryCandidateRecordV2 = IntegrationRegistryCandidateRecordShared &
-    Readonly<{
-        schema: typeof LEGACY_INTEGRATION_REGISTRY_CANDIDATE_RECORD_V2_SCHEMA;
-        candidateDigest: string;
-        policyDigest?: string;
-        admissionInputDigest?: string;
-        verificationJobResultDigest?: string;
-    }>;
-
 export type IntegrationRegistryCandidateRecord = IntegrationRegistryCandidateRecordShared &
     Readonly<{
         schema: typeof INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA;
@@ -83,11 +67,6 @@ export type IntegrationRegistryCandidateRecord = IntegrationRegistryCandidateRec
         admissionJobResultDigest?: string;
         verificationJobResultDigest?: string;
     }>;
-
-export type PersistedIntegrationRegistryCandidateRecord =
-    | LegacyIntegrationRegistryCandidateRecordV1
-    | LegacyIntegrationRegistryCandidateRecordV2
-    | IntegrationRegistryCandidateRecord;
 
 export type CreateIntegrationRegistryCandidateInput = Readonly<{
     candidateId: string;

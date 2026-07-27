@@ -1,9 +1,6 @@
 export { FsIntegrationRegistryCandidateStoreError } from "./errors";
 export {
-    parsePersistedIntegrationRegistryCandidateRecord,
     readIntegrationRegistryCandidateRecord,
-    readPersistedIntegrationRegistryCandidateRecord,
-    requireCurrentIntegrationRegistryCandidateRecord,
     parseIntegrationRegistryCandidateRecord,
 } from "./document";
 export {

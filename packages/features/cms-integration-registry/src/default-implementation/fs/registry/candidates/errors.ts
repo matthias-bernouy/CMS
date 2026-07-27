@@ -7,7 +7,6 @@ export class FsIntegrationRegistryCandidateStoreError extends Error {
             | "candidate_not_found"
             | "corrupt_candidate"
             | "inventory_limit"
-            | "legacy_candidate"
             | "mutation_locked",
         message: string,
     ) {

@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { readPersistedIntegrationRegistryCandidateRecord } from "../../document";
+import { readIntegrationRegistryCandidateRecord } from "../../document";
 import { FsIntegrationRegistryCandidateStoreError } from "../../errors";
 import { candidateRevisionPath, type FsIntegrationRegistryCandidateLayout } from "../../layout";
 import { readCandidatePlanBinding } from "../../objects";
@@ -27,7 +27,7 @@ export async function collectCandidateObjectReferences(
             if (!match || !revision.isFile() || revision.isSymbolicLink()) {
                 corrupt(`Candidate ${candidate.name} contains unsafe revision ${revision.name}`);
             }
-            const record = await readPersistedIntegrationRegistryCandidateRecord(
+            const record = await readIntegrationRegistryCandidateRecord(
                 candidateRevisionPath(layout, candidate.name, Number(match[1])),
             );
             if (!record || record.candidateId !== candidate.name) {
@@ -35,19 +35,15 @@ export async function collectCandidateObjectReferences(
             }
             references.add(`package:${record.packageDigest}`);
             references.add(`verification:${record.verificationDigest}`);
-            if (record.schema !== "cms.integration.registry.candidate-record.v1") {
-                addOptionalReference(references, "policy", record.policyDigest);
-                addOptionalReference(references, "admission", record.admissionInputDigest);
-                addOptionalReference(references, "result", record.verificationJobResultDigest);
+            addOptionalReference(references, "policy", record.policyDigest);
+            addOptionalReference(references, "admission", record.admissionInputDigest);
+            addOptionalReference(references, "result", record.verificationJobResultDigest);
+            addOptionalReference(references, "compatibility-report", record.compatibilityReportDigest);
+            addOptionalReference(references, "stateful-selection", record.statefulChangeSelectionDigest);
+            for (const digest of record.migrationInputDigests ?? []) {
+                references.add(`migration-input:${digest}`);
             }
-            if (record.schema === "cms.integration.registry.candidate-record.v3") {
-                addOptionalReference(references, "compatibility-report", record.compatibilityReportDigest);
-                addOptionalReference(references, "stateful-selection", record.statefulChangeSelectionDigest);
-                for (const digest of record.migrationInputDigests ?? []) {
-                    references.add(`migration-input:${digest}`);
-                }
-                addOptionalReference(references, "result", record.admissionJobResultDigest);
-            }
+            addOptionalReference(references, "result", record.admissionJobResultDigest);
         }
         const plan = await readCandidatePlanBinding(layout, candidate.name);
         if (plan) {

@@ -3,7 +3,7 @@ import { existsSync, utimesSync, writeFileSync } from "node:fs";
 import { identifyReleaseAdmissionPolicySnapshot } from "@bernouy/cms-integration-verification";
 import { garbageCollectFsIntegrationRegistryCandidateObjects } from "@bernouy/cms-integration-registry/fs";
 import { candidatePolicy, candidateStoreFixture, createCandidate } from "../fixtures";
-import { objectEntries, objectPath, rewriteInitialRecordAsLegacyV1 } from "./helpers";
+import { objectEntries, objectPath } from "./helpers";
 
 let cleanup: (() => void) | undefined;
 afterEach(() => cleanup?.());
@@ -20,11 +20,10 @@ describe("filesystem candidate object garbage collection", () => {
         expect(objectEntries(fixture.root, "verifications")).toHaveLength(1);
     });
 
-    test("collects old unreferenced objects and retains references from a legacy v1 record", async () => {
-        const fixture = await candidateStoreFixture("legacy-candidate");
+    test("collects old unreferenced objects and retains candidate references", async () => {
+        const fixture = await candidateStoreFixture("referenced-candidate");
         cleanup = fixture.cleanup;
         await createCandidate(fixture);
-        rewriteInitialRecordAsLegacyV1(fixture.root, fixture.candidateId);
         const orphan = await identifyReleaseAdmissionPolicySnapshot({
             ...(await candidatePolicy()),
             identity: { name: "orphan-policy", version: "1.0.0" },
@@ -49,7 +48,9 @@ describe("filesystem candidate object garbage collection", () => {
         expect(existsSync(orphanPath)).toBeFalse();
         expect(objectEntries(fixture.root, "packages")).toHaveLength(1);
         expect(objectEntries(fixture.root, "verifications")).toHaveLength(1);
-        await expect(fixture.store.get(fixture.candidateId)).rejects.toMatchObject({ code: "legacy_candidate" });
+        await expect(fixture.store.get(fixture.candidateId)).resolves.toMatchObject({
+            candidateId: fixture.candidateId,
+        });
     });
 
     test("retains a young orphan until the configured grace period elapses", async () => {

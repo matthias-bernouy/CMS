@@ -2,7 +2,7 @@ import { readdir, rename, rm, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { syncDirectory } from "../../../persistence/canonicalFile";
 import { readVerifiedRegistryDirectory } from "../../../persistence/ownedDirectory";
-import { readPersistedIntegrationRegistryCandidateRecord } from "../../document";
+import { readIntegrationRegistryCandidateRecord } from "../../document";
 import { FsIntegrationRegistryCandidateStoreError } from "../../errors";
 import { readCurrentCandidateRecord } from "../../history";
 import {
@@ -50,7 +50,7 @@ export async function pruneTerminalCandidateRecords(
             corrupt(`Candidate inventory contains unsafe entry ${entry.name}`);
         }
         const lastDocument = await readLastPersistedRecord(layout, entry.name);
-        if (!lastDocument || lastDocument.schema === "cms.integration.registry.candidate-record.v1") {
+        if (!lastDocument) {
             continue;
         }
         const record = await readCurrentCandidateRecord(layout, entry.name);
@@ -132,7 +132,7 @@ async function readLastPersistedRecord(layout: FsIntegrationRegistryCandidateLay
     const revision = revisions.at(-1);
     return revision === undefined
         ? null
-        : await readPersistedIntegrationRegistryCandidateRecord(candidateRevisionPath(layout, candidateId, revision));
+        : await readIntegrationRegistryCandidateRecord(candidateRevisionPath(layout, candidateId, revision));
 }
 
 async function removeVerifiedPruningDirectory(
