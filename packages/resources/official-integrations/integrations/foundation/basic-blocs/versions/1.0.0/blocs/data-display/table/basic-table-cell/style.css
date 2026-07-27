@@ -1,0 +1,23 @@
+:host {
+    display: table-cell;
+    padding: 0.75rem 1.25rem;
+    vertical-align: middle;
+    color: var(--text-body, inherit);
+    font-size: 0.875rem;
+}
+
+:host([variant="success"]) {
+    color: var(--success-base, #067647);
+}
+
+:host([variant="danger"]) {
+    color: var(--danger-base, #b42318);
+}
+
+:host([variant="info"]) {
+    color: var(--info-base, #175cd3);
+}
+
+:host([variant="primary"]) {
+    color: var(--primary-base, CanvasText);
+}

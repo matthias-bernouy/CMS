@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-table",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Table",
+        "description": "Responsive data table with an editable header and rows."
+    }
+}

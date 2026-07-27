@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-table-row",
+        "name": "Table row",
+        "group": "Data display",
+        "description": "Editable table row with optional link behavior.",
+        "path": "blocs/data-display/table/basic-table-row"
+    }
+}
