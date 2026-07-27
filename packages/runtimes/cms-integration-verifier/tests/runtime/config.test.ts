@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
     IntegrationVerifierCredentialError,
-    readIntegrationVerifierExecutableEnv,
     readIntegrationVerifierRemoteSandboxEnv,
     readIntegrationVerifierRuntimeEnv,
     readIntegrationVerifierWorkerToken,
@@ -20,7 +19,7 @@ afterEach(async () => {
 });
 
 describe("integration verifier runtime configuration", () => {
-    test("refuses the in-process sandbox fallback in production", async () => {
+    test("requires the isolated sandbox service", async () => {
         await expect(runIntegrationVerifierExecutable({ NODE_ENV: "production" })).rejects.toThrow(
             /isolated remote sandbox service/,
         );
@@ -50,48 +49,6 @@ describe("integration verifier runtime configuration", () => {
                 CMS_INTEGRATION_VERIFIER_WORKER_TOKEN: "forbidden",
             }),
         ).toThrow(/secret file/);
-    });
-
-    test("requires an explicit provider, process command, and digest-pinned runner for the executable", () => {
-        const source = {
-            CMS_INTEGRATION_VERIFIER_REPOSITORY_URL: "http://repository.internal",
-            CMS_INTEGRATION_VERIFIER_WORKER_ID: "worker-1",
-            CMS_INTEGRATION_VERIFIER_DATABASE_PROVIDER_MODULE: "/opt/verifier/provider.js",
-            CMS_INTEGRATION_VERIFIER_SANDBOX_EXECUTABLE: "/opt/verifier/runner",
-            CMS_INTEGRATION_VERIFIER_SANDBOX_ARGUMENTS_JSON: '["--stdio"]',
-            CMS_INTEGRATION_VERIFIER_RUNNER_NAME: "cms-postgres",
-            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.3",
-            CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: `sha256:${"a".repeat(64)}`,
-        };
-
-        expect(readIntegrationVerifierExecutableEnv(source)).toMatchObject({
-            databaseProviderModule: "/opt/verifier/provider.js",
-            sandboxExecutable: "/opt/verifier/runner",
-            sandboxArguments: ["--stdio"],
-            runnerIdentity: { name: "cms-postgres", version: "1.2.3" },
-        });
-        expect(() =>
-            readIntegrationVerifierExecutableEnv({
-                ...source,
-                CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: undefined,
-            }),
-        ).toThrow(/digest-pinned/);
-        expect(() =>
-            readIntegrationVerifierExecutableEnv({
-                ...source,
-                CMS_INTEGRATION_VERIFIER_SANDBOX_ARGUMENTS_JSON: '["--stdio",]',
-            }),
-        ).toThrow(/strict bounded JSON/);
-        expect(() => readIntegrationVerifierExecutableEnv({ ...source, NODE_ENV: "production" })).toThrow(
-            /digest-pinned/,
-        );
-        expect(
-            readIntegrationVerifierExecutableEnv({
-                ...source,
-                NODE_ENV: "production",
-                CMS_INTEGRATION_VERIFIER_DEPLOYED_IMAGE_REFERENCE: `registry.test/verifier@sha256:${"a".repeat(64)}`,
-            }).runnerIdentity.imageDigest,
-        ).toBe(`sha256:${"a".repeat(64)}`);
     });
 
     test("rejects invalid numeric controls instead of silently coercing them", () => {
@@ -126,7 +83,6 @@ describe("integration verifier runtime configuration", () => {
             ...common,
             CMS_INTEGRATION_VERIFIER_REPOSITORY_URL: "http://cms-repository:3000",
             CMS_INTEGRATION_VERIFIER_WORKER_ID: "worker-1",
-            CMS_INTEGRATION_VERIFIER_DATABASE_PROVIDER_MODULE: "/app/provider.ts",
             CMS_INTEGRATION_VERIFIER_SANDBOX_URL: "http://sandbox:3101",
             CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_FILE: "/run/secrets/private-key",
         });

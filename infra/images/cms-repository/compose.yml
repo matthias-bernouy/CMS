@@ -143,7 +143,6 @@ services:
             CMS_INTEGRATION_VERIFIER_REPOSITORY_URL: http://cms-repository:3000
             CMS_INTEGRATION_VERIFIER_WORKER_ID: ${CMS_INTEGRATION_VERIFIER_WORKER_ID:-verifier-1}
             CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_FILE: /run/secrets/cms-integration-verifier-worker-token
-            CMS_INTEGRATION_VERIFIER_DATABASE_PROVIDER_MODULE: /app/packages/runtimes/cms-integration-verifier/src/runtime/providers/postgres/index.ts
             CMS_INTEGRATION_VERIFIER_SANDBOX_URL: http://cms-integration-verifier-sandbox:3101
             CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_FILE: /run/secrets/cms-integration-verifier-sandbox-signing-key
             CMS_INTEGRATION_VERIFIER_SANDBOX_CAPABILITY_LIFETIME_MS: "${CMS_INTEGRATION_VERIFIER_SANDBOX_CAPABILITY_LIFETIME_MS:-15000}"

@@ -1,5 +1,4 @@
-import type { PinnedVerificationRunnerIdentity } from "@bernouy/cms-integration-verification";
-import { absolutePath, boundedInteger, identifier, repositoryOrigin, runnerIdentity, sandboxArguments } from "./values";
+import { absolutePath, boundedInteger, identifier, repositoryOrigin } from "./values";
 
 export type IntegrationVerifierEnvSource = Record<string, string | undefined>;
 
@@ -14,19 +13,6 @@ export type IntegrationVerifierRuntimeEnv = Readonly<{
     pollIntervalMs: number;
     errorBackoffMs: number;
 }>;
-
-export type IntegrationVerifierExecutableEnv = IntegrationVerifierRuntimeEnv &
-    Readonly<{
-        databaseProviderModule: string;
-        sandboxExecutable: string;
-        sandboxArguments: readonly string[];
-        sandboxTempRoot: string;
-        sandboxTimeoutMs: number;
-        sandboxTerminationGraceMs: number;
-        sandboxMaxOutputBytes: number;
-        sandboxMaxErrorBytes: number;
-        runnerIdentity: PinnedVerificationRunnerIdentity;
-    }>;
 
 export function readIntegrationVerifierRuntimeEnv(source: IntegrationVerifierEnvSource): IntegrationVerifierRuntimeEnv {
     if (source.CMS_INTEGRATION_VERIFIER_WORKER_TOKEN !== undefined) {
@@ -81,56 +67,5 @@ export function readIntegrationVerifierRuntimeEnv(source: IntegrationVerifierEnv
             100,
             600_000,
         ),
-    });
-}
-
-export function readIntegrationVerifierExecutableEnv(
-    source: IntegrationVerifierEnvSource,
-): IntegrationVerifierExecutableEnv {
-    return Object.freeze({
-        ...readIntegrationVerifierRuntimeEnv(source),
-        databaseProviderModule: absolutePath(
-            source.CMS_INTEGRATION_VERIFIER_DATABASE_PROVIDER_MODULE,
-            "CMS_INTEGRATION_VERIFIER_DATABASE_PROVIDER_MODULE",
-        ),
-        sandboxExecutable: absolutePath(
-            source.CMS_INTEGRATION_VERIFIER_SANDBOX_EXECUTABLE,
-            "CMS_INTEGRATION_VERIFIER_SANDBOX_EXECUTABLE",
-        ),
-        sandboxArguments: sandboxArguments(source.CMS_INTEGRATION_VERIFIER_SANDBOX_ARGUMENTS_JSON),
-        sandboxTempRoot: absolutePath(
-            source.CMS_INTEGRATION_VERIFIER_SANDBOX_TMP_ROOT,
-            "CMS_INTEGRATION_VERIFIER_SANDBOX_TMP_ROOT",
-            "/tmp/cms-integration-verifier",
-        ),
-        sandboxTimeoutMs: boundedInteger(
-            source.CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS,
-            "CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS",
-            600_000,
-            1_000,
-            3_600_000,
-        ),
-        sandboxTerminationGraceMs: boundedInteger(
-            source.CMS_INTEGRATION_VERIFIER_SANDBOX_TERMINATION_GRACE_MS,
-            "CMS_INTEGRATION_VERIFIER_SANDBOX_TERMINATION_GRACE_MS",
-            2_000,
-            10,
-            30_000,
-        ),
-        sandboxMaxOutputBytes: boundedInteger(
-            source.CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES,
-            "CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES",
-            1_048_576,
-            1_024,
-            4 * 1_048_576,
-        ),
-        sandboxMaxErrorBytes: boundedInteger(
-            source.CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_ERROR_BYTES,
-            "CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_ERROR_BYTES",
-            65_536,
-            1_024,
-            1_048_576,
-        ),
-        runnerIdentity: runnerIdentity(source),
     });
 }

@@ -4,7 +4,6 @@ import { readIntegrationVerifierRuntimeEnv, type IntegrationVerifierRuntimeEnv }
 
 export type IntegrationVerifierRemoteSandboxEnv = IntegrationVerifierRuntimeEnv &
     Readonly<{
-        databaseProviderModule: string;
         sandboxOrigin: string;
         sandboxSigningKeyFile: string;
         sandboxCapabilityLifetimeMs: number;
@@ -20,10 +19,6 @@ export function readIntegrationVerifierRemoteSandboxEnv(
 ): IntegrationVerifierRemoteSandboxEnv {
     return Object.freeze({
         ...readIntegrationVerifierRuntimeEnv(source),
-        databaseProviderModule: absolutePath(
-            source.CMS_INTEGRATION_VERIFIER_DATABASE_PROVIDER_MODULE,
-            "CMS_INTEGRATION_VERIFIER_DATABASE_PROVIDER_MODULE",
-        ),
         sandboxOrigin: repositoryOriginNamed(
             source.CMS_INTEGRATION_VERIFIER_SANDBOX_URL,
             "CMS_INTEGRATION_VERIFIER_SANDBOX_URL",

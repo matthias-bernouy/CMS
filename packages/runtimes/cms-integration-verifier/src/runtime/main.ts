@@ -1,35 +1,26 @@
 import {
-    readIntegrationVerifierExecutableEnv,
     readIntegrationVerifierKey,
     readIntegrationVerifierRemoteSandboxEnv,
 } from "../config";
-import {
-    createHttpVerificationSandbox,
-    createProcessVerificationSandbox,
-    createSandboxCapabilitySigner,
-} from "../sandbox";
+import { createHttpVerificationSandbox, createSandboxCapabilitySigner } from "../sandbox";
 import type { VerificationSandbox } from "../supervisor";
 import { startVerifierHealthServer, VerificationRuntimeHealth } from "./health";
-import { loadDisposableVerificationDatabaseProvider } from "./provider";
 import { createProductionIntegrationVerifier } from "./production";
+import { createDisposableVerificationDatabaseProviderFromEnv } from "./providers/postgres";
 import { runVerificationPullLoop } from "./pullLoop";
 
 export async function runIntegrationVerifierExecutable(
     source: Record<string, string | undefined> = process.env,
 ): Promise<void> {
-    if (source.NODE_ENV === "production" && !source.CMS_INTEGRATION_VERIFIER_SANDBOX_URL) {
-        throw new Error("Production verification requires the isolated remote sandbox service");
+    if (!source.CMS_INTEGRATION_VERIFIER_SANDBOX_URL) {
+        throw new Error("Integration verification requires the isolated remote sandbox service");
     }
-    const remoteEnv = source.CMS_INTEGRATION_VERIFIER_SANDBOX_URL
-        ? readIntegrationVerifierRemoteSandboxEnv(source)
-        : undefined;
-    const localEnv = remoteEnv ? undefined : readIntegrationVerifierExecutableEnv(source);
-    const env = remoteEnv ?? localEnv!;
-    const databases = await loadDisposableVerificationDatabaseProvider(env.databaseProviderModule);
-    const sandbox = remoteEnv ? await remoteSandbox(remoteEnv) : localSandbox(localEnv!);
+    const env = readIntegrationVerifierRemoteSandboxEnv(source);
+    const databases = await createDisposableVerificationDatabaseProviderFromEnv(source);
+    const sandbox = await remoteSandbox(env);
     const supervisor = await createProductionIntegrationVerifier({ env: source, sandbox, databases });
     const healthState = new VerificationRuntimeHealth();
-    const health = remoteEnv ? startVerifierHealthServer(remoteEnv.healthPort, healthState) : undefined;
+    const health = startVerifierHealthServer(env.healthPort, healthState);
     const controller = new AbortController();
     const stop = () => controller.abort();
     process.once("SIGTERM", stop);
@@ -51,21 +42,6 @@ export async function runIntegrationVerifierExecutable(
         process.removeListener("SIGTERM", stop);
         process.removeListener("SIGINT", stop);
     }
-}
-
-function localSandbox(env: ReturnType<typeof readIntegrationVerifierExecutableEnv>): VerificationSandbox {
-    return createProcessVerificationSandbox({
-        identity: env.runnerIdentity,
-        executable: env.sandboxExecutable,
-        arguments: env.sandboxArguments,
-        tempRoot: env.sandboxTempRoot,
-        timeoutMs: env.sandboxTimeoutMs,
-        terminationGraceMs: env.sandboxTerminationGraceMs,
-        maxInputBytes: env.maxResponseBytes,
-        maxOutputBytes: env.sandboxMaxOutputBytes,
-        maxErrorBytes: env.sandboxMaxErrorBytes,
-        environment: { PATH: "/usr/local/bin:/usr/bin:/bin", LANG: "C.UTF-8", LC_ALL: "C.UTF-8", TZ: "UTC" },
-    });
 }
 
 async function remoteSandbox(
