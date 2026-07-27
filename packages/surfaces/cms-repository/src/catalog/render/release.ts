@@ -70,7 +70,7 @@ function renderStaticCompatibility(release: PublicRepositoryRelease): string {
 <div><dt>Contract admissible</dt><dd>${compatibility.contractAdmissible ? "Yes" : "No"}</dd></div>
 <div><dt>Release level</dt><dd>${escapeHtml(compatibility.releaseLevel)} (required ${escapeHtml(compatibility.requiredReleaseLevel)})</dd></div>
 </dl>${compatibility.baselines.length > 0 ? `<p>Baselines: ${compatibility.baselines.map(({ kind, version, packageDigest }) => `<code>${escapeHtml(kind)}@${escapeHtml(version)} · ${escapeHtml(packageDigest)}</code>`).join(", ")}</p>` : ""}
-${compatibility.findings.length > 0 ? `<ul>${compatibility.findings.map(({ findingId, classification, surface, path, code, message }) => `<li><strong>${escapeHtml(humanLabel(classification))}</strong> ${escapeHtml(message)} <code>${escapeHtml(surface)}:${escapeHtml(path)}:${escapeHtml(code)}:${escapeHtml(findingId)}</code></li>`).join("")}</ul>` : "<p>No compatibility finding.</p>"}`;
+${compatibility.findings.length > 0 ? `<ul>${compatibility.findings.map(({ findingId, classification, surface, code, message }) => `<li><strong>${escapeHtml(humanLabel(classification))}</strong> ${escapeHtml(message)} <code>${escapeHtml(surface)}:${escapeHtml(code)}:${escapeHtml(findingId)}</code></li>`).join("")}</ul>` : "<p>No compatibility finding.</p>"}`;
 }
 
 function renderMigrations(release: PublicRepositoryRelease): string {

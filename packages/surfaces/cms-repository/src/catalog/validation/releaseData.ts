@@ -70,7 +70,6 @@ export function assertReleaseEvidence(release: PublicRepositoryRelease, kind: st
             boundedText(finding.findingId, "finding ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
             boundedText(finding.classification, "finding classification", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
             boundedText(finding.surface, "finding surface", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
-            boundedText(finding.path, "finding path", REPOSITORY_CATALOG_LIMITS.descriptionBytes);
             boundedText(finding.code, "finding code", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
             boundedText(finding.message, "finding message", REPOSITORY_CATALOG_LIMITS.descriptionBytes);
         }
@@ -109,16 +108,17 @@ export function assertReleaseEvidence(release: PublicRepositoryRelease, kind: st
             "provider-direct cutover strategy",
             REPOSITORY_CATALOG_LIMITS.shortTextBytes,
         );
-        if (migration.cutoverEvidence) {
-            validateMigrationCheck(migration.cutoverEvidence.cmsMediated);
-            validateMigrationCheck(migration.cutoverEvidence.providerDirect);
-            validateMigrationCheck(migration.cutoverEvidence.activation);
-            validateCutoverApplicability(migration.cutover.cmsMediated, migration.cutoverEvidence.cmsMediated.outcome);
-            validateCutoverApplicability(
-                migration.cutover.providerDirect,
-                migration.cutoverEvidence.providerDirect.outcome,
-            );
+        if (!migration.cutoverEvidence) {
+            throw invalid("Migration cutover evidence is required");
         }
+        validateMigrationCheck(migration.cutoverEvidence.cmsMediated);
+        validateMigrationCheck(migration.cutoverEvidence.providerDirect);
+        validateMigrationCheck(migration.cutoverEvidence.activation);
+        validateCutoverApplicability(migration.cutover.cmsMediated, migration.cutoverEvidence.cmsMediated.outcome);
+        validateCutoverApplicability(
+            migration.cutover.providerDirect,
+            migration.cutoverEvidence.providerDirect.outcome,
+        );
         boundedText(migration.rollback, "migration rollback", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
         boundedText(migration.pointOfNoReturn, "point of no return", REPOSITORY_CATALOG_LIMITS.descriptionBytes);
     }

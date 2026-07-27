@@ -54,11 +54,10 @@ function compatibility(history: NonNullable<IntegrationRegistryReleaseEvidence["
         requiredReleaseLevel: report.requiredReleaseLevel,
         evaluator: report.evaluator,
         baselines: report.baselines.map(({ kind, version, packageDigest }) => ({ kind, version, packageDigest })),
-        findings: report.findings.map(({ findingId, classification, surface, path, code, message }) => ({
+        findings: report.findings.map(({ findingId, classification, surface, code, message }) => ({
             findingId,
             classification,
             surface,
-            path,
             code,
             message,
         })),

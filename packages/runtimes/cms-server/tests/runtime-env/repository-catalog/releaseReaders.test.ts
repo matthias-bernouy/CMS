@@ -25,7 +25,42 @@ describe("repository release HTTP readers", () => {
             kind: "commerce",
             version: "1.0.0",
             verification: { activeContracts: [{ contractId: "public-api" }] },
+            migrations: [
+                {
+                    cutoverEvidence: {
+                        cmsMediated: { outcome: "passed", evidenceDigest: "c".repeat(64) },
+                        providerDirect: { outcome: "passed", evidenceDigest: "c".repeat(64) },
+                        activation: { outcome: "passed", evidenceDigest: "c".repeat(64) },
+                    },
+                },
+            ],
         });
+    });
+
+    test("rejects private finding paths and malformed migration cutover evidence", async () => {
+        const privateFinding = releaseDocument("1.0.0");
+        privateFinding.compatibility.findings.push({
+            findingId: "d".repeat(64),
+            classification: "compatible",
+            surface: "definition",
+            path: "/registry/private/definition.json",
+            code: "definition-stable",
+            message: "Stable",
+        } as never);
+        const missingDigest = releaseDocument("1.0.0");
+        missingDigest.migrations[0]!.cutoverEvidence.cmsMediated = { outcome: "passed" };
+        const inconsistentApplicability = releaseDocument("1.0.0");
+        inconsistentApplicability.migrations[0]!.cutoverEvidence.cmsMediated = { outcome: "not-applicable" };
+
+        for (const value of [privateFinding, missingDigest, inconsistentApplicability]) {
+            const reader = new HttpRepositoryReleaseReader({
+                baseUrl: "https://repository.example/.cms/repository",
+                fetch: async () => jsonResponse(value, "b".repeat(64)),
+                timeoutMs: 1_000,
+                maxResponseBytes: 1_048_576,
+            });
+            await expect(reader.get("commerce", "1.0.0")).rejects.toBeInstanceOf(IntegrationRepositoryContractError);
+        }
     });
 
     test("recomputes verification identity and rejects a substituted validator", async () => {

@@ -76,12 +76,11 @@ function parseCompatibility(value: unknown): NonNullable<PublicRepositoryRelease
 }
 
 function parseFinding(value: unknown): NonNullable<PublicRepositoryRelease["compatibility"]>["findings"][number] {
-    const source = strictRecord(value, ["classification", "code", "findingId", "message", "path", "surface"]);
+    const source = strictRecord(value, ["classification", "code", "findingId", "message", "surface"]);
     return {
         findingId: text(source.findingId, 256),
         classification: text(source.classification, 1_024),
         surface: text(source.surface, 1_024),
-        path: text(source.path, 16_384),
         code: text(source.code, 1_024),
         message: text(source.message, 16_384),
     };

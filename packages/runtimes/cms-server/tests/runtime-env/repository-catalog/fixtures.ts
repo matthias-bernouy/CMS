@@ -125,6 +125,11 @@ export function releaseDocument(version: string) {
                     resumption: { outcome: "passed", evidenceDigest: "d".repeat(64) },
                 },
                 cutover: { cmsMediated: "binding-revision", providerDirect: "expand-in-code" },
+                cutoverEvidence: {
+                    cmsMediated: { outcome: "passed", evidenceDigest: reportDigest },
+                    providerDirect: { outcome: "passed", evidenceDigest: reportDigest },
+                    activation: { outcome: "passed", evidenceDigest: reportDigest },
+                },
                 rollback: "available",
                 pointOfNoReturn: "cleanup",
                 delayedCleanupVerified: true,

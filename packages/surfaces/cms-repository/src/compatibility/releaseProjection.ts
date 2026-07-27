@@ -37,11 +37,10 @@ export function projectPublicRepositoryRelease(source: IntegrationRegistryReleas
                           packageDigest,
                       })),
                       findings: compatibility.current.findings.map(
-                          ({ findingId, classification, surface, path, code, message }) => ({
+                          ({ findingId, classification, surface, code, message }) => ({
                               findingId,
                               classification,
                               surface,
-                              path,
                               code,
                               message,
                           }),

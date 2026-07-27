@@ -6,8 +6,18 @@ import type {
 } from "@bernouy/cms-control";
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { validateIntegrationCandidateEnvelope } from "@bernouy/cms-integration-verification";
+import { RepositoryCms } from "@bernouy/cms-repository";
+import { BunRunner } from "@bernouy/http-runner";
 import { gateway, jsonResponse, managementResponseFor, packageFixture, TEST_ACTOR, TEST_TOKEN } from "./fixtures";
-import { admissionReport, candidateReport, reportReference, revisionReport, TEST_KIND, TEST_VERSION } from "./reports";
+import {
+    admissionReport,
+    candidateReport,
+    registryReleaseEvidence,
+    reportReference,
+    revisionReport,
+    TEST_KIND,
+    TEST_VERSION,
+} from "./reports";
 
 describe("HTTP repository management gateway requests", () => {
     test("calls only allowlisted endpoints with exact application headers", async () => {
@@ -202,6 +212,42 @@ describe("HTTP repository management gateway requests", () => {
         expect(captured[3]!.url.searchParams.get("candidateId")).toBe("candidate-1");
         expect(new Uint8Array(captured[1]!.init.body as ArrayBuffer)).toEqual(candidateBytes);
         expect(await requestJson(captured[4]!.init)).toEqual({ ...block, actor: TEST_ACTOR });
+    });
+
+    test("round-trips projected migration evidence without exposing private finding paths", async () => {
+        const runner = new BunRunner();
+        new RepositoryCms({
+            runner,
+            integrationCatalog: {
+                list: async () => [],
+                getIndex: async () => null,
+                listVersions: async () => [],
+                get: async () => null,
+            },
+            integrationReleases: { get: async () => registryReleaseEvidence() },
+        });
+        runner.start(0);
+        try {
+            const upstreamOrigin = `http://127.0.0.1:${runner.port}`;
+            const client = gateway(async (input, init) => {
+                const requested = new URL(String(input));
+                return await fetch(`${upstreamOrigin}/api/integrations/release${requested.search}`, init);
+            });
+
+            const response = await client.release(TEST_KIND, TEST_VERSION);
+            const body = await response.json();
+
+            expect(response.status).toBe(200);
+            expect(body.migrations[0].cutoverEvidence).toEqual({
+                cmsMediated: { outcome: "passed", evidenceDigest: "c".repeat(64) },
+                providerDirect: { outcome: "not-supported" },
+                activation: { outcome: "passed", evidenceDigest: "c".repeat(64) },
+            });
+            expect(body.compatibility.findings[0]).not.toHaveProperty("path");
+            expect(JSON.stringify(body)).not.toContain("/registry/private/definition.json");
+        } finally {
+            await runner.stopGracefully();
+        }
     });
 });
 

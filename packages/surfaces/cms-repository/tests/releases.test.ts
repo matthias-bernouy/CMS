@@ -59,7 +59,15 @@ describe("@bernouy/cms-repository public release evidence", () => {
             ],
             decision: { admissible: true, reasons: [] },
         });
+        expect(body.compatibility.findings[0]).toEqual({
+            findingId: "e".repeat(64),
+            classification: "compatible",
+            surface: "definition",
+            code: "definition-stable",
+            message: "The public definition contract is stable",
+        });
         expect(JSON.stringify(body)).not.toContain("private-actor");
+        expect(JSON.stringify(body)).not.toContain("/registry/private/definition.json");
     });
 
     test("keeps blocked evidence visible while marking it non-installable", async () => {
@@ -148,7 +156,18 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
         evaluator: { name: "compatibility", version: "1.0.0" },
         baselines: [],
         informationalBaselines: [],
-        findings: [],
+        findings: [
+            {
+                findingId: "e".repeat(64),
+                classification: "compatible" as const,
+                surface: "definition" as const,
+                path: "/registry/private/definition.json",
+                code: "definition-stable",
+                baselineDigest: "d".repeat(64),
+                candidateDigest: PACKAGE_DIGEST,
+                message: "The public definition contract is stable",
+            },
+        ],
         outcome: "not-applicable" as const,
         requiredReleaseLevel: "none" as const,
         releaseLevel: "initial" as const,

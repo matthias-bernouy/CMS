@@ -10,6 +10,7 @@ export function parsePublicMigration(value: unknown): PublicRepositoryMigrationE
             "checks",
             "connectorKey",
             "cutover",
+            "cutoverEvidence",
             "delayedCleanupVerified",
             "environmentDigest",
             "lineageId",
@@ -27,6 +28,11 @@ export function parsePublicMigration(value: unknown): PublicRepositoryMigrationE
         ["operationalEvidence"],
     );
     const cutover = strictRecord(source.cutover, ["cmsMediated", "providerDirect"]);
+    const parsedCutover = {
+        cmsMediated: enumText(cutover.cmsMediated, ["binding-revision", "expand-in-code", "not-applicable"]),
+        providerDirect: enumText(cutover.providerDirect, ["provider-cutover", "expand-in-code", "not-applicable"]),
+    };
+    const cutoverEvidence = parseCutoverEvidence(source.cutoverEvidence, parsedCutover);
     const rollback = enumText(source.rollback, ["available", "unavailable", "not-applicable"] as const);
     const pointOfNoReturn = text(source.pointOfNoReturn, 16_384);
     const delayedCleanupVerified = boolean(source.delayedCleanupVerified);
@@ -53,10 +59,8 @@ export function parsePublicMigration(value: unknown): PublicRepositoryMigrationE
         runner: runner(source.runner),
         environmentDigest: digest(source.environmentDigest),
         checks: parseChecks(source.checks),
-        cutover: {
-            cmsMediated: enumText(cutover.cmsMediated, ["binding-revision", "expand-in-code", "not-applicable"]),
-            providerDirect: enumText(cutover.providerDirect, ["provider-cutover", "expand-in-code", "not-applicable"]),
-        },
+        cutover: parsedCutover,
+        cutoverEvidence,
         rollback,
         pointOfNoReturn,
         delayedCleanupVerified,
@@ -140,10 +144,37 @@ function parseChecks(value: unknown): PublicRepositoryMigrationEvidence["checks"
     return Object.fromEntries(Object.entries(source).map(([name, check]) => [name, parseCheck(check)]));
 }
 
+function parseCutoverEvidence(
+    value: unknown,
+    cutover: PublicRepositoryMigrationEvidence["cutover"],
+): PublicRepositoryMigrationEvidence["cutoverEvidence"] {
+    const source = strictRecord(value, ["activation", "cmsMediated", "providerDirect"]);
+    const evidence = {
+        cmsMediated: parseCheck(source.cmsMediated),
+        providerDirect: parseCheck(source.providerDirect),
+        activation: parseCheck(source.activation),
+    };
+    if (
+        (cutover.cmsMediated === "not-applicable") !== (evidence.cmsMediated.outcome === "not-applicable") ||
+        (cutover.providerDirect === "not-applicable") !== (evidence.providerDirect.outcome === "not-applicable")
+    ) {
+        invalid();
+    }
+    return evidence;
+}
+
 function parseCheck(value: unknown): Readonly<{ outcome: string; evidenceDigest?: string }> {
     const source = strictRecord(value, ["outcome"], ["evidenceDigest"]);
+    const outcome = enumText(source.outcome, CHECK_OUTCOMES);
+    const evidenceDigest = source.evidenceDigest === undefined ? undefined : digest(source.evidenceDigest);
+    if (
+        ((outcome === "passed" || outcome === "failed") && evidenceDigest === undefined) ||
+        (outcome === "not-supported" && evidenceDigest !== undefined)
+    ) {
+        invalid();
+    }
     return {
-        outcome: enumText(source.outcome, CHECK_OUTCOMES),
-        ...(source.evidenceDigest === undefined ? {} : { evidenceDigest: digest(source.evidenceDigest) }),
+        outcome,
+        ...(evidenceDigest ? { evidenceDigest } : {}),
     };
 }
