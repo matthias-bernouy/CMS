@@ -136,8 +136,6 @@ export type RepositoryCandidateWorkerSurfaceMount = Readonly<{
     mountCapabilities(runner: Runner): void;
 }>;
 
-export type RepositoryCandidateStatusProjection = ReturnType<typeof projectCandidateStatus>;
-
 export function projectCandidateStatus(record: IntegrationRegistryCandidateRecord) {
     return Object.freeze({
         candidateId: record.candidateId,

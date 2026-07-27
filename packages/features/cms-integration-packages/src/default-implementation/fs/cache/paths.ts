@@ -104,11 +104,6 @@ export function isMissing(error: unknown): boolean {
     return errorCode(error) === "ENOENT";
 }
 
-export function isRenameConflict(error: unknown): boolean {
-    const code = errorCode(error);
-    return code === "EEXIST" || code === "ENOTEMPTY";
-}
-
 export function errorCode(error: unknown): string | undefined {
     return typeof error === "object" && error !== null && "code" in error && typeof error.code === "string"
         ? error.code

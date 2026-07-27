@@ -77,15 +77,6 @@ export function assertCanonicalFileLayout(
     }
 }
 
-export function assertIntegrationPackageFileLayout(
-    filePath: string,
-    filePaths: ReadonlySet<string>,
-    directoryPaths: Set<string>,
-    maxDirectories: number,
-): void {
-    assertCanonicalFileLayout(filePath, filePaths, directoryPaths, maxDirectories);
-}
-
 function invalidPath(value: string, reason: string): IntegrationPackageValidationError {
     return new IntegrationPackageValidationError("invalid_path", `file path ${JSON.stringify(value)} ${reason}`, value);
 }
