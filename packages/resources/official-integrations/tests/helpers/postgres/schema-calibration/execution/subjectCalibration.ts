@@ -133,10 +133,10 @@ function identicalCompatibilityFindings(
                 },
             ],
         });
-    return evaluator.evaluateAdmission({
+    return evaluator.evaluate({
         baseline: { definition: definition("1.0.0"), packageDigest: "a".repeat(64) },
         candidate: { definition: definition("1.0.1"), packageDigest: "b".repeat(64) },
-    }).report.evidence.length;
+    }).evidence.length;
 }
 
 async function serverVersion(database: SQL): Promise<string> {

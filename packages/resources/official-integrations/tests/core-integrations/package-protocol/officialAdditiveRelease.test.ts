@@ -106,16 +106,24 @@ describe("official Photo Albums additive release", () => {
             baseline.package.envelope,
             candidate.package.envelope,
         );
-        const accepted = evaluator.evaluateAdmission({
+        const acceptedInput = {
             baseline: baselineInput,
             candidate: { definition: candidate.definition, packageDigest: candidate.digest },
             changedPaths,
+        };
+        const accepted = await evaluator.buildRoot(acceptedInput, "admission", {
+            actor: "official-release-test",
+            reason: "Validate the Photo Albums additive release contract",
         });
-        expect(accepted).toMatchObject({
-            accepted: true,
-            report: { outcome: "compatible", requiredReleaseLevel: "minor", releaseLevel: "minor" },
+        expect(accepted.report).toMatchObject({
+            schema: "cms.integration.compatibility-report.v2",
+            revisionType: "root",
+            contractAdmissible: true,
+            outcome: "compatible",
+            requiredReleaseLevel: "minor",
+            releaseLevel: "minor",
         });
-        expect(accepted.report.evidence).toEqual([
+        expect(accepted.report.findings).toEqual([
             expect.objectContaining({
                 classification: "additive",
                 code: "dependency-range-declared-from-reviewed-baseline",
@@ -123,17 +131,17 @@ describe("official Photo Albums additive release", () => {
             expect.objectContaining({ classification: "additive", code: "function-contract-declared" }),
             expect.objectContaining({ classification: "additive", code: "relation-added" }),
         ]);
-        expect(accepted.report.evidence.some(({ code }) => code === "legacy-schema-baseline-missing")).toBeFalse();
+        expect(accepted.report.findings.some(({ code }) => code === "legacy-schema-baseline-missing")).toBeFalse();
 
-        const mislabeled = evaluator.evaluateAdmission({
+        const mislabeled = evaluator.evaluate({
             baseline: baselineInput,
             candidate: { definition: { ...candidate.definition, version: "1.0.1" }, packageDigest: candidate.digest },
             changedPaths,
         });
         expect(mislabeled).toMatchObject({
-            accepted: false,
-            status: 422,
-            report: { requiredReleaseLevel: "minor", releaseLevel: "patch" },
+            contractAdmissible: false,
+            requiredReleaseLevel: "minor",
+            releaseLevel: "patch",
         });
 
         const reviewedSchema = projectObservedSchemaContract(reviewed.observedSchema);
@@ -143,7 +151,7 @@ describe("official Photo Albums additive release", () => {
                 relations: namespace.relations.filter(({ name }) => name !== "albums"),
             })),
         };
-        const breakingPatch = evaluator.evaluateAdmission({
+        const breakingPatch = evaluator.evaluate({
             baseline: baselineInput,
             candidate: {
                 definition: {
@@ -160,11 +168,11 @@ describe("official Photo Albums additive release", () => {
             changedPaths,
         });
         expect(breakingPatch).toMatchObject({
-            accepted: false,
-            status: 422,
-            report: { requiredReleaseLevel: "major", releaseLevel: "patch" },
+            contractAdmissible: false,
+            requiredReleaseLevel: "major",
+            releaseLevel: "patch",
         });
-        expect(breakingPatch.report.evidence).toContainEqual(
+        expect(breakingPatch.evidence).toContainEqual(
             expect.objectContaining({ classification: "breaking", code: "relation-removed" }),
         );
     });
