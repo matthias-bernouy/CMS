@@ -349,13 +349,8 @@ class StripeConnectOnboarding extends HTMLElement {
                 await this.showWallet();
                 return;
             }
-            if (status.onboardingStatus === "pending_verification") {
-                this.hidePanels();
-                this.header.hidden = false;
-                this.setStatus(
-                    "Tes informations sont en cours de vérification. Cela peut prendre quelques minutes.",
-                    "success",
-                );
+            if (verificationPending(status)) {
+                this.showPendingVerification();
                 return;
             }
             this.showActivation();
@@ -466,7 +461,7 @@ class StripeConnectOnboarding extends HTMLElement {
             if (status.onboardingStatus === "enabled" && status.payoutsEnabled === true) {
                 await this.showWallet();
             } else {
-                await this.refresh();
+                this.showPendingVerification();
             }
         } finally {
             this.setBusy(false);
@@ -497,6 +492,15 @@ class StripeConnectOnboarding extends HTMLElement {
         this.hidePanels();
         this.header.hidden = false;
         this.activationPanel.hidden = false;
+    }
+
+    showPendingVerification() {
+        this.hidePanels();
+        this.header.hidden = false;
+        this.setStatus(
+            "Validation en attente. Tes informations sont en cours de vérification. Cela peut prendre quelques minutes.",
+            "idle",
+        );
     }
 
     showLoading() {
@@ -765,6 +769,18 @@ function providerNeutralCopy(value) {
         .replace(/conditions Stripe/gi, "conditions du service de paiement")
         .replace(/Stripe Connect/gi, "service de paiement")
         .replace(/Stripe/gi, "service de paiement");
+}
+
+function verificationPending(status) {
+    const providerPending =
+        status?.onboardingStatus === "pending_verification" ||
+        status?.bankPayoutsStatus === "pending" ||
+        (Array.isArray(status?.pendingVerification) && status.pendingVerification.length > 0);
+    if (providerPending) {
+        return true;
+    }
+    const actionRequired = ["requirements_due", "rejected"].includes(status?.onboardingStatus);
+    return status?.bankAccountStatus === "attached" && status?.payoutsEnabled !== true && !actionRequired;
 }
 
 function publicErrorMessage(error) {

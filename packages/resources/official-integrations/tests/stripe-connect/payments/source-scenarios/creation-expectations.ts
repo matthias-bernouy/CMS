@@ -17,6 +17,12 @@ export function expectWalletBlocContract(bloc: ImportedBloc | undefined): void {
     expect(bloc?.viewJS).toContain('.replace(/Compte vendeur Stripe/gi, "Compte vendeur")');
     expect(bloc?.viewJS).toContain('.replace(/compte Stripe Connect/gi, "compte vendeur")');
     expect(bloc?.viewJS).toContain("submitConnectVerification");
+    expect(bloc?.viewJS).toContain("Validation en attente.");
+    expect(bloc?.viewJS).toContain('status?.bankPayoutsStatus === "pending"');
+    expect(bloc?.viewJS).toContain('status?.bankAccountStatus === "attached"');
+    expect(bloc?.viewJS).toContain('["requirements_due", "rejected"].includes');
+    expect(bloc?.viewJS).toContain("this.showPendingVerification();");
+    expect(bloc?.viewJS).not.toContain("await this.refresh();");
     expect(bloc?.viewJS).toContain('requestAccountSource("getAccount")');
     expect(bloc?.viewJS).toContain('requestAuthSource("me")');
     expect(bloc?.viewJS).toContain("currentAccount?.subject?.email");
