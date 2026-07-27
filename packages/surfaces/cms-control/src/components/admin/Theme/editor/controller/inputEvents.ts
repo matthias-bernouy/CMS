@@ -27,7 +27,6 @@ export function handleThemeInput(event: Event, context: ThemeInputContext): void
     const catalogEditable = isThemeCatalogEditable(source);
     if (input.matches("[data-category-label-input]") && category && source && catalogEditable) {
         category.label = input.value;
-        query<HTMLElement>(context.root, "[data-category-title]").textContent = category.label;
         query<HTMLElement>(context.root, "[data-category-section]").setAttribute("heading", category.label);
         dispatchThemeCategoryUpdated({ sourceId: source.id, category });
         return;

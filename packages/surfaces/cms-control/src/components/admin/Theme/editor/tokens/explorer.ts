@@ -7,7 +7,6 @@ import type {
     ThemeTokenType,
 } from "@bernouy/cms-content";
 
-import { isIntegrationSource } from "../../ownership";
 import { renderToken } from "./view";
 
 export type ThemeTokenFilter = "all" | ThemeTokenType;
@@ -34,7 +33,7 @@ const FILTER_LABELS: Record<ThemeTokenFilter, string> = {
 };
 
 export function renderTokenExplorer(root: ShadowRoot, state: ExplorerState): void {
-    const categories = isIntegrationSource(state.source) ? state.source.categories : [state.category];
+    const categories = [state.category];
     const allTokens = categories.flatMap((category) => category.tokens);
     const availableFilters = new Set(allTokens.map((token) => token.type));
     const activeFilter = state.filter === "all" || availableFilters.has(state.filter) ? state.filter : "all";
@@ -57,30 +56,13 @@ export function renderTokenExplorer(root: ShadowRoot, state: ExplorerState): voi
             ),
         }))
         .filter((entry) => entry.tokens.length > 0);
-    const groups = visible.map(({ category, tokens }) =>
-        tokenGroup(category, tokens, state, isIntegrationSource(state.source)),
-    );
+    const groups = visible.map(({ category, tokens }) => tokenGroup(category, tokens, state));
     root.querySelector<HTMLElement>("[data-groups]")!.replaceChildren(...(groups.length ? groups : [emptyResults()]));
 }
 
-function tokenGroup(
-    category: ThemeCategory,
-    tokens: ThemeCategory["tokens"],
-    state: ExplorerState,
-    showHeading: boolean,
-): HTMLElement {
+function tokenGroup(category: ThemeCategory, tokens: ThemeCategory["tokens"], state: ExplorerState): HTMLElement {
     const group = document.createElement("section");
     group.className = "group";
-    if (showHeading) {
-        const heading = document.createElement("div");
-        heading.className = "group-heading";
-        const title = document.createElement("h4");
-        title.textContent = category.label;
-        const description = document.createElement("p");
-        description.textContent = category.description;
-        heading.append(title, description);
-        group.append(heading);
-    }
     const list = document.createElement("div");
     list.className = "element-list";
     list.append(

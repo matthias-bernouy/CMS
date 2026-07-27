@@ -21,6 +21,14 @@ w13c-lateral-menu-item.category-item {
     --item-font-size: .8125rem;
 }
 
-.theme-group[data-theme-group="integrations"] {
-    margin-top: 6px;
+w13c-lateral-menu-item.integration-item {
+    margin-top: 8px;
+}
+
+w13c-lateral-menu-item.integration-item::part(label) {
+    font-weight: 650;
+}
+
+w13c-lateral-menu-item.integration-category {
+    margin-left: 22px;
 }

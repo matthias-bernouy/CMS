@@ -1,7 +1,7 @@
 import type { ThemeDefinition, ThemeSettings, ThemeSource } from "@bernouy/cms-content";
 
 import type { ThemeSelection } from "../events";
-import { integrationOwnerId, isIntegrationSource, isThemeCatalogEditable } from "../ownership";
+import { integrationOwnerId, isThemeCatalogEditable } from "../ownership";
 import { currentCategory, currentSource, currentTheme } from "./model";
 import { renderTokenExplorer, type ThemeTokenFilter } from "./tokens/explorer";
 
@@ -23,18 +23,17 @@ export function renderThemeEditor(root: ShadowRoot, state: ThemeEditorViewState)
     if (!source || !category || !theme) {
         return state.mode;
     }
-    const integration = isIntegrationSource(source);
     const catalogEditable = isThemeCatalogEditable(source);
     const mode = source.supportsModes ? state.mode : "light";
-    renderHeader(root, state, source, category.label, theme, integration);
+    renderHeader(root, state, source, theme);
     renderOwnership(root, source);
     renderCategoryFields(root, category, catalogEditable);
     renderActions(root, state, source, theme, catalogEditable);
     renderModes(root, source, mode);
 
     const section = query<HTMLElement>(root, "[data-category-section]");
-    section.setAttribute("heading", integration ? source.label : category.label);
-    section.setAttribute("description", integration ? integrationDescription(source) : category.description);
+    section.setAttribute("heading", category.label);
+    section.setAttribute("description", category.description);
     renderTokenExplorer(root, {
         settings: state.settings,
         source,
@@ -60,11 +59,9 @@ function renderHeader(
     root: ShadowRoot,
     state: ThemeEditorViewState,
     source: ThemeSource,
-    categoryLabel: string,
     theme: ThemeDefinition,
-    integration: boolean,
 ): void {
-    query<HTMLElement>(root, "[data-category-title]").textContent = integration ? source.label : categoryLabel;
+    query<HTMLElement>(root, "[data-category-title]").textContent = source.label;
     query<HTMLInputElement>(root, "[data-theme-name-input]").value = theme.name;
     query<HTMLElement>(root, "[data-site-name]").textContent = state.siteName || "Current site";
     const select = query<HTMLElement>(root, "[data-theme-switch]") as HTMLElement & { value: string };
@@ -109,8 +106,9 @@ function renderOwnership(root: ShadowRoot, source: ThemeSource): void {
     const label = query<HTMLElement>(root, "[data-source-owner-label]");
     const note = query<HTMLElement>(root, "[data-source-owner-note]");
     kind.textContent = "Integration";
-    label.textContent = `${source.label} · ${integrationId}`;
-    note.textContent = "The integration defines this catalogue; this theme can override its values.";
+    label.textContent = source.label;
+    label.title = integrationId;
+    note.textContent = "Structure managed by the integration; token values remain editable.";
 }
 
 function renderCategoryFields(root: ShadowRoot, category: ThemeSource["categories"][number], editable: boolean): void {
@@ -125,11 +123,6 @@ function renderModes(root: ShadowRoot, source: ThemeSource, mode: "light" | "dar
     for (const button of Array.from(modeSwitch.querySelectorAll<HTMLButtonElement>("[data-mode]"))) {
         button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
     }
-}
-
-function integrationDescription(source: ThemeSource): string {
-    const tokenCount = source.categories.reduce((sum, category) => sum + category.tokens.length, 0);
-    return `${source.categories.length} categories · ${tokenCount} tokens · filter or search without changing ownership.`;
 }
 
 function themeOption(theme: ThemeDefinition): HTMLOptionElement {

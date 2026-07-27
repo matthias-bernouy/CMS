@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import type { ThemeSettings } from "@bernouy/cms-content";
 import { renderThemeEditor } from "cms-control/components/admin/Theme/editor/view";
+
+import {
+    integrationThemeEditorRoot as editorRoot,
+    integrationThemeFixture as integrationTheme,
+} from "./integrationThemeFixture";
 
 describe("integration theme catalogue", () => {
     test("shows provenance while keeping only theme values editable", () => {
@@ -18,7 +22,8 @@ describe("integration theme catalogue", () => {
         });
 
         expect(root.querySelector<HTMLElement>("[data-source-provenance]")!.hidden).toBeFalse();
-        expect(root.querySelector("[data-source-owner-label]")?.textContent).toContain("photo-albums");
+        expect(root.querySelector("[data-source-owner-label]")?.textContent).toBe("Photo Albums");
+        expect(root.querySelector<HTMLElement>("[data-source-owner-label]")?.title).toBe("photo-albums");
         expect(root.querySelector("[data-source-owner-kind]")?.textContent).toBe("Integration");
         expect(root.querySelector<HTMLElement>("[data-add-theme-category]")!.hidden).toBeTrue();
         expect(root.querySelector<HTMLElement>("[data-add-element]")!.hidden).toBeTrue();
@@ -27,6 +32,11 @@ describe("integration theme catalogue", () => {
         expect(root.querySelector("[data-token-label]")).toBeNull();
         expect(root.querySelector("[data-delete-token]")).toBeNull();
         expect(root.querySelector(".token-label-text")?.textContent).toBe("Gallery font");
+        expect(root.querySelector("[data-token-id='integration-photo-albums-shadow']")).toBeNull();
+        expect(root.querySelector("[data-category-section]")?.getAttribute("heading")).toBe("Gallery");
+        expect(root.querySelector("[data-category-section]")?.getAttribute("description")).toBe(
+            "Gallery presentation.",
+        );
 
         const font = root.querySelector<HTMLInputElement>("[data-token-type='font-family'] [data-value-control]")!;
         expect(font.value).toBe("var(--font-body)");
@@ -58,6 +68,28 @@ describe("integration theme catalogue", () => {
                 "[data-token-id='integration-photo-albums-accent'] [data-value-control]",
             )!.value,
         ).toBe("#336699");
+    });
+
+    test("renders only the selected integration category", () => {
+        const root = editorRoot();
+
+        renderThemeEditor(root, {
+            settings: integrationTheme(),
+            selection: { sourceId: "integration-photo-albums", categoryId: "viewer" },
+            selectedThemeId: "default",
+            mode: "light",
+            siteName: "Portfolio",
+            canPersist: true,
+            tokenFilter: "all",
+            tokenSearch: "",
+        });
+
+        expect(root.querySelector("[data-category-title]")?.textContent).toBe("Photo Albums");
+        expect(root.querySelector("[data-category-section]")?.getAttribute("heading")).toBe("Viewer");
+        expect(root.querySelector("[data-category-section]")?.getAttribute("description")).toBe("Viewer presentation.");
+        expect(root.querySelector("[data-token-id='integration-photo-albums-shadow']")).not.toBeNull();
+        expect(root.querySelector("[data-token-id='integration-photo-albums-font']")).toBeNull();
+        expect(root.querySelectorAll("[data-groups] > .group")).toHaveLength(1);
     });
 
     test("keeps ordinary catalogues structurally editable without ownership metadata", () => {
@@ -97,6 +129,7 @@ describe("integration theme catalogue", () => {
         });
 
         expect(root.querySelector<HTMLElement>("[data-source-provenance]")!.hidden).toBeTrue();
+        expect(root.querySelector("[data-source-provenance]:not([hidden]) [data-source-owner-kind]")).toBeNull();
         expect(root.querySelector<HTMLElement>("[data-add-theme-category]")!.hidden).toBeFalse();
         expect(root.querySelector<HTMLElement>("[data-add-element]")!.hidden).toBeFalse();
         expect(root.querySelector<HTMLButtonElement>("[data-delete-category]")!.hidden).toBeFalse();
@@ -109,70 +142,3 @@ describe("integration theme catalogue", () => {
         expect(root.querySelector<HTMLButtonElement>("[data-delete-token]")?.ariaLabel).toBe("Delete Brand color");
     });
 });
-
-function editorRoot(): ShadowRoot {
-    const host = document.createElement("div");
-    const root = host.attachShadow({ mode: "open" });
-    root.innerHTML = `
-        <span data-category-title></span>
-        <div data-theme-switch></div>
-        <button data-add-theme-category></button><button data-add-element></button>
-        <button data-save-theme></button><button data-activate-theme></button>
-        <input data-theme-name-input><span data-theme-status></span><span data-site-name></span>
-        <div data-source-provenance><span data-source-owner-kind></span><span data-source-owner-label></span><span data-source-owner-note></span></div>
-        <div data-mode-switch><button data-mode="light"></button><button data-mode="dark"></button></div>
-        <section data-category-section></section>
-        <input data-token-search><div data-token-filters></div><div data-groups></div>
-        <div data-category-fields><input data-category-label-input><input data-category-description-input><button data-delete-category></button></div>
-    `;
-    return root;
-}
-
-function integrationTheme(): ThemeSettings {
-    return {
-        activeThemeId: "default",
-        sources: [
-            {
-                id: "integration-photo-albums",
-                label: "Photo Albums",
-                supportsModes: true,
-                owner: { kind: "integration", integrationId: "photo-albums" },
-                categories: [
-                    {
-                        id: "gallery",
-                        label: "Gallery",
-                        description: "Gallery presentation.",
-                        tokens: [
-                            {
-                                id: "integration-photo-albums-font",
-                                variable: "integration-photo-albums-font",
-                                label: "Gallery font",
-                                description: "Titles and captions",
-                                type: "font-family",
-                                defaults: { light: "Inter, system-ui, sans-serif", dark: "system-ui, sans-serif" },
-                            },
-                            {
-                                id: "integration-photo-albums-accent",
-                                variable: "integration-photo-albums-accent",
-                                label: "Gallery accent",
-                                description: "Selected media",
-                                type: "color",
-                                defaults: { light: "#336699" },
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-        themes: [
-            {
-                id: "default",
-                name: "Default",
-                values: {
-                    light: { "integration-photo-albums-font": "var(--font-body)" },
-                    dark: {},
-                },
-            },
-        ],
-    };
-}

@@ -3,7 +3,7 @@ import type { ThemeSettings } from "@bernouy/cms-content";
 import { renderTokenExplorer } from "cms-control/components/admin/Theme/editor/tokens/explorer";
 
 describe("integration token explorer", () => {
-    test("renders every integration category on a single page", () => {
+    test("renders only the selected integration category", () => {
         const root = explorerRoot();
         const settings = fixture();
         const source = settings.sources[0]!;
@@ -19,13 +19,11 @@ describe("integration token explorer", () => {
             search: "",
         });
 
-        expect(Array.from(root.querySelectorAll(".group-heading h4"), (item) => item.textContent)).toEqual([
-            "Gallery",
-            "Viewer",
-        ]);
+        expect(root.querySelector(".group-heading")).toBeNull();
         expect(
             Array.from(root.querySelectorAll<HTMLElement>("[data-token-id]"), (item) => item.dataset.tokenId),
-        ).toEqual(["album-accent", "album-gap", "album-caption-font", "album-shadow"]);
+        ).toEqual(["album-accent", "album-gap"]);
+        expect(root.querySelector("[data-token-id='album-caption-font']")).toBeNull();
     });
 
     test("combines free-text search with token type filters", () => {
@@ -47,11 +45,21 @@ describe("integration token explorer", () => {
             Array.from(root.querySelectorAll<HTMLElement>("[data-token-id]"), (item) => item.dataset.tokenId),
         ).toEqual(["album-accent"]);
 
-        renderTokenExplorer(root, { ...base, filter: "all", search: "viewer caption" });
+        renderTokenExplorer(root, {
+            ...base,
+            category: source.categories[1]!,
+            filter: "all",
+            search: "viewer caption",
+        });
         expect(root.querySelector("[data-token-id='album-caption-font']")).not.toBeNull();
         expect(root.querySelectorAll("[data-token-id]")).toHaveLength(1);
 
-        renderTokenExplorer(root, { ...base, filter: "color", search: "shadow" });
+        renderTokenExplorer(root, {
+            ...base,
+            category: source.categories[1]!,
+            filter: "font-family",
+            search: "shadow",
+        });
         expect(root.querySelector(".empty-category")?.textContent ?? "").toContain("No token matches");
     });
 });
