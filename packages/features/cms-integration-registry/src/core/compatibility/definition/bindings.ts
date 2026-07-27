@@ -1,13 +1,19 @@
-import { integrationVersionRangeContainsRange, type IntegrationDefinition } from "@bernouy/cms-integrations";
+import {
+    integrationVersionRangeContainsRange,
+    integrationVersionSatisfies,
+    type IntegrationDefinition,
+} from "@bernouy/cms-integrations";
+import type { IntegrationCompatibilityPackage } from "../../../interfaces/compatibility";
 import type { CompatibilityChangeSink } from "../changes";
 
 export function compareDefinitionBindings(
-    baseline: IntegrationDefinition,
+    baselinePackage: IntegrationCompatibilityPackage,
     candidate: IntegrationDefinition,
     add: CompatibilityChangeSink,
 ): void {
+    const baseline = baselinePackage.definition;
     compareInputs(baseline, candidate, add);
-    compareDependencies(baseline, candidate, add);
+    compareDependencies(baselinePackage, candidate, add);
 }
 
 function compareInputs(
@@ -45,10 +51,11 @@ function compareInputs(
 }
 
 function compareDependencies(
-    baseline: IntegrationDefinition,
+    baselinePackage: IntegrationCompatibilityPackage,
     candidate: IntegrationDefinition,
     add: CompatibilityChangeSink,
 ): void {
+    const baseline = baselinePackage.definition;
     const previous = new Map((baseline.dependencies ?? []).map((dependency) => [dependency.name, dependency]));
     const next = new Map((candidate.dependencies ?? []).map((dependency) => [dependency.name, dependency]));
     for (const [name, dependency] of previous) {
@@ -67,7 +74,14 @@ function compareDependencies(
                 "Dependency binding became more restrictive",
             );
         }
-        compareDependencyRange(dependency.versionRange, candidateDependency.versionRange, path, add);
+        compareDependencyRange(
+            dependency.versionRange,
+            candidateDependency.versionRange,
+            path,
+            add,
+            candidateDependency.kind,
+            baselinePackage,
+        );
     }
     for (const [name, dependency] of next) {
         if (!previous.has(name)) {
@@ -87,11 +101,21 @@ function compareDependencyRange(
     candidate: string | undefined,
     path: string,
     add: CompatibilityChangeSink,
+    dependencyKind: string,
+    baselinePackage: IntegrationCompatibilityPackage,
 ): void {
     if (baseline === candidate) {
         return;
     }
-    if (!candidate || (baseline && integrationVersionRangeContainsRange(candidate, baseline))) {
+    if (!baseline && candidate && reviewedLegacyDependencyRangeCovers(baselinePackage, dependencyKind, candidate)) {
+        add(
+            "additive",
+            "dependency",
+            "dependency-range-declared-from-reviewed-baseline",
+            `${path}.versionRange`,
+            "Dependency range covers every exact dependency in the reviewed legacy baseline",
+        );
+    } else if (!candidate || (baseline && integrationVersionRangeContainsRange(candidate, baseline))) {
         add(
             "additive",
             "dependency",
@@ -108,6 +132,33 @@ function compareDependencyRange(
             "Dependency range excludes previously supported versions",
         );
     }
+}
+
+function reviewedLegacyDependencyRangeCovers(
+    baselinePackage: IntegrationCompatibilityPackage,
+    dependencyKind: string,
+    candidateRange: string,
+): boolean {
+    const connectors = new Set(
+        (baselinePackage.definition.connectors ?? []).map(
+            (connector) => `${connector.provider}:${connector.root ?? "."}`,
+        ),
+    );
+    const applicable = (baselinePackage.reviewedSchemaBaselines ?? []).filter(
+        (reviewed) =>
+            reviewed.packageDigest === baselinePackage.packageDigest &&
+            connectors.has(`${reviewed.connector.provider}:${reviewed.connector.root ?? "."}`),
+    );
+    return (
+        applicable.length > 0 &&
+        applicable.every((reviewed) => {
+            const dependencies = reviewed.dependencies.filter(({ kind }) => kind === dependencyKind);
+            return (
+                dependencies.length > 0 &&
+                dependencies.every(({ version }) => integrationVersionSatisfies(version, candidateRange))
+            );
+        })
+    );
 }
 
 function optionsNarrowed(

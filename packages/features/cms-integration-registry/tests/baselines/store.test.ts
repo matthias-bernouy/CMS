@@ -64,6 +64,7 @@ describe("filesystem reviewed schema baseline store", () => {
             {
                 connector: revision.legacySelector,
                 packageDigest: PACKAGE_DIGEST,
+                dependencies: revision.dependencies,
                 schema: { namespaces: revision.observedSchema.namespaces },
                 provenance: {
                     evidenceId: `reviewed-schema-baseline-${current.currentBaselineDigest}`,

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { evaluator, packageState } from "./fixtures";
+import { BASELINE_DIGEST, connector, evaluator, packageState, schemaContract } from "./fixtures";
 
 describe("integration definition compatibility", () => {
     test("treats a newly declared input enum as narrowing", () => {
@@ -34,6 +34,52 @@ describe("integration definition compatibility", () => {
         expect(narrowed.report.evidence).toContainEqual(expect.objectContaining({ code: "dependency-range-narrowed" }));
         expect(widened.accepted).toBeTrue();
         expect(widened.report.evidence).toContainEqual(expect.objectContaining({ code: "dependency-range-widened" }));
+    });
+
+    test("bounds a legacy dependency range only from every exact reviewed baseline pin", () => {
+        const covered = evaluator().evaluateAdmission({
+            baseline: reviewedLegacyDependencyPackage([["1.0.0"]]),
+            candidate: dependencyPackage("1.1.0", "^1.0.0"),
+        });
+        expect(covered.accepted).toBeTrue();
+        expect(covered.report.evidence).toContainEqual(
+            expect.objectContaining({
+                classification: "additive",
+                code: "dependency-range-declared-from-reviewed-baseline",
+            }),
+        );
+
+        const oneExcluded = evaluator().evaluateAdmission({
+            baseline: reviewedLegacyDependencyPackage([["1.0.0"], ["2.0.0"]]),
+            candidate: dependencyPackage("1.1.0", "^1.0.0"),
+        });
+        expect(oneExcluded).toMatchObject({ accepted: false, report: { outcome: "breaking" } });
+        expect(oneExcluded.report.evidence).toContainEqual(
+            expect.objectContaining({ code: "dependency-range-narrowed" }),
+        );
+    });
+
+    test("keeps an unreviewed or inapplicable legacy dependency range breaking", () => {
+        const candidate = dependencyPackage("1.1.0", "^1.0.0");
+        const absent = evaluator().evaluateAdmission({
+            baseline: dependencyPackage("1.0.0"),
+            candidate,
+        });
+        const noPin = evaluator().evaluateAdmission({
+            baseline: reviewedLegacyDependencyPackage([[]]),
+            candidate,
+        });
+        const wrongConnector = evaluator().evaluateAdmission({
+            baseline: reviewedLegacyDependencyPackage([["1.0.0"]], "connectors/other"),
+            candidate,
+        });
+
+        for (const decision of [absent, noPin, wrongConnector]) {
+            expect(decision).toMatchObject({ accepted: false, report: { outcome: "breaking" } });
+            expect(decision.report.evidence).toContainEqual(
+                expect.objectContaining({ code: "dependency-range-narrowed" }),
+            );
+        }
     });
 
     test("rejects removed or renamed artifacts", () => {
@@ -101,10 +147,33 @@ describe("integration definition compatibility", () => {
     });
 });
 
-function dependencyPackage(version: string, versionRange: string) {
+function dependencyPackage(version: string, versionRange?: string) {
     return packageState(version, {
-        dependencies: [{ name: "commerce", kind: "commerce", versionRange }],
+        dependencies: [{ name: "commerce", kind: "commerce", ...(versionRange ? { versionRange } : {}) }],
+        connectors: [connector({ compatibility: { schema: schemaContract() } })],
     });
+}
+
+function reviewedLegacyDependencyPackage(versions: readonly (readonly string[])[], root = "connectors/supabase") {
+    const baseline = dependencyPackage("1.0.0");
+    return {
+        ...baseline,
+        reviewedSchemaBaselines: versions.map((entries, index) => ({
+            connector: { provider: "supabase", root },
+            packageDigest: BASELINE_DIGEST,
+            dependencies: entries.map((version) => ({
+                kind: "commerce",
+                version,
+                packageDigest: String(index + 1).repeat(64),
+            })),
+            schema: schemaContract(),
+            provenance: {
+                evidenceId: `legacy-dependency-${index}`,
+                source: "reviewed-test",
+                reviewedAt: "2026-07-27T00:00:00.000Z",
+            },
+        })),
+    };
 }
 
 function sourceArtifact(endpoints: unknown[], id = "primary") {

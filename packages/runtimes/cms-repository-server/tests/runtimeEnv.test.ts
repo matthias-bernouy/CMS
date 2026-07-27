@@ -143,9 +143,11 @@ describe("readRepositoryRuntimeEnv", () => {
 
         expect(environment.runner.identity).toEqual(runner);
         expect(environment.postgres.imageDigest).toStartWith("sha256:");
-        expect(policy.identity).toEqual({ name: "repository-admission", version: "1.5.0" });
+        expect(policy.identity).toEqual({ name: "repository-admission", version: "1.6.0" });
+        expect(policy.staticEvaluator).toEqual({ name: "repository-static-compatibility", version: "1.1.0" });
         expect(policy.verificationPolicy).toEqual({ name: "repository-verification", version: "1.4.0" });
         expect(policy.migrationPolicy).toEqual({ name: "repository-migration", version: "1.1.0" });
+        expect(environment.policy).toEqual(policy.migrationPolicy);
         expect(policy.migrationEvidence.approvedEnvironmentDigests).toEqual([identified.digest]);
         expect(policy.migrationEvidence).toMatchObject({
             requireCmsMediatedCutoverEvidence: false,

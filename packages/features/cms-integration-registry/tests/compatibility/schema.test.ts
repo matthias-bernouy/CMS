@@ -66,6 +66,7 @@ describe("integration SQL schema compatibility", () => {
                 {
                     connector: { provider: "supabase", root: "connectors/supabase" },
                     packageDigest: BASELINE_DIGEST,
+                    dependencies: [],
                     schema: parseConnectorSchemaContract(schemaContract(), "supabase"),
                     provenance: {
                         evidenceId: "ci-schema-1",

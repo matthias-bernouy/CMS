@@ -28,6 +28,9 @@ export async function loadReviewedConnectorSchemaBaselines(
             return Object.freeze({
                 connector: Object.freeze({ ...baseline.legacySelector }),
                 packageDigest,
+                dependencies: Object.freeze(
+                    baseline.dependencies.map((dependency) => Object.freeze({ ...dependency })),
+                ),
                 schema: projectObservedSchemaContract(baseline.observedSchema),
                 provenance: Object.freeze({
                     evidenceId: `reviewed-schema-baseline-${history.currentBaselineDigest}`,

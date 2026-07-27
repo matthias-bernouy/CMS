@@ -75,6 +75,7 @@ export type IntegrationCompatibilityReport =
 export type ReviewedConnectorSchemaBaseline = Readonly<{
     connector: Readonly<{ provider: string; root?: string }>;
     packageDigest: string;
+    dependencies: readonly Readonly<{ kind: string; version: string; packageDigest: string }>[];
     schema: DeclarativeConnectorSchemaContract;
     provenance: Readonly<{
         evidenceId: string;

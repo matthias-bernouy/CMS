@@ -12,7 +12,7 @@ export function compareIntegrationDefinitions(
     changedPaths: ReadonlySet<string>,
     add: CompatibilityChangeSink,
 ): void {
-    compareDefinitionBindings(baseline.definition, candidate.definition, add);
+    compareDefinitionBindings(baseline, candidate.definition, add);
     compareDefinitionArtifacts(baseline.definition, candidate.definition, add);
     compareConnectors(baseline, candidate, changedPaths, add);
 }
