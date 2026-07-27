@@ -35,6 +35,15 @@ export type IntegrationConnectorBaselineAdoptionAudit = {
 
 export type IntegrationMigrationJournalStatus = "pending" | "running" | "succeeded" | "failed";
 
+export type IntegrationMigrationCompensationJournal = {
+    status: "running" | "succeeded" | "failed";
+    attemptId: string;
+    startedAt: Date;
+    externalOperationId?: string;
+    confirmedAt?: Date;
+    error?: IntegrationRunError;
+};
+
 export type IntegrationMigrationJournalEntry = {
     id: string;
     phase: import("./IntegrationConnectorDeployer").IntegrationMigrationPhase;
@@ -48,6 +57,7 @@ export type IntegrationMigrationJournalEntry = {
     startedAt?: Date;
     confirmedAt?: Date;
     error?: IntegrationRunError;
+    compensation?: IntegrationMigrationCompensationJournal;
 };
 
 export type IntegrationMigrationOperationStatus = "running" | "paused" | "activated" | "completed" | "aborted";
@@ -61,6 +71,10 @@ export type IntegrationMigrationOperation = {
     targetVersion: string;
     targetPackageDigest: string;
     sourceDefinition: IntegrationDefinition;
+    sourceState?: {
+        connectorBindings: Record<string, IntegrationConnectorBinding>;
+        artifacts: IntegrationArtifactResult[];
+    };
     targetDefinition: IntegrationDefinition;
     connectors: IntegrationMigrationConnectorTransition[];
     attemptId: string;
@@ -70,6 +84,10 @@ export type IntegrationMigrationOperation = {
     updatedAt: Date;
     activatedAt?: Date;
     pointOfNoReturnReachedAt?: Date;
+    abortRequestedAt?: Date;
+    abortRequestedBy?: string;
+    abortReason?: string;
+    abortedAt?: Date;
     journal: IntegrationMigrationJournalEntry[];
 };
 

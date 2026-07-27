@@ -146,6 +146,41 @@ export class FailAfterRemoteRuntime implements IntegrationMigrationRuntime {
     }
 }
 
+export class FailAfterCompensationRuntime implements IntegrationMigrationRuntime {
+    private failed = false;
+
+    constructor(
+        private readonly inner: IntegrationMigrationRuntime,
+        private readonly phase: IntegrationMigrationPhase,
+    ) {}
+
+    async executeStep(context: IntegrationMigrationStepContext) {
+        return await this.inner.executeStep(context);
+    }
+
+    async confirmStep(
+        context: IntegrationMigrationStepContext,
+        previous: { externalOperationId?: string; confirmationDigest?: string },
+    ) {
+        return await this.inner.confirmStep(context, previous);
+    }
+
+    async compensateStep(
+        context: IntegrationMigrationStepContext,
+        previous: { externalOperationId?: string; confirmationDigest?: string },
+    ) {
+        if (!this.inner.compensateStep) {
+            throw new Error("inner runtime does not support compensation");
+        }
+        const result = await this.inner.compensateStep(context, previous);
+        if (!this.failed && context.phase === this.phase) {
+            this.failed = true;
+            throw new Error(`injected after ${context.phase} compensation`);
+        }
+        return result;
+    }
+}
+
 export class TestClock {
     private value = new Date("2026-07-26T10:00:00.000Z");
 

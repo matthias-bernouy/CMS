@@ -82,6 +82,23 @@ export class ConfiguredIntegrationMigrationRuntime implements IntegrationMigrati
         };
     }
 
+    async compensateStep(
+        context: IntegrationMigrationStepContext,
+        previous: { externalOperationId?: string; confirmationDigest?: string },
+    ) {
+        if (context.phase === "expand" || context.phase === "contract") {
+            throw new IntegrationRuntimeError(`database migration phase "${context.phase}" cannot be compensated`);
+        }
+        const handler = this.requiredHandler(context);
+        if (!handler.compensate) {
+            throw new IntegrationRuntimeError(
+                `migration phase "${context.phase}" requires explicit operator recovery before abort`,
+                409,
+            );
+        }
+        return await handler.compensate(context, previous);
+    }
+
     private requiredHandler(context: IntegrationMigrationStepContext): IntegrationMigrationExternalPhaseHandler {
         const handler = this.options.phases[context.phase as Exclude<IntegrationMigrationPhase, "expand" | "contract">];
         if (!handler) {

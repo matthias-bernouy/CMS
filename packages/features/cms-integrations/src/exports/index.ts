@@ -87,6 +87,7 @@ export type {
     IntegrationMigrationPhase,
     IntegrationMigrationRuntime,
     IntegrationMigrationStepConfirmation,
+    IntegrationMigrationStepCompensation,
     IntegrationMigrationStepContext,
     IntegrationMigrationStepResult,
     IntegrationProviderDirectMigrationAdapter,
@@ -127,6 +128,7 @@ export type {
     IntegrationInstallationStatus,
     IntegrationConnectorBinding,
     IntegrationConnectorBaselineAdoptionAudit,
+    IntegrationMigrationCompensationJournal,
     IntegrationMigrationJournalEntry,
     IntegrationMigrationJournalStatus,
     IntegrationMigrationOperation,
@@ -207,6 +209,7 @@ export {
 export {
     abortIntegrationMigration,
     runDurableMigrationUpgrade,
+    type AbortIntegrationMigrationRequest,
     type DurableMigrationUpgradeRequest,
 } from "../core/installation/migration/engine";
 export {

@@ -96,18 +96,56 @@ describe("provider-direct migration strategies", () => {
             'provider-direct migration adapter "supabase" is not configured',
         );
     });
+
+    test("compensates journalled provider changes and treats expand-in-code as a retained no-op", async () => {
+        const calls: string[] = [];
+        const handler = new ProviderDirectMigrationHandler([
+            providerAdapter({
+                compensate: async (_context, connector, _cutover, previous) => {
+                    calls.push(`${connector.connectorKey}:${previous.externalOperationId}`);
+                    return { compensated: true, externalOperationId: "stripe-endpoint-1-restored" };
+                },
+            }),
+        ]);
+        const journalled = migrationContext("journalled-provider-switch");
+        const receipt = await handler.execute(journalled);
+
+        expect(await handler.compensate(journalled, receipt)).toMatchObject({ compensated: true });
+        expect(calls).toEqual(["primary:stripe-endpoint-2"]);
+
+        const expanded = migrationContext("expand-in-code");
+        expect(await handler.compensate(expanded, await handler.execute(expanded))).toMatchObject({
+            compensated: true,
+        });
+    });
+
+    test("requires explicit operator recovery when a journalled adapter cannot roll back", async () => {
+        const adapter: IntegrationProviderDirectMigrationAdapter = {
+            provider: "supabase",
+            executeTransition: async () => ({ externalOperationId: "stripe-endpoint-2" }),
+            confirmTransition: async () => true,
+        };
+        const handler = new ProviderDirectMigrationHandler([adapter]);
+        const context = migrationContext("journalled-provider-switch");
+
+        await expect(handler.compensate(context, await handler.execute(context))).rejects.toThrow(
+            "requires explicit operator recovery",
+        );
+    });
 });
 
 function providerAdapter(
     overrides: {
         execute?: IntegrationProviderDirectMigrationAdapter["executeTransition"];
         confirm?: IntegrationProviderDirectMigrationAdapter["confirmTransition"];
+        compensate?: IntegrationProviderDirectMigrationAdapter["compensateTransition"];
     } = {},
 ): IntegrationProviderDirectMigrationAdapter {
     return {
         provider: "supabase",
         executeTransition: overrides.execute ?? (async () => ({ externalOperationId: "stripe-endpoint-2" })),
         confirmTransition: overrides.confirm ?? (async () => true),
+        compensateTransition: overrides.compensate ?? (async () => ({ compensated: true })),
     };
 }
 

@@ -38,6 +38,7 @@ export type {
     IntegrationMigrationPhase,
     IntegrationMigrationRuntime,
     IntegrationMigrationStepConfirmation,
+    IntegrationMigrationStepCompensation,
     IntegrationMigrationStepContext,
     IntegrationMigrationStepResult,
     IntegrationProviderDirectMigrationAdapter,

@@ -1,18 +1,18 @@
-import { IntegrationInputError, IntegrationRuntimeError } from "../../errors";
-import { appendRun, successRun } from "../execution/runs";
-import { sanitizeDefinitionSnapshot } from "../snapshots";
-import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
-import type { IntegrationInstallationRepository } from "../../../interfaces/IntegrationInstallationRepository";
-import type { IntegrationMigrationConnectorTransition } from "../../../interfaces/IntegrationConnectorDeployer";
-import type { RunIntegrationInstallationResult } from "../execution/runIntegrationInstallation";
-import type { DurableMigrationUpgradeRequest } from "./engine";
+import { IntegrationRuntimeError } from "../../../errors";
+import { appendRun, successRun } from "../../execution/runs";
+import { sanitizeDefinitionSnapshot } from "../../snapshots";
+import type { IntegrationInstallation } from "../../../../interfaces/IntegrationInstallation";
+import type { IntegrationInstallationRepository } from "../../../../interfaces/IntegrationInstallationRepository";
+import type { IntegrationMigrationConnectorTransition } from "../../../../interfaces/IntegrationConnectorDeployer";
+import type { RunIntegrationInstallationResult } from "../../execution/runIntegrationInstallation";
+import type { DurableMigrationUpgradeRequest } from "../engine";
 import {
     mergedMigrationImportResult,
     migrationActivationRevision,
     requiredMigrationJournalEntry,
     requiredMigrationOperation,
-} from "./shared";
-import { type MigrationClock, systemMigrationClock, updateMigrationInstallation } from "./state";
+} from "../shared";
+import { type MigrationClock, updateMigrationInstallation } from "../state";
 
 export async function activateMigrationTarget(
     request: DurableMigrationUpgradeRequest,
@@ -119,71 +119,4 @@ function mergeMigrationArtifacts(
         byIdentity.set(`${artifact.type}:${artifact.id}`, artifact);
     }
     return [...byIdentity.values()];
-}
-
-export async function pauseIntegrationMigration(
-    repository: IntegrationInstallationRepository,
-    installation: IntegrationInstallation,
-    clock: MigrationClock,
-    leaseMs: number,
-    error: unknown,
-): Promise<void> {
-    const current = await repository.get(installation.id);
-    const operation = current?.migrationOperation;
-    if (!current || !operation || operation.leaseExpiresAt.getTime() <= clock.now().getTime()) {
-        return;
-    }
-    try {
-        const message = error instanceof Error ? error.message : "integration migration failed";
-        await updateMigrationInstallation({
-            repository,
-            installation: current,
-            operation: {
-                ...operation,
-                status: "paused",
-                journal: operation.journal.map((entry) =>
-                    entry.status === "running" ? { ...entry, status: "failed", error: { message } } : entry,
-                ),
-            },
-            clock,
-            leaseMs,
-            patch: { status: "failed" },
-        });
-    } catch {
-        // A takeover may have fenced this attempt; it must not overwrite the new owner.
-    }
-}
-
-export async function abortIntegrationMigration(input: {
-    installations: IntegrationInstallationRepository;
-    integrationId: string;
-    reason: string;
-    clock?: MigrationClock;
-}): Promise<IntegrationInstallation> {
-    const installation = await input.installations.get(input.integrationId);
-    const operation = installation?.migrationOperation;
-    if (!installation || !operation) {
-        throw new IntegrationInputError("integrationId", "integration has no migration to abort");
-    }
-    if (operation.activatedAt || operation.pointOfNoReturnReachedAt) {
-        throw new IntegrationRuntimeError("activated migration cannot be aborted automatically", 409);
-    }
-    const clock = input.clock ?? systemMigrationClock;
-    const now = clock.now();
-    const expected =
-        operation.status === "running" ? operation : { ...operation, leaseExpiresAt: new Date(now.getTime() + 1) };
-    return await updateMigrationInstallation({
-        repository: input.installations,
-        installation: { ...installation, migrationOperation: expected },
-        operation: {
-            ...expected,
-            status: "aborted",
-            journal: expected.journal.map((entry) =>
-                entry.status === "succeeded" ? entry : { ...entry, status: "failed", error: { message: input.reason } },
-            ),
-        },
-        clock,
-        leaseMs: 1,
-        patch: { status: "failed" },
-    });
 }

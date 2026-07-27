@@ -136,4 +136,4 @@ function validatedLeaseMs(value: number): number {
     return value;
 }
 
-export { abortIntegrationMigration } from "./lifecycle";
+export { abortIntegrationMigration, type AbortIntegrationMigrationRequest } from "./lifecycle";

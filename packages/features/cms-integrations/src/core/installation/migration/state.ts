@@ -22,10 +22,17 @@ export async function claimMigrationOperation(input: {
     journal: IntegrationMigrationOperation["journal"];
     clock: MigrationClock;
     leaseMs: number;
+    allowAbortRequested?: boolean;
 }): Promise<IntegrationInstallation> {
     const now = input.clock.now();
     const current = input.installation.migrationOperation;
     if (current && current.status !== "completed" && current.status !== "aborted") {
+        if (current.abortRequestedAt && !input.allowAbortRequested) {
+            throw new IntegrationRuntimeError(
+                `integration migration "${current.id}" has an abort compensation in progress`,
+                409,
+            );
+        }
         if (
             current.targetVersion !== input.targetVersion ||
             current.targetPackageDigest !== input.targetPackageDigest
@@ -65,6 +72,10 @@ export async function claimMigrationOperation(input: {
                   targetVersion: input.targetVersion,
                   targetPackageDigest: input.targetPackageDigest,
                   sourceDefinition: input.installation.definitionSnapshot ?? input.targetDefinition,
+                  sourceState: {
+                      connectorBindings: structuredClone(input.installation.connectorBindings ?? {}),
+                      artifacts: structuredClone(input.installation.artifacts),
+                  },
                   targetDefinition: input.targetDefinition,
                   connectors: structuredClone(input.connectors),
                   attemptId,

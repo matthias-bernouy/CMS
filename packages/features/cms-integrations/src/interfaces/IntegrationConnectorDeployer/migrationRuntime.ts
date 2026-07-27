@@ -54,12 +54,21 @@ export type IntegrationMigrationStepConfirmation = {
     importResult?: IntegrationImportResult;
 };
 
+export type IntegrationMigrationStepCompensation = {
+    compensated: boolean;
+    externalOperationId?: string;
+};
+
 export interface IntegrationMigrationRuntime {
     executeStep(context: IntegrationMigrationStepContext): Promise<IntegrationMigrationStepResult>;
     confirmStep(
         context: IntegrationMigrationStepContext,
         previous: { externalOperationId?: string; confirmationDigest?: string },
     ): Promise<IntegrationMigrationStepConfirmation>;
+    compensateStep?(
+        context: IntegrationMigrationStepContext,
+        previous: { externalOperationId?: string; confirmationDigest?: string },
+    ): Promise<IntegrationMigrationStepCompensation>;
 }
 
 export interface IntegrationConnectorMigrationAdapter {
@@ -87,6 +96,12 @@ export interface IntegrationProviderDirectMigrationAdapter {
         cutover: Extract<IntegrationProviderDirectCutover, { strategy: "journalled-provider-switch" }>,
         previous: { externalOperationId?: string },
     ): Promise<boolean>;
+    compensateTransition?(
+        context: IntegrationMigrationStepContext,
+        connector: IntegrationMigrationConnectorTransition,
+        cutover: Extract<IntegrationProviderDirectCutover, { strategy: "journalled-provider-switch" }>,
+        previous: { externalOperationId: string },
+    ): Promise<IntegrationMigrationStepCompensation>;
 }
 
 export type IntegrationConnectorBaselineAdoptionContext = {
@@ -124,4 +139,8 @@ export type IntegrationMigrationExternalPhaseHandler = {
         context: IntegrationMigrationStepContext,
         previous: { externalOperationId?: string; confirmationDigest?: string },
     ): Promise<{ confirmed: boolean; externalOperationId?: string; importResult?: IntegrationImportResult }>;
+    compensate?(
+        context: IntegrationMigrationStepContext,
+        previous: { externalOperationId?: string; confirmationDigest?: string },
+    ): Promise<IntegrationMigrationStepCompensation>;
 };

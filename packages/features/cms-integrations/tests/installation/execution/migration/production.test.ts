@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { runDurableMigrationUpgrade, type IntegrationMigrationPhase } from "@bernouy/cms-integrations";
-import { FailAfterRemoteRuntime, RealMigrationFixture } from "./realRuntimeFixture";
+import {
+    abortIntegrationMigration,
+    runDurableMigrationUpgrade,
+    type IntegrationMigrationPhase,
+} from "@bernouy/cms-integrations";
+import { FailAfterCompensationRuntime, FailAfterRemoteRuntime, RealMigrationFixture } from "./realRuntimeFixture";
 
 const fixtures: RealMigrationFixture[] = [];
 const PHASES: IntegrationMigrationPhase[] = [
@@ -122,6 +126,78 @@ describe("production integration migration runtime", () => {
         expect((await run(fixture, fixture.runtime)).installation.definitionVersion).toBe("1.1.0");
     });
 
+    test("compensates the CMS binding and records audited abort provenance before activation", async () => {
+        const fixture = await pausedAfterBindingFixture();
+
+        const aborted = await abort(fixture, fixture.runtime);
+
+        expect(aborted).toMatchObject({ definitionVersion: "1.0.0", status: "success" });
+        expect(aborted.migrationOperation).toMatchObject({
+            status: "aborted",
+            abortRequestedBy: "repository-admin",
+            abortReason: "target smoke failed after binding",
+            abortedAt: expect.any(Date),
+        });
+        expect(
+            aborted.migrationOperation?.journal.find((entry) => entry.phase === "switch-cms-binding")?.compensation,
+        ).toMatchObject({ status: "succeeded", confirmedAt: expect.any(Date) });
+        expect((await fixture.sources.getSource("urn:commerce"))?.endpoints[0]?.targetUrl).toEndWith(
+            "/cms-commerce/health",
+        );
+    });
+
+    test("retries compensation idempotently after a crash following the remote rollback", async () => {
+        const fixture = await pausedAfterBindingFixture();
+        const faulted = new FailAfterCompensationRuntime(fixture.runtime, "switch-cms-binding");
+
+        await expect(abort(fixture, faulted)).rejects.toThrow("injected after switch-cms-binding compensation");
+        expect((await fixture.sources.getSource("urn:commerce"))?.endpoints[0]?.targetUrl).toEndWith(
+            "/cms-commerce/health",
+        );
+        expect(
+            (await fixture.installation()).migrationOperation?.journal.find(
+                (entry) => entry.phase === "switch-cms-binding",
+            )?.compensation?.status,
+        ).toBe("failed");
+        await expect(run(fixture, fixture.runtime)).rejects.toThrow("abort compensation in progress");
+
+        expect((await abort(fixture, fixture.runtime)).migrationOperation?.status).toBe("aborted");
+    });
+
+    test("rolls the active pin and binding back before the separate point of no return", async () => {
+        const fixture = await initializedFixture();
+        const faulted = new FailAfterRemoteRuntime(fixture.runtime, "drain");
+
+        await expect(run(fixture, faulted)).rejects.toThrow("injected after drain");
+        expect((await fixture.installation()).definitionVersion).toBe("1.1.0");
+
+        const aborted = await abort(fixture, fixture.runtime);
+
+        expect(aborted).toMatchObject({
+            definitionVersion: "1.0.0",
+            packageDigest: "e".repeat(64),
+            connectorBindings: { primary: { migrationRevision: 1 } },
+            status: "success",
+        });
+        expect(aborted.migrationOperation).toMatchObject({
+            status: "aborted",
+            activatedAt: expect.any(Date),
+        });
+        expect(aborted.migrationOperation?.pointOfNoReturnReachedAt).toBeUndefined();
+        expect((await fixture.sources.getSource("urn:commerce"))?.endpoints[0]?.targetUrl).toEndWith(
+            "/cms-commerce/health",
+        );
+    });
+
+    test("refuses automatic rollback after the durable point of no return", async () => {
+        const fixture = await initializedFixture();
+        const faulted = new FailAfterRemoteRuntime(fixture.runtime, "contract");
+
+        await expect(run(fixture, faulted)).rejects.toThrow("injected after contract");
+        await expect(abort(fixture, fixture.runtime)).rejects.toThrow("after its point of no return");
+        expect((await fixture.installation()).definitionVersion).toBe("1.1.0");
+    });
+
     test("pauses during a declared drain and resumes only after the deadline", async () => {
         const fixture = await initializedFixture();
         fixture.setDrainSeconds(5);
@@ -147,6 +223,27 @@ async function initializedFixture(): Promise<RealMigrationFixture> {
     const fixture = await new RealMigrationFixture().initialize();
     fixtures.push(fixture);
     return fixture;
+}
+
+async function pausedAfterBindingFixture(): Promise<RealMigrationFixture> {
+    const fixture = await initializedFixture();
+    fixture.supabase.queueSmokeResponse(200, { ok: true });
+    fixture.supabase.queueSmokeResponse(200, { ok: true });
+    fixture.supabase.queueSmokeResponse(200, { ok: false });
+    await expect(run(fixture, fixture.runtime)).rejects.toThrow("returned an unexpected body");
+    return fixture;
+}
+
+async function abort(fixture: RealMigrationFixture, runtime: RealMigrationFixture["runtime"]) {
+    return await abortIntegrationMigration({
+        installations: fixture.installations,
+        integrationId: "commerce",
+        actor: "repository-admin",
+        reason: "target smoke failed after binding",
+        targetPackageRoot: fixture.root,
+        runtime,
+        clock: fixture.clock,
+    });
 }
 
 async function run(fixture: RealMigrationFixture, runtime: RealMigrationFixture["runtime"]) {

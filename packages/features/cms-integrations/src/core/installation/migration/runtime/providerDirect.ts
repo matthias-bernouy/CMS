@@ -1,3 +1,4 @@
+import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
 import { IntegrationRuntimeError } from "../../../errors";
 import type {
     IntegrationMigrationExternalPhaseHandler,
@@ -84,6 +85,46 @@ export class ProviderDirectMigrationHandler implements IntegrationMigrationExter
             }
         }
         return { confirmed: true, externalOperationId: previous.externalOperationId };
+    }
+
+    async compensate(context: IntegrationMigrationStepContext, previous: { externalOperationId?: string }) {
+        assertPhase(context);
+        const operations = decodeProviderDirectReceipt(previous.externalOperationId);
+        const connectors = providerDirectConnectors(context);
+        if (!operations || !samePlannedOperations(connectors, operations)) {
+            throw new IntegrationRuntimeError("provider-direct compensation receipt does not match the migration", 409);
+        }
+        const compensated = [];
+        for (const connector of connectors.toReversed()) {
+            const cutover = connector.plan.providerDirect;
+            const operation = operations.find((entry) => entry.connectorKey === connector.connectorKey);
+            if (!cutover || !operation) {
+                throw new IntegrationRuntimeError("provider-direct migration plan disappeared during compensation");
+            }
+            if (cutover.strategy === "expand-in-code") {
+                compensated.push({ connectorKey: connector.connectorKey, rollbackOf: null });
+                continue;
+            }
+            const adapter = this.adapters.get(connector.provider);
+            if (!adapter?.compensateTransition || !operation.externalOperationId) {
+                throw new IntegrationRuntimeError(
+                    `provider-direct migration adapter "${connector.provider}" requires explicit operator recovery`,
+                    409,
+                );
+            }
+            const outcome = await adapter.compensateTransition(context, connector, cutover, {
+                externalOperationId: operation.externalOperationId,
+            });
+            if (!outcome.compensated) {
+                throw new IntegrationRuntimeError(
+                    `provider-direct migration adapter "${connector.provider}" did not confirm rollback`,
+                    409,
+                );
+            }
+            compensated.push({ connectorKey: connector.connectorKey, rollbackOf: operation.externalOperationId });
+        }
+        const digest = await sha256Hex(canonicalJsonBytes({ compensated }));
+        return { compensated: true, externalOperationId: `provider-direct-rollback:${digest}` };
     }
 }
 
