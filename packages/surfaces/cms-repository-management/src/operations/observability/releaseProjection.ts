@@ -19,6 +19,9 @@ export function projectRepositoryManagementRelease(source: IntegrationRegistryRe
         rollback: current.rollback,
         pointOfNoReturn: current.pointOfNoReturn,
         delayedCleanupVerified: current.delayedCleanupVerified,
+        ...(current.schema === "cms.integration.migration-report.v3"
+            ? { operationalEvidence: current.operationalEvidence }
+            : {}),
     }));
     return {
         kind: source.kind,
@@ -64,15 +67,22 @@ function verification(history: NonNullable<IntegrationRegistryReleaseEvidence["v
         reportId: report.reportId,
         reportDigest: history.currentReportDigest,
         origin: report.origin,
+        createdAt: report.createdAt,
         outcome: report.outcome,
         runner: report.runner,
         environment: report.environment,
         policy: { ...report.policy, snapshotDigest: report.policySnapshotDigest },
+        activeContracts: report.activeContracts.map(({ contractId, ownerVersion, digest }) => ({
+            contractId,
+            ownerVersion,
+            digest,
+        })),
         results: report.results.map((result) => ({
             suiteId: result.suiteId,
             source: result.source,
             required: result.required,
             outcome: result.outcome,
+            durationMs: result.durationMs,
             attempts: result.attempts,
             cacheHit: result.cacheHit,
             diagnostics: result.diagnostics.map(({ code, message }) => ({ code, message })),

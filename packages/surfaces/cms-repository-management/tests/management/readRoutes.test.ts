@@ -16,6 +16,7 @@ import {
     REPOSITORY_VERSIONS_PATH,
 } from "@bernouy/cms-repository-management";
 import type { RouteHandler, Runner } from "@bernouy/http-runner";
+import { richReleaseEvidence } from "./releaseFixture";
 
 describe("repository management read routes", () => {
     test("reports status and redacts filesystem sources from diagnostics", async () => {
@@ -153,6 +154,33 @@ describe("repository management read routes", () => {
             migrations: [],
         });
         expect((await runner.handle(`${REPOSITORY_RELEASE_PATH}?kind=commerce&version=2.0.0`)).status).toBe(404);
+    });
+
+    test("projects the complete strict release contract for the CMS Control gateway", async () => {
+        const runner = new ReadTestRunner();
+        mountRepositoryManagementReadRoutes(runner as unknown as Runner, {
+            catalog: { current: fixtureSnapshot },
+            reports: new ReportStore(),
+            releases: { get: async () => richReleaseEvidence() },
+        });
+
+        const response = await runner.handle(`${REPOSITORY_RELEASE_PATH}?kind=commerce&version=1.0.0`);
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({
+            verification: {
+                createdAt: "2026-07-26T10:00:00.000Z",
+                activeContracts: [{ contractId: "public-api", ownerVersion: "1.0.0", digest: "c".repeat(64) }],
+                results: [{ suiteId: "platform-postgres-install-reapply", durationMs: 17 }],
+            },
+            migrations: [
+                {
+                    operationalEvidence: {
+                        downtime: { status: "zero-downtime", observedSeconds: 0 },
+                        drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
+                    },
+                },
+            ],
+        });
     });
 
     test("returns stable 400 and 404 errors", async () => {

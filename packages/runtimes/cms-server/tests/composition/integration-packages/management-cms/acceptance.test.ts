@@ -98,6 +98,21 @@ describe("management CMS process acceptance", () => {
             integrations: 14,
             versions: 14,
         });
+        const managementRelease = await controlRequest(
+            cms.controlOrigin,
+            "/api/repository/release?kind=commerce&version=1.0.0",
+            "owner",
+        );
+        expect(managementRelease.status).toBe(200);
+        const managementReleaseText = await managementRelease.text();
+        expect(JSON.parse(managementReleaseText)).toMatchObject({
+            verification: {
+                origin: "legacy-backfill",
+                createdAt: expect.any(String),
+                activeContracts: expect.any(Array),
+                results: expect.arrayContaining([expect.objectContaining({ durationMs: expect.any(Number) })]),
+            },
+        });
         const adminPage = await controlRequest(cms.controlOrigin, "/admin/repository", "owner");
         expect(adminPage.status).toBe(200);
         const adminHtml = await adminPage.text();
@@ -121,6 +136,7 @@ describe("management CMS process acceptance", () => {
             submittedText,
             candidateStatusText,
             statusText,
+            managementReleaseText,
             adminHtml,
             releaseText,
             verificationText,
