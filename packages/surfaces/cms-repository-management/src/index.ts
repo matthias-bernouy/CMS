@@ -68,6 +68,7 @@ export {
 } from "cms-repository-management/operations/candidates/coordinator";
 export {
     REPOSITORY_CANDIDATES_PATH,
+    REPOSITORY_CANDIDATE_REPORT_PATH,
     REPOSITORY_CANDIDATE_STATUS_PATH,
     REPOSITORY_VERIFICATION_JOBS_PATH,
     REPOSITORY_VERIFICATION_JOB_CLAIMS_PATH,
@@ -85,7 +86,7 @@ export {
     type RepositoryCandidateWorkerRoutesConfig,
     type RepositoryCandidateWorkerSurfaceMount,
 } from "cms-repository-management/operations/candidates/contracts";
-export { mountRepositoryCandidateManagementRoutes } from "cms-repository-management/operations/candidates/managementRoutes";
+export { mountRepositoryCandidateManagementRoutes } from "cms-repository-management/operations/candidates/management";
 export {
     mountRepositoryCandidateAuthenticatedWorkerRoutes,
     mountRepositoryCandidateCapabilityRoutes,

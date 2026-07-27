@@ -1,14 +1,15 @@
 import type { Runner } from "@bernouy/http-runner";
-import { readCanonicalCandidate, RepositoryCandidateRequestError } from "./body";
+import { readCanonicalCandidate } from "../body";
 import {
     projectCandidateStatus,
     REPOSITORY_CANDIDATES_PATH,
+    REPOSITORY_CANDIDATE_REPORT_PATH,
     REPOSITORY_CANDIDATE_STATUS_PATH,
     type RepositoryCandidateManagementRoutesConfig,
-} from "./contracts";
-import { candidateJsonResponse, candidateProtocolErrorResponse } from "./responses";
-
-const IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
+} from "../contracts";
+import { candidateJsonResponse, candidateProtocolErrorResponse } from "../responses";
+import { projectCandidateReport } from "./projection";
+import { candidateIdentifier, readCandidateId } from "./query";
 
 export function mountRepositoryCandidateManagementRoutes(
     runner: Runner,
@@ -19,7 +20,7 @@ export function mountRepositoryCandidateManagementRoutes(
         try {
             const candidate = await readCanonicalCandidate(request, config.maxBodyBytes);
             const createdAt = canonicalTimestamp(config.now());
-            const candidateId = identifier(config.createCandidateId());
+            const candidateId = candidateIdentifier(config.createCandidateId());
             const expiresAt = addMilliseconds(createdAt, config.candidateTtlMs);
             const record = await config.admission.submit({ candidateId, candidate, createdAt, expiresAt });
             return candidateJsonResponse(202, { candidate: projectCandidateStatus(record) });
@@ -29,33 +30,37 @@ export function mountRepositoryCandidateManagementRoutes(
     });
     runner.get(REPOSITORY_CANDIDATE_STATUS_PATH, async (request) => {
         try {
+            const record = await config.store.get(readCandidateId(request));
+            return record
+                ? candidateJsonResponse(200, { candidate: projectCandidateStatus(record) })
+                : candidateNotFound();
+        } catch (error) {
+            return candidateProtocolErrorResponse(error);
+        }
+    });
+    runner.get(REPOSITORY_CANDIDATE_REPORT_PATH, async (request) => {
+        try {
             const candidateId = readCandidateId(request);
             const record = await config.store.get(candidateId);
             if (!record) {
-                return candidateJsonResponse(404, {
-                    code: "candidate_not_found",
-                    error: "Candidate was not found",
-                });
+                return candidateNotFound();
             }
-            return candidateJsonResponse(200, { candidate: projectCandidateStatus(record) });
+            const report = await projectCandidateReport(record, await config.store.objects(candidateId));
+            return candidateJsonResponse(200, { report });
         } catch (error) {
             return candidateProtocolErrorResponse(error);
         }
     });
 }
 
-function readCandidateId(request: Request): string {
-    const params = new URL(request.url).searchParams;
-    if ([...params.keys()].some((key) => key !== "candidateId") || params.getAll("candidateId").length !== 1) {
-        throw new RepositoryCandidateRequestError("Invalid candidate status query");
-    }
-    return identifier(params.get("candidateId"));
+function candidateNotFound(): Response {
+    return candidateJsonResponse(404, { code: "candidate_not_found", error: "Candidate was not found" });
 }
 
 function assertConfig(config: RepositoryCandidateManagementRoutesConfig): void {
     positiveInteger(config.maxBodyBytes, "Candidate body limit");
     positiveInteger(config.candidateTtlMs, "Candidate TTL");
-    if (!config.store || typeof config.store.get !== "function") {
+    if (!config.store || typeof config.store.get !== "function" || typeof config.store.objects !== "function") {
         throw new TypeError("Candidate store is required");
     }
     if (!config.admission || typeof config.admission.submit !== "function") {
@@ -78,13 +83,6 @@ function canonicalTimestamp(value: string): string {
     const parsed = Date.parse(value);
     if (!Number.isFinite(parsed) || new Date(parsed).toISOString() !== value) {
         throw new TypeError("Candidate clock must return a canonical timestamp");
-    }
-    return value;
-}
-
-function identifier(value: unknown): string {
-    if (typeof value !== "string" || !IDENTIFIER.test(value)) {
-        throw new TypeError("Candidate identifier is invalid");
     }
     return value;
 }

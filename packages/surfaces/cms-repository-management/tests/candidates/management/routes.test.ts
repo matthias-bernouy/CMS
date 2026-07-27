@@ -7,7 +7,7 @@ import {
     submitAndQueue,
     TIMES,
     type CandidateProtocolFixture,
-} from "./support";
+} from "../support";
 
 const fixtures = new Set<CandidateProtocolFixture>();
 

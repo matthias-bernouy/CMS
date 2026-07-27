@@ -16,6 +16,7 @@ import type { Runner } from "@bernouy/http-runner";
 
 export const REPOSITORY_CANDIDATES_PATH = "/api/integrations/candidates";
 export const REPOSITORY_CANDIDATE_STATUS_PATH = "/api/integrations/candidates/status";
+export const REPOSITORY_CANDIDATE_REPORT_PATH = "/api/integrations/candidates/report";
 export const REPOSITORY_VERIFICATION_JOBS_PATH = "/api/integrations/verification-jobs";
 export const REPOSITORY_VERIFICATION_JOB_CLAIMS_PATH = "/api/integrations/verification-jobs/claims";
 export const REPOSITORY_VERIFICATION_JOB_LEASE_PATH = "/api/integrations/verification-jobs/lease";
