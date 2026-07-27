@@ -1,7 +1,8 @@
-import type { ContentSlot, Editor, CmsSourceStatusCondition } from "@bernouy/cms-content/editor";
+import type { ContentSlot, Editor, EditorCatalog, CmsSourceStatusCondition } from "@bernouy/cms-content/editor";
 
 import type { EditorRuntime } from "../../../../../runtime";
 import { applySlot } from "./insertion";
+import { acceptsElement } from "../../../../../policy/contentSlotAcceptance";
 
 export function canInsertNodeCount(parent: Editor, slot: ContentSlot, insertedElements: HTMLElement[]): boolean {
     if (typeof slot.max !== "number") {
@@ -24,7 +25,7 @@ export function canReplaceNodeCount(
     return slotChildCount(parent, slot) - replacedCount + insertedElements.length <= slot.max;
 }
 
-export function canDuplicate(runtime: EditorRuntime | null, editor: Editor): boolean {
+export function canDuplicate(runtime: EditorRuntime | null, editor: Editor, catalog: EditorCatalog): boolean {
     const parent = parentEditor(runtime, editor);
     if (!parent) {
         return true;
@@ -35,7 +36,7 @@ export function canDuplicate(runtime: EditorRuntime | null, editor: Editor): boo
         return true;
     }
 
-    return !isSlotFull(parent, slot);
+    return acceptsElement(slot, editor.target, catalog) && !isSlotFull(parent, slot);
 }
 
 export function canDelete(runtime: EditorRuntime | null, editor: Editor): boolean {
@@ -56,6 +57,7 @@ export function canInsertSibling(
     runtime: EditorRuntime | null,
     reference: Editor,
     insertedElement: HTMLElement,
+    catalog: EditorCatalog,
     applySourceConditions: (element: HTMLElement, conditions: CmsSourceStatusCondition[]) => void,
     sourceConditionsForSibling: (reference: Editor) => CmsSourceStatusCondition[],
 ): boolean {
@@ -68,7 +70,11 @@ export function canInsertSibling(
 
     const slotName = reference.target.getAttribute("slot") ?? undefined;
     const slot = findSlot(parent, slotName);
-    if (!slot || !canInsertNodeCount(parent, slot, [insertedElement])) {
+    if (
+        !slot ||
+        !acceptsElement(slot, insertedElement, catalog) ||
+        !canInsertNodeCount(parent, slot, [insertedElement])
+    ) {
         return false;
     }
 
@@ -77,25 +83,30 @@ export function canInsertSibling(
     return true;
 }
 
-export function canMoveEditor(runtime: EditorRuntime | null, source: Editor, target: Editor): boolean {
-    if (!canDelete(runtime, source)) {
+export function canMoveEditor(
+    runtime: EditorRuntime | null,
+    source: Editor,
+    target: Editor,
+    catalog: EditorCatalog,
+): boolean {
+    const sourceParent = parentEditor(runtime, source);
+    const targetParent = parentEditor(runtime, target);
+    const targetSlotName = target.target.getAttribute("slot") ?? undefined;
+    const isSameSlot =
+        sourceParent === targetParent && (source.target.getAttribute("slot") ?? undefined) === targetSlotName;
+    if (!isSameSlot && !canDelete(runtime, source)) {
         return false;
     }
 
-    const targetParent = parentEditor(runtime, target);
     if (!targetParent) {
         return true;
     }
 
-    const targetSlotName = target.target.getAttribute("slot") ?? undefined;
     const targetSlot = findSlot(targetParent, targetSlotName);
-    if (!targetSlot) {
+    if (!targetSlot || !acceptsElement(targetSlot, source.target, catalog)) {
         return false;
     }
 
-    const sourceParent = parentEditor(runtime, source);
-    const isSameSlot =
-        sourceParent === targetParent && (source.target.getAttribute("slot") ?? undefined) === targetSlotName;
     if (isSameSlot) {
         return true;
     }

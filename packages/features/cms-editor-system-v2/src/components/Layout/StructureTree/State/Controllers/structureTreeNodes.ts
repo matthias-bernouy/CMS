@@ -12,6 +12,7 @@ import {
     nodeForEditor,
     parentStructureNode,
     sameSlot,
+    siblingStructureNode,
     slotChildCount,
     slotForChild,
 } from "../structureNodeRelations";
@@ -69,11 +70,19 @@ export class StructureTreeNodes {
     }
 
     parentNode(child: EditorStructureNode): EditorStructureNode | null {
-        return parentStructureNode(this.state.nodes, child);
+        const parent = parentStructureNode(this.state.nodes, child);
+        if (parent || !this.state.rootNode) {
+            return parent;
+        }
+        return this.state.nodes.includes(child) ? this.state.rootNode : null;
     }
 
     nodeForEditor(editor: Editor): EditorStructureNode | null {
         return nodeForEditor(this.state.nodes, editor);
+    }
+
+    sibling(node: EditorStructureNode, offset: -1 | 1): EditorStructureNode | null {
+        return siblingStructureNode(this.state.nodes, node, offset);
     }
 
     isDescendantNode(candidate: EditorStructureNode, parent: EditorStructureNode): boolean {
@@ -111,14 +120,14 @@ export class StructureTreeNodes {
     }
 
     toggleBadges(node: StructureNode): void {
-        const key = this.nodeBadgeKey(node);
+        const key = this.nodeCollapseKey(node);
         this.areBadgesExpanded(node)
             ? this.state.expandedBadgeTargets.delete(key)
             : this.state.expandedBadgeTargets.add(key);
     }
 
     areBadgesExpanded(node: StructureNode): boolean {
-        return this.state.expandedBadgeTargets.has(this.nodeBadgeKey(node));
+        return this.state.expandedBadgeTargets.has(this.nodeCollapseKey(node));
     }
 
     setRepeatableTargets(targets: HTMLElement[]): void {
@@ -136,16 +145,8 @@ export class StructureTreeNodes {
         return this.state.dataSources;
     }
 
-    flattenNodes(nodes: StructureNode[]): StructureNode[] {
-        return flattenStructureNodes(nodes);
-    }
-
     nodeCollapseKey(node: StructureNode): HTMLElement | object {
         return node.target;
-    }
-
-    nodeBadgeKey(node: StructureNode): HTMLElement | object {
-        return this.nodeCollapseKey(node);
     }
 
     nearestSourceNode(node: EditorStructureNode): EditorStructureNode | null {

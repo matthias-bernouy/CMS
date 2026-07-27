@@ -5,7 +5,11 @@ import type { TopBarEditorMode, TopBarViewport } from "../../../../TopBar/TopBar
 import type { SettingsViewMode } from "../../../../../Settings/SettingsView/SettingsView";
 import type { DefaultTemplateSelection } from "../../../../StructureTree/StructureTree";
 import type { BlockPickerItem } from "../../../../Pickers/BlockPickerModal/BlockPickerModal";
-import type { EditorV2PageConfig } from "../../shellTypes";
+import type { EditorPreviewMode, EditorV2PageConfig } from "../../shellTypes";
+import {
+    resolveEditorInteractionPolicy,
+    type ResolvedEditorInteractionPolicy,
+} from "../../../../../../policy/editorInteractionPolicy";
 
 export type ShellState = {
     catalog: EditorCatalog;
@@ -19,6 +23,8 @@ export type ShellState = {
     editorMode: TopBarEditorMode;
     sourceStateForce: CmsSourceStateForce;
     pageConfig: EditorV2PageConfig | null;
+    editingPolicy: ResolvedEditorInteractionPolicy;
+    previewMode: EditorPreviewMode;
     chromeSyncPending: boolean;
 };
 
@@ -35,6 +41,8 @@ export function createShellState(): ShellState {
         editorMode: "edit",
         sourceStateForce: "loading",
         pageConfig: null,
+        editingPolicy: resolveEditorInteractionPolicy(),
+        previewMode: "mirrored",
         chromeSyncPending: false,
     };
 }

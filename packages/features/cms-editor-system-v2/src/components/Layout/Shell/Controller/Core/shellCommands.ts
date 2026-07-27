@@ -83,7 +83,7 @@ export class ShellCommands {
     }
 
     bindViewFrameDocument(document: Document): void {
-        this.context.frames.bindViewFrameDocument(document);
+        this.context.frames.bindViewFrameDocument(document, this.context.state.previewMode);
     }
 
     unbindFrameDocument(): void {

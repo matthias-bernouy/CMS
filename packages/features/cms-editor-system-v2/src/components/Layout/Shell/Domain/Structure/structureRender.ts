@@ -10,13 +10,15 @@ export type StructureRenderOptions = {
 export function renderStructure(
     tree: StructureTree,
     runtime: EditorRuntime | null,
+    contentRoot: HTMLElement | null | undefined,
     catalog: EditorCatalog,
     _insertItems: unknown[],
     isEmptyDocumentContent: () => boolean,
     options: StructureRenderOptions = {},
 ): void {
+    const rootNode = runtime && contentRoot ? editorRootNode(runtime, contentRoot, catalog) : null;
     if (!runtime || isEmptyDocumentContent()) {
-        tree.setStructure([], null, catalog);
+        tree.setStructure([], null, catalog, { rootNode });
         return;
     }
 
@@ -24,7 +26,30 @@ export function renderStructure(
     tree.setStructure(structure, runtime.getSelection()?.editor ?? null, catalog, {
         scrollSelectedIntoView: options.scrollStructureIntoView === true,
         repeatableTargets: repeatableTargets(runtime, structure),
+        rootNode,
     });
+}
+
+function editorRootNode(
+    runtime: EditorRuntime,
+    contentRoot: HTMLElement,
+    catalog: EditorCatalog,
+): EditorStructureNode | null {
+    const editor = runtime.getEditor(contentRoot);
+    const entry = catalog.find((candidate) => candidate.tag.toLowerCase() === contentRoot.localName);
+    if (!editor || !entry || editor.getContentSlots().length === 0) {
+        return null;
+    }
+    return {
+        kind: "editor",
+        editor,
+        target: contentRoot,
+        tag: entry.tag,
+        label: entry.label,
+        icon: entry.icon,
+        badges: [],
+        children: decorateStructure(runtime.getStructure()),
+    };
 }
 
 export function decorateStructure(nodes: StructureNode[]): StructureNode[] {

@@ -1,7 +1,13 @@
-import { CMS_BINDING_ATTRIBUTES } from "@bernouy/cms-content/editor";
+import type { ResolvedEditorInteractionPolicy } from "../../../../policy/editorInteractionPolicy";
 import type { BlockPickerSlotGroup } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorStructureNode, StructureNode } from "../../../../runtime";
 import { contextMenuButton, contextSeparator, positionContextMenu } from "./structureContextMenuItems";
+import {
+    dynamicContextMenuItems,
+    moveContextMenuItems,
+    openChildPicker,
+    openReplacePicker,
+} from "./structureContextMenuSections";
 
 type PendingPickerAction = {
     action: "add-child" | "add-root" | "replace";
@@ -14,6 +20,7 @@ export type StructureContextMenuContext = {
     canDuplicate(node: EditorStructureNode): boolean;
     childGroups(node: EditorStructureNode): BlockPickerSlotGroup[];
     closeContextMenu(): void;
+    editingPolicy: ResolvedEditorInteractionPolicy;
     emitAction(
         action:
             | "copy"
@@ -26,6 +33,7 @@ export type StructureContextMenuContext = {
         editor?: EditorStructureNode["editor"],
     ): void;
     hasEnabledGroup(groups: BlockPickerSlotGroup[]): boolean;
+    moveNode(source: EditorStructureNode, target: EditorStructureNode, position: "before" | "after"): void;
     openPickerOrEmitSingleMedia(
         action: PendingPickerAction,
         groups: BlockPickerSlotGroup[],
@@ -36,9 +44,11 @@ export type StructureContextMenuContext = {
     openSourcePicker(node: EditorStructureNode): void;
     repeatableTargets: WeakSet<HTMLElement>;
     replaceGroups(node: EditorStructureNode): BlockPickerSlotGroup[];
+    requestFocusRestore(): void;
     rootGroups(): BlockPickerSlotGroup[];
     sourceActionLabel(node: EditorStructureNode): string;
     sourceDataSourceCount(): number;
+    sibling(node: EditorStructureNode, offset: -1 | 1): EditorStructureNode | null;
 };
 
 export function openStructureContextMenu(
@@ -47,43 +57,13 @@ export function openStructureContextMenu(
     clientY: number,
     menu: HTMLElement,
     context: StructureContextMenuContext,
+    focusMenu = false,
 ): void {
     context.closeContextMenu();
-
-    menu.replaceChildren();
-    const sourceAction = contextMenuButton(
-        context.sourceActionLabel(node),
-        () => {
-            context.openSourcePicker(node);
-        },
-        context.closeContextMenu,
-        undefined,
-        context.sourceDataSourceCount() === 0,
-    );
-    const repeatAction = node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)
-        ? contextMenuButton(
-              "Remove repeat",
-              () => context.emitAction("remove-repeat", node.editor),
-              context.closeContextMenu,
-          )
-        : contextMenuButton(
-              "Add repeat",
-              () => context.emitAction("configure-repeat", node.editor),
-              context.closeContextMenu,
-              undefined,
-              !context.repeatableTargets.has(node.target),
-          );
-
-    menu.append(
+    menu.replaceChildren(
         contextMenuButton(
             "Add child",
-            () => {
-                context.openPickerOrEmitSingleMedia(
-                    { action: "add-child", editor: node.editor },
-                    context.childGroups(node),
-                    node.label,
-                );
-            },
+            () => openChildPicker(node, context),
             context.closeContextMenu,
             undefined,
             !context.hasEnabledGroup(context.childGroups(node)),
@@ -101,20 +81,18 @@ export function openStructureContextMenu(
             undefined,
             !context.canDuplicate(node),
         ),
-        contextSeparator(),
-        sourceAction,
-        repeatAction,
-        contextMenuButton("Add condition", () => context.openConditionPicker(node), context.closeContextMenu),
+        ...moveContextMenuItems(node, context),
+    );
+
+    const bindingItems = dynamicContextMenuItems(node, context);
+    if (bindingItems.length > 0) {
+        menu.append(contextSeparator(), ...bindingItems);
+    }
+    menu.append(
         contextSeparator(),
         contextMenuButton(
             "Replace",
-            () => {
-                context.openPickerOrEmitSingleMedia(
-                    { action: "replace", editor: node.editor },
-                    context.replaceGroups(node),
-                    node.label,
-                );
-            },
+            () => openReplacePicker(node, context),
             context.closeContextMenu,
             undefined,
             !context.hasEnabledGroup(context.replaceGroups(node)),
@@ -127,8 +105,10 @@ export function openStructureContextMenu(
             !context.canDelete(node),
         ),
     );
-
     appendPositionedMenu(menu, clientX, clientY, context);
+    if (focusMenu) {
+        menu.querySelector<HTMLButtonElement>("button:not([disabled])")?.focus();
+    }
 }
 
 export function openRootContextMenu(

@@ -20,6 +20,13 @@ export type SelectOptions = {
     scrollStructureIntoView?: boolean;
 };
 
+export type EditorPreviewMode = "mirrored" | "external";
+
+export type EditorFrameUrls = {
+    editor?: string | null;
+    view?: string | null;
+};
+
 export type ViewportConfig = {
     label: string;
     width: number | "100%";

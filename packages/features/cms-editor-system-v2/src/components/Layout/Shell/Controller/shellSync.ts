@@ -16,6 +16,7 @@ import {
     syncStructureTreeCatalog,
     syncStructureTreeDefaultTemplateSelection,
     syncStructureTreeInsertItems,
+    syncStructureTreeEditingPolicy,
 } from "../Domain/shellStructureTreeSync";
 import { syncStructureTreeDataSources } from "../Domain/Structure/structureDataSources";
 import { findStructureNodeLabel } from "../Domain/Structure/structureRender";
@@ -89,6 +90,10 @@ export class ShellSync {
 
     syncStructureTreeDataSources(): void {
         syncStructureTreeDataSources(this.context.host.shadowRoot!, this.context.state.dataSources, isStructureTree);
+    }
+
+    syncStructureTreeEditingPolicy(): void {
+        syncStructureTreeEditingPolicy(this.context.host.shadowRoot!, this.context.state.editingPolicy);
     }
 
     findStructureNodeLabel(editor: Editor): string | null {

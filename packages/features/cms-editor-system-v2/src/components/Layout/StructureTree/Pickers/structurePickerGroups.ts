@@ -6,6 +6,11 @@ import type {
 } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorStructureNode } from "../../../../runtime";
 import { slotOptions } from "./structurePickerOptions";
+import {
+    isCatalogEntryInsertable,
+    isInsertionItemAllowed,
+    type ResolvedEditorInteractionPolicy,
+} from "../../../../policy/editorInteractionPolicy";
 
 export type DefaultTemplateSelection = {
     category?: string;
@@ -15,6 +20,8 @@ export type StructurePickerGroupContext = {
     catalog: EditorCatalog;
     insertItems: BlockPickerItem[];
     defaultTemplateSelection: DefaultTemplateSelection;
+    editingPolicy: ResolvedEditorInteractionPolicy;
+    rootNode: EditorStructureNode | null;
     editorChildrenOf(parent: EditorStructureNode): EditorStructureNode[];
     nodeForEditor(editor: EditorStructureNode["editor"]): EditorStructureNode | null;
     parentNode(child: EditorStructureNode): EditorStructureNode | null;
@@ -24,9 +31,12 @@ export type StructurePickerGroupContext = {
 };
 
 export function rootGroups(context: StructurePickerGroupContext): BlockPickerSlotGroup[] {
+    if (context.rootNode) {
+        return childGroups(context, context.rootNode);
+    }
     const options: BlockPickerOption[] = [
         ...context.catalog
-            .filter((entry) => entry.category !== "Runtime")
+            .filter((entry) => entry.category !== "Runtime" && isCatalogEntryInsertable(context.editingPolicy, entry))
             .map((entry) => ({
                 item: {
                     kind: "block" as const,
@@ -36,7 +46,7 @@ export function rootGroups(context: StructurePickerGroupContext): BlockPickerSlo
                 slotLabel: "Page",
             })),
         ...context.insertItems
-            .filter((item) => item.kind !== "media")
+            .filter((item) => item.kind !== "media" && isInsertionItemAllowed(context.editingPolicy, item))
             .map((item) => ({
                 item,
                 slotLabel: "Page",
@@ -108,7 +118,8 @@ export function hasEnabledGroup(groups: BlockPickerSlotGroup[]): boolean {
 
 export function defaultTemplateItems(context: StructurePickerGroupContext): BlockPickerItem[] {
     const templates = context.insertItems.filter(
-        (item): item is Extract<BlockPickerItem, { kind: "template" }> => item.kind === "template",
+        (item): item is Extract<BlockPickerItem, { kind: "template" }> =>
+            item.kind === "template" && isInsertionItemAllowed(context.editingPolicy, item),
     );
     if (context.defaultTemplateSelection.category) {
         return templates.filter((item) => item.category === context.defaultTemplateSelection.category);

@@ -11,6 +11,7 @@ import contextCss from "./Styles/context.css" with { type: "text" };
 import sourceStatesCss from "./Styles/sourceStates.css" with { type: "text" };
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
+import type { EditorInteractionPolicy } from "../../../policy/editorInteractionPolicy";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${[componentCss, sourceStatesCss, badgesCss, contextCss]
@@ -55,6 +56,10 @@ export class StructureTree extends HTMLElement {
 
     setDataSources(sources: EditorDataSource[]): void {
         this.controller.setDataSources(sources);
+    }
+
+    setEditingPolicy(policy: EditorInteractionPolicy): void {
+        this.controller.setEditingPolicy(policy);
     }
 
     get catalog(): EditorCatalog {

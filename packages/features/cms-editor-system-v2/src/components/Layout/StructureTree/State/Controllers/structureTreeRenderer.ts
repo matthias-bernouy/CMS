@@ -32,6 +32,7 @@ export class StructureTreeRenderer {
                     useDefaultTemplate: (templates) => this.tree.pickers.useDefaultTemplate(templates),
                 }),
             );
+            this.restoreSelectedFocus();
             return;
         }
 
@@ -45,6 +46,7 @@ export class StructureTreeRenderer {
         } else {
             scrollContainer.scrollTop = previousScrollTop;
         }
+        this.restoreSelectedFocus();
     }
 
     renderNode(node: StructureNode, depth: number): HTMLElement {
@@ -60,7 +62,8 @@ export class StructureTreeRenderer {
             onDragOver: (value, row, event) => this.tree.events.onDragOver(value, row, event),
             onDragStart: (value, event) => this.tree.events.onDragStart(value, event),
             onDrop: (value, event) => this.tree.events.onDrop(value, event),
-            openContextMenu: (value, clientX, clientY) => this.tree.menus.openContextMenu(value, clientX, clientY),
+            openContextMenu: (value, clientX, clientY, focusMenu) =>
+                this.tree.menus.openContextMenu(value, clientX, clientY, focusMenu),
             renderBadge: (value) => renderStructureBadge(value),
             rowClass: structureRowClass,
             selectEditor: (editor) => this.tree.emitter.selectEditor(editor),
@@ -124,5 +127,18 @@ export class StructureTreeRenderer {
         typeof scrollContainer.scrollTo === "function"
             ? scrollContainer.scrollTo({ top, behavior: "smooth" })
             : (scrollContainer.scrollTop = top);
+    }
+
+    private restoreSelectedFocus(): void {
+        if (!this.tree.state.restoreSelectedFocusOnRender) {
+            return;
+        }
+        this.tree.state.restoreSelectedFocusOnRender = false;
+        const requestId = this.tree.state.scrollRequestId;
+        requestAnimationFrame(() => {
+            if (requestId === this.tree.state.scrollRequestId) {
+                this.tree.host.shadowRoot!.querySelector<HTMLElement>(".item.selected")?.focus();
+            }
+        });
     }
 }

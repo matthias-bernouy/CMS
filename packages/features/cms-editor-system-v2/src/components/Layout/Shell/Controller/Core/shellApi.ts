@@ -3,7 +3,12 @@ import { type EditorCatalog, type EditorDocument } from "@bernouy/cms-content/ed
 import { EditorRuntime, type EditorDataSource } from "../../../../../runtime";
 import type { DefaultTemplateSelection } from "../../../StructureTree/StructureTree";
 import type { BlockPickerItem } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
-import type { EditorV2PageConfig } from "../shellTypes";
+import type { TopBarEditorMode } from "../../../TopBar/TopBar";
+import type { EditorFrameUrls, EditorPreviewMode, EditorV2PageConfig } from "../shellTypes";
+import {
+    resolveEditorInteractionPolicy,
+    type EditorInteractionPolicy,
+} from "../../../../../policy/editorInteractionPolicy";
 import type { ShellDomRefs } from "../../Domain/shellDomRefs";
 import type { ShellCommands } from "./shellCommands";
 import type { ShellRenderSyncCommands } from "./shellRenderSyncCommands";
@@ -56,6 +61,47 @@ export class ShellApi {
         this.context.renderSync.syncStructureTreeDataSources();
     }
 
+    setEditingPolicy(policy: EditorInteractionPolicy): void {
+        this.context.state.editingPolicy = resolveEditorInteractionPolicy(policy);
+        this.context.renderSync.syncStructureTreeEditingPolicy();
+        if (this.context.state.runtime) {
+            this.context.commands.renderStructure();
+            this.context.commands.renderSettings();
+        }
+    }
+
+    setPreviewMode(mode: EditorPreviewMode): void {
+        this.context.state.previewMode = mode === "external" ? "external" : "mirrored";
+        this.context.renderSync.syncBindingPreviewCore();
+        this.context.renderSync.syncViewFrameContent();
+    }
+
+    setFrameUrls(urls: EditorFrameUrls): void {
+        this.setFrameUrl("editor-frame-url", urls.editor);
+        this.setFrameUrl("view-frame-url", urls.view);
+    }
+
+    reloadPreview(url?: string): void {
+        if (url === undefined) {
+            this.context.refs.canvas.reloadViewFrame();
+            return;
+        }
+        const currentUrl = this.context.refs.canvas.getAttribute("view-frame-url");
+        this.context.refs.canvas.setAttribute("view-frame-url", url);
+        if (currentUrl === url) {
+            this.context.refs.canvas.reloadViewFrame();
+        }
+    }
+
+    setEditorMode(mode: TopBarEditorMode): void {
+        this.context.state.editorMode = mode === "view" ? "view" : "edit";
+        this.context.renderSync.syncEditorMode();
+    }
+
+    requestSave(): void {
+        this.context.commands.saveDocument();
+    }
+
     setPageConfig(config: EditorV2PageConfig): void {
         this.context.state.pageConfig = {
             ...config,
@@ -82,5 +128,16 @@ export class ShellApi {
                 : null,
             { scrollStructureIntoView: true },
         );
+    }
+
+    private setFrameUrl(attribute: "editor-frame-url" | "view-frame-url", url: string | null | undefined): void {
+        if (url === undefined) {
+            return;
+        }
+        if (url === null) {
+            this.context.refs.canvas.removeAttribute(attribute);
+        } else {
+            this.context.refs.canvas.setAttribute(attribute, url);
+        }
     }
 }

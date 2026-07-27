@@ -1,6 +1,7 @@
 import type { EditorCatalog } from "@bernouy/cms-content/editor";
 import type { BlockPickerItem } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { DefaultTemplateSelection, StructureTree } from "../../StructureTree/StructureTree";
+import type { ResolvedEditorInteractionPolicy } from "../../../../policy/editorInteractionPolicy";
 
 export function isStructureTree(value: Element | null | undefined): value is StructureTree {
     return Boolean(
@@ -8,8 +9,13 @@ export function isStructureTree(value: Element | null | undefined): value is Str
             "catalog" in value &&
             "setStructure" in value &&
             "setInsertItems" in value &&
-            "setDefaultTemplateSelection" in value,
+            "setDefaultTemplateSelection" in value &&
+            "setEditingPolicy" in value,
     );
+}
+
+export function syncStructureTreeEditingPolicy(root: ShadowRoot, policy: ResolvedEditorInteractionPolicy): void {
+    withStructureTree(root, (tree) => tree.setEditingPolicy(policy));
 }
 
 export function syncStructureTreeCatalog(

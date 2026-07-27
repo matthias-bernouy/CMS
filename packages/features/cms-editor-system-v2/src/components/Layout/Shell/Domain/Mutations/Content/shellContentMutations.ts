@@ -38,10 +38,15 @@ export class ShellContentMutations {
         }
 
         parent.target.append(insertion.fragment);
-        this.reloadFrameDocument(insertion.selectionTarget);
+        reloadFrameDocument(this.context, insertion.selectionTarget);
     }
 
-    addRoot(item: BlockPickerItem): void {
+    addRoot(item: BlockPickerItem, slotName?: string): void {
+        const rootEditor = this.context.rootEditor?.();
+        if (rootEditor?.getContentSlots().length) {
+            this.addChild(rootEditor, item, slotName);
+            return;
+        }
         const document = this.context.editorDocument();
         if (!document || item.kind === "media") {
             return;
@@ -55,7 +60,7 @@ export class ShellContentMutations {
             document.contentRoot.replaceChildren();
         }
         document.contentRoot.append(insertion.fragment);
-        this.reloadFrameDocument(insertion.selectionTarget);
+        reloadFrameDocument(this.context, insertion.selectionTarget);
     }
 
     replaceEditor(editor: Editor, item: BlockPickerItem, slotName?: string): void {
@@ -79,11 +84,7 @@ export class ShellContentMutations {
         }
 
         editor.target.replaceWith(insertion.fragment);
-        this.reloadFrameDocument(insertion.selectionTarget);
-    }
-
-    reloadFrameDocument(selectedTarget: HTMLElement | null = null): void {
-        reloadFrameDocument(this.context, selectedTarget);
+        reloadFrameDocument(this.context, insertion.selectionTarget);
     }
 
     private replaceRootEditor(editor: Editor, item: BlockPickerItem): void {
@@ -96,7 +97,7 @@ export class ShellContentMutations {
         }
 
         editor.target.replaceWith(insertion.fragment);
-        this.reloadFrameDocument(insertion.selectionTarget);
+        reloadFrameDocument(this.context, insertion.selectionTarget);
     }
 
     private createInsertion(
@@ -146,7 +147,7 @@ export class ShellContentMutations {
             }
         }
         parent.target.append(...elements);
-        this.reloadFrameDocument(elements[0] ?? null);
+        reloadFrameDocument(this.context, elements[0] ?? null);
     }
 
     private replaceWithMedia(
@@ -170,7 +171,7 @@ export class ShellContentMutations {
                 applySourceStatusConditions(element, sourceStatusConditions);
             }
             editor.target.replaceWith(element);
-            this.reloadFrameDocument(element);
+            reloadFrameDocument(this.context, element);
         });
     }
 }

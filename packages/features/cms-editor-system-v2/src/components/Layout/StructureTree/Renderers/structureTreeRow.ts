@@ -13,7 +13,7 @@ export type StructureTreeRowRenderContext = {
     onDragOver(node: EditorStructureNode, row: HTMLElement, event: DragEvent): void;
     onDragStart(node: EditorStructureNode, event: DragEvent): void;
     onDrop(node: EditorStructureNode, event: DragEvent): void;
-    openContextMenu(node: StructureNode, clientX: number, clientY: number): void;
+    openContextMenu(node: StructureNode, clientX: number, clientY: number, focusMenu?: boolean): void;
     renderBadge(value: string): HTMLElement;
     rowClass(node: StructureNode): string;
     selectEditor(editor: Editor): void;
@@ -51,6 +51,14 @@ export function renderStructureTreeRow(
         event.stopPropagation();
         context.openContextMenu(node, mouseEvent.clientX, mouseEvent.clientY);
     });
+    item.addEventListener("keydown", (event) => {
+        if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) {
+            return;
+        }
+        event.preventDefault();
+        const bounds = item.getBoundingClientRect();
+        context.openContextMenu(node, bounds.left, bounds.bottom, true);
+    });
     item.addEventListener("dragstart", (event) => context.onDragStart(node, event as DragEvent));
     item.addEventListener("dragover", (event) => context.onDragOver(node, row, event as DragEvent));
     item.addEventListener("dragleave", () => context.clearDropRow());
@@ -70,9 +78,24 @@ export function renderStructureTreeRow(
     appendBadges(badges, node, context);
 
     item.append(icon, label, badges);
-    row.append(item);
+    row.append(item, actionsButton(node, context));
 
     return row;
+}
+
+function actionsButton(node: StructureNode, context: StructureTreeRowRenderContext): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.className = "row-actions";
+    button.type = "button";
+    button.textContent = "⋯";
+    button.setAttribute("aria-label", `Actions for ${context.nodeLabel(node)}`);
+    button.setAttribute("aria-haspopup", "menu");
+    button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const bounds = button.getBoundingClientRect();
+        context.openContextMenu(node, bounds.left, bounds.bottom, true);
+    });
+    return button;
 }
 
 function appendToggle(row: HTMLElement, node: StructureNode, context: StructureTreeRowRenderContext): void {

@@ -28,6 +28,7 @@ export function connectShellController(context: ShellLifecycleContext): void {
     bindShellLifecycle(lifecycleTargetsFor(context), lifecycleHandlersFor(context));
     context.renderSync.syncStructureTreeCatalog();
     context.renderSync.syncStructureTreeDataSources();
+    context.renderSync.syncStructureTreeEditingPolicy();
     context.renderSync.syncViewport();
     context.renderSync.syncEditorMode();
     context.renderSync.syncChromeLabels();

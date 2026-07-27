@@ -33,7 +33,9 @@ export class StructureTreePickers {
     }
 
     defaultTemplateGroups(templates: BlockPickerItem[]): BlockPickerSlotGroup[] {
-        return defaultTemplateGroups(templates);
+        return defaultTemplateGroups(
+            templates.filter((item) => (item.kind === "template" ? this.tree.state.editingPolicy.templates : true)),
+        );
     }
 
     childGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
@@ -66,6 +68,9 @@ export class StructureTreePickers {
     }
 
     openSourcePicker(node: EditorStructureNode): void {
+        if (!this.tree.state.editingPolicy.bindings) {
+            return;
+        }
         openStructureSourcePicker(node, {
             dataSources: this.tree.nodes.sourceDataSources(),
             onRemove: this.tree.events.onDataSourceRemove,
@@ -78,6 +83,10 @@ export class StructureTreePickers {
     }
 
     openConditionPicker(node: EditorStructureNode): void {
+        const policy = this.tree.state.editingPolicy;
+        if (!policy.bindings || !policy.conditions) {
+            return;
+        }
         this.tree.state.pendingConditionEditor = node.editor;
         const picker = this.tree.refs.conditionPicker;
         picker.removeEventListener(CONDITION_PICKER_APPLY_EVENT, this.tree.events.onConditionApply as EventListener);
@@ -110,6 +119,8 @@ export class StructureTreePickers {
             catalog: this.tree.state.catalog,
             insertItems: this.tree.state.insertItems,
             defaultTemplateSelection: this.tree.state.defaultTemplateSelection,
+            editingPolicy: this.tree.state.editingPolicy,
+            rootNode: this.tree.state.rootNode,
             editorChildrenOf: (parent) => this.tree.nodes.editorChildrenOf(parent),
             nodeForEditor: (editor) => this.tree.nodes.nodeForEditor(editor),
             parentNode: (child) => this.tree.nodes.parentNode(child),

@@ -27,7 +27,13 @@ export function createShellControllerServices(
         frameDocument: () => frames.frameDocument,
         editorDocument: () => state.editorDocument,
         runtime: () => state.runtime,
+        catalog: () => state.catalog,
+        rootEditor: () => {
+            const contentRoot = state.editorDocument?.contentRoot;
+            return contentRoot && state.runtime ? (state.runtime.getEditor(contentRoot) ?? null) : null;
+        },
         insertItems: () => state.insertItems,
+        editingPolicy: () => state.editingPolicy,
         repeatPicker: () => refs.repeatPicker,
         findStructureNodeLabel: (editor) => renderSync.findStructureNodeLabel(editor),
         isEmptyDocumentContent: () => renderSync.isEmptyDocumentContent(),
@@ -38,6 +44,7 @@ export function createShellControllerServices(
         runtime: () => state.runtime,
         settings: () => refs.settings,
         dataSources: () => state.dataSources,
+        editingPolicy: () => state.editingPolicy,
         settingsMode: () => state.settingsMode,
         stateSessions: () => stateSessions,
         highlight: () => highlight,

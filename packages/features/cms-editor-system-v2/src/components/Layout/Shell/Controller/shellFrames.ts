@@ -9,6 +9,7 @@ import {
 import { contentHtml } from "../Domain/Structure/structureDocument";
 import type { CmsSourceStateForce } from "@bernouy/cms-content/editor";
 import type { EditorDocument } from "@bernouy/cms-content/editor";
+import type { EditorPreviewMode } from "./shellTypes";
 
 type FrameReadyCallbacks = {
     bindViewFrameDocument(document: Document): void;
@@ -32,9 +33,11 @@ export class ShellFrames {
         this.injectBindingPreviewStyle(document);
     }
 
-    bindViewFrameDocument(document: Document): void {
+    bindViewFrameDocument(document: Document, previewMode: EditorPreviewMode = "mirrored"): void {
         this.viewFrameDocument = document;
-        this.injectBindingPreviewStyle(document);
+        if (previewMode === "mirrored") {
+            this.injectBindingPreviewStyle(document);
+        }
     }
 
     unbindFrameDocument(onFrameClick: EventListener): void {
@@ -46,11 +49,23 @@ export class ShellFrames {
         this.viewFrameDocument = null;
     }
 
-    syncBindingPreviewCore(sourceStateForce: CmsSourceStateForce, viewActive: boolean): void {
-        syncBindingPreviewCore(this.frameDocument, this.viewFrameDocument, sourceStateForce, viewActive);
+    syncBindingPreviewCore(
+        sourceStateForce: CmsSourceStateForce,
+        viewActive: boolean,
+        previewMode: EditorPreviewMode = "mirrored",
+    ): void {
+        const viewDocument = previewMode === "mirrored" ? this.viewFrameDocument : null;
+        syncBindingPreviewCore(this.frameDocument, viewDocument, sourceStateForce, viewActive);
     }
 
-    syncViewFrameContent(sourceStateForce: CmsSourceStateForce, viewActive: boolean): void {
+    syncViewFrameContent(
+        sourceStateForce: CmsSourceStateForce,
+        viewActive: boolean,
+        previewMode: EditorPreviewMode = "mirrored",
+    ): void {
+        if (previewMode === "external") {
+            return;
+        }
         syncViewFrameContent(this.frameDocument, this.viewFrameDocument, sourceStateForce, viewActive);
     }
 

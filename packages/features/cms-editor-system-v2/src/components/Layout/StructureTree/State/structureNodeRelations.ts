@@ -77,6 +77,20 @@ export function nodeForEditor(nodes: StructureNode[], editor: Editor): EditorStr
     );
 }
 
+export function siblingStructureNode(
+    nodes: StructureNode[],
+    node: EditorStructureNode,
+    offset: -1 | 1,
+): EditorStructureNode | null {
+    const parent = parentStructureNode(nodes, node);
+    const slotName = node.target.getAttribute("slot") ?? undefined;
+    const siblings = (parent?.children ?? nodes).filter(
+        (candidate) => (candidate.target.getAttribute("slot") ?? undefined) === slotName,
+    );
+    const index = siblings.indexOf(node);
+    return index >= 0 ? (siblings[index + offset] ?? null) : null;
+}
+
 function nodeForEditorChildren(node: StructureNode): StructureNode[] {
     return node.children.flatMap((child) => [child, ...nodeForEditorChildren(child)]);
 }

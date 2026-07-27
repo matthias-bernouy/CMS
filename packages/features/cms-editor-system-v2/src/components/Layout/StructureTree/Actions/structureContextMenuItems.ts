@@ -7,6 +7,7 @@ export function contextMenuButton(
 ): HTMLButtonElement {
     const button = document.createElement("button");
     button.className = variant ? `context-item ${variant}` : "context-item";
+    button.role = "menuitem";
     button.type = "button";
     button.disabled = disabled;
     button.textContent = label;

@@ -1,7 +1,7 @@
 import type { Editor, EditorCatalogEntry } from "@bernouy/cms-content/editor";
 import type { BlockPickerItem } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { DataSourcePickerSourceBinding } from "../../Pickers/DataSourcePicker/DataSourcePicker";
-import type { EditorDataSource, SourceStateName } from "../../../../runtime";
+import type { EditorDataSource, EditorStructureNode, SourceStateName } from "../../../../runtime";
 
 export type StructureTreeKey = HTMLElement | object;
 
@@ -48,6 +48,7 @@ export type StructureTreeActionDetail = {
 export type StructureTreeRenderOptions = {
     scrollSelectedIntoView?: boolean;
     repeatableTargets?: HTMLElement[];
+    rootNode?: EditorStructureNode | null;
 };
 
 export type PendingPickerAction = {

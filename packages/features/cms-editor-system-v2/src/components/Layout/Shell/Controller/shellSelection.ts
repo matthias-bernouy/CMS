@@ -4,16 +4,12 @@ import {
     type Editor,
     type SettingControl,
 } from "@bernouy/cms-content/editor";
-import {
-    NETWORK_BINDING_ATTRIBUTES,
-    type NetworkBindingAttribute,
-    writeNetworkBindingAttribute,
-} from "@bernouy/components/binding-dom";
-
 import type { EditorRuntime } from "../../../../runtime";
-import type { SettingsViewMode } from "../../../Settings/SettingsView/SettingsView";
-import type { SettingsViewAttributeChanges } from "../../../Settings/SettingsView/SettingsView";
-import type { SettingsView } from "../../../Settings/SettingsView/SettingsView";
+import type {
+    SettingsView,
+    SettingsViewAttributeChanges,
+    SettingsViewMode,
+} from "../../../Settings/SettingsView/SettingsView";
 import type { EditorDataSource } from "../../../../runtime";
 import type { FrameHighlight } from "./Core/FrameHighlight";
 import type { SelectOptions } from "./shellTypes";
@@ -21,11 +17,20 @@ import { applyParamSyncSetting, settingsWithParamSync } from "../Domain/Settings
 import { applyPageStateSetting, settingsWithPageState } from "../Domain/Settings/pageState";
 import { getTextValue, resolveSettingsValues } from "../Domain/Settings/settingsValues";
 import { exitAllStateSessions, toggleStateSession } from "../Domain/Settings/stateSessions";
+import { writeSettingAttribute } from "../Domain/Settings/settingAttributes";
+import {
+    filterSettingSections,
+    DEFAULT_EDITOR_INTERACTION_POLICY,
+    isAttributeAllowed,
+    isSettingAllowed,
+    type ResolvedEditorInteractionPolicy,
+} from "../../../../policy/editorInteractionPolicy";
 
 type SelectionContext = {
     runtime(): EditorRuntime | null;
     settings(): SettingsView;
     dataSources(): EditorDataSource[];
+    editingPolicy?(): ResolvedEditorInteractionPolicy;
     settingsMode(): SettingsViewMode;
     stateSessions(): WeakMap<Editor, Map<string, EditableStateSession>>;
     highlight(): FrameHighlight;
@@ -68,22 +73,24 @@ export class ShellSelection {
             return;
         }
 
+        const policy = this.editingPolicy();
+        const settings = filterSettingSections(
+            policy,
+            resolveSettingsValues(
+                selection.editor,
+                settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings)),
+            ),
+        );
         this.context
             .settings()
             .setSettings(
-                resolveSettingsValues(
-                    selection.editor,
-                    settingsWithPageState(
-                        selection.editor,
-                        settingsWithParamSync(selection.editor, selection.settings),
-                    ),
-                ),
+                settings,
                 selection.textCapability,
                 selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "",
                 this.context.settingsMode(),
                 selection.states,
-                runtime.getSelectedDataScopes(),
-                this.context.dataSources(),
+                policy.bindings ? runtime.getSelectedDataScopes() : [],
+                policy.bindings ? this.context.dataSources() : [],
             );
     }
 
@@ -93,8 +100,12 @@ export class ShellSelection {
         value: string | boolean,
         attributes?: SettingsViewAttributeChanges,
     ): void {
+        const policy = this.editingPolicy();
+        if (!isSettingAllowed(policy, setting)) {
+            return;
+        }
         if (attributes) {
-            this.applyAttributes(editor, attributes);
+            this.applyAttributes(editor, attributes, policy);
             return;
         }
 
@@ -116,8 +127,15 @@ export class ShellSelection {
         }
     }
 
-    private applyAttributes(editor: Editor, attributes: SettingsViewAttributeChanges): void {
+    private applyAttributes(
+        editor: Editor,
+        attributes: SettingsViewAttributeChanges,
+        policy: ResolvedEditorInteractionPolicy,
+    ): void {
         for (const [attribute, value] of Object.entries(attributes)) {
+            if (!isAttributeAllowed(policy, attribute)) {
+                continue;
+            }
             if (typeof value === "boolean") {
                 editor.target.toggleAttribute(attribute, value);
             } else {
@@ -138,20 +156,8 @@ export class ShellSelection {
         }
         exitAllStateSessions(this.context.stateSessions(), runtime.getStructure());
     }
-}
 
-function writeSettingAttribute(element: Element, name: string, value: string | null): void {
-    if (isNetworkBindingAttribute(name)) {
-        writeNetworkBindingAttribute(element, name, value);
-        return;
+    private editingPolicy(): ResolvedEditorInteractionPolicy {
+        return this.context.editingPolicy?.() ?? DEFAULT_EDITOR_INTERACTION_POLICY;
     }
-    if (value === null) {
-        element.removeAttribute(name);
-    } else {
-        element.setAttribute(name, value);
-    }
-}
-
-function isNetworkBindingAttribute(name: string): name is NetworkBindingAttribute {
-    return (NETWORK_BINDING_ATTRIBUTES as readonly string[]).includes(name);
 }

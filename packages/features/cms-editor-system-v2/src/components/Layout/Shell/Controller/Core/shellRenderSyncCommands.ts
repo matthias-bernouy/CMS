@@ -24,6 +24,7 @@ export class ShellRenderSyncCommands {
         renderStructure(
             this.context.refs.structureTree,
             this.context.state.runtime,
+            this.context.state.editorDocument?.contentRoot,
             this.context.state.catalog,
             this.context.state.insertItems,
             () => this.isEmptyDocumentContent(),
@@ -60,6 +61,7 @@ export class ShellRenderSyncCommands {
         this.context.frames.syncBindingPreviewCore(
             this.context.state.sourceStateForce,
             this.context.state.editorMode === "view",
+            this.context.state.previewMode,
         );
     }
 
@@ -67,6 +69,7 @@ export class ShellRenderSyncCommands {
         this.context.frames.syncViewFrameContent(
             this.context.state.sourceStateForce,
             this.context.state.editorMode === "view",
+            this.context.state.previewMode,
         );
     }
 
@@ -112,6 +115,10 @@ export class ShellRenderSyncCommands {
 
     syncStructureTreeDataSources(): void {
         this.context.sync.syncStructureTreeDataSources();
+    }
+
+    syncStructureTreeEditingPolicy(): void {
+        this.context.sync.syncStructureTreeEditingPolicy();
     }
 
     findStructureNodeLabel(editor: Editor): string | null {

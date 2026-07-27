@@ -11,6 +11,8 @@ import { StructureTreePickers } from "./structureTreePickers";
 import { StructureTreeRefs } from "./Support/structureTreeRefs";
 import { StructureTreeRenderer } from "./structureTreeRenderer";
 import { StructureTreeState } from "../structureTreeState";
+import type { EditorInteractionPolicy } from "../../../../../policy/editorInteractionPolicy";
+import { resolveEditorInteractionPolicy } from "../../../../../policy/editorInteractionPolicy";
 
 export class StructureTreeController {
     readonly state: StructureTreeState;
@@ -53,6 +55,10 @@ export class StructureTreeController {
     setDataSources(sources: EditorDataSource[]): void {
         this.state.dataSources = sources.map((source) => ({ ...source, fields: [...source.fields] }));
     }
+    setEditingPolicy(policy: EditorInteractionPolicy): void {
+        this.state.editingPolicy = resolveEditorInteractionPolicy(policy);
+        this.renderer.render();
+    }
 
     get catalog(): EditorCatalog {
         return this.state.catalog;
@@ -68,6 +74,7 @@ export class StructureTreeController {
         options: StructureTreeRenderOptions = {},
     ): void {
         this.state.nodes = nodes;
+        this.state.rootNode = options.rootNode ?? null;
         this.state.selectedEditor = selectedEditor;
         this.state.catalog = [...catalog];
         this.state.scrollSelectedIntoViewOnRender = options.scrollSelectedIntoView === true;

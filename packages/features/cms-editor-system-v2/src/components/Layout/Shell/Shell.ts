@@ -4,6 +4,8 @@ export {
     ShellController,
 } from "./ShellController";
 export type {
+    EditorFrameUrls,
+    EditorPreviewMode,
     EditorV2PageConfig,
     EditorV2SaveDocumentDetail,
 } from "./Controller/shellTypes";

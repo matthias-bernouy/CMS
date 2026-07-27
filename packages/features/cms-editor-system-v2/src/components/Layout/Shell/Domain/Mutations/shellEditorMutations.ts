@@ -7,26 +7,23 @@ import {
 } from "@bernouy/cms-content/editor";
 
 import type { MutationContext } from "./shellMutations";
-import type { ShellContentMutations } from "./Content/shellContentMutations";
+import { reloadFrameDocument } from "./Content/reloadFrameDocument";
 import { applySlot } from "./insertion";
 import { canDelete, canDuplicate, canInsertSibling, canMoveEditor } from "./slots";
 
 export class ShellEditorMutations {
     private _clipboardElement: HTMLElement | null = null;
 
-    constructor(
-        private readonly context: MutationContext,
-        private readonly content: ShellContentMutations,
-    ) {}
+    constructor(private readonly context: MutationContext) {}
 
     duplicateEditor(editor: Editor): void {
-        if (!canDuplicate(this.context.runtime(), editor)) {
+        if (!canDuplicate(this.context.runtime(), editor, this.context.catalog())) {
             return;
         }
 
         const clone = editor.target.cloneNode(true) as HTMLElement;
         editor.target.after(clone);
-        this.content.reloadFrameDocument(clone);
+        reloadFrameDocument(this.context, clone);
     }
 
     deleteEditor(editor: Editor): void {
@@ -36,7 +33,7 @@ export class ShellEditorMutations {
 
         const nextSelectionTarget = this.findNextSelectionTargetAfterDelete(editor);
         editor.target.remove();
-        this.content.reloadFrameDocument(nextSelectionTarget);
+        reloadFrameDocument(this.context, nextSelectionTarget);
     }
 
     copyEditor(editor: Editor): void {
@@ -52,7 +49,7 @@ export class ShellEditorMutations {
         const clone = this._clipboardElement.cloneNode(true) as HTMLElement;
         if (!editor) {
             document.contentRoot.append(clone);
-            this.content.reloadFrameDocument(clone);
+            reloadFrameDocument(this.context, clone);
             return;
         }
 
@@ -61,6 +58,7 @@ export class ShellEditorMutations {
                 this.context.runtime(),
                 editor,
                 clone,
+                this.context.catalog(),
                 (element, state) => {
                     if (state.length) {
                         applySourceStatusConditions(element, state);
@@ -73,14 +71,14 @@ export class ShellEditorMutations {
         }
 
         editor.target.after(clone);
-        this.content.reloadFrameDocument(clone);
+        reloadFrameDocument(this.context, clone);
     }
 
     moveEditor(source: Editor, target: Editor, position: "before" | "after"): void {
         if (source === target || source.target.contains(target.target)) {
             return;
         }
-        if (!canMoveEditor(this.context.runtime(), source, target)) {
+        if (!canMoveEditor(this.context.runtime(), source, target, this.context.catalog())) {
             return;
         }
 
@@ -93,7 +91,7 @@ export class ShellEditorMutations {
             target.target.after(source.target);
         }
 
-        this.content.reloadFrameDocument(source.target);
+        reloadFrameDocument(this.context, source.target);
     }
 
     private findNextSelectionTargetAfterDelete(editor: Editor): HTMLElement | null {

@@ -58,4 +58,15 @@ export class StructureTreeEmitter {
     closeContextMenu(): void {
         this.refs.contextMenu.remove();
     }
+
+    moveEditor(source: Editor, target: Editor, position: "before" | "after"): void {
+        this.emitAction(
+            position === "before" ? "move-before" : "move-after",
+            target,
+            undefined,
+            undefined,
+            undefined,
+            source,
+        );
+    }
 }
