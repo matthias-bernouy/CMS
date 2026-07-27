@@ -1,4 +1,3 @@
-import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import {
     assertIntegrationPackageKind,
@@ -7,7 +6,11 @@ import {
     sha256Hex,
 } from "@bernouy/cms-integration-packages";
 import type { ReviewedSchemaBaselineLogicalKey } from "../../../../interfaces/reportStore";
-import { ensureVerifiedRegistryChildDirectory, readVerifiedRegistryDirectory } from "../persistence/ownedDirectory";
+import {
+    ensureVerifiedRegistryChildDirectory,
+    ensureVerifiedRegistryMetadataDirectory,
+    readVerifiedRegistryDirectory,
+} from "../persistence/ownedDirectory";
 
 export const REVIEWED_SCHEMA_BASELINE_DIRECTORY = "schema-baselines";
 
@@ -53,29 +56,11 @@ export async function ensureReviewedSchemaBaselinePaths(
     key: ReviewedSchemaBaselineLogicalKey,
 ): Promise<FsReviewedSchemaBaselinePaths> {
     await readVerifiedRegistryDirectory(registryRoot);
-    const metadata = await ensureFixedChildDirectory(registryRoot, ".registry");
+    const metadata = await ensureVerifiedRegistryMetadataDirectory(registryRoot);
     const root = await ensureVerifiedRegistryChildDirectory(metadata, REVIEWED_SCHEMA_BASELINE_DIRECTORY);
     const history = await ensureVerifiedRegistryChildDirectory(root, await reviewedSchemaBaselineKeyDigest(key));
     const revisions = await ensureVerifiedRegistryChildDirectory(history, "revisions");
     return { root, history, identity: join(history, "identity.json"), revisions };
-}
-
-async function ensureFixedChildDirectory(parent: string, name: string): Promise<string> {
-    await readVerifiedRegistryDirectory(parent);
-    const path = join(parent, name);
-    try {
-        await mkdir(path, { mode: 0o750 });
-    } catch (error) {
-        if (!isNodeError(error) || error.code !== "EEXIST") {
-            throw error;
-        }
-    }
-    await readVerifiedRegistryDirectory(path);
-    return path;
-}
-
-function isNodeError(value: unknown): value is NodeJS.ErrnoException {
-    return value instanceof Error && "code" in value;
 }
 
 export function reviewedSchemaBaselineRevisionFilename(ordinal: number): string {

@@ -1,4 +1,4 @@
-import { lstat, mkdir } from "node:fs/promises";
+import { lstat } from "node:fs/promises";
 import { join } from "node:path";
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
@@ -12,6 +12,7 @@ import type {
 import { readCanonicalJsonFile, writeCanonicalJsonNoReplace } from "../../../persistence/canonicalFile";
 import {
     ensureVerifiedRegistryChildDirectory,
+    ensureVerifiedRegistryMetadataDirectory,
     readVerifiedRegistryDirectory,
 } from "../../../persistence/ownedDirectory";
 
@@ -79,7 +80,7 @@ function bundlePath(root: string, digest: string): string {
 
 async function ensureBundleParents(registryRoot: string, digest: string): Promise<string> {
     await readVerifiedRegistryDirectory(registryRoot);
-    const metadata = await ensureFixedChildDirectory(registryRoot, ".registry");
+    const metadata = await ensureVerifiedRegistryMetadataDirectory(registryRoot);
     const store = await ensureVerifiedRegistryChildDirectory(metadata, "verification-bundles");
     const objects = await ensureVerifiedRegistryChildDirectory(store, "objects");
     const sha256 = await ensureVerifiedRegistryChildDirectory(objects, "sha256");
@@ -104,20 +105,6 @@ async function assertBundleParents(registryRoot: string, digest: string): Promis
     if (fileMetadata.isSymbolicLink() || !fileMetadata.isFile()) {
         throw new Error(`Verification bundle ${digest} must be a real file`);
     }
-}
-
-async function ensureFixedChildDirectory(parent: string, name: string): Promise<string> {
-    await readVerifiedRegistryDirectory(parent);
-    const path = join(parent, name);
-    try {
-        await mkdir(path, { mode: 0o750 });
-    } catch (error) {
-        if (!isNodeError(error) || error.code !== "EEXIST") {
-            throw error;
-        }
-    }
-    await readVerifiedRegistryDirectory(path);
-    return path;
 }
 
 function shard(digest: string, index: 0 | 1): string {

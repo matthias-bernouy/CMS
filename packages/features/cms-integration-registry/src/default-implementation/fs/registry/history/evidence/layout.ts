@@ -1,7 +1,11 @@
-import { mkdir, opendir } from "node:fs/promises";
+import { opendir } from "node:fs/promises";
 import { join } from "node:path";
 import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
-import { ensureVerifiedRegistryChildDirectory, readVerifiedRegistryDirectory } from "../../persistence/ownedDirectory";
+import {
+    ensureVerifiedRegistryChildDirectory,
+    ensureVerifiedRegistryMetadataDirectory,
+    readVerifiedRegistryDirectory,
+} from "../../persistence/ownedDirectory";
 import type { FsReleaseReportStream } from "./types";
 
 export const RELEASE_REPORT_HISTORY_DIRECTORY = "release-reports";
@@ -46,7 +50,7 @@ export async function ensureReleaseReportHistoryPaths(
     key: unknown,
 ): Promise<FsReleaseReportHistoryPaths> {
     await readVerifiedRegistryDirectory(registryRoot);
-    const metadata = await ensureFixedChildDirectory(registryRoot, ".registry");
+    const metadata = await ensureVerifiedRegistryMetadataDirectory(registryRoot);
     const storeRoot = await ensureVerifiedRegistryChildDirectory(metadata, RELEASE_REPORT_HISTORY_DIRECTORY);
     const streamRoot = await ensureVerifiedRegistryChildDirectory(storeRoot, stream);
     const historyRoot = await ensureVerifiedRegistryChildDirectory(streamRoot, await releaseReportKeyDigest(key));
@@ -103,19 +107,6 @@ export function releaseReportRevisionFilename(ordinal: number): string {
         throw new TypeError("Release report revision ordinal is invalid");
     }
     return `${ordinal.toString().padStart(10, "0")}.json`;
-}
-
-async function ensureFixedChildDirectory(parent: string, name: string): Promise<string> {
-    const path = join(parent, name);
-    try {
-        await mkdir(path, { mode: 0o750 });
-    } catch (error) {
-        if (!isNodeError(error) || error.code !== "EEXIST") {
-            throw error;
-        }
-    }
-    await readVerifiedRegistryDirectory(path);
-    return path;
 }
 
 function isNodeError(value: unknown): value is NodeJS.ErrnoException {

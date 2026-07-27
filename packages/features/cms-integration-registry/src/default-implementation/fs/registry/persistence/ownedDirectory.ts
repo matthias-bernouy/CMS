@@ -63,10 +63,18 @@ export async function withVerifiedRegistryDirectory<T>(
     }
 }
 
+export async function ensureVerifiedRegistryMetadataDirectory(parent: string): Promise<string> {
+    return await ensureVerifiedRegistryDirectory(parent, ".registry");
+}
+
 export async function ensureVerifiedRegistryChildDirectory(parent: string, name: string): Promise<string> {
     if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u.test(name)) {
         throw new TypeError("Integration registry directory name must be a path-safe identifier");
     }
+    return await ensureVerifiedRegistryDirectory(parent, name);
+}
+
+async function ensureVerifiedRegistryDirectory(parent: string, name: string): Promise<string> {
     await readVerifiedRegistryDirectory(parent);
     const path = join(parent, name);
     try {

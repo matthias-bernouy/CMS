@@ -1,8 +1,10 @@
-import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { FsIntegrationRegistryLayout } from "../persistence/layout";
 import { ensureFsIntegrationRegistryLayout } from "../persistence/layout";
-import { ensureVerifiedRegistryChildDirectory, readVerifiedRegistryDirectory } from "../persistence/ownedDirectory";
+import {
+    ensureVerifiedRegistryChildDirectory,
+    ensureVerifiedRegistryMetadataDirectory,
+} from "../persistence/ownedDirectory";
 
 export const FS_INTEGRATION_REGISTRY_CANDIDATE_DOCUMENT_LIMIT = 64 * 1_024;
 export const FS_INTEGRATION_REGISTRY_CANDIDATE_CONTROL_DOCUMENT_LIMIT = 1_048_576;
@@ -29,7 +31,7 @@ export async function ensureFsIntegrationRegistryCandidateLayout(
     requestedRoot: string,
 ): Promise<FsIntegrationRegistryCandidateLayout> {
     const registry = await ensureFsIntegrationRegistryLayout(requestedRoot);
-    const metadata = await ensureFixedChildDirectory(registry.root, ".registry");
+    const metadata = await ensureVerifiedRegistryMetadataDirectory(registry.root);
     const root = await ensureVerifiedRegistryChildDirectory(metadata, "candidates");
     const objects = await ensureVerifiedRegistryChildDirectory(root, "objects");
     return {
@@ -119,22 +121,4 @@ export function assertCandidateRevision(value: number): void {
     if (!Number.isSafeInteger(value) || value < 0) {
         throw new TypeError("Integration registry candidate revision must be a non-negative safe integer");
     }
-}
-
-async function ensureFixedChildDirectory(parent: string, name: string): Promise<string> {
-    await readVerifiedRegistryDirectory(parent);
-    const path = join(parent, name);
-    try {
-        await mkdir(path, { mode: 0o750 });
-    } catch (error) {
-        if (!isNodeError(error) || error.code !== "EEXIST") {
-            throw error;
-        }
-    }
-    await readVerifiedRegistryDirectory(path);
-    return path;
-}
-
-function isNodeError(value: unknown): value is NodeJS.ErrnoException {
-    return value instanceof Error && "code" in value;
 }
