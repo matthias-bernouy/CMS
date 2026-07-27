@@ -9,7 +9,7 @@ export function renderCompatibilitySummary(summary: RepositoryCatalogCompatibili
     if (!summary) {
         return "Unreported";
     }
-    const outcome = summary.currentOutcome ?? summary.admissionOutcome ?? "unreported";
+    const outcome = summary.currentOutcome ?? summary.rootOutcome ?? "unreported";
     return `${escapeHtml(humanLabel(outcome))}${summary.warning ? " — warning" : ""}`;
 }
 
@@ -17,45 +17,37 @@ export function renderCompatibilityHistory(history: RepositoryCatalogCompatibili
     if (!history) {
         return `<section class="compatibility"><h2>Compatibility</h2><p>No compatibility report is available for this legacy version.</p></section>`;
     }
-    const reports = [history.admission, ...(history.revisions ?? [])];
+    const reports = [history.root, ...(history.revisions ?? [])];
     return `<section class="compatibility">
 <h2>Compatibility</h2>
 ${history.warning ? '<p role="alert">A later compatibility assessment raised a warning for this version.</p>' : ""}
-<p>Current report revision: <code>${escapeHtml(history.currentRevisionId)}</code></p>
-<ol class="compatibility-history">${reports.map((report) => renderReport(report, history.currentRevisionId)).join("")}</ol>
+<p>Current report revision: <code>${escapeHtml(history.currentReportId)}</code></p>
+<ol class="compatibility-history">${reports.map((report) => renderReport(report, history.currentReportId)).join("")}</ol>
 </section>`;
 }
 
 function renderReport(report: RepositoryCatalogCompatibilityReport, currentId: string): string {
     const metadata = [
-        report.packageDigest
-            ? `<div><dt>Package digest</dt><dd><code>${escapeHtml(report.packageDigest)}</code></dd></div>`
-            : "",
-        report.evaluator
-            ? `<div><dt>Evaluator</dt><dd>${escapeHtml(report.evaluator.name)} ${escapeHtml(report.evaluator.version)}</dd></div>`
-            : "",
+        `<div><dt>Package digest</dt><dd><code>${escapeHtml(report.packageDigest)}</code></dd></div>`,
+        `<div><dt>Evaluator</dt><dd>${escapeHtml(report.evaluator.name)} ${escapeHtml(report.evaluator.version)}</dd></div>`,
         renderBaselines("Baselines", report.baselines),
         renderBaselines("Informational baselines", report.informationalBaselines),
-        report.createdAt ? `<div><dt>Created</dt><dd>${escapeHtml(report.createdAt)}</dd></div>` : "",
-        report.releaseLevel ? `<div><dt>Release level</dt><dd>${escapeHtml(report.releaseLevel)}</dd></div>` : "",
-        report.requiredReleaseLevel
-            ? `<div><dt>Required level</dt><dd>${escapeHtml(report.requiredReleaseLevel)}</dd></div>`
+        `<div><dt>Created</dt><dd>${escapeHtml(report.createdAt)}</dd></div>`,
+        `<div><dt>Release level</dt><dd>${escapeHtml(report.releaseLevel)}</dd></div>`,
+        `<div><dt>Required level</dt><dd>${escapeHtml(report.requiredReleaseLevel)}</dd></div>`,
+        `<div><dt>Contract admissible</dt><dd>${report.contractAdmissible ? "Yes" : "No"}</dd></div>`,
+        report.revisionType === "revision"
+            ? `<div><dt>Supersedes</dt><dd><code>${escapeHtml(report.supersedes)}</code></dd></div>`
             : "",
-        report.admissible === undefined
-            ? ""
-            : `<div><dt>Admissible</dt><dd>${report.admissible ? "Yes" : "No"}</dd></div>`,
-        report.supersedes ? `<div><dt>Supersedes</dt><dd><code>${escapeHtml(report.supersedes)}</code></dd></div>` : "",
-        report.provenance
-            ? `<div><dt>Reassessment reason</dt><dd>${escapeHtml(report.provenance.reason)}</dd></div>`
-            : "",
+        `<div><dt>Assessment reason</dt><dd>${escapeHtml(report.provenance.reason)}</dd></div>`,
     ].join("");
-    const evidence = report.evidence ?? [];
+    const findings = report.findings;
     return `<li>
 <article>
-<h3>${report.reportType === "admission" ? "Admission report" : "Reassessment"}${report.id === currentId ? " (current)" : ""}</h3>
-<p><code>${escapeHtml(report.id)}</code> — ${escapeHtml(humanLabel(report.outcome))}</p>
+<h3>${report.revisionType === "root" ? "Root report" : "Reassessment"}${report.reportId === currentId ? " (current)" : ""}</h3>
+<p><code>${escapeHtml(report.reportId)}</code> — ${escapeHtml(humanLabel(report.outcome))}</p>
 ${metadata ? `<dl>${metadata}</dl>` : ""}
-${evidence.length > 0 ? `<details><summary>${evidence.length} evidence item${evidence.length === 1 ? "" : "s"}</summary><ul>${evidence.map(renderEvidence).join("")}</ul></details>` : ""}
+${findings.length > 0 ? `<details><summary>${findings.length} finding${findings.length === 1 ? "" : "s"}</summary><ul>${findings.map(renderFinding).join("")}</ul></details>` : ""}
 </article>
 </li>`;
 }
@@ -70,6 +62,6 @@ function renderBaselines(label: string, baselines: RepositoryCatalogCompatibilit
     return `<div><dt>${label}</dt><dd>${values}</dd></div>`;
 }
 
-function renderEvidence(evidence: NonNullable<RepositoryCatalogCompatibilityReport["evidence"]>[number]): string {
-    return `<li><strong>${escapeHtml(humanLabel(evidence.classification))}</strong> — ${escapeHtml(evidence.message)} <code>${escapeHtml(evidence.path)}</code> <small>${escapeHtml(evidence.surface)} / ${escapeHtml(evidence.code)}</small></li>`;
+function renderFinding(finding: NonNullable<RepositoryCatalogCompatibilityReport["findings"]>[number]): string {
+    return `<li><strong>${escapeHtml(humanLabel(finding.classification))}</strong> — ${escapeHtml(finding.message)} <small>${escapeHtml(finding.surface)} / ${escapeHtml(finding.code)}</small></li>`;
 }

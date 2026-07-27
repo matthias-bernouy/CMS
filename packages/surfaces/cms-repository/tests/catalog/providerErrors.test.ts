@@ -70,7 +70,7 @@ describe("repository catalog provider failures", () => {
                             ...version,
                             compatibility: {
                                 ...compatibility,
-                                admission: { ...compatibility.admission, packageDigest: "not-a-digest" },
+                                root: { ...compatibility.root, packageDigest: "not-a-digest" },
                             },
                         },
                     }),

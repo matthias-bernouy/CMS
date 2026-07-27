@@ -3,7 +3,7 @@ import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations"
 import type { ClientAddressPolicy } from "@bernouy/http-runner";
 import type {
     PublicPackageDownloadProtection,
-    RepositoryCompatibilityReader,
+    RepositoryProjectedCompatibilityReader,
     RepositoryProjectedReleaseReader,
     RepositoryVerificationBundleReader,
 } from "@bernouy/cms-repository";
@@ -28,7 +28,7 @@ export function productionRepositoryReadConfig(
 ): {
     integrationCatalog: IntegrationDefinitionRepository;
     integrationPackages: IntegrationPackageSource;
-    integrationCompatibility?: RepositoryCompatibilityReader;
+    integrationProjectedCompatibility?: RepositoryProjectedCompatibilityReader;
     integrationProjectedReleases?: RepositoryProjectedReleaseReader;
     integrationVerificationBundles?: RepositoryVerificationBundleReader;
     packageDownloadProtection: PublicPackageDownloadProtection;
@@ -40,7 +40,7 @@ export function productionRepositoryReadConfig(
             integrationCatalog: integrations.publicRepositoryCatalog,
             integrationPackages: integrations.publicRepositoryPackages,
             ...(integrations.publicRepositoryCompatibility
-                ? { integrationCompatibility: integrations.publicRepositoryCompatibility }
+                ? { integrationProjectedCompatibility: integrations.publicRepositoryCompatibility }
                 : {}),
             ...(integrations.publicRepositoryReleases
                 ? { integrationProjectedReleases: integrations.publicRepositoryReleases }
@@ -55,7 +55,7 @@ export function productionRepositoryReadConfig(
         integrationCatalog: integrations.publicRepositoryCatalog,
         integrationPackages: integrations.publicRepositoryPackages,
         ...(integrations.publicRepositoryCompatibility
-            ? { integrationCompatibility: integrations.publicRepositoryCompatibility }
+            ? { integrationProjectedCompatibility: integrations.publicRepositoryCompatibility }
             : {}),
         ...(integrations.publicRepositoryReleases
             ? { integrationProjectedReleases: integrations.publicRepositoryReleases }

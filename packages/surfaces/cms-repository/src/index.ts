@@ -25,6 +25,7 @@ export type {
     RepositoryCompatibilityPageRequest,
     RepositoryCompatibilityPageSource,
     RepositoryCompatibilityReader,
+    RepositoryProjectedCompatibilityReader,
     RepositoryCompatibilityReportSource,
 } from "cms-repository/compatibility/contracts";
 export type {

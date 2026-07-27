@@ -41,7 +41,7 @@ describe("HTTP repository catalog reader", () => {
         expect(integration?.value.featuredVersion).toMatchObject({
             version: "1.0.0",
             releaseNotes: "# Release notes\n\nSafe Markdown.\n",
-            compatibility: { currentRevisionId: "revision-1" },
+            compatibility: { currentReportId: "revision-1" },
             release: {
                 status: "installable",
                 verification: expect.objectContaining({ origin: "legacy-backfill", outcome: "passed" }),
@@ -93,9 +93,9 @@ describe("HTTP repository catalog reader", () => {
         const after = await fixture.reader.getVersion("commerce", "1.0.0");
 
         expect(before?.revision).not.toBe(after?.revision);
-        expect(before?.value.version.compatibility?.currentRevisionId).toBe("revision-1");
+        expect(before?.value.version.compatibility?.currentReportId).toBe("revision-1");
         expect(after?.value.version.compatibility).toMatchObject({
-            currentRevisionId: "revision-2",
+            currentReportId: "revision-2",
             warning: true,
         });
     });
@@ -113,13 +113,13 @@ describe("HTTP repository catalog reader", () => {
             const template = seed.revisions[0]!;
             const revisions = Array.from({ length: 101 }, (_, index) => ({
                 ...template,
-                id: `revision-${index + 1}`,
-                supersedes: index === 0 ? seed.admission.id : `revision-${index}`,
+                reportId: `revision-${index + 1}`,
+                supersedes: index === 0 ? seed.root.reportId : `revision-${index}`,
             }));
             const secondPage = url.searchParams.has("after");
             return jsonResponse(
                 {
-                    admission: seed.admission,
+                    root: seed.root,
                     current: revisions.at(-1),
                     revisions: secondPage ? revisions.slice(100) : revisions.slice(0, 100),
                     totalRevisions: revisions.length,
@@ -137,7 +137,41 @@ describe("HTTP repository catalog reader", () => {
         const result = await reader.getVersion("commerce", "1.0.0");
 
         expect(result?.value.version.compatibility?.revisions).toHaveLength(101);
-        expect(result?.value.version.compatibility?.currentRevisionId).toBe("revision-101");
+        expect(result?.value.version.compatibility?.currentReportId).toBe("revision-101");
         expect(compatibilityRequests).toBe(4);
+    });
+
+    test("rejects a compatibility report ID reused across page boundaries", async () => {
+        const fixture = catalogFixture();
+        const fetchWithDuplicate: typeof fetch = async (input, init) => {
+            const url = new URL(String(input));
+            if (!url.pathname.endsWith("/compatibility")) {
+                return await fixture.fetch(input, init);
+            }
+            const seed = compatibilityPage(url, false);
+            const template = seed.revisions[0]!;
+            const firstPage = Array.from({ length: 100 }, (_, index) => ({
+                ...template,
+                reportId: `revision-${index + 1}`,
+                supersedes: index === 0 ? seed.root.reportId : `revision-${index}`,
+            }));
+            const duplicate = { ...template, reportId: "revision-50", supersedes: "revision-100" };
+            const current = { ...template, reportId: "revision-102", supersedes: duplicate.reportId };
+            const secondPage = url.searchParams.has("after");
+            return jsonResponse({
+                root: seed.root,
+                current,
+                revisions: secondPage ? [duplicate, current] : firstPage,
+                totalRevisions: 102,
+                ...(secondPage ? {} : { nextCursor: "revision-100" }),
+            });
+        };
+        const reader = new HttpRepositoryCatalogReader({
+            catalog: new FixtureDefinitionRepository(),
+            baseUrl: "https://repository.example/.cms/repository",
+            fetch: fetchWithDuplicate,
+        });
+
+        await expect(reader.getVersion("commerce", "1.0.0")).rejects.toMatchObject({ status: 502 });
     });
 });

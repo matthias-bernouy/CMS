@@ -1,9 +1,9 @@
 import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@bernouy/cms-integration-packages";
 import { IntegrationRepositoryContractError } from "@bernouy/cms-integrations";
 import type {
-    RepositoryCompatibilityBaselineSource,
-    RepositoryCompatibilityEvidenceSource,
-    RepositoryCompatibilityReportSource,
+    PublicRepositoryCompatibilityBaseline,
+    PublicRepositoryCompatibilityFinding,
+    PublicRepositoryCompatibilityReport,
 } from "@bernouy/cms-repository";
 
 const SHA256 = /^[a-f0-9]{64}$/u;
@@ -13,33 +13,36 @@ const SURFACES = new Set(["definition", "input", "dependency", "artifact", "sche
 const RELEASE_LEVELS = new Set(["initial", "major", "minor", "patch"]);
 const REQUIRED_RELEASE_LEVELS = new Set(["none", "major", "minor", "patch"]);
 const NO_BASELINE_REASONS = new Set(["new-kind", "new-major"]);
+const ORIGINS = new Set(["admission", "legacy-backfill"]);
 const encoder = new TextEncoder();
 
 export function parseCompatibilityReport(
     value: unknown,
     kind: string,
     version: string,
-): RepositoryCompatibilityReportSource {
+): PublicRepositoryCompatibilityReport {
     const source = record(value);
-    const revision = source.reportType === "revision";
+    const revision = source.revisionType === "revision";
     const required = [
-        "admissible",
         "baselines",
+        "contractAdmissible",
         "createdAt",
         "evaluator",
-        "evidence",
-        "id",
+        "findings",
         "informationalBaselines",
         "kind",
+        "origin",
         "outcome",
         "packageDigest",
+        "provenance",
         "releaseLevel",
-        "reportType",
+        "reportId",
+        "revisionType",
         "requiredReleaseLevel",
         "version",
-        ...(revision ? ["provenance", "supersedes"] : []),
+        ...(revision ? ["supersedes"] : []),
     ];
-    if (!hasAllowedKeys(source, required, ["noBaselineReason"]) || (!revision && source.reportType !== "admission")) {
+    if (!hasAllowedKeys(source, required, ["noBaselineReason"]) || (!revision && source.revisionType !== "root")) {
         throw invalid();
     }
     const identity = exactIdentity(source.kind, source.version);
@@ -48,9 +51,14 @@ export function parseCompatibilityReport(
     }
     const evaluator = record(source.evaluator);
     exactKeys(evaluator, ["name", "version"]);
+    const provenance = record(source.provenance);
+    if (!hasAllowedKeys(provenance, ["reason"], ["evidenceIds"])) {
+        throw invalid();
+    }
     const common = {
-        id: text(source.id, 256),
-        reportType: source.reportType as "admission" | "revision",
+        reportId: text(source.reportId, 256),
+        revisionType: source.revisionType as "root" | "revision",
+        origin: enumText(source.origin, ORIGINS),
         kind,
         version,
         packageDigest: digest(source.packageDigest),
@@ -58,26 +66,14 @@ export function parseCompatibilityReport(
         createdAt: timestamp(source.createdAt),
         baselines: array(source.baselines, 16).map(parseBaseline),
         informationalBaselines: array(source.informationalBaselines, 16).map(parseBaseline),
-        evidence: array(source.evidence, 256).map(parseEvidence),
+        findings: array(source.findings, 256).map(parseFinding),
         outcome: enumText(source.outcome, OUTCOMES),
         requiredReleaseLevel: enumText(source.requiredReleaseLevel, REQUIRED_RELEASE_LEVELS),
         releaseLevel: enumText(source.releaseLevel, RELEASE_LEVELS),
-        admissible: boolean(source.admissible),
+        contractAdmissible: boolean(source.contractAdmissible),
         ...(source.noBaselineReason === undefined
             ? {}
             : { noBaselineReason: enumText(source.noBaselineReason, NO_BASELINE_REASONS) }),
-    };
-    if (!revision) {
-        return common as RepositoryCompatibilityReportSource;
-    }
-    const provenance = record(source.provenance);
-    if (!hasAllowedKeys(provenance, ["reason"], ["evidenceIds"])) {
-        throw invalid();
-    }
-    return {
-        ...common,
-        reportType: "revision",
-        supersedes: text(source.supersedes, 256),
         provenance: {
             reason: text(provenance.reason, 8_192),
             ...(provenance.evidenceIds === undefined
@@ -85,21 +81,33 @@ export function parseCompatibilityReport(
                 : { evidenceIds: array(provenance.evidenceIds, 256).map((entry) => text(entry, 256)) }),
         },
     };
+    if (!revision) {
+        return common as PublicRepositoryCompatibilityReport;
+    }
+    return {
+        ...common,
+        revisionType: "revision",
+        supersedes: text(source.supersedes, 256),
+    } as PublicRepositoryCompatibilityReport;
 }
 
-function parseBaseline(value: unknown): RepositoryCompatibilityBaselineSource {
+function parseBaseline(value: unknown): PublicRepositoryCompatibilityBaseline {
     const source = record(value);
     exactKeys(source, ["kind", "packageDigest", "version"]);
     const identity = exactIdentity(source.kind, source.version);
     return { ...identity, packageDigest: digest(source.packageDigest) };
 }
 
-function parseEvidence(value: unknown): RepositoryCompatibilityEvidenceSource {
+function parseFinding(value: unknown): PublicRepositoryCompatibilityFinding {
     const source = record(value);
-    exactKeys(source, ["classification", "code", "message", "surface"]);
+    exactKeys(source, ["classification", "code", "findingId", "message", "surface"]);
     return {
-        classification: enumText(source.classification, CLASSIFICATIONS),
-        surface: enumText(source.surface, SURFACES),
+        findingId: digest(source.findingId),
+        classification: enumText(
+            source.classification,
+            CLASSIFICATIONS,
+        ) as PublicRepositoryCompatibilityFinding["classification"],
+        surface: enumText(source.surface, SURFACES) as PublicRepositoryCompatibilityFinding["surface"],
         code: text(source.code, 1_024),
         message: text(source.message, 8_192),
     };

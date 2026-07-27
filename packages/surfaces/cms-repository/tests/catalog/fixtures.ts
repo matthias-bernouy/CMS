@@ -1,6 +1,7 @@
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import type {
     RepositoryCatalogDocument,
+    RepositoryCatalogCompatibilityReport,
     RepositoryCatalogIntegrationPage,
     RepositoryCatalogIntegrationSummary,
     RepositoryCatalogPageRequestContext,
@@ -36,9 +37,9 @@ export function commerceSummary(): RepositoryCatalogIntegrationSummary {
             { type: "bloc", count: 3 },
         ],
         compatibility: {
-            admissionOutcome: "compatible",
+            rootOutcome: "compatible",
             currentOutcome: "compatible",
-            currentRevisionId: "commerce-current",
+            currentReportId: "commerce-current",
         },
         versions: [
             {
@@ -71,7 +72,7 @@ export function newsletterSummary(): RepositoryCatalogIntegrationSummary {
         stable: "1.0.0",
         latest: "1.0.0",
         technicalProviders: ["supabase"],
-        compatibility: { admissionOutcome: "not-applicable", currentOutcome: "not-applicable" },
+        compatibility: { rootOutcome: "not-applicable", currentOutcome: "not-applicable" },
         versions: [{ version: "1.0.0" }],
     };
 }
@@ -92,44 +93,46 @@ export function commerceVersion(version = "1.1.0"): RepositoryCatalogVersionCont
         ],
         ui: { instructions: [["Setup", "Use **safe configuration** before installing."]] },
     };
+    const root: RepositoryCatalogCompatibilityReport = {
+        reportId: "admission-1",
+        revisionType: "root",
+        origin: "admission",
+        outcome: "compatible",
+        packageDigest: DIGEST,
+        evaluator: { name: "cms-compatibility", version: "1.0.0" },
+        baselines: [{ kind: "commerce", version: "1.0.0", packageDigest: "b".repeat(64) }],
+        informationalBaselines: [],
+        createdAt: "2026-07-26T09:00:00.000Z",
+        releaseLevel: "minor",
+        requiredReleaseLevel: "minor",
+        contractAdmissible: true,
+        provenance: { reason: "Initial assessment" },
+        findings: [
+            {
+                findingId: "c".repeat(64),
+                classification: "additive",
+                surface: "definition",
+                code: "artifact-added",
+                message: "A public bloc was added.",
+            },
+        ],
+    };
+    const revision: RepositoryCatalogCompatibilityReport = {
+        ...root,
+        reportId: "revision-2",
+        revisionType: "revision",
+        supersedes: root.reportId,
+        provenance: { reason: "Comparator update" },
+    };
     return {
         version,
         definition,
         package: { digest: DIGEST, canonicalBytes: 2_048 },
         releaseNotes: "# Commerce 1.1\n\n- Added checkout retries.",
         compatibility: {
-            admission: {
-                id: "admission-1",
-                reportType: "admission",
-                outcome: "compatible",
-                packageDigest: DIGEST,
-                evaluator: { name: "cms-compatibility", version: "1.0.0" },
-                baselines: [{ kind: "commerce", version: "1.0.0", packageDigest: "b".repeat(64) }],
-                createdAt: "2026-07-26T09:00:00.000Z",
-                releaseLevel: "minor",
-                requiredReleaseLevel: "minor",
-                admissible: true,
-                evidence: [
-                    {
-                        classification: "additive",
-                        surface: "definition",
-                        code: "artifact-added",
-                        path: "artifacts.shop-product",
-                        message: "A public bloc was added.",
-                    },
-                ],
-            },
-            revisions: [
-                {
-                    id: "revision-2",
-                    reportType: "revision",
-                    outcome: "compatible",
-                    admissible: true,
-                    supersedes: "admission-1",
-                    provenance: { reason: "Comparator update" },
-                },
-            ],
-            currentRevisionId: "revision-2",
+            root,
+            revisions: [revision],
+            currentReportId: revision.reportId,
         },
         release: releaseEvidence(version),
     };

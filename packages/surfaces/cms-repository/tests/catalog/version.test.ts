@@ -32,7 +32,7 @@ describe("repository catalog integration and version pages", () => {
 
         expect(result?.page.path).toBe("/integrations/commerce/versions/1.1.0");
         expect(result?.page.title).toBe("Commerce 1.1.0");
-        expect(html).toContain("Admission report");
+        expect(html).toContain("Root report");
         expect(html).toContain("Reassessment (current)");
         expect(html).toContain("revision-2");
         expect(html).toContain("A public bloc was added.");

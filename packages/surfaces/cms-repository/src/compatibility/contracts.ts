@@ -21,6 +21,14 @@ export interface RepositoryCompatibilityReader {
     ): Promise<RepositoryCompatibilityPageSource | null>;
 }
 
+export interface RepositoryProjectedCompatibilityReader {
+    list(
+        kind: string,
+        version: string,
+        page?: RepositoryCompatibilityPageRequest,
+    ): Promise<PublicRepositoryCompatibilityPage | null>;
+}
+
 export type PublicRepositoryCompatibilityFinding = Readonly<
     Pick<CompatibilityFinding, "findingId" | "classification" | "surface" | "code" | "message">
 >;

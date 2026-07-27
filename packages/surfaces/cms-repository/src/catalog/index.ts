@@ -10,7 +10,7 @@ export {
 export type {
     RepositoryCatalogArtifactSummary,
     RepositoryCatalogCompatibilityBaseline,
-    RepositoryCatalogCompatibilityEvidence,
+    RepositoryCatalogCompatibilityFinding,
     RepositoryCatalogCompatibilityHistory,
     RepositoryCatalogCompatibilityOutcome,
     RepositoryCatalogCompatibilityReport,

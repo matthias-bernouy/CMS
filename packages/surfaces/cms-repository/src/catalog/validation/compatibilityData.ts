@@ -14,34 +14,34 @@ export function assertCompatibilitySummary(value: RepositoryCatalogCompatibility
     if (!value) {
         return;
     }
-    assertOutcome(value.admissionOutcome);
+    assertOutcome(value.rootOutcome);
     assertOutcome(value.currentOutcome);
-    boundedText(value.admissionReportId, "admission report ID", REPOSITORY_CATALOG_LIMITS.identifierBytes, false);
-    boundedText(value.currentRevisionId, "current revision ID", REPOSITORY_CATALOG_LIMITS.identifierBytes, false);
+    boundedText(value.rootReportId, "root report ID", REPOSITORY_CATALOG_LIMITS.identifierBytes, false);
+    boundedText(value.currentReportId, "current report ID", REPOSITORY_CATALOG_LIMITS.identifierBytes, false);
 }
 
 export function assertCompatibilityHistory(history: RepositoryCatalogCompatibilityHistory): void {
-    assertReport(history.admission, "admission");
+    assertReport(history.root, "root");
     const revisions = boundedArray(
         history.revisions ?? [],
         "compatibility revisions",
         REPOSITORY_CATALOG_LIMITS.compatibilityRevisions,
     );
-    const reports = [history.admission, ...revisions];
+    const reports = [history.root, ...revisions];
     for (const revision of revisions) {
         assertReport(revision, "revision");
     }
-    boundedText(history.currentRevisionId, "current revision ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
-    if (!reports.some(({ id }) => id === history.currentRevisionId)) {
+    boundedText(history.currentReportId, "current report ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
+    if (!reports.some(({ reportId }) => reportId === history.currentReportId)) {
         throw new RepositoryCatalogDataError("Current compatibility revision is absent from history");
     }
 }
 
-function assertReport(report: RepositoryCatalogCompatibilityReport, expectedType: "admission" | "revision"): void {
-    if (report.reportType !== expectedType) {
+function assertReport(report: RepositoryCatalogCompatibilityReport, expectedType: "root" | "revision"): void {
+    if (!report || report.revisionType !== expectedType) {
         throw new RepositoryCatalogDataError(`Compatibility report must be ${expectedType}`);
     }
-    boundedText(report.id, "compatibility report ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
+    boundedText(report.reportId, "compatibility report ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
     assertOutcome(report.outcome);
     assertDigest(report.packageDigest, "compatibility package digest");
     if (report.evaluator) {
@@ -73,31 +73,31 @@ function assertReport(report: RepositoryCatalogCompatibilityReport, expectedType
     boundedText(report.createdAt, "compatibility report timestamp", REPOSITORY_CATALOG_LIMITS.shortTextBytes, false);
     boundedText(report.releaseLevel, "release level", REPOSITORY_CATALOG_LIMITS.shortTextBytes, false);
     boundedText(report.requiredReleaseLevel, "required release level", REPOSITORY_CATALOG_LIMITS.shortTextBytes, false);
-    boundedText(report.supersedes, "superseded report ID", REPOSITORY_CATALOG_LIMITS.identifierBytes, false);
-    if (report.provenance) {
-        boundedText(
-            report.provenance.reason,
-            "compatibility provenance reason",
-            REPOSITORY_CATALOG_LIMITS.descriptionBytes,
-        );
-        for (const evidenceId of boundedArray(
-            report.provenance.evidenceIds ?? [],
-            "compatibility provenance evidence IDs",
-            REPOSITORY_CATALOG_LIMITS.compatibilityEvidence,
-        )) {
-            boundedText(evidenceId, "compatibility provenance evidence ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
-        }
+    if (report.revisionType === "revision") {
+        boundedText(report.supersedes, "superseded report ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
     }
-    for (const evidence of boundedArray(
-        report.evidence ?? [],
-        "compatibility evidence",
+    boundedText(
+        report.provenance.reason,
+        "compatibility provenance reason",
+        REPOSITORY_CATALOG_LIMITS.descriptionBytes,
+    );
+    for (const evidenceId of boundedArray(
+        report.provenance.evidenceIds ?? [],
+        "compatibility provenance evidence IDs",
         REPOSITORY_CATALOG_LIMITS.compatibilityEvidence,
     )) {
-        boundedText(evidence.classification, "evidence classification", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
-        boundedText(evidence.surface, "evidence surface", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
-        boundedText(evidence.code, "evidence code", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
-        boundedText(evidence.path, "evidence path", REPOSITORY_CATALOG_LIMITS.descriptionBytes);
-        boundedText(evidence.message, "evidence message", REPOSITORY_CATALOG_LIMITS.descriptionBytes);
+        boundedText(evidenceId, "compatibility provenance evidence ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
+    }
+    for (const finding of boundedArray(
+        report.findings ?? [],
+        "compatibility findings",
+        REPOSITORY_CATALOG_LIMITS.compatibilityEvidence,
+    )) {
+        assertDigest(finding.findingId, "compatibility finding ID");
+        boundedText(finding.classification, "finding classification", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
+        boundedText(finding.surface, "finding surface", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
+        boundedText(finding.code, "finding code", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
+        boundedText(finding.message, "finding message", REPOSITORY_CATALOG_LIMITS.descriptionBytes);
     }
 }
 

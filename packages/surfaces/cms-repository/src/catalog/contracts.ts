@@ -20,10 +20,10 @@ export type RepositoryCatalogArtifactSummary = Readonly<{
 }>;
 
 export type RepositoryCatalogCompatibilitySummary = Readonly<{
-    admissionOutcome?: RepositoryCatalogCompatibilityOutcome;
+    rootOutcome?: RepositoryCatalogCompatibilityOutcome;
     currentOutcome?: RepositoryCatalogCompatibilityOutcome;
-    admissionReportId?: string;
-    currentRevisionId?: string;
+    rootReportId?: string;
+    currentReportId?: string;
     warning?: boolean;
 }>;
 
@@ -51,11 +51,11 @@ export type RepositoryCatalogIntegrationSummary = Readonly<{
     versions: readonly RepositoryCatalogVersionSummary[];
 }>;
 
-export type RepositoryCatalogCompatibilityEvidence = Readonly<{
+export type RepositoryCatalogCompatibilityFinding = Readonly<{
+    findingId: string;
     classification: string;
     surface: string;
     code: string;
-    path: string;
     message: string;
 }>;
 
@@ -65,27 +65,30 @@ export type RepositoryCatalogCompatibilityBaseline = Readonly<{
     packageDigest: string;
 }>;
 
-export type RepositoryCatalogCompatibilityReport = Readonly<{
-    id: string;
-    reportType: "admission" | "revision";
+type RepositoryCatalogCompatibilityReportBase = Readonly<{
+    reportId: string;
+    origin: "admission" | "legacy-backfill";
     outcome: RepositoryCatalogCompatibilityOutcome;
-    packageDigest?: string;
-    evaluator?: Readonly<{ name: string; version: string }>;
-    baselines?: readonly RepositoryCatalogCompatibilityBaseline[];
-    informationalBaselines?: readonly RepositoryCatalogCompatibilityBaseline[];
-    createdAt?: string;
-    releaseLevel?: string;
-    requiredReleaseLevel?: string;
-    admissible?: boolean;
-    supersedes?: string;
-    provenance?: Readonly<{ reason: string; evidenceIds?: readonly string[] }>;
-    evidence?: readonly RepositoryCatalogCompatibilityEvidence[];
+    packageDigest: string;
+    evaluator: Readonly<{ name: string; version: string }>;
+    baselines: readonly RepositoryCatalogCompatibilityBaseline[];
+    informationalBaselines: readonly RepositoryCatalogCompatibilityBaseline[];
+    createdAt: string;
+    releaseLevel: string;
+    requiredReleaseLevel: string;
+    contractAdmissible: boolean;
+    noBaselineReason?: "new-kind" | "new-major";
+    provenance: Readonly<{ reason: string; evidenceIds?: readonly string[] }>;
+    findings: readonly RepositoryCatalogCompatibilityFinding[];
 }>;
 
+export type RepositoryCatalogCompatibilityReport = RepositoryCatalogCompatibilityReportBase &
+    (Readonly<{ revisionType: "root" }> | Readonly<{ revisionType: "revision"; supersedes: string }>);
+
 export type RepositoryCatalogCompatibilityHistory = Readonly<{
-    admission: RepositoryCatalogCompatibilityReport;
+    root: RepositoryCatalogCompatibilityReport;
     revisions?: readonly RepositoryCatalogCompatibilityReport[];
-    currentRevisionId: string;
+    currentReportId: string;
     warning?: boolean;
 }>;
 

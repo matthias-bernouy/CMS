@@ -1,6 +1,6 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
-import type { RepositoryCompatibilityPageSource, RepositoryCompatibilityReportSource } from "@bernouy/cms-repository";
+import type { PublicRepositoryCompatibilityPage, PublicRepositoryCompatibilityReport } from "@bernouy/cms-repository";
 import type {
     RepositoryCatalogArtifactSummary,
     RepositoryCatalogCompatibilityHistory,
@@ -31,14 +31,14 @@ export function artifactSummaries(definition: IntegrationDefinition): readonly R
 }
 
 export function compatibilityHistory(
-    page: RepositoryCompatibilityPageSource,
-    revisions: RepositoryCompatibilityPageSource["revisions"],
+    page: PublicRepositoryCompatibilityPage,
+    revisions: PublicRepositoryCompatibilityPage["revisions"],
 ): RepositoryCatalogCompatibilityHistory {
     return {
-        admission: catalogReport(page.admission),
+        root: catalogReport(page.root),
         revisions: revisions.map(catalogReport),
-        currentRevisionId: page.current.id,
-        warning: page.current.id !== page.admission.id && !page.current.admissible,
+        currentReportId: page.current.reportId,
+        warning: page.current.reportId !== page.root.reportId && !page.current.contractAdmissible,
     };
 }
 
@@ -48,14 +48,14 @@ export function compatibilitySummary(
     if (!history) {
         return undefined;
     }
-    const current = [history.admission, ...(history.revisions ?? [])].find(
-        ({ id }) => id === history.currentRevisionId,
+    const current = [history.root, ...(history.revisions ?? [])].find(
+        ({ reportId }) => reportId === history.currentReportId,
     )!;
     return {
-        admissionOutcome: history.admission.outcome,
+        rootOutcome: history.root.outcome,
         currentOutcome: current.outcome,
-        admissionReportId: history.admission.id,
-        currentRevisionId: current.id,
+        rootReportId: history.root.reportId,
+        currentReportId: current.reportId,
         warning: history.warning,
     };
 }
@@ -67,10 +67,10 @@ export function catalogDocument<T>(value: T, validators: readonly string[]): Rep
     return { value, revision };
 }
 
-function catalogReport(source: RepositoryCompatibilityReportSource): RepositoryCatalogCompatibilityReport {
-    return {
-        id: source.id,
-        reportType: source.reportType,
+function catalogReport(source: PublicRepositoryCompatibilityReport): RepositoryCatalogCompatibilityReport {
+    const report = {
+        reportId: source.reportId,
+        origin: source.origin,
         outcome: source.outcome as RepositoryCatalogCompatibilityOutcome,
         packageDigest: source.packageDigest,
         evaluator: source.evaluator,
@@ -79,20 +79,18 @@ function catalogReport(source: RepositoryCompatibilityReportSource): RepositoryC
         createdAt: source.createdAt,
         releaseLevel: source.releaseLevel,
         requiredReleaseLevel: source.requiredReleaseLevel,
-        admissible: source.admissible,
-        ...(source.reportType === "revision"
-            ? {
-                  supersedes: source.supersedes,
-                  provenance: source.provenance,
-              }
-            : {}),
-        evidence: source.evidence.map((entry) => ({
+        contractAdmissible: source.contractAdmissible,
+        ...(source.noBaselineReason ? { noBaselineReason: source.noBaselineReason } : {}),
+        provenance: source.provenance,
+        findings: source.findings.map((entry) => ({
+            findingId: entry.findingId,
             classification: entry.classification,
             surface: entry.surface,
             code: entry.code,
-            // The public projection intentionally redacts registry-local paths.
-            path: entry.code,
             message: entry.message,
         })),
     };
+    return source.revisionType === "root"
+        ? { ...report, revisionType: "root" }
+        : { ...report, revisionType: "revision", supersedes: source.supersedes };
 }

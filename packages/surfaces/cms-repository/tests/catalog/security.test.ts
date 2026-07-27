@@ -29,15 +29,15 @@ describe("repository catalog rendering safety", () => {
             releaseNotes: '<img src=x onerror="alert(6)">\n\n[bad](javascript:alert(7))',
             compatibility: {
                 ...commerceVersion().compatibility!,
-                admission: {
-                    ...commerceVersion().compatibility!.admission,
-                    evidence: [
+                root: {
+                    ...commerceVersion().compatibility!.root,
+                    findings: [
                         {
+                            findingId: "d".repeat(64),
                             classification: "breaking",
                             surface: "definition",
                             code: "unsafe",
-                            path: '<img onerror="bad">',
-                            message: '<script id="evidence">bad</script>',
+                            message: '<script id="finding">bad</script>',
                         },
                     ],
                 },

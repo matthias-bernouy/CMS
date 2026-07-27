@@ -1,10 +1,12 @@
 import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@bernouy/cms-integration-packages";
 import { IntegrationRepositoryContractError } from "@bernouy/cms-integrations";
 import type {
+    PublicRepositoryCompatibilityPage,
+    PublicRepositoryCompatibilityReport,
     RepositoryCompatibilityPageRequest,
-    RepositoryCompatibilityPageSource,
-    RepositoryCompatibilityReader,
+    RepositoryProjectedCompatibilityReader,
 } from "@bernouy/cms-repository";
+import { isDeepStrictEqual } from "node:util";
 import { RepositoryCatalogHttpTransport, type RepositoryHttpDocument } from "../transport";
 import { array, parseCompatibilityReport, record, text } from "./report";
 
@@ -20,7 +22,7 @@ export type HttpRepositoryCompatibilityReaderConfig = Readonly<{
     maxResponseBytes?: number;
 }>;
 
-export class HttpRepositoryCompatibilityReader implements RepositoryCompatibilityReader {
+export class HttpRepositoryCompatibilityReader implements RepositoryProjectedCompatibilityReader {
     private readonly transport: RepositoryCatalogHttpTransport;
     private readonly maxResponseBytes: number;
 
@@ -37,7 +39,7 @@ export class HttpRepositoryCompatibilityReader implements RepositoryCompatibilit
         kind: string,
         version: string,
         page: RepositoryCompatibilityPageRequest = {},
-    ): Promise<RepositoryCompatibilityPageSource | null> {
+    ): Promise<PublicRepositoryCompatibilityPage | null> {
         return (await this.listDocument(kind, version, page))?.value ?? null;
     }
 
@@ -45,7 +47,7 @@ export class HttpRepositoryCompatibilityReader implements RepositoryCompatibilit
         kind: string,
         version: string,
         page: RepositoryCompatibilityPageRequest = {},
-    ): Promise<RepositoryHttpDocument<RepositoryCompatibilityPageSource> | null> {
+    ): Promise<RepositoryHttpDocument<PublicRepositoryCompatibilityPage> | null> {
         const identity = validatedIdentity(kind, version);
         const normalizedPage = validatedPage(page);
         const params = new URLSearchParams({ kind: identity.kind, version: identity.version });
@@ -71,9 +73,9 @@ function parseCompatibilityPage(
     value: unknown,
     identity: Readonly<{ kind: string; version: string }>,
     page: Readonly<{ after?: string; limit: number }>,
-): RepositoryCompatibilityPageSource {
+): PublicRepositoryCompatibilityPage {
     const source = record(value);
-    const required = ["admission", "current", "revisions", "totalRevisions"];
+    const required = ["root", "current", "revisions", "totalRevisions"];
     const keys = Object.keys(source);
     if (
         !required.every((key) => keys.includes(key)) ||
@@ -81,14 +83,14 @@ function parseCompatibilityPage(
     ) {
         throw new IntegrationRepositoryContractError();
     }
-    const admission = parseCompatibilityReport(source.admission, identity.kind, identity.version);
+    const root = parseCompatibilityReport(source.root, identity.kind, identity.version);
     const current = parseCompatibilityReport(source.current, identity.kind, identity.version);
-    if (admission.reportType !== "admission") {
+    if (root.revisionType !== "root") {
         throw new IntegrationRepositoryContractError();
     }
     const revisions = array(source.revisions, page.limit).map((entry) => {
         const report = parseCompatibilityReport(entry, identity.kind, identity.version);
-        if (report.reportType !== "revision") {
+        if (report.revisionType !== "revision") {
             throw new IntegrationRepositoryContractError();
         }
         return report;
@@ -96,36 +98,32 @@ function parseCompatibilityPage(
     const totalRevisions = safeCount(source.totalRevisions, MAX_TOTAL_REVISIONS);
     const nextCursor = source.nextCursor === undefined ? undefined : text(source.nextCursor, 256);
     for (const report of [current, ...revisions]) {
-        if (report.packageDigest !== admission.packageDigest) {
+        if (report.packageDigest !== root.packageDigest) {
             throw new IntegrationRepositoryContractError();
         }
     }
-    if (
-        (totalRevisions === 0 && current.reportType !== "admission") ||
-        (totalRevisions > 0 && current.reportType !== "revision")
-    ) {
-        throw new IntegrationRepositoryContractError();
-    }
-    assertPageChain(admission.id, current.id, revisions, totalRevisions, page.after, nextCursor);
-    return { admission, current, revisions, totalRevisions, ...(nextCursor ? { nextCursor } : {}) };
+    assertPageChain(root, current, revisions, totalRevisions, page.after, nextCursor);
+    return { root, current, revisions, totalRevisions, ...(nextCursor ? { nextCursor } : {}) };
 }
 
 function assertPageChain(
-    admissionId: string,
-    currentId: string,
-    revisions: RepositoryCompatibilityPageSource["revisions"],
+    root: PublicRepositoryCompatibilityPage["root"],
+    current: PublicRepositoryCompatibilityReport,
+    revisions: PublicRepositoryCompatibilityPage["revisions"],
     totalRevisions: number,
     after: string | undefined,
     nextCursor: string | undefined,
 ): void {
-    let previous = after ?? admissionId;
-    const ids = new Set([admissionId]);
+    const rootId = root.reportId;
+    const currentId = current.reportId;
+    let previous = after ?? rootId;
+    const ids = new Set([rootId, ...(after ? [after] : [])]);
     for (const revision of revisions) {
-        if (ids.has(revision.id) || revision.supersedes !== previous) {
+        if (ids.has(revision.reportId) || revision.supersedes !== previous) {
             throw new IntegrationRepositoryContractError();
         }
-        ids.add(revision.id);
-        previous = revision.id;
+        ids.add(revision.reportId);
+        previous = revision.reportId;
     }
     if (nextCursor !== undefined && (revisions.length === 0 || nextCursor !== previous)) {
         throw new IntegrationRepositoryContractError();
@@ -133,13 +131,29 @@ function assertPageChain(
     if (!nextCursor && previous !== currentId) {
         throw new IntegrationRepositoryContractError();
     }
-    if ((totalRevisions === 0) !== (currentId === admissionId) || totalRevisions < revisions.length) {
+    if (totalRevisions === 0) {
+        if (after || nextCursor || revisions.length > 0 || !isDeepStrictEqual(current, root)) {
+            throw new IntegrationRepositoryContractError();
+        }
+        return;
+    }
+    if (current.revisionType !== "revision" || currentId === rootId || totalRevisions < revisions.length) {
         throw new IntegrationRepositoryContractError();
     }
     if (
         (!after && !nextCursor && revisions.length !== totalRevisions) ||
         (nextCursor && totalRevisions <= revisions.length)
     ) {
+        throw new IntegrationRepositoryContractError();
+    }
+    if (nextCursor && ids.has(currentId)) {
+        throw new IntegrationRepositoryContractError();
+    }
+    const last = revisions.at(-1);
+    if (!nextCursor && last && !isDeepStrictEqual(current, last)) {
+        throw new IntegrationRepositoryContractError();
+    }
+    if (!nextCursor && after && !last && currentId !== after) {
         throw new IntegrationRepositoryContractError();
     }
 }

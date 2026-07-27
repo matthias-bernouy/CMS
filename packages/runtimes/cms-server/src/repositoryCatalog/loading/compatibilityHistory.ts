@@ -1,6 +1,6 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { IntegrationRepositoryContractError } from "@bernouy/cms-integrations";
-import type { RepositoryCompatibilityPageSource } from "@bernouy/cms-repository";
+import type { PublicRepositoryCompatibilityPage } from "@bernouy/cms-repository";
 import type { HttpRepositoryCompatibilityReader } from "../compatibility/reader";
 import { BoundedCatalogWork, type RepositoryCatalogReaderLimits } from "../limits";
 import { compatibilityHistory } from "./projection";
@@ -20,10 +20,11 @@ export async function loadCatalogCompatibility(
     work: BoundedCatalogWork,
 ): Promise<LoadedCompatibility> {
     const validators: string[] = [];
-    const revisions: RepositoryCompatibilityPageSource["revisions"][number][] = [];
+    const revisions: PublicRepositoryCompatibilityPage["revisions"][number][] = [];
     let after: string | undefined;
     let first: Awaited<ReturnType<HttpRepositoryCompatibilityReader["listDocument"]>> = null;
     const cursors = new Set<string>();
+    const reportIds = new Set<string>();
     let pages = 0;
     do {
         pages += 1;
@@ -39,12 +40,21 @@ export async function loadCatalogCompatibility(
             }
             throw new IntegrationRepositoryContractError();
         }
-        first ??= document;
+        if (!first) {
+            first = document;
+            reportIds.add(document.value.root.reportId);
+        }
         assertStablePage(document.value, first.value);
         if (document.value.totalRevisions > limits.compatibilityRevisions) {
             throw new IntegrationRepositoryContractError();
         }
-        revisions.push(...document.value.revisions);
+        for (const revision of document.value.revisions) {
+            if (reportIds.has(revision.reportId)) {
+                throw new IntegrationRepositoryContractError();
+            }
+            reportIds.add(revision.reportId);
+            revisions.push(revision);
+        }
         validators.push(`compatibility:${kind}@${version}:${document.etag}`);
         after = document.value.nextCursor;
         if (after && cursors.has(after)) {
@@ -60,10 +70,10 @@ export async function loadCatalogCompatibility(
     return { history: compatibilityHistory(first.value, revisions), validators };
 }
 
-function assertStablePage(value: RepositoryCompatibilityPageSource, first: RepositoryCompatibilityPageSource): void {
+function assertStablePage(value: PublicRepositoryCompatibilityPage, first: PublicRepositoryCompatibilityPage): void {
     if (
         value.totalRevisions !== first.totalRevisions ||
-        !sameValue(value.admission, first.admission) ||
+        !sameValue(value.root, first.root) ||
         !sameValue(value.current, first.current)
     ) {
         throw new IntegrationRepositoryContractError();

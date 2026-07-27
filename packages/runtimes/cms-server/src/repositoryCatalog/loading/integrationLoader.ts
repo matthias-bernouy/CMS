@@ -162,7 +162,7 @@ function endpoint(resource: "package" | "release-notes", kind: string, version: 
 }
 
 function assertDigestAgreement(metadata: RepositoryPackageMetadata | null, compatibility: LoadedCompatibility): void {
-    if (metadata && compatibility.history && compatibility.history.admission.packageDigest !== metadata.digest) {
+    if (metadata && compatibility.history && compatibility.history.root.packageDigest !== metadata.digest) {
         throw new IntegrationRepositoryContractError();
     }
 }

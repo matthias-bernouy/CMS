@@ -14,7 +14,7 @@ describe("production repository read composition", () => {
         expect(config).toEqual({
             integrationCatalog: fixture.integrations.publicRepositoryCatalog,
             integrationPackages: fixture.integrations.publicRepositoryPackages,
-            integrationCompatibility: fixture.integrations.publicRepositoryCompatibility,
+            integrationProjectedCompatibility: fixture.integrations.publicRepositoryCompatibility,
             integrationProjectedReleases: fixture.integrations.publicRepositoryReleases,
             integrationVerificationBundles: fixture.integrations.publicRepositoryVerificationBundles,
             packageDownloadProtection: {

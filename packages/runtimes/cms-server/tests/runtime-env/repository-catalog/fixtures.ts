@@ -209,12 +209,12 @@ export class FixtureDefinitionRepository implements IntegrationDefinitionReposit
 
 export function compatibilityPage(url: URL, appended: boolean) {
     const version = url.searchParams.get("version") ?? "1.0.0";
-    const admission = report(version, "admission-1", "admission", "not-applicable");
-    const first = report(version, "revision-1", "revision", "compatible", "admission-1");
+    const root = report(version, "admission-1", "root", "not-applicable");
+    const first = report(version, "revision-1", "revision", "compatible", root.reportId);
     const second = report(version, "revision-2", "revision", "breaking", "revision-1");
     const revisions = appended ? [first, second] : [first];
     return {
-        admission,
+        root,
         current: revisions.at(-1),
         revisions,
         totalRevisions: revisions.length,
@@ -223,14 +223,15 @@ export function compatibilityPage(url: URL, appended: boolean) {
 
 function report(
     version: string,
-    id: string,
-    reportType: "admission" | "revision",
+    reportId: string,
+    revisionType: "root" | "revision",
     outcome: string,
     supersedes?: string,
 ) {
     return {
-        id,
-        reportType,
+        reportId,
+        revisionType,
+        origin: "admission",
         kind: "commerce",
         version,
         packageDigest: PACKAGE_DIGEST,
@@ -238,17 +239,22 @@ function report(
         createdAt: "2026-07-26T12:00:00.000Z",
         baselines: [],
         informationalBaselines: [],
-        evidence: [
-            { classification: "compatible", surface: "definition", code: "definition-stable", message: "Stable" },
+        findings: [
+            {
+                findingId: "b".repeat(64),
+                classification: "compatible",
+                surface: "definition",
+                code: "definition-stable",
+                message: "Stable",
+            },
         ],
         outcome,
         requiredReleaseLevel: "none",
         releaseLevel: "initial",
-        admissible: outcome !== "breaking",
+        contractAdmissible: outcome !== "breaking",
         noBaselineReason: "new-kind",
-        ...(reportType === "revision"
-            ? { supersedes, provenance: { reason: "Comparator update", evidenceIds: ["ci-1"] } }
-            : {}),
+        provenance: { reason: "Comparator update", evidenceIds: ["ci-1"] },
+        ...(revisionType === "revision" ? { supersedes } : {}),
     };
 }
 

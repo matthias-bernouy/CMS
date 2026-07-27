@@ -3,7 +3,11 @@ import {
     assertIntegrationPackageKind,
     assertIntegrationPackageVersion,
 } from "@bernouy/cms-integration-packages";
-import type { RepositoryCompatibilityPageRequest, RepositoryCompatibilityReader } from "./contracts";
+import type {
+    RepositoryCompatibilityPageRequest,
+    RepositoryCompatibilityReader,
+    RepositoryProjectedCompatibilityReader,
+} from "./contracts";
 import { PUBLIC_COMPATIBILITY_LIMITS } from "./limits";
 import { projectPublicCompatibilityPage } from "./projection";
 import { publicJsonResponse, publicNotFound } from "cms-repository/publicReadResponse";
@@ -18,6 +22,18 @@ export function integrationCompatibilityRouteHandler(
             return publicNotFound("integration compatibility report not found");
         }
         return publicJsonResponse(request, await projectPublicCompatibilityPage(source, identity, page), "catalog");
+    };
+}
+
+export function integrationProjectedCompatibilityRouteHandler(
+    reader: RepositoryProjectedCompatibilityReader,
+): (request: Request) => Promise<Response> {
+    return async (request) => {
+        const { identity, page } = compatibilityRequest(request);
+        const report = await reader.list(identity.kind, identity.version, page);
+        return report
+            ? publicJsonResponse(request, report, "catalog")
+            : publicNotFound("integration compatibility report not found");
     };
 }
 

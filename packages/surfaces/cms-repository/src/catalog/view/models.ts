@@ -44,13 +44,13 @@ export type RepositoryCatalogVersionView = Readonly<{
 export function compatibilityOutcome(
     summary: RepositoryCatalogIntegrationSummary | RepositoryCatalogVersionSummary,
 ): RepositoryCatalogCompatibilityOutcome | "unreported" {
-    const direct = summary.compatibility?.currentOutcome ?? summary.compatibility?.admissionOutcome;
+    const direct = summary.compatibility?.currentOutcome ?? summary.compatibility?.rootOutcome;
     if (direct || !("versions" in summary)) {
         return direct ?? "unreported";
     }
     const channel = summary.stable ?? summary.latest;
     const version = summary.versions.find((entry) => entry.version === channel);
-    return version?.compatibility?.currentOutcome ?? version?.compatibility?.admissionOutcome ?? "unreported";
+    return version?.compatibility?.currentOutcome ?? version?.compatibility?.rootOutcome ?? "unreported";
 }
 
 export function versionContentView(

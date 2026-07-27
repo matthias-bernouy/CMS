@@ -1,8 +1,14 @@
 import type { Runner } from "@bernouy/http-runner";
 import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
-import type { RepositoryCompatibilityReader } from "cms-repository/compatibility/contracts";
-import { integrationCompatibilityRouteHandler } from "cms-repository/compatibility/routes";
+import type {
+    RepositoryCompatibilityReader,
+    RepositoryProjectedCompatibilityReader,
+} from "cms-repository/compatibility/contracts";
+import {
+    integrationCompatibilityRouteHandler,
+    integrationProjectedCompatibilityRouteHandler,
+} from "cms-repository/compatibility/routes";
 import type {
     RepositoryProjectedReleaseReader,
     RepositoryReleaseReader,
@@ -36,6 +42,7 @@ type RepositoryCmsBaseConfig = {
     runner: Runner;
     integrationCatalog: IntegrationDefinitionRepository;
     integrationCompatibility?: RepositoryCompatibilityReader;
+    integrationProjectedCompatibility?: RepositoryProjectedCompatibilityReader;
     integrationReleases?: RepositoryReleaseReader;
     integrationProjectedReleases?: RepositoryProjectedReleaseReader;
     integrationVerificationBundles?: RepositoryVerificationBundleReader;
@@ -55,6 +62,7 @@ export class RepositoryCms {
     private readonly runner: Runner;
     private readonly integrationCatalog: IntegrationDefinitionRepository;
     private readonly integrationCompatibility?: RepositoryCompatibilityReader;
+    private readonly integrationProjectedCompatibility?: RepositoryProjectedCompatibilityReader;
     private readonly integrationReleases?: RepositoryReleaseReader;
     private readonly integrationProjectedReleases?: RepositoryProjectedReleaseReader;
     private readonly integrationVerificationBundles?: RepositoryVerificationBundleReader;
@@ -66,6 +74,7 @@ export class RepositoryCms {
         this.runner = config.runner;
         this.integrationCatalog = config.integrationCatalog;
         this.integrationCompatibility = config.integrationCompatibility;
+        this.integrationProjectedCompatibility = config.integrationProjectedCompatibility;
         this.integrationReleases = config.integrationReleases;
         this.integrationProjectedReleases = config.integrationProjectedReleases;
         this.integrationVerificationBundles = config.integrationVerificationBundles;
@@ -74,6 +83,9 @@ export class RepositoryCms {
         this.observeRead = config.observeRead;
         if (this.integrationReleases && this.integrationProjectedReleases) {
             throw new TypeError("Repository release readers are mutually exclusive");
+        }
+        if (this.integrationCompatibility && this.integrationProjectedCompatibility) {
+            throw new TypeError("Repository compatibility readers are mutually exclusive");
         }
         if (this.packageDownloadProtection) {
             assertPackageDownloadProtection(this.packageDownloadProtection);
@@ -133,6 +145,14 @@ export class RepositoryCms {
                 "/api/integrations/compatibility",
                 "integration-compatibility",
                 integrationCompatibilityRouteHandler(this.integrationCompatibility),
+            );
+        }
+
+        if (this.integrationProjectedCompatibility) {
+            this.registerPublicRead(
+                "/api/integrations/compatibility",
+                "integration-compatibility",
+                integrationProjectedCompatibilityRouteHandler(this.integrationProjectedCompatibility),
             );
         }
 
