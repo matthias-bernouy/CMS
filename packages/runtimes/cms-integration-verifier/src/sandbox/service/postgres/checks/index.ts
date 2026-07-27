@@ -17,6 +17,7 @@ import { boundaryChecks, failedSqlEvidence, installChecks, schemaContractCheck }
 import { grantChecks, rlsChecks, routineChecks, viewChecks } from "./security";
 import { dependencyMatrixCheck, httpContractChecks } from "./contracts";
 import type { AdmissionDependencyReferenceV1 } from "@bernouy/cms-integration-verification";
+import type { DependencyMatrixExecution } from "../suites/dependencies";
 
 export type PostgresAuditContext = Readonly<{
     loaded: LoadedSqlPackage;
@@ -42,6 +43,7 @@ export async function buildPlatformEvidence(
     loaded: LoadedSqlPackage,
     dependencies: readonly AdmissionDependencyReferenceV1[],
     context: PostgresAuditContext | undefined,
+    dependencyExecutions: readonly DependencyMatrixExecution[] = [],
 ): Promise<PlatformVerificationEvidenceV1[]> {
     return await Promise.all(
         planned.map(async (entry) => {
@@ -55,7 +57,14 @@ export async function buildPlatformEvidence(
             if (definition.applicability !== "always" && !context) {
                 return await failedSqlEvidence(definition, entry.suiteDigest);
             }
-            return await applicableEvidence(definition, entry.suiteDigest, loaded, dependencies, context);
+            return await applicableEvidence(
+                definition,
+                entry.suiteDigest,
+                loaded,
+                dependencies,
+                context,
+                dependencyExecutions,
+            );
         }),
     );
 }
@@ -76,6 +85,7 @@ async function applicableEvidence(
     loaded: LoadedSqlPackage,
     dependencies: readonly AdmissionDependencyReferenceV1[],
     context: PostgresAuditContext | undefined,
+    dependencyExecutions: readonly DependencyMatrixExecution[],
 ): Promise<PlatformVerificationEvidenceV1> {
     if (definition.suiteId === "platform-package-materialization") {
         const subject = {
@@ -90,7 +100,11 @@ async function applicableEvidence(
         return suiteEvidence(definition, suiteDigest, await httpContractChecks(loaded.definition));
     }
     if (definition.suiteId === "platform-dependency-matrix") {
-        return suiteEvidence(definition, suiteDigest, [await dependencyMatrixCheck(loaded.definition, dependencies)]);
+        return suiteEvidence(
+            definition,
+            suiteDigest,
+            await dependencyMatrixCheck(loaded.definition, dependencies, dependencyExecutions),
+        );
     }
     if (!context) {
         throw new TypeError(`Applicable PostgreSQL suite ${definition.suiteId} has no audit context`);

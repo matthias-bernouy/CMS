@@ -29,6 +29,7 @@ export interface PostgresPlatformVerificationAdapter {
         input: Readonly<{
             package: VerificationSandboxInput["workload"]["package"];
             dependencies: VerificationSandboxInput["workload"]["admission"]["dependencies"];
+            dependencyPackages: VerificationSandboxInput["workload"]["dependencyPackages"];
             database: VerificationSandboxInput["database"];
             platformSuites: readonly Readonly<{
                 suiteId: string;
@@ -74,6 +75,7 @@ export async function runPostgresPlatformVerification(
         {
             package: input.workload.package,
             dependencies: input.workload.admission.dependencies,
+            dependencyPackages: input.workload.dependencyPackages,
             database: input.database,
             platformSuites: plannedPlatform,
         },

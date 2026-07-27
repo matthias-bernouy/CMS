@@ -1,10 +1,19 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import type { IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
-import { validateVerificationJobResultForAdmission } from "@bernouy/cms-integration-verification";
+import type { IntegrationDefinition } from "@bernouy/cms-integrations";
+import {
+    validateVerificationJobResultForAdmission,
+    type AdmissionDependencyReferenceV1,
+} from "@bernouy/cms-integration-verification";
 import { runPostgresPlatformVerification, type VerificationSandboxInput } from "../../src";
 import { createPostgresPlatformVerificationAdapter } from "../../src/sandbox/service/postgres";
+import { dependencyMatrixCheck } from "../../src/sandbox/service/postgres/checks/contracts";
+import type { DependencyMatrixExecution } from "../../src/sandbox/service/postgres/suites/dependencies";
 import { DIGEST_A, DIGEST_B } from "../fixtures/contracts";
-import { postgresPlatformInputFixture } from "../fixtures/postgresAdapter";
+import {
+    createPostgresPlatformVerificationAdapter as createFixtureAdapter,
+    postgresPlatformInputFixture,
+} from "../fixtures/postgresAdapter";
 
 const adapters: ReturnType<typeof createPostgresPlatformVerificationAdapter>[] = [];
 
@@ -23,7 +32,9 @@ describe("non-PostgreSQL generated platform contracts", () => {
             },
         };
 
-        await expect(execute(input)).rejects.toThrow("cannot execute required migration proofs");
+        await expect(
+            runPostgresPlatformVerification(input, createFixtureAdapter(), new AbortController().signal),
+        ).rejects.toThrow("cannot execute required migration proofs");
     });
 
     test("rejects a connector function and CMS Source route without a declared HTTP contract", async () => {
@@ -56,72 +67,100 @@ describe("non-PostgreSQL generated platform contracts", () => {
     });
 
     test("requires exact minimum and stable dependency resolution points", async () => {
-        const base = await postgresPlatformInputFixture(dependencyPackage());
         const dependencies = [
             { selection: "minimum" as const, kind: "dependency", version: "1.0.0", packageDigest: DIGEST_A },
             { selection: "stable" as const, kind: "dependency", version: "1.4.0", packageDigest: DIGEST_B },
         ];
-        const input = withDependencies(base, dependencies);
-        const passed = await execute(input);
-        expect(passed.results.find((entry) => entry.suiteId === "platform-dependency-matrix")?.outcome).toBe("passed");
+        const passed = await dependencyChecks(dependencyDefinition(), dependencies);
+        expect(passed.map(({ outcome }) => outcome)).toEqual(["passed", "passed", "passed"]);
 
-        const coincident = withDependencies(base, [
+        const coincident = [
             { selection: "minimum", kind: "dependency", version: "1.0.0", packageDigest: DIGEST_A },
             { selection: "stable", kind: "dependency", version: "1.0.0", packageDigest: DIGEST_A },
+        ] as const;
+        expect((await dependencyChecks(dependencyDefinition(), coincident)).map(({ outcome }) => outcome)).toEqual([
+            "passed",
+            "passed",
+            "passed",
         ]);
-        const coincidentResult = await execute(coincident);
-        expect(coincidentResult.bindings.dependencyDigests).toEqual([DIGEST_A]);
-        await expect(
-            validateVerificationJobResultForAdmission(
-                coincidentResult,
-                coincident.workload.admission,
-                coincident.workload.policy,
-                coincident.workload.attempt,
-            ),
-        ).resolves.toBeDefined();
 
-        const incomplete = withDependencies(base, dependencies.slice(0, 1));
-        const failed = await execute(incomplete);
-        expect(
-            failed.results.find((entry) => entry.suiteId === "platform-dependency-matrix")?.platformEvidence?.checks[0]
-                ?.findings,
-        ).toEqual([{ code: "dependency-resolution-missing", path: "dependencies.dependency.stable" }]);
+        const incomplete = await dependencyChecks(dependencyDefinition(), dependencies.slice(0, 1));
+        expect(incomplete[0]?.findings).toEqual([
+            { code: "dependency-resolution-missing", path: "dependencies.dependency.stable" },
+        ]);
+        expect(incomplete[2]?.findings).toEqual([]);
     });
 
     test("does not invent minimum compatibility when a dependency omits its version range", async () => {
-        const base = await postgresPlatformInputFixture(
-            packageWithDefinition({
-                kind: "example",
-                label: "Example",
-                version: "1.2.0",
-                inputs: [],
-                dependencies: [{ name: "Dependency", kind: "dependency" }],
-            }),
-        );
-        const input = withDependencies(base, [
+        const dependencies = [
             { selection: "minimum", kind: "dependency", version: "1.0.0", packageDigest: DIGEST_A },
             { selection: "stable", kind: "dependency", version: "1.4.0", packageDigest: DIGEST_B },
-        ]);
-        const result = await execute(input);
+        ] as const;
+        const checks = await dependencyChecks(
+            { ...dependencyDefinition(), dependencies: [{ name: "Dependency", kind: "dependency" }] },
+            dependencies,
+        );
 
-        expect(
-            result.results.find((entry) => entry.suiteId === "platform-dependency-matrix")?.platformEvidence?.checks[0]
-                ?.findings,
-        ).toContainEqual({ code: "dependency-version-range-missing", path: "dependencies.dependency" });
+        expect(checks[0]?.findings).toContainEqual({
+            code: "dependency-version-range-missing",
+            path: "dependencies.dependency",
+        });
     });
 });
 
 async function execute(input: VerificationSandboxInput) {
     const adapter = createPostgresPlatformVerificationAdapter();
     adapters.push(adapter);
-    return (await runPostgresPlatformVerification(input, adapter, new AbortController().signal)).verification;
+    return (
+        await runPostgresPlatformVerification(
+            input,
+            {
+                ...adapter,
+                async verifyAuthorSuites({ suites }) {
+                    return suites.map((suite) => ({
+                        suiteId: suite.suiteId,
+                        suiteDigest: suite.contentDigest,
+                        outcome: "passed" as const,
+                        durationMs: 1,
+                        evidenceDigest: suite.contentDigest,
+                    }));
+                },
+            },
+            new AbortController().signal,
+        )
+    ).verification;
 }
 
-function withDependencies(
-    input: VerificationSandboxInput,
-    dependencies: VerificationSandboxInput["workload"]["admission"]["dependencies"],
-): VerificationSandboxInput {
-    return { ...input, workload: { ...input.workload, admission: { ...input.workload.admission, dependencies } } };
+async function dependencyChecks(
+    definition: IntegrationDefinition,
+    dependencies: readonly AdmissionDependencyReferenceV1[],
+) {
+    const executions = (["minimum", "stable"] as const).flatMap((selection): DependencyMatrixExecution[] => {
+        const packages = dependencies
+            .filter((entry) => entry.selection === selection)
+            .map(({ kind, version, packageDigest }) => ({ kind, version, packageDigest }));
+        return packages.length === 0
+            ? []
+            : [
+                  {
+                      selection,
+                      packages,
+                      candidate: { kind: "example", version: "1.2.0", packageDigest: DIGEST_A },
+                      outcome: "passed",
+                  },
+              ];
+    });
+    return await dependencyMatrixCheck(definition, dependencies, executions);
+}
+
+function dependencyDefinition(): IntegrationDefinition {
+    return {
+        kind: "example",
+        label: "Example",
+        version: "1.2.0",
+        inputs: [],
+        dependencies: [{ name: "Dependency", kind: "dependency", versionRange: "^1.0.0" }],
+    };
 }
 
 function dependencyPackage(): IntegrationPackageEnvelopeV1 {

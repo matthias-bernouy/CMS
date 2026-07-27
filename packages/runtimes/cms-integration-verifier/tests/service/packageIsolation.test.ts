@@ -11,7 +11,11 @@ import {
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../src/runtime/providers/postgres";
 import { createPostgresPlatformVerificationAdapter } from "../../src/sandbox/service/postgres";
 import { DIGEST_A, DIGEST_B } from "../fixtures/contracts";
-import { disposablePostgresAvailable, startDisposablePostgres } from "./postgresFixture";
+import {
+    disposablePostgresAvailable,
+    markDisposablePostgresDedicated,
+    startDisposablePostgres,
+} from "./postgresFixture";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
 
@@ -22,6 +26,7 @@ postgresTest(
         const tempRoot = await mkdtemp(join(tmpdir(), "cms-verifier-package-cache-"));
         const adapter = createPostgresPlatformVerificationAdapter({ packageTempRoot: tempRoot, maxCachedPackages: 2 });
         try {
+            await markDisposablePostgresDedicated(postgres);
             const provider = await createDisposableVerificationDatabaseProviderFromEnv({
                 CMS_INTEGRATION_VERIFIER_POSTGRES_HOST: postgres.host,
                 CMS_INTEGRATION_VERIFIER_POSTGRES_PORT: String(postgres.port),
@@ -37,11 +42,21 @@ postgresTest(
                 const signal = new AbortController().signal;
                 const suites = await platformSuites(true, false);
                 const first = await adapter.verifyPackage(
-                    { package: packageFixture("verifier_first"), database: lease.credential, platformSuites: suites },
+                    {
+                        package: packageFixture("verifier_first"),
+                        dependencyPackages: [],
+                        database: lease.credential,
+                        platformSuites: suites,
+                    },
                     signal,
                 );
                 const second = await adapter.verifyPackage(
-                    { package: packageFixture("verifier_second"), database: lease.credential, platformSuites: suites },
+                    {
+                        package: packageFixture("verifier_second"),
+                        dependencyPackages: [],
+                        database: lease.credential,
+                        platformSuites: suites,
+                    },
                     signal,
                 );
                 expect(first.suites.filter((suite) => suite.outcome === "failed")).toEqual([]);
@@ -51,6 +66,7 @@ postgresTest(
                     adapter.verifyPackage(
                         {
                             package: packageFixture("verifier_third"),
+                            dependencyPackages: [],
                             database: lease.credential,
                             platformSuites: suites,
                         },

@@ -3,7 +3,11 @@ import { expect, test } from "bun:test";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../../src/runtime/providers/postgres";
 import { proveBehavioralRlsIsolation } from "../../../src/sandbox/service/postgres/checks/behavioral";
 import { DIGEST_A, DIGEST_B } from "../../fixtures/contracts";
-import { disposablePostgresAvailable, startDisposablePostgres } from "../postgresFixture";
+import {
+    disposablePostgresAvailable,
+    markDisposablePostgresDedicated,
+    startDisposablePostgres,
+} from "../postgresFixture";
 import { BEHAVIORAL_PROBE, installBehavioralRuntime, installTenantTable, makePoliciesLeaky } from "./behavioralFixture";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
@@ -12,6 +16,7 @@ postgresTest(
     "proves tenant isolation with realistic Supabase actors and rejects cross-tenant access",
     async () => {
         const postgres = await startDisposablePostgres();
+        await markDisposablePostgresDedicated(postgres);
         const provider = await createDisposableVerificationDatabaseProviderFromEnv({
             CMS_INTEGRATION_VERIFIER_POSTGRES_HOST: postgres.host,
             CMS_INTEGRATION_VERIFIER_POSTGRES_PORT: String(postgres.port),

@@ -1,6 +1,7 @@
 import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
 import { integrationVersionSatisfies, type IntegrationDefinition } from "@bernouy/cms-integrations";
 import type { AdmissionDependencyReferenceV1 } from "@bernouy/cms-integration-verification";
+import type { DependencyMatrixExecution } from "../suites/dependencies";
 import { checkEvidence, finding } from "../evidence";
 
 export async function httpContractChecks(definition: IntegrationDefinition) {
@@ -29,6 +30,7 @@ export async function httpContractChecks(definition: IntegrationDefinition) {
 export async function dependencyMatrixCheck(
     definition: IntegrationDefinition,
     references: readonly AdmissionDependencyReferenceV1[],
+    executions: readonly DependencyMatrixExecution[],
 ) {
     const declared = new Map((definition.dependencies ?? []).map((dependency) => [dependency.kind, dependency]));
     const findings = references.flatMap((reference) => {
@@ -70,7 +72,49 @@ export async function dependencyMatrixCheck(
         packageDigest: reference.packageDigest,
         direct: declared.has(reference.kind),
     }));
-    return await checkEvidence("exact-resolution-points", subjects, findings);
+    return await Promise.all([
+        checkEvidence("exact-resolution-points", subjects, findings),
+        executionCheck("minimum", references, executions),
+        executionCheck("stable", references, executions),
+    ]);
+}
+
+async function executionCheck(
+    selection: "minimum" | "stable",
+    references: readonly AdmissionDependencyReferenceV1[],
+    executions: readonly DependencyMatrixExecution[],
+) {
+    const expected = references.filter((reference) => reference.selection === selection);
+    const selected = executions.filter((execution) => execution.selection === selection);
+    const execution = selected[0];
+    const findings: ReturnType<typeof finding>[] = [];
+    if (expected.length === 0 && selected.length === 0) {
+        return await checkEvidence(`${selection}-package-execution`, [], []);
+    }
+    if (selected.length !== 1 || !execution) {
+        findings.push(finding("dependency-matrix-execution-missing", `dependencies.${selection}`));
+    } else {
+        const expectedIdentities = expected.map(referenceIdentity).toSorted();
+        const executedIdentities = execution.packages.map(referenceIdentity).toSorted();
+        if (
+            expectedIdentities.length !== executedIdentities.length ||
+            expectedIdentities.some((identity, index) => identity !== executedIdentities[index])
+        ) {
+            findings.push(finding("dependency-matrix-execution-substituted", `dependencies.${selection}`));
+        }
+        if (execution.outcome === "failed" && execution.failure) {
+            findings.push(finding(execution.failure.code, execution.failure.path));
+        }
+    }
+    return await checkEvidence(
+        `${selection}-package-execution`,
+        execution ? [{ ...execution, outcome: execution.outcome }] : [],
+        findings,
+    );
+}
+
+function referenceIdentity(reference: Readonly<{ kind: string; version: string; packageDigest: string }>): string {
+    return `${reference.kind}\0${reference.version}\0${reference.packageDigest}`;
 }
 
 function comparePath(left: Readonly<{ path: string }>, right: Readonly<{ path: string }>): number {

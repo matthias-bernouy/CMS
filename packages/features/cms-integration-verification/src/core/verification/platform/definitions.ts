@@ -24,14 +24,11 @@ export const POSTGRES_PLATFORM_VERIFICATION_SUITES_V1 = Object.freeze([
     suite(
         "platform-dependency-matrix",
         "always",
-        ["exact-resolution-points"],
+        ["exact-resolution-points", "minimum-package-execution", "stable-package-execution"],
         [
             "Every required direct dependency has exact minimum and stable admission references satisfying its declared range.",
             "Every recorded dependency resolution point is bound to a package digest.",
-        ],
-        [
-            "dependency package execution",
-            "transitive dependency declarations without supplied dependency package bytes",
+            "The exact minimum and stable dependency package graphs execute in dependency-first order before the candidate.",
         ],
     ),
     suite(

@@ -10,6 +10,7 @@ import {
 } from "./catalog";
 import { buildPlatformEvidence } from "./checks";
 import { createPostgresAuthorSuiteVerifier } from "./suites/author";
+import { executeExactDependencyMatrices } from "./suites/dependencies";
 import { createPostgresMigrationVerifier } from "./migrations";
 
 const POSTGRES_IMAGE = "postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777";
@@ -32,22 +33,39 @@ export function createPostgresPlatformVerificationAdapter(
                 { name: "bun", version: Bun.version },
                 { name: "author-suite-runtime", version: "bun-vm-ipc-v1" },
                 { name: "postgres-image", version: POSTGRES_IMAGE },
-                { name: "platform-policy", version: "postgres-platform-v1.2.0" },
+                { name: "platform-policy", version: "postgres-platform-v1.3.0" },
             ];
         },
         async verifyPackage(
             input: Parameters<PostgresPlatformVerificationAdapter["verifyPackage"]>[0],
             signal: AbortSignal,
         ) {
-            const { package: envelope, dependencies = [], database, platformSuites } = input;
+            const { package: envelope, dependencies = [], dependencyPackages = [], database, platformSuites } = input;
             const started = performance.now();
             const loaded = await packages.load(envelope);
             const sql = new SQL(database.connectionUri, { max: 1 });
             try {
+                const dependencyExecutions = await executeExactDependencyMatrices(
+                    {
+                        database: sql,
+                        databaseId: database.databaseId,
+                        candidate: envelope,
+                        packages: dependencyPackages,
+                        ...(config.packageTempRoot ? { packageTempRoot: config.packageTempRoot } : {}),
+                        ...(config.maxCachedPackages ? { maxCachedPackages: config.maxCachedPackages } : {}),
+                    },
+                    signal,
+                );
                 if (loaded.connectors.length === 0) {
                     return {
                         durationMs: elapsed(started),
-                        suites: await buildPlatformEvidence(platformSuites, loaded, dependencies, undefined),
+                        suites: await buildPlatformEvidence(
+                            platformSuites,
+                            loaded,
+                            dependencies,
+                            undefined,
+                            dependencyExecutions,
+                        ),
                     };
                 }
                 const ownedNamespaces = unique(loaded.connectors.flatMap((connector) => connector.ownedNamespaces));
@@ -66,18 +84,24 @@ export function createPostgresPlatformVerificationAdapter(
                     const routines = await readRoutineObservation(sql, ownedNamespaces);
                     return {
                         durationMs: elapsed(started),
-                        suites: await buildPlatformEvidence(platformSuites, loaded, dependencies, {
+                        suites: await buildPlatformEvidence(
+                            platformSuites,
                             loaded,
-                            before,
-                            afterInstall,
-                            afterReapply,
-                            installedSchemas,
-                            reappliedSchemas,
-                            rls,
-                            grants,
-                            views,
-                            routines,
-                        }),
+                            dependencies,
+                            {
+                                loaded,
+                                before,
+                                afterInstall,
+                                afterReapply,
+                                installedSchemas,
+                                reappliedSchemas,
+                                rls,
+                                grants,
+                                views,
+                                routines,
+                            },
+                            dependencyExecutions,
+                        ),
                     };
                 } catch (error) {
                     if (signal.aborted) {
@@ -88,7 +112,13 @@ export function createPostgresPlatformVerificationAdapter(
                     }
                     return {
                         durationMs: elapsed(started),
-                        suites: await buildPlatformEvidence(platformSuites, loaded, dependencies, undefined),
+                        suites: await buildPlatformEvidence(
+                            platformSuites,
+                            loaded,
+                            dependencies,
+                            undefined,
+                            dependencyExecutions,
+                        ),
                     };
                 }
             } finally {

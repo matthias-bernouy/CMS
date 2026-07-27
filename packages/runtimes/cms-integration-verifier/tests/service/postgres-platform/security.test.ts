@@ -5,7 +5,11 @@ import { join } from "node:path";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../../src/runtime/providers/postgres";
 import { createPostgresPlatformVerificationAdapter } from "../../../src/sandbox/service/postgres";
 import { DIGEST_A, DIGEST_B } from "../../fixtures/contracts";
-import { disposablePostgresAvailable, startDisposablePostgres } from "../postgresFixture";
+import {
+    disposablePostgresAvailable,
+    markDisposablePostgresDedicated,
+    startDisposablePostgres,
+} from "../postgresFixture";
 import { applicablePlatformSuites, unsafePostgresPackage } from "./fixture";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
@@ -17,6 +21,7 @@ postgresTest(
         const tempRoot = await mkdtemp(join(tmpdir(), "cms-verifier-adversarial-"));
         const adapter = createPostgresPlatformVerificationAdapter({ packageTempRoot: tempRoot });
         try {
+            await markDisposablePostgresDedicated(postgres);
             const provider = await createDisposableVerificationDatabaseProviderFromEnv({
                 CMS_INTEGRATION_VERIFIER_POSTGRES_HOST: postgres.host,
                 CMS_INTEGRATION_VERIFIER_POSTGRES_PORT: String(postgres.port),
@@ -32,6 +37,7 @@ postgresTest(
                 const result = await adapter.verifyPackage(
                     {
                         package: unsafePostgresPackage(),
+                        dependencyPackages: [],
                         database: lease.credential,
                         platformSuites: await applicablePlatformSuites(),
                     },

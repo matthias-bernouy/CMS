@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { POSTGRES_DEDICATED_CLUSTER_CONTRACT } from "../../src/runtime/providers/postgres/fingerprint";
 
 export const POSTGRES_IMAGE =
     "postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777";
@@ -116,6 +117,20 @@ export async function startDisposablePostgres(): Promise<DisposablePostgresFixtu
         Bun.spawnSync({ cmd: ["docker", "stop", "--time", "1", container], stdout: "ignore", stderr: "ignore" });
         await rm(root, { recursive: true, force: true });
         throw error;
+    }
+}
+
+export async function markDisposablePostgresDedicated(postgres: DisposablePostgresFixture): Promise<void> {
+    const url = new URL("postgresql://postgres@localhost/postgres");
+    url.hostname = postgres.host;
+    url.port = String(postgres.port);
+    url.password = postgres.password;
+    url.searchParams.set("sslmode", "disable");
+    const admin = new SQL(url.toString(), { max: 1 });
+    try {
+        await admin.unsafe(`comment on database postgres is '${POSTGRES_DEDICATED_CLUSTER_CONTRACT}'`);
+    } finally {
+        await admin.close();
     }
 }
 
