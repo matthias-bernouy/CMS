@@ -1,7 +1,8 @@
 import type { ThemeDefinition, ThemeMode, ThemeSettings, ThemeToken, ThemeTokenType } from "@bernouy/cms-content";
 
-import { directTokenReference } from "./cssReference";
-import { effectiveTokenValue, resolveThemeTokenValue } from "./values";
+import { canReferenceThemeToken, effectiveTokenValue, resolveThemeTokenValue, themeTokenEntries } from "./values";
+
+type TokenValueControl = HTMLElement & { value: string };
 
 export function renderTokenControls(
     token: ThemeToken,
@@ -14,7 +15,7 @@ export function renderTokenControls(
     group.className = "token-controls";
     const valueLine = document.createElement("div");
     valueLine.className = "token-value-line";
-    valueLine.append(renderControl(token, settings, theme, value, mode), referenceButton(token, value));
+    valueLine.append(renderControl(token, settings, theme, value, mode));
     group.append(valueLine, referenceStatus(token, settings, theme, mode));
     if (token.defaults) {
         group.append(renderDefault(token, mode, Object.hasOwn(theme.values[mode] ?? {}, token.id)));
@@ -30,7 +31,7 @@ function renderControl(
     mode: ThemeMode,
 ): HTMLElement {
     if (token.type !== "color") {
-        return valueInput(token, value);
+        return valueCombobox(token, settings, theme, mode, value);
     }
     const control = document.createElement("div");
     control.className = "color-control";
@@ -42,32 +43,43 @@ function renderControl(
     picker.hidden = !hasPreview;
     picker.dataset.valueControl = "true";
     picker.ariaLabel = `${token.label} color picker`;
-    control.append(picker, valueInput(token, value));
+    control.append(picker, valueCombobox(token, settings, theme, mode, value));
     return control;
 }
 
-function valueInput(token: ThemeToken, value: string): HTMLInputElement {
-    const input = document.createElement("input");
+function valueCombobox(
+    token: ThemeToken,
+    settings: ThemeSettings,
+    theme: ThemeDefinition,
+    mode: ThemeMode,
+    value: string,
+): TokenValueControl {
+    const input = document.createElement("p9r-combobox") as TokenValueControl;
     input.className = `value-control ${token.type}-control`;
-    input.type = "text";
+    input.dataset.tokenValueControl = "true";
+    input.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
+    input.setAttribute("creatable", "");
+    input.setAttribute("placeholder", placeholderFor(token.type));
+    input.replaceChildren(...referenceOptions(token, settings, theme, mode));
+    input.setAttribute("value", value);
     input.value = value;
-    input.dataset.valueControl = "true";
-    input.ariaLabel = `${token.label} ${controlLabel(token.type)}`;
-    input.autocomplete = "off";
-    input.spellcheck = false;
-    input.inputMode = token.type === "number" ? "decimal" : "text";
-    input.placeholder = placeholderFor(token.type);
     return input;
 }
 
-function referenceButton(token: ThemeToken, value: string): HTMLButtonElement {
-    const button = document.createElement("button");
-    button.className = "reference-button";
-    button.type = "button";
-    button.dataset.openTokenReference = token.id;
-    button.textContent = directTokenReference(value) ? "Change link" : "Link token";
-    button.ariaLabel = `Link ${token.label} to another token`;
-    return button;
+function referenceOptions(
+    token: ThemeToken,
+    settings: ThemeSettings,
+    theme: ThemeDefinition,
+    mode: ThemeMode,
+): HTMLOptionElement[] {
+    return themeTokenEntries(settings)
+        .filter((entry) => canReferenceThemeToken(settings, theme, mode, token.id, entry.token.id))
+        .map((entry) => {
+            const option = document.createElement("option");
+            option.value = `var(--${entry.token.variable})`;
+            option.textContent = `${entry.source.label} · ${entry.category.label} · ${entry.token.label} · --${entry.token.variable}`;
+            return option;
+        });
 }
 
 function referenceStatus(
@@ -79,14 +91,14 @@ function referenceStatus(
     const status = document.createElement("p");
     status.className = "reference-status";
     const resolved = resolveThemeTokenValue(settings, theme, mode, token.id);
-    if (resolved.state === "resolved" && resolved.reference) {
-        status.textContent = `Linked to ${resolved.reference.token.label} · resolves to ${resolved.value}`;
-    } else if (resolved.state === "cycle") {
+    if (resolved.state === "cycle") {
         status.dataset.error = "true";
         status.textContent = "Circular token reference. Choose a different token before saving.";
     } else if (resolved.state === "missing") {
         status.dataset.error = "true";
         status.textContent = "This value references a token that is not available.";
+    } else if (resolved.state === "resolved" && resolved.reference) {
+        status.textContent = `Uses ${resolved.reference.token.label} · ${resolved.value}`;
     } else {
         status.hidden = true;
     }

@@ -12,8 +12,10 @@ export type ThemeInputContext = {
     mode: "light" | "dark";
 };
 
+type ThemeValueControl = HTMLElement & { type?: string; value: string };
+
 export function handleThemeInput(event: Event, context: ThemeInputContext): void {
-    const input = event.target as HTMLInputElement | null;
+    const input = event.target as ThemeValueControl | null;
     const theme = currentTheme(context.settings, context.selectedThemeId);
     if (!input || !theme) {
         return;
@@ -55,7 +57,11 @@ export function handleThemeInput(event: Event, context: ThemeInputContext): void
         });
         return;
     }
-    if (!input.matches("[data-value-control]")) {
+    const tokenValueControl = input.matches("[data-token-value-control]");
+    if (!input.matches("[data-value-control]") && !tokenValueControl) {
+        return;
+    }
+    if (tokenValueControl && event.type !== "change") {
         return;
     }
     const tokenId = input.closest<HTMLElement>("[data-token-id]")?.dataset.tokenId;
@@ -67,9 +73,10 @@ export function handleThemeInput(event: Event, context: ThemeInputContext): void
     if (input.type === "color") {
         const text = input
             .closest<HTMLElement>("[data-token-id]")
-            ?.querySelector<HTMLInputElement>('input.value-control[type="text"]');
+            ?.querySelector<ThemeValueControl>("[data-token-value-control]");
         if (text) {
             text.value = input.value;
+            text.setAttribute("value", input.value);
         }
     }
 }
@@ -105,7 +112,7 @@ export function clickAction(
 
 function updateToken(
     context: ThemeInputContext,
-    input: HTMLInputElement,
+    input: ThemeValueControl,
     update: (token: ThemeSettings["sources"][number]["categories"][number]["tokens"][number]) => void,
 ): void {
     const tokenId = input.closest<HTMLElement>("[data-token-id]")?.dataset.tokenId;

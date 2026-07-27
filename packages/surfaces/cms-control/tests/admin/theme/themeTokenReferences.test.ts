@@ -1,54 +1,48 @@
 import { describe, expect, test } from "bun:test";
 import type { ThemeSettings, ThemeSource } from "@bernouy/cms-content";
-import { ThemeExplorerController } from "cms-control/components/admin/Theme/editor/controller/explorerController";
-import { renderTokenReferencePicker } from "cms-control/components/admin/Theme/editor/tokens/referencePicker";
+import { renderToken } from "cms-control/components/admin/Theme/editor/tokens/view";
 import {
     resolveThemeTokenValue,
     setThemeTokenReference,
 } from "cms-control/components/admin/Theme/editor/tokens/values";
 
 describe("theme token references", () => {
-    test("groups reference candidates by source", () => {
-        const root = pickerRoot();
+    test("offers compatible references inline with searchable ownership labels", () => {
         const settings = fixture();
+        const token = settings.sources[2]!.categories[0]!.tokens[0]!;
+        const row = renderToken(token, settings, settings.themes[0]!, "light", false);
+        const control = valueControl(row);
+        const options = Array.from(control.querySelectorAll("option"), (option) => ({
+            label: option.textContent,
+            value: option.value,
+        }));
 
-        renderTokenReferencePicker(root, {
-            settings,
-            theme: settings.themes[0]!,
-            mode: "light",
-            tokenId: "album-accent",
-            search: "",
-        });
-
-        expect(
-            Array.from(
-                root.querySelectorAll<HTMLElement>("[data-reference-source]"),
-                (item) => item.dataset.referenceSource,
-            ),
-        ).toEqual(["colors", "integration-photo-albums"]);
-        expect(Array.from(root.querySelectorAll(".reference-group h5"), (item) => item.textContent)).toEqual([
-            "Colors",
-            "Photo Albums · Integration",
+        expect(control.localName).toBe("p9r-combobox");
+        expect(control.hasAttribute("creatable")).toBeTrue();
+        expect(options).toEqual([
+            {
+                label: "Colors · General · Brand · --brand-color",
+                value: "var(--brand-color)",
+            },
+            {
+                label: "Photo Albums · General · Album border · --album-border",
+                value: "var(--album-border)",
+            },
         ]);
-        expect(root.querySelector("[data-reference-target='album-accent']")).toBeNull();
-        expect(root.querySelector("[data-reference-target='commerce-accent']")).toBeNull();
-        expect(root.querySelector("[data-reference-target='brand-color'] code")?.textContent).toBe("--brand-color");
+        expect(options.some((option) => option.value === "var(--album-accent)")).toBeFalse();
+        expect(options.some((option) => option.value === "var(--space-md)")).toBeFalse();
+        expect(options.some((option) => option.value === "var(--commerce-accent)")).toBeFalse();
     });
 
-    test("lets independent tokens reference compatible integration tokens", () => {
-        const root = pickerRoot();
+    test("lets independent tokens select compatible integration tokens", () => {
         const settings = fixture();
+        const token = settings.sources[0]!.categories[0]!.tokens[0]!;
+        const row = renderToken(token, settings, settings.themes[0]!, "light", false);
+        const values = Array.from(valueControl(row).querySelectorAll("option"), (option) => option.value);
 
-        renderTokenReferencePicker(root, {
-            settings,
-            theme: settings.themes[0]!,
-            mode: "light",
-            tokenId: "brand-color",
-            search: "",
-        });
-
-        expect(root.querySelector("[data-reference-target='album-accent']")).not.toBeNull();
-        expect(root.querySelector("[data-reference-target='commerce-accent']")).not.toBeNull();
+        expect(values).toContain("var(--album-border)");
+        expect(values).toContain("var(--commerce-accent)");
+        expect(values).not.toContain("var(--album-accent)");
         expect(
             setThemeTokenReference(settings, settings.themes[0]!, "light", "brand-color", "commerce-accent"),
         ).toBeTrue();
@@ -88,54 +82,10 @@ describe("theme token references", () => {
         expect(resolved.reference?.token.id).toBe("brand-color");
         expect(resolved.value).toBe("#336699");
     });
-
-    test("keeps modal focus inside the picker and restores the opener", () => {
-        const root = pickerRoot();
-        const settings = fixture();
-        const controller = new ThemeExplorerController();
-        const context = {
-            root,
-            settings,
-            selectedThemeId: "default",
-            mode: "light" as const,
-            render: () => undefined,
-            showError: () => undefined,
-        };
-        const opener = root.querySelector<HTMLButtonElement>("[data-open-token-reference]")!;
-        controller.handleClick({ target: opener } as unknown as Event, context);
-
-        expect(root.querySelector<HTMLElement>("[data-background]")!.inert).toBeTrue();
-        const close = root.querySelector<HTMLButtonElement>("[data-close-token-reference]")!;
-        const last = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-reference-target]")).at(-1)!;
-        last.focus();
-        controller.handleKeyDown(new KeyboardEvent("keydown", { key: "Tab", cancelable: true }), context);
-        expect(root.activeElement).toBe(close);
-
-        controller.handleKeyDown(new KeyboardEvent("keydown", { key: "Escape", cancelable: true }), context);
-        expect(root.querySelector<HTMLElement>("[data-reference-picker]")!.hidden).toBeTrue();
-        expect(root.querySelector<HTMLElement>("[data-background]")!.inert).toBeFalse();
-        expect(root.activeElement).toBe(opener);
-    });
 });
 
-function pickerRoot(): ShadowRoot {
-    const host = document.createElement("div");
-    document.body.append(host);
-    const root = host.attachShadow({ mode: "open" });
-    root.innerHTML = `
-        <cms-shell-detail>
-            <section data-background></section>
-            <button data-open-token-reference="album-accent">Link token</button>
-            <aside data-reference-picker hidden>
-                <button data-close-token-reference>Close</button>
-                <h4 data-reference-picker-title></h4>
-                <input data-reference-search>
-                <div data-reference-results></div>
-                <p data-reference-empty hidden></p>
-            </aside>
-        </cms-shell-detail>
-    `;
-    return root;
+function valueControl(root: ParentNode): HTMLElement & { value: string } {
+    return root.querySelector("[data-token-value-control]") as HTMLElement & { value: string };
 }
 
 function fixture(): ThemeSettings {

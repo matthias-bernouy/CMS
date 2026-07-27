@@ -38,16 +38,16 @@ describe("integration theme catalogue", () => {
             "Gallery presentation.",
         );
 
-        const font = root.querySelector<HTMLInputElement>("[data-token-type='font-family'] [data-value-control]")!;
+        const font = valueControl(root, "[data-token-type='font-family']");
         expect(font.value).toBe("var(--font-body)");
-        expect(font.placeholder).toContain("system-ui");
+        expect(font.getAttribute("placeholder")).toContain("system-ui");
         expect(font.classList.contains("font-family-control")).toBeTrue();
         expect(
             root.querySelector<HTMLButtonElement>("[data-reset-token='integration-photo-albums-font']")!.disabled,
         ).toBeFalse();
 
         const accent = root.querySelector<HTMLElement>("[data-token-id='integration-photo-albums-accent']")!;
-        expect(accent.querySelector<HTMLInputElement>('input[type="text"]')!.value).toBe("#336699");
+        expect(valueControl(accent).value).toBe("#336699");
         expect(accent.querySelector<HTMLButtonElement>("[data-reset-token]")!.disabled).toBeTrue();
 
         renderThemeEditor(root, {
@@ -60,14 +60,8 @@ describe("integration theme catalogue", () => {
             tokenFilter: "all",
             tokenSearch: "",
         });
-        expect(
-            root.querySelector<HTMLInputElement>("[data-token-type='font-family'] [data-value-control]")!.value,
-        ).toBe("system-ui, sans-serif");
-        expect(
-            root.querySelector<HTMLInputElement>(
-                "[data-token-id='integration-photo-albums-accent'] [data-value-control]",
-            )!.value,
-        ).toBe("#336699");
+        expect(valueControl(root, "[data-token-type='font-family']").value).toBe("system-ui, sans-serif");
+        expect(valueControl(root, "[data-token-id='integration-photo-albums-accent']").value).toBe("#336699");
     });
 
     test("renders only the selected integration category", () => {
@@ -142,3 +136,8 @@ describe("integration theme catalogue", () => {
         expect(root.querySelector<HTMLButtonElement>("[data-delete-token]")?.ariaLabel).toBe("Delete Brand color");
     });
 });
+
+function valueControl(root: ParentNode, rowSelector = ""): HTMLElement & { value: string } {
+    const selector = rowSelector ? `${rowSelector} [data-token-value-control]` : "[data-token-value-control]";
+    return root.querySelector(selector) as HTMLElement & { value: string };
+}

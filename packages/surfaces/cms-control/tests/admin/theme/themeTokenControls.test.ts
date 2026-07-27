@@ -9,8 +9,8 @@ describe("theme token controls", () => {
         const row = renderToken(accent, settings, settings.themes[0]!, "light", false);
 
         expect(row.querySelector<HTMLInputElement>('input[type="color"]')?.value).toBe("#336699");
-        expect(row.querySelector<HTMLInputElement>('input[type="text"]')?.value).toBe("var(--brand-color)");
-        expect(row.querySelector(".reference-status")?.textContent).toContain("resolves to #336699");
+        expect(valueControl(row).value).toBe("var(--brand-color)");
+        expect(row.querySelector(".reference-status")?.textContent).toContain("Uses Brand · #336699");
     });
 
     test("uses a known fallback for calculated integration colors", () => {
@@ -20,7 +20,7 @@ describe("theme token controls", () => {
         const row = renderToken(accent, settings, settings.themes[0]!, "light", false);
 
         expect(row.querySelector<HTMLInputElement>('input[type="color"]')?.value).toBe("#336699");
-        expect(row.querySelector<HTMLButtonElement>("[data-open-token-reference]")?.textContent).toBe("Change link");
+        expect(valueControl(row).value).toBe("var(--external-accent, var(--brand-color))");
     });
 
     test("does not show a false black preview for an unresolved color", () => {
@@ -37,24 +37,23 @@ describe("theme token controls", () => {
         const category = settings.sources[0]!.categories[0]!;
         const theme = settings.themes[0]!;
         const expectations = [
-            { id: "content-width", className: "length-control", placeholder: "1rem", inputMode: "text" },
-            { id: "overlay-opacity", className: "number-control", placeholder: "1", inputMode: "decimal" },
+            { id: "content-width", className: "length-control", placeholder: "1rem" },
+            { id: "overlay-opacity", className: "number-control", placeholder: "1" },
             {
                 id: "card-shadow",
                 className: "shadow-control",
                 placeholder: "0 2px 8px rgb(0 0 0 / 10%)",
-                inputMode: "text",
             },
         ];
 
         for (const expected of expectations) {
             const token = category.tokens.find((item) => item.id === expected.id)!;
             const row = renderToken(token, settings, theme, "light", true);
-            const input = row.querySelector<HTMLInputElement>(".value-control")!;
+            const input = valueControl(row);
             expect(row.dataset.tokenType).toBe(token.type);
             expect(input.classList.contains(expected.className)).toBeTrue();
-            expect(input.placeholder).toBe(expected.placeholder);
-            expect(input.inputMode).toBe(expected.inputMode);
+            expect(input.getAttribute("placeholder")).toBe(expected.placeholder);
+            expect(input.hasAttribute("creatable")).toBeTrue();
             expect(row.querySelector<HTMLSelectElement>("[data-token-type-control]")?.value).toBe(token.type);
             expect(row.querySelector<HTMLButtonElement>("[data-delete-token]")?.ariaLabel).toBe(
                 `Delete ${token.label}`,
@@ -62,6 +61,10 @@ describe("theme token controls", () => {
         }
     });
 });
+
+function valueControl(root: ParentNode): HTMLElement & { value: string } {
+    return root.querySelector("[data-token-value-control]") as HTMLElement & { value: string };
+}
 
 function fixture(): ThemeSettings {
     return {

@@ -26,41 +26,24 @@ describe("integration token explorer", () => {
         expect(root.querySelector("[data-token-id='album-caption-font']")).toBeNull();
     });
 
-    test("combines free-text search with token type filters", () => {
+    test("renders every token in the selected group without local explorer state", () => {
         const root = explorerRoot();
         const settings = fixture();
         const source = settings.sources[0]!;
-        const base = {
+
+        renderTokenExplorer(root, {
             settings,
             source,
-            category: source.categories[0]!,
+            category: source.categories[1]!,
             theme: settings.themes[0]!,
-            mode: "light" as const,
+            mode: "light",
             catalogEditable: false,
-        };
+        });
 
-        renderTokenExplorer(root, { ...base, filter: "color", search: "" });
-        expect(root.querySelector("[data-token-filter='color']")?.getAttribute("aria-pressed")).toBe("true");
+        expect(root.querySelector("[data-token-filter]")).toBeNull();
         expect(
             Array.from(root.querySelectorAll<HTMLElement>("[data-token-id]"), (item) => item.dataset.tokenId),
-        ).toEqual(["album-accent"]);
-
-        renderTokenExplorer(root, {
-            ...base,
-            category: source.categories[1]!,
-            filter: "all",
-            search: "viewer caption",
-        });
-        expect(root.querySelector("[data-token-id='album-caption-font']")).not.toBeNull();
-        expect(root.querySelectorAll("[data-token-id]")).toHaveLength(1);
-
-        renderTokenExplorer(root, {
-            ...base,
-            category: source.categories[1]!,
-            filter: "font-family",
-            search: "shadow",
-        });
-        expect(root.querySelector(".empty-category")?.textContent ?? "").toContain("No token matches");
+        ).toEqual(["album-caption-font", "album-shadow"]);
     });
 });
 
