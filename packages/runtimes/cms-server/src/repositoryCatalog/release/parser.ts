@@ -89,6 +89,8 @@ function parseFinding(value: unknown): NonNullable<PublicRepositoryRelease["comp
 
 function parseVerification(value: unknown): NonNullable<PublicRepositoryRelease["verification"]> {
     const source = strictRecord(value, [
+        "activeContracts",
+        "createdAt",
         "environment",
         "origin",
         "outcome",
@@ -103,11 +105,24 @@ function parseVerification(value: unknown): NonNullable<PublicRepositoryRelease[
         reportId: text(source.reportId, 256),
         reportDigest: digest(source.reportDigest),
         origin: enumText(source.origin, ["admission", "legacy-backfill"] as const),
+        createdAt: text(source.createdAt, 1_024),
         outcome: text(source.outcome, 1_024),
         runner: runner(source.runner),
         environment: { digest: digest(environment.digest), versions: textRecord(environment.versions, 64) },
         policy: policy(source.policy, true) as NonNullable<PublicRepositoryRelease["verification"]>["policy"],
+        activeContracts: array(source.activeContracts, 4_096).map(parseActiveContract),
         results: array(source.results, 4_096).map(parseResult),
+    };
+}
+
+function parseActiveContract(
+    value: unknown,
+): NonNullable<PublicRepositoryRelease["verification"]>["activeContracts"][number] {
+    const source = strictRecord(value, ["contractId", "digest", "ownerVersion"]);
+    return {
+        contractId: text(source.contractId, 256),
+        ownerVersion: identity("contract", source.ownerVersion).version,
+        digest: digest(source.digest),
     };
 }
 
@@ -116,6 +131,7 @@ function parseResult(value: unknown): NonNullable<PublicRepositoryRelease["verif
         "attempts",
         "cacheHit",
         "diagnostics",
+        "durationMs",
         "outcome",
         "required",
         "source",
@@ -126,6 +142,7 @@ function parseResult(value: unknown): NonNullable<PublicRepositoryRelease["verif
         source: text(source.source, 1_024),
         required: boolean(source.required),
         outcome: text(source.outcome, 1_024),
+        durationMs: count(source.durationMs),
         attempts: count(source.attempts),
         cacheHit: boolean(source.cacheHit),
         diagnostics: array(source.diagnostics, 4_096).map((value) => {

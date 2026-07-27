@@ -37,15 +37,22 @@ export type PublicRepositoryRelease = Readonly<{
         reportId: string;
         reportDigest: string;
         origin: "admission" | "legacy-backfill";
+        createdAt: string;
         outcome: string;
         runner: Readonly<{ name: string; version: string; imageDigest: string }>;
         environment: Readonly<{ digest: string; versions: Readonly<Record<string, string>> }>;
         policy: Readonly<{ name: string; version: string; snapshotDigest: string }>;
+        activeContracts: readonly Readonly<{
+            contractId: string;
+            ownerVersion: string;
+            digest: string;
+        }>[];
         results: readonly Readonly<{
             suiteId: string;
             source: string;
             required: boolean;
             outcome: string;
+            durationMs: number;
             attempts: number;
             cacheHit: boolean;
             diagnostics: readonly Readonly<{ code: string; message: string }>[];

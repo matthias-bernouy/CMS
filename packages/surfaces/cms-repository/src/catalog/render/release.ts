@@ -45,14 +45,16 @@ function renderVerification(release: PublicRepositoryRelease): string {
         .join(", ");
     return `<h3>Executable verification</h3><dl>
 <div><dt>Origin</dt><dd>${escapeHtml(humanLabel(verification.origin))}</dd></div>
+<div><dt>Created</dt><dd><time datetime="${escapeAttr(verification.createdAt)}">${escapeHtml(verification.createdAt)}</time></dd></div>
 <div><dt>Outcome</dt><dd>${escapeHtml(humanLabel(verification.outcome))}</dd></div>
 <div><dt>Report</dt><dd><code>${escapeHtml(verification.reportId)}</code> · <code>${escapeHtml(verification.reportDigest)}</code></dd></div>
 <div><dt>Runner</dt><dd>${escapeHtml(verification.runner.name)} ${escapeHtml(verification.runner.version)} · <code>${escapeHtml(verification.runner.imageDigest)}</code></dd></div>
 <div><dt>Environment</dt><dd><code>${escapeHtml(verification.environment.digest)}</code>${versions ? ` · ${versions}` : ""}</dd></div>
+<div><dt>Active contracts</dt><dd>${verification.activeContracts.length > 0 ? verification.activeContracts.map(({ contractId, ownerVersion, digest }) => `<code>${escapeHtml(contractId)}@${escapeHtml(ownerVersion)} · ${escapeHtml(digest)}</code>`).join(", ") : "None"}</dd></div>
 </dl><ul>${verification.results
         .map(
             (result) =>
-                `<li><strong>${escapeHtml(result.suiteId)}</strong> — ${escapeHtml(humanLabel(result.outcome))} (${escapeHtml(result.source)}, ${result.attempts} attempt${result.attempts === 1 ? "" : "s"})${result.diagnostics.length > 0 ? `<ul>${result.diagnostics.map(({ code, message }) => `<li><code>${escapeHtml(code)}</code> ${escapeHtml(message)}</li>`).join("")}</ul>` : ""}</li>`,
+                `<li><strong>${escapeHtml(result.suiteId)}</strong> — ${escapeHtml(humanLabel(result.outcome))} (${escapeHtml(result.source)}, ${result.durationMs} ms, ${result.attempts} attempt${result.attempts === 1 ? "" : "s"})${result.diagnostics.length > 0 ? `<ul>${result.diagnostics.map(({ code, message }) => `<li><code>${escapeHtml(code)}</code> ${escapeHtml(message)}</li>`).join("")}</ul>` : ""}</li>`,
         )
         .join("")}</ul>`;
 }

@@ -50,6 +50,7 @@ export function projectPublicRepositoryRelease(source: IntegrationRegistryReleas
                       reportId: verification.current.reportId,
                       reportDigest: verification.currentReportDigest,
                       origin: verification.current.origin,
+                      createdAt: verification.current.createdAt,
                       outcome: verification.current.outcome,
                       runner: verification.current.runner,
                       environment: verification.current.environment,
@@ -57,11 +58,19 @@ export function projectPublicRepositoryRelease(source: IntegrationRegistryReleas
                           ...verification.current.policy,
                           snapshotDigest: verification.current.policySnapshotDigest,
                       },
+                      activeContracts: verification.current.activeContracts.map(
+                          ({ contractId, ownerVersion, digest }) => ({
+                              contractId,
+                              ownerVersion,
+                              digest,
+                          }),
+                      ),
                       results: verification.current.results.map((result) => ({
                           suiteId: result.suiteId,
                           source: result.source,
                           required: result.required,
                           outcome: result.outcome,
+                          durationMs: result.durationMs,
                           attempts: result.attempts,
                           cacheHit: result.cacheHit,
                           diagnostics: result.diagnostics.map(({ code, message }) => ({ code, message })),

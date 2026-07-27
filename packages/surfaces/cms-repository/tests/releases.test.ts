@@ -28,8 +28,11 @@ describe("@bernouy/cms-repository public release evidence", () => {
             compatibility: { origin: "legacy-backfill", contractAdmissible: true },
             verification: {
                 origin: "legacy-backfill",
+                createdAt: "2026-07-26T10:00:00.000Z",
                 outcome: "passed",
                 runner: { name: "cms-schema-generator", imageDigest: "sha256:pinned" },
+                activeContracts: [{ contractId: "public-api", ownerVersion: "1.0.0", digest: REPORT_DIGEST }],
+                results: [{ suiteId: "sql-install-and-reapply", durationMs: 1 }],
             },
             migrations: [
                 {
@@ -165,7 +168,7 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
         verificationJobResultDigest: REPORT_DIGEST,
         dependencies: [],
         baselines: [],
-        activeContracts: [],
+        activeContracts: [{ contractId: "public-api", ownerVersion: "1.0.0", digest: REPORT_DIGEST }],
         environment: { digest: REPORT_DIGEST, versions: { postgres: "16.9" } },
         results: [
             {

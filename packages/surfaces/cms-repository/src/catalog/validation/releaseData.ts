@@ -102,6 +102,7 @@ export function assertReleaseEvidence(release: PublicRepositoryRelease, kind: st
 function validateVerification(verification: NonNullable<PublicRepositoryRelease["verification"]>): void {
     boundedText(verification.reportId, "verification report ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
     digest(verification.reportDigest);
+    boundedText(verification.createdAt, "verification creation time", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
     validateRunner(verification.runner);
     digest(verification.environment.digest);
     for (const [name, version] of Object.entries(verification.environment.versions)) {
@@ -109,8 +110,14 @@ function validateVerification(verification: NonNullable<PublicRepositoryRelease[
         boundedText(version, "environment version", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
     }
     validatePolicy(verification.policy);
+    for (const contract of boundedArray(verification.activeContracts, "active verification contracts", 4_096)) {
+        boundedText(contract.contractId, "contract ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
+        assertIntegrationPackageVersion(contract.ownerVersion);
+        digest(contract.digest);
+    }
     for (const result of boundedArray(verification.results, "verification results", 4_096)) {
         boundedText(result.suiteId, "verification suite ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
+        safeCount(result.durationMs, "verification duration");
         safeCount(result.attempts, "verification attempts");
         boundedArray(result.diagnostics, "verification diagnostics", 4_096).forEach(({ code, message }) => {
             boundedText(code, "verification diagnostic code", REPOSITORY_CATALOG_LIMITS.shortTextBytes);

@@ -44,7 +44,10 @@ describe("repository catalog integration and version pages", () => {
         expect(html).toContain("Release admission");
         expect(html).toContain("Legacy backfill");
         expect(html).toContain("cms-schema-generator");
+        expect(html).toContain("2026-07-26T10:00:00.000Z");
+        expect(html).toContain("public-api@1.0.0");
         expect(html).toContain("sql-install-and-reapply");
+        expect(html).toContain("12 ms");
         expect(html).toContain("verification-bundle?digest=");
         expect(html).toContain("cms-postgres-migration");
         expect(html).toContain("sha256:migration");
