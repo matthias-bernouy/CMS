@@ -1,7 +1,9 @@
-import type { ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
+import { canonicalJsonBytes, sha256Hex, type ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
 import {
+    identifyMigrationVerificationEnvironment,
     validateIntegrationCandidateEnvelope,
     type IntegrationVerificationEnvelopeV1,
+    type MigrationVerificationEnvironmentV1,
     type ReleaseAdmissionPolicySnapshotV1,
 } from "@bernouy/cms-integration-verification";
 import { FsIntegrationRegistryCandidateStore } from "@bernouy/cms-integration-registry/fs";
@@ -60,4 +62,39 @@ export async function validatingCandidate(
 
 export async function planningPolicy(): Promise<ReleaseAdmissionPolicySnapshotV1> {
     return await candidatePolicy();
+}
+
+export async function planningMigrationEnvironment(
+    policy: ReleaseAdmissionPolicySnapshotV1,
+): Promise<MigrationVerificationEnvironmentV1> {
+    const runner = policy.approvedRunners[0]!;
+    return (
+        await identifyMigrationVerificationEnvironment({
+            schema: "cms.integration.migration-verification-environment.v1",
+            postgres: { version: "16.4", imageDigest: `sha256:${"8".repeat(64)}` },
+            runner: { digest: await sha256Hex(canonicalJsonBytes(runner)), identity: runner },
+            bootstrapSqlDigest: "7".repeat(64),
+            roles: [],
+            grants: [],
+            extensions: [],
+            fixtures: [],
+            sessionSettings: [],
+            policy: policy.migrationPolicy,
+        })
+    ).environment;
+}
+
+export async function planningMigrationConfiguration(policy: ReleaseAdmissionPolicySnapshotV1) {
+    const environment = await planningMigrationEnvironment(policy);
+    const environmentDigest = (await identifyMigrationVerificationEnvironment(environment)).digest;
+    return {
+        environment,
+        policy: {
+            ...policy,
+            migrationEvidence: {
+                ...policy.migrationEvidence,
+                approvedEnvironmentDigests: [environmentDigest],
+            },
+        } satisfies ReleaseAdmissionPolicySnapshotV1,
+    };
 }

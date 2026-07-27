@@ -6,6 +6,8 @@ import {
     readCandidatePolicy,
     readCandidateVerification,
     readCandidateVerificationJobResult,
+    readCandidateResultObject,
+    readCandidateMigrationInput,
     readCandidateCompatibilityReport,
     readCandidateStatefulSelection,
 } from "../../objects";
@@ -25,6 +27,7 @@ type CandidateObjectKind =
     | "admission"
     | "compatibility-report"
     | "stateful-selection"
+    | "migration-input"
     | "result";
 
 export async function recoverObjectInventory(
@@ -83,7 +86,9 @@ function readCandidateObject(layout: FsIntegrationRegistryCandidateLayout, kind:
             return readCandidateCompatibilityReport(layout, digest);
         case "stateful-selection":
             return readCandidateStatefulSelection(layout, digest);
+        case "migration-input":
+            return readCandidateMigrationInput(layout, digest);
         case "result":
-            return readCandidateVerificationJobResult(layout, digest);
+            return readCandidateResultObject(layout, digest);
     }
 }

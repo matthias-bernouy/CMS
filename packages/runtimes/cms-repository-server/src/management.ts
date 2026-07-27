@@ -11,7 +11,10 @@ import {
     type OfficialRepositoryBootstrapBaselineApproval,
     type PreparedOfficialVerificationBackfill,
 } from "@bernouy/cms-integration-registry";
-import type { ReleaseAdmissionPolicySnapshotV1 } from "@bernouy/cms-integration-verification";
+import type {
+    MigrationVerificationEnvironmentV1,
+    ReleaseAdmissionPolicySnapshotV1,
+} from "@bernouy/cms-integration-verification";
 import {
     FsIntegrationCompatibilityReevaluator,
     FsIntegrationCompatibilityReportStore,
@@ -25,6 +28,7 @@ import {
     FsIntegrationRegistryRecoverer,
     FsIntegrationRegistryStablePromoter,
     FsIntegrationRegistryVersionEligibilityManager,
+    SnapshotIntegrationPackageSource,
     FsIntegrationVerificationReportStore,
     FsIntegrationVerificationBundleStore,
     FsIntegrationVerificationBackfiller,
@@ -38,7 +42,6 @@ import {
     recoverFsReleaseReportHistories,
     recoverReviewedSchemaBaselineImports,
     recoverVerifiedCandidateActivations,
-    type CandidateMigrationReportProvider,
     type ReviewedSchemaBaselineImportTarget,
 } from "@bernouy/cms-integration-registry/fs";
 import {
@@ -86,7 +89,7 @@ export async function createProductionRepositoryManagement(input: {
     verificationBackfills?: readonly PreparedOfficialVerificationBackfill[];
     candidateProtocol?: Omit<ProductionRepositoryCandidateProtocolConfig, "root">;
     candidateAdmissionPolicy?: ReleaseAdmissionPolicySnapshotV1;
-    candidateMigrationReports?: CandidateMigrationReportProvider;
+    candidateMigrationEnvironment?: MigrationVerificationEnvironmentV1;
 }): Promise<ProductionRepositoryManagement> {
     const telemetry = input.telemetry ?? new RepositoryOperationalTelemetry();
     const snapshots = input.catalog.snapshotReference();
@@ -193,6 +196,9 @@ export async function createProductionRepositoryManagement(input: {
               candidates: candidateStore,
               reviewedSchemaBaselines,
               policy: input.candidateAdmissionPolicy,
+              ...(input.candidateMigrationEnvironment
+                  ? { migrationEnvironment: input.candidateMigrationEnvironment }
+                  : {}),
           })
         : undefined;
     const candidateFinalizerConfig = input.candidateAdmissionPolicy
@@ -209,7 +215,6 @@ export async function createProductionRepositoryManagement(input: {
               migrationReports,
               releaseDecisions,
               verificationBundles,
-              ...(input.candidateMigrationReports ? { loadMigrationReports: input.candidateMigrationReports } : {}),
           }
         : undefined;
     const candidateFinalizer = candidateFinalizerConfig
@@ -219,6 +224,7 @@ export async function createProductionRepositoryManagement(input: {
         root: input.root,
         ...input.candidateProtocol,
         store: candidateStore,
+        packageSource: new SnapshotIntegrationPackageSource({ snapshots }),
         ...(candidatePlanner ? { plan: (request) => candidatePlanner.plan(request) } : {}),
         ...(candidateFinalizer
             ? {

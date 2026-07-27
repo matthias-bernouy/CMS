@@ -13,6 +13,7 @@ import {
     RepositoryCandidateAdmissionPlanningError,
     type RepositoryCandidateAdmissionPlanner,
     type RepositoryCandidatePublicationFinalizer,
+    type RepositoryCandidateWorkerRoutesConfig,
 } from "@bernouy/cms-repository-management";
 import type { Runner } from "@bernouy/http-runner";
 
@@ -30,6 +31,7 @@ export type ProductionRepositoryCandidateProtocolConfig = Readonly<{
     now?: () => string;
     plan?: RepositoryCandidateAdmissionPlanner;
     publication?: RepositoryCandidatePublicationFinalizer;
+    packageSource?: RepositoryCandidateWorkerRoutesConfig["packageSource"];
     store?: FsIntegrationRegistryCandidateStore;
 }>;
 
@@ -66,6 +68,7 @@ export async function createProductionRepositoryCandidateProtocol(
         now,
         createJobId: () => randomUUID(),
         createAttemptId: () => randomUUID(),
+        ...(config.packageSource ? { packageSource: config.packageSource } : {}),
         ...(config.publication ? { publication: config.publication } : {}),
     };
     return Object.freeze({

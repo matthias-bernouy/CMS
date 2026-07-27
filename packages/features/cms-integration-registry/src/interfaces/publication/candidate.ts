@@ -1,7 +1,9 @@
 import type {
     AdmissionInputSnapshotV1,
+    CandidateAdmissionJobResultV1,
     CompatibilityReportV2,
     ReleaseAdmissionPolicySnapshotV1,
+    MigrationVerificationInputV1,
     StatefulChangeSelectionV1,
     ValidatedIntegrationCandidateEnvelopeV1,
     VerificationJobResultV1,
@@ -77,6 +79,8 @@ export type IntegrationRegistryCandidateRecord = IntegrationRegistryCandidateRec
         admissionInputDigest?: string;
         compatibilityReportDigest?: string;
         statefulChangeSelectionDigest?: string;
+        migrationInputDigests?: readonly string[];
+        admissionJobResultDigest?: string;
         verificationJobResultDigest?: string;
     }>;
 
@@ -97,6 +101,7 @@ export type QueueIntegrationRegistryCandidateInput = Readonly<{
     now: string;
     policy: ReleaseAdmissionPolicySnapshotV1;
     admission: AdmissionInputSnapshotV1;
+    migrationInputs?: readonly MigrationVerificationInputV1[];
     planningArtifacts?: Readonly<{
         compatibilityReportDigest: string;
         statefulChangeSelectionDigest: string;
@@ -128,7 +133,7 @@ export type ClaimIntegrationRegistryCandidateInput = Readonly<{
 export type CompleteIntegrationRegistryCandidateInput = Readonly<{
     expectedRevision: number;
     now: string;
-    result: VerificationJobResultV1;
+    result: CandidateAdmissionJobResultV1 | VerificationJobResultV1;
 }>;
 
 export type BeginIntegrationRegistryCandidatePublicationInput = Readonly<{

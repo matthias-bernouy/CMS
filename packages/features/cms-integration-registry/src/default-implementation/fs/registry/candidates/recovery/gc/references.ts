@@ -43,6 +43,10 @@ export async function collectCandidateObjectReferences(
             if (record.schema === "cms.integration.registry.candidate-record.v3") {
                 addOptionalReference(references, "compatibility-report", record.compatibilityReportDigest);
                 addOptionalReference(references, "stateful-selection", record.statefulChangeSelectionDigest);
+                for (const digest of record.migrationInputDigests ?? []) {
+                    references.add(`migration-input:${digest}`);
+                }
+                addOptionalReference(references, "result", record.admissionJobResultDigest);
             }
         }
         const plan = await readCandidatePlanBinding(layout, candidate.name);

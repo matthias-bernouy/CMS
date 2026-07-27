@@ -5,8 +5,10 @@ import {
     type ReleaseAdmissionPolicySnapshotV1,
 } from "@bernouy/cms-integration-verification";
 import type { IntegrationRegistryCatalogSnapshot } from "cms-integration-registry/interfaces/catalog";
-import type { CapturedReviewedSchemaBaselineStore } from "./baselines";
-import { FsIntegrationRegistryCandidateAdmissionPlanningError } from "./types";
+import type { CapturedReviewedSchemaBaselineStore } from "../baselines";
+import { FsIntegrationRegistryCandidateAdmissionPlanningError } from "../types";
+
+export { buildMigrationVerificationInputs } from "./inputs";
 
 export async function selectStatefulChanges(input: {
     snapshot: IntegrationRegistryCatalogSnapshot;

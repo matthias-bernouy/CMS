@@ -9,9 +9,9 @@ import {
     publicationPackage,
     registryFixture,
     seedLegacySqlBaseline,
-    sqlPublicationPackage,
+    statefulSqlPublicationPackage,
 } from "../../publication/fixtures";
-import { planningPolicy, validatingCandidate, verificationCandidate } from "./fixtures";
+import { planningMigrationConfiguration, planningPolicy, validatingCandidate, verificationCandidate } from "./fixtures";
 
 afterEach(cleanupRegistryFixtures);
 
@@ -126,7 +126,7 @@ describe("filesystem candidate admission planning", () => {
             expectedCurrentRevisionId: null,
         });
         const candidate = await verificationCandidate(
-            await sqlPublicationPackage("demo", "1.1.0", {
+            await statefulSqlPublicationPackage("demo", "1.1.0", {
                 namespaces: [
                     {
                         name: "public",
@@ -143,7 +143,7 @@ describe("filesystem candidate admission planning", () => {
         );
         const store = await validatingCandidate(fixture.root, "candidate-stateful", candidate);
         const basePolicy = await planningPolicy();
-        const policy = {
+        const requestedPolicy = {
             ...basePolicy,
             migrationEvidence: {
                 ...basePolicy.migrationEvidence,
@@ -151,12 +151,14 @@ describe("filesystem candidate admission planning", () => {
                 requiredChecks: ["fresh-install" as const, "migrated-state" as const, "equivalence" as const],
             },
         };
+        const { policy, environment } = await planningMigrationConfiguration(requestedPolicy);
         const planner = new FsIntegrationRegistryCandidateAdmissionPlanner({
             snapshots: fixture.snapshots,
             mutations: fixture.mutations,
             candidates: store,
             reviewedSchemaBaselines: fixture.reviewedSchemaBaselines,
             policy,
+            migrationEnvironment: environment,
         });
 
         const plan = await planner.plan({ candidateId: "candidate-stateful", candidate });
@@ -169,5 +171,12 @@ describe("filesystem candidate admission planning", () => {
             },
         ]);
         expect(plan.admission.reviewedBaselines[0]?.baselineDigest).toHaveLength(64);
+        expect(plan.migrationInputs).toHaveLength(1);
+        expect(plan.migrationInputs[0]).toMatchObject({
+            sourceMigrationRevision: 0,
+            targetMigrationRevision: 1,
+            connectorKey: "primary",
+            lineageId: "demo-supabase-v1",
+        });
     });
 });

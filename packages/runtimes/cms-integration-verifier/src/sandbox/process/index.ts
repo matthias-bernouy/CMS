@@ -1,6 +1,7 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
     parsePinnedVerificationRunnerIdentity,
+    parseCandidateAdmissionJobResult,
     parseVerificationJobResult,
 } from "@bernouy/cms-integration-verification";
 import type { VerificationSandbox, VerificationSandboxInput } from "../../supervisor";
@@ -18,9 +19,12 @@ export function createProcessVerificationSandbox(config: ProcessVerificationSand
         async run(input: VerificationSandboxInput, signal: AbortSignal) {
             const output = await executeSandboxProcess(config, canonicalJsonBytes(input), signal);
             try {
-                const result = await parseVerificationJobResult(output);
+                const result = await parseSandboxOutput(output);
                 const canonical = canonicalJsonBytes(result);
-                if (!sameBytes(output, canonical)) {
+                if (
+                    !sameBytes(output, canonical) &&
+                    !(result.migrations.length === 0 && sameBytes(output, canonicalJsonBytes(result.verification)))
+                ) {
                     throw new TypeError("non-canonical result");
                 }
                 return result;
@@ -29,6 +33,18 @@ export function createProcessVerificationSandbox(config: ProcessVerificationSand
             }
         },
     });
+}
+
+async function parseSandboxOutput(output: Uint8Array) {
+    try {
+        return await parseCandidateAdmissionJobResult(output);
+    } catch {
+        return {
+            schema: "cms.integration.candidate-admission-job-result.v1" as const,
+            verification: await parseVerificationJobResult(output),
+            migrations: [],
+        };
+    }
 }
 
 export { ProcessVerificationSandboxError };

@@ -1,4 +1,4 @@
-import type { VerificationJobResultV1 } from "@bernouy/cms-integration-verification";
+import type { CandidateAdmissionJobResultV1, VerificationJobResultV1 } from "@bernouy/cms-integration-verification";
 import type { DisposableVerificationDatabaseCredential } from "../types";
 
 const MAX_DIAGNOSTIC_BYTES = 4_096;
@@ -8,13 +8,21 @@ const utf8 = new TextEncoder();
 const decoder = new TextDecoder("utf-8", { fatal: true });
 
 export function sanitizeSandboxResult(
-    value: VerificationJobResultV1,
+    value: CandidateAdmissionJobResultV1 | VerificationJobResultV1,
     credential: DisposableVerificationDatabaseCredential,
-): VerificationJobResultV1 {
+): CandidateAdmissionJobResultV1 {
+    const candidate =
+        value.schema === "cms.integration.candidate-admission-job-result.v1"
+            ? value
+            : {
+                  schema: "cms.integration.candidate-admission-job-result.v1" as const,
+                  verification: value,
+                  migrations: [],
+              };
     const secrets = credentialSecrets(credential);
     let remainingBytes = MAX_TOTAL_DIAGNOSTIC_BYTES;
-    const results = Array.isArray(value.results)
-        ? value.results.map((result) => ({
+    const results = Array.isArray(candidate.verification.results)
+        ? candidate.verification.results.map((result) => ({
               ...result,
               diagnostics: Array.isArray(result.diagnostics)
                   ? result.diagnostics
@@ -33,8 +41,11 @@ export function sanitizeSandboxResult(
                         })
                   : result.diagnostics,
           }))
-        : value.results;
-    const sanitized = { ...value, results } as VerificationJobResultV1;
+        : candidate.verification.results;
+    const sanitized = {
+        ...candidate,
+        verification: { ...candidate.verification, results },
+    } as CandidateAdmissionJobResultV1;
     if (containsSecret(sanitized, secrets, new WeakSet())) {
         throw new TypeError("Sandbox result contains disposable database credentials outside diagnostics");
     }

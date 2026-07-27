@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { canonicalJsonBytes, type IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
 import {
     POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
-    parseVerificationJobResult,
+    parseCandidateAdmissionJobResult,
 } from "@bernouy/cms-integration-verification";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../src/runtime/providers/postgres";
 import type { VerificationSandboxInput } from "../../src";
@@ -81,7 +81,7 @@ async function runAdapter(input: VerificationSandboxInput, cwd: string) {
         new Response(child.stderr).text(),
     ]);
     expect(status, stderr).toBe(0);
-    return await parseVerificationJobResult(new Uint8Array(stdout));
+    return (await parseCandidateAdmissionJobResult(new Uint8Array(stdout))).verification;
 }
 
 async function productionInput(database: VerificationSandboxInput["database"]): Promise<VerificationSandboxInput> {

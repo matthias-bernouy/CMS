@@ -18,6 +18,7 @@ export type FsIntegrationRegistryCandidateLayout = Readonly<{
     admissions: string;
     compatibilityReports: string;
     statefulSelections: string;
+    migrationInputs: string;
     plans: string;
     results: string;
     records: string;
@@ -41,6 +42,7 @@ export async function ensureFsIntegrationRegistryCandidateLayout(
         admissions: await ensureVerifiedRegistryChildDirectory(objects, "admissions"),
         compatibilityReports: await ensureVerifiedRegistryChildDirectory(objects, "compatibility-reports"),
         statefulSelections: await ensureVerifiedRegistryChildDirectory(objects, "stateful-selections"),
+        migrationInputs: await ensureVerifiedRegistryChildDirectory(objects, "migration-inputs"),
         plans: await ensureVerifiedRegistryChildDirectory(root, "plans"),
         results: await ensureVerifiedRegistryChildDirectory(objects, "results"),
         records: await ensureVerifiedRegistryChildDirectory(root, "records"),
@@ -72,6 +74,11 @@ export function candidateAdmissionPath(layout: FsIntegrationRegistryCandidateLay
 export function candidateResultPath(layout: FsIntegrationRegistryCandidateLayout, digest: string): string {
     assertSha256Digest(digest);
     return join(layout.results, `${digest}.json`);
+}
+
+export function candidateMigrationInputPath(layout: FsIntegrationRegistryCandidateLayout, digest: string): string {
+    assertSha256Digest(digest);
+    return join(layout.migrationInputs, `${digest}.json`);
 }
 
 export function candidateCompatibilityReportPath(layout: FsIntegrationRegistryCandidateLayout, digest: string): string {

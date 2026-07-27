@@ -77,6 +77,17 @@ export function parseCandidateSharedFields(input: Record<string, unknown>) {
     };
 }
 
+export function digestArray(value: unknown, field: string): readonly string[] {
+    if (!Array.isArray(value)) {
+        invalid(`Candidate ${field} must be an array`);
+    }
+    const parsed = value.map((entry, index) => digest(entry, `${field}.${index}`));
+    if (parsed.length > 256 || parsed.some((entry, index) => index > 0 && entry <= parsed[index - 1]!)) {
+        invalid(`Candidate ${field} must use unique canonical digest order`);
+    }
+    return Object.freeze(parsed);
+}
+
 function parseLease(value: unknown): IntegrationRegistryCandidateLease {
     const input = strictRecord(value, "candidate lease", [
         "jobId",

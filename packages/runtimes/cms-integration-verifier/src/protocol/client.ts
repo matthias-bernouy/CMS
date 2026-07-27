@@ -1,4 +1,4 @@
-import type { VerificationJobResultV1 } from "@bernouy/cms-integration-verification";
+import type { CandidateAdmissionJobResultV1 } from "@bernouy/cms-integration-verification";
 import {
     REPOSITORY_VERIFICATION_JOBS_PATH,
     REPOSITORY_VERIFICATION_JOB_CLAIMS_PATH,
@@ -59,7 +59,7 @@ export function createHttpCandidateWorkerClient(config: HttpCandidateWorkerClien
         async submit(
             candidate: ClaimedVerificationJob["candidate"],
             capability: Readonly<{ token: string; expiresAt: string; resultDigest: string }>,
-            result: VerificationJobResultV1,
+            result: CandidateAdmissionJobResultV1,
         ) {
             const value = await request(
                 REPOSITORY_VERIFICATION_JOB_RESULT_PATH,

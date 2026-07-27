@@ -1,4 +1,7 @@
-import { identifyVerificationJobResult, type VerificationJobResultV1 } from "@bernouy/cms-integration-verification";
+import {
+    identifyCandidateAdmissionJobResult,
+    type CandidateAdmissionJobResultV1,
+} from "@bernouy/cms-integration-verification";
 import type {
     CandidateStatusProjection,
     CandidateWorkerClient,
@@ -13,14 +16,14 @@ export type FakeWorkerControls = Readonly<{
     submit?: (
         candidate: ClaimedVerificationJob["candidate"],
         capability: ResultCapability,
-        result: VerificationJobResultV1,
+        result: CandidateAdmissionJobResultV1,
     ) => Promise<CandidateStatusProjection>;
 }>;
 
 export async function createFakeWorkerClient(controls: FakeWorkerControls = {}) {
     const queued = await queuedCandidate();
     const claimed = await claimedJob();
-    const submissions: Array<Readonly<{ capability: ResultCapability; result: VerificationJobResultV1 }>> = [];
+    const submissions: Array<Readonly<{ capability: ResultCapability; result: CandidateAdmissionJobResultV1 }>> = [];
     const calls: string[] = [];
     const client: CandidateWorkerClient = {
         async listClaimable() {
@@ -55,7 +58,7 @@ export async function createFakeWorkerClient(controls: FakeWorkerControls = {}) 
             if (controls.submit) {
                 return await controls.submit(candidate, capability, result);
             }
-            const identified = await identifyVerificationJobResult(result);
+            const identified = await identifyCandidateAdmissionJobResult(result);
             if (identified.digest !== capability.resultDigest) {
                 throw new Error("result digest mismatch");
             }

@@ -1,9 +1,9 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
     validateIntegrationCandidateEnvelope,
-    validateVerificationJobResult,
+    validateCandidateAdmissionJobResult,
     type ValidatedIntegrationCandidateEnvelopeV1,
-    type VerificationJobResultV1,
+    type CandidateAdmissionJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import {
     readRepositoryManagementJsonDocument,
@@ -85,12 +85,12 @@ export async function readCanonicalResultCapabilityRequest(request: Request, max
 export async function readCanonicalResultRequest(
     request: Request,
     maxBytes: number,
-): Promise<Readonly<{ expectedRevision: number; result: VerificationJobResultV1 }>> {
+): Promise<Readonly<{ expectedRevision: number; result: CandidateAdmissionJobResultV1 }>> {
     const document = await readRepositoryManagementJsonDocument(request, maxBytes);
     const input = strictRecord(document.value, ["expectedRevision", "result"]);
     const result = {
         expectedRevision: nonNegativeInteger(input.expectedRevision),
-        result: await validateVerificationJobResult(input.result),
+        result: await validateCandidateAdmissionJobResult(input.result),
     };
     assertCanonicalDocument(document.bytes, result);
     return result;

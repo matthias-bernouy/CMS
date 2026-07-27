@@ -1,49 +1,120 @@
 import {
-    identifyStatefulChangeSelection,
-    type AdmissionInputSnapshotV1,
-    type MigrationReport,
+    identifyMigrationVerificationInput,
+    type MigrationJobResultV1,
+    type MigrationVerificationInputV1,
 } from "@bernouy/cms-integration-verification";
 
-export async function passedMigrationReport(
-    selection: Awaited<ReturnType<typeof identifyStatefulChangeSelection>>["selection"],
-    runner: AdmissionInputSnapshotV1["selectedRunner"],
-): Promise<MigrationReport> {
-    const requirement = selection.requiredMigrations[0];
-    if (!requirement) {
-        throw new Error("Expected a selected migration requirement");
-    }
-    const passed = { outcome: "passed" as const, evidenceDigest: "e".repeat(64) };
+export async function passedMigrationResult(
+    input: MigrationVerificationInputV1,
+    lease: Readonly<{ jobId: string; attemptId: string; fencingToken: number }>,
+    observationStatus: "passed" | "failed" | "infrastructure-failure" = "passed",
+): Promise<MigrationJobResultV1> {
+    const identified = await identifyMigrationVerificationInput(input);
+    const stateDigest = "3".repeat(64);
+    const schemaDigest = "4".repeat(64);
+    const evidence = { status: "passed" as const, evidenceDigests: ["5".repeat(64)], diagnosticCodes: [] };
+    const covered = input.migrationPlan.plan.install.coveredMigrations;
+    const sourceRows = covered.filter((entry) => entry.revision <= input.sourceMigrationRevision).length;
     return {
-        schema: "cms.integration.migration-report.v1",
-        reportId: "migration-candidate-stateful-finalization",
-        revisionType: "root",
-        origin: "admission",
-        createdAt: "2026-07-26T10:00:05.000Z",
-        source: requirement.source,
-        target: selection.target,
-        connectorKey: requirement.connectorKey,
-        lineageId: requirement.lineageId,
-        migrationRevision: 1,
-        supportedSourceRange: "^1.0.0",
-        runner,
-        policy: selection.selector,
-        policySnapshotDigest: selection.policySnapshotDigest,
-        migrationInputDigest: "a".repeat(64),
-        migrationJobResultDigest: "b".repeat(64),
-        statefulChangeSelectionDigest: (await identifyStatefulChangeSelection(selection)).digest,
-        environmentDigest: "c".repeat(64),
-        checks: {
-            freshInstall: passed,
-            migratedState: passed,
-            equivalence: passed,
-            failureInjection: { outcome: "not-supported" },
-            resumption: { outcome: "not-supported" },
+        schema: "cms.integration.migration-job-result.v1",
+        jobId: lease.jobId,
+        attemptId: lease.attemptId,
+        fencingToken: lease.fencingToken,
+        migrationInputDigest: identified.digest,
+        runnerDigest: input.runner.digest,
+        environmentDigest: input.environment.digest,
+        observations: {
+            freshTarget: { ...evidence, stateDigest, schemaDigest, functionDigests: [] },
+            migratedTarget: { ...evidence, stateDigest, schemaDigest, functionDigests: [] },
+            equivalence: {
+                ...evidence,
+                freshStateDigest: stateDigest,
+                migratedStateDigest: stateDigest,
+                equivalent: true,
+                differences: [],
+            },
+            ledger: {
+                ...evidence,
+                sourceRevision: input.sourceMigrationRevision,
+                targetRevision: input.targetMigrationRevision,
+                freshBaselineRecorded: true,
+                migrationAndLedgerAtomic: true,
+                checksumMismatchRejected: true,
+                emptyLedgerRejected: true,
+                rows: covered.map((entry) => ({
+                    migrationId: entry.id,
+                    checksum: entry.checksum,
+                    revision: entry.revision,
+                    attemptId: entry.revision > input.sourceMigrationRevision ? lease.attemptId : "source-install",
+                    ...(entry.revision > input.sourceMigrationRevision
+                        ? {
+                              sourcePackageDigest: input.source.packageDigest,
+                              targetPackageDigest: input.target.packageDigest,
+                          }
+                        : {}),
+                })),
+            },
+            replay: {
+                ...evidence,
+                firstStateDigest: stateDigest,
+                replayStateDigest: stateDigest,
+                unchanged: true,
+                ledgerRowsBefore: sourceRows,
+                ledgerRowsAfterFirstRun: covered.length,
+                ledgerRowsAfterReplay: covered.length,
+            },
+            failureInjections: migrationFailureObservations(observationStatus),
+            resumptions: [],
+            cutover: {
+                cmsMediated: {
+                    status: "not-applicable",
+                    evidenceDigests: [],
+                    diagnosticCodes: [],
+                    strategy: "not-applicable",
+                },
+                providerDirect: {
+                    status: "not-applicable",
+                    evidenceDigests: [],
+                    diagnosticCodes: [],
+                    strategy: "not-applicable",
+                    callbackIds: [],
+                },
+                activation: {
+                    ...evidence,
+                    activePackageDigest: input.target.packageDigest,
+                    pointOfNoReturnCrossed: true,
+                    cleanupObserved: true,
+                },
+            },
         },
-        cutover: { cmsMediated: "binding-revision", providerDirect: "expand-in-code" },
-        rollback: "unavailable",
-        pointOfNoReturn: "cleanup",
-        delayedCleanupVerified: true,
-        outcome: "passed",
-        provenance: { actor: "repository-verifier", reason: "candidate-admission" },
     };
+}
+
+function migrationFailureObservations(
+    status: "passed" | "failed" | "infrastructure-failure",
+): MigrationJobResultV1["observations"]["failureInjections"] {
+    if (status === "passed") {
+        return [];
+    }
+    return status === "failed"
+        ? [
+              {
+                  status,
+                  evidenceDigests: ["6".repeat(64)],
+                  diagnosticCodes: [],
+                  boundary: "after-expand",
+                  injected: true,
+                  recovery: "operator-required",
+              },
+          ]
+        : [
+              {
+                  status,
+                  evidenceDigests: [],
+                  diagnosticCodes: ["injected-boundary-unavailable"],
+                  boundary: "after-expand",
+                  injected: false,
+                  recovery: "not-observed",
+              },
+          ];
 }

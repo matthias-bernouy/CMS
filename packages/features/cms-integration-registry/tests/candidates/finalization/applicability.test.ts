@@ -27,7 +27,7 @@ test("keeps explicit non-applicable platform suites successful in final release 
     const candidate = await verificationCandidate(await publicationPackage("demo", "1.0.0"));
     const setup = await completePassedCandidate(fixture, "candidate-applicability", candidate, policy);
 
-    const finalization = await releaseFinalizer(fixture, setup.store, policy).finalize("candidate-applicability");
+    const finalization = await releaseFinalizer(fixture, setup.store, setup.policy).finalize("candidate-applicability");
     expect(finalization).toMatchObject({ status: "published" });
     const history = await releaseStores(fixture).verificationReports.get("demo", "1.0.0");
     expect(history?.current.outcome).toBe("passed");

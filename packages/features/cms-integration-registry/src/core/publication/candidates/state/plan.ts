@@ -1,10 +1,14 @@
 import {
     identifyReleaseAdmissionPolicySnapshot,
+    identifyMigrationVerificationInput,
     validateAdmissionInputSnapshotForPolicy,
     type AdmissionInputSnapshotV1,
     type ReleaseAdmissionPolicySnapshotV1,
 } from "@bernouy/cms-integration-verification";
-import type { IntegrationRegistryCandidateRecord } from "../../../../interfaces/publication";
+import type {
+    IntegrationRegistryCandidateRecord,
+    QueueIntegrationRegistryCandidateInput,
+} from "../../../../interfaces/publication";
 import {
     assertCandidateRevision,
     assertCandidateTransition,
@@ -20,6 +24,7 @@ export async function queueIntegrationRegistryCandidate(
         now: string;
         policy: ReleaseAdmissionPolicySnapshotV1;
         admission: AdmissionInputSnapshotV1;
+        migrationInputs: QueueIntegrationRegistryCandidateInput["migrationInputs"];
         planningArtifacts?: Readonly<{
             compatibilityReportDigest: string;
             statefulChangeSelectionDigest: string;
@@ -35,11 +40,17 @@ export async function queueIntegrationRegistryCandidate(
     const policy = await identifyReleaseAdmissionPolicySnapshot(input.policy);
     const admission = await validateAdmissionInputSnapshotForPolicy(input.admission, policy.snapshot);
     assertAdmissionCandidate(record, admission.snapshot.candidate);
+    const migrationInputs = await Promise.all((input.migrationInputs ?? []).map(identifyMigrationVerificationInput));
+    const migrationInputDigests = migrationInputs.map((entry) => entry.digest).toSorted();
+    if (migrationInputDigests.some((digest, index) => digest === migrationInputDigests[index - 1])) {
+        invalidCandidate("Candidate migration inputs must be unique");
+    }
     return nextCandidateRecord(record, {
         status: "queued",
         updatedAt: now,
         policyDigest: policy.digest,
         admissionInputDigest: admission.digest,
+        migrationInputDigests,
         ...(input.planningArtifacts ?? {}),
     });
 }

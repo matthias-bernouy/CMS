@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { identifyVerificationJobResult } from "@bernouy/cms-integration-verification";
+import { identifyCandidateAdmissionJobResult } from "@bernouy/cms-integration-verification";
 import { createRepositoryManagementGuard, createRepositoryWorkerGuard } from "@bernouy/cms-repository-management";
 import { BunRunner, type Runner } from "@bernouy/http-runner";
 import { serveForTest, type TestServer } from "@bernouy/http-runner/testing";
@@ -53,7 +53,7 @@ describe("production candidate protocol recovery", () => {
         const running = (await firstClaim.json()).candidate;
         expect(running.lease.fencingToken).toBe(1);
         const oldResult = await runtimeJobResult(queued.candidateId, candidate, running.lease);
-        const oldDigest = (await identifyVerificationJobResult(oldResult)).digest;
+        const oldDigest = (await identifyCandidateAdmissionJobResult(oldResult)).digest;
         clock.value = "2026-07-26T10:04:00.000Z";
         const oldCapability = await seal(first.server, running, oldDigest);
         first.server.stop();
@@ -89,7 +89,7 @@ describe("production candidate protocol recovery", () => {
         ).toBe(401);
 
         const result = await runtimeJobResult(queued.candidateId, candidate, rerun.lease);
-        const digest = (await identifyVerificationJobResult(result)).digest;
+        const digest = (await identifyCandidateAdmissionJobResult(result)).digest;
         const capability = await seal(restarted.server, rerun, digest);
         clock.value = "2026-07-26T10:06:00.000Z";
         const resultBody = { expectedRevision: rerun.revision, result };

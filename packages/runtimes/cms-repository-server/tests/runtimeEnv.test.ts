@@ -1,9 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import {
+    identifyMigrationVerificationEnvironment,
     POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
     validateReleaseAdmissionPolicySnapshot,
 } from "@bernouy/cms-integration-verification";
-import { productionReleaseAdmissionPolicy } from "../src/core/candidates/policy";
+import {
+    productionMigrationVerificationEnvironment,
+    productionReleaseAdmissionPolicy,
+} from "../src/core/candidates/policy";
 import { readRepositoryRuntimeEnv } from "../src/runtimeEnv";
 
 describe("readRepositoryRuntimeEnv", () => {
@@ -109,6 +113,18 @@ describe("readRepositoryRuntimeEnv", () => {
         );
         expect(policy.platformRequiredSuites.every((suite) => suite.runner.version === "1.2.0")).toBeTrue();
         expect(policy.platformRequiredSuites.every((suite) => suite.suiteDigest.length === 64)).toBeTrue();
+    });
+
+    test("approves only the exact pinned migration proof environment", async () => {
+        const runner = readRepositoryRuntimeEnv({}).verifierRunner;
+        const environment = await productionMigrationVerificationEnvironment(runner);
+        const identified = await identifyMigrationVerificationEnvironment(environment);
+        const policy = await productionReleaseAdmissionPolicy(runner, environment);
+
+        expect(environment.runner.identity).toEqual(runner);
+        expect(environment.postgres.imageDigest).toStartWith("sha256:");
+        expect(policy.migrationEvidence.approvedEnvironmentDigests).toEqual([identified.digest]);
+        await expect(validateReleaseAdmissionPolicySnapshot(policy)).resolves.toBeDefined();
     });
 
     test("requires explicit trusted hops and keeps disabled mode explicit", () => {

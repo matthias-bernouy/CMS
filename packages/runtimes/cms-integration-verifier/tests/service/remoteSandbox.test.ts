@@ -86,7 +86,7 @@ describe("fixed sandbox service", () => {
 
         const input = await sandboxInputFixture();
         const result = await remote.run(input, new AbortController().signal);
-        expect(result.candidateId).toBe(input.workload.admission.candidate.candidateId);
+        expect(result.verification.candidateId).toBe(input.workload.admission.candidate.candidateId);
 
         const unauthenticated = await fetch(`http://127.0.0.1:${server.port}/v1/run`, {
             method: "POST",

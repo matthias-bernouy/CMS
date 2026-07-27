@@ -21,6 +21,7 @@ import {
     resultCapabilityIdentity,
     sameCandidateLease,
 } from "./shared";
+import { resolveExactMigrationPackages } from "./packages";
 
 export function mountAuthenticatedWorkerRoutes(runner: Runner, config: RepositoryCandidateWorkerRoutesConfig): void {
     runner.get(REPOSITORY_VERIFICATION_JOBS_PATH, (request) => listJobs(request, config));
@@ -52,6 +53,14 @@ async function claimJob(request: Request, config: RepositoryCandidateWorkerRoute
             throw new Error("Candidate has no exact admission plan");
         }
         const current = await config.store.get(input.candidateId);
+        if (!current) {
+            throw new Error("Candidate disappeared before its exact claim");
+        }
+        const migrationPackages = await resolveExactMigrationPackages(config.packageSource, objects.migrationInputs, {
+            kind: current.kind,
+            version: current.version,
+            packageDigest: current.packageDigest,
+        });
         const now = canonicalWorkerTimestamp(config.now());
         const record = await config.store.claim(input.candidateId, {
             expectedRevision: input.expectedRevision,
@@ -68,6 +77,8 @@ async function claimJob(request: Request, config: RepositoryCandidateWorkerRoute
                 verification: objects.verification,
                 policy: objects.policy,
                 admission: objects.admission,
+                migrationInputs: objects.migrationInputs,
+                ...(migrationPackages.length > 0 ? { migrationPackages } : {}),
             },
         });
     } catch (error) {

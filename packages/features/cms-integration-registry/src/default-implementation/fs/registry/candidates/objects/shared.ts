@@ -42,6 +42,7 @@ export async function assertCandidateObjectCapacity(
         layout.admissions,
         layout.compatibilityReports,
         layout.statefulSelections,
+        layout.migrationInputs,
         layout.results,
     ]) {
         await readVerifiedRegistryDirectory(root);

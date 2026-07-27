@@ -3,6 +3,8 @@ import type {
     AdmissionInputSnapshotV1,
     AdmissionSuitePlanEntryV1,
     ReleaseAdmissionPolicySnapshotV1,
+    MigrationVerificationEnvironmentV1,
+    MigrationVerificationInputV1,
     StatefulChangeSelectionV1,
     ValidatedIntegrationCandidateEnvelopeV1,
 } from "@bernouy/cms-integration-verification";
@@ -28,6 +30,7 @@ export type FsIntegrationRegistryCandidateAdmissionPlannerConfig = Readonly<{
     reviewedSchemaBaselines: ReviewedSchemaBaselineStore;
     policy: ReleaseAdmissionPolicySnapshotV1;
     inheritedContracts?: IntegrationVerificationContractCatalog;
+    migrationEnvironment?: MigrationVerificationEnvironmentV1;
     limits?: Partial<IntegrationPackageLimits>;
 }>;
 
@@ -37,6 +40,7 @@ export type FsIntegrationRegistryCandidateAdmissionPlan = Readonly<{
     compatibilityReportDigest: string;
     statefulChangeSelectionDigest: string;
     statefulChanges: StatefulChangeSelectionV1;
+    migrationInputs: readonly MigrationVerificationInputV1[];
 }>;
 
 export type PlanFsIntegrationRegistryCandidateInput = Readonly<{
@@ -50,6 +54,7 @@ export type CandidateAdmissionPlanningErrorCode =
     | "dependency_cycle"
     | "dependency_unavailable"
     | "missing_migration_baseline"
+    | "migration_input_unavailable"
     | "runner_unavailable"
     | "suite_conflict";
 

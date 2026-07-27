@@ -1,9 +1,10 @@
 import type { IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
 import type {
     AdmissionInputSnapshotV1,
+    CandidateAdmissionJobResultV1,
     IntegrationVerificationEnvelopeV1,
     ReleaseAdmissionPolicySnapshotV1,
-    VerificationJobResultV1,
+    MigrationVerificationInputV1,
 } from "@bernouy/cms-integration-verification";
 
 export type CandidateLeaseProjection = Readonly<{
@@ -51,6 +52,13 @@ export type ExactVerificationWorkload = Readonly<{
     verification: IntegrationVerificationEnvelopeV1;
     policy: ReleaseAdmissionPolicySnapshotV1;
     admission: AdmissionInputSnapshotV1;
+    migrationInputs: readonly MigrationVerificationInputV1[];
+    migrationPackages: readonly ExactMigrationPackage[];
+}>;
+
+export type ExactMigrationPackage = Readonly<{
+    digest: string;
+    envelope: IntegrationPackageEnvelopeV1;
 }>;
 
 export type ClaimedVerificationJob = Readonly<{
@@ -72,6 +80,6 @@ export interface CandidateWorkerClient {
     submit(
         candidate: ClaimedVerificationJob["candidate"],
         capability: ResultCapability,
-        result: VerificationJobResultV1,
+        result: CandidateAdmissionJobResultV1,
     ): Promise<CandidateStatusProjection>;
 }

@@ -1,9 +1,23 @@
 import { IntegrationRegistryCandidateError } from "cms-integration-registry/core/publication/candidates/errors";
 import type { IntegrationRegistryCandidateRecord } from "cms-integration-registry/interfaces/publication";
 import { FsIntegrationRegistryCandidateStoreError } from "../errors";
+import { readCurrentCandidateRecord } from "../history";
 import { assertCandidateId, type FsIntegrationRegistryCandidateLayout } from "../layout";
 import { boundedCandidateListLimit, candidateRecordInventory, canonicalCandidateStoreTimestamp } from "./inventory";
-import { requireCandidateRecord } from "./operations";
+
+export async function requireCandidateRecord(
+    layout: FsIntegrationRegistryCandidateLayout,
+    candidateId: string,
+): Promise<IntegrationRegistryCandidateRecord> {
+    const record = await readCurrentCandidateRecord(layout, candidateId);
+    if (!record) {
+        throw new FsIntegrationRegistryCandidateStoreError(
+            "candidate_not_found",
+            `Candidate ${candidateId} does not exist`,
+        );
+    }
+    return record;
+}
 
 export async function readCandidateRecordOrNull(
     layout: FsIntegrationRegistryCandidateLayout,

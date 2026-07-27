@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { identifyVerificationJobResult } from "@bernouy/cms-integration-verification";
+import { identifyCandidateAdmissionJobResult } from "@bernouy/cms-integration-verification";
 import { VerificationSupervisorError, createVerificationSupervisor, type VerificationSandboxInput } from "../../src";
 import { runnerFixture } from "../fixtures/contracts";
 import { validJobResult } from "../fixtures/result";
@@ -38,20 +38,23 @@ describe("verification supervisor credential boundary", () => {
                     const result = await validJobResult(fake.claimed);
                     return {
                         ...result,
-                        results: result.results.map((suite, index) =>
-                            index === 0
-                                ? {
-                                      ...suite,
-                                      diagnostics: [
-                                          {
-                                              code: "malicious-echo",
-                                              message: `database=${input.database.connectionUri}; password=database-secret`,
-                                              redacted: true,
-                                          },
-                                      ],
-                                  }
-                                : suite,
-                        ),
+                        verification: {
+                            ...result.verification,
+                            results: result.verification.results.map((suite, index) =>
+                                index === 0
+                                    ? {
+                                          ...suite,
+                                          diagnostics: [
+                                              {
+                                                  code: "malicious-echo",
+                                                  message: `database=${input.database.connectionUri}; password=database-secret`,
+                                                  redacted: true,
+                                              },
+                                          ],
+                                      }
+                                    : suite,
+                            ),
+                        },
                     };
                 },
             },
@@ -69,9 +72,9 @@ describe("verification supervisor credential boundary", () => {
         const submitted = fake.submissions[0]!.result;
         expect(JSON.stringify(submitted)).not.toContain(DATABASE_URI);
         expect(JSON.stringify(submitted)).not.toContain("database-secret");
-        expect(submitted.results[0]!.diagnostics[0]!.message).toContain("[REDACTED]");
+        expect(submitted.verification.results[0]!.diagnostics[0]!.message).toContain("[REDACTED]");
         expect(outcome.outcome === "submitted" ? outcome.resultDigest : "").toBe(
-            (await identifyVerificationJobResult(submitted)).digest,
+            (await identifyCandidateAdmissionJobResult(submitted)).digest,
         );
     });
 
@@ -88,7 +91,13 @@ describe("verification supervisor credential boundary", () => {
                 async run() {
                     const result = await validJobResult(fake.claimed);
                     const versions = [{ name: "postgres", version: "database-secret" }];
-                    return { ...result, environment: { ...result.environment, versions } };
+                    return {
+                        ...result,
+                        verification: {
+                            ...result.verification,
+                            environment: { ...result.verification.environment, versions },
+                        },
+                    };
                 },
             },
         });

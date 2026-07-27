@@ -23,17 +23,13 @@ import { ensureFsIntegrationRegistryCandidateLayout, type FsIntegrationRegistryC
 import { readFsIntegrationRegistryCandidateObjects } from "../objects";
 import { persistCandidatePlanningArtifacts } from "../objects";
 import { withCandidateMutationLock } from "./lock";
-import {
-    completeStoredCandidate,
-    createStoredCandidate,
-    mutateStoredCandidate,
-    queueStoredCandidate,
-    requireCandidateRecord,
-} from "./operations";
+import { createStoredCandidate, mutateStoredCandidate, queueStoredCandidate } from "./operations";
+import { completeStoredCandidate } from "./completion";
 import {
     listClaimableCandidateRecords,
     listPublicationPendingCandidateRecords,
     readCandidateRecordOrNull,
+    requireCandidateRecord,
     sweepDueCandidateExpirations,
     sweepExpiredCandidateLeases,
 } from "./queries";

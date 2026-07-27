@@ -20,7 +20,7 @@ describe("local process verification sandbox", () => {
 
         const result = await fixture.sandbox.run(await sandboxInputFixture(), new AbortController().signal);
 
-        const diagnostic = result.results[0]!.diagnostics[0]!;
+        const diagnostic = result.verification.results[0]!.diagnostics[0]!;
         expect(diagnostic.code).toBe("sandbox-environment");
         const environment = JSON.parse(diagnostic.message) as Record<string, string>;
         expect(environment.CMS_INTEGRATION_VERIFIER_WORKER_TOKEN).toBeUndefined();

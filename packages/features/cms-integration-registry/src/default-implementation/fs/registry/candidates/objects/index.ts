@@ -3,31 +3,36 @@ import type {
     CompatibilityReportV2,
     ReleaseAdmissionPolicySnapshotV1,
     StatefulChangeSelectionV1,
-    VerificationJobResultV1,
+    MigrationVerificationInputV1,
 } from "@bernouy/cms-integration-verification";
 import {
     identifyCompatibilityReportV2,
     identifyStatefulChangeSelection,
     validateAdmissionInputSnapshotForPolicy,
     validateIntegrationCandidateEnvelope,
-    validateVerificationJobResultForAdmission,
 } from "@bernouy/cms-integration-verification";
 import type {
     IntegrationRegistryCandidateObjects,
     IntegrationRegistryCandidateRecord,
 } from "cms-integration-registry/interfaces/publication";
 import type { FsIntegrationRegistryCandidateLayout } from "../layout";
-import { readCandidateAdmission, readCandidatePolicy, readCandidateVerificationJobResult } from "./control";
+import { readCandidateAdmission, readCandidatePolicy, readCandidateResultObject } from "./control";
+import { readCandidateAttemptObjects } from "./attempt";
+import { readCandidateMigrationInput } from "./migration";
 import { readCandidatePackage, readCandidateVerification } from "./package";
 import { readCandidateCompatibilityReport, readCandidateStatefulSelection } from "./planning";
 
 export {
     persistCandidateAdmissionObjects,
+    persistCandidateAdmissionJobResult,
     persistCandidateVerificationJobResult,
     readCandidateAdmission,
+    readCandidateAdmissionJobResult,
     readCandidatePolicy,
+    readCandidateResultObject,
     readCandidateVerificationJobResult,
 } from "./control";
+export { persistCandidateMigrationInputs, readCandidateMigrationInput } from "./migration";
 export { persistCandidatePackageObjects, readCandidatePackage, readCandidateVerification } from "./package";
 export {
     persistCandidatePlanningArtifacts,
@@ -68,7 +73,7 @@ export async function readFsIntegrationRegistryCandidateObjects(
     let admission: AdmissionInputSnapshotV1 | undefined;
     let compatibilityReport: CompatibilityReportV2 | undefined;
     let statefulChanges: StatefulChangeSelectionV1 | undefined;
-    let verificationJobResult: VerificationJobResultV1 | undefined;
+    let migrationInputs: readonly MigrationVerificationInputV1[] = [];
     if (record.policyDigest && record.admissionInputDigest) {
         policy = await readCandidatePolicy(layout, record.policyDigest);
         admission = await readCandidateAdmission(layout, record.admissionInputDigest);
@@ -85,24 +90,12 @@ export async function readFsIntegrationRegistryCandidateObjects(
             throw new Error(`Candidate ${record.candidateId} admission inputs do not match its record`);
         }
     }
-    if (record.verificationJobResultDigest) {
-        verificationJobResult = await readCandidateVerificationJobResult(layout, record.verificationJobResultDigest);
-        if (!policy || !admission) {
-            throw new Error(`Candidate ${record.candidateId} result is missing persisted admission inputs`);
-        }
-        const identified = await validateVerificationJobResultForAdmission(verificationJobResult, admission, policy, {
-            jobId: verificationJobResult.jobId,
-            attemptId: verificationJobResult.attemptId,
-            fencingToken: verificationJobResult.fencingToken,
-        });
-        if (
-            identified.digest !== record.verificationJobResultDigest ||
-            verificationJobResult.fencingToken > record.attemptCount ||
-            (record.status !== "running" && verificationJobResult.fencingToken !== record.attemptCount)
-        ) {
-            throw new Error(`Candidate ${record.candidateId} result does not match its record attempt`);
-        }
+    if (record.migrationInputDigests) {
+        migrationInputs = await Promise.all(
+            record.migrationInputDigests.map((digest) => readCandidateMigrationInput(layout, digest)),
+        );
     }
+    const attempt = await readCandidateAttemptObjects(layout, record, policy, admission, migrationInputs);
     if (record.compatibilityReportDigest && record.statefulChangeSelectionDigest) {
         compatibilityReport = await readCandidateCompatibilityReport(layout, record.compatibilityReportDigest);
         statefulChanges = await readCandidateStatefulSelection(layout, record.statefulChangeSelectionDigest);
@@ -128,6 +121,7 @@ export async function readFsIntegrationRegistryCandidateObjects(
         ...(admission ? { admission } : {}),
         ...(compatibilityReport ? { compatibilityReport } : {}),
         ...(statefulChanges ? { statefulChanges } : {}),
-        ...(verificationJobResult ? { verificationJobResult } : {}),
+        migrationInputs,
+        ...attempt,
     });
 }

@@ -194,7 +194,6 @@ export {
     FsIntegrationRegistryCandidateFinalizationError,
     FsIntegrationRegistryCandidateFinalizer,
     recoverVerifiedCandidateActivations,
-    type CandidateMigrationReportProvider,
     type FinalizedIntegrationRegistryCandidate,
     type FsIntegrationRegistryCandidateFinalizerConfig,
 } from "../default-implementation/fs/registry/publication/transaction/finalization";

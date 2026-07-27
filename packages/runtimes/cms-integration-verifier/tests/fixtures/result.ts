@@ -1,9 +1,13 @@
 import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
-import { identifyAdmissionInputSnapshot, type VerificationJobResultV1 } from "@bernouy/cms-integration-verification";
+import {
+    identifyAdmissionInputSnapshot,
+    type CandidateAdmissionJobResultV1,
+    type VerificationJobResultV1,
+} from "@bernouy/cms-integration-verification";
 import type { ClaimedVerificationJob, VerificationSandboxInput } from "../../src";
 import { runnerFixture } from "./contracts";
 
-export async function validJobResult(job: ClaimedVerificationJob): Promise<VerificationJobResultV1> {
+export async function validJobResult(job: ClaimedVerificationJob): Promise<CandidateAdmissionJobResultV1> {
     return await validSandboxResult({
         workload: {
             ...job.workload,
@@ -17,7 +21,15 @@ export async function validJobResult(job: ClaimedVerificationJob): Promise<Verif
     });
 }
 
-export async function validSandboxResult(input: VerificationSandboxInput): Promise<VerificationJobResultV1> {
+export async function validSandboxResult(input: VerificationSandboxInput): Promise<CandidateAdmissionJobResultV1> {
+    return {
+        schema: "cms.integration.candidate-admission-job-result.v1",
+        verification: await validVerificationResult(input),
+        migrations: [],
+    };
+}
+
+async function validVerificationResult(input: VerificationSandboxInput): Promise<VerificationJobResultV1> {
     const { admission, attempt } = input.workload;
     const admissionDigest = (await identifyAdmissionInputSnapshot(admission)).digest;
     const versions = [{ name: "postgres", version: "16.4" }];

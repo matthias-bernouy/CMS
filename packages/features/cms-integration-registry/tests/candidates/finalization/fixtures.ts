@@ -2,6 +2,8 @@ import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages
 import {
     identifyAdmissionInputSnapshot,
     type AdmissionInputSnapshotV1,
+    type CandidateAdmissionJobResultV1,
+    type MigrationVerificationInputV1,
     type ReleaseAdmissionPolicySnapshotV1,
     type VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
@@ -16,8 +18,14 @@ import {
     FsReleaseAdmissionDecisionStore,
 } from "@bernouy/cms-integration-registry/fs";
 import { publicationPackage, registryFixture } from "../../publication/fixtures";
-import { planningPolicy, validatingCandidate, verificationCandidate } from "../planning/fixtures";
+import {
+    planningMigrationConfiguration,
+    planningPolicy,
+    validatingCandidate,
+    verificationCandidate,
+} from "../planning/fixtures";
 import { passedSuiteResult } from "./platformResult";
+import { passedMigrationResult } from "./migration";
 
 export async function passedCandidate(fixture: ReturnType<typeof registryFixture>, candidateId: string) {
     const candidate = await verificationCandidate(await publicationPackage("demo", "1.0.0"));
@@ -30,14 +38,19 @@ export async function completePassedCandidate(
     candidateId: string,
     candidate: Awaited<ReturnType<typeof verificationCandidate>>,
     policy: ReleaseAdmissionPolicySnapshotV1,
+    options: Readonly<{
+        migrationObservationStatus?: "passed" | "failed" | "infrastructure-failure";
+    }> = {},
 ) {
     const store = await validatingCandidate(fixture.root, candidateId, candidate);
+    const migration = await planningMigrationConfiguration(policy);
     const planner = new FsIntegrationRegistryCandidateAdmissionPlanner({
         snapshots: fixture.snapshots,
         mutations: fixture.mutations,
         candidates: store,
         reviewedSchemaBaselines: fixture.reviewedSchemaBaselines,
-        policy,
+        policy: migration.policy,
+        migrationEnvironment: migration.environment,
     });
     const plan = await planner.plan({ candidateId, candidate });
     const queued = await store.queue(candidateId, {
@@ -45,6 +58,7 @@ export async function completePassedCandidate(
         now: "2026-07-26T10:00:02.000Z",
         policy: plan.policy,
         admission: plan.admission,
+        migrationInputs: plan.migrationInputs,
     });
     const running = await store.claim(candidateId, {
         expectedRevision: queued.revision,
@@ -54,12 +68,17 @@ export async function completePassedCandidate(
         now: "2026-07-26T10:00:03.000Z",
         leaseExpiresAt: "2026-07-26T10:05:03.000Z",
     });
-    await store.complete(candidateId, {
+    const completion = await store.complete(candidateId, {
         expectedRevision: running.revision,
         now: "2026-07-26T10:00:04.000Z",
-        result: await passedResult(plan.admission, running.lease!),
+        result: await passedResult(
+            plan.admission,
+            plan.migrationInputs,
+            running.lease!,
+            options.migrationObservationStatus,
+        ),
     });
-    return { candidate, store, policy, plan };
+    return { candidate, store, policy: migration.policy, plan, completion };
 }
 
 export function releaseStores(fixture: ReturnType<typeof registryFixture>) {
@@ -106,10 +125,12 @@ export function finalizerConfig(
 
 async function passedResult(
     admission: AdmissionInputSnapshotV1,
+    migrationInputs: readonly MigrationVerificationInputV1[],
     lease: Readonly<{ jobId: string; attemptId: string; fencingToken: number }>,
-): Promise<VerificationJobResultV1> {
+    migrationObservationStatus?: "passed" | "failed" | "infrastructure-failure",
+): Promise<CandidateAdmissionJobResultV1> {
     const versions = [{ name: "postgres", version: "16.4" }];
-    return {
+    const verification: VerificationJobResultV1 = {
         schema: "cms.integration.verification-job-result.v1",
         candidateId: admission.candidate.candidateId,
         jobId: lease.jobId,
@@ -136,5 +157,12 @@ async function passedResult(
         runner: admission.selectedRunner,
         environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },
         results: await Promise.all(admission.suites.map(async (suite) => await passedSuiteResult(suite))),
+    };
+    return {
+        schema: "cms.integration.candidate-admission-job-result.v1",
+        verification,
+        migrations: await Promise.all(
+            migrationInputs.map(async (input) => await passedMigrationResult(input, lease, migrationObservationStatus)),
+        ),
     };
 }

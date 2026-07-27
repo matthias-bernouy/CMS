@@ -60,7 +60,7 @@ export async function workloadFixture(): Promise<ClaimedVerificationJob["workloa
             evaluatorInputDigest: DIGEST_C,
         },
     };
-    return { package: packageValue, verification, policy, admission };
+    return { package: packageValue, verification, policy, admission, migrationInputs: [], migrationPackages: [] };
 }
 
 export async function queuedCandidate(): Promise<CandidateStatusProjection> {

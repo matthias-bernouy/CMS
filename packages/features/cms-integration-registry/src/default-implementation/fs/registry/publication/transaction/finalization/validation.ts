@@ -1,16 +1,20 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
     identifyAdmissionInputSnapshot,
+    identifyCandidateAdmissionJobResult,
     identifyCompatibilityReportV2,
     identifyReleaseAdmissionPolicySnapshot,
     identifyStatefulChangeSelection,
     identifyVerificationJobResult,
+    identifyMigrationVerificationInput,
+    validateCandidateAdmissionJobResultForPlan,
 } from "@bernouy/cms-integration-verification";
 import type { IntegrationRegistryCatalogSnapshot } from "cms-integration-registry/interfaces/catalog";
 import type {
     IntegrationRegistryCandidateObjects,
     IntegrationRegistryCandidateRecord,
 } from "cms-integration-registry/interfaces/publication";
+import { asCandidateAdmissionJobResult } from "cms-integration-registry/core/publication/candidates/state";
 import type { FsIntegrationRegistryCandidateFinalizerConfig } from "./types";
 import { FsIntegrationRegistryCandidateFinalizationError } from "./types";
 import { identifyCatalogRevision } from "../planning/catalog";
@@ -26,12 +30,26 @@ export async function assertCandidateFinalizationInputs(
     if (!policy || !admission || !compatibilityReport || !statefulChanges || !verificationJobResult) {
         stale("Candidate is missing immutable admission planning or verification objects");
     }
+    const admissionJobResult = objects.admissionJobResult ?? asCandidateAdmissionJobResult(verificationJobResult);
     const identifiedPolicy = await identifyReleaseAdmissionPolicySnapshot(policy);
     const currentPolicy = await identifyReleaseAdmissionPolicySnapshot(config.policy);
     const identifiedAdmission = await identifyAdmissionInputSnapshot(admission);
     const compatibility = await identifyCompatibilityReportV2(compatibilityReport);
     const stateful = await identifyStatefulChangeSelection(statefulChanges);
     const result = await identifyVerificationJobResult(verificationJobResult);
+    const admissionResult = await identifyCandidateAdmissionJobResult(admissionJobResult);
+    const migrationInputs = await Promise.all(objects.migrationInputs.map(identifyMigrationVerificationInput));
+    await validateCandidateAdmissionJobResultForPlan(
+        admissionJobResult,
+        migrationInputs.map((entry) => entry.input),
+        admission,
+        policy,
+        {
+            jobId: verificationJobResult.jobId,
+            attemptId: verificationJobResult.attemptId,
+            fencingToken: verificationJobResult.fencingToken,
+        },
+    );
     if (
         identifiedPolicy.digest !== currentPolicy.digest ||
         identifiedPolicy.digest !== record.policyDigest ||
@@ -39,6 +57,11 @@ export async function assertCandidateFinalizationInputs(
         compatibility.digest !== record.compatibilityReportDigest ||
         stateful.digest !== record.statefulChangeSelectionDigest ||
         result.digest !== record.verificationJobResultDigest ||
+        (record.admissionJobResultDigest !== undefined && admissionResult.digest !== record.admissionJobResultDigest) ||
+        !sameCanonical(
+            migrationInputs.map((entry) => entry.digest),
+            record.migrationInputDigests ?? [],
+        ) ||
         identifiedAdmission.snapshot.compatibilityRevision.digest !== compatibility.digest ||
         identifiedAdmission.snapshot.compatibilityRevision.revisionId !== compatibility.report.reportId ||
         stateful.selection.compatibilityReport.reportDigest !== compatibility.digest ||

@@ -5,12 +5,14 @@ import {
 } from "@bernouy/cms-integration-packages";
 import {
     computeIntegrationVerificationDigest,
+    identifyMigrationVerificationInput,
     validateAdmissionInputSnapshotForPolicy,
     validateIntegrationVerificationEnvelope,
     validateReleaseAdmissionPolicySnapshot,
 } from "@bernouy/cms-integration-verification";
 import { validateIntegrationPackageEnvelope } from "@bernouy/cms-integration-packages";
 import type { VerificationSandboxInput } from "../supervisor";
+import { parseExactMigrationPackages } from "../protocol/workload";
 import { validateDisposableDatabaseCredential } from "../supervisor/execution/credential";
 
 const IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
@@ -24,14 +26,47 @@ export async function parseCanonicalVerificationSandboxInput(
     }
     const document = parseStrictJsonDocument(bytes, maxBytes);
     const root = strictRecord(document, ["workload", "database"]);
-    const workload = strictRecord(root.workload, ["package", "verification", "policy", "admission", "attempt"]);
+    const rawWorkload = root.workload;
+    const hasMigrationInputs = Boolean(
+        rawWorkload &&
+            typeof rawWorkload === "object" &&
+            !Array.isArray(rawWorkload) &&
+            "migrationInputs" in rawWorkload,
+    );
+    const hasMigrationPackages = Boolean(
+        rawWorkload &&
+            typeof rawWorkload === "object" &&
+            !Array.isArray(rawWorkload) &&
+            "migrationPackages" in rawWorkload,
+    );
+    const workload = strictRecord(rawWorkload, [
+        "package",
+        "verification",
+        "policy",
+        "admission",
+        ...(hasMigrationInputs ? ["migrationInputs"] : []),
+        ...(hasMigrationPackages ? ["migrationPackages"] : []),
+        "attempt",
+    ]);
     const packageEnvelope = validateIntegrationPackageEnvelope(workload.package, { requireReleaseNotes: true });
     const verification = validateIntegrationVerificationEnvelope(workload.verification);
     const policy = await validateReleaseAdmissionPolicySnapshot(workload.policy);
     const admission = await validateAdmissionInputSnapshotForPolicy(workload.admission, policy);
     const attempt = parseAttempt(workload.attempt);
+    const rawMigrationInputs = workload.migrationInputs ?? [];
+    if (!Array.isArray(rawMigrationInputs)) {
+        throw new TypeError("Sandbox migration input plan must be an array");
+    }
+    const migrationInputs = (await Promise.all(rawMigrationInputs.map(identifyMigrationVerificationInput))).map(
+        (entry) => entry.input,
+    );
     const database = validateDisposableDatabaseCredential(root.database as VerificationSandboxInput["database"]);
     const packageDigest = await computeIntegrationPackageDigest(packageEnvelope);
+    const migrationPackages = await parseExactMigrationPackages(workload.migrationPackages ?? [], migrationInputs, {
+        kind: packageEnvelope.kind,
+        version: packageEnvelope.version,
+        packageDigest,
+    });
     const verificationDigest = await computeIntegrationVerificationDigest(verification);
     if (
         packageEnvelope.kind !== admission.snapshot.candidate.kind ||
@@ -50,6 +85,8 @@ export async function parseCanonicalVerificationSandboxInput(
             verification,
             policy,
             admission: admission.snapshot,
+            migrationInputs,
+            migrationPackages,
             attempt,
         },
         database,

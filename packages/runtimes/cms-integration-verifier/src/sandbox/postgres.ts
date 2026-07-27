@@ -2,6 +2,8 @@ import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages
 import {
     identifyAdmissionInputSnapshot,
     parsePlatformVerificationEvidence,
+    type CandidateAdmissionJobResultV1,
+    type MigrationJobResultV1,
     type PlatformVerificationEvidenceV1,
     type VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
@@ -27,6 +29,15 @@ export interface PostgresPlatformVerificationAdapter {
         }>,
         signal: AbortSignal,
     ): Promise<PostgresPlatformVerificationEvidence>;
+    verifyMigrations?(
+        input: Readonly<{
+            package: VerificationSandboxInput["workload"]["package"];
+            migrationInputs: VerificationSandboxInput["workload"]["migrationInputs"];
+            attempt: VerificationSandboxInput["workload"]["attempt"];
+            database: VerificationSandboxInput["database"];
+        }>,
+        signal: AbortSignal,
+    ): Promise<readonly MigrationJobResultV1[]>;
     dispose?(): Promise<void>;
 }
 
@@ -34,7 +45,7 @@ export async function runPostgresPlatformVerification(
     input: VerificationSandboxInput,
     adapter: PostgresPlatformVerificationAdapter,
     signal: AbortSignal,
-): Promise<VerificationJobResultV1> {
+): Promise<CandidateAdmissionJobResultV1> {
     const plannedPlatform = input.workload.admission.suites
         .filter((entry) => entry.source === "platform")
         .map((entry) => ({
@@ -64,7 +75,7 @@ export async function runPostgresPlatformVerification(
         left.name.localeCompare(right.name),
     );
     const admissionDigest = (await identifyAdmissionInputSnapshot(input.workload.admission)).digest;
-    return {
+    const verification: VerificationJobResultV1 = {
         schema: "cms.integration.verification-job-result.v1",
         candidateId: input.workload.admission.candidate.candidateId,
         ...input.workload.attempt,
@@ -100,6 +111,27 @@ export async function runPostgresPlatformVerification(
                 };
             }),
         ),
+    };
+    let migrations: readonly MigrationJobResultV1[] = [];
+    const migrationInputs = input.workload.migrationInputs ?? [];
+    if (migrationInputs.length > 0) {
+        if (!adapter.verifyMigrations) {
+            throw new TypeError("PostgreSQL verification adapter cannot execute required migration proofs");
+        }
+        migrations = await adapter.verifyMigrations(
+            {
+                package: input.workload.package,
+                migrationInputs,
+                attempt: input.workload.attempt,
+                database: input.database,
+            },
+            signal,
+        );
+    }
+    return {
+        schema: "cms.integration.candidate-admission-job-result.v1",
+        verification,
+        migrations,
     };
 }
 

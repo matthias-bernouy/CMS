@@ -1,4 +1,4 @@
-import type { MigrationReport, ReleaseAdmissionPolicySnapshotV1 } from "@bernouy/cms-integration-verification";
+import type { ReleaseAdmissionPolicySnapshotV1 } from "@bernouy/cms-integration-verification";
 import type { IntegrationRegistryCandidateStore } from "cms-integration-registry/interfaces/publication";
 import type {
     IntegrationCompatibilityV2ReportStore,
@@ -11,15 +11,6 @@ import type {
 import type { FsIntegrationRegistryPublicationConfig } from "../../types";
 import type { IntegrationVerificationContractCatalog } from "../planning";
 
-export type CandidateMigrationReportProvider = (
-    input: Readonly<{
-        candidateId: string;
-        kind: string;
-        version: string;
-        packageDigest: string;
-    }>,
-) => Promise<readonly MigrationReport[]>;
-
 export type FsIntegrationRegistryCandidateFinalizerConfig = FsIntegrationRegistryPublicationConfig &
     Readonly<{
         candidates: IntegrationRegistryCandidateStore;
@@ -31,7 +22,6 @@ export type FsIntegrationRegistryCandidateFinalizerConfig = FsIntegrationRegistr
         releaseDecisions: ReleaseAdmissionDecisionStore;
         verificationBundles: IntegrationVerificationBundleStore;
         inheritedContracts?: IntegrationVerificationContractCatalog;
-        loadMigrationReports?: CandidateMigrationReportProvider;
         createDecisionId?: (candidateId: string) => string;
         afterActivationPhase?: (
             phase: "prepared" | "index-written" | "snapshot-swapped" | "candidate-published",

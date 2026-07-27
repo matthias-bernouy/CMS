@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { identifyVerificationJobResult } from "@bernouy/cms-integration-verification";
+import { identifyCandidateAdmissionJobResult } from "@bernouy/cms-integration-verification";
 import {
     candidateJobResult,
     candidateProtocolFixture,
@@ -75,7 +75,7 @@ describe("private repository candidate protocol", () => {
             attemptId: lease.attemptId,
             fencingToken: lease.fencingToken,
         });
-        const resultDigest = (await identifyVerificationJobResult(result)).digest;
+        const resultDigest = (await identifyCandidateAdmissionJobResult(result)).digest;
         fixture.clock.value = TIMES.completed;
         const sealBody = {
             candidateId: queued.candidateId,
@@ -111,7 +111,13 @@ describe("private repository candidate protocol", () => {
         expect((await requestJson(fixture.server, "POST", resultPath, resultBody, "worker-secret")).status).toBe(401);
         const substituted = {
             ...result,
-            results: result.results.map((entry) => ({ ...entry, evidenceDigests: ["9".repeat(64)] })),
+            verification: {
+                ...result.verification,
+                results: result.verification.results.map((entry) => ({
+                    ...entry,
+                    evidenceDigests: ["9".repeat(64)],
+                })),
+            },
         };
         expect(
             (

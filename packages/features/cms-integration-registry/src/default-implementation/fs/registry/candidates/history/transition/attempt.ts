@@ -40,11 +40,15 @@ export function assertCompletion(
     current: IntegrationRegistryCandidateRecord,
     retry: boolean,
 ): void {
+    const legacyPlan = previous.migrationInputDigests === undefined;
     if (
         !previous.lease ||
         current.lease ||
         !current.verificationJobResultDigest ||
-        current.verificationJobResultDigest === previous.verificationJobResultDigest
+        current.verificationJobResultDigest === previous.verificationJobResultDigest ||
+        (!legacyPlan &&
+            (!current.admissionJobResultDigest ||
+                current.admissionJobResultDigest === previous.admissionJobResultDigest))
     ) {
         corrupt(`Candidate ${current.candidateId} completion has no fresh immutable result`);
     }
@@ -64,6 +68,7 @@ export function assertCompletion(
         "lease",
         "lastFailure",
         "verificationJobResultDigest",
+        "admissionJobResultDigest",
     ]);
 }
 

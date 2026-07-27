@@ -12,6 +12,8 @@ import {
     readCandidatePolicy,
     readCandidateVerification,
     readCandidateVerificationJobResult,
+    readCandidateResultObject,
+    readCandidateMigrationInput,
     readCandidateCompatibilityReport,
     readCandidateStatefulSelection,
 } from "../../objects";
@@ -90,9 +92,14 @@ function objectInventories(layout: FsIntegrationRegistryCandidateLayout) {
             read: (digest: string) => readCandidateStatefulSelection(layout, digest),
         },
         {
+            kind: "migration-input",
+            root: layout.migrationInputs,
+            read: (digest: string) => readCandidateMigrationInput(layout, digest),
+        },
+        {
             kind: "result",
             root: layout.results,
-            read: (digest: string) => readCandidateVerificationJobResult(layout, digest),
+            read: (digest: string) => readCandidateResultObject(layout, digest),
         },
     ] as const;
 }

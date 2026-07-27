@@ -1,12 +1,16 @@
 import {
     identifyReleaseAdmissionPolicySnapshot,
     validateAdmissionInputSnapshotForPolicy,
-    validateVerificationJobResultForAdmission,
+    validateCandidateAdmissionJobResultForPlan,
+    identifyVerificationJobResult,
     type AdmissionInputSnapshotV1,
     type ReleaseAdmissionPolicySnapshotV1,
+    type CandidateAdmissionJobResultV1,
+    type MigrationVerificationInputV1,
     type VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import type { IntegrationRegistryCandidateRecord } from "../../../../interfaces/publication";
+import { asCandidateAdmissionJobResult, candidateAdmissionJobOutcome } from "./admissionResult";
 import { assertAdmissionCandidate } from "./plan";
 import {
     assertCandidateLease,
@@ -79,7 +83,8 @@ export async function completeIntegrationRegistryCandidateAttempt(
     input: Readonly<{
         expectedRevision: number;
         now: string;
-        result: VerificationJobResultV1;
+        result: CandidateAdmissionJobResultV1 | VerificationJobResultV1;
+        migrationInputs?: readonly MigrationVerificationInputV1[];
         admission: AdmissionInputSnapshotV1;
         policy: ReleaseAdmissionPolicySnapshotV1;
     }>,
@@ -88,7 +93,9 @@ export async function completeIntegrationRegistryCandidateAttempt(
     if (!record.lease || !record.policyDigest || !record.admissionInputDigest) {
         invalidCandidate("Candidate running attempt is missing exact admission inputs");
     }
-    const lease = assertCandidateLease(record, input.result.attemptId, input.result.fencingToken);
+    const admissionResult = asCandidateAdmissionJobResult(input.result);
+    const verificationResult = admissionResult.verification;
+    const lease = assertCandidateLease(record, verificationResult.attemptId, verificationResult.fencingToken);
     const now = monotonicCandidateTimestamp(record, input.now);
     assertCandidateLeaseCurrent(lease, now);
     const policy = await identifyReleaseAdmissionPolicySnapshot(input.policy);
@@ -97,26 +104,30 @@ export async function completeIntegrationRegistryCandidateAttempt(
         invalidCandidate("Candidate completion admission inputs differ from its immutable queued plan");
     }
     assertAdmissionCandidate(record, admission.snapshot.candidate);
-    const result = await validateVerificationJobResultForAdmission(input.result, admission.snapshot, policy.snapshot, {
-        jobId: lease.jobId,
-        attemptId: lease.attemptId,
-        fencingToken: lease.fencingToken,
-    });
-    return completeWithDerivedOutcome(record, policy.snapshot, result.result, result.digest, now);
+    const result = await validateCandidateAdmissionJobResultForPlan(
+        admissionResult,
+        input.migrationInputs ?? [],
+        admission.snapshot,
+        policy.snapshot,
+        {
+            jobId: lease.jobId,
+            attemptId: lease.attemptId,
+            fencingToken: lease.fencingToken,
+        },
+    );
+    const verification = await identifyVerificationJobResult(result.result.verification);
+    return completeWithDerivedOutcome(record, policy.snapshot, result.result, verification.digest, result.digest, now);
 }
 
 function completeWithDerivedOutcome(
     record: IntegrationRegistryCandidateRecord,
     policy: ReleaseAdmissionPolicySnapshotV1,
-    result: VerificationJobResultV1,
-    resultDigest: string,
+    result: CandidateAdmissionJobResultV1,
+    verificationJobResultDigest: string,
+    admissionJobResultDigest: string,
     now: string,
 ): IntegrationRegistryCandidateRecord {
-    const outcome = result.results.some((entry) => entry.outcome === "infrastructure-failure")
-        ? "infrastructure-failure"
-        : result.results.every((entry) => entry.outcome === "passed" || entry.outcome === "not-applicable")
-          ? "passed"
-          : "rejected";
+    const outcome = candidateAdmissionJobOutcome(result, policy);
     const retryable =
         outcome === "infrastructure-failure" &&
         policy.retry.retryableOutcomes.includes("infrastructure-failure") &&
@@ -124,7 +135,8 @@ function completeWithDerivedOutcome(
     return nextCandidateRecord(record, {
         status: outcome === "passed" ? "passed" : retryable ? "queued" : "rejected",
         updatedAt: now,
-        verificationJobResultDigest: resultDigest,
+        verificationJobResultDigest,
+        admissionJobResultDigest,
         lease: undefined,
         ...(outcome === "passed" ? { lastFailure: undefined } : derivedFailure(outcome, retryable, now)),
     });

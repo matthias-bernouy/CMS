@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import type { ReleaseAdmissionPolicySnapshotV1 } from "@bernouy/cms-integration-verification";
-import { FsIntegrationRegistryCandidateFinalizationError } from "@bernouy/cms-integration-registry/fs";
+import { FsIntegrationRegistryCandidateAdmissionPlanningError } from "@bernouy/cms-integration-registry/fs";
 import { reviewedBaseline } from "../../baselines/fixtures";
 import {
     cleanupRegistryFixtures,
@@ -9,12 +9,12 @@ import {
     sqlPublicationPackage,
 } from "../../publication/fixtures";
 import { planningPolicy, verificationCandidate } from "../planning/fixtures";
-import { completePassedCandidate, releaseFinalizer } from "./fixtures";
+import { completePassedCandidate } from "./fixtures";
 
 afterEach(cleanupRegistryFixtures);
 
-describe("candidate finalization without migration evidence", () => {
-    test("fails closed and keeps a stateful target private", async () => {
+describe("candidate admission without a migration proof plan", () => {
+    test("fails before queueing and keeps a stateful target private", async () => {
         const fixture = registryFixture();
         const baselinePackage = await seedLegacySqlBaseline(fixture);
         await fixture.reviewedSchemaBaselines.append({
@@ -49,18 +49,16 @@ describe("candidate finalization without migration evidence", () => {
                 requiredChecks: ["fresh-install", "migrated-state", "equivalence"],
             },
         };
-        const setup = await completePassedCandidate(fixture, "candidate-migration-missing", candidate, policy);
-
         let failure: unknown;
         try {
-            await releaseFinalizer(fixture, setup.store, policy).finalize("candidate-migration-missing");
+            await completePassedCandidate(fixture, "candidate-migration-missing", candidate, policy);
         } catch (error) {
             failure = error;
         }
 
-        expect(failure).toBeInstanceOf(FsIntegrationRegistryCandidateFinalizationError);
-        expect(failure).toMatchObject({ code: "admission_rejected" });
-        expect((failure as Error).message).toMatch(/migration-missing:/);
+        expect(failure).toBeInstanceOf(FsIntegrationRegistryCandidateAdmissionPlanningError);
+        expect(failure).toMatchObject({ code: "migration_input_unavailable" });
+        expect((failure as Error).message).toMatch(/has no migration plan/);
         expect(fixture.snapshots.current().locateExactVersion("demo", "1.1.0")).toBeNull();
         expect(
             fixture.snapshots

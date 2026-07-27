@@ -1,6 +1,7 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
-    validateVerificationJobResultForAdmission,
+    validateCandidateAdmissionJobResultForPlan,
+    type CandidateAdmissionJobResultV1,
     type VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import type { VerificationSandboxInput } from "../supervisor";
@@ -9,7 +10,7 @@ import { parseCanonicalVerificationSandboxInput } from "./childProtocol";
 export type VerificationSandboxProgram = (
     input: VerificationSandboxInput,
     signal: AbortSignal,
-) => Promise<VerificationJobResultV1>;
+) => Promise<CandidateAdmissionJobResultV1 | VerificationJobResultV1>;
 
 export async function runCanonicalVerificationSandboxProgram(
     program: VerificationSandboxProgram,
@@ -22,9 +23,11 @@ export async function runCanonicalVerificationSandboxProgram(
     try {
         const bytes = await readStdin(options.maxInputBytes);
         const input = await parseCanonicalVerificationSandboxInput(bytes, options.maxInputBytes);
-        const result = await program(input, controller.signal);
-        const identified = await validateVerificationJobResultForAdmission(
+        const value = await program(input, controller.signal);
+        const result = asAdmissionResult(value);
+        const identified = await validateCandidateAdmissionJobResultForPlan(
             result,
+            input.workload.migrationInputs,
             input.workload.admission,
             input.workload.policy,
             input.workload.attempt,
@@ -34,6 +37,18 @@ export async function runCanonicalVerificationSandboxProgram(
         process.removeListener("SIGTERM", abort);
         process.removeListener("SIGINT", abort);
     }
+}
+
+function asAdmissionResult(
+    value: CandidateAdmissionJobResultV1 | VerificationJobResultV1,
+): CandidateAdmissionJobResultV1 {
+    return value.schema === "cms.integration.candidate-admission-job-result.v1"
+        ? value
+        : {
+              schema: "cms.integration.candidate-admission-job-result.v1",
+              verification: value,
+              migrations: [],
+          };
 }
 
 async function readStdin(limit: number): Promise<Uint8Array> {

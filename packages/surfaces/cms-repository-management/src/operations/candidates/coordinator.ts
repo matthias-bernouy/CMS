@@ -48,6 +48,7 @@ export function createRepositoryCandidateAdmissionCoordinator(
                 now: canonicalTimestamp(config.now()),
                 policy: plan.policy,
                 admission: plan.admission,
+                migrationInputs: plan.migrationInputs ?? [],
             });
         },
     });

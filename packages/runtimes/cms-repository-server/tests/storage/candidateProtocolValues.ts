@@ -9,9 +9,9 @@ import {
     identifyReleaseAdmissionPolicySnapshot,
     validateIntegrationCandidateEnvelope,
     type AdmissionInputSnapshotV1,
+    type CandidateAdmissionJobResultV1,
     type ReleaseAdmissionPolicySnapshotV1,
     type ValidatedIntegrationCandidateEnvelopeV1,
-    type VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import type { TestServer } from "@bernouy/http-runner/testing";
 
@@ -75,45 +75,49 @@ export async function runtimeJobResult(
     candidateId: string,
     candidate: ValidatedIntegrationCandidateEnvelopeV1,
     attempt: { jobId: string; attemptId: string; fencingToken: number },
-): Promise<VerificationJobResultV1> {
+): Promise<CandidateAdmissionJobResultV1> {
     const policy = runtimePolicy();
     const admission = await runtimeAdmission(candidateId, candidate, policy);
     const versions = [{ name: "postgres", version: "16.4" }];
     return {
-        schema: "cms.integration.verification-job-result.v1",
-        candidateId,
-        jobId: attempt.jobId,
-        attemptId: attempt.attemptId,
-        fencingToken: attempt.fencingToken,
-        bindings: {
-            admissionDigest: (await identifyAdmissionInputSnapshot(admission)).digest,
-            candidateDigest: candidate.candidateDigest,
-            packageDigest: candidate.packageDigest,
-            verificationDigest: candidate.verificationDigest,
-            policyDigest: admission.policyDigest,
-            reviewedBaselineRevisionIds: [],
-            reviewedBaselineDigests: [],
-            reviewedObservedSchemaDigests: [],
-            dependencyDigests: [],
-            activeContractDigests: [],
-            suiteContentDigests: admission.suites.map(({ contentDigest }) => contentDigest),
-            catalogRevisionDigest: admission.catalogRevision.digest,
-            compatibilityRevisionDigest: admission.compatibilityRevision.digest,
-            compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
-        },
-        runner: runnerIdentity(),
-        environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },
-        results: [
-            {
-                suiteId: "platform-install",
-                outcome: "passed",
-                durationMs: 10,
-                attempts: 1,
-                cacheHit: false,
-                evidenceDigests: ["e".repeat(64)],
-                diagnostics: [],
+        schema: "cms.integration.candidate-admission-job-result.v1",
+        verification: {
+            schema: "cms.integration.verification-job-result.v1",
+            candidateId,
+            jobId: attempt.jobId,
+            attemptId: attempt.attemptId,
+            fencingToken: attempt.fencingToken,
+            bindings: {
+                admissionDigest: (await identifyAdmissionInputSnapshot(admission)).digest,
+                candidateDigest: candidate.candidateDigest,
+                packageDigest: candidate.packageDigest,
+                verificationDigest: candidate.verificationDigest,
+                policyDigest: admission.policyDigest,
+                reviewedBaselineRevisionIds: [],
+                reviewedBaselineDigests: [],
+                reviewedObservedSchemaDigests: [],
+                dependencyDigests: [],
+                activeContractDigests: [],
+                suiteContentDigests: admission.suites.map(({ contentDigest }) => contentDigest),
+                catalogRevisionDigest: admission.catalogRevision.digest,
+                compatibilityRevisionDigest: admission.compatibilityRevision.digest,
+                compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
             },
-        ],
+            runner: runnerIdentity(),
+            environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },
+            results: [
+                {
+                    suiteId: "platform-install",
+                    outcome: "passed",
+                    durationMs: 10,
+                    attempts: 1,
+                    cacheHit: false,
+                    evidenceDigests: ["e".repeat(64)],
+                    diagnostics: [],
+                },
+            ],
+        },
+        migrations: [],
     };
 }
 

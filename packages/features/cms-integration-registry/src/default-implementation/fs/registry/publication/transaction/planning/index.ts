@@ -9,7 +9,7 @@ import { CapturedReviewedSchemaBaselineStore } from "./baselines";
 import { identifyCatalogRevision } from "./catalog";
 import { planCandidateCompatibility } from "./compatibility";
 import { resolveCandidateDependencies } from "./dependencies";
-import { selectStatefulChanges } from "./stateful";
+import { buildMigrationVerificationInputs, selectStatefulChanges } from "./stateful";
 import { selectCandidateSuites } from "./suites";
 import {
     FsIntegrationRegistryCandidateAdmissionPlanningError,
@@ -78,6 +78,16 @@ export class FsIntegrationRegistryCandidateAdmissionPlanner {
             policyDigest: policy.digest,
             baselines: reviewed,
         });
+        const migrationInputs = await buildMigrationVerificationInputs({
+            snapshot,
+            targetDefinition: prepared.definition,
+            dependencies,
+            selection: stateful.selection,
+            selectionDigest: stateful.digest,
+            policy: policy.snapshot,
+            policyDigest: policy.digest,
+            environment: this.config.migrationEnvironment,
+        });
         const admission = await identifyAdmissionInputSnapshot({
             schema: "cms.integration.admission-input.v1",
             candidate: {
@@ -116,6 +126,7 @@ export class FsIntegrationRegistryCandidateAdmissionPlanner {
             compatibilityReportDigest: persisted.compatibilityReportDigest,
             statefulChangeSelectionDigest: persisted.statefulChangeSelectionDigest,
             statefulChanges: stateful.selection,
+            migrationInputs,
         });
     }
 

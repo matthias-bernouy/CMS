@@ -1,7 +1,9 @@
 import type {
     AdmissionInputSnapshotV1,
+    CandidateAdmissionJobResultV1,
     CompatibilityReportV2,
     IntegrationVerificationEnvelopeV1,
+    MigrationVerificationInputV1,
     ReleaseAdmissionPolicySnapshotV1,
     StatefulChangeSelectionV1,
     VerificationJobResultV1,
@@ -27,6 +29,8 @@ export type IntegrationRegistryCandidateObjects = Readonly<{
     admission?: AdmissionInputSnapshotV1;
     compatibilityReport?: CompatibilityReportV2;
     statefulChanges?: StatefulChangeSelectionV1;
+    migrationInputs: readonly MigrationVerificationInputV1[];
+    admissionJobResult?: CandidateAdmissionJobResultV1;
     verificationJobResult?: VerificationJobResultV1;
 }>;
 

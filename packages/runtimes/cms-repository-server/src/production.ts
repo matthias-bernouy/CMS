@@ -33,7 +33,7 @@ import {
     readRepositoryWorkerToken,
 } from "./credentials";
 import { createProductionRepositoryManagement } from "./management";
-import { productionReleaseAdmissionPolicy } from "./core/candidates/policy";
+import { productionMigrationVerificationEnvironment, productionReleaseAdmissionPolicy } from "./core/candidates/policy";
 import {
     bootstrapRepositoryRegistryIfEmpty,
     type EmptyRegistryBootstrap,
@@ -70,6 +70,7 @@ export async function startProductionRepositoryServer(
     }
     const telemetry = createProductionRepositoryOperationalTelemetry();
     const officialPlan = await buildOfficialRepositoryBootstrapPlan();
+    const migrationEnvironment = await productionMigrationVerificationEnvironment(env.verifierRunner);
     const repositoryManagement = await createProductionRepositoryManagement({
         root: env.registryRoot,
         catalog,
@@ -92,7 +93,8 @@ export async function startProductionRepositoryServer(
             candidateTtlMs: env.candidateTtlMs,
             leaseDurationMs: env.workerLeaseDurationMs,
         },
-        candidateAdmissionPolicy: await productionReleaseAdmissionPolicy(env.verifierRunner),
+        candidateAdmissionPolicy: await productionReleaseAdmissionPolicy(env.verifierRunner, migrationEnvironment),
+        candidateMigrationEnvironment: migrationEnvironment,
     });
 
     const managementGuard = createRepositoryManagementGuard({

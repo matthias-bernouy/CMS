@@ -1,6 +1,7 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
     parsePinnedVerificationRunnerIdentity,
+    parseCandidateAdmissionJobResult,
     parseVerificationJobResult,
     type PinnedVerificationRunnerIdentity,
 } from "@bernouy/cms-integration-verification";
@@ -51,13 +52,28 @@ export function createHttpVerificationSandbox(config: HttpVerificationSandboxCon
             if (!response.ok || response.headers.get("content-type")?.split(";", 1)[0] !== "application/json") {
                 throw new Error("Remote verification sandbox rejected the exact workload");
             }
-            const result = await parseVerificationJobResult(bytes);
-            if (!sameBytes(bytes, canonicalJsonBytes(result))) {
+            const result = await parseSandboxOutput(bytes);
+            if (
+                !sameBytes(bytes, canonicalJsonBytes(result)) &&
+                !(result.migrations.length === 0 && sameBytes(bytes, canonicalJsonBytes(result.verification)))
+            ) {
                 throw new Error("Remote verification sandbox returned non-canonical output");
             }
             return result;
         },
     });
+}
+
+async function parseSandboxOutput(bytes: Uint8Array) {
+    try {
+        return await parseCandidateAdmissionJobResult(bytes);
+    } catch {
+        return {
+            schema: "cms.integration.candidate-admission-job-result.v1" as const,
+            verification: await parseVerificationJobResult(bytes),
+            migrations: [],
+        };
+    }
 }
 
 function assertConfig(config: HttpVerificationSandboxConfig): void {

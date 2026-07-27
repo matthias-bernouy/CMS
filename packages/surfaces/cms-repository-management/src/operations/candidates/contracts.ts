@@ -2,8 +2,10 @@ import type {
     IntegrationRegistryCandidateRecord,
     IntegrationRegistryCandidateStore,
 } from "@bernouy/cms-integration-registry";
+import type { IntegrationPackageEnvelopeV1, IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import type {
     AdmissionInputSnapshotV1,
+    MigrationVerificationInputV1,
     ReleaseAdmissionPolicySnapshotV1,
     ValidatedIntegrationCandidateEnvelopeV1,
 } from "@bernouy/cms-integration-verification";
@@ -45,6 +47,7 @@ export type RepositoryCandidateManagementRoutesConfig = Readonly<{
 export type RepositoryCandidateAdmissionPlan = Readonly<{
     policy: ReleaseAdmissionPolicySnapshotV1;
     admission: AdmissionInputSnapshotV1;
+    migrationInputs?: readonly MigrationVerificationInputV1[];
 }>;
 
 export type RepositoryCandidateAdmissionPlanner = (
@@ -71,6 +74,7 @@ export interface RepositoryCandidatePublicationFinalizer {
 
 export type RepositoryCandidateWorkerRoutesConfig = Readonly<{
     store: IntegrationRegistryCandidateStore;
+    packageSource?: Pick<IntegrationPackageSource, "getPackage">;
     capabilityAuthority: RepositoryCandidateCapabilityAuthority;
     maxBodyBytes: number;
     maxResultBodyBytes: number;
@@ -79,6 +83,11 @@ export type RepositoryCandidateWorkerRoutesConfig = Readonly<{
     createJobId(): string;
     createAttemptId(): string;
     publication?: RepositoryCandidatePublicationFinalizer;
+}>;
+
+export type RepositoryCandidateExactMigrationPackage = Readonly<{
+    digest: string;
+    envelope: IntegrationPackageEnvelopeV1;
 }>;
 
 export type RepositoryCandidateWorkerSurfaceMount = Readonly<{

@@ -5,4 +5,5 @@ export {
     reviewedSchemaContract,
     seedLegacySqlBaseline,
     sqlPublicationPackage,
+    statefulSqlPublicationPackage,
 } from "./packages";

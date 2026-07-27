@@ -38,6 +38,7 @@ export async function recoverFsIntegrationRegistryCandidates(
     await recoverObjectInventory(layout, layout.verifications, "verification", now, grace, diagnostics);
     await recoverObjectInventory(layout, layout.compatibilityReports, "compatibility-report", now, grace, diagnostics);
     await recoverObjectInventory(layout, layout.statefulSelections, "stateful-selection", now, grace, diagnostics);
+    await recoverObjectInventory(layout, layout.migrationInputs, "migration-input", now, grace, diagnostics);
     await recoverObjectInventory(layout, layout.policies, "policy", now, grace, diagnostics);
     await recoverObjectInventory(layout, layout.admissions, "admission", now, grace, diagnostics);
     await recoverObjectInventory(layout, layout.results, "result", now, grace, diagnostics);

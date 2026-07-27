@@ -1,7 +1,9 @@
 import {
+    identifyCandidateAdmissionJobResult,
     identifyAdmissionInputSnapshot,
     identifyReleaseAdmissionPolicySnapshot,
     identifyVerificationJobResult,
+    type CandidateAdmissionJobResultV1,
     type AdmissionInputSnapshotV1,
     type ReleaseAdmissionPolicySnapshotV1,
     type VerificationJobResultV1,
@@ -59,6 +61,22 @@ export async function persistCandidateVerificationJobResult(
     return identified.digest;
 }
 
+export async function persistCandidateAdmissionJobResult(
+    layout: FsIntegrationRegistryCandidateLayout,
+    result: CandidateAdmissionJobResultV1,
+): Promise<string> {
+    const identified = await identifyCandidateAdmissionJobResult(result);
+    await writeOrVerifyObject(
+        layout,
+        layout.results,
+        candidateResultPath(layout, identified.digest),
+        identified.result,
+        FS_INTEGRATION_REGISTRY_CANDIDATE_CONTROL_DOCUMENT_LIMIT,
+        () => readCandidateAdmissionJobResult(layout, identified.digest),
+    );
+    return identified.digest;
+}
+
 export async function readCandidatePolicy(
     layout: FsIntegrationRegistryCandidateLayout,
     digest: string,
@@ -83,6 +101,34 @@ export async function readCandidateVerificationJobResult(
 ): Promise<VerificationJobResultV1> {
     return await readControlObject(layout.results, candidateResultPath(layout, digest), digest, async (value) =>
         identifyVerificationJobResult(value),
+    );
+}
+
+export async function readCandidateAdmissionJobResult(
+    layout: FsIntegrationRegistryCandidateLayout,
+    digest: string,
+): Promise<CandidateAdmissionJobResultV1> {
+    return await readControlObject(layout.results, candidateResultPath(layout, digest), digest, async (value) =>
+        identifyCandidateAdmissionJobResult(value),
+    );
+}
+
+export async function readCandidateResultObject(
+    layout: FsIntegrationRegistryCandidateLayout,
+    digest: string,
+): Promise<CandidateAdmissionJobResultV1 | VerificationJobResultV1> {
+    return await readControlObject<CandidateAdmissionJobResultV1 | VerificationJobResultV1>(
+        layout.results,
+        candidateResultPath(layout, digest),
+        digest,
+        async (value) => {
+            const schema = (value as { schema?: unknown } | null)?.schema;
+            const identified =
+                schema === "cms.integration.candidate-admission-job-result.v1"
+                    ? await identifyCandidateAdmissionJobResult(value)
+                    : await identifyVerificationJobResult(value);
+            return { digest: identified.digest, result: identified.result };
+        },
     );
 }
 

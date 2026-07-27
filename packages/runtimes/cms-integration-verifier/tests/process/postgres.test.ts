@@ -3,7 +3,7 @@ import { join } from "node:path";
 import {
     PLATFORM_VERIFICATION_EVIDENCE_SCHEMA,
     POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
-    validateVerificationJobResultForAdmission,
+    validateCandidateAdmissionJobResultForPlan,
 } from "@bernouy/cms-integration-verification";
 import {
     runPostgresPlatformVerification,
@@ -24,13 +24,16 @@ describe("PostgreSQL platform verification sandbox program", () => {
                 await postgresPlatformInputFixture(),
                 new AbortController().signal,
             );
-            expect(result.results.find((suite) => suite.suiteId === "platform-package-materialization")?.outcome).toBe(
-                "passed",
+            expect(
+                result.verification.results.find((suite) => suite.suiteId === "platform-package-materialization")
+                    ?.outcome,
+            ).toBe("passed");
+            expect(
+                result.verification.results.find((suite) => suite.suiteId === "platform-postgres-rls-shape")?.outcome,
+            ).toBe("not-applicable");
+            expect(result.verification.results.find((suite) => suite.suiteId === "implementation")?.outcome).toBe(
+                "skipped",
             );
-            expect(result.results.find((suite) => suite.suiteId === "platform-postgres-rls-shape")?.outcome).toBe(
-                "not-applicable",
-            );
-            expect(result.results.find((suite) => suite.suiteId === "implementation")?.outcome).toBe("skipped");
         } finally {
             await fixture.cleanup();
         }
@@ -46,18 +49,19 @@ describe("PostgreSQL platform verification sandbox program", () => {
         );
 
         await expect(
-            validateVerificationJobResultForAdmission(
+            validateCandidateAdmissionJobResultForPlan(
                 result,
+                input.workload.migrationInputs,
                 input.workload.admission,
                 input.workload.policy,
                 input.workload.attempt,
             ),
         ).resolves.toBeDefined();
         expect(calls).toEqual([input.database]);
-        expect(result.results.filter((suite) => suite.platformEvidence)).toHaveLength(
+        expect(result.verification.results.filter((suite) => suite.platformEvidence)).toHaveLength(
             POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.length,
         );
-        const author = result.results.find((suite) => suite.suiteId === "implementation")!;
+        const author = result.verification.results.find((suite) => suite.suiteId === "implementation")!;
         expect(author.outcome).toBe("skipped");
         expect(author.platformEvidence).toBeUndefined();
     });
@@ -69,7 +73,9 @@ describe("PostgreSQL platform verification sandbox program", () => {
             adapter(undefined, true),
             new AbortController().signal,
         );
-        const suite = result.results.find((entry) => entry.suiteId === "platform-package-materialization")!;
+        const suite = result.verification.results.find(
+            (entry) => entry.suiteId === "platform-package-materialization",
+        )!;
 
         expect(suite.outcome).toBe("failed");
         expect(suite.platformEvidence?.checks[0]).toMatchObject({

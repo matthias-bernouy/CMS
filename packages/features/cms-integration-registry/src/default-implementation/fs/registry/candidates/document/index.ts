@@ -10,7 +10,8 @@ import {
 import { readCanonicalJsonFile } from "../../persistence/canonicalFile";
 import { FsIntegrationRegistryCandidateStoreError } from "../errors";
 import { FS_INTEGRATION_REGISTRY_CANDIDATE_DOCUMENT_LIMIT } from "../layout";
-import { digest, invalid, parseCandidateSharedFields, strictRecord } from "./fields";
+import { digest, digestArray, invalid, parseCandidateSharedFields, strictRecord } from "./fields";
+import { assertCandidateAdmissionState } from "./state";
 
 const LEGACY_FIELDS = [
     "schema",
@@ -36,7 +37,13 @@ const LEGACY_V2_FIELDS = [
     "admissionInputDigest",
     "verificationJobResultDigest",
 ] as const;
-const CURRENT_FIELDS = [...LEGACY_V2_FIELDS, "compatibilityReportDigest", "statefulChangeSelectionDigest"] as const;
+const CURRENT_FIELDS = [
+    ...LEGACY_V2_FIELDS,
+    "compatibilityReportDigest",
+    "statefulChangeSelectionDigest",
+    "migrationInputDigests",
+    "admissionJobResultDigest",
+] as const;
 
 export async function readPersistedIntegrationRegistryCandidateRecord(
     path: string,
@@ -110,13 +117,19 @@ export function parseIntegrationRegistryCandidateRecord(value: unknown): Integra
                       "statefulChangeSelectionDigest",
                   ),
               }),
+        ...(input.migrationInputDigests === undefined
+            ? {}
+            : { migrationInputDigests: digestArray(input.migrationInputDigests, "migrationInputDigests") }),
+        ...(input.admissionJobResultDigest === undefined
+            ? {}
+            : { admissionJobResultDigest: digest(input.admissionJobResultDigest, "admissionJobResultDigest") }),
         ...(input.verificationJobResultDigest === undefined
             ? {}
             : {
                   verificationJobResultDigest: digest(input.verificationJobResultDigest, "verificationJobResultDigest"),
               }),
     };
-    assertAdmissionState(record);
+    assertCandidateAdmissionState(record);
     return Object.freeze(record);
 }
 
@@ -130,48 +143,6 @@ export function requireCurrentIntegrationRegistryCandidateRecord(
         );
     }
     return record;
-}
-
-function assertAdmissionState(record: IntegrationRegistryCandidateRecord): void {
-    if (Boolean(record.policyDigest) !== Boolean(record.admissionInputDigest)) {
-        invalid("Candidate policy and admission input digests must be present together");
-    }
-    if (Boolean(record.compatibilityReportDigest) !== Boolean(record.statefulChangeSelectionDigest)) {
-        invalid("Candidate compatibility report and stateful-change selection digests must be present together");
-    }
-    if ((record.compatibilityReportDigest || record.statefulChangeSelectionDigest) && !record.admissionInputDigest) {
-        invalid("Candidate planning artifacts require exact admission inputs");
-    }
-    if (["queued", "running", "passed", "publishing", "published"].includes(record.status)) {
-        if (!record.policyDigest || !record.admissionInputDigest) {
-            invalid(`Candidate ${record.status} status requires exact admission input digests`);
-        }
-    }
-    if (["uploaded", "validating"].includes(record.status)) {
-        if (record.policyDigest || record.admissionInputDigest || record.verificationJobResultDigest) {
-            invalid(`Candidate ${record.status} status cannot carry admission results`);
-        }
-    }
-    if (["passed", "publishing", "published"].includes(record.status) && !record.verificationJobResultDigest) {
-        invalid(`Candidate ${record.status} status requires an exact verification job result digest`);
-    }
-    if (record.verificationJobResultDigest && record.attemptCount < 1) {
-        invalid("Candidate result digest requires at least one worker attempt");
-    }
-    if (
-        record.status === "queued" &&
-        record.verificationJobResultDigest &&
-        record.lastFailure?.kind !== "infrastructure"
-    ) {
-        invalid("Candidate queued result must describe a retryable infrastructure failure");
-    }
-    if (
-        record.status === "rejected" &&
-        record.lastFailure?.kind !== "validation" &&
-        (!record.policyDigest || !record.admissionInputDigest || !record.verificationJobResultDigest)
-    ) {
-        invalid("Candidate verification rejection requires exact admission and result digests");
-    }
 }
 
 function schemaOf(value: unknown): unknown {

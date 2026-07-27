@@ -9,9 +9,9 @@ import {
     identifyReleaseAdmissionPolicySnapshot,
     validateIntegrationCandidateEnvelope,
     type AdmissionInputSnapshotV1,
+    type CandidateAdmissionJobResultV1,
     type ReleaseAdmissionPolicySnapshotV1,
     type ValidatedIntegrationCandidateEnvelopeV1,
-    type VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 
 export async function candidatePolicy(): Promise<ReleaseAdmissionPolicySnapshotV1> {
@@ -74,43 +74,47 @@ export async function candidateJobResult(
     candidateId: string,
     candidate: ValidatedIntegrationCandidateEnvelopeV1,
     attempt: { jobId: string; attemptId: string; fencingToken: number },
-): Promise<VerificationJobResultV1> {
+): Promise<CandidateAdmissionJobResultV1> {
     const policy = await candidatePolicy();
     const admission = await candidateAdmission(candidateId, candidate, policy);
     const versions = [{ name: "postgres", version: "16.4" }];
     return {
-        schema: "cms.integration.verification-job-result.v1",
-        candidateId,
-        ...attempt,
-        bindings: {
-            admissionDigest: (await identifyAdmissionInputSnapshot(admission)).digest,
-            candidateDigest: candidate.candidateDigest,
-            packageDigest: candidate.packageDigest,
-            verificationDigest: candidate.verificationDigest,
-            policyDigest: admission.policyDigest,
-            reviewedBaselineRevisionIds: [],
-            reviewedBaselineDigests: [],
-            reviewedObservedSchemaDigests: [],
-            dependencyDigests: [],
-            activeContractDigests: [],
-            suiteContentDigests: admission.suites.map((suite) => suite.contentDigest),
-            catalogRevisionDigest: admission.catalogRevision.digest,
-            compatibilityRevisionDigest: admission.compatibilityRevision.digest,
-            compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
-        },
-        runner: candidateRunner(),
-        environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },
-        results: [
-            {
-                suiteId: "platform-install",
-                outcome: "passed",
-                durationMs: 10,
-                attempts: 1,
-                cacheHit: false,
-                evidenceDigests: ["e".repeat(64)],
-                diagnostics: [],
+        schema: "cms.integration.candidate-admission-job-result.v1",
+        verification: {
+            schema: "cms.integration.verification-job-result.v1",
+            candidateId,
+            ...attempt,
+            bindings: {
+                admissionDigest: (await identifyAdmissionInputSnapshot(admission)).digest,
+                candidateDigest: candidate.candidateDigest,
+                packageDigest: candidate.packageDigest,
+                verificationDigest: candidate.verificationDigest,
+                policyDigest: admission.policyDigest,
+                reviewedBaselineRevisionIds: [],
+                reviewedBaselineDigests: [],
+                reviewedObservedSchemaDigests: [],
+                dependencyDigests: [],
+                activeContractDigests: [],
+                suiteContentDigests: admission.suites.map((suite) => suite.contentDigest),
+                catalogRevisionDigest: admission.catalogRevision.digest,
+                compatibilityRevisionDigest: admission.compatibilityRevision.digest,
+                compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
             },
-        ],
+            runner: candidateRunner(),
+            environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },
+            results: [
+                {
+                    suiteId: "platform-install",
+                    outcome: "passed",
+                    durationMs: 10,
+                    attempts: 1,
+                    cacheHit: false,
+                    evidenceDigests: ["e".repeat(64)],
+                    diagnostics: [],
+                },
+            ],
+        },
+        migrations: [],
     };
 }
 

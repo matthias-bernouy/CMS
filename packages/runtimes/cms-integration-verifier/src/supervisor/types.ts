@@ -1,7 +1,7 @@
 import type {
+    CandidateAdmissionJobResultV1,
     PinnedVerificationRunnerIdentity,
     VerificationJobAttemptIdentityV1,
-    VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import type { CandidateStatusProjection, CandidateWorkerClient, ExactVerificationWorkload } from "../protocol";
 
@@ -22,7 +22,7 @@ export type VerificationSandboxInput = Readonly<{
 
 export interface VerificationSandbox {
     readonly identity: PinnedVerificationRunnerIdentity;
-    run(input: VerificationSandboxInput, signal: AbortSignal): Promise<VerificationJobResultV1>;
+    run(input: VerificationSandboxInput, signal: AbortSignal): Promise<CandidateAdmissionJobResultV1>;
 }
 
 export interface DisposableVerificationDatabaseLease {

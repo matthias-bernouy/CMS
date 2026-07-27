@@ -1,17 +1,10 @@
+import { identifyReleaseAdmissionPolicySnapshot } from "@bernouy/cms-integration-verification";
 import {
-    assertVerificationJobResultReplay,
-    identifyReleaseAdmissionPolicySnapshot,
-} from "@bernouy/cms-integration-verification";
-import {
-    completeIntegrationRegistryCandidateAttempt,
     createIntegrationRegistryCandidateRecord,
     queueIntegrationRegistryCandidate,
 } from "cms-integration-registry/core/publication/candidates/state";
-import { IntegrationRegistryCandidateError } from "cms-integration-registry/core/publication/candidates/errors";
 import type {
-    CompleteIntegrationRegistryCandidateInput,
     CreateIntegrationRegistryCandidateInput,
-    IntegrationRegistryCandidateObjects,
     IntegrationRegistryCandidateRecord,
     QueueIntegrationRegistryCandidateInput,
 } from "cms-integration-registry/interfaces/publication";
@@ -23,14 +16,15 @@ import { candidatePlanningBindingPath, type FsIntegrationRegistryCandidateLayout
 import { syncDirectory } from "../../persistence/canonicalFile";
 import {
     persistCandidateAdmissionObjects,
+    persistCandidateMigrationInputs,
     persistCandidatePackageObjects,
-    persistCandidateVerificationJobResult,
     readCandidateCompatibilityReport,
     readCandidatePlanBinding,
     readCandidateStatefulSelection,
     readFsIntegrationRegistryCandidateObjects,
 } from "../objects";
 import { assertCandidateRecordCapacity } from "./inventory";
+import { requireCandidateRecord } from "./queries";
 import { readPrunedCandidate } from "../recovery/retention";
 
 export async function createStoredCandidate(
@@ -62,10 +56,18 @@ export async function queueStoredCandidate(
     await readFsIntegrationRegistryCandidateObjects(layout, current);
     const binding = await readCandidatePlanBinding(layout, candidateId);
     const planningArtifacts = binding ? await validatePlanningBinding(layout, current, input, binding) : undefined;
-    const next = await queueIntegrationRegistryCandidate(current, { ...input, planningArtifacts });
+    const next = await queueIntegrationRegistryCandidate(current, {
+        ...input,
+        migrationInputs: input.migrationInputs ?? [],
+        planningArtifacts,
+    });
     const persisted = await persistCandidateAdmissionObjects(layout, input.policy, input.admission);
+    const migrationInputDigests = await persistCandidateMigrationInputs(layout, input.migrationInputs ?? []);
     if (persisted.policyDigest !== next.policyDigest || persisted.admissionInputDigest !== next.admissionInputDigest) {
         corrupt("Candidate queued admission object digests changed during persistence");
+    }
+    if (!sameDigests(migrationInputDigests, next.migrationInputDigests ?? [])) {
+        corrupt("Candidate queued migration input digests changed during persistence");
     }
     await appendCandidateRecordRevision(layout, next);
     if (binding) {
@@ -105,32 +107,6 @@ async function validatePlanningBinding(
     };
 }
 
-export async function completeStoredCandidate(
-    layout: FsIntegrationRegistryCandidateLayout,
-    candidateId: string,
-    input: CompleteIntegrationRegistryCandidateInput,
-): Promise<IntegrationRegistryCandidateRecord> {
-    const current = await requireCandidateRecord(layout, candidateId);
-    const objects = await readFsIntegrationRegistryCandidateObjects(layout, current);
-    if (current.status !== "running") {
-        return await replayCompletedAttempt(current, objects, input);
-    }
-    if (!objects.policy || !objects.admission) {
-        corrupt(`Candidate ${candidateId} is running without persisted admission inputs`);
-    }
-    const next = await completeIntegrationRegistryCandidateAttempt(current, {
-        ...input,
-        policy: objects.policy,
-        admission: objects.admission,
-    });
-    const digest = await persistCandidateVerificationJobResult(layout, input.result);
-    if (next.verificationJobResultDigest !== digest) {
-        corrupt("Candidate completion result digest changed during persistence");
-    }
-    await appendCandidateRecordRevision(layout, next);
-    return next;
-}
-
 export async function mutateStoredCandidate(
     layout: FsIntegrationRegistryCandidateLayout,
     candidateId: string,
@@ -160,34 +136,8 @@ async function removeCandidatePlanBinding(
     }
 }
 
-export async function requireCandidateRecord(
-    layout: FsIntegrationRegistryCandidateLayout,
-    candidateId: string,
-): Promise<IntegrationRegistryCandidateRecord> {
-    const record = await readCurrentCandidateRecord(layout, candidateId);
-    if (!record) {
-        throw new FsIntegrationRegistryCandidateStoreError(
-            "candidate_not_found",
-            `Candidate ${candidateId} does not exist`,
-        );
-    }
-    return record;
-}
-
-function replayCompletedAttempt(
-    record: IntegrationRegistryCandidateRecord,
-    objects: IntegrationRegistryCandidateObjects,
-    input: CompleteIntegrationRegistryCandidateInput,
-): Promise<IntegrationRegistryCandidateRecord> {
-    if (
-        record.lease ||
-        !record.verificationJobResultDigest ||
-        !objects.verificationJobResult ||
-        record.revision !== input.expectedRevision + 1
-    ) {
-        throw new IntegrationRegistryCandidateError("lease_conflict", "Candidate attempt lease is no longer current");
-    }
-    return assertVerificationJobResultReplay(objects.verificationJobResult, input.result).then(() => record);
+function sameDigests(left: readonly string[], right: readonly string[]): boolean {
+    return left.length === right.length && left.every((digest, index) => digest === right[index]);
 }
 
 function corrupt(message: string): never {

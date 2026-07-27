@@ -1,9 +1,11 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { identifyMigrationReport, identifyReleaseAdmissionDecision } from "@bernouy/cms-integration-verification";
+import { asCandidateAdmissionJobResult } from "cms-integration-registry/core/publication/candidates/state";
 import { prepareFsIntegrationRegistryCandidate } from "../../candidate";
 import { publishPreparedFsIntegrationRegistryCandidate } from "../../publisher";
 import { activateVerifiedCandidate, recoverVerifiedCandidateActivations } from "./activation";
 import { buildCandidateReleaseEvidence } from "./report";
+import { buildCandidateMigrationReports } from "./migration";
 import {
     FsIntegrationRegistryCandidateFinalizationError,
     type FinalizedIntegrationRegistryCandidate,
@@ -118,13 +120,16 @@ export class FsIntegrationRegistryCandidateFinalizer {
                 "Candidate immutable evidence is incomplete",
             );
         }
-        const migrations =
-            (await this.config.loadMigrationReports?.({
-                candidateId: record.candidateId,
-                kind: record.kind,
-                version: record.version,
-                packageDigest: record.packageDigest,
-            })) ?? [];
+        const admissionJobResult =
+            objects.admissionJobResult ?? asCandidateAdmissionJobResult(objects.verificationJobResult);
+        const migrations = await buildCandidateMigrationReports({
+            candidateId: record.candidateId,
+            createdAt: record.updatedAt,
+            compatibility: objects.compatibilityReport,
+            policy: objects.policy,
+            migrationInputs: objects.migrationInputs,
+            result: admissionJobResult,
+        });
         const evidence = await buildCandidateReleaseEvidence({
             candidateId: record.candidateId,
             candidateDigest: record.candidateDigest,

@@ -1,4 +1,4 @@
-import { validateVerificationJobResultForAdmission } from "@bernouy/cms-integration-verification";
+import { validateCandidateAdmissionJobResultForPlan } from "@bernouy/cms-integration-verification";
 import type { ClaimedVerificationJob } from "../../protocol";
 import { VerificationSupervisorError } from "../error";
 import type {
@@ -48,8 +48,9 @@ export async function validateSandboxResult(
 ) {
     try {
         const sanitized = sanitizeSandboxResult(result, credential);
-        return await validateVerificationJobResultForAdmission(
+        return await validateCandidateAdmissionJobResultForPlan(
             sanitized,
+            claimed.workload.migrationInputs,
             claimed.workload.admission,
             claimed.workload.policy,
             {

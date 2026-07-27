@@ -1,4 +1,4 @@
-import { identifyVerificationJobResult } from "@bernouy/cms-integration-verification";
+import { identifyCandidateAdmissionJobResult } from "@bernouy/cms-integration-verification";
 import type { Runner } from "@bernouy/http-runner";
 import { readRepositoryWorkerCapability } from "../auth";
 import { readCanonicalResultRequest } from "../body";
@@ -25,12 +25,12 @@ export function mountWorkerResultRoutes(runner: Runner, config: RepositoryCandid
                 return workerCapabilityUnauthorized();
             }
             const input = await readCanonicalResultRequest(request, config.maxResultBodyBytes);
-            const identified = await identifyVerificationJobResult(input.result);
+            const identified = await identifyCandidateAdmissionJobResult(input.result);
             const current = await config.store.get(identity.candidateId);
-            const exactReplay = !current?.lease && current?.verificationJobResultDigest === identity.resultDigest;
+            const exactReplay = !current?.lease && current?.admissionJobResultDigest === identity.resultDigest;
             if (
                 identified.digest !== identity.resultDigest ||
-                !resultMatchesCapability(input.result, identity) ||
+                !resultMatchesCapability(input.result.verification, identity) ||
                 (!exactReplay && !sameCandidateLease(current?.lease, identity))
             ) {
                 return workerAttemptConflict();

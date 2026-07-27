@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { chmodSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import type { ReleaseAdmissionPolicySnapshotV1 } from "@bernouy/cms-integration-verification";
 import {
     FsIntegrationRegistryCandidateFinalizer,
@@ -10,11 +13,10 @@ import {
     publicationPackage,
     registryFixture,
     seedLegacySqlBaseline,
-    sqlPublicationPackage,
+    statefulSqlPublicationPackage,
 } from "../../publication/fixtures";
 import { planningPolicy, verificationCandidate } from "../planning/fixtures";
 import { completePassedCandidate, finalizerConfig, passedCandidate, releaseFinalizer, releaseStores } from "./fixtures";
-import { passedMigrationReport } from "./migration";
 
 afterEach(cleanupRegistryFixtures);
 
@@ -43,6 +45,17 @@ describe("filesystem candidate release publication", () => {
         });
     });
 
+    test("finalizes a pre-migration v3 candidate from its exact raw verification result", async () => {
+        const fixture = registryFixture();
+        const setup = await passedCandidate(fixture, "candidate-legacy-v3");
+        rewriteAsPreMigrationV3(fixture.root, setup.completion);
+        const restartedStore = new FsIntegrationRegistryCandidateStore({ root: fixture.root });
+
+        await expect(
+            releaseFinalizer(fixture, restartedStore, setup.policy).finalize("candidate-legacy-v3"),
+        ).resolves.toMatchObject({ status: "published" });
+    });
+
     test("persists exact optional migration evidence before activating a stateful release", async () => {
         const fixture = registryFixture();
         const baselinePackage = await seedLegacySqlBaseline(fixture);
@@ -54,7 +67,7 @@ describe("filesystem candidate release publication", () => {
             expectedCurrentRevisionId: null,
         });
         const candidate = await verificationCandidate(
-            await sqlPublicationPackage("demo", "1.1.0", {
+            await statefulSqlPublicationPackage("demo", "1.1.0", {
                 namespaces: [
                     {
                         name: "public",
@@ -78,34 +91,71 @@ describe("filesystem candidate release publication", () => {
                 requiredChecks: ["fresh-install", "migrated-state", "equivalence"],
             },
         };
-        const setup = await completePassedCandidate(fixture, "candidate-stateful-finalization", candidate, policy);
-        const migration = await passedMigrationReport(setup.plan.statefulChanges, setup.plan.admission.selectedRunner);
-        const stores = releaseStores(fixture);
-        const finalizer = new FsIntegrationRegistryCandidateFinalizer({
-            ...finalizerConfig(fixture, setup.store, policy, stores),
-            async loadMigrationReports() {
-                return [migration];
-            },
+        const failed = await completePassedCandidate(fixture, "candidate-stateful-failed", candidate, policy, {
+            migrationObservationStatus: "failed",
         });
+        expect(failed.completion).toMatchObject({ status: "rejected", lastFailure: { kind: "suite" } });
+        expect(fixture.snapshots.current().locateExactVersion("demo", "1.1.0")).toBeNull();
+        const infrastructure = await completePassedCandidate(
+            fixture,
+            "candidate-stateful-infrastructure",
+            candidate,
+            policy,
+            { migrationObservationStatus: "infrastructure-failure" },
+        );
+        expect(infrastructure.completion).toMatchObject({
+            status: "queued",
+            lastFailure: { kind: "infrastructure" },
+        });
+        const failClosedPolicy: ReleaseAdmissionPolicySnapshotV1 = {
+            ...policy,
+            migrationEvidence: {
+                ...policy.migrationEvidence,
+                requiredChecks: ["fresh-install", "migrated-state", "equivalence", "failure-injection", "resumption"],
+            },
+        };
+        const missingRequiredEvidence = await completePassedCandidate(
+            fixture,
+            "candidate-stateful-missing-required-evidence",
+            candidate,
+            failClosedPolicy,
+        );
+        expect(missingRequiredEvidence.completion).toMatchObject({
+            status: "rejected",
+            lastFailure: { kind: "suite" },
+        });
+        const setup = await completePassedCandidate(fixture, "candidate-stateful-finalization", candidate, policy);
+        const stores = releaseStores(fixture);
+        const finalizer = new FsIntegrationRegistryCandidateFinalizer(
+            finalizerConfig(fixture, setup.store, setup.policy, stores),
+        );
 
         await expect(finalizer.finalize("candidate-stateful-finalization")).resolves.toMatchObject({
             status: "published",
         });
         const decisions = await stores.releaseDecisions.get("demo", "1.1.0");
         expect(decisions?.current.migrationReports).toHaveLength(1);
-        expect(
-            await stores.migrationReports.get({
-                sourceKind: migration.source.kind,
-                sourceVersion: migration.source.version,
-                sourcePackageDigest: migration.source.packageDigest,
-                targetKind: migration.target.kind,
-                targetVersion: migration.target.version,
-                targetPackageDigest: migration.target.packageDigest,
-                connectorKey: migration.connectorKey,
-                lineageId: migration.lineageId,
-                migrationRevision: migration.migrationRevision,
-            }),
-        ).not.toBeNull();
+        const migrationInput = setup.plan.migrationInputs[0]!;
+        const migrationHistory = await stores.migrationReports.get({
+            sourceKind: migrationInput.source.kind,
+            sourceVersion: migrationInput.source.version,
+            sourcePackageDigest: migrationInput.source.packageDigest,
+            targetKind: migrationInput.target.kind,
+            targetVersion: migrationInput.target.version,
+            targetPackageDigest: migrationInput.target.packageDigest,
+            connectorKey: migrationInput.connectorKey,
+            lineageId: migrationInput.lineageId,
+            migrationRevision: migrationInput.targetMigrationRevision,
+        });
+        expect(migrationHistory?.current).toMatchObject({
+            schema: "cms.integration.migration-report.v3",
+            operationalEvidence: {
+                downtime: { status: "not-measured" },
+                rollback: { capability: "unavailable", verified: false },
+                pointOfNoReturn: { phase: "before-contract", observation: "crossed" },
+                cleanup: { observed: true },
+            },
+        });
     });
 
     test("keeps stale verified candidates private and non-installable", async () => {
@@ -123,3 +173,23 @@ describe("filesystem candidate release publication", () => {
         });
     });
 });
+
+function rewriteAsPreMigrationV3(
+    root: string,
+    completion: Readonly<{ candidateId: string; admissionJobResultDigest?: string }>,
+): void {
+    const records = join(root, ".registry", "candidates", "records", completion.candidateId);
+    for (const name of readdirSync(records)) {
+        const path = join(records, name);
+        const record = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
+        delete record.migrationInputDigests;
+        delete record.admissionJobResultDigest;
+        chmodSync(path, 0o640);
+        writeFileSync(path, canonicalJsonBytes(record));
+    }
+    if (completion.admissionJobResultDigest) {
+        unlinkSync(
+            join(root, ".registry", "candidates", "objects", "results", `${completion.admissionJobResultDigest}.json`),
+        );
+    }
+}

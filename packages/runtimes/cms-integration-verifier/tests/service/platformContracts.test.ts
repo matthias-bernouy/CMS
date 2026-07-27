@@ -13,6 +13,19 @@ afterEach(async () => {
 });
 
 describe("non-PostgreSQL generated platform contracts", () => {
+    test("fails closed when a required migration proof has no production executor", async () => {
+        const base = await postgresPlatformInputFixture(dependencyPackage());
+        const input: VerificationSandboxInput = {
+            ...base,
+            workload: {
+                ...base.workload,
+                migrationInputs: [{} as VerificationSandboxInput["workload"]["migrationInputs"][number]],
+            },
+        };
+
+        await expect(execute(input)).rejects.toThrow("cannot execute required migration proofs");
+    });
+
     test("rejects a connector function and CMS Source route without a declared HTTP contract", async () => {
         const input = await postgresPlatformInputFixture(functionPackage(false));
         const result = await execute(input);
@@ -101,7 +114,7 @@ describe("non-PostgreSQL generated platform contracts", () => {
 async function execute(input: VerificationSandboxInput) {
     const adapter = createPostgresPlatformVerificationAdapter();
     adapters.push(adapter);
-    return await runPostgresPlatformVerification(input, adapter, new AbortController().signal);
+    return (await runPostgresPlatformVerification(input, adapter, new AbortController().signal)).verification;
 }
 
 function withDependencies(

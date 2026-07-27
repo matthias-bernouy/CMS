@@ -120,6 +120,59 @@ export async function sqlPublicationPackage(kind: string, version: string, schem
     );
 }
 
+export async function statefulSqlPublicationPackage(kind: string, version: string, schema: unknown) {
+    const checksum = `sha256:${"1".repeat(64)}`;
+    return await publicationPackage(
+        kind,
+        version,
+        {
+            connectors: [
+                {
+                    provider: "supabase",
+                    connectorKey: "primary",
+                    lineageId: `${kind}-supabase-v1`,
+                    migrationRevision: 1,
+                    root: "connectors/supabase",
+                    schemas: [{ path: "install/schema.sql" }],
+                    compatibility: { schema },
+                    migration: {
+                        install: {
+                            revision: 1,
+                            digest: `sha256:${"2".repeat(64)}`,
+                            coveredMigrations: [{ id: "add-items", checksum, revision: 1, introducedIn: version }],
+                        },
+                        migrations: [
+                            {
+                                id: "add-items",
+                                checksum,
+                                fromRevision: 0,
+                                toRevision: 1,
+                                introducedIn: version,
+                                transaction: "atomic",
+                                phase: "expand",
+                                path: "migrations/001-add-items.sql",
+                            },
+                        ],
+                        supportedSources: [{ range: "^1.0.0", migrationRevision: 0 }],
+                        pointOfNoReturn: "before-contract",
+                    },
+                },
+            ],
+        },
+        `implementation ${version}\n`,
+        {
+            "connectors/supabase/install/schema.sql": {
+                encoding: "utf8",
+                content: "create schema if not exists public;\n",
+            },
+            "connectors/supabase/migrations/001-add-items.sql": {
+                encoding: "utf8",
+                content: "select 1;\n",
+            },
+        },
+    );
+}
+
 export function reviewedSchemaContract() {
     return { namespaces: [{ name: "public", relations: [] }] };
 }

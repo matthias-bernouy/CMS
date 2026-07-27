@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { identifyVerificationJobResult } from "@bernouy/cms-integration-verification";
+import { identifyCandidateAdmissionJobResult } from "@bernouy/cms-integration-verification";
 import {
     candidateJobResult,
     candidateProtocolFixture,
@@ -84,7 +84,7 @@ async function submitVerificationResult(fixture: CandidateProtocolFixture): Prom
         attemptId: lease.attemptId,
         fencingToken: lease.fencingToken,
     });
-    const resultDigest = (await identifyVerificationJobResult(result)).digest;
+    const resultDigest = (await identifyCandidateAdmissionJobResult(result)).digest;
     fixture.clock.value = TIMES.completed;
     const capabilityResponse = await requestJson(
         fixture.server,

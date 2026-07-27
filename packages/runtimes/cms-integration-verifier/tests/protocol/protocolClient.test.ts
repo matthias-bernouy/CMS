@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
-import { identifyVerificationJobResult } from "@bernouy/cms-integration-verification";
+import { identifyCandidateAdmissionJobResult } from "@bernouy/cms-integration-verification";
 import { VerificationProtocolError, createHttpCandidateWorkerClient } from "../../src";
 import { validJobResult } from "../fixtures/result";
 import { claimedJob, queuedCandidate } from "../fixtures/workload";
@@ -12,7 +12,7 @@ describe("candidate worker HTTP client", () => {
         const claimed = await claimedJob();
         const renewed = renewedCandidate(claimed.candidate);
         const result = await validJobResult({ ...claimed, candidate: renewed });
-        const resultDigest = (await identifyVerificationJobResult(result)).digest;
+        const resultDigest = (await identifyCandidateAdmissionJobResult(result)).digest;
         const terminal = { ...renewed, revision: renewed.revision + 1, status: "passed", lease: undefined };
         const responses = [
             json({ candidates: [queued] }),
