@@ -2,20 +2,21 @@ import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../../src/runtime/providers/postgres";
 import { createPostgresMigrationVerifier } from "../../../src/sandbox/service/postgres/migrations";
 import { disposablePostgresAvailable } from "../postgresFixture";
 import { startMigrationPostgres } from "./fixture/harness";
 import { migrationExecutionFixture } from "./fixture/input";
-import type { MigrationPackageFixture } from "./fixture/packages";
+import { expectExactLegacyAdoption, expectRecoveredOfficialUpgrade } from "./fixture/official/assertions";
+import { OFFICIAL_MIGRATION_PHASES, OfficialUpgradeHarness } from "./fixture/official/harness";
+import { loadOfficialPhotoAlbumsRelease } from "./fixture/official/release";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
 
 postgresTest(
     "proves the exact official Photo Albums 1.0.0 to 1.1.0 migration from transported envelopes",
     async () => {
-        const release = await officialPhotoAlbumsRelease();
+        const release = await loadOfficialPhotoAlbumsRelease();
         const postgres = await startMigrationPostgres();
         const packageTempRoot = await mkdtemp(join(tmpdir(), "cms-official-migration-verifier-"));
         try {
@@ -85,43 +86,34 @@ postgresTest(
     90_000,
 );
 
-async function officialPhotoAlbumsRelease(): Promise<MigrationPackageFixture> {
-    const packages = await buildOfficialIntegrationPackages();
-    const source = requiredPackage(packages, "1.0.0");
-    const target = requiredPackage(packages, "1.1.0");
-    const connector = target.definition.connectors?.find(({ provider }) => provider === "supabase");
-    if (
-        !connector?.connectorKey ||
-        !connector.lineageId ||
-        connector.migrationRevision === undefined ||
-        !connector.migration
-    ) {
-        throw new Error("Official Photo Albums target connector is not migration-aware");
-    }
-    const sourceMapping = connector.migration.supportedSources.find(
-        ({ legacyAdoption }) =>
-            legacyAdoption?.definitionVersion === source.version && legacyAdoption.packageDigest === source.digest,
-    );
-    if (!sourceMapping) {
-        throw new Error("Official Photo Albums source is not bound by exact legacy adoption");
-    }
-    return {
-        source: { digest: source.digest, envelope: source.package.envelope },
-        target: { digest: target.digest, envelope: target.package.envelope },
-        targetPlan: connector.migration,
-        connectorKey: connector.connectorKey,
-        lineageId: connector.lineageId,
-        sourceMigrationRevision: sourceMapping.migrationRevision,
-        targetMigrationRevision: connector.migrationRevision,
-    };
-}
+postgresTest(
+    "resumes every production phase and retries only an identical Function upload after its receipt is lost",
+    async () => {
+        const harness = await OfficialUpgradeHarness.create();
+        try {
+            for (const phase of OFFICIAL_MIGRATION_PHASES) {
+                const scenario = await harness.createScenario(phase);
+                try {
+                    await expectExactLegacyAdoption(harness, scenario);
+                    await expect(scenario.failAfterRemoteSuccess()).rejects.toThrow(
+                        `injected after remote success for ${phase}`,
+                    );
+                    const paused = await scenario.installation();
+                    expect(paused.migrationOperation).toMatchObject({ status: "paused" });
+                    expect(paused.migrationOperation?.journal.find((entry) => entry.phase === phase)).toMatchObject({
+                        status: "failed",
+                    });
+                    expect(scenario.executionCounts.get(phase)).toBe(1);
 
-function requiredPackage(packages: Awaited<ReturnType<typeof buildOfficialIntegrationPackages>>, version: string) {
-    const value = packages.find(
-        ({ kind, version: candidateVersion }) => kind === "photo-albums" && candidateVersion === version,
-    );
-    if (!value) {
-        throw new Error(`Official Photo Albums ${version} package is missing`);
-    }
-    return value;
-}
+                    const resumed = await scenario.resumeFromReconstructedComposition();
+                    await expectRecoveredOfficialUpgrade(harness, scenario, paused, resumed);
+                } finally {
+                    await scenario.close();
+                }
+            }
+        } finally {
+            await harness.close();
+        }
+    },
+    600_000,
+);
