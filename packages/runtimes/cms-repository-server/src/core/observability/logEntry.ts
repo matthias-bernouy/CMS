@@ -1,4 +1,4 @@
-import type { IntegrationCompatibilityReport } from "@bernouy/cms-integration-registry";
+import type { CompatibilityReportV2 } from "@bernouy/cms-integration-verification";
 import type {
     RepositoryOperationIdentity,
     RepositoryOperationLogEntry,
@@ -15,7 +15,7 @@ export function repositoryOperationLogEntry(
     details: Readonly<{
         operationId?: string;
         digest?: string;
-        report?: IntegrationCompatibilityReport;
+        report?: CompatibilityReportV2;
         reportRevisionId?: string;
         errorCode?: string;
     }>,
@@ -33,8 +33,8 @@ export function repositoryOperationLogEntry(
         ...(safeDigest(details.digest) ? { digest: safeDigest(details.digest) } : {}),
         ...(report
             ? {
-                  reportId: safeLogText(report.id),
-                  reportRevisionId: safeLogText(details.reportRevisionId ?? report.id),
+                  reportId: safeLogText(report.reportId),
+                  reportRevisionId: safeLogText(details.reportRevisionId ?? report.reportId),
                   evaluatorName: safeLogText(report.evaluator.name),
                   evaluatorVersion: safeLogText(report.evaluator.version),
                   compatibilityOutcome: report.outcome,

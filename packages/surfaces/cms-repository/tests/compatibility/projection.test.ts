@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { identifyCompatibilityReportV2 } from "@bernouy/cms-integration-verification";
 import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
 import { admission, mounted, mutableCompatibilityReader, revision } from "./fixtures";
 
@@ -11,19 +12,20 @@ describe("public integration compatibility projection", () => {
         const body = await response.json();
         const serialized = JSON.stringify(body);
 
-        expect(body.admission).toMatchObject({
-            id: "admission-1",
-            reportType: "admission",
+        expect(body.root).toMatchObject({
+            reportId: "admission-1",
+            revisionType: "root",
             packageDigest: "a".repeat(64),
-            outcome: "compatible",
+            outcome: "not-applicable",
         });
-        expect(body.current).toMatchObject({ id: "revision-1", reportType: "revision" });
+        expect(body.current).toMatchObject({ reportId: "revision-1", revisionType: "revision" });
         expect(body.revisions).toHaveLength(1);
         expect(body.revisions[0].provenance).toEqual({
             reason: "Comparator update",
             evidenceIds: ["ci-evidence-1"],
         });
-        expect(body.admission.evidence[0]).toEqual({
+        expect(body.root.findings[0]).toEqual({
+            findingId: "b51ab3cc141991012ec0abc4c32a0232cc87f1aa30a3235a01be2bdc8e2600a3",
             classification: "compatible",
             surface: "definition",
             code: "contract-preserved",
@@ -31,9 +33,8 @@ describe("public integration compatibility projection", () => {
         });
         expect(serialized).not.toContain("private-admin");
         expect(serialized).not.toContain("/registry/private");
-        expect(serialized).not.toContain("internal-evidence-source");
-        expect(serialized).not.toContain("internal-management-request");
-        expect(serialized).not.toContain("top-level-internal-source");
+        expect(serialized).not.toContain('"path"');
+        expect(serialized).not.toContain('"actor"');
     });
 
     test("keeps redacted upstream changes out of the representation ETag", async () => {
@@ -43,9 +44,15 @@ describe("public integration compatibility projection", () => {
                 const current = {
                     ...revision(),
                     provenance: { ...revision().provenance!, actor },
-                    evidence: [{ ...revision().evidence[0]!, path: `/private/${actor}` }],
                 };
-                return { admission: admission(), current, revisions: [current], totalRevisions: 1 };
+                return {
+                    root: admission(),
+                    current,
+                    currentRevisionId: current.reportId,
+                    currentReportDigest: (await identifyCompatibilityReportV2(current)).digest,
+                    revisions: [current],
+                    totalRevisions: 1,
+                };
             },
         };
         const runner = mounted(reader);
@@ -61,8 +68,8 @@ describe("public integration compatibility projection", () => {
         const response = await mounted(history.reader).handle(`${PATH}&limit=1`);
         const body = await response.json();
 
-        expect(body.revisions.map(({ id }: { id: string }) => id)).toEqual(["revision-1"]);
-        expect(body.current.id).toBe("revision-2");
+        expect(body.revisions.map(({ reportId }: { reportId: string }) => reportId)).toEqual(["revision-1"]);
+        expect(body.current.reportId).toBe("revision-2");
         expect(body.totalRevisions).toBe(2);
         expect(body.nextCursor).toBe("revision-1");
         expect(history.requests).toEqual([{ limit: 1 }]);

@@ -18,7 +18,6 @@ import type {
 } from "@bernouy/cms-integration-verification";
 import {
     FsIntegrationCompatibilityReevaluator,
-    FsIntegrationCompatibilityReportStore,
     FsIntegrationCompatibilityV2ReportStore,
     FsIntegrationMigrationReportStore,
     FsIntegrationRegistryCandidateAdmissionPlanner,
@@ -96,7 +95,6 @@ export async function createProductionRepositoryManagement(input: {
     const mutations = new InMemoryIntegrationRegistryMutationCoordinator();
     const reviewedSchemaBaselines = new FsReviewedSchemaBaselineStore({ root: input.root });
     const releaseReportConfig = { root: input.root, snapshots, mutations };
-    const reports = new FsIntegrationCompatibilityReportStore({ snapshots, mutations });
     const compatibilityReports = new FsIntegrationCompatibilityV2ReportStore(releaseReportConfig);
     const verificationReports = new FsIntegrationVerificationReportStore(releaseReportConfig);
     const verificationBundleStore = new FsIntegrationVerificationBundleStore(input.root);
@@ -130,7 +128,6 @@ export async function createProductionRepositoryManagement(input: {
         migrations: migrationReports,
         decisions: releaseDecisions,
         eligibility: versionEligibility,
-        legacyCompatibility: reports,
         ...(input.candidateAdmissionPolicy
             ? {
                   statefulChanges: {
@@ -299,11 +296,10 @@ export async function createProductionRepositoryManagement(input: {
     const reevaluator = new ObservedIntegrationCompatibilityReevaluator(
         new FsIntegrationCompatibilityReevaluator({
             snapshots,
-            reports,
+            reports: compatibilityReports,
             evaluator: compatibility,
             reviewedSchemaBaselines,
             release: {
-                compatibility: compatibilityReports,
                 decisions: releaseDecisions,
                 reconciler: releaseAdmission,
             },
@@ -313,7 +309,7 @@ export async function createProductionRepositoryManagement(input: {
     return Object.freeze({
         recovery,
         candidateRecovery: candidateProtocol.recovery,
-        compatibility: reports,
+        compatibility: compatibilityReports,
         releases: releaseEvidence,
         verificationBundles,
         mountMaintenance(runner: Runner) {
@@ -339,7 +335,7 @@ export async function createProductionRepositoryManagement(input: {
                 runner,
                 reads: {
                     catalog: snapshots,
-                    reports,
+                    reports: compatibilityReports,
                     releases: releaseEvidence,
                     recoveryDiagnostics: () => recovery.diagnostics,
                     operational: {

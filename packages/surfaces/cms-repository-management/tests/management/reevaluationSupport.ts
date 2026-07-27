@@ -46,6 +46,7 @@ export class RecordingReevaluator implements IntegrationCompatibilityReevaluator
             throw this.failure;
         }
         const base = {
+            schema: "cms.integration.compatibility-report.v2" as const,
             kind: request.kind,
             version: request.version,
             packageDigest: "a".repeat(64),
@@ -53,26 +54,35 @@ export class RecordingReevaluator implements IntegrationCompatibilityReevaluator
             createdAt: "2026-07-26T12:00:00.000Z",
             baselines: [],
             informationalBaselines: [],
-            evidence: [],
+            findings: [],
             outcome: "not-applicable" as const,
             requiredReleaseLevel: "none" as const,
             releaseLevel: "initial" as const,
-            admissible: true,
+            contractAdmissible: true,
             noBaselineReason: "new-kind" as const,
-        };
-        const admission = { ...base, id: "admission-1", reportType: "admission" as const };
-        const revision = {
-            ...base,
-            id: "revision-2",
-            reportType: "revision" as const,
-            supersedes: request.currentReportRevisionId,
+            origin: "admission" as const,
             provenance: {
                 actor: request.actor,
                 reason: request.reason,
                 ...(request.evidenceIds ? { evidenceIds: request.evidenceIds } : {}),
             },
         };
-        return { revision, history: { admission, current: revision, reports: [admission, revision] } };
+        const root = { ...base, reportId: "admission-1", revisionType: "root" as const };
+        const revision = {
+            ...base,
+            reportId: "revision-2",
+            revisionType: "revision" as const,
+            supersedes: request.currentReport.revisionId,
+        };
+        return {
+            revision,
+            history: {
+                currentRevisionId: revision.reportId,
+                currentReportDigest: "c".repeat(64),
+                current: revision,
+                revisions: [root, revision],
+            },
+        };
     }
 }
 
@@ -89,7 +99,7 @@ export function reevaluationBody(): IntegrationCompatibilityReevaluationRequest 
     return {
         kind: "commerce",
         version: "1.1.0",
-        currentReportRevisionId: "report-2",
+        currentReport: { revisionId: "report-2", reportDigest: "a".repeat(64) },
         currentDecision: { revisionId: "decision-2", digest: "b".repeat(64) },
         actor: "repository-owner",
         reason: "Run evaluator version 2",

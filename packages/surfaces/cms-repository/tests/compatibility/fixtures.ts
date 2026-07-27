@@ -1,4 +1,5 @@
 import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
+import { identifyCompatibilityReportV2 } from "@bernouy/cms-integration-verification";
 import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 import {
     RepositoryCms,
@@ -13,59 +14,53 @@ export const BASELINE_DIGEST = "b".repeat(64);
 export const DOWNLOAD_DIGEST = "c".repeat(64);
 
 export function admission(): RepositoryCompatibilityReportSource {
-    const report: RepositoryCompatibilityReportSource & Readonly<{ path: string; source: string }> = {
-        id: "admission-1",
-        reportType: "admission",
+    return {
+        schema: "cms.integration.compatibility-report.v2",
+        reportId: "admission-1",
+        revisionType: "root",
+        origin: "admission",
+        createdAt: "2026-07-26T09:00:00.000Z",
         kind: "demo",
         version: "1.0.0",
         packageDigest: PACKAGE_DIGEST,
-        evaluator: { name: "cms-compatibility", version: "1.0.0" },
-        createdAt: "2026-07-26T09:00:00.000Z",
+        evaluator: { name: "cms-compatibility", version: "2.0.0" },
         baselines: [],
-        informationalBaselines: [
+        informationalBaselines: [],
+        findings: [
             {
-                kind: "demo",
-                version: "0.9.0",
-                packageDigest: BASELINE_DIGEST,
-                path: "/registry/private/baseline.json",
-                source: "internal-baseline-source",
-            },
-        ],
-        evidence: [
-            {
+                findingId: "b51ab3cc141991012ec0abc4c32a0232cc87f1aa30a3235a01be2bdc8e2600a3",
                 classification: "compatible",
                 surface: "definition",
-                code: "contract-preserved",
-                message: "The public contract is preserved.",
                 path: "/registry/private/definition.json",
-                source: "internal-evidence-source",
+                code: "contract-preserved",
+                baselineDigest: PACKAGE_DIGEST,
+                candidateDigest: PACKAGE_DIGEST,
+                message: "The public contract is preserved.",
             },
         ],
-        outcome: "compatible",
+        outcome: "not-applicable",
         requiredReleaseLevel: "none",
         releaseLevel: "initial",
-        admissible: true,
-        noBaselineReason: "new-major",
-        path: "/registry/private/admission.json",
-        source: "top-level-internal-source",
+        contractAdmissible: true,
+        noBaselineReason: "new-kind",
+        provenance: {
+            actor: "private-registry-service",
+            reason: "Initial static evaluation",
+        },
     };
-    return report;
 }
 
 export function revision(id = "revision-1", supersedes = "admission-1"): RepositoryCompatibilityReportSource {
     return {
         ...admission(),
-        id,
-        reportType: "revision",
+        reportId: id,
+        revisionType: "revision",
         createdAt: "2026-07-26T10:00:00.000Z",
-        releaseLevel: "patch",
         supersedes,
         provenance: {
-            actor: "private-admin@example.test",
+            actor: "private-admin",
             reason: "Comparator update",
             evidenceIds: ["ci-evidence-1"],
-            source: "internal-management-request",
-            path: "/private/audit/42",
         },
     };
 }
@@ -79,7 +74,7 @@ export function mutableCompatibilityReader(initial: readonly RepositoryCompatibi
             if (kind !== "demo" || version !== "1.0.0") {
                 return null;
             }
-            const start = page.after ? revisions.findIndex(({ id }) => id === page.after) + 1 : 0;
+            const start = page.after ? revisions.findIndex(({ reportId }) => reportId === page.after) + 1 : 0;
             if (page.after && start === 0) {
                 throw Object.assign(new Error("Compatibility history cursor does not exist"), {
                     status: 400,
@@ -89,12 +84,16 @@ export function mutableCompatibilityReader(initial: readonly RepositoryCompatibi
             const limit = page.limit ?? 50;
             const selected = revisions.slice(start, start + limit);
             const hasMore = start + selected.length < revisions.length;
+            const root = admission();
+            const current = revisions.at(-1) ?? root;
             return {
-                admission: admission(),
-                current: revisions.at(-1) ?? admission(),
+                root,
+                current,
+                currentRevisionId: current.reportId,
+                currentReportDigest: (await identifyCompatibilityReportV2(current)).digest,
                 revisions: selected,
                 totalRevisions: revisions.length,
-                ...(hasMore ? { nextCursor: selected.at(-1)?.id } : {}),
+                ...(hasMore ? { nextCursor: selected.at(-1)?.reportId } : {}),
             };
         },
     };

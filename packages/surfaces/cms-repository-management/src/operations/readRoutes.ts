@@ -1,7 +1,7 @@
 import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@bernouy/cms-integration-packages";
 import type {
     IntegrationCompatibilityReportPageRequest,
-    IntegrationCompatibilityReportStore,
+    IntegrationCompatibilityV2ReportStore,
     IntegrationRegistryCatalogSnapshotProvider,
     IntegrationRegistryReleaseEvidenceReader,
     IntegrationRegistryRecoveryDiagnostic,
@@ -24,7 +24,7 @@ const MAX_COMPATIBILITY_PAGE_SIZE = 100;
 
 export type RepositoryManagementReadConfig = Readonly<{
     catalog: IntegrationRegistryCatalogSnapshotProvider;
-    reports: IntegrationCompatibilityReportStore;
+    reports: IntegrationCompatibilityV2ReportStore;
     releases?: IntegrationRegistryReleaseEvidenceReader;
     recoveryDiagnostics?: () => readonly IntegrationRegistryRecoveryDiagnostic[];
     operational?: RepositoryManagementOperationalReadSource;
@@ -93,6 +93,7 @@ async function versionsResponse(request: Request, config: RepositoryManagementRe
             snapshot.listVersions(kind).map(async ({ version, status }) => {
                 const location = snapshot.locateExactVersion(kind, version);
                 const history = await config.reports.get(kind, version);
+                const root = history?.revisions[0];
                 const release = await config.releases?.get(kind, version);
                 return {
                     version,
@@ -104,15 +105,18 @@ async function versionsResponse(request: Request, config: RepositoryManagementRe
                               blockPreview: projectIntegrationRegistryVersionEligibility(index, version, "blocked")
                                   .channels,
                           }),
-                    compatibility: history
-                        ? {
-                              admissionReportId: history.admission.id,
-                              currentReportRevisionId: history.current.id,
-                              outcome: history.current.outcome,
-                              admissible: history.current.admissible,
-                              warning: history.current.id !== history.admission.id && !history.current.admissible,
-                          }
-                        : null,
+                    compatibility:
+                        history && root?.revisionType === "root"
+                            ? {
+                                  rootReportId: root.reportId,
+                                  currentReportRevisionId: history.current.reportId,
+                                  currentReportDigest: history.currentReportDigest,
+                                  outcome: history.current.outcome,
+                                  contractAdmissible: history.current.contractAdmissible,
+                                  warning:
+                                      history.current.reportId !== root.reportId && !history.current.contractAdmissible,
+                              }
+                            : null,
                     ...(release
                         ? {
                               release: {

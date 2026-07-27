@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type {
-    IntegrationCompatibilityAdmissionReport,
-    IntegrationCompatibilityReportRevision,
-} from "@bernouy/cms-integration-registry";
+import type { CompatibilityReportV2 } from "@bernouy/cms-integration-verification";
 import { ObservedIntegrationRegistryStablePromoter } from "../../src/core/observability/promoter";
 import { ObservedIntegrationCompatibilityReevaluator } from "../../src/core/observability/reevaluator";
 import {
@@ -51,10 +48,10 @@ describe("repository operation observability", () => {
         await promotion.promoteStable({
             kind: "demo",
             version: "1.0.0",
-            currentReportRevisionId: admission.id,
+            currentReportRevisionId: admission.reportId,
             actor: "secret-admin-subject",
             reason: "token=secret /var/lib/private",
-            confirmation: { version: "1.0.0", reportRevisionId: admission.id },
+            confirmation: { version: "1.0.0", reportRevisionId: admission.reportId },
         });
 
         const revision = revisedReport();
@@ -62,7 +59,12 @@ describe("repository operation observability", () => {
             {
                 reevaluate: async () => ({
                     revision,
-                    history: { admission, current: revision, revisions: [revision] },
+                    history: {
+                        currentRevisionId: revision.reportId,
+                        currentReportDigest: "c".repeat(64),
+                        current: revision,
+                        revisions: [admission, revision],
+                    },
                 }),
             },
             telemetry,
@@ -70,7 +72,7 @@ describe("repository operation observability", () => {
         await reevaluator.reevaluate({
             kind: "demo",
             version: "1.0.0",
-            currentReportRevisionId: admission.id,
+            currentReport: { revisionId: admission.reportId, reportDigest: "b".repeat(64) },
             actor: "another-secret-actor",
             reason: "package content must stay private",
         });
@@ -85,14 +87,14 @@ describe("repository operation observability", () => {
                 schema: "cms.repository.operation.v1",
                 operation: "stable-promotion",
                 operationId: "promotion-operation",
-                reportRevisionId: admission.id,
+                reportRevisionId: admission.reportId,
                 outcome: "succeeded",
                 durationMs: 7,
             }),
             expect.objectContaining({
                 operation: "compatibility-reevaluation",
-                reportRevisionId: revision.id,
-                compatibilityOutcome: "breaking",
+                reportRevisionId: revision.reportId,
+                compatibilityOutcome: "invalid",
                 outcome: "succeeded",
             }),
         ]);
@@ -185,10 +187,12 @@ describe("repository operation observability", () => {
 
 const DIGEST = "a".repeat(64);
 
-function report(admissible: boolean): IntegrationCompatibilityAdmissionReport {
+function report(admissible: boolean): CompatibilityReportV2 {
     return {
-        reportType: "admission",
-        id: "admission-report",
+        schema: "cms.integration.compatibility-report.v2",
+        revisionType: "root",
+        reportId: "admission-report",
+        origin: "admission",
         kind: "demo",
         version: "1.0.0",
         packageDigest: DIGEST,
@@ -196,20 +200,21 @@ function report(admissible: boolean): IntegrationCompatibilityAdmissionReport {
         createdAt: "2026-07-26T12:00:00.000Z",
         baselines: [],
         informationalBaselines: [],
-        evidence: [],
-        outcome: admissible ? "not-applicable" : "breaking",
+        findings: [],
+        outcome: admissible ? "not-applicable" : "invalid",
         requiredReleaseLevel: "none",
         releaseLevel: "initial",
-        admissible,
+        contractAdmissible: admissible,
         noBaselineReason: "new-kind",
+        provenance: { actor: "repository-owner", reason: "Initial evaluation" },
     };
 }
 
-function revisedReport(): IntegrationCompatibilityReportRevision {
+function revisedReport(): CompatibilityReportV2 {
     return {
         ...report(false),
-        reportType: "revision",
-        id: "revision-report",
+        revisionType: "revision",
+        reportId: "revision-report",
         supersedes: "admission-report",
         provenance: { actor: "never-log", reason: "never-log" },
     };

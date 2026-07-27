@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { PublicPackageReadObservation, PublicRepositoryReadObservation } from "@bernouy/cms-repository";
-import type { IntegrationCompatibilityReport } from "@bernouy/cms-integration-registry";
+import type { CompatibilityReportV2 } from "@bernouy/cms-integration-verification";
 import type {
     RepositoryOperationalSnapshot,
     RepositoryOperation,
@@ -91,7 +91,7 @@ export class RepositoryOperationalTelemetry {
         details: Readonly<{
             operationId?: string;
             digest?: string;
-            report?: IntegrationCompatibilityReport;
+            report?: CompatibilityReportV2;
             reportRevisionId?: string;
             errorCode?: string;
         }> = {},
@@ -105,7 +105,7 @@ export class RepositoryOperationalTelemetry {
         if (span.operation === "compatibility-reevaluation" && outcome === "succeeded") {
             this.reevaluations = increment(this.reevaluations);
         }
-        if (details.report && !details.report.admissible) {
+        if (details.report && !details.report.contractAdmissible) {
             this.warnings = increment(this.warnings);
         }
         this.record(repositoryOperationLogEntry(span, outcome, durationMs, details, this.now().toISOString()));

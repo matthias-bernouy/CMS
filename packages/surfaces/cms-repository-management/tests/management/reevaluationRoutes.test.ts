@@ -20,9 +20,9 @@ describe("repository compatibility reevaluation route", () => {
         expect(response.headers.get("cache-control")).toBe("no-store");
         expect(reevaluator.requests).toEqual([reevaluationBody()]);
         expect(body).toEqual({
-            currentReportRevisionId: "revision-2",
+            currentReport: { revisionId: "revision-2", reportDigest: "c".repeat(64) },
             revision: expect.objectContaining({
-                id: "revision-2",
+                reportId: "revision-2",
                 supersedes: "report-2",
                 provenance: {
                     actor: "repository-owner",

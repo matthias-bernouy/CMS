@@ -47,7 +47,7 @@ describe("public integration compatibility HTTP contract", () => {
         const bodyAfter = await compatibilityAfter.json();
 
         expect(compatibilityBefore.headers.get("etag")).not.toBe(compatibilityAfter.headers.get("etag"));
-        expect(bodyAfter.current.id).toBe("revision-1");
+        expect(bodyAfter.current.reportId).toBe("revision-1");
         expect(bodyAfter.totalRevisions).toBe(1);
         expect(packageBefore.headers.get("etag")).toBe(`"${DOWNLOAD_DIGEST}"`);
         expect(packageAfter.headers.get("etag")).toBe(packageBefore.headers.get("etag"));

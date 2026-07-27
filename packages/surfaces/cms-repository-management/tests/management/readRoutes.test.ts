@@ -1,11 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import type {
-    IntegrationCompatibilityReportCollection,
     IntegrationCompatibilityReportPage,
-    IntegrationCompatibilityReportStore,
+    IntegrationCompatibilityV2ReportStore,
     IntegrationRegistryCatalogSnapshot,
     IntegrationRegistryReleaseEvidence,
+    ReleaseReportHistory,
 } from "@bernouy/cms-integration-registry";
+import type { CompatibilityReportV2 } from "@bernouy/cms-integration-verification";
 import { createIntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry";
 import {
     mountRepositoryManagementReadRoutes,
@@ -92,10 +93,11 @@ describe("repository management read routes", () => {
                         next: {},
                     },
                     compatibility: {
-                        admissionReportId: "admission-1",
+                        rootReportId: "admission-1",
                         currentReportRevisionId: "revision-1",
-                        outcome: "breaking",
-                        admissible: false,
+                        currentReportDigest: "c".repeat(64),
+                        outcome: "invalid",
+                        contractAdmissible: false,
                         warning: true,
                     },
                 },
@@ -113,7 +115,7 @@ describe("repository management read routes", () => {
 
         expect(response.status).toBe(200);
         expect(reports.pages).toEqual([{ after: "admission-1", limit: 25 }]);
-        expect(((await response.json()) as { current: { id: string } }).current.id).toBe("revision-1");
+        expect(((await response.json()) as { current: { reportId: string } }).current.reportId).toBe("revision-1");
 
         for (const query of ["", "&limit=0", "&limit=101", "&limit=1.5"]) {
             const invalid = await runner.handle(`${REPOSITORY_COMPATIBILITY_PATH}?kind=commerce&version=1.0.0${query}`);
@@ -223,28 +225,30 @@ class ReadTestRunner {
     }
 }
 
-class ReportStore implements IntegrationCompatibilityReportStore {
+class ReportStore implements IntegrationCompatibilityV2ReportStore {
     readonly pages: Array<{ after?: string; limit?: number }> = [];
 
-    async get(kind: string, version: string): Promise<IntegrationCompatibilityReportCollection | null> {
-        return kind === "commerce" && version === "1.0.0" ? reportCollection() : null;
+    async get(kind: string, version: string): Promise<ReleaseReportHistory<CompatibilityReportV2> | null> {
+        return kind === "commerce" && version === "1.0.0" ? reportHistory() : null;
     }
 
     async list(kind: string, version: string, page = {}): Promise<IntegrationCompatibilityReportPage | null> {
         this.pages.push(page);
-        const collection = await this.get(kind, version);
-        return collection
+        const history = await this.get(kind, version);
+        return history
             ? {
-                  admission: collection.admission,
-                  current: collection.current,
-                  revisions: [collection.reports[1]!],
+                  root: history.revisions[0]!,
+                  current: history.current,
+                  currentRevisionId: history.currentRevisionId,
+                  currentReportDigest: history.currentReportDigest,
+                  revisions: [history.revisions[1]!],
                   totalRevisions: 1,
               }
             : null;
     }
 
-    async appendRevision(): Promise<IntegrationCompatibilityReportCollection> {
-        return reportCollection();
+    async append(): Promise<ReleaseReportHistory<CompatibilityReportV2>> {
+        return reportHistory();
     }
 }
 
@@ -305,8 +309,9 @@ function fixtureSnapshot(): IntegrationRegistryCatalogSnapshot {
     });
 }
 
-function reportCollection(): IntegrationCompatibilityReportCollection {
+function reportHistory(): ReleaseReportHistory<CompatibilityReportV2> {
     const base = {
+        schema: "cms.integration.compatibility-report.v2" as const,
         kind: "commerce",
         version: "1.0.0",
         packageDigest: "a".repeat(64),
@@ -314,26 +319,45 @@ function reportCollection(): IntegrationCompatibilityReportCollection {
         createdAt: "2026-07-26T00:00:00.000Z",
         baselines: [],
         informationalBaselines: [],
-        evidence: [],
-        requiredReleaseLevel: "major" as const,
-        releaseLevel: "patch" as const,
-        noBaselineReason: undefined,
-    };
-    const admission = {
-        ...base,
-        id: "admission-1",
-        reportType: "admission" as const,
-        outcome: "compatible" as const,
-        admissible: true,
-    };
-    const revision = {
-        ...base,
-        id: "revision-1",
-        reportType: "revision" as const,
-        outcome: "breaking" as const,
-        admissible: false,
-        supersedes: admission.id,
+        releaseLevel: "initial" as const,
+        noBaselineReason: "new-kind" as const,
+        origin: "admission" as const,
         provenance: { actor: "repository-owner", reason: "Comparator update" },
     };
-    return { admission, current: revision, reports: [admission, revision] };
+    const root: CompatibilityReportV2 = {
+        ...base,
+        reportId: "admission-1",
+        revisionType: "root",
+        findings: [],
+        outcome: "not-applicable",
+        requiredReleaseLevel: "none",
+        contractAdmissible: true,
+    };
+    const revision: CompatibilityReportV2 = {
+        ...base,
+        reportId: "revision-1",
+        revisionType: "revision",
+        findings: [
+            {
+                findingId: "f".repeat(64),
+                surface: "schema",
+                path: "public.orders",
+                code: "schema-invalid",
+                baselineDigest: "a".repeat(64),
+                candidateDigest: "a".repeat(64),
+                classification: "invalid",
+                message: "Schema declaration is invalid",
+            },
+        ],
+        outcome: "invalid",
+        requiredReleaseLevel: "none",
+        contractAdmissible: false,
+        supersedes: root.reportId,
+    };
+    return {
+        currentRevisionId: revision.reportId,
+        currentReportDigest: "c".repeat(64),
+        current: revision,
+        revisions: [root, revision],
+    };
 }

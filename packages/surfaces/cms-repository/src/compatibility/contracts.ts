@@ -1,60 +1,17 @@
-export type RepositoryCompatibilityOutcome = "compatible" | "breaking" | "unknown" | "invalid" | "not-applicable";
+import type {
+    IntegrationCompatibilityReportPage,
+    IntegrationCompatibilityReportPageRequest,
+} from "@bernouy/cms-integration-registry";
+import type {
+    CompatibilityFinding,
+    CompatibilityReportV2,
+    VersionDigestReference,
+} from "@bernouy/cms-integration-verification";
 
-export type RepositoryCompatibilityPageRequest = Readonly<{
-    after?: string;
-    limit?: number;
-}>;
-
-export type RepositoryCompatibilityEvidenceSource = Readonly<{
-    classification: string;
-    surface: string;
-    code: string;
-    message: string;
-    path?: unknown;
-    source?: unknown;
-}>;
-
-export type RepositoryCompatibilityBaselineSource = Readonly<{
-    kind: string;
-    version: string;
-    packageDigest: string;
-    path?: unknown;
-    source?: unknown;
-}>;
-
-export type RepositoryCompatibilityReportSource = Readonly<{
-    id: string;
-    reportType: "admission" | "revision";
-    kind: string;
-    version: string;
-    packageDigest: string;
-    evaluator: Readonly<{ name: string; version: string }>;
-    createdAt: string;
-    baselines: readonly RepositoryCompatibilityBaselineSource[];
-    informationalBaselines: readonly RepositoryCompatibilityBaselineSource[];
-    evidence: readonly RepositoryCompatibilityEvidenceSource[];
-    outcome: string;
-    requiredReleaseLevel: string;
-    releaseLevel: string;
-    admissible: boolean;
-    noBaselineReason?: string;
-    supersedes?: string;
-    provenance?: Readonly<{
-        actor?: unknown;
-        reason: string;
-        evidenceIds?: readonly string[];
-        source?: unknown;
-        path?: unknown;
-    }>;
-}>;
-
-export type RepositoryCompatibilityPageSource = Readonly<{
-    admission: RepositoryCompatibilityReportSource;
-    current: RepositoryCompatibilityReportSource;
-    revisions: readonly RepositoryCompatibilityReportSource[];
-    totalRevisions: number;
-    nextCursor?: string;
-}>;
+export type RepositoryCompatibilityOutcome = CompatibilityReportV2["outcome"];
+export type RepositoryCompatibilityPageRequest = IntegrationCompatibilityReportPageRequest;
+export type RepositoryCompatibilityReportSource = CompatibilityReportV2;
+export type RepositoryCompatibilityPageSource = IntegrationCompatibilityReportPage;
 
 export interface RepositoryCompatibilityReader {
     list(
@@ -64,52 +21,43 @@ export interface RepositoryCompatibilityReader {
     ): Promise<RepositoryCompatibilityPageSource | null>;
 }
 
-export type PublicRepositoryCompatibilityEvidence = Readonly<{
-    classification: string;
-    surface: string;
-    code: string;
-    message: string;
-}>;
+export type PublicRepositoryCompatibilityFinding = Readonly<
+    Pick<CompatibilityFinding, "findingId" | "classification" | "surface" | "code" | "message">
+>;
 
-export type PublicRepositoryCompatibilityBaseline = Readonly<{
-    kind: string;
-    version: string;
-    packageDigest: string;
-}>;
+export type PublicRepositoryCompatibilityBaseline = VersionDigestReference;
 
 type PublicRepositoryCompatibilityReportBase = Readonly<{
-    id: string;
+    reportId: string;
+    origin: CompatibilityReportV2["origin"];
+    createdAt: string;
     kind: string;
     version: string;
     packageDigest: string;
-    evaluator: Readonly<{ name: string; version: string }>;
-    createdAt: string;
+    evaluator: CompatibilityReportV2["evaluator"];
     baselines: readonly PublicRepositoryCompatibilityBaseline[];
     informationalBaselines: readonly PublicRepositoryCompatibilityBaseline[];
-    evidence: readonly PublicRepositoryCompatibilityEvidence[];
-    outcome: RepositoryCompatibilityOutcome;
-    requiredReleaseLevel: string;
-    releaseLevel: string;
-    admissible: boolean;
-    noBaselineReason?: string;
+    findings: readonly PublicRepositoryCompatibilityFinding[];
+    outcome: CompatibilityReportV2["outcome"];
+    requiredReleaseLevel: CompatibilityReportV2["requiredReleaseLevel"];
+    releaseLevel: CompatibilityReportV2["releaseLevel"];
+    contractAdmissible: boolean;
+    noBaselineReason?: CompatibilityReportV2["noBaselineReason"];
+    provenance: Readonly<{ reason: string; evidenceIds?: readonly string[] }>;
 }>;
 
-export type PublicRepositoryCompatibilityAdmission = PublicRepositoryCompatibilityReportBase &
-    Readonly<{ reportType: "admission" }>;
+export type PublicRepositoryCompatibilityRoot = PublicRepositoryCompatibilityReportBase &
+    Readonly<{ revisionType: "root" }>;
 
 export type PublicRepositoryCompatibilityRevision = PublicRepositoryCompatibilityReportBase &
-    Readonly<{
-        reportType: "revision";
-        supersedes: string;
-        provenance: Readonly<{ reason: string; evidenceIds?: readonly string[] }>;
-    }>;
+    Readonly<{ revisionType: "revision"; supersedes: string }>;
 
 export type PublicRepositoryCompatibilityReport =
-    | PublicRepositoryCompatibilityAdmission
+    | PublicRepositoryCompatibilityRoot
     | PublicRepositoryCompatibilityRevision;
 
 export type PublicRepositoryCompatibilityPage = Readonly<{
-    admission: PublicRepositoryCompatibilityAdmission;
+    root: PublicRepositoryCompatibilityRoot;
     current: PublicRepositoryCompatibilityReport;
     revisions: readonly PublicRepositoryCompatibilityRevision[];
     totalRevisions: number;

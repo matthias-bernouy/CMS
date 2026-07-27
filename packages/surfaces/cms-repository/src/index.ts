@@ -15,14 +15,12 @@ export type {
     PublicRepositoryReadResource,
 } from "cms-repository/readObservation";
 export type {
-    PublicRepositoryCompatibilityAdmission,
     PublicRepositoryCompatibilityBaseline,
-    PublicRepositoryCompatibilityEvidence,
+    PublicRepositoryCompatibilityFinding,
     PublicRepositoryCompatibilityPage,
     PublicRepositoryCompatibilityReport,
+    PublicRepositoryCompatibilityRoot,
     PublicRepositoryCompatibilityRevision,
-    RepositoryCompatibilityBaselineSource,
-    RepositoryCompatibilityEvidenceSource,
     RepositoryCompatibilityOutcome,
     RepositoryCompatibilityPageRequest,
     RepositoryCompatibilityPageSource,

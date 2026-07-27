@@ -33,7 +33,10 @@ export function mountRepositoryCompatibilityReevaluationRoutes(
             const result = await config.reevaluator.reevaluate(input);
             return jsonResponse(201, {
                 revision: result.revision,
-                currentReportRevisionId: result.history.current.id,
+                currentReport: {
+                    revisionId: result.history.currentRevisionId,
+                    reportDigest: result.history.currentReportDigest,
+                },
                 ...(result.release ? { release: result.release } : {}),
             });
         } catch (error) {
@@ -43,16 +46,16 @@ export function mountRepositoryCompatibilityReevaluationRoutes(
 }
 
 function parseReevaluationRequest(value: unknown): IntegrationCompatibilityReevaluationRequest {
-    const required = ["actor", "currentDecision", "currentReportRevisionId", "kind", "reason", "version"];
-    const optional = ["evidenceIds"];
+    const required = ["actor", "currentReport", "kind", "reason", "version"];
+    const optional = ["currentDecision", "evidenceIds"];
     if (!isRecord(value) || !hasAllowedKeys(value, required, optional)) {
         throw invalidRequest();
     }
     return {
         kind: requiredString(value.kind),
         version: requiredString(value.version),
-        currentReportRevisionId: requiredString(value.currentReportRevisionId),
-        currentDecision: decisionReference(value.currentDecision),
+        currentReport: reportReference(value.currentReport),
+        ...(value.currentDecision === undefined ? {} : { currentDecision: decisionReference(value.currentDecision) }),
         actor: requiredString(value.actor),
         reason: requiredString(value.reason),
         ...(value.evidenceIds === undefined ? {} : { evidenceIds: stringArray(value.evidenceIds) }),
@@ -119,6 +122,17 @@ function decisionReference(value: unknown): Readonly<{ revisionId: string; diges
         throw invalidRequest();
     }
     return { revisionId: requiredString(value.revisionId), digest };
+}
+
+function reportReference(value: unknown): Readonly<{ revisionId: string; reportDigest: string }> {
+    if (!isRecord(value) || !hasAllowedKeys(value, ["reportDigest", "revisionId"], [])) {
+        throw invalidRequest();
+    }
+    const reportDigest = requiredString(value.reportDigest);
+    if (!/^[a-f0-9]{64}$/u.test(reportDigest)) {
+        throw invalidRequest();
+    }
+    return { revisionId: requiredString(value.revisionId), reportDigest };
 }
 
 function requiredString(value: unknown): string {

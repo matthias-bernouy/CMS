@@ -17,7 +17,7 @@ export function integrationCompatibilityRouteHandler(
         if (!source) {
             return publicNotFound("integration compatibility report not found");
         }
-        return publicJsonResponse(request, projectPublicCompatibilityPage(source, identity, page), "catalog");
+        return publicJsonResponse(request, await projectPublicCompatibilityPage(source, identity, page), "catalog");
     };
 }
 

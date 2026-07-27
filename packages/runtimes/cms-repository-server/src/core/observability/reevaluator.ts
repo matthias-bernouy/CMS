@@ -18,21 +18,21 @@ export class ObservedIntegrationCompatibilityReevaluator implements IntegrationC
         const span = this.telemetry.start("compatibility-reevaluation", {
             kind: request.kind,
             version: request.version,
-            reportRevisionId: request.currentReportRevisionId,
+            reportRevisionId: request.currentReport.revisionId,
         });
         try {
             const result = await this.reevaluator.reevaluate(request);
             this.telemetry.finish(span, "succeeded", {
                 digest: result.revision.packageDigest,
                 report: result.revision,
-                reportRevisionId: result.revision.id,
+                reportRevisionId: result.revision.reportId,
             });
             return result;
         } catch (error) {
             const failure = failedOperation(error);
             this.telemetry.finish(span, failure.outcome, {
                 ...failure,
-                reportRevisionId: request.currentReportRevisionId,
+                reportRevisionId: request.currentReport.revisionId,
             });
             throw error;
         }

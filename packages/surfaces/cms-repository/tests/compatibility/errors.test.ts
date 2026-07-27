@@ -67,8 +67,10 @@ describe("public integration compatibility failures", () => {
         });
         const invalid = mounted({
             list: async () => ({
-                admission: admission(),
+                root: admission(),
                 current: { ...admission(), packageDigest: "invalid" },
+                currentRevisionId: "admission-1",
+                currentReportDigest: "f".repeat(64),
                 revisions: [],
                 totalRevisions: 0,
             }),
