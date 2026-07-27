@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "workspace-shell-detail",
+        "name": "Workspace shell detail",
+        "group": "Workspace · Layout",
+        "description": "Two-column tool detail shell with title, actions, main content, and aside.",
+        "path": "blocs/layout/workspace-shell-detail"
+    }
+}

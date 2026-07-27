@@ -6,6 +6,16 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 const expectedBlocs = new Map([
     [
+        "workspace-blocs",
+        [
+            "workspace-detail-section",
+            "workspace-lateral-menu",
+            "workspace-lateral-menu-item",
+            "workspace-shell",
+            "workspace-shell-detail",
+        ],
+    ],
+    [
         "documentation-blocs",
         [
             "doc-anchor-heading",

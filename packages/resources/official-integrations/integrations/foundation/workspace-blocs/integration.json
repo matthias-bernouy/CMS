@@ -1,0 +1,16 @@
+{
+    "schema": "cms.integration.index.v1",
+    "kind": "workspace-blocs",
+    "label": "Workspace Blocs",
+    "category": "Blocks",
+    "description": "Install official design-system shells, lateral navigation, and detail layouts for authenticated tools.",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
+    "versions": [
+        {
+            "version": "1.0.0",
+            "path": "versions/1.0.0",
+            "definition": "versions/1.0.0/definition.json"
+        }
+    ]
+}
