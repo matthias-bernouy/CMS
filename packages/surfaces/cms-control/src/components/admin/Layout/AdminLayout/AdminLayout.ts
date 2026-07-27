@@ -1,14 +1,9 @@
 import { Component } from "@bernouy/components/base";
+import { adminSystemSettingsStore } from "../../Common/SystemSettings/store";
 
 import template from "./template.html" with { type: "text" };
 
 const DEFAULT_BRAND_NAME = "CmsCore";
-
-type SiteSettingsResponse = {
-    site?: {
-        name?: unknown;
-    };
-};
 
 /**
  * Fixed admin shell + sidebar. Sidebar items declare their target as
@@ -24,7 +19,6 @@ type SiteSettingsResponse = {
  * longer carries misleading "./" hrefs.
  */
 export class FixedAdminLayout extends Component {
-    private _brandRequest: AbortController | null = null;
     private _titleSlot: HTMLSlotElement | null = null;
     private _actionSlot: HTMLSlotElement | null = null;
     private _pageHeader: HTMLElement | null = null;
@@ -51,7 +45,7 @@ export class FixedAdminLayout extends Component {
         this._syncRoutes(root, basePath);
         this._setBrandName(root, DEFAULT_BRAND_NAME);
         this._syncPageHeader();
-        void this._syncSiteName(root, basePath);
+        void this._syncSiteName(root);
 
         document.addEventListener("settings:saved", this._onSettingsSaved);
         this._titleSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
@@ -59,8 +53,6 @@ export class FixedAdminLayout extends Component {
     }
 
     disconnectedCallback() {
-        this._brandRequest?.abort();
-        this._brandRequest = null;
         document.removeEventListener("settings:saved", this._onSettingsSaved);
         this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
         this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
@@ -82,32 +74,14 @@ export class FixedAdminLayout extends Component {
         }
     }
 
-    private async _syncSiteName(root: ShadowRoot, basePath: string): Promise<void> {
-        this._brandRequest?.abort();
-
-        const request = new AbortController();
-        this._brandRequest = request;
-
+    private async _syncSiteName(root: ShadowRoot): Promise<void> {
         try {
-            const response = await fetch(`${basePath}/api/system/settings`, {
-                headers: { Accept: "application/json" },
-                signal: request.signal,
-            });
-            if (!response.ok) {
-                return;
-            }
-
-            const data = (await response.json()) as SiteSettingsResponse;
-            const name = typeof data.site?.name === "string" ? data.site.name.trim() : "";
+            const data = await adminSystemSettingsStore.load();
+            const name = data.site.name.trim();
             this._setBrandName(root, name || DEFAULT_BRAND_NAME);
-        } catch (error) {
-            if (!isAbortError(error)) {
-                return;
-            }
-        } finally {
-            if (this._brandRequest === request) {
-                this._brandRequest = null;
-            }
+        } catch {
+            // Keep the last valid name when a refresh fails. The initial fallback
+            // is installed before the first request in connectedCallback.
         }
     }
 
@@ -149,14 +123,11 @@ export class FixedAdminLayout extends Component {
         if (!root) {
             return;
         }
-        void this._syncSiteName(root, this._basePath());
+        adminSystemSettingsStore.invalidate();
+        void this._syncSiteName(root);
     };
 
     private _onPageHeaderSlotChange = (): void => this._syncPageHeader();
 }
 
 customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
-
-function isAbortError(error: unknown): boolean {
-    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
-}
