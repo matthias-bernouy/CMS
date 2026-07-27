@@ -10,7 +10,6 @@ import {
 import type { CMS_ROLES } from "@bernouy/cms-permissions";
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { CoreStores } from "./stores/core";
-import { createSignupLegalAcceptancePolicy } from "./signupLegalAcceptance";
 
 export async function createProductionAuth(env: RuntimeEnv, stores: CoreStores) {
     if (!(await stores.identityProviders.get("local"))) {
@@ -69,7 +68,6 @@ export async function createProductionAuth(env: RuntimeEnv, stores: CoreStores) 
         defaultRole: "user" as CMS_ROLES,
         siteName: env.CMS_AUTH_SITE_NAME,
         authEmailCooldownSeconds: env.CMS_AUTH_EMAIL_COOLDOWN_SECONDS,
-        signupLegalAcceptance: createSignupLegalAcceptancePolicy(stores.repo, stores.signupLegalAcceptances),
     };
     return { auth, publicAuthBase };
 }

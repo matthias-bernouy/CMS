@@ -16,6 +16,7 @@ type Role = "user";
 
 class CaptureRunner implements Runner {
     readonly endpoints = new Set<string>();
+    readonly handlers = new Map<string, RouteHandler>();
 
     constructor(
         readonly basePath: string = "/",
@@ -25,10 +26,12 @@ class CaptureRunner implements Runner {
     addEndpoint(
         method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
         path: string,
-        _handler: RouteHandler,
+        handler: RouteHandler,
         _middlewares?: Middleware[],
     ): void {
-        this.target.endpoints.add(`${method} ${joinPath(this.basePath, path)}`);
+        const route = `${method} ${joinPath(this.basePath, path)}`;
+        this.target.endpoints.add(route);
+        this.target.handlers.set(route, handler);
     }
     use() {}
     get(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
@@ -68,6 +71,14 @@ class CaptureRunner implements Runner {
     private get target(): CaptureRunner {
         return this.root ?? this;
     }
+
+    handler(method: "GET" | "POST", path: string): RouteHandler {
+        const handler = this.handlers.get(`${method} ${path}`);
+        if (!handler) {
+            throw new Error(`Missing handler for ${method} ${path}`);
+        }
+        return handler;
+    }
 }
 
 describe("Delivery public auth mount", () => {
@@ -83,6 +94,25 @@ describe("Delivery public auth mount", () => {
         expect(runner.endpoints.has("POST /.cms/auth/signup")).toBe(true);
         expect(runner.endpoints.has("POST /.cms/auth/login")).toBe(true);
         expect(runner.endpoints.has("GET /.cms/auth/me")).toBe(true);
+    });
+
+    test("keeps auth-only signup working when the source gateway is absent", async () => {
+        const runner = new CaptureRunner();
+        new DeliveryCms({ runner, repository: {} as any, auth: authConfig() });
+
+        const response = await runner.handler(
+            "POST",
+            "/.cms/auth/signup",
+        )(
+            new Request("http://site.test/.cms/auth/signup", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ email: "auth-only@example.test", password: "password-1" }),
+            }),
+        );
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ ok: true });
     });
 });
 

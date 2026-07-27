@@ -11,19 +11,12 @@ import {
     registerPublicAuthRoutes,
     SignedCookieCodec,
     SubjectResolver,
-    type SignupLegalAcceptancePolicy,
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
 
 type Role = "user" | "admin";
 
-export function setupPublicAuthRoutes(
-    opts: {
-        authEmailCooldownSeconds?: number;
-        emailer?: Emailer;
-        signupLegalAcceptance?: SignupLegalAcceptancePolicy;
-    } = {},
-) {
+export function setupPublicAuthRoutes(opts: { authEmailCooldownSeconds?: number; emailer?: Emailer } = {}) {
     const runner = new BunRunner();
     const users = new InMemoryUsersRepository<Role>();
     const credentials = new InMemoryLocalCredentialStore();

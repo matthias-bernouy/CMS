@@ -6,11 +6,9 @@
  * credential stores, and the auth handlers + middleware the host surface needs
  * to gate admin surfaces.
  *
- * The web component `<cms-login-methods>` lives under the `./components`
- * subpath so consumers can import it into their browser bundle without
- * pulling Node-side modules. The Mongo-backed stores live under the
- * `./mongo` subpath — composition roots only; the root export stays
- * network-adapter-free.
+ * Browser-safe helpers live under `./browser`. The Mongo-backed stores live
+ * under the `./mongo` subpath — composition roots only; the root export stays
+ * network-adapter-free and this package owns no authored-site components.
  */
 
 // ── Authentication ─────────────────────────────────────────────────────
@@ -99,7 +97,6 @@ export { InMemoryLocalCredentialStore } from "cms-auth/default-implementation/me
 export { InMemoryPatRepository } from "cms-auth/default-implementation/memory/InMemoryPatRepository";
 export { InMemoryAuthTokenStore } from "cms-auth/default-implementation/memory/InMemoryAuthTokenStore";
 export { InMemoryEmailer } from "cms-auth/default-implementation/memory/InMemoryEmailer";
-export { InMemorySignupLegalAcceptanceStore } from "cms-auth/signup-legal/InMemorySignupLegalAcceptanceStore";
 export { ConsoleEmailer } from "cms-auth/default-implementation/ConsoleEmailer";
 export {
     SmtpEmailer,
@@ -128,23 +125,6 @@ export {
     InMemoryAuthentication,
     type InMemoryAuthConfig,
 } from "cms-auth/default-implementation/memory/InMemoryAuthentication";
-export {
-    PageBackedSignupLegalAcceptancePolicy,
-    type PageBackedSignupLegalAcceptanceConfig,
-} from "cms-auth/signup-legal/PageBackedSignupLegalAcceptancePolicy";
-export type {
-    PreparedSignupLegalAcceptance,
-    ResolvedSignupLegalPage,
-    SignupLegalAcceptance,
-    SignupLegalAcceptancePolicy,
-    SignupLegalAcceptanceStore,
-    SignupLegalDocumentDefinition,
-    SignupLegalDocumentEvidence,
-    SignupLegalPageSnapshot,
-    SignupLegalRequirement,
-    SignupLegalRequirements,
-} from "cms-auth/signup-legal/contracts";
-
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export {
     AUTH_ROUTES,
@@ -159,6 +139,10 @@ export { createAuthGuard, type AuthGuardContext } from "cms-auth/http/authGuard"
 export {
     PUBLIC_AUTH_ROUTES,
     registerPublicAuthRoutes,
+    type PublicAuthRouteOverrides,
     type PublicAuthRoutesConfig,
 } from "cms-auth/http/publicAuthHandlers";
-export { executeAuthSystemSourceEndpoint } from "cms-auth/http/systemAuthSource";
+export {
+    executeAuthSystemSourceEndpoint,
+    type AuthSystemSourceHooks,
+} from "cms-auth/http/systemAuthSource";

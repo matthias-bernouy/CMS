@@ -8,27 +8,27 @@ import {
 } from "cms-auth/core/public-auth/flows";
 import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
-import { optionalRepeatedStrings, readJsonObject, requiredString } from "cms-auth/http/requestInput";
+import { readJsonObject, requiredString } from "cms-auth/http/requestInput";
 import { resolveRequestSubject } from "cms-auth/http/requestSubject";
-import type { SignupLegalRequirements } from "cms-auth/signup-legal/contracts";
 
 type SystemSourceEndpoint = {
     urn: string;
     targetUrl: string;
 };
 
+export type AuthSystemSourceHooks = {
+    /** Keeps integration-only response data in-process and out of the public HTTP body. */
+    attachTriggerResponseBody?: (response: Response, body: unknown) => void;
+};
+
 export async function executeAuthSystemSourceEndpoint<Role extends string>(
     cfg: PublicAuthRoutesConfig<Role>,
     endpoint: SystemSourceEndpoint,
     req: Request,
+    hooks: AuthSystemSourceHooks = {},
 ): Promise<Response> {
     const target = parseSystemAuthTarget(endpoint);
     switch (target) {
-        case "/signup/legal-requirements":
-            if (cfg.allowSignup === false) {
-                return privateAuthResponse("not_found", { status: 404 });
-            }
-            return privateAuthJsonResponse(await signupLegalRequirements(cfg));
         case "/me":
             return privateAuthJsonResponse({ subject: await resolveRequestSubject(cfg.local, req) });
         case "/login":
@@ -40,12 +40,13 @@ export async function executeAuthSystemSourceEndpoint<Role extends string>(
                 return privateAuthResponse("not_found", { status: 404 });
             }
             const body = await readJsonObject(req);
-            await signupLocalUser(cfg, {
+            const result = await signupLocalUser(cfg, {
                 email: requiredString(body, "email"),
                 password: requiredString(body, "password"),
-                acceptedLegalDocumentVersionIds: optionalRepeatedStrings(body, "acceptedLegalDocumentVersionIds"),
             });
-            return ok();
+            const response = ok();
+            hooks.attachTriggerResponseBody?.(response, { ok: true, cmsUserId: result.cmsUserId });
+            return response;
         }
         case "/email/verification/request": {
             const body = await readJsonObject(req);
@@ -95,7 +96,6 @@ function isKnownTarget(
     target: string,
 ): target is
     | "/me"
-    | "/signup/legal-requirements"
     | "/login"
     | "/logout"
     | "/signup"
@@ -105,7 +105,6 @@ function isKnownTarget(
     | "/password/reset/confirm" {
     return [
         "/me",
-        "/signup/legal-requirements",
         "/login",
         "/logout",
         "/signup",
@@ -114,12 +113,6 @@ function isKnownTarget(
         "/password/reset/request",
         "/password/reset/confirm",
     ].includes(target);
-}
-
-async function signupLegalRequirements<Role extends string>(
-    cfg: PublicAuthRoutesConfig<Role>,
-): Promise<SignupLegalRequirements> {
-    return cfg.signupLegalAcceptance?.requirements() ?? { documents: [] };
 }
 
 const ok = (): Response => privateAuthJsonResponse({ ok: true });

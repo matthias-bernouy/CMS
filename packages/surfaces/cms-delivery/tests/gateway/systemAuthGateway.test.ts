@@ -10,13 +10,15 @@ import {
     SubjectResolver,
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { CompositeSourceRepository, InMemorySourceRepository, SYSTEM_SOURCES } from "@bernouy/cms-sources";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
+import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { CaptureRunner } from "./support/CaptureRunner";
 
 type Role = "user";
 
-async function setup() {
+async function setup(options: { blockSignup?: boolean } = {}) {
     const runner = new CaptureRunner();
     const users = new InMemoryUsersRepository<Role>();
     const credentials = new InMemoryLocalCredentialStore();
@@ -43,22 +45,62 @@ async function setup() {
     };
     const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
     const roles = new InMemoryRolesRepository();
-    new DeliveryCms({ runner, repository: {} as any, auth, sources: gateway, roles });
+    const functions = new InMemoryFunctionRepository();
+    const triggers = new InMemoryTriggerRepository();
+    await functions.createFunction({
+        id: "record-signup-subject",
+        method: "POST",
+        input: {
+            body: {
+                type: "object",
+                properties: { cmsUserId: { type: "string" } },
+                required: ["cmsUserId"],
+            },
+        },
+        steps: [],
+        return: { status: 204 },
+    });
+    await triggers.createTrigger({
+        id: "record-signup-subject",
+        enabled: true,
+        event: { kind: "endpoint", source: "system-auth", endpoint: "signup", phase: "response" },
+        mode: "sync",
+        failureMode: "block",
+        condition: { exists: "$response.body.cmsUserId" },
+        function: {
+            id: "record-signup-subject",
+            body: { cmsUserId: "$response.body.cmsUserId" },
+        },
+    });
+    if (options.blockSignup) {
+        await triggers.createTrigger({
+            id: "block-signup",
+            enabled: true,
+            event: { kind: "endpoint", source: "system-auth", endpoint: "signup", phase: "request" },
+            mode: "sync",
+            failureMode: "block",
+            function: { id: "missing-signup-policy" },
+        });
+    }
+    new DeliveryCms({ runner, repository: {} as any, auth, sources: gateway, roles, functions, triggers });
     return {
         emailer,
         credentials,
+        triggers,
         get: runner.defaultHandler("GET", "/.cms/sources"),
         post: runner.defaultHandler("POST", "/.cms/sources"),
+        legacySignup: runner.endpointHandler("POST", "/.cms/auth/signup"),
     };
 }
 
 describe("Delivery system auth gateway", () => {
     test("signup, verification, login, me and logout run through system-auth", async () => {
-        const { post, get, emailer } = await setup();
+        const { post, get, emailer, triggers } = await setup();
 
-        expect((await post(jsonRequest("/signup", { email: "Ada@Example.com", password: "password-1" }))).status).toBe(
-            200,
-        );
+        const signup = await post(jsonRequest("/signup", { email: "Ada@Example.com", password: "password-1" }));
+        expect(signup.status).toBe(200);
+        expect(await signup.clone().json()).toEqual({ ok: true });
+        expect((await triggers.getTrigger("record-signup-subject"))?.lastRun?.status).toBe("ok");
         expect(emailer.sent).toHaveLength(1);
 
         const blocked = await post(jsonRequest("/login", { email: "ada@example.com", password: "password-1" }));
@@ -102,6 +144,34 @@ describe("Delivery system auth gateway", () => {
         expect(
             (await post(jsonRequest("/login", { email: "reset@example.com", password: "new-password" }))).status,
         ).toBe(200);
+    });
+
+    test("applies the same blocking signup trigger to canonical and legacy routes", async () => {
+        const { post, legacySignup, credentials } = await setup({ blockSignup: true });
+
+        const canonical = await post(
+            jsonRequest("/signup", {
+                email: "canonical@example.com",
+                password: "password-1",
+                consentVersionIds: ["version-1"],
+            }),
+        );
+        const legacy = await legacySignup(
+            new Request("http://site/.cms/auth/signup", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                    email: "legacy@example.com",
+                    password: "password-1",
+                    consentVersionIds: ["version-1"],
+                }),
+            }),
+        );
+
+        expect(canonical.status).toBe(502);
+        expect(legacy.status).toBe(502);
+        expect(await credentials.getByEmail("canonical@example.com")).toBeNull();
+        expect(await credentials.getByEmail("legacy@example.com")).toBeNull();
     });
 });
 

@@ -27,16 +27,14 @@ describe("CompositeSourceRepository", () => {
         expect(await inner.getSource(SYSTEM_AUTH_SOURCE_URN)).toBeNull();
         expect((await repo.getSource(SYSTEM_AUTH_SOURCE_URN))?.meta?.name).toBe("Authentication");
         expect((await repo.getEndpoint("urn:system-auth:login"))?.targetUrl).toBe("cms-system://auth/login");
-        expect(await repo.getEndpoint("urn:system-auth:signupLegalRequirements")).toMatchObject({
-            method: "GET",
-            targetUrl: "cms-system://auth/signup/legal-requirements",
+        expect(await repo.getEndpoint("urn:system-auth:signupLegalRequirements")).toBeNull();
+        const signup = await repo.getEndpoint("urn:system-auth:signup");
+        expect(Object.keys(signup?.input?.body.properties ?? {})).toEqual(["email", "password"]);
+        expect(signup?.output?.[0]?.triggerBody).toEqual({
+            type: "object",
+            properties: { cmsUserId: { type: "string", nullable: true } },
+            required: ["cmsUserId"],
         });
-        expect(
-            (
-                (await repo.getEndpoint("urn:system-auth:signup"))?.input?.body.properties
-                    ?.acceptedLegalDocumentVersionIds as { type?: string; items?: { type?: string } }
-            )?.items,
-        ).toEqual({ type: "string" });
     });
 
     test("blocks writes in the reserved system namespace", async () => {

@@ -6,20 +6,8 @@ import { pullSystem } from "cms-cli/push/system/pull";
 import { scanSystem } from "cms-cli/push/system/scan";
 import { withFetch } from "../integrations/fixtures";
 
-const auth = {
-    signupLegalDocuments: [
-        {
-            key: "terms-of-use",
-            label: "Terms of use",
-            consentText: "I accept the terms of use.",
-            pageId: "stable-cms-page-id",
-            enabled: true,
-        },
-    ],
-};
-
-describe("pullSystem signup legal policy", () => {
-    test("writes documents and preserves them through a scan round trip", async () => {
+describe("pullSystem", () => {
+    test("writes supported system settings and preserves them through a scan round trip", async () => {
         const siteDir = mkdtempSync(join(tmpdir(), "p9r-system-pull-"));
 
         await withFetch(
@@ -29,7 +17,6 @@ describe("pullSystem signup legal policy", () => {
                 return Response.json({
                     site: { name: "Foo", theme: ":root { --x: red; }" },
                     editor: { layoutCategory: "Layouts" },
-                    auth,
                 });
             },
             async () => {
@@ -38,11 +25,11 @@ describe("pullSystem signup legal policy", () => {
         );
 
         const pulled = JSON.parse(readFileSync(join(siteDir, "system.json"), "utf-8"));
-        expect(pulled.auth).toEqual(auth);
-        expect((await scanSystem(siteDir))?.payload.auth).toEqual(auth);
+        expect(pulled.site.name).toBe("Foo");
+        expect((await scanSystem(siteDir))?.payload.site.name).toBe("Foo");
     });
 
-    test("normalizes a legacy response without auth to an explicit empty policy", async () => {
+    test("does not invent integration-owned settings for a minimal response", async () => {
         const siteDir = mkdtempSync(join(tmpdir(), "p9r-system-pull-"));
 
         await withFetch(
@@ -53,7 +40,7 @@ describe("pullSystem signup legal policy", () => {
         );
 
         const pulled = JSON.parse(readFileSync(join(siteDir, "system.json"), "utf-8"));
-        expect(pulled.auth).toEqual({ signupLegalDocuments: [] });
-        expect((await scanSystem(siteDir))?.payload.auth).toEqual({ signupLegalDocuments: [] });
+        expect(pulled).not.toHaveProperty("auth");
+        expect((await scanSystem(siteDir))?.payload).not.toHaveProperty("auth");
     });
 });

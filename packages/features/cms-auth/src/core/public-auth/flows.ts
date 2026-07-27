@@ -29,16 +29,10 @@ export async function signupLocalUser<Role extends string>(
     validateEmail(email);
     validatePassword(input.password);
 
-    const legalAcceptance = cfg.signupLegalAcceptance;
-    const preparedLegalAcceptance = legalAcceptance
-        ? await legalAcceptance.prepare(input.acceptedLegalDocumentVersionIds ?? [])
-        : null;
     return activateOrResumeLocalSignup(cfg, {
         email,
         password: input.password,
         emailDeliveryEnabled: await isEmailDeliveryEnabled(cfg),
-        legalAcceptance,
-        preparedLegalAcceptance,
     });
 }
 

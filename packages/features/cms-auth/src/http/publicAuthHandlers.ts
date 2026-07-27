@@ -9,14 +9,12 @@ import {
     signupLocalUser,
 } from "cms-auth/core/public-auth/flows";
 import { privateAuthJsonResponse } from "cms-auth/http/authResponse";
-import { optionalRepeatedStrings, readJsonObject, requiredString } from "cms-auth/http/requestInput";
+import { readJsonObject, requiredString } from "cms-auth/http/requestInput";
 import { resolveRequestSubject } from "cms-auth/http/requestSubject";
-import type { SignupLegalRequirements } from "cms-auth/signup-legal/contracts";
 
 export const PUBLIC_AUTH_ROUTES = {
     base: "/.cms/auth",
     signup: "/signup",
-    signupLegalRequirements: "/signup/legal-requirements",
     login: "/login",
     logout: "/logout",
     me: "/me",
@@ -31,20 +29,17 @@ export type PublicAuthRoutesConfig<Role extends string = string> = PublicAuthFlo
     allowSignup?: boolean;
 };
 
-export function registerPublicAuthRoutes<Role extends string>(runner: Runner, cfg: PublicAuthRoutesConfig<Role>): void {
+export type PublicAuthRouteOverrides = {
+    signup?: (request: Request) => Response | Promise<Response>;
+};
+
+export function registerPublicAuthRoutes<Role extends string>(
+    runner: Runner,
+    cfg: PublicAuthRoutesConfig<Role>,
+    overrides: PublicAuthRouteOverrides = {},
+): void {
     if (cfg.allowSignup !== false) {
-        runner.addEndpoint("GET", PUBLIC_AUTH_ROUTES.signupLegalRequirements, async () =>
-            privateAuthJsonResponse(await signupLegalRequirements(cfg)),
-        );
-        runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.signup, async (req) => {
-            const body = await readJsonObject(req);
-            await signupLocalUser(cfg, {
-                email: requiredString(body, "email"),
-                password: requiredString(body, "password"),
-                acceptedLegalDocumentVersionIds: optionalRepeatedStrings(body, "acceptedLegalDocumentVersionIds"),
-            });
-            return ok();
-        });
+        runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.signup, overrides.signup ?? ((req) => signup(req, cfg)));
     }
 
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.login, (req) => cfg.local.loginJson(req));
@@ -81,10 +76,13 @@ export function registerPublicAuthRoutes<Role extends string>(runner: Runner, cf
     });
 }
 
-async function signupLegalRequirements<Role extends string>(
-    cfg: PublicAuthRoutesConfig<Role>,
-): Promise<SignupLegalRequirements> {
-    return cfg.signupLegalAcceptance?.requirements() ?? { documents: [] };
+async function signup<Role extends string>(req: Request, cfg: PublicAuthRoutesConfig<Role>): Promise<Response> {
+    const body = await readJsonObject(req);
+    await signupLocalUser(cfg, {
+        email: requiredString(body, "email"),
+        password: requiredString(body, "password"),
+    });
+    return ok();
 }
 
 const ok = (): Response => privateAuthJsonResponse({ ok: true });

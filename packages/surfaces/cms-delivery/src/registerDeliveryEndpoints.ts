@@ -15,6 +15,7 @@ import {
     serveFilesRequest,
     serveVariantRequest,
 } from "@bernouy/cms-files";
+import { SYSTEM_AUTH_SOURCE_ID, sourcesPrefix } from "@bernouy/cms-sources";
 import {
     generateStyleEntry,
     P9R_CACHE,
@@ -23,7 +24,11 @@ import {
 } from "@bernouy/cms-content";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
-import { registerDeliverySourceProxy } from "cms-delivery/core/sources/registerSourceProxy";
+import {
+    handleDeliverySourceRequest,
+    registerDeliverySourceProxy,
+} from "cms-delivery/core/sources/registerSourceProxy";
+import { deliverySourceOverlaySchemaCache } from "cms-delivery/core/sources/requestScope";
 import {
     PRIVACY_ANALYTICS_ROUTES,
     analyticsPreferencePost,
@@ -68,8 +73,22 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     );
 
     if (delivery.auth) {
+        const schemaCache = deliverySourceOverlaySchemaCache(delivery);
         runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
-            registerPublicAuthRoutes(authRunner, delivery.auth!);
+            registerPublicAuthRoutes(
+                authRunner,
+                delivery.auth!,
+                delivery.sources
+                    ? {
+                          signup: (request) =>
+                              handleDeliverySourceRequest(
+                                  delivery,
+                                  canonicalSignupSourceRequest(request, runner.basePath),
+                                  { schemaCache },
+                              ),
+                      }
+                    : {},
+            );
         });
     }
 
@@ -125,4 +144,11 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     }
 
     runner.setDefaultEndpoint("GET", (req) => recordPageView(req, delivery));
+}
+
+function canonicalSignupSourceRequest(request: Request, basePath: string): Request {
+    const url = new URL(request.url);
+    url.pathname = `${sourcesPrefix(basePath)}${SYSTEM_AUTH_SOURCE_ID}/signup`;
+    url.search = "";
+    return new Request(url, request);
 }

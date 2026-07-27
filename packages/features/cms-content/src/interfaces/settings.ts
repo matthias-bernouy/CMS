@@ -6,20 +6,6 @@ export type TEmailTemplate = {
     html: string;
 };
 
-export type SignupLegalDocumentSettings = {
-    /** Stable business key, for example `terms-of-use`. */
-    key: string;
-    label: string;
-    consentText: string;
-    /** Stable id of a CMS page. The page must be published at signup time. */
-    pageId: string;
-    enabled: boolean;
-};
-
-export type AuthSettings = {
-    signupLegalDocuments: SignupLegalDocumentSettings[];
-};
-
 export type TSystem = {
     initializationStep: number;
 
@@ -59,9 +45,6 @@ export type TSystem = {
          */
         layoutCategory: string;
     };
-
-    /** Defaults to an empty document list when absent from legacy stores. */
-    auth?: AuthSettings;
 
     /** Structured design tokens. `site.theme` remains the free-form CSS layer. */
     theme: ThemeSettings;

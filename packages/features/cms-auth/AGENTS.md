@@ -8,8 +8,8 @@ signed session cookies, public auth flows, and membership stores.
 - Root export exposes auth contracts, default in-memory implementations,
   validation, public auth flow helpers, route handlers, and route registrars.
 - `@bernouy/cms-auth/mongo` exposes Mongo repositories for composition roots.
-- `@bernouy/cms-auth/components` exposes browser components and browser-safe
-  helpers only.
+- `@bernouy/cms-auth/browser` exposes browser-safe helpers only. UI components
+  belong to their consuming surface or integration.
 - This package may depend on `@bernouy/cms-secrets`,
   `@bernouy/envelope-crypto`, `@bernouy/http-runner`, and
   `@bernouy/rate-limiter`; it must not import surfaces or runtimes.
@@ -22,6 +22,6 @@ signed session cookies, public auth flows, and membership stores.
   Control disables signup for its guarded admin context.
 - Assignment of users to roles lives here; role definitions and grants live in
   `@bernouy/cms-permissions`.
-- Keep browser components out of the root server export when possible.
+- Do not add browser components to this package.
 - Security-sensitive changes require tests around cookie behavior, rate limits,
   token expiry, and last-admin protection.

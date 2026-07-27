@@ -1,10 +1,4 @@
-/**
- * `<cms-login-methods base>` — fetches `GET <base>/auth/methods` and renders a
- * button for each **redirect-style** provider (Google, OIDC…), linking to its
- * `loginUrl` (carrying the current `returnTo`). Credential-style providers
- * (local email/password) are handled by the page's own form, not here. Renders
- * nothing when there is no redirect provider.
- */
+/** Renders redirect-style login providers on the Control login page. */
 class CmsLoginMethods extends HTMLElement {
     async connectedCallback() {
         const base = this.getAttribute("base") ?? "";
@@ -22,27 +16,36 @@ class CmsLoginMethods extends HTMLElement {
 
         const wrap = root.querySelector(".methods")!;
         const returnTo = new URL(location.href).searchParams.get("returnTo") ?? "";
-        const rt = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
+        const suffix = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
 
         try {
-            const res = await fetch(`${base}/auth/methods`);
-            const methods: Array<{ displayName: string; loginUrl?: string }> = res.ok ? await res.json() : [];
-            const redirect = methods.filter((m) => m.loginUrl);
-            if (!redirect.length) {
+            const response = await fetch(`${base}/auth/methods`);
+            const methods: Array<{ displayName: string; loginUrl?: string }> = response.ok ? await response.json() : [];
+            const redirectMethods = methods.filter((method) => method.loginUrl);
+            if (!redirectMethods.length) {
                 return;
             }
             wrap.innerHTML =
                 `<div class="sep">or</div>` +
-                redirect
-                    .map((m) => `<a class="provider" href="${esc(m.loginUrl!)}${rt}">${esc(m.displayName)}</a>`)
+                redirectMethods
+                    .map(
+                        (method) =>
+                            `<a class="provider" href="${escapeHtml(method.loginUrl!)}${suffix}">${escapeHtml(method.displayName)}</a>`,
+                    )
                     .join("");
         } catch {
-            /* no providers shown on failure */
+            // The local login form remains available when providers cannot load.
         }
     }
 }
 
-const esc = (s: string) =>
-    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtml(value: string): string {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
 
 customElements.define("cms-login-methods", CmsLoginMethods);

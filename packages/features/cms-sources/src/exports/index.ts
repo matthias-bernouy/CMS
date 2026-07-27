@@ -117,6 +117,7 @@ export {
     type DataShapeProjectionResult,
 } from "../core/response-projection/projectDataShape";
 export {
+    attachTriggerResponseBody,
     triggerResponseProjection,
     type TriggerResponseProjection,
 } from "../core/response-projection/triggerResponseBody";

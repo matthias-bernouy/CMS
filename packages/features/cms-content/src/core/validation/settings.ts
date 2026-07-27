@@ -2,7 +2,6 @@ import type { TSystem } from "cms-content/interfaces/settings";
 import { ContentValidationError } from "cms-content/core/validation/errors";
 import { defaultSystem } from "cms-content/core/lifecycle/system";
 import { validateThemeSettings } from "cms-content/core/theme";
-import { validateSignupLegalDocuments } from "cms-content/core/validation/signupLegalSettings";
 
 const SECRET_REF_PATTERN = /^\$\{[A-Z][A-Z0-9_]*\}$/;
 type SettingsPatch = Omit<Partial<TSystem>, "email"> & {
@@ -56,12 +55,6 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
 
     if (patch.email) {
         normalized.email = validateEmailSettings(patch.email);
-    }
-
-    if (patch.auth?.signupLegalDocuments !== undefined) {
-        normalized.auth = {
-            signupLegalDocuments: validateSignupLegalDocuments(patch.auth.signupLegalDocuments),
-        };
     }
 
     if (patch.theme) {

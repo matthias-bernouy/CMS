@@ -10,6 +10,7 @@ import { resolveRequestRoleDefinitions } from "@bernouy/cms-permissions/requestS
 import {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
+    attachTriggerResponseBody,
     createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
     measureActiveSourceTiming,
@@ -81,7 +82,9 @@ export function mountControlSourceProxy(
                             });
                         }
                         if (controlPublicAuth) {
-                            return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, request);
+                            return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, request, {
+                                attachTriggerResponseBody,
+                            });
                         }
                         return new Response("system source executor not configured", { status: 501 });
                     };

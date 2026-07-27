@@ -5,7 +5,6 @@ import {
     MongoIdentityProviderRepository,
     MongoLocalCredentialStore,
     MongoPatRepository,
-    MongoSignupLegalAcceptanceStore,
     MongoUsersRepository,
 } from "@bernouy/cms-auth/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
@@ -55,8 +54,6 @@ export async function createCoreStores(env: RuntimeEnv) {
     await pats.init();
     const authTokens = new MongoAuthTokenStore(db);
     await authTokens.init();
-    const signupLegalAcceptances = new MongoSignupLegalAcceptanceStore(db);
-    await signupLegalAcceptances.init();
 
     const rateLimit = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 });
     await rateLimit.init();
@@ -90,7 +87,6 @@ export async function createCoreStores(env: RuntimeEnv) {
         credentials,
         pats,
         authTokens,
-        signupLegalAcceptances,
         rateLimit,
         roles,
         secrets,
