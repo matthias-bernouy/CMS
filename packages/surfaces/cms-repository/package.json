@@ -19,6 +19,7 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-registry": "workspace:*",
+        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*"

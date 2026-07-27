@@ -215,6 +215,7 @@ export {
     assertReleaseAdmissionDecisionHistory,
     identifyReleaseAdmissionDecision,
     identifyStatefulChangeSelection,
+    isIntegrationReleaseFreshInstallOnly,
     parseReleaseAdmissionDecision,
     parseStatefulChangeSelection,
 } from "../core/reports/decision";

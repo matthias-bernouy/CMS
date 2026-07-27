@@ -1,18 +1,14 @@
 import {
     integrationVersionReleaseLevel,
-    integrationVersionSatisfies,
     IntegrationInputError,
     isIntegrationDefinitionVersionInstallable,
-    type IntegrationDefinition,
     type IntegrationDefinitionRepository,
     type IntegrationDefinitionVersion,
     type IntegrationInstallation,
 } from "@bernouy/cms-integrations";
-import type {
-    IntegrationUpgradeMigrationEvidence,
-    IntegrationUpgradeReleaseReader,
-    IntegrationUpgradeTarget,
-} from "./contracts";
+import { isIntegrationReleaseFreshInstallOnly } from "@bernouy/cms-integration-verification";
+import type { IntegrationUpgradeReleaseReader, IntegrationUpgradeTarget } from "./contracts";
+import { migrationRequirements, verifiedMigrations } from "./migrationEvidence";
 
 type PreflightInput = Readonly<{
     repository: IntegrationDefinitionRepository;
@@ -61,6 +57,28 @@ export async function preflightIntegrationUpgrade(input: PreflightInput): Promis
     const migrations =
         definition && release ? verifiedMigrations(input.installation, definition, release.migrations) : [];
     const migrationConnectors = definition?.connectors?.filter((connector) => connector.migration) ?? [];
+    const sourcePackageDigest = input.installation.packageDigest;
+    const lacksPackageProvenance = migrationConnectors.length > 0 && !sourcePackageDigest;
+    const passedMigrations = sourcePackageDigest
+        ? migrations.map((migration) => ({
+              source: {
+                  kind: input.installation.id,
+                  version: input.installation.definitionVersion,
+                  packageDigest: sourcePackageDigest,
+              },
+              connectorKey: migration.connectorKey,
+              lineageId: migration.lineageId,
+              outcome: "passed" as const,
+          }))
+        : [];
+    const freshInstallOnly =
+        release?.freshInstallOnly === true ||
+        lacksPackageProvenance ||
+        isIntegrationReleaseFreshInstallOnly({
+            releaseLevel: releaseLevel ?? undefined,
+            requiredMigrations: migrationRequirements(input.installation, definition),
+            migrations: passedMigrations,
+        });
     if (releaseLevel === "major" && migrationConnectors.length === 0) {
         reasons.push(
             "A major release requires a tested source-to-target migration and is otherwise fresh-install-only.",
@@ -77,7 +95,7 @@ export async function preflightIntegrationUpgrade(input: PreflightInput): Promis
         version: input.version.version,
         eligible: reasons.length === 0,
         evidence: "composite",
-        freshInstallOnly: Boolean(release?.freshInstallOnly || (releaseLevel === "major" && migrations.length === 0)),
+        freshInstallOnly,
         ...(releaseLevel ? { releaseLevel } : {}),
         ...(release ? { packageDigest: release.packageDigest } : {}),
         reasons,
@@ -103,77 +121,4 @@ function legacyTarget(version: string, releaseLevel: string | undefined): Integr
         reasons: [],
         migrations: [],
     };
-}
-
-function verifiedMigrations(
-    installation: IntegrationInstallation,
-    definition: IntegrationDefinition,
-    reports: readonly IntegrationUpgradeMigrationEvidence[],
-): IntegrationUpgradeTarget["migrations"] {
-    if (!installation.packageDigest) {
-        return [];
-    }
-    return (definition.connectors ?? []).flatMap((connector) => {
-        if (!connector.connectorKey || !connector.lineageId || !connector.migration) {
-            return [];
-        }
-        const source = connector.migration.supportedSources.find((candidate) =>
-            integrationVersionSatisfies(installation.definitionVersion, candidate.range),
-        );
-        if (!source) {
-            return [];
-        }
-        const report = reports.find(
-            (candidate) =>
-                candidate.outcome === "passed" &&
-                candidate.source.kind === installation.id &&
-                candidate.source.version === installation.definitionVersion &&
-                candidate.source.packageDigest === installation.packageDigest &&
-                candidate.connectorKey === connector.connectorKey &&
-                candidate.lineageId === connector.lineageId &&
-                candidate.migrationRevision === connector.migrationRevision &&
-                integrationVersionSatisfies(installation.definitionVersion, candidate.supportedSourceRange),
-        );
-        if (!report) {
-            return [];
-        }
-        const operational = report.operationalEvidence;
-        const cmsDrainSeconds = operational?.drain.cmsMediatedSeconds ?? connector.migration.cmsMediated?.drainSeconds;
-        const providerDrainSeconds =
-            operational?.drain.providerDirectSeconds ?? connector.migration.providerDirect?.drainSeconds;
-        return [
-            {
-                connectorKey: report.connectorKey,
-                lineageId: report.lineageId,
-                supportedSourceRange: report.supportedSourceRange,
-                reportId: report.reportId,
-                reportDigest: report.reportDigest,
-                runner: `${report.runner.name} ${report.runner.version}`,
-                environmentDigest: report.environmentDigest,
-                cmsMediatedCutover: report.cutover.cmsMediated,
-                providerDirectCutover: report.cutover.providerDirect,
-                ...(report.cutoverEvidence
-                    ? {
-                          cmsMediatedCutoverOutcome: report.cutoverEvidence.cmsMediated.outcome,
-                          providerDirectCutoverOutcome: report.cutoverEvidence.providerDirect.outcome,
-                          activationOutcome: report.cutoverEvidence.activation.outcome,
-                      }
-                    : {}),
-                rollback: report.rollback,
-                pointOfNoReturn: report.pointOfNoReturn,
-                ...(cmsDrainSeconds === undefined ? {} : { cmsDrainSeconds }),
-                ...(providerDrainSeconds === undefined ? {} : { providerDrainSeconds }),
-                downtimeStatus: operational?.downtime.status ?? "not-recorded",
-                ...(operational?.downtime.observedSeconds === undefined
-                    ? {}
-                    : { observedDowntimeSeconds: operational.downtime.observedSeconds }),
-                rollbackVerified: operational?.rollback.verified ?? false,
-                pointOfNoReturnObservation: operational?.pointOfNoReturn.observation ?? "not-recorded",
-                cleanupObserved: operational?.cleanup.observed ?? report.delayedCleanupVerified,
-                ...(operational?.cleanup.delaySeconds === undefined
-                    ? {}
-                    : { cleanupDelaySeconds: operational.cleanup.delaySeconds }),
-            },
-        ];
-    });
 }

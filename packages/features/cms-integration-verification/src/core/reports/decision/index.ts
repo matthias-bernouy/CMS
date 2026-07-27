@@ -10,3 +10,4 @@ export {
     appendReleaseAdmissionDecision,
     assertReleaseAdmissionDecisionHistory,
 } from "./history";
+export { isIntegrationReleaseFreshInstallOnly } from "./freshInstallOnly";

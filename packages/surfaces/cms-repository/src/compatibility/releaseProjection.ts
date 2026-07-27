@@ -1,4 +1,5 @@
 import type { IntegrationRegistryReleaseEvidence } from "@bernouy/cms-integration-registry";
+import { isIntegrationReleaseFreshInstallOnly } from "@bernouy/cms-integration-verification";
 import type { PublicRepositoryMigrationEvidence, PublicRepositoryRelease } from "./releaseContracts";
 
 export function projectPublicRepositoryRelease(source: IntegrationRegistryReleaseEvidence): PublicRepositoryRelease {
@@ -13,7 +14,11 @@ export function projectPublicRepositoryRelease(source: IntegrationRegistryReleas
         packageDigest: source.packageDigest,
         status,
         installable: status === "installable",
-        freshInstallOnly: freshInstallOnly(source, migrations),
+        freshInstallOnly: isIntegrationReleaseFreshInstallOnly({
+            releaseLevel: source.compatibility?.current.releaseLevel,
+            requiredMigrations: source.decision?.current.statefulChanges.requiredMigrations ?? [],
+            migrations: source.migrations.map(({ current }) => current),
+        }),
         ...(source.verificationDigest ? { verificationDigest: source.verificationDigest } : {}),
         ...(compatibility
             ? {
@@ -131,28 +136,4 @@ function releaseStatus(source: IntegrationRegistryReleaseEvidence): PublicReposi
         return source.status;
     }
     return source.decision?.current.admissible ? "installable" : "unverified";
-}
-
-function freshInstallOnly(
-    source: IntegrationRegistryReleaseEvidence,
-    migrations: readonly PublicRepositoryMigrationEvidence[],
-): boolean {
-    const required = source.decision?.current.statefulChanges.requiredMigrations ?? [];
-    if (required.length === 0) {
-        return (
-            source.compatibility?.current.releaseLevel === "major" &&
-            !migrations.some(({ outcome }) => outcome === "passed")
-        );
-    }
-    return !required.every((requirement) =>
-        migrations.some(
-            (migration) =>
-                migration.outcome === "passed" &&
-                migration.source.kind === requirement.source.kind &&
-                migration.source.version === requirement.source.version &&
-                migration.source.packageDigest === requirement.source.packageDigest &&
-                migration.connectorKey === requirement.connectorKey &&
-                migration.lineageId === requirement.lineageId,
-        ),
-    );
 }
