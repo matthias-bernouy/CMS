@@ -9,8 +9,8 @@ import type {
     IntegrationMigrationPhase,
 } from "../../../interfaces/IntegrationConnectorDeployer";
 import type { DurableMigrationUpgradeRequest } from "./engine";
-import { requiredMigrationOperation } from "./shared";
-import { assertFence, type MigrationClock, updateMigrationInstallation } from "./state";
+import { requiredMigrationOperation, saveMigrationJournalEntry } from "./shared";
+import { assertFence, type MigrationClock } from "./state";
 import { withMigrationLeaseHeartbeat } from "./runtime/leaseHeartbeat";
 
 export async function runMigrationPhases(
@@ -52,7 +52,7 @@ async function runPhase(
         startedAt: currentEntry.startedAt ?? clock.now(),
         error: undefined,
     };
-    installation = await saveJournal(request.installations, installation, runningEntry, clock, leaseMs);
+    installation = await saveMigrationJournalEntry(request.installations, installation, runningEntry, clock, leaseMs);
     operation = requiredMigrationOperation(installation);
     const context = {
         phase,
@@ -98,7 +98,7 @@ async function runPhase(
         throw new IntegrationRuntimeError(`migration phase "${phase}" confirmation digest does not match its target`);
     }
     installation = await requireCurrentFence(request.installations, installation, operation, clock);
-    return await saveJournal(
+    return await saveMigrationJournalEntry(
         request.installations,
         installation,
         {
@@ -112,26 +112,6 @@ async function runPhase(
         clock,
         leaseMs,
     );
-}
-
-async function saveJournal(
-    repository: IntegrationInstallationRepository,
-    installation: IntegrationInstallation,
-    entry: IntegrationMigrationJournalEntry,
-    clock: MigrationClock,
-    leaseMs: number,
-): Promise<IntegrationInstallation> {
-    const operation = requiredMigrationOperation(installation);
-    return await updateMigrationInstallation({
-        repository,
-        installation,
-        operation: {
-            ...operation,
-            journal: operation.journal.map((candidate) => (candidate.id === entry.id ? entry : candidate)),
-        },
-        clock,
-        leaseMs,
-    });
 }
 
 async function requireCurrentFence(

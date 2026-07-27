@@ -9,8 +9,8 @@ import type {
     IntegrationMigrationRuntime,
 } from "../../../../interfaces/IntegrationConnectorDeployer";
 import { withMigrationLeaseHeartbeat } from "../runtime/leaseHeartbeat";
-import { requiredMigrationOperation } from "../shared";
-import { type MigrationClock, updateMigrationInstallation } from "../state";
+import { requiredMigrationOperation, saveMigrationJournalEntry } from "../shared";
+import type { MigrationClock } from "../state";
 
 export async function compensateMigrationPhase(
     repository: IntegrationInstallationRepository,
@@ -35,7 +35,7 @@ export async function compensateMigrationPhase(
             startedAt: entry.compensation?.startedAt ?? clock.now(),
         },
     };
-    installation = await saveJournal(repository, installation, running, clock, leaseMs);
+    installation = await saveMigrationJournalEntry(repository, installation, running, clock, leaseMs);
     operation = requiredMigrationOperation(installation);
     if (!runtime.compensateStep) {
         throw new IntegrationRuntimeError(`migration runtime cannot compensate phase "${phase}"`, 409);
@@ -65,7 +65,7 @@ export async function compensateMigrationPhase(
     if (!remote.value.compensated) {
         throw new IntegrationRuntimeError(`migration phase "${phase}" compensation was not confirmed`, 409);
     }
-    return await saveJournal(
+    return await saveMigrationJournalEntry(
         repository,
         remote.installation,
         {
@@ -80,24 +80,4 @@ export async function compensateMigrationPhase(
         clock,
         leaseMs,
     );
-}
-
-async function saveJournal(
-    repository: IntegrationInstallationRepository,
-    installation: IntegrationInstallation,
-    entry: IntegrationMigrationJournalEntry,
-    clock: MigrationClock,
-    leaseMs: number,
-): Promise<IntegrationInstallation> {
-    const operation = requiredMigrationOperation(installation);
-    return await updateMigrationInstallation({
-        repository,
-        installation,
-        operation: {
-            ...operation,
-            journal: operation.journal.map((candidate) => (candidate.id === entry.id ? entry : candidate)),
-        },
-        clock,
-        leaseMs,
-    });
 }

@@ -4,10 +4,12 @@ import type {
     IntegrationInstallation,
     IntegrationMigrationJournalEntry,
 } from "../../../interfaces/IntegrationInstallation";
+import type { IntegrationInstallationRepository } from "../../../interfaces/IntegrationInstallationRepository";
 import type {
     IntegrationMigrationConnectorTransition,
     IntegrationMigrationPhase,
 } from "../../../interfaces/IntegrationConnectorDeployer";
+import { type MigrationClock, updateMigrationInstallation } from "./state";
 
 export function requiredMigrationOperation(installation: IntegrationInstallation) {
     if (!installation.migrationOperation) {
@@ -46,4 +48,24 @@ export function migrationActivationRevision(connector: IntegrationMigrationConne
                 migration.toRevision <= connector.toRevision,
         )
         .reduce((revision, migration) => Math.max(revision, migration.toRevision), connector.fromRevision);
+}
+
+export async function saveMigrationJournalEntry(
+    repository: IntegrationInstallationRepository,
+    installation: IntegrationInstallation,
+    entry: IntegrationMigrationJournalEntry,
+    clock: MigrationClock,
+    leaseMs: number,
+): Promise<IntegrationInstallation> {
+    const operation = requiredMigrationOperation(installation);
+    return await updateMigrationInstallation({
+        repository,
+        installation,
+        operation: {
+            ...operation,
+            journal: operation.journal.map((candidate) => (candidate.id === entry.id ? entry : candidate)),
+        },
+        clock,
+        leaseMs,
+    });
 }
