@@ -3,6 +3,7 @@ import {
     IntegrationCompatibilityReevaluationConflictError,
     IntegrationCompatibilityReevaluationIntegrityError,
     IntegrationCompatibilityReevaluationNotFoundError,
+    IntegrationCompatibilityReevaluationPendingActivationError,
     IntegrationCompatibilityReevaluationStaleDecisionError,
     IntegrationCompatibilityReevaluationStaleReportError,
 } from "@bernouy/cms-integration-registry";
@@ -42,6 +43,18 @@ describe("repository compatibility reevaluation route", () => {
         expect(await absentResponse.json()).toEqual({
             code: "integration_compatibility_reevaluation_not_found",
             error: "Integration compatibility history was not found",
+        });
+
+        const pending = configuredRunner(
+            new RecordingReevaluator(
+                new IntegrationCompatibilityReevaluationPendingActivationError("commerce", "1.1.0"),
+            ),
+        );
+        const pendingResponse = await pending.request(reevaluationBody());
+        expect(pendingResponse.status).toBe(409);
+        expect(await pendingResponse.json()).toEqual({
+            code: "integration_compatibility_reevaluation_pending_activation",
+            error: "Compatibility reevaluation is unavailable while release activation is pending",
         });
 
         const stale = configuredRunner(

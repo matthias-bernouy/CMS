@@ -37,6 +37,19 @@ export class IntegrationCompatibilityReevaluationStaleDecisionError extends Erro
     }
 }
 
+export class IntegrationCompatibilityReevaluationPendingActivationError extends Error {
+    readonly status = 409;
+    readonly code = "integration_compatibility_reevaluation_pending_activation";
+
+    constructor(
+        readonly kind: string,
+        readonly version: string,
+    ) {
+        super(`Compatibility reevaluation is unavailable until release activation completes: ${kind}@${version}`);
+        this.name = "IntegrationCompatibilityReevaluationPendingActivationError";
+    }
+}
+
 export class IntegrationCompatibilityReevaluationConflictError extends Error {
     readonly status = 409;
     readonly code = "integration_compatibility_reevaluation_conflict";

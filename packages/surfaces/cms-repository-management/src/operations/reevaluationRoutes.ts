@@ -2,6 +2,7 @@ import {
     IntegrationCompatibilityReevaluationConflictError,
     IntegrationCompatibilityReevaluationIntegrityError,
     IntegrationCompatibilityReevaluationNotFoundError,
+    IntegrationCompatibilityReevaluationPendingActivationError,
     IntegrationCompatibilityReevaluationStaleDecisionError,
     IntegrationCompatibilityReevaluationStaleReportError,
     IntegrationCompatibilityReevaluationValidationError,
@@ -73,6 +74,12 @@ function reevaluationErrorResponse(error: unknown): Response {
         return jsonResponse(error.status, {
             code: error.code,
             error: "Integration compatibility history was not found",
+        });
+    }
+    if (error instanceof IntegrationCompatibilityReevaluationPendingActivationError) {
+        return jsonResponse(error.status, {
+            code: error.code,
+            error: "Compatibility reevaluation is unavailable while release activation is pending",
         });
     }
     if (error instanceof IntegrationCompatibilityReevaluationStaleReportError) {

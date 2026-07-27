@@ -172,6 +172,7 @@ export {
     IntegrationCompatibilityReevaluationConflictError,
     IntegrationCompatibilityReevaluationIntegrityError,
     IntegrationCompatibilityReevaluationNotFoundError,
+    IntegrationCompatibilityReevaluationPendingActivationError,
     IntegrationCompatibilityReevaluationStaleDecisionError,
     IntegrationCompatibilityReevaluationStaleReportError,
     IntegrationCompatibilityReevaluationValidationError,

@@ -8,6 +8,7 @@ import {
     IntegrationCompatibilityReevaluationConflictError,
     IntegrationCompatibilityReevaluationIntegrityError,
     IntegrationCompatibilityReevaluationNotFoundError,
+    IntegrationCompatibilityReevaluationPendingActivationError,
     IntegrationCompatibilityReevaluationStaleReportError,
 } from "../../../../core/compatibility/reevaluation/errors";
 import { validateCompatibilityReevaluationRequest } from "../../../../core/compatibility/reevaluation/request";
@@ -42,8 +43,18 @@ export class FsIntegrationCompatibilityReevaluator implements IntegrationCompati
     async reevaluate(request: IntegrationCompatibilityReevaluationRequest) {
         const validated = validateCompatibilityReevaluationRequest(request);
         const snapshot = this.config.snapshots.current();
-        if (!snapshot.locateExactVersion(validated.kind, validated.version)) {
+        const location = snapshot.locateExactVersion(validated.kind, validated.version);
+        if (!location) {
             throw new IntegrationCompatibilityReevaluationNotFoundError(validated.kind, validated.version);
+        }
+        const version = snapshot.listVersions(validated.kind).find((entry) => entry.version === validated.version);
+        if (!version) {
+            throw new IntegrationCompatibilityReevaluationIntegrityError(
+                "Compatibility reevaluation target is missing from its validated catalog index",
+            );
+        }
+        if (version.status === "unverified") {
+            throw new IntegrationCompatibilityReevaluationPendingActivationError(validated.kind, validated.version);
         }
         let history;
         try {
