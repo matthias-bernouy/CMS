@@ -92,8 +92,8 @@ async function installSubject(
 async function installTarget(database: SQL, subject: OfficialSchemaCalibrationSubject): Promise<void> {
     const connectorRoot = resolve(subject.root, subject.connector.root ?? ".");
     const schemas = await loadSupabaseSqlSchemas(connectorRoot, subject.connector.schemas ?? []);
-    for (const schema of schemas) {
-        await database.unsafe(schema.sql);
+    for (const { sql } of schemas) {
+        await database.unsafe(sql);
     }
 }
 
