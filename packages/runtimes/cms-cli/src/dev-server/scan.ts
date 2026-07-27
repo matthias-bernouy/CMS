@@ -2,7 +2,11 @@ import { readdir, stat, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { folderToCategory } from "cms-cli/push/shared/categoryFolder";
+import { safeJoin } from "cms-cli/push/shared/safeJoin";
 import { isNativeBlocTag } from "@bernouy/cms-bloc-compile";
+import type { BlocOwnership, SiteBlocDefinition, SiteBlocSnapshot } from "@bernouy/cms-content";
+import { SITE_BLOC_BUILDER_FILE } from "cms-cli/push/blocs/siteBuilder";
+import { scanSiteDevBloc } from "cms-cli/dev-server/bloc-build/siteBloc";
 
 export type BlocManifest = {
     runtime?: string;
@@ -26,10 +30,12 @@ export type DevBloc = {
     label: string;
     group: string;
     description: string;
+    ownership: BlocOwnership;
+    siteDefinition?: SiteBlocDefinition;
+    siteBuildSnapshot?: SiteBlocSnapshot;
     entry?: string;
     editorEntry?: string;
-    /** Convention: `template.html` next to the bloc entry. Absent when the
-     *  bloc renders without a shadow template. */
+    /** `template.html` next to the entry, when the bloc has a shadow template. */
     templatePath?: string;
     /** Convention: `configuration.html` next to the editor entry. Absent
      *  for opaque blocs (no editor). */
@@ -42,6 +48,11 @@ export type ScanOptions = {
     /** Suppress warnings about skipped folders. Used by the polling loop which
      *  re-runs the scan every second and would otherwise spam identical logs. */
     quiet?: boolean;
+    /** Fail instead of skipping an invalid or unpublished site-builder definition. */
+    strictBuilder?: boolean;
+    /** Runtime scans default to published; push explicitly selects the draft. */
+    siteBuilderSnapshot?: "published" | "draft";
+    ownershipByTag?: ReadonlyMap<string, BlocOwnership>;
 };
 
 export async function scanDevBlocs(root: string, options: ScanOptions = {}): Promise<DevBloc[]> {
@@ -58,7 +69,16 @@ async function walk(dir: string, results: DevBloc[], options: ScanOptions) {
         return;
     }
 
-    if (entries.includes("manifest.json")) {
+    if (entries.includes(SITE_BLOC_BUILDER_FILE)) {
+        const bloc = await scanSiteDevBloc(dir, {
+            quiet: options.quiet,
+            strict: options.strictBuilder,
+            snapshot: options.siteBuilderSnapshot,
+        });
+        if (bloc) {
+            results.push(bloc);
+        }
+    } else if (entries.includes("manifest.json")) {
         const manifest = await parseManifest(join(dir, "manifest.json"), options);
         if (manifest) {
             const bloc = toDevBloc(dir, manifest, options);
@@ -138,8 +158,8 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
     const blocRel = manifest.bloc || (native ? undefined : "./Bloc.ts");
     const editorRel = manifest.editor;
 
-    const entry = blocRel ? join(folder, blocRel) : undefined;
-    const editorEntry = editorRel ? join(folder, editorRel) : undefined;
+    const entry = blocRel ? safeJoin(folder, blocRel) : undefined;
+    const editorEntry = editorRel ? safeJoin(folder, editorRel) : undefined;
 
     const templatePath = entry ? join(dirname(entry), "template.html") : join(folder, "template.html");
     const configurationPath = editorEntry ? join(dirname(editorEntry), "configuration.html") : undefined;
@@ -151,6 +171,7 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
         label: manifest.meta?.title || basename(folder),
         group: folderToCategory(parentName),
         description: manifest.meta?.description || "",
+        ownership: structuredClone(options.ownershipByTag?.get(tag) ?? { kind: "code-managed" }),
         ...(entry ? { entry } : {}),
         ...(editorEntry ? { editorEntry } : {}),
         ...(existsSync(templatePath) ? { templatePath } : {}),

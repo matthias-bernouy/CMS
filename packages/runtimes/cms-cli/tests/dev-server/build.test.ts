@@ -38,6 +38,7 @@ describe("buildDevBloc", () => {
             label: "Figure",
             group: "Content",
             description: "Image with caption",
+            ownership: { kind: "code-managed" },
             entry: join(folder, "Figure.ts"),
             editorEntry: join(folder, "BlocEditor.ts"),
         };
@@ -69,6 +70,7 @@ describe("buildDevBloc", () => {
             label: `Grid "layout"`,
             group: "Layout",
             description: `Children can use bleed="wide|full".`,
+            ownership: { kind: "code-managed" },
             entry: join(folder, "Grid.ts"),
             editorEntry: join(folder, "BlocEditor.ts"),
         };
@@ -100,6 +102,7 @@ describe("buildDevBloc", () => {
             label: "Paragraph",
             group: "Text",
             description: "Native paragraph",
+            ownership: { kind: "code-managed" },
             editorEntry: join(folder, "BlocEditor.ts"),
         };
 

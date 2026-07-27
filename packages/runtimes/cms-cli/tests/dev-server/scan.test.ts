@@ -59,6 +59,33 @@ describe("scanDevBlocs", () => {
         expect(blocs).toHaveLength(0);
     });
 
+    test("rejects manifest entries that escape their bloc folder", async () => {
+        const root = makeBlocsRoot({
+            "marketing/demo-card": {
+                "manifest.json": JSON.stringify({
+                    "default-tag": "demo-card",
+                    bloc: "../../../outside.ts",
+                }),
+            },
+        });
+
+        await expect(scanDevBlocs(root, { quiet: true })).rejects.toThrow("escapes the site directory");
+    });
+
+    test("treats builder.json as authoritative and rejects an invalid schema in strict mode", async () => {
+        const root = makeBlocsRoot({
+            "Layout/site-shell": {
+                "builder.json": JSON.stringify({ schema: "not-a-site-bloc" }),
+                "manifest.json": baseManifest("site-shell"),
+                "Bloc.ts": "export class Untrusted extends HTMLElement {}",
+            },
+        });
+
+        await expect(scanDevBlocs(root, { quiet: true, strictBuilder: true })).rejects.toThrow(
+            'schema must be "cms.site-bloc.v1"',
+        );
+    });
+
     test("continues scanning nested bloc folders after a parent manifest", async () => {
         const root = makeBlocsRoot({
             "ui/accordion": { "manifest.json": baseManifest("base-accordion"), "Bloc.ts": "" },

@@ -1,5 +1,11 @@
 import { isNativeBlocTag, validateBloc } from "@bernouy/cms-bloc-compile";
 import { readFile } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { BlocOwnership, SiteBlocDefinition } from "@bernouy/cms-content";
+import { writeBlocSourceAtomically } from "cms-cli/push/blocs/atomicSource";
+import { generateSiteBlocSource } from "cms-cli/push/blocs/siteBuilder";
 import type { DevBloc } from "../scan";
 import { buildEditorBundle, buildOpaqueEditorBundle, buildViewBundle } from "./bundle";
 import { readDefaultContent } from "./defaultContent";
@@ -12,9 +18,19 @@ export type BuiltBloc = {
     folder: string;
     viewJS: string;
     editorJS: string | null;
+    ownership: BlocOwnership;
+    siteDefinition?: SiteBlocDefinition;
+    source?: Record<string, string>;
 };
 
 export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
+    if (bloc.siteDefinition) {
+        return buildGeneratedSiteBloc(bloc);
+    }
+    return buildPreparedBloc(bloc);
+}
+
+async function buildPreparedBloc(bloc: DevBloc): Promise<BuiltBloc> {
     const native = isNativeBlocTag(bloc.tag);
     await validateSources(bloc, native);
 
@@ -38,7 +54,37 @@ export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
         folder: bloc.folder,
         viewJS,
         editorJS,
+        ownership: structuredClone(bloc.ownership),
     };
+}
+
+async function buildGeneratedSiteBloc(bloc: DevBloc): Promise<BuiltBloc> {
+    const definition = bloc.siteDefinition!;
+    const source = generateSiteBlocSource(definition, bloc.siteBuildSnapshot);
+    const temporaryRoot = await mkdtemp(join(tmpdir(), "p9r-site-bloc-build-"));
+    const generatedFolder = join(temporaryRoot, definition.tag);
+    try {
+        await writeBlocSourceAtomically(generatedFolder, source);
+        const generated: DevBloc = {
+            ...bloc,
+            folder: generatedFolder,
+            entry: join(generatedFolder, "Bloc.ts"),
+            editorEntry: join(generatedFolder, "BlocEditor.ts"),
+            templatePath: join(generatedFolder, "template.html"),
+            siteDefinition: undefined,
+            siteBuildSnapshot: undefined,
+        };
+        const built = await buildPreparedBloc(generated);
+        return {
+            ...built,
+            folder: bloc.folder,
+            ownership: structuredClone(definition.ownership),
+            siteDefinition: structuredClone(definition),
+            source,
+        };
+    } finally {
+        await rm(temporaryRoot, { recursive: true, force: true });
+    }
 }
 
 export async function buildAllDevBlocs(blocs: DevBloc[]): Promise<Map<string, BuiltBloc>> {

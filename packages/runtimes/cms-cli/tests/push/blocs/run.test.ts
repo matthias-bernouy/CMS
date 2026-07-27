@@ -61,7 +61,7 @@ describe("runBlocs", () => {
 
 describe("CLI_push bloc stage wiring", () => {
     test("uses the normal blocs stage instead of the legacy import implementation", () => {
-        const source = readFileSync(new URL("../../src/commands/CLI_push.ts", import.meta.url), "utf-8");
+        const source = readFileSync(new URL("../../../src/commands/CLI_push.ts", import.meta.url), "utf-8");
 
         expect(source).toMatch(/import\s*\{\s*runBlocs\s*\}\s*from\s*["']\.\.\/push\/blocs\/run["']\s*;/);
         expect(source).toMatch(
@@ -112,7 +112,7 @@ function mockBlocFetch(remoteTags: string[]) {
         calls.push({ input, init });
         const url = String(input);
         if (url.endsWith("/api/bloc/list")) {
-            return Response.json(remoteTags.map((id) => ({ id })));
+            return Response.json(remoteTags.map((id) => ({ id, ownership: { kind: "code-managed" } })));
         }
         if (init?.method === "POST") {
             return new Response("ok");

@@ -1,4 +1,13 @@
-import type { CmsRepository, BlocListItemResponse, PageLink, PagesQuery } from "@bernouy/cms-content";
+import type {
+    BlocListItemResponse,
+    BlocRecord,
+    CmsRepository,
+    PageLink,
+    PagesQuery,
+    SiteBlocDefinition,
+    SiteBlocSnapshot,
+    TBlocWrite,
+} from "@bernouy/cms-content";
 import { countValues, isPublishedPage, normalizeTags } from "@bernouy/cms-content";
 import type { TBloc, TPage, TSystem, TTemplate } from "@bernouy/cms-content";
 import type { BuiltBloc } from "../bloc-build/index";
@@ -6,6 +15,7 @@ import { PagesStore } from "./pages";
 import { TemplatesStore } from "./templates";
 import { SystemStore } from "./system";
 import { BlocsStore } from "./blocs";
+import { type LocalSiteBlocPublicationGuard, SiteBlocsStore } from "./siteBlocs";
 
 export type LocalFsCmsRepositoryOptions = {
     blocRootDir?: string;
@@ -25,20 +35,57 @@ export class LocalFsCmsRepository implements CmsRepository {
     private readonly _templates: TemplatesStore;
     private readonly _system: SystemStore;
     private readonly _blocs: BlocsStore;
+    private readonly _siteBlocs: SiteBlocsStore;
 
     constructor(siteDir: string, builtBlocs: Map<string, BuiltBloc>, options: LocalFsCmsRepositoryOptions = {}) {
         this._pages = new PagesStore(siteDir);
         this._templates = new TemplatesStore(siteDir);
         this._system = new SystemStore(siteDir);
         this._blocs = new BlocsStore(siteDir, builtBlocs, { rootDir: options.blocRootDir });
+        this._siteBlocs = new SiteBlocsStore(this._blocs);
     }
 
     // ── Bloc ──
-    createBloc(bloc: TBloc): Promise<TBloc> {
+    createBloc(bloc: TBlocWrite): Promise<TBloc> {
         return this._blocs.create(bloc);
     }
-    replaceBloc(bloc: TBloc): Promise<TBloc> {
+    replaceBloc(bloc: TBlocWrite): Promise<TBloc> {
         return this._blocs.replace(bloc);
+    }
+    getBlocRecord(tag: string): Promise<BlocRecord | null> {
+        return this._blocs.getRecord(tag);
+    }
+    getBlocRecords(): Promise<BlocRecord[]> {
+        return this._blocs.getRecords();
+    }
+    createSiteBloc(definition: SiteBlocDefinition): Promise<BlocRecord> {
+        return this._siteBlocs.create(definition);
+    }
+    saveSiteBlocDraft(
+        tag: string,
+        draft: SiteBlocSnapshot,
+        expectedDraftRevision: number,
+    ): Promise<SiteBlocDefinition> {
+        return this._siteBlocs.saveDraft(tag, draft, expectedDraftRevision);
+    }
+    async publishSiteBloc(
+        tag: string,
+        artifact: TBlocWrite,
+        expectedDraftRevision: number,
+        publicationDate?: Date,
+        publicationGuard?: LocalSiteBlocPublicationGuard,
+    ): Promise<BlocRecord> {
+        await publicationGuard?.assertHeld();
+        return this._siteBlocs.publish(tag, artifact, expectedDraftRevision, publicationDate);
+    }
+    archiveSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition> {
+        return this._siteBlocs.setArchived(tag, true, expectedDraftRevision);
+    }
+    restoreSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition> {
+        return this._siteBlocs.setArchived(tag, false, expectedDraftRevision);
+    }
+    withSiteBlocPublicationLock<T>(operation: (guard: LocalSiteBlocPublicationGuard) => Promise<T>): Promise<T> {
+        return this._siteBlocs.withPublicationLock(operation);
     }
     getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]> {
         return this._blocs.getAllJS();

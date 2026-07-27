@@ -49,7 +49,15 @@ describe("LocalFsCmsRepository blocs", () => {
         expect(viewJS).toContain(`customElements.define("site-demo"`);
 
         const list = await repository.getBlocsList();
-        expect(list).toEqual([{ id: "site-demo", name: "Demo", group: "Layout", description: "Demo bloc" }]);
+        expect(list).toEqual([
+            {
+                id: "site-demo",
+                name: "Demo",
+                group: "Layout",
+                description: "Demo bloc",
+                ownership: { kind: "code-managed" },
+            },
+        ]);
     });
 
     test("replaceBloc removes stale source files", async () => {

@@ -1,8 +1,10 @@
 import type { BuiltBloc } from "cms-cli/dev-server/bloc-build/index";
 import { bundleBlocSource } from "cms-cli/push/blocs/bundle";
+import type { BlocOwnership } from "@bernouy/cms-content";
 
 export type RemoteBlocItem = {
     id: string;
+    ownership: BlocOwnership;
 };
 
 export type PushBlocResult = {
@@ -20,7 +22,9 @@ export async function fetchRemoteBlocList(adminBase: URL, token: string): Promis
     if (!Array.isArray(data)) {
         throw new Error(`GET ${url} did not return a JSON array`);
     }
-    return data.filter((b): b is { id: string } => typeof b?.id === "string").map((b) => ({ id: b.id }));
+    return data
+        .filter((bloc): bloc is { id: string; ownership?: unknown } => typeof bloc?.id === "string")
+        .map((bloc) => ({ id: bloc.id, ownership: parseRemoteBlocOwnership(bloc.ownership, bloc.id) }));
 }
 
 export async function applyPushBlocs(
@@ -42,7 +46,8 @@ export async function applyPushBlocs(
 }
 
 async function pushBloc(adminBase: URL, token: string, bloc: BuiltBloc, force: boolean): Promise<void> {
-    const url = new URL("api/bloc", adminBase).href;
+    const siteBuilder = bloc.ownership.kind === "site-builder";
+    const url = new URL(siteBuilder ? "api/bloc/site-builder" : "api/bloc", adminBase).href;
 
     const form = new FormData();
     form.append("name", bloc.label);
@@ -57,9 +62,16 @@ async function pushBloc(adminBase: URL, token: string, bloc: BuiltBloc, force: b
         form.append("editorJS", new File([bloc.editorJS], `${bloc.tag}Editor.js`, { type: "application/javascript" }));
     }
 
-    const source = await bundleBlocSource(bloc.folder);
+    const source = bloc.source ?? (await bundleBlocSource(bloc.folder));
     if (Object.keys(source).length > 0) {
         form.append("source", JSON.stringify(source));
+    }
+    if (siteBuilder) {
+        const builder = source["builder.json"];
+        if (!builder) {
+            throw new Error(`Site-builder bloc "${bloc.tag}" has no builder.json`);
+        }
+        form.append("definition", Buffer.from(builder, "base64").toString("utf-8"));
     }
 
     const res = await fetch(url, {
@@ -71,4 +83,31 @@ async function pushBloc(adminBase: URL, token: string, bloc: BuiltBloc, force: b
         const text = await res.text().catch(() => "");
         throw new Error(`POST ${url} -> HTTP ${res.status}${text ? " - " + text : ""}`);
     }
+}
+
+export function parseRemoteBlocOwnership(value: unknown, tag: string): BlocOwnership {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        throw new Error(`GET api/bloc/list returned no ownership for bloc "${tag}"`);
+    }
+    const ownership = value as Partial<BlocOwnership>;
+    if (ownership.kind === "code-managed") {
+        return { kind: "code-managed" };
+    }
+    if (ownership.kind === "site-builder" && typeof ownership.definitionId === "string") {
+        return { kind: "site-builder", definitionId: ownership.definitionId };
+    }
+    if (
+        ownership.kind === "integration" &&
+        typeof ownership.integrationKind === "string" &&
+        typeof ownership.installationId === "string" &&
+        typeof ownership.definitionVersion === "string"
+    ) {
+        return {
+            kind: "integration",
+            integrationKind: ownership.integrationKind,
+            installationId: ownership.installationId,
+            definitionVersion: ownership.definitionVersion,
+        };
+    }
+    throw new Error(`GET api/bloc/list returned invalid ownership for bloc "${tag}"`);
 }

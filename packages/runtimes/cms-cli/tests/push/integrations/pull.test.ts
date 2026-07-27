@@ -69,7 +69,18 @@ describe("pullIntegrations", () => {
                     return Response.json(demoDetail());
                 }
                 if (url.endsWith("/api/bloc/list")) {
-                    return Response.json([{ id: "demo-card", group: "Generated" }]);
+                    return Response.json([
+                        {
+                            id: "demo-card",
+                            group: "Generated",
+                            ownership: {
+                                kind: "integration",
+                                integrationKind: "demo",
+                                installationId: "demo",
+                                definitionVersion: "1",
+                            },
+                        },
+                    ]);
                 }
                 if (url.includes("/api/bloc/source?tag=demo-card")) {
                     return Response.json({ source: blocSource });
@@ -96,6 +107,27 @@ describe("pullIntegrations", () => {
 });
 
 describe("pullBlocs", () => {
+    test("rejects a traversal tag without replacing the existing bloc tree", async () => {
+        const siteDir = mkdtempSync(join(tmpdir(), "p9r-bloc-pull-"));
+        const marker = join(siteDir, "blocs", "Keep", "safe-card", "marker.txt");
+        mkdirSync(join(siteDir, "blocs", "Keep", "safe-card"), { recursive: true });
+        writeFileSync(marker, "keep");
+
+        await withFetch(
+            async (url) =>
+                url.endsWith("/api/bloc/list")
+                    ? Response.json([{ id: "..", group: "Generated", ownership: { kind: "code-managed" } }])
+                    : new Response("source must not be fetched", { status: 500 }),
+            async () => {
+                const result = await pullBlocs(new URL("http://cms.test/"), "token", siteDir);
+
+                expect(result.pulled).toEqual([]);
+                expect(result.failed[0]?.error).toContain("Invalid remote bloc tag");
+                expect(readFileSync(marker, "utf-8")).toBe("keep");
+            },
+        );
+    });
+
     test("skips blocs already owned by generated integration artifacts", async () => {
         const siteDir = mkdtempSync(join(tmpdir(), "p9r-bloc-pull-"));
         mkdirSync(join(siteDir, ".p9r", "generated"), { recursive: true });
@@ -112,7 +144,9 @@ describe("pullBlocs", () => {
         await withFetch(
             async (url) => {
                 if (url.endsWith("/api/bloc/list")) {
-                    return Response.json([{ id: "demo-card", group: "Generated" }]);
+                    return Response.json([
+                        { id: "demo-card", group: "Generated", ownership: { kind: "code-managed" } },
+                    ]);
                 }
                 if (url.includes("/api/bloc/source")) {
                     throw new Error("generated bloc source should not be fetched by pullBlocs");

@@ -8,6 +8,7 @@ import {
     SITE_INTEGRATIONS_DIR,
 } from "cms-cli/dev-server/integrations";
 import { fetchBlocSource, fetchRemoteBlocList, writeBlocSource } from "cms-cli/push/blocs/pull";
+import { assertSafeBlocTag } from "cms-cli/push/blocs/pullLocation";
 import { parseUrn, type Source } from "@bernouy/cms-sources";
 import type { IntegrationInstallation } from "@bernouy/cms-integrations";
 import type { RemoteIntegrationDetail, RemoteIntegrationListItem } from "./pullTypes";
@@ -109,6 +110,7 @@ async function writeGeneratedBloc(
     group: string,
     source: Record<string, string>,
 ): Promise<void> {
+    assertSafeBlocTag(tag);
     await writeBlocSource(safeJoin(siteDir, GENERATED_BLOCS_DIR, categoryToFolder(group), tag), source);
 }
 

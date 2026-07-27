@@ -4,6 +4,7 @@ import { buildAllDevBlocs } from "cms-cli/dev-server/bloc-build/index";
 import { loadPushConfig } from "cms-cli/push/shared/config";
 import { confirm } from "cms-cli/push/shared/recap";
 import { applyPushBlocs, fetchRemoteBlocList } from "cms-cli/push/blocs/apply";
+import { sameBlocOwner } from "@bernouy/cms-content";
 
 export type RunBlocsFlags = {
     force: boolean;
@@ -28,8 +29,14 @@ export async function runBlocs(adminBase: URL, token: string, flags: RunBlocsFla
         console.log(`→ Filter   : --only=${[...flags.only].join(",")}`);
     }
 
-    const remoteTags = new Set((await fetchRemoteBlocList(adminBase, token)).map((b) => b.id));
-    const blocs = await scanDevBlocs(root);
+    const remote = new Map((await fetchRemoteBlocList(adminBase, token)).map((bloc) => [bloc.id, bloc]));
+    let blocs: DevBloc[];
+    try {
+        blocs = await scanDevBlocs(root, { strictBuilder: true, siteBuilderSnapshot: "draft" });
+    } catch (error) {
+        console.error(`✖ ${error instanceof Error ? error.message : String(error)}`);
+        return 1;
+    }
     if (blocs.length === 0) {
         console.log("→ No blocs found under <siteDir>/blocs/. Skipping.");
         return 0;
@@ -48,12 +55,27 @@ export async function runBlocs(adminBase: URL, token: string, flags: RunBlocsFla
 
     const fresh: DevBloc[] = [];
     const existing: DevBloc[] = [];
+    const ownershipConflicts: DevBloc[] = [];
     for (const bloc of candidates) {
-        if (remoteTags.has(bloc.tag)) {
+        const remoteBloc = remote.get(bloc.tag);
+        if (remoteBloc && !sameBlocOwner(remoteBloc.ownership, bloc.ownership)) {
+            ownershipConflicts.push(bloc);
+        } else if (remoteBloc) {
             existing.push(bloc);
         } else {
             fresh.push(bloc);
         }
+    }
+
+    if (ownershipConflicts.length > 0) {
+        console.error("");
+        console.error(`✖ ${ownershipConflicts.length} bloc(s) belong to a different remote owner:`);
+        for (const bloc of ownershipConflicts) {
+            console.error(
+                `    • ${bloc.tag} (local: ${bloc.ownership.kind}, remote: ${remote.get(bloc.tag)!.ownership.kind})`,
+            );
+        }
+        console.error("  --force never bypasses bloc ownership.");
     }
 
     if (existing.length > 0) {
@@ -68,11 +90,12 @@ export async function runBlocs(adminBase: URL, token: string, flags: RunBlocsFla
         }
     }
 
-    const toBuild = force ? candidates : fresh;
+    const compatible = [...fresh, ...existing];
+    const toBuild = force ? compatible : fresh;
     if (toBuild.length === 0) {
         console.log("");
         console.log("→ No bloc changes.");
-        return 0;
+        return ownershipConflicts.length > 0 ? 1 : 0;
     }
 
     console.log("");
@@ -95,12 +118,12 @@ export async function runBlocs(adminBase: URL, token: string, flags: RunBlocsFla
             const editorKb = bloc.editorJS ? `${(bloc.editorJS.length / 1024).toFixed(1)}kb` : "-";
             console.log(`    • ${tag.padEnd(28)} view=${viewKb}kb  editor=${editorKb}`);
         }
-        return buildFailures > 0 ? 1 : 0;
+        return buildFailures + ownershipConflicts.length > 0 ? 1 : 0;
     }
 
     if (!(await confirm(`\nPush ${built.size} bloc(s)?`, flags.yes))) {
         console.log("→ Aborted.");
-        return 0;
+        return ownershipConflicts.length > 0 ? 1 : 0;
     }
 
     const result = await applyPushBlocs(adminBase, token, built, force);
@@ -111,7 +134,7 @@ export async function runBlocs(adminBase: URL, token: string, flags: RunBlocsFla
         console.log(`    ✓ ${tag}`);
     }
 
-    const failed = result.failed.length + buildFailures;
+    const failed = result.failed.length + buildFailures + ownershipConflicts.length;
     console.log(
         `\n→ Done. ${result.pushed.length} pushed, ${existing.length - (force ? existing.length : 0)} skipped, ${failed} failed.`,
     );
