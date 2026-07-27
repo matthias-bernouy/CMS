@@ -6,23 +6,25 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import {
     buildOfficialIntegrationCandidates,
     buildOfficialIntegrationPackages,
+    OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT,
 } from "@bernouy/cms-official-integrations/publication";
 
-const EXPECTED_KINDS = [
-    "ban",
-    "basic-blocs",
-    "commerce",
-    "commerce-mondial-relay-delivery",
-    "commerce-mondial-relay-fulfillment",
-    "commerce-negotiation",
-    "commerce-stripe-payments",
-    "emailer",
-    "mondial-relay",
-    "newsletter",
-    "photo-albums",
-    "sales-configurator",
-    "stripe-connect",
-    "user-account",
+const EXPECTED_COORDINATES = [
+    "ban@1.0.0",
+    "basic-blocs@1.0.0",
+    "commerce@1.0.0",
+    "commerce-mondial-relay-delivery@1.0.0",
+    "commerce-mondial-relay-fulfillment@1.0.0",
+    "commerce-negotiation@1.0.0",
+    "commerce-stripe-payments@1.0.0",
+    "emailer@1.0.0",
+    "mondial-relay@1.0.0",
+    "newsletter@1.0.0",
+    "photo-albums@1.0.0",
+    "photo-albums@1.1.0",
+    "sales-configurator@1.0.0",
+    "stripe-connect@1.0.0",
+    "user-account@1.0.0",
 ] as const;
 
 const roots: string[] = [];
@@ -36,8 +38,8 @@ describe("official integration publication source", () => {
         const first = await buildOfficialIntegrationPackages();
         const second = await buildOfficialIntegrationPackages(OFFICIAL_INTEGRATIONS_ROOT);
 
-        expect(first.map(({ kind }) => kind)).toEqual(EXPECTED_KINDS);
-        expect(first).toHaveLength(14);
+        expect(first.map(({ kind, version }) => `${kind}@${version}`)).toEqual(EXPECTED_COORDINATES);
+        expect(first).toHaveLength(EXPECTED_COORDINATES.length);
         const identity = ({ kind, version, digest, canonicalBytes }: (typeof first)[number]) => ({
             kind,
             version,
@@ -51,8 +53,9 @@ describe("official integration publication source", () => {
                 schema: "cms.integration.package.v1",
                 kind: integrationPackage.kind,
                 version: integrationPackage.version,
-                releaseNotes: "README.md",
             });
+            expect(typeof envelope.releaseNotes).toBe("string");
+            expect(envelope.files[envelope.releaseNotes]).toMatchObject({ encoding: "utf8" });
             expect(integrationPackage.digest).toMatch(/^[a-f0-9]{64}$/);
         }
     });
@@ -62,7 +65,7 @@ describe("official integration publication source", () => {
         const second = await buildOfficialIntegrationCandidates(OFFICIAL_INTEGRATIONS_ROOT);
 
         expect(first).toEqual(second);
-        expect(first.map(({ kind }) => kind)).toEqual(EXPECTED_KINDS);
+        expect(first.map(({ kind, version }) => `${kind}@${version}`)).toEqual(EXPECTED_COORDINATES);
         for (const candidate of first) {
             const envelope = JSON.parse(new TextDecoder().decode(candidate.canonicalBytes));
             expect(envelope).toMatchObject({
@@ -75,7 +78,7 @@ describe("official integration publication source", () => {
                         packageDigest: candidate.packageDigest,
                     },
                     manifest: {
-                        runnerRequirements: [{ name: "cms-postgres", versionRange: "1.0.0" }],
+                        runnerRequirements: [OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT],
                     },
                 },
                 submission: { requestedChannel: "latest" },
