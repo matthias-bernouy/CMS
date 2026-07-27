@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
     InMemoryIntegrationRegistryMutationCoordinator,
     CurrentIntegrationRegistryReleaseEvidenceReader,
+    PublishedIntegrationVerificationBundleReader,
     IntegrationCompatibilityEvaluator,
     identifyIntegrationVerificationBackfillRequest,
     INTEGRATION_VERIFICATION_BACKFILL_SCHEMA,
@@ -99,7 +100,11 @@ export async function createProductionRepositoryManagement(input: {
     const reports = new FsIntegrationCompatibilityReportStore({ snapshots, mutations });
     const compatibilityReports = new FsIntegrationCompatibilityV2ReportStore(releaseReportConfig);
     const verificationReports = new FsIntegrationVerificationReportStore(releaseReportConfig);
-    const verificationBundles = new FsIntegrationVerificationBundleStore(input.root);
+    const verificationBundleStore = new FsIntegrationVerificationBundleStore(input.root);
+    const verificationBundles = new PublishedIntegrationVerificationBundleReader({
+        catalog: snapshots,
+        bundles: verificationBundleStore,
+    });
     const migrationReports = new FsIntegrationMigrationReportStore(releaseReportConfig);
     const releaseDecisions = new FsReleaseAdmissionDecisionStore({
         ...releaseReportConfig,
@@ -179,7 +184,7 @@ export async function createProductionRepositoryManagement(input: {
         root: input.root,
         snapshots,
         mutations,
-        bundles: verificationBundles,
+        bundles: verificationBundleStore,
         compatibilityReports,
         verificationReports,
         decisions: releaseDecisions,
@@ -214,7 +219,7 @@ export async function createProductionRepositoryManagement(input: {
               verificationReports,
               migrationReports,
               releaseDecisions,
-              verificationBundles,
+              verificationBundles: verificationBundleStore,
           }
         : undefined;
     const candidateFinalizer = candidateFinalizerConfig

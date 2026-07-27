@@ -139,6 +139,10 @@ export {
     type IntegrationRegistryReleaseEvidenceReaderConfig,
 } from "../core/catalog/releaseEvidence";
 export {
+    PublishedIntegrationVerificationBundleReader,
+    type PublishedIntegrationVerificationBundleReaderConfig,
+} from "../core/catalog/publicVerificationBundles";
+export {
     assertIntegrationCompatibilityAdmission,
     IntegrationCompatibilityAdmissionError,
     IntegrationCompatibilityEvaluator,
