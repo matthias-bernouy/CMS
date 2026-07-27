@@ -1,6 +1,12 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { isNativeBlocTag, prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
-import { DuplicateBlocTagError, type CmsRepository } from "@bernouy/cms-content";
+import {
+    type BlocOwnership,
+    ContentConflictError,
+    DuplicateBlocTagError,
+    type CmsRepository,
+    type TBloc,
+} from "@bernouy/cms-content";
 import { invalidateBlocAssets, invalidatePagesReferencingBloc } from "cms-control/core/admin/server/cache/invalidation";
 import { parseSourceManifest, resolveDefaultContent } from "./sourceBundle";
 
@@ -34,6 +40,9 @@ export type BlocImportResult = {
 
 export type BlocImportRuntime = {
     repository?: CmsRepository;
+    ownership?: BlocOwnership;
+    persist?: (bloc: TBloc, context: { exists: boolean; force: boolean }) => Promise<void>;
+    invalidate?: boolean;
 };
 
 export async function importBlocArtifact(
@@ -66,7 +75,7 @@ export async function importBlocArtifact(
         throw new BlocImportError(validation.errors.join("\n"), 400);
     }
 
-    const existing = await repository.getBlocViewJS(input.tag);
+    const existing = await repository.getBlocRecord(input.tag);
     const force = input.force === true;
     if (existing !== null && !force) {
         throw new BlocImportError(`Bloc with tag "${input.tag}" already exists`, 409);
@@ -77,7 +86,7 @@ export async function importBlocArtifact(
         throw new BlocImportError(defaultContentResult.error, 400);
     }
 
-    const bloc = await prepare_bloc(
+    const prepared = await prepare_bloc(
         viewFile,
         editorFile,
         input.name,
@@ -88,9 +97,15 @@ export async function importBlocArtifact(
         defaultContentResult.content,
         { native },
     );
+    const bloc: TBloc = {
+        ...prepared,
+        ownership: runtime.ownership ?? { kind: "code-managed" },
+    };
 
     try {
-        if (force) {
+        if (runtime.persist) {
+            await runtime.persist(bloc, { exists: existing !== null, force });
+        } else if (force) {
             await repository.replaceBloc(bloc);
         } else {
             await repository.createBloc(bloc);
@@ -99,11 +114,16 @@ export async function importBlocArtifact(
         if (!force && e instanceof DuplicateBlocTagError) {
             throw new BlocImportError(`Bloc with tag "${bloc.id}" already exists`, 409);
         }
+        if (e instanceof ContentConflictError) {
+            throw new BlocImportError(e.message, e.status);
+        }
         throw e;
     }
 
-    invalidateBlocAssets(cms, bloc.id);
-    await invalidatePagesReferencingBloc(cms, bloc.id);
+    if (runtime.invalidate !== false) {
+        invalidateBlocAssets(cms, bloc.id);
+        await invalidatePagesReferencingBloc(cms, bloc.id);
+    }
 
     return { id: bloc.id, action: existing === null ? "created" : "updated" };
 }

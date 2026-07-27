@@ -4,6 +4,7 @@ import importBloc from "cms-control/api/_content/bloc/bloc.post";
 function makeSystem() {
     return {
         repository: {
+            getBlocRecord: async () => null,
             getBlocViewJS: async () => null,
             createBloc: async (b: any) => b,
             getAllPages: async () => [],

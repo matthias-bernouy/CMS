@@ -1,12 +1,13 @@
 import type { ControlCms } from "cms-control/ControlCms";
+import { cliBlocList } from "cms-control/core/content/bloc/cliExport";
 
 /**
- * Lightweight bloc metadata endpoint. Returns `{id, name, group, description}`
- * for every registered bloc — no compiled JS payloads. Consumed by CLI
- * push/pull flows for validation and source materialization.
+ * Lightweight CLI inventory. Site-builder drafts are included before their
+ * first publication and expose current draft metadata, so pull is lossless.
+ * Compiled JavaScript is deliberately omitted.
  */
 export default async function getBlocsList(_req: Request, cms: ControlCms) {
-    const blocs = await cms.repository.getBlocsList();
+    const blocs = await cliBlocList(cms.repository);
     return new Response(JSON.stringify(blocs), {
         headers: { "Content-Type": "application/json" },
     });

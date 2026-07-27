@@ -14,6 +14,11 @@ function makeSystem(opts: { existingTags?: string[]; throwOnCreate?: unknown } =
     cache.set(P9R_CACHE.page("/kept"), {});
     const cms: any = {
         repository: {
+            getBlocRecord: async (tag: string) => {
+                return (opts.existingTags ?? []).includes(tag)
+                    ? { tag, ownership: { kind: "code-managed" }, artifact: null }
+                    : null;
+            },
             getBlocViewJS: async (tag: string) => {
                 return (opts.existingTags ?? []).includes(tag) ? "/*existing*/" : null;
             },
