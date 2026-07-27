@@ -180,7 +180,7 @@ describe("filesystem candidate release publication", () => {
             migrationRevision: migrationInput.targetMigrationRevision,
         });
         expect(migrationHistory?.current).toMatchObject({
-            schema: "cms.integration.migration-report.v4",
+            schema: "cms.integration.migration-report.v1",
             outcome: "passed",
             cutover: {
                 cmsMediated: "binding-revision",

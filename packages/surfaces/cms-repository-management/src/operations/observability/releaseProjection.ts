@@ -17,16 +17,11 @@ export function projectRepositoryManagementRelease(source: IntegrationRegistryRe
         environmentDigest: current.environmentDigest,
         checks: current.checks,
         cutover: current.cutover,
-        ...(current.schema === "cms.integration.migration-report.v4"
-            ? { cutoverEvidence: current.cutoverEvidence }
-            : {}),
-        rollback: current.rollback,
-        pointOfNoReturn: current.pointOfNoReturn,
-        delayedCleanupVerified: current.delayedCleanupVerified,
-        ...(current.schema === "cms.integration.migration-report.v3" ||
-        current.schema === "cms.integration.migration-report.v4"
-            ? { operationalEvidence: current.operationalEvidence }
-            : {}),
+        cutoverEvidence: current.cutoverEvidence,
+        rollback: current.operationalEvidence.rollback.capability,
+        pointOfNoReturn: current.operationalEvidence.pointOfNoReturn.phase,
+        delayedCleanupVerified: current.operationalEvidence.cleanup.observed,
+        operationalEvidence: current.operationalEvidence,
     }));
     return {
         kind: source.kind,

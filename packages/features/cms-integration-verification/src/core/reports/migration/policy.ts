@@ -4,10 +4,8 @@ import type {
     MigrationCheckResult,
     MigrationPolicyEvaluationCheck,
     MigrationReport,
-    MigrationReportV4,
     MigrationReportPolicyEvaluation,
 } from "../../../interfaces/reports/migration";
-import { MIGRATION_REPORT_V4_SCHEMA } from "../../../interfaces/reports/migration";
 import { IntegrationVerificationContractError } from "../../validation/errors";
 import { migrationExecutionOutcome } from "./results";
 
@@ -37,11 +35,7 @@ export function evaluateMigrationReportAgainstPolicy(
     }
     if (policy.requireCmsMediatedCutoverEvidence) {
         checks.push(
-            strategyCheck(
-                "cms-mediated-cutover",
-                report.cutover.cmsMediated,
-                report.schema === MIGRATION_REPORT_V4_SCHEMA ? report.cutoverEvidence.cmsMediated : undefined,
-            ),
+            strategyCheck("cms-mediated-cutover", report.cutover.cmsMediated, report.cutoverEvidence.cmsMediated),
         );
     }
     if (policy.requireProviderDirectCutoverEvidence) {
@@ -49,15 +43,15 @@ export function evaluateMigrationReportAgainstPolicy(
             strategyCheck(
                 "provider-direct-cutover",
                 report.cutover.providerDirect,
-                report.schema === MIGRATION_REPORT_V4_SCHEMA ? report.cutoverEvidence.providerDirect : undefined,
+                report.cutoverEvidence.providerDirect,
             ),
         );
     }
     if (policy.requireRollbackEvidence) {
-        checks.push(rollbackCheck(report.rollback));
+        checks.push(rollbackCheck(report.operationalEvidence.rollback));
     }
     if (policy.requireDelayedCleanupEvidence) {
-        checks.push(delayedCleanupCheck(report.delayedCleanupVerified));
+        checks.push(delayedCleanupCheck(report.operationalEvidence.cleanup.observed));
     }
     const frozenChecks = Object.freeze(checks.map((check) => Object.freeze(check)));
     const reasons = Object.freeze(
@@ -131,7 +125,7 @@ function requiredMigrationCheck(
 function strategyCheck(
     check: "cms-mediated-cutover" | "provider-direct-cutover",
     observed: MigrationReport["cutover"]["cmsMediated"] | MigrationReport["cutover"]["providerDirect"],
-    evidence: MigrationReportV4["cutoverEvidence"]["cmsMediated"] | undefined,
+    evidence: MigrationReport["cutoverEvidence"]["cmsMediated"],
 ): MigrationPolicyEvaluationCheck {
     const applicable = observed !== "not-applicable";
     if (!evidence) {
@@ -153,14 +147,14 @@ function strategyCheck(
     };
 }
 
-function rollbackCheck(observed: MigrationReport["rollback"]): MigrationPolicyEvaluationCheck {
-    const applicable = observed !== "not-applicable";
-    const satisfied = !applicable || observed === "available";
+function rollbackCheck(observed: MigrationReport["operationalEvidence"]["rollback"]): MigrationPolicyEvaluationCheck {
+    const applicable = observed.capability !== "not-applicable";
+    const satisfied = !applicable || (observed.capability === "available" && observed.verified);
     return {
         check: "rollback",
         applicable,
         satisfied,
-        observed,
+        observed: observed.verified ? "verified" : observed.capability,
         ...(satisfied ? {} : { reason: "rollback-evidence-unavailable" }),
     };
 }

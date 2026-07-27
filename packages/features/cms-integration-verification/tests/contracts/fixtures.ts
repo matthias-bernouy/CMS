@@ -133,9 +133,38 @@ export function migrationReport(): MigrationReport {
             resumption: { outcome: "not-supported" },
         },
         cutover: { cmsMediated: "binding-revision", providerDirect: "expand-in-code" },
-        rollback: "available",
-        pointOfNoReturn: "cleanup",
-        delayedCleanupVerified: true,
+        policyEvaluation: {
+            releaseLevel: "minor",
+            applicable: true,
+            satisfied: true,
+            checks: [
+                {
+                    check: "report-outcome",
+                    applicable: true,
+                    satisfied: true,
+                    observed: "passed",
+                },
+                {
+                    check: "environment",
+                    applicable: true,
+                    satisfied: true,
+                    observed: DIGEST_B,
+                },
+            ],
+            reasons: [],
+        },
+        operationalEvidence: {
+            downtime: { status: "not-measured" },
+            drain: {},
+            rollback: { capability: "available", verified: true, evidenceDigest: DIGEST_C },
+            pointOfNoReturn: { phase: "cleanup", observation: "crossed", evidenceDigest: DIGEST_C },
+            cleanup: { observed: true, evidenceDigest: DIGEST_C },
+        },
+        cutoverEvidence: {
+            cmsMediated: passed,
+            providerDirect: passed,
+            activation: passed,
+        },
         outcome: "passed",
         provenance: provenance(),
     };

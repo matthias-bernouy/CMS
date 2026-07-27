@@ -48,10 +48,10 @@ describe("migration report contract", () => {
         expect(revision.supersedes).toBe(root.reportId);
     });
 
-    test("reads legacy v1 reports and binds v2 reports to a durable policy evaluation", () => {
-        const legacy = parseMigrationReport(migrationReport());
+    test("binds the durable policy evaluation", () => {
+        const report = parseMigrationReport(migrationReport());
         const policyEvaluation = evaluateMigrationReportAgainstPolicy(
-            legacy,
+            report,
             {
                 requiredForReleaseLevels: ["minor"],
                 requiredChecks: ["fresh-install", "migrated-state", "equivalence"],
@@ -65,26 +65,19 @@ describe("migration report contract", () => {
             },
             "minor",
         );
-        const current = parseMigrationReport({
-            ...legacy,
-            schema: "cms.integration.migration-report.v2",
-            policyEvaluation,
-        });
-
-        expect(legacy.schema).toBe("cms.integration.migration-report.v1");
-        expect(current).toMatchObject({
-            schema: "cms.integration.migration-report.v2",
+        expect(parseMigrationReport({ ...report, policyEvaluation })).toMatchObject({
+            schema: "cms.integration.migration-report.v1",
             policyEvaluation: { releaseLevel: "minor", applicable: true, satisfied: true, reasons: [] },
         });
         expect(() =>
             parseMigrationReport({
-                ...current,
+                ...report,
                 policyEvaluation: { ...policyEvaluation, reasons: ["fabricated-denial"], satisfied: false },
             }),
         ).toThrow(/exact checks and reasons/);
         expect(() =>
             parseMigrationReport({
-                ...current,
+                ...report,
                 policyEvaluation: {
                     ...policyEvaluation,
                     checks: policyEvaluation.checks.map((check) =>
@@ -95,47 +88,30 @@ describe("migration report contract", () => {
         ).toThrow(/execution outcome and environment/);
     });
 
-    test("binds v3 operational facts without fabricating downtime or rollback evidence", () => {
-        const legacy = parseMigrationReport(migrationReport());
-        const policyEvaluation = evaluateMigrationReportAgainstPolicy(
-            legacy,
-            {
-                requiredForReleaseLevels: ["minor"],
-                requiredChecks: ["fresh-install", "migrated-state", "equivalence"],
-                requireExactSourcePackageDigest: true,
-                requireExactTargetPackageDigest: true,
-                approvedEnvironmentDigests: [DIGEST_B],
-                requireCmsMediatedCutoverEvidence: true,
-                requireProviderDirectCutoverEvidence: true,
-                requireRollbackEvidence: false,
-                requireDelayedCleanupEvidence: false,
-            },
-            "minor",
-        );
+    test("binds operational facts without fabricating downtime or rollback evidence", () => {
+        const report = parseMigrationReport(migrationReport());
         const operationalEvidence = {
             downtime: { status: "not-measured" as const },
             drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
             rollback: {
-                capability: legacy.rollback,
+                capability: "available" as const,
                 verified: true,
                 evidenceDigest: DIGEST_B,
             },
             pointOfNoReturn: {
-                phase: legacy.pointOfNoReturn,
+                phase: "cleanup",
                 observation: "crossed" as const,
                 evidenceDigest: DIGEST_B,
             },
             cleanup: { delaySeconds: 60, observed: true, evidenceDigest: DIGEST_B },
         };
         const current = parseMigrationReport({
-            ...legacy,
-            schema: "cms.integration.migration-report.v3",
-            policyEvaluation,
+            ...report,
             operationalEvidence,
         });
 
         expect(current).toMatchObject({
-            schema: "cms.integration.migration-report.v3",
+            schema: "cms.integration.migration-report.v1",
             operationalEvidence: {
                 downtime: { status: "not-measured" },
                 drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
@@ -153,19 +129,9 @@ describe("migration report contract", () => {
                 },
             }),
         ).toThrow(/must not fabricate/);
-        expect(() =>
-            parseMigrationReport({
-                ...current,
-                operationalEvidence: {
-                    ...operationalEvidence,
-                    rollback: { capability: "unavailable", verified: false },
-                },
-            }),
-        ).toThrow(/must match the report/);
         expect(
             parseMigrationReport({
                 ...current,
-                rollback: "available",
                 operationalEvidence: {
                     ...operationalEvidence,
                     rollback: { capability: "available", verified: false },
@@ -175,7 +141,6 @@ describe("migration report contract", () => {
         expect(() =>
             parseMigrationReport({
                 ...current,
-                rollback: "unavailable",
                 operationalEvidence: {
                     ...operationalEvidence,
                     rollback: { capability: "unavailable", verified: true, evidenceDigest: DIGEST_B },
@@ -184,10 +149,10 @@ describe("migration report contract", () => {
         ).toThrow(/verified rollback requires available capability/);
     });
 
-    test("binds v4 cutover execution statuses without fabricating unsupported evidence", () => {
-        const legacy = parseMigrationReport(migrationReport());
+    test("binds cutover execution statuses without fabricating unsupported evidence", () => {
+        const report = parseMigrationReport(migrationReport());
         const policyEvaluation = evaluateMigrationReportAgainstPolicy(
-            legacy,
+            report,
             {
                 requiredForReleaseLevels: ["minor"],
                 requiredChecks: ["fresh-install", "migrated-state", "equivalence"],
@@ -202,18 +167,17 @@ describe("migration report contract", () => {
             "minor",
         );
         const value = {
-            ...legacy,
-            schema: "cms.integration.migration-report.v4" as const,
+            ...report,
             policyEvaluation,
             operationalEvidence: {
                 downtime: { status: "not-measured" as const },
                 drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
-                rollback: { capability: legacy.rollback, verified: false },
+                rollback: { capability: "available" as const, verified: false },
                 pointOfNoReturn: {
-                    phase: legacy.pointOfNoReturn,
+                    phase: "cleanup",
                     observation: "not-observed" as const,
                 },
-                cleanup: { delaySeconds: 60, observed: legacy.delayedCleanupVerified, evidenceDigest: DIGEST_B },
+                cleanup: { delaySeconds: 60, observed: true, evidenceDigest: DIGEST_B },
             },
             cutoverEvidence: {
                 cmsMediated: { outcome: "not-supported" as const },
@@ -224,7 +188,7 @@ describe("migration report contract", () => {
         const current = parseMigrationReport(value);
 
         expect(current).toMatchObject({
-            schema: "cms.integration.migration-report.v4",
+            schema: "cms.integration.migration-report.v1",
             cutoverEvidence: {
                 cmsMediated: { outcome: "not-supported" },
                 providerDirect: { outcome: "not-supported" },

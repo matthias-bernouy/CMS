@@ -38,17 +38,13 @@ export function parseMigrationCutover(value: unknown): MigrationReport["cutover"
 
 export function assertMigrationOutcome(report: MigrationReport): void {
     const expected = migrationExecutionOutcome(report);
-    const legacyCleanupFailure = expected === "passed" && !report.delayedCleanupVerified && report.outcome === "failed";
-    if (report.outcome !== expected && !legacyCleanupFailure) {
+    if (report.outcome !== expected) {
         throw invalid("migrationReport.outcome", `must be ${expected} for the recorded migration checks`);
     }
 }
 
 export function migrationExecutionOutcome(report: MigrationReport): MigrationReport["outcome"] {
-    const checks = [
-        ...Object.values(report.checks),
-        ...(report.schema === "cms.integration.migration-report.v4" ? Object.values(report.cutoverEvidence) : []),
-    ];
+    const checks = [...Object.values(report.checks), ...Object.values(report.cutoverEvidence)];
     return checks.some((check) => check.outcome === "infrastructure-failure")
         ? "infrastructure-failure"
         : report.checks.freshInstall.outcome !== "passed" ||

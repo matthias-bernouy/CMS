@@ -110,7 +110,27 @@ function reportWithCheck(
             : outcome === "failed" || (core && outcome !== "passed")
               ? "failed"
               : "passed";
-    return parseMigrationReport({ ...base, checks, outcome: reportOutcome });
+    const outcomePassed = reportOutcome === "passed";
+    return parseMigrationReport({
+        ...base,
+        checks,
+        outcome: reportOutcome,
+        policyEvaluation: {
+            ...base.policyEvaluation,
+            satisfied: outcomePassed,
+            checks: base.policyEvaluation.checks.map((entry) =>
+                entry.check === "report-outcome"
+                    ? {
+                          ...entry,
+                          satisfied: outcomePassed,
+                          observed: reportOutcome,
+                          ...(outcomePassed ? {} : { reason: `migration-report-${reportOutcome}` }),
+                      }
+                    : entry,
+            ),
+            reasons: outcomePassed ? [] : [`migration-report-${reportOutcome}`],
+        },
+    });
 }
 
 function policy(requiredChecks: MigrationEvidencePolicyV1["requiredChecks"]): MigrationEvidencePolicyV1 {

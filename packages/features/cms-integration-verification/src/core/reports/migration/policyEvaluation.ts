@@ -1,9 +1,7 @@
 import type {
     MigrationPolicyEvaluationCheck,
+    MigrationReport,
     MigrationReportPolicyEvaluation,
-    MigrationReportV2,
-    MigrationReportV3,
-    MigrationReportV4,
 } from "../../../interfaces/reports/migration";
 import { assertUnique, boundedArray, invalid, strictRecord } from "../../validation/structure";
 import { oneOf, requiredBoolean, requiredText } from "../../validation/values";
@@ -71,9 +69,7 @@ export function parseMigrationPolicyEvaluation(value: unknown): MigrationReportP
     });
 }
 
-export function assertMigrationPolicyEvaluationMatchesReport(
-    report: MigrationReportV2 | MigrationReportV3 | MigrationReportV4,
-): void {
+export function assertMigrationPolicyEvaluationMatchesReport(report: MigrationReport): void {
     if (!report.policyEvaluation.applicable) {
         return;
     }
@@ -88,14 +84,12 @@ export function assertMigrationPolicyEvaluationMatchesReport(
     ) {
         throw invalid("migrationReport.policyEvaluation", "does not bind the report execution outcome and environment");
     }
-    if (report.schema === "cms.integration.migration-report.v4") {
-        assertCutoverPolicyCheckMatchesReport(report, "cms-mediated-cutover", "cmsMediated");
-        assertCutoverPolicyCheckMatchesReport(report, "provider-direct-cutover", "providerDirect");
-    }
+    assertCutoverPolicyCheckMatchesReport(report, "cms-mediated-cutover", "cmsMediated");
+    assertCutoverPolicyCheckMatchesReport(report, "provider-direct-cutover", "providerDirect");
 }
 
 function assertCutoverPolicyCheckMatchesReport(
-    report: MigrationReportV4,
+    report: MigrationReport,
     checkName: "cms-mediated-cutover" | "provider-direct-cutover",
     regime: "cmsMediated" | "providerDirect",
 ): void {

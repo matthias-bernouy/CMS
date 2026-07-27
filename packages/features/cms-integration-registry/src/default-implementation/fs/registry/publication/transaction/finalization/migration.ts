@@ -65,7 +65,7 @@ async function buildMigrationReport(
         providerDirect: await observationCheck(result.result.observations.cutover.providerDirect),
         activation: await observationCheck(result.result.observations.cutover.activation),
     };
-    const legacy = await identifyMigrationReport({
+    const report: MigrationReport = {
         schema: "cms.integration.migration-report.v1",
         reportId: `migration-${input.digest.slice(0, 40)}`,
         revisionType: "root",
@@ -89,36 +89,30 @@ async function buildMigrationReport(
             cmsMediated: cmsCutover(result.result),
             providerDirect: providerCutover(result.result),
         },
-        rollback: "unavailable",
-        pointOfNoReturn: input.input.migrationPlan.plan.pointOfNoReturn,
-        delayedCleanupVerified: result.result.observations.cutover.activation.cleanupObserved === true,
-        outcome: executionOutcome(checks),
+        policyEvaluation: {
+            releaseLevel: context.compatibility.releaseLevel,
+            applicable: false,
+            satisfied: true,
+            checks: [],
+            reasons: [],
+        },
+        operationalEvidence,
+        cutoverEvidence,
+        outcome: executionOutcome({ ...checks, ...cutoverEvidence }),
         provenance: {
             actor: "repository-verifier",
             reason: "candidate-migration-admission",
             evidenceIds: [context.candidateId, result.result.jobId, result.result.attemptId],
         },
-    });
-    const legacyPolicyEvaluation = evaluateMigrationReportAgainstPolicy(
-        legacy.report,
-        context.policy.migrationEvidence,
-        context.compatibility.releaseLevel,
-    );
-    const current = {
-        ...legacy.report,
-        schema: "cms.integration.migration-report.v4" as const,
-        policyEvaluation: legacyPolicyEvaluation,
-        operationalEvidence,
-        cutoverEvidence,
     };
     const policyEvaluation = evaluateMigrationReportAgainstPolicy(
-        current,
+        report,
         context.policy.migrationEvidence,
         context.compatibility.releaseLevel,
     );
     return (
         await identifyMigrationReport({
-            ...current,
+            ...report,
             policyEvaluation,
         })
     ).report;

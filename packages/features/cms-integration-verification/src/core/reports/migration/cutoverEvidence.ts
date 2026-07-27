@@ -1,4 +1,4 @@
-import type { MigrationCutoverEvidence, MigrationReportV4 } from "../../../interfaces/reports/migration";
+import type { MigrationCutoverEvidence, MigrationReport } from "../../../interfaces/reports/migration";
 import { IntegrationVerificationContractError } from "../../validation/errors";
 import { strictRecord } from "../../validation/structure";
 import { parseMigrationCheck } from "./results";
@@ -16,7 +16,7 @@ export function parseMigrationCutoverEvidence(value: unknown): MigrationCutoverE
     };
 }
 
-export function assertMigrationCutoverEvidenceMatchesReport(report: MigrationReportV4): void {
+export function assertMigrationCutoverEvidenceMatchesReport(report: MigrationReport): void {
     assertStrategyEvidence(
         "migrationReport.cutoverEvidence.cmsMediated",
         report.cutover.cmsMediated,

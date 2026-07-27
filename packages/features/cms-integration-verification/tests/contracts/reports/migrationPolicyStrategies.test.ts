@@ -3,7 +3,6 @@ import {
     assertMigrationReportAgainstPolicy,
     evaluateMigrationReportAgainstPolicy,
     type MigrationEvidencePolicyV1,
-    type MigrationReport,
     parseMigrationReport,
 } from "../../../src/exports/index";
 import { DIGEST_B, migrationReport } from "../fixtures";
@@ -15,6 +14,17 @@ describe("migration report policy strategies", () => {
                 const report = parseMigrationReport({
                     ...migrationReport(),
                     cutover: { cmsMediated, providerDirect },
+                    cutoverEvidence: {
+                        cmsMediated:
+                            cmsMediated === "not-applicable"
+                                ? { outcome: "not-applicable" }
+                                : { outcome: "passed", evidenceDigest: DIGEST_B },
+                        providerDirect:
+                            providerDirect === "not-applicable"
+                                ? { outcome: "not-applicable" }
+                                : { outcome: "passed", evidenceDigest: DIGEST_B },
+                        activation: { outcome: "passed", evidenceDigest: DIGEST_B },
+                    },
                 });
                 const evaluation = evaluateMigrationReportAgainstPolicy(
                     report,
@@ -22,18 +32,16 @@ describe("migration report policy strategies", () => {
                     "minor",
                 );
 
-                expect(evaluation.satisfied).toBe(
-                    cmsMediated === "not-applicable" && providerDirect === "not-applicable",
-                );
+                expect(evaluation.satisfied).toBeTrue();
                 expect(evaluation.checks.find(({ check }) => check === "cms-mediated-cutover")).toMatchObject({
                     applicable: cmsMediated !== "not-applicable",
-                    satisfied: cmsMediated === "not-applicable",
-                    observed: cmsMediated,
+                    satisfied: true,
+                    observed: cmsMediated === "not-applicable" ? "not-applicable" : "passed",
                 });
                 expect(evaluation.checks.find(({ check }) => check === "provider-direct-cutover")).toMatchObject({
                     applicable: providerDirect !== "not-applicable",
-                    satisfied: providerDirect === "not-applicable",
-                    observed: providerDirect,
+                    satisfied: true,
+                    observed: providerDirect === "not-applicable" ? "not-applicable" : "passed",
                 });
             }
         }
@@ -41,6 +49,11 @@ describe("migration report policy strategies", () => {
             parseMigrationReport({
                 ...migrationReport(),
                 cutover: { cmsMediated: "not-applicable", providerDirect: "not-applicable" },
+                cutoverEvidence: {
+                    cmsMediated: { outcome: "not-applicable" },
+                    providerDirect: { outcome: "not-applicable" },
+                    activation: { outcome: "passed", evidenceDigest: DIGEST_B },
+                },
             }),
             policy({}),
             "minor",
@@ -51,8 +64,19 @@ describe("migration report policy strategies", () => {
 
     test("requires rollback only for an applicable strategy under a strict policy", () => {
         for (const rollback of ["available", "unavailable", "not-applicable"] as const) {
+            const verified = rollback === "available";
             const evaluation = evaluateMigrationReportAgainstPolicy(
-                parseMigrationReport({ ...migrationReport(), rollback }),
+                parseMigrationReport({
+                    ...migrationReport(),
+                    operationalEvidence: {
+                        ...migrationReport().operationalEvidence,
+                        rollback: {
+                            capability: rollback,
+                            verified,
+                            ...(verified ? { evidenceDigest: DIGEST_B } : {}),
+                        },
+                    },
+                }),
                 policy({ rollback: true }),
                 "minor",
             );
@@ -62,26 +86,17 @@ describe("migration report policy strategies", () => {
             expect(evaluation.checks.find(({ check }) => check === "rollback")).toMatchObject({
                 applicable,
                 satisfied,
-                observed: rollback,
+                observed: rollback === "available" ? "verified" : rollback,
             });
             expect(evaluation.satisfied).toBe(satisfied);
         }
     });
 
-    test("fails closed when v4 records declared cutovers as unsupported", () => {
-        const legacy = parseMigrationReport(migrationReport());
+    test("fails closed when declared cutovers are unsupported", () => {
+        const report = parseMigrationReport(migrationReport());
         const permissivePolicy = policy({});
-        const report = parseMigrationReport({
-            ...legacy,
-            schema: "cms.integration.migration-report.v4",
-            policyEvaluation: evaluateMigrationReportAgainstPolicy(legacy, permissivePolicy, "minor"),
-            operationalEvidence: {
-                downtime: { status: "not-measured" },
-                drain: {},
-                rollback: { capability: legacy.rollback, verified: false },
-                pointOfNoReturn: { phase: legacy.pointOfNoReturn, observation: "not-observed" },
-                cleanup: { observed: legacy.delayedCleanupVerified, evidenceDigest: DIGEST_B },
-            },
+        const unsupported = parseMigrationReport({
+            ...report,
             cutoverEvidence: {
                 cmsMediated: { outcome: "not-supported" },
                 providerDirect: { outcome: "not-supported" },
@@ -89,7 +104,7 @@ describe("migration report policy strategies", () => {
             },
         });
         const strict = evaluateMigrationReportAgainstPolicy(
-            report,
+            unsupported,
             policy({ cmsCutover: true, providerCutover: true }),
             "minor",
         );
@@ -107,39 +122,41 @@ describe("migration report policy strategies", () => {
             satisfied: false,
             observed: "not-supported",
         });
-        expect(evaluateMigrationReportAgainstPolicy(report, permissivePolicy, "minor").checks).not.toContainEqual(
+        expect(evaluateMigrationReportAgainstPolicy(unsupported, permissivePolicy, "minor").checks).not.toContainEqual(
             expect.objectContaining({ check: "cms-mediated-cutover" }),
         );
     });
 
-    test("accepts both legacy and current cleanup outcomes, then applies the selected policy", () => {
-        const current = parseMigrationReport({
-            ...migrationReport(),
-            delayedCleanupVerified: false,
-            outcome: "passed",
+    test("applies delayed-cleanup policy to operational evidence", () => {
+        const report = migrationReport();
+        const withoutCleanup = parseMigrationReport({
+            ...report,
+            operationalEvidence: {
+                ...report.operationalEvidence,
+                cleanup: { observed: false },
+            },
         });
-        const legacy = parseMigrationReport({ ...migrationReport(), delayedCleanupVerified: false, outcome: "failed" });
-
-        for (const report of [current, legacy]) {
-            expect(evaluateMigrationReportAgainstPolicy(report, policy({}), "minor")).toMatchObject({
-                applicable: true,
-                satisfied: true,
-                reasons: [],
-            });
-            expect(evaluateMigrationReportAgainstPolicy(report, policy({ cleanup: true }), "minor")).toMatchObject({
-                applicable: true,
-                satisfied: false,
-                reasons: ["delayed-cleanup-evidence-missing"],
-            });
-        }
+        expect(evaluateMigrationReportAgainstPolicy(withoutCleanup, policy({}), "minor")).toMatchObject({
+            applicable: true,
+            satisfied: true,
+            reasons: [],
+        });
+        expect(evaluateMigrationReportAgainstPolicy(withoutCleanup, policy({ cleanup: true }), "minor")).toMatchObject({
+            applicable: true,
+            satisfied: false,
+            reasons: ["delayed-cleanup-evidence-missing"],
+        });
     });
 
     test("returns deterministic checks and reasons and exposes a fail-closed assertion", () => {
+        const base = migrationReport();
         const report = parseMigrationReport({
-            ...migrationReport(),
-            rollback: "unavailable",
-            delayedCleanupVerified: false,
-            outcome: "passed",
+            ...base,
+            operationalEvidence: {
+                ...base.operationalEvidence,
+                rollback: { capability: "unavailable", verified: false },
+                cleanup: { observed: false },
+            },
         });
         const first = evaluateMigrationReportAgainstPolicy(
             report,

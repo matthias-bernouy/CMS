@@ -1,10 +1,5 @@
-import type { LegacyMigrationReportV1, MigrationReport } from "../../../interfaces/reports/migration";
-import {
-    MIGRATION_REPORT_SCHEMA,
-    MIGRATION_REPORT_V2_SCHEMA,
-    MIGRATION_REPORT_V3_SCHEMA,
-    MIGRATION_REPORT_V4_SCHEMA,
-} from "../../../interfaces/reports/migration";
+import type { MigrationReport } from "../../../interfaces/reports/migration";
+import { MIGRATION_REPORT_SCHEMA } from "../../../interfaces/reports/migration";
 import { pinnedRunner, parseVerificationPolicyIdentity } from "../../runner";
 import { IntegrationVerificationContractError } from "../../validation/errors";
 import { assertContractIJson, strictRecord } from "../../validation/structure";
@@ -12,7 +7,6 @@ import {
     assertVersionInRange,
     oneOf,
     positiveInteger,
-    requiredBoolean,
     sha256Digest,
     stableIdentifier,
     supportedVersionRange,
@@ -21,7 +15,7 @@ import { identifyCanonicalVerificationContract } from "../../verification/shared
 import { parseReportHistoryFields, parseReportProvenance, parseVersionDigestReference } from "../shared";
 import { assertMigrationPolicyEvaluationMatchesReport, parseMigrationPolicyEvaluation } from "./policyEvaluation";
 import { assertMigrationOutcome, parseMigrationChecks, parseMigrationCutover } from "./results";
-import { assertMigrationOperationalEvidenceMatchesReport, parseMigrationOperationalEvidence } from "./operational";
+import { parseMigrationOperationalEvidence } from "./operational";
 import { assertMigrationCutoverEvidenceMatchesReport, parseMigrationCutoverEvidence } from "./cutoverEvidence";
 
 const COMMON_FIELDS = [
@@ -45,87 +39,36 @@ const COMMON_FIELDS = [
     "environmentDigest",
     "checks",
     "cutover",
-    "rollback",
-    "pointOfNoReturn",
-    "delayedCleanupVerified",
+    "policyEvaluation",
+    "operationalEvidence",
+    "cutoverEvidence",
     "outcome",
     "provenance",
 ] as const;
-const V1_FIELDS = ["schema", ...COMMON_FIELDS] as const;
-const V2_FIELDS = ["schema", ...COMMON_FIELDS, "policyEvaluation"] as const;
-const V3_FIELDS = ["schema", ...COMMON_FIELDS, "policyEvaluation", "operationalEvidence"] as const;
-const V4_FIELDS = ["schema", ...COMMON_FIELDS, "policyEvaluation", "operationalEvidence", "cutoverEvidence"] as const;
+const FIELDS = ["schema", ...COMMON_FIELDS] as const;
 
 export function parseMigrationReport(value: unknown): MigrationReport {
     assertContractIJson(value);
     const schema = schemaOf(value);
-    if (
-        schema !== MIGRATION_REPORT_SCHEMA &&
-        schema !== MIGRATION_REPORT_V2_SCHEMA &&
-        schema !== MIGRATION_REPORT_V3_SCHEMA &&
-        schema !== MIGRATION_REPORT_V4_SCHEMA
-    ) {
+    if (schema !== MIGRATION_REPORT_SCHEMA) {
         throw new IntegrationVerificationContractError(
             "invalid_schema",
-            `migrationReport.schema must be ${MIGRATION_REPORT_SCHEMA}, ${MIGRATION_REPORT_V2_SCHEMA}, ${MIGRATION_REPORT_V3_SCHEMA}, or ${MIGRATION_REPORT_V4_SCHEMA}`,
+            `migrationReport.schema must be ${MIGRATION_REPORT_SCHEMA}`,
             "migrationReport.schema",
         );
     }
-    const input = strictRecord(value, "migrationReport", fieldsForSchema(schema));
-    const fields = parseMigrationReportFields(input);
-    const report: MigrationReport =
-        schema === MIGRATION_REPORT_SCHEMA
-            ? { schema: MIGRATION_REPORT_SCHEMA, ...fields }
-            : schema === MIGRATION_REPORT_V2_SCHEMA
-              ? {
-                    schema: MIGRATION_REPORT_V2_SCHEMA,
-                    ...fields,
-                    policyEvaluation: parseMigrationPolicyEvaluation(input.policyEvaluation),
-                }
-              : schema === MIGRATION_REPORT_V3_SCHEMA
-                ? {
-                      schema: MIGRATION_REPORT_V3_SCHEMA,
-                      ...fields,
-                      policyEvaluation: parseMigrationPolicyEvaluation(input.policyEvaluation),
-                      operationalEvidence: parseMigrationOperationalEvidence(input.operationalEvidence),
-                  }
-                : {
-                      schema: MIGRATION_REPORT_V4_SCHEMA,
-                      ...fields,
-                      policyEvaluation: parseMigrationPolicyEvaluation(input.policyEvaluation),
-                      operationalEvidence: parseMigrationOperationalEvidence(input.operationalEvidence),
-                      cutoverEvidence: parseMigrationCutoverEvidence(input.cutoverEvidence),
-                  };
+    const input = strictRecord(value, "migrationReport", FIELDS);
+    const report: MigrationReport = {
+        schema: MIGRATION_REPORT_SCHEMA,
+        ...parseMigrationReportFields(input),
+    };
     assertMigrationOutcome(report);
-    if (report.schema !== MIGRATION_REPORT_SCHEMA) {
-        assertMigrationPolicyEvaluationMatchesReport(report);
-    }
-    if (report.schema === MIGRATION_REPORT_V3_SCHEMA || report.schema === MIGRATION_REPORT_V4_SCHEMA) {
-        assertMigrationOperationalEvidenceMatchesReport(report);
-    }
-    if (report.schema === MIGRATION_REPORT_V4_SCHEMA) {
-        assertMigrationCutoverEvidenceMatchesReport(report);
-    }
+    assertMigrationPolicyEvaluationMatchesReport(report);
+    assertMigrationCutoverEvidenceMatchesReport(report);
     return report;
 }
 
-function fieldsForSchema(
-    schema:
-        | typeof MIGRATION_REPORT_SCHEMA
-        | typeof MIGRATION_REPORT_V2_SCHEMA
-        | typeof MIGRATION_REPORT_V3_SCHEMA
-        | typeof MIGRATION_REPORT_V4_SCHEMA,
-): readonly string[] {
-    if (schema === MIGRATION_REPORT_SCHEMA) {
-        return V1_FIELDS;
-    }
-    if (schema === MIGRATION_REPORT_V2_SCHEMA) {
-        return V2_FIELDS;
-    }
-    return schema === MIGRATION_REPORT_V3_SCHEMA ? V3_FIELDS : V4_FIELDS;
-}
-
-function parseMigrationReportFields(input: Record<string, unknown>): Omit<LegacyMigrationReportV1, "schema"> {
+function parseMigrationReportFields(input: Record<string, unknown>): Omit<MigrationReport, "schema"> {
     const source = parseVersionDigestReference(input.source, "migrationReport.source");
     const target = parseVersionDigestReference(input.target, "migrationReport.target");
     const supportedSourceRange = supportedVersionRange(
@@ -159,13 +102,9 @@ function parseMigrationReportFields(input: Record<string, unknown>): Omit<Legacy
         environmentDigest: sha256Digest(input.environmentDigest, "migrationReport.environmentDigest"),
         checks: parseMigrationChecks(input.checks),
         cutover: parseMigrationCutover(input.cutover),
-        rollback: oneOf(input.rollback, "migrationReport.rollback", [
-            "available",
-            "unavailable",
-            "not-applicable",
-        ] as const),
-        pointOfNoReturn: stableIdentifier(input.pointOfNoReturn, "migrationReport.pointOfNoReturn"),
-        delayedCleanupVerified: requiredBoolean(input.delayedCleanupVerified, "migrationReport.delayedCleanupVerified"),
+        policyEvaluation: parseMigrationPolicyEvaluation(input.policyEvaluation),
+        operationalEvidence: parseMigrationOperationalEvidence(input.operationalEvidence),
+        cutoverEvidence: parseMigrationCutoverEvidence(input.cutoverEvidence),
         outcome: oneOf(input.outcome, "migrationReport.outcome", [
             "passed",
             "failed",

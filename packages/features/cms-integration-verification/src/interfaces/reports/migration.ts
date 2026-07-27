@@ -2,9 +2,6 @@ import type { PinnedVerificationRunnerIdentity, VerificationPolicyIdentity } fro
 import type { ReportHistoryFields, ReportProvenance, VersionDigestReference } from "./common";
 
 export const MIGRATION_REPORT_SCHEMA = "cms.integration.migration-report.v1" as const;
-export const MIGRATION_REPORT_V2_SCHEMA = "cms.integration.migration-report.v2" as const;
-export const MIGRATION_REPORT_V3_SCHEMA = "cms.integration.migration-report.v3" as const;
-export const MIGRATION_REPORT_V4_SCHEMA = "cms.integration.migration-report.v4" as const;
 
 export type MigrationCheckResult = Readonly<{
     outcome: "passed" | "failed" | "not-supported" | "not-applicable" | "infrastructure-failure";
@@ -99,37 +96,14 @@ type MigrationReportFields = ReportHistoryFields &
             cmsMediated: "binding-revision" | "expand-in-code" | "not-applicable";
             providerDirect: "provider-cutover" | "expand-in-code" | "not-applicable";
         }>;
-        rollback: "available" | "unavailable" | "not-applicable";
-        pointOfNoReturn: string;
-        delayedCleanupVerified: boolean;
+        policyEvaluation: MigrationReportPolicyEvaluation;
+        operationalEvidence: MigrationOperationalEvidence;
+        cutoverEvidence: MigrationCutoverEvidence;
         outcome: "passed" | "failed" | "infrastructure-failure";
         provenance: ReportProvenance;
     }>;
 
-export type LegacyMigrationReportV1 = MigrationReportFields &
+export type MigrationReport = MigrationReportFields &
     Readonly<{
         schema: typeof MIGRATION_REPORT_SCHEMA;
     }>;
-
-export type MigrationReportV2 = MigrationReportFields &
-    Readonly<{
-        schema: typeof MIGRATION_REPORT_V2_SCHEMA;
-        policyEvaluation: MigrationReportPolicyEvaluation;
-    }>;
-
-export type MigrationReportV3 = MigrationReportFields &
-    Readonly<{
-        schema: typeof MIGRATION_REPORT_V3_SCHEMA;
-        policyEvaluation: MigrationReportPolicyEvaluation;
-        operationalEvidence: MigrationOperationalEvidence;
-    }>;
-
-export type MigrationReportV4 = MigrationReportFields &
-    Readonly<{
-        schema: typeof MIGRATION_REPORT_V4_SCHEMA;
-        policyEvaluation: MigrationReportPolicyEvaluation;
-        operationalEvidence: MigrationOperationalEvidence;
-        cutoverEvidence: MigrationCutoverEvidence;
-    }>;
-
-export type MigrationReport = LegacyMigrationReportV1 | MigrationReportV2 | MigrationReportV3 | MigrationReportV4;

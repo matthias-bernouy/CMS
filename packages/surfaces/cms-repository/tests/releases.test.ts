@@ -192,7 +192,7 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
         provenance: { actor: "private-actor", reason: "Legacy backfill" },
     };
     const migration = {
-        schema: "cms.integration.migration-report.v4" as const,
+        schema: "cms.integration.migration-report.v1" as const,
         reportId: "migration-1",
         revisionType: "root" as const,
         origin: "admission" as const,
@@ -218,9 +218,6 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
             resumption: { outcome: "not-supported" as const },
         },
         cutover: { cmsMediated: "binding-revision" as const, providerDirect: "expand-in-code" as const },
-        rollback: "available" as const,
-        pointOfNoReturn: "cleanup",
-        delayedCleanupVerified: true,
         outcome: "passed" as const,
         policyEvaluation: {
             releaseLevel: "minor" as const,

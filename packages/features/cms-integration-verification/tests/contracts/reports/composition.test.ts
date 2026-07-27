@@ -74,7 +74,6 @@ describe("release admission decision composition", () => {
         const input = await decisionInput(compatibility, [migrationRequirement()]);
         const report = parseMigrationReport({
             ...migrationReport(),
-            schema: "cms.integration.migration-report.v2",
             statefulChangeSelectionDigest: input.statefulChanges.digest,
             policyEvaluation: {
                 releaseLevel: "minor",

@@ -1,4 +1,4 @@
-import type { MigrationOperationalEvidence, MigrationReport } from "../../../interfaces/reports/migration";
+import type { MigrationOperationalEvidence } from "../../../interfaces/reports/migration";
 import { strictRecord } from "../../validation/structure";
 import { nonNegativeInteger, oneOf, requiredBoolean, sha256Digest, stableIdentifier } from "../../validation/values";
 import { IntegrationVerificationContractError } from "../../validation/errors";
@@ -18,19 +18,6 @@ export function parseMigrationOperationalEvidence(value: unknown): MigrationOper
         pointOfNoReturn: parsePointOfNoReturn(input.pointOfNoReturn),
         cleanup: parseCleanup(input.cleanup),
     };
-}
-
-export function assertMigrationOperationalEvidenceMatchesReport(
-    report: MigrationReport & Readonly<{ operationalEvidence: MigrationOperationalEvidence }>,
-): void {
-    const evidence = report.operationalEvidence;
-    if (
-        evidence.rollback.capability !== report.rollback ||
-        evidence.pointOfNoReturn.phase !== report.pointOfNoReturn ||
-        evidence.cleanup.observed !== report.delayedCleanupVerified
-    ) {
-        throw invalid("migrationReport.operationalEvidence", "must match the report's durable operational fields");
-    }
 }
 
 function parseDowntime(value: unknown): MigrationOperationalEvidence["downtime"] {
