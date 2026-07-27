@@ -5,6 +5,8 @@ import type {
 import type { IntegrationPackageEnvelopeV1, IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import type {
     AdmissionInputSnapshotV1,
+    BoundIntegrationVerificationAuthorSuiteV1,
+    IntegrationVerificationEnvelopeV1,
     MigrationVerificationInputV1,
     ReleaseAdmissionPolicySnapshotV1,
     ValidatedIntegrationCandidateEnvelopeV1,
@@ -75,6 +77,7 @@ export interface RepositoryCandidatePublicationFinalizer {
 export type RepositoryCandidateWorkerRoutesConfig = Readonly<{
     store: IntegrationRegistryCandidateStore;
     packageSource?: Pick<IntegrationPackageSource, "getPackage">;
+    authorSuites?: RepositoryCandidateAuthorSuiteResolver;
     capabilityAuthority: RepositoryCandidateCapabilityAuthority;
     maxBodyBytes: number;
     maxResultBodyBytes: number;
@@ -84,6 +87,16 @@ export type RepositoryCandidateWorkerRoutesConfig = Readonly<{
     createAttemptId(): string;
     publication?: RepositoryCandidatePublicationFinalizer;
 }>;
+
+export interface RepositoryCandidateAuthorSuiteResolver {
+    resolve(
+        input: Readonly<{
+            candidate: IntegrationRegistryCandidateRecord;
+            verification: IntegrationVerificationEnvelopeV1;
+            admission: AdmissionInputSnapshotV1;
+        }>,
+    ): Promise<readonly BoundIntegrationVerificationAuthorSuiteV1[]>;
+}
 
 export type RepositoryCandidateExactMigrationPackage = Readonly<{
     digest: string;

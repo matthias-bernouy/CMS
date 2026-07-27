@@ -58,6 +58,7 @@ import {
     createProductionRepositoryCandidateProtocol,
     type ProductionRepositoryCandidateProtocolConfig,
 } from "./core/candidates/composition";
+import { createRepositoryCandidateAuthorSuiteResolver } from "./core/candidates/authorSuites";
 import { readRepositoryFilesystemCapacity } from "./core/filesystemCapacity";
 import { ObservedIntegrationRegistryStablePromoter } from "./core/observability/promoter";
 import { ObservedIntegrationRegistryPublisher } from "./core/observability/publisher";
@@ -239,6 +240,7 @@ export async function createProductionRepositoryManagement(input: {
         ...input.candidateProtocol,
         store: candidateStore,
         packageSource: new SnapshotIntegrationPackageSource({ snapshots }),
+        authorSuites: createRepositoryCandidateAuthorSuiteResolver(verificationContracts),
         ...(candidatePlanner ? { plan: (request) => candidatePlanner.plan(request) } : {}),
         ...(candidateFinalizer
             ? {

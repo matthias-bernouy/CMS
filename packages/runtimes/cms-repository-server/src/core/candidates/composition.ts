@@ -32,6 +32,7 @@ export type ProductionRepositoryCandidateProtocolConfig = Readonly<{
     plan?: RepositoryCandidateAdmissionPlanner;
     publication?: RepositoryCandidatePublicationFinalizer;
     packageSource?: RepositoryCandidateWorkerRoutesConfig["packageSource"];
+    authorSuites?: RepositoryCandidateWorkerRoutesConfig["authorSuites"];
     store?: FsIntegrationRegistryCandidateStore;
 }>;
 
@@ -69,6 +70,7 @@ export async function createProductionRepositoryCandidateProtocol(
         createJobId: () => randomUUID(),
         createAttemptId: () => randomUUID(),
         ...(config.packageSource ? { packageSource: config.packageSource } : {}),
+        ...(config.authorSuites ? { authorSuites: config.authorSuites } : {}),
         ...(config.publication ? { publication: config.publication } : {}),
     };
     return Object.freeze({

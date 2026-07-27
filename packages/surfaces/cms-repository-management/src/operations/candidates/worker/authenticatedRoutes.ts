@@ -1,4 +1,5 @@
 import type { Runner } from "@bernouy/http-runner";
+import { validateBoundIntegrationVerificationAuthorSuites } from "@bernouy/cms-integration-verification";
 import { readCanonicalClaimRequest, readCanonicalRenewRequest, readCanonicalResultCapabilityRequest } from "../body";
 import {
     projectCandidateStatus,
@@ -61,6 +62,16 @@ async function claimJob(request: Request, config: RepositoryCandidateWorkerRoute
             version: current.version,
             packageDigest: current.packageDigest,
         });
+        const authorSuites = await validateBoundIntegrationVerificationAuthorSuites(
+            config.authorSuites
+                ? await config.authorSuites.resolve({
+                      candidate: current,
+                      verification: objects.verification,
+                      admission: objects.admission,
+                  })
+                : [],
+            objects.admission,
+        );
         const now = canonicalWorkerTimestamp(config.now());
         const record = await config.store.claim(input.candidateId, {
             expectedRevision: input.expectedRevision,
@@ -77,6 +88,7 @@ async function claimJob(request: Request, config: RepositoryCandidateWorkerRoute
                 verification: objects.verification,
                 policy: objects.policy,
                 admission: objects.admission,
+                authorSuites,
                 migrationInputs: objects.migrationInputs,
                 ...(migrationPackages.length > 0 ? { migrationPackages } : {}),
             },

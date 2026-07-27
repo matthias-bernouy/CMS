@@ -3,6 +3,7 @@ import {
     computeIntegrationVerificationDigest,
     identifyMigrationVerificationInput,
     identifyReleaseAdmissionPolicySnapshot,
+    validateBoundIntegrationVerificationAuthorSuites,
     validateAdmissionInputSnapshotForPolicy,
     validateIntegrationVerificationEnvelope,
 } from "@bernouy/cms-integration-verification";
@@ -19,11 +20,22 @@ export async function parseExactWorkload(
 ): Promise<ExactVerificationWorkload> {
     try {
         const optionalFields = optionalWorkloadFields(value);
-        const input = record(value, ["package", "verification", "policy", "admission", ...optionalFields]);
+        const input = record(value, [
+            "package",
+            "verification",
+            "policy",
+            "admission",
+            "authorSuites",
+            ...optionalFields,
+        ]);
         const packageEnvelope = validateIntegrationPackageEnvelope(input.package, { requireReleaseNotes: true });
         const verification = validateIntegrationVerificationEnvelope(input.verification);
         const policy = await identifyReleaseAdmissionPolicySnapshot(input.policy);
         const admission = await validateAdmissionInputSnapshotForPolicy(input.admission, policy.snapshot);
+        const authorSuites = await validateBoundIntegrationVerificationAuthorSuites(
+            input.authorSuites,
+            admission.snapshot,
+        );
         const rawMigrationInputs = input.migrationInputs ?? [];
         if (!Array.isArray(rawMigrationInputs)) {
             throw new TypeError("Candidate migration input plan must be an array");
@@ -61,6 +73,7 @@ export async function parseExactWorkload(
             verification,
             policy: policy.snapshot,
             admission: admission.snapshot,
+            authorSuites,
             migrationInputs,
             migrationPackages,
         });

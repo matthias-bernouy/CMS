@@ -79,6 +79,7 @@ export {
     type RepositoryCandidateAdmissionCoordinator,
     type RepositoryCandidateAdmissionPlan,
     type RepositoryCandidateAdmissionPlanner,
+    type RepositoryCandidateAuthorSuiteResolver,
     type RepositoryCandidatePublicationFinalizer,
     type RepositoryCandidateManagementRoutesConfig,
     type RepositoryCandidateWorkerRoutesConfig,

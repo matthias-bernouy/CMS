@@ -68,6 +68,7 @@ describe("private repository candidate protocol", () => {
         const claimed = await claim.json();
         expect(claimed).not.toHaveProperty("capability");
         expect(claimed.workload).toHaveProperty("admission");
+        expect(claimed.workload.authorSuites).toEqual([]);
 
         const lease = claimed.candidate.lease;
         const result = await candidateJobResult(queued.candidateId, fixture.candidate, {

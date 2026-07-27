@@ -101,6 +101,38 @@ describe("candidate worker HTTP client", () => {
 
         await expect(client.claim(queued)).rejects.toMatchObject({ kind: "invalid-response", retryable: false });
     });
+
+    test("rejects missing, extra, or substituted author suite closures", async () => {
+        const queued = await queuedCandidate();
+        const claimed = await claimedJob();
+        const exact = claimed.workload.authorSuites[0]!;
+        const invalidSets = [
+            [],
+            [exact, { ...exact, suiteId: "extra-suite" }],
+            [
+                {
+                    ...exact,
+                    content: {
+                        ...exact.content,
+                        sources: exact.content.sources.map((entry, index) =>
+                            index === 0
+                                ? {
+                                      ...entry,
+                                      file: { encoding: "utf8" as const, content: "export default false;" },
+                                  }
+                                : entry,
+                        ),
+                    },
+                },
+            ],
+        ];
+        for (const authorSuites of invalidSets) {
+            const client = clientForResponses([
+                json({ candidate: claimed.candidate, workload: { ...claimed.workload, authorSuites } }, 201),
+            ]);
+            await expect(client.claim(queued)).rejects.toMatchObject({ kind: "invalid-response", retryable: false });
+        }
+    });
 });
 
 function clientForResponses(responses: Response[]) {

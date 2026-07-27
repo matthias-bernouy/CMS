@@ -6,6 +6,7 @@ import {
 import {
     computeIntegrationVerificationDigest,
     identifyMigrationVerificationInput,
+    validateBoundIntegrationVerificationAuthorSuites,
     validateAdmissionInputSnapshotForPolicy,
     validateIntegrationVerificationEnvelope,
     validateReleaseAdmissionPolicySnapshot,
@@ -44,6 +45,7 @@ export async function parseCanonicalVerificationSandboxInput(
         "verification",
         "policy",
         "admission",
+        "authorSuites",
         ...(hasMigrationInputs ? ["migrationInputs"] : []),
         ...(hasMigrationPackages ? ["migrationPackages"] : []),
         "attempt",
@@ -52,6 +54,10 @@ export async function parseCanonicalVerificationSandboxInput(
     const verification = validateIntegrationVerificationEnvelope(workload.verification);
     const policy = await validateReleaseAdmissionPolicySnapshot(workload.policy);
     const admission = await validateAdmissionInputSnapshotForPolicy(workload.admission, policy);
+    const authorSuites = await validateBoundIntegrationVerificationAuthorSuites(
+        workload.authorSuites,
+        admission.snapshot,
+    );
     const attempt = parseAttempt(workload.attempt);
     const rawMigrationInputs = workload.migrationInputs ?? [];
     if (!Array.isArray(rawMigrationInputs)) {
@@ -85,6 +91,7 @@ export async function parseCanonicalVerificationSandboxInput(
             verification,
             policy,
             admission: admission.snapshot,
+            authorSuites,
             migrationInputs,
             migrationPackages,
             attempt,

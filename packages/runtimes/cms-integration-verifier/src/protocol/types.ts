@@ -1,6 +1,7 @@
 import type { IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
 import type {
     AdmissionInputSnapshotV1,
+    BoundIntegrationVerificationAuthorSuiteV1,
     CandidateAdmissionJobResultV1,
     IntegrationVerificationEnvelopeV1,
     ReleaseAdmissionPolicySnapshotV1,
@@ -52,6 +53,7 @@ export type ExactVerificationWorkload = Readonly<{
     verification: IntegrationVerificationEnvelopeV1;
     policy: ReleaseAdmissionPolicySnapshotV1;
     admission: AdmissionInputSnapshotV1;
+    authorSuites: readonly BoundIntegrationVerificationAuthorSuiteV1[];
     migrationInputs: readonly MigrationVerificationInputV1[];
     migrationPackages: readonly ExactMigrationPackage[];
 }>;

@@ -1,6 +1,8 @@
 import { computeIntegrationPackageDigest } from "@bernouy/cms-integration-packages";
 import {
     computeIntegrationVerificationDigest,
+    buildIntegrationVerificationSuiteContent,
+    identifyIntegrationVerificationSuiteContent,
     identifyReleaseAdmissionPolicySnapshot,
     type AdmissionInputSnapshotV1,
     type IntegrationVerificationEnvelopeV1,
@@ -32,6 +34,9 @@ export async function workloadFixture(): Promise<ClaimedVerificationJob["workloa
         files: { "tests/implementation.ts": { encoding: "utf8", content: "export default true;" } },
     };
     const verificationDigest = await computeIntegrationVerificationDigest(verification);
+    const implementation = await identifyIntegrationVerificationSuiteContent(
+        await buildIntegrationVerificationSuiteContent(verification, "conformance", "implementation"),
+    );
     const policy = await policyFixture();
     const policyDigest = (await identifyReleaseAdmissionPolicySnapshot(policy)).digest;
     const admission: AdmissionInputSnapshotV1 = {
@@ -50,7 +55,7 @@ export async function workloadFixture(): Promise<ClaimedVerificationJob["workloa
         dependencies: [],
         activeContracts: [],
         suites: [
-            { suiteId: "implementation", source: "author-conformance", contentDigest: DIGEST_B },
+            { suiteId: "implementation", source: "author-conformance", contentDigest: implementation.digest },
             { suiteId: "platform-install", source: "platform", contentDigest: DIGEST_C },
         ],
         catalogRevision: { revisionId: "catalog-1", digest: DIGEST_A },
@@ -60,7 +65,22 @@ export async function workloadFixture(): Promise<ClaimedVerificationJob["workloa
             evaluatorInputDigest: DIGEST_C,
         },
     };
-    return { package: packageValue, verification, policy, admission, migrationInputs: [], migrationPackages: [] };
+    return {
+        package: packageValue,
+        verification,
+        policy,
+        admission,
+        authorSuites: [
+            {
+                suiteId: "implementation",
+                source: "author-conformance",
+                contentDigest: implementation.digest,
+                content: implementation.content,
+            },
+        ],
+        migrationInputs: [],
+        migrationPackages: [],
+    };
 }
 
 export async function queuedCandidate(): Promise<CandidateStatusProjection> {
