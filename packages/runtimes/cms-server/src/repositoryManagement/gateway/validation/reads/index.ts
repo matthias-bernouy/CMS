@@ -30,6 +30,13 @@ const RECOVERY_CODES = [
     "publication-quarantined",
     "stable-promotion-replayed",
     "stable-promotion-quarantined",
+    "version-eligibility-replayed",
+    "version-eligibility-quarantined",
+    "schema-baseline-import-replayed",
+    "schema-baseline-import-quarantined",
+    "verification-backfill-replayed",
+    "verification-backfill-quarantined",
+    "release-report-history-quarantined",
     "abandoned-staging-quarantined",
     "orphan-version-quarantined",
 ] as const;

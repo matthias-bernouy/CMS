@@ -187,6 +187,38 @@ describe("HTTP repository management gateway DTO validation", () => {
         ]);
     });
 
+    test("accepts every recovery diagnostic emitted by the registry", async () => {
+        const codes = [
+            "publication-replayed",
+            "publication-quarantined",
+            "stable-promotion-replayed",
+            "stable-promotion-quarantined",
+            "version-eligibility-replayed",
+            "version-eligibility-quarantined",
+            "schema-baseline-import-replayed",
+            "schema-baseline-import-quarantined",
+            "verification-backfill-replayed",
+            "verification-backfill-quarantined",
+            "release-report-history-quarantined",
+            "abandoned-staging-quarantined",
+            "orphan-version-quarantined",
+        ] as const;
+        const recovery = codes.map((code) => ({
+            code,
+            message: `Recovered ${code}`,
+            operationId: `operation-${code}`,
+            kind: TEST_KIND,
+            version: TEST_VERSION,
+        }));
+
+        const response = await gateway(
+            oneResponse({ health: "degraded", diagnostics: [], quarantined: [], recovery }),
+        ).diagnostics();
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ health: "degraded", diagnostics: [], quarantined: [], recovery });
+    });
+
     test("preserves a sanitized candidate report absence", async () => {
         const response = await gateway(
             oneResponse({ code: "candidate_not_found", error: "Private candidate path did not exist" }, 404),
