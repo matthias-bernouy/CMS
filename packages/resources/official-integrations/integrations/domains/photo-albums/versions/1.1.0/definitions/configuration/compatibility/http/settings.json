@@ -1,0 +1,31 @@
+[
+    {
+        "route": "/settings",
+        "method": "GET",
+        "requiredInputs": [],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/settings",
+        "method": "POST",
+        "requiredInputs": [
+            "allowDownloads",
+            "defaultPageSize",
+            "galleryTitle",
+            "maxPhotosPerAlbum",
+            "showCaptions",
+            "showTakenAt",
+            "version"
+        ],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/setup",
+        "method": "POST",
+        "requiredInputs": [],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    }
+]

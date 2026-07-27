@@ -1,0 +1,30 @@
+[
+    {
+        "route": "/public/album",
+        "method": "GET",
+        "requiredInputs": ["slug"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/public/albums",
+        "method": "GET",
+        "requiredInputs": [],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/public/categories",
+        "method": "GET",
+        "requiredInputs": [],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/public/photo",
+        "method": "GET",
+        "requiredInputs": ["id"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    }
+]
