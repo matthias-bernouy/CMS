@@ -1,6 +1,6 @@
-import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
+import { assertIJsonValue, canonicalJsonBytes, parseStrictJsonDocument } from "@bernouy/cms-integration-packages";
 import { validateIntegrationCandidateEnvelope } from "@bernouy/cms-integration-verification";
-import { parseStrictRepositoryJson } from "../strictJson";
+import { REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES } from "../transport";
 import { canonicalText } from "../validation/helpers";
 
 const CANDIDATE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
@@ -16,7 +16,9 @@ export type PreparedRepositoryCandidate = Readonly<{
 
 export async function prepareRepositoryCandidate(document: Uint8Array): Promise<PreparedRepositoryCandidate> {
     const bytes = document.slice();
-    const candidate = await validateIntegrationCandidateEnvelope(parseStrictRepositoryJson(bytes));
+    const value = parseStrictJsonDocument(bytes, REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES);
+    assertIJsonValue(value);
+    const candidate = await validateIntegrationCandidateEnvelope(value);
     const canonical = canonicalJsonBytes(candidate.envelope);
     if (!equalBytes(bytes, canonical)) {
         throw new TypeError("Repository candidate must be canonical");

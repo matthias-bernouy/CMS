@@ -1,4 +1,4 @@
-import { parseStrictRepositoryJson } from "./strictJson";
+import { assertIJsonValue, parseStrictJsonDocument } from "@bernouy/cms-integration-packages";
 
 export const REPOSITORY_MANAGEMENT_RESPONSE_LIMIT_BYTES = 8 * 1_024 * 1_024;
 export const REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES = 32 * 1_024 * 1_024;
@@ -131,7 +131,9 @@ async function readBoundedBody(body: ReadableStream<Uint8Array> | null, signal: 
 
 function parseJson(bytes: Uint8Array): unknown {
     try {
-        return parseStrictRepositoryJson(bytes);
+        const value = parseStrictJsonDocument(bytes, REPOSITORY_MANAGEMENT_RESPONSE_LIMIT_BYTES);
+        assertIJsonValue(value);
+        return value;
     } catch {
         throw new RepositoryManagementTransportError();
     }
