@@ -322,7 +322,7 @@ export class CommerceOfferPriceForm extends Composition {
                 const message = this.enrollmentRequired
                     ? this.text(
                           "first-enrollment-consent-required-message",
-                          "Tu dois accepter les conditions vendeur Courtside et l’accord Stripe pour continuer.",
+                          "Tu dois accepter les conditions vendeur Courtside et les conditions du service de paiement pour continuer.",
                       )
                     : this.text(
                           "seller-terms-consent-required-message",
@@ -588,15 +588,16 @@ export class CommerceOfferPriceForm extends Composition {
         this.setProfileLabel("city", "city-label", "Ville");
         this.setProfileLabel("countryCode", "country-label", "Pays");
         const publishedTerms = publishedMarketplaceTermsRequirement(this.sellerTermsRequirement);
-        this.consentPrefix.textContent = publishedTerms?.consentText || this.text("consent-prefix", "J’accepte les");
-        this.sellerTermsLink.textContent =
+        const sellerTermsLabel =
             publishedTerms?.label || this.text("seller-terms-label", "conditions vendeur Courtside");
-        this.sellerTermsLink.setAttribute(
-            "href",
+        renderLinkedConsent(
+            this.sellerConsent,
+            publishedTerms?.consentText || `${this.text("consent-prefix", "J’accepte les")} ${sellerTermsLabel}.`,
+            sellerTermsLabel,
             publishedTerms?.page.path || this.getAttribute("seller-terms-url") || "/cgu-cgv",
         );
-        this.stripeConsentPrefix.textContent = this.text("stripe-consent-prefix", "et l’");
-        this.stripeTermsLink.textContent = this.text("stripe-terms-label", "accord de compte connecté Stripe");
+        this.stripeConsentPrefix.textContent = this.text("stripe-consent-prefix", "J’accepte les");
+        this.stripeTermsLink.textContent = this.text("stripe-terms-label", "conditions du service de paiement");
         this.stripeTermsLink.setAttribute(
             "href",
             this.getAttribute("stripe-terms-url") || "https://stripe.com/connect-account/legal",
@@ -850,11 +851,8 @@ export class CommerceOfferPriceForm extends Composition {
     get consentValidation() {
         return this.querySelector("[data-consent-validation]");
     }
-    get consentPrefix() {
-        return this.querySelector("[data-consent-prefix]");
-    }
-    get sellerTermsLink() {
-        return this.querySelector("[data-seller-terms-link]");
+    get sellerConsent() {
+        return this.querySelector("[data-seller-consent]");
     }
     get stripeConsentFragment() {
         return this.querySelector("[data-stripe-consent-fragment]");
@@ -923,6 +921,22 @@ export class CommerceOfferPriceForm extends Composition {
 
 function headersObject(headers) {
     return headers ? Object.fromEntries(new Headers(headers).entries()) : {};
+}
+
+function renderLinkedConsent(container, consentText, documentLabel, documentUrl) {
+    const link = document.createElement("a");
+    link.setAttribute("data-seller-terms-link", "");
+    link.href = documentUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = documentLabel;
+    const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
+    container.replaceChildren();
+    if (start < 0) {
+        container.append(consentText, " ", link);
+        return;
+    }
+    container.append(consentText.slice(0, start), link, consentText.slice(start + documentLabel.length));
 }
 
 function marketplaceTermsRequirement(value) {
