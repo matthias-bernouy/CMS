@@ -25,7 +25,7 @@
     },
     "artifacts": {
         "$files": [
-            "artifacts/blocs/cms-consent-field.json",
+            "artifacts/blocs/consent-field.json",
             "artifacts/sources/primary/definition.json",
             "artifacts/functions/stage-consent-acceptance.json",
             "artifacts/functions/commit-consent-acceptance.json",

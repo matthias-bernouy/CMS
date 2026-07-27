@@ -1,10 +1,10 @@
 {
     "type": "bloc",
     "bloc": {
-        "tag": "cms-consent-field",
+        "tag": "consent-field",
         "name": "Consent field",
         "group": "Consent",
         "description": "Binding-aware, form-associated field for one versioned consent context.",
-        "path": "blocs/cms-consent-field"
+        "path": "blocs/consent-field"
     }
 }

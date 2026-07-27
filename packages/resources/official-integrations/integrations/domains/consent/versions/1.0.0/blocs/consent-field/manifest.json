@@ -1,5 +1,5 @@
 {
-    "default-tag": "cms-consent-field",
+    "default-tag": "consent-field",
     "bloc": "./Bloc.ts",
     "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",

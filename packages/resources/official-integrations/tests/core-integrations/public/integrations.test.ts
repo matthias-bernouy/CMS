@@ -24,7 +24,7 @@ describe("public integrations 1.0.0", () => {
             kind: "consent",
             sourceId: "consent",
             dashboardId: "consent-acceptances",
-            blocTags: ["cms-consent-field"],
+            blocTags: ["consent-field"],
             answers: {
                 id: "consent",
                 enabled: false,

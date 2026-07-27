@@ -4,9 +4,9 @@ import { afterEach, beforeAll, describe, expect, test } from "bun:test";
 import { prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
 import { BindingCore, BINDING_CORE_TAG } from "@bernouy/components/binding";
 
-const tag = "cms-consent-field";
+const tag = "consent-field";
 const versionRoot = resolve(import.meta.dir, "../../../integrations/domains/consent/versions/1.0.0");
-const blocRoot = resolve(versionRoot, "blocs/cms-consent-field");
+const blocRoot = resolve(versionRoot, "blocs/consent-field");
 const originalFetch = globalThis.fetch;
 
 beforeAll(async () => {
@@ -25,12 +25,12 @@ afterEach(() => {
     location.href = "http://localhost/";
 });
 
-describe("cms consent field", () => {
+describe("consent field", () => {
     test("is binding-native and exposes one stable authoring contract", async () => {
         const view = await read("Bloc.ts");
         const editor = await read("BlocEditor.ts");
         const content = await read("default.html");
-        const compiled = await compileBloc("contract-cms-consent-field");
+        const compiled = await compileBloc("contract-consent-field");
 
         expect(view).not.toMatch(/\bfetch\s*\(/);
         expect(content).not.toContain("<cms-binding-core");
@@ -56,10 +56,10 @@ describe("cms consent field", () => {
         expect(content).not.toMatch(/\srequired-label=/);
         expect(view).toContain('this.getAttribute("source-prefix")');
         expect(editor).toContain('attribute: "source-prefix"');
-        expect(compiled.viewJS).toContain('customElements.define("contract-cms-consent-field"');
+        expect(compiled.viewJS).toContain('customElements.define("contract-consent-field"');
         expect(
             validateBloc({
-                tag: "contract-cms-consent-field",
+                tag: "contract-consent-field",
                 viewSource: compiled.viewJS,
                 editorSource: compiled.editorJS,
             }).errors,
@@ -83,7 +83,7 @@ describe("cms consent field", () => {
             } else {
                 wrapper.setAttribute("cms-bind-stop", "");
             }
-            wrapper.innerHTML = (await read("default.html")).replaceAll("cms-consent-field", tag);
+            wrapper.innerHTML = (await read("default.html")).replaceAll("consent-field", tag);
             core.append(wrapper);
             document.body.append(core);
             await settle();
@@ -262,7 +262,7 @@ describe("cms consent field", () => {
 
 async function mountRuntime(): Promise<HTMLElement> {
     const core = document.createElement(BINDING_CORE_TAG);
-    core.innerHTML = (await read("default.html")).replaceAll("cms-consent-field", tag);
+    core.innerHTML = (await read("default.html")).replaceAll("consent-field", tag);
     document.body.append(core);
     return core;
 }

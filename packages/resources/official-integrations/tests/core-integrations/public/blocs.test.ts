@@ -1,6 +1,6 @@
 import { Buffer, File } from "node:buffer";
 import { describe, expect, test } from "bun:test";
-import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
@@ -68,7 +68,7 @@ const expectedBlocs = new Map([
         ],
     ],
     ["commerce-negotiation", ["commerce-negotiation-form", "commerce-negotiation-list"]],
-    ["consent", ["cms-consent-field"]],
+    ["consent", ["consent-field"]],
     [
         "sales-configurator",
         [
@@ -99,6 +99,13 @@ describe("public integration blocs 1.0.0", () => {
                 expect(bloc.source?.["manifest.json"]).toBeTruthy();
                 expect(bloc.source?.["default.html"]).toBeTruthy();
                 expect(bloc.source?.["Bloc.ts"]).toBeTruthy();
+                expect(
+                    validateBloc({
+                        tag: bloc.tag,
+                        viewSource: bloc.viewJS,
+                        editorSource: bloc.editorJS,
+                    }).errors,
+                ).toEqual([]);
 
                 const built = await prepare_bloc(
                     new File([bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),

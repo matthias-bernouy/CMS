@@ -82,9 +82,9 @@ export async function consentSignupHarness(enabled = true) {
         triggers,
         sourceResolveSecret: createSecretResolver(secrets),
     });
-    const bloc = importedBlocs.find((candidate) => candidate.tag === "cms-consent-field");
+    const bloc = importedBlocs.find((candidate) => candidate.tag === "consent-field");
     if (!bloc) {
-        throw new Error("the Consent installation did not import cms-consent-field");
+        throw new Error("the Consent installation did not import consent-field");
     }
     return {
         backend,

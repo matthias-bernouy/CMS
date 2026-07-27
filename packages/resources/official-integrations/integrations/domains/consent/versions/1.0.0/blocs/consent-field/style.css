@@ -1,10 +1,10 @@
-cms-consent-field {
+consent-field {
     display: block;
     color: var(--text-default, currentColor);
     font: inherit;
 }
 
-cms-consent-field .consent-field__requirements {
+consent-field .consent-field__requirements {
     display: grid;
     gap: 0.75rem;
     min-width: 0;
@@ -13,12 +13,12 @@ cms-consent-field .consent-field__requirements {
     border: 0;
 }
 
-cms-consent-field .consent-field__legend {
+consent-field .consent-field__legend {
     margin-block-end: 0.25rem;
     font-weight: 700;
 }
 
-cms-consent-field[appearance="compact"] .consent-field__legend {
+consent-field[appearance="compact"] .consent-field__legend {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -27,7 +27,7 @@ cms-consent-field[appearance="compact"] .consent-field__legend {
     white-space: nowrap;
 }
 
-cms-consent-field .consent-field__item {
+consent-field .consent-field__item {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     gap: 0.6rem;
@@ -36,24 +36,24 @@ cms-consent-field .consent-field__item {
     cursor: pointer;
 }
 
-cms-consent-field [data-consent-copy] {
+consent-field [data-consent-copy] {
     display: inline;
 }
 
-cms-consent-field .consent-field__item input {
+consent-field .consent-field__item input {
     width: 1rem;
     height: 1rem;
     margin-block-start: 0.2em;
     accent-color: var(--primary-base, #176b52);
 }
 
-cms-consent-field .consent-field__item a {
+consent-field .consent-field__item a {
     color: var(--primary-base, #176b52);
     font-weight: 650;
     text-underline-offset: 0.15em;
 }
 
-cms-consent-field .consent-field__new-tab {
+consent-field .consent-field__new-tab {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -66,32 +66,32 @@ cms-consent-field .consent-field__new-tab {
     border: 0;
 }
 
-cms-consent-field .consent-field__status,
-cms-consent-field .consent-field__error,
-cms-consent-field .consent-field__changed,
-cms-consent-field .consent-field__required {
+consent-field .consent-field__status,
+consent-field .consent-field__error,
+consent-field .consent-field__changed,
+consent-field .consent-field__required {
     margin: 0;
     font-size: 0.875rem;
 }
 
-cms-consent-field .consent-field__status {
+consent-field .consent-field__status {
     color: var(--text-muted, #69726d);
 }
 
-cms-consent-field .consent-field__error,
-cms-consent-field .consent-field__changed,
-cms-consent-field .consent-field__required {
+consent-field .consent-field__error,
+consent-field .consent-field__changed,
+consent-field .consent-field__required {
     color: var(--danger-base, #a32626);
 }
 
-cms-consent-field .consent-field__error {
+consent-field .consent-field__error {
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
     align-items: center;
 }
 
-cms-consent-field [data-consent-retry] {
+consent-field [data-consent-retry] {
     min-height: 2rem;
     padding: 0.3rem 0.7rem;
     border: 1px solid currentColor;
@@ -103,20 +103,20 @@ cms-consent-field [data-consent-retry] {
     cursor: pointer;
 }
 
-cms-consent-field [data-consent-editor-preview] {
+consent-field [data-consent-editor-preview] {
     display: none;
 }
 
-cms-binding-core[cms-binding-disabled] cms-consent-field [data-consent-runtime],
-[cms-bind-stop] cms-consent-field [data-consent-runtime],
-cms-consent-field[cms-binding-disabled] [data-consent-runtime],
-cms-consent-field[cms-bind-stop] [data-consent-runtime] {
+cms-binding-core[cms-binding-disabled] consent-field [data-consent-runtime],
+[cms-bind-stop] consent-field [data-consent-runtime],
+consent-field[cms-binding-disabled] [data-consent-runtime],
+consent-field[cms-bind-stop] [data-consent-runtime] {
     display: none !important;
 }
 
-cms-binding-core[cms-binding-disabled] cms-consent-field [data-consent-editor-preview],
-[cms-bind-stop] cms-consent-field [data-consent-editor-preview],
-cms-consent-field[cms-binding-disabled] [data-consent-editor-preview],
-cms-consent-field[cms-bind-stop] [data-consent-editor-preview] {
+cms-binding-core[cms-binding-disabled] consent-field [data-consent-editor-preview],
+[cms-bind-stop] consent-field [data-consent-editor-preview],
+consent-field[cms-binding-disabled] [data-consent-editor-preview],
+consent-field[cms-bind-stop] [data-consent-editor-preview] {
     display: block !important;
 }
