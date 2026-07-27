@@ -49,15 +49,19 @@ export async function queueStoredCandidate(
 ): Promise<IntegrationRegistryCandidateRecord> {
     const current = await requireCandidateRecord(layout, candidateId);
     await readFsIntegrationRegistryCandidateObjects(layout, current);
-    const next = await queueIntegrationRegistryCandidate(current, {
-        ...input,
-        migrationInputs: input.migrationInputs ?? [],
-    });
-    const planning = input.planningArtifacts
-        ? await persistCandidatePlanningArtifacts(layout, input.planningArtifacts)
-        : undefined;
-    const persisted = await persistCandidateAdmissionObjects(layout, input.policy, input.admission);
-    const migrationInputDigests = await persistCandidateMigrationInputs(layout, input.migrationInputs ?? []);
+    const planningArtifacts = input.planningArtifacts;
+    const queueInput = {
+        expectedRevision: input.expectedRevision,
+        now: input.now,
+        policy: input.policy,
+        admission: input.admission,
+        ...(planningArtifacts ? { planningArtifacts } : {}),
+        migrationInputs: [...(input.migrationInputs ?? [])],
+    };
+    const next = await queueIntegrationRegistryCandidate(current, queueInput);
+    const planning = planningArtifacts ? await persistCandidatePlanningArtifacts(layout, planningArtifacts) : undefined;
+    const persisted = await persistCandidateAdmissionObjects(layout, queueInput.policy, queueInput.admission);
+    const migrationInputDigests = await persistCandidateMigrationInputs(layout, queueInput.migrationInputs);
     if (persisted.policyDigest !== next.policyDigest || persisted.admissionInputDigest !== next.admissionInputDigest) {
         corrupt("Candidate queued admission object digests changed during persistence");
     }

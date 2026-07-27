@@ -41,23 +41,25 @@ export async function queueIntegrationRegistryCandidate(
     const policy = await identifyReleaseAdmissionPolicySnapshot(input.policy);
     const admission = await validateAdmissionInputSnapshotForPolicy(input.admission, policy.snapshot);
     assertAdmissionCandidate(record, admission.snapshot.candidate);
+    const planningArtifacts = input.planningArtifacts;
     const migrationInputs = await Promise.all((input.migrationInputs ?? []).map(identifyMigrationVerificationInput));
     const migrationInputDigests = migrationInputs.map((entry) => entry.digest).toSorted();
     if (migrationInputDigests.some((digest, index) => digest === migrationInputDigests[index - 1])) {
         invalidCandidate("Candidate migration inputs must be unique");
     }
-    const planning = input.planningArtifacts
+    const planning = planningArtifacts
         ? {
-              compatibility: await identifyCompatibilityReportV2(input.planningArtifacts.compatibilityReport),
-              stateful: await identifyStatefulChangeSelection(input.planningArtifacts.statefulChanges),
+              compatibility: await identifyCompatibilityReportV2(planningArtifacts.compatibilityReport),
+              stateful: await identifyStatefulChangeSelection(planningArtifacts.statefulChanges),
           }
         : undefined;
-    if (planning && input.planningArtifacts) {
+    if (planning && planningArtifacts) {
         assertPlanningArtifacts(
             record,
             admission.snapshot,
+            policy.snapshot,
             policy.digest,
-            input.planningArtifacts.compatibilityEvaluatorInputDigest,
+            planningArtifacts.compatibilityEvaluatorInputDigest,
             planning.compatibility.report,
             planning.compatibility.digest,
             planning.stateful.selection,
@@ -81,6 +83,7 @@ export async function queueIntegrationRegistryCandidate(
 function assertPlanningArtifacts(
     record: IntegrationRegistryCandidateRecord,
     admission: AdmissionInputSnapshotV1,
+    policy: ReleaseAdmissionPolicySnapshotV1,
     policyDigest: string,
     evaluatorInputDigest: string,
     report: CompatibilityReportV2,
@@ -91,18 +94,27 @@ function assertPlanningArtifacts(
         report.kind !== record.kind ||
         report.version !== record.version ||
         report.packageDigest !== record.packageDigest ||
+        !samePolicyIdentity(report.evaluator, policy.staticEvaluator) ||
         admission.compatibilityRevision.revisionId !== report.reportId ||
         admission.compatibilityRevision.digest !== reportDigest ||
         admission.compatibilityRevision.evaluatorInputDigest !== evaluatorInputDigest ||
         selection.target.kind !== record.kind ||
         selection.target.version !== record.version ||
         selection.target.packageDigest !== record.packageDigest ||
+        !samePolicyIdentity(selection.selector, policy.migrationPolicy) ||
         selection.policySnapshotDigest !== policyDigest ||
         selection.compatibilityReport.revisionId !== report.reportId ||
         selection.compatibilityReport.reportDigest !== reportDigest
     ) {
         invalidCandidate("Candidate planning artifacts do not bind the exact admission input");
     }
+}
+
+function samePolicyIdentity(
+    left: Readonly<{ name: string; version: string }>,
+    right: Readonly<{ name: string; version: string }>,
+): boolean {
+    return left.name === right.name && left.version === right.version;
 }
 
 export function assertAdmissionCandidate(
