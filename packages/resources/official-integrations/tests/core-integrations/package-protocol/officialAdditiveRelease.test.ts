@@ -66,6 +66,8 @@ describe("official Photo Albums additive release", () => {
         expect(parsed.envelope.verification.manifest.runnerRequirements).toEqual([
             OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT,
         ]);
+        expect(parsed.envelope.verification.manifest.behavioralRls).toBe("platform/behavioral-rls.json");
+        expect(parsed.envelope.verification.files["platform/behavioral-rls.json"]?.content).toContain('"probes":[]');
 
         const backfill = await loadOfficialIntegrationVerificationBackfill();
         const historical = selectOfficialVerificationBackfillPackages(packages, backfill.index);

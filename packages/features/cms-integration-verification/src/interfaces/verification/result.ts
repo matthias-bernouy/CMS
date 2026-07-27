@@ -40,6 +40,8 @@ export type VerificationJobResultV1 = Readonly<{
         catalogRevisionDigest: string;
         compatibilityRevisionDigest: string;
         compatibilityEvaluatorInputDigest: string;
+        /** Missing only when the corresponding legacy admission has no behavioral RLS plan. */
+        behavioralRlsPlanDigest?: string;
     }>;
     runner: PinnedVerificationRunnerIdentity;
     environment: Readonly<{

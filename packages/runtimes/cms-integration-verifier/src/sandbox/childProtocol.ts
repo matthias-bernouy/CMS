@@ -10,6 +10,7 @@ import {
     validateAdmissionInputSnapshotForPolicy,
     validateIntegrationVerificationEnvelope,
     validateReleaseAdmissionPolicySnapshot,
+    validateBehavioralRlsPlanBinding,
 } from "@bernouy/cms-integration-verification";
 import { validateIntegrationPackageEnvelope } from "@bernouy/cms-integration-packages";
 import type { VerificationSandboxInput } from "../supervisor";
@@ -46,11 +47,18 @@ export async function parseCanonicalVerificationSandboxInput(
             !Array.isArray(rawWorkload) &&
             "dependencyPackages" in rawWorkload,
     );
+    const hasBehavioralRlsPlan = Boolean(
+        rawWorkload &&
+            typeof rawWorkload === "object" &&
+            !Array.isArray(rawWorkload) &&
+            "behavioralRlsPlan" in rawWorkload,
+    );
     const workload = strictRecord(rawWorkload, [
         "package",
         "verification",
         "policy",
         "admission",
+        ...(hasBehavioralRlsPlan ? ["behavioralRlsPlan"] : []),
         "authorSuites",
         ...(hasDependencyPackages ? ["dependencyPackages"] : []),
         ...(hasMigrationInputs ? ["migrationInputs"] : []),
@@ -61,6 +69,10 @@ export async function parseCanonicalVerificationSandboxInput(
     const verification = validateIntegrationVerificationEnvelope(workload.verification);
     const policy = await validateReleaseAdmissionPolicySnapshot(workload.policy);
     const admission = await validateAdmissionInputSnapshotForPolicy(workload.admission, policy);
+    const behavioralRlsPlan = await validateBehavioralRlsPlanBinding(
+        workload.behavioralRlsPlan,
+        admission.snapshot.behavioralRlsPlan,
+    );
     const authorSuites = await validateBoundIntegrationVerificationAuthorSuites(
         workload.authorSuites,
         admission.snapshot,
@@ -102,6 +114,7 @@ export async function parseCanonicalVerificationSandboxInput(
             verification,
             policy,
             admission: admission.snapshot,
+            ...(behavioralRlsPlan ? { behavioralRlsPlan } : {}),
             authorSuites,
             dependencyPackages,
             migrationInputs,

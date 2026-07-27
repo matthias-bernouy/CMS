@@ -92,6 +92,9 @@ async function claimJob(request: Request, config: RepositoryCandidateWorkerRoute
                 verification: objects.verification,
                 policy: objects.policy,
                 admission: objects.admission,
+                ...(objects.admission.behavioralRlsPlan
+                    ? { behavioralRlsPlan: objects.admission.behavioralRlsPlan }
+                    : {}),
                 authorSuites,
                 ...(dependencyPackages.length > 0 ? { dependencyPackages } : {}),
                 migrationInputs: objects.migrationInputs,

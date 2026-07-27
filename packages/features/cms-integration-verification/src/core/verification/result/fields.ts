@@ -7,6 +7,9 @@ import { compareText } from "../shared";
 
 export function parseBindings(value: unknown): VerificationJobResultV1["bindings"] {
     const field = "jobResult.bindings";
+    const hasBehavioralRlsPlanDigest = Boolean(
+        value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "behavioralRlsPlanDigest"),
+    );
     const input = strictRecord(value, field, [
         "admissionDigest",
         "candidateDigest",
@@ -22,6 +25,7 @@ export function parseBindings(value: unknown): VerificationJobResultV1["bindings
         "catalogRevisionDigest",
         "compatibilityRevisionDigest",
         "compatibilityEvaluatorInputDigest",
+        ...(hasBehavioralRlsPlanDigest ? ["behavioralRlsPlanDigest"] : []),
     ]);
     return {
         admissionDigest: sha256Digest(input.admissionDigest, `${field}.admissionDigest`),
@@ -55,6 +59,14 @@ export function parseBindings(value: unknown): VerificationJobResultV1["bindings
             input.compatibilityEvaluatorInputDigest,
             `${field}.compatibilityEvaluatorInputDigest`,
         ),
+        ...(hasBehavioralRlsPlanDigest
+            ? {
+                  behavioralRlsPlanDigest: sha256Digest(
+                      input.behavioralRlsPlanDigest,
+                      `${field}.behavioralRlsPlanDigest`,
+                  ),
+              }
+            : {}),
     };
 }
 

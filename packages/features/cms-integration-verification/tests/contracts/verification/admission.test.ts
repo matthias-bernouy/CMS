@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
+    BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
+    BEHAVIORAL_RLS_PLAN_SCHEMA,
     identifyAdmissionInputSnapshot,
+    identifyBehavioralRlsPlan,
+    identifyReleaseAdmissionPolicySnapshot,
     parseAdmissionInputSnapshot,
     validateAdmissionInputSnapshot,
     validateAdmissionInputSnapshotForPolicy,
@@ -73,6 +77,59 @@ describe("admission input snapshot", () => {
                 suites: admission.suites.filter((suite) => suite.source !== "author-contract"),
             }),
         ).toThrow(/every and only active author contract/);
+    });
+
+    test("requires a digest-bound behavioral plan exactly under the new platform policy", async () => {
+        const basePolicy = await policySnapshot();
+        const policy = {
+            ...basePolicy,
+            platformRequiredSuites: [
+                ...basePolicy.platformRequiredSuites,
+                {
+                    suiteId: BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
+                    suiteDigest: DIGEST_A,
+                    runner: basePolicy.approvedRunners.find(({ name }) => name === "cms-postgres")!,
+                    applicability: "data-api-schemas" as const,
+                },
+            ],
+        };
+        const policyDigest = (await identifyReleaseAdmissionPolicySnapshot(policy)).digest;
+        const baseAdmission = await admissionSnapshot(policy);
+        const plan = await identifyBehavioralRlsPlan({
+            schema: BEHAVIORAL_RLS_PLAN_SCHEMA,
+            target: {
+                kind: baseAdmission.candidate.kind,
+                version: baseAdmission.candidate.version,
+                candidateDigest: baseAdmission.candidate.candidateDigest,
+                packageDigest: baseAdmission.candidate.packageDigest,
+                verificationDigest: baseAdmission.candidate.verificationDigest,
+            },
+            policyDigest,
+            probes: [],
+        });
+        const admission = {
+            ...baseAdmission,
+            suites: [
+                ...baseAdmission.suites,
+                {
+                    suiteId: BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
+                    source: "platform" as const,
+                    contentDigest: DIGEST_A,
+                    applicable: true,
+                },
+            ],
+            behavioralRlsPlan: { digest: plan.digest, plan: plan.plan },
+        };
+
+        await expect(validateAdmissionInputSnapshotForPolicy(admission, policy)).resolves.toBeDefined();
+        const { behavioralRlsPlan: _omitted, ...withoutPlan } = admission;
+        await expect(validateAdmissionInputSnapshotForPolicy(withoutPlan, policy)).rejects.toThrow(/must be present/);
+        await expect(
+            validateAdmissionInputSnapshotForPolicy(
+                { ...admission, behavioralRlsPlan: { ...admission.behavioralRlsPlan, digest: DIGEST_B } },
+                policy,
+            ),
+        ).rejects.toThrow(/canonical plan/);
     });
 
     test("rejects malformed digests, duplicate suites, and unknown fields", async () => {

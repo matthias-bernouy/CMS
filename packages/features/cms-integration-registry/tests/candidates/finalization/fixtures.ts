@@ -157,6 +157,7 @@ async function passedResult(
             catalogRevisionDigest: admission.catalogRevision.digest,
             compatibilityRevisionDigest: admission.compatibilityRevision.digest,
             compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
+            ...(admission.behavioralRlsPlan ? { behavioralRlsPlanDigest: admission.behavioralRlsPlan.digest } : {}),
         },
         runner: admission.selectedRunner,
         environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },

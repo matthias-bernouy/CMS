@@ -116,7 +116,16 @@ function parseManifest(
     files: CanonicalFileSet,
     targetVersion: string,
 ): IntegrationVerificationManifestV1 {
-    const input = strictRecord(value, "manifest", ["runnerRequirements", "contracts", "conformance", "fixtures"]);
+    const hasBehavioralRls = Boolean(
+        value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "behavioralRls"),
+    );
+    const input = strictRecord(value, "manifest", [
+        "runnerRequirements",
+        "contracts",
+        "conformance",
+        "fixtures",
+        ...(hasBehavioralRls ? ["behavioralRls"] : []),
+    ]);
     const runnerRequirements = boundedArray(
         input.runnerRequirements,
         "manifest.runnerRequirements",
@@ -132,6 +141,9 @@ function parseManifest(
     const fixtures = boundedArray(input.fixtures, "manifest.fixtures", (entry, field) =>
         referencedFile(entry, field, files, false),
     );
+    const behavioralRls = hasBehavioralRls
+        ? referencedFile(input.behavioralRls, "manifest.behavioralRls", files, true)
+        : undefined;
     assertUnique(
         runnerRequirements.map((entry) => entry.name),
         "manifest.runnerRequirements.name",
@@ -154,6 +166,7 @@ function parseManifest(
         contracts: contracts.toSorted((left, right) => compareText(left.contractId, right.contractId)),
         conformance: conformance.toSorted((left, right) => compareText(left.suiteId, right.suiteId)),
         fixtures: fixtures.toSorted(compareText),
+        ...(behavioralRls ? { behavioralRls } : {}),
     };
 }
 

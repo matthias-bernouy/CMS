@@ -6,6 +6,7 @@ import {
     validateBoundIntegrationVerificationAuthorSuites,
     validateAdmissionInputSnapshotForPolicy,
     validateIntegrationVerificationEnvelope,
+    validateBehavioralRlsPlanBinding,
 } from "@bernouy/cms-integration-verification";
 import { VerificationProtocolError } from "../error";
 import { record } from "../status";
@@ -34,6 +35,10 @@ export async function parseExactWorkload(
         const verification = validateIntegrationVerificationEnvelope(input.verification);
         const policy = await identifyReleaseAdmissionPolicySnapshot(input.policy);
         const admission = await validateAdmissionInputSnapshotForPolicy(input.admission, policy.snapshot);
+        const behavioralRlsPlan = await validateBehavioralRlsPlanBinding(
+            input.behavioralRlsPlan,
+            admission.snapshot.behavioralRlsPlan,
+        );
         const authorSuites = await validateBoundIntegrationVerificationAuthorSuites(
             input.authorSuites,
             admission.snapshot,
@@ -79,6 +84,7 @@ export async function parseExactWorkload(
             verification,
             policy: policy.snapshot,
             admission: admission.snapshot,
+            ...(behavioralRlsPlan ? { behavioralRlsPlan } : {}),
             authorSuites,
             dependencyPackages,
             migrationInputs,
@@ -105,6 +111,7 @@ function optionalWorkloadFields(value: unknown): string[] {
         ...(Object.hasOwn(input, "migrationInputs") ? ["migrationInputs"] : []),
         ...(Object.hasOwn(input, "migrationPackages") ? ["migrationPackages"] : []),
         ...(Object.hasOwn(input, "dependencyPackages") ? ["dependencyPackages"] : []),
+        ...(Object.hasOwn(input, "behavioralRlsPlan") ? ["behavioralRlsPlan"] : []),
     ];
 }
 

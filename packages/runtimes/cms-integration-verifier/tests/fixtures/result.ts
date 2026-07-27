@@ -52,6 +52,7 @@ async function validVerificationResult(input: VerificationSandboxInput): Promise
             catalogRevisionDigest: admission.catalogRevision.digest,
             compatibilityRevisionDigest: admission.compatibilityRevision.digest,
             compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
+            ...(admission.behavioralRlsPlan ? { behavioralRlsPlanDigest: admission.behavioralRlsPlan.digest } : {}),
         },
         runner: runnerFixture(),
         environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },

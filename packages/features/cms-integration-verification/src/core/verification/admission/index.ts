@@ -13,6 +13,7 @@ import {
     samePinnedRunner,
 } from "../shared";
 import { assertContractSuites, assertPlatformSuites } from "./assertions";
+import { BEHAVIORAL_RLS_PLATFORM_SUITE_ID, identifyBehavioralRlsPlan, validateBehavioralRlsPlan } from "../platform";
 import {
     compareBaseline,
     compareDependency,
@@ -38,6 +39,9 @@ export function parseAdmissionInputSnapshot(input: string | Uint8Array): Admissi
 
 export function validateAdmissionInputSnapshot(value: unknown): AdmissionInputSnapshotV1 {
     assertContractIJson(value);
+    const hasBehavioralRlsPlan = Boolean(
+        value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "behavioralRlsPlan"),
+    );
     const input = strictRecord(value, "admission", [
         "schema",
         "candidate",
@@ -47,6 +51,7 @@ export function validateAdmissionInputSnapshot(value: unknown): AdmissionInputSn
         "dependencies",
         "activeContracts",
         "suites",
+        ...(hasBehavioralRlsPlan ? ["behavioralRlsPlan"] : []),
         "catalogRevision",
         "compatibilityRevision",
     ]);
@@ -95,15 +100,22 @@ export function validateAdmissionInputSnapshot(value: unknown): AdmissionInputSn
         "admission.suites.suiteId",
     );
     assertContractSuites(activeContracts, suites);
+    const candidate = parseCandidate(input.candidate);
+    const policyDigest = sha256Digest(input.policyDigest, "admission.policyDigest");
+    const behavioralRlsPlan = hasBehavioralRlsPlan ? parseBehavioralRlsPlanBinding(input.behavioralRlsPlan) : undefined;
+    if (behavioralRlsPlan) {
+        assertBehavioralRlsPlanReferences(behavioralRlsPlan.plan, candidate, policyDigest);
+    }
     return {
         schema: ADMISSION_INPUT_SNAPSHOT_SCHEMA,
-        candidate: parseCandidate(input.candidate),
-        policyDigest: sha256Digest(input.policyDigest, "admission.policyDigest"),
+        candidate,
+        policyDigest,
         selectedRunner: pinnedRunner(input.selectedRunner, "admission.selectedRunner"),
         reviewedBaselines,
         dependencies,
         activeContracts,
         suites,
+        ...(behavioralRlsPlan ? { behavioralRlsPlan } : {}),
         catalogRevision: parseRevision(input.catalogRevision, "admission.catalogRevision"),
         compatibilityRevision: parseCompatibilityRevision(input.compatibilityRevision),
     };
@@ -111,6 +123,12 @@ export function validateAdmissionInputSnapshot(value: unknown): AdmissionInputSn
 
 export async function identifyAdmissionInputSnapshot(value: unknown): Promise<IdentifiedAdmissionInputSnapshotV1> {
     const snapshot = validateAdmissionInputSnapshot(value);
+    if (snapshot.behavioralRlsPlan) {
+        const identifiedPlan = await identifyBehavioralRlsPlan(snapshot.behavioralRlsPlan.plan);
+        if (identifiedPlan.digest !== snapshot.behavioralRlsPlan.digest) {
+            invalidReference("admission.behavioralRlsPlan.digest", "does not identify the canonical plan");
+        }
+    }
     const identified = await identifyCanonicalVerificationContract(snapshot);
     return { snapshot, canonicalBytes: identified.canonicalBytes, digest: identified.digest };
 }
@@ -130,5 +148,46 @@ export async function validateAdmissionInputSnapshotForPolicy(
         invalidReference("admission.selectedRunner", "must be an exact runner approved by policy");
     }
     assertPlatformSuites(admission.snapshot, policy.snapshot);
+    assertBehavioralRlsPlanPolicy(admission.snapshot);
     return admission;
+}
+
+function parseBehavioralRlsPlanBinding(value: unknown): NonNullable<AdmissionInputSnapshotV1["behavioralRlsPlan"]> {
+    const input = strictRecord(value, "admission.behavioralRlsPlan", ["digest", "plan"]);
+    return {
+        digest: sha256Digest(input.digest, "admission.behavioralRlsPlan.digest"),
+        plan: validateBehavioralRlsPlan(input.plan),
+    };
+}
+
+function assertBehavioralRlsPlanReferences(
+    plan: NonNullable<AdmissionInputSnapshotV1["behavioralRlsPlan"]>["plan"],
+    candidate: AdmissionInputSnapshotV1["candidate"],
+    policyDigest: string,
+): void {
+    if (
+        plan.target.kind !== candidate.kind ||
+        plan.target.version !== candidate.version ||
+        plan.target.candidateDigest !== candidate.candidateDigest ||
+        plan.target.packageDigest !== candidate.packageDigest ||
+        plan.target.verificationDigest !== candidate.verificationDigest ||
+        plan.policyDigest !== policyDigest
+    ) {
+        invalidReference("admission.behavioralRlsPlan", "does not bind the exact candidate and policy");
+    }
+}
+
+function assertBehavioralRlsPlanPolicy(admission: AdmissionInputSnapshotV1): void {
+    const suite = admission.suites.find(
+        (entry) => entry.source === "platform" && entry.suiteId === BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
+    );
+    if (Boolean(suite) !== Boolean(admission.behavioralRlsPlan)) {
+        invalidReference(
+            "admission.behavioralRlsPlan",
+            `must be present exactly when ${BEHAVIORAL_RLS_PLATFORM_SUITE_ID} is planned`,
+        );
+    }
+    if (suite?.applicable === false && admission.behavioralRlsPlan!.plan.probes.length !== 0) {
+        invalidReference("admission.behavioralRlsPlan.plan.probes", "must be empty for a non-applicable suite");
+    }
 }

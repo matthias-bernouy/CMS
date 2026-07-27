@@ -141,6 +141,9 @@ export async function jobResult(
             catalogRevisionDigest: selectedAdmission.catalogRevision.digest,
             compatibilityRevisionDigest: selectedAdmission.compatibilityRevision.digest,
             compatibilityEvaluatorInputDigest: selectedAdmission.compatibilityRevision.evaluatorInputDigest,
+            ...(selectedAdmission.behavioralRlsPlan
+                ? { behavioralRlsPlanDigest: selectedAdmission.behavioralRlsPlan.digest }
+                : {}),
         },
         runner: selectedAdmission.selectedRunner,
         environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },

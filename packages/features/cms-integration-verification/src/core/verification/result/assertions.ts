@@ -49,6 +49,7 @@ export function assertBindings(
         catalogRevisionDigest: admission.catalogRevision.digest,
         compatibilityRevisionDigest: admission.compatibilityRevision.digest,
         compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
+        ...(admission.behavioralRlsPlan ? { behavioralRlsPlanDigest: admission.behavioralRlsPlan.digest } : {}),
     };
     if (!sameBytes(canonicalJsonBytes(result.bindings), canonicalJsonBytes(expected))) {
         invalidReference("jobResult.bindings", "do not match the canonical admission inputs");

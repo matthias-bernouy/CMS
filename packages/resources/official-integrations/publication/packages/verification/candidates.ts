@@ -1,5 +1,6 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
+    BEHAVIORAL_RLS_AUTHOR_INPUT_SCHEMA,
     validateIntegrationCandidateEnvelope,
     validateIntegrationVerificationEnvelope,
     type IntegrationCandidateEnvelopeV1,
@@ -11,6 +12,8 @@ export const OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT = Object.freeze({
     name: "cms-postgres",
     versionRange: "1.0.0",
 });
+
+const BEHAVIORAL_RLS_INPUT_PATH = "platform/behavioral-rls.json";
 
 export type BuiltOfficialIntegrationCandidate = Readonly<{
     kind: string;
@@ -27,6 +30,13 @@ export async function buildOfficialIntegrationCandidates(
     const packages = await buildOfficialIntegrationPackages(requestedRoot);
     return await Promise.all(
         packages.map(async (integrationPackage) => {
+            const behavioralRls =
+                integrationPackage.kind === "photo-albums" && integrationPackage.version === "1.1.0"
+                    ? {
+                          schema: BEHAVIORAL_RLS_AUTHOR_INPUT_SCHEMA,
+                          probes: [],
+                      }
+                    : undefined;
             const verification = validateIntegrationVerificationEnvelope({
                 schema: "cms.integration.verification.v1",
                 target: {
@@ -39,8 +49,16 @@ export async function buildOfficialIntegrationCandidates(
                     contracts: [],
                     conformance: [],
                     fixtures: [],
+                    ...(behavioralRls ? { behavioralRls: BEHAVIORAL_RLS_INPUT_PATH } : {}),
                 },
-                files: {},
+                files: behavioralRls
+                    ? {
+                          [BEHAVIORAL_RLS_INPUT_PATH]: {
+                              encoding: "utf8",
+                              content: new TextDecoder().decode(canonicalJsonBytes(behavioralRls)),
+                          },
+                      }
+                    : {},
             });
             const validated = await validateIntegrationCandidateEnvelope({
                 schema: "cms.integration.candidate.v1",

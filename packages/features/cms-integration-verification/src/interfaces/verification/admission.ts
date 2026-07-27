@@ -1,4 +1,5 @@
 import type { PinnedVerificationRunnerIdentity } from "../runner";
+import type { AdmissionBehavioralRlsPlanBindingV1 } from "./behavioralRls";
 
 export const ADMISSION_INPUT_SNAPSHOT_SCHEMA = "cms.integration.admission-input.v1" as const;
 
@@ -52,6 +53,8 @@ export type AdmissionInputSnapshotV1 = Readonly<{
     dependencies: readonly AdmissionDependencyReferenceV1[];
     activeContracts: readonly AdmissionActiveContractReferenceV1[];
     suites: readonly AdmissionSuitePlanEntryV1[];
+    /** Missing only from admissions created before behavioral RLS planning. */
+    behavioralRlsPlan?: AdmissionBehavioralRlsPlanBindingV1;
     catalogRevision: Readonly<{
         revisionId: string;
         digest: string;

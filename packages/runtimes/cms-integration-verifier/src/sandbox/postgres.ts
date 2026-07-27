@@ -244,5 +244,6 @@ function resultBindings(input: VerificationSandboxInput, admissionDigest: string
         catalogRevisionDigest: admission.catalogRevision.digest,
         compatibilityRevisionDigest: admission.compatibilityRevision.digest,
         compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
+        ...(admission.behavioralRlsPlan ? { behavioralRlsPlanDigest: admission.behavioralRlsPlan.digest } : {}),
     };
 }

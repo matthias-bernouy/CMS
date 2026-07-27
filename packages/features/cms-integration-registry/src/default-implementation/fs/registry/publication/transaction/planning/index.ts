@@ -10,7 +10,7 @@ import { identifyCatalogRevision } from "./catalog";
 import { planCandidateCompatibility } from "./compatibility";
 import { resolveCandidateDependencies } from "./dependencies";
 import { buildMigrationVerificationInputs, selectStatefulChanges } from "./stateful";
-import { selectCandidateSuites } from "./suites";
+import { planCandidateBehavioralRls, selectCandidateSuites } from "./suites";
 import {
     FsIntegrationRegistryCandidateAdmissionPlanningError,
     type FsIntegrationRegistryCandidateAdmissionPlan,
@@ -88,15 +88,24 @@ export class FsIntegrationRegistryCandidateAdmissionPlanner {
             policyDigest: policy.digest,
             environment: this.config.migrationEnvironment,
         });
+        const candidateIdentity = {
+            kind: record.kind,
+            version: record.version,
+            candidateDigest: record.candidateDigest,
+            packageDigest: record.packageDigest,
+            verificationDigest: record.verificationDigest,
+        };
+        const behavioralRlsPlan = await planCandidateBehavioralRls(
+            suites,
+            input.candidate.envelope.verification,
+            candidateIdentity,
+            policy.digest,
+        );
         const admission = await identifyAdmissionInputSnapshot({
             schema: "cms.integration.admission-input.v1",
             candidate: {
                 candidateId: record.candidateId,
-                candidateDigest: record.candidateDigest,
-                kind: record.kind,
-                version: record.version,
-                packageDigest: record.packageDigest,
-                verificationDigest: record.verificationDigest,
+                ...candidateIdentity,
             },
             policyDigest: policy.digest,
             selectedRunner: suites.runner,
@@ -104,6 +113,9 @@ export class FsIntegrationRegistryCandidateAdmissionPlanner {
             dependencies,
             activeContracts: suites.activeContracts,
             suites: suites.suites,
+            ...(behavioralRlsPlan
+                ? { behavioralRlsPlan: { digest: behavioralRlsPlan.digest, plan: behavioralRlsPlan.plan } }
+                : {}),
             catalogRevision: catalog,
             compatibilityRevision: {
                 revisionId: compatibility.report.reportId,

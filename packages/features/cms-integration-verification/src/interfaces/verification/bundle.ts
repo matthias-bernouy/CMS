@@ -42,6 +42,8 @@ export type IntegrationVerificationManifestV1 = Readonly<{
     contracts: readonly IntegrationVerificationContractSuiteV1[];
     conformance: readonly IntegrationVerificationConformanceSuiteV1[];
     fixtures: readonly string[];
+    /** Optional author fixtures for the repository-owned behavioral RLS suite. */
+    behavioralRls?: string;
 }>;
 
 export type IntegrationVerificationEnvelopeV1 = Readonly<{

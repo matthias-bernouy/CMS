@@ -1,9 +1,12 @@
 import {
+    BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
+    buildBehavioralRlsPlan,
     computeIntegrationVerificationSuiteContentDigest,
     runnerSatisfiesRequirement,
     type AdmissionActiveContractReferenceV1,
     type AdmissionSuitePlanEntryV1,
     type IntegrationVerificationEnvelopeV1,
+    type BehavioralRlsPlanV1,
     type PinnedVerificationRunnerIdentity,
     type PlatformRequiredVerificationSuiteV1,
     type ReleaseAdmissionPolicySnapshotV1,
@@ -20,6 +23,22 @@ export type CandidateSuiteSelection = Readonly<{
     activeContracts: readonly AdmissionActiveContractReferenceV1[];
     suites: readonly AdmissionSuitePlanEntryV1[];
 }>;
+
+export async function planCandidateBehavioralRls(
+    selection: CandidateSuiteSelection,
+    verification: IntegrationVerificationEnvelopeV1,
+    target: BehavioralRlsPlanV1["target"],
+    policyDigest: string,
+) {
+    if (
+        !selection.suites.some(
+            (suite) => suite.source === "platform" && suite.suiteId === BEHAVIORAL_RLS_PLATFORM_SUITE_ID,
+        )
+    ) {
+        return undefined;
+    }
+    return await buildBehavioralRlsPlan({ verification, target, policyDigest });
+}
 
 export async function selectCandidateSuites(input: {
     kind: string;
