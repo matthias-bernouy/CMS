@@ -162,7 +162,11 @@ export function migrationPlan(): DeclarativeConnectorMigrationPlan {
                 },
             ],
         },
-        cmsMediated: { strategy: "binding-switch", drainSeconds: 30 },
+        cmsMediated: {
+            strategy: "binding-switch",
+            smoke: { endpointId: "health", expectedStatus: 200, expectedBody: { ok: true } },
+            drainSeconds: 30,
+        },
         providerDirect: { strategy: "expand-in-code", callbackIds: ["stripe-webhook"] },
         pointOfNoReturn: "before-contract",
     };

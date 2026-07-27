@@ -24,8 +24,10 @@ export type {
     IntegrationConnectorMigrationDeployment,
     IntegrationConnectorMigrationIdentity,
     IntegrationMigrationChecksum,
+    IntegrationMigrationHttpSmoke,
     IntegrationProviderDirectCutover,
 } from "./migrations";
+export { MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES } from "./migrations";
 export type {
     IntegrationConnectorBaselineAdopter,
     IntegrationConnectorBaselineAdoptionContext,

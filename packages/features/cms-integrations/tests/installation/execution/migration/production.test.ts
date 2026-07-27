@@ -71,6 +71,57 @@ describe("production integration migration runtime", () => {
         expect(interrupted.migrationOperation?.pointOfNoReturnReachedAt).toBeUndefined();
     });
 
+    test("probes the side-by-side target and then the stable CMS binding through real Source execution", async () => {
+        const fixture = await initializedFixture();
+
+        await run(fixture, fixture.runtime);
+
+        expect(fixture.supabase.smokeRequests).toHaveLength(4);
+        expect(fixture.supabase.smokeRequests).toEqual(
+            fixture.supabase.smokeRequests.map(() => ({
+                method: "GET",
+                path: "/functions/v1/cms-commerce-v2/health",
+                slug: "cms-commerce-v2",
+            })),
+        );
+    });
+
+    test("fails target smoke closed before changing the stable CMS binding and resumes safely", async () => {
+        const fixture = await initializedFixture();
+        fixture.supabase.smokeBody = { ok: false };
+
+        await expect(run(fixture, fixture.runtime)).rejects.toThrow(
+            'CMS migration smoke endpoint "urn:commerce:health" returned an unexpected body',
+        );
+        expect((await fixture.sources.getSource("urn:commerce"))?.endpoints[0]?.targetUrl).toEndWith(
+            "/cms-commerce/health",
+        );
+        expect((await fixture.installation()).migrationOperation).toMatchObject({ status: "paused" });
+
+        fixture.supabase.smokeBody = { ok: true };
+        expect((await run(fixture, fixture.runtime)).installation.definitionVersion).toBe("1.1.0");
+    });
+
+    test("fails stable CMS smoke closed before activation and resumes the exact switched binding", async () => {
+        const fixture = await initializedFixture();
+        fixture.supabase.queueSmokeResponse(200, { ok: true });
+        fixture.supabase.queueSmokeResponse(200, { ok: true });
+        fixture.supabase.queueSmokeResponse(200, { ok: false });
+
+        await expect(run(fixture, fixture.runtime)).rejects.toThrow(
+            'CMS migration smoke endpoint "urn:commerce:health" returned an unexpected body',
+        );
+        expect((await fixture.sources.getSource("urn:commerce"))?.endpoints[0]?.targetUrl).toEndWith(
+            "/cms-commerce-v2/health",
+        );
+        const paused = await fixture.installation();
+        expect(paused.definitionVersion).toBe("1.0.0");
+        expect(paused.migrationOperation?.status).toBe("paused");
+        expect(paused.migrationOperation?.activatedAt).toBeUndefined();
+
+        expect((await run(fixture, fixture.runtime)).installation.definitionVersion).toBe("1.1.0");
+    });
+
     test("pauses during a declared drain and resumes only after the deadline", async () => {
         const fixture = await initializedFixture();
         fixture.setDrainSeconds(5);

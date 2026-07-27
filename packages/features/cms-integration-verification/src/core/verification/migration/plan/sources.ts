@@ -1,10 +1,13 @@
+import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
+    MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES,
     parseObservedSchemaContractV1,
     type DeclarativeConnectorMigrationSource,
+    type IntegrationAnswerValue,
     type IntegrationCmsMediatedCutover,
     type IntegrationProviderDirectCutover,
 } from "@bernouy/cms-integrations";
-import { assertUnique, boundedArray, strictRecord } from "../../../validation/structure";
+import { assertContractIJson, assertUnique, boundedArray, invalid, strictRecord } from "../../../validation/structure";
 import {
     exactVersion,
     nonNegativeInteger,
@@ -34,12 +37,37 @@ export function parseCmsMediatedCutover(value: unknown, field: string): Integrat
     if (value === undefined) {
         return undefined;
     }
-    const input = strictRecord(value, field, ["strategy", "drainSeconds"]);
+    const input = strictRecord(value, field, ["strategy", "drainSeconds", "smoke"]);
     return {
         strategy: oneOf(input.strategy, `${field}.strategy`, ["binding-switch"] as const),
+        ...(input.smoke === undefined ? {} : { smoke: parseHttpSmoke(input.smoke, `${field}.smoke`) }),
         ...(input.drainSeconds === undefined
             ? {}
             : { drainSeconds: nonNegativeInteger(input.drainSeconds, `${field}.drainSeconds`) }),
+    };
+}
+
+function parseHttpSmoke(value: unknown, field: string): NonNullable<IntegrationCmsMediatedCutover["smoke"]> {
+    const input = strictRecord(value, field, ["endpointId", "expectedStatus", "expectedBody"]);
+    const expectedStatus = nonNegativeInteger(input.expectedStatus, `${field}.expectedStatus`);
+    if (expectedStatus < 100 || expectedStatus > 599) {
+        throw invalid(`${field}.expectedStatus`, "must be an HTTP status between 100 and 599");
+    }
+    if (input.expectedBody !== undefined) {
+        assertContractIJson(input.expectedBody);
+        if (canonicalJsonBytes(input.expectedBody).byteLength > MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES) {
+            throw invalid(
+                `${field}.expectedBody`,
+                `must not exceed ${MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES} canonical bytes`,
+            );
+        }
+    }
+    return {
+        endpointId: canonicalIdentifiers([input.endpointId], `${field}.endpointId`, 1)[0]!,
+        expectedStatus,
+        ...(input.expectedBody === undefined
+            ? {}
+            : { expectedBody: structuredClone(input.expectedBody) as IntegrationAnswerValue }),
     };
 }
 

@@ -54,11 +54,13 @@ export type {
     IntegrationInput,
     IntegrationCmsMediatedCutover,
     IntegrationMigrationChecksum,
+    IntegrationMigrationHttpSmoke,
     IntegrationProviderDirectCutover,
     IntegrationSecurityDefinition,
     IntegrationUiDefinition,
 } from "../interfaces/Integration";
 export {
+    MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES,
     OBSERVED_SCHEMA_CONTRACT_V1,
     type ObservedSchemaColumnV1,
     type ObservedSchemaConstraintV1,
@@ -220,6 +222,7 @@ export {
 } from "../core/installation/migration/runtime";
 export { ConfirmedMigrationPhaseProbe } from "../core/installation/migration/runtime/controlPhases";
 export { CmsSourceBindingMigrationHandler } from "../core/installation/migration/runtime/cmsBinding";
+export { CmsSourceFunctionalMigrationProbe } from "../core/installation/migration/runtime/functionalSmoke";
 export { ProviderDirectMigrationHandler } from "../core/installation/migration/runtime/providerDirect";
 export { assertResolvedRerunDefinition, assertRerunVersion } from "../core/installation/execution/rerunRequest";
 export { resolveUpgradePackage } from "../core/installation/packages";

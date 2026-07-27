@@ -32,6 +32,7 @@ export type {
     DeclarativeConnectorSchemaTemplate,
     DeclarativeConnectorTemplate,
 } from "./IntegrationConnectorDeployer";
+export { MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES } from "./IntegrationConnectorDeployer";
 export type {
     DeclarativeConnectorDatabaseClockDefaultProjection,
     DeclarativeConnectorLegacyAdoptionBaseline,
@@ -44,6 +45,7 @@ export type {
     DeclarativeConnectorRepeatableDescriptor,
     IntegrationCmsMediatedCutover,
     IntegrationMigrationChecksum,
+    IntegrationMigrationHttpSmoke,
     IntegrationProviderDirectCutover,
 } from "./IntegrationConnectorDeployer";
 export {

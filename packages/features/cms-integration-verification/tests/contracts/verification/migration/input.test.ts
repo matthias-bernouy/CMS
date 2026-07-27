@@ -29,6 +29,11 @@ describe("migration verification input", () => {
                 columns: ["created_at", "updated_at"],
             },
         ]);
+        expect(parsed.migrationPlan.plan.cmsMediated?.smoke).toEqual({
+            endpointId: "health",
+            expectedStatus: 200,
+            expectedBody: { ok: true },
+        });
     });
 
     test("preserves topological dependency order in the input identity", async () => {

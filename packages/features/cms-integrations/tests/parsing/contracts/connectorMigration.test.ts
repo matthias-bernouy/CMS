@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseIntegrationDefinition } from "@bernouy/cms-integrations";
+import { MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES, parseIntegrationDefinition } from "@bernouy/cms-integrations";
 
 const DIGEST_A = `sha256:${"a".repeat(64)}`;
 const DIGEST_B = `sha256:${"b".repeat(64)}`;
@@ -25,8 +25,40 @@ describe("connector migration definitions", () => {
                     ],
                 },
                 pointOfNoReturn: "before-contract",
+                cmsMediated: {
+                    strategy: "binding-switch",
+                    smoke: { endpointId: "health", expectedStatus: 200, expectedBody: { ok: true } },
+                },
             },
         });
+    });
+
+    test("parses a bounded CMS-mediated functional smoke contract", () => {
+        const definition = migrationDefinition();
+
+        expect(parseIntegrationDefinition(definition).connectors?.[0]?.migration?.cmsMediated?.smoke).toEqual({
+            endpointId: "health",
+            expectedStatus: 200,
+            expectedBody: { ok: true },
+        });
+
+        const invalidStatus = migrationDefinition();
+        invalidStatus.connectors[0].migration.cmsMediated.smoke.expectedStatus = 700;
+        expect(() => parseIntegrationDefinition(invalidStatus)).toThrow(/HTTP status between 100 and 599/);
+
+        const invalidBody = migrationDefinition();
+        invalidBody.connectors[0].migration.cmsMediated.smoke.expectedBody = Number.POSITIVE_INFINITY;
+        expect(() => parseIntegrationDefinition(invalidBody)).toThrow(/finite JSON value/);
+
+        const oversizedBody = migrationDefinition();
+        oversizedBody.connectors[0].migration.cmsMediated.smoke.expectedBody = "x".repeat(
+            MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES,
+        );
+        expect(() => parseIntegrationDefinition(oversizedBody)).toThrow(/canonical bytes/);
+
+        const unknown = migrationDefinition();
+        Object.assign(unknown.connectors[0].migration.cmsMediated.smoke, { acceptsAnyResponse: true });
+        expect(() => parseIntegrationDefinition(unknown)).toThrow(/acceptsAnyResponse.*not supported/);
     });
 
     test("rejects partial identities, unsafe layouts, and non-contiguous revisions", () => {
@@ -317,7 +349,11 @@ function migrationDefinition() {
                             },
                         ],
                     },
-                    cmsMediated: { strategy: "binding-switch", drainSeconds: 30 },
+                    cmsMediated: {
+                        strategy: "binding-switch",
+                        smoke: { endpointId: "health", expectedStatus: 200, expectedBody: { ok: true } },
+                        drainSeconds: 30,
+                    },
                     providerDirect: { strategy: "expand-in-code", callbackIds: ["stripe-webhook"], drainSeconds: 60 },
                     pointOfNoReturn: "before-contract",
                 },

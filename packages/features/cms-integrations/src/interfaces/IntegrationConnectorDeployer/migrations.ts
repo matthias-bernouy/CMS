@@ -1,6 +1,9 @@
 import type { ObservedSchemaContractV1 } from "./schemaObservation";
+import type { IntegrationAnswerValue } from "../Integration";
 
 export type IntegrationMigrationChecksum = `sha256:${string}`;
+
+export const MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES = 64 * 1_024;
 
 export type DeclarativeConnectorMigrationReference = {
     id: string;
@@ -29,8 +32,15 @@ export type DeclarativeConnectorInstallBaseline = {
     coveredMigrations: DeclarativeConnectorMigrationReference[];
 };
 
+export type IntegrationMigrationHttpSmoke = {
+    endpointId: string;
+    expectedStatus: number;
+    expectedBody?: IntegrationAnswerValue;
+};
+
 export type IntegrationCmsMediatedCutover = {
     strategy: "binding-switch";
+    smoke?: IntegrationMigrationHttpSmoke;
     drainSeconds?: number;
 };
 

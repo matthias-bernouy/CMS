@@ -1,12 +1,23 @@
 export class FakeSupabaseManagementApi {
     readonly functions = new Map<string, string>();
+    readonly smokeRequests: Array<{ method: string; path: string; slug: string }> = [];
     revision = 1;
     migrationRuntimeSchemaReady = false;
+    smokeStatus = 200;
+    smokeBody: unknown = { ok: true };
+    private readonly queuedSmokeResponses: Array<{ status: number; body: unknown }> = [];
+
+    queueSmokeResponse(status: number, body: unknown): void {
+        this.queuedSmokeResponses.push({ status, body });
+    }
 
     readonly fetch: typeof fetch = async (input, init) => {
-        const url = new URL(String(input));
+        const url = new URL(input instanceof Request ? input.url : String(input));
         if (url.pathname.endsWith("/database/query")) {
             return this.databaseResponse(String(init?.body));
+        }
+        if (url.pathname.includes("/functions/v1/")) {
+            return this.smokeResponse(url, init);
         }
         const slug = url.searchParams.get("slug") ?? url.pathname.split("/").at(-1)!;
         if (url.pathname.endsWith("/functions/deploy")) {
@@ -17,6 +28,17 @@ export class FakeSupabaseManagementApi {
             ? Response.json({ slug, status: "ACTIVE", ezbr_sha256: bundleDigest })
             : Response.json({}, { status: 404 });
     };
+
+    private smokeResponse(url: URL, init?: RequestInit): Response {
+        const suffix = url.pathname.split("/functions/v1/")[1] ?? "";
+        const [slug = ""] = suffix.split("/");
+        this.smokeRequests.push({ method: init?.method ?? "GET", path: url.pathname, slug });
+        if (!this.functions.has(slug)) {
+            return Response.json({ error: "function not deployed" }, { status: 404 });
+        }
+        const response = this.queuedSmokeResponses.shift() ?? { status: this.smokeStatus, body: this.smokeBody };
+        return Response.json(response.body, { status: response.status });
+    }
 
     private databaseResponse(body: string): Response {
         const query = (JSON.parse(body) as { query: string }).query;

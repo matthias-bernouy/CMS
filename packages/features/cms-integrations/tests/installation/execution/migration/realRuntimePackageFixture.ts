@@ -64,7 +64,11 @@ function migrationPlan(migrations: ReturnType<typeof migration>[]) {
         },
         migrations,
         supportedSources: [{ range: "^1.0.0", migrationRevision: 1 }],
-        cmsMediated: { strategy: "binding-switch" as const, drainSeconds: 0 },
+        cmsMediated: {
+            strategy: "binding-switch" as const,
+            smoke: { endpointId: "health", expectedStatus: 200, expectedBody: { ok: true } },
+            drainSeconds: 0,
+        },
         providerDirect: { strategy: "expand-in-code" as const, callbackIds: ["stripe"], drainSeconds: 0 },
         pointOfNoReturn: "before-contract" as const,
     };

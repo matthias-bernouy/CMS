@@ -2,7 +2,7 @@ import type { RuntimeEnv } from "../runtimeEnv";
 import type { ScheduledTriggerRunner } from "@bernouy/cms-triggers";
 import {
     CmsSourceBindingMigrationHandler,
-    ConfirmedMigrationPhaseProbe,
+    CmsSourceFunctionalMigrationProbe,
     ProductionIntegrationMigrationRuntime,
 } from "@bernouy/cms-integrations";
 import type { ProductionAuthentication } from "./auth";
@@ -53,7 +53,7 @@ export async function mountProductionSurfaces(
         slowRequestThresholdMs: env.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
         reportDiagnostic: runtime.log,
     });
-    const cmsBindingMigration = new CmsSourceBindingMigrationHandler({
+    const cmsBindingDeps = {
         sources: features.sources,
         functions: features.functions,
         roles: core.roles,
@@ -66,16 +66,14 @@ export async function mountProductionSurfaces(
         connectorDeployers: integrations.integrationConnectorDeployers,
         provisioners: integrations.integrationProvisioners,
         sourceExecutorDeps: { resolveSecret: features.resolveSecret, identities: features.identities },
-    });
+    };
+    const cmsBindingMigration = new CmsSourceBindingMigrationHandler(cmsBindingDeps);
     const integrationMigrationRuntime = new ProductionIntegrationMigrationRuntime({
         connectorAdapters: integrations.integrationConnectorMigrationAdapters,
         functionDeployment: integrations.integrationFunctionMigrationHandler,
-        targetSmoke: new ConfirmedMigrationPhaseProbe(
-            "deploy-functions",
-            integrations.integrationFunctionMigrationHandler,
-        ),
+        targetSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "target"),
         cmsBinding: cmsBindingMigration,
-        cmsSmoke: new ConfirmedMigrationPhaseProbe("switch-cms-binding", cmsBindingMigration),
+        cmsSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "stable"),
     });
     const { sourceImageInterceptor, responsivePublicSourceImagesEnabled, responsivePrivateSourceImagesEnabled } =
         await createRuntimeSourceImageComposition({

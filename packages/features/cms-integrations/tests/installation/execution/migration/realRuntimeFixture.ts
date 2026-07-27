@@ -1,6 +1,6 @@
 import {
     CmsSourceBindingMigrationHandler,
-    ConfirmedMigrationPhaseProbe,
+    CmsSourceFunctionalMigrationProbe,
     InMemoryIntegrationInstallationRepository,
     ProductionIntegrationMigrationRuntime,
     type IntegrationDefinition,
@@ -78,18 +78,20 @@ export class RealMigrationFixture {
         const config = { projectRef: "project", accessToken: "token", fetch: this.supabase.fetch };
         const connectorDeployer = new SupabaseConnectorDeployer(config);
         const functionDeployment = new SupabaseFunctionMigrationHandler(config);
-        const cmsBinding = new CmsSourceBindingMigrationHandler({
+        const cmsBindingDeps = {
             sources: this.sources,
             secrets: this.secrets,
             installations: this.installations,
             connectorDeployers: [connectorDeployer],
-        });
+            sourceExecutorDeps: { fetchImpl: this.supabase.fetch },
+        };
+        const cmsBinding = new CmsSourceBindingMigrationHandler(cmsBindingDeps);
         this.runtime = new ProductionIntegrationMigrationRuntime({
             connectorAdapters: [new SupabaseConnectorMigrationAdapter(config)],
             functionDeployment,
-            targetSmoke: new ConfirmedMigrationPhaseProbe("deploy-functions", functionDeployment),
+            targetSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "target"),
             cmsBinding,
-            cmsSmoke: new ConfirmedMigrationPhaseProbe("switch-cms-binding", cmsBinding),
+            cmsSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "stable"),
             clock: this.clock,
         });
         return this;
