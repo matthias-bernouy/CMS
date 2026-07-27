@@ -1,4 +1,5 @@
 import { RepositoryApiError } from "../api";
+import type { RepositoryCandidateReportView } from "../contracts/candidateReport";
 import type { RepositoryCandidateView } from "../contracts/candidates";
 
 const STORAGE_KEY = "cms.repository.candidate-monitor.v1";
@@ -9,7 +10,9 @@ const MAX_RETRY_DELAY_MS = 30_000;
 export type RepositoryCandidateMonitorConfig = Readonly<{
     signal: AbortSignal;
     fetchStatus: (candidateId: string, signal: AbortSignal) => Promise<RepositoryCandidateView>;
+    fetchReport: (candidateId: string, signal: AbortSignal) => Promise<RepositoryCandidateReportView>;
     onCandidate: (candidate: RepositoryCandidateView) => void;
+    onReport: (report: RepositoryCandidateReportView) => void;
     onRetry: (candidate: RepositoryCandidateView, retryInMs: number) => void;
     wait?: (delayMs: number, signal: AbortSignal) => Promise<void>;
 }>;
@@ -41,6 +44,9 @@ export async function monitorRepositoryCandidate(
         }
     }
     forgetRepositoryCandidate(candidate.candidateId);
+    if (candidate.status === "rejected" || candidate.status === "expired") {
+        config.onReport(await config.fetchReport(candidate.candidateId, config.signal));
+    }
     return candidate;
 }
 

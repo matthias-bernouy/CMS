@@ -1,6 +1,7 @@
 import template from "../template.html" with { type: "text" };
 import css from "../styles";
 import {
+    fetchRepositoryCandidateReport,
     fetchRepositoryCandidateStatus,
     fetchRepositoryCompatibility,
     fetchRepositoryRelease,
@@ -16,6 +17,7 @@ import type {
 } from "../contracts/types";
 import { field } from "../forms/fields";
 import { renderRepositoryCompatibility } from "../render/compatibility";
+import { renderRepositoryCandidateReport } from "../render/candidateReport";
 import { clearFeedback, showFeedback } from "../render/feedback";
 import { renderRepositoryVersions } from "../render/versions";
 import { renderRepositoryRelease } from "../render/release";
@@ -215,15 +217,19 @@ export class RepositoryAdmin extends HTMLElement {
 
     private async monitorCandidate(initial: RepositoryCandidateView): Promise<void> {
         const feedback = this.query<HTMLElement>("[data-candidate-progress]");
+        const reportTarget = this.query<HTMLElement>("[data-candidate-report]");
+        reportTarget.replaceChildren();
         const candidate = await monitorRepositoryCandidate(initial, {
             signal: this.signal(),
             fetchStatus: fetchRepositoryCandidateStatus,
+            fetchReport: fetchRepositoryCandidateReport,
             onCandidate: (current) => {
                 showFeedback(
                     feedback,
                     `${current.kind}@${current.version}: ${current.status}, attempt ${current.attemptCount}.`,
                 );
             },
+            onReport: (report) => renderRepositoryCandidateReport(reportTarget, report),
             onRetry: (current, retryInMs) => {
                 showFeedback(
                     feedback,

@@ -17,7 +17,11 @@ export type RepositoryCandidateView = Readonly<{
 }>;
 
 export function parseRepositoryCandidateResponse(value: unknown): RepositoryCandidateView {
-    const source = readRecord(readRecord(value).candidate);
+    return parseRepositoryCandidate(readRecord(value).candidate);
+}
+
+export function parseRepositoryCandidate(value: unknown): RepositoryCandidateView {
+    const source = readRecord(value);
     const failure = source.lastFailure === undefined ? undefined : readRecord(source.lastFailure);
     return {
         candidateId: readText(source.candidateId),

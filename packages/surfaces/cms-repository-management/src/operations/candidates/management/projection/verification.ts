@@ -41,6 +41,7 @@ export async function projectCandidateVerification(
             packageDigest: admission.candidate.packageDigest,
             verificationDigest: admission.candidate.verificationDigest,
             policyDigest: admission.policyDigest,
+            ...(admission.behavioralRlsPlan ? { behavioralRlsPlanDigest: admission.behavioralRlsPlan.digest } : {}),
         },
         runner: result?.runner ?? admission.selectedRunner,
         ...(result

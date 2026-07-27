@@ -1,4 +1,4 @@
-import type { RepositoryFetchCall } from "./fixtures";
+import type { RepositoryFetchCall } from "../fixtures";
 import {
     admissionReport,
     compatibilityFixture,
@@ -7,7 +7,10 @@ import {
     releaseFixture,
     statusFixture,
     versionsFixture,
-} from "./reportFixtures";
+} from "../reportFixtures";
+import { candidateReportFixture } from "./candidateReport";
+
+export { candidateReportFixture } from "./candidateReport";
 
 export function defaultRepositoryResponse(call: RepositoryFetchCall): Response {
     const path = `${call.method} ${call.url.pathname}`;
@@ -25,6 +28,9 @@ export function defaultRepositoryResponse(call: RepositoryFetchCall): Response {
     }
     if (path === "GET /cms/api/repository/release") {
         return Response.json(releaseFixture());
+    }
+    if (path === "GET /cms/api/repository/candidates/report") {
+        return Response.json(candidateReportFixture());
     }
     if (path === "POST /cms/api/repository/candidates" || path === "GET /cms/api/repository/candidates/status") {
         return Response.json(

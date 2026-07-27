@@ -30067,6 +30067,7 @@ button[slot="back"]:disabled {
         </form>
         <div class="feedback" data-candidate-feedback role="status" aria-live="polite"></div>
         <div class="feedback" data-candidate-progress role="status" aria-live="polite"></div>
+        <div data-candidate-report aria-live="polite"></div>
     </section>
 
     <section class="panel" aria-labelledby="repository-actions-title" data-actions-panel hidden>
@@ -30320,11 +30321,23 @@ cms-repository-admin .lookup label {
 }
 
 cms-repository-admin .diagnostic,
+cms-repository-admin .candidate-report,
 cms-repository-admin .report,
 cms-repository-admin .quarantine {
     border-left: 3px solid #cbd5e1;
     margin: 0.65rem 0;
     padding: 0.45rem 0.75rem;
+}
+
+cms-repository-admin .candidate-report {
+    border-color: #2257d6;
+    margin-top: 1rem;
+}
+
+cms-repository-admin .candidate-observation,
+cms-repository-admin .migration-report {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 0.65rem;
 }
 
 cms-repository-admin .report[data-outcome="breaking"],
@@ -30608,7 +30621,10 @@ ${controls_default3}`;
 
   // src/components/admin/Resources/Repository/contracts/candidates.ts
   function parseRepositoryCandidateResponse(value3) {
-    const source2 = readRecord(readRecord(value3).candidate);
+    return parseRepositoryCandidate(readRecord(value3).candidate);
+  }
+  function parseRepositoryCandidate(value3) {
+    const source2 = readRecord(value3);
     const failure = source2.lastFailure === undefined ? undefined : readRecord(source2.lastFailure);
     return {
       candidateId: readText(source2.candidateId),
@@ -30627,6 +30643,223 @@ ${controls_default3}`;
     };
   }
 
+  // src/components/admin/Resources/Repository/contracts/candidateReport/shared.ts
+  function parseVersionReference(value3) {
+    const source2 = readRecord(value3);
+    return {
+      kind: readText(source2.kind),
+      version: readText(source2.version),
+      packageDigest: readText(source2.packageDigest)
+    };
+  }
+  function parseObservation(value3) {
+    const source2 = readRecord(value3);
+    return {
+      status: readText(source2.status),
+      evidenceDigests: readArray(source2.evidenceDigests).map(readText),
+      diagnosticCodes: readArray(source2.diagnosticCodes).map(readText)
+    };
+  }
+  function optionalBoolean(value3) {
+    return value3 === undefined ? undefined : readBoolean(value3);
+  }
+  function optionalCount(value3) {
+    return value3 === undefined ? undefined : readCount(value3);
+  }
+  function optionalText(key, value3) {
+    return optionalProperty(key, readOptionalText(value3));
+  }
+
+  // src/components/admin/Resources/Repository/contracts/candidateReport/migrations.ts
+  function parseMigrations(value3) {
+    return readArray(value3, 256).map((entry) => {
+      const source2 = readRecord(entry);
+      return {
+        migrationInputDigest: readText(source2.migrationInputDigest),
+        source: parseVersionReference(source2.source),
+        target: parseVersionReference(source2.target),
+        connectorKey: readText(source2.connectorKey),
+        lineageId: readText(source2.lineageId),
+        sourceMigrationRevision: requiredCount(source2.sourceMigrationRevision),
+        targetMigrationRevision: requiredCount(source2.targetMigrationRevision),
+        supportedSourceRange: readText(source2.supportedSourceRange),
+        ...optionalProperty("result", source2.result === undefined ? undefined : parseMigrationResult(source2.result))
+      };
+    });
+  }
+  function parseMigrationResult(value3) {
+    const source2 = readRecord(value3);
+    return {
+      runnerDigest: readText(source2.runnerDigest),
+      environmentDigest: readText(source2.environmentDigest),
+      freshTarget: parseTargetObservation(source2.freshTarget),
+      migratedTarget: parseTargetObservation(source2.migratedTarget),
+      equivalence: parseEquivalence(source2.equivalence),
+      ledger: parseLedger(source2.ledger),
+      replay: parseReplay(source2.replay),
+      cutover: parseCutover(source2.cutover)
+    };
+  }
+  function parseTargetObservation(value3) {
+    const source2 = readRecord(value3);
+    return {
+      ...parseObservation(source2),
+      ...optionalText("stateDigest", source2.stateDigest),
+      ...optionalText("schemaDigest", source2.schemaDigest),
+      ...optionalText("dataDigest", source2.dataDigest),
+      ...optionalText("bindingDigest", source2.bindingDigest),
+      functionDigests: readArray(source2.functionDigests).map((entry) => {
+        const functionDigest = readRecord(entry);
+        return { functionId: readText(functionDigest.functionId), digest: readText(functionDigest.digest) };
+      })
+    };
+  }
+  function parseEquivalence(value3) {
+    const source2 = readRecord(value3);
+    return {
+      ...parseObservation(source2),
+      ...optionalProperty("equivalent", optionalBoolean(source2.equivalent)),
+      differenceCount: readArray(source2.differences).length
+    };
+  }
+  function parseLedger(value3) {
+    const source2 = readRecord(value3);
+    return {
+      ...parseObservation(source2),
+      ...optionalProperty("sourceRevision", optionalCount(source2.sourceRevision)),
+      ...optionalProperty("targetRevision", optionalCount(source2.targetRevision)),
+      ...optionalProperty("freshBaselineRecorded", optionalBoolean(source2.freshBaselineRecorded)),
+      ...optionalProperty("migrationAndLedgerAtomic", optionalBoolean(source2.migrationAndLedgerAtomic)),
+      ...optionalProperty("checksumMismatchRejected", optionalBoolean(source2.checksumMismatchRejected)),
+      ...optionalProperty("emptyLedgerRejected", optionalBoolean(source2.emptyLedgerRejected)),
+      migrationIds: readArray(source2.rows).map((entry) => readText(readRecord(entry).migrationId))
+    };
+  }
+  function parseReplay(value3) {
+    const source2 = readRecord(value3);
+    return {
+      ...parseObservation(source2),
+      ...optionalProperty("unchanged", optionalBoolean(source2.unchanged)),
+      ...optionalProperty("ledgerRowsBefore", optionalCount(source2.ledgerRowsBefore)),
+      ...optionalProperty("ledgerRowsAfterFirstRun", optionalCount(source2.ledgerRowsAfterFirstRun)),
+      ...optionalProperty("ledgerRowsAfterReplay", optionalCount(source2.ledgerRowsAfterReplay))
+    };
+  }
+  function parseCutover(value3) {
+    const source2 = readRecord(value3);
+    return {
+      cmsMediated: cutoverObservation(source2.cmsMediated, ["bindingRevisionBefore", "bindingRevisionAfter"]),
+      providerDirect: providerCutover(source2.providerDirect),
+      activation: activationCutover(source2.activation)
+    };
+  }
+  function cutoverObservation(value3, fields) {
+    const source2 = readRecord(value3);
+    return {
+      ...parseObservation(source2),
+      strategy: readText(source2.strategy),
+      ...optionalText(fields[0], source2[fields[0]]),
+      ...optionalText(fields[1], source2[fields[1]])
+    };
+  }
+  function providerCutover(value3) {
+    const source2 = readRecord(value3);
+    return {
+      ...parseObservation(source2),
+      strategy: readText(source2.strategy),
+      callbackIds: readArray(source2.callbackIds).map(readText),
+      ...optionalProperty("signingSecretContinuityObserved", optionalBoolean(source2.signingSecretContinuityObserved))
+    };
+  }
+  function activationCutover(value3) {
+    const source2 = readRecord(value3);
+    return {
+      ...parseObservation(source2),
+      ...optionalProperty("pointOfNoReturnCrossed", optionalBoolean(source2.pointOfNoReturnCrossed)),
+      ...optionalProperty("cleanupObserved", optionalBoolean(source2.cleanupObserved))
+    };
+  }
+  function requiredCount(value3) {
+    const result = optionalCount(value3);
+    if (result === undefined) {
+      throw new TypeError("Repository candidate migration revision is missing");
+    }
+    return result;
+  }
+
+  // src/components/admin/Resources/Repository/contracts/candidateReport/parsing.ts
+  function parseRepositoryCandidateReport(value3) {
+    const report = readRecord(readRecord(value3).report);
+    if (readText(report.schema) !== "cms.repository.management.candidate-report.v1") {
+      throw new TypeError("Repository candidate report schema is unsupported");
+    }
+    return {
+      candidate: parseRepositoryCandidate(report.candidate),
+      ...optionalProperty("compatibility", report.compatibility === undefined ? undefined : parseCompatibility(report.compatibility)),
+      ...optionalProperty("verification", report.verification === undefined ? undefined : parseVerification(report.verification)),
+      migrations: parseMigrations(report.migrations)
+    };
+  }
+  function parseCompatibility(value3) {
+    const source2 = readRecord(value3);
+    return {
+      outcome: readText(source2.outcome),
+      contractAdmissible: readBoolean(source2.contractAdmissible),
+      releaseLevel: readText(source2.releaseLevel),
+      requiredReleaseLevel: readText(source2.requiredReleaseLevel),
+      baselines: readArray(source2.baselines).map(parseVersionReference),
+      informationalBaselines: readArray(source2.informationalBaselines).map(parseVersionReference),
+      findings: readArray(source2.findings).map((entry) => {
+        const finding = readRecord(entry);
+        return {
+          findingId: readText(finding.findingId),
+          classification: readText(finding.classification),
+          surface: readText(finding.surface),
+          path: readText(finding.path),
+          code: readText(finding.code),
+          message: readText(finding.message)
+        };
+      })
+    };
+  }
+  function parseVerification(value3) {
+    const source2 = readRecord(value3);
+    const runner = readRecord(source2.runner);
+    return {
+      state: readText(source2.state),
+      runner: {
+        name: readText(runner.name),
+        version: readText(runner.version),
+        imageDigest: readText(runner.imageDigest)
+      },
+      ...optionalProperty("environment", source2.environment === undefined ? undefined : parseEnvironment(source2.environment)),
+      ...optionalProperty("outcome", source2.outcome === undefined ? undefined : readText(source2.outcome)),
+      suites: readArray(source2.suites).map(parseSuite)
+    };
+  }
+  function parseEnvironment(value3) {
+    const source2 = readRecord(value3);
+    return {
+      digest: readText(source2.digest),
+      versions: readArray(source2.versions).map((entry) => {
+        const version = readRecord(entry);
+        return { name: readText(version.name), version: readText(version.version) };
+      })
+    };
+  }
+  function parseSuite(value3) {
+    const source2 = readRecord(value3);
+    return {
+      suiteId: readText(source2.suiteId),
+      source: readText(source2.source),
+      ...optionalProperty("applicable", source2.applicable === undefined ? undefined : readBoolean(source2.applicable)),
+      ...optionalProperty("outcome", source2.outcome === undefined ? undefined : readText(source2.outcome)),
+      ...optionalProperty("durationMs", source2.durationMs === undefined ? undefined : readCount(source2.durationMs)),
+      ...optionalProperty("attempts", source2.attempts === undefined ? undefined : readCount(source2.attempts)),
+      ...optionalProperty("cacheHit", source2.cacheHit === undefined ? undefined : readBoolean(source2.cacheHit)),
+      diagnosticCodes: source2.diagnostics === undefined ? [] : readArray(source2.diagnostics).map((entry) => readText(readRecord(entry).code))
+    };
+  }
   // src/components/admin/Resources/Repository/contracts/release/parsing.ts
   function parseRepositoryRelease(value3) {
     const source2 = readRecord(value3);
@@ -30987,6 +31220,9 @@ ${controls_default3}`;
   function fetchRepositoryCandidateStatus(candidateId, signal) {
     return get("/candidates/status", parseRepositoryCandidateResponse, { candidateId }, signal);
   }
+  function fetchRepositoryCandidateReport(candidateId, signal) {
+    return get("/candidates/report", parseRepositoryCandidateReport, { candidateId }, signal);
+  }
   function requestRepositoryReevaluation(input2, signal) {
     return postJson2("/reevaluations", input2, parseRepositoryReevaluationResult, signal);
   }
@@ -31147,6 +31383,138 @@ ${controls_default3}`;
     return line3;
   }
 
+  // src/components/admin/Resources/Repository/render/candidateReport/migrations.ts
+  function renderCandidateMigrations(migrations) {
+    const section = element("article", undefined, "report");
+    section.append(element("h4", `Migration verification (${migrations.length})`));
+    if (migrations.length === 0) {
+      section.append(emptyMessage("No migration input was planned for this candidate."));
+      return section;
+    }
+    for (const migration2 of migrations) {
+      section.append(renderMigration(migration2));
+    }
+    return section;
+  }
+  function renderMigration(migration2) {
+    const section = element("section", undefined, "migration-report");
+    section.append(element("h5", `${migration2.source.version} → ${migration2.target.version}`), metadata([
+      `Connector ${migration2.connectorKey}`,
+      `Lineage ${migration2.lineageId}`,
+      `Revisions ${migration2.sourceMigrationRevision} → ${migration2.targetMigrationRevision}`,
+      `Source range ${migration2.supportedSourceRange}`
+    ]), codeLine2("Migration input", migration2.migrationInputDigest), codeLine2("Source package", migration2.source.packageDigest), codeLine2("Target package", migration2.target.packageDigest));
+    if (!migration2.result) {
+      section.append(emptyMessage("Migration verification is pending."));
+      return section;
+    }
+    const result = migration2.result;
+    section.append(metadata([`Runner ${result.runnerDigest}`, `Environment ${result.environmentDigest}`]), targetState("Fresh target", result.freshTarget), targetState("Migrated target", result.migratedTarget), observation("Equivalence", result.equivalence, `equivalent ${displayBoolean(result.equivalence.equivalent)} · ${result.equivalence.differenceCount} difference(s)`), observation("Ledger", result.ledger, [
+      `revision ${result.ledger.sourceRevision ?? "?"} → ${result.ledger.targetRevision ?? "?"}`,
+      `atomic ${displayBoolean(result.ledger.migrationAndLedgerAtomic)}`,
+      `checksum rejection ${displayBoolean(result.ledger.checksumMismatchRejected)}`,
+      `empty-ledger rejection ${displayBoolean(result.ledger.emptyLedgerRejected)}`,
+      `rows ${result.ledger.migrationIds.join(", ") || "none"}`
+    ].join(" · ")), observation("Replay", result.replay, `unchanged ${displayBoolean(result.replay.unchanged)} · rows ${result.replay.ledgerRowsBefore ?? "?"}/${result.replay.ledgerRowsAfterFirstRun ?? "?"}/${result.replay.ledgerRowsAfterReplay ?? "?"}`), observation("CMS-mediated cutover", result.cutover.cmsMediated, `${result.cutover.cmsMediated.strategy} · ${result.cutover.cmsMediated.bindingRevisionBefore ?? "?"} → ${result.cutover.cmsMediated.bindingRevisionAfter ?? "?"}`), observation("Provider-direct cutover", result.cutover.providerDirect, `${result.cutover.providerDirect.strategy} · callbacks ${result.cutover.providerDirect.callbackIds.join(", ") || "none"} · signing continuity ${displayBoolean(result.cutover.providerDirect.signingSecretContinuityObserved)}`), observation("Activation", result.cutover.activation, `point of no return ${displayBoolean(result.cutover.activation.pointOfNoReturnCrossed)} · cleanup ${displayBoolean(result.cutover.activation.cleanupObserved)}`));
+    return section;
+  }
+  function targetState(title2, target2) {
+    return observation(title2, target2, `state ${target2.stateDigest ?? "not recorded"} · schema ${target2.schemaDigest ?? "not recorded"} · data ${target2.dataDigest ?? "not recorded"} · functions ${target2.functionDigests.length}`);
+  }
+  function observation(title2, value3, detail) {
+    const node = element("div", undefined, "candidate-observation");
+    node.append(element("strong", `${title2}: ${value3.status}`), metadata([
+      detail,
+      value3.diagnosticCodes.length > 0 ? `Diagnostics ${value3.diagnosticCodes.join(", ")}` : undefined,
+      value3.evidenceDigests.length > 0 ? `${value3.evidenceDigests.length} evidence object(s)` : undefined
+    ]));
+    return node;
+  }
+  function displayBoolean(value3) {
+    return value3 === undefined ? "not recorded" : value3 ? "yes" : "no";
+  }
+  function codeLine2(label3, value3) {
+    const line3 = element("p", undefined, "metadata");
+    line3.append(document.createTextNode(`${label3}: `), element("code", value3));
+    return line3;
+  }
+
+  // src/components/admin/Resources/Repository/render/candidateReport/verification.ts
+  function renderCandidateVerification(verification2) {
+    const section = element("article", undefined, "report");
+    section.dataset.outcome = verification2.outcome ?? verification2.state;
+    section.append(element("h4", `Verification: ${verification2.outcome ?? verification2.state}`), metadata([
+      `Runner ${verification2.runner.name} ${verification2.runner.version}`,
+      verification2.environment ? `Environment ${verification2.environment.versions.map(({ name, version }) => `${name} ${version}`).join(", ")}` : "Environment pending"
+    ]));
+    if (verification2.suites.length === 0) {
+      section.append(emptyMessage("No verification suite was planned."));
+      return section;
+    }
+    const list = element("ul", undefined, "suite-list");
+    for (const suite of verification2.suites) {
+      const item = element("li");
+      item.append(element("strong", `${suite.suiteId}: ${suite.outcome ?? "planned"}`), metadata([
+        `Source ${suite.source}`,
+        suite.durationMs === undefined ? undefined : `${suite.durationMs} ms`,
+        suite.attempts === undefined ? undefined : `${suite.attempts} attempt(s)`,
+        suite.cacheHit === undefined ? undefined : suite.cacheHit ? "cache hit" : "cache miss",
+        suite.applicable === undefined ? undefined : suite.applicable ? "applicable" : "not applicable"
+      ]));
+      if (suite.diagnosticCodes.length > 0) {
+        item.append(element("p", `Diagnostics: ${suite.diagnosticCodes.join(", ")}`, "metadata"));
+      }
+      list.append(item);
+    }
+    section.append(list);
+    return section;
+  }
+
+  // src/components/admin/Resources/Repository/render/candidateReport/index.ts
+  function renderRepositoryCandidateReport(target2, report) {
+    const section = element("section", undefined, "candidate-report");
+    section.append(element("h3", `Admission report for ${report.candidate.kind}@${report.candidate.version}`), metadata([
+      `Candidate ${report.candidate.candidateId}`,
+      `Status ${report.candidate.status}`,
+      `Attempt ${report.candidate.attemptCount}`
+    ]), codeLine3("Package digest", report.candidate.packageDigest), codeLine3("Verification digest", report.candidate.verificationDigest));
+    section.append(report.compatibility ? renderCompatibility(report.compatibility) : pending("Compatibility was not evaluated."), report.verification ? renderCandidateVerification(report.verification) : pending("Verification was not planned."), renderCandidateMigrations(report.migrations));
+    target2.replaceChildren(section);
+  }
+  function renderCompatibility(compatibility2) {
+    const section = element("article", undefined, "report");
+    section.dataset.outcome = compatibility2.outcome;
+    section.append(element("h4", `Compatibility: ${compatibility2.outcome}`), metadata([
+      `Contract ${compatibility2.contractAdmissible ? "admissible" : "not admissible"}`,
+      `Release ${compatibility2.releaseLevel}`,
+      `Required ${compatibility2.requiredReleaseLevel}`,
+      `${compatibility2.baselines.length} blocking baseline(s)`,
+      `${compatibility2.informationalBaselines.length} informational baseline(s)`
+    ]));
+    if (compatibility2.findings.length === 0) {
+      section.append(emptyMessage("No compatibility findings."));
+    } else {
+      const list = element("ul", undefined, "evidence-list");
+      for (const finding of compatibility2.findings) {
+        const item = element("li");
+        item.append(element("strong", `${finding.classification} · ${finding.surface} · ${finding.code}`), document.createTextNode(` — ${finding.path}: ${finding.message}`));
+        list.append(item);
+      }
+      section.append(list);
+    }
+    return section;
+  }
+  function pending(message) {
+    const section = element("article", undefined, "report");
+    section.append(emptyMessage(message));
+    return section;
+  }
+  function codeLine3(label3, value3) {
+    const line3 = element("p", undefined, "metadata");
+    line3.append(document.createTextNode(`${label3}: `), element("code", value3));
+    return line3;
+  }
+
   // src/components/admin/Resources/Repository/render/feedback.ts
   function clearFeedback(target2) {
     target2.replaceChildren();
@@ -31276,9 +31644,9 @@ ${controls_default3}`;
       `Status ${release.status}`,
       `Installable ${release.installable ? "yes" : "no"}`,
       `Fresh-install-only ${release.freshInstallOnly ? "yes" : "no"}`
-    ]), codeLine2("Package digest", release.packageDigest));
+    ]), codeLine4("Package digest", release.packageDigest));
     if (release.verificationDigest) {
-      fragment.append(codeLine2("Verification bundle digest", release.verificationDigest));
+      fragment.append(codeLine4("Verification bundle digest", release.verificationDigest));
     }
     appendDecision(fragment, release);
     appendVerification(fragment, release);
@@ -31293,7 +31661,7 @@ ${controls_default3}`;
     }
     const decision2 = element("article", undefined, "report");
     decision2.dataset.outcome = release.decision.admissible ? "compatible" : "breaking";
-    decision2.append(element("h4", `Composite decision: ${release.decision.admissible ? "admissible" : "rejected"}`), metadata([`ID ${release.decision.decisionId}`, `Created ${release.decision.createdAt}`]), codeLine2("Decision digest", release.decision.decisionDigest));
+    decision2.append(element("h4", `Composite decision: ${release.decision.admissible ? "admissible" : "rejected"}`), metadata([`ID ${release.decision.decisionId}`, `Created ${release.decision.createdAt}`]), codeLine4("Decision digest", release.decision.decisionDigest));
     if (release.decision.reasons.length > 0) {
       decision2.append(list("Decision reasons", release.decision.reasons));
     }
@@ -31314,7 +31682,7 @@ ${controls_default3}`;
       `Runner ${report.runner.name} ${report.runner.version}`,
       `Environment ${report.environment.digest}`,
       ...environmentVersions
-    ]), codeLine2("Report digest", report.reportDigest), codeLine2("Runner image", report.runner.imageDigest));
+    ]), codeLine4("Report digest", report.reportDigest), codeLine4("Runner image", report.runner.imageDigest));
     if (report.activeContracts.length > 0) {
       section.append(list("Active contracts", report.activeContracts.map(({ contractId, ownerVersion, digest }) => `${contractId}@${ownerVersion} · ${digest}`)));
     }
@@ -31341,7 +31709,7 @@ ${controls_default3}`;
       `Origin ${report.origin}`,
       `Release ${report.releaseLevel}`,
       `Required ${report.requiredReleaseLevel}`
-    ]), codeLine2("Report digest", report.reportDigest));
+    ]), codeLine4("Report digest", report.reportDigest));
     if (report.findings.length > 0) {
       section.append(list("Findings", report.findings.map((finding) => `${finding.classification} · ${finding.surface}:${finding.path} · ${finding.code} — ${finding.message}`)));
     }
@@ -31366,7 +31734,7 @@ ${controls_default3}`;
         `Delayed cleanup ${migration2.delayedCleanupVerified ? "verified" : "not verified"}`,
         ...operationalMetadata(migration2)
       ]);
-      report.append(codeLine2("Report digest", migration2.reportDigest), codeLine2("Runner image", migration2.runner.imageDigest), codeLine2("Environment digest", migration2.environmentDigest), list("Checks", Object.entries(migration2.checks).map(([name, result]) => `${name} · ${result.outcome}${result.evidenceDigest ? ` · ${result.evidenceDigest}` : ""}`)));
+      report.append(codeLine4("Report digest", migration2.reportDigest), codeLine4("Runner image", migration2.runner.imageDigest), codeLine4("Environment digest", migration2.environmentDigest), list("Checks", Object.entries(migration2.checks).map(([name, result]) => `${name} · ${result.outcome}${result.evidenceDigest ? ` · ${result.evidenceDigest}` : ""}`)));
       target2.append(report);
     }
   }
@@ -31407,7 +31775,7 @@ ${controls_default3}`;
     node.append(element("h4", title2), metadata(parts));
     return node;
   }
-  function codeLine2(label3, value3) {
+  function codeLine4(label3, value3) {
     const line3 = element("p", undefined, "metadata");
     line3.append(document.createTextNode(`${label3}: `), element("code", value3));
     return line3;
@@ -31633,6 +32001,9 @@ ${controls_default3}`;
       }
     }
     forgetRepositoryCandidate(candidate.candidateId);
+    if (candidate.status === "rejected" || candidate.status === "expired") {
+      config.onReport(await config.fetchReport(candidate.candidateId, config.signal));
+    }
     return candidate;
   }
   function rememberedRepositoryCandidate() {
@@ -31995,12 +32366,16 @@ ${controls_default3}`;
     }
     async monitorCandidate(initial) {
       const feedback = this.query("[data-candidate-progress]");
+      const reportTarget = this.query("[data-candidate-report]");
+      reportTarget.replaceChildren();
       const candidate = await monitorRepositoryCandidate(initial, {
         signal: this.signal(),
         fetchStatus: fetchRepositoryCandidateStatus,
+        fetchReport: fetchRepositoryCandidateReport,
         onCandidate: (current) => {
           showFeedback(feedback, `${current.kind}@${current.version}: ${current.status}, attempt ${current.attemptCount}.`);
         },
+        onReport: (report) => renderRepositoryCandidateReport(reportTarget, report),
         onRetry: (current, retryInMs) => {
           showFeedback(feedback, `${current.kind}@${current.version}: repository temporarily unavailable; retrying in ${Math.ceil(retryInMs / 1000)}s.`);
         }

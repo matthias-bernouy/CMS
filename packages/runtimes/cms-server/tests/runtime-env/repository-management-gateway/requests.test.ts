@@ -7,10 +7,10 @@ import type {
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { validateIntegrationCandidateEnvelope } from "@bernouy/cms-integration-verification";
 import { gateway, jsonResponse, managementResponseFor, packageFixture, TEST_ACTOR, TEST_TOKEN } from "./fixtures";
-import { revisionReport, TEST_KIND, TEST_VERSION } from "./reports";
+import { candidateReport, revisionReport, TEST_KIND, TEST_VERSION } from "./reports";
 
 describe("HTTP repository management gateway requests", () => {
-    test("calls only the seven allowlisted endpoints with exact application headers", async () => {
+    test("calls only allowlisted endpoints with exact application headers", async () => {
         const publication = await packageFixture();
         const captured: Array<{ url: URL; init: RequestInit }> = [];
         const after = "report/revision?cursor=yes&next=1";
@@ -145,7 +145,7 @@ describe("HTTP repository management gateway requests", () => {
         }
     });
 
-    test("submits candidates, polls progress, reads release evidence, and blocks with an injected actor", async () => {
+    test("submits candidates, polls progress, reads reports and release evidence, and blocks", async () => {
         const packageValue = await packageFixture();
         const candidate = await validateIntegrationCandidateEnvelope({
             schema: "cms.integration.candidate.v1",
@@ -172,6 +172,9 @@ describe("HTTP repository management gateway requests", () => {
             if (url.pathname.endsWith("/release")) {
                 return jsonResponse(releaseEvidence());
             }
+            if (url.pathname.endsWith("/candidates/report")) {
+                return jsonResponse(candidateReport());
+            }
             if (url.pathname.endsWith("/candidates/status")) {
                 return jsonResponse({ candidate: candidateStatus(candidate) });
             }
@@ -189,20 +192,23 @@ describe("HTTP repository management gateway requests", () => {
             await client.release(TEST_KIND, TEST_VERSION),
             await client.submitCandidate(candidateBytes),
             await client.candidateStatus("candidate-1"),
+            await client.candidateReport("candidate-1"),
             await client.blockVersion(block),
         ];
 
-        expect(responses.map(({ status }) => status)).toEqual([200, 202, 200, 201]);
+        expect(responses.map(({ status }) => status)).toEqual([200, 202, 200, 200, 201]);
         expect(captured.map(({ url }) => url.pathname)).toEqual([
             "/.cms/repository-management/api/integrations/release",
             "/.cms/repository-management/api/integrations/candidates",
             "/.cms/repository-management/api/integrations/candidates/status",
+            "/.cms/repository-management/api/integrations/candidates/report",
             "/.cms/repository-management/api/integrations/version-blocks",
         ]);
         expect(captured[0]!.url.searchParams.get("version")).toBe(TEST_VERSION);
         expect(captured[2]!.url.searchParams.get("candidateId")).toBe("candidate-1");
+        expect(captured[3]!.url.searchParams.get("candidateId")).toBe("candidate-1");
         expect(new Uint8Array(captured[1]!.init.body as ArrayBuffer)).toEqual(candidateBytes);
-        expect(await requestJson(captured[3]!.init)).toEqual({ ...block, actor: TEST_ACTOR });
+        expect(await requestJson(captured[4]!.init)).toEqual({ ...block, actor: TEST_ACTOR });
     });
 });
 

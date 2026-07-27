@@ -47,6 +47,9 @@ export function mountRepositoryManagementRoutes(runner: Runner, access: Reposito
     runner.get("/repository/candidates/status", (request) =>
         callGateway(access, (gateway) => gateway.candidateStatus(repositoryRequiredQuery(request, "candidateId"))),
     );
+    runner.get("/repository/candidates/report", (request) =>
+        callGateway(access, (gateway) => gateway.candidateReport(repositoryRequiredQuery(request, "candidateId"))),
+    );
     runner.post("/repository/reevaluations", async (request) =>
         callGateway(access, async (gateway) =>
             gateway.reevaluate(parseRepositoryReevaluation(await readRepositoryControlJson(request, MAX_JSON_BYTES))),

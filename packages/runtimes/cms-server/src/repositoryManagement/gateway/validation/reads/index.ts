@@ -35,6 +35,7 @@ const RECOVERY_CODES = [
 ] as const;
 export { validateReleaseResponse } from "./release";
 export { validateVersionsResponse } from "./versions";
+export { validateCandidateReportResponse } from "./candidateReport";
 
 export function validateStatusResponse(
     response: RepositoryManagementTransportResponse,

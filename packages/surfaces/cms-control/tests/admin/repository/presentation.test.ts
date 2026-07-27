@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import staticPage from "../../../src/static/admin/_operations/repository.html" with { type: "text" };
+import { parseRepositoryCandidateReport } from "cms-control/components/admin/Resources/Repository/contracts/candidateReport";
+import { renderRepositoryCandidateReport } from "cms-control/components/admin/Resources/Repository/render/candidateReport";
 import { renderRepositoryRelease } from "cms-control/components/admin/Resources/Repository/render/release";
 import {
     installRepositoryFetch,
@@ -10,6 +12,7 @@ import {
     selectCurrentVersion,
 } from "./fixtures";
 import { releaseFixture } from "./reportFixtures";
+import { candidateReportFixture } from "./responses";
 
 afterEach(resetRepositoryDom);
 
@@ -92,6 +95,33 @@ describe("repository administration presentation", () => {
             "CMS cutover binding-revision · execution status not recorded by this legacy report",
         );
         expect(target.textContent).toContain("Activation status not recorded by this legacy report");
+    });
+
+    test("parses and safely renders terminal candidate compatibility, verification, and migration evidence", () => {
+        const parsed = parseRepositoryCandidateReport(candidateReportFixture());
+        const target = document.createElement("div");
+
+        renderRepositoryCandidateReport(target, parsed);
+
+        expect(parsed.candidate.failureCode).toBe("verification-failed");
+        expect(target.textContent).toContain("Admission report for commerce@1.2.0");
+        expect(target.textContent).toContain("Compatibility: breaking");
+        expect(target.textContent).toContain("behavioral-rls: failed");
+        expect(target.textContent).toContain("42 ms");
+        expect(target.textContent).toContain("2 attempt(s)");
+        expect(target.textContent).toContain("cache miss");
+        expect(target.textContent).toContain("rls-cross-tenant-visible");
+        expect(target.textContent).toContain("1.1.0 → 1.2.0");
+        expect(target.textContent).toContain("Fresh target: passed");
+        expect(target.textContent).toContain("Equivalence: passed");
+        expect(target.textContent).toContain("CMS-mediated cutover: passed");
+        expect(target.textContent).toContain("Provider-direct cutover: not-applicable");
+        expect(target.textContent).toContain("Literal <img src=x onerror=alert(1)> finding");
+        expect(target.querySelector('img[src="x"]')).toBeNull();
+
+        const malformed = candidateReportFixture();
+        malformed.report.verification.suites[0]!.attempts = -1;
+        expect(() => parseRepositoryCandidateReport(malformed)).toThrow();
     });
 
     test("ships a distinct static repository page", () => {

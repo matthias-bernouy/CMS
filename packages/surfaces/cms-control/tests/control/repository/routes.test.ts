@@ -14,6 +14,7 @@ describe("Control repository management routes", () => {
         const gateway = new RecordingGateway();
         const runner = configuredRunner(gateway);
         expect([...runner.routes.keys()].sort()).toEqual([
+            "GET /repository/candidates/report",
             "GET /repository/candidates/status",
             "GET /repository/compatibility",
             "GET /repository/diagnostics",
@@ -31,12 +32,14 @@ describe("Control repository management routes", () => {
         await runner.request("GET", "/repository/versions?kind=commerce");
         await runner.request("GET", "/repository/release?kind=commerce&version=1.1.0");
         await runner.request("GET", "/repository/candidates/status?candidateId=candidate-1");
+        await runner.request("GET", "/repository/candidates/report?candidateId=candidate-1");
         await runner.request("GET", "/repository/compatibility?kind=commerce&version=1.1.0&after=report-1&limit=25");
         expect(gateway.calls).toEqual([
             ["status"],
             ["versions", "commerce"],
             ["release", "commerce", "1.1.0"],
             ["candidateStatus", "candidate-1"],
+            ["candidateReport", "candidate-1"],
             ["compatibility", { kind: "commerce", version: "1.1.0", after: "report-1", limit: 25 }],
         ]);
     });
@@ -204,6 +207,9 @@ class RecordingGateway implements RepositoryManagementGateway {
     }
     candidateStatus(candidateId: string) {
         return this.respond("candidateStatus", candidateId);
+    }
+    candidateReport(candidateId: string) {
+        return this.respond("candidateReport", candidateId);
     }
     reevaluate(input: RepositoryReevaluationInput) {
         this.reevaluation = input;

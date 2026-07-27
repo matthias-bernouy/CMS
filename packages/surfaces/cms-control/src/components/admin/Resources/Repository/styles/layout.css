@@ -70,11 +70,23 @@ cms-repository-admin .lookup label {
 }
 
 cms-repository-admin .diagnostic,
+cms-repository-admin .candidate-report,
 cms-repository-admin .report,
 cms-repository-admin .quarantine {
     border-left: 3px solid #cbd5e1;
     margin: 0.65rem 0;
     padding: 0.45rem 0.75rem;
+}
+
+cms-repository-admin .candidate-report {
+    border-color: #2257d6;
+    margin-top: 1rem;
+}
+
+cms-repository-admin .candidate-observation,
+cms-repository-admin .migration-report {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 0.65rem;
 }
 
 cms-repository-admin .report[data-outcome="breaking"],

@@ -39,10 +39,10 @@ export function validateCandidateSubmissionResponse(
     expected: CandidateIdentity,
 ): SanitizedRepositoryManagementResult {
     if (response.status !== 202) {
-        return validateCandidateError(response);
+        return validateCandidateErrorResponse(response);
     }
     const body = exactObject(response.body, ["candidate"]);
-    validateCandidate(body.candidate, expected);
+    validateCandidateProjection(body.candidate, expected);
     return { status: 202, body };
 }
 
@@ -51,15 +51,15 @@ export function validateCandidateStatusResponse(
     candidateId: string,
 ): SanitizedRepositoryManagementResult {
     if (response.status !== 200) {
-        return validateCandidateError(response);
+        return validateCandidateErrorResponse(response);
     }
     const body = exactObject(response.body, ["candidate"]);
-    const candidate = validateCandidate(body.candidate);
+    const candidate = validateCandidateProjection(body.candidate);
     assertEqual(candidate.candidateId, candidateId);
     return { status: 200, body };
 }
 
-function validateCandidate(value: unknown, expected?: CandidateIdentity): JsonObject {
+export function validateCandidateProjection(value: unknown, expected?: CandidateIdentity): JsonObject {
     const candidate = exactObject(
         value,
         [
@@ -126,7 +126,9 @@ function validateFailure(value: unknown): void {
     isoTimestamp(failure.occurredAt);
 }
 
-function validateCandidateError(response: RepositoryManagementTransportResponse): SanitizedRepositoryManagementResult {
+export function validateCandidateErrorResponse(
+    response: RepositoryManagementTransportResponse,
+): SanitizedRepositoryManagementResult {
     const body = exactObject(response.body, ["code", "error"]);
     const code = canonicalText(body.code, 512);
     canonicalText(body.error, 2_048);

@@ -10,10 +10,14 @@ import {
 } from "./fixtures";
 import {
     admissionReport,
+    candidateProjection,
+    candidateReport,
     compatibilityPage,
     promotionRecord,
     revisionReport,
+    TEST_CANDIDATE_DIGEST,
     TEST_KIND,
+    TEST_VERIFICATION_DIGEST,
     TEST_VERSION,
 } from "./reports";
 
@@ -108,6 +112,20 @@ describe("HTTP repository management gateway DTO validation", () => {
                         201,
                     ),
                 ).promoteStable(promotionInput()),
+            () =>
+                gateway(
+                    oneResponse(candidateReport({ privatePackage: { sql: "SELECT private_secret" } })),
+                ).candidateReport("candidate-1"),
+            () =>
+                gateway(
+                    oneResponse(
+                        candidateReport({ candidate: candidateProjection({ candidateId: "candidate-substituted" }) }),
+                    ),
+                ).candidateReport("candidate-1"),
+            () => gateway(oneResponse(tamperedCandidateReport("verification"))).candidateReport("candidate-1"),
+            () => gateway(oneResponse(tamperedCandidateReport("migration"))).candidateReport("candidate-1"),
+            () => gateway(oneResponse(tamperedCandidateReport("diagnostic"))).candidateReport("candidate-1"),
+            () => gateway(oneResponse(tamperedCandidateReport("finding"))).candidateReport("candidate-1"),
         ];
         for (const execute of cases) {
             expect((await execute()).status).toBe(503);
@@ -152,10 +170,21 @@ describe("HTTP repository management gateway DTO validation", () => {
                         201,
                     ),
                 ).promoteStable(promotionInput()),
+            () => gateway(oneResponse(candidateReport())).candidateReport("candidate-1"),
+            () => gateway(oneResponse(plannedCandidateReport())).candidateReport("candidate-1"),
         ];
         expect(await Promise.all(successCases.map(async (execute) => (await execute()).status))).toEqual([
-            200, 200, 200, 200, 201, 201, 201,
+            200, 200, 200, 200, 201, 201, 201, 200, 200,
         ]);
+    });
+
+    test("preserves a sanitized candidate report absence", async () => {
+        const response = await gateway(
+            oneResponse({ code: "candidate_not_found", error: "Private candidate path did not exist" }, 404),
+        ).candidateReport("candidate-1");
+
+        expect(response.status).toBe(404);
+        expect(await response.json()).toEqual({ code: "candidate_not_found", error: "Candidate operation failed" });
     });
 
     test("never forwards upstream response headers", async () => {
@@ -184,4 +213,52 @@ function promotionInput() {
         currentReportRevisionId: "report-admission",
         confirmation: { version: TEST_VERSION, reportRevisionId: "report-admission" },
     };
+}
+
+function plannedCandidateReport() {
+    return candidateReport({
+        compatibility: undefined,
+        verification: {
+            state: "planned",
+            bindings: {
+                candidateId: "candidate-1",
+                candidateDigest: TEST_CANDIDATE_DIGEST,
+                packageDigest: "a".repeat(64),
+                verificationDigest: TEST_VERIFICATION_DIGEST,
+                policyDigest: "e".repeat(64),
+            },
+            runner: { name: "cms-postgres", version: "1.0.0", imageDigest: `sha256:${"f".repeat(64)}` },
+            suites: [
+                {
+                    suiteId: "platform-clean-install",
+                    source: "platform",
+                    contentDigest: "1".repeat(64),
+                    applicable: true,
+                },
+            ],
+        },
+        migrations: [],
+    });
+}
+
+function tamperedCandidateReport(target: "verification" | "migration" | "diagnostic" | "finding") {
+    const body = structuredClone(candidateReport()) as {
+        report: {
+            verification: { bindings: { packageDigest: string }; suites: Array<{ diagnostics: unknown[] }> };
+            migrations: Array<{ target: { packageDigest: string } }>;
+            compatibility: { findings: Array<{ baselineDigest: string }> };
+        };
+    };
+    if (target === "verification") {
+        body.report.verification.bindings.packageDigest = "f".repeat(64);
+    } else if (target === "migration") {
+        body.report.migrations[0]!.target.packageDigest = "f".repeat(64);
+    } else if (target === "diagnostic") {
+        body.report.verification.suites[0]!.diagnostics = [
+            { code: "contract-failed", redacted: true, message: "Private fixture contents" },
+        ];
+    } else {
+        body.report.compatibility.findings[0]!.baselineDigest = "f".repeat(64);
+    }
+    return body;
 }

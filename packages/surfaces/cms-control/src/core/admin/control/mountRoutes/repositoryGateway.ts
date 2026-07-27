@@ -54,6 +54,7 @@ export interface RepositoryManagementGateway {
     publish(packageDocument: Uint8Array): Promise<Response>;
     submitCandidate(candidateDocument: Uint8Array): Promise<Response>;
     candidateStatus(candidateId: string): Promise<Response>;
+    candidateReport(candidateId: string): Promise<Response>;
     reevaluate(input: RepositoryReevaluationInput): Promise<Response>;
     promoteStable(input: RepositoryStablePromotionInput): Promise<Response>;
     blockVersion(input: RepositoryVersionBlockInput): Promise<Response>;

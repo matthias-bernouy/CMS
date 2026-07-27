@@ -38,6 +38,7 @@ import { validatePublicationResponse } from "./validation/mutations/publication"
 import { validateReevaluationResponse } from "./validation/mutations/reevaluation";
 import {
     validateCompatibilityResponse,
+    validateCandidateReportResponse,
     validateDiagnosticsResponse,
     validateReleaseResponse,
     validateStatusResponse,
@@ -51,6 +52,7 @@ const PATHS = {
     compatibility: "/api/integrations/compatibility",
     publications: "/api/integrations/publications",
     candidates: "/api/integrations/candidates",
+    candidateReport: "/api/integrations/candidates/report",
     candidateStatus: "/api/integrations/candidates/status",
     release: "/api/integrations/release",
     reevaluations: "/api/integrations/compatibility/reevaluations",
@@ -171,6 +173,17 @@ export class HttpRepositoryManagementGateway implements RepositoryManagementGate
             const url = this.endpoint(PATHS.candidateStatus);
             url.searchParams.set("candidateId", expected);
             return this.sanitized(validateCandidateStatusResponse(await this.request(url, "GET"), expected));
+        } catch {
+            return repositoryManagementUnavailableResponse();
+        }
+    }
+
+    async candidateReport(candidateId: string): Promise<Response> {
+        try {
+            const expected = repositoryCandidateId(candidateId);
+            const url = this.endpoint(PATHS.candidateReport);
+            url.searchParams.set("candidateId", expected);
+            return this.sanitized(validateCandidateReportResponse(await this.request(url, "GET"), expected));
         } catch {
             return repositoryManagementUnavailableResponse();
         }

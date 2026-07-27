@@ -1,6 +1,7 @@
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import { parseRepositoryDiagnostics, parseRepositoryStatus, parseRepositoryVersions } from "./contracts/read";
 import { parseRepositoryCandidateResponse, type RepositoryCandidateView } from "./contracts/candidates";
+import { parseRepositoryCandidateReport, type RepositoryCandidateReportView } from "./contracts/candidateReport";
 import { parseRepositoryRelease } from "./contracts/release/parsing";
 import type { RepositoryReleaseView } from "./contracts/release/types";
 import { readOptionalText, readRecord } from "./contracts/parsing";
@@ -93,6 +94,13 @@ export function fetchRepositoryCandidateStatus(
     signal?: AbortSignal,
 ): Promise<RepositoryCandidateView> {
     return get("/candidates/status", parseRepositoryCandidateResponse, { candidateId }, signal);
+}
+
+export function fetchRepositoryCandidateReport(
+    candidateId: string,
+    signal?: AbortSignal,
+): Promise<RepositoryCandidateReportView> {
+    return get("/candidates/report", parseRepositoryCandidateReport, { candidateId }, signal);
 }
 
 export function requestRepositoryReevaluation(
