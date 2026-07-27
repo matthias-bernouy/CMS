@@ -2,6 +2,7 @@ import { findIntegration } from "../definitions/catalog";
 import { IntegrationInputError, MissingIntegrationParam } from "../errors";
 import type { IntegrationAnswerValue, IntegrationDefinition } from "../../interfaces/Integration";
 import type { IntegrationImportDto, IntegrationImportRequest } from "../../interfaces/IntegrationImport";
+import { objectListAnswer } from "./objectListAnswers";
 import { assertDefinitionUsable, parseOptionalDefinition } from "./definition/definition";
 import {
     booleanAnswer,
@@ -53,7 +54,7 @@ function parseAnswers(
 ): Record<string, IntegrationAnswerValue> {
     const answers: Record<string, IntegrationAnswerValue> = {};
     for (const input of definition.inputs) {
-        const raw = answerValue(rawAnswers[input.name], input.defaultValue);
+        const raw = answerValue(rawAnswers[input.name], input.type === "object-list" ? undefined : input.defaultValue);
         if (raw === undefined || raw === null || raw === "") {
             if (input.required) {
                 throw new MissingIntegrationParam(`answers.${input.name}`);
@@ -64,6 +65,8 @@ function parseAnswers(
             answers[input.name] = booleanAnswer(raw, `answers.${input.name}`);
         } else if (input.type === "json") {
             answers[input.name] = jsonAnswer(raw, `answers.${input.name}`);
+        } else if (input.type === "object-list") {
+            answers[input.name] = objectListAnswer(input, raw);
         } else {
             answers[input.name] = stringAnswer(input, raw);
         }

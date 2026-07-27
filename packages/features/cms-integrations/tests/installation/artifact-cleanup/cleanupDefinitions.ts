@@ -77,6 +77,44 @@ export function blocDefinition(version: string, includeArtifact: boolean): Integ
     };
 }
 
+export function hookCleanupDefinition(version: string, includeLegacy: boolean): IntegrationDefinition {
+    return {
+        kind: "hook-cleanup",
+        label: "Hook cleanup",
+        version,
+        inputs: [],
+        afterInstallation: [
+            {
+                id: "sync",
+                steps: [{ id: "sync", call: { source: "hook-source", endpoint: "read" } }],
+            },
+        ],
+        artifacts: [
+            sourceArtifact("hook-source", `https://hook.test/${version}`),
+            ...(includeLegacy ? [sourceArtifact("legacy-source", "https://hook.test/legacy")] : []),
+        ],
+    };
+}
+
+function sourceArtifact(id: string, targetUrl: string) {
+    return {
+        type: "source" as const,
+        source: {
+            id,
+            meta: { name: id },
+            endpoints: [
+                {
+                    endpointId: "read",
+                    method: "GET" as const,
+                    targetUrl,
+                    params: [],
+                    output: [{ status: "200" as const, body: { type: "object" as const } }],
+                },
+            ],
+        },
+    };
+}
+
 function legacyFunctionArtifact() {
     return {
         type: "function" as const,

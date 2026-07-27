@@ -17,6 +17,7 @@ export function defaultSystem(): TSystem {
             login: null,
         },
         editor: { layoutCategory: "" },
+        auth: { signupLegalDocuments: [] },
         theme: defaultThemeSettings(),
         security: { connectExtras: [], mediaExtras: [] },
         email: {

@@ -32,14 +32,16 @@ describe("commerce protected C2C claims and refunds", () => {
         });
     });
 
-    test("keeps business key and financial allocation inside Commerce", async () => {
+    test("keeps business key and seller recovery inside Commerce while requiring component allocation", async () => {
         const response = await requestCommerce("/admin/order/refund", {
             userId: "admin-7",
             userRole: "admin",
             body: {
                 orderId: 42,
                 reason: "admin_resolution",
-                amount: 8_000,
+                idempotencyKey: "refund-operation-42",
+                merchandiseRefundAmount: 7_600,
+                shippingRefundAmount: 0,
                 protectionFeeRefundAmount: 400,
                 sellerRecoveryAmount: 7_600,
                 businessKey: "attacker-controlled-key",
@@ -47,12 +49,15 @@ describe("commerce protected C2C claims and refunds", () => {
         });
 
         expect(response.status).toBe(201);
-        expect(expectSingleRpc("request_order_refund").body).toEqual({
+        expect(expectSingleRpc("request_allocated_order_refund").body).toEqual({
             p_order_id: 42,
             p_reason: "admin_resolution",
-            p_requested_amount: 8_000,
+            p_merchandise_refund_amount: 7_600,
+            p_shipping_refund_amount: 0,
+            p_protection_fee_refund_amount: 400,
             p_actor_kind: "admin",
             p_actor_id: "admin-7",
+            p_idempotency_key: "refund-operation-42",
         });
     });
 
@@ -77,7 +82,8 @@ describe("commerce protected C2C claims and refunds", () => {
             body: {
                 claimId: 7,
                 outcome: "split",
-                buyerRefundAmount: 4_000,
+                merchandiseRefundAmount: 3_750,
+                shippingRefundAmount: 0,
                 sellerTransferAmount: 5_500,
                 protectionFeeRefundAmount: 250,
                 decisionReason: "partial mismatch",
@@ -86,10 +92,11 @@ describe("commerce protected C2C claims and refunds", () => {
         });
 
         expect(response.status).toBe(200);
-        expect(expectSingleRpc("resolve_marketplace_claim").body).toEqual({
+        expect(expectSingleRpc("resolve_allocated_marketplace_claim").body).toEqual({
             p_claim_id: 7,
             p_outcome: "split",
-            p_buyer_refund_amount: 4_000,
+            p_merchandise_refund_amount: 3_750,
+            p_shipping_refund_amount: 0,
             p_seller_transfer_amount: 5_500,
             p_protection_fee_refund_amount: 250,
             p_decision_reason: "partial mismatch",

@@ -48,6 +48,15 @@
                     "amount": {
                         "type": "number"
                     },
+                    "merchandiseRefundAmount": {
+                        "type": "number"
+                    },
+                    "shippingRefundAmount": {
+                        "type": "number"
+                    },
+                    "allocationVersion": {
+                        "type": "number"
+                    },
                     "authorizedSellerAmount": {
                         "type": "number"
                     },
@@ -79,6 +88,9 @@
                     "commerceRefundRequestId",
                     "businessKey",
                     "amount",
+                    "merchandiseRefundAmount",
+                    "shippingRefundAmount",
+                    "allocationVersion",
                     "authorizedSellerAmount",
                     "sellerEntitlementReductionAmount",
                     "sellerRecoveryAmount",

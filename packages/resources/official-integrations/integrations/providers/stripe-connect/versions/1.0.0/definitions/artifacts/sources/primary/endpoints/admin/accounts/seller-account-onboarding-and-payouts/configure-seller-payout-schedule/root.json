@@ -27,6 +27,9 @@
             "payoutScheduleChangeId": {
                 "type": "string"
             },
+            "payoutSchedule": {
+                "type": "string"
+            },
             "interval": {
                 "type": "string"
             },
@@ -57,8 +60,7 @@
         },
         "required": [
             "userId",
-            "payoutScheduleChangeId",
-            "interval"
+            "payoutScheduleChangeId"
         ]
     },
     "output": {

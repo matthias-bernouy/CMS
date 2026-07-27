@@ -5,7 +5,7 @@ import { camelize, integer, readJsonObject, requiredText, text } from "../../../
 import { listRows, one, rpc } from "../../../core/rest.ts";
 
 const refundSelect =
-    "id,public_id,order_id,claim_id,business_key,reason,status,requested_amount,protection_fee_refund_amount,seller_recovery_amount,seller_reserve_offset_amount,requires_finance_approval,dual_approval_required,requested_by_kind,requested_by,approved_by,first_approved_by,first_approved_at,second_approved_by,second_approved_at,rejected_by,decision_reason,provider_refund_id,provider_operation_key,provider_snapshot,version,created_at,updated_at";
+    "id,public_id,order_id,claim_id,business_key,reason,status,requested_amount,merchandise_refund_amount,shipping_refund_amount,protection_fee_refund_amount,allocation_version,seller_recovery_amount,seller_reserve_offset_amount,requires_finance_approval,dual_approval_required,requested_by_kind,requested_by,approved_by,first_approved_by,first_approved_at,second_approved_by,second_approved_at,rejected_by,decision_reason,provider_refund_id,provider_operation_key,provider_snapshot,version,created_at,updated_at";
 
 export async function listRefundRequests(request: Request): Promise<Response> {
     const url = new URL(request.url);
@@ -41,13 +41,47 @@ export async function getRefundRequest(request: Request): Promise<Response> {
 
 export async function requestOrderRefund(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
-    const result = await rpc("request_order_refund", {
-        p_order_id: integer(body.orderId, "orderId", true),
-        p_reason: requiredText(body.reason, "reason"),
-        p_requested_amount: integer(body.amount, "amount", true),
-        p_actor_kind: "admin",
-        p_actor_id: cmsUserId(request),
-    });
+    const orderId = integer(body.orderId, "orderId", true);
+    const reason = requiredText(body.reason, "reason");
+    const actorId = cmsUserId(request);
+    const hasLegacyAmount = body.amount !== undefined;
+    const hasAnyAllocation =
+        body.merchandiseRefundAmount !== undefined ||
+        body.shippingRefundAmount !== undefined ||
+        body.protectionFeeRefundAmount !== undefined;
+    if (hasLegacyAmount === hasAnyAllocation) {
+        throw new HttpError(400, "exactly one refund amount form is required");
+    }
+    // Stable 1.0.0 callers may not send a key yet. In that case Postgres selects
+    // the seven-argument compatibility overload and keeps the historical
+    // one-shot behavior. New callers get durable replay protection through
+    // the eight-argument overload.
+    const idempotencyKey =
+        hasAnyAllocation && body.idempotencyKey !== undefined
+            ? requiredText(body.idempotencyKey, "idempotencyKey")
+            : undefined;
+    const result = hasAnyAllocation
+        ? await rpc("request_allocated_order_refund", {
+              p_order_id: orderId,
+              p_reason: reason,
+              p_merchandise_refund_amount: integer(body.merchandiseRefundAmount, "merchandiseRefundAmount", true),
+              p_shipping_refund_amount: integer(body.shippingRefundAmount, "shippingRefundAmount", true),
+              p_protection_fee_refund_amount: integer(
+                  body.protectionFeeRefundAmount,
+                  "protectionFeeRefundAmount",
+                  true,
+              ),
+              p_actor_kind: "admin",
+              p_actor_id: actorId,
+              p_idempotency_key: idempotencyKey,
+          })
+        : await rpc("request_order_refund", {
+              p_order_id: orderId,
+              p_reason: reason,
+              p_requested_amount: integer(body.amount, "amount", true),
+              p_actor_kind: "admin",
+              p_actor_id: actorId,
+          });
     return json(camelize(result), 201);
 }
 

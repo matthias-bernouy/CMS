@@ -24,7 +24,17 @@ export async function pullSystem(adminBase: URL, token: string, siteDir: string)
     site.serverError = coercePageRef(site.serverError);
     site.login = coercePageRef(site.login);
 
-    const json = JSON.stringify({ site, editor, ...(themeSettings ? { theme: themeSettings } : {}) }, null, 4) + "\n";
+    const json =
+        JSON.stringify(
+            {
+                site,
+                editor,
+                auth: remote.auth ?? { signupLegalDocuments: [] },
+                ...(themeSettings ? { theme: themeSettings } : {}),
+            },
+            null,
+            4,
+        ) + "\n";
     await writeFile(join(siteDir, "system.json"), json, "utf-8");
     if (theme) {
         await writeFile(join(siteDir, "theme.css"), theme, "utf-8");

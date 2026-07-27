@@ -58,3 +58,81 @@ begin
     );
 end;
 $$;
+
+create or replace function commerce.request_allocated_order_refund(
+    p_order_id bigint,
+    p_reason text,
+    p_merchandise_refund_amount bigint,
+    p_shipping_refund_amount bigint,
+    p_protection_fee_refund_amount bigint,
+    p_actor_kind text,
+    p_actor_id text,
+    p_idempotency_key text
+)
+returns jsonb
+language plpgsql
+set search_path = ''
+as $$
+declare
+    v_request jsonb;
+    v_idempotency_key text := btrim(coalesce(p_idempotency_key, ''));
+    v_business_key text;
+begin
+    if p_actor_kind is distinct from 'admin' then
+        raise exception 'forbidden: admin refund request actor is required';
+    end if;
+    if length(v_idempotency_key) not between 1 and 200 then
+        raise exception 'validation: idempotency key is required and must not exceed 200 characters';
+    end if;
+    v_business_key := 'admin-order-refund:v1:' || p_order_id || ':' ||
+        encode(extensions.digest(
+            convert_to(v_idempotency_key, 'UTF8'),
+            'sha256'
+        ), 'hex');
+    v_request := commerce.create_allocated_refund_request(
+        p_order_id,
+        null,
+        v_business_key,
+        p_reason,
+        p_merchandise_refund_amount,
+        p_shipping_refund_amount,
+        p_protection_fee_refund_amount,
+        p_actor_kind,
+        p_actor_id,
+        false
+    );
+    return v_request || jsonb_build_object(
+        'refundAuthorization',
+        commerce.refund_authorization_payload((v_request->>'id')::bigint)
+    );
+end;
+$$;
+
+-- Positional SQL callers from earlier releases retain their one-shot
+-- behavior. The HTTP/source contract always uses the idempotent overload.
+create or replace function commerce.request_allocated_order_refund(
+    p_order_id bigint,
+    p_reason text,
+    p_merchandise_refund_amount bigint,
+    p_shipping_refund_amount bigint,
+    p_protection_fee_refund_amount bigint,
+    p_actor_kind text,
+    p_actor_id text
+)
+returns jsonb
+language plpgsql
+set search_path = ''
+as $$
+begin
+    return commerce.request_allocated_order_refund(
+        p_order_id,
+        p_reason,
+        p_merchandise_refund_amount,
+        p_shipping_refund_amount,
+        p_protection_fee_refund_amount,
+        p_actor_kind,
+        p_actor_id,
+        gen_random_uuid()::text
+    );
+end;
+$$;

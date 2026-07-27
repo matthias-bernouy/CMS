@@ -19,7 +19,8 @@ create table if not exists commerce.order_payment_attempts (
     cancelled_at timestamptz,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
-    constraint order_payment_attempts_provider check (provider = 'stripe'),
+    constraint order_payment_attempts_provider
+        check (provider ~ '^[a-z][a-z0-9_.-]{1,79}$'),
     constraint order_payment_attempts_provider_id check (
         provider_payment_id is null or provider_payment_id > 0
     ),
@@ -55,3 +56,8 @@ alter table commerce.order_payment_attempts
     drop constraint if exists order_payment_attempts_terms_hash;
 alter table commerce.order_payment_attempts
     add constraint order_payment_attempts_terms_hash check (financial_terms_hash ~ '^[a-f0-9]{64}$');
+alter table commerce.order_payment_attempts
+    drop constraint if exists order_payment_attempts_provider;
+alter table commerce.order_payment_attempts
+    add constraint order_payment_attempts_provider
+    check (provider ~ '^[a-z][a-z0-9_.-]{1,79}$');

@@ -59,6 +59,27 @@
 
     <section class="integration-detail" data-detail-view hidden></section>
 
+    <p9r-modal class="integration-reconfigure-modal" data-reconfigure-modal aria-label="Reconfigure integration">
+        <span slot="title" data-reconfigure-title>Reconfigure integration</span>
+        <form id="integration-reconfigure-form" data-reconfigure-form>
+            <p class="reconfigure-note">
+                Review the installation values, then save to update its resources and connectors in one sync.
+            </p>
+            <div class="fields reconfigure-fields" data-reconfigure-fields></div>
+            <p class="action-status" role="status" aria-live="polite" data-reconfigure-status></p>
+        </form>
+        <div slot="footer" class="reconfigure-actions">
+            <p9r-button type="button" variant="outlined" data-reconfigure-cancel>Cancel</p9r-button>
+            <p9r-button
+                type="submit"
+                form="integration-reconfigure-form"
+                color="primary"
+                data-reconfigure-submit
+                disabled
+            >Save and sync</p9r-button>
+        </div>
+    </p9r-modal>
+
     <template data-field-template>
         <label class="field">
             <span data-label></span>

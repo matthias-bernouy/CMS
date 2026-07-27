@@ -73,9 +73,19 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
     }
 
     async verify(email: string, password: string): Promise<Identity | null> {
+        const verified = await this._verifyPassword(email, password);
+        return verified?.emailVerified === true ? verified.identity : null;
+    }
+
+    async verifyPassword(email: string, password: string): Promise<Identity | null> {
+        return (await this._verifyPassword(email, password))?.identity ?? null;
+    }
+
+    private async _verifyPassword(
+        email: string,
+        password: string,
+    ): Promise<{ identity: Identity; emailVerified: boolean } | null> {
         const doc = await this.col.findOne({ emailIndex: this.fieldCrypto.blindIndex(normalizeEmail(email)) });
-        // Spend a verify's worth of time on an unknown email too, so timing
-        // doesn't reveal which emails are registered.
         if (!doc) {
             await dummyPasswordVerify(password);
             return null;
@@ -83,11 +93,11 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
         if (!(await Bun.password.verify(password, doc.hash))) {
             return null;
         }
-        if (doc.emailVerifiedAt === null) {
-            return null;
-        }
         const stored = await this.fieldCrypto.decrypt(doc.emailEnc);
-        return { sub: doc._id, email: stored };
+        return {
+            identity: { sub: doc._id, email: stored },
+            emailVerified: doc.emailVerifiedAt !== null,
+        };
     }
 
     async setPassword(sub: string, password: string): Promise<boolean> {

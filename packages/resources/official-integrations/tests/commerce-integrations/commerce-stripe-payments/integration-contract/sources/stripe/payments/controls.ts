@@ -33,6 +33,15 @@ export function stripePaymentControlEndpoints(): Source["endpoints"] {
                         },
                     },
                 },
+                {
+                    status: "409",
+                    body: {
+                        type: "object",
+                        properties: {
+                            error: { type: "string" },
+                        },
+                    },
+                },
             ],
         },
         {
@@ -45,8 +54,10 @@ export function stripePaymentControlEndpoints(): Source["endpoints"] {
                     properties: {
                         userId: { type: "string", semantic: { kind: "user-id", authority: "cms" } },
                         payoutScheduleChangeId: { type: "string" },
+                        payoutSchedule: { type: "string" },
                         interval: { type: "string" },
                         weeklyPayoutDays: { type: "array", items: { type: "string" } },
+                        monthlyPayoutDays: { type: "array", items: { type: "number" } },
                         minimumBalanceEur: { type: "number" },
                         delayDaysOverride: { type: "number" },
                         debitNegativeBalances: { type: "boolean" },

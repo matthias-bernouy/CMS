@@ -1,0 +1,84 @@
+[
+    {
+        "endpointId": "getBuyerLegalAcceptanceAudit",
+        "method": "GET",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/legal-acceptances",
+        "params": [
+            {
+                "name": "orderId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "orderPublicId": {
+                            "type": "string"
+                        },
+                        "checkoutGroupId": {
+                            "type": "string"
+                        },
+                        "buyerCmsUserId": {
+                            "type": "string"
+                        },
+                        "paymentAttemptIds": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        },
+                        "acceptances": {
+                            "type": "array",
+                            "items": {
+                                "$include": "../../shared/buyer-legal-acceptance-audit-item.json"
+                            }
+                        }
+                    },
+                    "required": [
+                        "orderId",
+                        "orderPublicId",
+                        "checkoutGroupId",
+                        "buyerCmsUserId",
+                        "paymentAttemptIds",
+                        "acceptances"
+                    ]
+                }
+            }
+        ]
+    }
+]

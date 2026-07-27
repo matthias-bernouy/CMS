@@ -35,8 +35,45 @@ export function registerPayoutScheduleValidationContracts(createHarness: CreateA
                 [{ ...validCommand, payoutScheduleChangeId: "x".repeat(201) }, "payoutScheduleChangeId is too long"],
                 [{ ...validCommand, interval: null }, "interval is required"],
                 [{ ...validCommand, interval: "yearly" }, "interval must be manual, daily, weekly, or monthly"],
+                [
+                    { ...validCommand, payoutSchedule: "daily" },
+                    "payoutSchedule cannot be combined with interval, weeklyPayoutDays, or monthlyPayoutDays",
+                ],
+                [
+                    {
+                        userId: validCommand.userId,
+                        payoutScheduleChangeId: validCommand.payoutScheduleChangeId,
+                        payoutSchedule: "weekly",
+                    },
+                    "payoutSchedule must be daily, manual, weekly:<weekdays>, or monthly:<days-of-month>",
+                ],
+                [
+                    {
+                        userId: validCommand.userId,
+                        payoutScheduleChangeId: validCommand.payoutScheduleChangeId,
+                        payoutSchedule: "weekly:saturday",
+                    },
+                    "payoutSchedule contains an invalid day",
+                ],
+                [
+                    {
+                        userId: validCommand.userId,
+                        payoutScheduleChangeId: validCommand.payoutScheduleChangeId,
+                        payoutSchedule: "monthly:0",
+                    },
+                    "payoutSchedule must be daily, manual, weekly:<weekdays>, or monthly:<days-of-month>",
+                ],
+                [
+                    {
+                        userId: validCommand.userId,
+                        payoutScheduleChangeId: validCommand.payoutScheduleChangeId,
+                        payoutSchedule: "monthly:1,1",
+                    },
+                    "payoutSchedule contains duplicate days",
+                ],
                 [{ ...validCommand, weeklyPayoutDays: "monday" }, "weeklyPayoutDays must be an array"],
                 [{ ...validCommand, weeklyPayoutDays: ["holiday"] }, "weeklyPayoutDays contains an invalid day"],
+                [{ ...validCommand, weeklyPayoutDays: ["saturday"] }, "weeklyPayoutDays contains an invalid day"],
                 [
                     { ...validCommand, weeklyPayoutDays: ["monday", "monday"] },
                     "weeklyPayoutDays contains duplicate days",

@@ -6,8 +6,9 @@ import type { TSystem } from "cms-content/interfaces/settings";
  * needs: no create/update/delete paths, no editor bundles, no templates.
  * `CmsRepository` extends it, so any repository satisfies a reader.
  *
- * Unlike the admin side, Delivery addresses pages by path only: identifier
- * variants are an authoring concern and don't exist in the public URL space.
+ * Delivery normally addresses rendered pages by path. Stable page identifiers
+ * remain available for read-only machine contracts that must survive a path
+ * change, such as a published-page snapshot.
  *
  * An adapter that wraps the existing `CmsRepository` is the short-term way
  * to satisfy this contract; longer term, Delivery can bypass the admin DB
@@ -16,6 +17,7 @@ import type { TSystem } from "cms-content/interfaces/settings";
 export interface ContentReader {
     // PAGE
     getPage(path: string): Promise<TPage | null>;
+    getPageById(id: string): Promise<TPage | null>;
     getAllPages(): Promise<TPage[]>;
     getPublishedPage(path: string): Promise<TPage | null>;
     getPublishedPages(): Promise<TPage[]>;

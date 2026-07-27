@@ -4,7 +4,7 @@ import { executeFunction } from "@bernouy/cms-functions";
 import type { IntegrationContractContext } from "../../harness";
 
 export async function assertSettlementRelease(
-    { releaseFn, sources }: IntegrationContractContext,
+    { releaseFn, sources, sellerPayoutSchedule }: IntegrationContractContext,
     identities: InMemoryIdentityService,
     initialSellerPayoutBody: unknown,
 ): Promise<void> {
@@ -44,7 +44,7 @@ export async function assertSettlementRelease(
                     releaseCalls.push(new URL(request.url).pathname);
                     if (request.url.startsWith("https://stripe.test/payout/seller")) {
                         sellerPayoutBody = await request.json();
-                        return Response.json({ payoutControl: { interval: "weekly" } });
+                        return Response.json({ payoutControl: { interval: "daily" } });
                     }
                     if (request.url.startsWith("https://stripe.test/settlement/release")) {
                         releaseBody = await request.json();
@@ -71,9 +71,8 @@ export async function assertSettlementRelease(
     expect(releaseResponse.status).toBe(200);
     expect(sellerPayoutBody).toEqual({
         userId: "seller-subject",
-        payoutScheduleChangeId: "settlement-release:release-42:0:14",
-        interval: "weekly",
-        weeklyPayoutDays: ["monday"],
+        payoutScheduleChangeId: `settlement-release:release-42:0:14:${sellerPayoutSchedule}`,
+        payoutSchedule: sellerPayoutSchedule,
         minimumBalanceEur: 0,
         delayDaysOverride: 14,
         reason: "Commerce authorized settlement release",

@@ -13,6 +13,7 @@ export type DependencyTemplateContext = Record<
 
 export type TemplateContext = {
     answers: Record<string, IntegrationAnswerValue>;
+    resolved?: Record<string, IntegrationAnswerValue>;
     secrets: Record<string, string>;
     dependencies?: DependencyTemplateContext;
     generated?: Record<string, string>;
@@ -23,6 +24,10 @@ export type TemplateContext = {
 
 export function resolveTemplates<T>(value: T, context: TemplateContext): T {
     if (typeof value === "string") {
+        const jsonValue = resolveExactJsonTemplate(value, context);
+        if (jsonValue.matched) {
+            return structuredClone(jsonValue.value) as T;
+        }
         return resolveTemplate(value, context) as T;
     }
     if (Array.isArray(value)) {
@@ -56,12 +61,30 @@ export function resolveTemplate(template: string, context: TemplateContext): str
         if (!expression) {
             throw new IntegrationInputError("template", "empty expression");
         }
-        const value = resolveExpression(expression, context);
-        out += typeof value === "boolean" ? String(value) : value;
+        const json = expression.startsWith("json ");
+        const value = resolveExpression(json ? expression.slice(5).trim() : expression, context);
+        if (json) {
+            out += JSON.stringify(value);
+        } else if (typeof value === "string" || typeof value === "boolean") {
+            out += String(value);
+        } else {
+            throw new IntegrationInputError("template", `expression "${expression}" cannot be interpolated as text`);
+        }
         offset = end + 2;
     }
 
     return out;
+}
+
+function resolveExactJsonTemplate(
+    template: string,
+    context: TemplateContext,
+): { matched: false } | { matched: true; value: IntegrationAnswerValue } {
+    const match = template.match(/^\s*\{\{\s*json\s+(.+?)\s*\}\}\s*$/s);
+    if (!match?.[1]) {
+        return { matched: false };
+    }
+    return { matched: true, value: resolveExpression(match[1], context) };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -65,6 +65,7 @@ export function registerSettlementRefundScenario(createHarness: CreateProtectedR
         });
         expect(harness.rest.lastTransferParameters).toMatchObject({
             source_transaction: "ch_1",
+            transfer_group: String(created.transferGroup),
             destination: "acct_seller_example_com",
             amount: "1080",
         });

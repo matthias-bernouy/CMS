@@ -1,5 +1,6 @@
 import { secretKeyToRef } from "@bernouy/cms-secrets";
 import { type TemplateContext } from "../../definitions/templates";
+import { resolveIntegrationInputs } from "../../definitions/resolvedInputs";
 import { buildConnectorDeployments, previewConnectorOutputs } from "../connectorDeployments";
 import { resolveDependencyContext } from "../dependencies";
 import { buildProvisionDeployments, provisionIntegrationResources } from "../provisionDeployments";
@@ -17,6 +18,7 @@ export async function prepareDeclarativeIntegration(
     definition: IntegrationDefinition,
     answers: TemplateContext["answers"],
 ) {
+    const resolved = await resolveIntegrationInputs(definition, answers, deps.resolvePublishedPage);
     const dependencies = await resolveDependencyContext(definition, deps.installations);
     const secretInputNames = sensitiveInputs(definition);
     const inputSecretWrites = buildInputSecretWrites(definition.secrets ?? [], answers, secretInputNames);
@@ -25,6 +27,7 @@ export async function prepareDeclarativeIntegration(
     const initialContext = contextForSecrets(
         answers,
         dependencies,
+        resolved,
         secretInputNames,
         generatedSecretWrites,
         initialSecretWrites,
@@ -46,6 +49,7 @@ export async function prepareDeclarativeIntegration(
         const baseContext = contextForSecrets(
             answers,
             dependencies,
+            resolved,
             secretInputNames,
             generatedSecretWrites,
             secretWrites,
@@ -65,12 +69,14 @@ export async function prepareDeclarativeIntegration(
 function contextForSecrets(
     answers: TemplateContext["answers"],
     dependencies: NonNullable<TemplateContext["dependencies"]>,
+    resolved: NonNullable<TemplateContext["resolved"]>,
     secretInputNames: ReadonlySet<string>,
     generated: Array<{ input: string; value: string }>,
     secrets: Array<{ input?: string; key: string }>,
 ): TemplateContext {
     return {
         answers,
+        resolved,
         secrets: Object.fromEntries(
             secrets.filter((secret) => secret.input).map((secret) => [secret.input!, secretKeyToRef(secret.key)]),
         ),

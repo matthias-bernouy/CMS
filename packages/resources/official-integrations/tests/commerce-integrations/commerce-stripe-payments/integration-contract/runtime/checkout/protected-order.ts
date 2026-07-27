@@ -109,6 +109,7 @@ export async function assertProtectedOrderCreation(
     expect(reservationAttempted).toBeFalse();
 
     let paymentPreparationAttempted = false;
+    let providerPaymentAttempted = false;
     const blockedPaymentResponse = await executeFunction(
         fn,
         new Request("https://cms.test/functions/createPaymentForOrder", {
@@ -124,6 +125,15 @@ export async function assertProtectedOrderCreation(
                 identities,
                 fetchImpl: async (input, init) => {
                     const request = new Request(input, init);
+                    if (request.url.startsWith("https://commerce.test/payment/prepare")) {
+                        paymentPreparationAttempted = true;
+                        expect(await request.json()).toEqual({ orderId: 42, paymentProvider: "stripe" });
+                        return Response.json({
+                            protectionRequired: true,
+                            currency: "EUR",
+                            buyerTotalAmount: 2_000,
+                        });
+                    }
                     if (request.url.startsWith("https://commerce.test/protected-payment/seller-context")) {
                         return Response.json({
                             sellerCmsUserId: "legacy-seller-subject",
@@ -136,7 +146,7 @@ export async function assertProtectedOrderCreation(
                     if (request.url.startsWith("https://commerce.test/seller/sale-capability")) {
                         return saleCapabilityResponse(false);
                     }
-                    paymentPreparationAttempted = true;
+                    providerPaymentAttempted = true;
                     throw new Error(`unexpected payment mutation after failed eligibility: ${request.url}`);
                 },
             },
@@ -144,7 +154,8 @@ export async function assertProtectedOrderCreation(
     );
     expect(blockedPaymentResponse.status).toBe(409);
     expect(await blockedPaymentResponse.json()).toEqual({ error: "SELLER_PROTECTED_PAYMENT_NOT_READY" });
-    expect(paymentPreparationAttempted).toBeFalse();
+    expect(paymentPreparationAttempted).toBeTrue();
+    expect(providerPaymentAttempted).toBeFalse();
 }
 
 function saleCapabilityResponse(ready: boolean): Response {

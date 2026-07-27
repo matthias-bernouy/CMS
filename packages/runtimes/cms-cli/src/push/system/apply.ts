@@ -10,6 +10,7 @@ const HEADERS_JSON = (token: string) => ({
 type RemoteSystem = {
     site: Record<string, unknown>;
     editor: Record<string, unknown>;
+    auth?: NonNullable<TSystem["auth"]>;
     theme?: TSystem["theme"];
 };
 
@@ -20,8 +21,13 @@ export async function fetchRemoteSystem(adminBase: URL, token: string): Promise<
     if (!res.ok) {
         throw new Error(`GET ${url} → HTTP ${res.status}`);
     }
-    const data = (await res.json()) as RemoteSystem;
-    return { site: data.site ?? {}, editor: data.editor ?? {}, theme: data.theme };
+    const data = (await res.json()) as Partial<RemoteSystem>;
+    return {
+        site: data.site ?? {},
+        editor: data.editor ?? {},
+        auth: data.auth ?? { signupLegalDocuments: [] },
+        theme: data.theme,
+    };
 }
 
 /**
@@ -41,6 +47,7 @@ export function projectRemote(local: SystemPayload, remote: RemoteSystem): Syste
     return {
         site: site as SystemPayload["site"],
         editor: editor as SystemPayload["editor"],
+        ...(local.auth !== undefined ? { auth: remote.auth ?? { signupLegalDocuments: [] } } : {}),
         ...(local.theme ? { theme: remote.theme } : {}),
     };
 }
@@ -59,6 +66,9 @@ export function flatten(payload: SystemPayload): Record<string, unknown> {
         if (typeof v === "string") {
             body[`editor.${k}`] = v;
         }
+    }
+    if (payload.auth !== undefined) {
+        body["auth.signupLegalDocuments"] = payload.auth.signupLegalDocuments;
     }
     if (payload.theme) {
         body.theme = payload.theme;

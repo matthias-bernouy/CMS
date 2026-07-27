@@ -7,7 +7,12 @@ import { applyPushPages, fetchRemoteList } from "./apply";
 import { gatherAvailability } from "../shared/availability";
 import { validateDocs, printValidation } from "../shared/validate";
 
-export type RunPagesFlags = { force: boolean; yes: boolean; dryRun: boolean };
+export type RunPagesFlags = {
+    force: boolean;
+    yes: boolean;
+    dryRun: boolean;
+    onlyPaths?: ReadonlySet<string>;
+};
 
 /**
  * Push the contents of `<siteDir>/pages/`. Returns the exit code so the
@@ -25,7 +30,8 @@ export async function runPages(adminBase: URL, token: string, flags: RunPagesFla
         console.log(`→ Force    : conflicts and validation errors will be bypassed`);
     }
 
-    const local = await scanPages(config.siteDir);
+    const scanned = await scanPages(config.siteDir);
+    const local = flags.onlyPaths ? scanned.filter((page) => flags.onlyPaths!.has(page.path)) : scanned;
     if (local.length === 0) {
         console.log("→ No pages found under <siteDir>/pages/. Nothing to push.");
         return 0;

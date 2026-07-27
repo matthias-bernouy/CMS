@@ -127,6 +127,9 @@ describe("commerce negotiation list buyer checkout", () => {
             );
             const image = list.querySelector<HTMLImageElement>("[data-offer-image]");
             expect(image?.getAttribute("data-cms-src")).toBe("/.cms/sources/commerce/publicOfferImage?id=17");
+            expect(image?.getAttribute("data-source-image-access")).toBe("public");
+            expect(image?.getAttribute("data-source-width")).toBe("1200");
+            expect(image?.getAttribute("data-source-height")).toBe("800");
             expect(image?.getAttribute("width")).toBe("1200");
             expect(image?.getAttribute("height")).toBe("800");
             expect(image?.getAttribute("sizes")).toBe("auto, 100vw");
@@ -195,6 +198,8 @@ describe("commerce negotiation list buyer checkout", () => {
 
             const images = list.querySelectorAll<HTMLImageElement>("[data-offer-image]");
             expect(images[0].getAttribute("src")).toBe("/.cms/sources/commerce/publicOfferImage?id=17");
+            expect(images[0].getAttribute("data-cms-src")).toBe("/.cms/sources/commerce/publicOfferImage?id=17");
+            expect(images[0].getAttribute("data-source-image-access")).toBe("public");
             expect(images[0].hasAttribute("srcset")).toBe(false);
             expect(images[0].hasAttribute("data-source-width")).toBe(false);
             expect(images[1].hasAttribute("data-cms-src")).toBe(false);

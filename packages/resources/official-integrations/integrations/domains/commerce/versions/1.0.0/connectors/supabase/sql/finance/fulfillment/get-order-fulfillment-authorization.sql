@@ -30,6 +30,7 @@ begin
         -- rejects ambiguous/manual-review operations and preserves the exact
         -- immutable delivery quote.
         and v_fulfillment.status in ('awaiting_shipment', 'shipment_creating', 'label_created')
+        and v_fulfillment.blocking_reason is null
         and not exists (
             select 1 from commerce.refund_requests
             where order_id = v_order.id and status not in ('rejected', 'cancelled', 'failed')
@@ -43,6 +44,7 @@ begin
         when v_payment.status is distinct from 'succeeded' then 'payment_not_confirmed'
         when v_order.status <> 'active' then 'order_not_active'
         when v_fulfillment.status not in ('awaiting_shipment', 'shipment_creating', 'label_created') then 'fulfillment_not_eligible'
+        when v_fulfillment.blocking_reason is not null then 'fulfillment_blocked'
         when exists (select 1 from commerce.refund_requests where order_id = v_order.id and status not in ('rejected', 'cancelled', 'failed')) then 'refund_open'
         when exists (select 1 from commerce.stripe_dispute_projections where order_id = v_order.id and status not in ('won', 'prevented', 'warning_closed')) then 'stripe_dispute_open'
         else null end;

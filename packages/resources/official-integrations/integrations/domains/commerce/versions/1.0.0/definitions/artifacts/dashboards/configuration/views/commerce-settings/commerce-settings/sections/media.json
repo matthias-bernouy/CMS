@@ -1,0 +1,34 @@
+{
+    "id": "settingsMedia",
+    "title": "Images",
+    "fields": [
+        {
+            "id": "productImageMinCount",
+            "label": "Minimum product images",
+            "path": "productImageMinCount",
+            "type": "number",
+            "required": true
+        },
+        {
+            "id": "productImageMaxCount",
+            "label": "Maximum product images",
+            "path": "productImageMaxCount",
+            "type": "number",
+            "required": true
+        },
+        {
+            "id": "offerImageMinCount",
+            "label": "Minimum offer images",
+            "path": "offerImageMinCount",
+            "type": "number",
+            "required": true
+        },
+        {
+            "id": "offerImageMaxCount",
+            "label": "Maximum offer images",
+            "path": "offerImageMaxCount",
+            "type": "number",
+            "required": true
+        }
+    ]
+}

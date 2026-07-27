@@ -6,6 +6,7 @@ import {
     resolveDeclarativeSecretRefs,
 } from "../../import/declarative";
 import { withObsoleteArtifactCleanup } from "../artifactCleanup";
+import { reconcileChangedInstallation } from "./afterInstallation";
 import { appendRun, failedRun, successRun } from "./runs";
 import { assertSecretKeysAvailable, deleteObsoleteSecretRefs } from "../secretRefs";
 import { sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "../snapshots";
@@ -100,6 +101,7 @@ async function commitSuccessfulRerun(
         nextArtifacts: result.artifacts,
         operation: async () => {
             const saved = await request.installations.replace(next);
+            await reconcileChangedInstallation(request.deps, request.installations, saved.id);
             await deleteObsoleteSecretRefs(request.deps.secrets, installation.secretRefs, saved.secretRefs);
             return { installation: saved, run };
         },

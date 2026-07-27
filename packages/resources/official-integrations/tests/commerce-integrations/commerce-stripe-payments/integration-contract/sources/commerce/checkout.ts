@@ -167,7 +167,14 @@ export function commerceCheckoutEndpoints(): Source["endpoints"] {
             input: {
                 body: {
                     type: "object",
-                    properties: { orderId: { type: "number" } },
+                    properties: {
+                        orderId: { type: "number" },
+                        paymentProvider: { type: "string" },
+                        acceptedLegalDocumentVersionIds: {
+                            type: "array",
+                            items: { type: "string" },
+                        },
+                    },
                     required: ["orderId"],
                 },
             },
@@ -200,6 +207,7 @@ export function commerceCheckoutEndpoints(): Source["endpoints"] {
                         },
                     },
                 },
+                ...businessErrorOutputs(),
             ],
         },
     ];

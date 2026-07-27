@@ -22,6 +22,11 @@ Commerce locks financial terms
   -> the connected account payout schedule moves available funds to the bank
 ```
 
+This flow is not a wallet, escrow account, or legal sequestration service.
+Before Commerce authorizes release, the captured money remains in the Stripe
+platform balance and is not a segregated per-order balance. The integration
+does not use Stripe's private-preview Funds Segregation API.
+
 The PaymentIntent deliberately omits:
 
 - `transfer_data[destination]`;
@@ -235,6 +240,9 @@ The connector reuses the snapshotted destination and Charge. It refuses an
 unconfirmed payment, amount overflow, currency mismatch, refund, or open Stripe
 dispute. Stripe receives a separate Transfer with `source_transaction`,
 `transfer_group`, and a stable `settlement:{paymentId}:{authorization}` key.
+`source_transaction` gates the Transfer on the source Charge becoming
+available; `transfer_group` is correlation only and provides no funds
+protection by itself.
 
 ### `requestTransferReversal`
 
@@ -281,7 +289,13 @@ recovery request has been acknowledged; unrelated poison rows do not block the
 rest of the queue.
 
 Stripe does not reverse separate Transfers when a Charge is refunded. The
-connector therefore never interprets a Refund response as seller recovery.
+platform remains responsible for the Refund, dispute, Stripe fees, and any
+negative platform balance. The connector therefore never interprets a Refund
+response as seller recovery: Commerce must authorize the recovery amount and
+the connector must confirm a Transfer Reversal separately. A reversal can
+still fail when the connected account has insufficient available balance and
+no applicable connected-account reserve; that outcome remains in finance
+review rather than being presented as recovered money.
 
 ## Stripe disputes
 
@@ -319,10 +333,11 @@ only from Stripe webhook or retrieval truth.
 
 ## Payout and seller risk
 
-The seller wallet is read-only. The previous seller-controlled "pay out all
-available funds" command was removed. Available and pending connected-account
-balances remain visible, while payout scheduling and risk restrictions stay
-provider/finance controls.
+The seller balance view is read-only and is not presented as a wallet or
+escrow balance. The previous seller-controlled "pay out all available funds"
+command was removed. Available and pending connected-account balances remain
+visible, while payout scheduling and risk restrictions stay provider/finance
+controls.
 
 `getSellerProviderRisk` retrieves the connected Stripe balance and current
 Balance Settings. `configureSellerPayoutSchedule` applies a specific,
@@ -331,7 +346,22 @@ versioned Commerce risk-policy decision with a stable
 `monthly` schedules plus optional EUR minimum balance, settlement delay, and
 negative-balance debit control. The command is replay-safe, verifies current
 provider state after a lost response, and moves ambiguity to finance review.
-The connector never selects a risk policy itself.
+The connector never selects a risk policy itself. Callers may send the
+individual `interval`, `weeklyPayoutDays`, and `monthlyPayoutDays` fields, or
+the mutually exclusive compact `payoutSchedule` form used by linking
+integrations:
+
+```text
+daily
+manual
+weekly:monday,thursday
+monthly:1,15,31
+```
+
+Weekly automatic payout days follow Stripe's Monday-to-Friday contract.
+`manual` is intended only for a monitored temporary finance/risk hold; it does
+not remove Stripe's jurisdiction-specific limit on how long funds may remain
+unpaid.
 
 Protected payment creation fails closed unless the Stripe **platform** Balance
 Settings use the controlled automatic daily schedule and an EUR minimum balance
@@ -345,6 +375,9 @@ concurrent higher aggregate before finalization, and never lowers a confirmed
 minimum automatically. An ambiguous update enters `manual_review`. There is no
 connector endpoint that manually pays out the platform balance. A privileged
 out-of-band manual or instant payout is a critical trust-boundary exception.
+Concurrent commands briefly wait for the active lease and then re-evaluate
+provider truth; persistent contention returns a retryable `409` before payment
+creation can call Stripe.
 
 The required platform amount remains an exact, revisioned Commerce aggregate.
 The provider minimum may safely overcover it: without a decrease authorization,

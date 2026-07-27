@@ -30,6 +30,197 @@
                     "type": "string",
                     "nullable": true
                 },
+                "resolutionBuyerRefundAmount": {
+                    "type": "number",
+                    "nullable": true
+                },
+                "resolutionSellerTransferAmount": {
+                    "type": "number",
+                    "nullable": true
+                },
+                "resolutionProtectionFeeRefundAmount": {
+                    "type": "number",
+                    "nullable": true
+                },
+                "decisionReason": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "financialTerms": {
+                    "type": "object",
+                    "properties": {
+                        "merchandiseSubtotalAmount": {
+                            "type": "number"
+                        },
+                        "shippingAmount": {
+                            "type": "number"
+                        },
+                        "buyerProtectionFeeAmount": {
+                            "type": "number"
+                        },
+                        "buyerTotalAmount": {
+                            "type": "number"
+                        },
+                        "sellerProceedsAmount": {
+                            "type": "number"
+                        },
+                        "sellerTransferReleaseAmount": {
+                            "type": "number"
+                        },
+                        "sellerReserveLiabilityAmount": {
+                            "type": "number"
+                        },
+                        "sellerShippingShareAmount": {
+                            "type": "number"
+                        },
+                        "platformRetainedAmount": {
+                            "type": "number"
+                        },
+                        "buyerProtectionRefundPolicy": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "financialTermsHash": {
+                            "type": "string"
+                        },
+                        "financialRevision": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "settlement": {
+                    "type": "object",
+                    "properties": {
+                        "status": {
+                            "type": "string"
+                        },
+                        "authorizedSellerAmount": {
+                            "type": "number"
+                        },
+                        "totalTransferredAmount": {
+                            "type": "number"
+                        },
+                        "totalReversedAmount": {
+                            "type": "number"
+                        },
+                        "totalRefundedAmount": {
+                            "type": "number"
+                        },
+                        "sellerReserveLiabilityRemainingAmount": {
+                            "type": "number"
+                        },
+                        "platformGrossRemainderAmount": {
+                            "type": "number"
+                        },
+                        "manualReviewReason": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "version": {
+                            "type": "number"
+                        },
+                        "updatedAt": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "resolutionLimits": {
+                    "type": "object",
+                    "properties": {
+                        "remainingBuyerRefundAmount": {
+                            "type": "number"
+                        },
+                        "remainingMerchandiseRefundAmount": {
+                            "type": "number"
+                        },
+                        "remainingShippingRefundAmount": {
+                            "type": "number"
+                        },
+                        "remainingProtectionFeeRefundAmount": {
+                            "type": "number"
+                        },
+                        "maximumSellerTransferAmount": {
+                            "type": "number"
+                        },
+                        "remainingPlatformContributionAmount": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "resolutionRefund": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "requestedAmount": {
+                            "type": "number"
+                        },
+                        "merchandiseRefundAmount": {
+                            "type": "number"
+                        },
+                        "shippingRefundAmount": {
+                            "type": "number"
+                        },
+                        "protectionFeeRefundAmount": {
+                            "type": "number"
+                        },
+                        "allocationVersion": {
+                            "type": "number"
+                        },
+                        "sellerRecoveryAmount": {
+                            "type": "number"
+                        },
+                        "sellerReserveOffsetAmount": {
+                            "type": "number"
+                        },
+                        "platformContributionAmount": {
+                            "type": "number"
+                        },
+                        "requiresFinanceApproval": {
+                            "type": "boolean"
+                        },
+                        "dualApprovalRequired": {
+                            "type": "boolean"
+                        },
+                        "firstApprovedBy": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "firstApprovedAt": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "secondApprovedBy": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "secondApprovedAt": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "decisionReason": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "version": {
+                            "type": "number"
+                        },
+                        "createdAt": {
+                            "type": "string"
+                        },
+                        "updatedAt": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "returnShipByAt": {
                     "type": "string",
                     "nullable": true
@@ -70,6 +261,9 @@
                             "message": {
                                 "type": "string",
                                 "nullable": true
+                            },
+                            "data": {
+                                "type": "object"
                             },
                             "createdAt": {
                                 "type": "string"

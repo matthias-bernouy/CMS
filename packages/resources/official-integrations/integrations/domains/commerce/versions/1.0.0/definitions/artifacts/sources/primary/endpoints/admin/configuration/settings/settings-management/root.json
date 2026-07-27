@@ -62,6 +62,9 @@
                         "sellerCanPublish": {
                             "type": "boolean"
                         },
+                        "buyerLegalAcceptanceEnabled": {
+                            "type": "boolean"
+                        },
                         "activeC2cFeePolicyId": {
                             "type": "number"
                         },

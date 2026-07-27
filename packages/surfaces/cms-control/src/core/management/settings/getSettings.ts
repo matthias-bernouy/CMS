@@ -1,10 +1,17 @@
-import { composeThemeSettings, type PageLink, type TSystem } from "@bernouy/cms-content";
+import {
+    composeThemeSettings,
+    defaultSystem,
+    type AuthSettings,
+    type PageLink,
+    type TSystem,
+} from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
 import { getInstalledIntegrationThemeContributions } from "cms-control/core/management/integrations/themeContributions";
 
 export type SettingsResponse = {
     site: TSystem["site"];
     editor: TSystem["editor"];
+    auth: AuthSettings;
     theme: TSystem["theme"];
     security: TSystem["security"];
     email: TSystem["email"];
@@ -30,6 +37,7 @@ export async function getSettings(cms: ControlCms): Promise<SettingsResponse> {
     return {
         site: system.site,
         editor: system.editor,
+        auth: system.auth ?? defaultSystem().auth!,
         theme: composeThemeSettings(system.theme, themeContributions),
         security: system.security,
         email: system.email,

@@ -1,6 +1,7 @@
 import { importIntegration, pushIntegrationRoute, rerunIntegrationInstallation } from "../api";
 import { collectAnswers } from "../fields";
 import type { BrowserTab, IntegrationBrowserHost, IntegrationDefinition } from "../model";
+import { closeIntegrationReconfigure, openIntegrationReconfigure } from "../reconfigure";
 import { renderImporting, renderSetup } from "./setup";
 
 export async function handleClick(host: IntegrationBrowserHost, event: Event): Promise<void> {
@@ -20,6 +21,13 @@ export async function handleClick(host: IntegrationBrowserHost, event: Event): P
     }
     if (target.closest("[data-import-setup]")) {
         return importActive(host);
+    }
+    if (target.closest("[data-reconfigure-cancel]")) {
+        closeIntegrationReconfigure(host);
+        return;
+    }
+    if (target.closest("[data-reconfigure]")) {
+        return openIntegrationReconfigure(host);
     }
 
     const runSync = target.closest("[data-run-sync]") as HTMLElement | null;

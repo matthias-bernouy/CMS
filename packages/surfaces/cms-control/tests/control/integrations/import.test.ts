@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { P9R_CACHE } from "@bernouy/cms-content";
+import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import { compress } from "@bernouy/http-runner";
 import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
 import { makeCms, manualSourceDefinition, postImport, sourceWithFunctionDefinition } from "./support/helpers";
@@ -100,6 +101,50 @@ describe("POST /api/integrations/import", () => {
 
         expect(body.installation.id).toBe("no-id");
         expect(await integrationInstallations.get("no-id")).not.toBeNull();
+    });
+
+    test("resolves nested page links through the published content repository", async () => {
+        const definition: IntegrationDefinition = {
+            kind: "page-config",
+            label: "Page config",
+            inputs: [
+                {
+                    name: "documents",
+                    label: "Documents",
+                    type: "object-list",
+                    fields: [{ name: "page", label: "Page", type: "page-link", required: true }],
+                },
+            ],
+        };
+        const { cms, repository } = makeCms([definition]);
+        const paths: string[] = [];
+        Object.assign(repository, {
+            getPublishedPage: async (path: string) => {
+                paths.push(path);
+                return {
+                    id: "terms",
+                    path,
+                    title: "Terms",
+                    description: "Current terms",
+                    content: "<p>Terms</p>",
+                    visible: true,
+                    tags: [],
+                };
+            },
+        });
+
+        const response = await postIntegrationImport(
+            postImport({
+                kind: "page-config",
+                answers: { documents: [{ page: "/terms" }] },
+            }),
+            cms,
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(paths).toEqual(["/terms"]);
+        expect(body.installation.answersSnapshot).toEqual({ documents: [{ page: "/terms" }] });
     });
 
     test("fails before writing when no integration installation repository is configured", async () => {
