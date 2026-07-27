@@ -37,13 +37,15 @@ async function projectValidatedCompatibilityPage(
     page: RepositoryCompatibilityPageRequest,
 ): Promise<PublicRepositoryCompatibilityPage> {
     const source = sourceRecord(value);
-    const root = (await identifyCompatibilityReportV2(source.root)).report;
+    const rootIdentity = await identifyCompatibilityReportV2(source.root);
+    const root = rootIdentity.report;
     const currentIdentity = await identifyCompatibilityReportV2(source.current);
-    const revisions = await Promise.all(
+    const revisionIdentities = await Promise.all(
         sourceArray(source.revisions, page.limit ?? PUBLIC_COMPATIBILITY_LIMITS.defaultPageSize).map(
-            async (revision) => (await identifyCompatibilityReportV2(revision)).report,
+            async (revision) => await identifyCompatibilityReportV2(revision),
         ),
     );
+    const revisions = revisionIdentities.map(({ report }) => report);
     const currentRevisionId = sourceIdentifier(source.currentRevisionId);
     const currentReportDigest = digest(source.currentReportDigest);
     const totalRevisions = boundedRevisionCount(source.totalRevisions, revisions.length);
@@ -57,7 +59,7 @@ async function projectValidatedCompatibilityPage(
     ) {
         throw invalidSource();
     }
-    assertRevisionPage(root.reportId, currentRevisionId, revisions, totalRevisions, nextCursor, page.after);
+    assertRevisionPage(rootIdentity, currentIdentity, revisionIdentities, totalRevisions, nextCursor, page.after);
 
     const projected = {
         root: projectReport(root) as PublicRepositoryCompatibilityPage["root"],
@@ -138,28 +140,54 @@ function assertIdentity(
 }
 
 function assertRevisionPage(
-    rootId: string,
-    currentId: string,
-    revisions: readonly CompatibilityReportV2[],
+    root: Awaited<ReturnType<typeof identifyCompatibilityReportV2>>,
+    current: Awaited<ReturnType<typeof identifyCompatibilityReportV2>>,
+    revisions: readonly Awaited<ReturnType<typeof identifyCompatibilityReportV2>>[],
     totalRevisions: number,
     nextCursor: string | undefined,
     after: string | undefined,
 ): void {
+    const rootId = root.report.reportId;
+    const currentId = current.report.reportId;
     let previous = after ?? rootId;
-    for (const revision of revisions) {
+    const seen = new Set([rootId, ...(after ? [after] : [])]);
+    for (const { report: revision } of revisions) {
         if (revision.revisionType !== "revision" || revision.supersedes !== previous) {
             throw invalidSource();
         }
+        if (seen.has(revision.reportId)) {
+            throw invalidSource();
+        }
+        seen.add(revision.reportId);
         previous = revision.reportId;
     }
     const last = revisions.at(-1);
-    if (nextCursor && (!last || nextCursor !== last.reportId || totalRevisions <= revisions.length)) {
+    if (totalRevisions === 0) {
+        if (
+            after ||
+            nextCursor ||
+            revisions.length !== 0 ||
+            current.report.revisionType !== "root" ||
+            currentId !== rootId ||
+            current.digest !== root.digest
+        ) {
+            throw invalidSource();
+        }
+        return;
+    }
+    if (current.report.revisionType !== "revision" || currentId === rootId) {
+        throw invalidSource();
+    }
+    if (
+        nextCursor &&
+        (!last || nextCursor !== last.report.reportId || totalRevisions <= revisions.length || seen.has(currentId))
+    ) {
         throw invalidSource();
     }
     if (!after && !nextCursor && revisions.length !== totalRevisions) {
         throw invalidSource();
     }
-    if (!nextCursor && last && currentId !== last.reportId) {
+    if (!nextCursor && last && (currentId !== last.report.reportId || current.digest !== last.digest)) {
         throw invalidSource();
     }
     if (!nextCursor && after && !last && currentId !== after) {

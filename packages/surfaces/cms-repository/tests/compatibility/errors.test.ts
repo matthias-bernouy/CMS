@@ -1,7 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import { identifyCompatibilityReportV2 } from "@bernouy/cms-integration-verification";
 import { IntegrationRepositoryUnavailableError } from "@bernouy/cms-integrations";
-import { RepositoryCms, type RepositoryCompatibilityReader } from "@bernouy/cms-repository";
-import { admission, mounted, mutableCompatibilityReader } from "./fixtures";
+import {
+    RepositoryCms,
+    type RepositoryCompatibilityPageSource,
+    type RepositoryCompatibilityReader,
+} from "@bernouy/cms-repository";
+import { admission, mounted, mutableCompatibilityReader, revision } from "./fixtures";
 import { json, TestRunner } from "../testRunner";
 
 const ROOT = "/api/integrations/compatibility";
@@ -94,6 +99,17 @@ describe("public integration compatibility failures", () => {
         });
     });
 
+    test("rejects duplicate histories, orphan tips, stale roots, and substituted current reports", async () => {
+        for (const source of await malformedHistories()) {
+            const response = await mounted({ list: async () => source }).handle(VALID);
+            expect(response.status).toBe(502);
+            expect(await json(response)).toEqual({
+                error: "Integration repository returned an invalid response",
+                code: "integration_repository_invalid_response",
+            });
+        }
+    });
+
     test("accepts the inclusive 100-revision page boundary", async () => {
         const history = mutableCompatibilityReader();
         const response = await mounted(history.reader).handle(`${VALID}&limit=100`);
@@ -117,3 +133,53 @@ describe("public integration compatibility failures", () => {
         expect(runner.handle(VALID)).rejects.toThrow("missing handler");
     });
 });
+
+async function malformedHistories(): Promise<readonly RepositoryCompatibilityPageSource[]> {
+    const root = admission();
+    const repeatedFirst = revision("repeated", root.reportId);
+    const middle = revision("middle", repeatedFirst.reportId);
+    const repeatedLast = revision("repeated", middle.reportId);
+    const orphan = revision("orphan", root.reportId);
+    const original = revision("revision-1", root.reportId);
+    const substituted = {
+        ...original,
+        provenance: { ...original.provenance, reason: "Different report content under the same ID" },
+    };
+    const digest = async (report: RepositoryCompatibilityPageSource["current"]) =>
+        (await identifyCompatibilityReportV2(report)).digest;
+    return [
+        {
+            root,
+            current: repeatedLast,
+            currentRevisionId: repeatedLast.reportId,
+            currentReportDigest: await digest(repeatedLast),
+            revisions: [repeatedFirst, middle, repeatedLast],
+            totalRevisions: 3,
+        },
+        {
+            root,
+            current: orphan,
+            currentRevisionId: orphan.reportId,
+            currentReportDigest: await digest(orphan),
+            revisions: [],
+            totalRevisions: 0,
+        },
+        {
+            root,
+            current: root,
+            currentRevisionId: root.reportId,
+            currentReportDigest: await digest(root),
+            revisions: [original],
+            totalRevisions: 2,
+            nextCursor: original.reportId,
+        },
+        {
+            root,
+            current: substituted,
+            currentRevisionId: substituted.reportId,
+            currentReportDigest: await digest(substituted),
+            revisions: [original],
+            totalRevisions: 1,
+        },
+    ];
+}
