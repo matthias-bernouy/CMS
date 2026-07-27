@@ -2,7 +2,6 @@ export { createIntegrationRegistryCandidateRecord } from "./create";
 export { advanceIntegrationRegistryCandidate } from "./advance";
 export { queueIntegrationRegistryCandidate } from "./plan";
 export {
-    asCandidateAdmissionJobResult,
     candidateAdmissionJobOutcome,
     type CandidateAdmissionJobOutcome,
 } from "./admissionResult";

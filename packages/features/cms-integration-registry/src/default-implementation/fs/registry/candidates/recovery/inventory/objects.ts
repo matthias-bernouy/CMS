@@ -2,11 +2,10 @@ import { join } from "node:path";
 import type { FsIntegrationRegistryCandidateLayout } from "../../layout";
 import {
     readCandidateAdmission,
+    readCandidateAdmissionJobResult,
     readCandidatePackage,
     readCandidatePolicy,
     readCandidateVerification,
-    readCandidateVerificationJobResult,
-    readCandidateResultObject,
     readCandidateMigrationInput,
     readCandidateCompatibilityReport,
     readCandidateStatefulSelection,
@@ -89,6 +88,6 @@ function readCandidateObject(layout: FsIntegrationRegistryCandidateLayout, kind:
         case "migration-input":
             return readCandidateMigrationInput(layout, digest);
         case "result":
-            return readCandidateResultObject(layout, digest);
+            return readCandidateAdmissionJobResult(layout, digest);
     }
 }

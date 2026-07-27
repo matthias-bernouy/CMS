@@ -80,7 +80,6 @@ describe("private candidate report", () => {
             diagnostics: [{ code: "domain-contract-failed", message: "PRIVATE-AUTHOR-OUTPUT", redacted: true }],
         };
         fixture.objects.admissionJobResult = result;
-        fixture.objects.verificationJobResult = result.verification;
         const response = await reportRequest(reportServer(fixture.record, fixture.objects));
         const verification = (await response.json()).report.verification;
 
@@ -114,7 +113,6 @@ describe("private candidate report", () => {
         fixture.record.migrationInputDigests = [inputDigest];
         fixture.objects.migrationInputs = [input];
         fixture.objects.admissionJobResult = result;
-        fixture.objects.verificationJobResult = result.verification;
 
         const response = await reportRequest(reportServer(fixture.record, fixture.objects));
         const migration = (await response.json()).report.migrations[0];

@@ -1,15 +1,13 @@
 import {
     validateCandidateAdmissionJobResultForPlan,
-    validateVerificationJobResultForAdmission,
     type AdmissionInputSnapshotV1,
     type CandidateAdmissionJobResultV1,
     type MigrationVerificationInputV1,
     type ReleaseAdmissionPolicySnapshotV1,
-    type VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import type { IntegrationRegistryCandidateRecord } from "cms-integration-registry/interfaces/publication";
 import type { FsIntegrationRegistryCandidateLayout } from "../layout";
-import { readCandidateAdmissionJobResult, readCandidateVerificationJobResult } from "./control";
+import { readCandidateAdmissionJobResult } from "./control";
 
 export async function readCandidateAttemptObjects(
     layout: FsIntegrationRegistryCandidateLayout,
@@ -20,61 +18,34 @@ export async function readCandidateAttemptObjects(
 ): Promise<
     Readonly<{
         admissionJobResult?: CandidateAdmissionJobResultV1;
-        verificationJobResult?: VerificationJobResultV1;
     }>
 > {
-    if (!record.verificationJobResultDigest) {
+    if (!record.admissionJobResultDigest) {
         return {};
     }
-    const admissionJobResult = record.admissionJobResultDigest
-        ? await readCandidateAdmissionJobResult(layout, record.admissionJobResultDigest)
-        : undefined;
-    const verificationJobResult = await readCandidateVerificationJobResult(layout, record.verificationJobResultDigest);
+    const admissionJobResult = await readCandidateAdmissionJobResult(layout, record.admissionJobResultDigest);
     if (!policy || !admission) {
         throw new Error(`Candidate ${record.candidateId} result is missing persisted admission inputs`);
     }
+    const verification = admissionJobResult.verification;
     const attempt = {
-        jobId: verificationJobResult.jobId,
-        attemptId: verificationJobResult.attemptId,
-        fencingToken: verificationJobResult.fencingToken,
+        jobId: verification.jobId,
+        attemptId: verification.attemptId,
+        fencingToken: verification.fencingToken,
     };
-    const identified = admissionJobResult
-        ? await validateCandidateAdmissionJobResultForPlan(
-              admissionJobResult,
-              migrationInputs,
-              admission,
-              policy,
-              attempt,
-          )
-        : await validateVerificationJobResultForAdmission(verificationJobResult, admission, policy, attempt);
+    const identified = await validateCandidateAdmissionJobResultForPlan(
+        admissionJobResult,
+        migrationInputs,
+        admission,
+        policy,
+        attempt,
+    );
     if (
-        (admissionJobResult
-            ? identified.digest !== record.admissionJobResultDigest
-            : identified.digest !== record.verificationJobResultDigest) ||
-        verificationJobResult.fencingToken > record.attemptCount ||
-        (record.status !== "running" && verificationJobResult.fencingToken !== record.attemptCount)
+        identified.digest !== record.admissionJobResultDigest ||
+        verification.fencingToken > record.attemptCount ||
+        (record.status !== "running" && verification.fencingToken !== record.attemptCount)
     ) {
         throw new Error(`Candidate ${record.candidateId} result does not match its record attempt`);
     }
-    if (admissionJobResult) {
-        const verification = await validateVerificationJobResultForAdmission(
-            verificationJobResult,
-            admission,
-            policy,
-            attempt,
-        );
-        const wrappedVerification = await validateVerificationJobResultForAdmission(
-            admissionJobResult.verification,
-            admission,
-            policy,
-            attempt,
-        );
-        if (
-            verification.digest !== record.verificationJobResultDigest ||
-            wrappedVerification.digest !== record.verificationJobResultDigest
-        ) {
-            throw new Error(`Candidate ${record.candidateId} verification result digest is inconsistent`);
-        }
-    }
-    return { ...(admissionJobResult ? { admissionJobResult } : {}), verificationJobResult };
+    return { admissionJobResult };
 }

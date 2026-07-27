@@ -8,11 +8,10 @@ import {
 } from "../../layout";
 import {
     readCandidateAdmission,
+    readCandidateAdmissionJobResult,
     readCandidatePackage,
     readCandidatePolicy,
     readCandidateVerification,
-    readCandidateVerificationJobResult,
-    readCandidateResultObject,
     readCandidateMigrationInput,
     readCandidateCompatibilityReport,
     readCandidateStatefulSelection,
@@ -99,7 +98,7 @@ function objectInventories(layout: FsIntegrationRegistryCandidateLayout) {
         {
             kind: "result",
             root: layout.results,
-            read: (digest: string) => readCandidateResultObject(layout, digest),
+            read: (digest: string) => readCandidateAdmissionJobResult(layout, digest),
         },
     ] as const;
 }

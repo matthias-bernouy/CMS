@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { chmodSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { VerificationJobResultV1 } from "@bernouy/cms-integration-verification";
 import { FsIntegrationRegistryCandidateStore } from "@bernouy/cms-integration-registry/fs";
 import {
     CANDIDATE_TIMES,
@@ -10,6 +9,7 @@ import {
     candidatePolicy,
     candidateStoreFixture,
     createCandidate,
+    invalidCandidateJobResults,
     queueCandidate,
 } from "./fixtures";
 
@@ -38,7 +38,7 @@ describe("filesystem candidate admission bindings", () => {
         const restarted = new FsIntegrationRegistryCandidateStore({ root: fixture.root });
 
         expect(await restarted.get(fixture.candidateId)).toEqual(passed);
-        expect((await restarted.objects(fixture.candidateId)).verificationJobResult).toEqual(result);
+        expect((await restarted.objects(fixture.candidateId)).admissionJobResult).toEqual(result);
         expect(
             await restarted.complete(fixture.candidateId, {
                 expectedRevision: running.revision,
@@ -50,7 +50,13 @@ describe("filesystem candidate admission bindings", () => {
             restarted.complete(fixture.candidateId, {
                 expectedRevision: running.revision,
                 now: CANDIDATE_TIMES.completed,
-                result: { ...result, environment: { ...result.environment, digest: "0".repeat(64) } },
+                result: {
+                    ...result,
+                    verification: {
+                        ...result.verification,
+                        environment: { ...result.verification.environment, digest: "0".repeat(64) },
+                    },
+                },
             }),
         ).rejects.toThrow();
     });
@@ -92,17 +98,7 @@ describe("filesystem candidate admission bindings", () => {
             leaseExpiresAt: CANDIDATE_TIMES.lease,
         });
         const valid = await candidateJobResult(fixture);
-        const invalid: VerificationJobResultV1[] = [
-            { ...valid, results: [] },
-            {
-                ...valid,
-                results: [...valid.results, { ...valid.results[0]!, suiteId: "unexpected-suite" }],
-            },
-            { ...valid, attemptId: "stale-attempt" },
-            { ...valid, fencingToken: 2 },
-            { ...valid, bindings: { ...valid.bindings, policyDigest: "0".repeat(64) } },
-        ];
-        for (const result of invalid) {
+        for (const result of invalidCandidateJobResults(valid)) {
             await expect(
                 fixture.store.complete(fixture.candidateId, {
                     expectedRevision: running.revision,
@@ -152,7 +148,7 @@ describe("filesystem candidate admission bindings", () => {
             now: CANDIDATE_TIMES.completed,
             result: await candidateJobResult(fixture),
         });
-        const resultPath = objectPath(fixture.root, "results", passed.verificationJobResultDigest!);
+        const resultPath = objectPath(fixture.root, "results", passed.admissionJobResultDigest!);
         chmodSync(resultPath, 0o640);
         writeFileSync(resultPath, readFileSync(resultPath, "utf8").replace('"durationMs":10', '"durationMs":11'));
 

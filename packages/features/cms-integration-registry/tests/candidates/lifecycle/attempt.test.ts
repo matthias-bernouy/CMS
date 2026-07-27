@@ -33,7 +33,7 @@ describe("integration registry candidate attempts", () => {
         expect(passed).toMatchObject({ status: "passed", revision: 5, attemptCount: 1 });
         expect(passed.policyDigest).toMatch(/^[a-f0-9]{64}$/);
         expect(passed.admissionInputDigest).toMatch(/^[a-f0-9]{64}$/);
-        expect(passed.verificationJobResultDigest).toMatch(/^[a-f0-9]{64}$/);
+        expect(passed.admissionJobResultDigest).toMatch(/^[a-f0-9]{64}$/);
         expect(passed.lease).toBeUndefined();
         expect(() =>
             advanceIntegrationRegistryCandidate(passed, {
@@ -79,7 +79,7 @@ describe("integration registry candidate attempts", () => {
             "infrastructure-failure",
         );
         expect(retried).toMatchObject({ status: "queued", lastFailure: { kind: "infrastructure" } });
-        expect(retried.verificationJobResultDigest).toMatch(/^[a-f0-9]{64}$/);
+        expect(retried.admissionJobResultDigest).toMatch(/^[a-f0-9]{64}$/);
     });
 
     test("never grants or renews a worker lease beyond candidate expiry", async () => {

@@ -2,7 +2,6 @@ import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
     validateCandidateAdmissionJobResultForPlan,
     type CandidateAdmissionJobResultV1,
-    type VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import type { VerificationSandboxInput } from "../supervisor";
 import { parseCanonicalVerificationSandboxInput } from "./childProtocol";
@@ -10,7 +9,7 @@ import { parseCanonicalVerificationSandboxInput } from "./childProtocol";
 export type VerificationSandboxProgram = (
     input: VerificationSandboxInput,
     signal: AbortSignal,
-) => Promise<CandidateAdmissionJobResultV1 | VerificationJobResultV1>;
+) => Promise<CandidateAdmissionJobResultV1>;
 
 export async function runCanonicalVerificationSandboxProgram(
     program: VerificationSandboxProgram,
@@ -23,8 +22,7 @@ export async function runCanonicalVerificationSandboxProgram(
     try {
         const bytes = await readStdin(options.maxInputBytes);
         const input = await parseCanonicalVerificationSandboxInput(bytes, options.maxInputBytes);
-        const value = await program(input, controller.signal);
-        const result = asAdmissionResult(value);
+        const result = await program(input, controller.signal);
         const identified = await validateCandidateAdmissionJobResultForPlan(
             result,
             input.workload.migrationInputs,
@@ -37,18 +35,6 @@ export async function runCanonicalVerificationSandboxProgram(
         process.removeListener("SIGTERM", abort);
         process.removeListener("SIGINT", abort);
     }
-}
-
-function asAdmissionResult(
-    value: CandidateAdmissionJobResultV1 | VerificationJobResultV1,
-): CandidateAdmissionJobResultV1 {
-    return value.schema === "cms.integration.candidate-admission-job-result.v1"
-        ? value
-        : {
-              schema: "cms.integration.candidate-admission-job-result.v1",
-              verification: value,
-              migrations: [],
-          };
 }
 
 async function readStdin(limit: number): Promise<Uint8Array> {

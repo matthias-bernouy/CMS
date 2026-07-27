@@ -24,31 +24,20 @@ export function assertCandidateAdmissionState(record: IntegrationRegistryCandida
             record.policyDigest ||
             record.admissionInputDigest ||
             record.migrationInputDigests ||
-            record.admissionJobResultDigest ||
-            record.verificationJobResultDigest
+            record.admissionJobResultDigest
         ) {
             invalid(`Candidate ${record.status} status cannot carry admission results`);
         }
     }
-    if (["passed", "publishing", "published"].includes(record.status) && !record.verificationJobResultDigest) {
-        invalid(`Candidate ${record.status} status requires an exact verification job result digest`);
-    }
-    if (
-        record.migrationInputDigests &&
-        ["passed", "publishing", "published"].includes(record.status) &&
-        !record.admissionJobResultDigest
-    ) {
+    if (["passed", "publishing", "published"].includes(record.status) && !record.admissionJobResultDigest) {
         invalid(`Candidate ${record.status} status requires an exact admission job result digest`);
     }
-    if (record.admissionJobResultDigest && (!record.verificationJobResultDigest || !record.migrationInputDigests)) {
-        invalid("Candidate admission result requires its verification result and migration input plan");
-    }
-    if (record.verificationJobResultDigest && record.attemptCount < 1) {
+    if (record.admissionJobResultDigest && record.attemptCount < 1) {
         invalid("Candidate result digest requires at least one worker attempt");
     }
     if (
         record.status === "queued" &&
-        (record.verificationJobResultDigest || record.admissionJobResultDigest) &&
+        record.admissionJobResultDigest &&
         record.lastFailure?.kind !== "infrastructure"
     ) {
         invalid("Candidate queued result must describe a retryable infrastructure failure");
@@ -56,10 +45,7 @@ export function assertCandidateAdmissionState(record: IntegrationRegistryCandida
     if (
         record.status === "rejected" &&
         record.lastFailure?.kind !== "validation" &&
-        (!record.policyDigest ||
-            !record.admissionInputDigest ||
-            !record.verificationJobResultDigest ||
-            (record.migrationInputDigests !== undefined && !record.admissionJobResultDigest))
+        (!record.policyDigest || !record.admissionInputDigest || !record.admissionJobResultDigest)
     ) {
         invalid("Candidate verification rejection requires exact admission and result digests");
     }

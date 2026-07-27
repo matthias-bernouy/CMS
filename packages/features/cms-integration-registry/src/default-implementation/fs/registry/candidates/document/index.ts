@@ -26,7 +26,6 @@ const FIELDS = [
     "candidateDigest",
     "policyDigest",
     "admissionInputDigest",
-    "verificationJobResultDigest",
     "compatibilityReportDigest",
     "statefulChangeSelectionDigest",
     "migrationInputDigests",
@@ -70,11 +69,6 @@ export function parseIntegrationRegistryCandidateRecord(value: unknown): Integra
         ...(input.admissionJobResultDigest === undefined
             ? {}
             : { admissionJobResultDigest: digest(input.admissionJobResultDigest, "admissionJobResultDigest") }),
-        ...(input.verificationJobResultDigest === undefined
-            ? {}
-            : {
-                  verificationJobResultDigest: digest(input.verificationJobResultDigest, "verificationJobResultDigest"),
-              }),
     };
     assertCandidateAdmissionState(record);
     return Object.freeze(record);

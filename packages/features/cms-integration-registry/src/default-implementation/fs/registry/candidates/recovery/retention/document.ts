@@ -14,7 +14,7 @@ export type PrunedIntegrationRegistryCandidateRecord = Readonly<{
     verificationDigest: string;
     policyDigest?: string;
     admissionInputDigest?: string;
-    verificationJobResultDigest?: string;
+    admissionJobResultDigest?: string;
     finalStatus: "published" | "rejected" | "expired";
     finalRevision: number;
     prunedAt: string;
@@ -35,9 +35,7 @@ export async function writeOrVerifyPrunedCandidate(
         verificationDigest: record.verificationDigest,
         ...(record.policyDigest ? { policyDigest: record.policyDigest } : {}),
         ...(record.admissionInputDigest ? { admissionInputDigest: record.admissionInputDigest } : {}),
-        ...(record.verificationJobResultDigest
-            ? { verificationJobResultDigest: record.verificationJobResultDigest }
-            : {}),
+        ...(record.admissionJobResultDigest ? { admissionJobResultDigest: record.admissionJobResultDigest } : {}),
         finalStatus: record.status as PrunedIntegrationRegistryCandidateRecord["finalStatus"],
         finalRevision: record.revision,
         prunedAt,
@@ -60,7 +58,7 @@ export async function writeOrVerifyPrunedCandidate(
             existing.verificationDigest !== value.verificationDigest ||
             existing.policyDigest !== value.policyDigest ||
             existing.admissionInputDigest !== value.admissionInputDigest ||
-            existing.verificationJobResultDigest !== value.verificationJobResultDigest ||
+            existing.admissionJobResultDigest !== value.admissionJobResultDigest ||
             existing.finalRevision !== value.finalRevision ||
             existing.finalStatus !== value.finalStatus
         ) {
@@ -89,7 +87,7 @@ export async function readPrunedCandidate(path: string): Promise<PrunedIntegrati
         "verificationDigest",
         "policyDigest",
         "admissionInputDigest",
-        "verificationJobResultDigest",
+        "admissionJobResultDigest",
         "finalStatus",
         "finalRevision",
         "prunedAt",
@@ -107,7 +105,7 @@ export async function readPrunedCandidate(path: string): Promise<PrunedIntegrati
         !isDigest(input.verificationDigest) ||
         (input.policyDigest !== undefined && !isDigest(input.policyDigest)) ||
         (input.admissionInputDigest !== undefined && !isDigest(input.admissionInputDigest)) ||
-        (input.verificationJobResultDigest !== undefined && !isDigest(input.verificationJobResultDigest)) ||
+        (input.admissionJobResultDigest !== undefined && !isDigest(input.admissionJobResultDigest)) ||
         (input.policyDigest === undefined) !== (input.admissionInputDigest === undefined) ||
         !new Set(["published", "rejected", "expired"]).has(String(input.finalStatus)) ||
         !Number.isSafeInteger(input.finalRevision) ||

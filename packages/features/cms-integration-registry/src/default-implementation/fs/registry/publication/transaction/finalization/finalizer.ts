@@ -1,6 +1,5 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { identifyMigrationReport, identifyReleaseAdmissionDecision } from "@bernouy/cms-integration-verification";
-import { asCandidateAdmissionJobResult } from "cms-integration-registry/core/publication/candidates/state";
 import { prepareFsIntegrationRegistryCandidate } from "../../candidate";
 import { publishPreparedFsIntegrationRegistryCandidate } from "../../publisher";
 import { activateVerifiedCandidate, recoverVerifiedCandidateActivations } from "./activation";
@@ -113,15 +112,14 @@ export class FsIntegrationRegistryCandidateFinalizer {
             !objects.admission ||
             !objects.compatibilityReport ||
             !objects.statefulChanges ||
-            !objects.verificationJobResult
+            !objects.admissionJobResult
         ) {
             throw new FsIntegrationRegistryCandidateFinalizationError(
                 "admission_stale",
                 "Candidate immutable evidence is incomplete",
             );
         }
-        const admissionJobResult =
-            objects.admissionJobResult ?? asCandidateAdmissionJobResult(objects.verificationJobResult);
+        const admissionJobResult = objects.admissionJobResult;
         const migrations = await buildCandidateMigrationReports({
             candidateId: record.candidateId,
             createdAt: record.updatedAt,
@@ -138,7 +136,7 @@ export class FsIntegrationRegistryCandidateFinalizer {
             admission: objects.admission,
             compatibility: objects.compatibilityReport,
             statefulChanges: objects.statefulChanges,
-            result: objects.verificationJobResult,
+            result: admissionJobResult.verification,
             migrations,
             createDecisionId: this.config.createDecisionId ?? (() => `decision-${record.candidateDigest.slice(0, 32)}`),
         });

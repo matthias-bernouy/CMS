@@ -6,7 +6,6 @@ import type {
     MigrationVerificationInputV1,
     StatefulChangeSelectionV1,
     ValidatedIntegrationCandidateEnvelopeV1,
-    VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 
 export const INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA = "cms.integration.registry.candidate-record.v1" as const;
@@ -65,7 +64,6 @@ export type IntegrationRegistryCandidateRecord = IntegrationRegistryCandidateRec
         statefulChangeSelectionDigest?: string;
         migrationInputDigests?: readonly string[];
         admissionJobResultDigest?: string;
-        verificationJobResultDigest?: string;
     }>;
 
 export type CreateIntegrationRegistryCandidateInput = Readonly<{
@@ -112,7 +110,7 @@ export type ClaimIntegrationRegistryCandidateInput = Readonly<{
 export type CompleteIntegrationRegistryCandidateInput = Readonly<{
     expectedRevision: number;
     now: string;
-    result: CandidateAdmissionJobResultV1 | VerificationJobResultV1;
+    result: CandidateAdmissionJobResultV1;
 }>;
 
 export type BeginIntegrationRegistryCandidatePublicationInput = Readonly<{

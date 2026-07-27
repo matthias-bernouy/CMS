@@ -16,7 +16,7 @@ import type {
     IntegrationRegistryCandidateRecord,
 } from "cms-integration-registry/interfaces/publication";
 import type { FsIntegrationRegistryCandidateLayout } from "../layout";
-import { readCandidateAdmission, readCandidatePolicy, readCandidateResultObject } from "./control";
+import { readCandidateAdmission, readCandidatePolicy } from "./control";
 import { readCandidateAttemptObjects } from "./attempt";
 import { readCandidateMigrationInput } from "./migration";
 import { readCandidatePackage, readCandidateVerification } from "./package";
@@ -25,12 +25,9 @@ import { readCandidateCompatibilityReport, readCandidateStatefulSelection } from
 export {
     persistCandidateAdmissionObjects,
     persistCandidateAdmissionJobResult,
-    persistCandidateVerificationJobResult,
     readCandidateAdmission,
     readCandidateAdmissionJobResult,
     readCandidatePolicy,
-    readCandidateResultObject,
-    readCandidateVerificationJobResult,
 } from "./control";
 export { persistCandidateMigrationInputs, readCandidateMigrationInput } from "./migration";
 export { persistCandidatePackageObjects, readCandidatePackage, readCandidateVerification } from "./package";

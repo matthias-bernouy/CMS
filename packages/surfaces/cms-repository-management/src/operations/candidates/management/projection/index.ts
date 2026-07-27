@@ -14,7 +14,7 @@ export async function projectCandidateReport(
     objects: IntegrationRegistryCandidateObjects,
 ) {
     assertObjectIdentity(record, objects);
-    const verificationResult = objects.admissionJobResult?.verification ?? objects.verificationJobResult;
+    const verificationResult = objects.admissionJobResult?.verification;
     const migrationResults = objects.admissionJobResult?.migrations ?? [];
     return {
         schema: REPOSITORY_CANDIDATE_REPORT_SCHEMA,

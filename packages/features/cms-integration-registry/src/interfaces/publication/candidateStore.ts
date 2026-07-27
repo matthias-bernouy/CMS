@@ -6,7 +6,6 @@ import type {
     MigrationVerificationInputV1,
     ReleaseAdmissionPolicySnapshotV1,
     StatefulChangeSelectionV1,
-    VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import type { IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
 import type {
@@ -31,7 +30,6 @@ export type IntegrationRegistryCandidateObjects = Readonly<{
     statefulChanges?: StatefulChangeSelectionV1;
     migrationInputs: readonly MigrationVerificationInputV1[];
     admissionJobResult?: CandidateAdmissionJobResultV1;
-    verificationJobResult?: VerificationJobResultV1;
 }>;
 
 export interface IntegrationRegistryCandidateStore {

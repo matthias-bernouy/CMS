@@ -3,6 +3,7 @@ import {
     identifyAdmissionInputSnapshot,
     identifyReleaseAdmissionPolicySnapshot,
     type AdmissionInputSnapshotV1,
+    type CandidateAdmissionJobResultV1,
     type ReleaseAdmissionPolicySnapshotV1,
     type ValidatedIntegrationCandidateEnvelopeV1,
     type VerificationJobResultV1,
@@ -77,11 +78,11 @@ export async function candidateJobResult(
         fencingToken?: number;
         outcome?: "passed" | "failed" | "skipped" | "infrastructure-failure";
     }> = {},
-): Promise<VerificationJobResultV1> {
+): Promise<CandidateAdmissionJobResultV1> {
     const policy = await candidatePolicy();
     const admission = await candidateAdmission(fixture, policy);
     const versions = [{ name: "postgres", version: "16.4" }];
-    return {
+    const verification: VerificationJobResultV1 = {
         schema: "cms.integration.verification-job-result.v1",
         candidateId: fixture.candidateId,
         jobId: input.jobId ?? "job-1",
@@ -117,6 +118,36 @@ export async function candidateJobResult(
             },
         ],
     };
+    return {
+        schema: "cms.integration.candidate-admission-job-result.v1",
+        verification,
+        migrations: [],
+    };
+}
+
+export function invalidCandidateJobResults(
+    valid: CandidateAdmissionJobResultV1,
+): readonly CandidateAdmissionJobResultV1[] {
+    const verification = valid.verification;
+    return [
+        { ...valid, verification: { ...verification, results: [] } },
+        {
+            ...valid,
+            verification: {
+                ...verification,
+                results: [...verification.results, { ...verification.results[0]!, suiteId: "unexpected-suite" }],
+            },
+        },
+        { ...valid, verification: { ...verification, attemptId: "stale-attempt" } },
+        { ...valid, verification: { ...verification, fencingToken: 2 } },
+        {
+            ...valid,
+            verification: {
+                ...verification,
+                bindings: { ...verification.bindings, policyDigest: "0".repeat(64) },
+            },
+        },
+    ];
 }
 
 function candidateRunner() {

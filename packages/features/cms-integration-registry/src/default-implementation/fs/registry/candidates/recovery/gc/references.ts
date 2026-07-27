@@ -37,7 +37,6 @@ export async function collectCandidateObjectReferences(
             references.add(`verification:${record.verificationDigest}`);
             addOptionalReference(references, "policy", record.policyDigest);
             addOptionalReference(references, "admission", record.admissionInputDigest);
-            addOptionalReference(references, "result", record.verificationJobResultDigest);
             addOptionalReference(references, "compatibility-report", record.compatibilityReportDigest);
             addOptionalReference(references, "stateful-selection", record.statefulChangeSelectionDigest);
             for (const digest of record.migrationInputDigests ?? []) {

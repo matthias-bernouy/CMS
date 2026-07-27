@@ -1,7 +1,4 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { chmodSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import type { ReleaseAdmissionPolicySnapshotV1 } from "@bernouy/cms-integration-verification";
 import {
     FsIntegrationRegistryCandidateFinalizer,
@@ -43,17 +40,6 @@ describe("filesystem candidate release publication", () => {
             status: "published",
             decisionDigest: result.status === "published" ? result.decisionDigest : "",
         });
-    });
-
-    test("finalizes a pre-migration v3 candidate from its exact raw verification result", async () => {
-        const fixture = registryFixture();
-        const setup = await passedCandidate(fixture, "candidate-legacy-v3");
-        rewriteAsPreMigrationV3(fixture.root, setup.completion);
-        const restartedStore = new FsIntegrationRegistryCandidateStore({ root: fixture.root });
-
-        await expect(
-            releaseFinalizer(fixture, restartedStore, setup.policy).finalize("candidate-legacy-v3"),
-        ).resolves.toMatchObject({ status: "published" });
     });
 
     test("admits exact SQL evidence without claiming unexecuted cutover evidence", async () => {
@@ -224,23 +210,3 @@ describe("filesystem candidate release publication", () => {
         });
     });
 });
-
-function rewriteAsPreMigrationV3(
-    root: string,
-    completion: Readonly<{ candidateId: string; admissionJobResultDigest?: string }>,
-): void {
-    const records = join(root, ".registry", "candidates", "records", completion.candidateId);
-    for (const name of readdirSync(records)) {
-        const path = join(records, name);
-        const record = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
-        delete record.migrationInputDigests;
-        delete record.admissionJobResultDigest;
-        chmodSync(path, 0o640);
-        writeFileSync(path, canonicalJsonBytes(record));
-    }
-    if (completion.admissionJobResultDigest) {
-        unlinkSync(
-            join(root, ".registry", "candidates", "objects", "results", `${completion.admissionJobResultDigest}.json`),
-        );
-    }
-}

@@ -15,7 +15,6 @@ export function assertInitialCandidateRecord(record: IntegrationRegistryCandidat
         record.statefulChangeSelectionDigest ||
         record.migrationInputDigests ||
         record.admissionJobResultDigest ||
-        record.verificationJobResultDigest ||
         record.updatedAt !== record.createdAt
     ) {
         corrupt(`Candidate ${record.candidateId} has an invalid initial revision`);
@@ -49,7 +48,7 @@ export function assertCandidateRecordFollows(
             assertCompletion(previous, current, false);
             return;
         case "running->queued":
-            if (current.verificationJobResultDigest !== previous.verificationJobResultDigest) {
+            if (current.admissionJobResultDigest !== previous.admissionJobResultDigest) {
                 assertCompletion(previous, current, true);
             } else {
                 assertLeaseRecovery(previous, current);
@@ -83,12 +82,7 @@ function assertQueuedPlan(
     previous: IntegrationRegistryCandidateRecord,
     current: IntegrationRegistryCandidateRecord,
 ): void {
-    if (
-        !current.policyDigest ||
-        !current.admissionInputDigest ||
-        current.admissionJobResultDigest ||
-        current.verificationJobResultDigest
-    ) {
+    if (!current.policyDigest || !current.admissionInputDigest || current.admissionJobResultDigest) {
         corrupt(`Candidate ${current.candidateId} queued without a fresh exact admission plan`);
     }
     assertRecordDelta(previous, current, [

@@ -2,22 +2,9 @@ import type {
     CandidateAdmissionJobResultV1,
     MigrationJobResultV1,
     ReleaseAdmissionPolicySnapshotV1,
-    VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 
 export type CandidateAdmissionJobOutcome = "passed" | "rejected" | "infrastructure-failure";
-
-export function asCandidateAdmissionJobResult(
-    result: CandidateAdmissionJobResultV1 | VerificationJobResultV1,
-): CandidateAdmissionJobResultV1 {
-    return result.schema === "cms.integration.candidate-admission-job-result.v1"
-        ? result
-        : {
-              schema: "cms.integration.candidate-admission-job-result.v1",
-              verification: result,
-              migrations: [],
-          };
-}
 
 export function candidateAdmissionJobOutcome(
     result: CandidateAdmissionJobResultV1,
