@@ -1,10 +1,14 @@
-import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { IntegrationRuntimeError } from "../../../errors";
 import type {
     IntegrationMigrationExternalPhaseHandler,
     IntegrationMigrationStepContext,
     IntegrationProviderDirectMigrationAdapter,
 } from "../../../../interfaces/IntegrationConnectorDeployer";
+import {
+    decodeProviderDirectReceipt,
+    encodeProviderDirectReceipt,
+    type ProviderDirectReceiptOperation,
+} from "./providerDirectReceipt";
 
 export class ProviderDirectMigrationHandler implements IntegrationMigrationExternalPhaseHandler {
     private readonly adapters: Map<string, IntegrationProviderDirectMigrationAdapter>;
@@ -15,17 +19,18 @@ export class ProviderDirectMigrationHandler implements IntegrationMigrationExter
 
     async execute(context: IntegrationMigrationStepContext) {
         assertPhase(context);
-        const operations: Array<Record<string, unknown>> = [];
-        for (const connector of context.connectors) {
+        const operations: ProviderDirectReceiptOperation[] = [];
+        for (const connector of providerDirectConnectors(context)) {
             const cutover = connector.plan.providerDirect;
             if (!cutover) {
-                continue;
+                throw new IntegrationRuntimeError("provider-direct connector plan disappeared during execution");
             }
             if (cutover.strategy === "expand-in-code") {
                 operations.push({
                     connectorKey: connector.connectorKey,
                     strategy: cutover.strategy,
                     callbackIds: [...cutover.callbackIds].sort(),
+                    externalOperationId: null,
                 });
                 continue;
             }
@@ -36,30 +41,78 @@ export class ProviderDirectMigrationHandler implements IntegrationMigrationExter
                 );
             }
             const result = await adapter.executeTransition(context, connector, cutover);
+            const externalOperationId = result.externalOperationId;
+            if (!externalOperationId || externalOperationId.trim() !== externalOperationId) {
+                throw new IntegrationRuntimeError(
+                    `provider-direct migration adapter "${connector.provider}" returned no durable operation id`,
+                );
+            }
             operations.push({
                 connectorKey: connector.connectorKey,
                 strategy: cutover.strategy,
                 callbackIds: [...cutover.callbackIds].sort(),
-                externalOperationId: result.externalOperationId ?? null,
+                externalOperationId,
             });
         }
-        return { externalOperationId: encodeOperations(operations) };
+        return { externalOperationId: encodeProviderDirectReceipt(operations) };
     }
 
     async confirm(context: IntegrationMigrationStepContext, previous: { externalOperationId?: string }) {
         assertPhase(context);
-        for (const connector of context.connectors) {
+        const operations = decodeProviderDirectReceipt(previous.externalOperationId);
+        const connectors = providerDirectConnectors(context);
+        if (!operations || !samePlannedOperations(connectors, operations)) {
+            return { confirmed: false };
+        }
+        for (const connector of connectors) {
             const cutover = connector.plan.providerDirect;
-            if (!cutover || cutover.strategy === "expand-in-code") {
+            const operation = operations.find((entry) => entry.connectorKey === connector.connectorKey);
+            if (!cutover || !operation) {
+                return { confirmed: false };
+            }
+            if (cutover.strategy === "expand-in-code") {
                 continue;
             }
             const adapter = this.adapters.get(connector.provider);
-            if (!adapter || !(await adapter.confirmTransition(context, connector, cutover, previous))) {
+            if (
+                !adapter ||
+                !(await adapter.confirmTransition(context, connector, cutover, {
+                    externalOperationId: operation.externalOperationId ?? undefined,
+                }))
+            ) {
                 return { confirmed: false };
             }
         }
-        return { confirmed: true, externalOperationId: previous.externalOperationId ?? encodeOperations([]) };
+        return { confirmed: true, externalOperationId: previous.externalOperationId };
     }
+}
+
+function providerDirectConnectors(context: IntegrationMigrationStepContext) {
+    return context.connectors
+        .filter((connector) => connector.plan.providerDirect !== undefined)
+        .toSorted((left, right) =>
+            left.connectorKey < right.connectorKey ? -1 : left.connectorKey > right.connectorKey ? 1 : 0,
+        );
+}
+
+function samePlannedOperations(
+    connectors: ReturnType<typeof providerDirectConnectors>,
+    operations: readonly ProviderDirectReceiptOperation[],
+): boolean {
+    if (connectors.length !== operations.length) {
+        return false;
+    }
+    return connectors.every((connector, index) => {
+        const planned = connector.plan.providerDirect;
+        const observed = operations[index];
+        const callbacks = [...(planned?.callbackIds ?? [])].sort();
+        return (
+            observed?.connectorKey === connector.connectorKey &&
+            observed.strategy === planned?.strategy &&
+            observed.callbackIds.length === callbacks.length &&
+            observed.callbackIds.every((callback, callbackIndex) => callback === callbacks[callbackIndex])
+        );
+    });
 }
 
 function assertPhase(context: IntegrationMigrationStepContext): void {
@@ -70,11 +123,4 @@ function assertPhase(context: IntegrationMigrationStepContext): void {
     if (functions?.status !== "succeeded") {
         throw new IntegrationRuntimeError("provider-direct transition requires confirmed target Functions");
     }
-}
-
-function encodeOperations(operations: Array<Record<string, unknown>>): string {
-    const value = Buffer.from(
-        canonicalJsonBytes({ schema: "cms.integration.provider-direct-receipt.v1", operations }),
-    ).toString("base64url");
-    return `provider-direct:${value}`;
 }
