@@ -42,8 +42,19 @@ export class StripeConnectOnboardingEditor extends Editor {
                     { type: "textarea", label: "IBAN privacy notice", attribute: "privacy-copy" },
                     { type: "textarea", label: "Security message", attribute: "security-copy" },
                     { type: "text", label: "Marketplace terms label", attribute: "marketplace-terms-label" },
+                    { type: "textarea", label: "Marketplace consent text", attribute: "marketplace-consent-text" },
                     { type: "text", label: "Payment terms label", attribute: "payment-terms-label" },
                     { type: "page-link", label: "Marketplace terms", attribute: "terms-url" },
+                ],
+            },
+            {
+                kind: "self",
+                label: "Terms update",
+                settings: [
+                    { type: "text", label: "Title", attribute: "terms-update-title" },
+                    { type: "textarea", label: "Description", attribute: "terms-update-copy" },
+                    { type: "text", label: "Button", attribute: "terms-update-button-label" },
+                    { type: "textarea", label: "Unavailable message", attribute: "terms-unavailable-copy" },
                 ],
             },
             {

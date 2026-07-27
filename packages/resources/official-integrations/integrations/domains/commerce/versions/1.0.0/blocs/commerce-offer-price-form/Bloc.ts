@@ -932,7 +932,13 @@ function marketplaceTermsRequirement(value) {
         return null;
     }
     const published = publishedMarketplaceTermsRequirement(value);
-    return published ? { version, hash, ...published } : { version, hash };
+    if (value?.mode === "published_page") {
+        return published ? { version, hash, ...published } : null;
+    }
+    if (value?.mode !== "legacy") {
+        return null;
+    }
+    return { version, hash };
 }
 
 function publishedMarketplaceTermsRequirement(value) {

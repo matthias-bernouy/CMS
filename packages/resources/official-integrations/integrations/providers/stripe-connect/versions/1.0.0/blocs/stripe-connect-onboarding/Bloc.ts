@@ -24,8 +24,13 @@ class StripeConnectOnboarding extends HTMLElement {
             "pending-label",
             "profile-url",
             "terms-url",
+            "marketplace-consent-text",
             "marketplace-terms-label",
             "payment-terms-label",
+            "terms-update-title",
+            "terms-update-copy",
+            "terms-update-button-label",
+            "terms-unavailable-copy",
             "eyebrow",
         ];
     }
@@ -35,6 +40,7 @@ class StripeConnectOnboarding extends HTMLElement {
         this.root = this.attachShadow({ mode: "open" });
         this.profile = null;
         this.marketplaceTermsRequirement = null;
+        this.marketplaceTermsRequired = false;
         this.clientConfigPromise = null;
     }
 
@@ -43,6 +49,7 @@ class StripeConnectOnboarding extends HTMLElement {
         this.syncPresentation();
         this.activateButton.addEventListener("click", this.onActivate);
         this.form.addEventListener("submit", this.onSubmit);
+        this.termsForm.addEventListener("submit", this.onTermsSubmit);
         if (isFramed()) {
             this.showActivation();
             this.setStatus("L’activation des versements est disponible sur la page publiée.", "idle");
@@ -54,6 +61,7 @@ class StripeConnectOnboarding extends HTMLElement {
     disconnectedCallback() {
         this.activateButton?.removeEventListener("click", this.onActivate);
         this.form?.removeEventListener("submit", this.onSubmit);
+        this.termsForm?.removeEventListener("submit", this.onTermsSubmit);
     }
 
     attributeChangedCallback() {
@@ -69,6 +77,11 @@ class StripeConnectOnboarding extends HTMLElement {
     onSubmit = (event) => {
         event.preventDefault();
         this.submit().catch((error) => this.showError(error));
+    };
+
+    onTermsSubmit = (event) => {
+        event.preventDefault();
+        this.submitMarketplaceTermsAcceptance().catch((error) => this.showError(error));
     };
 
     render() {
@@ -257,8 +270,12 @@ class StripeConnectOnboarding extends HTMLElement {
                         <p class="hint" data-privacy-copy></p>
                     </div>
                     <label class="check">
-                        <input type="checkbox" name="termsAccepted" required>
-                        <span><span data-marketplace-consent-text>J’accepte les</span> <a data-marketplace-terms href="${escapeHtml(this.getAttribute("terms-url") || "/legal/terms")}" target="_blank" rel="noopener"></a> et les <a data-payment-terms href="https://stripe.com/fr/legal/connect-account" target="_blank" rel="noopener"></a>.</span>
+                        <input type="checkbox" name="marketplaceTermsAccepted" autocomplete="off" required>
+                        <span data-marketplace-consent></span>
+                    </label>
+                    <label class="check">
+                        <input type="checkbox" name="paymentTermsAccepted" autocomplete="off" required>
+                        <span>J’accepte les <a data-payment-terms href="https://stripe.com/fr/legal/connect-account" target="_blank" rel="noopener noreferrer"></a>.</span>
                     </label>
                     <div class="security">
                         <span aria-hidden="true">🔒</span>
@@ -266,6 +283,19 @@ class StripeConnectOnboarding extends HTMLElement {
                     </div>
                     <button type="submit" data-submit>Configurer mon compte vendeur</button>
                 </form>
+                <form data-terms-form hidden novalidate>
+                    <h3 data-terms-update-title></h3>
+                    <p class="muted" data-terms-update-copy></p>
+                    <label class="check">
+                        <input type="checkbox" name="marketplaceTermsAccepted" autocomplete="off" required>
+                        <span data-marketplace-consent></span>
+                    </label>
+                    <button type="submit" data-terms-submit></button>
+                </form>
+                <div class="missing" data-terms-unavailable hidden role="alert">
+                    <strong data-terms-unavailable-title>Conditions vendeur indisponibles</strong>
+                    <p data-terms-unavailable-copy></p>
+                </div>
                 <div class="wallet" data-wallet hidden>
                     <div class="balances" data-balances></div>
                 </div>
@@ -303,8 +333,19 @@ class StripeConnectOnboarding extends HTMLElement {
         this.setText("[data-submit]", "button-label", "Configurer mon compte vendeur");
         this.setText("[data-missing-title]", "missing-title", "Ton profil est incomplet");
         this.setText("[data-profile-link]", "profile-link-label", "Compléter mon profil");
-        this.setText("[data-marketplace-terms]", "marketplace-terms-label", "conditions générales de la plateforme");
         this.setText("[data-payment-terms]", "payment-terms-label", "conditions du service de paiement");
+        this.setText("[data-terms-update-title]", "terms-update-title", "Mise à jour des conditions vendeur");
+        this.setText(
+            "[data-terms-update-copy]",
+            "terms-update-copy",
+            "Pour continuer à vendre et recevoir tes prochains versements, accepte la version actuelle des conditions vendeur de la plateforme.",
+        );
+        this.setText("[data-terms-submit]", "terms-update-button-label", "Accepter et continuer");
+        this.setText(
+            "[data-terms-unavailable-copy]",
+            "terms-unavailable-copy",
+            "Les conditions vendeur sont momentanément indisponibles. Réessaie dans quelques instants.",
+        );
         this.setText(
             "[data-ready-copy]",
             "ready-copy",
@@ -318,24 +359,22 @@ class StripeConnectOnboarding extends HTMLElement {
         );
         this.setText("[data-security-copy]", "security-copy", "Tes informations sont vérifiées de manière sécurisée.");
         const profileLink = this.root.querySelector("[data-profile-link]");
-        const termsLink = this.root.querySelector("[data-marketplace-terms]");
-        const consentText = this.root.querySelector("[data-marketplace-consent-text]");
         if (profileLink) {
             profileLink.setAttribute("href", this.getAttribute("profile-url")?.trim() || "/account/profile");
         }
-        if (termsLink) {
-            const requirement = publishedMarketplaceTermsRequirement(this.marketplaceTermsRequirement);
-            termsLink.setAttribute(
-                "href",
-                requirement?.page.path || this.getAttribute("terms-url")?.trim() || "/legal/terms",
-            );
-            termsLink.textContent =
-                requirement?.label ||
-                this.getAttribute("marketplace-terms-label")?.trim() ||
-                "conditions générales de la plateforme";
-            if (consentText) {
-                consentText.textContent = requirement?.consentText || "J’accepte les";
-            }
+        const publishedRequirement = publishedMarketplaceTermsRequirement(this.marketplaceTermsRequirement);
+        const marketplaceLabel =
+            publishedRequirement?.label ||
+            this.getAttribute("marketplace-terms-label")?.trim() ||
+            "conditions générales de la plateforme";
+        const marketplaceConsentText =
+            publishedRequirement?.consentText ||
+            this.getAttribute("marketplace-consent-text")?.trim() ||
+            `J’accepte les ${marketplaceLabel}.`;
+        const marketplaceTermsUrl =
+            publishedRequirement?.page.path || this.getAttribute("terms-url")?.trim() || "/legal/terms";
+        for (const container of this.root.querySelectorAll("[data-marketplace-consent]")) {
+            renderLinkedConsent(container, marketplaceConsentText, marketplaceLabel, marketplaceTermsUrl);
         }
     }
 
@@ -352,6 +391,7 @@ class StripeConnectOnboarding extends HTMLElement {
         try {
             const status = await this.requestStripeSource("getConnectStatus");
             this.marketplaceTermsRequirement = marketplaceTermsRequirement(status?.marketplaceTermsRequirement);
+            this.marketplaceTermsRequired = status?.marketplaceTermsCurrentVersionAccepted !== true;
             this.syncPresentation();
             this.dispatchEvent(
                 new CustomEvent("stripe-connect-onboarding:status", {
@@ -361,11 +401,19 @@ class StripeConnectOnboarding extends HTMLElement {
                 }),
             );
             if (status.onboardingStatus === "enabled" && status.payoutsEnabled === true) {
+                if (this.marketplaceTermsRequired) {
+                    this.showMarketplaceTermsUpdate();
+                    return;
+                }
                 await this.showWallet();
                 return;
             }
             if (verificationPending(status)) {
                 this.showPendingVerification();
+                return;
+            }
+            if (!this.marketplaceTermsRequirement) {
+                this.showMarketplaceTermsUnavailable();
                 return;
             }
             this.showActivation();
@@ -389,6 +437,10 @@ class StripeConnectOnboarding extends HTMLElement {
     }
 
     async prepareActivation() {
+        if (!this.marketplaceTermsRequirement) {
+            this.showMarketplaceTermsUnavailable();
+            return;
+        }
         this.setBusy(true);
         this.setStatus("Vérification de ton profil…", "idle");
         try {
@@ -427,6 +479,10 @@ class StripeConnectOnboarding extends HTMLElement {
     }
 
     async submit() {
+        if (!this.marketplaceTermsRequirement) {
+            this.showMarketplaceTermsUnavailable();
+            return;
+        }
         if (!this.profile) {
             await this.prepareActivation();
             return;
@@ -434,6 +490,8 @@ class StripeConnectOnboarding extends HTMLElement {
         if (!this.form.reportValidity()) {
             return;
         }
+        const marketplaceTermsAccepted = this.activationMarketplaceTermsInput.checked;
+        const paymentTermsAccepted = this.paymentTermsInput.checked;
         this.setBusy(true);
         this.setStatus("Envoi sécurisé de tes informations…", "idle");
         try {
@@ -458,7 +516,9 @@ class StripeConnectOnboarding extends HTMLElement {
                             city: this.profile.city,
                         },
                     },
-                    attestations: { terms_of_service: { account: { shown_and_accepted: true } } },
+                    attestations: {
+                        terms_of_service: { account: { shown_and_accepted: paymentTermsAccepted } },
+                    },
                 },
             });
             const bankAccountToken = await this.createBankAccountToken(config.publishableKey, {
@@ -479,7 +539,7 @@ class StripeConnectOnboarding extends HTMLElement {
                         contactEmail: this.profile.email,
                         ...(marketplaceTerms
                             ? {
-                                  marketplaceTermsAccepted: true,
+                                  marketplaceTermsAccepted,
                                   expectedMarketplaceTermsVersion: marketplaceTerms.version,
                                   expectedMarketplaceTermsHash: marketplaceTerms.hash,
                               }
@@ -488,7 +548,8 @@ class StripeConnectOnboarding extends HTMLElement {
                 });
             } catch (error) {
                 if (error instanceof Error && error.message === "MARKETPLACE_TERMS_VERSION_CHANGED") {
-                    this.form.querySelector("[name='termsAccepted']").checked = false;
+                    this.activationMarketplaceTermsInput.checked = false;
+                    this.paymentTermsInput.checked = false;
                     await this.refresh();
                     throw new PublicError(
                         "Les conditions vendeur ont changé. Relis la nouvelle version avant de continuer.",
@@ -497,7 +558,60 @@ class StripeConnectOnboarding extends HTMLElement {
                 throw error;
             }
             this.ibanInput.value = "";
+            this.activationMarketplaceTermsInput.checked = false;
+            this.paymentTermsInput.checked = false;
             if (status.onboardingStatus === "enabled" && status.payoutsEnabled === true) {
+                if (status.marketplaceTermsCurrentVersionAccepted === true) {
+                    await this.showWallet();
+                } else {
+                    await this.refresh();
+                }
+            } else {
+                this.showPendingVerification();
+            }
+        } finally {
+            this.setBusy(false);
+        }
+    }
+
+    async submitMarketplaceTermsAcceptance() {
+        const marketplaceTerms = this.marketplaceTermsRequirement;
+        if (!marketplaceTerms) {
+            this.showMarketplaceTermsUnavailable();
+            return;
+        }
+        if (!this.termsForm.reportValidity()) {
+            return;
+        }
+        this.setBusy(true);
+        this.setStatus("Enregistrement de ton accord…", "idle");
+        try {
+            let status;
+            try {
+                status = await this.requestStripeSource("enrollConnectSeller", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        marketplaceTermsAccepted: true,
+                        expectedMarketplaceTermsVersion: marketplaceTerms.version,
+                        expectedMarketplaceTermsHash: marketplaceTerms.hash,
+                    }),
+                });
+            } catch (error) {
+                if (error instanceof Error && error.message === "MARKETPLACE_TERMS_VERSION_CHANGED") {
+                    this.termsAcceptanceInput.checked = false;
+                    await this.refresh();
+                    throw new PublicError(
+                        "Les conditions vendeur ont changé. Relis la nouvelle version avant de continuer.",
+                    );
+                }
+                throw error;
+            }
+            this.termsAcceptanceInput.checked = false;
+            if (
+                status.marketplaceTermsCurrentVersionAccepted === true &&
+                status.onboardingStatus === "enabled" &&
+                status.payoutsEnabled === true
+            ) {
                 await this.showWallet();
             } else {
                 this.showPendingVerification();
@@ -542,6 +656,25 @@ class StripeConnectOnboarding extends HTMLElement {
         );
     }
 
+    showMarketplaceTermsUpdate() {
+        this.hidePanels();
+        this.header.hidden = false;
+        if (!this.marketplaceTermsRequirement) {
+            this.showMarketplaceTermsUnavailable();
+            return;
+        }
+        this.termsAcceptanceInput.checked = false;
+        this.termsForm.hidden = false;
+        this.clearStatus();
+    }
+
+    showMarketplaceTermsUnavailable() {
+        this.hidePanels();
+        this.header.hidden = false;
+        this.termsUnavailablePanel.hidden = false;
+        this.clearStatus();
+    }
+
     showLoading() {
         this.hidePanels();
         this.shell.classList.add("wallet-only");
@@ -556,12 +689,15 @@ class StripeConnectOnboarding extends HTMLElement {
         this.activationPanel.hidden = true;
         this.missingPanel.hidden = true;
         this.form.hidden = true;
+        this.termsForm.hidden = true;
+        this.termsUnavailablePanel.hidden = true;
         this.walletPanel.hidden = true;
     }
 
     setBusy(busy) {
         this.activateButton.disabled = busy;
         this.submitButton.disabled = busy;
+        this.termsSubmitButton.disabled = busy;
         for (const button of this.root.querySelectorAll(".balance button")) {
             button.disabled = busy || button.dataset.empty === "true";
         }
@@ -665,6 +801,9 @@ class StripeConnectOnboarding extends HTMLElement {
     get submitButton() {
         return this.root.querySelector("[data-submit]");
     }
+    get termsSubmitButton() {
+        return this.root.querySelector("[data-terms-submit]");
+    }
     get status() {
         return this.root.querySelector("[data-status]");
     }
@@ -682,6 +821,21 @@ class StripeConnectOnboarding extends HTMLElement {
     }
     get form() {
         return this.root.querySelector("[data-form]");
+    }
+    get termsForm() {
+        return this.root.querySelector("[data-terms-form]");
+    }
+    get termsUnavailablePanel() {
+        return this.root.querySelector("[data-terms-unavailable]");
+    }
+    get activationMarketplaceTermsInput() {
+        return this.form.querySelector("[name='marketplaceTermsAccepted']");
+    }
+    get paymentTermsInput() {
+        return this.form.querySelector("[name='paymentTermsAccepted']");
+    }
+    get termsAcceptanceInput() {
+        return this.termsForm.querySelector("[name='marketplaceTermsAccepted']");
     }
     get ibanInput() {
         return this.root.querySelector("[name='iban']");
@@ -822,6 +976,22 @@ function verificationPending(status) {
     return status?.bankAccountStatus === "attached" && status?.payoutsEnabled !== true && !actionRequired;
 }
 
+function renderLinkedConsent(container, consentText, documentLabel, documentUrl) {
+    const link = document.createElement("a");
+    link.setAttribute("data-marketplace-terms", "");
+    link.href = documentUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = documentLabel;
+    const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
+    container.replaceChildren();
+    if (start < 0) {
+        container.append(consentText, " ", link);
+        return;
+    }
+    container.append(consentText.slice(0, start), link, consentText.slice(start + documentLabel.length));
+}
+
 function marketplaceTermsRequirement(value) {
     const version = text(value?.version);
     const hash = text(value?.hash).toLowerCase();
@@ -830,7 +1000,13 @@ function marketplaceTermsRequirement(value) {
     }
     const requirement = { version, hash };
     const published = publishedMarketplaceTermsRequirement(value);
-    return published ? { ...requirement, ...published } : requirement;
+    if (value?.mode === "published_page") {
+        return published ? { ...requirement, ...published } : null;
+    }
+    if (value?.mode !== "legacy") {
+        return null;
+    }
+    return requirement;
 }
 
 function publishedMarketplaceTermsRequirement(value) {
