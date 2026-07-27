@@ -28,13 +28,15 @@ describe("repository operation observability", () => {
                     return {
                         operationId: "promotion-operation",
                         record: {
-                            schema: "cms.integration.registry.stable-promotion.v1",
+                            schema: "cms.integration.registry.stable-promotion.v2",
                             id: "promotion-record",
                             operationId: "promotion-operation",
                             kind: request.kind,
                             version: request.version,
                             packageDigest: DIGEST,
                             reportRevisionId: request.currentReportRevisionId,
+                            reportDigest: "b".repeat(64),
+                            reportType: "release-admission-decision",
                             actor: request.actor,
                             confirmation: request.confirmation,
                             createdAt: "2026-07-26T12:00:00.000Z",

@@ -3,11 +3,9 @@ import type { IntegrationDefinitionIndex } from "@bernouy/cms-integrations";
 import { parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
 import { identifyReleaseAdmissionDecision } from "@bernouy/cms-integration-verification";
 import type { IntegrationRegistryCatalogSnapshotReference } from "../../../../../core/catalog/reference";
-import type { IntegrationRegistryExactVersionLocation } from "../../../../../interfaces/catalog";
 import type { IntegrationRegistryRecoveryDiagnostic } from "../../../../../interfaces/recovery";
 import type { ReleaseAdmissionDecisionStore } from "../../../../../interfaces/reportStore";
 import { buildFsIntegrationRegistryCatalogSnapshot } from "../../../snapshot/builder";
-import { readFsIntegrationCompatibilityReportCollection } from "../../history/store";
 import { readJsonFile, removeFileIfExists, replaceCanonicalJson } from "../../persistence/canonicalFile";
 import type { FsIntegrationRegistryLayout } from "../../persistence/layout";
 import { readStablePromotionRecord, writeStablePromotionRecord } from "../document";
@@ -41,7 +39,7 @@ export async function replayStablePromotion(
     if (!location || location.package.digest !== journal.record.packageDigest) {
         throw new Error("Stable promotion journal references an unavailable package");
     }
-    const evidence = await loadPromotionEvidence(input, journal, location);
+    const evidence = await loadPromotionEvidence(input, journal);
     const storage = stablePromotionStoragePaths(location.integrationRoot);
     const paths = stablePromotionPaths(storage, journal.operationId, journal.record.id);
     let currentIndex = await readCurrentIndex(paths.index);
@@ -62,14 +60,9 @@ export async function replayStablePromotion(
     if (
         sameIntegrationRegistryIndex(currentIndex, journal.previousIndex) &&
         (evidence.currentRevisionId !== journal.record.reportRevisionId ||
-            (journal.record.schema === "cms.integration.registry.stable-promotion.v2" &&
-                evidence.currentDigest !== journal.record.reportDigest))
+            evidence.currentDigest !== journal.record.reportDigest)
     ) {
-        throw new Error(
-            journal.record.schema === "cms.integration.registry.stable-promotion.v1"
-                ? "Uncommitted stable promotion report is no longer the current compatibility revision"
-                : "Uncommitted stable promotion evidence is no longer the current release decision",
-        );
+        throw new Error("Uncommitted stable promotion evidence is no longer the current release decision");
     }
     let currentJournal = journal;
     if (sameIntegrationRegistryIndex(currentIndex, journal.previousIndex)) {
@@ -97,16 +90,7 @@ export async function replayStablePromotion(
 async function loadPromotionEvidence(
     input: Pick<Parameters<typeof replayStablePromotion>[0], "releaseDecisions">,
     journal: FsIntegrationRegistryStablePromotionJournal,
-    location: IntegrationRegistryExactVersionLocation,
-): Promise<Readonly<{ currentRevisionId: string; currentDigest?: string }>> {
-    if (journal.record.schema === "cms.integration.registry.stable-promotion.v1") {
-        const history = await readFsIntegrationCompatibilityReportCollection(location);
-        const referenced = history?.reports.find((report) => report.id === journal.record.reportRevisionId);
-        if (!history || !referenced?.admissible) {
-            throw new Error("Legacy stable promotion references an absent or ineligible compatibility report");
-        }
-        return { currentRevisionId: history.current.id };
-    }
+): Promise<Readonly<{ currentRevisionId: string; currentDigest: string }>> {
     if (!input.releaseDecisions) {
         throw new Error("Composite stable promotion recovery requires the release decision store");
     }

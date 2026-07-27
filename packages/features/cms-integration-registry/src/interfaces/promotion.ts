@@ -12,25 +12,7 @@ export type IntegrationRegistryStablePromotionRequest = Readonly<{
     reason?: string;
 }>;
 
-export type LegacyIntegrationRegistryStablePromotionRecordV1 = Readonly<{
-    schema: "cms.integration.registry.stable-promotion.v1";
-    id: string;
-    operationId: string;
-    kind: string;
-    version: string;
-    packageDigest: string;
-    reportRevisionId: string;
-    previousStable?: string;
-    actor: string;
-    confirmation: Readonly<{
-        version: string;
-        reportRevisionId: string;
-    }>;
-    createdAt: string;
-    reason?: string;
-}>;
-
-export type IntegrationRegistryStablePromotionRecordV2 = Readonly<{
+export type IntegrationRegistryStablePromotionRecord = Readonly<{
     schema: "cms.integration.registry.stable-promotion.v2";
     id: string;
     operationId: string;
@@ -49,10 +31,6 @@ export type IntegrationRegistryStablePromotionRecordV2 = Readonly<{
     createdAt: string;
     reason?: string;
 }>;
-
-export type IntegrationRegistryStablePromotionRecord =
-    | LegacyIntegrationRegistryStablePromotionRecordV1
-    | IntegrationRegistryStablePromotionRecordV2;
 
 export type IntegrationRegistryStablePromotionResult = Readonly<{
     operationId: string;

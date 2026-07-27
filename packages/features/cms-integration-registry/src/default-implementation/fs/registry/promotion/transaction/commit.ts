@@ -32,10 +32,7 @@ export async function commitFsIntegrationRegistryStablePromotion(
 ): Promise<IntegrationRegistryStablePromotionResult> {
     const { config, paths, record, previousIndex, nextIndex } = input;
     let journal: FsIntegrationRegistryStablePromotionJournal = {
-        schema:
-            record.schema === "cms.integration.registry.stable-promotion.v2"
-                ? "cms.integration.registry.stable-promotion-journal.v2"
-                : "cms.integration.registry.stable-promotion-journal.v1",
+        schema: "cms.integration.registry.stable-promotion-journal.v2",
         operationId: record.operationId,
         phase: "prepared",
         createdAt: record.createdAt,
@@ -115,8 +112,6 @@ function boundary(journal: FsIntegrationRegistryStablePromotionJournal) {
         kind: journal.record.kind,
         version: journal.record.version,
         reportRevisionId: journal.record.reportRevisionId,
-        ...(journal.record.schema === "cms.integration.registry.stable-promotion.v2"
-            ? { reportDigest: journal.record.reportDigest }
-            : {}),
+        reportDigest: journal.record.reportDigest,
     } as const;
 }

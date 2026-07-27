@@ -19,7 +19,7 @@ export class IntegrationRegistryStablePromotionStaleReportError extends Error {
         readonly requestedReportRevisionId: string,
         readonly currentReportRevisionId: string,
     ) {
-        super(`Stable promotion report revision is stale: expected current revision "${currentReportRevisionId}"`);
+        super(`Stable promotion decision is stale: expected current revision "${currentReportRevisionId}"`);
         this.name = "IntegrationRegistryStablePromotionStaleReportError";
     }
 }

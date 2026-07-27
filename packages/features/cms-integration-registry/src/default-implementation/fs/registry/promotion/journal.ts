@@ -5,8 +5,6 @@ import { readCanonicalJsonFile, replaceCanonicalJson, writeCanonicalJsonNoReplac
 import { parseStablePromotionRecord } from "./document";
 import { nextStableIntegrationRegistryIndex, sameIntegrationRegistryIndex } from "./eligibility/channels";
 
-export const LEGACY_INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_SCHEMA =
-    "cms.integration.registry.stable-promotion-journal.v1" as const;
 export const INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_SCHEMA =
     "cms.integration.registry.stable-promotion-journal.v2" as const;
 export const MAX_INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_BYTES = 2 * 1_024 * 1_024;
@@ -22,9 +20,7 @@ export type FsIntegrationRegistryStablePromotionPhase =
     (typeof FS_INTEGRATION_REGISTRY_STABLE_PROMOTION_PHASES)[number];
 
 export type FsIntegrationRegistryStablePromotionJournal = Readonly<{
-    schema:
-        | typeof LEGACY_INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_SCHEMA
-        | typeof INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_SCHEMA;
+    schema: typeof INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_SCHEMA;
     operationId: string;
     phase: FsIntegrationRegistryStablePromotionPhase;
     createdAt: string;
@@ -73,8 +69,7 @@ export async function readStablePromotionJournal(
 export function parseStablePromotionJournal(value: unknown): FsIntegrationRegistryStablePromotionJournal {
     if (
         !hasExactKeys(value, ["createdAt", "nextIndex", "operationId", "phase", "previousIndex", "record", "schema"]) ||
-        (value.schema !== LEGACY_INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_SCHEMA &&
-            value.schema !== INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_SCHEMA) ||
+        value.schema !== INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_SCHEMA ||
         !isPathSafeId(value.operationId) ||
         !isStablePromotionPhase(value.phase) ||
         typeof value.createdAt !== "string" ||
@@ -86,12 +81,6 @@ export function parseStablePromotionJournal(value: unknown): FsIntegrationRegist
         throw new Error("Invalid integration registry stable promotion journal");
     }
     const record = parseStablePromotionRecord(value.record);
-    if (
-        (record.schema === "cms.integration.registry.stable-promotion.v1") !==
-        (value.schema === LEGACY_INTEGRATION_REGISTRY_STABLE_PROMOTION_JOURNAL_SCHEMA)
-    ) {
-        throw new Error("Integration registry stable promotion journal schema does not match its record");
-    }
     const previousIndex = parseIntegrationDefinitionIndex(
         value.previousIndex,
         `stable-promotion:${value.operationId}:previous-index`,

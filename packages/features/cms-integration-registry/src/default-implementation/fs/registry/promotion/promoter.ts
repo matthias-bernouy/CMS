@@ -73,21 +73,15 @@ export class FsIntegrationRegistryStablePromoter implements IntegrationRegistryS
             }
             const createdAt = this.config.now?.() ?? new Date().toISOString();
             const record: IntegrationRegistryStablePromotionRecord = parseStablePromotionRecord({
-                schema: evidence.digest
-                    ? "cms.integration.registry.stable-promotion.v2"
-                    : "cms.integration.registry.stable-promotion.v1",
+                schema: "cms.integration.registry.stable-promotion.v2",
                 id: promotionId,
                 operationId,
                 kind: validated.kind,
                 version: validated.version,
                 packageDigest: location.package.digest,
                 reportRevisionId: evidence.revisionId,
-                ...(evidence.digest
-                    ? {
-                          reportDigest: evidence.digest,
-                          reportType: "release-admission-decision",
-                      }
-                    : {}),
+                reportDigest: evidence.digest,
+                reportType: "release-admission-decision",
                 ...(index.stable ? { previousStable: index.stable } : {}),
                 actor: validated.actor,
                 confirmation: validated.confirmation,
@@ -111,24 +105,14 @@ async function currentPromotionEvidence(
     config: FsIntegrationRegistryStablePromoterConfig,
     kind: string,
     version: string,
-): Promise<Readonly<{ revisionId: string; digest?: string; admissible: boolean; label: string }> | null> {
-    if (config.decisions) {
-        const history = await config.decisions.get(kind, version);
-        return history
-            ? {
-                  revisionId: history.currentRevisionId,
-                  digest: history.currentReportDigest,
-                  admissible: history.current.admissible,
-                  label: "release admission decision",
-              }
-            : null;
-    }
-    const history = await config.reports.get(kind, version);
+): Promise<Readonly<{ revisionId: string; digest: string; admissible: boolean; label: string }> | null> {
+    const history = await config.decisions.get(kind, version);
     return history
         ? {
-              revisionId: history.current.id,
+              revisionId: history.currentRevisionId,
+              digest: history.currentReportDigest,
               admissible: history.current.admissible,
-              label: "legacy compatibility report",
+              label: "release admission decision",
           }
         : null;
 }

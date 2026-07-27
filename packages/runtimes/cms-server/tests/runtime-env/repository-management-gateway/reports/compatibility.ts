@@ -50,13 +50,15 @@ export function compatibilityPage(
 
 export function promotionRecord(overrides: Readonly<Record<string, unknown>> = {}): Readonly<Record<string, unknown>> {
     return {
-        schema: "cms.integration.registry.stable-promotion.v1",
+        schema: "cms.integration.registry.stable-promotion.v2",
         id: "promotion-record",
         operationId: "promotion-operation",
         kind: TEST_KIND,
         version: TEST_VERSION,
         packageDigest: TEST_DIGEST,
         reportRevisionId: "report-admission",
+        reportDigest: "b".repeat(64),
+        reportType: "release-admission-decision",
         actor: "administrator-subject",
         confirmation: { version: TEST_VERSION, reportRevisionId: "report-admission" },
         createdAt: TEST_CREATED_AT,

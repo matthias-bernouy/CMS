@@ -81,7 +81,7 @@ function promotionErrorResponse(error: unknown): Response {
     if (error instanceof IntegrationRegistryStablePromotionStaleReportError) {
         return jsonResponse(error.status, {
             code: error.code,
-            error: "Compatibility report revision is stale",
+            error: "Release admission decision is stale",
             currentReportRevisionId: error.currentReportRevisionId,
         });
     }

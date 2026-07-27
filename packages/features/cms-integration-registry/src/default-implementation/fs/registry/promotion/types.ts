@@ -1,10 +1,7 @@
 import type { IntegrationPackageLimits } from "@bernouy/cms-integration-packages";
 import type { IntegrationRegistryCatalogSnapshotReference } from "../../../../core/catalog/reference";
 import type { IntegrationRegistryMutationCoordinator } from "../../../../interfaces/mutations";
-import type {
-    IntegrationCompatibilityReportStore,
-    ReleaseAdmissionDecisionStore,
-} from "../../../../interfaces/reportStore";
+import type { ReleaseAdmissionDecisionStore } from "../../../../interfaces/reportStore";
 import type { FsIntegrationRegistryStablePromotionPhase } from "./journal";
 
 export type FsIntegrationRegistryStablePromotionBoundary = Readonly<{
@@ -14,7 +11,7 @@ export type FsIntegrationRegistryStablePromotionBoundary = Readonly<{
     kind: string;
     version: string;
     reportRevisionId: string;
-    reportDigest?: string;
+    reportDigest: string;
 }>;
 
 type FsIntegrationRegistryStablePromoterConfigBase = Readonly<{
@@ -29,10 +26,7 @@ type FsIntegrationRegistryStablePromoterConfigBase = Readonly<{
 }>;
 
 export type FsIntegrationRegistryStablePromoterConfig = FsIntegrationRegistryStablePromoterConfigBase &
-    (
-        | Readonly<{ decisions: ReleaseAdmissionDecisionStore; reports?: never }>
-        | Readonly<{ reports: IntegrationCompatibilityReportStore; decisions?: never }>
-    );
+    Readonly<{ decisions: ReleaseAdmissionDecisionStore }>;
 
 export class FsIntegrationRegistryStablePromotionSimulatedCrashError extends Error {
     constructor(

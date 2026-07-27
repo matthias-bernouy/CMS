@@ -60,7 +60,7 @@ function validatePromotionError(
             status: 409,
             body: {
                 code: initial.code,
-                error: "Compatibility report revision is stale",
+                error: "Release admission decision is stale",
                 currentReportRevisionId: canonicalText(body.currentReportRevisionId, 512),
             },
         };
@@ -94,12 +94,6 @@ function validatePromotionError(
 }
 
 function validatePromotionRecord(value: unknown, expected: PromotionIdentity): JsonObject {
-    const schema =
-        value && typeof value === "object" && !Array.isArray(value) ? (value as JsonObject).schema : undefined;
-    const v2 = schema === "cms.integration.registry.stable-promotion.v2";
-    if (!v2) {
-        assertEqual(schema, "cms.integration.registry.stable-promotion.v1");
-    }
     const record = exactObject(
         value,
         [
@@ -110,23 +104,23 @@ function validatePromotionRecord(value: unknown, expected: PromotionIdentity): J
             "version",
             "packageDigest",
             "reportRevisionId",
-            ...(v2 ? ["reportDigest", "reportType"] : []),
+            "reportDigest",
+            "reportType",
             "actor",
             "confirmation",
             "createdAt",
         ],
         ["previousStable", "reason"],
     );
+    assertEqual(record.schema, "cms.integration.registry.stable-promotion.v2");
     canonicalText(record.id, 512);
     canonicalText(record.operationId, 512);
     assertEqual(packageKind(record.kind), expected.input.kind);
     assertEqual(packageVersion(record.version), expected.input.version);
     digest(record.packageDigest);
     assertEqual(canonicalText(record.reportRevisionId, 512), expected.input.currentReportRevisionId);
-    if (v2) {
-        digest(record.reportDigest);
-        assertEqual(record.reportType, "release-admission-decision");
-    }
+    digest(record.reportDigest);
+    assertEqual(record.reportType, "release-admission-decision");
     assertEqual(canonicalText(record.actor, 512), expected.actor);
     const confirmation = exactObject(record.confirmation, ["version", "reportRevisionId"]);
     assertEqual(packageVersion(confirmation.version), expected.input.confirmation.version);

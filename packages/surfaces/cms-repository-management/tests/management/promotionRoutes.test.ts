@@ -55,7 +55,7 @@ describe("repository stable promotion route", () => {
         expect(staleResponse.status).toBe(409);
         expect(await staleResponse.json()).toEqual({
             code: "integration_registry_stable_promotion_stale_report",
-            error: "Compatibility report revision is stale",
+            error: "Release admission decision is stale",
             currentReportRevisionId: "report-2",
         });
 
@@ -129,13 +129,15 @@ class RecordingPromoter implements IntegrationRegistryStablePromoter {
         return {
             operationId: "operation-1",
             record: {
-                schema: "cms.integration.registry.stable-promotion.v1" as const,
+                schema: "cms.integration.registry.stable-promotion.v2" as const,
                 id: "promotion-1",
                 operationId: "operation-1",
                 kind: request.kind,
                 version: request.version,
                 packageDigest: "a".repeat(64),
                 reportRevisionId: request.currentReportRevisionId,
+                reportDigest: "b".repeat(64),
+                reportType: "release-admission-decision" as const,
                 previousStable: "1.0.0",
                 actor: request.actor,
                 confirmation: request.confirmation,

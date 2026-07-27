@@ -26,7 +26,6 @@ export async function writeStablePromotionRecord(
 
 export function parseStablePromotionRecord(value: unknown): IntegrationRegistryStablePromotionRecord {
     const schema = isRecord(value) ? value.schema : undefined;
-    const isComposite = schema === "cms.integration.registry.stable-promotion.v2";
     if (
         !isRecord(value) ||
         !hasAllowedKeys(
@@ -39,13 +38,15 @@ export function parseStablePromotionRecord(value: unknown): IntegrationRegistryS
                 "kind",
                 "operationId",
                 "packageDigest",
+                "reportDigest",
                 "reportRevisionId",
+                "reportType",
                 "schema",
                 "version",
             ],
-            ["previousStable", "reason", ...(isComposite ? ["reportDigest", "reportType"] : [])],
+            ["previousStable", "reason"],
         ) ||
-        (schema !== "cms.integration.registry.stable-promotion.v1" && !isComposite) ||
+        schema !== "cms.integration.registry.stable-promotion.v2" ||
         !isConfirmation(value.confirmation) ||
         !isPathSafeId(value.id) ||
         !isPathSafeId(value.operationId) ||
@@ -54,7 +55,8 @@ export function parseStablePromotionRecord(value: unknown): IntegrationRegistryS
         !isBoundedCanonicalText(value.kind, 128) ||
         !isBoundedCanonicalText(value.version, 128) ||
         !isDigest(value.packageDigest) ||
-        (isComposite && (!isDigest(value.reportDigest) || value.reportType !== "release-admission-decision")) ||
+        !isDigest(value.reportDigest) ||
+        value.reportType !== "release-admission-decision" ||
         !isTimestamp(value.createdAt) ||
         (value.reason !== undefined && !isBoundedCanonicalText(value.reason, 4_096)) ||
         (value.previousStable !== undefined && !isBoundedCanonicalText(value.previousStable, 128))
