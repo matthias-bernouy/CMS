@@ -38,10 +38,6 @@ export function resolveInstallableIntegrationDefinitionVersion(
         : (index.versions.find(isIntegrationDefinitionVersionInstallable) ?? null);
 }
 
-export function isIntegrationDefinitionVersionBlocked(version: IntegrationDefinitionVersion): boolean {
-    return version.status === "blocked";
-}
-
 export function isIntegrationDefinitionVersionInstallable(version: IntegrationDefinitionVersion): boolean {
     return version.status === undefined;
 }

@@ -48,13 +48,6 @@ export function isSupportedIntegrationVersionRange(value: string): boolean {
     return validRange(value) !== null && minVersion(value) !== null;
 }
 
-export function assertSupportedIntegrationVersionRange(value: string, source: string): string {
-    if (!isSupportedIntegrationVersionRange(value)) {
-        throw new Error(`${source} must be an exact, caret, tilde, or bounded comparator range such as >=1.2.0 <2.0.0`);
-    }
-    return value;
-}
-
 export function integrationVersionSatisfies(version: string, range: string): boolean {
     return (
         isExactIntegrationVersion(version) &&

@@ -166,14 +166,12 @@ export {
 export {
     assertIntegrationVersionInstallable,
     assertUpgradeEligible,
-    isIntegrationDefinitionVersionBlocked,
     isIntegrationDefinitionVersionInstallable,
     resolveExactIntegrationDefinitionVersion,
     resolveInstallableIntegrationDefinitionVersion,
 } from "../core/definitions/repositoryVersions";
 export {
     assertExactIntegrationVersion,
-    assertSupportedIntegrationVersionRange,
     integrationVersionRangeContainsRange,
     integrationVersionReleaseLevel,
     integrationVersionSatisfies,
