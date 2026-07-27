@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { defaultThemeSettings, type ThemeSettings } from "@bernouy/cms-content";
 import { handleThemeInput } from "cms-control/components/admin/Theme/editor/controller/inputEvents";
-import { themeSettingsFromCss } from "cms-control/components/admin/Theme/editor/importCss";
 import {
     addCategory,
     addToken,
@@ -63,17 +62,6 @@ describe("integration theme editor actions", () => {
         });
     });
 
-    test("keeps fallback CSS imports aligned with referenced token types", () => {
-        const settings = themeSettingsFromCss(":root { --space-md: 1rem; --custom-gap: var(--space-md); }");
-        const tokens = settings.sources.flatMap((source) => source.categories.flatMap((category) => category.tokens));
-
-        expect(settings.sources).toHaveLength(1);
-        expect(settings.sources[0]).toMatchObject({ id: "imported-css", label: "Imported CSS" });
-        expect(settings.sources[0]!.owner).toBeUndefined();
-        expect(tokens.find((token) => token.id === "space-md")?.type).toBe("length");
-        expect(tokens.find((token) => token.id === "custom-gap")?.type).toBe("length");
-    });
-
     test("removes ordinary tokens and their values from every theme and mode", () => {
         const settings = defaultThemeSettings();
         settings.themes.push({
@@ -109,7 +97,8 @@ describe("integration theme editor actions", () => {
     });
 
     test("does not mutate when deleting a category would leave no valid destination", () => {
-        const settings = themeSettingsFromCss(":root { --brand-color: #123456; }");
+        const settings = defaultThemeSettings();
+        settings.sources = [{ ...settings.sources[0]!, categories: [settings.sources[0]!.categories[0]!] }];
         settings.sources.push({
             id: "empty",
             label: "Empty",
@@ -125,7 +114,7 @@ describe("integration theme editor actions", () => {
         });
         const before = structuredClone(settings);
 
-        expect(removeCategory(settings, { sourceId: "imported-css", categoryId: "general" })).toBeUndefined();
+        expect(removeCategory(settings, { sourceId: "colors", categoryId: "brand" })).toBeUndefined();
         expect(settings).toEqual(before);
     });
 });

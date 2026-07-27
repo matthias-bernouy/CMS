@@ -1,9 +1,7 @@
 import type { ThemeSettings } from "@bernouy/cms-content";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
-import { themeSettingsFromCss } from "./importCss";
-
-type SettingsResponse = { site?: { name?: string; theme?: string }; theme?: ThemeSettings };
+type SettingsResponse = { site: { name: string }; theme: ThemeSettings };
 
 export type LoadedThemeSettings = {
     settings: ThemeSettings;
@@ -20,9 +18,9 @@ export async function loadThemeSettings(): Promise<LoadedThemeSettings> {
     }
     const data = (await response.json()) as SettingsResponse;
     return {
-        canPersist: Boolean(data.theme),
-        settings: structuredClone(data.theme ?? themeSettingsFromCss(data.site?.theme ?? "")),
-        siteName: data.site?.name ?? "",
+        canPersist: true,
+        settings: structuredClone(data.theme),
+        siteName: data.site.name,
     };
 }
 
