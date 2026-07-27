@@ -11,12 +11,7 @@ import {
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
-import {
-    CompositeSourceRepository,
-    InMemorySourceRepository,
-    SYSTEM_SOURCES,
-    type SourceEndpointInterceptor,
-} from "@bernouy/cms-sources";
+import { InMemorySourceRepository, type SourceEndpointInterceptor } from "@bernouy/cms-sources";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { getRequestIP, requestCorrelationId, setRequestIP } from "@bernouy/http-runner";
@@ -56,7 +51,7 @@ async function setup(
         passwordResetUrl: "http://site.test/auth/reset-password",
         authEmailCooldownSeconds: 0,
     };
-    const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
+    const gateway = new InMemorySourceRepository();
     const roles = new InMemoryRolesRepository();
     const functions = new InMemoryFunctionRepository();
     const triggers = new InMemoryTriggerRepository();
@@ -130,6 +125,27 @@ async function setup(
 }
 
 describe("Delivery system auth gateway", () => {
+    test("adds the system auth overlay to a plain user source repository", async () => {
+        const { post, legacySignup, credentials } = await setup({ installResponseTrigger: false });
+
+        expect(
+            (await post(jsonRequest("/signup", { email: "source@example.com", password: "password-1" }))).status,
+        ).toBe(200);
+        expect(
+            (
+                await legacySignup(
+                    new Request("http://site/.cms/auth/signup", {
+                        method: "POST",
+                        headers: { "content-type": "application/json" },
+                        body: JSON.stringify({ email: "legacy@example.com", password: "password-1" }),
+                    }),
+                )
+            ).status,
+        ).toBe(200);
+        expect(await credentials.getByEmail("source@example.com")).not.toBeNull();
+        expect(await credentials.getByEmail("legacy@example.com")).not.toBeNull();
+    });
+
     test("signup, verification, login, me and logout run through system-auth", async () => {
         const { post, get, emailer, triggers } = await setup();
 
