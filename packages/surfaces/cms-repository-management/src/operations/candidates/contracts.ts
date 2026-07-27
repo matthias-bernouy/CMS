@@ -14,6 +14,7 @@ import type {
 } from "@bernouy/cms-integration-verification";
 import type { Runner } from "@bernouy/http-runner";
 
+export const REPOSITORY_MANAGEMENT_BASE_PATH = "/.cms/repository-management";
 export const REPOSITORY_CANDIDATES_PATH = "/api/integrations/candidates";
 export const REPOSITORY_CANDIDATE_STATUS_PATH = "/api/integrations/candidates/status";
 export const REPOSITORY_CANDIDATE_REPORT_PATH = "/api/integrations/candidates/report";
@@ -23,6 +24,22 @@ export const REPOSITORY_VERIFICATION_JOB_LEASE_PATH = "/api/integrations/verific
 export const REPOSITORY_VERIFICATION_JOB_RESULT_CAPABILITIES_PATH =
     "/api/integrations/verification-jobs/result-capabilities";
 export const REPOSITORY_VERIFICATION_JOB_RESULT_PATH = "/api/integrations/verification-jobs/result";
+
+const REPOSITORY_MANAGEMENT_BASE_URL = new URL(
+    `${REPOSITORY_MANAGEMENT_BASE_PATH}/`,
+    "http://repository-management.invalid",
+);
+
+export function repositoryManagementAbsolutePath(path: string): string {
+    if (!path.startsWith("/api/") || path.startsWith("//") || path.includes("#")) {
+        throw new TypeError("Repository management API path must be an absolute /api/ path without a fragment");
+    }
+    const resolved = new URL(`.${path}`, REPOSITORY_MANAGEMENT_BASE_URL);
+    if (!resolved.pathname.startsWith(`${REPOSITORY_MANAGEMENT_BASE_PATH}/api/`)) {
+        throw new TypeError("Repository management API path escaped its mount point");
+    }
+    return `${resolved.pathname}${resolved.search}`;
+}
 
 export type RepositoryCandidateCapabilityIdentity = Readonly<{
     candidateId: string;

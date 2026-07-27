@@ -13,12 +13,13 @@ import {
     type RepositoryCompatibilityReader,
     type PublicRepositoryReadObserver,
 } from "@bernouy/cms-repository";
+import { REPOSITORY_MANAGEMENT_BASE_PATH } from "@bernouy/cms-repository-management";
 import type { Middleware, Runner } from "@bernouy/http-runner";
 import type { RepositoryCatalogRefreshResult, RepositoryCatalogRuntime } from "./catalogRuntime";
 import { mountRepositoryHealthRoutes } from "./healthRoutes";
 
 export const REPOSITORY_PUBLIC_BASE_PATH = "/.cms/repository";
-export const REPOSITORY_MANAGEMENT_BASE_PATH = "/.cms/repository-management";
+export { REPOSITORY_MANAGEMENT_BASE_PATH };
 
 export type RepositoryManagementSurfaceMount = (runner: Runner) => void;
 

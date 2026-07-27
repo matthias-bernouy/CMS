@@ -80,8 +80,23 @@ describe("PostgreSQL platform verification sandbox program", () => {
         expect(suite.outcome).toBe("failed");
         expect(suite.platformEvidence?.checks[0]).toMatchObject({
             outcome: "failed",
-            findings: [{ code: "probe-failed", path: "package" }],
+            findings: [
+                { code: "probe-failed", path: "definition" },
+                { code: "probe-failed", path: "package" },
+            ],
         });
+        expect(suite.diagnostics).toEqual([
+            { code: "probe-failed", message: "materialized-definition rejected definition", redacted: true },
+        ]);
+        await expect(
+            validateCandidateAdmissionJobResultForPlan(
+                result,
+                input.workload.migrationInputs,
+                input.workload.admission,
+                input.workload.policy,
+                input.workload.attempt,
+            ),
+        ).resolves.toBeDefined();
     });
 
     test("fails closed when author execution is absent or substitutes a content digest", async () => {
@@ -157,7 +172,12 @@ function adapter(
                             outcome,
                             subjectCount: suite.applicable ? 1 : 0,
                             observationDigest: DIGEST_A,
-                            findings: failed ? [{ code: "probe-failed", path: "package" }] : [],
+                            findings: failed
+                                ? [
+                                      { code: "probe-failed", path: "definition" },
+                                      { code: "probe-failed", path: "package" },
+                                  ]
+                                : [],
                             findingsTruncated: false,
                         })),
                     };

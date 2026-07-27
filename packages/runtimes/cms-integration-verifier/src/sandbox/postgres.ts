@@ -200,14 +200,24 @@ function diagnostics(
             },
         ];
     }
-    return evidence.checks
+    const findings = evidence.checks
         .flatMap((check) => check.findings.map((finding) => ({ check, finding })))
-        .slice(0, 8)
-        .map(({ check, finding }) => ({
-            code: finding.code,
-            message: `${check.checkId} rejected ${finding.path}`,
-            redacted: true as const,
-        }));
+        .toSorted((left, right) =>
+            `${left.finding.code}\0${left.check.checkId}\0${left.finding.path}`.localeCompare(
+                `${right.finding.code}\0${right.check.checkId}\0${right.finding.path}`,
+            ),
+        );
+    const unique = new Map<string, (typeof findings)[number]>();
+    for (const finding of findings) {
+        if (!unique.has(finding.finding.code)) {
+            unique.set(finding.finding.code, finding);
+        }
+    }
+    return [...unique.values()].slice(0, 8).map(({ check, finding }) => ({
+        code: finding.code,
+        message: `${check.checkId} rejected ${finding.path}`,
+        redacted: true as const,
+    }));
 }
 
 function authorDiagnostics(

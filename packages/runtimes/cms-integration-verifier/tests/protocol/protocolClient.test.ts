@@ -13,7 +13,7 @@ describe("candidate worker HTTP client", () => {
         const renewed = renewedCandidate(claimed.candidate);
         const result = await validJobResult({ ...claimed, candidate: renewed });
         const resultDigest = (await identifyCandidateAdmissionJobResult(result)).digest;
-        const terminal = { ...renewed, revision: renewed.revision + 1, status: "passed", lease: undefined };
+        const terminal = { ...renewed, revision: renewed.revision + 1, status: "published", lease: undefined };
         const responses = [
             json({ candidates: [queued] }),
             json({ candidate: claimed.candidate, workload: claimed.workload }, 201),
@@ -47,9 +47,16 @@ describe("candidate worker HTTP client", () => {
         const exactClaim = await client.claim(listed[0]!);
         const exactRenewal = await client.renew(exactClaim.candidate);
         const capability = await client.seal(exactRenewal, resultDigest);
-        await client.submit(exactRenewal, capability, result);
+        expect((await client.submit(exactRenewal, capability, result)).status).toBe("published");
 
         expect(requests).toHaveLength(5);
+        expect(requests.map((request) => `${new URL(request.url).pathname}${new URL(request.url).search}`)).toEqual([
+            "/.cms/repository-management/api/integrations/verification-jobs?limit=1",
+            "/.cms/repository-management/api/integrations/verification-jobs/claims",
+            "/.cms/repository-management/api/integrations/verification-jobs/lease",
+            "/.cms/repository-management/api/integrations/verification-jobs/result-capabilities",
+            "/.cms/repository-management/api/integrations/verification-jobs/result",
+        ]);
         expect(requests.slice(0, 4).map((request) => request.headers.get("authorization"))).toEqual([
             "Bearer worker-service-secret",
             "Bearer worker-service-secret",
@@ -83,6 +90,34 @@ describe("candidate worker HTTP client", () => {
         await expect(substitutedClient.seal(claimed.candidate, "e".repeat(64))).rejects.toMatchObject({
             kind: "invalid-response",
         });
+    });
+
+    test("rejects a partially publishing result response", async () => {
+        const claimed = await claimedJob();
+        const result = await validJobResult(claimed);
+        const resultDigest = (await identifyCandidateAdmissionJobResult(result)).digest;
+        const client = clientForResponses([
+            json({
+                candidate: {
+                    ...claimed.candidate,
+                    revision: claimed.candidate.revision + 1,
+                    status: "publishing",
+                    lease: undefined,
+                },
+            }),
+        ]);
+
+        await expect(
+            client.submit(
+                claimed.candidate,
+                {
+                    token: "sealed-result-capability",
+                    expiresAt: claimed.candidate.lease.leaseExpiresAt,
+                    resultDigest,
+                },
+                result,
+            ),
+        ).rejects.toMatchObject({ kind: "invalid-response", retryable: false });
     });
 
     test("rejects a claim whose package bytes differ from the advertised exact digest", async () => {

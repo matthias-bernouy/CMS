@@ -67,6 +67,7 @@ export {
     RepositoryCandidateAdmissionPlanningError,
 } from "cms-repository-management/operations/candidates/coordinator";
 export {
+    REPOSITORY_MANAGEMENT_BASE_PATH,
     REPOSITORY_CANDIDATES_PATH,
     REPOSITORY_CANDIDATE_REPORT_PATH,
     REPOSITORY_CANDIDATE_STATUS_PATH,
@@ -75,6 +76,7 @@ export {
     REPOSITORY_VERIFICATION_JOB_LEASE_PATH,
     REPOSITORY_VERIFICATION_JOB_RESULT_CAPABILITIES_PATH,
     REPOSITORY_VERIFICATION_JOB_RESULT_PATH,
+    repositoryManagementAbsolutePath,
     type RepositoryCandidateCapabilityAuthority,
     type RepositoryCandidateCapabilityIdentity,
     type RepositoryCandidateAdmissionCoordinator,

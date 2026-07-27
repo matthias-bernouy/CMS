@@ -110,7 +110,10 @@ export function parseSubmittedCandidate(
             candidate.kind !== previous.kind ||
             candidate.version !== previous.version ||
             candidate.revision <= previous.revision ||
-            (candidate.status !== "queued" && candidate.status !== "passed" && candidate.status !== "rejected") ||
+            (candidate.status !== "queued" &&
+                candidate.status !== "passed" &&
+                candidate.status !== "published" &&
+                candidate.status !== "rejected") ||
             candidate.lease
         ) {
             throw new TypeError("Result submission did not finish the exact candidate attempt");
