@@ -15,7 +15,6 @@ import type {
     CompleteIntegrationRegistryCandidatePublicationInput,
     CreateIntegrationRegistryCandidateInput,
     IntegrationRegistryCandidateRecord,
-    PersistIntegrationRegistryCandidatePlanningInput,
     QueueIntegrationRegistryCandidateInput,
     RejectIntegrationRegistryCandidatePublicationInput,
     RejectIntegrationRegistryCandidateValidationInput,
@@ -36,10 +35,6 @@ export interface IntegrationRegistryCandidateStore {
     create(input: CreateIntegrationRegistryCandidateInput): Promise<IntegrationRegistryCandidateRecord>;
     get(candidateId: string): Promise<IntegrationRegistryCandidateRecord | null>;
     objects(candidateId: string): Promise<IntegrationRegistryCandidateObjects>;
-    persistPlanningArtifacts(
-        candidateId: string,
-        input: PersistIntegrationRegistryCandidatePlanningInput,
-    ): Promise<Readonly<{ compatibilityReportDigest: string; statefulChangeSelectionDigest: string }>>;
     listClaimable(now: string, limit?: number): Promise<readonly IntegrationRegistryCandidateRecord[]>;
     listPublicationPending(limit?: number): Promise<readonly IntegrationRegistryCandidateRecord[]>;
     advanceValidation(

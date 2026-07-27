@@ -34,9 +34,7 @@ export { persistCandidatePackageObjects, readCandidatePackage, readCandidateVeri
 export {
     persistCandidatePlanningArtifacts,
     readCandidateCompatibilityReport,
-    readCandidatePlanBinding,
     readCandidateStatefulSelection,
-    type CandidatePlanBinding,
 } from "./planning";
 export { readCandidatePackage as readPackage, readCandidateVerification as readVerification } from "./package";
 export { assertCandidateObjectCapacity } from "./shared";

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { chmodSync, existsSync, writeFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { FsIntegrationRegistryCandidateAdmissionPlanner } from "@bernouy/cms-integration-registry/fs";
 import { reviewedBaseline } from "../../baselines/fixtures";
@@ -115,7 +115,7 @@ describe("candidate admission planning fail-closed checks", () => {
         });
     });
 
-    test("detects exact planning-object tampering and a stale candidate CAS", async () => {
+    test("rejects a substituted admission plan and a stale candidate CAS before writing objects", async () => {
         const fixture = registryFixture();
         const candidate = await verificationCandidate(await publicationPackage("demo", "1.0.0"));
         const store = await validatingCandidate(fixture.root, "candidate-tamper", candidate);
@@ -133,10 +133,8 @@ describe("candidate admission planning fail-closed checks", () => {
             "candidates",
             "objects",
             "compatibility-reports",
-            `${plan.compatibilityReportDigest}.json`,
+            `${plan.admission.compatibilityRevision.digest}.json`,
         );
-        chmodSync(reportPath, 0o640);
-        writeFileSync(reportPath, "{}", { mode: 0o440 });
 
         await expect(
             store.queue("candidate-tamper", {
@@ -144,9 +142,14 @@ describe("candidate admission planning fail-closed checks", () => {
                 now: "2026-07-26T10:00:02.000Z",
                 policy: plan.policy,
                 admission: plan.admission,
+                planningArtifacts: {
+                    ...plan.planningArtifacts,
+                    compatibilityEvaluatorInputDigest: "0".repeat(64),
+                },
             }),
         ).rejects.toThrow();
         expect((await store.get("candidate-tamper"))?.status).toBe("validating");
+        expect(existsSync(reportPath)).toBeFalse();
 
         const second = await verificationCandidate(await publicationPackage("other", "1.0.0"));
         const secondStore = await validatingCandidate(fixture.root, "candidate-cas", second);
@@ -158,6 +161,14 @@ describe("candidate admission planning fail-closed checks", () => {
             policy: await planningPolicy(),
         });
         const secondPlan = await secondPlanner.plan({ candidateId: "candidate-cas", candidate: second });
+        const secondReportPath = join(
+            fixture.root,
+            ".registry",
+            "candidates",
+            "objects",
+            "compatibility-reports",
+            `${secondPlan.admission.compatibilityRevision.digest}.json`,
+        );
         await secondStore.expire("candidate-cas", 1, "2026-07-27T10:00:00.000Z");
         await expect(
             secondStore.queue("candidate-cas", {
@@ -165,8 +176,9 @@ describe("candidate admission planning fail-closed checks", () => {
                 now: "2026-07-27T10:00:01.000Z",
                 policy: secondPlan.policy,
                 admission: secondPlan.admission,
+                planningArtifacts: secondPlan.planningArtifacts,
             }),
         ).rejects.toMatchObject({ code: "revision_conflict" });
-        expect(existsSync(join(fixture.root, ".registry", "candidates", "plans", "candidate-cas.json"))).toBeFalse();
+        expect(existsSync(secondReportPath)).toBeFalse();
     });
 });

@@ -1,5 +1,6 @@
 import type {
     IntegrationRegistryCandidateRecord,
+    IntegrationRegistryCandidatePlanningArtifacts,
     IntegrationRegistryCandidateStore,
 } from "@bernouy/cms-integration-registry";
 import type { IntegrationPackageEnvelopeV1, IntegrationPackageSource } from "@bernouy/cms-integration-packages";
@@ -68,6 +69,7 @@ export type RepositoryCandidateManagementRoutesConfig = Readonly<{
 export type RepositoryCandidateAdmissionPlan = Readonly<{
     policy: ReleaseAdmissionPolicySnapshotV1;
     admission: AdmissionInputSnapshotV1;
+    planningArtifacts?: IntegrationRegistryCandidatePlanningArtifacts;
     migrationInputs?: readonly MigrationVerificationInputV1[];
 }>;
 

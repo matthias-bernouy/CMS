@@ -2,6 +2,7 @@ import type {
     AdmissionActiveContractReferenceV1,
     AdmissionInputSnapshotV1,
     AdmissionSuitePlanEntryV1,
+    CompatibilityReportV2,
     IntegrationVerificationSuiteContentV2,
     ReleaseAdmissionPolicySnapshotV1,
     MigrationVerificationEnvironmentV1,
@@ -41,9 +42,11 @@ export type FsIntegrationRegistryCandidateAdmissionPlannerConfig = Readonly<{
 export type FsIntegrationRegistryCandidateAdmissionPlan = Readonly<{
     policy: ReleaseAdmissionPolicySnapshotV1;
     admission: AdmissionInputSnapshotV1;
-    compatibilityReportDigest: string;
-    statefulChangeSelectionDigest: string;
-    statefulChanges: StatefulChangeSelectionV1;
+    planningArtifacts: Readonly<{
+        compatibilityReport: CompatibilityReportV2;
+        compatibilityEvaluatorInputDigest: string;
+        statefulChanges: StatefulChangeSelectionV1;
+    }>;
     migrationInputs: readonly MigrationVerificationInputV1[];
 }>;
 

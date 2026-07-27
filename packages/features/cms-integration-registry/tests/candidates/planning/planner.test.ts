@@ -3,7 +3,10 @@ import {
     FsIntegrationRegistryCandidateAdmissionPlanner,
     FsIntegrationRegistryCandidateStore,
 } from "@bernouy/cms-integration-registry/fs";
-import { computeIntegrationVerificationSuiteContentDigest } from "@bernouy/cms-integration-verification";
+import {
+    computeIntegrationVerificationSuiteContentDigest,
+    identifyStatefulChangeSelection,
+} from "@bernouy/cms-integration-verification";
 import { reviewedBaseline } from "../../baselines/fixtures";
 import {
     cleanupRegistryFixtures,
@@ -17,7 +20,7 @@ import { planningMigrationConfiguration, planningPolicy, validatingCandidate, ve
 afterEach(cleanupRegistryFixtures);
 
 describe("filesystem candidate admission planning", () => {
-    test("pins compatibility, dependency, runner, author suites, and restart-safe planning objects", async () => {
+    test("pins compatibility, dependency, runner, author suites, and atomically queued planning objects", async () => {
         const fixture = registryFixture();
         const dependency = await publicationPackage("dependency", "1.0.0", {}, "stable implementation\n");
         const baseline = await publicationPackage("demo", "1.0.0", {}, "stable implementation\n");
@@ -50,10 +53,13 @@ describe("filesystem candidate admission planning", () => {
             now: "2026-07-26T10:00:02.000Z",
             policy: plan.policy,
             admission: plan.admission,
+            planningArtifacts: plan.planningArtifacts,
         });
 
-        expect(queued.compatibilityReportDigest).toBe(plan.compatibilityReportDigest);
-        expect(queued.statefulChangeSelectionDigest).toBe(plan.statefulChangeSelectionDigest);
+        expect(queued.compatibilityReportDigest).toBe(plan.admission.compatibilityRevision.digest);
+        expect(queued.statefulChangeSelectionDigest).toBe(
+            (await identifyStatefulChangeSelection(plan.planningArtifacts.statefulChanges)).digest,
+        );
         expect(plan.admission.dependencies).toEqual([
             { selection: "minimum", kind: "dependency", version: "1.0.0", packageDigest: dependency.digest },
             { selection: "stable", kind: "dependency", version: "1.0.0", packageDigest: dependency.digest },
@@ -182,7 +188,7 @@ describe("filesystem candidate admission planning", () => {
 
         const plan = await planner.plan({ candidateId: "candidate-stateful", candidate });
 
-        expect(plan.statefulChanges.requiredMigrations).toEqual([
+        expect(plan.planningArtifacts.statefulChanges.requiredMigrations).toEqual([
             {
                 source: { kind: "demo", version: "1.0.0", packageDigest: baselinePackage.digest },
                 connectorKey: "primary",

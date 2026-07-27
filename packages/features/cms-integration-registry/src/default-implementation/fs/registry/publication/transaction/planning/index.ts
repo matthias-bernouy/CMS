@@ -126,18 +126,14 @@ export class FsIntegrationRegistryCandidateAdmissionPlanner {
         await reviewed.assertStillCurrent();
         await this.#assertCatalogStillCurrent(catalog.digest);
         await this.#requireValidatingCandidate(input, record.revision);
-        const persisted = await this.config.candidates.persistPlanningArtifacts(record.candidateId, {
-            expectedRevision: record.revision,
-            compatibilityReport: compatibility.report,
-            compatibilityEvaluatorInputDigest: compatibility.evaluatorInputDigest,
-            statefulChanges: stateful.selection,
-        });
         return Object.freeze({
             policy: policy.snapshot,
             admission: admission.snapshot,
-            compatibilityReportDigest: persisted.compatibilityReportDigest,
-            statefulChangeSelectionDigest: persisted.statefulChangeSelectionDigest,
-            statefulChanges: stateful.selection,
+            planningArtifacts: {
+                compatibilityReport: compatibility.report,
+                compatibilityEvaluatorInputDigest: compatibility.evaluatorInputDigest,
+                statefulChanges: stateful.selection,
+            },
             migrationInputs,
         });
     }

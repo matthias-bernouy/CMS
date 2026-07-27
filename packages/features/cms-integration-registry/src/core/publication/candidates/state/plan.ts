@@ -1,9 +1,13 @@
 import {
+    identifyCompatibilityReportV2,
     identifyReleaseAdmissionPolicySnapshot,
     identifyMigrationVerificationInput,
+    identifyStatefulChangeSelection,
     validateAdmissionInputSnapshotForPolicy,
     type AdmissionInputSnapshotV1,
+    type CompatibilityReportV2,
     type ReleaseAdmissionPolicySnapshotV1,
+    type StatefulChangeSelectionV1,
 } from "@bernouy/cms-integration-verification";
 import type {
     IntegrationRegistryCandidateRecord,
@@ -25,10 +29,7 @@ export async function queueIntegrationRegistryCandidate(
         policy: ReleaseAdmissionPolicySnapshotV1;
         admission: AdmissionInputSnapshotV1;
         migrationInputs: QueueIntegrationRegistryCandidateInput["migrationInputs"];
-        planningArtifacts?: Readonly<{
-            compatibilityReportDigest: string;
-            statefulChangeSelectionDigest: string;
-        }>;
+        planningArtifacts?: QueueIntegrationRegistryCandidateInput["planningArtifacts"];
     }>,
 ): Promise<IntegrationRegistryCandidateRecord> {
     assertCandidateRevision(record, input.expectedRevision);
@@ -45,14 +46,63 @@ export async function queueIntegrationRegistryCandidate(
     if (migrationInputDigests.some((digest, index) => digest === migrationInputDigests[index - 1])) {
         invalidCandidate("Candidate migration inputs must be unique");
     }
+    const planning = input.planningArtifacts
+        ? {
+              compatibility: await identifyCompatibilityReportV2(input.planningArtifacts.compatibilityReport),
+              stateful: await identifyStatefulChangeSelection(input.planningArtifacts.statefulChanges),
+          }
+        : undefined;
+    if (planning && input.planningArtifacts) {
+        assertPlanningArtifacts(
+            record,
+            admission.snapshot,
+            policy.digest,
+            input.planningArtifacts.compatibilityEvaluatorInputDigest,
+            planning.compatibility.report,
+            planning.compatibility.digest,
+            planning.stateful.selection,
+        );
+    }
     return nextCandidateRecord(record, {
         status: "queued",
         updatedAt: now,
         policyDigest: policy.digest,
         admissionInputDigest: admission.digest,
         migrationInputDigests,
-        ...(input.planningArtifacts ?? {}),
+        ...(planning
+            ? {
+                  compatibilityReportDigest: planning.compatibility.digest,
+                  statefulChangeSelectionDigest: planning.stateful.digest,
+              }
+            : {}),
     });
+}
+
+function assertPlanningArtifacts(
+    record: IntegrationRegistryCandidateRecord,
+    admission: AdmissionInputSnapshotV1,
+    policyDigest: string,
+    evaluatorInputDigest: string,
+    report: CompatibilityReportV2,
+    reportDigest: string,
+    selection: StatefulChangeSelectionV1,
+): void {
+    if (
+        report.kind !== record.kind ||
+        report.version !== record.version ||
+        report.packageDigest !== record.packageDigest ||
+        admission.compatibilityRevision.revisionId !== report.reportId ||
+        admission.compatibilityRevision.digest !== reportDigest ||
+        admission.compatibilityRevision.evaluatorInputDigest !== evaluatorInputDigest ||
+        selection.target.kind !== record.kind ||
+        selection.target.version !== record.version ||
+        selection.target.packageDigest !== record.packageDigest ||
+        selection.policySnapshotDigest !== policyDigest ||
+        selection.compatibilityReport.revisionId !== report.reportId ||
+        selection.compatibilityReport.reportDigest !== reportDigest
+    ) {
+        invalidCandidate("Candidate planning artifacts do not bind the exact admission input");
+    }
 }
 
 export function assertAdmissionCandidate(

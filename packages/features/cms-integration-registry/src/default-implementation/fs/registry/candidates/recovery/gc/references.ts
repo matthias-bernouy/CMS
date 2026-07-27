@@ -2,7 +2,6 @@ import { join } from "node:path";
 import { readIntegrationRegistryCandidateRecord } from "../../document";
 import { FsIntegrationRegistryCandidateStoreError } from "../../errors";
 import { candidateRevisionPath, type FsIntegrationRegistryCandidateLayout } from "../../layout";
-import { readCandidatePlanBinding } from "../../objects";
 import { boundedCandidateInventory, CANDIDATE_TEMPORARY_FILE } from "../inventory/support";
 
 const REVISION_FILE = /^(\d{16})\.json$/u;
@@ -43,11 +42,6 @@ export async function collectCandidateObjectReferences(
                 references.add(`migration-input:${digest}`);
             }
             addOptionalReference(references, "result", record.admissionJobResultDigest);
-        }
-        const plan = await readCandidatePlanBinding(layout, candidate.name);
-        if (plan) {
-            references.add(`compatibility-report:${plan.compatibilityReportDigest}`);
-            references.add(`stateful-selection:${plan.statefulChangeSelectionDigest}`);
         }
     }
     return references;

@@ -60,6 +60,7 @@ export async function completePassedCandidate(
         now: "2026-07-26T10:00:02.000Z",
         policy: plan.policy,
         admission: plan.admission,
+        planningArtifacts: plan.planningArtifacts,
         migrationInputs: plan.migrationInputs,
     });
     const running = await store.claim(candidateId, {

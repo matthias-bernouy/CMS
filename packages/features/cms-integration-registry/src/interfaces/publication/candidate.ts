@@ -73,23 +73,19 @@ export type CreateIntegrationRegistryCandidateInput = Readonly<{
     expiresAt: string;
 }>;
 
+export type IntegrationRegistryCandidatePlanningArtifacts = Readonly<{
+    compatibilityReport: CompatibilityReportV2;
+    compatibilityEvaluatorInputDigest: string;
+    statefulChanges: StatefulChangeSelectionV1;
+}>;
+
 export type QueueIntegrationRegistryCandidateInput = Readonly<{
     expectedRevision: number;
     now: string;
     policy: ReleaseAdmissionPolicySnapshotV1;
     admission: AdmissionInputSnapshotV1;
     migrationInputs?: readonly MigrationVerificationInputV1[];
-    planningArtifacts?: Readonly<{
-        compatibilityReportDigest: string;
-        statefulChangeSelectionDigest: string;
-    }>;
-}>;
-
-export type PersistIntegrationRegistryCandidatePlanningInput = Readonly<{
-    expectedRevision: number;
-    compatibilityReport: CompatibilityReportV2;
-    compatibilityEvaluatorInputDigest: string;
-    statefulChanges: StatefulChangeSelectionV1;
+    planningArtifacts?: IntegrationRegistryCandidatePlanningArtifacts;
 }>;
 
 export type RejectIntegrationRegistryCandidateValidationInput = Readonly<{
