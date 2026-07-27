@@ -217,7 +217,6 @@ export async function createProductionRepositoryManagement(input: {
               root: input.root,
               snapshots,
               mutations,
-              compatibility,
               reviewedSchemaBaselines,
               candidates: candidateStore,
               policy: input.candidateAdmissionPolicy,

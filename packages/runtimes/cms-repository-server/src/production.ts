@@ -1,7 +1,5 @@
-import { randomUUID } from "node:crypto";
 import {
     InMemoryIntegrationRegistryMutationCoordinator,
-    IntegrationCompatibilityEvaluator,
     IntegrationRegistryCatalogSnapshotReference,
     type IntegrationRegistryCatalogSnapshot,
 } from "@bernouy/cms-integration-registry";
@@ -163,11 +161,6 @@ export const prepareOfficialRepositoryBootstrap: EmptyRegistryBootstrap = async 
     const publisher = new FsOfficialIntegrationRegistryBootstrapPublisher({
         root,
         snapshots,
-        compatibility: new IntegrationCompatibilityEvaluator({
-            identity: { name: "cms-repository-server-bootstrap", version: "1.0.0" },
-            now: () => new Date().toISOString(),
-            createReportId: () => randomUUID(),
-        }),
         mutations: new InMemoryIntegrationRegistryMutationCoordinator(),
         baselineApproval: OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
     });

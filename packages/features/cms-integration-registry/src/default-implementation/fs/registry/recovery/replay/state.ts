@@ -5,9 +5,8 @@ const phaseOrder = new Map<FsIntegrationRegistryPublicationPhase, number>([
     ["staged", 0],
     ["version-live", 1],
     ["manifest-written", 2],
-    ["report-written", 3],
-    ["index-written", 4],
-    ["snapshot-swapped", 5],
+    ["index-written", 3],
+    ["snapshot-swapped", 4],
 ]);
 
 export function publicationPhaseAtLeast(

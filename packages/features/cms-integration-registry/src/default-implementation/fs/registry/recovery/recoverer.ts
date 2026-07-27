@@ -131,12 +131,6 @@ async function quarantineOrphanVersions(
                 "manifest",
                 join(first.integrationRoot, ".registry", "manifests", `${version}.json`),
             );
-            await quarantineRegistryPath(
-                layout,
-                namespace,
-                "report",
-                join(first.integrationRoot, ".registry", "reports", version, "admission.json"),
-            );
             diagnostics.push({
                 code: "orphan-version-quarantined",
                 source,

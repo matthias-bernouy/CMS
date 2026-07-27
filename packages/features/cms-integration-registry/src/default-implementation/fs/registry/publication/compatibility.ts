@@ -1,14 +1,8 @@
 import type { IntegrationPackageLimits } from "@bernouy/cms-integration-packages";
 import { integrationVersionsShareMajor } from "@bernouy/cms-integrations";
-import {
-    assertIntegrationCompatibilityAdmission,
-    IntegrationCompatibilityEvaluator,
-} from "../../../../core/compatibility/evaluation";
 import { changedIntegrationPackagePaths } from "../../../../core/publication/changedPaths";
 import type { IntegrationRegistryCatalogSnapshot } from "../../../../interfaces/catalog";
 import type {
-    IntegrationCompatibilityAdmissionReport,
-    IntegrationCompatibilityAdmissionDecision,
     IntegrationCompatibilityEvaluationInput,
     IntegrationCompatibilityPackage,
     TrustedSchemaDeclarationEvidence,
@@ -17,41 +11,6 @@ import type { ReviewedSchemaBaselineStore } from "../../../../interfaces/reportS
 import { loadReviewedConnectorSchemaBaselines } from "../baselines/projection";
 import type { PreparedFsIntegrationRegistryCandidate } from "./candidate";
 import { SnapshotIntegrationPackageSource } from "../../snapshot/snapshotPackageSource";
-
-export async function evaluatePublicationCompatibility(
-    snapshot: IntegrationRegistryCatalogSnapshot,
-    candidate: PreparedFsIntegrationRegistryCandidate,
-    evaluator: IntegrationCompatibilityEvaluator,
-    schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
-    reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
-): Promise<IntegrationCompatibilityAdmissionReport> {
-    return assertIntegrationCompatibilityAdmission(
-        await evaluatePublicationCompatibilityDecision(
-            snapshot,
-            candidate,
-            evaluator,
-            schemaDeclarationEvidence,
-            reviewedSchemaBaselines,
-        ),
-    );
-}
-
-export async function evaluatePublicationCompatibilityDecision(
-    snapshot: IntegrationRegistryCatalogSnapshot,
-    candidate: PreparedFsIntegrationRegistryCandidate,
-    evaluator: IntegrationCompatibilityEvaluator,
-    schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
-    reviewedSchemaBaselines?: ReviewedSchemaBaselineStore,
-): Promise<IntegrationCompatibilityAdmissionDecision> {
-    return evaluator.evaluateAdmission(
-        await buildPublicationCompatibilityInput(
-            snapshot,
-            candidate,
-            schemaDeclarationEvidence,
-            reviewedSchemaBaselines,
-        ),
-    );
-}
 
 export async function buildPublicationCompatibilityInput(
     snapshot: IntegrationRegistryCatalogSnapshot,

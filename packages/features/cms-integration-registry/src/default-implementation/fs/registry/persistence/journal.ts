@@ -11,7 +11,6 @@ import {
     INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_SCHEMA,
     parsePublicationJournalDocument,
 } from "./journalDocument";
-import { parseAdmissionReport } from "./report";
 
 const PUBLICATION_JOURNAL_METADATA_BYTES = 8 * 1_024 * 1_024;
 export const MAX_INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_BYTES =
@@ -65,21 +64,16 @@ export async function readPublicationJournal(
         requireReleaseNotes: true,
     });
     const digest = await sha256Hex(canonicalJsonBytes(envelope));
-    const report = parseAdmissionReport(journal.report);
     if (
         digest !== journal.digest ||
         envelope.kind !== journal.kind ||
         envelope.version !== journal.version ||
-        report.kind !== journal.kind ||
-        report.version !== journal.version ||
-        report.packageDigest !== journal.digest ||
-        !report.admissible ||
         journal.nextIndex.kind !== journal.kind ||
         (journal.previousIndex !== null && journal.previousIndex.kind !== journal.kind)
     ) {
         throw new Error(`Integration registry publication journal identity is inconsistent: ${path}`);
     }
-    return { ...journal, envelope, report };
+    return { ...journal, envelope };
 }
 
 export function publicationJournalByteLimit(limits: Readonly<IntegrationPackageLimits>): number {

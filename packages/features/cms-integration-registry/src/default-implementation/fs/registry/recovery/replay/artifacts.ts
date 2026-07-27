@@ -1,13 +1,10 @@
 import { lstat, rename } from "node:fs/promises";
 import { dirname } from "node:path";
-import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { manifestDocumentByteLimit } from "../../../manifest/contract";
 import { readIntegrationRegistryVersionManifest } from "../../../manifest/reader";
 import { syncDirectory, writeCanonicalJsonNoReplace } from "../../persistence/canonicalFile";
-import type { FsIntegrationRegistryPublicationJournal } from "../../persistence/journal";
 import { publicationPaths, type FsIntegrationRegistryLayout } from "../../persistence/layout";
 import { assertVerifiedRegistryDirectory, chmodVerifiedRegistryDirectory } from "../../persistence/ownedDirectory";
-import { readCompatibilityAdmissionReport, writeCompatibilityAdmissionReport } from "../../persistence/report";
 import { removeImmutableTreeIfExists } from "../../persistence/tree";
 import { quarantineRegistryPath } from "../quarantine";
 import { pathExists, validateRecoveryJournal, verifyRecoveryPackageRoot } from "../validation";
@@ -73,37 +70,5 @@ export async function ensureManifest(
         paths.manifest,
         candidate.manifest.document,
         manifestDocumentByteLimit(candidate.limits),
-    );
-}
-
-export async function ensureReport(
-    layout: FsIntegrationRegistryLayout,
-    paths: ReturnType<typeof publicationPaths>,
-    journal: FsIntegrationRegistryPublicationJournal,
-    operationId: string,
-): Promise<void> {
-    try {
-        const existing = await readCompatibilityAdmissionReport(paths.report, {
-            kind: journal.kind,
-            version: journal.version,
-            digest: journal.digest,
-        });
-        if (existing) {
-            if (!sameJson(existing, journal.report)) {
-                throw new Error("Recovered integration admission report differs from its publication journal");
-            }
-            return;
-        }
-    } catch {
-        await quarantineRegistryPath(layout, operationId, "corrupt-report", paths.report);
-    }
-    await writeCompatibilityAdmissionReport(paths.report, journal.report);
-}
-
-function sameJson(left: unknown, right: unknown): boolean {
-    const leftBytes = canonicalJsonBytes(left);
-    const rightBytes = canonicalJsonBytes(right);
-    return (
-        leftBytes.byteLength === rightBytes.byteLength && leftBytes.every((byte, index) => byte === rightBytes[index])
     );
 }

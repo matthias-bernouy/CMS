@@ -1,4 +1,3 @@
-import type { IntegrationCompatibilityAdmissionReport } from "../../../../../interfaces/compatibility";
 import type {
     OfficialRepositoryBootstrapBaselineApproval,
     OfficialRepositoryBootstrapPlanProjection,
@@ -40,7 +39,7 @@ export type PreparedFsOfficialIntegrationRegistryBootstrap = Readonly<{
 export type PreflightedOfficialBootstrapPackage = Readonly<{
     candidate: PreparedFsIntegrationRegistryCandidate;
     verificationDigest: string;
-    report?: IntegrationCompatibilityAdmissionReport;
+    pending: boolean;
 }>;
 
 export type PreflightedOfficialBootstrap = Readonly<{

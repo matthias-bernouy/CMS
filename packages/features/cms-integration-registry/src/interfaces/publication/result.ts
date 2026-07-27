@@ -1,4 +1,3 @@
-import type { IntegrationCompatibilityAdmissionReport } from "../compatibility";
 import type { IntegrationRegistryCatalogSnapshot } from "../catalog";
 
 export type IntegrationRegistryPublicationResult = Readonly<{
@@ -6,6 +5,5 @@ export type IntegrationRegistryPublicationResult = Readonly<{
     kind: string;
     version: string;
     digest: string;
-    report: IntegrationCompatibilityAdmissionReport;
     snapshot: IntegrationRegistryCatalogSnapshot;
 }>;

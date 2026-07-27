@@ -163,8 +163,6 @@ export class FsIntegrationRegistryCandidateFinalizer {
             await publishPreparedFsIntegrationRegistryCandidate(
                 this.config,
                 prepared,
-                undefined,
-                undefined,
                 "unverified",
                 record.verificationDigest,
                 async (capturedSnapshot) => {

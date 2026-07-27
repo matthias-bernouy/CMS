@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { readdir } from "node:fs/promises";
-import { IntegrationCompatibilityEvaluator } from "@bernouy/cms-integration-registry";
 import type { ReviewedSchemaBaselineStore } from "@bernouy/cms-integration-registry";
 import {
     FsOfficialIntegrationRegistryBootstrapPublisher,
@@ -25,9 +24,6 @@ describe("official filesystem registry bootstrap publication", () => {
         const integrationPackage = await legacySqlPackage("legacy");
         const baseline = await reviewedBaseline(integrationPackage);
         const plan = bootstrapPlan([integrationPackage], [baseline]);
-        await expect(fixture.publisher.publish({ package: integrationPackage })).rejects.toThrow(
-            "compatibility.schema",
-        );
 
         const bootstrap = bootstrapPublisher(fixture);
         const preparation = await bootstrap.prepare(plan);
@@ -48,29 +44,17 @@ describe("official filesystem registry bootstrap publication", () => {
 
     test("validates the entire package and admission plan before writing", async () => {
         const fixture = registryFixture();
-        let reports = 0;
-        const compatibility = new IntegrationCompatibilityEvaluator({
-            identity: { name: "bootstrap-preflight-test", version: "1.0.0" },
-            now: () => "2026-07-26T10:00:00.000Z",
-            createReportId: () => {
-                reports += 1;
-                if (reports === 2) {
-                    throw new Error("preflight evaluator failure");
-                }
-                return `report-${reports}`;
-            },
-        });
         const bootstrap = new FsOfficialIntegrationRegistryBootstrapPublisher({
             root: fixture.root,
             snapshots: fixture.snapshots,
-            compatibility,
             mutations: fixture.mutations,
             baselineApproval: BASELINE_APPROVAL,
         });
         const first = await publicationPackage("first", "1.0.0");
         const second = await publicationPackage("second", "1.0.0");
+        const invalidSecond = { ...second, digest: "f".repeat(64) };
 
-        await expect(bootstrap.prepare(bootstrapPlan([first, second]))).rejects.toThrow("preflight evaluator failure");
+        await expect(bootstrap.prepare(bootstrapPlan([first, invalidSecond]))).rejects.toThrow();
         expect(await readdir(fixture.root)).toEqual([]);
     });
 
@@ -87,7 +71,6 @@ describe("official filesystem registry bootstrap publication", () => {
         const bootstrap = new FsOfficialIntegrationRegistryBootstrapPublisher({
             root: fixture.root,
             snapshots: fixture.snapshots,
-            compatibility: fixture.compatibility,
             mutations: fixture.mutations,
             baselineApproval: BASELINE_APPROVAL,
             baselineStore: swallowedStore,

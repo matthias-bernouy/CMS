@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { chmodSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
-import { FsIntegrationRegistryRecoverer, readCompatibilityAdmissionReport } from "@bernouy/cms-integration-registry/fs";
+import { FsIntegrationRegistryRecoverer } from "@bernouy/cms-integration-registry/fs";
 import { cleanupRegistryFixtures, publicationPackage, registryFixture } from "./fixtures";
 
 afterEach(cleanupRegistryFixtures);
@@ -88,34 +88,6 @@ describe("filesystem integration registry corruption recovery", () => {
             "journal",
             "staging",
         ]);
-    });
-
-    test("repairs a corrupt immutable report from the exact journal copy", async () => {
-        const fixture = registryFixture({
-            createOperationId: () => "corrupt-report",
-            afterBoundary: ({ phase }) => {
-                if (phase === "report-written") {
-                    throw new Error("crash");
-                }
-            },
-        });
-        const input = await publicationPackage("demo", "1.0.0");
-        await expect(fixture.publisher.publish({ package: input })).rejects.toThrow(/simulated/i);
-        const report = join(fixture.root, "demo", ".registry", "reports", "1.0.0", "admission.json");
-        chmodSync(report, 0o640);
-        writeFileSync(report, canonicalJsonBytes({ invalid: true }));
-
-        const result = await recover(fixture);
-
-        expect(result.snapshot.locateExactVersion("demo", "1.0.0")?.package.digest).toBe(input.digest);
-        expect(
-            await readCompatibilityAdmissionReport(report, {
-                kind: "demo",
-                version: "1.0.0",
-                digest: input.digest,
-            }),
-        ).toMatchObject({ id: "report-1", admissible: true });
-        expect(readdirSync(join(fixture.root, ".quarantine", "corrupt-report"))).toContain("corrupt-report");
     });
 
     test("preserves a divergent third-party index and excludes the incomplete publication", async () => {

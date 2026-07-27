@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 import {
     identifyOfficialRepositoryBootstrapPlan,
     InMemoryIntegrationRegistryMutationCoordinator,
-    IntegrationCompatibilityEvaluator,
     IntegrationRegistryCatalogSnapshotReference,
     OFFICIAL_REPOSITORY_BOOTSTRAP_PLAN_SCHEMA,
     type OfficialBootstrapAnonymousConstraintGrandfathering,
@@ -38,7 +37,6 @@ export function bootstrapPublisher(fixture: ReturnType<typeof registryFixture>) 
     return new FsOfficialIntegrationRegistryBootstrapPublisher({
         root: fixture.root,
         snapshots: fixture.snapshots,
-        compatibility: fixture.compatibility,
         mutations: fixture.mutations,
         baselineApproval: BASELINE_APPROVAL,
         now: () => "2026-07-26T10:00:00.000Z",
@@ -49,15 +47,9 @@ export async function restartedBootstrapPublisher(root: string) {
     const snapshots = new IntegrationRegistryCatalogSnapshotReference(
         await buildFsIntegrationRegistryCatalogSnapshot({ root }),
     );
-    let sequence = 0;
     return new FsOfficialIntegrationRegistryBootstrapPublisher({
         root,
         snapshots,
-        compatibility: new IntegrationCompatibilityEvaluator({
-            identity: { name: "restart-test", version: "1.0.0" },
-            now: () => "2026-07-26T10:00:00.000Z",
-            createReportId: () => `restart-report-${++sequence}`,
-        }),
         mutations: new InMemoryIntegrationRegistryMutationCoordinator(),
         baselineApproval: BASELINE_APPROVAL,
         now: () => "2026-07-26T10:00:00.000Z",

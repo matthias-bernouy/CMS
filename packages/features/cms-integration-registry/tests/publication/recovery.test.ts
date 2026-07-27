@@ -24,7 +24,7 @@ describe("filesystem integration registry publication recovery", () => {
             );
             expect(readdirSync(join(fixture.root, ".journals"))).toEqual([`crash-${phase}.json`]);
             expect(readCrashJournal(fixture.root, phase)).toMatchObject({
-                schema: "cms.integration.registry.publication-journal.v2",
+                schema: "cms.integration.registry.publication-journal.v3",
                 publication: { disposition: "installable" },
             });
 
@@ -63,7 +63,7 @@ describe("filesystem integration registry publication recovery", () => {
                 FsIntegrationRegistrySimulatedCrashError,
             );
             expect(readCrashJournal(fixture.root, phase)).toMatchObject({
-                schema: "cms.integration.registry.publication-journal.v2",
+                schema: "cms.integration.registry.publication-journal.v3",
                 publication: { disposition: "unverified" },
             });
             const recovered = await new FsIntegrationRegistryRecoverer({
@@ -91,8 +91,6 @@ describe("filesystem integration registry publication recovery", () => {
             publishPreparedFsIntegrationRegistryCandidate(
                 fixture.publicationConfig,
                 candidate,
-                undefined,
-                undefined,
                 "unverified",
                 verificationDigest,
             ),

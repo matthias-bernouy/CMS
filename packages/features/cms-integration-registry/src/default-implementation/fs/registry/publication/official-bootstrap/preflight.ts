@@ -6,7 +6,6 @@ import type {
 } from "../../../../../interfaces/publication";
 import { FsReviewedSchemaBaselineStore } from "../../baselines/store";
 import { prepareFsOfficialBootstrapCandidate, type PreparedFsIntegrationRegistryCandidate } from "../candidate";
-import { evaluatePublicationCompatibility } from "../compatibility";
 import { nextIntegrationRegistryIndex } from "../index";
 import { validateBootstrapBaselines } from "./baselines";
 import { preflightStoredBootstrapBaselines } from "./storedBaselines";
@@ -63,15 +62,7 @@ export async function preflightOfficialBootstrapPlan(
         prepared.push({
             candidate,
             verificationDigest: backfill.verification.digest,
-            ...(existingKinds.has(candidate.definition.kind)
-                ? {}
-                : {
-                      report: await evaluatePublicationCompatibility(
-                          config.snapshots.current(),
-                          candidate,
-                          config.compatibility,
-                      ),
-                  }),
+            pending: !existingKinds.has(candidate.definition.kind),
         });
     }
     await preflightStoredBootstrapBaselines(

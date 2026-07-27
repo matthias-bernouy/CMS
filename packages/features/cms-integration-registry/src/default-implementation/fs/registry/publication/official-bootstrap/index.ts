@@ -31,7 +31,7 @@ export class FsOfficialIntegrationRegistryBootstrapPublisher {
             schema: PREPARED_OFFICIAL_BOOTSTRAP_SCHEMA,
             planDigest: prepared.planDigest,
             packageCount: prepared.packages.length,
-            pendingPackageCount: prepared.packages.filter(({ report }) => report !== undefined).length,
+            pendingPackageCount: prepared.packages.filter(({ pending }) => pending).length,
             baselineCount: prepared.plan.reviewedSchemaBaselines.length,
             verificationBackfillCount: prepared.plan.verificationBackfills.length,
             plan: prepared.plan,
@@ -50,19 +50,17 @@ export class FsOfficialIntegrationRegistryBootstrapPublisher {
             prepared.packages.length !== preparation.packageCount ||
             prepared.plan.reviewedSchemaBaselines.length !== preparation.baselineCount ||
             prepared.plan.verificationBackfills.length !== preparation.verificationBackfillCount ||
-            prepared.packages.filter(({ report }) => report !== undefined).length !== preparation.pendingPackageCount
+            prepared.packages.filter(({ pending }) => pending).length !== preparation.pendingPackageCount
         ) {
             throw new TypeError("Official integration registry bootstrap preparation changed after preflight");
         }
         const results: IntegrationRegistryPublicationResult[] = [];
-        for (const { candidate, report, verificationDigest } of prepared.packages) {
-            if (report) {
+        for (const { candidate, pending, verificationDigest } of prepared.packages) {
+            if (pending) {
                 results.push(
                     await publishPreparedFsIntegrationRegistryCandidate(
                         this.config,
                         candidate,
-                        undefined,
-                        report,
                         undefined,
                         verificationDigest,
                     ),
@@ -79,7 +77,7 @@ export class FsOfficialIntegrationRegistryBootstrapPublisher {
             this.config,
             hydratePreparedOfficialBootstrap(preparation),
         );
-        if (completed.packages.some(({ report }) => report !== undefined)) {
+        if (completed.packages.some(({ pending }) => pending)) {
             throw new Error("Official integration registry bootstrap did not commit the complete exact plan");
         }
         await assertCompleteStoredBootstrapBaselines(baselines, completed.plan);

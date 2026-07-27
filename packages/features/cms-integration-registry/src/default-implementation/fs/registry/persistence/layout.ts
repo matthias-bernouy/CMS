@@ -17,7 +17,6 @@ export type FsIntegrationRegistryPublicationPaths = Readonly<{
     journal: string;
     index: string;
     manifest: string;
-    report: string;
 }>;
 
 export async function ensureFsIntegrationRegistryLayout(requestedRoot: string): Promise<FsIntegrationRegistryLayout> {
@@ -43,8 +42,6 @@ export async function ensurePublicationPaths(
     const versionsRoot = await ensureChildDirectory(integrationRoot, "versions");
     const metadata = await ensureChildDirectory(integrationRoot, ".registry");
     const manifests = await ensureChildDirectory(metadata, "manifests");
-    const reports = await ensureChildDirectory(metadata, "reports");
-    const versionReports = await ensureChildDirectory(reports, version);
     return {
         integrationRoot,
         versionsRoot,
@@ -53,7 +50,6 @@ export async function ensurePublicationPaths(
         journal: join(layout.journals, `${operationId}.json`),
         index: join(integrationRoot, "integration.json"),
         manifest: join(manifests, `${version}.json`),
-        report: join(versionReports, "admission.json"),
     };
 }
 
@@ -75,7 +71,6 @@ export function publicationPaths(
         journal: join(layout.journals, `${operationId}.json`),
         index: join(integrationRoot, "integration.json"),
         manifest: join(integrationRoot, ".registry", "manifests", `${version}.json`),
-        report: join(integrationRoot, ".registry", "reports", version, "admission.json"),
     };
 }
 

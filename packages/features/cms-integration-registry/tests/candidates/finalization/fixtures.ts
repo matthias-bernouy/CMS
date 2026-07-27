@@ -117,7 +117,6 @@ export function finalizerConfig(
         root: fixture.root,
         snapshots: fixture.snapshots,
         mutations: fixture.mutations,
-        compatibility: fixture.compatibility,
         reviewedSchemaBaselines: fixture.reviewedSchemaBaselines,
         candidates,
         policy,

@@ -1,5 +1,4 @@
 import { manifestDocumentByteLimit } from "../../../manifest/contract";
-import type { IntegrationCompatibilityAdmissionReport } from "../../../../../interfaces/compatibility";
 import type { IntegrationRegistryCatalogSnapshot } from "../../../../../interfaces/catalog";
 import type { IntegrationRegistryPublicationResult } from "../../../../../interfaces/publication";
 import {
@@ -10,9 +9,7 @@ import {
 } from "../../persistence/journal";
 import { replaceCanonicalJson, writeCanonicalJsonNoReplace } from "../../persistence/canonicalFile";
 import type { FsIntegrationRegistryLayout, FsIntegrationRegistryPublicationPaths } from "../../persistence/layout";
-import { writeCompatibilityAdmissionReport } from "../../persistence/report";
 import type { PreparedFsIntegrationRegistryCandidate } from "../candidate";
-import { evaluatePublicationCompatibility } from "../compatibility";
 import { nextIntegrationRegistryIndex } from "../index";
 import {
     FsIntegrationRegistryRecoveryRequiredError,
@@ -32,8 +29,6 @@ export async function commitFsIntegrationRegistryPublication(
         paths: FsIntegrationRegistryPublicationPaths;
         operationId: string;
         candidate: PreparedFsIntegrationRegistryCandidate;
-        schemaDeclarationEvidence?: Parameters<typeof evaluatePublicationCompatibility>[3];
-        admissionReport?: IntegrationCompatibilityAdmissionReport;
         versionStatus?: "unverified";
         verificationDigest?: string;
         validateUnderLock?: (snapshot: IntegrationRegistryCatalogSnapshot) => Promise<void>;
@@ -48,15 +43,6 @@ export async function commitFsIntegrationRegistryPublication(
         ...(input.verificationDigest ? { verificationDigest: input.verificationDigest } : {}),
         advanceChannels: !input.versionStatus,
     });
-    const report =
-        input.admissionReport ??
-        (await evaluatePublicationCompatibility(
-            capturedSnapshot,
-            candidate,
-            config.compatibility,
-            input.schemaDeclarationEvidence,
-            config.reviewedSchemaBaselines,
-        ));
     let journal: FsIntegrationRegistryPublicationJournal = {
         schema: INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_SCHEMA,
         operationId,
@@ -66,7 +52,6 @@ export async function commitFsIntegrationRegistryPublication(
         version: candidate.package.envelope.version,
         digest: candidate.package.digest,
         envelope: candidate.package.envelope,
-        report,
         publication: {
             disposition: input.versionStatus === "unverified" ? "unverified" : "installable",
             ...(input.verificationDigest ? { verificationDigest: input.verificationDigest } : {}),
@@ -78,7 +63,6 @@ export async function commitFsIntegrationRegistryPublication(
         journalCreated: false,
         versionMoved: false,
         manifestWritten: false,
-        reportWritten: false,
         indexWritten: false,
         snapshotSwapped: false,
     };
@@ -102,11 +86,6 @@ export async function commitFsIntegrationRegistryPublication(
         journal = await advancePublicationJournal(paths.journal, journal, "manifest-written", journalLimit);
         await notifyPublicationBoundary(config, journal);
 
-        await writeCompatibilityAdmissionReport(paths.report, report);
-        state.reportWritten = true;
-        journal = await advancePublicationJournal(paths.journal, journal, "report-written", journalLimit);
-        await notifyPublicationBoundary(config, journal);
-
         await replaceCanonicalJson(paths.index, nextIndex, MAX_INDEX_DOCUMENT_BYTES);
         state.indexWritten = true;
         journal = await advancePublicationJournal(paths.journal, journal, "index-written", journalLimit);
@@ -122,7 +101,6 @@ export async function commitFsIntegrationRegistryPublication(
             kind: candidate.definition.kind,
             version: candidate.package.envelope.version,
             digest: candidate.package.digest,
-            report,
             snapshot,
         };
     } catch (error) {

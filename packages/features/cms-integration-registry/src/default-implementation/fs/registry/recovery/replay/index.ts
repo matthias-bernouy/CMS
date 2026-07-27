@@ -15,7 +15,7 @@ import { removeImmutableTreeIfExists } from "../../persistence/tree";
 import type { FsIntegrationRegistryPublicationConfig } from "../../publication/types";
 import type { PublicationJournalInventoryEntry } from "../inventory";
 import { readCurrentIntegrationIndex, sameIndex, validateRecoveryJournal } from "../validation";
-import { ensureLiveVersion, ensureManifest, ensureReport } from "./artifacts";
+import { ensureLiveVersion, ensureManifest } from "./artifacts";
 export { quarantineFailedPublication } from "./failure";
 import { publicationPhaseAtLeast, resolvedRecoveryPackageLimits } from "./state";
 
@@ -48,8 +48,6 @@ export async function replayPublicationJournal(
     currentJournal = await advanceAtLeast(paths.journal, currentJournal, "version-live", candidate.limits);
     await ensureManifest(input.layout, paths, candidate, journal.operationId);
     currentJournal = await advanceAtLeast(paths.journal, currentJournal, "manifest-written", candidate.limits);
-    await ensureReport(input.layout, paths, currentJournal, journal.operationId);
-    currentJournal = await advanceAtLeast(paths.journal, currentJournal, "report-written", candidate.limits);
     if (sameIndex(currentIndex, journal.previousIndex)) {
         await replaceCanonicalJson(paths.index, journal.nextIndex, MAX_INDEX_DOCUMENT_BYTES);
     }

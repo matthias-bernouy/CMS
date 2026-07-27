@@ -13,7 +13,6 @@ export type PublicationMutationState = {
     journalCreated: boolean;
     versionMoved: boolean;
     manifestWritten: boolean;
-    reportWritten: boolean;
     indexWritten: boolean;
     snapshotSwapped: boolean;
 };
@@ -57,9 +56,6 @@ export async function rollbackPublication(
                 ? replaceCanonicalJson(paths.index, previousIndex, MAX_INDEX_DOCUMENT_BYTES)
                 : removeFileIfExists(paths.index),
         );
-    }
-    if (state.reportWritten) {
-        await captureFailure(failures, removeFileIfExists(paths.report));
     }
     if (state.manifestWritten) {
         await captureFailure(failures, removeFileIfExists(paths.manifest));

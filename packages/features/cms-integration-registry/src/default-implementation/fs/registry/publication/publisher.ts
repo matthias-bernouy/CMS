@@ -1,9 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { writeImmutableIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
-import type {
-    IntegrationCompatibilityAdmissionReport,
-    TrustedSchemaDeclarationEvidence,
-} from "../../../../interfaces/compatibility";
 import type { IntegrationRegistryCatalogSnapshot } from "../../../../interfaces/catalog";
 import { ensureFsIntegrationRegistryLayout, ensurePublicationPaths } from "../persistence/layout";
 import { removeImmutableTreeIfExists } from "../persistence/tree";
@@ -18,8 +14,6 @@ import {
 export async function publishPreparedFsIntegrationRegistryCandidate(
     config: FsIntegrationRegistryPublicationConfig,
     candidate: Awaited<ReturnType<typeof prepareFsIntegrationRegistryCandidate>>,
-    schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
-    admissionReport?: IntegrationCompatibilityAdmissionReport,
     versionStatus?: "unverified",
     verificationDigest?: string,
     validateUnderLock?: (snapshot: IntegrationRegistryCatalogSnapshot) => Promise<void>,
@@ -49,8 +43,6 @@ export async function publishPreparedFsIntegrationRegistryCandidate(
                 paths,
                 operationId,
                 candidate,
-                ...(schemaDeclarationEvidence ? { schemaDeclarationEvidence } : {}),
-                ...(admissionReport ? { admissionReport } : {}),
                 ...(versionStatus ? { versionStatus } : {}),
                 ...(verificationDigest ? { verificationDigest } : {}),
                 ...(validateUnderLock ? { validateUnderLock } : {}),

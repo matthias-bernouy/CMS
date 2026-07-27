@@ -56,9 +56,6 @@ export async function quarantineFailedPublication(
         }
     }
     if (ownsIndex || untouchedIndex) {
-        if (publicationPhaseAtLeast(journal.phase, "report-written")) {
-            await quarantineRegistryPath(layout, journal.operationId, "report", paths.report);
-        }
         if (publicationPhaseAtLeast(journal.phase, "manifest-written")) {
             await quarantineRegistryPath(layout, journal.operationId, "manifest", paths.manifest);
         }

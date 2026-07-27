@@ -1,16 +1,14 @@
 import type { IntegrationPackageEnvelopeV1 } from "@bernouy/cms-integration-packages";
 import type { IntegrationDefinitionIndex } from "@bernouy/cms-integrations";
 import { parseIntegrationDefinitionIndex } from "@bernouy/cms-integrations/fs";
-import type { IntegrationCompatibilityAdmissionReport } from "../../../../interfaces/compatibility";
 
 export const INTEGRATION_REGISTRY_PUBLICATION_JOURNAL_SCHEMA =
-    "cms.integration.registry.publication-journal.v2" as const;
+    "cms.integration.registry.publication-journal.v3" as const;
 
 export const FS_INTEGRATION_REGISTRY_PUBLICATION_PHASES = Object.freeze([
     "staged",
     "version-live",
     "manifest-written",
-    "report-written",
     "index-written",
     "snapshot-swapped",
 ] as const);
@@ -31,7 +29,6 @@ export type FsIntegrationRegistryPublicationJournal = Readonly<{
     version: string;
     digest: string;
     envelope: IntegrationPackageEnvelopeV1;
-    report: IntegrationCompatibilityAdmissionReport;
     publication: FsIntegrationRegistryPublicationDisposition;
     previousIndex: IntegrationDefinitionIndex | null;
     nextIndex: IntegrationDefinitionIndex;
@@ -46,7 +43,6 @@ const COMMON_KEYS = [
     "operationId",
     "phase",
     "previousIndex",
-    "report",
     "schema",
     "version",
 ] as const;
@@ -75,7 +71,6 @@ export function parsePublicationJournalDocument(
         typeof value.digest !== "string" ||
         !isDigest(value.digest) ||
         !isRecord(value.envelope) ||
-        !isRecord(value.report) ||
         (value.previousIndex !== null && !isRecord(value.previousIndex)) ||
         !isRecord(value.nextIndex)
     ) {
@@ -98,7 +93,6 @@ export function parsePublicationJournalDocument(
         version: value.version,
         digest: value.digest,
         envelope: value.envelope as unknown as IntegrationPackageEnvelopeV1,
-        report: value.report as IntegrationCompatibilityAdmissionReport,
         publication,
         previousIndex,
         nextIndex,

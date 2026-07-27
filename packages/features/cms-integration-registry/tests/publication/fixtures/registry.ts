@@ -7,7 +7,6 @@ import {
     InMemoryIntegrationRegistryMutationCoordinator,
     IntegrationCompatibilityEvaluator,
     IntegrationRegistryCatalogSnapshotReference,
-    type TrustedSchemaDeclarationEvidence,
 } from "@bernouy/cms-integration-registry";
 import {
     FsReviewedSchemaBaselineStore,
@@ -49,29 +48,16 @@ export function registryFixture(overrides: Partial<FsIntegrationRegistryPublicat
         now: () => "2026-07-26T10:00:00.000Z",
         ...overrides,
     };
-    async function publish(
-        integrationPackage: ResolvedIntegrationPackage,
-        schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
-        versionStatus?: "unverified",
-    ) {
+    async function publish(integrationPackage: ResolvedIntegrationPackage, versionStatus?: "unverified") {
         const candidate = await prepareFsIntegrationRegistryCandidate(
             integrationPackage,
             publicationConfig.packageLimits,
         );
-        return await publishPreparedFsIntegrationRegistryCandidate(
-            publicationConfig,
-            candidate,
-            schemaDeclarationEvidence,
-            undefined,
-            versionStatus,
-        );
+        return await publishPreparedFsIntegrationRegistryCandidate(publicationConfig, candidate, versionStatus);
     }
     const publisher = {
-        async publish(request: {
-            package: ResolvedIntegrationPackage;
-            schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[];
-        }) {
-            return await publish(request.package, request.schemaDeclarationEvidence);
+        async publish(request: { package: ResolvedIntegrationPackage }) {
+            return await publish(request.package);
         },
     };
     return {
@@ -82,7 +68,7 @@ export function registryFixture(overrides: Partial<FsIntegrationRegistryPublicat
         publicationConfig,
         publisher,
         publishUnverified: (integrationPackage: ResolvedIntegrationPackage) =>
-            publish(integrationPackage, undefined, "unverified"),
+            publish(integrationPackage, "unverified"),
         reviewedSchemaBaselines,
     };
 }
