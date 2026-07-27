@@ -60,6 +60,7 @@ export type {
     IntegrationArtifactResult,
     IntegrationArtifactType,
     IntegrationBlocArtifact,
+    IntegrationBlocImportContext,
     IntegrationBlocImporter,
     IntegrationImportDeps,
     IntegrationImportDto,

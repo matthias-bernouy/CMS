@@ -137,9 +137,16 @@ export type IntegrationBlocArtifact = {
     source?: Record<string, string>;
 };
 
+export type IntegrationBlocImportContext = {
+    integrationKind: string;
+    installationId: string;
+    definitionVersion: string;
+};
+
 export type IntegrationBlocImporter = {
     importBloc(
         artifact: IntegrationBlocArtifact,
         options: IntegrationImportOptions,
+        context: IntegrationBlocImportContext,
     ): Promise<{ id: string; action: IntegrationArtifactAction }>;
 };

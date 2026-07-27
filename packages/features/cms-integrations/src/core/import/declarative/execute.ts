@@ -86,7 +86,11 @@ export async function executeDeclarativeIntegration<T>(
                 const functionWrites = await buildFunctionWrites(deps, functionArtifacts, options);
                 const triggerWrites = await buildTriggerWrites(deps, triggerArtifacts, options);
                 const finish = async (results: DeclarativeArtifactWriteResults) => {
-                    const blocImportResults = await importBlocArtifacts(deps, blocArtifacts, options);
+                    const blocImportResults = await importBlocArtifacts(deps, blocArtifacts, options, {
+                        integrationKind: definition.kind,
+                        installationId: definition.kind,
+                        definitionVersion: definition.version ?? "unversioned",
+                    });
                     await applyIntegrationAccessGrants(deps.roles, accessGrants);
                     const importResult = {
                         artifacts: [

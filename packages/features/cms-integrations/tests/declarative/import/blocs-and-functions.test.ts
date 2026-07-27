@@ -13,6 +13,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         const definition: IntegrationDefinition = {
             kind: "bloc-pack",
             label: "Bloc Pack",
+            version: "1.2.3",
             inputs: [],
             artifacts: [
                 {
@@ -37,8 +38,8 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                 sources,
                 secrets,
                 blocs: {
-                    importBloc: async (artifact) => {
-                        imported.push(artifact);
+                    importBloc: async (artifact, options, context) => {
+                        imported.push({ artifact, options, context });
                         return { id: artifact.tag, action: "created" };
                     },
                 },
@@ -50,14 +51,22 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         expect(result.artifacts).toEqual([{ type: "bloc", id: "demo-card", action: "created" }]);
         expect(imported).toEqual([
             {
-                tag: "demo-card",
-                name: "Demo card",
-                group: "Content",
-                viewJS: `customElements.define("demo-card", class extends HTMLElement {});`,
-                source: {
-                    "Bloc.ts": Buffer.from(
-                        `customElements.define("demo-card", class extends HTMLElement {});`,
-                    ).toString("base64"),
+                artifact: {
+                    tag: "demo-card",
+                    name: "Demo card",
+                    group: "Content",
+                    viewJS: `customElements.define("demo-card", class extends HTMLElement {});`,
+                    source: {
+                        "Bloc.ts": Buffer.from(
+                            `customElements.define("demo-card", class extends HTMLElement {});`,
+                        ).toString("base64"),
+                    },
+                },
+                options: {},
+                context: {
+                    integrationKind: "bloc-pack",
+                    installationId: "bloc-pack",
+                    definitionVersion: "1.2.3",
                 },
             },
         ]);
