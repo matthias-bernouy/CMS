@@ -6,6 +6,7 @@ import {
     candidateReport,
     compatibilityPage,
     promotionRecord,
+    reportReference,
     revisionReport,
     TEST_CANDIDATE_DIGEST,
     TEST_KIND,
@@ -15,6 +16,20 @@ import {
 
 describe("HTTP repository management gateway DTO validation", () => {
     test("rejects extra fields, identity drift, invalid digests, report chains, actors, and confirmations", async () => {
+        const invalidChainRevision = revisionReport({ supersedes: "wrong-report" });
+        const invalidCompatibility = await compatibilityPage({
+            current: invalidChainRevision,
+            revisions: [invalidChainRevision],
+            totalRevisions: 1,
+        });
+        const invalidCompatibilityDigest = await compatibilityPage({ currentReportDigest: "f".repeat(64) });
+        const invalidActorRevision = revisionReport({
+            provenance: { actor: "browser-actor", reason: "Manual evidence review" },
+        });
+        const invalidActorReference = await reportReference(invalidActorRevision);
+        const rootReference = await reportReference(admissionReport());
+        const revision = revisionReport();
+        const revisionReference = await reportReference(revision);
         const cases: Array<() => Promise<Response>> = [
             () => gateway(oneResponse({ ...validStatus(), internal: "secret" })).status(),
             () =>
@@ -53,30 +68,41 @@ describe("HTTP repository management gateway DTO validation", () => {
                         versions: [{ version: TEST_VERSION, digest: "not-a-digest", compatibility: null }],
                     }),
                 ).versions(TEST_KIND),
+            () => gateway(oneResponse(invalidCompatibility)).compatibility({ kind: TEST_KIND, version: TEST_VERSION }),
             () =>
-                gateway(
-                    oneResponse({
-                        admission: admissionReport(),
-                        current: revisionReport(),
-                        revisions: [revisionReport({ supersedes: "wrong-report" })],
-                        totalRevisions: 1,
-                    }),
-                ).compatibility({ kind: TEST_KIND, version: TEST_VERSION }),
+                gateway(oneResponse(invalidCompatibilityDigest)).compatibility({
+                    kind: TEST_KIND,
+                    version: TEST_VERSION,
+                }),
             () =>
                 gateway(
                     oneResponse(
                         {
-                            revision: revisionReport({
-                                provenance: { actor: "browser-actor", reason: "Manual evidence review" },
-                            }),
-                            currentReportRevisionId: "report-revision",
+                            revision: invalidActorRevision,
+                            currentReport: invalidActorReference,
                         },
                         201,
                     ),
                 ).reevaluate({
                     kind: TEST_KIND,
                     version: TEST_VERSION,
-                    currentReportRevisionId: "report-admission",
+                    currentReport: rootReference,
+                    currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
+                    reason: "Manual evidence review",
+                }),
+            () =>
+                gateway(
+                    oneResponse(
+                        {
+                            revision,
+                            currentReport: { ...revisionReference, reportDigest: "f".repeat(64) },
+                        },
+                        201,
+                    ),
+                ).reevaluate({
+                    kind: TEST_KIND,
+                    version: TEST_VERSION,
+                    currentReport: rootReference,
                     currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
                     reason: "Manual evidence review",
                 }),
@@ -111,19 +137,20 @@ describe("HTTP repository management gateway DTO validation", () => {
     });
 
     test("accepts complete success DTOs for reads and mutations", async () => {
-        const compatibility = compatibilityPage();
+        const compatibility = await compatibilityPage();
+        const revision = revisionReport();
+        const revisionReference = await reportReference(revision);
+        const rootReference = await reportReference(admissionReport());
         const successCases: Array<() => Promise<Response>> = [
             () => gateway(oneResponse(validStatus())).status(),
             () => gateway(oneResponse({ ...validStatus(), metrics: validOperationalMetrics() })).status(),
             () => gateway(oneResponse(validVersions())).versions(TEST_KIND),
             () => gateway(oneResponse(compatibility)).compatibility({ kind: TEST_KIND, version: TEST_VERSION }),
             () =>
-                gateway(
-                    oneResponse({ revision: revisionReport(), currentReportRevisionId: "report-revision" }, 201),
-                ).reevaluate({
+                gateway(oneResponse({ revision, currentReport: revisionReference }, 201)).reevaluate({
                     kind: TEST_KIND,
                     version: TEST_VERSION,
-                    currentReportRevisionId: "report-admission",
+                    currentReport: rootReference,
                     currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
                     reason: "Manual evidence review",
                 }),
@@ -149,6 +176,18 @@ describe("HTTP repository management gateway DTO validation", () => {
 
         expect(response.status).toBe(404);
         expect(await response.json()).toEqual({ code: "candidate_not_found", error: "Candidate operation failed" });
+    });
+
+    test("removes private compatibility provenance before returning it to Control", async () => {
+        const response = await gateway(oneResponse(await compatibilityPage())).compatibility({
+            kind: TEST_KIND,
+            version: TEST_VERSION,
+        });
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.current.reportId).toBe("report-admission");
+        expect(JSON.stringify(body)).not.toContain('"actor"');
     });
 
     test("never forwards upstream response headers", async () => {

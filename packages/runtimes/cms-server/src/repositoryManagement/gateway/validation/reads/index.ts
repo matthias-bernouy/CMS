@@ -87,10 +87,10 @@ export function validateDiagnosticsResponse(
     return { status: 200, body };
 }
 
-export function validateCompatibilityResponse(
+export async function validateCompatibilityResponse(
     response: RepositoryManagementTransportResponse,
     query: RepositoryCompatibilityQuery,
-): SanitizedRepositoryManagementResult {
+): Promise<SanitizedRepositoryManagementResult> {
     if (response.status === 429) {
         return rateLimitResult(response);
     }
@@ -103,7 +103,7 @@ export function validateCompatibilityResponse(
         );
     }
     assertEqual(response.status, 200);
-    const body = validateCompatibilityPage(response.body, {
+    const body = await validateCompatibilityPage(response.body, {
         kind: query.kind,
         version: query.version,
         ...(query.after ? { after: query.after } : {}),

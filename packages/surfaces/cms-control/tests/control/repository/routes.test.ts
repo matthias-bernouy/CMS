@@ -50,7 +50,7 @@ describe("Control repository management routes", () => {
         await runner.request("POST", "/repository/reevaluations", {
             kind: "commerce",
             version: "1.1.0",
-            currentReportRevisionId: "report-1",
+            currentReport: { revisionId: "report-1", reportDigest: "b".repeat(64) },
             currentDecision: { revisionId: "decision-1", digest: "a".repeat(64) },
             reason: "New evaluator",
             evidenceIds: ["ci-1"],
@@ -79,7 +79,7 @@ describe("Control repository management routes", () => {
         expect(gateway.reevaluation).toEqual({
             kind: "commerce",
             version: "1.1.0",
-            currentReportRevisionId: "report-1",
+            currentReport: { revisionId: "report-1", reportDigest: "b".repeat(64) },
             currentDecision: { revisionId: "decision-1", digest: "a".repeat(64) },
             reason: "New evaluator",
             evidenceIds: ["ci-1"],
@@ -90,7 +90,7 @@ describe("Control repository management routes", () => {
         const rejected = await runner.request("POST", "/repository/reevaluations", {
             kind: "commerce",
             version: "1.1.0",
-            currentReportRevisionId: "report-1",
+            currentReport: { revisionId: "report-1", reportDigest: "b".repeat(64) },
             currentDecision: { revisionId: "decision-1", digest: "a".repeat(64) },
             reason: "Injected",
             actor: "browser-controlled",

@@ -30,14 +30,8 @@ export function repositoryCompatibilityQuery(request: Request): RepositoryCompat
 }
 
 export function parseRepositoryReevaluation(value: unknown): RepositoryReevaluationInput {
-    const object = exactObject(value, [
-        "kind",
-        "version",
-        "currentReportRevisionId",
-        "currentDecision",
-        "reason",
-        "evidenceIds",
-    ]);
+    const object = exactObject(value, ["kind", "version", "currentReport", "currentDecision", "reason", "evidenceIds"]);
+    const currentReport = exactObject(object.currentReport, ["revisionId", "reportDigest"]);
     const currentDecision = exactObject(object.currentDecision, ["revisionId", "digest"]);
     const evidenceIds = object.evidenceIds;
     if (evidenceIds !== undefined && (!Array.isArray(evidenceIds) || !evidenceIds.every(isNonEmptyString))) {
@@ -46,7 +40,10 @@ export function parseRepositoryReevaluation(value: unknown): RepositoryReevaluat
     return {
         kind: requiredBodyText(object.kind),
         version: requiredBodyText(object.version),
-        currentReportRevisionId: requiredBodyText(object.currentReportRevisionId),
+        currentReport: {
+            revisionId: requiredBodyText(currentReport.revisionId),
+            reportDigest: requiredBodyText(currentReport.reportDigest),
+        },
         currentDecision: {
             revisionId: requiredBodyText(currentDecision.revisionId),
             digest: requiredBodyText(currentDecision.digest),

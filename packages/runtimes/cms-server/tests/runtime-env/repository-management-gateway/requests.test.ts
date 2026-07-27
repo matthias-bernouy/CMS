@@ -7,18 +7,19 @@ import type {
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { validateIntegrationCandidateEnvelope } from "@bernouy/cms-integration-verification";
 import { gateway, jsonResponse, managementResponseFor, packageFixture, TEST_ACTOR, TEST_TOKEN } from "./fixtures";
-import { candidateReport, revisionReport, TEST_KIND, TEST_VERSION } from "./reports";
+import { admissionReport, candidateReport, reportReference, revisionReport, TEST_KIND, TEST_VERSION } from "./reports";
 
 describe("HTTP repository management gateway requests", () => {
     test("calls only allowlisted endpoints with exact application headers", async () => {
         const captured: Array<{ url: URL; init: RequestInit }> = [];
-        const after = "report/revision?cursor=yes&next=1";
+        const after = "report/revision:cursor";
         const fetchImpl = (async (input, init = {}) => {
             const url = new URL(String(input));
             captured.push({ url, init });
-            return managementResponseFor(url, after);
+            return await managementResponseFor(url, after);
         }) as typeof fetch;
         const client = gateway(fetchImpl);
+        const currentReport = await reportReference(admissionReport());
 
         const responses = [
             await client.status(),
@@ -29,7 +30,7 @@ describe("HTTP repository management gateway requests", () => {
                 maliciousReevaluation({
                     kind: TEST_KIND,
                     version: TEST_VERSION,
-                    currentReportRevisionId: "report-admission",
+                    currentReport,
                     currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
                     reason: "Manual evidence review",
                     evidenceIds: ["evidence-z", "evidence-a"],
@@ -55,7 +56,7 @@ describe("HTTP repository management gateway requests", () => {
             "/.cms/repository-management/api/integrations/stable-promotions",
         ]);
         expect(captured[2]!.url.search).toBe(`?kind=${TEST_KIND}`);
-        expect(captured[3]!.url.search).toContain("after=report%2Frevision%3Fcursor%3Dyes%26next%3D1");
+        expect(captured[3]!.url.search).toContain("after=report%2Frevision%3Acursor");
         expect(captured[3]!.url.searchParams.get("limit")).toBe("17");
         for (const [index, request] of captured.entries()) {
             const post = index >= 4;
@@ -71,7 +72,7 @@ describe("HTTP repository management gateway requests", () => {
         expect(await requestJson(captured[4]!.init)).toEqual({
             kind: TEST_KIND,
             version: TEST_VERSION,
-            currentReportRevisionId: "report-admission",
+            currentReport,
             currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
             reason: "Manual evidence review",
             evidenceIds: ["evidence-a", "evidence-z"],
@@ -99,23 +100,19 @@ describe("HTTP repository management gateway requests", () => {
                     cookie: request.headers.get("cookie"),
                     body: await request.json(),
                 };
-                return jsonResponse(
-                    {
-                        revision: revisionReport(),
-                        currentReportRevisionId: "report-revision",
-                    },
-                    201,
-                );
+                const revision = revisionReport();
+                return jsonResponse({ revision, currentReport: await reportReference(revision) }, 201);
             },
         });
         try {
             const client = gateway(fetch, {
                 baseUrl: `${server.url.origin}/private-management`,
             });
+            const currentReport = await reportReference(admissionReport());
             const response = await client.reevaluate({
                 kind: TEST_KIND,
                 version: TEST_VERSION,
-                currentReportRevisionId: "report-admission",
+                currentReport,
                 currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
                 reason: "Manual evidence review",
             });
@@ -130,7 +127,7 @@ describe("HTTP repository management gateway requests", () => {
                 body: {
                     kind: TEST_KIND,
                     version: TEST_VERSION,
-                    currentReportRevisionId: "report-admission",
+                    currentReport,
                     currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
                     reason: "Manual evidence review",
                     actor: TEST_ACTOR,

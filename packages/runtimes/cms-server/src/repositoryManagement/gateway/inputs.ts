@@ -22,7 +22,10 @@ export type PreparedPromotion = Readonly<{
 export function prepareReevaluation(input: RepositoryReevaluationInput, actor: string): PreparedReevaluation {
     const kind = packageKind(input.kind);
     const version = packageVersion(input.version);
-    const currentReportRevisionId = canonicalText(input.currentReportRevisionId, 512);
+    const currentReport = {
+        revisionId: canonicalText(input.currentReport.revisionId, 512),
+        reportDigest: digest(input.currentReport.reportDigest),
+    };
     const currentDecision = {
         revisionId: canonicalText(input.currentDecision.revisionId, 512),
         digest: digest(input.currentDecision.digest),
@@ -32,7 +35,7 @@ export function prepareReevaluation(input: RepositoryReevaluationInput, actor: s
     const normalized: RepositoryReevaluationInput = {
         kind,
         version,
-        currentReportRevisionId,
+        currentReport,
         currentDecision,
         reason,
         ...(evidenceIds ? { evidenceIds } : {}),

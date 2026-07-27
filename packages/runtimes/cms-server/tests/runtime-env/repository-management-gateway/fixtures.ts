@@ -7,6 +7,7 @@ import {
     admissionReport,
     compatibilityPage,
     promotionRecord,
+    reportReference,
     revisionReport,
     TEST_DIGEST,
     TEST_KIND,
@@ -127,7 +128,7 @@ export function validVersions(): Readonly<Record<string, unknown>> {
     };
 }
 
-export function managementResponseFor(url: URL, after: string): Response {
+export async function managementResponseFor(url: URL, after: string): Promise<Response> {
     if (url.pathname.endsWith("/api/status")) {
         return jsonResponse(validStatus());
     }
@@ -139,23 +140,18 @@ export function managementResponseFor(url: URL, after: string): Response {
     }
     if (url.pathname.endsWith("/api/integrations/compatibility")) {
         const revision = revisionReport({ supersedes: after });
-        return jsonResponse(compatibilityPage({ current: revision, revisions: [revision], totalRevisions: 2 }));
+        return jsonResponse(await compatibilityPage({ current: revision, revisions: [revision], totalRevisions: 2 }));
     }
     if (url.pathname.endsWith("/api/integrations/compatibility/reevaluations")) {
-        return jsonResponse(
-            {
-                revision: revisionReport({
-                    packageDigest: TEST_DIGEST,
-                    provenance: {
-                        actor: TEST_ACTOR,
-                        reason: "Manual evidence review",
-                        evidenceIds: ["evidence-a", "evidence-z"],
-                    },
-                }),
-                currentReportRevisionId: "report-revision",
+        const revision = revisionReport({
+            packageDigest: TEST_DIGEST,
+            provenance: {
+                actor: TEST_ACTOR,
+                reason: "Manual evidence review",
+                evidenceIds: ["evidence-a", "evidence-z"],
             },
-            201,
-        );
+        });
+        return jsonResponse({ revision, currentReport: await reportReference(revision) }, 201);
     }
     if (url.pathname.endsWith("/api/integrations/stable-promotions")) {
         return jsonResponse({ operationId: "promotion-operation", record: promotionRecord() }, 201);

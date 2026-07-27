@@ -1,3 +1,5 @@
+import { identifyCompatibilityReportV2 } from "@bernouy/cms-integration-verification";
+
 export const TEST_KIND = "commerce";
 export const TEST_VERSION = "1.2.3";
 export const TEST_DIGEST = "a".repeat(64);
@@ -5,21 +7,24 @@ export const TEST_CREATED_AT = "2026-07-26T10:00:00.000Z";
 
 export function admissionReport(overrides: Readonly<Record<string, unknown>> = {}): Readonly<Record<string, unknown>> {
     return {
-        reportType: "admission",
-        id: "report-admission",
+        schema: "cms.integration.compatibility-report.v2",
+        reportId: "report-admission",
+        revisionType: "root",
+        origin: "admission",
         kind: TEST_KIND,
         version: TEST_VERSION,
         packageDigest: TEST_DIGEST,
-        evaluator: { name: "repository-compatibility", version: "1.0.0" },
+        evaluator: { name: "repository-compatibility", version: "2.0.0" },
         createdAt: TEST_CREATED_AT,
         baselines: [],
         informationalBaselines: [],
-        evidence: [],
-        outcome: "compatible",
+        findings: [],
+        outcome: "not-applicable",
         requiredReleaseLevel: "none",
         releaseLevel: "initial",
-        admissible: true,
+        contractAdmissible: true,
         noBaselineReason: "new-kind",
+        provenance: { actor: "administrator-subject", reason: "Initial evaluation" },
         ...overrides,
     };
 }
@@ -27,25 +32,33 @@ export function admissionReport(overrides: Readonly<Record<string, unknown>> = {
 export function revisionReport(overrides: Readonly<Record<string, unknown>> = {}): Readonly<Record<string, unknown>> {
     return {
         ...admissionReport(),
-        reportType: "revision",
-        id: "report-revision",
+        reportId: "report-revision",
+        revisionType: "revision",
         supersedes: "report-admission",
         provenance: { actor: "administrator-subject", reason: "Manual evidence review" },
         ...overrides,
     };
 }
 
-export function compatibilityPage(
+export async function compatibilityPage(
     overrides: Readonly<Record<string, unknown>> = {},
-): Readonly<Record<string, unknown>> {
-    const admission = admissionReport();
+): Promise<Readonly<Record<string, unknown>>> {
+    const root = admissionReport();
+    const page = { root, current: root, revisions: [], totalRevisions: 0, ...overrides };
+    const current = await identifyCompatibilityReportV2(page.current);
     return {
-        admission,
-        current: admission,
-        revisions: [],
-        totalRevisions: 0,
+        ...page,
+        currentRevisionId: current.report.reportId,
+        currentReportDigest: current.digest,
         ...overrides,
     };
+}
+
+export async function reportReference(
+    report: unknown,
+): Promise<Readonly<{ revisionId: string; reportDigest: string }>> {
+    const identified = await identifyCompatibilityReportV2(report);
+    return { revisionId: identified.report.reportId, reportDigest: identified.digest };
 }
 
 export function promotionRecord(overrides: Readonly<Record<string, unknown>> = {}): Readonly<Record<string, unknown>> {

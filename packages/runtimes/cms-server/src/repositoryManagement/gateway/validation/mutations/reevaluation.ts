@@ -2,7 +2,7 @@ import type { RepositoryReevaluationInput } from "@bernouy/cms-control";
 import type { RepositoryManagementTransportResponse } from "../../transport";
 import { rateLimitResult, simpleErrorResult, type SanitizedRepositoryManagementResult } from "../errors";
 import { array, assertEqual, boolean, canonicalText, digest, exactObject } from "../helpers";
-import { validateRevisionReport } from "../reports";
+import { validateCompatibilityReport } from "../reports";
 
 export type ReevaluationIdentity = Readonly<{
     input: RepositoryReevaluationInput;
@@ -10,10 +10,10 @@ export type ReevaluationIdentity = Readonly<{
     evidenceIds?: readonly string[];
 }>;
 
-export function validateReevaluationResponse(
+export async function validateReevaluationResponse(
     response: RepositoryManagementTransportResponse,
     expected: ReevaluationIdentity,
-): SanitizedRepositoryManagementResult {
+): Promise<SanitizedRepositoryManagementResult> {
     if (response.status === 429) {
         return rateLimitResult(response);
     }
@@ -45,18 +45,34 @@ export function validateReevaluationResponse(
         );
     }
     assertEqual(response.status, 201);
-    const body = exactObject(response.body, ["revision", "currentReportRevisionId"], ["release"]);
-    const revision = validateRevisionReport(body.revision, {
-        kind: expected.input.kind,
-        version: expected.input.version,
-    });
-    assertEqual(revision.supersedes, expected.input.currentReportRevisionId);
-    assertEqual(body.currentReportRevisionId, revision.id);
-    validateExpectedProvenance(revision.provenance, expected);
+    const body = exactObject(response.body, ["revision", "currentReport"], ["release"]);
+    const revision = await validateCompatibilityReport(
+        body.revision,
+        {
+            kind: expected.input.kind,
+            version: expected.input.version,
+        },
+        "revision",
+    );
+    assertEqual(revision.report.supersedes, expected.input.currentReport.revisionId);
+    const currentReport = exactObject(body.currentReport, ["revisionId", "reportDigest"]);
+    assertEqual(currentReport.revisionId, revision.report.reportId);
+    assertEqual(currentReport.reportDigest, revision.reportDigest);
+    validateExpectedProvenance(revision.report.provenance, expected);
     if (body.release !== undefined) {
         validateRelease(body.release);
     }
-    return { status: 201, body };
+    return {
+        status: 201,
+        body: {
+            revision: revision.projected,
+            currentReport: {
+                revisionId: revision.report.reportId,
+                reportDigest: revision.reportDigest,
+            },
+            ...(body.release ? { release: body.release } : {}),
+        },
+    };
 }
 
 function validateRelease(value: unknown): void {

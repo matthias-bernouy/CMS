@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES } from "../../../src/repositoryManagement/gateway";
 import { gateway, jsonResponse, responseBody, validStatus } from "./fixtures";
-import { TEST_KIND, TEST_VERSION } from "./reports";
+import { admissionReport, reportReference, TEST_KIND, TEST_VERSION } from "./reports";
 
 describe("HTTP repository management gateway error mapping", () => {
     test("preserves only expected not-found and conflict statuses with sanitized bodies", async () => {
@@ -32,7 +32,7 @@ describe("HTTP repository management gateway error mapping", () => {
         const stale = await reevaluation.reevaluate({
             kind: TEST_KIND,
             version: TEST_VERSION,
-            currentReportRevisionId: "report-admission",
+            currentReport: await reportReference(admissionReport()),
             currentDecision: { revisionId: "decision-admission", digest: "d".repeat(64) },
             reason: "Manual evidence review",
         });

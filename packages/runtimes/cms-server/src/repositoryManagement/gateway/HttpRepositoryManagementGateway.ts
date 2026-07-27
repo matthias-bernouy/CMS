@@ -126,7 +126,7 @@ export class HttpRepositoryManagementGateway implements RepositoryManagementGate
             if (normalized.limit !== undefined) {
                 url.searchParams.set("limit", String(normalized.limit));
             }
-            return this.sanitized(validateCompatibilityResponse(await this.request(url, "GET"), normalized));
+            return this.sanitized(await validateCompatibilityResponse(await this.request(url, "GET"), normalized));
         } catch {
             return repositoryManagementUnavailableResponse();
         }
@@ -175,7 +175,7 @@ export class HttpRepositoryManagementGateway implements RepositoryManagementGate
             const prepared = prepareReevaluation(input, this.actor);
             const response = await this.request(this.endpoint(PATHS.reevaluations), "POST", prepared.bytes);
             return this.sanitized(
-                validateReevaluationResponse(response, {
+                await validateReevaluationResponse(response, {
                     input: prepared.input,
                     actor: this.actor,
                     ...(prepared.evidenceIds ? { evidenceIds: prepared.evidenceIds } : {}),

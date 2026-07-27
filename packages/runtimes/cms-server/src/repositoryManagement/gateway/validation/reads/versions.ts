@@ -50,16 +50,18 @@ function validateVersionSummary(value: unknown): JsonObject {
     }
     if (summary.compatibility !== null) {
         const compatibility = exactObject(summary.compatibility, [
-            "admissionReportId",
+            "rootReportId",
             "currentReportRevisionId",
+            "currentReportDigest",
             "outcome",
-            "admissible",
+            "contractAdmissible",
             "warning",
         ]);
-        canonicalText(compatibility.admissionReportId, 512);
+        canonicalText(compatibility.rootReportId, 512);
         canonicalText(compatibility.currentReportRevisionId, 512);
+        digest(compatibility.currentReportDigest);
         enumValue(compatibility.outcome, COMPATIBILITY_OUTCOMES);
-        boolean(compatibility.admissible);
+        boolean(compatibility.contractAdmissible);
         boolean(compatibility.warning);
     }
     if (summary.status !== undefined) {
