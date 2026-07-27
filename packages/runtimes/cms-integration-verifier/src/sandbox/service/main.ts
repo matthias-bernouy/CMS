@@ -1,4 +1,5 @@
 import { readIntegrationVerifierKey, readVerificationSandboxServiceEnv } from "../../config";
+import { resolve } from "node:path";
 import { createProcessVerificationSandbox } from "../process";
 import { createSandboxCapabilityVerifier } from "./capability";
 import { startVerificationSandboxService } from "./server";
@@ -10,8 +11,8 @@ export async function runVerificationSandboxService(
     const publicKey = await readIntegrationVerifierKey(env.verificationKeyFile, "sandbox verification-key");
     const sandbox = createProcessVerificationSandbox({
         identity: env.runnerIdentity,
-        executable: env.executable,
-        arguments: env.arguments,
+        executable: process.execPath,
+        arguments: ["run", resolve(import.meta.dir, "../postgresMain.ts")],
         tempRoot: env.tempRoot,
         timeoutMs: env.timeoutMs,
         terminationGraceMs: env.terminationGraceMs,

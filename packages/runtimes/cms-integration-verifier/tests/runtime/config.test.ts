@@ -91,7 +91,6 @@ describe("integration verifier runtime configuration", () => {
         const sandbox = readVerificationSandboxServiceEnv({
             ...common,
             CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: "/run/configs/public-key",
-            CMS_INTEGRATION_VERIFIER_SANDBOX_EXECUTABLE: "/usr/local/bin/bun",
         });
         expect(sandbox.verificationKeyFile).toBe("/run/configs/public-key");
         expect(sandbox).not.toHaveProperty("repositoryUrl");
@@ -102,7 +101,6 @@ describe("integration verifier runtime configuration", () => {
                 ...common,
                 CMS_INTEGRATION_VERIFIER_DEPLOYED_IMAGE_REFERENCE: `registry.test/verifier@sha256:${"b".repeat(64)}`,
                 CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: "/run/configs/public-key",
-                CMS_INTEGRATION_VERIFIER_SANDBOX_EXECUTABLE: "/usr/local/bin/bun",
             }),
         ).toThrow(/digest-pinned/);
     });

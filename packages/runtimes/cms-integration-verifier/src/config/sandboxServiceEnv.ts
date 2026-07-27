@@ -1,11 +1,9 @@
 import type { PinnedVerificationRunnerIdentity } from "@bernouy/cms-integration-verification";
-import { absolutePath, boundedInteger, runnerIdentity, sandboxArguments } from "./values";
+import { absolutePath, boundedInteger, runnerIdentity } from "./values";
 
 export type VerificationSandboxServiceEnv = Readonly<{
     port: number;
     verificationKeyFile: string;
-    executable: string;
-    arguments: readonly string[];
     tempRoot: string;
     timeoutMs: number;
     terminationGraceMs: number;
@@ -30,11 +28,6 @@ export function readVerificationSandboxServiceEnv(
             source.CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE,
             "CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE",
         ),
-        executable: absolutePath(
-            source.CMS_INTEGRATION_VERIFIER_SANDBOX_EXECUTABLE,
-            "CMS_INTEGRATION_VERIFIER_SANDBOX_EXECUTABLE",
-        ),
-        arguments: sandboxArguments(source.CMS_INTEGRATION_VERIFIER_SANDBOX_ARGUMENTS_JSON),
         tempRoot: absolutePath(
             source.CMS_INTEGRATION_VERIFIER_SANDBOX_TMP_ROOT,
             "CMS_INTEGRATION_VERIFIER_SANDBOX_TMP_ROOT",

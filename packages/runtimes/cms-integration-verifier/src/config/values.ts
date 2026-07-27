@@ -1,12 +1,10 @@
 import { isAbsolute, resolve } from "node:path";
-import { parseStrictJsonDocument } from "@bernouy/cms-integration-packages";
 import {
     parsePinnedVerificationRunnerIdentity,
     type PinnedVerificationRunnerIdentity,
 } from "@bernouy/cms-integration-verification";
 
 const IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
-const ARGUMENT_DOCUMENT_LIMIT = 32_768;
 
 export function repositoryOrigin(raw: string | undefined): string {
     if (!raw?.trim()) {
@@ -65,26 +63,6 @@ export function boundedInteger(
         throw new Error(`${name} must be an integer between ${minimum} and ${maximum}`);
     }
     return value;
-}
-
-export function sandboxArguments(raw: string | undefined): readonly string[] {
-    if (raw === undefined) {
-        return [];
-    }
-    let value: unknown;
-    try {
-        value = parseStrictJsonDocument(raw, ARGUMENT_DOCUMENT_LIMIT);
-    } catch {
-        throw new Error("CMS_INTEGRATION_VERIFIER_SANDBOX_ARGUMENTS_JSON must be strict bounded JSON");
-    }
-    if (
-        !Array.isArray(value) ||
-        value.length > 32 ||
-        value.some((entry) => typeof entry !== "string" || entry.length > 4_096 || entry.includes("\0"))
-    ) {
-        throw new Error("CMS_INTEGRATION_VERIFIER_SANDBOX_ARGUMENTS_JSON must contain bounded string arguments");
-    }
-    return Object.freeze([...value]) as readonly string[];
 }
 
 export function runnerIdentity(source: Record<string, string | undefined>): PinnedVerificationRunnerIdentity {

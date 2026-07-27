@@ -68,10 +68,8 @@ describe("integration verifier trust zones", () => {
         expect(sandbox).toContain("SANDBOX_TIMEOUT_MS");
         expect(sandbox).toContain("SANDBOX_MAX_OUTPUT_BYTES");
         expect(sandbox).toContain("SANDBOX_MAX_ERROR_BYTES");
-        expect(sandbox).toContain(
-            `'["run","packages/runtimes/cms-integration-verifier/src/sandbox/postgresMain.ts"]'`,
-        );
-        expect(sandbox).not.toContain("/sandbox/service/postgres/index.ts");
+        expect(sandbox).not.toContain("SANDBOX_EXECUTABLE");
+        expect(sandbox).not.toContain("SANDBOX_ARGUMENTS_JSON");
         expect(sandbox).toContain('CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.0"');
         expect(sandbox).not.toContain("service/postgresAdapter.ts");
         expect(sandbox).not.toContain('"platform-install"');
