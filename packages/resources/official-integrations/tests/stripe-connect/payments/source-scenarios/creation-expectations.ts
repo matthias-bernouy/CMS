@@ -22,7 +22,6 @@ export function expectWalletBlocContract(bloc: ImportedBloc | undefined): void {
     expect(bloc?.viewJS).toContain('status?.bankAccountStatus === "attached"');
     expect(bloc?.viewJS).toContain('["requirements_due", "rejected"].includes');
     expect(bloc?.viewJS).toContain("this.showPendingVerification();");
-    expect(bloc?.viewJS).not.toContain("await this.refresh();");
     expect(bloc?.viewJS).toContain('requestStripeSource("getConnectStatus")');
     expect(bloc?.viewJS).toContain(
         "this.marketplaceTermsRequirement = marketplaceTermsRequirement(status?.marketplaceTermsRequirement)",

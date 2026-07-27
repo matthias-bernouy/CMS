@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { Composition } from "@bernouy/components/base";
 import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
@@ -62,6 +63,59 @@ describe("commerce account offers 1.0.0", () => {
         expect(visible.getAttribute("href")).toBe("/annonce?slug=visible");
         expect(pending.hidden).toBeTrue();
         expect(pending.hasAttribute("href")).toBeFalse();
+    });
+
+    test("renders the exact published seller consent once with its document link", async () => {
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
+        const artifact = definition?.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form",
+        );
+        if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS) {
+            throw new Error("commerce-offer-price-form source not found");
+        }
+        const tag = "test-commerce-offer-price-form-seller-consent";
+        if (!customElements.get(tag)) {
+            Object.assign(((window as Window & { p9r?: Record<string, unknown> }).p9r ??= {}), { Composition });
+            const compiled = await prepare_bloc(
+                new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+                null,
+                artifact.bloc.name,
+                artifact.bloc.group ?? "Commerce",
+                artifact.bloc.description ?? "",
+                tag,
+                artifact.bloc.source,
+            );
+            new Function(compiled.viewJS)();
+        }
+        const form = document.createElement(tag) as HTMLElement & {
+            sellerTermsRequirement: Record<string, unknown>;
+            activationRequired: boolean;
+            load(): Promise<void>;
+            syncPresentation(): void;
+        };
+        form.load = async () => {};
+        document.body.append(form);
+        form.sellerTermsRequirement = {
+            mode: "published_page",
+            version: "cms-page:revision-1",
+            hash: "a".repeat(64),
+            label: "Conditions vendeur Courtside",
+            consentText: "J’accepte les Conditions vendeur Courtside.",
+            page: { path: "/conditions-vendeur" },
+        };
+        form.activationRequired = true;
+        form.syncPresentation();
+
+        const sellerConsent = form.querySelector("[data-seller-consent]");
+        const links = sellerConsent?.querySelectorAll<HTMLAnchorElement>("[data-seller-terms-link]") ?? [];
+        expect(sellerConsent?.textContent).toBe("J’accepte les Conditions vendeur Courtside.");
+        expect(links).toHaveLength(1);
+        expect(links[0]?.pathname).toBe("/conditions-vendeur");
+        expect(form.querySelector("[data-stripe-consent-fragment]")?.textContent).toContain(
+            "conditions du service de paiement",
+        );
+        expect(form.querySelector("[data-stripe-consent-fragment]")?.textContent).not.toContain("Stripe");
+        form.remove();
     });
 
     test("provides transparent public offer list and editable offer preview blocs", async () => {
@@ -368,6 +422,8 @@ describe("commerce account offers 1.0.0", () => {
         expect(viewSource).toContain("publishedTerms?.consentText");
         expect(viewSource).toContain("publishedTerms?.label");
         expect(viewSource).toContain("publishedTerms?.page.path");
+        expect(viewSource).toContain("renderLinkedConsent(");
+        expect(viewSource).toContain("this.sellerConsent");
         expect(viewSource).toContain("if (!this.consent.checked)");
         expect(viewSource).toContain("payload.sellerTermsVersion = this.sellerTermsRequirement.version");
         expect(viewSource).toContain("payload.sellerTermsHash = this.sellerTermsRequirement.hash");
@@ -403,8 +459,9 @@ describe("commerce account offers 1.0.0", () => {
         expect(compiled.viewJS).toContain("Les informations renseignées sont traitées");
         expect(compiled.viewJS).toContain("Consulter l’avis de confidentialité");
         expect(compiled.viewJS).toContain(
-            "Tu dois accepter les conditions vendeur Courtside et l’accord Stripe pour continuer.",
+            "Tu dois accepter les conditions vendeur Courtside et les conditions du service de paiement pour continuer.",
         );
+        expect(compiled.viewJS).not.toContain("accord de compte connecté Stripe");
         expect(compiled.viewJS).toContain("Tu dois accepter les conditions vendeur Courtside pour continuer.");
         expect(compiled.viewJS).toContain("sessionStorage.setItem");
         expect(compiled.viewJS).not.toContain("history.pushState");

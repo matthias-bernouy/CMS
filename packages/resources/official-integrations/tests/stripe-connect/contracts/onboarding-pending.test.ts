@@ -7,6 +7,7 @@ const tag = "test-stripe-connect-onboarding-pending";
 
 type OnboardingBloc = HTMLElement & {
     profile: Record<string, string> | null;
+    marketplaceTermsRequirement: Record<string, unknown> | null;
     render(): void;
     syncPresentation(): void;
     refresh(): Promise<void>;
@@ -28,12 +29,13 @@ afterEach(() => {
 describe("stripe connect onboarding pending verification", () => {
     test("keeps every validation action hidden while bank payouts are pending", async () => {
         const bloc = createBloc();
-        bloc.requestStripeSource = async () => ({
-            onboardingStatus: "enabled",
-            payoutsEnabled: false,
-            bankAccountStatus: "attached",
-            bankPayoutsStatus: "pending",
-        });
+        bloc.requestStripeSource = async () =>
+            statusWithTerms({
+                onboardingStatus: "enabled",
+                payoutsEnabled: false,
+                bankAccountStatus: "attached",
+                bankPayoutsStatus: "pending",
+            });
 
         await bloc.refresh();
 
@@ -48,12 +50,13 @@ describe("stripe connect onboarding pending verification", () => {
 
     test("keeps an attached bank account locked during the first provider propagation", async () => {
         const bloc = createBloc();
-        bloc.requestStripeSource = async () => ({
-            onboardingStatus: "enabled",
-            payoutsEnabled: false,
-            bankAccountStatus: "attached",
-            bankPayoutsStatus: "unrequested",
-        });
+        bloc.requestStripeSource = async () =>
+            statusWithTerms({
+                onboardingStatus: "enabled",
+                payoutsEnabled: false,
+                bankAccountStatus: "attached",
+                bankPayoutsStatus: "unrequested",
+            });
 
         await bloc.refresh();
 
@@ -63,13 +66,14 @@ describe("stripe connect onboarding pending verification", () => {
 
     test("keeps mixed provider requirements locked while verification is still pending", async () => {
         const bloc = createBloc();
-        bloc.requestStripeSource = async () => ({
-            onboardingStatus: "requirements_due",
-            payoutsEnabled: false,
-            bankAccountStatus: "attached",
-            bankPayoutsStatus: "restricted",
-            pendingVerification: ["identity.document"],
-        });
+        bloc.requestStripeSource = async () =>
+            statusWithTerms({
+                onboardingStatus: "requirements_due",
+                payoutsEnabled: false,
+                bankAccountStatus: "attached",
+                bankPayoutsStatus: "restricted",
+                pendingVerification: ["identity.document"],
+            });
 
         await bloc.refresh();
 
@@ -79,13 +83,14 @@ describe("stripe connect onboarding pending verification", () => {
 
     test("allows correction only when the provider reports an actionable terminal state", async () => {
         const bloc = createBloc();
-        bloc.requestStripeSource = async () => ({
-            onboardingStatus: "requirements_due",
-            payoutsEnabled: false,
-            bankAccountStatus: "attached",
-            bankPayoutsStatus: "restricted",
-            pendingVerification: [],
-        });
+        bloc.requestStripeSource = async () =>
+            statusWithTerms({
+                onboardingStatus: "requirements_due",
+                payoutsEnabled: false,
+                bankAccountStatus: "attached",
+                bankPayoutsStatus: "restricted",
+                pendingVerification: [],
+            });
 
         await bloc.refresh();
 
@@ -98,6 +103,7 @@ describe("stripe connect onboarding pending verification", () => {
         const bloc = createBloc();
         const endpoints: string[] = [];
         bloc.profile = completeProfile();
+        bloc.marketplaceTermsRequirement = legacyTermsRequirement();
         bloc.clientConfig = async () => ({ publishableKey: "pk_test_123" });
         bloc.createAccountToken = async () => "accttok_test_123";
         bloc.createBankAccountToken = async () => "btok_test_123";
@@ -111,12 +117,18 @@ describe("stripe connect onboarding pending verification", () => {
             };
         };
         const iban = bloc.shadowRoot?.querySelector<HTMLInputElement>("[name='iban']");
-        const consent = bloc.shadowRoot?.querySelector<HTMLInputElement>("[name='termsAccepted']");
-        if (!iban || !consent) {
+        const marketplaceConsent = bloc.shadowRoot?.querySelector<HTMLInputElement>(
+            "[data-form] [name='marketplaceTermsAccepted']",
+        );
+        const paymentConsent = bloc.shadowRoot?.querySelector<HTMLInputElement>(
+            "[data-form] [name='paymentTermsAccepted']",
+        );
+        if (!iban || !marketplaceConsent || !paymentConsent) {
             throw new Error("onboarding form was not rendered");
         }
         iban.value = "FR7612345678901234567890123";
-        consent.checked = true;
+        marketplaceConsent.checked = true;
+        paymentConsent.checked = true;
 
         await bloc.submit();
 
@@ -163,6 +175,23 @@ function completeProfile(): Record<string, string> {
         postalCode: "75001",
         city: "Paris",
         countryCode: "FR",
+    };
+}
+
+function statusWithTerms(status: Record<string, unknown>): Record<string, unknown> {
+    return {
+        ...status,
+        marketplaceTermsStatus: "required",
+        marketplaceTermsCurrentVersionAccepted: false,
+        marketplaceTermsRequirement: legacyTermsRequirement(),
+    };
+}
+
+function legacyTermsRequirement(): Record<string, unknown> {
+    return {
+        mode: "legacy",
+        version: "seller-terms-2026-07",
+        hash: "a".repeat(64),
     };
 }
 
