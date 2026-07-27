@@ -1,7 +1,7 @@
 {
     "install": {
         "revision": 1,
-        "digest": "sha256:4b7a22b292dd2723f948f07425b011b1079ac1c2436d8dd8e016a0590127f870",
+        "digest": "sha256:c7a9ed7ab0658119642e7fabab3758a16a51364639b29f1228189a5e2117eb77",
         "coveredMigrations": [
             {
                 "id": "add-photo-credit",

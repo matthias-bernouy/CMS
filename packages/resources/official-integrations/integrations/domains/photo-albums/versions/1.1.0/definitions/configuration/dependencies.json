@@ -1,6 +1,7 @@
 [
     {
         "name": "basicBlocs",
-        "kind": "basic-blocs"
+        "kind": "basic-blocs",
+        "versionRange": "^1.0.0"
     }
 ]

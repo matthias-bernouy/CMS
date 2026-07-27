@@ -26,6 +26,20 @@ create table if not exists photo_albums.settings (
     )
 );
 
+do $settings$
+begin
+    if not (
+        select relation.relforcerowsecurity
+        from pg_catalog.pg_class relation
+        where relation.oid = 'photo_albums.settings'::regclass
+    ) then
+        insert into photo_albums.settings (id)
+        values (true)
+        on conflict (id) do nothing;
+    end if;
+end
+$settings$;
+
 create table if not exists photo_albums.connector_credentials (
     credential_key text primary key,
     secret_hash text not null,
@@ -38,10 +52,6 @@ create table if not exists photo_albums.connector_credentials (
         secret_hash ~ '^[0-9a-f]{64}$'
     )
 );
-
-insert into photo_albums.settings (id)
-values (true)
-on conflict (id) do nothing;
 
 drop trigger if exists settings_touch_updated_at on photo_albums.settings;
 create trigger settings_touch_updated_at

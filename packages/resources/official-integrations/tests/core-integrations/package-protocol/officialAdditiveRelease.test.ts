@@ -92,6 +92,7 @@ describe("official Photo Albums additive release", () => {
                 {
                     connector: reviewed.legacySelector,
                     packageDigest: baseline.digest,
+                    dependencies: reviewed.dependencies,
                     schema: projectObservedSchemaContract(reviewed.observedSchema),
                     provenance: {
                         evidenceId: reviewed.reportId,
@@ -115,6 +116,11 @@ describe("official Photo Albums additive release", () => {
             report: { outcome: "compatible", requiredReleaseLevel: "minor", releaseLevel: "minor" },
         });
         expect(accepted.report.evidence).toEqual([
+            expect.objectContaining({
+                classification: "additive",
+                code: "dependency-range-declared-from-reviewed-baseline",
+            }),
+            expect.objectContaining({ classification: "additive", code: "function-contract-declared" }),
             expect.objectContaining({ classification: "additive", code: "relation-added" }),
         ]);
         expect(accepted.report.evidence.some(({ code }) => code === "legacy-schema-baseline-missing")).toBeFalse();

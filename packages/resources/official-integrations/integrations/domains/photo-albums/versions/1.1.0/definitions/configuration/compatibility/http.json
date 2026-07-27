@@ -1,0 +1,188 @@
+{
+    "endpoints": [
+        {
+            "route": "/album",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/album",
+            "method": "POST",
+            "requiredInputs": ["slug", "title"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/album/archive",
+            "method": "POST",
+            "requiredInputs": ["id"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/albums",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/albums/reorder",
+            "method": "POST",
+            "requiredInputs": ["albumIds"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/categories",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/categories/reorder",
+            "method": "POST",
+            "requiredInputs": ["categoryIds"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/category",
+            "method": "DELETE",
+            "requiredInputs": ["id"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/category",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/category",
+            "method": "POST",
+            "requiredInputs": ["name", "slug"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/health",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/photo",
+            "method": "GET",
+            "requiredInputs": ["id"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/photo/metadata",
+            "method": "GET",
+            "requiredInputs": ["id"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/photo/metadata",
+            "method": "POST",
+            "requiredInputs": ["albumId", "id", "version"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/photos/remove",
+            "method": "POST",
+            "requiredInputs": ["albumId", "photoId"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/photos/reorder",
+            "method": "POST",
+            "requiredInputs": ["albumId", "photoIds"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/photos/replace",
+            "method": "POST",
+            "requiredInputs": ["albumId", "photoId"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/photos/upload",
+            "method": "POST",
+            "requiredInputs": ["albumId"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/public/album",
+            "method": "GET",
+            "requiredInputs": ["slug"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/public/albums",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/public/categories",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/public/photo",
+            "method": "GET",
+            "requiredInputs": ["id"],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/settings",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/settings",
+            "method": "POST",
+            "requiredInputs": [
+                "allowDownloads",
+                "defaultPageSize",
+                "galleryTitle",
+                "maxPhotosPerAlbum",
+                "showCaptions",
+                "showTakenAt",
+                "version"
+            ],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        },
+        {
+            "route": "/setup",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }]
+        }
+    ],
+    "requiredSecrets": ["CMS_PHOTO_ALBUMS_API_KEY"]
+}
