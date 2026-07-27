@@ -4,8 +4,9 @@ import type {
     PageLink,
     PageMeta,
     PagesQuery,
+    SiteBlocPublicationGuard,
 } from "cms-content/interfaces/CmsRepository";
-import type { TBloc } from "cms-content/interfaces/blocs";
+import type { BlocRecord, SiteBlocDefinition, SiteBlocSnapshot, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TTemplate } from "cms-content/interfaces/templates";
 import type { TSystem } from "cms-content/interfaces/settings";
@@ -13,7 +14,11 @@ import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-cont
 import { validateTemplateCreate, validateTemplatePatch } from "cms-content/core/validation/documents/templates";
 import { assertContentRefsExist } from "cms-content/core/validation/documents/assertContentRefsExist";
 import { validateSettingsPatch } from "cms-content/core/validation/settings";
-
+import {
+    validateBlocWrite,
+    validateSiteBlocDefinition,
+    validateSiteBlocSnapshot,
+} from "cms-content/core/validation/blocs";
 /**
  * Decorator that VALIDATES + NORMALIZES every authored-content write before
  * delegating to the wrapped repository — the single, unbypassable barrier so
@@ -26,7 +31,6 @@ import { validateSettingsPatch } from "cms-content/core/validation/settings";
  */
 export class ValidatingCmsRepository implements CmsRepository {
     constructor(private readonly inner: CmsRepository) {}
-
     // ── Validated authored-content writes ─────────────────────────────────
     async insertPage(path: string, title: string): Promise<void> {
         return this.inner.insertPage(validatePagePath(path), validatePageTitle(title));
@@ -55,11 +59,51 @@ export class ValidatingCmsRepository implements CmsRepository {
     }
 
     // ── Pass-through: blocs (compiled + validated upstream) ────────────────
-    createBloc(bloc: TBloc): Promise<TBloc> {
-        return this.inner.createBloc(bloc);
+    createBloc(bloc: TBlocWrite): Promise<TBloc> {
+        return this.inner.createBloc(validateBlocWrite(bloc));
     }
-    replaceBloc(bloc: TBloc): Promise<TBloc> {
-        return this.inner.replaceBloc(bloc);
+    replaceBloc(bloc: TBlocWrite): Promise<TBloc> {
+        return this.inner.replaceBloc(validateBlocWrite(bloc));
+    }
+    getBlocRecord(tag: string): Promise<BlocRecord | null> {
+        return this.inner.getBlocRecord(tag);
+    }
+    getBlocRecords(): Promise<BlocRecord[]> {
+        return this.inner.getBlocRecords();
+    }
+    createSiteBloc(definition: SiteBlocDefinition): Promise<BlocRecord> {
+        return this.inner.createSiteBloc(validateSiteBlocDefinition(definition));
+    }
+    saveSiteBlocDraft(
+        tag: string,
+        draft: SiteBlocSnapshot,
+        expectedDraftRevision: number,
+    ): Promise<SiteBlocDefinition> {
+        return this.inner.saveSiteBlocDraft(tag, validateSiteBlocSnapshot(draft, tag), expectedDraftRevision);
+    }
+    publishSiteBloc(
+        tag: string,
+        artifact: TBlocWrite,
+        expectedDraftRevision: number,
+        publicationDate?: Date,
+        publicationGuard?: SiteBlocPublicationGuard,
+    ): Promise<BlocRecord> {
+        return this.inner.publishSiteBloc(
+            tag,
+            validateBlocWrite(artifact),
+            expectedDraftRevision,
+            publicationDate,
+            publicationGuard,
+        );
+    }
+    archiveSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition> {
+        return this.inner.archiveSiteBloc(tag, expectedDraftRevision);
+    }
+    restoreSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition> {
+        return this.inner.restoreSiteBloc(tag, expectedDraftRevision);
+    }
+    withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T> {
+        return this.inner.withSiteBlocPublicationLock(operation);
     }
     getBlocsJS() {
         return this.inner.getBlocsJS();

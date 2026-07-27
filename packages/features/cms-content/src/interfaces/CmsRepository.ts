@@ -1,5 +1,5 @@
 import type { ContentReader } from "cms-content/interfaces/ContentReader";
-import type { TBloc } from "cms-content/interfaces/blocs";
+import type { BlocRecord, SiteBlocDefinition, SiteBlocSnapshot, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
 import type { TTemplate } from "cms-content/interfaces/templates";
@@ -9,6 +9,7 @@ export type BlocListItemResponse = {
     name: string;
     group: string;
     description: string;
+    ownership: TBloc["ownership"];
 };
 
 export type PageLink = {
@@ -27,6 +28,11 @@ export type PageMeta = {
 export type ValueCount = {
     value: string;
     count: number;
+};
+
+export type SiteBlocPublicationGuard = {
+    /** Refreshes and verifies the graph-wide publication lease before persistence. */
+    assertHeld(): Promise<void>;
 };
 
 /**
@@ -49,8 +55,23 @@ export type PagesQuery = {
 
 export interface CmsRepository extends ContentReader {
     // BLOC
-    createBloc(bloc: TBloc): Promise<TBloc>;
-    replaceBloc(bloc: TBloc): Promise<TBloc>;
+    createBloc(bloc: TBlocWrite): Promise<TBloc>;
+    replaceBloc(bloc: TBlocWrite): Promise<TBloc>;
+
+    getBlocRecord(tag: string): Promise<BlocRecord | null>;
+    getBlocRecords(): Promise<BlocRecord[]>;
+    createSiteBloc(definition: SiteBlocDefinition): Promise<BlocRecord>;
+    saveSiteBlocDraft(tag: string, draft: SiteBlocSnapshot, expectedDraftRevision: number): Promise<SiteBlocDefinition>;
+    publishSiteBloc(
+        tag: string,
+        artifact: TBlocWrite,
+        expectedDraftRevision: number,
+        publicationDate?: Date,
+        publicationGuard?: SiteBlocPublicationGuard,
+    ): Promise<BlocRecord>;
+    archiveSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition>;
+    restoreSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition>;
+    withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T>;
 
     getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]>;
     getBlocsList(): Promise<BlocListItemResponse[]>;

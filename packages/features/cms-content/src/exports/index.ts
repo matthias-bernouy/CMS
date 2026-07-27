@@ -9,7 +9,16 @@
  */
 
 // ── Entities ───────────────────────────────────────────────────────────
-export type { TBloc } from "cms-content/interfaces/blocs";
+export type {
+    BlocOwnership,
+    BlocRecord,
+    SiteBlocDefinition,
+    SiteBlocNode,
+    SiteBlocSlot,
+    SiteBlocSnapshot,
+    TBloc,
+    TBlocWrite,
+} from "cms-content/interfaces/blocs";
 export type { TPage, TPageRef } from "cms-content/interfaces/pages";
 export type { TTemplate } from "cms-content/interfaces/templates";
 export type { TSystem } from "cms-content/interfaces/settings";
@@ -37,6 +46,7 @@ export type {
     PageLink,
     PageMeta,
     PagesQuery,
+    SiteBlocPublicationGuard,
     ValueCount,
 } from "cms-content/interfaces/CmsRepository";
 export { InMemoryCmsRepository } from "cms-content/default-implementation/InMemoryCmsRepository";
@@ -66,10 +76,36 @@ export {
     type PublishedPageSnapshot,
 } from "cms-content/core/lifecycle/publication";
 export {
+    BlocOwnershipConflictError,
+    BlocPublicationConflictError,
+    BlocRevisionConflictError,
+    BlocLifecycleConflictError,
     ContentValidationError,
     ContentConflictError,
     DuplicateBlocTagError,
+    SiteBlocLifecycleConflictError,
+    SiteBlocNotFoundError,
+    SiteBlocPublishedSlotConflictError,
+    SiteBlocPublicationLockLostError,
+    SiteBlocPublicationRecoveryRequiredError,
+    SiteBlocPublicationRequiredError,
 } from "cms-content/core/validation/errors";
+export {
+    archivedSiteDefinition,
+    assertBlocOwner,
+    CODE_MANAGED_BLOC_OWNERSHIP,
+    nextDraftDefinition,
+    normalizeBlocWrite,
+    publishedSiteRecord,
+    sameBlocOwner,
+} from "cms-content/core/blocs/records";
+export { nextSiteBlocUpdatedAt } from "cms-content/core/blocs/timestamps";
+export { SiteBlocPublicationQueue } from "cms-content/core/blocs/SiteBlocPublicationQueue";
+export {
+    validateBlocWrite,
+    validateSiteBlocDefinition,
+    validateSiteBlocSnapshot,
+} from "cms-content/core/validation/blocs";
 export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/core/queries/pagesReferencing";
 export { createBlocUsageResolver } from "cms-content/core/blocs/resolveUsedBlocTags";
 export { findUsedBlocTags } from "cms-content/core/blocs/findUsedBlocTags";

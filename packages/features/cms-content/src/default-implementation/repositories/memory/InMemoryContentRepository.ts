@@ -1,58 +1,17 @@
 import { randomUUIDv7 } from "bun";
-import type { BlocListItemResponse, PageLink, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
-import type { TBloc } from "cms-content/interfaces/blocs";
+import type { PageLink, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
 import type { TTemplate } from "cms-content/interfaces/templates";
 import { defaultSystem } from "cms-content/core/lifecycle/system";
 import { filterAndSortPages } from "cms-content/core/queries/pagesQuery";
-import { DuplicateBlocTagError } from "cms-content/core/validation/errors";
 import { isPublishedPage } from "cms-content/core/lifecycle/publication";
+import { InMemoryBlocRepository } from "cms-content/default-implementation/repositories/memory/InMemoryBlocRepository";
 
-export class InMemoryContentRepository {
-    protected readonly blocs = new Map<string, TBloc>();
+export class InMemoryContentRepository extends InMemoryBlocRepository {
     protected readonly pages = new Map<string, TPage>();
     protected readonly templates = new Map<string, TTemplate>();
     protected system: TSystem = defaultSystem();
-
-    async createBloc(bloc: TBloc): Promise<TBloc> {
-        if (this.blocs.has(bloc.id)) {
-            throw new DuplicateBlocTagError(bloc.id);
-        }
-        this.blocs.set(bloc.id, { ...bloc });
-        return bloc;
-    }
-
-    async replaceBloc(bloc: TBloc): Promise<TBloc> {
-        this.blocs.set(bloc.id, { ...bloc });
-        return bloc;
-    }
-
-    async getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]> {
-        return Array.from(this.blocs.values()).map((bloc) => ({
-            id: bloc.id,
-            editorJS: bloc.editorJS,
-            viewJS: bloc.viewJS,
-        }));
-    }
-
-    async getBlocsList(): Promise<BlocListItemResponse[]> {
-        return Array.from(this.blocs.values()).map((bloc) => ({
-            id: bloc.id,
-            name: bloc.name,
-            group: bloc.group || "",
-            description: bloc.description || "",
-        }));
-    }
-
-    async getBlocViewJS(htmlTag: string): Promise<string | null> {
-        return this.blocs.get(htmlTag)?.viewJS ?? null;
-    }
-
-    async getBlocSource(htmlTag: string): Promise<Record<string, string> | null> {
-        const source = this.blocs.get(htmlTag)?.source;
-        return source ? { ...source } : null;
-    }
 
     async getPage(path: string): Promise<TPage | null> {
         const found = this.pages.get(path);

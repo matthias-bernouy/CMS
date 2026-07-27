@@ -1,3 +1,15 @@
+import type { ContentSlot } from "cms-content/interfaces/Editor/document/ContentSlots";
+
+export type BlocOwnership =
+    | { kind: "site-builder"; definitionId: string }
+    | { kind: "code-managed" }
+    | {
+          kind: "integration";
+          integrationKind: string;
+          installationId: string;
+          definitionVersion: string;
+      };
+
 export type TBloc = {
     id: string;
     name: string;
@@ -5,6 +17,7 @@ export type TBloc = {
     description: string;
     viewJS: string;
     editorJS: string;
+    ownership: BlocOwnership;
     /**
      * Author-side source folder, base64-encoded per relative path.
      * Optional — `p9r pull` skips blocs without source and reports them.
@@ -12,4 +25,62 @@ export type TBloc = {
      * `site/blocs/<tag>/`.
      */
     source?: Record<string, string>;
+};
+
+/**
+ * Backward-compatible write shape. Existing importers that predate explicit
+ * ownership are treated as code-managed writers at the repository boundary.
+ */
+export type TBlocWrite = Omit<TBloc, "ownership"> & { ownership?: BlocOwnership };
+
+export type SiteBlocNode =
+    | {
+          kind: "bloc";
+          tag: string;
+          attributes: Record<string, string>;
+          children: SiteBlocNode[];
+      }
+    | { kind: "slot"; slotId: string };
+
+export type SiteBlocSlot = ContentSlot & { id: string };
+
+export type SiteBlocSnapshot = {
+    name: string;
+    group: string;
+    description: string;
+    structure: SiteBlocNode[];
+    slots: SiteBlocSlot[];
+    defaultContent: string;
+    /** Derived from `structure`; callers must not use this as an authority. */
+    dependencies: string[];
+};
+
+export type SiteBlocDefinition = {
+    schema: "cms.site-bloc.v1";
+    id: string;
+    tag: string;
+    ownership: Extract<BlocOwnership, { kind: "site-builder" }>;
+    lifecycle: "active" | "archived";
+    draftRevision: number;
+    publishedRevision: number | null;
+    draft: SiteBlocSnapshot;
+    published: SiteBlocSnapshot | null;
+    createdAt: Date;
+    updatedAt: Date;
+    archivedAt?: Date;
+};
+
+/** One globally unique aggregate per custom-element tag. */
+export type BlocRecord = {
+    tag: string;
+    ownership: BlocOwnership;
+    /**
+     * One-shot migration state for pre-ownership flat Mongo documents. It is
+     * consumed by the first explicit code or integration write and is never
+     * created for modern aggregates.
+     */
+    legacyOwnershipClaim?: "unclaimed";
+    /** The active compiled publication. Draft-only records have no artifact. */
+    artifact: TBloc | null;
+    siteDefinition?: SiteBlocDefinition;
 };

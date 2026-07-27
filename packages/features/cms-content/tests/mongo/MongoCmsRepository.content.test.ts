@@ -10,6 +10,7 @@ const card: TBloc = {
     description: "A reusable card",
     editorJS: "editor-code",
     viewJS: "view-code",
+    ownership: { kind: "code-managed" },
     source: { "index.ts": "c291cmNl" },
 };
 
@@ -33,12 +34,24 @@ describe("MongoCmsRepository content persistence", () => {
         expect(await repository.getBlocSource(card.id)).toEqual(card.source!);
         expect(await repository.getBlocsJS()).toEqual([{ id: card.id, editorJS: "editor-code", viewJS: "view-code" }]);
         expect(await repository.getBlocsList()).toEqual([
-            { id: card.id, name: "Card", group: "Marketing", description: "A reusable card" },
+            {
+                id: card.id,
+                name: "Card",
+                group: "Marketing",
+                description: "A reusable card",
+                ownership: { kind: "code-managed" },
+            },
         ]);
 
         await repository.replaceBloc({ ...card, name: "Updated card", source: undefined });
         expect(await repository.getBlocsList()).toEqual([
-            { id: card.id, name: "Updated card", group: "Marketing", description: "A reusable card" },
+            {
+                id: card.id,
+                name: "Updated card",
+                group: "Marketing",
+                description: "A reusable card",
+                ownership: { kind: "code-managed" },
+            },
         ]);
         expect(await repository.getBlocSource(card.id)).toBeNull();
         await expect(repository.createBloc(card)).rejects.toBeInstanceOf(DuplicateBlocTagError);

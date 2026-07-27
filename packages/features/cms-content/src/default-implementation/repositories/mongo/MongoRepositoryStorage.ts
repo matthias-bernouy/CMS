@@ -3,6 +3,7 @@ import {
     SYSTEM_ID,
     type BlocDoc,
     type PageDoc,
+    type SiteBlocPublicationLockDoc,
     type SystemDoc,
     type TemplateDoc,
 } from "cms-content/default-implementation/repositories/mongo/documents";
@@ -48,6 +49,10 @@ export class MongoRepositoryStorage {
 
     protected get system(): Collection<SystemDoc> {
         return this.db.collection<SystemDoc>(this.prefix + "system");
+    }
+
+    protected get siteBlocPublicationLocks(): Collection<SiteBlocPublicationLockDoc> {
+        return this.db.collection<SiteBlocPublicationLockDoc>(this.prefix + "site_bloc_publication_locks");
     }
 }
 
