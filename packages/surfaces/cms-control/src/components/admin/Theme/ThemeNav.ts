@@ -1,20 +1,21 @@
 import { Component } from "@bernouy/components/base";
 import type { ThemeSource } from "@bernouy/cms-content";
+import { adminSystemSettingsStore } from "../Common/SystemSettings/store";
 
 import {
     THEME_CATEGORY_ADDED_EVENT,
     THEME_CATEGORY_DELETED_EVENT,
     THEME_CATEGORY_UPDATED_EVENT,
-    THEME_SETTINGS_CHANGED_EVENT,
+    THEME_SETTINGS_REFRESHED_EVENT,
     dispatchThemeCategorySelected,
+    themeSelectionFromUrl,
     type ThemeCategoryAdded,
     type ThemeCategoryDeleted,
     type ThemeSelection,
 } from "./events";
 import css from "./nav/ThemeNav.css" with { type: "text" };
 import template from "./nav/ThemeNav.html" with { type: "text" };
-import { renderThemeNav, selectionFromUrl } from "./nav/view";
-import { themePageStore } from "./store";
+import { renderThemeNav } from "./nav/view";
 
 export class CmsThemeNav extends Component {
     private sources: ThemeSource[] = [];
@@ -32,7 +33,7 @@ export class CmsThemeNav extends Component {
         window.addEventListener(THEME_CATEGORY_ADDED_EVENT, this.onCategoryAdded as EventListener);
         window.addEventListener(THEME_CATEGORY_DELETED_EVENT, this.onCategoryDeleted as EventListener);
         window.addEventListener(THEME_CATEGORY_UPDATED_EVENT, this.onCategoryUpdated as EventListener);
-        window.addEventListener(THEME_SETTINGS_CHANGED_EVENT, this.onSettingsChanged);
+        window.addEventListener(THEME_SETTINGS_REFRESHED_EVENT, this.onSettingsRefreshed);
     }
 
     disconnectedCallback(): void {
@@ -41,14 +42,14 @@ export class CmsThemeNav extends Component {
         window.removeEventListener(THEME_CATEGORY_ADDED_EVENT, this.onCategoryAdded as EventListener);
         window.removeEventListener(THEME_CATEGORY_DELETED_EVENT, this.onCategoryDeleted as EventListener);
         window.removeEventListener(THEME_CATEGORY_UPDATED_EVENT, this.onCategoryUpdated as EventListener);
-        window.removeEventListener(THEME_SETTINGS_CHANGED_EVENT, this.onSettingsChanged);
+        window.removeEventListener(THEME_SETTINGS_REFRESHED_EVENT, this.onSettingsRefreshed);
     }
 
     private async load(): Promise<void> {
         try {
-            const page = await themePageStore.load();
-            this.sources = structuredClone(page.settings.sources);
-            this.selection = selectionFromUrl(this.sources);
+            const page = await adminSystemSettingsStore.load();
+            this.sources = structuredClone(page.theme.sources);
+            this.selection = themeSelectionFromUrl(this.sources);
             this.render();
         } catch {
             // The editor displays the actionable load error; navigation stays empty.
@@ -88,7 +89,7 @@ export class CmsThemeNav extends Component {
     };
 
     private onPopState = (): void => {
-        this.selection = selectionFromUrl(this.sources);
+        this.selection = themeSelectionFromUrl(this.sources);
         this.render();
         dispatchThemeCategorySelected(this.selection);
     };
@@ -128,8 +129,7 @@ export class CmsThemeNav extends Component {
         this.select(detail.selection.sourceId, detail.selection.categoryId);
     };
 
-    private onSettingsChanged = (): void => {
-        themePageStore.invalidate();
+    private onSettingsRefreshed = (): void => {
         void this.load();
     };
 }

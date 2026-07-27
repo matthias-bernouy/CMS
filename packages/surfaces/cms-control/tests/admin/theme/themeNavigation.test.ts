@@ -18,7 +18,7 @@ describe("theme navigation", () => {
         expect(root.querySelector("[data-source='colors']")?.textContent).not.toContain("Integration");
     });
 
-    test("expands integration categories beneath their unique active parent", () => {
+    test("expands integration groups while keeping only the selected group active", () => {
         const root = navigationRoot();
 
         renderThemeNav(root, sources(), {
@@ -32,10 +32,13 @@ describe("theme navigation", () => {
         const children = Array.from(
             root.querySelectorAll<HTMLElement>("[data-source='integration-photo-albums'][data-category]"),
         );
-        expect(parent.hasAttribute("active")).toBeTrue();
-        expect(parent.getAttribute("aria-level")).toBe("1");
+        expect(parent.hasAttribute("active")).toBeFalse();
+        expect(parent.getAttribute("role")).toBe("button");
+        expect(parent.ariaLabel).toBe("Photo Albums");
+        expect(parent.hasAttribute("aria-level")).toBeFalse();
         expect(parent.getAttribute("aria-expanded")).toBe("true");
         expect(children.map((item) => item.dataset.category)).toEqual(["gallery", "viewer"]);
+        expect(children.map((item) => item.ariaLabel)).toEqual(["Gallery", "Viewer"]);
         expect(children.every((item) => item.getAttribute("aria-level") === "2")).toBeTrue();
         expect(children.every((item) => item.classList.contains("integration-category"))).toBeTrue();
         expect(children.find((item) => item.dataset.category === "viewer")?.hasAttribute("active")).toBeTrue();

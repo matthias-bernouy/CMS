@@ -29,16 +29,20 @@ function renderSources(menu: Element, sources: ThemeSource[], selection: ThemeSe
         const integration = isIntegrationSource(source);
         const hasChildren = integration ? source.categories.length > 0 : source.categories.length > 1;
         const expanded = hasChildren && source.id === selection.sourceId;
+        const label = sourceNavigationLabel(source);
         const sourceItem = document.createElement("w13c-lateral-menu-item");
         sourceItem.dataset.generated = "true";
         sourceItem.dataset.source = source.id;
-        sourceItem.setAttribute("aria-level", "1");
+        sourceItem.ariaLabel = label;
         sourceItem.classList.toggle("integration-item", integration);
-        sourceItem.toggleAttribute("active", source.id === selection.sourceId);
+        sourceItem.toggleAttribute("active", !hasChildren && source.id === selection.sourceId);
         if (hasChildren) {
+            sourceItem.setAttribute("role", "button");
             sourceItem.setAttribute("aria-expanded", String(expanded));
+        } else {
+            sourceItem.setAttribute("aria-level", "1");
         }
-        sourceItem.append(createSourceIcon(source.id), document.createTextNode(sourceNavigationLabel(source)));
+        sourceItem.append(createSourceIcon(source.id), document.createTextNode(label));
         menu.append(sourceItem);
 
         if (!expanded) {
@@ -51,6 +55,7 @@ function renderSources(menu: Element, sources: ThemeSource[], selection: ThemeSe
             categoryItem.dataset.generated = "true";
             categoryItem.dataset.source = source.id;
             categoryItem.dataset.category = category.id;
+            categoryItem.ariaLabel = category.label;
             categoryItem.setAttribute("aria-level", "2");
             categoryItem.toggleAttribute("active", category.id === selection.categoryId);
             categoryItem.append(createCategoryIcon(), document.createTextNode(category.label));
@@ -61,17 +66,4 @@ function renderSources(menu: Element, sources: ThemeSource[], selection: ThemeSe
 
 export function sourceNavigationLabel(source: ThemeSource): string {
     return CORE_SOURCE_LABELS[source.id] ?? source.label;
-}
-
-export function selectionFromUrl(sources: ThemeSource[]): ThemeSelection {
-    const url = new URL(window.location.href);
-    const sourceId = url.searchParams.get("type") ?? "";
-    const categoryId = url.searchParams.get("category") ?? "";
-    const explicitSource = sources.find((source) => source.id === sourceId);
-    const source =
-        explicitSource ??
-        sources.find((item) => item.categories.some((category) => category.id === categoryId)) ??
-        sources[0];
-    const category = source?.categories.find((item) => item.id === categoryId) ?? source?.categories[0];
-    return { sourceId: source?.id ?? "", categoryId: category?.id ?? "" };
 }
